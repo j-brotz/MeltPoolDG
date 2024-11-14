@@ -17,6 +17,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -116,11 +117,11 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
    */
 
   template <int dim>
-  class SimulationAdvecDG : public SimulationBase<dim>
+  class SimulationAdvecDG : public SimulationParametersBase<dim>
   {
   public:
     SimulationAdvecDG(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -161,22 +162,19 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
       constexpr types::boundary_id inflow_bc  = 42;
       constexpr types::boundary_id do_nothing = 0;
 
-      auto dirichlet = std::make_shared<DirichletConditions<dim>>;
+      auto dirichlet = std::make_shared<DirichletConditions<dim>>();
 
       if (inflow_outflow_bc)
         {
-          this->attach_inflow_outflow_boundary_condition(inflow_bc,
-                                                         dirichlet(),
-                                                         "advection_diffusion");
-          this->attach_inflow_outflow_boundary_condition(do_nothing,
-                                                         dirichlet(),
-                                                         "advection_diffusion");
+          this->attach_boundary_condition({inflow_bc, dirichlet},
+                                          "inflow_outflow",
+                                          "advection_diffusion");
+          this->attach_boundary_condition({do_nothing, dirichlet},
+                                          "inflow_outflow",
+                                          "advection_diffusion");
         }
       else
-        {
-          this->attach_dirichlet_boundary_condition(inflow_bc, dirichlet(), "advection_diffusion");
-          this->attach_open_boundary_condition(do_nothing, "advection_diffusion");
-        }
+        this->attach_boundary_condition({inflow_bc, dirichlet}, "dirichlet", "advection_diffusion");
 
 
       if constexpr (dim >= 2)
@@ -210,7 +208,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
                                   "advection_diffusion");
     }
 
-    void
+    bool
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
       prm.enter_subsection("simulation specific");
@@ -220,7 +218,10 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
                           "Set if the inflow/outflow boundary condition should be enabled.");
       }
       prm.leave_subsection();
+
+      return this->parameters.base.do_print_parameters;
     }
+
     void
     do_postprocessing(const GenericDataOut<dim> &generic_data_out) const final
     {

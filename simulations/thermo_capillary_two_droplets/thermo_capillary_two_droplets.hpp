@@ -11,6 +11,8 @@
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 // c++
+#include <meltpooldg/interface/parameters.hpp>
+
 #include <cmath>
 #include <iostream>
 
@@ -156,12 +158,12 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
    */
 
   template <int dim>
-  class SimulationThermoCapillaryTwoDroplets : public SimulationBase<dim>
+  class SimulationThermoCapillaryTwoDroplets : public SimulationParametersBase<dim>
   {
   public:
     SimulationThermoCapillaryTwoDroplets(std::string    parameter_file,
                                          const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -256,17 +258,17 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
           AssertThrow(false, ExcNotImplemented());
         }
 
-      this->attach_fix_pressure_constant_condition(lower_bc, "navier_stokes_p");
-      this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
-      this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
+      this->attach_boundary_condition(lower_bc, "fix_pressure_constant", "navier_stokes_p");
+      this->attach_boundary_condition(lower_bc, "no_slip", "navier_stokes_u");
+      this->attach_boundary_condition(upper_bc, "no_slip", "navier_stokes_u");
       this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
 
-      this->attach_dirichlet_boundary_condition(lower_bc,
-                                                std::make_shared<InitialValuesTemperature<dim>>(),
-                                                "heat_transfer");
-      this->attach_dirichlet_boundary_condition(upper_bc,
-                                                std::make_shared<InitialValuesTemperature<dim>>(),
-                                                "heat_transfer");
+      this->attach_boundary_condition({lower_bc, std::make_shared<InitialValuesTemperature<dim>>()},
+                                      "dirichlet",
+                                      "heat_transfer");
+      this->attach_boundary_condition({upper_bc, std::make_shared<InitialValuesTemperature<dim>>()},
+                                      "dirichlet",
+                                      "heat_transfer");
 
 
       if (this->parameters.base.fe.type != FiniteElementType::FE_SimplexP)

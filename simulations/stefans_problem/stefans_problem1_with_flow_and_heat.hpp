@@ -14,6 +14,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 
@@ -161,12 +162,12 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
    */
 
   template <int dim>
-  class SimulationStefansProblem1WithFlowAndHeat : public SimulationBase<dim>
+  class SimulationStefansProblem1WithFlowAndHeat : public SimulationParametersBase<dim>
   {
   public:
     SimulationStefansProblem1WithFlowAndHeat(std::string    parameter_file,
                                              const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
       , x_max(y_max / std::pow(dim, this->parameters.base.global_refinements))
       , remote_point_evaluation(1e-6, true)
     {
@@ -179,7 +180,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
                                     "_level_set_contour_over_time.txt";
     }
 
-    void
+    bool
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
       prm.enter_subsection("simulation specific");
@@ -188,6 +189,8 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
         prm.add_parameter("T wall", T_wall, "heated temperature of the wall");
       }
       prm.leave_subsection();
+
+      return this->parameters.base.do_print_parameters;
     }
 
     void
@@ -268,18 +271,23 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
       const types::boundary_id top_bc    = bottom_bc + 1;
 
       // lower part = gas; upper part = liquid
-      this->attach_dirichlet_boundary_condition(
-        bottom_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "level_set");
-      this->attach_dirichlet_boundary_condition(
-        bottom_bc, std::make_shared<Functions::ConstantFunction<dim>>(T_wall), "heat_transfer");
-      this->attach_dirichlet_boundary_condition(top_bc,
-                                                std::make_shared<Functions::ConstantFunction<dim>>(
-                                                  this->parameters.material.boiling_temperature),
-                                                "heat_transfer");
+      this->attach_boundary_condition({bottom_bc,
+                                       std::make_shared<Functions::ConstantFunction<dim>>(-1.0)},
+                                      "dirichlet",
+                                      "level_set");
+      this->attach_boundary_condition({bottom_bc,
+                                       std::make_shared<Functions::ConstantFunction<dim>>(T_wall)},
+                                      "dirichlet",
+                                      "heat_transfer");
+      this->attach_boundary_condition({top_bc,
+                                       std::make_shared<Functions::ConstantFunction<dim>>(
+                                         this->parameters.material.boiling_temperature)},
+                                      "dirichlet",
+                                      "heat_transfer");
 
       // dummy BC for Navier-Stokes
-      this->attach_no_slip_boundary_condition(bottom_bc, "navier_stokes_u");
-      this->attach_fix_pressure_constant_condition(top_bc, "navier_stokes_p");
+      this->attach_boundary_condition(bottom_bc, "no_slip", "navier_stokes_u");
+      this->attach_boundary_condition(top_bc, "fix_pressure_constant", "navier_stokes_p");
 
       // collect boundary ids of side walls
       std::vector<types::boundary_id> side_walls;

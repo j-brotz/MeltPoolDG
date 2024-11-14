@@ -16,6 +16,7 @@
 #include <deal.II/grid/grid_tools_geometry.h>
 
 #include <meltpooldg/heat/laser_intensity_profiles.hpp>
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 #include <meltpooldg/utilities/enum.hpp>
@@ -103,15 +104,15 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
 
 
   template <int dim>
-  class RadiativeTransportSimulation : public SimulationBase<dim>
+  class RadiativeTransportSimulation : public SimulationParametersBase<dim>
   {
   public:
     RadiativeTransportSimulation(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
       , cell_repetitions(dim, 1)
     {}
 
-    void
+    bool
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
       prm.enter_subsection("simulation specific parameters");
@@ -161,6 +162,8 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
                           "hanging powder particle offset from [dim-1] = 0 plane");
       }
       prm.leave_subsection();
+
+      return this->parameters.base.do_print_parameters;
     }
 
     void
@@ -222,10 +225,11 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
         get_colorized_rectangle_boundary_ids<dim>();
 
       if (this->parameters.base.problem_name == ProblemType::radiative_transport)
-        this->attach_dirichlet_boundary_condition(
-          upper_bc,
-          std::make_shared<Heat::GaussProjectionIntensityProfile<dim, double>>(
-            power_in, radius_in, center_in, -dealii::Point<dim>::unit_vector(dim - 1)),
+        this->attach_boundary_condition(
+          {upper_bc,
+           std::make_shared<Heat::GaussProjectionIntensityProfile<dim, double>>(
+             power_in, radius_in, center_in, -dealii::Point<dim>::unit_vector(dim - 1))},
+          "dirichlet",
           "intensity");
       else
         this->parameters.laser.rte_boundary_id = upper_bc;

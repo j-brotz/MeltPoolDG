@@ -32,7 +32,7 @@ jobs:
             adaflo: "adaflo=off"
     
     container:
-      image: dealii/dealii:${{ matrix.dealii_version }}-focal
+      image: dealii/dealii:${{ matrix.dealii_version }}-jammy
       options: --user root
 
     steps:          
@@ -45,6 +45,7 @@ jobs:
           mkdir adaflo-build
           cd adaflo-build
           cmake \
+            -D CMAKE_CXX_STANDARD=20 \
             -D BUILD_SHARED_LIBS=ON \
             -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             ../adaflo
@@ -55,6 +56,7 @@ jobs:
           mkdir build
           cd build
           cmake \
+            -D CMAKE_CXX_STANDARD=20 \
             -D CMAKE_CXX_FLAGS="-Werror" \
             -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -D ADAFLO_LIB=/__w/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/adaflo-build/ \

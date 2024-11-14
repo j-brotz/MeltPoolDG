@@ -18,6 +18,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -110,11 +111,11 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
    */
 
   template <int dim>
-  class SimulationAdvec : public SimulationBase<dim>
+  class SimulationAdvec : public SimulationParametersBase<dim>
   {
   public:
     SimulationAdvec(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -159,15 +160,15 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
 
       if (inflow_outflow_bc)
         {
-          this->attach_inflow_outflow_boundary_condition(inflow_bc,
-                                                         dirichlet,
-                                                         "advection_diffusion");
-          this->attach_inflow_outflow_boundary_condition(do_nothing,
-                                                         dirichlet,
-                                                         "advection_diffusion");
+          this->attach_boundary_condition({inflow_bc, dirichlet},
+                                          "inflow_outflow",
+                                          "advection_diffusion");
+          this->attach_boundary_condition({do_nothing, dirichlet},
+                                          "inflow_outflow",
+                                          "advection_diffusion");
         }
       else
-        this->attach_dirichlet_boundary_condition(inflow_bc, dirichlet, "advection_diffusion");
+        this->attach_boundary_condition({inflow_bc, dirichlet}, "dirichlet", "advection_diffusion");
 
       /*
        *  mark inflow edges with boundary label (no boundary on outflow edges must be prescribed
@@ -227,7 +228,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
                                   "advection_diffusion");
     }
 
-    void
+    bool
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
       prm.enter_subsection("simulation specific");
@@ -245,7 +246,10 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
           "signed_distance: signed distance level set.");
       }
       prm.leave_subsection();
+
+      return this->parameters.base.do_print_parameters;
     }
+
     void
     do_postprocessing(const GenericDataOut<dim> &generic_data_out) const final
     {

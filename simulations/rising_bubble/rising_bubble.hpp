@@ -12,6 +12,8 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
 
+#include <meltpooldg/interface/parameters.hpp>
+
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
@@ -51,11 +53,11 @@ namespace MeltPoolDG
        */
 
       template <int dim>
-      class SimulationRisingBubble : public SimulationBase<dim>
+      class SimulationRisingBubble : public SimulationParametersBase<dim>
       {
       public:
         SimulationRisingBubble(std::string parameter_file, const MPI_Comm mpi_communicator)
-          : SimulationBase<dim>(parameter_file, mpi_communicator)
+          : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
         {}
 
         void
@@ -123,14 +125,14 @@ namespace MeltPoolDG
           auto dirichlet = std::make_shared<Functions::ConstantFunction<dim>>(-1.0);
 
           // lower, right and left faces
-          this->attach_no_slip_boundary_condition(0, "navier_stokes_u");
+          this->attach_boundary_condition(0, "no_slip", "navier_stokes_u");
           // upper face
-          this->attach_symmetry_boundary_condition(2, "navier_stokes_u");
+          this->attach_boundary_condition(2, "symmetry", "navier_stokes_u");
 
-          this->attach_dirichlet_boundary_condition(0, dirichlet, "level_set");
-          this->attach_dirichlet_boundary_condition(2, dirichlet, "level_set");
+          this->attach_boundary_condition({0, dirichlet}, "dirichlet", "level_set");
+          this->attach_boundary_condition({2, dirichlet}, "dirichlet", "level_set");
 
-          this->attach_fix_pressure_constant_condition(0, "navier_stokes_p");
+          this->attach_boundary_condition(0, "fix_pressure_constant", "navier_stokes_p");
         }
 
         void

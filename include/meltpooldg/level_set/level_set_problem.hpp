@@ -25,6 +25,7 @@ namespace MeltPoolDG::LevelSet
   class LevelSetProblem : public ProblemBase<dim>
   {
   private:
+    using SimulationType  = SimulationParametersBase<dim>;
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
@@ -74,10 +75,10 @@ namespace MeltPoolDG::LevelSet
      *  for the computation of the level set problem
      */
     void
-    initialize(std::shared_ptr<SimulationBase<dim>> base_in);
+    initialize(std::shared_ptr<SimulationType> base_in);
 
     void
-    setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in, const bool do_reinit = true);
+    setup_dof_system(std::shared_ptr<SimulationType> base_in, const bool do_reinit = true);
 
     void
     compute_advection_velocity(Function<dim> &advec_func);
@@ -85,14 +86,14 @@ namespace MeltPoolDG::LevelSet
      *  perform output of results
      */
     void
-    output_results(const unsigned int                   time_step,
-                   const double                         current_time,
-                   std::shared_ptr<SimulationBase<dim>> base_in);
+    output_results(const unsigned int              time_step,
+                   const double                    current_time,
+                   std::shared_ptr<SimulationType> base_in);
     /*
      *  perform mesh refinement
      */
     void
-    refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in);
+    refine_mesh(std::shared_ptr<SimulationType> base_in);
 
   protected:
     void
@@ -102,7 +103,7 @@ namespace MeltPoolDG::LevelSet
     LevelSetProblem() = default;
 
     void
-    run(std::shared_ptr<SimulationBase<dim>> base_in) final;
+    run(std::shared_ptr<SimulationType> base_in) final;
 
     std::string
     get_name() final;

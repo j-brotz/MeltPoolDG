@@ -12,6 +12,7 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
 
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 
 #include <iostream>
@@ -119,14 +120,14 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
   };
 
   template <int dim>
-  class SimulationEvaporatingShell : public SimulationBase<dim>
+  class SimulationEvaporatingShell : public SimulationParametersBase<dim>
   {
   public:
     SimulationEvaporatingShell(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
     {}
 
-    void
+    bool
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
       prm.enter_subsection("simulation specific");
@@ -142,6 +143,8 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
         prm.add_parameter("two phase", two_phase, "two phase");
       }
       prm.leave_subsection();
+
+      return this->parameters.base.do_print_parameters;
     }
 
     void
@@ -184,21 +187,23 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
     set_boundary_conditions() override
     {
       // outer boundary
-      this->attach_open_boundary_condition(1, "navier_stokes_u");
+      this->attach_boundary_condition({1, std::make_shared<Functions::ZeroFunction<dim>>()},
+                                      "open",
+                                      "navier_stokes_u");
 
       // inner boundary
       const auto dirichlet = std::make_shared<RadialBoundaryVelocity<dim>>(center);
-      this->attach_dirichlet_boundary_condition(0, dirichlet, "navier_stokes_u");
+      this->attach_boundary_condition({0, dirichlet}, "dirichlet", "navier_stokes_u");
 
       if (shell_type != ShellType::full)
         {
-          this->attach_symmetry_boundary_condition(2, "navier_stokes_u");
+          this->attach_boundary_condition(2, "symmetry", "navier_stokes_u");
 
           if ((shell_type == ShellType::half && dim == 2) || shell_type == ShellType::quarter)
-            this->attach_symmetry_boundary_condition(3, "navier_stokes_u");
+            this->attach_boundary_condition(3, "symmetry", "navier_stokes_u");
 
           if (shell_type == ShellType::quarter && dim == 3)
-            this->attach_symmetry_boundary_condition(4, "navier_stokes_u");
+            this->attach_boundary_condition(4, "symmetry", "navier_stokes_u");
         }
     }
 

@@ -14,6 +14,7 @@
 #include <cmath>
 #include <iostream>
 // MeltPoolDG
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -74,12 +75,12 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
    */
 
   template <int dim>
-  class SimulationStefansProblem2WithFlowAndHeat : public SimulationBase<dim>
+  class SimulationStefansProblem2WithFlowAndHeat : public SimulationParametersBase<dim>
   {
   public:
     SimulationStefansProblem2WithFlowAndHeat(std::string    parameter_file,
                                              const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -147,20 +148,22 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
       const types::boundary_id right_bc = 4;
 
       // lower part = liquid; upper part = gas
-      this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
-      this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
+      this->attach_boundary_condition(lower_bc, "no_slip", "navier_stokes_u");
+      this->attach_boundary_condition(upper_bc, "open", "navier_stokes_u");
 
       if (dim >= 2)
         {
-          this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
-          this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
+          this->attach_boundary_condition(left_bc, "symmetry", "navier_stokes_u");
+          this->attach_boundary_condition(right_bc, "symmetry", "navier_stokes_u");
         }
 
-      this->attach_dirichlet_boundary_condition(lower_bc,
-                                                std::make_shared<InitialValuesTemperature<dim>>(),
-                                                "heat_transfer");
-      this->attach_dirichlet_boundary_condition(
-        lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(1.0), "level_set");
+      this->attach_boundary_condition({lower_bc, std::make_shared<InitialValuesTemperature<dim>>()},
+                                      "dirichlet",
+                                      "heat_transfer");
+      this->attach_boundary_condition({lower_bc,
+                                       std::make_shared<Functions::ConstantFunction<dim>>(1.0)},
+                                      "dirichlet",
+                                      "level_set");
 
       /*
        *  mark inflow edges with boundary label (no boundary on outflow edges must be prescribed

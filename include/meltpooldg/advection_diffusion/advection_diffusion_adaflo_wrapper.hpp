@@ -39,7 +39,7 @@ namespace MeltPoolDG::LevelSet
                                       const int                   advec_diff_dirichlet_dof_idx,
                                       const int                   advec_diff_quad_idx,
                                       const int                   velocity_dof_idx,
-                                      std::shared_ptr<SimulationBase<dim>> base_in,
+                                      std::shared_ptr<SimulationParametersBase<dim>> base_in,
                                       std::string operation_name = "advection_diffusion");
 
     void

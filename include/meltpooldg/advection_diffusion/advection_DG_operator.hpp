@@ -34,14 +34,14 @@ namespace MeltPoolDG::LevelSet
     using scalar = VectorizedArray<Number>;
 
     AdvectionDGOperator(
-      const MeltPoolDG::ScratchData<dim>                   &scratch_data_in,
-      VectorType                                           &advection_velocity_in,
-      const unsigned int                                    advec_diff_dof_idx_in,
-      const unsigned int                                    advec_diff_quad_idx_in,
-      const unsigned int                                    velocity_dof_idx_in,
-      std::shared_ptr<MeltPoolDG::BoundaryConditions<dim>> &boundary_conditions_in,
-      std::shared_ptr<dealii::Function<dim>>               &advection_field_in,
-      bool const                                            enable_analytical_velocity_update_in);
+      const MeltPoolDG::ScratchData<dim>                              &scratch_data_in,
+      VectorType                                                      &advection_velocity_in,
+      const unsigned int                                               advec_diff_dof_idx_in,
+      const unsigned int                                               advec_diff_quad_idx_in,
+      const unsigned int                                               velocity_dof_idx_in,
+      const std::shared_ptr<MeltPoolDG::BoundaryConditionManager<dim>> boundary_conditions_in,
+      std::shared_ptr<dealii::Function<dim>>                          &advection_field_in,
+      bool const enable_analytical_velocity_update_in);
 
     /**
      * If an analytical function for the velocity field is provided and an analytical update is
@@ -92,8 +92,8 @@ namespace MeltPoolDG::LevelSet
     const unsigned int advec_diff_quad_idx = 0;
     const unsigned int velocity_dof_idx    = 0;
 
-    std::shared_ptr<MeltPoolDG::BoundaryConditions<dim>> boundary_conditions;
-    std::shared_ptr<dealii::Function<dim>>               advection_field;
+    const std::shared_ptr<MeltPoolDG::BoundaryConditionManager<dim>> boundary_conditions;
+    std::shared_ptr<dealii::Function<dim>>                           advection_field;
 
     bool const enable_analytical_velocity_update = false;
 

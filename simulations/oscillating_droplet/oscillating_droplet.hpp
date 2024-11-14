@@ -1,16 +1,14 @@
 #pragma once
-// deal-specific libraries
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
 
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_tools_geometry.h>
 
-// MeltPoolDG
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
-// c++
 #include <cmath>
 #include <iostream>
 
@@ -54,16 +52,16 @@ namespace MeltPoolDG::Simulation::OscillatingDroplet
   };
 
   template <int dim>
-  class SimulationOscillatingDroplet : public SimulationBase<dim>
+  class SimulationOscillatingDroplet : public SimulationParametersBase<dim>
   {
   public:
     SimulationOscillatingDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
     {
       AssertDimension(dim, 2);
     }
 
-    void
+    bool
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
       prm.enter_subsection("simulation specific parameters");
@@ -75,6 +73,8 @@ namespace MeltPoolDG::Simulation::OscillatingDroplet
                           "Deviation of the elliptical semiaxes from the reference radius.");
       }
       prm.leave_subsection();
+
+      return this->parameters.base.do_print_parameters;
     }
 
     void
@@ -91,8 +91,8 @@ namespace MeltPoolDG::Simulation::OscillatingDroplet
     void
     set_boundary_conditions() final
     {
-      this->attach_no_slip_boundary_condition(0, "navier_stokes_u");
-      this->attach_fix_pressure_constant_condition(0, "navier_stokes_p");
+      this->attach_boundary_condition(0, "no_slip", "navier_stokes_u");
+      this->attach_boundary_condition(0, "fix_pressure_constant", "navier_stokes_p");
     }
 
     void

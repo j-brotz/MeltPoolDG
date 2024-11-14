@@ -12,6 +12,7 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/tria.h>
 
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -168,7 +169,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   };
 
   template <int dim>
-  class SimulationUnidirectionalHeatTransfer : public SimulationBase<dim>
+  class SimulationUnidirectionalHeatTransfer : public SimulationParametersBase<dim>
   {
   private:
     bool   do_solidification = false;
@@ -178,10 +179,10 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   public:
     SimulationUnidirectionalHeatTransfer(std::string    parameter_file,
                                          const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
     {}
 
-    void
+    bool
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
       prm.enter_subsection("simulation specific");
@@ -196,6 +197,8 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
         prm.add_parameter("velocity", velocity, "Velocity.");
       }
       prm.leave_subsection();
+
+      return this->parameters.base.do_print_parameters;
     }
 
     void
@@ -247,10 +250,14 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
         get_colorized_rectangle_boundary_ids<dim>();
 
       if (this->parameters.heat.radiation.emissivity > 0.0)
-        this->attach_radiation_boundary_condition(dim == 1 ? lower_bc : right_bc, "heat_transfer");
+        this->attach_boundary_condition(dim == 1 ? lower_bc : right_bc,
+                                        "radiation",
+                                        "heat_transfer");
 
       if (this->parameters.heat.convection.convection_coefficient > 0.0)
-        this->attach_convection_boundary_condition(dim == 1 ? lower_bc : right_bc, "heat_transfer");
+        this->attach_boundary_condition(dim == 1 ? lower_bc : right_bc,
+                                        "convection",
+                                        "heat_transfer");
     }
 
     void

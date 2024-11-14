@@ -1,8 +1,8 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/patterns.h>
 
-#include "meltpooldg/reinitialization/reinitialization_data.hpp"
 #include <meltpooldg/curvature/curvature_data.hpp>
+#include <meltpooldg/reinitialization/reinitialization_data.hpp>
 
 namespace MeltPoolDG::LevelSet
 {

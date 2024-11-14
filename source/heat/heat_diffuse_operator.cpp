@@ -19,21 +19,21 @@ namespace MeltPoolDG::Heat
 {
   template <int dim, typename number>
   HeatDiffuseMultiPhaseOperator<dim, number>::HeatDiffuseMultiPhaseOperator(
-    const std::shared_ptr<BoundaryConditions<dim>> &bc,
-    const ScratchData<dim>                         &scratch_data_in,
-    const HeatData<number>                         &data_in,
-    const Material<number>                         &material,
-    const unsigned int                              temp_dof_idx_in,
-    const unsigned int                              temp_quad_idx_in,
-    const unsigned int                              temp_hanging_nodes_dof_idx_in,
-    const VectorType                               &temperature_in,
-    const VectorType                               &temperature_old_in,
-    const VectorType                               &heat_source_in,
-    const unsigned int                              vel_dof_idx_in,
-    const VectorType                               *velocity_in,
-    const unsigned int                              ls_dof_idx_in,
-    const VectorType                               *level_set_as_heaviside_in,
-    const bool                                      do_solidification_in)
+    const std::shared_ptr<BoundaryConditionManager<dim>> &bc,
+    const ScratchData<dim>                               &scratch_data_in,
+    const HeatData<number>                               &data_in,
+    const Material<number>                               &material,
+    const unsigned int                                    temp_dof_idx_in,
+    const unsigned int                                    temp_quad_idx_in,
+    const unsigned int                                    temp_hanging_nodes_dof_idx_in,
+    const VectorType                                     &temperature_in,
+    const VectorType                                     &temperature_old_in,
+    const VectorType                                     &heat_source_in,
+    const unsigned int                                    vel_dof_idx_in,
+    const VectorType                                     *velocity_in,
+    const unsigned int                                    ls_dof_idx_in,
+    const VectorType                                     *level_set_as_heaviside_in,
+    const bool                                            do_solidification_in)
     : scratch_data(scratch_data_in)
     , data(data_in)
     , material(material)
@@ -79,9 +79,9 @@ namespace MeltPoolDG::Heat
 
     if (bc)
       {
-        bc_convection_indices = bc->convection_bc;
-        bc_radiation_indices  = bc->radiation_bc;
-        neumann_bc            = bc->neumann_bc;
+        bc_convection_indices = bc->get_indices_of_type("convection");
+        bc_radiation_indices  = bc->get_indices_of_type("radiation");
+        neumann_bc            = bc->get_bc_of_type("neumann");
       }
   }
 

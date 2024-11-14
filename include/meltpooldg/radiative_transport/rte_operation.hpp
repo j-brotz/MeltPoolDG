@@ -5,7 +5,6 @@
 #include <deal.II/lac/diagonal_matrix.h>
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/periodic_boundary_conditions.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
@@ -67,9 +66,10 @@ namespace MeltPoolDG::RadiativeTransport
     distribute_constraints();
 
     void
-    setup_constraints(ScratchData<dim>                       &scratch_data,
-                      const DirichletBoundaryConditions<dim> &bc_data,
-                      const PeriodicBoundaryConditions<dim>  &pbc);
+    setup_constraints(
+      ScratchData<dim>                                                           &scratch_data,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> &bc_data,
+      const PeriodicBoundaryConditions<dim>                                      &pbc);
 
     void
     solve();

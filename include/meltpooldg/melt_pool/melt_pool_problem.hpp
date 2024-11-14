@@ -53,6 +53,7 @@ namespace MeltPoolDG::MeltPool
   class MeltPoolProblem : public ProblemBase<dim>
   {
   private:
+    using SimulationType  = SimulationParametersBase<dim>;
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
@@ -60,7 +61,7 @@ namespace MeltPoolDG::MeltPool
     MeltPoolProblem() = default;
 
     void
-    run(std::shared_ptr<SimulationBase<dim>> base_in) final;
+    run(std::shared_ptr<SimulationType> base_in) final;
 
     std::string
     get_name() final;
@@ -74,10 +75,10 @@ namespace MeltPoolDG::MeltPool
 
   private:
     void
-    save(std::shared_ptr<SimulationBase<dim>> base_in);
+    save(std::shared_ptr<SimulationType> base_in);
 
     void
-    load(std::shared_ptr<SimulationBase<dim>> base_in);
+    load(std::shared_ptr<SimulationType> base_in);
 
     struct
     {
@@ -127,13 +128,13 @@ namespace MeltPoolDG::MeltPool
      *  for the computation of the level set problem
      */
     void
-    initialize(std::shared_ptr<SimulationBase<dim>> base_in);
+    initialize(std::shared_ptr<SimulationType> base_in);
 
     void
-    set_initial_condition(std::shared_ptr<SimulationBase<dim>> base_in);
+    set_initial_condition(std::shared_ptr<SimulationType> base_in);
 
     void
-    setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in, const bool do_reinit = true);
+    setup_dof_system(std::shared_ptr<SimulationType> base_in, const bool do_reinit = true);
 
     /**
      * Update material parameter of the phases.
@@ -161,9 +162,9 @@ namespace MeltPoolDG::MeltPool
      *  perform output of results
      */
     void
-    output_results(std::shared_ptr<SimulationBase<dim>> base_in,
-                   const bool                           force_output = false,
-                   const OutputNotConvergedOperation    output_not_converged_operation =
+    output_results(std::shared_ptr<SimulationType>   base_in,
+                   const bool                        force_output = false,
+                   const OutputNotConvergedOperation output_not_converged_operation =
                      OutputNotConvergedOperation::none);
     /*
      * collect all relevant output data
@@ -174,14 +175,14 @@ namespace MeltPoolDG::MeltPool
      * finalize simulation in the case that an operaion didn't converge
      */
     void
-    finalize(std::shared_ptr<SimulationBase<dim>> base_in,
-             const OutputNotConvergedOperation    output_no_converged_operation =
+    finalize(std::shared_ptr<SimulationType>   base_in,
+             const OutputNotConvergedOperation output_no_converged_operation =
                OutputNotConvergedOperation::none);
     /*
      *  perform mesh refinement
      */
     void
-    refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in);
+    refine_mesh(std::shared_ptr<SimulationType> base_in);
 
     /*
      *  perform mesh refinement
@@ -197,8 +198,7 @@ namespace MeltPoolDG::MeltPool
     post();
 
     bool
-    mark_cells_for_refinement(std::shared_ptr<SimulationBase<dim>> base_in,
-                              Triangulation<dim>                  &tria);
+    mark_cells_for_refinement(std::shared_ptr<SimulationType> base_in, Triangulation<dim> &tria);
 
     std::shared_ptr<TimeIterator<double>> time_iterator;
 

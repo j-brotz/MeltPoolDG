@@ -10,6 +10,7 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/evaporation/evaporation_model_constant.hpp>
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -36,11 +37,11 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
    */
 
   template <int dim>
-  class SimulationStefansProblemWithFlow : public SimulationBase<dim>
+  class SimulationStefansProblemWithFlow : public SimulationParametersBase<dim>
   {
   public:
     SimulationStefansProblemWithFlow(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -113,8 +114,8 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
       const types::boundary_id lower_bc = 2 * (dim - 1);
       const types::boundary_id upper_bc = 2 * (dim - 1) + 1;
 
-      this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
-      this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
+      this->attach_boundary_condition(lower_bc, "no_slip", "navier_stokes_u");
+      this->attach_boundary_condition(upper_bc, "open", "navier_stokes_u");
 
       // collect boundary ids of side walls
       std::vector<types::boundary_id> side_walls;
@@ -123,7 +124,7 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
         side_walls.push_back(i);
 
       for (const auto &s : side_walls)
-        this->attach_symmetry_boundary_condition(s, "navier_stokes_u");
+        this->attach_boundary_condition(s, "symmetry", "navier_stokes_u");
     }
 
     void

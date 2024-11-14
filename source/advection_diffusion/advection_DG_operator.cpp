@@ -5,14 +5,14 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   AdvectionDGOperator<dim, Number>::AdvectionDGOperator(
-    const MeltPoolDG::ScratchData<dim>                   &scratch_data_in,
-    VectorType                                           &advection_velocity_in,
-    const unsigned int                                    advec_diff_dof_idx_in,
-    const unsigned int                                    advec_diff_quad_idx_in,
-    const unsigned int                                    velocity_dof_idx_in,
-    std::shared_ptr<MeltPoolDG::BoundaryConditions<dim>> &boundary_conditions_in,
-    std::shared_ptr<dealii::Function<dim>>               &advection_field_in,
-    bool const                                            enable_analytical_velocity_update_in)
+    const MeltPoolDG::ScratchData<dim>                              &scratch_data_in,
+    VectorType                                                      &advection_velocity_in,
+    const unsigned int                                               advec_diff_dof_idx_in,
+    const unsigned int                                               advec_diff_quad_idx_in,
+    const unsigned int                                               velocity_dof_idx_in,
+    const std::shared_ptr<MeltPoolDG::BoundaryConditionManager<dim>> boundary_conditions_in,
+    std::shared_ptr<dealii::Function<dim>>                          &advection_field_in,
+    bool const enable_analytical_velocity_update_in)
     : update_field_functions(true)
     , scratch_data_(scratch_data_in)
     , advection_velocity_(advection_velocity_in)
@@ -152,7 +152,6 @@ namespace MeltPoolDG::LevelSet
         eval_vel.reinit(face);
         eval_vel.gather_evaluate(advection_velocity_, EvaluationFlags::values);
 
-        const auto boundary_id = data.get_boundary_id(face);
 
         for (unsigned int q = 0; q < eval_minus.n_q_points; ++q)
           {
@@ -162,7 +161,8 @@ namespace MeltPoolDG::LevelSet
               MeltPoolDG::VectorTools::to_vector<dim>(eval_minus.get_normal_vector(q));
 
             dealii::VectorizedArray<Number> u_plus;
-            if (boundary_conditions->get_boundary_type(boundary_id) == BoundaryTypes::dirichlet_bc)
+            const auto                      boundary_id = data.get_boundary_id(face);
+            if (boundary_conditions->get_type(boundary_id) == "dirichlet")
               {
                 u_plus = u_minus * 0.0;
               }
@@ -209,7 +209,7 @@ namespace MeltPoolDG::LevelSet
         eval_vel.gather_evaluate(advection_velocity_, EvaluationFlags::values);
 
         const auto boundary_id = data.get_boundary_id(face);
-        if (boundary_conditions->get_boundary_type(boundary_id) == BoundaryTypes::dirichlet_bc)
+        if (boundary_conditions->get_type(boundary_id) == "dirichlet")
           {
             for (unsigned int q = 0; q < eval_minus.n_q_points; ++q)
               {
@@ -222,7 +222,8 @@ namespace MeltPoolDG::LevelSet
                 // dealii::VectorizedArray<Number> u_plus;
                 auto const u_plus =
                   VectorTools::evaluate_function_at_vectorized_points<dim, Number>(
-                    *(boundary_conditions->dirichlet_bc.get_data().at(boundary_id)),
+                    *(boundary_conditions->get_bc_of_type("dirichlet", false /*not optional*/)
+                        .at(boundary_id)),
                     eval_minus.quadrature_point(q),
                     0);
 

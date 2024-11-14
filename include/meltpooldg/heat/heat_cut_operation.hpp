@@ -105,8 +105,7 @@ namespace MeltPoolDG::Heat
     reinit() override;
 
     void
-    set_initial_condition(const dealii::Function<dim> &initial_temperature,
-                          const double                 start_time) override;
+    set_initial_condition(const dealii::Function<dim> &initial_temperature) override;
 
     void
     distribute_constraints() override;

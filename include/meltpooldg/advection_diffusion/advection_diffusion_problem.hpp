@@ -25,6 +25,7 @@ namespace MeltPoolDG::LevelSet
   class AdvectionDiffusionProblem : public ProblemBase<dim>
   {
   private:
+    using SimulationType  = SimulationParametersBase<dim>;
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
@@ -32,7 +33,7 @@ namespace MeltPoolDG::LevelSet
     AdvectionDiffusionProblem() = default;
 
     void
-    run(std::shared_ptr<SimulationBase<dim>> base_in) final;
+    run(std::shared_ptr<SimulationType> base_in) final;
 
     std::string
     get_name() final;
@@ -43,10 +44,10 @@ namespace MeltPoolDG::LevelSet
      *  for the computation of the advection-diffusion problem
      */
     void
-    setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in);
+    setup_dof_system(std::shared_ptr<SimulationType> base_in);
 
     void
-    initialize(std::shared_ptr<SimulationBase<dim>> base_in);
+    initialize(std::shared_ptr<SimulationType> base_in);
 
     void
     compute_advection_velocity(Function<dim> &advec_func);
@@ -55,15 +56,15 @@ namespace MeltPoolDG::LevelSet
      *  perform output of results
      */
     void
-    output_results(unsigned int                         time_step,
-                   double                               current_time,
-                   std::shared_ptr<SimulationBase<dim>> base_in);
+    output_results(unsigned int                    time_step,
+                   double                          current_time,
+                   std::shared_ptr<SimulationType> base_in);
 
     /*
      *  perform mesh refinement
      */
     void
-    refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in);
+    refine_mesh(std::shared_ptr<SimulationType> base_in);
 
     DoFHandler<dim>                       dof_handler;
     AffineConstraints<double>             constraints;

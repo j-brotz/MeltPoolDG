@@ -17,6 +17,7 @@
 
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_intensity_profiles.hpp>
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/melt_pool/powder_bed.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
@@ -29,7 +30,7 @@
 namespace MeltPoolDG::Simulation::PowderBed
 {
   template <int dim>
-  class SimulationPowderBed : public SimulationBase<dim>
+  class SimulationPowderBed : public SimulationParametersBase<dim>
   {
   private:
     double                    domain_x_min = 0;
@@ -44,11 +45,11 @@ namespace MeltPoolDG::Simulation::PowderBed
 
   public:
     SimulationPowderBed(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
       , cell_repetitions(dim, 1)
     {}
 
-    void
+    bool
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
       prm.enter_subsection("simulation specific parameters");
@@ -78,6 +79,8 @@ namespace MeltPoolDG::Simulation::PowderBed
         powder_bed_data.add_parameters(prm);
       }
       prm.leave_subsection();
+
+      return this->parameters.base.do_print_parameters;
     }
 
     void
@@ -153,8 +156,10 @@ namespace MeltPoolDG::Simulation::PowderBed
       /*
        * BC for heat transfer
        */
-      this->attach_dirichlet_boundary_condition(
-        lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(T_initial), "heat_transfer");
+      this->attach_boundary_condition(
+        {lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(T_initial)},
+        "dirichlet",
+        "heat_transfer");
 
       if (this->parameters.base.fe.type != FiniteElementType::FE_SimplexP)
         this->triangulation->refine_global(this->parameters.base.global_refinements);
@@ -162,13 +167,14 @@ namespace MeltPoolDG::Simulation::PowderBed
        * BC for RTE
        */
       if (this->parameters.base.problem_name == ProblemType::radiative_transport)
-        this->attach_dirichlet_boundary_condition(
-          upper_bc,
-          std::make_shared<Heat::GaussProjectionIntensityProfile<dim, double>>(
-            this->parameters.laser.power,
-            this->parameters.laser.radius,
-            this->parameters.laser.template get_starting_position<dim>(),
-            this->parameters.laser.template get_direction<dim>()),
+        this->attach_boundary_condition(
+          {upper_bc,
+           std::make_shared<Heat::GaussProjectionIntensityProfile<dim, double>>(
+             this->parameters.laser.power,
+             this->parameters.laser.radius,
+             this->parameters.laser.template get_starting_position<dim>(),
+             this->parameters.laser.template get_direction<dim>())},
+          "dirichlet",
           "intensity");
       else
         this->parameters.laser.rte_boundary_id = upper_bc;

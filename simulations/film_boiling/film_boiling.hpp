@@ -1,5 +1,4 @@
 #pragma once
-
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/mpi.h>
@@ -20,6 +19,7 @@
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/post_processing/slice.hpp>
@@ -142,11 +142,11 @@ namespace MeltPoolDG::Simulation::FilmBoiling
    *      This class collects all relevant input data for the simulation.
    */
   template <int dim>
-  class SimulationFilmBoiling : public SimulationBase<dim>
+  class SimulationFilmBoiling : public SimulationParametersBase<dim>
   {
   public:
     SimulationFilmBoiling(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
       , lambda0(
           2. * numbers::PI *
           std::sqrt(3. * this->parameters.flow.surface_tension.surface_tension_coefficient /
@@ -158,7 +158,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
       , tria_slice(mpi_communicator)
     {}
 
-    void
+    bool
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
       prm.enter_subsection("simulation specific");
@@ -187,6 +187,8 @@ namespace MeltPoolDG::Simulation::FilmBoiling
                           "and Δz =  factor_delta_z * lambda_0");
       }
       prm.leave_subsection();
+
+      return this->parameters.base.do_print_parameters;
     }
 
     void
@@ -266,28 +268,32 @@ namespace MeltPoolDG::Simulation::FilmBoiling
       const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
         get_colorized_rectangle_boundary_ids<dim>();
 
-      this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
-      this->attach_open_boundary_condition(upper_bc,
-                                           std::make_shared<Functions::ZeroFunction<dim>>(),
-                                           "navier_stokes_u");
+      this->attach_boundary_condition(lower_bc, "no_slip", "navier_stokes_u");
+      this->attach_boundary_condition({upper_bc, std::make_shared<Functions::ZeroFunction<dim>>()},
+                                      "open",
+                                      "navier_stokes_u");
 
-      this->attach_dirichlet_boundary_condition(lower_bc,
-                                                std::make_shared<Functions::ConstantFunction<dim>>(
-                                                  this->parameters.material.boiling_temperature +
-                                                  delta_T),
-                                                "heat_transfer");
+      this->attach_boundary_condition({lower_bc,
+                                       std::make_shared<Functions::ConstantFunction<dim>>(
+                                         this->parameters.material.boiling_temperature + delta_T)},
+                                      "dirichlet",
+                                      "heat_transfer");
       if (bc_temperature_top == "dirichlet")
-        this->attach_dirichlet_boundary_condition(
-          upper_bc,
-          std::make_shared<Functions::ConstantFunction<dim>>(
-            this->parameters.material.boiling_temperature),
-          "heat_transfer");
+        this->attach_boundary_condition({upper_bc,
+                                         std::make_shared<Functions::ConstantFunction<dim>>(
+                                           this->parameters.material.boiling_temperature)},
+                                        "dirichlet",
+                                        "heat_transfer");
 
       // @note: this BC is necessary
-      this->attach_dirichlet_boundary_condition(
-        lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1), "level_set");
-      this->attach_inflow_outflow_boundary_condition(
-        upper_bc, std::make_shared<Functions::ConstantFunction<dim>>(1), "level_set");
+      this->attach_boundary_condition({lower_bc,
+                                       std::make_shared<Functions::ConstantFunction<dim>>(-1)},
+                                      "dirichlet",
+                                      "level_set");
+      this->attach_boundary_condition({upper_bc,
+                                       std::make_shared<Functions::ConstantFunction<dim>>(1)},
+                                      "inflow_outflow",
+                                      "level_set");
 
       if (dim > 1)
         {
@@ -295,8 +301,8 @@ namespace MeltPoolDG::Simulation::FilmBoiling
             this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
           else // if (bc_vertical_faces == "symmetry")
             {
-              this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
-              this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
+              this->attach_boundary_condition(left_bc, "symmetry", "navier_stokes_u");
+              this->attach_boundary_condition(right_bc, "symmetry", "navier_stokes_u");
             }
         }
 
@@ -306,8 +312,8 @@ namespace MeltPoolDG::Simulation::FilmBoiling
             this->attach_periodic_boundary_condition(front_bc, back_bc, 1);
           else // if (bc_vertical_faces == "symmetry")
             {
-              this->attach_symmetry_boundary_condition(front_bc, "navier_stokes_u");
-              this->attach_symmetry_boundary_condition(back_bc, "navier_stokes_u");
+              this->attach_boundary_condition(front_bc, "symmetry", "navier_stokes_u");
+              this->attach_boundary_condition(back_bc, "symmetry", "navier_stokes_u");
             }
         }
 

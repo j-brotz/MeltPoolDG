@@ -18,21 +18,21 @@ namespace MeltPoolDG::Heat
 {
   template <int dim>
   HeatDiffuseOperation<dim>::HeatDiffuseOperation(
-    std::shared_ptr<BoundaryConditions<dim>> bc_data_in,
-    const ScratchData<dim>                  &scratch_data_in,
-    const HeatData<double>                  &heat_data_in,
-    const Material<double>                  &material,
-    const TimeIterator<double>              &time_iterator,
-    const unsigned int                       temp_dof_idx_in,
-    const unsigned int                       temp_hanging_nodes_dof_idx_in,
-    const unsigned int                       temp_quad_idx_in,
-    const unsigned int                       vel_dof_idx_in,
-    const VectorType                        *velocity_in,
-    const unsigned int                       ls_dof_idx_in,
-    const VectorType                        *level_set_as_heaviside_in,
-    const bool                               do_solidification)
+    const std::shared_ptr<BoundaryConditionManager<dim>> bc,
+    const ScratchData<dim>                              &scratch_data_in,
+    const HeatData<double>                              &heat_data_in,
+    const Material<double>                              &material,
+    const TimeIterator<double>                          &time_iterator,
+    const unsigned int                                   temp_dof_idx_in,
+    const unsigned int                                   temp_hanging_nodes_dof_idx_in,
+    const unsigned int                                   temp_quad_idx_in,
+    const unsigned int                                   vel_dof_idx_in,
+    const VectorType                                    *velocity_in,
+    const unsigned int                                   ls_dof_idx_in,
+    const VectorType                                    *level_set_as_heaviside_in,
+    const bool                                           do_solidification)
     : scratch_data(scratch_data_in)
-    , bc_data(bc_data_in)
+    , dirichlet_bc(bc->get_bc_of_type("dirichlet"))
     , heat_data(heat_data_in)
     , time_iterator(time_iterator)
     , temp_dof_idx(temp_dof_idx_in)
@@ -47,7 +47,7 @@ namespace MeltPoolDG::Heat
                                 2U /*TODO: include time integration scheme*/))
   {
     heat_operator = std::make_unique<HeatDiffuseMultiPhaseOperator<dim>>(
-      bc_data,
+      bc,
       scratch_data,
       heat_data,
       material,
@@ -159,12 +159,8 @@ namespace MeltPoolDG::Heat
   template <int dim>
   void
   HeatDiffuseOperation<dim>::set_initial_condition(
-    const Function<dim> &initial_field_function_temperature,
-    const double         start_time)
+    const Function<dim> &initial_field_function_temperature)
   {
-    if (heat_data.enable_time_dependent_bc)
-      bc_data->set_time(start_time);
-
     dealii::VectorTools::interpolate(scratch_data.get_mapping(),
                                      scratch_data.get_dof_handler(temp_dof_idx),
                                      initial_field_function_temperature,
@@ -173,7 +169,7 @@ namespace MeltPoolDG::Heat
     if (heat_data.enable_time_dependent_bc)
       MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
         const_cast<ScratchData<dim> &>(scratch_data),
-        bc_data->dirichlet_bc,
+        dirichlet_bc,
         temp_dof_idx,
         temp_hanging_nodes_dof_idx);
 
@@ -218,10 +214,9 @@ namespace MeltPoolDG::Heat
 
     if (heat_data.enable_time_dependent_bc)
       {
-        bc_data->set_time(time_iterator.get_current_time());
         MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
           const_cast<ScratchData<dim> &>(scratch_data),
-          bc_data->dirichlet_bc,
+          dirichlet_bc,
           temp_dof_idx,
           temp_hanging_nodes_dof_idx);
       }

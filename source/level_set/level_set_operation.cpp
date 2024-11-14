@@ -25,11 +25,11 @@ namespace MeltPoolDG::LevelSet
   using namespace dealii;
 
   template <int dim>
-  LevelSetOperation<dim>::LevelSetOperation(const ScratchData<dim>              &scratch_data_in,
-                                            const TimeIterator<double>          &time_stepping,
-                                            std::shared_ptr<SimulationBase<dim>> base_in,
-                                            const VectorType                    &advection_velocity,
-                                            const unsigned int                   ls_dof_idx_in,
+  LevelSetOperation<dim>::LevelSetOperation(const ScratchData<dim>     &scratch_data_in,
+                                            const TimeIterator<double> &time_stepping,
+                                            std::shared_ptr<SimulationParametersBase<dim>> base_in,
+                                            const VectorType  &advection_velocity,
+                                            const unsigned int ls_dof_idx_in,
                                             const unsigned int ls_hanging_nodes_dof_idx_in,
                                             const unsigned int ls_quad_idx_in,
                                             const unsigned int reinit_dof_idx_in,
@@ -57,16 +57,16 @@ namespace MeltPoolDG::LevelSet
     if (base_in->parameters.ls.advec_diff.implementation == "meltpooldg")
       {
         (void)ls_zero_bc_idx;
-        advec_diff_operation =
-          std::make_shared<AdvectionDiffusionOperation<dim>>(scratch_data,
-                                                             base_in->get_bc("level_set"),
-                                                             base_in->parameters.ls.advec_diff,
-                                                             time_stepping,
-                                                             advection_velocity,
-                                                             ls_dof_idx,
-                                                             ls_hanging_nodes_dof_idx_in,
-                                                             ls_quad_idx_in,
-                                                             vel_dof_idx);
+        advec_diff_operation = std::make_shared<AdvectionDiffusionOperation<dim>>(
+          scratch_data,
+          base_in->get_boundary_condition("dirichlet", "level_set"),
+          base_in->parameters.ls.advec_diff,
+          time_stepping,
+          advection_velocity,
+          ls_dof_idx,
+          ls_hanging_nodes_dof_idx_in,
+          ls_quad_idx_in,
+          vel_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (base_in->parameters.ls.advec_diff.implementation == "adaflo")

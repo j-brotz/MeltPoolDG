@@ -1,4 +1,5 @@
 #pragma once
+#include <meltpooldg/interface/parameters.hpp>
 
 // deal-specific libraries
 #include <deal.II/base/function.h>
@@ -99,11 +100,11 @@ namespace MeltPoolDG
        */
 
       template <int dim>
-      class SimulationFlowPastCylinder : public SimulationBase<dim>
+      class SimulationFlowPastCylinder : public SimulationParametersBase<dim>
       {
       public:
         SimulationFlowPastCylinder(std::string parameter_file, const MPI_Comm mpi_communicator)
-          : SimulationBase<dim>(parameter_file, mpi_communicator)
+          : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
         {}
 
         void
@@ -164,20 +165,20 @@ namespace MeltPoolDG
         {
           auto dirichlet = std::make_shared<DirichletCondition<dim>>();
 
-          this->attach_dirichlet_boundary_condition(0, dirichlet, "level_set");
-          this->attach_dirichlet_boundary_condition(1, dirichlet, "level_set");
+          this->attach_boundary_condition({0, dirichlet}, "dirichlet", "level_set");
+          this->attach_boundary_condition({1, dirichlet}, "dirichlet", "level_set");
 
-          this->attach_no_slip_boundary_condition(0, "navier_stokes_u");
+          this->attach_boundary_condition(0, "no_slip", "navier_stokes_u");
 
-          this->attach_dirichlet_boundary_condition(1,
-                                                    std::shared_ptr<Function<dim>>(
-                                                      new InflowVelocity<dim>(0., true)),
-                                                    "navier_stokes_u");
+          this->attach_boundary_condition(
+            {1, std::shared_ptr<Function<dim>>(new InflowVelocity<dim>(0., true))},
+            "dirichlet",
+            "navier_stokes_u");
 
-          this->attach_neumann_boundary_condition(2,
-                                                  std::shared_ptr<Function<dim>>(
-                                                    new Functions::ZeroFunction<dim>(1)),
-                                                  "navier_stokes_p");
+          this->attach_boundary_condition(
+            {2, std::shared_ptr<Function<dim>>(new Functions::ZeroFunction<dim>(1))},
+            "neumann",
+            "navier_stokes_p");
         }
 
         void

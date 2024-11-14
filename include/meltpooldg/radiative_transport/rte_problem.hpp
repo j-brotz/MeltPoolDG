@@ -30,7 +30,8 @@ namespace MeltPoolDG::RadiativeTransport
   class RadiativeTransportProblem : public ProblemBase<dim>
   {
   private:
-    using VectorType = LinearAlgebra::distributed::Vector<double>;
+    using SimulationType = SimulationParametersBase<dim>;
+    using VectorType     = LinearAlgebra::distributed::Vector<double>;
 
     VectorType heaviside;
     VectorType heat_source;
@@ -62,7 +63,7 @@ namespace MeltPoolDG::RadiativeTransport
     RadiativeTransportProblem() = default;
 
     void
-    run(std::shared_ptr<SimulationBase<dim>> base_in) final;
+    run(std::shared_ptr<SimulationType> base_in) final;
 
     std::string
     get_name() final;
@@ -80,10 +81,10 @@ namespace MeltPoolDG::RadiativeTransport
      *  for the computation of the RTE problem
      */
     void
-    initialize(std::shared_ptr<SimulationBase<dim>> base_in);
+    initialize(std::shared_ptr<SimulationType> base_in);
 
     void
-    setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in, const bool do_reinit = true);
+    setup_dof_system(std::shared_ptr<SimulationType> base_in, const bool do_reinit = true);
 
     void
     compute_heaviside(Function<dim> &heaviside_func);
@@ -92,14 +93,14 @@ namespace MeltPoolDG::RadiativeTransport
      *  perform output of results
      */
     void
-    output_results(const unsigned int                   time_step,
-                   const double                         current_time,
-                   std::shared_ptr<SimulationBase<dim>> base_in);
+    output_results(const unsigned int              time_step,
+                   const double                    current_time,
+                   std::shared_ptr<SimulationType> base_in);
 
     /*
      *  perform mesh refinement
      */
     void
-    refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in);
+    refine_mesh(std::shared_ptr<SimulationType> base_in);
   };
 } // namespace MeltPoolDG::RadiativeTransport

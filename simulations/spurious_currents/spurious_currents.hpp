@@ -10,6 +10,7 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
 
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/functions.hpp>
 
@@ -24,14 +25,14 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
   static double radius_2    = 0.75;
 
   template <int dim>
-  class SimulationSpuriousCurrents : public SimulationBase<dim>
+  class SimulationSpuriousCurrents : public SimulationParametersBase<dim>
   {
   public:
     SimulationSpuriousCurrents(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
     {}
 
-    void
+    bool
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
       prm.enter_subsection("simulation specific parameters");
@@ -47,6 +48,8 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
         prm.add_parameter("radius 2", radius_2, "Radius of second semi-axis of an ellipse.");
       }
       prm.leave_subsection();
+
+      return this->parameters.base.do_print_parameters;
     }
 
     void
@@ -69,10 +72,11 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
     void
     set_boundary_conditions() override
     {
-      this->attach_dirichlet_boundary_condition(
-        0, std::make_shared<Functions::ConstantFunction<dim>>(-1), "level_set");
-      this->attach_no_slip_boundary_condition(0, "navier_stokes_u");
-      this->attach_fix_pressure_constant_condition(0, "navier_stokes_p");
+      this->attach_boundary_condition({0, std::make_shared<Functions::ConstantFunction<dim>>(-1)},
+                                      "dirichlet",
+                                      "level_set");
+      this->attach_boundary_condition(0, "no_slip", "navier_stokes_u");
+      this->attach_boundary_condition(0, "fix_pressure_constant", "navier_stokes_p");
     }
 
     void

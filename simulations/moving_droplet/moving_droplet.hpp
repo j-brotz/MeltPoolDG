@@ -4,6 +4,7 @@
 
 #include <deal.II/grid/grid_generator.h>
 
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -83,16 +84,16 @@ namespace MeltPoolDG::Simulation::MovingDroplet
   };
 
   template <int dim>
-  class SimulationMovingDroplet : public SimulationBase<dim>
+  class SimulationMovingDroplet : public SimulationParametersBase<dim>
   {
   public:
     SimulationMovingDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
     {
       AssertDimension(dim, 2);
     }
 
-    void
+    bool
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
       prm.enter_subsection("simulation specific");
@@ -102,6 +103,7 @@ namespace MeltPoolDG::Simulation::MovingDroplet
         prm.add_parameter("velocity", velocity, "Initial droplet velocity.");
       }
       prm.leave_subsection();
+      return this->parameters.base.do_print_parameters;
     }
 
     void
@@ -119,7 +121,7 @@ namespace MeltPoolDG::Simulation::MovingDroplet
     void
     set_boundary_conditions() final
     {
-      this->attach_fix_pressure_constant_condition(0, "navier_stokes_p");
+      this->attach_boundary_condition(0, "fix_pressure_constant", "navier_stokes_p");
 
       this->attach_periodic_boundary_condition(0, 1, 0);
       if (dim > 1)
