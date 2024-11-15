@@ -18,7 +18,7 @@
   "heat": {
     "operator type": "cut",
     "cut": {
-      "two_phase": "true"
+      "two phase": "true"
     },
     "linear solver": {
       "preconditioner type": "Diagonal",
