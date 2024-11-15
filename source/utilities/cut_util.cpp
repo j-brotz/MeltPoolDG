@@ -64,12 +64,14 @@ namespace MeltPoolDG::CutUtil
         if (not cell->is_locally_owned())
           continue;
 
+        // dealii::NonMatching::MeshClassifier classifies positive level set values as "outside".
+        // With our definition of the level set, "outside" correlates with the liquid phase.
         const auto cell_location = mesh_classifier.location_to_level_set(cell);
-        if (cell_location == dealii::NonMatching::LocationToLevelSet::inside)
+        if (cell_location == dealii::NonMatching::LocationToLevelSet::outside)
           cell->set_active_fe_index(CellCategory::liquid);
         else if (cell_location == dealii::NonMatching::LocationToLevelSet::intersected)
           cell->set_active_fe_index(CellCategory::intersected);
-        else if (cell_location == dealii::NonMatching::LocationToLevelSet::outside)
+        else if (cell_location == dealii::NonMatching::LocationToLevelSet::inside)
           cell->set_active_fe_index(CellCategory::gas);
         else
           AssertThrow(false, dealii::ExcMessage("Location not found."));
