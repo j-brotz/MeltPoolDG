@@ -39,9 +39,11 @@ namespace MeltPoolDG::Heat
   class HeatTransferProblem : public ProblemBase<dim>
   {
   private:
-    using SimulationType  = MeltPoolCase<dim>;
+    using CaseType        = MeltPoolCase<dim>;
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+
+    std::shared_ptr<CaseType> simulation_case;
 
     VectorType velocity;
     VectorType level_set_as_heaviside;
@@ -78,7 +80,7 @@ namespace MeltPoolDG::Heat
     HeatTransferProblem() = default;
 
     void
-    run(std::shared_ptr<SimulationType> base_in) final;
+    run(std::shared_ptr<CaseType> simulation_case_in) final;
 
   protected:
     void
@@ -95,10 +97,10 @@ namespace MeltPoolDG::Heat
      *  for the computation of the level set problem
      */
     void
-    initialize(std::shared_ptr<SimulationType> base_in);
+    initialize();
 
     void
-    setup_dof_system(std::shared_ptr<SimulationType> base_in);
+    setup_dof_system();
 
     void
     compute_field_vector(VectorType &vector, unsigned dof_idx, Function<dim> &field_function);
@@ -107,8 +109,7 @@ namespace MeltPoolDG::Heat
      *  perform output of results
      */
     void
-    output_results(std::shared_ptr<SimulationType> base_in,
-                   const bool                      output_not_converged = false);
+    output_results(const bool output_not_converged = false);
     /*
      * collect all relevant output data
      */
@@ -118,6 +119,6 @@ namespace MeltPoolDG::Heat
      *  perform adaptive mesh refinement
      */
     void
-    refine_mesh(std::shared_ptr<SimulationType> base_in);
+    refine_mesh();
   };
 } // namespace MeltPoolDG::Heat

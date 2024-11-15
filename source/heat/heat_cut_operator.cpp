@@ -234,6 +234,8 @@ namespace MeltPoolDG::Heat
   {
     AssertThrowZeroTimeIncrement(this->time_increment);
 
+    temperature.update_ghost_values();
+    temperature_old.update_ghost_values();
     residual.zero_out_ghost_values();
 
     scratch_data.get_matrix_free().loop(
@@ -260,11 +262,11 @@ namespace MeltPoolDG::Heat
   template <typename Evaluation>
   inline void
   do_domain_integral_tangent(
-    Evaluation                            &evaluator,
-    const typename Evaluation::number_type conductivity,
-    const typename Evaluation::number_type cv,         // density * specific_heat_capacity
-    const typename Evaluation::number_type ost_factor, // delta_t * theta
-    const unsigned int                     q)
+    Evaluation                             &evaluator,
+    const typename Evaluation::ScalarNumber conductivity,
+    const typename Evaluation::ScalarNumber cv,         // density * specific_heat_capacity
+    const typename Evaluation::ScalarNumber ost_factor, // delta_t * theta
+    const unsigned int                      q)
   {
     // heat storage
     evaluator.submit_value(cv * evaluator.get_value(q), q);
@@ -279,13 +281,13 @@ namespace MeltPoolDG::Heat
   template <typename Evaluation>
   inline void
   do_domain_integral_residual(
-    Evaluation                            &evaluator, // T^n+1
-    const Evaluation                      &Told_eval,
-    const typename Evaluation::number_type conductivity,
-    const typename Evaluation::number_type cv,                  // density * specific_heat_capacity
-    const typename Evaluation::number_type ost_factor_implicit, // delta_t * theta
-    const typename Evaluation::number_type ost_factor_explicit, // delta_t * (1. - theta)
-    const unsigned int                     q)
+    Evaluation                             &evaluator, // T^n+1
+    const Evaluation                       &Told_eval,
+    const typename Evaluation::ScalarNumber conductivity,
+    const typename Evaluation::ScalarNumber cv,                  // density * specific_heat_capacity
+    const typename Evaluation::ScalarNumber ost_factor_implicit, // delta_t * theta
+    const typename Evaluation::ScalarNumber ost_factor_explicit, // delta_t * (1. - theta)
+    const unsigned int                      q)
   {
     // conductive heat flux
     auto grad = ost_factor_implicit * evaluator.get_gradient(q) +
@@ -306,9 +308,9 @@ namespace MeltPoolDG::Heat
     Evaluation       &evaluator,
     const Evaluation &T_eval,
     const std::function<typename Evaluation::value_type(typename Evaluation::value_type)>
-                                          &compute_qVapor_derivative,
-    const typename Evaluation::number_type ost_factor, // delta_t * theta
-    const unsigned int                     q)
+                                           &compute_qVapor_derivative,
+    const typename Evaluation::ScalarNumber ost_factor, // delta_t * theta
+    const unsigned int                      q)
   {
     // temperature-dependent evaporation-induced heat flux
     evaluator.submit_value(-ost_factor * compute_qVapor_derivative(T_eval.get_value(q)) *
@@ -326,8 +328,8 @@ namespace MeltPoolDG::Heat
     [[maybe_unused]] const Evaluation &Told_eval,
     [[maybe_unused]] const std::function<
       typename Evaluation::value_type(typename Evaluation::value_type)> &compute_qVapor,
-    [[maybe_unused]] const typename Evaluation::number_type ost_factor_implicit, // delta_t * theta
-    [[maybe_unused]] const typename Evaluation::number_type
+    [[maybe_unused]] const typename Evaluation::ScalarNumber ost_factor_implicit, // delta_t * theta
+    [[maybe_unused]] const typename Evaluation::ScalarNumber
                                            ost_factor_explicit,    // delta_t * (1. - theta)
     const typename Evaluation::value_type &laser_heat_flux_factor, // laser_heat_flux * delta_t
     const bool                             enable_evapor_heat_loss,
@@ -359,14 +361,14 @@ namespace MeltPoolDG::Heat
     [[maybe_unused]] const Evaluation &T_eval_g,
     [[maybe_unused]] const std::function<
       typename Evaluation::value_type(typename Evaluation::value_type)> &compute_qVapor_derivative,
-    const typename Evaluation::number_type                               conductivity_l,
-    const typename Evaluation::number_type                               conductivity_g,
-    const typename Evaluation::number_type ost_factor,     // delta_t * theta
-    const typename Evaluation::number_type nitsche_factor, // delta_t * gamma_Gamma / h
-    const typename Evaluation::number_type kappa_l,
-    const typename Evaluation::number_type kappa_g,
-    const bool                             enable_evapor_heat_loss,
-    const unsigned int                     q)
+    const typename Evaluation::ScalarNumber                              conductivity_l,
+    const typename Evaluation::ScalarNumber                              conductivity_g,
+    const typename Evaluation::ScalarNumber ost_factor,     // delta_t * theta
+    const typename Evaluation::ScalarNumber nitsche_factor, // delta_t * gamma_Gamma / h
+    const typename Evaluation::ScalarNumber kappa_l,
+    const typename Evaluation::ScalarNumber kappa_g,
+    const bool                              enable_evapor_heat_loss,
+    const unsigned int                      q)
   {
     const auto eval_l   = evaluator_l.get_value(q);
     const auto eval_g   = evaluator_g.get_value(q);
@@ -414,17 +416,17 @@ namespace MeltPoolDG::Heat
     const Evaluation &Told_eval_g,
     [[maybe_unused]] const std::function<
       typename Evaluation::value_type(typename Evaluation::value_type)> &compute_qVapor,
-    const typename Evaluation::number_type                               conductivity_l,
-    const typename Evaluation::number_type                               conductivity_g,
-    const typename Evaluation::number_type ost_factor_implicit,    // delta_t * theta
-    const typename Evaluation::number_type ost_factor_explicit,    // delta_t * (1. - theta)
-    const typename Evaluation::number_type nitsche_factor,         // delta_t * gamma_Gamma / h
-    const typename Evaluation::value_type &laser_heat_flux_factor, // laser_heat_flux * delta_t
-    const typename Evaluation::number_type kappa_l,
-    const typename Evaluation::number_type kappa_g,
-    const bool                             enable_evapor_heat_loss,
-    const bool                             do_rhs_symm_term,
-    const unsigned int                     q)
+    const typename Evaluation::ScalarNumber                              conductivity_l,
+    const typename Evaluation::ScalarNumber                              conductivity_g,
+    const typename Evaluation::ScalarNumber ost_factor_implicit,    // delta_t * theta
+    const typename Evaluation::ScalarNumber ost_factor_explicit,    // delta_t * (1. - theta)
+    const typename Evaluation::ScalarNumber nitsche_factor,         // delta_t * gamma_Gamma / h
+    const typename Evaluation::value_type  &laser_heat_flux_factor, // laser_heat_flux * delta_t
+    const typename Evaluation::ScalarNumber kappa_l,
+    const typename Evaluation::ScalarNumber kappa_g,
+    const bool                              enable_evapor_heat_loss,
+    const bool                              do_rhs_symm_term,
+    const unsigned int                      q)
   {
     const auto normal_l    = evaluator_l.normal_vector(q);
     const auto normal_g    = -normal_l;
@@ -493,15 +495,15 @@ namespace MeltPoolDG::Heat
   // ghost-penalty terms for FE_Q elements (p=1)
   template <typename Evaluation>
   inline void
-  do_ghost_penalty_terms(Evaluation                            &evaluator_minus,
-                         Evaluation                            &evaluator_plus,
-                         const typename Evaluation::number_type conductivity,
-                         const typename Evaluation::number_type ost_factor, // delta_t * theta
-                         const typename Evaluation::number_type h,
-                         const typename Evaluation::number_type gamma_M,
-                         const typename Evaluation::number_type gamma_A,
-                         const unsigned int                     q,
-                         const typename Evaluation::number_type factor = 1.0)
+  do_ghost_penalty_terms(Evaluation                             &evaluator_minus,
+                         Evaluation                             &evaluator_plus,
+                         const typename Evaluation::ScalarNumber conductivity,
+                         const typename Evaluation::ScalarNumber ost_factor, // delta_t * theta
+                         const typename Evaluation::ScalarNumber h,
+                         const typename Evaluation::ScalarNumber gamma_M,
+                         const typename Evaluation::ScalarNumber gamma_A,
+                         const unsigned int                      q,
+                         const typename Evaluation::ScalarNumber factor = 1.0)
   {
     const auto normal_grad_jump =
       evaluator_minus.get_normal_derivative(q) - evaluator_plus.get_normal_derivative(q);

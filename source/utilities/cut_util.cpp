@@ -57,8 +57,16 @@ namespace MeltPoolDG::CutUtil
   template <int dim>
   void
   set_fe_index(const dealii::DoFHandler<dim>                  &dof_handler,
-               const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier)
+               const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
+               const bool                                      set_future)
   {
+    const auto set_fe_index_lambda = [set_future](const auto &cell, const auto active_fe_index) {
+      if (set_future)
+        cell->set_future_fe_index(active_fe_index);
+      else
+        cell->set_active_fe_index(active_fe_index);
+    };
+
     for (const auto &cell : dof_handler.active_cell_iterators())
       {
         if (not cell->is_locally_owned())
@@ -68,11 +76,11 @@ namespace MeltPoolDG::CutUtil
         // With our definition of the level set, "outside" correlates with the liquid phase.
         const auto cell_location = mesh_classifier.location_to_level_set(cell);
         if (cell_location == dealii::NonMatching::LocationToLevelSet::outside)
-          cell->set_active_fe_index(CellCategory::liquid);
+          set_fe_index_lambda(cell, CellCategory::liquid);
         else if (cell_location == dealii::NonMatching::LocationToLevelSet::intersected)
-          cell->set_active_fe_index(CellCategory::intersected);
+          set_fe_index_lambda(cell, CellCategory::intersected);
         else if (cell_location == dealii::NonMatching::LocationToLevelSet::inside)
-          cell->set_active_fe_index(CellCategory::gas);
+          set_fe_index_lambda(cell, CellCategory::gas);
         else
           AssertThrow(false, dealii::ExcMessage("Location not found."));
       }
@@ -151,11 +159,17 @@ namespace MeltPoolDG::CutUtil
 
 
   template void
-  set_fe_index<1>(const dealii::DoFHandler<1> &, const dealii::NonMatching::MeshClassifier<1> &);
+  set_fe_index<1>(const dealii::DoFHandler<1> &,
+                  const dealii::NonMatching::MeshClassifier<1> &,
+                  const bool);
   template void
-  set_fe_index<2>(const dealii::DoFHandler<2> &, const dealii::NonMatching::MeshClassifier<2> &);
+  set_fe_index<2>(const dealii::DoFHandler<2> &,
+                  const dealii::NonMatching::MeshClassifier<2> &,
+                  const bool);
   template void
-  set_fe_index<3>(const dealii::DoFHandler<3> &, const dealii::NonMatching::MeshClassifier<3> &);
+  set_fe_index<3>(const dealii::DoFHandler<3> &,
+                  const dealii::NonMatching::MeshClassifier<3> &,
+                  const bool);
 
   template void
   compute_intersected_quadrature(

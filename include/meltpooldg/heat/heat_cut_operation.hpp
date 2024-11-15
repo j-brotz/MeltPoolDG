@@ -21,11 +21,14 @@
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
 #include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/utilities/cut_solution_transfer.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
+#include <functional>
 #include <memory>
 #include <vector>
+
 
 namespace MeltPoolDG::Heat
 {
@@ -50,9 +53,15 @@ namespace MeltPoolDG::Heat
     // level set which defines the interface with its zero contour
     const unsigned int ls_dof_idx;
     const VectorType  &level_set;
-
+    // The mesh classifier loops over all non-artificial cells and retrieves all level-set DoF
+    // values to classify the cell. We use the @param mc_level_set vector that uses the matrix-based DoF layout.
+    mutable VectorType                                        mc_level_set;
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier;
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier_old;
+
+    CutUtil::SolutionTransferOperator<dim, double>                     cut_solution_transfer;
+    std::function<void(const dealii::DoFHandler<dim> &)>               reinit_matrix_free;
+    std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> reinit_vector;
 
     dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>>
       mapping_info_surface;
@@ -90,12 +99,19 @@ namespace MeltPoolDG::Heat
       std::shared_ptr<const dealii::Function<dim, double>> laser_intensity_profile_in,
       const dealii::Tensor<1, dim, double>                &laser_direction_in);
 
+    void
+    register_reinit_matrix_free(
+      const std::function<void(const dealii::DoFHandler<dim> &)> reinit_matrix_free_in);
+
   private:
     void
     classify_cells() const;
 
     void
     compute_intersected_quadrature();
+
+    void
+    adapt_to_new_interface_position();
 
   public:
     void

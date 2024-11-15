@@ -5,6 +5,8 @@
 
 #include <deal.II/dofs/dof_handler.h>
 
+#include <deal.II/grid/tria.h>
+
 #include <deal.II/matrix_free/evaluation_flags.h>
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
@@ -62,12 +64,14 @@ namespace MeltPoolDG::CutUtil
    * sign of a level set function. Note that the reclassify() function has to be called
    * before, so that the cell and face locations are categorized as one of the values of
    * dealii::NonMatching::LocationToLevelSet: inside, outside or intersected.
-   *
+   * @param set_future Criteria, whether the active FE index should be set (false) or
+   * the future FE index should be set (true) in this function.
    */
   template <int dim>
   void
   set_fe_index(const dealii::DoFHandler<dim>                  &dof_handler,
-               const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier);
+               const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
+               const bool                                      set_future);
 
 
 
@@ -130,5 +134,121 @@ namespace MeltPoolDG::CutUtil
     point_eval.evaluate(dealii::StridedArrayView<const number, n_lanes>(
                           &eval_intersected.begin_dof_values()[0][lane], n_dofs_per_cell),
                         evaluation_flags);
+  }
+
+
+
+  /**
+   * This function checks whether the currently considered face requires the application
+   * of ghost-penalty stabilization or not. A face is a ghost-penalty face if one of the two
+   * adjacent cells is an intersected cell and the other cell is either inside the active
+   * domain or is also an intersected cell.
+   *
+   * @tparam dim Dimension in which this function is to be used.
+   *
+   * @param mesh_classifier The NonMatching::MeshClassifier object which contains the
+   * information, how the active cells and faces of the triangulation are related to the
+   * sign of a level set function. Note that the reclassify() function has to be called
+   * before, so that the cell and face locations are categorized as one of the values of
+   * LocationToLevelSet: inside, outside or intersected.
+   * @param cell The considered cell for the function evaluation.
+   * @param face_index The index of the considered face, for which the check is done,
+   * whether this face is a ghost-penalty-face or not.
+   * @param inactive_location Location of the domain, which is not active (location for
+   * which a FE_Nothing element is set).
+   *
+   * @note For multiple component problems, the @p inactive_location has to be chosen
+   * carefully at the relevant code section, at which this function is called, as the
+   * @p inactive_location depends on the currently considered component. For single
+   * component problems, the default value of the inactive location is outside.
+   *
+   */
+  template <int dim>
+  bool
+  face_has_ghost_penalty(const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
+                         const typename dealii::Triangulation<dim>::active_cell_iterator &cell,
+                         const unsigned int                             face_index,
+                         const dealii::NonMatching::LocationToLevelSet &inactive_location =
+                           dealii::NonMatching::LocationToLevelSet::inside)
+  {
+    if (cell->at_boundary(face_index))
+      return false;
+
+    const dealii::NonMatching::LocationToLevelSet cell_location =
+      mesh_classifier.location_to_level_set(cell);
+    const dealii::NonMatching::LocationToLevelSet neighbor_location =
+      mesh_classifier.location_to_level_set(cell->neighbor(face_index));
+
+    if (cell_location == dealii::NonMatching::LocationToLevelSet::intersected &&
+        neighbor_location != inactive_location)
+      return true;
+
+    if (neighbor_location == dealii::NonMatching::LocationToLevelSet::intersected &&
+        cell_location != inactive_location)
+      return true;
+
+    return false;
+  }
+
+
+
+  /**
+   * This function checks whether the considered face is a newly created intersected face.
+   * This occurs when both adjacent cells of the face are currently intersected cells and
+   * were in the inactive location in the old state. This function is created for handling
+   * moving interface problems.
+   *
+   * @tparam dim Dimension in which this function is to be used.
+   *
+   * @param mesh_classifier_old The NonMatching::MeshClassifier object which contains the
+   * information, how the active cells and faces of the triangulation are related to the
+   * sign of a level set function at the old state. The cell and face locations are
+   * categorized as one of the values of LocationToLevelSet: inside, outside or intersected.
+   * @param mesh_classifier The NonMatching::MeshClassifier object which contains the
+   * information, how the active cells and faces of the triangulation are related to the
+   * sign of a level set function at the current state. The cell and face locations are
+   * categorized as one of the values of LocationToLevelSet: inside, outside or intersected.
+   * @param cell The considered cell for the function evaluation.
+   * @param face_index The index of the considered face, for which the check is done,
+   * whether this face is a newly created intersected face or not.
+   * @param inactive_location Location of the domain, which is not active (location for
+   * which a FE_Nothing element is set).
+   *
+   * @note For multiple component problems, the @p inactive_location has to be chosen
+   * carefully at the relevant code section, at which this function is called, as the
+   * @p inactive_location depends on the currently considered component. For single
+   * component problems, the default value of the inactive location is outside.
+   * It has to be ensured that the @p mesh_classifier_old and @p mesh_classifier are
+   * reclassified according to the correct states.
+   *
+   */
+  template <int dim>
+  bool
+  is_new_intersected_face(const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
+                          const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
+                          const typename dealii::Triangulation<dim>::active_cell_iterator &cell,
+                          const unsigned int                             face_index,
+                          const dealii::NonMatching::LocationToLevelSet &inactive_location =
+                            dealii::NonMatching::LocationToLevelSet::inside)
+  {
+    if (cell->at_boundary(face_index))
+      return false;
+
+    const dealii::NonMatching::LocationToLevelSet cell_location =
+      mesh_classifier.location_to_level_set(cell);
+    const dealii::NonMatching::LocationToLevelSet neighbor_location =
+      mesh_classifier.location_to_level_set(cell->neighbor(face_index));
+
+    const dealii::NonMatching::LocationToLevelSet cell_location_old =
+      mesh_classifier_old.location_to_level_set(cell);
+    const dealii::NonMatching::LocationToLevelSet neighbor_location_old =
+      mesh_classifier_old.location_to_level_set(cell->neighbor(face_index));
+
+    if (cell_location == dealii::NonMatching::LocationToLevelSet::intersected &&
+        neighbor_location == dealii::NonMatching::LocationToLevelSet::intersected &&
+        cell_location_old == inactive_location && neighbor_location_old == inactive_location)
+      return true;
+
+    return false;
   }
 } // namespace MeltPoolDG::CutUtil
