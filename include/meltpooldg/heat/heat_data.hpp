@@ -61,6 +61,8 @@ namespace MeltPoolDG::Heat
 
     FiniteElementData fe;
 
+    int verbosity_level = -1;
+
     void
     add_parameters(dealii::ParameterHandler &prm);
 

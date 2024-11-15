@@ -95,6 +95,9 @@ namespace MeltPoolDG::Heat
     if (nlsolve.verbosity_level == -1)
       nlsolve.verbosity_level = base_verbosity_level;
 
+    if (verbosity_level == -1)
+      verbosity_level = base_verbosity_level;
+
     predictor.post();
   }
 
