@@ -16,10 +16,10 @@
 
 #include <deal.II/non_matching/mapping_info.h>
 
+#include <meltpooldg/core/operator_base.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
-#include <meltpooldg/interface/operator_base.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 

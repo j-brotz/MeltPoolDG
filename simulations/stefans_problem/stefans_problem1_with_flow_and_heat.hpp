@@ -14,8 +14,8 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 
 #include <boost/math/tools/roots.hpp>
@@ -162,12 +162,12 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
    */
 
   template <int dim>
-  class SimulationStefansProblem1WithFlowAndHeat : public SimulationParametersBase<dim>
+  class SimulationStefansProblem1WithFlowAndHeat : public MeltPoolCase<dim>
   {
   public:
     SimulationStefansProblem1WithFlowAndHeat(std::string    parameter_file,
                                              const MPI_Comm mpi_communicator)
-      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
       , x_max(y_max / std::pow(dim, this->parameters.base.global_refinements))
       , remote_point_evaluation(1e-6, true)
     {

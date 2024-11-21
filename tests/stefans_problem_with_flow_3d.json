@@ -1,7 +1,7 @@
 {
   "base": {
     "problem name": "melt_pool",
-    "application name": "stefans_problem_with_flow",
+    "case name": "stefans_problem_with_flow",
     "dimension": "3",
     "global refinements": "4",
     "do print parameters": "false",

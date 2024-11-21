@@ -92,7 +92,6 @@ TARGET_COMPILE_DEFINITIONS(${libName} PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE
 
 deal_ii_setup_target(${libName})
 
-
 if(${DEAL_II_VERSION_MAJOR} GREATER_EQUAL 10)
   message("-- Enabling early deprecation via #define PUBLIC DEAL_II_DEPRECATED_EARLY=[[deprecated]]" )
   add_compile_definitions(${libName} PUBLIC DEAL_II_DEPRECATED_EARLY=[[deprecated]])
@@ -143,12 +142,32 @@ add_custom_target(
     "Switch CMAKE_BUILD_TYPE to Release\nPlease call 'make' to build the release project"
 )
 
-if(EXISTS ${CMAKE_SOURCE_DIR}/tests/CMakeLists.txt)
-  set(DEAL_II_HAVE_TESTS_DIRECTORY TRUE)
+# ##############################################################################
+# tests
+# ##############################################################################
+option(MPDG_ENABLE_TESTING "Configure tests" ON)
+
+if (MPDG_ENABLE_TESTING)
+  message(STATUS "Tests: enabled")
+  set(DEAL_II_HAVE_TESTS_DIRECTORY ON)
+  set(_n_tests "0")
+  enable_testing()
+  add_subdirectory(tests)
+  add_subdirectory(unit_tests)
+else ()
+    message(STATUS "Tests: disabled")
 endif()
 
-# tests
-set(_n_tests "0")
-enable_testing()
-add_subdirectory(tests)
-add_subdirectory(unit_tests)
+# ##############################################################################
+# Applications
+# ##############################################################################
+
+option(MPDG_ENABLE_ADVEC_DIFF "Build advection-diffusion executables" ON)
+
+if (MPDG_ENABLE_ADVEC_DIFF)
+  message(STATUS "Application: advection-diffusion enabled")
+  add_subdirectory(applications/mp-advec-diff)
+else ()
+  message(STATUS "Application: advection-diffusion disabled")
+endif()
+

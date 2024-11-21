@@ -1,7 +1,7 @@
 {
   "base": {
     "problem name": "melt_pool",
-    "application name": "spurious_currents",
+    "case name": "spurious_currents",
     "dimension": "2",
     "global refinements": "7",
     "fe": {

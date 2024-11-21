@@ -1,6 +1,6 @@
 {
   "base": {
-    "application name": "unidirectional_heat_transfer",
+    "case name": "unidirectional_heat_transfer",
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "5",

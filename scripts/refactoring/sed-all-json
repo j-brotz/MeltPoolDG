@@ -1,0 +1,1 @@
+sed -i $1 simulations/**/*.json applications/**/**/*.json tests/*.json tests/**/*.json scripts/config/singularity/*.json

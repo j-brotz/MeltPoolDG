@@ -6,7 +6,7 @@
 #pragma once
 #include <deal.II/lac/la_parallel_block_vector.h>
 
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 
 namespace MeltPoolDG

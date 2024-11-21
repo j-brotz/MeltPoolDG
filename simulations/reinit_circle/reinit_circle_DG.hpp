@@ -14,8 +14,8 @@
 #include <deal.II/numerics/error_estimator.h>
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
@@ -92,11 +92,11 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
    */
 
   template <int dim>
-  class SimulationReinitDG : public SimulationParametersBase<dim>
+  class SimulationReinitDG : public MeltPoolCase<dim>
   {
   public:
     SimulationReinitDG(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
     {
       if (dim == 1)
         AssertThrow(false, ExcMessage("Dimension 1 is not supported for this simulation"));

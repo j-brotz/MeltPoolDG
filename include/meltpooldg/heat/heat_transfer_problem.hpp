@@ -14,11 +14,11 @@
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <meltpooldg/core/problem_base.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/heat/heat_operation_base.hpp>
 #include <meltpooldg/heat/laser_operation.hpp>
-#include <meltpooldg/interface/problem_base.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
@@ -39,7 +39,7 @@ namespace MeltPoolDG::Heat
   class HeatTransferProblem : public ProblemBase<dim>
   {
   private:
-    using SimulationType  = SimulationParametersBase<dim>;
+    using SimulationType  = MeltPoolCase<dim>;
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
@@ -79,9 +79,6 @@ namespace MeltPoolDG::Heat
 
     void
     run(std::shared_ptr<SimulationType> base_in) final;
-
-    std::string
-    get_name() final;
 
   protected:
     void

@@ -1,6 +1,6 @@
 {
   "base": {
-    "application name": "solidification_slab",
+    "case name": "solidification_slab",
     "dimension": "1",
     "global refinements": "7",
     "problem name": "heat_transfer",

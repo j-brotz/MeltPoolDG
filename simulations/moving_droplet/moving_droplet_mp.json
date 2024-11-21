@@ -1,6 +1,6 @@
 {
   "base": {
-    "application name": "moving_droplet",
+    "case name": "moving_droplet",
     "problem name": "melt_pool",
     "dimension": "2",
     "do print parameters": "false",

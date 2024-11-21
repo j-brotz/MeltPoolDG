@@ -9,8 +9,8 @@
 
 #  include <deal.II/lac/generic_linear_algebra.h>
 
-#  include <meltpooldg/interface/scratch_data.hpp>
-#  include <meltpooldg/interface/simulation_base.hpp>
+#  include <meltpooldg/core/scratch_data.hpp>
+#  include <meltpooldg/core/simulation_base.hpp>
 #  include <meltpooldg/normal_vector/normal_vector_operation_adaflo_wrapper.hpp>
 #  include <meltpooldg/post_processing/generic_data_out.hpp>
 #  include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
@@ -38,12 +38,13 @@ namespace MeltPoolDG
       /**
        * Constructor.
        */
-      ReinitializationOperationAdaflo(const ScratchData<dim>     &scratch_data,
-                                      const TimeIterator<double> &time_iterator,
-                                      const int                   reinit_dof_idx,
-                                      const int                   reinit_quad_idx,
-                                      const int                   normal_dof_idx,
-                                      const Parameters<double>   &parameters);
+      ReinitializationOperationAdaflo(const ScratchData<dim>         &scratch_data,
+                                      const TimeIterator<double>     &time_iterator,
+                                      const int                       reinit_dof_idx,
+                                      const int                       reinit_quad_idx,
+                                      const int                       normal_dof_idx,
+                                      const TimeSteppingData<double> &time_stepping,
+                                      const LevelSetData<double>     &ls);
 
       void
       update_dof_idx(const unsigned int &reinit_dof_idx) override;
@@ -96,10 +97,10 @@ namespace MeltPoolDG
 
     private:
       void
-      set_adaflo_parameters(const Parameters<double> &parameters,
-                            const int                 reinit_dof_idx,
-                            const int                 reinit_quad_idx,
-                            const int                 normal_dof_idx);
+      set_adaflo_parameters(const TimeSteppingData<double> &time_stepping,
+                            const int                       reinit_dof_idx,
+                            const int                       reinit_quad_idx,
+                            const int                       normal_dof_idx);
 
       void
       initialize_vectors();

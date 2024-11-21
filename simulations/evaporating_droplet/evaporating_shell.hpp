@@ -2,6 +2,7 @@
 
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
+#include <deal.II/base/mpi_remote_point_evaluation.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/table_handler.h>
 #include <deal.II/base/tensor_function.h>
@@ -12,8 +13,10 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
 
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <deal.II/numerics/vector_tools.h>
+
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 
 #include <iostream>
 
@@ -120,11 +123,11 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
   };
 
   template <int dim>
-  class SimulationEvaporatingShell : public SimulationParametersBase<dim>
+  class SimulationEvaporatingShell : public MeltPoolCase<dim>
   {
   public:
     SimulationEvaporatingShell(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
     {}
 
     bool

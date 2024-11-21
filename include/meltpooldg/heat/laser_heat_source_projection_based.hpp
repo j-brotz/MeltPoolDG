@@ -6,8 +6,8 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
 
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
 

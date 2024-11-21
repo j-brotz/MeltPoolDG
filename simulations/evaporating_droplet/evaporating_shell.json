@@ -1,7 +1,7 @@
 {
   "base": {
     "problem name": "melt_pool",
-    "application name": "evaporating_shell",
+    "case name": "evaporating_shell",
     "global refinements": "7",
     "dimension": "2",
     "do print parameters": "false",

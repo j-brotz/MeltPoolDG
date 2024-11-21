@@ -18,11 +18,11 @@
 #include <deal.II/lac/la_parallel_vector.h>
 #include <deal.II/lac/trilinos_precondition.h>
 
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/heat_diffuse_operator.hpp>
 #include <meltpooldg/heat/heat_operation_base.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
 #include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>

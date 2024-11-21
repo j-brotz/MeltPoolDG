@@ -1,6 +1,6 @@
 {
   "base": {
-    "application name": "powder_bed",
+    "case name": "powder_bed",
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "4",

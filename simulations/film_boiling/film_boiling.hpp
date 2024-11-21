@@ -19,8 +19,8 @@
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/post_processing/slice.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
@@ -142,11 +142,11 @@ namespace MeltPoolDG::Simulation::FilmBoiling
    *      This class collects all relevant input data for the simulation.
    */
   template <int dim>
-  class SimulationFilmBoiling : public SimulationParametersBase<dim>
+  class SimulationFilmBoiling : public MeltPoolCase<dim>
   {
   public:
     SimulationFilmBoiling(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
       , lambda0(
           2. * numbers::PI *
           std::sqrt(3. * this->parameters.flow.surface_tension.surface_tension_coefficient /

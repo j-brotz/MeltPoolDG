@@ -85,18 +85,20 @@ namespace MeltPoolDG::LevelSet
     std::unique_ptr<Tools::NearestPoint<dim>> nearest_point_search;
 
   public:
-    LevelSetOperation(const ScratchData<dim>                        &scratch_data_in,
-                      const TimeIterator<double>                    &time_stepping,
-                      std::shared_ptr<SimulationParametersBase<dim>> base_in,
-                      const VectorType                              &advection_velocity,
-                      const unsigned int                             ls_dof_idx_in,
-                      const unsigned int                             ls_hanging_nodes_dof_idx_in,
-                      const unsigned int                             ls_quad_idx_in,
-                      const unsigned int                             reinit_dof_idx_in,
-                      const unsigned int                             curv_dof_idx_in,
-                      const unsigned int                             normal_dof_idx_in,
-                      const unsigned int                             vel_dof_idx,
-                      const unsigned int                             ls_zero_bc_idx);
+    LevelSetOperation(const ScratchData<dim>                          &scratch_data_in,
+                      const TimeIterator<double>                      &time_stepping,
+                      const BoundaryConditionManager<dim>             &bc_manager,
+                      [[maybe_unused]] const TimeSteppingData<double> &time_stepping_data,
+                      const LevelSetData<double>                      &ls,
+                      const VectorType                                &advection_velocity,
+                      const unsigned int                               ls_dof_idx_in,
+                      const unsigned int                               ls_hanging_nodes_dof_idx_in,
+                      const unsigned int                               ls_quad_idx_in,
+                      const unsigned int                               reinit_dof_idx_in,
+                      const unsigned int                               curv_dof_idx_in,
+                      const unsigned int                               normal_dof_idx_in,
+                      const unsigned int                               vel_dof_idx,
+                      const unsigned int                               ls_zero_bc_idx);
 
     /**
      * set initial condition

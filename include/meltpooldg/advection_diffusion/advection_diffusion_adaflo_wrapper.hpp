@@ -10,8 +10,8 @@
 #  include <deal.II/lac/generic_linear_algebra.h>
 
 #  include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
-#  include <meltpooldg/interface/scratch_data.hpp>
-#  include <meltpooldg/interface/simulation_base.hpp>
+#  include <meltpooldg/core/scratch_data.hpp>
+#  include <meltpooldg/core/simulation_base.hpp>
 #  include <meltpooldg/post_processing/generic_data_out.hpp>
 #  include <meltpooldg/utilities/time_iterator.hpp>
 
@@ -39,8 +39,9 @@ namespace MeltPoolDG::LevelSet
                                       const int                   advec_diff_dirichlet_dof_idx,
                                       const int                   advec_diff_quad_idx,
                                       const int                   velocity_dof_idx,
-                                      std::shared_ptr<SimulationParametersBase<dim>> base_in,
-                                      std::string operation_name = "advection_diffusion");
+                                      const TimeSteppingData<double>       &time_stepping,
+                                      const AdvectionDiffusionData<double> &ls,
+                                      const BoundaryConditionManager<dim>  &bc);
 
     void
     reinit() override;
@@ -89,10 +90,11 @@ namespace MeltPoolDG::LevelSet
 
   private:
     void
-    set_adaflo_parameters(const Parameters<double> &parameters,
-                          int                       advec_diff_dof_idx,
-                          int                       advec_diff_quad_idx,
-                          int                       velocity_dof_idx);
+    set_adaflo_parameters(const TimeSteppingData<double>       &time_stepping,
+                          const AdvectionDiffusionData<double> &ls,
+                          int                                   advec_diff_dof_idx,
+                          int                                   advec_diff_quad_idx,
+                          int                                   velocity_dof_idx);
 
     void
     set_velocity(bool initial_step = false);

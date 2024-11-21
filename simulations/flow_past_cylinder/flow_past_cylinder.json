@@ -1,7 +1,7 @@
 {
   "base": {
     "problem name": "melt_pool",
-    "application name": "flow_past_cylinder",
+    "case name": "flow_past_cylinder",
     "dimension": "2",
     "fe": {
       "degree": "2"

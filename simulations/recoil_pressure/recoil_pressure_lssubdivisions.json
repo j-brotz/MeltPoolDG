@@ -1,6 +1,6 @@
 {
   "base": {
-    "application name": "recoil_pressure",
+    "case name": "recoil_pressure",
     "dimension": "2",
     "do print parameters": "true",
     "global refinements": "6",

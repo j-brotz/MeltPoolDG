@@ -9,8 +9,8 @@
 
 #include <deal.II/grid/grid_generator.h>
 
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/post_processing/divergence_calc.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
@@ -53,14 +53,14 @@ namespace MeltPoolDG
       };
 
       template <int dim>
-      class SimulationEvaporatingDroplet : public SimulationParametersBase<dim>
+      class SimulationEvaporatingDroplet : public MeltPoolCase<dim>
       {
       private:
         mutable std::shared_ptr<PostProcessingTools::DivergenceCalculator<dim>> diver;
 
       public:
         SimulationEvaporatingDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
-          : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+          : MeltPoolCase<dim>(parameter_file, mpi_communicator)
         {
           AssertThrow(std::abs(droplet_phi) - 1.0 < 1e-10,
                       ExcMessage("'droplet phi' must be either 1 or"

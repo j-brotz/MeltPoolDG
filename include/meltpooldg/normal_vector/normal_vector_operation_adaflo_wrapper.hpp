@@ -12,8 +12,8 @@
 // DoFTools
 #  include <deal.II/dofs/dof_tools.h>
 // MeltPoolDG
-#  include <meltpooldg/interface/operator_base.hpp>
-#  include <meltpooldg/interface/parameters.hpp>
+#  include <meltpooldg/core/operator_base.hpp>
+#  include <meltpooldg/core/parameters.hpp>
 #  include <meltpooldg/normal_vector/normal_vector_operation_base.hpp>
 #  include <meltpooldg/utilities/utility_functions.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>

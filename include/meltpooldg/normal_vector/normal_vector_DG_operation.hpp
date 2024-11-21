@@ -12,7 +12,7 @@
 
 #include <deal.II/matrix_free/matrix_free.h>
 
-#include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/normal_vector/helmholtz_DG_operator.hpp>
 #include <meltpooldg/normal_vector/normal_vector_data.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation_base.hpp>

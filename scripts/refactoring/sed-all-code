@@ -1,0 +1,1 @@
+sed -i $1 source/**/*.cpp include/**/**/*.hpp simulations/*.hpp simulations/*.cpp simulations/**/*.hpp applications/**/*.hpp applications/**/*.cpp applications/**/**/*.hpp applications/**/**/*.hpp *.cpp unit_tests/*.cc

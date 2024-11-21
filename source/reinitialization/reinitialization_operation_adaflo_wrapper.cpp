@@ -8,23 +8,23 @@ namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   ReinitializationOperationAdaflo<dim>::ReinitializationOperationAdaflo(
-    const ScratchData<dim>     &scratch_data,
-    const TimeIterator<double> &time_iterator,
-    const int                   reinit_dof_idx,
-    const int                   reinit_quad_idx,
-    const int                   normal_dof_idx,
-    const Parameters<double>   &parameters)
+    const ScratchData<dim>         &scratch_data,
+    const TimeIterator<double>     &time_iterator,
+    const int                       reinit_dof_idx,
+    const int                       reinit_quad_idx,
+    const int                       normal_dof_idx,
+    const TimeSteppingData<double> &time_stepping,
+    const LevelSetData<double>     &ls)
     : scratch_data(scratch_data)
     , time_iterator(time_iterator)
     , pcout(scratch_data.get_pcout(1))
-    , normal_vector_data(parameters.ls.normal_vec)
-    , eps_cell_factor(parameters.ls.reinit.interface_thickness_parameter.value /
-                      parameters.ls.get_n_subdivisions())
+    , normal_vector_data(ls.normal_vec)
+    , eps_cell_factor(ls.reinit.interface_thickness_parameter.value / ls.get_n_subdivisions())
   {
     /**
      * set parameters of adaflo
      */
-    set_adaflo_parameters(parameters, reinit_dof_idx, reinit_quad_idx, normal_dof_idx);
+    set_adaflo_parameters(time_stepping, reinit_dof_idx, reinit_quad_idx, normal_dof_idx);
 
     /*
      * setup lambda function to compute the normal vector
@@ -238,17 +238,18 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  ReinitializationOperationAdaflo<dim>::set_adaflo_parameters(const Parameters<double> &parameters,
-                                                              const int reinit_dof_idx,
-                                                              const int reinit_quad_idx,
-                                                              const int normal_dof_idx)
+  ReinitializationOperationAdaflo<dim>::set_adaflo_parameters(
+    const TimeSteppingData<double> &time_stepping,
+    const int                       reinit_dof_idx,
+    const int                       reinit_quad_idx,
+    const int                       normal_dof_idx)
   {
     reinit_params_adaflo.time.time_step_scheme     = TimeSteppingParameters::Scheme::implicit_euler;
     reinit_params_adaflo.time.start_time           = 0.0;
     reinit_params_adaflo.time.end_time             = 1e8;
-    reinit_params_adaflo.time.time_step_size_start = parameters.time_stepping.time_step_size;
-    reinit_params_adaflo.time.time_step_size_min   = parameters.time_stepping.time_step_size;
-    reinit_params_adaflo.time.time_step_size_max   = parameters.time_stepping.time_step_size;
+    reinit_params_adaflo.time.time_step_size_start = time_stepping.time_step_size;
+    reinit_params_adaflo.time.time_step_size_min   = time_stepping.time_step_size;
+    reinit_params_adaflo.time.time_step_size_max   = time_stepping.time_step_size;
 
     //@todo?
     // if (parameters.ls.reinit.time_integration_scheme == "implicit_euler")

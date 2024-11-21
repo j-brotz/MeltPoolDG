@@ -1,5 +1,5 @@
 #pragma once
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/core/parameters.hpp>
 
 // deal-specific libraries
 #include <deal.II/base/function.h>
@@ -15,7 +15,8 @@
 
 #include <iostream>
 // MeltPoolDG
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG
 {
@@ -50,12 +51,12 @@ namespace MeltPoolDG
      */
 
     template <int dim>
-    class SimulationEvaporatingDropletWithHeat : public SimulationParametersBase<dim>
+    class SimulationEvaporatingDropletWithHeat : public MeltPoolCase<dim>
     {
     public:
       SimulationEvaporatingDropletWithHeat(std::string    parameter_file,
                                            const MPI_Comm mpi_communicator)
-        : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+        : MeltPoolCase<dim>(parameter_file, mpi_communicator)
         , lambda(2. * numbers::PI *
                  std::sqrt(3. * this->parameters.flow.surface_tension.surface_tension_coefficient /
                            (9.81 * (this->parameters.material.liquid.density -

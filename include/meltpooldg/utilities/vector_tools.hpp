@@ -7,7 +7,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 
 namespace dealii
 {

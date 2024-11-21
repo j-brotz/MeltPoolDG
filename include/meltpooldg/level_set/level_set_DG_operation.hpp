@@ -13,8 +13,8 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/advection_diffusion/advection_DG_operation.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/curvature/curvature_DG_operation.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/level_set/level_set_data.hpp>
 #include <meltpooldg/level_set/level_set_operation_base.hpp>
 #include <meltpooldg/normal_vector/normal_vector_DG_operation.hpp>
@@ -103,14 +103,16 @@ namespace MeltPoolDG::LevelSet
     int iter = 0;
 
   public:
-    LevelSetDGOperation(const ScratchData<dim>                        &scratch_data_in,
-                        const TimeIterator<double>                    &time_stepping,
-                        std::shared_ptr<SimulationParametersBase<dim>> base_in,
-                        VectorType                                    &advection_velocity,
-                        const unsigned int                             ls_dof_idx_in,
-                        const unsigned int                             ls_quad_idx_in,
-                        const unsigned int                             reinit_dof_idx_in,
-                        const unsigned int                             vel_dof_idx);
+    LevelSetDGOperation(const ScratchData<dim>                              &scratch_data_in,
+                        const TimeIterator<double>                          &time_stepping,
+                        const LevelSetData<double>                          &ls_data,
+                        const std::shared_ptr<BoundaryConditionManager<dim>> boundary_conditions_in,
+                        std::shared_ptr<dealii::Function<dim>> prescribed_velocity_function,
+                        VectorType                            &advection_velocity,
+                        const unsigned int                     ls_dof_idx_in,
+                        const unsigned int                     ls_quad_idx_in,
+                        const unsigned int                     reinit_dof_idx_in,
+                        const unsigned int                     vel_dof_idx);
     /**
      * set initial condition
      */

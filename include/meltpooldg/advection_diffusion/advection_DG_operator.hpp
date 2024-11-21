@@ -12,8 +12,8 @@ https://github.com/kronbichler/advection_miniapp/blob/master/advection_solver_va
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/interface/boundary_conditions.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/core/boundary_conditions.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 

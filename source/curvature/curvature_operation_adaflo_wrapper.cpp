@@ -11,10 +11,10 @@ namespace MeltPoolDG::LevelSet
                                                           const int         curv_dof_idx,
                                                           const int         curv_quad_idx,
                                                           const VectorType &advected_field,
-                                                          const Parameters<double> &data_in)
+                                                          const LevelSetData<double> &data_in)
     : scratch_data(scratch_data)
     , advected_field(advected_field)
-    , normal_vector_data(data_in.ls.normal_vec)
+    , normal_vector_data(data_in.normal_vec)
   {
     (void)normal_vec_dof_idx;
 
@@ -185,20 +185,20 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  CurvatureOperationAdaflo<dim>::set_adaflo_parameters(const Parameters<double> &parameters,
-                                                       const int                 advec_diff_dof_idx,
-                                                       const int                 curv_dof_idx,
-                                                       const int                 curv_quad_idx)
+  CurvatureOperationAdaflo<dim>::set_adaflo_parameters(const LevelSetData<double> &parameters,
+                                                       const int advec_diff_dof_idx,
+                                                       const int curv_dof_idx,
+                                                       const int curv_quad_idx)
   {
     curv_adaflo_params.dof_index_ls        = advec_diff_dof_idx;
     curv_adaflo_params.dof_index_curvature = curv_dof_idx; //@ todo
     curv_adaflo_params.dof_index_normal    = curv_dof_idx;
     curv_adaflo_params.quad_index          = curv_quad_idx;
     curv_adaflo_params.epsilon =
-      parameters.ls.reinit.interface_thickness_parameter.value / parameters.ls.get_n_subdivisions();
+      parameters.reinit.interface_thickness_parameter.value / parameters.get_n_subdivisions();
     curv_adaflo_params.approximate_projections = false; //@ todo
-    curv_adaflo_params.curvature_correction    = parameters.ls.curv.do_curvature_correction;
-    verbosity_level                            = parameters.ls.curv.verbosity_level;
+    curv_adaflo_params.curvature_correction    = parameters.curv.do_curvature_correction;
+    verbosity_level                            = parameters.curv.verbosity_level;
     // curv_adaflo_params.filter_parameter = parameters.ls.normal_vec.filter_parameter; //@
     // todo
   }

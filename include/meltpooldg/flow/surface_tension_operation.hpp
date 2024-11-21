@@ -10,8 +10,8 @@
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/flow/surface_tension_data.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
 
 #include <memory>

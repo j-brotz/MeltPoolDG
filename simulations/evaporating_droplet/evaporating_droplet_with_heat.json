@@ -1,7 +1,7 @@
 {
   "base": {
     "problem name": "melt_pool",
-    "application name": "evaporating_droplet_with_heat",
+    "case name": "evaporating_droplet_with_heat",
     "global refinements": "3",
     "dimension": "2",
     "verbosity level": "1",

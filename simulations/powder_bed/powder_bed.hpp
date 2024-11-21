@@ -15,10 +15,10 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_refinement.h>
 
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_intensity_profiles.hpp>
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/melt_pool/powder_bed.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -30,7 +30,7 @@
 namespace MeltPoolDG::Simulation::PowderBed
 {
   template <int dim>
-  class SimulationPowderBed : public SimulationParametersBase<dim>
+  class SimulationPowderBed : public MeltPoolCase<dim>
   {
   private:
     double                    domain_x_min = 0;
@@ -45,7 +45,7 @@ namespace MeltPoolDG::Simulation::PowderBed
 
   public:
     SimulationPowderBed(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
       , cell_repetitions(dim, 1)
     {}
 
@@ -166,7 +166,7 @@ namespace MeltPoolDG::Simulation::PowderBed
       /*
        * BC for RTE
        */
-      if (this->parameters.base.problem_name == ProblemType::radiative_transport)
+      if (this->parameters.base.problem_name == "radiative_transport")
         this->attach_boundary_condition(
           {upper_bc,
            std::make_shared<Heat::GaussProjectionIntensityProfile<dim, double>>(
@@ -186,7 +186,7 @@ namespace MeltPoolDG::Simulation::PowderBed
       if (this->parameters.laser.model == Heat::LaserModelType::RTE)
         this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(),
                                        "intensity");
-      if (this->parameters.base.problem_name == ProblemType::heat_transfer)
+      if (this->parameters.base.problem_name == "heat_transfer")
         {
           // attach initial temperature
           this->attach_initial_condition(

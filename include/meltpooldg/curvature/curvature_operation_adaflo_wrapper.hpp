@@ -11,9 +11,9 @@
 #  include <deal.II/lac/generic_linear_algebra.h>
 
 // MeltPoolDG
+#  include <meltpooldg/core/operator_base.hpp>
 #  include <meltpooldg/curvature/curvature_operation_base.hpp>
-#  include <meltpooldg/interface/operator_base.hpp>
-#  include <meltpooldg/interface/parameters.hpp>
+#  include <meltpooldg/level_set/level_set_data.hpp>
 #  include <meltpooldg/normal_vector/normal_vector_operation_adaflo_wrapper.hpp>
 
 #  include <adaflo/level_set_okz_compute_curvature.h>
@@ -34,13 +34,13 @@ namespace MeltPoolDG::LevelSet
     /**
      * Constructor.
      */
-    CurvatureOperationAdaflo(const ScratchData<dim>   &scratch_data,
-                             const int                 advec_diff_dof_idx,
-                             const int                 normal_vec_dof_idx,
-                             const int                 curv_dof_idx,
-                             const int                 curv_quad_idx,
-                             const VectorType         &advected_field,
-                             const Parameters<double> &data_in);
+    CurvatureOperationAdaflo(const ScratchData<dim>     &scratch_data,
+                             const int                   advec_diff_dof_idx,
+                             const int                   normal_vec_dof_idx,
+                             const int                   curv_dof_idx,
+                             const int                   curv_quad_idx,
+                             const VectorType           &advected_field,
+                             const LevelSetData<double> &data_in);
 
     void
     reinit() override;
@@ -77,10 +77,10 @@ namespace MeltPoolDG::LevelSet
     create_normal_vector_operator();
 
     void
-    set_adaflo_parameters(const Parameters<double> &parameters,
-                          int                       advec_diff_dof_idx,
-                          int                       curv_dof_idx,
-                          int                       curv_quad_idx);
+    set_adaflo_parameters(const LevelSetData<double> &parameters,
+                          int                         advec_diff_dof_idx,
+                          int                         curv_dof_idx,
+                          int                         curv_quad_idx);
 
     void
     initialize_vectors();

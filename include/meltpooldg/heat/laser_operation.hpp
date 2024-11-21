@@ -13,12 +13,12 @@
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/generic_linear_algebra.h>
 
+#include <meltpooldg/core/finite_element_data.hpp>
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_heat_source_projection_based.hpp>
 #include <meltpooldg/heat/laser_heat_source_volumetric.hpp>
-#include <meltpooldg/interface/finite_element_data.hpp>
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/radiative_transport/rte_operation.hpp>

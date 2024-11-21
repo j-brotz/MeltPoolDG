@@ -10,7 +10,7 @@
 
 #include <deal.II/matrix_free/tools.h>
 
-#include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/time_integration/time_integration_base.hpp>

@@ -1,8 +1,8 @@
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/revision.h>
 
-#include <meltpooldg/interface/base_data.hpp>
-#include <meltpooldg/interface/problem_selector.hpp>
+#include <meltpooldg/core/base_data.hpp>
+#include <meltpooldg/core/problem_selector.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/revision.hpp>
 
@@ -19,13 +19,13 @@ namespace MeltPoolDG
     void
     run_simulation(const std::string parameter_file, const MPI_Comm mpi_communicator)
     {
-      unsigned int    dim          = 0;
-      ProblemType     problem_type = ProblemType::not_initialized;
-      ApplicationName app          = ApplicationName::not_initialized;
+      unsigned int dim          = 0;
+      std::string  problem_type = "not_initialized";
+      std::string  case_name    = "not_initialized";
 
       {
         // The parameters will be read here to get information on the selection variables, i.e.,
-        // the dimension, the application_name and the problem_name.
+        // the dimension, the case_name and the problem_name.
         ParameterHandler   prm;
         Parameters<number> parameters;
         parameters.process_parameters_file(prm, parameter_file);
@@ -62,7 +62,7 @@ namespace MeltPoolDG
 
         dim          = parameters.base.dimension;
         problem_type = parameters.base.problem_name;
-        app          = parameters.base.application_name;
+        case_name    = parameters.base.case_name;
       }
 
       try
@@ -70,7 +70,7 @@ namespace MeltPoolDG
           if (dim == 1)
             {
               auto sim =
-                SimulationSelector<1>::get_simulation(app, parameter_file, mpi_communicator);
+                SimulationSelector<1>::get_simulation(case_name, parameter_file, mpi_communicator);
               sim->create();
               auto problem = ProblemSelector<1>::get_problem(problem_type);
               problem->run(sim);
@@ -78,7 +78,7 @@ namespace MeltPoolDG
           else if (dim == 2)
             {
               auto sim =
-                SimulationSelector<2>::get_simulation(app, parameter_file, mpi_communicator);
+                SimulationSelector<2>::get_simulation(case_name, parameter_file, mpi_communicator);
               sim->create();
               auto problem = ProblemSelector<2>::get_problem(problem_type);
               problem->run(sim);
@@ -86,7 +86,7 @@ namespace MeltPoolDG
           else if (dim == 3)
             {
               auto sim =
-                SimulationSelector<3>::get_simulation(app, parameter_file, mpi_communicator);
+                SimulationSelector<3>::get_simulation(case_name, parameter_file, mpi_communicator);
               sim->create();
               auto problem = ProblemSelector<3>::get_problem(problem_type);
               problem->run(sim);

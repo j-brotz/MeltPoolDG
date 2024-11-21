@@ -9,9 +9,9 @@
 
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <meltpooldg/interface/operator_base.hpp>
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/core/operator_base.hpp>
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 
 namespace MeltPoolDG::LevelSet
 {

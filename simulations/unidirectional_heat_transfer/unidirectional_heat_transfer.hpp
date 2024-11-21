@@ -12,8 +12,8 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/tria.h>
 
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -169,7 +169,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   };
 
   template <int dim>
-  class SimulationUnidirectionalHeatTransfer : public SimulationParametersBase<dim>
+  class SimulationUnidirectionalHeatTransfer : public MeltPoolCase<dim>
   {
   private:
     bool   do_solidification = false;
@@ -179,7 +179,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   public:
     SimulationUnidirectionalHeatTransfer(std::string    parameter_file,
                                          const MPI_Comm mpi_communicator)
-      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
     {}
 
     bool

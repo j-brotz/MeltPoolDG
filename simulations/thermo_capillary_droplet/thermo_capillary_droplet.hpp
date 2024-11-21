@@ -6,13 +6,13 @@
 #include <deal.II/grid/grid_generator.h>
 
 // MeltPoolDG
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/characteristic_numbers.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 // c++
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/core/parameters.hpp>
 
 #include <cmath>
 #include <iostream>
@@ -115,11 +115,11 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
    */
 
   template <int dim>
-  class SimulationThermoCapillaryDroplet : public SimulationParametersBase<dim>
+  class SimulationThermoCapillaryDroplet : public MeltPoolCase<dim>
   {
   public:
     SimulationThermoCapillaryDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
     {
       if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
         file.open(this->parameters.output.directory + "/" +

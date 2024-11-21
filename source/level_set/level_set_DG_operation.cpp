@@ -7,9 +7,9 @@
 // MeltPoolDG
 #include <meltpooldg/advection_diffusion/advection_diffusion_adaflo_wrapper.hpp>
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/curvature/curvature_operation.hpp>
 #include <meltpooldg/curvature/curvature_operation_adaflo_wrapper.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_DG_operation.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
@@ -26,17 +26,19 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   LevelSetDGOperation<dim>::LevelSetDGOperation(
-    const ScratchData<dim>                        &scratch_data_in,
-    const TimeIterator<double>                    &time_stepping,
-    std::shared_ptr<SimulationParametersBase<dim>> base_in,
-    VectorType                                    &advection_velocity,
-    const unsigned int                             ls_dof_idx_in,
-    const unsigned int                             ls_quad_idx_in,
-    const unsigned int                             reinit_dof_idx_in,
-    const unsigned int                             vel_dof_idx)
+    const ScratchData<dim>                              &scratch_data_in,
+    const TimeIterator<double>                          &time_stepping,
+    const LevelSetData<double>                          &ls_data,
+    const std::shared_ptr<BoundaryConditionManager<dim>> boundary_conditions_in,
+    std::shared_ptr<dealii::Function<dim>>               prescribed_velocity_function,
+    VectorType                                          &advection_velocity,
+    const unsigned int                                   ls_dof_idx_in,
+    const unsigned int                                   ls_quad_idx_in,
+    const unsigned int                                   reinit_dof_idx_in,
+    const unsigned int                                   vel_dof_idx)
     : scratch_data(scratch_data_in)
     , time_stepping(time_stepping)
-    , level_set_data(base_in->parameters.ls)
+    , level_set_data(ls_data)
     , ls_dof_idx(ls_dof_idx_in)
     , ls_quad_idx(ls_quad_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
@@ -49,39 +51,39 @@ namespace MeltPoolDG::LevelSet
     /*
      *    initialize the advection diffusion operation
      */
-    advec_operation = std::make_shared<AdvectionDGOperation<dim>>(
-      scratch_data,
-      base_in->parameters.ls.advec_diff,
-      time_stepping,
-      advection_velocity,
-      ls_dof_idx,
-      ls_quad_idx,
-      vel_dof_idx,
-      base_in->get_boundary_condition_manager("level_set"),
-      base_in->get_field_function("prescribed_velocity", "level_set"),
-      false);
+    advec_operation =
+      std::make_shared<AdvectionDGOperation<dim>>(scratch_data,
+                                                  ls_data.advec_diff,
+                                                  time_stepping,
+                                                  advection_velocity,
+                                                  ls_dof_idx,
+                                                  ls_quad_idx,
+                                                  vel_dof_idx,
+                                                  std::move(boundary_conditions_in),
+                                                  std::move(prescribed_velocity_function),
+                                                  false);
 
     /*
      *    initialize the advection smoothed signum operation
      */
-    advec_smoothed_signum_operation = std::make_shared<AdvectionDGOperation<dim>>(
-      scratch_data,
-      base_in->parameters.ls.advec_diff,
-      time_stepping,
-      advection_velocity,
-      ls_dof_idx,
-      ls_quad_idx,
-      vel_dof_idx,
-      base_in->get_boundary_condition_manager("level_set"),
-      base_in->get_field_function("prescribed_velocity", "level_set"),
-      false);
+    advec_smoothed_signum_operation =
+      std::make_shared<AdvectionDGOperation<dim>>(scratch_data,
+                                                  ls_data.advec_diff,
+                                                  time_stepping,
+                                                  advection_velocity,
+                                                  ls_dof_idx,
+                                                  ls_quad_idx,
+                                                  vel_dof_idx,
+                                                  std::move(boundary_conditions_in),
+                                                  std::move(prescribed_velocity_function),
+                                                  false);
 
 
     /*
      *    initialize the curvature normal vector operation class
      */
     normal_vector_operation = std::make_shared<NormalVectorDGOperation<dim>>(
-      scratch_data_in, ls_dof_idx, ls_quad_idx, get_level_set(), base_in->parameters.ls.normal_vec);
+      scratch_data_in, ls_dof_idx, ls_quad_idx, get_level_set(), ls_data.normal_vec);
 
 
     curvature_operation = std::make_shared<CurvatureDGOperation<dim>>(
@@ -89,7 +91,7 @@ namespace MeltPoolDG::LevelSet
       ls_dof_idx,
       ls_quad_idx,
       normal_vector_operation->get_solution_normal_vector(),
-      base_in->parameters.ls.curv);
+      ls_data.curv);
 
 
     /*
@@ -99,7 +101,7 @@ namespace MeltPoolDG::LevelSet
       {
         reinit_operation =
           std::make_shared<ReinitializationDGOperation<dim>>(scratch_data,
-                                                             base_in->parameters.ls.reinit,
+                                                             ls_data.reinit,
                                                              reinit_time_iterator,
                                                              ls_dof_idx,
                                                              ls_quad_idx,

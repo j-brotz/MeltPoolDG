@@ -19,9 +19,9 @@
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/grid/manifold_lib.h>
 
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/post_processing/slice.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 
@@ -69,7 +69,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
   };
 
   template <int dim>
-  class SimulationRecoilPressure : public SimulationParametersBase<dim>
+  class SimulationRecoilPressure : public MeltPoolCase<dim>
   {
   private:
     double                    domain_x_min = 0;
@@ -114,7 +114,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
 
   public:
     SimulationRecoilPressure(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
       , cell_repetitions(dim, 1)
       , tria_slice(mpi_communicator)
     {}
@@ -441,7 +441,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
           this->attach_boundary_condition(bc, "no_slip", "navier_stokes_u");
       };
 
-      if (this->parameters.base.problem_name == ProblemType::melt_pool)
+      if (this->parameters.base.problem_name == "melt_pool")
         {
           add_slip_or_no_slip_boundary(lower_bc);
           if (evaporation_boundary)

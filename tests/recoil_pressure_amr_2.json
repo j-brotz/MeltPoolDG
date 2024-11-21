@@ -5,7 +5,7 @@
     "time step size": "0.000001"
   },
   "base": {
-    "application name": "recoil_pressure",
+    "case name": "recoil_pressure",
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "6",

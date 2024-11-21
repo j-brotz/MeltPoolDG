@@ -41,7 +41,7 @@
 #include <deal.II/non_matching/fe_values.h>
 #include <deal.II/non_matching/mesh_classifier.h>
 
-#include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <algorithm>

@@ -8,8 +8,8 @@
 
 
 // MeltPoolDG
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/curvature/curvature_DG_operation.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/normal_vector/normal_vector_DG_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_DG_operator.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
