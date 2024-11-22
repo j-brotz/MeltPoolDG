@@ -1,5 +1,4 @@
 #pragma once
-
 #include <deal.II/base/bounding_box.h>
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
@@ -21,6 +20,7 @@
 #include <deal.II/grid/manifold_lib.h>
 
 #include <meltpooldg/heat/laser_data.hpp>
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/post_processing/slice.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
@@ -69,7 +69,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
   };
 
   template <int dim>
-  class SimulationRecoilPressure : public SimulationBase<dim>
+  class SimulationRecoilPressure : public SimulationParametersBase<dim>
   {
   private:
     double                    domain_x_min = 0;
@@ -114,12 +114,12 @@ namespace MeltPoolDG::Simulation::RecoilPressure
 
   public:
     SimulationRecoilPressure(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
       , cell_repetitions(dim, 1)
       , tria_slice(mpi_communicator)
     {}
 
-    void
+    bool
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
       prm.enter_subsection("simulation specific domain");
@@ -222,6 +222,8 @@ namespace MeltPoolDG::Simulation::RecoilPressure
         prm.leave_subsection();
       }
       prm.leave_subsection();
+
+      return this->parameters.base.do_print_parameters;
     }
 
     void
@@ -434,9 +436,9 @@ namespace MeltPoolDG::Simulation::RecoilPressure
        */
       const auto add_slip_or_no_slip_boundary = [&](const types::boundary_id bc) {
         if (slip_boundary)
-          this->attach_symmetry_boundary_condition(bc, "navier_stokes_u");
+          this->attach_boundary_condition(bc, "symmetry", "navier_stokes_u");
         else
-          this->attach_no_slip_boundary_condition(bc, "navier_stokes_u");
+          this->attach_boundary_condition(bc, "no_slip", "navier_stokes_u");
       };
 
       if (this->parameters.base.problem_name == ProblemType::melt_pool)
@@ -444,21 +446,21 @@ namespace MeltPoolDG::Simulation::RecoilPressure
           add_slip_or_no_slip_boundary(lower_bc);
           if (evaporation_boundary)
             {
-              this->attach_open_boundary_condition(
-                upper_bc,
-                std::make_shared<Functions::ConstantFunction<dim>>(outlet_pressure),
+              this->attach_boundary_condition(
+                {upper_bc, std::make_shared<Functions::ConstantFunction<dim>>(outlet_pressure)},
+                "open",
                 "navier_stokes_u");
               if (!periodic_boundary)
                 {
                   if (dim >= 2)
                     {
-                      this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
-                      this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
+                      this->attach_boundary_condition(left_bc, "symmetry", "navier_stokes_u");
+                      this->attach_boundary_condition(right_bc, "symmetry", "navier_stokes_u");
                     }
                   if (dim == 3)
                     {
-                      this->attach_symmetry_boundary_condition(front_bc, "navier_stokes_u");
-                      this->attach_symmetry_boundary_condition(back_bc, "navier_stokes_u");
+                      this->attach_boundary_condition(front_bc, "symmetry", "navier_stokes_u");
+                      this->attach_boundary_condition(back_bc, "symmetry", "navier_stokes_u");
                     }
                 }
             }
@@ -466,7 +468,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
             {
               // The fix pressure constant condition can be set on any boundary (that is not a
               // periodic boundary).
-              this->attach_fix_pressure_constant_condition(lower_bc, "navier_stokes_p");
+              this->attach_boundary_condition(lower_bc, "fix_pressure_constant", "navier_stokes_p");
               add_slip_or_no_slip_boundary(upper_bc);
               if (!periodic_boundary)
                 {
@@ -492,7 +494,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
       if (this->parameters.laser.model != Heat::LaserModelType::analytical_temperature)
         {
           if (evaporation_boundary && this->parameters.heat.convection.convection_coefficient > 0)
-            this->attach_convection_boundary_condition(upper_bc, "heat_transfer");
+            this->attach_boundary_condition(upper_bc, "convection", "heat_transfer");
           else
             {
               std::shared_ptr<Function<dim>> T_1;
@@ -509,8 +511,8 @@ namespace MeltPoolDG::Simulation::RecoilPressure
                   T_2 = std::make_shared<Functions::ConstantFunction<dim>>(T_initial_bottom);
                 }
 
-              this->attach_dirichlet_boundary_condition(upper_bc, T_1, "heat_transfer");
-              this->attach_dirichlet_boundary_condition(lower_bc, T_2, "heat_transfer");
+              this->attach_boundary_condition({upper_bc, T_1}, "dirichlet", "heat_transfer");
+              this->attach_boundary_condition({lower_bc, T_2}, "dirichlet", "heat_transfer");
             }
         }
       // BC for RTE laser

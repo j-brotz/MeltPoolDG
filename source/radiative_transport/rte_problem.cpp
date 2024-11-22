@@ -20,7 +20,7 @@ namespace MeltPoolDG::RadiativeTransport
 
   template <int dim>
   void
-  RadiativeTransportProblem<dim>::run(std::shared_ptr<SimulationBase<dim>> base_in)
+  RadiativeTransportProblem<dim>::run(std::shared_ptr<SimulationType> base_in)
   {
     initialize(base_in);
 
@@ -92,7 +92,7 @@ namespace MeltPoolDG::RadiativeTransport
 
   template <int dim>
   void
-  RadiativeTransportProblem<dim>::initialize(std::shared_ptr<SimulationBase<dim>> base_in)
+  RadiativeTransportProblem<dim>::initialize(std::shared_ptr<SimulationType> base_in)
   {
     check_input_parameters();
 
@@ -195,8 +195,8 @@ namespace MeltPoolDG::RadiativeTransport
 
   template <int dim>
   void
-  RadiativeTransportProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
-                                                   const bool                           do_reinit)
+  RadiativeTransportProblem<dim>::setup_dof_system(std::shared_ptr<SimulationType> base_in,
+                                                   const bool                      do_reinit)
   {
     FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.base.fe, dof_handler);
     FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.base.fe, dof_handler_heaviside);
@@ -210,7 +210,7 @@ namespace MeltPoolDG::RadiativeTransport
      *  create AffineConstraints
      */
     rte_operation->setup_constraints(*scratch_data,
-                                     base_in->get_dirichlet_bc("intensity"),
+                                     base_in->get_boundary_condition("dirichlet", "intensity"),
                                      base_in->get_periodic_bc());
     MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
                                                     base_in->get_periodic_bc(),
@@ -241,9 +241,9 @@ namespace MeltPoolDG::RadiativeTransport
    */
   template <int dim>
   void
-  RadiativeTransportProblem<dim>::output_results(const unsigned int                   time_step,
-                                                 const double                         time,
-                                                 std::shared_ptr<SimulationBase<dim>> base_in)
+  RadiativeTransportProblem<dim>::output_results(const unsigned int              time_step,
+                                                 const double                    time,
+                                                 std::shared_ptr<SimulationType> base_in)
   {
     if (!post_processor->is_output_timestep(time_step, time) &&
         !base_in->parameters.output.do_user_defined_postprocessing)
@@ -275,7 +275,7 @@ namespace MeltPoolDG::RadiativeTransport
    */
   template <int dim>
   void
-  RadiativeTransportProblem<dim>::refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in)
+  RadiativeTransportProblem<dim>::refine_mesh(std::shared_ptr<SimulationType> base_in)
   {
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       Vector<float> estimated_error_per_cell(base_in->triangulation->n_active_cells());

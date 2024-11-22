@@ -32,7 +32,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  LevelSetProblem<dim>::run(std::shared_ptr<SimulationBase<dim>> base_in)
+  LevelSetProblem<dim>::run(std::shared_ptr<SimulationParametersBase<dim>> base_in)
   {
     initialize(base_in);
     ScopedName         sc("run");
@@ -42,6 +42,7 @@ namespace MeltPoolDG::LevelSet
       {
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout());
+        base_in->set_time_boundary_conditions(time_iterator->get_current_time());
 
         //@todo: adapt in case of adaptive time stepping
         if (profiling_monitor && profiling_monitor->now())
@@ -109,7 +110,7 @@ namespace MeltPoolDG::LevelSet
    */
   template <int dim>
   void
-  LevelSetProblem<dim>::initialize(std::shared_ptr<SimulationBase<dim>> base_in)
+  LevelSetProblem<dim>::initialize(std::shared_ptr<SimulationType> base_in)
   {
     /*
      *  setup scratch data
@@ -148,9 +149,6 @@ namespace MeltPoolDG::LevelSet
      *  initialize the time iterator
      */
     time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
-
-    //@todo move to a more central place
-    base_in->attach_boundary_condition("level_set");
 
     setup_dof_system(base_in, false);
 
@@ -286,8 +284,8 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  LevelSetProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
-                                         const bool                           do_reinit)
+  LevelSetProblem<dim>::setup_dof_system(std::shared_ptr<SimulationType> base_in,
+                                         const bool                      do_reinit)
   {
     FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.ls.fe, dof_handler);
     FiniteElementUtils::distribute_dofs<dim, dim>(base_in->parameters.base.fe,
@@ -305,14 +303,14 @@ namespace MeltPoolDG::LevelSet
       {
         MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
           *scratch_data,
-          base_in->get_dirichlet_bc("level_set"),
+          base_in->get_boundary_condition("dirichlet", "level_set"),
           base_in->get_periodic_bc(),
           ls_dof_idx,
           ls_hanging_nodes_dof_idx);
 
         MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
           *scratch_data,
-          base_in->get_dirichlet_bc("level_set"),
+          base_in->get_boundary_condition("dirichlet", "level_set"),
           ls_zero_bc_idx,
           ls_hanging_nodes_dof_idx,
           false /*set inhomogeneities to zero*/);
@@ -364,9 +362,9 @@ namespace MeltPoolDG::LevelSet
    */
   template <int dim>
   void
-  LevelSetProblem<dim>::output_results(const unsigned int                   time_step,
-                                       const double                         time,
-                                       std::shared_ptr<SimulationBase<dim>> base_in)
+  LevelSetProblem<dim>::output_results(const unsigned int              time_step,
+                                       const double                    time,
+                                       std::shared_ptr<SimulationType> base_in)
   {
     ScopedName         sc("output_results");
     TimerOutput::Scope scope(scratch_data->get_timer(), sc);
@@ -409,7 +407,7 @@ namespace MeltPoolDG::LevelSet
    */
   template <int dim>
   void
-  LevelSetProblem<dim>::refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in)
+  LevelSetProblem<dim>::refine_mesh(std::shared_ptr<SimulationType> base_in)
   {
     ScopedName         sc("AMR");
     TimerOutput::Scope scope(scratch_data->get_timer(), sc);

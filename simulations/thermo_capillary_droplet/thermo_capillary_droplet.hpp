@@ -12,6 +12,8 @@
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 // c++
+#include <meltpooldg/interface/parameters.hpp>
+
 #include <cmath>
 #include <iostream>
 
@@ -113,11 +115,11 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
    */
 
   template <int dim>
-  class SimulationThermoCapillaryDroplet : public SimulationBase<dim>
+  class SimulationThermoCapillaryDroplet : public SimulationParametersBase<dim>
   {
   public:
     SimulationThermoCapillaryDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
     {
       if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
         file.open(this->parameters.output.directory + "/" +
@@ -205,17 +207,18 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
       const types::boundary_id left_bc  = 3;
       const types::boundary_id right_bc = 4;
 
-      this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
-      this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
-      this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
-      this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
+      this->attach_boundary_condition(lower_bc, "no_slip", "navier_stokes_u");
+      this->attach_boundary_condition(upper_bc, "no_slip", "navier_stokes_u");
 
-      this->attach_dirichlet_boundary_condition(lower_bc,
-                                                std::make_shared<InitialValuesTemperature<dim>>(),
-                                                "heat_transfer");
-      this->attach_dirichlet_boundary_condition(upper_bc,
-                                                std::make_shared<InitialValuesTemperature<dim>>(),
-                                                "heat_transfer");
+      this->attach_boundary_condition(left_bc, "symmetry", "navier_stokes_u");
+      this->attach_boundary_condition(right_bc, "symmetry", "navier_stokes_u");
+
+      this->attach_boundary_condition({lower_bc, std::make_shared<InitialValuesTemperature<dim>>()},
+                                      "dirichlet",
+                                      "heat_transfer");
+      this->attach_boundary_condition({upper_bc, std::make_shared<InitialValuesTemperature<dim>>()},
+                                      "dirichlet",
+                                      "heat_transfer");
 
       if constexpr (dim == 2)
         {
@@ -237,8 +240,8 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
         {
           const types::boundary_id front_bc = 5;
           const types::boundary_id back_bc  = 6;
-          this->attach_symmetry_boundary_condition(front_bc, "navier_stokes_u");
-          this->attach_symmetry_boundary_condition(back_bc, "navier_stokes_u");
+          this->attach_boundary_condition(front_bc, "symmetry", "navier_stokes_u");
+          this->attach_boundary_condition(back_bc, "symmetry", "navier_stokes_u");
           for (const auto &cell : this->triangulation->cell_iterators())
             for (const auto &face : cell->face_iterators())
               if ((face->at_boundary()))

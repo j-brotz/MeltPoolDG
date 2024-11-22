@@ -103,14 +103,14 @@ namespace MeltPoolDG::LevelSet
     int iter = 0;
 
   public:
-    LevelSetDGOperation(const ScratchData<dim>              &scratch_data_in,
-                        const TimeIterator<double>          &time_stepping,
-                        std::shared_ptr<SimulationBase<dim>> base_in,
-                        VectorType                          &advection_velocity,
-                        const unsigned int                   ls_dof_idx_in,
-                        const unsigned int                   ls_quad_idx_in,
-                        const unsigned int                   reinit_dof_idx_in,
-                        const unsigned int                   vel_dof_idx);
+    LevelSetDGOperation(const ScratchData<dim>                        &scratch_data_in,
+                        const TimeIterator<double>                    &time_stepping,
+                        std::shared_ptr<SimulationParametersBase<dim>> base_in,
+                        VectorType                                    &advection_velocity,
+                        const unsigned int                             ls_dof_idx_in,
+                        const unsigned int                             ls_quad_idx_in,
+                        const unsigned int                             reinit_dof_idx_in,
+                        const unsigned int                             vel_dof_idx);
     /**
      * set initial condition
      */

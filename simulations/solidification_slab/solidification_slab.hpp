@@ -8,6 +8,7 @@
 #include <cmath>
 #include <iostream>
 // MeltPoolDG
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 
 
@@ -37,11 +38,11 @@ namespace MeltPoolDG::Simulation::SolidificationSlab
   static constexpr double T_hat = 253.0;
 
   template <int dim>
-  class SimulationSolidificationSlab : public SimulationBase<dim>
+  class SimulationSolidificationSlab : public SimulationParametersBase<dim>
   {
   public:
     SimulationSolidificationSlab(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -102,8 +103,10 @@ namespace MeltPoolDG::Simulation::SolidificationSlab
                 face->set_boundary_id(left_bc);
             }
 
-      this->attach_dirichlet_boundary_condition(
-        left_bc, std::make_shared<Functions::ConstantFunction<dim>>(T_hat), "heat_transfer");
+      this->attach_boundary_condition({left_bc,
+                                       std::make_shared<Functions::ConstantFunction<dim>>(T_hat)},
+                                      "dirichlet",
+                                      "heat_transfer");
     }
 
     void

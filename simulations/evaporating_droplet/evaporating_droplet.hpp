@@ -1,5 +1,4 @@
 #pragma once
-
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
@@ -10,6 +9,7 @@
 
 #include <deal.II/grid/grid_generator.h>
 
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/post_processing/divergence_calc.hpp>
 #include <meltpooldg/utilities/journal.hpp>
@@ -53,21 +53,21 @@ namespace MeltPoolDG
       };
 
       template <int dim>
-      class SimulationEvaporatingDroplet : public SimulationBase<dim>
+      class SimulationEvaporatingDroplet : public SimulationParametersBase<dim>
       {
       private:
         mutable std::shared_ptr<PostProcessingTools::DivergenceCalculator<dim>> diver;
 
       public:
         SimulationEvaporatingDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
-          : SimulationBase<dim>(parameter_file, mpi_communicator)
+          : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
         {
           AssertThrow(std::abs(droplet_phi) - 1.0 < 1e-10,
                       ExcMessage("'droplet phi' must be either 1 or"
                                  "-1."));
         }
 
-        void
+        bool
         add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
         {
           prm.enter_subsection("simulation specific");
@@ -85,6 +85,8 @@ namespace MeltPoolDG
                               "Set the level set value inside the droplet, either -1 or 1.");
           }
           prm.leave_subsection();
+
+          return this->parameters.base.do_print_parameters;
         }
 
         void
@@ -150,8 +152,10 @@ namespace MeltPoolDG
         set_boundary_conditions() override
         {
           // prescribe pressure dirichlet BC
-          this->attach_open_boundary_condition(
-            0, std::make_shared<Functions::ConstantFunction<dim>>(bc_pressure), "navier_stokes_u");
+          this->attach_boundary_condition(
+            {0, std::make_shared<Functions::ConstantFunction<dim>>(bc_pressure)},
+            "open",
+            "navier_stokes_u");
         }
 
         void

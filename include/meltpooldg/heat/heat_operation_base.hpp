@@ -26,8 +26,7 @@ namespace MeltPoolDG::Heat
     distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const = 0;
 
     virtual void
-    set_initial_condition(const dealii::Function<dim> &initial_temperature,
-                          const double                 start_time) = 0;
+    set_initial_condition(const dealii::Function<dim> &initial_temperature) = 0;
 
     virtual void
     distribute_constraints() = 0;

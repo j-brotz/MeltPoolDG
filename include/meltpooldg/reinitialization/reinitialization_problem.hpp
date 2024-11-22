@@ -37,6 +37,7 @@ namespace MeltPoolDG
     class ReinitializationProblem : public ProblemBase<dim>
     {
     private:
+      using SimulationType = SimulationParametersBase<dim>;
       using VectorType     = LinearAlgebra::distributed::Vector<double>;
       using DoFHandlerType = DoFHandler<dim>;
 
@@ -48,7 +49,7 @@ namespace MeltPoolDG
       ReinitializationProblem() = default;
 
       void
-      run(std::shared_ptr<SimulationBase<dim>> base_in) final;
+      run(std::shared_ptr<SimulationType> base_in) final;
 
       std::string
       get_name() final;
@@ -59,24 +60,24 @@ namespace MeltPoolDG
        *  for the computation of a reinitialization problem
        */
       void
-      initialize(std::shared_ptr<SimulationBase<dim>> base_in);
+      initialize(std::shared_ptr<SimulationType> base_in);
 
       void
-      setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in);
+      setup_dof_system(std::shared_ptr<SimulationType> base_in);
 
       /*
        *  perform mesh refinement
        */
       void
-      refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in);
+      refine_mesh(std::shared_ptr<SimulationType> base_in);
 
       /*
        *  perform output of results
        */
       void
-      output_results(const unsigned int                   time_step,
-                     const double                         current_time,
-                     std::shared_ptr<SimulationBase<dim>> base_in);
+      output_results(const unsigned int              time_step,
+                     const double                    current_time,
+                     std::shared_ptr<SimulationType> base_in);
 
     private:
       DoFHandler<dim>           dof_handler;

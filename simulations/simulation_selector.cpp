@@ -39,7 +39,7 @@
 namespace MeltPoolDG::Simulation
 {
   template <int dim>
-  std::shared_ptr<SimulationBase<dim>>
+  std::shared_ptr<SimulationParametersBase<dim>>
   SimulationSelector<dim>::get_simulation(const ApplicationName simulation_name,
                                           const std::string     parameter_file,
                                           const MPI_Comm        mpi_communicator)

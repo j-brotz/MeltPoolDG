@@ -8,6 +8,7 @@
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/interface/base_data.hpp>
+#include <meltpooldg/interface/parameters_base.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
 #include <meltpooldg/level_set/level_set_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
@@ -26,11 +27,10 @@
 
 #include <iostream>
 #include <string>
-
+#include <type_traits>
 namespace MeltPoolDG
 {
   using namespace dealii;
-
   struct AdaptiveMeshingData
   {
     bool         do_amr                       = false;
@@ -55,20 +55,6 @@ namespace MeltPoolDG
   };
 
   /**
-   * Utility function to print parameters from a given ParameterHandler object.
-   */
-  inline void
-  print_parameters_external(const ParameterHandler &prm,
-                            std::ostream           &pcout,
-                            const bool              print_details)
-  {
-    prm.print_parameters(pcout,
-                         print_details ? ParameterHandler::OutputStyle::JSON |
-                                           ParameterHandler::OutputStyle::KeepDeclarationOrder :
-                                         ParameterHandler::OutputStyle::ShortJSON);
-  }
-
-  /**
    * Collection of all parameters of MeltPoolDG.
    *
    * @warning Parameters are read in order they are specified in the parameter
@@ -78,24 +64,23 @@ namespace MeltPoolDG
    * aware that you might change the behavior!
    */
   template <typename number = double>
-  struct Parameters
+  struct Parameters : public ParametersBase
   {
+  public:
+    bool
+    enable_print_parameters() const final;
+
+  protected:
     void
-    process_parameters_file(ParameterHandler &prm, const std::string &parameter_filename);
+    add_parameters(ParameterHandler &prm) final;
 
     void
-    print_parameters(ParameterHandler &prm, std::ostream &pcout, const bool print_details);
+    post(const std::string &parameter_filename) final;
 
   private:
     void
     check_input_parameters() const;
 
-    void
-    check_for_file(const std::string &parameter_filename) const;
-
-    void
-         add_parameters(ParameterHandler &prm);
-    bool parameters_read = false;
 
   public:
     BaseData                                           base;

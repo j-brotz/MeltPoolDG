@@ -19,6 +19,7 @@
 #include <fstream>
 #include <iostream>
 // MeltPoolDG
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/utilities/journal.hpp>
@@ -148,11 +149,11 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
    */
 
   template <int dim>
-  class SimulationVortexBubbleDG : public SimulationBase<dim>
+  class SimulationVortexBubbleDG : public SimulationParametersBase<dim>
   {
   public:
     SimulationVortexBubbleDG(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -192,10 +193,7 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
        */
       constexpr types::boundary_id do_nothing = 0;
 
-
-      this->attach_open_boundary_condition(do_nothing, "level_set");
-
-
+      // this->attach_boundary_condition(do_nothing, "open" "level_set");
 
       if constexpr (dim >= 2)
         {
@@ -272,7 +270,7 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
         }
     }
 
-    void
+    bool
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
       prm.enter_subsection("simulation specific");
@@ -280,6 +278,8 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
         prm.add_parameter("T", Tf, "Period of vortex flow.");
       }
       prm.leave_subsection();
+
+      return this->parameters.base.do_print_parameters;
     }
 
   private:

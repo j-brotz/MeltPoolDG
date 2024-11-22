@@ -14,6 +14,8 @@
 #include <deal.II/numerics/error_estimator.h>
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/interface/parameters.hpp>
+
 // c++
 #include <cmath>
 #include <iostream>
@@ -77,11 +79,11 @@ namespace MeltPoolDG
        */
 
       template <int dim>
-      class SimulationReinit : public SimulationBase<dim>
+      class SimulationReinit : public SimulationParametersBase<dim>
       {
       public:
         SimulationReinit(std::string parameter_file, const MPI_Comm mpi_communicator)
-          : SimulationBase<dim>(parameter_file, mpi_communicator)
+          : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
         {}
 
         void

@@ -1,11 +1,16 @@
 #pragma once
+
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
+
+#include "parameters_base.hpp"
 
 namespace MeltPoolDG
 {
   using namespace dealii;
 
-  template <int dim>
+  // TODO: how can this template type be omited?
+  template <int dim, typename SimulationType = SimulationParametersBase<dim>>
   class ProblemBase
   {
   public:
@@ -13,15 +18,13 @@ namespace MeltPoolDG
     {}
 
     virtual void
-    run(std::shared_ptr<SimulationBase<dim>> base_in) = 0;
+    run(std::shared_ptr<SimulationType> base_in) = 0;
 
     virtual std::string
     get_name() = 0;
 
-    virtual void
-    perform_convergence_study(){};
-
   protected:
+    // TODO: Move into free function
     void
     add_problem_specific_parameters(const std::string &parameter_file)
     {

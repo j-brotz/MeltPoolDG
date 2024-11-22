@@ -200,8 +200,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatCutOperation<dim>::set_initial_condition(const dealii::Function<dim>  &initial_temperature,
-                                               [[maybe_unused]] const double start_time)
+  HeatCutOperation<dim>::set_initial_condition(const dealii::Function<dim> &initial_temperature)
   {
     if (heat_data.cut.two_phase)
       // For the two-phase case, the initial temperature function must be set up with 2 components

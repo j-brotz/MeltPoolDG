@@ -8,15 +8,15 @@ namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   AdvectionDiffusionOperationAdaflo<dim>::AdvectionDiffusionOperationAdaflo(
-    const ScratchData<dim>              &scratch_data,
-    const TimeIterator<double>          &time_iterator,
-    const VectorType                    &advection_velocity,
-    const int                            advec_diff_zero_dirichlet_dof_idx,
-    const int                            advec_diff_dirichlet_dof_idx,
-    const int                            advec_diff_quad_idx,
-    const int                            velocity_dof_idx,
-    std::shared_ptr<SimulationBase<dim>> base_in,
-    std::string                          operation_name)
+    const ScratchData<dim>                        &scratch_data,
+    const TimeIterator<double>                    &time_iterator,
+    const VectorType                              &advection_velocity,
+    const int                                      advec_diff_zero_dirichlet_dof_idx,
+    const int                                      advec_diff_dirichlet_dof_idx,
+    const int                                      advec_diff_quad_idx,
+    const int                                      velocity_dof_idx,
+    std::shared_ptr<SimulationParametersBase<dim>> base_in,
+    std::string                                    operation_name)
     : scratch_data(scratch_data)
     , time_iterator(time_iterator)
     , advection_velocity(advection_velocity)
@@ -33,9 +33,10 @@ namespace MeltPoolDG::LevelSet
     /*
      * Boundary conditions for the advected field
      */
-    for (const auto &symmetry_id : base_in->get_symmetry_id(operation_name))
+    for (const auto &[symmetry_id, dummy] :
+         base_in->get_boundary_condition("symmetry", operation_name))
       bcs.symmetry.insert(symmetry_id);
-    for (const auto &dirichlet_bc : base_in->get_dirichlet_bc(operation_name).get_data())
+    for (const auto &dirichlet_bc : base_in->get_boundary_condition("dirichlet", operation_name))
       bcs.dirichlet[dirichlet_bc.first] = dirichlet_bc.second;
     /*
      * initialize adaflo operation

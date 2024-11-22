@@ -118,7 +118,6 @@ namespace MeltPoolDG::Heat
             rte_hanging_nodes_dof_idx =
               scratch_data_in.attach_constraint_matrix(*rte_hanging_node_constraints);
 
-            rte_dirichlet_boundary_condition = std::make_unique<DirichletBoundaryConditions<dim>>();
             AssertThrow(
               laser_data.rte_boundary_id != numbers::invalid_boundary_id,
               ExcMessage(
@@ -127,7 +126,7 @@ namespace MeltPoolDG::Heat
               Journal::print_line(scratch_data.get_pcout(),
                                   "RTE boundary id = " + std::to_string(laser_data.rte_boundary_id),
                                   "laser");
-            rte_dirichlet_boundary_condition->attach(laser_data.rte_boundary_id, intensity_profile);
+            rte_dirichlet_boundary_condition[laser_data.rte_boundary_id] = intensity_profile;
 
             if (data_in.base.fe.type == FiniteElementType::FE_SimplexP)
               rte_quad_idx = scratch_data_in.attach_quadrature(
@@ -171,7 +170,7 @@ namespace MeltPoolDG::Heat
       {
         auto mutable_scratch_data = const_cast<ScratchData<dim> &>(scratch_data);
         rte_operation->setup_constraints(mutable_scratch_data,
-                                         *rte_dirichlet_boundary_condition,
+                                         rte_dirichlet_boundary_condition,
                                          periodic_bc);
       }
   }

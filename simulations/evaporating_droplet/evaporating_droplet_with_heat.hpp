@@ -1,4 +1,5 @@
 #pragma once
+#include <meltpooldg/interface/parameters.hpp>
 
 // deal-specific libraries
 #include <deal.II/base/function.h>
@@ -49,12 +50,12 @@ namespace MeltPoolDG
      */
 
     template <int dim>
-    class SimulationEvaporatingDropletWithHeat : public SimulationBase<dim>
+    class SimulationEvaporatingDropletWithHeat : public SimulationParametersBase<dim>
     {
     public:
       SimulationEvaporatingDropletWithHeat(std::string    parameter_file,
                                            const MPI_Comm mpi_communicator)
-        : SimulationBase<dim>(parameter_file, mpi_communicator)
+        : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
         , lambda(2. * numbers::PI *
                  std::sqrt(3. * this->parameters.flow.surface_tension.surface_tension_coefficient /
                            (9.81 * (this->parameters.material.liquid.density -
@@ -118,8 +119,10 @@ namespace MeltPoolDG
       {
         auto dirichlet_temp = std::make_shared<Functions::ConstantFunction<dim>>(10);
 
-        this->attach_dirichlet_boundary_condition(0, dirichlet_temp, "heat_transfer");
-        this->attach_open_boundary_condition(0, "navier_stokes_u");
+        this->attach_boundary_condition({0, dirichlet_temp}, "dirichlet", "heat_transfer");
+        this->attach_boundary_condition({0, std::make_shared<Functions::ZeroFunction<dim>>()},
+                                        "open",
+                                        "navier_stokes_u");
       }
 
       void

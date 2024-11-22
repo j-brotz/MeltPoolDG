@@ -16,7 +16,6 @@
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_heat_source_projection_based.hpp>
 #include <meltpooldg/heat/laser_heat_source_volumetric.hpp>
-#include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/finite_element_data.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
@@ -65,11 +64,12 @@ namespace MeltPoolDG::Heat
     std::unique_ptr<RadiativeTransport::RadiativeTransportOperation<dim>> rte_operation;
     std::unique_ptr<DoFHandler<dim>>                                      rte_dof_handler;
     std::unique_ptr<AffineConstraints<double>>                            rte_constraints_dirichlet;
-    std::unique_ptr<AffineConstraints<double>>        rte_hanging_node_constraints;
-    std::unique_ptr<DirichletBoundaryConditions<dim>> rte_dirichlet_boundary_condition;
-    unsigned int                                      rte_dof_idx;
-    unsigned int                                      rte_hanging_nodes_dof_idx;
-    unsigned int                                      rte_quad_idx;
+    std::unique_ptr<AffineConstraints<double>> rte_hanging_node_constraints;
+    std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>>
+                 rte_dirichlet_boundary_condition;
+    unsigned int rte_dof_idx;
+    unsigned int rte_hanging_nodes_dof_idx;
+    unsigned int rte_quad_idx;
 
   public:
     LaserOperation(ScratchData<dim>                      &scratch_data_in,

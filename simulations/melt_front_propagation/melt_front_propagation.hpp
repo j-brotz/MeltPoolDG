@@ -8,6 +8,7 @@
 #include <cmath>
 #include <iostream>
 // MeltPoolDG
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 
 
@@ -78,7 +79,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   };
 
   template <int dim>
-  class SimulationMeltFrontPropagation : public SimulationBase<dim>
+  class SimulationMeltFrontPropagation : public SimulationParametersBase<dim>
   {
   private:
     double x_min        = 0.0;
@@ -92,10 +93,10 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
 
   public:
     SimulationMeltFrontPropagation(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
     {}
 
-    void
+    bool
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
       prm.enter_subsection("simulation specific parameters");
@@ -114,6 +115,8 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
         prm.add_parameter("do two phase", do_two_phase);
       }
       prm.leave_subsection();
+
+      return this->parameters.base.do_print_parameters;
     }
 
     void
@@ -239,8 +242,10 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
                       face->set_boundary_id(left_bc);
                   }
             }
-          this->attach_dirichlet_boundary_condition(
-            left_bc, std::make_shared<Functions::ConstantFunction<dim>>(T_0), "heat_transfer");
+          this->attach_boundary_condition({left_bc,
+                                           std::make_shared<Functions::ConstantFunction<dim>>(T_0)},
+                                          "dirichlet",
+                                          "heat_transfer");
         }
       else if (this->parameters.base.problem_name == ProblemType::melt_pool)
         {
@@ -288,18 +293,20 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
                         }
                     }
                 }
-          this->attach_no_slip_boundary_condition(left_bc, "navier_stokes_u");
-          this->attach_no_slip_boundary_condition(right_bc, "navier_stokes_u");
-          this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
-          this->attach_symmetry_boundary_condition(upper_bc, "navier_stokes_u");
+          this->attach_boundary_condition(left_bc, "no_slip", "navier_stokes_u");
+          this->attach_boundary_condition(right_bc, "no_slip", "navier_stokes_u");
+          this->attach_boundary_condition(lower_bc, "no_slip", "navier_stokes_u");
+          this->attach_boundary_condition(upper_bc, "symmetry", "navier_stokes_u");
           if constexpr (dim == 3)
             {
-              this->attach_no_slip_boundary_condition(front_bc, "navier_stokes_u");
-              this->attach_no_slip_boundary_condition(back_bc, "navier_stokes_u");
+              this->attach_boundary_condition(front_bc, "no_slip", "navier_stokes_u");
+              this->attach_boundary_condition(back_bc, "no_slip", "navier_stokes_u");
             }
-          this->attach_fix_pressure_constant_condition(lower_bc, "navier_stokes_p");
-          this->attach_dirichlet_boundary_condition(
-            lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(T_0), "heat_transfer");
+          this->attach_boundary_condition(lower_bc, "fix_pressure_constant", "navier_stokes_p");
+          this->attach_boundary_condition({lower_bc,
+                                           std::make_shared<Functions::ConstantFunction<dim>>(T_0)},
+                                          "dirichlet",
+                                          "heat_transfer");
         }
     }
 

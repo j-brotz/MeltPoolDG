@@ -16,7 +16,7 @@ namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   void
-  AdvectionDiffusionProblem<dim>::run(std::shared_ptr<SimulationBase<dim>> base_in)
+  AdvectionDiffusionProblem<dim>::run(std::shared_ptr<SimulationType> base_in)
   {
     initialize(base_in);
 
@@ -69,7 +69,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  AdvectionDiffusionProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in)
+  AdvectionDiffusionProblem<dim>::setup_dof_system(std::shared_ptr<SimulationType> base_in)
   {
     /*
      *  setup DoFHandler
@@ -86,21 +86,21 @@ namespace MeltPoolDG::LevelSet
      *  make hanging nodes and dirichlet constraints (Note: at the moment no time-dependent
      *  dirichlet constraints are supported)
      */
-    base_in->get_bc("advection_diffusion")->set_time(base_in->parameters.time_stepping.start_time);
+    base_in->set_time_boundary_conditions(base_in->parameters.time_stepping.start_time);
 
     if (base_in->parameters.ls.advec_diff.fe.type != FiniteElementType::FE_DGQ)
       { // In a DG simulation no hanging node constraints are present and the boundray condtions are
         // enforced in weak form by changing the fluxes at the boundary
         MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
           *scratch_data,
-          base_in->get_dirichlet_bc("advection_diffusion"),
+          base_in->get_boundary_condition("dirichlet", "advection_diffusion"),
           base_in->get_periodic_bc(),
           advec_diff_dof_idx,
           advec_diff_hanging_nodes_dof_idx);
         if (base_in->parameters.ls.advec_diff.implementation == "adaflo")
           MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
             *scratch_data,
-            base_in->get_dirichlet_bc("advection_diffusion"),
+            base_in->get_boundary_condition("dirichlet", "advection_diffusion"),
             advec_diff_adaflo_dof_idx,
             advec_diff_hanging_nodes_dof_idx,
             false /*set inhomogeneities to zero*/);
@@ -137,7 +137,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  AdvectionDiffusionProblem<dim>::initialize(std::shared_ptr<SimulationBase<dim>> base_in)
+  AdvectionDiffusionProblem<dim>::initialize(std::shared_ptr<SimulationType> base_in)
   {
     /*
      *  setup DoFHandler
@@ -175,9 +175,6 @@ namespace MeltPoolDG::LevelSet
       scratch_data->attach_constraint_matrix(hanging_node_constraints_velocity);
     }
 
-    //@todo move to a more central place
-    base_in->attach_boundary_condition("advection_diffusion");
-
     setup_dof_system(base_in);
 
     /*
@@ -189,20 +186,20 @@ namespace MeltPoolDG::LevelSet
       {
         if (base_in->parameters.ls.advec_diff.fe.type != FiniteElementType::FE_DGQ)
           {
-            advec_diff_operation =
-              std::make_shared<AdvectionDiffusionOperation<dim>>(*scratch_data,
-                                                                 base_in->get_bc(
-                                                                   "advection_diffusion"),
-                                                                 base_in->parameters.ls.advec_diff,
-                                                                 *time_iterator,
-                                                                 advection_velocity,
-                                                                 advec_diff_dof_idx,
-                                                                 advec_diff_hanging_nodes_dof_idx,
-                                                                 advec_diff_quad_idx,
-                                                                 velocity_dof_idx);
+            advec_diff_operation = std::make_shared<AdvectionDiffusionOperation<dim>>(
+              *scratch_data,
+              base_in->get_boundary_condition("dirichlet", "advection_diffusion"),
+              base_in->parameters.ls.advec_diff,
+              *time_iterator,
+              advection_velocity,
+              advec_diff_dof_idx,
+              advec_diff_hanging_nodes_dof_idx,
+              advec_diff_quad_idx,
+              velocity_dof_idx);
 
             dynamic_cast<AdvectionDiffusionOperation<dim> *>(advec_diff_operation.get())
-              ->set_inflow_outflow_bc(base_in->get_bc("advection_diffusion")->inflow_outflow_bc);
+              ->set_inflow_outflow_bc(
+                base_in->get_boundary_condition("inflow_outflow", "advection_diffusion"));
           }
         else
           {
@@ -214,7 +211,7 @@ namespace MeltPoolDG::LevelSet
               advec_diff_dof_idx,
               advec_diff_quad_idx,
               velocity_dof_idx,
-              base_in->get_bc("advection_diffusion"),
+              base_in->get_boundary_condition_manager("advection_diffusion"),
               base_in->get_field_function("prescribed_velocity", "advection_diffusion"),
               true);
 
@@ -226,7 +223,7 @@ namespace MeltPoolDG::LevelSet
     else if (base_in->parameters.ls.advec_diff.implementation == "adaflo")
       {
         AssertThrow(
-          base_in->get_bc("advection_diffusion")->inflow_outflow_bc.empty(),
+          base_in->get_boundary_condition("inflow_outflow", "advection_diffusion").empty(),
           ExcMessage(
             "Inflow/outflow boundary condition not supported from the adaflo implementation."));
 
@@ -290,9 +287,9 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  AdvectionDiffusionProblem<dim>::output_results(const unsigned int                   time_step,
-                                                 const double                         current_time,
-                                                 std::shared_ptr<SimulationBase<dim>> base_in)
+  AdvectionDiffusionProblem<dim>::output_results(const unsigned int              time_step,
+                                                 const double                    current_time,
+                                                 std::shared_ptr<SimulationType> base_in)
   {
     if (!post_processor->is_output_timestep(time_step, current_time) &&
         !base_in->parameters.output.do_user_defined_postprocessing)
@@ -325,7 +322,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  AdvectionDiffusionProblem<dim>::refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in)
+  AdvectionDiffusionProblem<dim>::refine_mesh(std::shared_ptr<SimulationType> base_in)
   {
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       Vector<float> estimated_error_per_cell(base_in->triangulation->n_active_cells());

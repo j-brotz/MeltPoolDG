@@ -14,6 +14,7 @@
 #include <cmath>
 #include <iostream>
 // MeltPoolDG
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -23,11 +24,11 @@ namespace MeltPoolDG::Simulation::StefansProblem
   using namespace MeltPoolDG::Simulation;
 
   template <int dim>
-  class SimulationStefansProblem : public SimulationBase<dim>
+  class SimulationStefansProblem : public SimulationParametersBase<dim>
   {
   public:
     SimulationStefansProblem(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationBase<dim>(parameter_file, mpi_communicator)
+      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -86,8 +87,10 @@ namespace MeltPoolDG::Simulation::StefansProblem
       // faces in dim-1 direction
       const types::boundary_id upper_bc = 2 * (dim - 1) + 1;
 
-      this->attach_dirichlet_boundary_condition(
-        upper_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "level_set");
+      this->attach_boundary_condition({upper_bc,
+                                       std::make_shared<Functions::ConstantFunction<dim>>(-1.0)},
+                                      "dirichlet",
+                                      "level_set");
     }
 
     void

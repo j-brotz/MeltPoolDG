@@ -25,14 +25,15 @@ namespace MeltPoolDG::LevelSet
   using namespace dealii;
 
   template <int dim>
-  LevelSetDGOperation<dim>::LevelSetDGOperation(const ScratchData<dim>     &scratch_data_in,
-                                                const TimeIterator<double> &time_stepping,
-                                                std::shared_ptr<SimulationBase<dim>> base_in,
-                                                VectorType        &advection_velocity,
-                                                const unsigned int ls_dof_idx_in,
-                                                const unsigned int ls_quad_idx_in,
-                                                const unsigned int reinit_dof_idx_in,
-                                                const unsigned int vel_dof_idx)
+  LevelSetDGOperation<dim>::LevelSetDGOperation(
+    const ScratchData<dim>                        &scratch_data_in,
+    const TimeIterator<double>                    &time_stepping,
+    std::shared_ptr<SimulationParametersBase<dim>> base_in,
+    VectorType                                    &advection_velocity,
+    const unsigned int                             ls_dof_idx_in,
+    const unsigned int                             ls_quad_idx_in,
+    const unsigned int                             reinit_dof_idx_in,
+    const unsigned int                             vel_dof_idx)
     : scratch_data(scratch_data_in)
     , time_stepping(time_stepping)
     , level_set_data(base_in->parameters.ls)
@@ -48,34 +49,32 @@ namespace MeltPoolDG::LevelSet
     /*
      *    initialize the advection diffusion operation
      */
-    advec_operation =
-      std::make_shared<AdvectionDGOperation<dim>>(scratch_data,
-                                                  base_in->parameters.ls.advec_diff,
-                                                  time_stepping,
-                                                  advection_velocity,
-                                                  ls_dof_idx,
-                                                  ls_quad_idx,
-                                                  vel_dof_idx,
-                                                  base_in->get_bc("level_set"),
-                                                  base_in->get_field_function("prescribed_velocity",
-                                                                              "level_set"),
-                                                  false);
+    advec_operation = std::make_shared<AdvectionDGOperation<dim>>(
+      scratch_data,
+      base_in->parameters.ls.advec_diff,
+      time_stepping,
+      advection_velocity,
+      ls_dof_idx,
+      ls_quad_idx,
+      vel_dof_idx,
+      base_in->get_boundary_condition_manager("level_set"),
+      base_in->get_field_function("prescribed_velocity", "level_set"),
+      false);
 
     /*
      *    initialize the advection smoothed signum operation
      */
-    advec_smoothed_signum_operation =
-      std::make_shared<AdvectionDGOperation<dim>>(scratch_data,
-                                                  base_in->parameters.ls.advec_diff,
-                                                  time_stepping,
-                                                  advection_velocity,
-                                                  ls_dof_idx,
-                                                  ls_quad_idx,
-                                                  vel_dof_idx,
-                                                  base_in->get_bc("level_set"),
-                                                  base_in->get_field_function("prescribed_velocity",
-                                                                              "level_set"),
-                                                  false);
+    advec_smoothed_signum_operation = std::make_shared<AdvectionDGOperation<dim>>(
+      scratch_data,
+      base_in->parameters.ls.advec_diff,
+      time_stepping,
+      advection_velocity,
+      ls_dof_idx,
+      ls_quad_idx,
+      vel_dof_idx,
+      base_in->get_boundary_condition_manager("level_set"),
+      base_in->get_field_function("prescribed_velocity", "level_set"),
+      false);
 
 
     /*

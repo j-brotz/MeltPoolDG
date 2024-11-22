@@ -2,7 +2,6 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include "meltpooldg/reinitialization/reinitialization_data.hpp"
 #include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_continuous.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_interface_value.hpp>
@@ -15,6 +14,7 @@
 #include <meltpooldg/evaporation/evaporation_source_terms_continuous.hpp>
 #include <meltpooldg/evaporation/evaporation_source_terms_sharp.hpp>
 #include <meltpooldg/evaporation/recoil_pressure_operation.hpp>
+#include <meltpooldg/reinitialization/reinitialization_data.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>

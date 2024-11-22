@@ -71,7 +71,7 @@ namespace MeltPoolDG::MeltPool
 {
   template <int dim>
   void
-  MeltPoolProblem<dim>::run(std::shared_ptr<SimulationBase<dim>> base_in)
+  MeltPoolProblem<dim>::run(std::shared_ptr<SimulationParametersBase<dim>> base_in)
   {
     initialize(base_in); // no timing needed, since the function does itself
 
@@ -130,6 +130,7 @@ namespace MeltPoolDG::MeltPool
             heat_up_modify_time_step();
 
             const auto dt = time_iterator->compute_next_time_increment();
+            base_in->set_time_boundary_conditions(time_iterator->get_current_time());
 
             time_iterator->print_me(scratch_data->get_pcout());
 
@@ -598,7 +599,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolProblem<dim>::save(std::shared_ptr<SimulationBase<dim>> base_in)
+  MeltPoolProblem<dim>::save(std::shared_ptr<SimulationType> base_in)
   {
     std::ofstream ofs(base_in->parameters.restart.prefix + "_0_problem.restart");
     {
@@ -619,7 +620,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolProblem<dim>::load(std::shared_ptr<SimulationBase<dim>> base_in)
+  MeltPoolProblem<dim>::load(std::shared_ptr<SimulationType> base_in)
   {
     const std::string load_prefix =
       base_in->parameters.restart.prefix + "_" + std::to_string(base_in->parameters.restart.load);
@@ -771,7 +772,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolProblem<dim>::initialize(std::shared_ptr<SimulationBase<dim>> base_in)
+  MeltPoolProblem<dim>::initialize(std::shared_ptr<SimulationType> base_in)
   {
     /*
      *  parameters for adaflo
@@ -871,13 +872,6 @@ namespace MeltPoolDG::MeltPool
 
     pressure_dof_idx = flow_operation->get_dof_handler_idx_pressure();
 
-    //@todo move to a more central place
-    base_in->attach_boundary_condition("level_set");
-    base_in->attach_boundary_condition("reinitialization");
-    if (problem_specific_parameters.do_heat_transfer)
-      base_in->attach_boundary_condition("heat_transfer");
-
-
     /*
      *    initialize the levelset operation class
      *    and setup initial conditions
@@ -914,7 +908,7 @@ namespace MeltPoolDG::MeltPool
      */
     if (problem_specific_parameters.do_heat_transfer)
       heat_operation = std::make_shared<Heat::HeatDiffuseOperation<dim>>(
-        base_in->get_bc("heat_transfer"),
+        base_in->get_boundary_condition_manager("heat_transfer"),
         *scratch_data,
         base_in->parameters.heat,
         *material,
@@ -1190,7 +1184,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolProblem<dim>::set_initial_condition(std::shared_ptr<SimulationBase<dim>> base_in)
+  MeltPoolProblem<dim>::set_initial_condition(std::shared_ptr<SimulationType> base_in)
   {
     ScopedName         sc("mp::set_initial_condition");
     TimerOutput::Scope scope(scratch_data->get_timer(), sc);
@@ -1226,7 +1220,8 @@ namespace MeltPoolDG::MeltPool
                    "signed distance field must be provided. Abort ..."));
 
     // set inflow outflow BC
-    level_set_operation->set_inflow_outflow_bc(base_in->get_bc("level_set")->inflow_outflow_bc);
+    level_set_operation->set_inflow_outflow_bc(
+      base_in->get_boundary_condition("inflow_outflow", "level_set"));
 
     // set initial conditions of the temperature field
     if (heat_operation)
@@ -1248,8 +1243,7 @@ namespace MeltPoolDG::MeltPool
                                         Evaporation::EvaporationModelType::analytical))
           {
             //            heat_operation->reinit();
-            heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
-                                                  base_in->parameters.time_stepping.start_time);
+            heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
           }
       }
     /*
@@ -1293,8 +1287,8 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
-                                         const bool                           do_reinit)
+  MeltPoolProblem<dim>::setup_dof_system(std::shared_ptr<SimulationType> base_in,
+                                         const bool                      do_reinit)
   {
     FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.ls.fe, dof_handler_ls);
 
@@ -1322,28 +1316,32 @@ namespace MeltPoolDG::MeltPool
      */
     MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
       *scratch_data,
-      base_in->get_dirichlet_bc("level_set"),
+      base_in->get_boundary_condition("dirichlet", "level_set"),
       base_in->get_periodic_bc(),
       ls_dof_idx,
       ls_hanging_nodes_dof_idx);
     MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
       *scratch_data,
-      base_in->get_dirichlet_bc("level_set"),
+      base_in->get_boundary_condition("dirichlet", "level_set"),
       base_in->get_periodic_bc(),
       reinit_dof_idx,
       ls_hanging_nodes_dof_idx,
       false /*set inhomogeneities to zero*/);
 
     // additional reinitialization dirichlet bc
-    if (base_in->get_bc("reinitialization"))
-      MeltPoolDG::Constraints::fill_DBC<dim>(
-        *scratch_data, base_in->get_dirichlet_bc("reinitialization"), reinit_dof_idx, true, true);
+    if (base_in->get_boundary_condition_manager("reinitialization"))
+      MeltPoolDG::Constraints::fill_DBC<dim>(*scratch_data,
+                                             base_in->get_boundary_condition("dirichlet",
+                                                                             "reinitialization"),
+                                             reinit_dof_idx,
+                                             true,
+                                             true);
     reinit_no_solid_constraints_dirichlet.copy_from(reinit_constraints_dirichlet);
 
     if (problem_specific_parameters.do_heat_transfer)
       MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
         *scratch_data,
-        base_in->get_dirichlet_bc("heat_transfer"),
+        base_in->get_boundary_condition("dirichlet", "heat_transfer"),
         base_in->get_periodic_bc(),
         temp_dof_idx,
         temp_hanging_nodes_dof_idx);
@@ -1669,9 +1667,9 @@ namespace MeltPoolDG::MeltPool
   template <int dim>
   void
   MeltPoolProblem<dim>::output_results(
-    std::shared_ptr<SimulationBase<dim>> base_in,
-    const bool                           force_output,
-    const OutputNotConvergedOperation    output_not_converged_operation)
+    std::shared_ptr<SimulationType>   base_in,
+    const bool                        force_output,
+    const OutputNotConvergedOperation output_not_converged_operation)
   {
     const unsigned int n_time_step  = time_iterator->get_current_time_step_number();
     const double       current_time = time_iterator->get_current_time();
@@ -1718,8 +1716,8 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolProblem<dim>::finalize(std::shared_ptr<SimulationBase<dim>> base_in,
-                                 const OutputNotConvergedOperation    output_no_converged_operation)
+  MeltPoolProblem<dim>::finalize(std::shared_ptr<SimulationType>   base_in,
+                                 const OutputNotConvergedOperation output_no_converged_operation)
   {
     output_results(base_in, true /* force_output */, output_no_converged_operation);
 
@@ -1768,8 +1766,8 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   bool
-  MeltPoolProblem<dim>::mark_cells_for_refinement(std::shared_ptr<SimulationBase<dim>> base_in,
-                                                  Triangulation<dim>                  &tria)
+  MeltPoolProblem<dim>::mark_cells_for_refinement(std::shared_ptr<SimulationType> base_in,
+                                                  Triangulation<dim>             &tria)
   {
     const auto &amr_data = base_in->parameters.amr;
 
@@ -2268,7 +2266,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolProblem<dim>::refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in)
+  MeltPoolProblem<dim>::refine_mesh(std::shared_ptr<SimulationType> base_in)
   {
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       return this->mark_cells_for_refinement(base_in, tria);

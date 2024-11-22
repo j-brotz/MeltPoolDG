@@ -6,7 +6,6 @@
 #pragma once
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/periodic_boundary_conditions.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -52,15 +51,15 @@ namespace MeltPoolDG::Constraints
    */
   template <int dim>
   void
-  fill_DBC(ScratchData<dim>                       &scratch_data,
-           const DirichletBoundaryConditions<dim> &bc_data,
-           const unsigned int                      dof_idx,
-           const bool                              set_inhomogeneities = true,
-           const bool                              close               = true)
+  fill_DBC(ScratchData<dim>                                                           &scratch_data,
+           const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> &bc_data,
+           const unsigned int                                                          dof_idx,
+           const bool set_inhomogeneities = true,
+           const bool close               = true)
   {
-    if (!bc_data.get_data().empty())
+    if (!bc_data.empty())
       {
-        for (const auto &bc : bc_data.get_data())
+        for (const auto &bc : bc_data)
           {
             if (set_inhomogeneities)
               dealii::VectorTools::interpolate_boundary_values(
@@ -97,11 +96,11 @@ namespace MeltPoolDG::Constraints
    */
   template <int dim>
   void
-  make_DBC(ScratchData<dim>                       &scratch_data,
-           const DirichletBoundaryConditions<dim> &bc_data,
-           const unsigned int                      dof_idx,
-           const bool                              set_inhomogeneities = true,
-           const bool                              close               = true)
+  make_DBC(ScratchData<dim>                                                           &scratch_data,
+           const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> &bc_data,
+           const unsigned int                                                          dof_idx,
+           const bool set_inhomogeneities = true,
+           const bool close               = true)
   {
     scratch_data.get_constraint(dof_idx).reinit(scratch_data.get_locally_relevant_dofs(dof_idx));
 
@@ -167,11 +166,12 @@ namespace MeltPoolDG::Constraints
    */
   template <int dim>
   void
-  make_DBC_and_HNC_and_merge_HNC_into_DBC(ScratchData<dim>                       &scratch_data,
-                                          const DirichletBoundaryConditions<dim> &bc_data,
-                                          const unsigned int                      dof_idx,
-                                          const unsigned int dof_hanging_nodes_idx,
-                                          const bool         set_inhomogeneities = true)
+  make_DBC_and_HNC_and_merge_HNC_into_DBC(
+    ScratchData<dim>                                                           &scratch_data,
+    const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> &bc_data,
+    const unsigned int                                                          dof_idx,
+    const unsigned int dof_hanging_nodes_idx,
+    const bool         set_inhomogeneities = true)
   {
     make_DBC(scratch_data, bc_data, dof_idx, set_inhomogeneities, true /* close */);
     make_HNC(scratch_data, dof_hanging_nodes_idx, true /* close */);
@@ -252,12 +252,12 @@ namespace MeltPoolDG::Constraints
   template <int dim>
   void
   make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC(
-    ScratchData<dim>                       &scratch_data,
-    const DirichletBoundaryConditions<dim> &bc_data,
-    const PeriodicBoundaryConditions<dim>  &pbc,
-    const unsigned int                      dof_idx,
-    const unsigned int                      dof_hanging_nodes_idx,
-    const bool                              set_inhomogeneities = true)
+    ScratchData<dim>                                                           &scratch_data,
+    const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> &bc_data,
+    const PeriodicBoundaryConditions<dim>                                      &pbc,
+    const unsigned int                                                          dof_idx,
+    const unsigned int dof_hanging_nodes_idx,
+    const bool         set_inhomogeneities = true)
   {
     make_HNC_plus_PBC(scratch_data, pbc, dof_hanging_nodes_idx);
     make_DBC(scratch_data, bc_data, dof_idx, set_inhomogeneities, true /* close */);

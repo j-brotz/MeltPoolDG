@@ -40,7 +40,7 @@ namespace MeltPoolDG::Heat
 {
   template <int dim>
   void
-  HeatTransferProblem<dim>::run(std::shared_ptr<SimulationBase<dim>> base_in)
+  HeatTransferProblem<dim>::run(std::shared_ptr<SimulationType> base_in)
   {
     initialize(base_in);
 
@@ -49,6 +49,7 @@ namespace MeltPoolDG::Heat
         while (!time_iterator->is_finished())
           {
             const auto dt = time_iterator->compute_next_time_increment();
+            base_in->set_time_boundary_conditions(time_iterator->get_current_time());
 
             time_iterator->print_me(scratch_data->get_pcout());
 
@@ -155,7 +156,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferProblem<dim>::initialize(std::shared_ptr<SimulationBase<dim>> base_in)
+  HeatTransferProblem<dim>::initialize(std::shared_ptr<SimulationType> base_in)
   {
     /*
      *  Add problem specific parameters defined within add_parameters()
@@ -226,9 +227,6 @@ namespace MeltPoolDG::Heat
     if (velocity_field_function)
       velocity_ptr = &velocity;
 
-    //@todo move to a more central place
-    base_in->attach_boundary_condition("heat_transfer");
-
     /*
      *    initialize the heat operation class
      */
@@ -254,7 +252,7 @@ namespace MeltPoolDG::Heat
                   TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation));
 
             heat_operation = std::make_shared<HeatDiffuseOperation<dim>>(
-              base_in->get_bc("heat_transfer"),
+              base_in->get_boundary_condition_manager("heat_transfer"),
               *scratch_data,
               base_in->parameters.heat,
               *material,
@@ -310,8 +308,7 @@ namespace MeltPoolDG::Heat
     if (level_set_field_function)
       compute_field_vector(level_set, level_set_dof_idx, *level_set_field_function);
 
-    heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
-                                          base_in->parameters.time_stepping.start_time);
+    heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
 
     /*
      *  initialize postprocessor
@@ -336,8 +333,7 @@ namespace MeltPoolDG::Heat
           /*
            *  set initial conditions after initial AMR
            */
-          heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
-                                                base_in->parameters.time_stepping.start_time);
+          heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
         }
     /*
      *  output results of initialization
@@ -367,7 +363,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in)
+  HeatTransferProblem<dim>::setup_dof_system(std::shared_ptr<SimulationType> base_in)
   {
     FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.base.fe, dof_handler_level_set);
 
@@ -411,7 +407,7 @@ namespace MeltPoolDG::Heat
 
     MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
       *scratch_data,
-      base_in->get_dirichlet_bc("heat_transfer"),
+      base_in->get_boundary_condition("dirichlet", "heat_transfer"),
       base_in->get_periodic_bc(),
       temp_dof_idx,
       temp_hanging_nodes_dof_idx);
@@ -434,8 +430,8 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferProblem<dim>::output_results(std::shared_ptr<SimulationBase<dim>> base_in,
-                                           const bool output_not_converged)
+  HeatTransferProblem<dim>::output_results(std::shared_ptr<SimulationType> base_in,
+                                           const bool                      output_not_converged)
   {
     const unsigned int n_time_step = time_iterator->get_current_time_step_number();
     const double       time        = time_iterator->get_current_time();
@@ -502,7 +498,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferProblem<dim>::refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in)
+  HeatTransferProblem<dim>::refine_mesh(std::shared_ptr<SimulationType> base_in)
   {
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       Vector<float> estimated_error_per_cell(base_in->triangulation->n_active_cells());

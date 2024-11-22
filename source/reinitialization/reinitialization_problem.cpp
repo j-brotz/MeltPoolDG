@@ -22,7 +22,7 @@ namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   void
-  ReinitializationProblem<dim>::run(std::shared_ptr<SimulationBase<dim>> base_in)
+  ReinitializationProblem<dim>::run(std::shared_ptr<SimulationParametersBase<dim>> base_in)
   {
     initialize(base_in);
     bool first_time_step = true;
@@ -77,7 +77,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  ReinitializationProblem<dim>::initialize(std::shared_ptr<SimulationBase<dim>> base_in)
+  ReinitializationProblem<dim>::initialize(std::shared_ptr<SimulationType> base_in)
   {
     /*
      *  setup scratch data
@@ -176,7 +176,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  ReinitializationProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in)
+  ReinitializationProblem<dim>::setup_dof_system(std::shared_ptr<SimulationType> base_in)
   {
     /*
      *  setup DoFHandler
@@ -228,7 +228,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  ReinitializationProblem<dim>::refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in)
+  ReinitializationProblem<dim>::refine_mesh(std::shared_ptr<SimulationType> base_in)
   {
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       Vector<float> estimated_error_per_cell(base_in->triangulation->n_active_cells());
@@ -285,9 +285,9 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  ReinitializationProblem<dim>::output_results(const unsigned int                   time_step,
-                                               const double                         time,
-                                               std::shared_ptr<SimulationBase<dim>> base_in)
+  ReinitializationProblem<dim>::output_results(const unsigned int              time_step,
+                                               const double                    time,
+                                               std::shared_ptr<SimulationType> base_in)
   {
     if (!post_processor->is_output_timestep(time_step, time) &&
         !base_in->parameters.output.do_user_defined_postprocessing)
