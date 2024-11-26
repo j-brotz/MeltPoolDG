@@ -3,6 +3,7 @@
 #include <deal.II/base/function.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/parameter_handler.h>
+#include <deal.II/base/revision.h>
 #include <deal.II/base/types.h>
 
 #include <deal.II/grid/grid_tools.h>
@@ -12,6 +13,8 @@
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/periodic_boundary_conditions.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/revision.hpp>
 
 #include <algorithm>
 #include <fstream>
@@ -591,4 +594,6 @@ namespace MeltPoolDG
                   << "----------------------------------------------------" << std::endl;
       }
   }
+
+
 } // namespace MeltPoolDG
