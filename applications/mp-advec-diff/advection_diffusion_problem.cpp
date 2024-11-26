@@ -17,6 +17,8 @@
 #include <meltpooldg/utilities/revision.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 
+#include "advection_diffusion_case.hpp"
+
 namespace MeltPoolDG::LevelSet
 {
   template <int dim>
@@ -374,108 +376,6 @@ namespace MeltPoolDG::LevelSet
   template class AdvectionDiffusionProblem<3>;
 } // namespace MeltPoolDG::LevelSet
 
-namespace MeltPoolDG
-{
-  void
-  run_simulation(const std::string parameter_file, const MPI_Comm mpi_communicator)
-  {
-    unsigned int dim = 0;
-    std::string  case_name;
-
-    {
-      // The parameters will be read here to get information on the selection variables, i.e.,
-      // the dimension, the case_name and the problem_name.
-      ParameterHandler                                   prm;
-      LevelSet::AdvectionDiffusionCaseParameters<double> parameters;
-      parameters.process_parameters_file(prm, parameter_file);
-
-      // print number of processes and GIT hashes if verbosity level >= 1
-      if (parameters.base.verbosity_level >= 1)
-        {
-          dealii::ConditionalOStream pcout(std::cout,
-                                           Utilities::MPI::this_mpi_process(mpi_communicator) == 0);
-          Journal::print_decoration_line(pcout);
-          Journal::print_line(pcout,
-                              "Running MeltPoolDG on " +
-                                std::to_string(Utilities::MPI::n_mpi_processes(mpi_communicator)) +
-                                " ranks.");
-
-          Journal::print_decoration_line(pcout);
-          pcout << "  - deal.II:" << std::endl
-                << "      * branch: " << DEAL_II_GIT_BRANCH << std::endl
-                << "      * revision: " << DEAL_II_GIT_REVISION << std::endl
-                << "      * short: " << DEAL_II_GIT_SHORTREV << std::endl;
-          pcout << "  - MeltPoolDG:" << std::endl
-                << "      * branch: " << LOCAL_GIT_BRANCH << std::endl
-                << "      * revision: " << LOCAL_GIT_REVISION << std::endl
-                << "      * short: " << LOCAL_GIT_SHORTREV << std::endl;
-          Journal::print_decoration_line(pcout);
-        }
-
-      if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
-          parameters.base.do_print_parameters)
-        parameters.print_parameters(prm, std::cout, false /*print_details*/);
-
-      dim       = parameters.base.dimension;
-      case_name = parameters.base.case_name;
-    }
-
-    try
-      {
-        if (dim == 1)
-          {
-            auto sim = get_simulation_case<LevelSet::AdvectionDiffusionCase<1>>(case_name,
-                                                                                parameter_file,
-                                                                                mpi_communicator);
-            sim->create();
-            auto problem = std::make_unique<LevelSet::AdvectionDiffusionProblem<1>>(std::move(sim));
-            problem->run();
-          }
-        else if (dim == 2)
-          {
-            auto sim = get_simulation_case<LevelSet::AdvectionDiffusionCase<2>>(case_name,
-                                                                                parameter_file,
-                                                                                mpi_communicator);
-            sim->create();
-            auto problem = std::make_unique<LevelSet::AdvectionDiffusionProblem<2>>(std::move(sim));
-            problem->run();
-          }
-        else if (dim == 3)
-          {
-            auto sim = get_simulation_case<LevelSet::AdvectionDiffusionCase<3>>(case_name,
-                                                                                parameter_file,
-                                                                                mpi_communicator);
-            sim->create();
-            auto problem = std::make_unique<LevelSet::AdvectionDiffusionProblem<3>>(std::move(sim));
-            problem->run();
-          }
-        else
-          {
-            AssertThrow(false, ExcMessage("Dimension must be 1, 2 or 3."));
-          }
-      }
-    catch (std::exception &exc)
-      {
-        std::cerr << std::endl
-                  << std::endl
-                  << "----------------------------------------------------" << std::endl;
-        std::cerr << "Exception on processing: " << std::endl
-                  << exc.what() << std::endl
-                  << "Aborting!" << std::endl
-                  << "----------------------------------------------------" << std::endl;
-      }
-    catch (...)
-      {
-        std::cerr << std::endl
-                  << std::endl
-                  << "----------------------------------------------------" << std::endl;
-        std::cerr << "Unknown exception!" << std::endl
-                  << "Aborting!" << std::endl
-                  << "----------------------------------------------------" << std::endl;
-      }
-  }
-} // namespace MeltPoolDG
-
 int
 main(int argc, char *argv[])
 {
@@ -497,7 +397,9 @@ main(int argc, char *argv[])
   else if (argc == 2)
     {
       input_file = std::string(argv[argc - 1]);
-      run_simulation(input_file, mpi_comm);
+      run_simulation<LevelSet::AdvectionDiffusionCaseParameters<double>,
+                     LevelSet::AdvectionDiffusionCase,
+                     LevelSet::AdvectionDiffusionProblem>(input_file, mpi_comm);
     }
   else if (argc == 3 &&
            ((std::string(argv[1]) == "--help") || (std::string(argv[1]) == "--help-detail")))
