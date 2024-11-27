@@ -14,9 +14,9 @@
 
 #include <deal.II/numerics/data_out.h>
 
+#include <meltpooldg/core/problem_base.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/evaporation/evaporation_data.hpp>
-#include <meltpooldg/interface/problem_base.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_problem.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/amr.hpp>
@@ -32,7 +32,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  LevelSetProblem<dim>::run(std::shared_ptr<SimulationParametersBase<dim>> base_in)
+  LevelSetProblem<dim>::run(std::shared_ptr<MeltPoolCase<dim>> base_in)
   {
     initialize(base_in);
     ScopedName         sc("run");
@@ -97,13 +97,6 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim>
-  std::string
-  LevelSetProblem<dim>::get_name()
-  {
-    return "level_set_problem";
-  }
-
   /*
    *  This function initials the relevant scratch data
    *  for the computation of the level set problem
@@ -158,29 +151,36 @@ namespace MeltPoolDG::LevelSet
 
     if (base_in->parameters.ls.fe.type != FiniteElementType::FE_DGQ)
       {
-        level_set_operation = std::make_shared<LevelSetOperation<dim>>(*scratch_data,
-                                                                       *time_iterator,
-                                                                       base_in,
-                                                                       advection_velocity,
-                                                                       ls_dof_idx,
-                                                                       ls_hanging_nodes_dof_idx,
-                                                                       ls_quad_idx,
-                                                                       reinit_dof_idx,
-                                                                       curv_dof_idx,
-                                                                       normal_dof_idx,
-                                                                       vel_dof_idx,
-                                                                       ls_zero_bc_idx);
+        level_set_operation =
+          std::make_shared<LevelSetOperation<dim>>(*scratch_data,
+                                                   *time_iterator,
+                                                   *base_in->get_boundary_condition_manager(
+                                                     "level_set"),
+                                                   base_in->parameters.time_stepping,
+                                                   base_in->parameters.ls,
+                                                   advection_velocity,
+                                                   ls_dof_idx,
+                                                   ls_hanging_nodes_dof_idx,
+                                                   ls_quad_idx,
+                                                   reinit_dof_idx,
+                                                   curv_dof_idx,
+                                                   normal_dof_idx,
+                                                   vel_dof_idx,
+                                                   ls_zero_bc_idx);
       }
     else
       {
-        level_set_operation = std::make_shared<LevelSetDGOperation<dim>>(*scratch_data,
-                                                                         *time_iterator,
-                                                                         base_in,
-                                                                         advection_velocity,
-                                                                         ls_dof_idx,
-                                                                         ls_quad_idx,
-                                                                         reinit_dof_idx,
-                                                                         vel_dof_idx);
+        level_set_operation = std::make_shared<LevelSetDGOperation<dim>>(
+          *scratch_data,
+          *time_iterator,
+          base_in->parameters.ls,
+          base_in->get_boundary_condition_manager("level_set"),
+          base_in->get_field_function("prescribed_velocity", "level_set"),
+          advection_velocity,
+          ls_dof_idx,
+          ls_quad_idx,
+          reinit_dof_idx,
+          vel_dof_idx);
       }
     level_set_operation->reinit();
 
@@ -192,7 +192,7 @@ namespace MeltPoolDG::LevelSet
     /*
      * configure level set with evaporation if requested
      */
-    if (base_in->parameters.base.problem_name == ProblemType::level_set_with_evaporation)
+    if (base_in->parameters.base.problem_name == "level_set_with_evaporation")
       {
         evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim>>(
           *scratch_data,

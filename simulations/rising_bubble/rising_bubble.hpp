@@ -12,11 +12,11 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
 
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/core/parameters.hpp>
 
 #include <iostream>
 // MeltPoolDG
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 
 namespace MeltPoolDG
 {
@@ -53,11 +53,11 @@ namespace MeltPoolDG
        */
 
       template <int dim>
-      class SimulationRisingBubble : public SimulationParametersBase<dim>
+      class SimulationRisingBubble : public MeltPoolCase<dim>
       {
       public:
         SimulationRisingBubble(std::string parameter_file, const MPI_Comm mpi_communicator)
-          : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+          : MeltPoolCase<dim>(parameter_file, mpi_communicator)
         {}
 
         void

@@ -14,8 +14,8 @@
 #include <cmath>
 #include <iostream>
 // MeltPoolDG
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 /**
@@ -75,12 +75,12 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
    */
 
   template <int dim>
-  class SimulationStefansProblem2WithFlowAndHeat : public SimulationParametersBase<dim>
+  class SimulationStefansProblem2WithFlowAndHeat : public MeltPoolCase<dim>
   {
   public:
     SimulationStefansProblem2WithFlowAndHeat(std::string    parameter_file,
                                              const MPI_Comm mpi_communicator)
-      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
     {}
 
     void

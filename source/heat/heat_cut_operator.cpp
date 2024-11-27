@@ -12,7 +12,7 @@
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 #include <deal.II/matrix_free/tools.h>
 
-#include <meltpooldg/interface/exceptions.hpp>
+#include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/utilities/cut_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 

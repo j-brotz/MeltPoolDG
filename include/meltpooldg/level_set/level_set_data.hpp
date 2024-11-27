@@ -3,8 +3,8 @@
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_data.hpp>
+#include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/curvature/curvature_data.hpp>
-#include <meltpooldg/interface/finite_element_data.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
 #include <meltpooldg/normal_vector/normal_vector_data.hpp>
 #include <meltpooldg/reinitialization/reinitialization_data.hpp>

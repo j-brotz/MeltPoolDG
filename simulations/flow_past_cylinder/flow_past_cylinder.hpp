@@ -1,5 +1,5 @@
 #pragma once
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/core/parameters.hpp>
 
 // deal-specific libraries
 #include <deal.II/base/function.h>
@@ -14,7 +14,7 @@
 
 #include <iostream>
 // MeltPoolDG
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 
 namespace MeltPoolDG
 {
@@ -100,11 +100,11 @@ namespace MeltPoolDG
        */
 
       template <int dim>
-      class SimulationFlowPastCylinder : public SimulationParametersBase<dim>
+      class SimulationFlowPastCylinder : public MeltPoolCase<dim>
       {
       public:
         SimulationFlowPastCylinder(std::string parameter_file, const MPI_Comm mpi_communicator)
-          : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+          : MeltPoolCase<dim>(parameter_file, mpi_communicator)
         {}
 
         void

@@ -8,7 +8,7 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 // MeltPoolDG
-#include <meltpooldg/interface/operator_base.hpp>
+#include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>

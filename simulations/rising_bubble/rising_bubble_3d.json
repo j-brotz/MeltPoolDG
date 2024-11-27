@@ -1,7 +1,7 @@
 {
   "base": {
     "problem name": "melt_pool",
-    "application name": "rising_bubble",
+    "case name": "rising_bubble",
     "global refinements": "2",
     "dimension": "3",
     "fe": {

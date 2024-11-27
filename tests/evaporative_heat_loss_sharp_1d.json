@@ -1,7 +1,7 @@
 {
   "base": {
     "problem name": "melt_pool",
-    "application name": "recoil_pressure",
+    "case name": "recoil_pressure",
     "global refinements": "4",
     "dimension": "1",
     "do print parameters": "false",

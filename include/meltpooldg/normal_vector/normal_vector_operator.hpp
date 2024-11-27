@@ -12,8 +12,8 @@
 #include <deal.II/matrix_free/fe_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
 // MeltPoolDG
-#include <meltpooldg/interface/operator_base.hpp>
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/core/operator_base.hpp>
+#include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
 using namespace dealii;

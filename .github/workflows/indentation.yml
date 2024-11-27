@@ -23,12 +23,12 @@ jobs:
         git diff-files --quiet || exit $?
     - name: json-formatting
       run: |
-        scripts/format-all-json
+        scripts/formatting/format-all-json
         git diff
         git diff-files --quiet || exit $?
-    - name: json-check
+    - name: json-check-of-test-configuration
       run: |
-        . ./scripts/check-json || exit $?
+        . ./scripts/sanity_check_ci/check-json || exit $?
     - name: python-formatting
       id: autopep8
       uses: peter-evans/autopep8@v1

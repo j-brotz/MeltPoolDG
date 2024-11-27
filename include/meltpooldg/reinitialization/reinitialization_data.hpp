@@ -3,7 +3,7 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/parameter_handler.h>
 
-#include <meltpooldg/interface/finite_element_data.hpp>
+#include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/predictor_data.hpp>
 #include <meltpooldg/time_integration/time_integration_setup.hpp>

@@ -11,9 +11,9 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
-#include <meltpooldg/interface/problem_base.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/problem_base.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
@@ -37,7 +37,7 @@ namespace MeltPoolDG
     class ReinitializationProblem : public ProblemBase<dim>
     {
     private:
-      using SimulationType = SimulationParametersBase<dim>;
+      using SimulationType = MeltPoolCase<dim>;
       using VectorType     = LinearAlgebra::distributed::Vector<double>;
       using DoFHandlerType = DoFHandler<dim>;
 
@@ -50,9 +50,6 @@ namespace MeltPoolDG
 
       void
       run(std::shared_ptr<SimulationType> base_in) final;
-
-      std::string
-      get_name() final;
 
     private:
       /*

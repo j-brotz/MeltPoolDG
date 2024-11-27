@@ -1,7 +1,7 @@
 {
   "base": {
     "problem name": "radiative_transport",
-    "application name": "radiative_transport",
+    "case name": "radiative_transport",
     "dimension": "1",
     "global refinements": "5",
     "do print parameters": "false",

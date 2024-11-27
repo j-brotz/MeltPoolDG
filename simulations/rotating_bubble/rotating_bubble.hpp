@@ -17,8 +17,8 @@
 #include <cmath>
 #include <iostream>
 // MeltPoolDG
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG
@@ -83,11 +83,11 @@ namespace MeltPoolDG
        */
 
       template <int dim>
-      class SimulationRotatingBubble : public SimulationParametersBase<dim>
+      class SimulationRotatingBubble : public MeltPoolCase<dim>
       {
       public:
         SimulationRotatingBubble(std::string parameter_file, const MPI_Comm mpi_communicator)
-          : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+          : MeltPoolCase<dim>(parameter_file, mpi_communicator)
         {}
 
         void

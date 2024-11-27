@@ -10,8 +10,8 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
 
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/utilities/functions.hpp>
 
 #include <iostream>
@@ -25,11 +25,11 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
   static double radius_2    = 0.75;
 
   template <int dim>
-  class SimulationSpuriousCurrents : public SimulationParametersBase<dim>
+  class SimulationSpuriousCurrents : public MeltPoolCase<dim>
   {
   public:
     SimulationSpuriousCurrents(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
     {}
 
     bool

@@ -1,4 +1,4 @@
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/core/parameters.hpp>
 
 #include <iostream>
 

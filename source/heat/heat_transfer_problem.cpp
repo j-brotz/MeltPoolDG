@@ -18,11 +18,11 @@
 #include <deal.II/numerics/vector_tools_integrate_difference.h>
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
+#include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/heat/heat_cut_operation.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/heat_diffuse_operation.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
-#include <meltpooldg/interface/exceptions.hpp>
 #include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
@@ -128,13 +128,6 @@ namespace MeltPoolDG::Heat
         AssertThrow(false, e);
       }
     Journal::print_end(scratch_data->get_pcout());
-  }
-
-  template <int dim>
-  std::string
-  HeatTransferProblem<dim>::get_name()
-  {
-    return "heat_transfer";
   }
 
   template <int dim>

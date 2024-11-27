@@ -15,9 +15,9 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_tools_geometry.h>
 
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/heat/laser_intensity_profiles.hpp>
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -104,11 +104,11 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
 
 
   template <int dim>
-  class RadiativeTransportSimulation : public SimulationParametersBase<dim>
+  class RadiativeTransportSimulation : public MeltPoolCase<dim>
   {
   public:
     RadiativeTransportSimulation(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
       , cell_repetitions(dim, 1)
     {}
 
@@ -224,7 +224,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
       [[maybe_unused]] const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
         get_colorized_rectangle_boundary_ids<dim>();
 
-      if (this->parameters.base.problem_name == ProblemType::radiative_transport)
+      if (this->parameters.base.problem_name == "radiative_transport")
         this->attach_boundary_condition(
           {upper_bc,
            std::make_shared<Heat::GaussProjectionIntensityProfile<dim, double>>(
@@ -260,12 +260,12 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
                                                                               epsilon_cell),
                                      "prescribed_heaviside");
 
-      if (this->parameters.base.problem_name == ProblemType::radiative_transport)
+      if (this->parameters.base.problem_name == "radiative_transport")
         this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(),
                                        "intensity");
 
       // this is only used to TODO generate the comparison solution with the gaussian laser
-      if (this->parameters.base.problem_name == ProblemType::heat_transfer)
+      if (this->parameters.base.problem_name == "heat_transfer")
         {
           // attach dummy initial conditions for the heat transfer operation
           this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(),

@@ -11,6 +11,7 @@ namespace MeltPoolDG::LevelSet
     linear_solver.solver_type         = LinearSolverType::GMRES;
     linear_solver.preconditioner_type = PreconditionerType::Diagonal;
   }
+
   template <typename number>
   void
   AdvectionDiffusionData<number>::add_parameters(dealii::ParameterHandler &prm)

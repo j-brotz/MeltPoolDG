@@ -5,7 +5,7 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 
-#include <meltpooldg/interface/operator_base.hpp>
+#include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
 
 

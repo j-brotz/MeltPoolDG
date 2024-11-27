@@ -7,11 +7,11 @@
 #include <deal.II/grid/tria.h>
 
 // MeltPoolDG
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 // c++
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/core/parameters.hpp>
 
 #include <cmath>
 #include <iostream>
@@ -158,12 +158,12 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
    */
 
   template <int dim>
-  class SimulationThermoCapillaryTwoDroplets : public SimulationParametersBase<dim>
+  class SimulationThermoCapillaryTwoDroplets : public MeltPoolCase<dim>
   {
   public:
     SimulationThermoCapillaryTwoDroplets(std::string    parameter_file,
                                          const MPI_Comm mpi_communicator)
-      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
     {}
 
     void

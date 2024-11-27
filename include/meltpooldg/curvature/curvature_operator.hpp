@@ -8,8 +8,8 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 // MeltPoolDG
-#include <meltpooldg/interface/operator_base.hpp>
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/core/operator_base.hpp>
+#include <meltpooldg/core/parameters.hpp>
 
 using namespace dealii;
 

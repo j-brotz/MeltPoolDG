@@ -28,7 +28,7 @@ namespace MeltPoolDG::Heat
 
     if (laser_data.model == LaserModelType::analytical_temperature)
       {
-        AssertThrow(data_in.base.problem_name == ProblemType::melt_pool,
+        AssertThrow(data_in.base.problem_name == "melt_pool",
                     ExcMessage(
                       "Only the melt pool problem can handle the analytical laser model."));
         return;

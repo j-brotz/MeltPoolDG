@@ -541,5 +541,6 @@ namespace MeltPoolDG
 
       return point;
     }
+
   } // namespace UtilityFunctions
 } // namespace MeltPoolDG

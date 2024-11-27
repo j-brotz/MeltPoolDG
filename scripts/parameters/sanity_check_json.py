@@ -144,6 +144,7 @@ old_parameter_names = [
     ["base", "do simplex"],
     ["heat", "degree"],
     ["material", "sticking constant"],
+    ["base", "application name"],
     # ... add old parameter names
     # ["old", "my age"],
 ]
@@ -271,6 +272,7 @@ new_parameter_names = [
     ["base", "fe", "type"],
     ["heat", "fe", "degree"],
     ["evaporation", "recoil pressure", "sticking constant"],
+    ["base", "case name"],
     # ... add new parameter names
     # ["new", "new", "my new age"],
 ]

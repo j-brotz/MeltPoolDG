@@ -14,8 +14,8 @@
 
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
-#include <meltpooldg/interface/exceptions.hpp>
-#include <meltpooldg/interface/finite_element_data.hpp>
+#include <meltpooldg/core/exceptions.hpp>
+#include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/utilities/cut_util.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>

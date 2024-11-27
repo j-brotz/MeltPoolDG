@@ -1,6 +1,6 @@
 #include <deal.II/numerics/data_out.h>
 
-#include <meltpooldg/interface/exceptions.hpp>
+#include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>

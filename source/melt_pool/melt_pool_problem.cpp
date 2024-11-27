@@ -30,12 +30,12 @@
 #include <deal.II/numerics/vector_tools_common.h>
 #include <deal.II/numerics/vector_tools_integrate_difference.h>
 
+#include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/evaporation/recoil_pressure_data.hpp>
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
 #include <meltpooldg/heat/laser_analytical_temperature_field.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
-#include <meltpooldg/interface/exceptions.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
@@ -71,7 +71,7 @@ namespace MeltPoolDG::MeltPool
 {
   template <int dim>
   void
-  MeltPoolProblem<dim>::run(std::shared_ptr<SimulationParametersBase<dim>> base_in)
+  MeltPoolProblem<dim>::run(std::shared_ptr<MeltPoolCase<dim>> base_in)
   {
     initialize(base_in); // no timing needed, since the function does itself
 
@@ -656,13 +656,6 @@ namespace MeltPoolDG::MeltPool
   }
 
   template <int dim>
-  std::string
-  MeltPoolProblem<dim>::get_name()
-  {
-    return "melt_pool";
-  }
-
-  template <int dim>
   void
   MeltPoolProblem<dim>::add_parameters(dealii::ParameterHandler &prm)
   {
@@ -879,7 +872,10 @@ namespace MeltPoolDG::MeltPool
     level_set_operation =
       std::make_shared<LevelSet::LevelSetOperation<dim>>(*scratch_data,
                                                          *time_iterator,
-                                                         base_in,
+                                                         *base_in->get_boundary_condition_manager(
+                                                           "level_set"),
+                                                         base_in->parameters.time_stepping,
+                                                         base_in->parameters.ls,
                                                          interface_velocity,
                                                          ls_dof_idx,
                                                          ls_hanging_nodes_dof_idx,

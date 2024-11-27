@@ -5,8 +5,8 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_tools_geometry.h>
 
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
@@ -52,11 +52,11 @@ namespace MeltPoolDG::Simulation::OscillatingDroplet
   };
 
   template <int dim>
-  class SimulationOscillatingDroplet : public SimulationParametersBase<dim>
+  class SimulationOscillatingDroplet : public MeltPoolCase<dim>
   {
   public:
     SimulationOscillatingDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
     {
       AssertDimension(dim, 2);
     }

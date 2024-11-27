@@ -11,7 +11,7 @@
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 
-#include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_base.hpp>
 

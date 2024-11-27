@@ -22,7 +22,7 @@ namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   void
-  ReinitializationProblem<dim>::run(std::shared_ptr<SimulationParametersBase<dim>> base_in)
+  ReinitializationProblem<dim>::run(std::shared_ptr<MeltPoolCase<dim>> base_in)
   {
     initialize(base_in);
     bool first_time_step = true;
@@ -66,13 +66,6 @@ namespace MeltPoolDG::LevelSet
           }
       }
     Journal::print_end(scratch_data->get_pcout());
-  }
-
-  template <int dim>
-  std::string
-  ReinitializationProblem<dim>::get_name()
-  {
-    return "reinitialization";
   }
 
   template <int dim>
@@ -156,7 +149,8 @@ namespace MeltPoolDG::LevelSet
                                                                  reinit_dof_idx,
                                                                  reinit_quad_idx,
                                                                  normal_dof_idx, // normal vec @todo
-                                                                 base_in->parameters);
+                                                                 base_in->parameters.time_stepping,
+                                                                 base_in->parameters.ls);
         reinit_operation->reinit();
       }
 #endif

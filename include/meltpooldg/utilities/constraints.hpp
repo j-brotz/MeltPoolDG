@@ -6,8 +6,8 @@
 #pragma once
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/interface/periodic_boundary_conditions.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/core/periodic_boundary_conditions.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::Constraints
@@ -62,14 +62,14 @@ namespace MeltPoolDG::Constraints
         for (const auto &bc : bc_data)
           {
             if (set_inhomogeneities)
-              dealii::VectorTools::interpolate_boundary_values(
+              dealii::VectorTools::interpolate_boundary_values<dim>(
                 scratch_data.get_mapping(),
                 scratch_data.get_dof_handler(dof_idx),
                 bc.first,
                 *bc.second,
                 scratch_data.get_constraint(dof_idx));
             else
-              dealii::DoFTools::make_zero_boundary_constraints(
+              dealii::DoFTools::make_zero_boundary_constraints<dim>(
                 scratch_data.get_dof_handler(dof_idx),
                 bc.first,
                 scratch_data.get_constraint(dof_idx));

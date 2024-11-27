@@ -8,15 +8,16 @@ namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   AdvectionDiffusionOperationAdaflo<dim>::AdvectionDiffusionOperationAdaflo(
-    const ScratchData<dim>                        &scratch_data,
-    const TimeIterator<double>                    &time_iterator,
-    const VectorType                              &advection_velocity,
-    const int                                      advec_diff_zero_dirichlet_dof_idx,
-    const int                                      advec_diff_dirichlet_dof_idx,
-    const int                                      advec_diff_quad_idx,
-    const int                                      velocity_dof_idx,
-    std::shared_ptr<SimulationParametersBase<dim>> base_in,
-    std::string                                    operation_name)
+    const ScratchData<dim>               &scratch_data,
+    const TimeIterator<double>           &time_iterator,
+    const VectorType                     &advection_velocity,
+    const int                             advec_diff_zero_dirichlet_dof_idx,
+    const int                             advec_diff_dirichlet_dof_idx,
+    const int                             advec_diff_quad_idx,
+    const int                             velocity_dof_idx,
+    const TimeSteppingData<double>       &time_stepping,
+    const AdvectionDiffusionData<double> &advec_diff_data,
+    const BoundaryConditionManager<dim>  &bc)
     : scratch_data(scratch_data)
     , time_iterator(time_iterator)
     , advection_velocity(advection_velocity)
@@ -26,17 +27,17 @@ namespace MeltPoolDG::LevelSet
     /**
      * set parameters of adaflo
      */
-    set_adaflo_parameters(base_in->parameters,
+    set_adaflo_parameters(time_stepping,
+                          advec_diff_data,
                           advec_diff_zero_dirichlet_dof_idx,
                           advec_diff_quad_idx,
                           velocity_dof_idx);
     /*
      * Boundary conditions for the advected field
      */
-    for (const auto &[symmetry_id, dummy] :
-         base_in->get_boundary_condition("symmetry", operation_name))
+    for (const auto &[symmetry_id, dummy] : bc.get_bc_of_type("symmetry"))
       bcs.symmetry.insert(symmetry_id);
-    for (const auto &dirichlet_bc : base_in->get_boundary_condition("dirichlet", operation_name))
+    for (const auto &dirichlet_bc : bc.get_bc_of_type("dirichlet"))
       bcs.dirichlet[dirichlet_bc.first] = dirichlet_bc.second;
     /*
      * initialize adaflo operation
@@ -223,24 +224,25 @@ namespace MeltPoolDG::LevelSet
   template <int dim>
   void
   AdvectionDiffusionOperationAdaflo<dim>::set_adaflo_parameters(
-    const Parameters<double> &parameters,
-    const int                 advec_diff_dof_idx,
-    const int                 advec_diff_quad_idx,
-    const int                 velocity_dof_idx)
+    const TimeSteppingData<double>       &time_stepping,
+    const AdvectionDiffusionData<double> &advec_diff,
+    const int                             advec_diff_dof_idx,
+    const int                             advec_diff_quad_idx,
+    const int                             velocity_dof_idx)
   {
-    adaflo_params.time.start_time           = parameters.time_stepping.start_time;
-    adaflo_params.time.end_time             = parameters.time_stepping.end_time;
-    adaflo_params.time.time_step_size_start = parameters.time_stepping.time_step_size;
-    adaflo_params.time.time_step_size_min   = parameters.time_stepping.time_step_size;
-    adaflo_params.time.time_step_size_max   = parameters.time_stepping.time_step_size;
+    adaflo_params.time.start_time           = time_stepping.start_time;
+    adaflo_params.time.end_time             = time_stepping.end_time;
+    adaflo_params.time.time_step_size_start = time_stepping.time_step_size;
+    adaflo_params.time.time_step_size_min   = time_stepping.time_step_size;
+    adaflo_params.time.time_step_size_max   = time_stepping.time_step_size;
 
-    if (parameters.ls.advec_diff.time_integration_scheme == TimeIntegrators::implicit_euler)
+    if (advec_diff.time_integration_scheme == TimeIntegrators::implicit_euler)
       adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::implicit_euler;
-    else if (parameters.ls.advec_diff.time_integration_scheme == TimeIntegrators::explicit_euler)
+    else if (advec_diff.time_integration_scheme == TimeIntegrators::explicit_euler)
       adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::explicit_euler;
-    else if (parameters.ls.advec_diff.time_integration_scheme == TimeIntegrators::crank_nicolson)
+    else if (advec_diff.time_integration_scheme == TimeIntegrators::crank_nicolson)
       adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::crank_nicolson;
-    else if (parameters.ls.advec_diff.time_integration_scheme == TimeIntegrators::bdf_2)
+    else if (advec_diff.time_integration_scheme == TimeIntegrators::bdf_2)
       adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::bdf_2;
     else
       AssertThrow(false, ExcMessage("Requested time stepping scheme not supported."));

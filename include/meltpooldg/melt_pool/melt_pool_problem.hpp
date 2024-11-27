@@ -13,6 +13,10 @@
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/generic_linear_algebra.h>
 
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/problem_base.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
 #include <meltpooldg/evaporation/incompressible_newtonian_evaporation_material.hpp>
 #include <meltpooldg/evaporation/recoil_pressure_operation.hpp>
@@ -21,10 +25,6 @@
 #include <meltpooldg/flow/surface_tension_operation.hpp>
 #include <meltpooldg/heat/heat_diffuse_operation.hpp>
 #include <meltpooldg/heat/laser_operation.hpp>
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/problem_base.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/melt_pool/melt_front_propagation.hpp>
@@ -53,7 +53,7 @@ namespace MeltPoolDG::MeltPool
   class MeltPoolProblem : public ProblemBase<dim>
   {
   private:
-    using SimulationType  = SimulationParametersBase<dim>;
+    using SimulationType  = MeltPoolCase<dim>;
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
@@ -62,9 +62,6 @@ namespace MeltPoolDG::MeltPool
 
     void
     run(std::shared_ptr<SimulationType> base_in) final;
-
-    std::string
-    get_name() final;
 
   protected:
     void

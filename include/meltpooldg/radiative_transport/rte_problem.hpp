@@ -9,10 +9,10 @@
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/problem_base.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/problem_base.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/radiative_transport/rte_operation.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
@@ -30,7 +30,7 @@ namespace MeltPoolDG::RadiativeTransport
   class RadiativeTransportProblem : public ProblemBase<dim>
   {
   private:
-    using SimulationType = SimulationParametersBase<dim>;
+    using SimulationType = MeltPoolCase<dim>;
     using VectorType     = LinearAlgebra::distributed::Vector<double>;
 
     VectorType heaviside;
@@ -64,9 +64,6 @@ namespace MeltPoolDG::RadiativeTransport
 
     void
     run(std::shared_ptr<SimulationType> base_in) final;
-
-    std::string
-    get_name() final;
 
   protected:
     void

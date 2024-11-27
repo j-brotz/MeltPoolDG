@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -e 
+
+test()
+  {
+    result=$(
+      for f in $(find tests/ -type f -name "*.json"); do
+        python3 scripts/sanity_check_ci/check-json.py "$1" "$2" $f
+      done
+      )
+
+    [ -z "$result" ] && return 0
+
+    echo "Error in test .json-files: $3:"
+
+    sorted=($(sort <<<"${result[*]}"));
+
+    for i in "${sorted[@]}"
+    do
+       echo "  $i"
+    done
+
+    return 1
+  }
+
+# test 1: "output" -> "paraview" -> "enable" : false
+test 'output,paraview,enable' 'false' 'output is enabled in following files'
+
+# test 2: "base" -> "verbosity level" : 0
+test 'base,verbosity level' '0' 'verbosity level is not correct in following files'
+
+# test 3: "Navier-Stokes" -> "adaflo" -> "Output options" -> "output verbosity" : 0
+test 'Navier-Stokes,adaflo,Output options,output verbosity' '0' 'output verbosity is not correct in following files'
+

@@ -1,4 +1,4 @@
-#include <meltpooldg/interface/exceptions.hpp>
+#include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/reinitialization/olsson_operator.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 

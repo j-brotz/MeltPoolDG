@@ -2,9 +2,9 @@
 // MeltPoolDG
 #include <deal.II/base/mpi.h>
 
-#include <meltpooldg/interface/base_data.hpp>
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/base_data.hpp>
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 
 #include <memory>
 #include <string>
@@ -17,10 +17,10 @@ namespace MeltPoolDG
     class SimulationSelector
     {
     public:
-      static std::shared_ptr<SimulationParametersBase<dim>>
-      get_simulation(const ApplicationName simulation_name,
-                     const std::string     parameter_file,
-                     const MPI_Comm        mpi_communicator);
+      static std::shared_ptr<MeltPoolCase<dim>>
+      get_simulation(const std::string simulation_name,
+                     const std::string parameter_file,
+                     const MPI_Comm    mpi_communicator);
     };
   } // namespace Simulation
 } // namespace MeltPoolDG

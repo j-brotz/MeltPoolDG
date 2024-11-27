@@ -1,6 +1,6 @@
 {
   "base": {
-    "application name": "melt_front_propagation",
+    "case name": "melt_front_propagation",
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "4",

@@ -5,7 +5,7 @@
 
 #include <deal.II/lac/sparsity_tools.h>
 
-#include <meltpooldg/interface/operator_base.hpp>
+#include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>

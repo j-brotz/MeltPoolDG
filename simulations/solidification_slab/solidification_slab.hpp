@@ -8,8 +8,8 @@
 #include <cmath>
 #include <iostream>
 // MeltPoolDG
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 
 
 /**
@@ -38,11 +38,11 @@ namespace MeltPoolDG::Simulation::SolidificationSlab
   static constexpr double T_hat = 253.0;
 
   template <int dim>
-  class SimulationSolidificationSlab : public SimulationParametersBase<dim>
+  class SimulationSolidificationSlab : public MeltPoolCase<dim>
   {
   public:
     SimulationSolidificationSlab(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
     {}
 
     void

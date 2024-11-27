@@ -8,10 +8,10 @@
 #include <tuple>
 
 // MeltPoolDG
+#include <meltpooldg/core/boundary_conditions.hpp>
+#include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
-#include <meltpooldg/interface/boundary_conditions.hpp>
-#include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>

@@ -9,9 +9,9 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/evaporation/evaporation_model_constant.hpp>
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
@@ -37,11 +37,11 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
    */
 
   template <int dim>
-  class SimulationStefansProblemWithFlow : public SimulationParametersBase<dim>
+  class SimulationStefansProblemWithFlow : public MeltPoolCase<dim>
   {
   public:
     SimulationStefansProblemWithFlow(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
     {}
 
     void

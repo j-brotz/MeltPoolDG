@@ -1,6 +1,6 @@
 {
   "base": {
-    "application name": "thermo_capillary_two_droplets",
+    "case name": "thermo_capillary_two_droplets",
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "9",

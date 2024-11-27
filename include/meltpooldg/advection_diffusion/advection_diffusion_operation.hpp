@@ -9,9 +9,9 @@
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
 #include <meltpooldg/advection_diffusion/advection_diffusion_operator.hpp>
-#include <meltpooldg/interface/boundary_conditions.hpp>
-#include <meltpooldg/interface/operator_base.hpp>
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/core/boundary_conditions.hpp>
+#include <meltpooldg/core/operator_base.hpp>
+#include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>

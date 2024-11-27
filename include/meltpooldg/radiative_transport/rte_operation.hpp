@@ -5,8 +5,8 @@
 #include <deal.II/lac/diagonal_matrix.h>
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <meltpooldg/interface/periodic_boundary_conditions.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/core/periodic_boundary_conditions.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/radiative_transport/pseudo_rte_operation.hpp>

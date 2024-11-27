@@ -1,0 +1,100 @@
+\documentclass[A4]{scrartcl}
+
+\usepackage{dirtree}
+\usepackage{forest}
+\usepackage{xcolor}
+%\usepackage{fontspec}
+\usepackage{fontawesome}
+
+
+\begin{document}
+
+\newcommand{\file}[1]{\textcolor{gray}{#1}}
+\newcommand{\exe}[1]{\textcolor{blue}{#1}}
+	
+\title{Structure of MeltPoolDG}
+\maketitle
+\newpage
+
+\dirtree{%
+.0 MeltPoolDG.
+.1 \faFolderOpen doc .
+.1 \faFolderOpen scripts.
+.2 \faFolderOpen config.
+.2 \faFolderOpen parameters.
+.2 \faFolderOpen tests.
+.2 \faFolderOpen formatting.
+.1 \faFolderOpen include.
+.2 \faFolderOpen meltpooldg.
+%.3 advection\_diffusion.
+%.3 curvature.
+.3 \faFolderOpen core \DTcomment{rename interface into core}.
+%.3 \faFolderOpen evaporation.
+.3 \faFolderOpen phase\_change  \DTcomment{rename evaporation and merge melt front propagation }.
+.3 \faFolderOpen flow.
+.3 \faFolderOpen heat.
+%.3 interface.
+.3 \faFolderOpen level\_set \DTcomment{merge advection, reinitialization, curvature}.
+.3 \faFolderOpen linear\_algebra.
+%.3 \faFolderOpen material.
+%.3 \faFolderOpen melt\_pool.
+%.3 normal\_vector.
+%.3 post\_processing.
+.3 \faFolderOpen radiative\_transport.
+%.3 reinitialization.
+.3 \faFolderOpen time\_integration.
+.3 \faFolderOpen utilities.\DTcomment{merge material}.
+.1 \faFolderOpen source.
+.2 \faFolderOpen \dots.
+.1 \faFolderOpen unit\_tests.
+}
+\newpage
+
+\dirtree{%
+.1 \faFolderOpen applications.
+.2 \faFolderOpen \exe{mp-advection-diffusion}.
+.3 \dots.
+.2 \faFolderOpen \exe{mp-compressible-flow}.
+.3 \dots.
+.2 \faFolderOpen \exe{mp-heat}.
+.3 \file{heat\_problem.cpp}.
+.3 \faFolderOpen cases.
+.4 \faFolderOpen case1.
+.5 \file{README.md}.
+.5 \file{case1.h}.
+.5 \file{case1.json}.
+%.5 \faFolderOpen dwyw.
+.5 \faFolderOpen scripts.
+.5 \faFolderOpen tests.
+.6 \file{case1\_test.json}.
+.6 \file{case1\_test.output}.
+.2 \faFolderOpen \exe{mp-level-set}.
+.3 \dots.
+.2 \faFolderOpen \exe{mp-radiative-transfer}.
+.3 \dots.
+.2 \faFolderOpen \exe{mp-reinitialization}.
+.3 \dots.
+.2 \faFolderOpen \exe{mp-melt-pool}.
+.3 \dots.
+.2 \faFolderOpen \exe{mp-fluid-particle}.
+.3 \dots.
+%- doc
+%- Flow
+%- Compressible Flow Problem
+%- Cut Compressible Flow Problem
+%- RadiativeTransport
+%- Level-Set
+%- Level Set Problem
+%- Advection Problem
+%- Reinitialization Problem
+%- Multi-Physics (or remove)
+%- Fluid-Particle Problem
+%- Melt Pool Problem
+}
+\noindent
+Color code:
+\begin{itemize}
+	\item 
+	\exe{executable}
+\end{itemize}
+\end{document}

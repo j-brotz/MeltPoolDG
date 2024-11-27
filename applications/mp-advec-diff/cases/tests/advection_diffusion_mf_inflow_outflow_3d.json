@@ -1,0 +1,31 @@
+{
+  "base": {
+    "problem name": "advection_diffusion",
+    "case name": "advection_diffusion",
+    "dimension": "3",
+    "global refinements": "3",
+    "do print parameters": "false",
+    "fe": {
+      "degree": "1"
+    }
+  },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "0.05",
+    "time step size": "0.01"
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
+    }
+  },
+  "advection diffusion": {
+    "advec diff integration scheme": "crank_nicolson",
+    "linear solver": {
+      "do matrix free": "true"
+    }
+  },
+  "simulation specific": {
+    "inflow outflow bc": "true"
+  }
+}

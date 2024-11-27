@@ -1,7 +1,7 @@
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_continuous.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
 
 namespace MeltPoolDG::Evaporation
 {

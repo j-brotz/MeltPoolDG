@@ -6,7 +6,7 @@
 #pragma once
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/linear_algebra/nonlinear_solver_data.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 

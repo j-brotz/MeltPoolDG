@@ -6,9 +6,9 @@
 #pragma once
 #include <deal.II/lac/generic_linear_algebra.h>
 
+#include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_DG_operation.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
@@ -25,7 +25,7 @@ namespace MeltPoolDG::LevelSet
   class LevelSetProblem : public ProblemBase<dim>
   {
   private:
-    using SimulationType  = SimulationParametersBase<dim>;
+    using SimulationType  = MeltPoolCase<dim>;
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
@@ -104,8 +104,5 @@ namespace MeltPoolDG::LevelSet
 
     void
     run(std::shared_ptr<SimulationType> base_in) final;
-
-    std::string
-    get_name() final;
   };
 } // namespace MeltPoolDG::LevelSet

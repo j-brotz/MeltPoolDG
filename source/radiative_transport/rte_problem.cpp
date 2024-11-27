@@ -53,13 +53,6 @@ namespace MeltPoolDG::RadiativeTransport
   }
 
   template <int dim>
-  std::string
-  RadiativeTransportProblem<dim>::get_name()
-  {
-    return "radiative_transport";
-  }
-
-  template <int dim>
   void
   RadiativeTransportProblem<dim>::add_parameters(dealii::ParameterHandler &prm)
   {

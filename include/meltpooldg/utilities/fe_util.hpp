@@ -6,7 +6,7 @@
 
 #include <deal.II/fe/mapping.h>
 
-#include <meltpooldg/interface/finite_element_data.hpp>
+#include <meltpooldg/core/finite_element_data.hpp>
 
 #include <memory>
 

@@ -6,7 +6,7 @@
     "max n steps": "400"
   },
   "base": {
-    "application name": "solidification_slab",
+    "case name": "solidification_slab",
     "dimension": "1",
     "do print parameters": "false",
     "global refinements": "10",

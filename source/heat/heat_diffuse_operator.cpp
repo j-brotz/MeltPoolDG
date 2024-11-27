@@ -3,10 +3,10 @@
 
 #include <deal.II/matrix_free/tools.h>
 
+#include <meltpooldg/core/exceptions.hpp>
+#include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/heat/heat_diffuse_operator.hpp>
-#include <meltpooldg/interface/exceptions.hpp>
-#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/material/material.templates.hpp>
 #include <meltpooldg/utilities/journal.hpp>

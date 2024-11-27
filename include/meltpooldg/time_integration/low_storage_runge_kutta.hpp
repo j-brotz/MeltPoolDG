@@ -9,7 +9,7 @@ https://github.com/kronbichler/advection_miniapp/blob/master/advection_solver_va
 
 #include <deal.II/matrix_free/operators.h>
 
-#include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/time_integration/time_integration_base.hpp>
 #include <meltpooldg/time_integration/time_integration_setup.hpp>

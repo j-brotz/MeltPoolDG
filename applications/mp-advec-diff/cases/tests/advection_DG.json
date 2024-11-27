@@ -1,0 +1,24 @@
+{
+  "base": {
+    "problem name": "advection_diffusion",
+    "case name": "advection_diffusion_DG",
+    "dimension": "2",
+    "global refinements": "6",
+    "do print parameters": "false"
+  },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "0.025",
+    "time step size": "0.005"
+  },
+  "advection diffusion": {
+    "time integration scheme": "crank_nicolson",
+    "linear solver": {
+      "do matrix free": "true"
+    },
+    "fe": {
+      "degree": "4",
+      "type": "FE_DGQ"
+    }
+  }
+}

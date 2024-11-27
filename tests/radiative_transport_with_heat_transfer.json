@@ -1,6 +1,6 @@
 {
   "base": {
-    "application name": "radiative_transport",
+    "case name": "radiative_transport",
     "problem name": "heat_transfer",
     "dimension": "2",
     "do print parameters": "false",

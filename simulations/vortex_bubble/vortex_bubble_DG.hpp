@@ -19,8 +19,8 @@
 #include <fstream>
 #include <iostream>
 // MeltPoolDG
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -149,11 +149,11 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
    */
 
   template <int dim>
-  class SimulationVortexBubbleDG : public SimulationParametersBase<dim>
+  class SimulationVortexBubbleDG : public MeltPoolCase<dim>
   {
   public:
     SimulationVortexBubbleDG(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : SimulationParametersBase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
     {}
 
     void
