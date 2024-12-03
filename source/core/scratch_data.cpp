@@ -211,7 +211,6 @@ namespace MeltPoolDG
                                 0);
             additional_data.mapping_update_flags_boundary_faces = update_flags;
           }
-
         this->matrix_free.reinit(
           *this->mapping, this->dof_handler, this->constraint, this->quad, additional_data);
 

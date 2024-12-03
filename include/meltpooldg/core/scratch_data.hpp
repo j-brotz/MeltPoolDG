@@ -219,9 +219,6 @@ namespace MeltPoolDG
     bool enable_inner_faces;
 
   private:
-    void
-    create_pcout(MPI_Comm mpi_communicator);
-
     bool                                           do_matrix_free;
     std::vector<dealii::ConditionalOStream>        pcout;
     std::shared_ptr<Mapping<dim, spacedim>>        mapping;
@@ -242,5 +239,11 @@ namespace MeltPoolDG
     mutable std::shared_ptr<TimerOutput> timer;
 
     MatrixFree<dim, number, VectorizedArrayType> matrix_free;
+
+    /**
+     * Helper functions for setting up internal data.
+     */
+    void
+    create_pcout(MPI_Comm mpi_communicator);
   };
 } // namespace MeltPoolDG

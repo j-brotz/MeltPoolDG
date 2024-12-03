@@ -131,6 +131,31 @@ namespace MeltPoolDG
         in.zero_out_ghost_values();
     }
 
+    template <int dim, int n_components, typename Number = double>
+    void
+    project_function_to_grid_points(LinearAlgebra::distributed::Vector<Number> &out,
+                                    const Function<dim>                        &function,
+                                    const MatrixFree<dim, Number>              &matrix_free,
+                                    const unsigned int                          dof_idx  = 0,
+                                    const unsigned int                          quad_idx = 0)
+    {
+      FECellIntegrator<dim, n_components, Number> phi(matrix_free, dof_idx, quad_idx);
+      MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, n_components, Number> inverse(phi);
+      out.zero_out_ghost_values();
+      for (unsigned int cell = 0; cell < matrix_free.n_cell_batches(); ++cell)
+        {
+          phi.reinit(cell);
+          for (const unsigned int q : phi.quadrature_point_indices())
+            phi.submit_dof_value(evaluate_function_at_vectorized_points<dim, Number, n_components>(
+                                   function, phi.quadrature_point(q)),
+                                 q);
+          inverse.transform_from_q_points_to_basis(n_components,
+                                                   phi.begin_dof_values(),
+                                                   phi.begin_dof_values());
+          phi.set_dof_values(out);
+        }
+    }
+
     template <int dim, int spacedim, typename Number>
     void
     convert_block_vector_to_fe_system_vector(
@@ -235,14 +260,14 @@ namespace MeltPoolDG
       return vec;
     }
 
-    template <int dim, typename number = double>
-    Tensor<1, dim, VectorizedArray<number>>
+    template <int dim, typename number = double, int n_components = dim>
+    Tensor<1, n_components, VectorizedArray<number>>
     evaluate_function_at_vectorized_points(const Function<dim>                       &func,
                                            const Point<dim, VectorizedArray<double>> &points)
     {
-      AssertThrow(func.n_components == dim, ExcNotImplemented());
+      AssertDimension(func.n_components, n_components);
 
-      Tensor<1, dim, VectorizedArray<number>> vec;
+      Tensor<1, n_components, VectorizedArray<number>> vec;
 
       for (unsigned int v = 0; v < VectorizedArray<number>::size(); ++v)
         {
@@ -251,7 +276,7 @@ namespace MeltPoolDG
           for (unsigned int d = 0; d < dim; ++d)
             point_v[d] = points[d][v];
 
-          for (unsigned int d = 0; d < dim; ++d)
+          for (unsigned int d = 0; d < n_components; ++d)
             vec[d][v] = func.value(point_v, d);
         }
       return vec;
@@ -322,6 +347,7 @@ namespace MeltPoolDG
                                            scratch_data.get_quadrature(quad_idx),
                                            norm_type);
     }
+
 
     template <int n_components, int dim, typename VectorType>
     void
