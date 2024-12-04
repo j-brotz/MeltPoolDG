@@ -219,6 +219,9 @@ namespace MeltPoolDG
     bool enable_inner_faces;
 
   private:
+    void
+    create_pcout(MPI_Comm mpi_communicator);
+
     bool                                           do_matrix_free;
     std::vector<dealii::ConditionalOStream>        pcout;
     std::shared_ptr<Mapping<dim, spacedim>>        mapping;
@@ -234,6 +237,7 @@ namespace MeltPoolDG
     std::vector<IndexSet>                  locally_relevant_dofs;
     std::vector<std::shared_ptr<Utilities::MPI::Partitioner>> partitioner;
     std::map<unsigned int, std::shared_ptr<Utilities::MPI::RemotePointEvaluation<dim, dim>>> rpe;
+    const unsigned int max_verbosity_level;
 
     mutable std::shared_ptr<TimerOutput> timer;
 

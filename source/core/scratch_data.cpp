@@ -14,14 +14,9 @@ namespace MeltPoolDG
     const unsigned int max_verbosity_level,
     const bool         do_matrix_free)
     : do_matrix_free(do_matrix_free)
+    , max_verbosity_level(max_verbosity_level)
   {
-    this->pcout.clear();
-
-    for (unsigned int i = 0; i <= 10; ++i)
-      this->pcout.push_back(
-        dealii::ConditionalOStream(std::cout,
-                                   (Utilities::MPI::this_mpi_process(mpi_communicator)) == 0 &&
-                                     (i <= max_verbosity_level)));
+    this->create_pcout(mpi_communicator);
 
     timer = std::make_shared<TimerOutput>(pcout[0], TimerOutput::never, TimerOutput::wall_times);
   }
@@ -54,6 +49,8 @@ namespace MeltPoolDG
       this->attach_quadrature(quad[i]);
 
     this->create_partitioning();
+
+    this->create_pcout(this->get_mpi_comm());
 
     this->build(enable_boundary_face_loops, enable_inner_face_loops, enable_normal_vector_update);
   }
@@ -560,6 +557,19 @@ namespace MeltPoolDG
     const unsigned int dof_idx) const
   {
     return *rpe.at(dof_idx);
+  }
+
+  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  void
+  ScratchData<dim, spacedim, number, VectorizedArrayType>::create_pcout(
+    const MPI_Comm mpi_communicator)
+  {
+    this->pcout.clear();
+    for (unsigned int i = 0; i <= 10; ++i)
+      this->pcout.push_back(
+        dealii::ConditionalOStream(std::cout,
+                                   (Utilities::MPI::this_mpi_process(mpi_communicator)) == 0 &&
+                                     (i <= max_verbosity_level)));
   }
 
   template class ScratchData<1>;
