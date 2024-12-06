@@ -25,19 +25,6 @@ namespace MeltPoolDG
     void
     add_problem_specific_parameters(const std::string &parameter_file)
     {
-      ParameterHandler prm_problem_specific;
-      add_parameters(prm_problem_specific);
-
-      std::ifstream file;
-      file.open(parameter_file);
-
-      if (parameter_file.substr(parameter_file.find_last_of(".") + 1) == "json")
-        prm_problem_specific.parse_input_from_json(file, true);
-      else if (parameter_file.substr(parameter_file.find_last_of(".") + 1) == "prm")
-        prm_problem_specific.parse_input(parameter_file);
-      else
-        AssertThrow(false, ExcMessage("Parameterhandler cannot handle current file ending"));
-
       add_and_parse_parameters(
         parameter_file, [this](ParameterHandler &prm) { add_parameters(prm); }, false);
     }
