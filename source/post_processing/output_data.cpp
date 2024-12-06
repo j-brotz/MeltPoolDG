@@ -73,7 +73,7 @@ namespace MeltPoolDG
      * calculate the output write frequency if a time step for producing the output
      * is specified
      */
-    if (write_time_step_size > 0.0)
+    if (write_time_step_size < std::numeric_limits<number>::max())
       {
         AssertThrow(
           write_time_step_size >= time_step_size,

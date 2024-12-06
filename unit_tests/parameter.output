@@ -418,7 +418,7 @@
         "do user defined postprocessing": "false",
         "output variables": "all",
         "write frequency": "1",
-        "write time step size": "0",
+        "write time step size": "1.79769e+308",
         "paraview":
         {
             "enable": "false",
