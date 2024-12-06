@@ -100,7 +100,6 @@
     "do user defined postprocessing": "true",
     "output variables": "all",
     "write frequency": "1",
-    "write time step size": "0",
     "paraview": {
       "enable": "false"
     }

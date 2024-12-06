@@ -2,6 +2,7 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -28,7 +29,7 @@ namespace MeltPoolDG
   {
     std::string              directory                      = "./";
     int                      write_frequency                = 1;
-    number                   write_time_step_size           = 0.0;
+    number                   write_time_step_size           = std::numeric_limits<number>::max();
     std::vector<std::string> output_variables               = {"all"};
     bool                     do_user_defined_postprocessing = false;
     ParaviewData             paraview;
