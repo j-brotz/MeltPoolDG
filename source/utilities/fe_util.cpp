@@ -121,13 +121,19 @@ namespace MeltPoolDG::FiniteElementUtils
   template void
   distribute_dofs<1, 1>(const FiniteElementData &, DoFHandler<1> &);
   template void
+  distribute_dofs<1, 3>(const FiniteElementData &, DoFHandler<1> &);
+  template void
   distribute_dofs<2, 1>(const FiniteElementData &, DoFHandler<2> &);
   template void
   distribute_dofs<2, 2>(const FiniteElementData &, DoFHandler<2> &);
   template void
+  distribute_dofs<2, 4>(const FiniteElementData &, DoFHandler<2> &);
+  template void
   distribute_dofs<3, 1>(const FiniteElementData &, DoFHandler<3> &);
   template void
   distribute_dofs<3, 3>(const FiniteElementData &, DoFHandler<3> &);
+  template void
+  distribute_dofs<3, 5>(const FiniteElementData &, DoFHandler<3> &);
 
   template std::shared_ptr<Mapping<1>>
   create_mapping(const FiniteElementData &);

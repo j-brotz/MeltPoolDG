@@ -3,6 +3,7 @@
 #include <meltpooldg/post_processing/output_data.hpp>
 
 #include <filesystem>
+#include <limits>
 
 namespace MeltPoolDG
 {

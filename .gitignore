@@ -1,7 +1,6 @@
 build/
 *.vtu
 *.pvtu
-*.cmake
 *.swp
 *.vtk
 *.a

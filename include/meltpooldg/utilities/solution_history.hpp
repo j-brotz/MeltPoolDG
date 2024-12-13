@@ -22,9 +22,18 @@ namespace TimeIntegration
   class SolutionHistory
   {
   public:
-    SolutionHistory(unsigned int size)
+    SolutionHistory() = default;
+
+    explicit SolutionHistory(unsigned int size)
       : solutions(size)
     {}
+
+    void
+    resize(const unsigned int size)
+    {
+      solutions.clear();
+      solutions.resize(size);
+    }
 
     void
     apply(std::function<void(VectorType &)> f)
