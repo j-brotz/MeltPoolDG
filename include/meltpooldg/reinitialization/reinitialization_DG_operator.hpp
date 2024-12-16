@@ -2,7 +2,7 @@
 
 #include <meltpooldg/reinitialization/reinitialization_DG_diffusion_operator.hpp>
 #include <meltpooldg/reinitialization/reinitialization_DG_grad_operator.hpp>
-#include <meltpooldg/time_integration/time_integration_concretization.hpp>
+#include <meltpooldg/time_integration/time_integrator_base.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 
@@ -53,7 +53,10 @@ namespace MeltPoolDG::LevelSet
      * @param src source vector for the operator
      */
     void
-    apply_operator(Number const time, VectorType &dst, VectorType const &src);
+    apply_operator(Number const                                           time,
+                   VectorType                                            &dst,
+                   VectorType const                                      &src,
+                   const std::function<void(unsigned int, unsigned int)> &func) const;
 
     /**
      * Function is needed for a conistent time integration interface. In this case the function is
@@ -72,20 +75,25 @@ namespace MeltPoolDG::LevelSet
     void
     reinit();
 
+    void
+    local_apply_inverse_mass_matrix(const MatrixFree<dim, Number>                    &data,
+                                    LinearAlgebra::distributed::Vector<Number>       &dst,
+                                    const LinearAlgebra::distributed::Vector<Number> &src,
+                                    const std::pair<unsigned int, unsigned int> &cell_range) const;
+
     /**
      * Applies the diffusion term with an implicit time integration in order to keep the time step
      * size of the integration scheme not limited by the diffusion term.
+     *
      * @param time current time
      * @param time_step size of the time
      * @param solution_history keeps different time instances of the level set field
-     * @param rhs vector for the right hand side resulting linear system of equations
      */
     void
     apply_diffusion_implicit(
       Number const                                                   time,
       Number const                                                   time_step,
-      [[maybe_unused]] TimeIntegration::SolutionHistory<VectorType> &solution_history,
-      VectorType                                                    &rhs) const;
+      [[maybe_unused]] TimeIntegration::SolutionHistory<VectorType> &solution_history) const;
 
     /**
      * flag for the time integration scheme if field functions should be updated in every step.
@@ -142,13 +150,14 @@ namespace MeltPoolDG::LevelSet
      *operators
      */
     ReinitializationDGDiffusionOperator<dim> RI_DG_diffusion_operator;
-    RIGradOperator<dim>                      RI_grad_operator;
+    mutable RIGradOperator<dim>              RI_grad_operator;
 
 
     /**
      * Time integration scheme for the IMEX integration of the diffusive term.
      */
-    std::shared_ptr<TimeIntegrationBase<dim>> IMEX_integration;
+    std::shared_ptr<TimeIntegratorBase<double, ReinitializationDGDiffusionOperator<dim>>>
+      IMEX_integration;
 
 
     /**
@@ -156,14 +165,14 @@ namespace MeltPoolDG::LevelSet
      * @param solution level set field
      */
     void
-    compute_godunov_hamiltonian(const VectorType &solution);
+    compute_godunov_hamiltonian(const VectorType &solution) const;
 
     /**
      * Calculates the Godunov gradient
      * @param solution level set field
      */
     void
-    compute_godunov_gradient(const VectorType &solution);
+    compute_godunov_gradient(const VectorType &solution) const;
 
     /**
      * Calculates the smoothed signum function and stores the result in the member @p signum_smoothed

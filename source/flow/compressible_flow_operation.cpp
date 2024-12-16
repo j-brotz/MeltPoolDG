@@ -25,20 +25,19 @@ namespace MeltPoolDG::Flow
 {
   template <int dim, typename number>
   CompressibleFlowOperation<dim, number>::CompressibleFlowOperation(
-    const ScratchData<dim>                    &scratch_data_in,
-    const CompressibleFlowData                &comp_flow_data_in,
-    const TimeIntegration::TimeIntegratorData &time_integrator_data_in,
-    const unsigned int                         comp_flow_dof_idx_in,
-    const unsigned int                         comp_flow_quad_idx_in)
+    const ScratchData<dim>     &scratch_data_in,
+    const CompressibleFlowData &comp_flow_data_in,
+    const unsigned int          comp_flow_dof_idx_in,
+    const unsigned int          comp_flow_quad_idx_in)
     : scratch_data_(scratch_data_in)
     , comp_flow_data_(comp_flow_data_in)
     , comp_flow_dof_idx(comp_flow_dof_idx_in)
     , comp_flow_quad_idx(comp_flow_quad_idx_in)
   {
     time_integrator =
-      TimeIntegration::explicit_integrator_factory<number,
-                                                   CompressibleFlowOperatorExplicit<dim, number>>(
-        time_integrator_data_in, scratch_data_.get_timer());
+      std::unique_ptr<TimeIntegratorBase<number, CompressibleFlowOperatorExplicit<dim, number>>>(
+        explicit_time_integrator_factory<number, CompressibleFlowOperatorExplicit<dim, number>>(
+          comp_flow_data_.time_integrator, scratch_data_.get_timer()));
 
     solution_history_.resize(time_integrator->required_solution_history_size());
 
@@ -50,13 +49,6 @@ namespace MeltPoolDG::Flow
   void
   CompressibleFlowOperation<dim, number>::reinit()
   {
-    // check if fe is equal to FESystem<dim>[FE_DGQ<dim>(degree)^dim+2]
-    AssertThrow(scratch_data_.get_fe(comp_flow_dof_idx).get_name() ==
-                  "FESystem<" + std::to_string(dim) + ">[FE_DGQ<" + std::to_string(dim) + ">(" +
-                    std::to_string(scratch_data_.get_degree(comp_flow_dof_idx)) + ")^" +
-                    std::to_string(dim + 2) + "]",
-                dealii::ExcMessage(
-                  "The compressible flow solver only supports finite element types of FE_DGQ!"));
     scratch_data_.initialize_dof_vector(solution_history_.get_current_solution(),
                                         comp_flow_dof_idx);
     time_integrator->reinit(solution_history_);
@@ -67,10 +59,13 @@ namespace MeltPoolDG::Flow
   void
   CompressibleFlowOperation<dim, number>::solve(double current_time, double time_step)
   {
-    time_integrator->perform_time_step(*comp_flow_operator_,
-                                       current_time,
-                                       time_step,
-                                       solution_history_);
+    std::function<void(number, VectorType &, const VectorType &)> pre_processing =
+      [&](number time, VectorType &, const VectorType &) -> void {
+      comp_flow_operator_->update_boundary_conditions(time);
+    };
+
+    time_integrator->perform_time_step(
+      *comp_flow_operator_, current_time, time_step, solution_history_, pre_processing);
   }
 
   template <int dim, typename number>

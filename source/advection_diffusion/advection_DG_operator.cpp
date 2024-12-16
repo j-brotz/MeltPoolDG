@@ -1,4 +1,5 @@
 #include <meltpooldg/advection_diffusion/advection_DG_operator.hpp>
+#include <meltpooldg/time_integration/time_integrator_util.hpp>
 
 namespace MeltPoolDG::LevelSet
 {
@@ -31,13 +32,9 @@ namespace MeltPoolDG::LevelSet
     if (enable_analytical_velocity_update)
       {
         scratch_data_.initialize_dof_vector(advection_velocity_, velocity_dof_idx);
-        /*
-         *  set the current time to the advection field function
-         */
+        // et the current time to the advection field function
         advection_field->set_time(time);
-        /*
-         *  interpolate the values of the advection velocity
-         */
+        // interpolate the values of the advection velocity
         dealii::VectorTools::interpolate(scratch_data_.get_mapping(),
                                          scratch_data_.get_dof_handler(velocity_dof_idx),
                                          *advection_field,
@@ -155,7 +152,8 @@ namespace MeltPoolDG::LevelSet
 
         for (unsigned int q = 0; q < eval_minus.n_q_points; ++q)
           {
-            const vector speed   = MeltPoolDG::VectorTools::to_vector<dim>(eval_vel.get_value(q));
+            const vector speed = MeltPoolDG::VectorTools::to_vector<dim>(eval_vel.get_value(q));
+
             const auto   u_minus = eval_minus.get_value(q);
             const vector normal_vector =
               MeltPoolDG::VectorTools::to_vector<dim>(eval_minus.get_normal_vector(q));
@@ -229,7 +227,7 @@ namespace MeltPoolDG::LevelSet
 
                 // Compute the flux
                 const scalar normal_times_speed = speed * normal_vector;
-                auto const   flux_times_normal =
+                const auto   flux_times_normal =
                   0.5 * ((u_minus + u_plus) * normal_times_speed +
                          std::abs(normal_times_speed) * (u_minus - u_plus));
 
@@ -243,14 +241,12 @@ namespace MeltPoolDG::LevelSet
   template <int dim, typename Number>
   void
   AdvectionDGOperator<dim, Number>::apply_operator(
-    const Number                                      time,
-    LinearAlgebra::distributed::Vector<Number>       &dst,
-    LinearAlgebra::distributed::Vector<Number> const &src) const
+    const Number                                           time,
+    LinearAlgebra::distributed::Vector<Number>            &dst,
+    LinearAlgebra::distributed::Vector<Number> const      &src,
+    const std::function<void(unsigned int, unsigned int)> &func) const
   {
-    if (this->update_field_functions)
-      {
-        set_field_functions(time);
-      }
+    boundary_conditions->set_time(time);
 
     this->scratch_data_.get_matrix_free().loop(
       &AdvectionDGOperator<dim, Number>::local_apply_domain,
@@ -259,9 +255,17 @@ namespace MeltPoolDG::LevelSet
       this,
       dst,
       src,
-      true,
+      false,
       MatrixFree<dim, Number>::DataAccessOnFaces::values,
       MatrixFree<dim, Number>::DataAccessOnFaces::values);
+
+    this->scratch_data_.get_matrix_free().cell_loop(
+      &AdvectionDGOperator<dim, Number>::local_apply_inverse_mass_matrix,
+      this,
+      dst,
+      dst,
+      std::function<void(unsigned int, unsigned int)>(),
+      func);
   }
 
   template <int dim, typename Number>
@@ -273,12 +277,7 @@ namespace MeltPoolDG::LevelSet
   {
     boundary_conditions->set_time(time);
 
-    if (this->update_field_functions)
-      {
-        set_field_functions(time);
-      }
-
-    scratch_data_.get_matrix_free().loop( // dst MUST NOT be set to zero when applied!
+    scratch_data_.get_matrix_free().loop(
       &AdvectionDGOperator<dim, Number>::local_apply_domain_dummy,
       &AdvectionDGOperator<dim, Number>::local_apply_inner_face_dummy,
       &AdvectionDGOperator<dim, Number>::local_apply_inhomogenous_boundary_face,
@@ -288,6 +287,34 @@ namespace MeltPoolDG::LevelSet
       false,
       MatrixFree<dim, Number>::DataAccessOnFaces::values,
       MatrixFree<dim, Number>::DataAccessOnFaces::values);
+
+
+    this->scratch_data_.get_matrix_free().cell_loop(
+      &AdvectionDGOperator<dim, Number>::local_apply_inverse_mass_matrix, this, dst, dst);
+  }
+
+
+  template <int dim, typename Number>
+  void
+  AdvectionDGOperator<dim, Number>::local_apply_inverse_mass_matrix(
+    const MatrixFree<dim, Number>                    &data,
+    LinearAlgebra::distributed::Vector<Number>       &dst,
+    const LinearAlgebra::distributed::Vector<Number> &src,
+    const std::pair<unsigned int, unsigned int>      &cell_range) const
+  {
+    FECellIntegrator<dim, 1, Number> eval(data, advec_diff_dof_idx, advec_diff_quad_idx);
+
+    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, Number> inverse(eval);
+
+    for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+      {
+        eval.reinit(cell);
+        eval.read_dof_values(src);
+
+        inverse.apply(eval.begin_dof_values(), eval.begin_dof_values());
+
+        eval.set_dof_values(dst);
+      }
   }
 
   template class AdvectionDGOperator<1>;

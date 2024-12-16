@@ -2,20 +2,17 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 
 #include <string>
 
-namespace MeltPoolDG::TimeIntegration
+namespace MeltPoolDG
 {
   BETTER_ENUM(TimeIntegratorSchemes,
               int,
               not_initialized,
-              RK_stage_1_order_1,
-              RK_stage_2_order_2,
-              RK_stage_3_order_3,
-              RK_stage_4_order_4,
               LSRK_stage_3_order_3, /* Kennedy, Carpenter, Lewis, 2000 */
               LSRK_stage_5_order_4, /* Kennedy, Carpenter, Lewis, 2000 */
               LSRK_stage_7_order_4, /* Tselios, Simos, 2007 */
@@ -30,7 +27,23 @@ namespace MeltPoolDG::TimeIntegration
    */
   struct TimeIntegratorData
   {
-    TimeIntegratorSchemes integrator_type = TimeIntegratorSchemes::LSRK_stage_5_order_4;
+    /**
+     * Default constructor.
+     */
+    TimeIntegratorData() = default;
+
+    /**
+     * Constructor setting a custom time integration scheme. This can be used to change the default
+     * time integration scheme, when no scheme is passed by the input file.
+     *
+     * @param scheme Name of the new default scheme.
+     */
+    explicit TimeIntegratorData(const TimeIntegratorSchemes scheme)
+      : integrator_type(scheme)
+    {}
+
+
+    TimeIntegratorSchemes integrator_type = TimeIntegratorSchemes::not_initialized;
 
     void
     add_parameters(dealii::ParameterHandler &prm)
@@ -43,4 +56,4 @@ namespace MeltPoolDG::TimeIntegration
     }
   };
 
-} // namespace MeltPoolDG::TimeIntegration
+} // namespace MeltPoolDG

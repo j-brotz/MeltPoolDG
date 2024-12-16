@@ -1,6 +1,6 @@
 /**
- * @brief Class providing different low storage Runge-Kutta schemes. The schemes implemented in
- * this class are presented in
+ * @brief Class providing different low storage explicit Runge-Kutta schemes. The schemes
+ * implemented in this class are presented in
  *
  * Kennedy, C.A., Carpenter, M.H & Lewis, R.M. (2000). Low-storage, explicit Runge-Kutta schemes for
  * the compressible Navier-Stokes equations. Applied Numerical Mathematics, 35(2000), 177-219.
@@ -15,19 +15,31 @@
 
 #include <deal.II/lac/la_parallel_vector.h>
 
-#include <meltpooldg/time_integration/explicit_integrator_base.hpp>
+#include <meltpooldg/time_integration/time_integrator_base.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 
 #include <string>
 #include <variant>
 #include <vector>
 
-namespace MeltPoolDG::TimeIntegration
+namespace MeltPoolDG
 {
   using namespace dealii;
 
-  template <typename number, typename PDEOperator = std::monostate>
-  class LowStorageRungeKuttaIntegrator final : public ExplicitIntegratorBase<number, PDEOperator>
+  /**
+   * The time integrator schemes supported by the low storage explicit Runge-Kutta time integrator.
+   */
+  inline static constexpr std::array<TimeIntegratorSchemes, 4> explicit_lsrk_supported_schemes{{
+    TimeIntegratorSchemes::LSRK_stage_3_order_3,
+    TimeIntegratorSchemes::LSRK_stage_5_order_4,
+    TimeIntegratorSchemes::LSRK_stage_7_order_4,
+    TimeIntegratorSchemes::LSRK_stage_9_order_5,
+  }};
+
+  template <typename number,
+            ExplicitPDEOperator<number, LinearAlgebra::distributed::Vector<number>> PDEOperator>
+  class LowStorageExplicitRungeKuttaIntegrator final
+    : public TimeIntegratorBase<number, PDEOperator>
   {
   public:
     using VectorType = LinearAlgebra::distributed::Vector<number>;
@@ -35,13 +47,15 @@ namespace MeltPoolDG::TimeIntegration
     /**
      * Constructor. Set the coefficients for the low storage explicit Runge-Kutta scheme.
      *
-     *  @param parameters Name of the used low-storage explicit Runge-Kutta scheme.
-     *  @param timer Timer used for computation time tracking.
+     * @param time_integrator_data Time integrator data struct setting the scheme of the integrator.
+     * @param timer Timer used for computation time tracking.
      */
-    LowStorageRungeKuttaIntegrator(const TimeIntegratorData &parameters, TimerOutput &timer)
-      : timer(timer)
+    LowStorageExplicitRungeKuttaIntegrator(const TimeIntegratorData &time_integrator_data,
+                                           TimerOutput              &timer)
+      : TimeIntegratorBase<number, PDEOperator>(time_integrator_data)
+      , timer(timer)
     {
-      switch (parameters.integrator_type)
+      switch (time_integrator_data.integrator_type)
         {
             case TimeIntegratorSchemes::LSRK_stage_3_order_3: {
               // Three-stage, third order scheme given in deal.II. While its stability region is
@@ -155,22 +169,37 @@ namespace MeltPoolDG::TimeIntegration
     }
 
     /**
-     * Perform the actual time integration for a single time step.
+     * Perform the actual time integration for a single time step using the low storage explicit
+     * Runge-Kutta scheme.
      *
      * @param pde_operator Class providing the 'apply_operator()' function to compute f(y).
      * @param current_time Current time.
      * @param time_step Current time step size.
      * @param solution_history Solution history object providing the current and all required
      * previous solutions.
+     * @param stage_pre_processing Function which is executed at the beginning of each Runge-Kutta
+     * stage. Three variables are passed to the function: the current time, the vector which is
+     * later used in the stage computation, and the current stage solution.
+     * @param stage_post_processing Function which is executed at the end of each Runge-Kutta stage.
+     * Three variables are passed to the function: the current time after perfoming the stage, the
+     * vector which is later used in the subsequent computations, and the solution of the
+     * Runge-Kutta stage.
      */
     void
-    perform_time_step(const PDEOperator                              &pde_operator,
-                      const number                                    current_time,
-                      const number                                    time_step,
-                      ::TimeIntegration::SolutionHistory<VectorType> &solution_history) override
+    perform_time_step(
+      const PDEOperator                                                   &pde_operator,
+      const number                                                         current_time,
+      const number                                                         time_step,
+      ::TimeIntegration::SolutionHistory<VectorType>                      &solution_history,
+      const std::function<void(number, VectorType &, const VectorType &)> &stage_pre_processing,
+      const std::function<void(number, VectorType &, const VectorType &)> &stage_post_processing)
+      override
     {
-      TimerOutput::Scope timer_section(timer, "Explicit Runge-Kutta time integration");
       AssertDimension(ai.size() + 1, bi.size());
+      TimerOutput::Scope timer_section(timer, "Explicit Runge-Kutta time integration");
+      rk_register_ri = 0.;
+      if (stage_pre_processing)
+        stage_pre_processing(current_time, rk_register_ri, solution_history.get_current_solution());
       pde_operator.apply_operator(
         current_time,
         rk_register_ri,
@@ -186,9 +215,16 @@ namespace MeltPoolDG::TimeIntegration
               rk_register_ri.local_element(i) = sol_i + ai[0] * time_step * k_i;
             }
         });
+      if (stage_post_processing)
+        stage_post_processing(current_time + ci[1] * time_step, rk_register_ri, rk_register_ri);
 
       for (unsigned int stage = 1; stage < bi.size(); ++stage)
         {
+          rk_register_ki = 0.;
+          if (stage_pre_processing)
+            stage_pre_processing(current_time + ci[stage - 1] * time_step,
+                                 rk_register_ki,
+                                 rk_register_ri);
           pde_operator.apply_operator(
             current_time,
             rk_register_ki,
@@ -218,21 +254,19 @@ namespace MeltPoolDG::TimeIntegration
                     }
                 }
             });
+          if (stage_post_processing)
+            stage_post_processing(current_time + ci[stage] * time_step,
+                                  rk_register_ki,
+                                  rk_register_ki);
+
           rk_register_ri.swap(rk_register_ki);
         }
     }
 
-    inline static constexpr std::array<TimeIntegratorSchemes, 4> supported_schemes{{
-      TimeIntegratorSchemes::LSRK_stage_3_order_3,
-      TimeIntegratorSchemes::LSRK_stage_5_order_4,
-      TimeIntegratorSchemes::LSRK_stage_7_order_4,
-      TimeIntegratorSchemes::LSRK_stage_9_order_5,
-    }};
-
   private:
-    std::vector<double> bi;
-    std::vector<double> ai;
-    std::vector<double> ci;
+    std::vector<number> bi;
+    std::vector<number> ai;
+    std::vector<number> ci;
 
     unsigned int n_stages;
 
@@ -242,7 +276,4 @@ namespace MeltPoolDG::TimeIntegration
 
     TimerOutput &timer;
   };
-
-  // Define an alias for static access of variables
-  using StaticExplicitLowStorageRungeKuttaIntegrator = LowStorageRungeKuttaIntegrator<double>;
-} // namespace MeltPoolDG::TimeIntegration
+} // namespace MeltPoolDG

@@ -20,7 +20,9 @@
       "type": "FE_DGQ"
     },
     "advection diffusion": {
-      "time integration scheme": "crank_nicolson"
+      "time integration": {
+        "type": "crank_nicolson"
+      }
     },
     "reinitialization": {
       "enable": "true",
@@ -37,7 +39,7 @@
         "factor diffusivity": "0.1",
         "hyperbolic weighting function_type": "initial_levelset",
         "signum smoothness paramater": "2",
-        "time integration scheme": "RK_stage_5_order_4",
+        "time integration scheme": "LSRK_stage_5_order_4",
         "use const gradient in RI": "false",
         "use directed diffusion stabilization": "true",
         "use interface movement penalization": "true",

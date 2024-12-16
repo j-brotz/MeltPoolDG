@@ -33,7 +33,7 @@
         "do CFL based time stepping": "true",
         "CFL": "0.05",
         "factor diffusivity": "0.1",
-        "time integration scheme": "RK_stage_5_order_4",
+        "time integration scheme": "LSRK_stage_5_order_4",
         "IMEX integration scheme": "implicit_euler",
         "use const gradient in RI": "false"
       },

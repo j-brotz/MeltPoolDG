@@ -161,6 +161,15 @@ namespace MeltPoolDG::Flow
       VectorizedArray<number>
       calculate_pressure(const ConservedVariablesType &conserved_variables, number gamma);
 
+    /**
+     * Compute the boundary conditions at the given time, i.e. evaluate the corresponding boundary
+     * conditions at that time.
+     *
+     * @param time Current time at which the boundary conditions are evaluated.
+     */
+    void
+    update_boundary_conditions(number time) const;
+
   protected:
     /**
      * Local appliers
@@ -324,16 +333,6 @@ namespace MeltPoolDG::Flow
                                          ConservedVariablesType                        &w_p,
                                          const ConservedVariablesGradType              &grad_w_m,
                                          ConservedVariablesGradType &grad_w_p) const;
-
-
-    /**
-     * Compute the boundary conditions at the given time, i.e. evaluate the corresponding boundary
-     * conditions at that time.
-     *
-     * @param time Current time at which the boundary conditions are evaluated.
-     */
-    void
-    update_boundary_conditions(number time) const;
 
     const CompressibleFlowData &comp_flow_data;
 

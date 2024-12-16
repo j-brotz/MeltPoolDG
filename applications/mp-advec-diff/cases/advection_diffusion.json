@@ -25,7 +25,9 @@
         "do matrix free": "true"
       },
       "diffusivity": "0.000000",
-      "time integration scheme": "implicit_euler"
+      "time integration": {
+        "type": "implicit_euler"
+      }
     }
   }
 }

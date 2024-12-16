@@ -21,7 +21,7 @@ namespace MeltPoolDG::Flow
   template <unsigned int dim, typename number>
   void
   CompressibleFlowOperatorExplicit<dim, number>::apply_operator(
-    number                                                 time,
+    number,
     VectorType                                            &dst,
     const VectorType                                      &src,
     const std::function<void(unsigned int, unsigned int)> &func) const
@@ -32,11 +32,10 @@ namespace MeltPoolDG::Flow
                                const std::pair<unsigned int, unsigned int> &)>
       local_applier_type;
 
-    this->update_boundary_conditions(time);
     local_applier_type cell          = MELT_POOL_DG_LAMBDA_WRAPPER(this->local_apply_cell);
     local_applier_type face          = MELT_POOL_DG_LAMBDA_WRAPPER(this->local_apply_face);
     local_applier_type boundary_face = MELT_POOL_DG_LAMBDA_WRAPPER(this->local_apply_boundary_face);
-    this->scratch_data.get_matrix_free().loop(cell, face, boundary_face, dst, src, true);
+    this->scratch_data.get_matrix_free().loop(cell, face, boundary_face, dst, src, false);
 
     local_applier_type inverse = MELT_POOL_DG_LAMBDA_WRAPPER(this->local_apply_inverse_mass_matrix);
     this->scratch_data.get_matrix_free().cell_loop(

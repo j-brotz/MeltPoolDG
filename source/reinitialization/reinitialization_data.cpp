@@ -65,12 +65,12 @@ namespace MeltPoolDG::LevelSet
 
         prm.add_parameter(
           "time integration scheme",
-          reinitilization_DG_specific_data.time_integration_scheme,
+          reinitilization_DG_specific_data.time_integration_data.integrator_type,
           "Determines the general time integration scheme for the pseudo time integration of the reinilization equation.");
 
         prm.add_parameter(
           "IMEX integration scheme",
-          reinitilization_DG_specific_data.IMEX_integration_scheme,
+          reinitilization_DG_specific_data.IMEX_integration_data.integrator_type,
           "If a IMEX integration scheme is specifiead, the integration in pseudo time of the reinilization is done with an Implict-Explicit (IMEX) scheme."
           "this means that the diffusion part is treated with the IMEX integration scheme and the hamiltonian is treated with the general time integration scheme."
           "When choosing an implicit scheme with A-stability larger time steps can be chosen only limited by the stability of the hamiltonian part."

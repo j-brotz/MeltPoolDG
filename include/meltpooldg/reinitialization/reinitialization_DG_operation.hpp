@@ -13,7 +13,6 @@
 #include <meltpooldg/normal_vector/normal_vector_DG_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_DG_operator.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
-#include <meltpooldg/time_integration/time_integration_concretization.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
@@ -138,9 +137,9 @@ namespace MeltPoolDG::LevelSet
 
     std::shared_ptr<ReinitilizationDGOperator<dim>> reinit_DG_operator;
 
-    std::shared_ptr<TimeIntegrationBase<dim>> reinitilization_integration;
+    std::shared_ptr<TimeIntegratorBase<double, ReinitilizationDGOperator<dim>>>
+      reinitialization_integration;
 
-    VectorType rhs;
 
     // maximum change of the level set due to the current reinitialization step
     double max_change_level_set = std::numeric_limits<double>::max();

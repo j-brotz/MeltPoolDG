@@ -23,9 +23,13 @@
   },
   "compressible navier stokes": {
     "numerical flux type": "lax_friedrichs_modified",
-    "use cfl criteria": "true"
-  },
-  "time integrator": {
-    "type": "LSRK_stage_5_order_4"
+    "use cfl criteria": "true",
+    "time integration": {
+      "type": "LSRK_stage_5_order_4"
+    },
+    "fe": {
+      "degree": "2",
+      "type": "FE_DGQ"
+    }
   }
 }

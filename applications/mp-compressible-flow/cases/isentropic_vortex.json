@@ -5,10 +5,7 @@
     "dimension": "2",
     "verbosity level": "0",
     "do print parameters": "false",
-    "global refinements": "4",
-    "fe": {
-      "degree": "2"
-    }
+    "global refinements": "4"
   },
   "time stepping": {
     "start time": "0.0",
@@ -24,9 +21,13 @@
   },
   "compressible navier stokes": {
     "dynamic_viscosity": 0.0,
-    "numerical flux type": "lax_friedrichs_modified"
-  },
-  "time integrator": {
-    "type": "LSRK_stage_5_order_4"
+    "numerical flux type": "lax_friedrichs_modified",
+    "time integration": {
+      "type": "LSRK_stage_5_order_4"
+    },
+    "fe": {
+      "degree": "2",
+      "type": "FE_DGQ"
+    }
   }
 }

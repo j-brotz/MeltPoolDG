@@ -145,6 +145,9 @@ old_parameter_names = [
     ["heat", "degree"],
     ["material", "sticking constant"],
     ["base", "application name"],
+    # 24-12-19
+    ["advection diffusion", "time integration scheme"],
+    ["level set", "advection diffusion", "time integration scheme"]
     # ... add old parameter names
     # ["old", "my age"],
 ]
@@ -273,6 +276,9 @@ new_parameter_names = [
     ["heat", "fe", "degree"],
     ["evaporation", "recoil pressure", "sticking constant"],
     ["base", "case name"],
+    # 24-12-19
+    ["advection diffusion", "time integration", "type"],
+    ["level set", "advection diffusion", "time integration", "type"]
     # ... add new parameter names
     # ["new", "new", "my new age"],
 ]

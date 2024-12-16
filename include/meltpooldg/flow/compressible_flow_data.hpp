@@ -5,12 +5,21 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/core/finite_element_data.hpp>
+#include <meltpooldg/time_integration/time_integrator_data.hpp>
+
 #include <string>
 
 namespace MeltPoolDG::Flow
 {
   struct CompressibleFlowData
   {
+    // finite element data
+    FiniteElementData fe;
+
+    // time integration data
+    TimeIntegratorData time_integrator;
+
     // ratio of specific heat (specific heat at constant pressure divided by
     // specific heat at constant volume)
     double gamma = 1.4;
@@ -55,6 +64,8 @@ namespace MeltPoolDG::Flow
     {
       prm.enter_subsection("compressible navier stokes");
       {
+        fe.add_parameters(prm);
+        time_integrator.add_parameters(prm);
         prm.add_parameter("gamma", gamma, "Ratio of specific heat (c_p/c_v).");
         prm.add_parameter("dynamic viscosity", dynamic_viscosity, "Dynamic viscosity.");
         prm.add_parameter("specific gas constant", specific_gas_constant, "Specific gas constant.");
@@ -89,6 +100,15 @@ namespace MeltPoolDG::Flow
         prm.add_parameter("gravity constant", gravity_constant, "Gravity constant.");
       }
       prm.leave_subsection();
+    }
+
+    void
+    post(const FiniteElementData &base_fe_data)
+    {
+      fe.post(base_fe_data);
+      AssertThrow(fe.type == FiniteElementType::FE_DGQ,
+                  ExcMessage(
+                    "The compressible flow solver only supports elements of type 'FE_DGQ'."));
     }
   };
 } // namespace MeltPoolDG::Flow

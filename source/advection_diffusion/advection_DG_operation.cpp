@@ -8,8 +8,10 @@
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
+#include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/preprocessor_directives.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -48,13 +50,11 @@ namespace MeltPoolDG::LevelSet
   {
     this->advec_diff_data = advec_diff_data_in;
 
-    advection_integration =
-      TimeIntegratorConcretization::concretize(advec_diff_data_in.time_integration_scheme,
-                                               advection_DG_operator,
-                                               scratch_data_in,
-                                               advec_diff_dof_idx_in,
-                                               advec_diff_quad_idx,
-                                               advec_diff_data_in.linear_solver);
+    advection_integration = std::shared_ptr<TimeIntegratorBase<double, AdvectionDGOperator<dim>>>(
+      time_integrator_factory<double, AdvectionDGOperator<dim>>(
+        advec_diff_data_in.time_integrator_data,
+        advec_diff_data_in.linear_solver,
+        scratch_data.get_timer()));
   }
 
   template <int dim>
@@ -113,9 +113,7 @@ namespace MeltPoolDG::LevelSet
   void
   AdvectionDGOperation<dim>::set_initial_condition(const VectorType &solution_level_set_in)
   {
-    /*
-     *    copy the given solution into the member variable
-     */
+    // copy the given solution into the member variable
     solution_history.get_current_solution().zero_out_ghost_values();
     solution_history.get_current_solution().copy_locally_owned_data_from(solution_level_set_in);
 
@@ -134,7 +132,8 @@ namespace MeltPoolDG::LevelSet
     scratch_data.initialize_dof_vector(rhs, advec_diff_dof_idx);
     scratch_data.initialize_dof_vector(user_rhs, advec_diff_dof_idx);
 
-    advection_integration->reinit();
+    advection_integration->reinit(solution_history);
+    advection_integration->set_monitoring_vector(user_rhs);
   }
 
 
@@ -146,8 +145,6 @@ namespace MeltPoolDG::LevelSet
       !solution_history.get_current_solution().has_ghost_elements();
     if (solution_update_ghosts)
       solution_history.get_current_solution().update_ghost_values();
-
-    rhs = user_rhs;
 
     this->ready_for_time_advance = true;
   }
@@ -171,14 +168,25 @@ namespace MeltPoolDG::LevelSet
     if (solution_update_ghosts)
       solution_history.get_recent_old_solution().update_ghost_values();
 
+    rhs = user_rhs;
 
-    advection_integration->perform_time_step(time_iterator.get_old_time(),
+    // type alias for the pre- and post-processing functions
+    std::function<void(double, VectorType &, const VectorType &)> pre_processing;
+
+    if (time_integrator_scheme_is_explicit(advection_integration->get_integrator_type()))
+      pre_processing =
+        [&](double time, VectorType &dst, const VectorType &current_solution) -> void {
+        advection_DG_operator.set_field_functions(time);
+        advection_DG_operator.apply_dirichlet_boundary_operator(time, dst, current_solution);
+      };
+
+    advection_integration->perform_time_step(advection_DG_operator,
+                                             time_iterator.get_current_time(),
                                              time_iterator.get_current_time_increment(),
                                              solution_history,
-                                             user_rhs);
+                                             pre_processing);
 
     solution_history.commit_old_solutions();
-
 
     Journal::print_formatted_norm(
       scratch_data.get_pcout(0),
