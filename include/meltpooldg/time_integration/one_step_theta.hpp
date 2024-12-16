@@ -87,22 +87,13 @@ namespace MeltPoolDG
       dt_       = time_step;
       old_time_ = old_time;
 
-      create_right_hand_side(true, solution_history.get_recent_old_solution());
-
-      rhs = right_hand_side_;
-
-      pde_operator_.set_field_functions(old_time_ + time_step);
-
-      // The velocity field needs only to be updated once and not in every call to vmult
-      pde_operator_.update_field_functions = false;
+      create_right_hand_side(solution_history.get_recent_old_solution());
 
       /* TODO: add preconditioner*/
       LinearSolver::solve<VectorType>(*this,
                                       solution_history.get_current_solution(),
                                       right_hand_side_,
                                       linear_solver_data);
-
-      pde_operator_.update_field_functions = true;
     }
 
 
@@ -115,14 +106,8 @@ namespace MeltPoolDG
     vmult(LinearAlgebra::distributed::Vector<Number>       &dst,
           const LinearAlgebra::distributed::Vector<Number> &src) const
     {
-      dst = 0;
-      pde_operator_.apply_operator(old_time_ + dt_, dst, src);
+      pde_operator_.apply_operator(old_time_ + dt_, dst, src, true);
 
-      scratch_data_.get_matrix_free().cell_loop(
-        &OneStepTheta<Operator, dim, scheme, Number>::local_apply_inverse_mass_matrix,
-        this,
-        dst,
-        dst);
       dst *= -1.0;
       dst *= Theta_ * dt_;
       dst.add(1.0, src);
@@ -144,35 +129,21 @@ namespace MeltPoolDG
      * @param old_solution
      */
     void
-    create_right_hand_side(const bool zero_out, const VectorType &old_solution) const
+    create_right_hand_side(const VectorType &old_solution) const
     {
       right_hand_side_.reinit(old_solution);
-      buffer = 0;
 
-      if (zero_out)
-        {
-          right_hand_side_ = 0;
-        }
-
-      pde_operator_.apply_operator(old_time_, right_hand_side_, old_solution);
+      pde_operator_.apply_operator(old_time_, right_hand_side_, old_solution, true);
 
       right_hand_side_ *= (1.0 - Theta_);
 
       pde_operator_.apply_dirichlet_boundary_operator(old_time_, buffer, old_solution);
       right_hand_side_.add(1.0 - Theta_, buffer);
 
-      buffer = 0;
-
       pde_operator_.apply_dirichlet_boundary_operator(old_time_ + dt_, buffer, old_solution);
       right_hand_side_.add(Theta_, buffer);
 
       right_hand_side_ *= dt_;
-
-      scratch_data_.get_matrix_free().cell_loop(
-        &OneStepTheta<Operator, dim, scheme, Number>::local_apply_inverse_mass_matrix,
-        this,
-        right_hand_side_,
-        right_hand_side_);
 
       right_hand_side_.add(1.0, old_solution);
     }
@@ -185,7 +156,7 @@ namespace MeltPoolDG
                                     const LinearAlgebra::distributed::Vector<Number> &src,
                                     const std::pair<unsigned int, unsigned int> &cell_range) const
     {
-      FECellIntegrator<dim, 1, Number> eval(data, dof_idx, quad_idx);
+      FECellIntegrator<dim, 1, Number> eval(data, 0, 0);
 
       MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, Number> inverse(eval);
 

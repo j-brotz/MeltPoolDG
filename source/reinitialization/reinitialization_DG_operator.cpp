@@ -65,7 +65,8 @@ namespace MeltPoolDG::LevelSet
   void
   ReinitilizationDGOperator<dim, Number>::apply_operator(Number const      time,
                                                          VectorType       &dst,
-                                                         VectorType const &src)
+                                                         VectorType const &src,
+                                                         const bool        zero_dst_vector)
   {
     compute_godunov_hamiltonian(src);
 
@@ -76,11 +77,15 @@ namespace MeltPoolDG::LevelSet
       num_Hamiltonian,
       true);
 
+    scratch_data.get_matrix_free().cell_loop(
+      &ReinitilizationDGOperator<dim, Number>::local_apply_inverse_mass_matrix, this, dst, dst);
+
+
 
     if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_scheme ==
         TimeIntegrators::not_initialized)
       {
-        RI_DG_diffusion_operator.apply_operator(time, num_Hamiltonian, src);
+        RI_DG_diffusion_operator.apply_operator(time, num_Hamiltonian, src, zero_dst_vector);
         RI_DG_diffusion_operator.apply_dirichlet_boundary_operator(time, num_Hamiltonian, src);
 
 
@@ -96,9 +101,39 @@ namespace MeltPoolDG::LevelSet
           src,
           true);
 
+        scratch_data.get_matrix_free().cell_loop(
+          &ReinitilizationDGOperator<dim, Number>::local_apply_inverse_mass_matrix,
+          this,
+          num_Hamiltonian,
+          num_Hamiltonian);
+
         dst.add(1.0, num_Hamiltonian);
       }
   }
+
+  template <int dim, typename Number>
+  void
+  ReinitilizationDGOperator<dim, Number>::local_apply_inverse_mass_matrix(
+    const MatrixFree<dim, Number>                    &data,
+    LinearAlgebra::distributed::Vector<Number>       &dst,
+    const LinearAlgebra::distributed::Vector<Number> &src,
+    const std::pair<unsigned int, unsigned int>      &cell_range) const
+  {
+    FECellIntegrator<dim, 1, Number> eval(data, reinit_dof_idx, reinit_quad_idx);
+
+    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, Number> inverse(eval);
+
+    for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+      {
+        eval.reinit(cell);
+        eval.read_dof_values(src);
+
+        inverse.apply(eval.begin_dof_values(), eval.begin_dof_values());
+
+        eval.set_dof_values(dst);
+      }
+  }
+
 
   template <int dim, typename Number>
   void

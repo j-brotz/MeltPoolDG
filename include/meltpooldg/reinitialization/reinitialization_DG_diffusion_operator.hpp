@@ -59,7 +59,14 @@ namespace MeltPoolDG::LevelSet
     void
     apply_operator([[maybe_unused]] const Number time,
                    VectorType                   &dst,
-                   const VectorType             &src) const;
+                   const VectorType             &src,
+                   bool                          zero_dst_vector = true) const;
+
+    void
+    local_apply_inverse_mass_matrix(const MatrixFree<dim, Number>                    &data,
+                                    LinearAlgebra::distributed::Vector<Number>       &dst,
+                                    const LinearAlgebra::distributed::Vector<Number> &src,
+                                    const std::pair<unsigned int, unsigned int> &cell_range) const;
 
     /**
      * Applies the dirichlet contribution of the DG diffusion operator to the src vector and stores

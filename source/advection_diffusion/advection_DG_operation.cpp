@@ -171,7 +171,9 @@ namespace MeltPoolDG::LevelSet
     if (solution_update_ghosts)
       solution_history.get_recent_old_solution().update_ghost_values();
 
+   advection_DG_operator.set_field_functions(time_iterator.get_current_time());
 
+    user_rhs = 0.;
     advection_integration->perform_time_step(time_iterator.get_old_time(),
                                              time_iterator.get_current_time_increment(),
                                              solution_history,
