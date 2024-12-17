@@ -3,6 +3,8 @@
 
 #include <deal.II/base/exceptions.h>
 
+#include <deal.II/dofs/dof_tools.h>
+
 #include <deal.II/fe/fe_nothing.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_system.h>
@@ -51,6 +53,11 @@ namespace MeltPoolDG::Heat
     , solution_history(std::max(2U, heat_data.predictor.n_old_solution_vectors))
     , ls_dof_idx(ls_dof_idx_in)
     , level_set(level_set_in)
+    , cut_solution_transfer(0.0 /* gamma_degree_0 only for DG */,
+                            heat_data.cut.ghost_penalty.gamma_A,
+                            0.0 /* gamma_degree_2 not implemented*/,
+                            heat_data.cut.two_phase,
+                            heat_data.verbosity_level)
     , mapping_info_surface(scratch_data.get_mapping(),
                            dealii::update_values | dealii::update_gradients |
                              dealii::update_JxW_values | dealii::update_normal_vectors)
@@ -96,11 +103,18 @@ namespace MeltPoolDG::Heat
       scratch_data, temp_dof_idx, heat_data.linear_solver.preconditioner_type, *heat_operator);
 
     mesh_classifier = std::make_shared<dealii::NonMatching::MeshClassifier<dim>>(
-      scratch_data.get_dof_handler(ls_dof_idx), level_set);
+      scratch_data.get_dof_handler(ls_dof_idx), mc_level_set);
     mesh_classifier_old = std::make_shared<dealii::NonMatching::MeshClassifier<dim>>(
-      scratch_data.get_dof_handler(ls_dof_idx), level_set);
+      scratch_data.get_dof_handler(ls_dof_idx), mc_level_set);
 
     setup_newton();
+
+    reinit_vector = [this](VectorType &vec, const DoFHandler<dim> &dh) {
+      Assert(&dh == &scratch_data.get_dof_handler(temp_dof_idx), dealii::ExcInternalError());
+      vec.reinit(dh.locally_owned_dofs(),
+                 scratch_data.get_locally_relevant_dofs(temp_dof_idx),
+                 dh.get_communicator());
+    };
   }
 
   template <int dim>
@@ -115,10 +129,56 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
+  HeatCutOperation<dim>::register_reinit_matrix_free(
+    const std::function<void(const dealii::DoFHandler<dim> &)> reinit_matrix_free_in)
+  {
+    reinit_matrix_free = reinit_matrix_free_in;
+  }
+
+  template <int dim>
+  void
   HeatCutOperation<dim>::classify_cells() const
   {
-    level_set.update_ghost_values();
+    const auto &ls_dof_handler = scratch_data.get_dof_handler(ls_dof_idx);
+    mc_level_set.reinit(ls_dof_handler.locally_owned_dofs(),
+                        dealii::DoFTools::extract_locally_relevant_dofs(ls_dof_handler),
+                        scratch_data.get_mpi_comm(ls_dof_idx));
+    mc_level_set.copy_locally_owned_data_from(level_set);
+    mc_level_set.update_ghost_values();
     mesh_classifier->reclassify();
+  }
+
+  template <int dim>
+  void
+  HeatCutOperation<dim>::adapt_to_new_interface_position()
+  {
+    std::swap(mesh_classifier_old, mesh_classifier);
+    classify_cells();
+
+    {
+      ScopedName         sc("heat::cut_solution_transfer");
+      TimerOutput::Scope scope(scratch_data.get_timer(), sc);
+
+      Assert(reinit_matrix_free != nullptr,
+             dealii::ExcMessage("You must register the reinit_matrix_free lambda function first!"));
+
+      // transfer old solution according to the new interface position,
+      // the matrix-free object is reinitialized within the reinit function
+      cut_solution_transfer.reinit(
+        const_cast<dealii::DoFHandler<dim> &>(scratch_data.get_dof_handler(temp_dof_idx)),
+        const_cast<dealii::Triangulation<dim> &>(scratch_data.get_triangulation()),
+        solution_history.get_current_solution(),
+        *mesh_classifier_old,
+        *mesh_classifier,
+        reinit_vector,
+        reinit_matrix_free);
+    }
+    scratch_data.initialize_dof_vector(solution_history.get_current_solution(), temp_dof_idx);
+    solution_history.get_current_solution().copy_locally_owned_data_from(
+      cut_solution_transfer.get_updated_solution());
+    solution_history.get_current_solution().update_ghost_values();
+
+    compute_intersected_quadrature();
   }
 
 
@@ -164,10 +224,10 @@ namespace MeltPoolDG::Heat
       {
         fe_collection.push_back(fe_q); // liquid
         fe_collection.push_back(fe_q); // intersected
-        fe_collection.push_back(fe_n); // outside
+        fe_collection.push_back(fe_n); // gas
       }
 
-    CutUtil::set_fe_index<dim>(dof_handler, *mesh_classifier);
+    CutUtil::set_fe_index<dim>(dof_handler, *mesh_classifier, false /* set_future */);
 
     dof_handler.distribute_dofs(fe_collection);
   }
@@ -186,6 +246,8 @@ namespace MeltPoolDG::Heat
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, temp_hanging_nodes_dof_idx); });
 
     scratch_data.initialize_dof_vector(volumetric_heat_source, temp_hanging_nodes_dof_idx);
+
+    heat_operator->reinit();
 
     /*
      * setup sparsity pattern of system matrix only if the latter is
@@ -278,7 +340,18 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperation<dim>::init_time_advance()
   {
-    solution_history.commit_old_solutions();
+    // Using solution_history.commit_old_solutions();  messes up the partitioner.
+    // This is a workaround.
+    auto &solutions = const_cast<std::vector<VectorType> &>(solution_history.get_all_solutions());
+    for (int i = solutions.size() - 1; i >= 1; --i)
+      solutions[i].swap(solutions[i - 1]);
+
+    // predictor: copy old solution
+    // Copying the vector messes up the partitioner. As a workaround we use the copy constructor to
+    // construct a temporary vector that is then swap in place.
+    VectorType temp = solution_history.get_recent_old_solution();
+    solution_history.get_current_solution().swap(temp);
+
     heat_operator->init_time_advance(time_iterator.get_current_time_increment());
   }
 
@@ -288,6 +361,9 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperation<dim>::solve()
   {
+    // TODO detect whether the level set has changed
+    adapt_to_new_interface_position();
+
     init_time_advance();
 
     // setup preconditioner

@@ -11,14 +11,14 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "time step size": "0.2",
-    "end time": "10.0",
+    "time step size": "1.0",
+    "end time": "100.0",
     "max n steps": "5"
   },
   "heat": {
     "operator type": "cut",
     "cut": {
-      "two phase": "true"
+      "two phase": "false"
     },
     "linear solver": {
       "preconditioner type": "Diagonal",
@@ -31,17 +31,13 @@
   },
   "simulation specific": {
     "do solidification": "false",
-    "do two phase": "true"
+    "do two phase": "true",
+    "velocity": "0.001"
   },
   "problem specific": {
     "do solidification": "false"
   },
   "material": {
-    "gas": {
-      "thermal conductivity": "27.7815",
-      "specific heat capacity": "230",
-      "density": "3925"
-    },
     "liquid": {
       "thermal conductivity": "55.563",
       "specific heat capacity": "460",

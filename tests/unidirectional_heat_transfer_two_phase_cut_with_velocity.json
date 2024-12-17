@@ -11,8 +11,8 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "time step size": "0.2",
-    "end time": "10.0",
+    "time step size": "1.0",
+    "end time": "100.0",
     "max n steps": "5"
   },
   "heat": {
@@ -31,7 +31,8 @@
   },
   "simulation specific": {
     "do solidification": "false",
-    "do two phase": "true"
+    "do two phase": "true",
+    "velocity": "0.001"
   },
   "problem specific": {
     "do solidification": "false"
