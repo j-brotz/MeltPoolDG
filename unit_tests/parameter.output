@@ -121,6 +121,7 @@
         "enable time dependent bc": "false",
         "operator type": "diffuse",
         "use volume-specific thermal capacity for phase interpolation": "false",
+        "verbosity level": "-1",
         "convective boundary condition":
         {
             "convection coefficient": "0",
