@@ -77,6 +77,10 @@ namespace MeltPoolDG::Heat
       }
       prm.leave_subsection();
 
+      prm.add_parameter("verbosity level",
+                        verbosity_level,
+                        "Sets the maximum verbosity level of the console output.");
+
       nlsolve.add_parameters(prm);
       linear_solver.add_parameters(prm);
       predictor.add_parameters(prm);
