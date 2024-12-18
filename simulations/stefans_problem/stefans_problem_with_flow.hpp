@@ -11,7 +11,7 @@
 
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/evaporation/evaporation_model_constant.hpp>
+#include <meltpooldg/phase_change/evaporation_model_constant.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>

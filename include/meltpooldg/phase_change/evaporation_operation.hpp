@@ -10,13 +10,13 @@
 
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/evaporation/evaporation_data.hpp>
-#include <meltpooldg/evaporation/evaporation_mass_flux_operator_base.hpp>
-#include <meltpooldg/evaporation/evaporation_model_base.hpp>
-#include <meltpooldg/evaporation/evaporation_source_terms_base.hpp>
-#include <meltpooldg/evaporation/recoil_pressure_data.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
+#include <meltpooldg/phase_change/evaporation_data.hpp>
+#include <meltpooldg/phase_change/evaporation_mass_flux_operator_base.hpp>
+#include <meltpooldg/phase_change/evaporation_model_base.hpp>
+#include <meltpooldg/phase_change/evaporation_source_terms_base.hpp>
+#include <meltpooldg/phase_change/recoil_pressure_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 
 namespace MeltPoolDG::Evaporation

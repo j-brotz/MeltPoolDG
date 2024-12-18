@@ -17,9 +17,6 @@
 #include <meltpooldg/core/problem_base.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/evaporation/evaporation_operation.hpp>
-#include <meltpooldg/evaporation/incompressible_newtonian_evaporation_material.hpp>
-#include <meltpooldg/evaporation/recoil_pressure_operation.hpp>
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
 #include <meltpooldg/flow/flow_base.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
@@ -27,7 +24,10 @@
 #include <meltpooldg/heat/laser_operation.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/material/material.hpp>
-#include <meltpooldg/melt_pool/melt_front_propagation.hpp>
+#include <meltpooldg/phase_change/evaporation_operation.hpp>
+#include <meltpooldg/phase_change/incompressible_newtonian_evaporation_material.hpp>
+#include <meltpooldg/phase_change/melt_front_propagation.hpp>
+#include <meltpooldg/phase_change/recoil_pressure_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>

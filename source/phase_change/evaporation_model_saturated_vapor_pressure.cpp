@@ -1,7 +1,7 @@
 #include <deal.II/base/numbers.h>
 
-#include <meltpooldg/evaporation/evaporation_model_saturated_vapor_pressure.hpp>
-#include <meltpooldg/evaporation/recoil_pressure_operation.templates.hpp>
+#include <meltpooldg/phase_change/evaporation_model_saturated_vapor_pressure.hpp>
+#include <meltpooldg/phase_change/recoil_pressure_operation.templates.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 
 #include <cmath>

@@ -1,8 +1,8 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/patterns.h>
 
-#include <meltpooldg/evaporation/evaporation_data.hpp>
-#include <meltpooldg/evaporation/recoil_pressure_data.hpp>
+#include <meltpooldg/phase_change/evaporation_data.hpp>
+#include <meltpooldg/phase_change/recoil_pressure_data.hpp>
 
 namespace MeltPoolDG::Evaporation
 {

@@ -7,8 +7,8 @@
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/evaporation/evaporation_data.hpp>
-#include <meltpooldg/evaporation/evaporation_source_terms_base.hpp>
+#include <meltpooldg/phase_change/evaporation_data.hpp>
+#include <meltpooldg/phase_change/evaporation_source_terms_base.hpp>
 
 namespace MeltPoolDG::Evaporation
 {
