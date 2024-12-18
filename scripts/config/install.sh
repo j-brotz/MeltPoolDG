@@ -6,8 +6,13 @@ read -p "Enter the path where external depencies should be installed (press ente
 depDir=${depDir:-$mpDir/../external_libs}
 depDir=$(realpath "$depDir")
 
-read -p 'Enter the number of processes (press enter for default=4): ' np
-np=${np:-4}
+# Retrieve the number of CPU cores
+core_count=$(nproc)
+# Reduce the core count by 1
+reduced_core_count=$((core_count - 1))
+
+read -p "Enter the number of processes (press enter for default=${reduced_core_count}): " np
+np=${reduced_core_count:-4}
 
 ##############################################################
 # install dependencies

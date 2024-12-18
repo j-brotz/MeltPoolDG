@@ -1,5 +1,5 @@
 trilinos_dir=${1:-../Trilinos-trilinos-release-13-4-1}
-trilinos_install=${1:-../trilinos-install}
+trilinos_install=${2:-../trilinos-install}
 rm -rf CMakeFiles/ CMakeCache.txt || true
 cmake                                            \
     -DTrilinos_ENABLE_Amesos=ON                      \
