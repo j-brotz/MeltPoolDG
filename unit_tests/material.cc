@@ -1,7 +1,7 @@
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/core/parameters.hpp>
-#include <meltpooldg/material/material.templates.hpp>
+#include <meltpooldg/utilities/material.templates.hpp>
 
 #include <iomanip>
 #include <iostream>

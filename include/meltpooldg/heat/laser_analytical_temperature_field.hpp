@@ -9,7 +9,7 @@
 
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
-#include <meltpooldg/material/material_data.hpp>
+#include <meltpooldg/utilities/material_data.hpp>
 
 namespace MeltPoolDG::Heat
 {

@@ -8,8 +8,8 @@
 
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/flow/darcy_damping_data.hpp>
-#include <meltpooldg/material/material.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/utilities/material.hpp>
 
 
 namespace MeltPoolDG::Flow

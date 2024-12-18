@@ -1,7 +1,7 @@
 #pragma once
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
-#include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/utilities/enum.hpp>
+#include <meltpooldg/utilities/material_data.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
 
 namespace MeltPoolDG::Evaporation

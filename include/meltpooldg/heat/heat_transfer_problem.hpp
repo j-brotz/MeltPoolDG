@@ -19,10 +19,10 @@
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/heat/heat_operation_base.hpp>
 #include <meltpooldg/heat/laser_operation.hpp>
-#include <meltpooldg/material/material.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/enum.hpp>
+#include <meltpooldg/utilities/material.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <memory>

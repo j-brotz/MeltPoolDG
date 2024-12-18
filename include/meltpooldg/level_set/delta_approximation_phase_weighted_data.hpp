@@ -1,8 +1,8 @@
 #pragma once
 #include <deal.II/base/parameter_handler.h>
 
-#include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/utilities/enum.hpp>
+#include <meltpooldg/utilities/material_data.hpp>
 
 namespace MeltPoolDG::LevelSet
 {

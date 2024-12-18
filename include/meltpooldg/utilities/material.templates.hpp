@@ -7,7 +7,7 @@
 #include <deal.II/base/exceptions.h>
 
 #include <meltpooldg/level_set/level_set_tools.hpp>
-#include <meltpooldg/material/material.hpp>
+#include <meltpooldg/utilities/material.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG

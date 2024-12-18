@@ -3,9 +3,9 @@
 
 #include <deal.II/dofs/dof_tools.h>
 
-#include <meltpooldg/material/material.templates.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
+#include <meltpooldg/utilities/material.templates.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::MeltPool

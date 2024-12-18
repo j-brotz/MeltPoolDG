@@ -6,8 +6,8 @@
 #pragma once
 #include <deal.II/base/vectorization.h>
 
-#include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
+#include <meltpooldg/utilities/material_data.hpp>
 
 namespace MeltPoolDG
 {

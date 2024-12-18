@@ -3,7 +3,7 @@
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
-#include <meltpooldg/material/material_data.hpp>
+#include <meltpooldg/utilities/material_data.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
 #include <meltpooldg/utilities/time_stepping_data.hpp>
 

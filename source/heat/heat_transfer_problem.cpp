@@ -23,11 +23,11 @@
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/heat_diffuse_operation.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
-#include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/material_data.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <functional>

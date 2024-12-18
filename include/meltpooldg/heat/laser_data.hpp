@@ -6,8 +6,8 @@
 #include <deal.II/base/types.h>
 
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
-#include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/utilities/enum.hpp>
+#include <meltpooldg/utilities/material_data.hpp>
 
 #include <limits>
 #include <string>

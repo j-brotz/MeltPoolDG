@@ -6,10 +6,10 @@
 #include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/heat/heat_diffuse_operator.hpp>
-#include <meltpooldg/material/material.hpp>
-#include <meltpooldg/material/material.templates.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/material.hpp>
+#include <meltpooldg/utilities/material.templates.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
