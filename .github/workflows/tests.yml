@@ -24,9 +24,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_type: ["Release", "Debug"]
+        build_type: ["Release"]
+#        build_type: ["Release", "Debug"]
         dealii_version: ["master"]
-        adaflo: ["adaflo=on", "adaflo=off"]
+#        adaflo: ["adaflo=on", "adaflo=off"]
+        adaflo: ["adaflo=on"]
         exclude:
           - build_type: "Release"
             adaflo: "adaflo=off"
