@@ -37,8 +37,6 @@
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
-#include <meltpooldg/material/material.templates.hpp>
-#include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/phase_change/recoil_pressure_data.hpp>
@@ -49,6 +47,8 @@
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/material.templates.hpp>
+#include <meltpooldg/utilities/material_data.hpp>
 #include <meltpooldg/utilities/restart.templates.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>

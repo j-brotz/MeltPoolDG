@@ -4,7 +4,7 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-#include <meltpooldg/material/material.hpp>
+#include <meltpooldg/utilities/material.hpp>
 
 namespace MeltPoolDG::Flow
 {

@@ -8,7 +8,7 @@
 // MeltPoolDG
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/characteristic_numbers.hpp>
-#include <meltpooldg/material/material.hpp>
+#include <meltpooldg/utilities/material.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 // c++

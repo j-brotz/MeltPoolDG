@@ -1,5 +1,5 @@
 #include <meltpooldg/flow/characteristic_numbers.hpp>
-#include <meltpooldg/material/material_data.hpp>
+#include <meltpooldg/utilities/material_data.hpp>
 
 #include <iostream>
 

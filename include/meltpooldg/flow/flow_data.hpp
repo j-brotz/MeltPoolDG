@@ -4,7 +4,7 @@
 
 #include <meltpooldg/flow/darcy_damping_data.hpp>
 #include <meltpooldg/flow/surface_tension_data.hpp>
-#include <meltpooldg/material/material_data.hpp>
+#include <meltpooldg/utilities/material_data.hpp>
 
 namespace MeltPoolDG::Flow
 {

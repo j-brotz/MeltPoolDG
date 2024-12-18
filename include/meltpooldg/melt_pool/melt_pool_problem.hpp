@@ -23,13 +23,13 @@
 #include <meltpooldg/heat/heat_diffuse_operation.hpp>
 #include <meltpooldg/heat/laser_operation.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
-#include <meltpooldg/material/material.hpp>
 #include <meltpooldg/phase_change/evaporation_operation.hpp>
 #include <meltpooldg/phase_change/incompressible_newtonian_evaporation_material.hpp>
 #include <meltpooldg/phase_change/melt_front_propagation.hpp>
 #include <meltpooldg/phase_change/recoil_pressure_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/enum.hpp>
+#include <meltpooldg/utilities/material.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
 #include <meltpooldg/utilities/restart.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>

@@ -1,8 +1,8 @@
 #include <deal.II/base/exceptions.h>
 
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
-#include <meltpooldg/material/material.templates.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
+#include <meltpooldg/utilities/material.templates.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <memory>

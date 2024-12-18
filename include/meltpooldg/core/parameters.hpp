@@ -13,7 +13,6 @@
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/nonlinear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/predictor_data.hpp>
-#include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
@@ -21,6 +20,7 @@
 #include <meltpooldg/utilities/amr_data.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/enum.hpp>
+#include <meltpooldg/utilities/material_data.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
 #include <meltpooldg/utilities/profiling_data.hpp>
 #include <meltpooldg/utilities/restart_data.hpp>
