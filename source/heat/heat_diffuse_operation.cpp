@@ -78,47 +78,57 @@ namespace MeltPoolDG::Heat
   void
   HeatDiffuseOperation<dim>::setup_newton()
   {
-    newton.residual = [&](const VectorType & /*evaluation_point*/, VectorType &rhs) {
-      // solely homogeneous dirichlet bc are distributed for the
-      // corrected temperature field in the newton solver
-      heat_operator->update_ghost_values();
-      rhs.copy_locally_owned_data_from(user_rhs);
-      heat_operator->create_rhs(rhs, solution_history.get_recent_old_solution());
-    };
+    newton.template set_function<typename NewtonRaphsonSolver<VectorType>::residual_function_type>(
+      NonlinearSolverFunctions::residual,
+      [&](const VectorType & /*evaluation_point*/, VectorType &rhs) {
+        // solely homogeneous dirichlet bc are distributed for the
+        // corrected temperature field in the newton solver
+        heat_operator->update_ghost_values();
+        rhs.copy_locally_owned_data_from(user_rhs);
+        heat_operator->create_rhs(rhs, solution_history.get_recent_old_solution());
+      });
 
-    newton.solve_with_jacobian = [&](const VectorType &rhs, VectorType &solution_update) -> int {
-      if (diag_preconditioner)
-        return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(*heat_operator,
-                                                                          solution_update,
-                                                                          rhs,
-                                                                          heat_data.linear_solver,
-                                                                          *diag_preconditioner,
-                                                                          "heat_operation");
-      else if (trilinos_preconditioner)
-        return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(*heat_operator,
-                                                                          solution_update,
-                                                                          rhs,
-                                                                          heat_data.linear_solver,
-                                                                          *trilinos_preconditioner,
-                                                                          "heat_operation");
-      else
-        AssertThrow(false, ExcNotImplemented());
-    };
+    newton
+      .template set_function<typename NewtonRaphsonSolver<VectorType>::solve_with_jacobian_function_type>(
+        NonlinearSolverFunctions::solve_with_jacobian,
+        [&](const VectorType &rhs, VectorType &solution_update) -> int {
+          if (diag_preconditioner)
+            return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
+              *heat_operator,
+              solution_update,
+              rhs,
+              heat_data.linear_solver,
+              *diag_preconditioner,
+              "heat_operation");
+          else if (trilinos_preconditioner)
+            return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
+              *heat_operator,
+              solution_update,
+              rhs,
+              heat_data.linear_solver,
+              *trilinos_preconditioner,
+              "heat_operation");
+          else
+            AssertThrow(false, ExcNotImplemented());
+        });
 
-    newton.reinit_vector = [&](VectorType &v) {
-      scratch_data.initialize_dof_vector(v, temp_dof_idx);
-    };
+    newton.template set_function<typename NewtonRaphsonSolver<VectorType>::reinit_vector_function_type>(
+      NonlinearSolverFunctions::reinit_vector,
+      [&](VectorType &v) { scratch_data.initialize_dof_vector(v, temp_dof_idx); });
 
-    newton.distribute_constraints = [&](VectorType &v) {
-      scratch_data.get_constraint(temp_dof_idx).distribute(v);
-    };
+    newton
+      .template set_function<typename NewtonRaphsonSolver<VectorType>::distribute_constraints_function_type>(
+        NonlinearSolverFunctions::distribute_constraints,
+        [&](VectorType &v) { scratch_data.get_constraint(temp_dof_idx).distribute(v); });
 
-    newton.norm_of_solution_vector = [this]() -> double {
-      return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
-                                                        scratch_data,
-                                                        temp_dof_idx,
-                                                        temp_quad_idx);
-    };
+    newton
+      .template set_function<typename NewtonRaphsonSolver<VectorType>::norm_of_solution_vector_funtion_type>(
+        NonlinearSolverFunctions::norm_of_solution_vector, [this]() -> double {
+          return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
+                                                            scratch_data,
+                                                            temp_dof_idx,
+                                                            temp_quad_idx);
+        });
   }
 
   template <int dim>
@@ -408,10 +418,6 @@ namespace MeltPoolDG::Heat
   void
   HeatDiffuseOperation<dim>::attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const
   {
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
-                             newton.get_solution_update(),
-                             "temperature_newton_last_solution_update",
-                             true /* force output */);
     data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                              newton.get_residual(),
                              "temperature_newton_failed_residual",

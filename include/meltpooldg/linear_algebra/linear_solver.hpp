@@ -16,27 +16,50 @@
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
-using namespace dealii;
+#include <iostream>
+#include <memory>
+#include <ostream>
+#include <string>
 
 namespace MeltPoolDG
 {
   class LinearSolver
   {
   public:
+    /**
+     * Solve a linear equation system of the form A*x=b with the linear solver provided in @p data.
+     * This function takes care of the complete process from setting up the linear solver to solving
+     * the equation system.
+     *
+     * @param system_matrix The matrix A. The provided matrix type must provide the function
+     * 'void vmult(VectorType&, const VectorType&)' computing the product A*x.
+     * @param solution Vector which stores the solution x of the equation system. At the same time
+     * the vector acts an initial guess for solving the equation system.
+     * @param rhs Right hand side vectpor 'b' of the equation system.
+     * @param data Linear solver data used to set up the linear solver.
+     * @param preconditioner Optional precodnitioner.
+     * @param identifier Optional identifier printed to the console if an exception is thrown.
+     *
+     * @note The linear solvers used in this function are exclusively deal.II linear solvers.
+     * @return The number of linear iterations required to solve the equation system.
+     * @throws Throws an exception if the linear solver does not converge.
+     */
     template <typename VectorType,
-              typename OperatorType       = TrilinosWrappers::SparseMatrix,
-              typename PreconditionerType = PreconditionIdentity>
+              typename OperatorType       = dealii::TrilinosWrappers::SparseMatrix,
+              typename PreconditionerType = dealii::PreconditionIdentity>
     static int
     solve(const OperatorType             &system_matrix,
           VectorType                     &solution,
           const VectorType               &rhs,
           const LinearSolverData<double> &data,
-          const PreconditionerType       &preconditioner = PreconditionIdentity(),
+          const PreconditionerType       &preconditioner = dealii::PreconditionIdentity(),
           const std::string               identifier     = "")
     {
       const bool monitor_history = data.monitor_type != LinearSolverMonitorType::none;
 
-      ReductionControl solver_control(data.max_iterations, data.abs_tolerance, data.rel_tolerance);
+      dealii::ReductionControl solver_control(data.max_iterations,
+                                              data.abs_tolerance,
+                                              data.rel_tolerance);
 
       if (monitor_history)
         solver_control.enable_history_data();
@@ -47,10 +70,13 @@ namespace MeltPoolDG
         if constexpr (internal::is_block_vector<VectorType>)
           pcout = std::make_unique<dealii::ConditionalOStream>(
             std::cout,
-            Utilities::MPI::this_mpi_process(solution.block(0).get_mpi_communicator()) == 0);
+            dealii::Utilities::MPI::this_mpi_process(solution.block(0).get_mpi_communicator()) ==
+              0);
         else
-          pcout = std::make_unique<dealii::ConditionalOStream>(
-            std::cout, Utilities::MPI::this_mpi_process(solution.get_mpi_communicator()) == 0);
+          pcout =
+            std::make_unique<dealii::ConditionalOStream>(std::cout,
+                                                         dealii::Utilities::MPI::this_mpi_process(
+                                                           solution.get_mpi_communicator()) == 0);
 
         if (monitor_history)
           {
@@ -102,27 +128,28 @@ namespace MeltPoolDG
           switch (data.solver_type)
             {
                 case (LinearSolverType::CG): {
-                  SolverCG<VectorType> solver(solver_control);
+                  dealii::SolverCG<VectorType> solver(solver_control);
 
                   solver.solve(system_matrix, solution, rhs, preconditioner);
                   break;
                 }
                 case (LinearSolverType::GMRES): {
-                  typename SolverGMRES<VectorType>::AdditionalData additional_data;
+                  typename dealii::SolverGMRES<VectorType>::AdditionalData additional_data;
                   additional_data.right_preconditioning = true;
 
-                  SolverGMRES<VectorType> solver(solver_control, additional_data);
+                  dealii::SolverGMRES<VectorType> solver(solver_control, additional_data);
                   solver.solve(system_matrix, solution, rhs, preconditioner);
                   break;
                 }
               default:
-                AssertThrow(false, ExcNotImplemented());
+                AssertThrow(false,
+                            dealii::ExcMessage(
+                              "The provided linear solver type is not supported by MeltPoolDG."));
             }
         }
-      catch (const SolverControl::NoConvergence &e)
+      catch (const dealii::SolverControl::NoConvergence &e)
         {
           finalize(true /*failed_step*/);
-
           AssertThrow(false, e);
         }
 

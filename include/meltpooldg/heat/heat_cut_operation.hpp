@@ -69,7 +69,7 @@ namespace MeltPoolDG::Heat
       std::shared_ptr<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>>>>
       mapping_info_cells;
 
-    NewtonRaphsonSolver<dim> newton;
+    NewtonRaphsonSolver<VectorType> newton;
 
     std::unique_ptr<HeatCutOperator<dim, double>> heat_operator;
 
