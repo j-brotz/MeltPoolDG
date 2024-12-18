@@ -31,8 +31,6 @@
 #include <deal.II/numerics/vector_tools_integrate_difference.h>
 
 #include <meltpooldg/core/exceptions.hpp>
-#include <meltpooldg/evaporation/evaporation_data.hpp>
-#include <meltpooldg/evaporation/recoil_pressure_data.hpp>
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
 #include <meltpooldg/heat/laser_analytical_temperature_field.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
@@ -42,6 +40,8 @@
 #include <meltpooldg/material/material.templates.hpp>
 #include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
+#include <meltpooldg/phase_change/evaporation_data.hpp>
+#include <meltpooldg/phase_change/recoil_pressure_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/cell_monitor.hpp>

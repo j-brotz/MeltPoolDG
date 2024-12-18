@@ -9,11 +9,11 @@
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/evaporation/evaporation_mass_flux_operator_base.hpp>
-#include <meltpooldg/evaporation/evaporation_model_base.hpp>
 #include <meltpooldg/level_set/level_set_data.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
+#include <meltpooldg/phase_change/evaporation_mass_flux_operator_base.hpp>
+#include <meltpooldg/phase_change/evaporation_model_base.hpp>
 
 namespace MeltPoolDG::Evaporation
 {

@@ -2,18 +2,18 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/evaporation/evaporation_data.hpp>
-#include <meltpooldg/evaporation/evaporation_mass_flux_operator_continuous.hpp>
-#include <meltpooldg/evaporation/evaporation_mass_flux_operator_interface_value.hpp>
-#include <meltpooldg/evaporation/evaporation_mass_flux_operator_thickness_integration.hpp>
-#include <meltpooldg/evaporation/evaporation_model_constant.hpp>
-#include <meltpooldg/evaporation/evaporation_model_hardt_wondra.hpp>
-#include <meltpooldg/evaporation/evaporation_model_recoil_pressure.hpp>
-#include <meltpooldg/evaporation/evaporation_model_saturated_vapor_pressure.hpp>
-#include <meltpooldg/evaporation/evaporation_operation.hpp>
-#include <meltpooldg/evaporation/evaporation_source_terms_continuous.hpp>
-#include <meltpooldg/evaporation/evaporation_source_terms_sharp.hpp>
-#include <meltpooldg/evaporation/recoil_pressure_operation.hpp>
+#include <meltpooldg/phase_change/evaporation_data.hpp>
+#include <meltpooldg/phase_change/evaporation_mass_flux_operator_continuous.hpp>
+#include <meltpooldg/phase_change/evaporation_mass_flux_operator_interface_value.hpp>
+#include <meltpooldg/phase_change/evaporation_mass_flux_operator_thickness_integration.hpp>
+#include <meltpooldg/phase_change/evaporation_model_constant.hpp>
+#include <meltpooldg/phase_change/evaporation_model_hardt_wondra.hpp>
+#include <meltpooldg/phase_change/evaporation_model_recoil_pressure.hpp>
+#include <meltpooldg/phase_change/evaporation_model_saturated_vapor_pressure.hpp>
+#include <meltpooldg/phase_change/evaporation_operation.hpp>
+#include <meltpooldg/phase_change/evaporation_source_terms_continuous.hpp>
+#include <meltpooldg/phase_change/evaporation_source_terms_sharp.hpp>
+#include <meltpooldg/phase_change/recoil_pressure_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_data.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>

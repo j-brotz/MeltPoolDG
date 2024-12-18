@@ -4,9 +4,9 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-#include <meltpooldg/evaporation/evaporation_model_base.hpp>
-#include <meltpooldg/evaporation/recoil_pressure_data.hpp>
-#include <meltpooldg/evaporation/recoil_pressure_operation.hpp>
+#include <meltpooldg/phase_change/evaporation_model_base.hpp>
+#include <meltpooldg/phase_change/recoil_pressure_data.hpp>
+#include <meltpooldg/phase_change/recoil_pressure_operation.hpp>
 
 namespace MeltPoolDG::Evaporation
 {

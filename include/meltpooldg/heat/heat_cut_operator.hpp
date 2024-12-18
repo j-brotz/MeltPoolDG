@@ -18,9 +18,9 @@
 
 #include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
+#include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 
 #include <map>

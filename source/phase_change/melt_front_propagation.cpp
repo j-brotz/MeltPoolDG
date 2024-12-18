@@ -1,4 +1,4 @@
-#include <meltpooldg/melt_pool/melt_front_propagation.hpp>
+#include <meltpooldg/phase_change/melt_front_propagation.hpp>
 //
 
 #include <deal.II/dofs/dof_tools.h>

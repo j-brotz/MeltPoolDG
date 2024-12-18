@@ -4,7 +4,6 @@
 
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
-#include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
 #include <meltpooldg/flow/flow_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
@@ -15,6 +14,7 @@
 #include <meltpooldg/linear_algebra/nonlinear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/predictor_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
+#include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
 #include <meltpooldg/reinitialization/reinitialization_data.hpp>

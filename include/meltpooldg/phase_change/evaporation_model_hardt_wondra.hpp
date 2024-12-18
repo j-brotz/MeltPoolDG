@@ -4,7 +4,7 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-#include <meltpooldg/evaporation/evaporation_model_base.hpp>
+#include <meltpooldg/phase_change/evaporation_model_base.hpp>
 
 namespace MeltPoolDG::Evaporation
 {
