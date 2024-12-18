@@ -109,7 +109,8 @@ namespace MeltPoolDG::LevelSet
     /*
      * Preconditioner for the matrix-free curvature operator
      */
-    std::shared_ptr<Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
+    std::shared_ptr<
+      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>
       preconditioner_matrixfree;
     /*
      * Cache for diagonal preconditioner matrix-free

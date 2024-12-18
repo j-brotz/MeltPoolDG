@@ -90,7 +90,8 @@ namespace MeltPoolDG::Heat
 
     std::unique_ptr<HeatDiffuseMultiPhaseOperator<dim>> heat_operator;
 
-    std::unique_ptr<Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
+    std::unique_ptr<
+      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>
                                                         heat_transfer_preconditioner;
     std::shared_ptr<DiagonalMatrix<VectorType>>         diag_preconditioner;
     std::shared_ptr<TrilinosWrappers::PreconditionBase> trilinos_preconditioner;

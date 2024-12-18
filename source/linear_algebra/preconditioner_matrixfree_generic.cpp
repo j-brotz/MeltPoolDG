@@ -96,6 +96,28 @@ namespace MeltPoolDG::Preconditioner
   }
 
   template <int dim, typename OperatorType>
+  typename PreconditionerMatrixFreeGeneric<dim, OperatorType>::PreconditionerObjectType
+  PreconditionerMatrixFreeGeneric<dim, OperatorType>::compute_preconditioner()
+  {
+    switch (preconditioner_type)
+      {
+          case PreconditionerType::Diagonal: {
+            return compute_diagonal_preconditioner();
+            break;
+          }
+        case PreconditionerType::Identity:
+        case PreconditionerType::AMG:
+          case PreconditionerType::ILU: {
+            return compute_trilinos_preconditioner();
+            break;
+          }
+          default: {
+            DEAL_II_NOT_IMPLEMENTED();
+          }
+      }
+  }
+
+  template <int dim, typename OperatorType>
   std::shared_ptr<DiagonalMatrix<BlockVectorType>>
   PreconditionerMatrixFreeGeneric<dim, OperatorType>::compute_block_diagonal_preconditioner()
   {
@@ -106,8 +128,8 @@ namespace MeltPoolDG::Preconditioner
     return std::make_shared<DiagonalMatrix<BlockVectorType>>(diag);
   }
 
-  template class PreconditionerMatrixFreeGeneric<1, OperatorBase<1, double>>;
-  template class PreconditionerMatrixFreeGeneric<2, OperatorBase<2, double>>;
-  template class PreconditionerMatrixFreeGeneric<3, OperatorBase<3, double>>;
+  template class PreconditionerMatrixFreeGeneric<1, OperatorMatrixFree<1, double>>;
+  template class PreconditionerMatrixFreeGeneric<2, OperatorMatrixFree<2, double>>;
+  template class PreconditionerMatrixFreeGeneric<3, OperatorMatrixFree<3, double>>;
 
 } // namespace MeltPoolDG::Preconditioner

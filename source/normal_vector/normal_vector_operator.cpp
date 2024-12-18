@@ -26,9 +26,8 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  NormalVectorOperator<dim, number>::assemble_matrixbased(const VectorType &level_set_in,
-                                                          SparseMatrixType &matrix,
-                                                          BlockVectorType  &rhs) const
+  NormalVectorOperator<dim, number>::compute_system_matrix_and_rhs(const VectorType &level_set_in,
+                                                                   BlockVectorType  &rhs) const
   {
     FEValues<dim> normal_values(scratch_data.get_mapping(),
                                 scratch_data.get_dof_handler(normal_dof_idx).get_fe(),
@@ -51,8 +50,8 @@ namespace MeltPoolDG::LevelSet
 
     std::vector<Tensor<1, dim>> normal_at_q(n_q_points, Tensor<1, dim>());
 
-    matrix = 0.0;
-    rhs    = 0.0;
+    this->system_matrix = 0.0;
+    rhs                 = 0.0;
 
     for (const auto &cell : scratch_data.get_dof_handler(normal_dof_idx).active_cell_iterators())
       if (cell->is_locally_owned())
@@ -104,13 +103,13 @@ namespace MeltPoolDG::LevelSet
           cell->get_dof_indices(local_dof_indices);
 
           scratch_data.get_constraint(normal_dof_idx)
-            .distribute_local_to_global(normal_cell_matrix, local_dof_indices, matrix);
+            .distribute_local_to_global(normal_cell_matrix, local_dof_indices, this->system_matrix);
           for (unsigned int d = 0; d < dim; ++d)
             scratch_data.get_constraint(normal_dof_idx)
               .distribute_local_to_global(normal_cell_rhs[d], local_dof_indices, rhs.block(d));
 
         } // end of cell loop
-    matrix.compress(VectorOperation::add);
+    this->system_matrix.compress(VectorOperation::add);
     rhs.compress(VectorOperation::add);
   }
 
@@ -350,6 +349,8 @@ namespace MeltPoolDG::LevelSet
               scratch_data, normal_dof_idx, cell, normal_vector_data.filter_parameter);
           }
       }
+    else
+      this->reinit_sparsity_pattern(scratch_data);
   }
 
   template class NormalVectorOperator<1, double>;

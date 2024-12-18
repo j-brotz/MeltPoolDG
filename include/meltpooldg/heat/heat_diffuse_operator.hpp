@@ -97,15 +97,14 @@ namespace MeltPoolDG::Heat
    */
 
   template <int dim, typename number = double>
-  class HeatDiffuseMultiPhaseOperator : public OperatorBase<dim, number>
+  class HeatDiffuseMultiPhaseOperator : public OperatorMatrixFree<dim, number>
   {
-    //@todo: to avoid compiler warnings regarding hidden overriden functions
-    using OperatorBase<dim, number>::vmult;
-    using OperatorBase<dim, number>::assemble_matrixbased;
-    using OperatorBase<dim, number>::create_rhs;
-    using OperatorBase<dim, number>::compute_inverse_diagonal_from_matrixfree;
-
   private:
+    // to avoid compiler warnings regarding hidden overriden functions
+    using OperatorMatrixFree<dim, number>::create_rhs;
+    using OperatorMatrixFree<dim, number>::compute_inverse_diagonal_from_matrixfree;
+    using OperatorMatrixFree<dim, number>::vmult;
+
     using VectorType       = LinearAlgebra::distributed::Vector<number>;
     using SparseMatrixType = TrilinosWrappers::SparseMatrix;
 
@@ -199,15 +198,10 @@ namespace MeltPoolDG::Heat
                                    >> &surface_mesh_info);
 
     void
-    assemble_matrixbased(const VectorType &advected_field_old,
-                         SparseMatrixType &matrix,
-                         VectorType       &rhs) const final;
+    pre() final;
 
     void
-    update_ghost_values() const;
-
-    void
-    zero_out_ghost_values() const;
+    post() final;
     /*
      *    matrix-free implementation
      */

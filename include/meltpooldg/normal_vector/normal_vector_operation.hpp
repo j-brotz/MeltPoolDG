@@ -105,12 +105,12 @@ namespace MeltPoolDG
       /*
        *  This pointer will point to your user-defined normal vector operator.
        */
-      std::unique_ptr<OperatorBase<dim, double>> normal_vector_operator;
+      std::unique_ptr<NormalVectorOperator<dim, double>> normal_vector_operator;
       /*
        * Preconditioner for the matrix-free curvature operator
        */
       std::shared_ptr<
-        Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
+        Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>
         preconditioner_matrixfree;
       /*
        * Cache for diagonal preconditioner matrix-free

@@ -45,7 +45,8 @@ namespace MeltPoolDG::RadiativeTransport
 
     TimeIterator<double> pseudo_time_iterator;
 
-    std::shared_ptr<Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
+    std::shared_ptr<
+      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>
                                                         preconditioner_matrixfree;
     std::shared_ptr<DiagonalMatrix<VectorType>>         diag_preconditioner_matrixfree;
     std::shared_ptr<TrilinosWrappers::PreconditionBase> trilinos_preconditioner_matrixfree;

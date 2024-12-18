@@ -113,10 +113,8 @@ namespace MeltPoolDG::LevelSet
       }
     else
       {
-        curvature_operator->assemble_matrixbased(
-          normal_vector_operation.get_solution_normal_vector(),
-          curvature_operator->get_system_matrix(),
-          rhs);
+        curvature_operator->compute_system_matrix_and_rhs(
+          normal_vector_operation.get_solution_normal_vector(), rhs);
 
         iter = LinearSolver::solve<VectorType>(curvature_operator->get_system_matrix(),
                                                solution_history.get_current_solution(),
@@ -200,9 +198,6 @@ namespace MeltPoolDG::LevelSet
     scratch_data.initialize_dof_vector(rhs, curv_dof_idx);
     scratch_data.initialize_dof_vector(solution_curvature_predictor, curv_dof_idx);
 
-    if (!curvature_data.linear_solver.do_matrix_free)
-      curvature_operator->initialize_matrix_based(scratch_data);
-
     if (curvature_operator)
       curvature_operator->reinit();
 
@@ -253,7 +248,7 @@ namespace MeltPoolDG::LevelSet
      */
     if (curvature_data.linear_solver.do_matrix_free)
       preconditioner_matrixfree = std::make_shared<
-        Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
+        Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>(
         scratch_data,
         curv_dof_idx,
         curvature_data.linear_solver.preconditioner_type,

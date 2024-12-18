@@ -71,7 +71,6 @@ namespace MeltPoolDG::LevelSet
 
     scratch_data.initialize_dof_vector(rhs, reinit_dof_idx);
 
-    update_operator();
     normal_vector_operation->reinit();
     reinit_operator->reinit();
 
@@ -228,10 +227,7 @@ namespace MeltPoolDG::LevelSet
       }
     else
       {
-        reinit_operator->get_system_matrix() = 0;
-        reinit_operator->assemble_matrixbased(solution_level_set,
-                                              reinit_operator->get_system_matrix(),
-                                              rhs);
+        reinit_operator->compute_system_matrix_and_rhs(solution_level_set, rhs);
 
         auto preconditioner = Preconditioner::get_preconditioner_trilinos(
           reinit_operator->get_system_matrix(), reinit_data.linear_solver.preconditioner_type);
@@ -405,19 +401,11 @@ namespace MeltPoolDG::LevelSet
 
     if (reinit_data.linear_solver.do_matrix_free)
       preconditioner_matrixfree = std::make_shared<
-        Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
+        Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>(
         scratch_data,
         reinit_dof_idx,
         reinit_data.linear_solver.preconditioner_type,
         *reinit_operator);
-  }
-
-  template <int dim>
-  void
-  ReinitializationOperation<dim>::update_operator()
-  {
-    if (!reinit_data.linear_solver.do_matrix_free)
-      reinit_operator->initialize_matrix_based(scratch_data);
   }
 
   template class ReinitializationOperation<1>;

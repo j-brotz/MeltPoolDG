@@ -31,9 +31,8 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  OlssonOperator<dim, number>::assemble_matrixbased(const VectorType &levelset_old,
-                                                    SparseMatrixType &matrix,
-                                                    VectorType       &rhs) const
+  OlssonOperator<dim, number>::compute_system_matrix_and_rhs(const VectorType &levelset_old,
+                                                             VectorType       &rhs) const
   {
     AssertThrowZeroTimeIncrement(this->time_increment);
 
@@ -55,8 +54,8 @@ namespace MeltPoolDG::LevelSet
 
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
-    rhs    = 0.0;
-    matrix = 0.0;
+    rhs                 = 0.0;
+    this->system_matrix = 0.0;
 
     for (const auto &cell : scratch_data.get_dof_handler(this->dof_idx).active_cell_iterators())
       if (cell->is_locally_owned())
@@ -118,10 +117,11 @@ namespace MeltPoolDG::LevelSet
           cell->get_dof_indices(local_dof_indices);
 
           scratch_data.get_constraint(this->dof_idx)
-            .distribute_local_to_global(cell_matrix, cell_rhs, local_dof_indices, matrix, rhs);
+            .distribute_local_to_global(
+              cell_matrix, cell_rhs, local_dof_indices, this->system_matrix, rhs);
         }
 
-    matrix.compress(VectorOperation::add);
+    this->system_matrix.compress(VectorOperation::add);
     rhs.compress(VectorOperation::add);
   }
 
@@ -304,6 +304,10 @@ namespace MeltPoolDG::LevelSet
             diffusion_length[cell] = reinit_data.compute_interface_thickness_parameter_epsilon(
               scratch_data.get_cell_sizes()[cell] / ls_n_subdivisions);
           }
+      }
+    else
+      {
+        this->reinit_sparsity_pattern(scratch_data);
       }
   }
 

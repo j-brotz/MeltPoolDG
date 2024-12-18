@@ -34,9 +34,8 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  CurvatureOperator<dim, number>::assemble_matrixbased(
+  CurvatureOperator<dim, number>::compute_system_matrix_and_rhs(
     const CurvatureOperator::BlockVectorType &solution_normal_vector_in,
-    CurvatureOperator::SparseMatrixType      &matrix,
     VectorType                               &rhs) const
   {
     BlockVectorType unit_normal(solution_normal_vector_in);
@@ -60,8 +59,8 @@ namespace MeltPoolDG::LevelSet
 
     const unsigned int n_q_points = curv_values.get_quadrature().size();
 
-    matrix = 0.0;
-    rhs    = 0.0;
+    this->system_matrix = 0.0;
+    rhs                 = 0.0;
 
     for (const auto &cell : scratch_data.get_dof_handler(curv_dof_idx).active_cell_iterators())
       if (cell->is_locally_owned())
@@ -142,11 +141,14 @@ namespace MeltPoolDG::LevelSet
           // assembly
           cell->get_dof_indices(local_dof_indices);
           scratch_data.get_constraint(curv_dof_idx)
-            .distribute_local_to_global(
-              curvature_cell_matrix, curvature_cell_rhs, local_dof_indices, matrix, rhs);
+            .distribute_local_to_global(curvature_cell_matrix,
+                                        curvature_cell_rhs,
+                                        local_dof_indices,
+                                        this->system_matrix,
+                                        rhs);
 
         } // end of cell loop
-    matrix.compress(VectorOperation::add);
+    this->system_matrix.compress(VectorOperation::add);
     rhs.compress(VectorOperation::add);
   }
 
@@ -374,6 +376,10 @@ namespace MeltPoolDG::LevelSet
             damping[cell] = compute_cell_size_dependent_filter_parameter_mf<dim>(
               scratch_data, curv_dof_idx, cell, curvature_data.filter_parameter);
           }
+      }
+    else
+      {
+        this->reinit_sparsity_pattern(scratch_data);
       }
   }
 

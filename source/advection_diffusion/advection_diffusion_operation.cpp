@@ -16,6 +16,8 @@
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
+#include <variant>
+
 namespace MeltPoolDG::LevelSet
 {
   template <int dim>
@@ -76,12 +78,6 @@ namespace MeltPoolDG::LevelSet
 
     scratch_data.initialize_dof_vector(user_rhs, advec_diff_dof_idx);
     scratch_data.initialize_dof_vector(rhs, advec_diff_dof_idx);
-    /*
-     *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
-     *  apply it to the system matrix. This functionality is part of the OperatorBase class.
-     */
-    if (!this->advec_diff_data.linear_solver.do_matrix_free && advec_diff_operator)
-      advec_diff_operator->initialize_matrix_based(scratch_data);
 
     if (this->advec_diff_data.linear_solver.do_matrix_free && preconditioner_matrixfree)
       {
@@ -201,7 +197,7 @@ namespace MeltPoolDG::LevelSet
 
     int iter = 0;
 
-    advec_diff_operator->prepare();
+    advec_diff_operator->pre();
 
 
     if (this->advec_diff_data.linear_solver.do_matrix_free)
@@ -219,51 +215,37 @@ namespace MeltPoolDG::LevelSet
           false /*don't zero out rhs*/,
           inflow_constraints_indices_and_values);
 
-        if (this->advec_diff_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
-          {
-            dynamic_cast<AdvectionDiffusionOperator<dim> *>(advec_diff_operator.get())
-              ->enable_pre_post();
-            auto diag_preconditioner_matrixfree =
-              preconditioner_matrixfree->compute_diagonal_preconditioner();
+        advec_diff_operator->enable_pre_post();
 
-            iter = LinearSolver::solve<VectorType>(*advec_diff_operator,
+        std::variant<std::shared_ptr<TrilinosWrappers::PreconditionBase>,
+                     std::shared_ptr<DiagonalMatrix<VectorType>>>
+          preconditioner;
+
+        preconditioner = preconditioner_matrixfree->compute_preconditioner();
+
+        std::visit(
+          [&](auto &precond_ptr) -> int {
+            return LinearSolver::solve<VectorType>(*advec_diff_operator,
                                                    solution_history.get_current_solution(),
                                                    rhs,
                                                    this->advec_diff_data.linear_solver,
-                                                   *diag_preconditioner_matrixfree,
+                                                   *precond_ptr,
                                                    "advection_diffusion_operation");
+          },
+          preconditioner);
 
-            dynamic_cast<AdvectionDiffusionOperator<dim> *>(advec_diff_operator.get())
-              ->disable_pre_post();
-          }
-        else
-          {
-            dynamic_cast<AdvectionDiffusionOperator<dim> *>(advec_diff_operator.get())
-              ->enable_pre_post();
-            auto trilinos_preconditioner_matrixfree =
-              preconditioner_matrixfree->compute_trilinos_preconditioner();
-
-            iter = LinearSolver::solve<VectorType>(*advec_diff_operator,
-                                                   solution_history.get_current_solution(),
-                                                   rhs,
-                                                   this->advec_diff_data.linear_solver,
-                                                   *trilinos_preconditioner_matrixfree,
-                                                   "advection_diffusion_operation");
-            dynamic_cast<AdvectionDiffusionOperator<dim> *>(advec_diff_operator.get())
-              ->disable_pre_post();
-          }
+        advec_diff_operator->disable_pre_post();
       }
     else
       {
         rhs = 0.0;
-        advec_diff_operator->assemble_matrixbased(solution_history.get_recent_old_solution(),
-                                                  advec_diff_operator->get_system_matrix(),
-                                                  rhs);
+        advec_diff_operator->compute_system_matrix_and_rhs(
+          solution_history.get_recent_old_solution(), rhs);
 
         rhs += user_rhs;
         scratch_data.get_constraint(advec_diff_dof_idx)
           .distribute(rhs); //@todo: this could be avoided by introducing a zero_out inside
-                            // assemble_matrixbased
+                            // compute_system_matrix_and_rhs
 
         auto preconditioner = Preconditioner::get_preconditioner_trilinos(
           advec_diff_operator->get_system_matrix(),
@@ -544,15 +526,13 @@ namespace MeltPoolDG::LevelSet
      */
 
     advec_diff_operator->reinit();
-    if (!this->advec_diff_data.linear_solver.do_matrix_free)
-      advec_diff_operator->initialize_matrix_based(scratch_data);
     /*
      * initialize preconditioner matrix-free
      */
     if (this->advec_diff_data.linear_solver.do_matrix_free)
       {
         preconditioner_matrixfree = std::make_shared<
-          Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
+          Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>(
           scratch_data,
           advec_diff_dof_idx,
           this->advec_diff_data.linear_solver.preconditioner_type,

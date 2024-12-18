@@ -38,9 +38,6 @@ namespace MeltPoolDG::LevelSet
     scratch_data.initialize_dof_vector(solution_normal_vector_predictor, normal_dof_idx);
     scratch_data.initialize_dof_vector(rhs, normal_dof_idx);
 
-    if (!normal_vector_data.linear_solver.do_matrix_free)
-      normal_vector_operator->initialize_matrix_based(scratch_data);
-
     normal_vector_operator->reinit();
 
     if (normal_vector_data.linear_solver.do_matrix_free)
@@ -141,9 +138,7 @@ namespace MeltPoolDG::LevelSet
       }
     else
       {
-        normal_vector_operator->assemble_matrixbased(solution_level_set,
-                                                     normal_vector_operator->get_system_matrix(),
-                                                     rhs);
+        normal_vector_operator->compute_system_matrix_and_rhs(solution_level_set, rhs);
 
         for (unsigned int d = 0; d < dim; ++d)
           iter = LinearSolver::solve<VectorType>(normal_vector_operator->get_system_matrix(),
@@ -232,7 +227,7 @@ namespace MeltPoolDG::LevelSet
     if (normal_vector_data.linear_solver.do_matrix_free)
       {
         preconditioner_matrixfree = std::make_shared<
-          Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
+          Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>(
           scratch_data,
           normal_dof_idx,
           normal_vector_data.linear_solver.preconditioner_type,

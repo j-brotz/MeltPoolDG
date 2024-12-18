@@ -34,13 +34,13 @@ namespace MeltPoolDG::Utilities::MatrixFree
             typename SrcRhsVectorType = VectorType>
   inline void
   create_rhs_and_apply_dirichlet_matrixfree(
-    OperatorBase<dim, number> &operator_base,
-    DoFVectorType             &rhs,
-    const SrcRhsVectorType    &src,
-    const ScratchData<dim>    &scratch_data,
-    const unsigned int         dof_idx,
-    const unsigned int         dof_no_bc_idx,
-    const bool                 zero_out,
+    OperatorMatrixFree<dim, number> &operator_base,
+    DoFVectorType                   &rhs,
+    const SrcRhsVectorType          &src,
+    const ScratchData<dim>          &scratch_data,
+    const unsigned int               dof_idx,
+    const unsigned int               dof_no_bc_idx,
+    const bool                       zero_out,
     const std::optional<std::pair<std::vector<unsigned int>, std::vector<double>>>
       &additional_inhomogeneous_constraints = std::nullopt)
   {
@@ -72,14 +72,11 @@ namespace MeltPoolDG::Utilities::MatrixFree
 
     scratch_data.get_constraint(dof_idx).distribute(bc_values);
 
-    /*
-     * perform matrix-vector multiplication (with unconstrained system and constrained set in
-     * Vector)
-     */
+    // perform matrix-vector multiplication (with unconstrained system and constrained set in
+    // Vector)
     operator_base.vmult(temp_rhs, bc_values);
-    /*
-     * Modify right-hand side
-     */
+
+    // Modify right-hand side
     temp_rhs *= -1.0;
     operator_base.create_rhs(temp_rhs, temp_src);
     /*
