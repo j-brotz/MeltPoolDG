@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: ${{github.event_name == 'pull_request'}}
     
 env:
-  COMPILE_JOBS: 2
+  COMPILE_JOBS: 4
   PROJECT_NAME: MeltPoolDG-dev
 
 jobs:
@@ -71,7 +71,7 @@ jobs:
           export OMPI_ALLOW_RUN_AS_ROOT=1
           export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
           cd build
-          ctest --output-on-failure -R 'unit_tests/|tests/'
+          ctest -j${{ env.COMPILE_JOBS }} --output-on-failure -R 'unit_tests/|tests/'
           
       - name: Failed test log
         if: ${{ failure() }}
