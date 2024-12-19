@@ -19,7 +19,7 @@
     }
   },
   "compressible navier stokes": {
-    "dynamic_viscosity": 0.1,
+    "dynamic viscosity": 0.1,
     "numerical flux type": "lax_friedrichs_modified",
     "use cfl criteria": "true",
     "time integration": {
