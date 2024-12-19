@@ -366,6 +366,12 @@ namespace MeltPoolDG::Heat
 
     init_time_advance();
 
+    if (not solution_history.get_current_solution().has_ghost_elements())
+      solution_history.get_current_solution().update_ghost_values();
+    if (not solution_history.get_recent_old_solution().has_ghost_elements())
+      solution_history.get_recent_old_solution().update_ghost_values();
+    heat_operator->update_ghost_values();
+
     // setup preconditioner
     switch (heat_data.linear_solver.preconditioner_type)
       {
