@@ -6,6 +6,7 @@
 #include <deal.II/base/vectorization.h>
 
 #include <deal.II/fe/fe_dgq.h>
+#include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/lac/la_parallel_vector.h>
@@ -60,8 +61,10 @@ namespace MeltPoolDG::Heat
       &mapping_info_cells;
 
     // use FE_DGQ for FEPointEvaluation (DoF numbering reasons)
-    const dealii::FE_DGQ<dim> fe_point_tmp;
-    const unsigned int        n_dofs_per_cell;
+    const dealii::FE_DGQ<dim>   fe_point_temp;
+    const unsigned int          n_dofs_per_cell;
+    const dealii::FESystem<dim> fe_point_vel;
+    const unsigned int          n_dofs_per_cell_vel;
 
     // coefficients for weighted average operator for two-phase case
     const number kappa_l;
@@ -121,6 +124,9 @@ namespace MeltPoolDG::Heat
 
     void
     init_time_advance(const double dt);
+
+    void
+    update_ghost_values() const;
 
     /*
      *    matrix-free implementation

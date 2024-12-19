@@ -118,15 +118,15 @@ namespace MeltPoolDG::CutUtil
 
 
 
-  template <int dim, typename number>
+  template <int dim, typename number, int n_components = 1>
   inline void
   evaluate_intersected_domain(
-    dealii::FEPointEvaluation<1, dim, dim, dealii::VectorizedArray<number>> &point_eval,
-    const dealii::FECellIntegrator<dim, 1, number>                          &eval_intersected,
-    const dealii::EvaluationFlags::EvaluationFlags                           evaluation_flags,
-    const unsigned int                                                       cell_index,
-    const unsigned int                                                       lane,
-    const unsigned int                                                       n_dofs_per_cell)
+    dealii::FEPointEvaluation<n_components, dim, dim, dealii::VectorizedArray<number>> &point_eval,
+    const dealii::FECellIntegrator<dim, n_components, number> &eval_intersected,
+    const dealii::EvaluationFlags::EvaluationFlags             evaluation_flags,
+    const unsigned int                                         cell_index,
+    const unsigned int                                         lane,
+    const unsigned int                                         n_dofs_per_cell)
   {
     static constexpr unsigned int n_lanes = dealii::VectorizedArray<number>::size();
 
