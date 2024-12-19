@@ -3,10 +3,7 @@
     "problem name": "compressible_flow",
     "case name": "channel_particle_flow",
     "dimension": "2",
-    "global refinements": "2",
-    "fe": {
-      "degree": "2"
-    }
+    "global refinements": "2"
   },
   "time stepping": {
     "start time": "0.0",
@@ -22,11 +19,15 @@
     }
   },
   "compressible navier stokes": {
-    "dynamic_viscosity": 0.1,
+    "dynamic viscosity": 0.1,
     "numerical flux type": "lax_friedrichs_modified",
-    "use cfl criteria": "true"
-  },
-  "time integrator": {
-    "type": "LSRK_stage_5_order_4"
+    "use cfl criteria": "true",
+    "time integration": {
+      "type": "LSRK_stage_5_order_4"
+    },
+    "fe": {
+      "degree": "2",
+      "type": "FE_DGQ"
+    }
   }
 }

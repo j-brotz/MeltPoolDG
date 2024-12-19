@@ -1,5 +1,6 @@
 #include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
 #include <meltpooldg/reinitialization/reinitialization_DG_operation.hpp>
+#include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
@@ -46,13 +47,12 @@ namespace MeltPoolDG::LevelSet
       curvature_operation->get_curvature(),
       normal_vector_operation->get_solution_normal_vector());
 
-    reinitilization_integration = TimeIntegratorConcretization::concretize(
-      reinit_data.reinitilization_DG_specific_data.time_integration_scheme,
-      *reinit_DG_operator,
-      scratch_data_in,
-      reinit_dof_idx_in,
-      reinit_quad_idx_in,
-      reinit_data.linear_solver);
+    reinitialization_integration =
+      std::shared_ptr<TimeIntegratorBase<double, ReinitilizationDGOperator<dim, double>>>(
+        time_integrator_factory<double, ReinitilizationDGOperator<dim, double>>(
+          reinit_data.reinitilization_DG_specific_data.time_integration_data,
+          reinit_data.linear_solver,
+          scratch_data_in.get_timer()));
   }
 
   template <int dim>
@@ -88,13 +88,12 @@ namespace MeltPoolDG::LevelSet
       curvature_operation->get_curvature(),
       normal_vector_operation->get_solution_normal_vector());
 
-    reinitilization_integration = TimeIntegratorConcretization::concretize(
-      reinit_data.reinitilization_DG_specific_data.time_integration_scheme,
-      *reinit_DG_operator,
-      scratch_data_in,
-      reinit_dof_idx_in,
-      reinit_quad_idx_in,
-      reinit_data.linear_solver);
+    reinitialization_integration =
+      std::shared_ptr<TimeIntegratorBase<double, ReinitilizationDGOperator<dim, double>>>(
+        time_integrator_factory<double, ReinitilizationDGOperator<dim, double>>(
+          reinit_data.reinitilization_DG_specific_data.time_integration_data,
+          reinit_data.linear_solver,
+          scratch_data_in.get_timer()));
   }
 
   template <int dim>
@@ -104,10 +103,8 @@ namespace MeltPoolDG::LevelSet
     solution_history.apply(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, reinit_dof_idx); });
 
-    scratch_data.initialize_dof_vector(rhs, reinit_dof_idx);
-
     reinit_DG_operator->reinit();
-    reinitilization_integration->reinit();
+    reinitialization_integration->reinit(solution_history);
 
     if (!is_coupled)
       {
@@ -233,21 +230,19 @@ namespace MeltPoolDG::LevelSet
 
     if (reinit_data.linear_solver.do_matrix_free)
       {
-        if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_scheme !=
-            TimeIntegrators::not_initialized)
+        if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type !=
+            TimeIntegratorSchemes::not_initialized)
           {
             reinit_DG_operator->apply_diffusion_implicit(time_iterator.get_old_time(),
                                                          time_iterator.get_current_time_increment(),
-                                                         solution_history,
-                                                         rhs);
+                                                         solution_history);
             solution_history.set_recent_old_solution(solution_history.get_current_solution());
           }
 
-        reinitilization_integration->perform_time_step(time_iterator.get_old_time(),
-                                                       time_iterator.get_current_time_increment(),
-                                                       solution_history,
-                                                       rhs);
-
+        reinitialization_integration->perform_time_step(*reinit_DG_operator,
+                                                        time_iterator.get_old_time(),
+                                                        time_iterator.get_current_time_increment(),
+                                                        solution_history);
         solution_history.get_recent_old_solution().add(-1.0,
                                                        solution_history.get_current_solution());
         max_change_level_set = solution_history.get_recent_old_solution().linfty_norm();
@@ -332,8 +327,8 @@ namespace MeltPoolDG::LevelSet
     const double minimal_vertex_distance = scratch_data.get_min_cell_size();
     const double fe_degree = ((static_cast<double>(scratch_data.get_degree(reinit_dof_idx))));
 
-    if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_scheme !=
-        TimeIntegrators::not_initialized)
+    if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type !=
+        TimeIntegratorSchemes::not_initialized)
       {
         return reinit_data.reinitilization_DG_specific_data.CFL * minimal_vertex_distance /
                ((fe_degree * fe_degree) * reinit_DG_operator->get_signum_smoothed().linfty_norm());

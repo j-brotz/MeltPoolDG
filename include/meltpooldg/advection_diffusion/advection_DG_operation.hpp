@@ -16,7 +16,9 @@
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
-#include <meltpooldg/time_integration/time_integration_concretization.hpp>
+#include <meltpooldg/time_integration/time_integrator_base.hpp>
+#include <meltpooldg/time_integration/time_integrator_data.hpp>
+#include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
@@ -123,6 +125,6 @@ namespace MeltPoolDG::LevelSet
 
     AdvectionDGOperator<dim> advection_DG_operator;
 
-    std::shared_ptr<TimeIntegrationBase<dim>> advection_integration;
+    std::shared_ptr<TimeIntegratorBase<double, AdvectionDGOperator<dim>>> advection_integration;
   };
 } // namespace MeltPoolDG::LevelSet

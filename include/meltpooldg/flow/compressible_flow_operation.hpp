@@ -24,7 +24,7 @@
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_operator_explicit.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
-#include <meltpooldg/time_integration/explicit_integrator_base.hpp>
+#include <meltpooldg/time_integration/time_integrator_base.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 
@@ -45,15 +45,13 @@ namespace MeltPoolDG::Flow
      *
      * @param scratch_data_in Reference to the used ScratchData object.
      * @param comp_flow_data_in Reference to the compressible flow data struct used.
-     * @param time_integrator_data_in Reference to the used time integrator data.
      * @param comp_flow_dof_idx_in Index of the used dof handler in @p scratch_data_in.
      * @param comp_flow_quad_idx_in Index of the used quadrature object in @p scratch_data_in.
      */
-    CompressibleFlowOperation(const ScratchData<dim>                    &scratch_data_in,
-                              const CompressibleFlowData                &comp_flow_data_in,
-                              const TimeIntegration::TimeIntegratorData &time_integrator_data_in,
-                              unsigned int                               comp_flow_dof_idx_in  = 0,
-                              unsigned int                               comp_flow_quad_idx_in = 0);
+    CompressibleFlowOperation(const ScratchData<dim>     &scratch_data_in,
+                              const CompressibleFlowData &comp_flow_data_in,
+                              unsigned int                comp_flow_dof_idx_in  = 0,
+                              unsigned int                comp_flow_quad_idx_in = 0);
 
     /**
      * Set up the required internal data structures. After a call to this function the solve()
@@ -209,8 +207,7 @@ namespace MeltPoolDG::Flow
     number
     compute_minimum_density() const;
 
-    std::unique_ptr<TimeIntegration::
-                      ExplicitIntegratorBase<number, CompressibleFlowOperatorExplicit<dim, number>>>
+    std::unique_ptr<TimeIntegratorBase<number, CompressibleFlowOperatorExplicit<dim, number>>>
       time_integrator;
   };
 

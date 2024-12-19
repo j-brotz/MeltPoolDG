@@ -23,11 +23,14 @@
     }
   },
   "compressible navier stokes": {
-    "dynamic_viscosity": 0.0,
+    "dynamic viscosity": 0.0,
     "numerical flux type": "lax_friedrichs_modified",
-    "gravity constant": 0.0
-  },
-  "time integrator": {
-    "type": "LSRK_stage_5_order_4"
+    "time integration": {
+      "type": "LSRK_stage_5_order_4"
+    },
+    "fe": {
+      "degree": "2",
+      "type": "FE_DGQ"
+    }
   }
 }

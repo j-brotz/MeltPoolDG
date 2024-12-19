@@ -145,6 +145,9 @@ old_parameter_names = [
     ["heat", "degree"],
     ["material", "sticking constant"],
     ["base", "application name"],
+    # 24-12-19
+    ["advection diffusion", "time integration scheme"],
+    ["level set", "advection diffusion", "time integration scheme"]
     # ... add old parameter names
     # ["old", "my age"],
 ]
@@ -273,6 +276,9 @@ new_parameter_names = [
     ["heat", "fe", "degree"],
     ["evaporation", "recoil pressure", "sticking constant"],
     ["base", "case name"],
+    # 24-12-19
+    ["advection diffusion", "time integration", "type"],
+    ["level set", "advection diffusion", "time integration", "type"]
     # ... add new parameter names
     # ["new", "new", "my new age"],
 ]
@@ -280,7 +286,8 @@ new_parameter_names = [
 # Optional: attach lambda function to modify value of new parameter name
 new_parameter_names_lambda = [
     (["recoil pressure", "pressure coefficient"], lambda x: x * 1.e-5 / 1.013),
-    (["base", "fe", "type"], lambda x: "FE_SimplexP" if x == "true" else "FE_Q" if x == "false" else x),
+    (["base", "fe", "type"], lambda x: "FE_SimplexP" if x ==
+     "true" else "FE_Q" if x == "false" else x),
 ]
 
 rename_parameter_values = [
@@ -308,7 +315,8 @@ rename_parameter_values = [
     (["evaporation", "formulation source term continuity"], "diffuse", "regularized"),
     (["evaporation", "evaporative cooling", "model"], "diffuse", "regularized"),
     (["evaporation", "evaporative dilation rate", "model"], "diffuse", "regularized"),
-    (["evaporation", "recoil pressure", "interface distributed flux type"], "continuous", "local_value"),
+    (["evaporation", "recoil pressure", "interface distributed flux type"],
+     "continuous", "local_value"),
 ]
 
 delete_parameter_names = [
@@ -494,6 +502,15 @@ def sanity_check_json(j, old_parameter_names, new_parameter_names,
             # get value of old parameter
             try:
                 val = get_nested_value(datastore, o)
+
+                # TODO: BRUTEFORCE WORKAROUND!!!! [MS]
+                # special treatment for new application structure in MeltPoolDG
+                if "mp-advec-diff" in j and new_parameter_names[i][0] == "level set":
+                    new_parameter_names[i] = new_parameter_names[i][1:]
+                if new_parameter_names[i] == old_parameter_names[i]:
+                    print("nothing to do")
+                    continue
+
                 print_error(
                     f"outdated parameter detected {o}; use new definition {new_parameter_names[i]}")
                 errors += 1
@@ -570,6 +587,7 @@ def sanity_check_json(j, old_parameter_names, new_parameter_names,
         with open(new_file, 'w') as f:
             print(f"Write file: updated parameters written to {new_file}")
             json.dump(datastore, f, indent=2, separators=(',', ': '))
+
     else:
         sys.exit(1)
         assert errors == 0, f"ERROR: {errors} errors in the parameter file {j} detected. Use the overwrite option '-w' to fix it."

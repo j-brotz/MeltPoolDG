@@ -26,7 +26,9 @@
     }
   },
   "advection diffusion": {
-    "advec diff integration scheme": "crank_nicolson",
+    "time integration": {
+      "type": "crank_nicolson"
+    },
     "linear solver": {
       "do matrix free": "true"
     },

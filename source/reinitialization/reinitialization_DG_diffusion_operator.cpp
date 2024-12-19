@@ -288,9 +288,10 @@ namespace MeltPoolDG::LevelSet
   template <int dim, typename Number>
   void
   ReinitializationDGDiffusionOperator<dim, Number>::apply_operator(
-    [[maybe_unused]] const Number time,
-    VectorType                   &dst,
-    const VectorType             &src) const
+    [[maybe_unused]] const Number                          time,
+    VectorType                                            &dst,
+    const VectorType                                      &src,
+    const std::function<void(unsigned int, unsigned int)> &func) const
   {
     scratch_data.get_matrix_free().loop(
       &ReinitializationDGDiffusionOperator<dim, Number>::local_apply_domain,
@@ -302,6 +303,39 @@ namespace MeltPoolDG::LevelSet
       true,
       MatrixFree<dim, Number>::DataAccessOnFaces::unspecified,
       MatrixFree<dim, Number>::DataAccessOnFaces::unspecified);
+
+
+    this->scratch_data.get_matrix_free().cell_loop(
+      &ReinitializationDGDiffusionOperator<dim, Number>::local_apply_inverse_mass_matrix,
+      this,
+      dst,
+      dst,
+      std::function<void(unsigned int, unsigned int)>(),
+      func);
+  }
+
+
+  template <int dim, typename Number>
+  void
+  ReinitializationDGDiffusionOperator<dim, Number>::local_apply_inverse_mass_matrix(
+    const MatrixFree<dim, Number>                    &data,
+    LinearAlgebra::distributed::Vector<Number>       &dst,
+    const LinearAlgebra::distributed::Vector<Number> &src,
+    const std::pair<unsigned int, unsigned int>      &cell_range) const
+  {
+    FECellIntegrator<dim, 1, Number> eval(data, reinit_dof_idx, reinit_quad_idx);
+
+    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, Number> inverse(eval);
+
+    for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+      {
+        eval.reinit(cell);
+        eval.read_dof_values(src);
+
+        inverse.apply(eval.begin_dof_values(), eval.begin_dof_values());
+
+        eval.set_dof_values(dst);
+      }
   }
 
   template class ReinitializationDGDiffusionOperator<1>;

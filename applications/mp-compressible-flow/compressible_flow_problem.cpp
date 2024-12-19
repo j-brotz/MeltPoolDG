@@ -56,7 +56,7 @@ namespace MeltPoolDG::Flow
   {
     // setup DoFHandler
     constexpr unsigned int dofs_per_node = dim + 2;
-    FiniteElementUtils::distribute_dofs<dim, dofs_per_node>(simulation_case->parameters.base.fe,
+    FiniteElementUtils::distribute_dofs<dim, dofs_per_node>(simulation_case->parameters.flow.fe,
                                                             dof_handler);
 
     scratch_data->create_partitioning();
@@ -92,11 +92,11 @@ namespace MeltPoolDG::Flow
                                            true);
       // set up mapping
       scratch_data->set_mapping(
-        FiniteElementUtils::create_mapping<dim>(simulation_case->parameters.base.fe));
+        FiniteElementUtils::create_mapping<dim>(simulation_case->parameters.flow.fe));
 
       // create quadrature rule
       comp_flow_quad_idx = scratch_data->attach_quadrature(
-        FiniteElementUtils::create_quadrature<dim>(simulation_case->parameters.base.fe));
+        FiniteElementUtils::create_quadrature<dim>(simulation_case->parameters.flow.fe));
 
       comp_flow_dof_idx = scratch_data->attach_dof_handler(dof_handler);
 
@@ -111,11 +111,7 @@ namespace MeltPoolDG::Flow
 
     // initialize compressible flow operation
     comp_flow_operation = std::make_unique<CompressibleFlowOperation<dim, double>>(
-      *scratch_data,
-      simulation_case->parameters.flow,
-      simulation_case->parameters.time_integrator,
-      comp_flow_dof_idx,
-      comp_flow_quad_idx);
+      *scratch_data, simulation_case->parameters.flow, comp_flow_dof_idx, comp_flow_quad_idx);
 
     // set boundary conditions
     comp_flow_operation->set_inflow_boundary(
@@ -133,7 +129,7 @@ namespace MeltPoolDG::Flow
     comp_flow_operation->set_no_slip_adiabatic_wall_boundary(
       simulation_case->get_boundary_condition("no_slip_wall", "compressible_flow"));
 
-    // initialize operation dof vectors
+    // initialize operation
     comp_flow_operation->reinit();
 
     // set initial condition for the flow field

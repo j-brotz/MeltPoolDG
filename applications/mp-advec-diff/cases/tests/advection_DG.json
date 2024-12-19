@@ -12,7 +12,9 @@
     "time step size": "0.005"
   },
   "advection diffusion": {
-    "time integration scheme": "crank_nicolson",
+    "time integration": {
+      "type": "crank_nicolson"
+    },
     "linear solver": {
       "do matrix free": "true"
     },

@@ -20,6 +20,7 @@
 #include <meltpooldg/normal_vector/normal_vector_DG_operation.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/reinitialization/reinitialization_DG_operation.hpp>
+#include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <limits>

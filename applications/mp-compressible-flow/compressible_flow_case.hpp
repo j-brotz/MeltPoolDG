@@ -26,7 +26,6 @@ namespace MeltPoolDG::Flow
     {
       base.add_parameters(prm);
       flow.add_parameters(prm);
-      time_integrator.add_parameters(prm);
       time_stepping.add_parameters(prm);
       output.add_parameters(prm);
       profiling.add_parameters(prm);
@@ -37,19 +36,18 @@ namespace MeltPoolDG::Flow
     {
       output.post(time_stepping.time_step_size, parameter_filename);
       profiling.post(base.verbosity_level);
+      flow.post(base.fe);
 
       // check input parameters for validity
       profiling.check_input_parameters(time_stepping.time_step_size);
-      base.fe.type = FiniteElementType::FE_DGQ; // only discontinuous elements are supported
     }
 
   public:
-    BaseData                            base;
-    CompressibleFlowData                flow;
-    TimeIntegration::TimeIntegratorData time_integrator;
-    TimeSteppingData<number>            time_stepping;
-    OutputData<number>                  output;
-    Profiling::ProfilingData<number>    profiling;
+    BaseData                         base;
+    CompressibleFlowData             flow;
+    TimeSteppingData<number>         time_stepping;
+    OutputData<number>               output;
+    Profiling::ProfilingData<number> profiling;
   };
 
   template <int dim>

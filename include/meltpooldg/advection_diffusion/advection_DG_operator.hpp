@@ -64,9 +64,10 @@ namespace MeltPoolDG::LevelSet
      * @param scr source vector for the operator
      */
     void
-    apply_operator(const Number                                      time,
-                   LinearAlgebra::distributed::Vector<Number>       &dst,
-                   const LinearAlgebra::distributed::Vector<Number> &src) const;
+    apply_operator(Number                                                 time,
+                   LinearAlgebra::distributed::Vector<Number>            &dst,
+                   const LinearAlgebra::distributed::Vector<Number>      &src,
+                   const std::function<void(unsigned int, unsigned int)> &func = {}) const;
     /**
      * Applies the dirichlet contribution of the DG advection operator to the @param src vector and stores
      * the result in the @param dst vector. The dst vector is NOT zeroed out before the operation.
@@ -81,6 +82,12 @@ namespace MeltPoolDG::LevelSet
      *Flag if old velocity needs to be updated
      */
     bool update_field_functions;
+
+    void
+    local_apply_inverse_mass_matrix(const MatrixFree<dim, Number>                    &data,
+                                    LinearAlgebra::distributed::Vector<Number>       &dst,
+                                    const LinearAlgebra::distributed::Vector<Number> &src,
+                                    const std::pair<unsigned int, unsigned int> &cell_range) const;
 
 
   private:

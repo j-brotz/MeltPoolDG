@@ -1,4 +1,5 @@
 #include <meltpooldg/reinitialization/reinitialization_DG_operator.hpp>
+#include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -27,15 +28,14 @@ namespace MeltPoolDG::LevelSet
 
     , RI_grad_operator(scratch_data_in, reinit_dof_idx_in, reinit_quad_idx_in)
   {
-    if (reinit_data_in.reinitilization_DG_specific_data.IMEX_integration_scheme !=
-        TimeIntegrators::not_initialized)
-      IMEX_integration = TimeIntegratorConcretization::concretize(
-        reinit_data_in.reinitilization_DG_specific_data.IMEX_integration_scheme,
-        RI_DG_diffusion_operator,
-        scratch_data_in,
-        reinit_dof_idx_in,
-        reinit_quad_idx_in,
-        reinit_data_in.linear_solver);
+    if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type !=
+        TimeIntegratorSchemes::not_initialized)
+      IMEX_integration =
+        std::shared_ptr<TimeIntegratorBase<double, ReinitializationDGDiffusionOperator<dim>>>(
+          time_integrator_factory<double, ReinitializationDGDiffusionOperator<dim>>(
+            reinit_data_in.reinitilization_DG_specific_data.IMEX_integration_data,
+            reinit_data_in.linear_solver,
+            scratch_data.get_timer()));
   }
 
 
@@ -55,17 +55,21 @@ namespace MeltPoolDG::LevelSet
   ReinitilizationDGOperator<dim, Number>::apply_diffusion_implicit(
     const Number                                  time,
     const Number                                  time_step,
-    TimeIntegration::SolutionHistory<VectorType> &solution_history,
-    VectorType                                   &rhs) const
+    TimeIntegration::SolutionHistory<VectorType> &solution_history) const
   {
-    IMEX_integration->perform_time_step(time, time_step, solution_history, rhs);
+    IMEX_integration->perform_time_step(RI_DG_diffusion_operator,
+                                        time,
+                                        time_step,
+                                        solution_history);
   }
 
   template <int dim, typename Number>
   void
-  ReinitilizationDGOperator<dim, Number>::apply_operator(Number const      time,
-                                                         VectorType       &dst,
-                                                         VectorType const &src)
+  ReinitilizationDGOperator<dim, Number>::apply_operator(
+    Number const                                           time,
+    VectorType                                            &dst,
+    VectorType const                                      &src,
+    const std::function<void(unsigned int, unsigned int)> &func) const
   {
     compute_godunov_hamiltonian(src);
 
@@ -76,13 +80,16 @@ namespace MeltPoolDG::LevelSet
       num_Hamiltonian,
       true);
 
+    scratch_data.get_matrix_free().cell_loop(
+      &ReinitilizationDGOperator<dim, Number>::local_apply_inverse_mass_matrix, this, dst, dst);
 
-    if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_scheme ==
-        TimeIntegrators::not_initialized)
+
+
+    if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type ==
+        TimeIntegratorSchemes::not_initialized)
       {
         RI_DG_diffusion_operator.apply_operator(time, num_Hamiltonian, src);
         RI_DG_diffusion_operator.apply_dirichlet_boundary_operator(time, num_Hamiltonian, src);
-
 
         dst.add(1.0, num_Hamiltonian);
       }
@@ -96,9 +103,40 @@ namespace MeltPoolDG::LevelSet
           src,
           true);
 
+        scratch_data.get_matrix_free().cell_loop(
+          &ReinitilizationDGOperator<dim, Number>::local_apply_inverse_mass_matrix,
+          this,
+          num_Hamiltonian,
+          num_Hamiltonian);
+
         dst.add(1.0, num_Hamiltonian);
       }
+    func(0, dst.locally_owned_size());
   }
+
+  template <int dim, typename Number>
+  void
+  ReinitilizationDGOperator<dim, Number>::local_apply_inverse_mass_matrix(
+    const MatrixFree<dim, Number>                    &data,
+    LinearAlgebra::distributed::Vector<Number>       &dst,
+    const LinearAlgebra::distributed::Vector<Number> &src,
+    const std::pair<unsigned int, unsigned int>      &cell_range) const
+  {
+    FECellIntegrator<dim, 1, Number> eval(data, reinit_dof_idx, reinit_quad_idx);
+
+    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, Number> inverse(eval);
+
+    for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+      {
+        eval.reinit(cell);
+        eval.read_dof_values(src);
+
+        inverse.apply(eval.begin_dof_values(), eval.begin_dof_values());
+
+        eval.set_dof_values(dst);
+      }
+  }
+
 
   template <int dim, typename Number>
   void
@@ -118,9 +156,9 @@ namespace MeltPoolDG::LevelSet
         scratch_data.initialize_dof_vector(grad_z_l, reinit_dof_idx);
         scratch_data.initialize_dof_vector(grad_z_r, reinit_dof_idx);
       }
-    if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_scheme !=
-        TimeIntegrators::not_initialized)
-      IMEX_integration->reinit();
+    if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type !=
+        TimeIntegratorSchemes::not_initialized)
+      IMEX_integration->reinit(grad_x_l); // TODO: Pass scratch data to initialize vectors
 
     RI_DG_diffusion_operator.compute_diffusitivity_value();
     RI_DG_diffusion_operator.compute_penalty_parameter();
@@ -128,7 +166,8 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  ReinitilizationDGOperator<dim, Number>::compute_godunov_hamiltonian(const VectorType &solution)
+  ReinitilizationDGOperator<dim, Number>::compute_godunov_hamiltonian(
+    const VectorType &solution) const
   {
     Number const gradient_goal = 1.;
 
@@ -211,7 +250,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  ReinitilizationDGOperator<dim, Number>::compute_godunov_gradient(const VectorType &solution)
+  ReinitilizationDGOperator<dim, Number>::compute_godunov_gradient(const VectorType &solution) const
   {
     {
       // compute local upwind and downwind gradients

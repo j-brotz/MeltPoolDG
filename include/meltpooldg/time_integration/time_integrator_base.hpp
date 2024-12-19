@@ -5,11 +5,12 @@
 #pragma once
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 
 #include <functional>
 
-namespace MeltPoolDG::TimeIntegration
+namespace MeltPoolDG
 {
   using namespace dealii;
 
@@ -35,14 +36,16 @@ namespace MeltPoolDG::TimeIntegration
 
 
   template <typename number, typename PDEOperator>
-  class ExplicitIntegratorBase
+  class TimeIntegratorBase
   {
     using VectorType = LinearAlgebra::distributed::Vector<number>;
 
   public:
-    ExplicitIntegratorBase() = default;
+    explicit TimeIntegratorBase(const TimeIntegratorData &time_integrator_data_in)
+      : time_integrator_data(time_integrator_data_in)
+    {}
 
-    virtual ~ExplicitIntegratorBase() = default;
+    virtual ~TimeIntegratorBase() = default;
 
     /**
      * This function returns the number of previous solutions required, which corresponds to the
@@ -79,9 +82,47 @@ namespace MeltPoolDG::TimeIntegration
      * previous solutions.
      */
     virtual void
-    perform_time_step(const PDEOperator                              &pde_operator,
-                      number                                          current_time,
-                      number                                          time_step,
-                      ::TimeIntegration::SolutionHistory<VectorType> &solution_history) = 0;
+    perform_time_step(
+      const PDEOperator                                                   &pde_operator,
+      number                                                               current_time,
+      number                                                               time_step,
+      ::TimeIntegration::SolutionHistory<VectorType>                      &solution_history,
+      const std::function<void(number, VectorType &, const VectorType &)> &pre_processing = {},
+      const std::function<void(number, VectorType &, const VectorType &)> &post_processing =
+        {}) = 0;
+
+    /**
+     * Function that returns the time integration scheme of the time integrator object.
+     */
+    TimeIntegratorSchemes
+    get_integrator_type() const
+    {
+      return time_integrator_data.integrator_type;
+    }
+
+    /**
+     * This function stores a pointer to the passed vector which can then be used in the derived
+     * time integrator classes for providing additional data during the time integration. Which kind
+     * of data is provided to this vector depends on the individual time integrator class.
+     */
+    void
+    set_monitoring_vector(VectorType &monitoring_vector_in)
+    {
+      monitoring_vector = &monitoring_vector_in;
+    }
+
+    /**
+     * This function sets the monitoring vector to nullptr in the case monitoring is no longer
+     * needed.
+     */
+    void
+    reset_monitoring_vector()
+    {
+      monitoring_vector = nullptr;
+    }
+
+  protected:
+    const TimeIntegratorData time_integrator_data;
+    VectorType              *monitoring_vector = nullptr;
   };
-} // namespace MeltPoolDG::TimeIntegration
+} // namespace MeltPoolDG

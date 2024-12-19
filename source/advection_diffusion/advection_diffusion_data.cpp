@@ -33,10 +33,6 @@ namespace MeltPoolDG::LevelSet
       prm.add_parameter("diffusivity",
                         diffusivity,
                         "Defines the diffusivity for the advection diffusion equation ");
-      prm.add_parameter("time integration scheme",
-                        time_integration_scheme,
-                        "Determines the time integration scheme.");
-
       prm.add_parameter(
         "implementation",
         implementation,
@@ -47,6 +43,7 @@ namespace MeltPoolDG::LevelSet
                         "Set this parameter to true to enable time-dependent bc.");
       predictor.add_parameters(prm);
       linear_solver.add_parameters(prm);
+      time_integrator_data.add_parameters(prm);
     }
     prm.leave_subsection();
   }

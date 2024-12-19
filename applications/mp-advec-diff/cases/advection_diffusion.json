@@ -19,13 +19,13 @@
       "enable": "true"
     }
   },
-  "level set": {
-    "advection diffusion": {
-      "linear solver": {
-        "do matrix free": "true"
-      },
-      "diffusivity": "0.000000",
-      "time integration scheme": "implicit_euler"
+  "advection diffusion": {
+    "linear solver": {
+      "do matrix free": "true"
+    },
+    "diffusivity": "0.000000",
+    "time integration": {
+      "type": "implicit_euler"
     }
   }
 }
