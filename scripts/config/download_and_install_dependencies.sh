@@ -21,6 +21,15 @@ else
 fi
 
 ##############################################################
+# check gcc version
+##############################################################
+# Get the GCC version
+gcc_version=$(gcc --version | head -n 1 | awk '{print $3}')
+
+# Extract the major version
+gcc_major_version=$(echo $gcc_version | cut -d'.' -f1)
+
+##############################################################
 # install metis
 ##############################################################
 ldconfig -p | grep libmetis
@@ -40,13 +49,25 @@ $configDir/p4est-config.sh p4est-2.2.tar.gz `pwd/p4est-build`
 ##############################################################
 # install Trilinos
 ##############################################################
-wget https://github.com/trilinos/Trilinos/archive/trilinos-release-13-4-1.tar.gz
-mv trilinos-release-13-4-1.tar.gz trilinos-release-13-4-1.tar
-tar -xvf trilinos-release-13-4-1.tar
 mkdir -p trilinos-build
-cd trilinos-build
-rm -rf *
-$configDir/trilinos-config.sh
+
+if [ "$gcc_major_version" -lt 13 ]; then
+  echo "Use patched Trilinos version 13.4.1."
+  wget https://github.com/trilinos/Trilinos/archive/trilinos-release-13-4-1.tar.gz
+  mv trilinos-release-13-4-1.tar.gz trilinos-release-13-4-1.tar
+  tar -xvf trilinos-release-13-4-1.tar
+  cd trilinos-build
+  rm -rf *
+  $configDir/trilinos-config.sh ../Trilinos-trilinos-release-13-4-1
+else 
+  echo "Use patched Trilinos version 13.4.1 for GCC13"
+  wget https://github.com/MeltPoolDG/Trilinos/archive/trilinos-release-13-4-1-for-gcc-13.zip
+  unzip trilinos-release-13-4-1-for-gcc-13.zip
+  cd trilinos-build
+  rm -rf *
+  $configDir/trilinos-config.sh ../Trilinos-trilinos-release-13-4-1-for-gcc-13
+fi
+
 make -j$np install
 cd ..
 
