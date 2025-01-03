@@ -48,8 +48,7 @@ namespace MeltPoolDG
      * solve() function.
      */
     void
-    reinit() override
-    {}
+    reinit() override;
 
     const VectorType &
     get_residual() const
@@ -81,7 +80,7 @@ namespace MeltPoolDG
      * performs a full newton step.
      */
     void
-    set_trilinos_solver_parameters();
+    set_nox_solver_parameters();
 
 
     const NonlinearSolverData<double> nlsolve_data;
@@ -98,6 +97,11 @@ namespace MeltPoolDG
     int                iteration_counter = 0;
     int                linear_iter_acc   = 0;
     std::ostringstream str_;
+
+    //! Trilinos nonlinear solver objects
+    Teuchos::RCP<Teuchos::ParameterList>                                     nox_parameters;
+    typename dealii::TrilinosWrappers::NOXSolver<VectorType>::AdditionalData nox_additional_data;
+    dealii::TrilinosWrappers::NOXSolver<VectorType>                          solver;
   };
 
 } // namespace MeltPoolDG

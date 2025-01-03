@@ -10,12 +10,21 @@ namespace MeltPoolDG
   template <typename number = double>
   struct NonlinearSolverData
   {
-    int    max_nonlinear_iterations       = 10;
-    number field_correction_tolerance     = 1e-10;
-    number residual_tolerance             = 1e-9;
+    //! maximum number of nonlinear iterations
+    int max_nonlinear_iterations = 10;
+    //!
+    number field_correction_tolerance = 1e-10;
+    //! absolute tolerance of the residual
+    number abs_residual_tolerance = 1e-9;
+    //! relative tolerance of the residual
+    number rel_residual_tolerance         = 1e-5;
+    //! alternative maximum number of nonlinear iterations
     int    max_nonlinear_iterations_alt   = 0;
+    //!
     number field_correction_tolerance_alt = 1e-9;
-    number residual_tolerance_alt         = 1e-8;
+    //! alternative absolute tolerance of the residual
+    number abs_residual_tolerance_alt     = 1e-8;
+
     int    verbosity_level                = -1;
 
     void

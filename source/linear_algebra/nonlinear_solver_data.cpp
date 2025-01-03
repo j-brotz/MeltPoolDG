@@ -18,7 +18,7 @@ namespace MeltPoolDG
         "Set the tolerance for the maximum allowed correction of the unknown field.");
       prm.add_parameter(
         "residual tolerance",
-        residual_tolerance,
+        abs_residual_tolerance,
         "Set the tolerance for the maximum allowed residual of the nonlinear system.");
       prm.add_parameter(
         "max nonlinear iterations alt",
@@ -30,7 +30,7 @@ namespace MeltPoolDG
         "Set the alternative tolerance for the maximum allowed correction of the unknown field.");
       prm.add_parameter(
         "residual tolerance alt",
-        residual_tolerance_alt,
+        abs_residual_tolerance_alt,
         "Set the alternative tolerance for the maximum allowed residual of the nonlinear system.");
     }
     prm.leave_subsection();
