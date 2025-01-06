@@ -28,6 +28,7 @@ namespace MeltPoolDG
 
     // TODO: remove and replace by standard l2_norm() (?)
     typedef std::function<double()> norm_of_solution_vector_funtion_type;
+    typedef std::function<void(const VectorType &)> setup_jacobian_function_type;
 
     explicit
     NewtonRaphsonSolver(const NonlinearSolverData<double> &nlsolve_data);
@@ -96,12 +97,11 @@ namespace MeltPoolDG
 
     int                iteration_counter = 0;
     int                linear_iter_acc   = 0;
-    std::ostringstream str_;
 
     //! Trilinos nonlinear solver objects
     Teuchos::RCP<Teuchos::ParameterList>                                     nox_parameters;
     typename dealii::TrilinosWrappers::NOXSolver<VectorType>::AdditionalData nox_additional_data;
-    dealii::TrilinosWrappers::NOXSolver<VectorType>                          solver;
+    dealii::TrilinosWrappers::NOXSolver<VectorType>                          nox_solver;
   };
 
 } // namespace MeltPoolDG

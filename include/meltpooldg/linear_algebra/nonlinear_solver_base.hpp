@@ -15,6 +15,7 @@ enum NonlinearSolverFunctions
 {
   reinit_vector,
   solve_with_jacobian,
+  setup_jacobian,
   residual,
   distribute_constraints,
   norm_of_solution_vector

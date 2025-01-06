@@ -129,6 +129,7 @@ namespace MeltPoolDG::Heat
                                                             temp_dof_idx,
                                                             temp_quad_idx);
         });
+    newton.reinit();
   }
 
   template <int dim>
