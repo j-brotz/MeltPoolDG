@@ -8,8 +8,8 @@
 
 namespace MeltPoolDG
 {
-  template <int dim, typename VectorType>
-  NewtonRaphsonSolver<dim, VectorType>::NewtonRaphsonSolver(
+  template <typename VectorType>
+  NewtonRaphsonSolver<VectorType>::NewtonRaphsonSolver(
     const NonlinearSolverData<double> &nlsolve_data)
     : nlsolve_data(nlsolve_data)
     , pcout(std::cout, Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0)
@@ -19,9 +19,9 @@ namespace MeltPoolDG
     , field_correction_tolerance(nlsolve_data.field_correction_tolerance)
   {}
 
-  template <int dim, typename VectorType>
+  template <typename VectorType>
   void
-  NewtonRaphsonSolver<dim, VectorType>::solve(VectorType &solution)
+  NewtonRaphsonSolver<VectorType>::solve(VectorType &solution)
   {
     print_header();
 
@@ -32,8 +32,7 @@ namespace MeltPoolDG
     linear_iter_acc = 0;
     while (i < max_number_of_iterations)
       {
-        solve_increment();
-
+        solve_increment(solution);
         if (is_converged())
           {
             if (nlsolve_data.verbosity_level >= 0)
@@ -46,12 +45,12 @@ namespace MeltPoolDG
               }
 
             {
-              ScopedName sc("nonlinear_solve");
+              const ScopedName sc("nonlinear_solve");
               IterationMonitor::add_linear_iterations(sc, i);
             }
 
             {
-              ScopedName sc("linear_solve_acc");
+              const ScopedName sc("linear_solve_acc");
               IterationMonitor::add_linear_iterations(sc, linear_iter_acc);
             }
 
@@ -66,9 +65,9 @@ namespace MeltPoolDG
     AssertThrow(is_converged(), ExcNewtonDidNotConverge());
   }
 
-  template <int dim, typename VectorType>
+  template <typename VectorType>
   void
-  NewtonRaphsonSolver<dim, VectorType>::print_header()
+  NewtonRaphsonSolver<VectorType>::print_header() const
   {
     if (nlsolve_data.verbosity_level >= 1)
       {
@@ -82,34 +81,34 @@ namespace MeltPoolDG
       }
   }
 
-  template <int dim, typename VectorType>
+  template <typename VectorType>
   double
-  NewtonRaphsonSolver<dim, VectorType>::suggest_new_time_increment()
+  NewtonRaphsonSolver<VectorType>::suggest_new_time_increment()
   {
     AssertThrow(false, ExcNotImplemented());
     return 0.0;
   }
 
-  template <int dim, typename VectorType>
+  template <typename VectorType>
   void
-  NewtonRaphsonSolver<dim, VectorType>::set_tolerances_to_alternative_values()
+  NewtonRaphsonSolver<VectorType>::set_tolerances_to_alternative_values()
   {
     residual_tolerance         = nlsolve_data.residual_tolerance_alt;
     field_correction_tolerance = nlsolve_data.field_correction_tolerance_alt;
   }
 
-  template <int dim, typename VectorType>
+  template <typename VectorType>
   bool
-  NewtonRaphsonSolver<dim, VectorType>::is_converged()
+  NewtonRaphsonSolver<VectorType>::is_converged()
   {
     if (iteration_counter == nlsolve_data.max_nonlinear_iterations)
       set_tolerances_to_alternative_values();
 
-    double res_norm    = rhs.l2_norm();
-    double update_norm = solution_update.l2_norm();
+    const double res_norm    = rhs.l2_norm();
+    const double update_norm = solution_update.l2_norm();
 
-    bool residual_converged   = res_norm < residual_tolerance;
-    bool correction_converged = update_norm < field_correction_tolerance;
+    const bool residual_converged   = res_norm < residual_tolerance;
+    const bool correction_converged = update_norm < field_correction_tolerance;
 
     if (nlsolve_data.verbosity_level >= 1)
       {
@@ -125,27 +124,25 @@ namespace MeltPoolDG
     return residual_converged && correction_converged;
   }
 
-  template <int dim, typename VectorType>
+  template <typename VectorType>
   std::string
-  NewtonRaphsonSolver<dim, VectorType>::print_checkmark(bool is_converged)
+  NewtonRaphsonSolver<VectorType>::print_checkmark(const bool is_converged) const
   {
     return (is_converged) ? " ✓ " : " ✗ ";
   }
 
-  template <int dim, typename VectorType>
+  template <typename VectorType>
   void
-  NewtonRaphsonSolver<dim, VectorType>::solve_increment()
+  NewtonRaphsonSolver<VectorType>::solve_increment(const VectorType &current_solution)
   {
     rhs             = 0.0;
     solution_update = 0.0;
 
     // compute residual
-    residual(solution_update, rhs);
-
-    // solve linear system
-    int iter = solve_with_jacobian(rhs, solution_update);
+    residual(current_solution, rhs);
+    const int iter = solve_with_jacobian(rhs, solution_update);
     {
-      ScopedName sc("linear_solve");
+      const ScopedName sc("linear_solve");
       IterationMonitor::add_linear_iterations(sc, iter);
     }
     linear_iter_acc += iter;
@@ -153,7 +150,5 @@ namespace MeltPoolDG
     str_ << std::string(10, ' ') << std::right << std::setw(15) << std::setprecision(0) << iter;
   }
 
-  template class NewtonRaphsonSolver<1>;
-  template class NewtonRaphsonSolver<2>;
-  template class NewtonRaphsonSolver<3>;
+  template class NewtonRaphsonSolver<LinearAlgebra::distributed::Vector<double>>;
 } // namespace MeltPoolDG

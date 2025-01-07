@@ -48,8 +48,9 @@ namespace MeltPoolDG
     virtual ~TimeIntegratorBase() = default;
 
     /**
-     * This function returns the number of previous solutions required, which corresponds to the
-     * minimum size a potential SolutionHistory object.
+     * This function returns the number of previous solutions required. Note that a corresponding
+     * solution history must be of the size previous_solutions_required+1 to account for the current
+     * solution.
      */
     virtual unsigned int
     required_solution_history_size() const = 0;

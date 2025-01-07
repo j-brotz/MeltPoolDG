@@ -183,7 +183,7 @@ namespace MeltPoolDG
       {
         this->matrix_free.clear();
 
-        typename MatrixFree<dim, double, VectorizedArray<double>>::AdditionalData additional_data;
+        typename MatrixFree<dim, double, VectorizedArrayType>::AdditionalData additional_data;
 
         additional_data.overlap_communication_computation = false;
 
@@ -223,7 +223,7 @@ namespace MeltPoolDG
 
         for (unsigned int cell = 0; cell < this->matrix_free.n_cell_batches(); ++cell)
           {
-            VectorizedArray<double> cell_size = VectorizedArray<double>();
+            VectorizedArrayType cell_size = VectorizedArrayType();
             for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(cell); ++v)
               {
                 // the diameter is subdivided by sqrt(dim) to get the edge length for quadratic

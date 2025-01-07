@@ -22,10 +22,8 @@
 
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
-#include <meltpooldg/flow/compressible_flow_operator_explicit.hpp>
+#include <meltpooldg/flow/compressible_flow_operator_implicit_base.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
-#include <meltpooldg/time_integration/time_integrator_base.hpp>
-#include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 
 #include <memory>
@@ -193,7 +191,7 @@ namespace MeltPoolDG::Flow
     const unsigned int comp_flow_dof_idx  = 0;
     const unsigned int comp_flow_quad_idx = 0;
 
-    std::unique_ptr<CompressibleFlowOperatorExplicit<dim, number>> comp_flow_operator_;
+    std::unique_ptr<CompressibleFlowOperatorBase<dim, number>> comp_flow_operator_;
 
     /**
      * Compute the convective time step limit for the current mesh and flow field.
@@ -207,8 +205,11 @@ namespace MeltPoolDG::Flow
     number
     compute_minimum_density() const;
 
-    std::unique_ptr<TimeIntegratorBase<number, CompressibleFlowOperatorExplicit<dim, number>>>
-      time_integrator;
+    /**
+     * Set up the operator to suit the specified time integration scheme.
+     */
+    void
+    setup_operator_and_time_integrator();
   };
 
 

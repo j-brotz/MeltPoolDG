@@ -4,32 +4,62 @@
 
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <deal.II/matrix_free/fe_evaluation.h>
+#include <deal.II/matrix_free/fe_point_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/flow/compressible_flow_calculator_functions.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 
+#include <concepts>
+#include <memory>
+#include <tuple>
 #include <utility>
 
 namespace MeltPoolDG::Flow
 {
-  using namespace dealii;
+  template <typename evaluator_type,
+            int dim,
+            int n_components,
+            typename number,
+            typename VectorizedArrayType>
+  concept CellEvaluatorType =
+    std::is_base_of_v<dealii::FEEvaluation<dim, -1, 0, n_components, number, VectorizedArrayType>,
+                      evaluator_type> ||
+    std::is_base_of_v<dealii::FEPointEvaluation<n_components, dim, dim, number>, evaluator_type>;
+
+  template <typename evaluator_type,
+            int dim,
+            int n_components,
+            typename number,
+            typename VectorizedArrayType>
+  concept FaceEvaluatorType =
+    std::is_base_of_v<
+      dealii::FEFaceEvaluation<dim, -1, 0, n_components, number, VectorizedArrayType>,
+      evaluator_type> ||
+    std::is_base_of_v<dealii::FEFacePointEvaluation<n_components, dim, dim, number>,
+                      evaluator_type>;
 
   template <int dim, typename number>
   class CompressibleFlowOperatorBase
   {
   protected:
-    using VectorType = LinearAlgebra::distributed::Vector<number>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
   public:
-    using ConservedVariablesType     = Tensor<1, dim + 2, VectorizedArray<number>>;
-    using ConservedVariablesGradType = Tensor<1, dim + 2, Tensor<1, dim, VectorizedArray<number>>>;
+    using ConservedVariablesType = dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>>;
+    using ConservedVariablesGradType =
+      dealii::Tensor<1, dim + 2, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
 
-    CompressibleFlowOperatorBase(const CompressibleFlowData &compressible_flow_data_in,
-                                 const ScratchData<dim>     &scratch_data_in,
-                                 unsigned int                comp_flow_dof_idx_in  = 0,
-                                 unsigned int                comp_flow_quad_idx_in = 0);
+    CompressibleFlowOperatorBase(
+      const CompressibleFlowData                     &compressible_flow_data_in,
+      const ScratchData<dim>                         &scratch_data_in,
+      ::TimeIntegration::SolutionHistory<VectorType> &solution_history_in,
+      unsigned int                                    comp_flow_dof_idx_in  = 0,
+      unsigned int                                    comp_flow_quad_idx_in = 0);
 
     virtual ~CompressibleFlowOperatorBase() = default;
 
@@ -41,26 +71,37 @@ namespace MeltPoolDG::Flow
     reinit();
 
     /**
-     * Central function of the operator class which needs to be overridden by all derived classes.
-     * This function shall provide the required computations required by a suitable time integrator
-     * class.
+     * Core function of the operator class, intended to be overridden by all derived classes.
+     *
+     * This function executes the necessary computations to perform a single time step. For more
+     * details it is referred to the derived class' documentation.
+     *
+     * @param current_time Current simulation time.
+     * @param time_step Current time step size.
+     * @param pre_processing Preprocessing function called before the time integration or before
+     * each stage during the time integration. The exact implementation depends on the used time
+     * inegrator.
+     * @param post_processing Postprocessing function called after the time integration or after
+     * each stage during the time integration. The exact implementation depends on the used time
+     * inegrator.
      */
     virtual void
-    apply_operator(number                                                 time,
-                   VectorType                                            &dst,
-                   const VectorType                                      &src,
-                   const std::function<void(unsigned int, unsigned int)> &func) const = 0;
+    advance_time_step(
+      number                                                        current_time,
+      number                                                        time_step,
+      std::function<void(number, VectorType &, const VectorType &)> pre_processing  = {},
+      std::function<void(number, VectorType &, const VectorType &)> post_processing = {}) = 0;
 
     /**
      * Set an inflow boundary conditions for all boundary ids occurring in the given std::map and
-     * applies the corresponding function at this boundary. This corresponds to a Dirichlet boundary
-     * condition to all primary variables.
+     * applies the corresponding function at this boundary. This corresponds to a Dirichlet
+     * boundary condition to all primary variables.
      *
      * @param inflow_bc Map of boundary ids and corresponding functions for inflow boundaries.
      */
     void
-    set_inflow_boundary(
-      const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> &inflow_bc);
+    set_inflow_boundary(const std::map<dealii::types::boundary_id,
+                                       std::shared_ptr<dealii::Function<dim>>> &inflow_bc);
 
     /**
      * Set a subsonic outflow boundary condition for all boundary ids occurring in the given
@@ -75,7 +116,7 @@ namespace MeltPoolDG::Flow
      */
     void
     set_subsonic_outflow_with_fixed_static_pressure(
-      const std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
         &outflow_fixed_pressure_bc);
 
     /**
@@ -88,7 +129,8 @@ namespace MeltPoolDG::Flow
      */
     void
     set_subsonic_outflow_with_fixed_energy(
-      const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> &outflow_fixed_energy_bc);
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        &outflow_fixed_energy_bc);
 
     /**
      * Set a slip wall boundary condition for all boundary ids occurring in the given std::map,
@@ -99,8 +141,8 @@ namespace MeltPoolDG::Flow
      * outflow boundaries.
      */
     void
-    set_slip_wall_boundary(
-      const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> &slip_wall_bc);
+    set_slip_wall_boundary(const std::map<dealii::types::boundary_id,
+                                          std::shared_ptr<dealii::Function<dim>>> &slip_wall_bc);
 
     /**
      * Set an adiabatic no-slip wall boundary condition for all boundary ids occurring in the given
@@ -113,7 +155,8 @@ namespace MeltPoolDG::Flow
      */
     void
     set_no_slip_adiabatic_wall_boundary(
-      const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> &no_slip_wall_bc);
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        &no_slip_wall_bc);
 
     /**
      * Set a body force, e.g. gravity, specified by the passed function.
@@ -121,45 +164,7 @@ namespace MeltPoolDG::Flow
      * @param body_force_in Function specifying the body force.
      */
     void
-    set_body_force(std::unique_ptr<Function<dim>> body_force_in);
-
-    /**
-     * Calculate the velocity from the conserved variables by computing u = (ρu)/ρ.
-     *
-     * @param conserved_variables Current values of the conserved variables.
-     *
-     * @return Current velocity.
-     */
-    static inline DEAL_II_ALWAYS_INLINE //
-      Tensor<1, dim, VectorizedArray<number>>
-      calculate_velocity(const ConservedVariablesType &conserved_variables);
-
-    /**
-     * Calculate the gradient of the  velocity from the conserved variables and their gradients by
-     * computing grad(u) = 1/ρ * (grad(ρu) - u*grad(ρ)).
-     *
-     * @param conserved_variables Current values of the conserved variables.
-     * @param grad_conserved_variables Current gradient of the conserved variables.
-     *
-     * @return Current gradient of the velocity.
-     */
-    static inline DEAL_II_ALWAYS_INLINE //
-      Tensor<2, dim, VectorizedArray<number>>
-      calculate_grad_velocity(const ConservedVariablesType     &conserved_variables,
-                              const ConservedVariablesGradType &grad_conserved_variables);
-
-    /**
-     * Calculate the pressure from the conserved variables and their gradients by computing
-     * p = (γ-1)*(ρE - 0.5*ρ*||u||^2).
-     *
-     * @param conserved_variables Current values of the conserved variables.
-     * @param gamma Heat capacity ratio.
-     *
-     * @return Pressure resulting from the values of the conserved variables.
-     */
-    static inline DEAL_II_ALWAYS_INLINE //
-      VectorizedArray<number>
-      calculate_pressure(const ConservedVariablesType &conserved_variables, number gamma);
+    set_body_force(std::unique_ptr<dealii::Function<dim>> body_force_in);
 
     /**
      * Compute the boundary conditions at the given time, i.e. evaluate the corresponding boundary
@@ -172,26 +177,13 @@ namespace MeltPoolDG::Flow
 
   protected:
     /**
-     * Local appliers
+     * Apply the inverse of the mass matrix to the given dof vector.
+     *
+     * @param matrix_free Matrix free object on which the applier works on.
+     * @param dst Destination vector where the solution is stored.
+     * @param src Current solution of the primary variables.
+     * @param cell_range Cell range on which the inverse mass matrix is applied.
      */
-    void
-    local_apply_cell(const MatrixFree<dim, number>                    &matrix_free,
-                     LinearAlgebra::distributed::Vector<number>       &dst,
-                     const LinearAlgebra::distributed::Vector<number> &src,
-                     const std::pair<unsigned int, unsigned int>      &cell_range) const;
-
-    void
-    local_apply_face(const MatrixFree<dim, number>                    &matrix_free,
-                     LinearAlgebra::distributed::Vector<number>       &dst,
-                     const LinearAlgebra::distributed::Vector<number> &src,
-                     const std::pair<unsigned int, unsigned int>      &face_range) const;
-
-    void
-    local_apply_boundary_face(const MatrixFree<dim, number>                    &matrix_free,
-                              LinearAlgebra::distributed::Vector<number>       &dst,
-                              const LinearAlgebra::distributed::Vector<number> &src,
-                              const std::pair<unsigned int, unsigned int>      &face_range) const;
-
     void
     local_apply_inverse_mass_matrix(const MatrixFree<dim, number>                    &matrix_free,
                                     LinearAlgebra::distributed::Vector<number>       &dst,
@@ -199,118 +191,81 @@ namespace MeltPoolDG::Flow
                                     const std::pair<unsigned int, unsigned int> &cell_range) const;
 
     /**
-     * Calculate the gradient of the temperature from the conserved variables and their gradients by
-     * computing grad(T) = (γ-1)/R * (grad(E) - grad(u)*u).
+     * Kernel of the local cell applier for the right-hand side function. This function computes the
+     * cell integral contribution to the right hand side for the quadrature point index and the
+     * corresponding FE evaluator.
      *
-     * @param conserved_variables Current values of the conserved variables.
-     * @param grad_conserved_variables Current gradient of the conserved variables.
+     * @param evaluator FE-evaluator object reinitialized on the current cell batch.
+     * @param q Index of the quadrature point.
+     * @param constant_body_force Value of the body force. If the body force is not constant the
+     * pointer must be set to nullptr.
      *
-     * @return Current gradient of the temperature field.
+     * @return Tuple, containing the flux, weighted with the value of the test function, as first
+     * argument, and the flux, weighted with the gradient of the test function, as second argument.
      */
+    template <CellEvaluatorType<dim,
+                                dim + 2,
+                                number,
+                                dealii::VectorizedArray<number>> Integrator>
     inline DEAL_II_ALWAYS_INLINE //
-      Tensor<1, dim, VectorizedArray<number>>
-      calculate_grad_T(const ConservedVariablesType     &conserved_variables,
-                       const ConservedVariablesGradType &grad_conserved_variables) const;
+      std::tuple<ConservedVariablesType, ConservedVariablesGradType>
+      rhs_cell_intergal_kernel(
+        const Integrator                                              &evaluator,
+        unsigned int                                                   q,
+        const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> *constant_body_force) const;
 
     /**
-     * Contracts the given tensor of the gradient of conserved variables with the given normal
-     * vector.
+     * Kernel of the local inner face applier for the right-hand side function. This function
+     * computes the face integral contribution of inner faces to the right hand side for the
+     * quadrature point index and the corresponding FE evaluator.
      *
-     * @param grad Current gradient of the conserved variables.
-     * @param normal Normal vector.
+     * @param evaluator_m FE-evaluator object reinitialized on the current (inside) face batch.
+     * @param evaluator_p FE-evaluator object reinitialized on the current (outside) face batch.
+     * @param q Index of the quadrature point.
+     * @param penalty_parameter Value of the symmetric interior penalty parameter on the face.
      *
-     * @return Result of the contraction, i.e. grad*normal.
+     * @return Tuple, which containing the fluxes for the inside and outside faces, weighted with
+     * the value of the test functions, as first two arguments, and the fluxes for the inside and
+     * outside faces, weighted with the gradient of the test functions, as the third and fourth
+     * argument.
      */
+    template <FaceEvaluatorType<dim,
+                                dim + 2,
+                                number,
+                                dealii::VectorizedArray<number>> Integrator>
     inline DEAL_II_ALWAYS_INLINE //
-      ConservedVariablesType
-      contract_tensor_with_normal(const ConservedVariablesGradType              &grad,
-                                  const Tensor<1, dim, VectorizedArray<number>> &normal) const;
+      std::tuple<ConservedVariablesType,
+                 ConservedVariablesType,
+                 ConservedVariablesGradType,
+                 ConservedVariablesGradType>
+      rhs_face_integral_kernel(const Integrator               &evaluator_m,
+                               const Integrator               &evaluator_p,
+                               unsigned                        q,
+                               dealii::VectorizedArray<number> penalty_parameter) const;
 
     /**
-     * Computes the average of the passed tensors and contracts the corresponding result with the
-     * given normal vector. In other words the function computes 0.5*(grad_m+grad_p)*normal.
+     * Kernel of the local boundary face applier for the right-hand side function. This function
+     * computes the face integral contribution of boundary faces to the right hand side for the
+     * quadrature point index and the corresponding FE evaluator.
      *
-     * @param grad_p Current gradient of the conserved variables on the outer face.
-     * @param grad_p Current gradient of the conserved variables on the inner face.
-     * @param normal Normal vector.
+     * @param evaluator_m FE-evaluator object reinitialized on the current (inner) face batch.
+     * @param q Index of the quadrature point.
+     * @param boundary_id ID of the boundary.
+     * @param penalty_parameter Value of the symmetric interior penalty parameter on the face.
      *
-     * @return Result of the contraction.
+     * @return Tuple, containing the flux for the boundary face, weighted with the value of the test
+     * function, as first argument, and the flux for the boundary face, weighted with the gradient
+     * of the test function, as second argument.
      */
+    template <FaceEvaluatorType<dim,
+                                dim + 2,
+                                number,
+                                dealii::VectorizedArray<number>> Integrator>
     inline DEAL_II_ALWAYS_INLINE //
-      ConservedVariablesType
-      contract_average_tensor_with_normal(
-        const ConservedVariablesGradType              &grad_m,
-        const ConservedVariablesGradType              &grad_p,
-        const Tensor<1, dim, VectorizedArray<number>> &normal) const;
-
-    /**
-     * Calculate the convective flux F_c.
-     *
-     * @param conserved_variables Current values of the conserved variables.
-     *
-     * @return Convective flux.
-     */
-    inline DEAL_II_ALWAYS_INLINE //
-      ConservedVariablesGradType
-      calculate_convective_flux(const ConservedVariablesType &conserved_variables) const;
-
-    /**
-     * Calculate the convective flux F_c^*.
-     *
-     * @param u_m Current values of the conserved variables on the inner face.
-     * @param u_p Current values of the conserved variables on the outer type.
-     * @param normal Outer facing normal vector.
-     * @param numerical_flux_type Flux type used for the numerical convective flux.
-     *
-     * @return Convective numerical flux.
-     */
-    inline DEAL_II_ALWAYS_INLINE //
-      ConservedVariablesType
-      calculate_convective_numerical_flux(const ConservedVariablesType                  &u_m,
-                                          const ConservedVariablesType                  &u_p,
-                                          const Tensor<1, dim, VectorizedArray<number>> &normal,
-                                          const std::string &numerical_flux_type) const;
-
-    /**
-     * Calculate the viscous stress tensor τ given by τ = μ*(grad(u)+grad(u)^T-2/3*(grad*u)*I),
-     * where μ is the dynamic viscosity and I representing the identity matrix.
-     *
-     * @param grad_u Current gradient of the velocity field.
-     *
-     * @return Viscous stress tensor τ.
-     */
-    inline DEAL_II_ALWAYS_INLINE //
-      Tensor<2, dim, VectorizedArray<number>>
-      calculate_viscous_stress_tensor(const Tensor<2, dim, VectorizedArray<number>> &grad_u) const;
-
-    /**
-     * Calculate the convective flux F_v.
-     *
-     * @param conserved_variables Current values of the conserved variables.
-     * @param grad_conserved_variables Current gradient of the conserved variables.
-     *
-     * @return Viscous flux.
-     */
-    inline DEAL_II_ALWAYS_INLINE //
-      ConservedVariablesGradType
-      calculate_viscous_flux(const ConservedVariablesType     &conserved_variables,
-                             const ConservedVariablesGradType &grad_conserved_variables) const;
-
-    inline DEAL_II_ALWAYS_INLINE //
-      ConservedVariablesType
-      calculate_viscous_numerical_flux(const ConservedVariablesType                  &u_m,
-                                       const ConservedVariablesType                  &u_p,
-                                       const ConservedVariablesGradType              &grad_u_m,
-                                       const ConservedVariablesGradType              &grad_u_p,
-                                       const Tensor<1, dim, VectorizedArray<number>> &normal,
-                                       VectorizedArray<number> penalty_parameter) const;
-
-    inline DEAL_II_ALWAYS_INLINE //
-      std::pair<ConservedVariablesGradType, ConservedVariablesGradType>
-      calculate_viscous_numerical_flux_gradient(
-        const ConservedVariablesType                  &u_m,
-        const ConservedVariablesType                  &u_p,
-        const Tensor<1, dim, VectorizedArray<number>> &normal) const;
+      std::tuple<ConservedVariablesType, ConservedVariablesGradType>
+      rhs_boundary_face_integral_kernel(const Integrator               &evaluator_m,
+                                        unsigned int                    q,
+                                        dealii::VectorizedArray<number> penalty_parameter) const;
 
     /**
      * This function sets the corresponding values on the fictional outer face if the face is
@@ -326,23 +281,34 @@ namespace MeltPoolDG::Flow
      * be stored.
      */
     void
-    get_adjacent_face_values_at_boundary(const Point<dim, VectorizedArray<number>>     &q_point,
-                                         const Tensor<1, dim, VectorizedArray<number>> &normal,
-                                         unsigned int                                   boundary_id,
-                                         const ConservedVariablesType                  &w_m,
-                                         ConservedVariablesType                        &w_p,
-                                         const ConservedVariablesGradType              &grad_w_m,
-                                         ConservedVariablesGradType &grad_w_p) const;
+    get_adjacent_face_values_at_boundary(
+      const Point<dim, dealii::VectorizedArray<number>>             &q_point,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
+      unsigned int                                                   boundary_id,
+      const ConservedVariablesType                                  &w_m,
+      ConservedVariablesType                                        &w_p,
+      const ConservedVariablesGradType                              &grad_w_m,
+      ConservedVariablesGradType                                    &grad_w_p) const;
+
+    /**
+     * This function makes the necessary function call to compute the interior penalty parameter in
+     * the case that the viscosity is greater than zero.
+     */
+    void
+    calculate_interior_penalty_parameter();
 
     const CompressibleFlowData &comp_flow_data;
 
     const ScratchData<dim> &scratch_data;
 
+    ::TimeIntegration::SolutionHistory<VectorType> &solution_history;
+
     const unsigned int comp_flow_dof_idx  = 0;
     const unsigned int comp_flow_quad_idx = 0;
 
-    AlignedVector<VectorizedArray<number>> interior_penalty_parameter;
+    const CompressibleFlowCalculators<dim, number> calculator_functions;
 
+    AlignedVector<VectorizedArray<number>> interior_penalty_parameter;
 
     //! Boundary conditions
     mutable std::map<types::boundary_id, std::shared_ptr<Function<dim>>> inflow_boundaries;
@@ -362,317 +328,135 @@ namespace MeltPoolDG::Flow
    * Inlined function definitions
    * **************************************************************************/
   template <int dim, typename number>
+  template <CellEvaluatorType<dim,
+                              dim + 2,
+                              number,
+                              dealii::VectorizedArray<number>> Integrator>
   inline DEAL_II_ALWAYS_INLINE //
-    Tensor<1, dim, VectorizedArray<number>>
-    CompressibleFlowOperatorBase<dim, number>::calculate_velocity(
-      const ConservedVariablesType &conserved_variables)
+    std::tuple<typename CompressibleFlowOperatorBase<dim, number>::ConservedVariablesType,
+               typename CompressibleFlowOperatorBase<dim, number>::ConservedVariablesGradType>
+    CompressibleFlowOperatorBase<dim, number>::rhs_cell_intergal_kernel(
+      const Integrator                                              &evaluator,
+      const unsigned int                                             q,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> *constant_body_force) const
   {
-    const VectorizedArray<number> inverse_density =
-      VectorizedArray<number>(1.) / conserved_variables[0];
+    const auto w_q = evaluator.get_value(q);
 
-    Tensor<1, dim, VectorizedArray<number>> velocity;
-    for (unsigned int d = 0; d < dim; ++d)
-      velocity[d] = conserved_variables[1 + d] * inverse_density;
+    auto flux = calculator_functions.calculate_convective_flux(w_q);
 
-    return velocity;
-  }
-
-
-  template <int dim, typename number>
-  inline DEAL_II_ALWAYS_INLINE //
-    Tensor<2, dim, VectorizedArray<number>>
-    CompressibleFlowOperatorBase<dim, number>::calculate_grad_velocity(
-      const ConservedVariablesType     &conserved_variables,
-      const ConservedVariablesGradType &grad_conserved_variables)
-  {
-    const VectorizedArray<number> inverse_density =
-      VectorizedArray<number>(1.) / conserved_variables[0];
-    const Tensor<1, dim, VectorizedArray<number>> velocity =
-      calculate_velocity(conserved_variables);
-
-    Tensor<1, dim, VectorizedArray<number>> grad_rho;
-    for (unsigned int d = 0; d < dim; ++d)
-      grad_rho[d] = grad_conserved_variables[0][d];
-
-    Tensor<2, dim, VectorizedArray<number>> grad_rho_velocity;
-    for (unsigned int d = 0; d < dim; ++d)
-      for (unsigned int e = 0; e < dim; ++e)
-        grad_rho_velocity[d][e] = grad_conserved_variables[1 + d][e];
-
-    Tensor<2, dim, VectorizedArray<number>> grad_velocity;
-    for (unsigned int d = 0; d < dim; ++d)
-      for (unsigned int e = 0; e < dim; ++e)
-        grad_velocity[d][e] =
-          inverse_density * (grad_rho_velocity[d][e] - velocity[d] * grad_rho[e]);
-
-    return grad_velocity;
-  }
-
-
-  template <int dim, typename number>
-  inline DEAL_II_ALWAYS_INLINE //
-    VectorizedArray<number>
-    CompressibleFlowOperatorBase<dim, number>::calculate_pressure(
-      const ConservedVariablesType &conserved_variables,
-      number                        gamma)
-  {
-    const Tensor<1, dim, VectorizedArray<number>> velocity =
-      calculate_velocity(conserved_variables);
-    return (gamma - 1.) * (conserved_variables[dim + 1] -
-                           conserved_variables[0] * 0.5 * scalar_product(velocity, velocity));
-  }
-
-
-  template <int dim, typename number>
-  inline DEAL_II_ALWAYS_INLINE //
-    Tensor<1, dim, VectorizedArray<number>>
-    CompressibleFlowOperatorBase<dim, number>::calculate_grad_T(
-      const ConservedVariablesType     &conserved_variables,
-      const ConservedVariablesGradType &grad_conserved_variables) const
-  {
-    const Tensor<1, dim, VectorizedArray<number>> u = calculate_velocity(conserved_variables);
-    const Tensor<2, dim, VectorizedArray<number>> grad_u =
-      calculate_grad_velocity(conserved_variables, grad_conserved_variables);
-    const VectorizedArray<number>                 rho      = conserved_variables[0];
-    const VectorizedArray<number>                 inv_rho  = VectorizedArray<number>(1.) / rho;
-    const Tensor<1, dim, VectorizedArray<number>> grad_rho = grad_conserved_variables[0];
-    const Tensor<1, dim, VectorizedArray<number>> grad_E =
-      inv_rho *
-      (grad_conserved_variables[dim + 1] - inv_rho * conserved_variables[dim + 1] * grad_rho);
-    return (comp_flow_data.gamma - 1.0) / comp_flow_data.specific_gas_constant *
-           (grad_E - grad_u * u);
-  }
-
-
-  template <int dim, typename number>
-  inline DEAL_II_ALWAYS_INLINE //
-    Tensor<1, dim + 2, VectorizedArray<number>>
-    CompressibleFlowOperatorBase<dim, number>::contract_tensor_with_normal(
-      const ConservedVariablesGradType                      &grad,
-      const dealii::Tensor<1, dim, VectorizedArray<number>> &normal) const
-  {
-    ConservedVariablesType result;
-
-    result[0] = grad[0] * normal;
-
-    for (unsigned int e = 0; e < dim; ++e)
-      result[e + 1] = grad[e + 1] * normal;
-
-    result[dim + 1] = grad[dim + 1] * normal;
-
-    return result;
-  }
-
-
-  template <int dim, typename number>
-  DEAL_II_ALWAYS_INLINE //
-    Tensor<1, dim + 2, VectorizedArray<number>>
-    CompressibleFlowOperatorBase<dim, number>::contract_average_tensor_with_normal(
-      const ConservedVariablesGradType                      &grad_m,
-      const ConservedVariablesGradType                      &grad_p,
-      const dealii::Tensor<1, dim, VectorizedArray<number>> &normal) const
-  {
-    ConservedVariablesType result;
-
-    result[0] = (grad_m[0] + grad_p[0]) * normal;
-
-    for (unsigned int e = 0; e < dim; ++e)
-      result[e + 1] = (grad_m[e + 1] + grad_p[e + 1]) * normal;
-
-    result[dim + 1] = (grad_m[dim + 1] + grad_p[dim + 1]) * normal;
-
-    return 0.5 * result;
-  }
-
-
-  template <int dim, typename number>
-  inline DEAL_II_ALWAYS_INLINE //
-    Tensor<1, dim + 2, Tensor<1, dim, VectorizedArray<number>>>
-    CompressibleFlowOperatorBase<dim, number>::calculate_convective_flux(
-      const ConservedVariablesType &conserved_variables) const
-  {
-    const Tensor<1, dim, VectorizedArray<number>> velocity =
-      calculate_velocity(conserved_variables);
-    const VectorizedArray<number> pressure =
-      calculate_pressure(conserved_variables, comp_flow_data.gamma);
-
-    ConservedVariablesGradType flux;
-    for (unsigned int d = 0; d < dim; ++d)
+    if (this->comp_flow_data.dynamic_viscosity > 0)
       {
-        flux[0][d] = conserved_variables[1 + d];
-        for (unsigned int e = 0; e < dim; ++e)
-          flux[e + 1][d] = conserved_variables[e + 1] * velocity[d];
-        flux[d + 1][d] += pressure;
-        flux[dim + 1][d] = velocity[d] * (conserved_variables[dim + 1] + pressure);
-      }
-    return flux;
-  }
-
-  template <int dim, typename number>
-  inline DEAL_II_ALWAYS_INLINE //
-    Tensor<1, dim + 2, VectorizedArray<number>>
-    CompressibleFlowOperatorBase<dim, number>::calculate_convective_numerical_flux(
-      const ConservedVariablesType                  &u_m,
-      const ConservedVariablesType                  &u_p,
-      const Tensor<1, dim, VectorizedArray<number>> &normal,
-      const std::string                             &numerical_flux_type) const
-  {
-    const auto velocity_m = calculate_velocity(u_m);
-    const auto velocity_p = calculate_velocity(u_p);
-
-    const auto pressure_m = calculate_pressure(u_m, comp_flow_data.gamma);
-    const auto pressure_p = calculate_pressure(u_p, comp_flow_data.gamma);
-
-    const auto flux_m = calculate_convective_flux(u_m);
-    const auto flux_p = calculate_convective_flux(u_p);
-
-    if (numerical_flux_type == "lax_friedrichs_modified")
-      {
-        const auto lambda =
-          0.5 * std::sqrt(std::max(velocity_p.norm_square() +
-                                     std::abs(comp_flow_data.gamma * pressure_p * (1. / u_p[0])),
-                                   velocity_m.norm_square() +
-                                     std::abs(comp_flow_data.gamma * pressure_m * (1. / u_m[0]))));
-
-        return contract_average_tensor_with_normal(flux_m, flux_p, normal) +
-               0.5 * lambda * (u_m - u_p);
-      }
-    else if (numerical_flux_type == "lax_friedrichs_exact")
-      {
-        const auto lambda =
-          std::max(std::abs(velocity_p * normal) +
-                     std::sqrt(comp_flow_data.gamma * pressure_p * (1. / u_p[0])),
-                   std::abs(velocity_m * normal) +
-                     std::sqrt(comp_flow_data.gamma * pressure_m * (1. / u_m[0])));
-
-        return contract_average_tensor_with_normal(flux_m, flux_p, normal) +
-               0.5 * lambda * (u_m - u_p);
-      }
-    else if (numerical_flux_type == "harten_lax_vanleer")
-      {
-        const auto avg_velocity_normal = 0.5 * ((velocity_m + velocity_p) * normal);
-        const auto avg_c               = std::sqrt(std::abs(
-          0.5 * comp_flow_data.gamma * (pressure_p * (1. / u_p[0]) + pressure_m * (1. / u_m[0]))));
-        const VectorizedArray<number> s_pos =
-          std::max(VectorizedArray<number>(), avg_velocity_normal + avg_c);
-        const VectorizedArray<number> s_neg =
-          std::min(VectorizedArray<number>(), avg_velocity_normal - avg_c);
-        const VectorizedArray<number> inverse_s = VectorizedArray<number>(1.) / (s_pos - s_neg);
-
-        return inverse_s * ((s_pos * contract_tensor_with_normal(flux_m, normal) -
-                             s_neg * contract_tensor_with_normal(flux_p, normal)) -
-                            s_pos * s_neg * (u_m - u_p));
-      }
-    else
-      {
-        Assert(false, ExcNotImplemented());
-        return {};
-      }
-  }
-
-
-  template <int dim, typename number>
-  inline DEAL_II_ALWAYS_INLINE //
-    Tensor<2, dim, VectorizedArray<number>>
-    CompressibleFlowOperatorBase<dim, number>::calculate_viscous_stress_tensor(
-      const Tensor<2, dim, VectorizedArray<number>> &grad_u) const
-  {
-    const VectorizedArray<number> div_u = (2. / 3.) * trace(grad_u);
-
-    Tensor<2, dim, VectorizedArray<number>> out;
-    for (unsigned int d = 0; d < dim; ++d)
-      {
-        for (unsigned int e = 0; e < dim; ++e)
-          out[d][e] = comp_flow_data.dynamic_viscosity * (grad_u[d][e] + grad_u[e][d]);
-        out[d][d] -= comp_flow_data.dynamic_viscosity * div_u;
+        const auto grad_w_q = evaluator.get_gradient(q);
+        flux -= calculator_functions.calculate_viscous_flux(w_q, grad_w_q);
       }
 
-    return out;
-  }
+    dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>> forcing;
 
-
-
-  template <int dim, typename number>
-  inline DEAL_II_ALWAYS_INLINE //
-    Tensor<1, dim + 2, Tensor<1, dim, VectorizedArray<number>>>
-    CompressibleFlowOperatorBase<dim, number>::calculate_viscous_flux(
-      const ConservedVariablesType     &conserved_variables,
-      const ConservedVariablesGradType &grad_conserved_variables) const
-  {
-    const Tensor<1, dim, VectorizedArray<number>> velocity =
-      calculate_velocity(conserved_variables);
-
-    const auto grad_u = calculate_grad_velocity(conserved_variables, grad_conserved_variables);
-
-    const Tensor<2, dim, VectorizedArray<number>> viscous_stress =
-      calculate_viscous_stress_tensor(grad_u);
-
-    const Tensor<1, dim, VectorizedArray<number>> neg_heat_flux =
-      comp_flow_data.thermal_conductivity *
-      calculate_grad_T(conserved_variables, grad_conserved_variables);
-
-    ConservedVariablesGradType flux;
-    for (unsigned int d = 0; d < dim; ++d)
+    if (this->body_force.get() != nullptr)
       {
-        // density
-        flux[0][d] = 0.0;
-
-        // momentum
-        for (unsigned int e = 0; e < dim; ++e)
-          flux[e + 1][d] = viscous_stress[e][d];
-
-        // energy
-        flux[dim + 1][d] = neg_heat_flux[d];
-
-        for (unsigned int e = 0; e < dim; ++e)
-          flux[dim + 1][d] += velocity[e] * viscous_stress[d][e];
+        const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> force =
+          constant_body_force ?
+            *constant_body_force :
+            VectorTools::evaluate_function_at_vectorized_points(*this->body_force,
+                                                                evaluator.quadrature_point(q));
+        for (unsigned int d = 0; d < dim; ++d)
+          forcing[d + 1] = w_q[0] * force[d];
+        for (unsigned int d = 0; d < dim; ++d)
+          forcing[dim + 1] += force[d] * w_q[d + 1];
       }
 
-    return flux;
+    return {forcing, flux};
   }
 
 
-
   template <int dim, typename number>
+  template <FaceEvaluatorType<dim,
+                              dim + 2,
+                              number,
+                              dealii::VectorizedArray<number>> Integrator>
   inline DEAL_II_ALWAYS_INLINE //
-    Tensor<1, dim + 2, VectorizedArray<number>>
-    CompressibleFlowOperatorBase<dim, number>::calculate_viscous_numerical_flux(
-      const ConservedVariablesType                  &u_m,
-      const ConservedVariablesType                  &u_p,
-      const ConservedVariablesGradType              &grad_u_m,
-      const ConservedVariablesGradType              &grad_u_p,
-      const Tensor<1, dim, VectorizedArray<number>> &normal,
-      const VectorizedArray<number>                  penalty_parameter) const
+    std::tuple<typename CompressibleFlowOperatorBase<dim, number>::ConservedVariablesType,
+               typename CompressibleFlowOperatorBase<dim, number>::ConservedVariablesType,
+               typename CompressibleFlowOperatorBase<dim, number>::ConservedVariablesGradType,
+               typename CompressibleFlowOperatorBase<dim, number>::ConservedVariablesGradType>
+    CompressibleFlowOperatorBase<dim, number>::rhs_face_integral_kernel(
+      const Integrator                     &evaluator_m,
+      const Integrator                     &evaluator_p,
+      const unsigned int                    q,
+      const dealii::VectorizedArray<number> penalty_parameter) const
   {
-    const auto flux_m = calculate_viscous_flux(u_m, grad_u_m);
+    auto numerical_flux =
+      calculator_functions.calculate_convective_numerical_flux(evaluator_m.get_value(q),
+                                                               evaluator_p.get_value(q),
+                                                               evaluator_m.normal_vector(q));
 
-    const auto flux_p = calculate_viscous_flux(u_p, grad_u_p);
+    if (this->comp_flow_data.dynamic_viscosity > 0)
+      numerical_flux -=
+        calculator_functions.calculate_viscous_numerical_flux(evaluator_m.get_value(q),
+                                                              evaluator_p.get_value(q),
+                                                              evaluator_m.get_gradient(q),
+                                                              evaluator_p.get_gradient(q),
+                                                              evaluator_m.normal_vector(q),
+                                                              penalty_parameter);
 
-    return contract_average_tensor_with_normal(flux_m, flux_p, normal) -
-           penalty_parameter * comp_flow_data.dynamic_viscosity / comp_flow_data.reference_density *
-             (u_m - u_p);
+    std::pair<ConservedVariablesGradType, ConservedVariablesGradType> viscous_numerical_flux;
+
+    // interior penalty
+    if (this->comp_flow_data.dynamic_viscosity > 0)
+      {
+        viscous_numerical_flux = calculator_functions.calculate_viscous_numerical_flux_gradient(
+          evaluator_m.get_value(q), evaluator_p.get_value(q), evaluator_m.normal_vector(q));
+      }
+
+    return {-numerical_flux,
+            numerical_flux,
+            viscous_numerical_flux.first,
+            viscous_numerical_flux.second};
   }
 
 
-
   template <int dim, typename number>
+  template <FaceEvaluatorType<dim,
+                              dim + 2,
+                              number,
+                              dealii::VectorizedArray<number>> Integrator>
   inline DEAL_II_ALWAYS_INLINE //
-    std::pair<Tensor<1, dim + 2, Tensor<1, dim, VectorizedArray<number>>>,
-              Tensor<1, dim + 2, Tensor<1, dim, VectorizedArray<number>>>>
-    CompressibleFlowOperatorBase<dim, number>::calculate_viscous_numerical_flux_gradient(
-      const ConservedVariablesType                  &u_m,
-      const ConservedVariablesType                  &u_p,
-      const Tensor<1, dim, VectorizedArray<number>> &normal) const
+    std::tuple<typename CompressibleFlowOperatorBase<dim, number>::ConservedVariablesType,
+               typename CompressibleFlowOperatorBase<dim, number>::ConservedVariablesGradType>
+    CompressibleFlowOperatorBase<dim, number>::rhs_boundary_face_integral_kernel(
+      const Integrator                     &evaluator_m,
+      const unsigned int                    q,
+      const dealii::VectorizedArray<number> penalty_parameter) const
   {
-    ConservedVariablesGradType jump_u;
-    for (unsigned int e = 0; e < dim + 2; ++e)
-      for (unsigned int d = 0; d < dim; ++d)
-        jump_u[e][d] = (u_m[e] - u_p[e]) * normal[d];
+    const auto w_m      = evaluator_m.get_value(q);
+    const auto normal   = evaluator_m.normal_vector(q);
+    const auto grad_w_m = evaluator_m.get_gradient(q);
 
-    // use jumps instead of gradients for evaluating the viscous flux
-    const ConservedVariablesGradType flux_m = 0.5 * calculate_viscous_flux(u_m, jump_u);
-    const ConservedVariablesGradType flux_p = 0.5 * calculate_viscous_flux(u_p, jump_u);
+    ConservedVariablesType     w_p;
+    ConservedVariablesGradType grad_w_p;
 
-    return std::make_pair(flux_m, flux_p);
+    this->get_adjacent_face_values_at_boundary(evaluator_m.quadrature_point(q),
+                                               normal,
+                                               evaluator_m.boundary_id(),
+                                               w_m,
+                                               w_p,
+                                               grad_w_m,
+                                               grad_w_p);
+
+    auto flux = calculator_functions.calculate_convective_numerical_flux(w_m, w_p, normal);
+
+    if (this->comp_flow_data.dynamic_viscosity > 0)
+      flux -= calculator_functions.calculate_viscous_numerical_flux(
+        w_m, w_p, grad_w_m, grad_w_p, normal, penalty_parameter);
+
+    ConservedVariablesGradType numerical_flux_gradient;
+
+    if (this->comp_flow_data.dynamic_viscosity > 0)
+      {
+        numerical_flux_gradient =
+          calculator_functions.calculate_viscous_numerical_flux_gradient(w_m, w_p, normal).first;
+      }
+
+    return {-flux, numerical_flux_gradient};
   }
 } // namespace MeltPoolDG::Flow

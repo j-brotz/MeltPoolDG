@@ -1,0 +1,33 @@
+{
+  "base": {
+    "problem name": "compressible_flow",
+    "case name": "isentropic_vortex",
+    "dimension": "2",
+    "verbosity level": "0",
+    "global refinements": "4",
+    "do print parameters": "false"
+  },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "0.2",
+    "time step size": "0.01"
+  },
+  "output": {
+    "write frequency": "1",
+    "do user defined postprocessing": "true",
+    "paraview": {
+      "enable": "false"
+    }
+  },
+  "compressible navier stokes": {
+    "dynamic viscosity": 0.0,
+    "numerical flux type": "lax_friedrichs_modified",
+    "time integration": {
+      "type": "LSRK_stage_5_order_4"
+    },
+    "fe": {
+      "degree": "2",
+      "type": "FE_DGQ"
+    }
+  }
+}

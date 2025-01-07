@@ -14,7 +14,7 @@ namespace MeltPoolDG
 {
   using namespace dealii;
 
-  template <int dim, typename VectorType = LinearAlgebra::distributed::Vector<double>>
+  template <typename VectorType = LinearAlgebra::distributed::Vector<double>>
   class NewtonRaphsonSolver
   {
   public:
@@ -62,7 +62,7 @@ namespace MeltPoolDG
 
   private:
     void
-    solve_increment();
+    solve_increment(const VectorType &current_solution);
 
     double
     suggest_new_time_increment();
@@ -74,10 +74,10 @@ namespace MeltPoolDG
     is_converged();
 
     void
-    print_header();
+    print_header() const;
 
     std::string
-    print_checkmark(bool is_converged);
+    print_checkmark(bool is_converged) const;
   };
 
 } // namespace MeltPoolDG

@@ -2,6 +2,7 @@
 #pragma once
 
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
+#include <meltpooldg/time_integration/bdf_time_intgeration.hpp>
 #include <meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp>
 #include <meltpooldg/time_integration/one_step_theta.hpp>
 #include <meltpooldg/time_integration/time_integrator_base.hpp>
@@ -23,6 +24,22 @@ namespace MeltPoolDG
   time_integrator_scheme_is_explicit(const TimeIntegratorSchemes scheme)
   {
     if (Utils::contains(explicit_lsrk_supported_schemes, scheme))
+      return true;
+    return false;
+  }
+
+  /**
+   * Checks if the given @p scheme is implicit and supported by one of the available
+   * implicit integrator classes.
+   *
+   * @param scheme The time integration scheme to check.
+   *
+   * @return True if the scheme is implicit and supported; otherwise, false.
+   */
+  inline bool
+  time_integrator_scheme_is_implicit(const TimeIntegratorSchemes scheme)
+  {
+    if (Utils::contains(bdf_supported_schemes, scheme))
       return true;
     return false;
   }
@@ -53,6 +70,32 @@ namespace MeltPoolDG
     DEAL_II_NOT_IMPLEMENTED();
   }
 
+  /**
+   * Factory function that creates and returns a raw pointer to an implicit time integrator
+   * based on the scheme specified in @p TimeIntegratorData.
+   *
+   * @param params Contains the configuration details for the time integrator.
+   * @param timer Timer passed to the constructor of the time integrator.
+   *
+   * @return A raw pointer to the appropriate implicit time integrator.
+   * @throws An exception if the specified integration scheme is not supported.
+   * @note This function returns a raw pointer, leaving the responsibility for memory management
+   * (e.g., wrapping it in a smart pointer) to the caller.
+   */
+  template <typename number, typename PDEOperator>
+  TimeIntegratorBase<number, PDEOperator> *
+  implicit_time_integrator_factory(const TimeIntegratorData &params, dealii::TimerOutput &timer)
+  {
+    if constexpr (BDFImplicitPDEOperator<PDEOperator,
+                                         number,
+                                         dealii::LinearAlgebra::distributed::Vector<number>>)
+      {
+        if (Utils::contains(bdf_supported_schemes, params.integrator_type))
+          return new BDFIntegrator<number, PDEOperator>(params, timer);
+      }
+    DEAL_II_NOT_IMPLEMENTED();
+  }
+
 
   /**
    * Factory function that creates and returns a raw pointer to any suitable time integrator
@@ -68,18 +111,23 @@ namespace MeltPoolDG
    * @note This function returns a raw pointer, leaving the responsibility for memory management
    * (e.g., wrapping it in a smart pointer) to the caller.
    */
-  template <typename number, typename PDEOperator>
+  template <typename number,
+            typename PDEOperator,
+            typename VectorType = dealii::LinearAlgebra::distributed::Vector<number>>
   TimeIntegratorBase<number, PDEOperator> *
   time_integrator_factory(const TimeIntegratorData       &params,
                           const LinearSolverData<number> &linear_solver_data,
                           dealii::TimerOutput            &timer)
   {
-    if constexpr (ExplicitPDEOperator<PDEOperator,
-                                      number,
-                                      dealii::LinearAlgebra::distributed::Vector<number>>)
+    if constexpr (ExplicitPDEOperator<PDEOperator, number, VectorType>)
       {
         if (Utils::contains(explicit_lsrk_supported_schemes, params.integrator_type))
           return new LowStorageExplicitRungeKuttaIntegrator<number, PDEOperator>(params, timer);
+      }
+    if constexpr (BDFImplicitPDEOperator<PDEOperator, number, VectorType>)
+      {
+        if (Utils::contains(bdf_supported_schemes, params.integrator_type))
+          return new BDFIntegrator<number, PDEOperator>(params, timer);
       }
     if (Utils::contains(one_step_theta_supported_schemes, params.integrator_type))
       return new OneStepTheta<number, PDEOperator>(params, linear_solver_data);
