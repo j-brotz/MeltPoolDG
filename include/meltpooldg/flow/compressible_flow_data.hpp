@@ -57,7 +57,7 @@ namespace MeltPoolDG::Flow
     bool do_cfl_time_stepping = false;
 
     // gravity constant used in the body force computation
-    double gravity_constant = 9.81;
+    double gravity_constant = 0.0;
 
     void
     add_parameters(dealii::ParameterHandler &prm)

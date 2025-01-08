@@ -178,7 +178,7 @@ else ()
     message(STATUS "Application: advection-diffusion disabled")
 endif ()
 
-if (MPDG_ENABLE_ADVEC_DIFF)
+if (MPDG_ENABLE_COMP_FLOW)
     message(STATUS "Application: compressible-flow enabled")
     add_subdirectory(applications/mp-compressible-flow)
 else ()
