@@ -19,4 +19,13 @@ namespace MeltPoolDG::Evaporation
     return 0.82 * sticking_constant * recoil_model.compute_recoil_pressure_coefficient(T) *
            std::sqrt(Cm / T); //@todo: replace recoil pressure by saturated vapor pressure
   }
+
+  dealii::VectorizedArray<double>
+  EvaporationModelRecoilPressure::local_compute_evaporative_mass_flux(
+    const dealii::VectorizedArray<double> &T) const
+  {
+    return 0.82 * sticking_constant * recoil_model.compute_recoil_pressure_coefficient(T) *
+           std::sqrt(Cm / T);
+  }
+
 } // namespace MeltPoolDG::Evaporation

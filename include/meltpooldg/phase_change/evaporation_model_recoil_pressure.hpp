@@ -4,6 +4,8 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+#include <deal.II/base/vectorization.h>
+
 #include <meltpooldg/phase_change/evaporation_model_base.hpp>
 #include <meltpooldg/phase_change/recoil_pressure_data.hpp>
 #include <meltpooldg/phase_change/recoil_pressure_operation.hpp>
@@ -49,5 +51,8 @@ namespace MeltPoolDG::Evaporation
      */
     double
     local_compute_evaporative_mass_flux(const double T) const final;
+
+    dealii::VectorizedArray<double>
+    local_compute_evaporative_mass_flux(const dealii::VectorizedArray<double> &T) const final;
   };
 } // namespace MeltPoolDG::Evaporation

@@ -5,6 +5,8 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 
+#include <deal.II/base/vectorization.h>
+
 namespace MeltPoolDG::Evaporation
 {
   /**
@@ -21,5 +23,15 @@ namespace MeltPoolDG::Evaporation
      */
     virtual double
     local_compute_evaporative_mass_flux(const double T) const = 0;
+
+    virtual dealii::VectorizedArray<double>
+    local_compute_evaporative_mass_flux(const dealii::VectorizedArray<double> &T) const
+    {
+      // default implementation
+      dealii::VectorizedArray<double> out;
+      for (unsigned int i = 0; i < dealii::VectorizedArray<double>::size(); ++i)
+        out[i] = this->local_compute_evaporative_mass_flux(T[i]);
+      return out;
+    };
   };
 } // namespace MeltPoolDG::Evaporation

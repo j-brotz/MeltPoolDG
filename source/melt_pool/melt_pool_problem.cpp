@@ -1002,7 +1002,6 @@ namespace MeltPoolDG::MeltPool
          */
         evaporation_operation->reinit(&heat_operation->get_temperature(),
                                       level_set_operation->get_distance_to_level_set(),
-                                      base_in->parameters.evapor.recoil,
                                       base_in->parameters.ls.nearest_point,
                                       base_in->parameters.ls.reinit,
                                       temp_dof_idx);
