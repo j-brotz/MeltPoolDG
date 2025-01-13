@@ -101,32 +101,29 @@ namespace MeltPoolDG::CutUtil
     const int                                                               fe_degree,
     const bool                                                              is_two_phase)
   {
+    AssertDimension(mapping_info_cells.size(), is_two_phase ? 2 : 1);
+
     dealii::hp::QCollection<1> q_collection((dealii::QGauss<1>(fe_degree + 1)));
 
     const unsigned int n_lanes = dealii::VectorizedArray<number>::size();
+    const unsigned int n_cell_batches =
+      matrix_free.n_cell_batches() + matrix_free.n_ghost_cell_batches();
 
     dealii::NonMatching::DiscreteQuadratureGenerator<dim> quadrature_generator(
       q_collection, level_set_dof_handler, level_set);
 
-    std::vector<dealii::Quadrature<dim>> quad_vec_cells_inner_domain;
-    quad_vec_cells_inner_domain.reserve(
-      (matrix_free.n_cell_batches() + matrix_free.n_ghost_cell_batches()) * n_lanes);
-
-    std::vector<dealii::Quadrature<dim>> quad_vec_cells_outer_domain;
-    if (is_two_phase)
-      quad_vec_cells_outer_domain.reserve(
-        (matrix_free.n_cell_batches() + matrix_free.n_ghost_cell_batches()) * n_lanes);
-
+    std::vector<dealii::Quadrature<dim>>                             quad_vec_cells_liquid_domain;
+    std::vector<dealii::Quadrature<dim>>                             quad_vec_cells_gas_domain;
     std::vector<dealii::NonMatching::ImmersedSurfaceQuadrature<dim>> quad_vec_surface;
-    quad_vec_surface.reserve((matrix_free.n_cell_batches() + matrix_free.n_ghost_cell_batches()) *
-                             n_lanes);
-
-    std::vector<typename dealii::DoFHandler<dim>::cell_iterator> vector_cell_iterators;
-    vector_cell_iterators.reserve(
-      (matrix_free.n_cell_batches() + matrix_free.n_ghost_cell_batches()) * n_lanes);
-
-    const unsigned int n_cell_batches =
-      matrix_free.n_cell_batches() + matrix_free.n_ghost_cell_batches();
+    std::vector<typename dealii::DoFHandler<dim>::cell_iterator>     vector_cell_iterators;
+    {
+      const unsigned int reserve_size = n_cell_batches * n_lanes;
+      quad_vec_cells_liquid_domain.reserve(reserve_size);
+      if (is_two_phase)
+        quad_vec_cells_gas_domain.reserve(reserve_size);
+      quad_vec_surface.reserve(reserve_size);
+      vector_cell_iterators.reserve(reserve_size);
+    }
 
     for (unsigned int cell_batch = 0; cell_batch < n_cell_batches; ++cell_batch)
       for (unsigned int lane = 0; lane < n_lanes; ++lane)
@@ -143,16 +140,16 @@ namespace MeltPoolDG::CutUtil
               quadrature_generator.generate(matrix_free.get_cell_iterator(cell_batch, 0));
             }
 
-          quad_vec_cells_inner_domain.push_back(quadrature_generator.get_inside_quadrature());
+          quad_vec_cells_liquid_domain.push_back(quadrature_generator.get_outside_quadrature());
           if (is_two_phase)
-            quad_vec_cells_outer_domain.push_back(quadrature_generator.get_outside_quadrature());
+            quad_vec_cells_gas_domain.push_back(quadrature_generator.get_inside_quadrature());
 
           quad_vec_surface.push_back(quadrature_generator.get_surface_quadrature());
         }
 
-    mapping_info_cells[0]->reinit_cells(vector_cell_iterators, quad_vec_cells_inner_domain);
+    mapping_info_cells[0]->reinit_cells(vector_cell_iterators, quad_vec_cells_liquid_domain);
     if (is_two_phase)
-      mapping_info_cells[1]->reinit_cells(vector_cell_iterators, quad_vec_cells_outer_domain);
+      mapping_info_cells[1]->reinit_cells(vector_cell_iterators, quad_vec_cells_gas_domain);
 
     mapping_info_surface.reinit_surface(vector_cell_iterators, quad_vec_surface);
   }
