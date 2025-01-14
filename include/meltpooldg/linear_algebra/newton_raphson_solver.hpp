@@ -67,11 +67,8 @@ namespace MeltPoolDG
     void
     set_tolerances_to_alternative_values();
 
-    bool
-    is_converged();
-
     void
-    print_header();
+    print_header() const;
 
     std::string
     print_checkmark(bool is_converged) const;

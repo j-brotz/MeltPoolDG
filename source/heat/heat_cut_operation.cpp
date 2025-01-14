@@ -344,6 +344,7 @@ namespace MeltPoolDG::Heat
       NonlinearSolverFunctions::norm_of_solution_vector, [this]() -> double {
         return heat_operator->compute_cut_L2_norm(solution_history.get_current_solution());
       });
+    newton.reinit();
   }
 
   template <int dim>
