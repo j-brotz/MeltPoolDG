@@ -128,12 +128,10 @@ namespace MeltPoolDG::Heat
   HeatDiffuseOperation<dim>::register_evaporative_mass_flux(
     VectorType        *evaporative_mass_flux_in,
     const unsigned int evapor_mass_flux_dof_idx_in,
-    const double       latent_heat_of_evaporation,
     const typename Evaporation::EvaporationData<double>::EvaporativeCooling &evapor_cooling_data)
   {
     heat_operator->register_evaporative_mass_flux(evaporative_mass_flux_in,
                                                   evapor_mass_flux_dof_idx_in,
-                                                  latent_heat_of_evaporation,
                                                   evapor_cooling_data);
   }
 

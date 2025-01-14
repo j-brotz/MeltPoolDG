@@ -13,6 +13,7 @@
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
+#include <meltpooldg/phase_change/evaporative_heat_loss.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/material.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
@@ -134,10 +135,9 @@ namespace MeltPoolDG::Heat
     const VectorType  *level_set_as_heaviside;
 
     // optional: two phase flow with evaporation
-    VectorType  *evaporative_mass_flux      = nullptr;
-    unsigned int evapor_mass_flux_dof_idx   = 0;
-    double       latent_heat_of_evaporation = 0;
-    bool         do_phenomenological_recoil_pressure;
+    VectorType                                               *evaporative_mass_flux    = nullptr;
+    unsigned int                                              evapor_mass_flux_dof_idx = 0;
+    std::unique_ptr<Evaporation::EvaporativeHeatLoss<number>> evaporative_heat_loss;
 
     // optional: melting/solidification effects
     const bool do_solidification;
@@ -187,7 +187,6 @@ namespace MeltPoolDG::Heat
     register_evaporative_mass_flux(
       VectorType        *evaporative_mass_flux_in,
       const unsigned int evapor_mass_flux_dof_idx_in,
-      const double       latent_heat_of_evaporation,
       const typename Evaporation::EvaporationData<number>::EvaporativeCooling &evapor_cooling_data);
 
     void
