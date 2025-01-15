@@ -25,7 +25,7 @@ namespace MeltPoolDG
     //! alternative absolute tolerance of the residual
     number abs_residual_tolerance_alt     = 1e-8;
 
-    int    verbosity_level                = 1;
+    int    verbosity_level                = -1;
 
     void
     add_parameters(dealii::ParameterHandler &prm);

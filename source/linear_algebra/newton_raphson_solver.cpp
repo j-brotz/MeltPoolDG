@@ -17,91 +17,12 @@ namespace MeltPoolDG
                                nlsolve_data.max_nonlinear_iterations_alt)
     , residual_tolerance(nlsolve_data.abs_residual_tolerance)
     , field_correction_tolerance(nlsolve_data.field_correction_tolerance)
-    , nox_parameters(Teuchos::rcp(new Teuchos::ParameterList))
-    , nox_additional_data(nlsolve_data.max_nonlinear_iterations +
-                            nlsolve_data.max_nonlinear_iterations_alt,
-                          nlsolve_data.abs_residual_tolerance,
-                          nlsolve_data.rel_residual_tolerance)
-    , nox_solver(nox_additional_data, nox_parameters)
-  {
-    set_nox_solver_parameters();
-  }
+  {}
 
   template <typename VectorType>
   void
   NewtonRaphsonSolver<VectorType>::reinit()
-  {
-    // compute the residual
-    nox_solver.residual = [this](const VectorType &src, VectorType &dst) {
-      this->template get_function<residual_function_type>(NonlinearSolverFunctions::residual)(src,
-                                                                                              dst);
-      dst *= -1.;
-    };
-
-    // compute the update step
-    try
-      {
-        nox_solver.setup_jacobian = this->template get_function<setup_jacobian_function_type>(
-          NonlinearSolverFunctions::setup_jacobian);
-      }
-    catch (...)
-      {
-        nox_solver.setup_jacobian = [this](const auto &solution) {};
-      }
-
-    // solve with external defined jacobian (note: the variable tolerance is not used as the
-    // tolerance is defined in the MeltPoolDG linear solver data)
-    nox_solver.solve_with_jacobian_and_track_n_linear_iterations =
-      [this](const VectorType             &rhs,
-             VectorType                   &dst,
-             [[maybe_unused]] const double tolerance) -> int {
-      const int lin_iter = this->template get_function<solve_with_jacobian_function_type>(
-        NonlinearSolverFunctions::solve_with_jacobian)(rhs, dst);
-      {
-        const ScopedName sc("linear_solve");
-        IterationMonitor::add_linear_iterations(sc, lin_iter);
-      }
-      if (nlsolve_data.verbosity_level > 0)
-        str_ << std::string(10, ' ') << std::right << std::setw(15) << std::setprecision(0)
-             << lin_iter;
-      return lin_iter;
-    };
-
-
-    // post-processing after each Newton iteration
-    nox_solver.check_iteration_status = [this](const unsigned int nl_iter,
-                                               const double       res_norm,
-                                               const VectorType  &solution,
-                                               const VectorType &) -> dealii::SolverControl::State {
-      if (nlsolve_data.verbosity_level >= 1)
-        {
-          if (nl_iter == 0)
-            str_ << std::string(10, ' ') << std::right << std::setw(15) << std::setprecision(0)
-                 << "--";
-          str_ << std::right << std::setw(15) << std::scientific << std::setprecision(5) << res_norm
-               << print_checkmark(res_norm < residual_tolerance);
-
-          Journal::print_line(pcout, str_.str(), "", 4);
-          str_.str("");
-        }
-      // In addition to checking the iteration status we use this function to perform
-      // post-processing.
-      try
-        {
-          this->template get_function<distribute_constraints_function_type>(
-            NonlinearSolverFunctions::distribute_constraints)(const_cast<VectorType &>(solution));
-        }
-      catch (...)
-        {}
-
-      // return iterate as we leave the convergence check to trilinos
-      if (this->template get_function<norm_of_solution_vector_funtion_type>(
-            NonlinearSolverFunctions::norm_of_solution_vector)() < residual_tolerance)
-        return dealii::SolverControl::State::success;
-      else
-        return dealii::SolverControl::State::iterate;
-    };
-  }
+  {}
 
   template <typename VectorType>
   void
@@ -113,31 +34,6 @@ namespace MeltPoolDG
       NonlinearSolverFunctions::reinit_vector)(rhs);
     this->template get_function<reinit_vector_function_type>(
       NonlinearSolverFunctions::reinit_vector)(solution_update);
-    /*
-        this->template get_function<residual_function_type>(
-          NonlinearSolverFunctions::residual)(solution, rhs);
-
-        pcout << "Initial residual norm: " << rhs.l2_norm() << std::endl;
-        linear_iter_acc = 0;
-
-        nox_solver.solve(solution);
-
-        if (nlsolve_data.verbosity_level >= 0)
-          {
-            str_ << "Newton Raphson solver converged: ||solution|| = " << std::scientific
-                 << std::setprecision(5)
-                 << this->template get_function<norm_of_solution_vector_funtion_type>(
-                      NonlinearSolverFunctions::norm_of_solution_vector)();
-
-            Journal::print_line(pcout, str_.str(), "newton_raphson_solver");
-            str_.str("");
-          }
-
-        {
-          ScopedName sc("linear_solve_acc");
-          IterationMonitor::add_linear_iterations(sc, linear_iter_acc);
-        }
-        */
 
     int i           = 0;
     linear_iter_acc = 0;
@@ -176,33 +72,8 @@ namespace MeltPoolDG
             NonlinearSolverFunctions::distribute_constraints)(const_cast<VectorType &>(solution));
         i++;
       }
-  }
 
-  template <typename VectorType>
-  bool
-  NewtonRaphsonSolver<VectorType>::is_converged()
-  {
-    if (iteration_counter == nlsolve_data.max_nonlinear_iterations)
-      set_tolerances_to_alternative_values();
-
-    double res_norm    = rhs.l2_norm();
-    double update_norm = solution_update.l2_norm();
-
-    bool residual_converged   = res_norm < residual_tolerance;
-    bool correction_converged = update_norm < field_correction_tolerance;
-
-    if (nlsolve_data.verbosity_level >= 1)
-      {
-        str_ << std::right << std::setw(15) << std::scientific << std::setprecision(5) << res_norm
-             << print_checkmark(residual_converged);
-        str_ << std::right << std::setw(15) << std::scientific << std::setprecision(5)
-             << update_norm << print_checkmark(correction_converged);
-
-        Journal::print_line(pcout, str_.str(), "", 4);
-        str_.str("");
-      }
-
-    return residual_converged && correction_converged;
+    AssertThrow(is_converged(), ExcNewtonDidNotConverge());
   }
 
   template <typename VectorType>
@@ -233,7 +104,35 @@ namespace MeltPoolDG
   void
   NewtonRaphsonSolver<VectorType>::set_tolerances_to_alternative_values()
   {
-    residual_tolerance = nlsolve_data.abs_residual_tolerance_alt;
+    residual_tolerance         = nlsolve_data.abs_residual_tolerance_alt;
+    field_correction_tolerance = nlsolve_data.field_correction_tolerance_alt;
+  }
+
+  template <typename VectorType>
+  bool
+  NewtonRaphsonSolver<VectorType>::is_converged()
+  {
+    if (iteration_counter == nlsolve_data.max_nonlinear_iterations)
+      set_tolerances_to_alternative_values();
+
+    double res_norm    = rhs.l2_norm();
+    double update_norm = solution_update.l2_norm();
+
+    bool residual_converged   = res_norm < residual_tolerance;
+    bool correction_converged = update_norm < field_correction_tolerance;
+
+    if (nlsolve_data.verbosity_level >= 1)
+      {
+        str_ << std::right << std::setw(15) << std::scientific << std::setprecision(5) << res_norm
+             << print_checkmark(residual_converged);
+        str_ << std::right << std::setw(15) << std::scientific << std::setprecision(5)
+             << update_norm << print_checkmark(correction_converged);
+
+        Journal::print_line(pcout, str_.str(), "", 4);
+        str_.str("");
+      }
+
+    return residual_converged && correction_converged;
   }
 
   template <typename VectorType>
@@ -252,33 +151,18 @@ namespace MeltPoolDG
 
     // compute residual
     this->template get_function<residual_function_type>(
-      NonlinearSolverFunctions::residual)(solution_update, rhs);
+          NonlinearSolverFunctions::residual)(solution_update, rhs);
 
     // solve linear system
     const int iter = this->template get_function<solve_with_jacobian_function_type>(
-      NonlinearSolverFunctions::solve_with_jacobian)(rhs, solution_update);
+        NonlinearSolverFunctions::solve_with_jacobian)(rhs, solution_update);
     {
       ScopedName sc("linear_solve");
       IterationMonitor::add_linear_iterations(sc, iter);
     }
     linear_iter_acc += iter;
 
-    // TODO
-    // str_ << std::string(10, ' ') << std::right << std::setw(15) << std::setprecision(0) << iter;
-  }
-
-  template <typename VectorType>
-  void
-  NewtonRaphsonSolver<VectorType>::set_nox_solver_parameters()
-  {
-    // specify nonlinear solver type
-    nox_parameters->set("Nonlinear Solver", "Line Search Based");
-    // specify method of line search
-    nox_parameters->sublist("Line Search").set("Method", "Full Step");
-    // specify direction
-    nox_parameters->sublist("Direction").set("Method", "Newton");
-    // prevent output
-    nox_parameters->sublist("Printing").set("Output Information", 0);
+    str_ << std::string(10, ' ') << std::right << std::setw(15) << std::setprecision(0) << iter;
   }
 
   template class NewtonRaphsonSolver<dealii::LinearAlgebra::distributed::Vector<double>>;
