@@ -77,15 +77,12 @@ namespace MeltPoolDG
                                                const double       res_norm,
                                                const VectorType  &solution,
                                                const VectorType &) -> dealii::SolverControl::State {
-      // In addition to checking the iteration status we use this function to perform
-      // post-processing.
       return dealii::SolverControl::iterate;
     };
 
 
 
     print_header();
-    pcout << "I am here 1" << std::endl;
     nox_solver.solve(solution);
 
     try
