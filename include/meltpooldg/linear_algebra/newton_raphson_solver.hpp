@@ -98,11 +98,9 @@ namespace MeltPoolDG
     int linear_iter_acc   = 0;
 
     //! Trilinos nonlinear solver objects
-    /*
     Teuchos::RCP<Teuchos::ParameterList>                                     nox_parameters;
     typename dealii::TrilinosWrappers::NOXSolver<VectorType>::AdditionalData nox_additional_data;
     dealii::TrilinosWrappers::NOXSolver<VectorType>                          nox_solver;
-*/
 
     std::ostringstream str_;
   };

@@ -17,7 +17,15 @@ namespace MeltPoolDG
                                nlsolve_data.max_nonlinear_iterations_alt)
     , residual_tolerance(nlsolve_data.abs_residual_tolerance)
     , field_correction_tolerance(nlsolve_data.field_correction_tolerance)
-  {}
+    , nox_parameters(Teuchos::rcp(new Teuchos::ParameterList))
+    , nox_additional_data(nlsolve_data.max_nonlinear_iterations +
+                            nlsolve_data.max_nonlinear_iterations_alt,
+                          nlsolve_data.abs_residual_tolerance,
+                          nlsolve_data.rel_residual_tolerance)
+    , nox_solver(nox_additional_data, nox_parameters)
+  {
+    set_nox_solver_parameters();
+  }
 
   template <typename VectorType>
   void
@@ -69,7 +77,7 @@ namespace MeltPoolDG
 
         solution += solution_update;
         this->template get_function<distribute_constraints_function_type>(
-            NonlinearSolverFunctions::distribute_constraints)(const_cast<VectorType &>(solution));
+          NonlinearSolverFunctions::distribute_constraints)(const_cast<VectorType &>(solution));
         i++;
       }
 
@@ -151,11 +159,11 @@ namespace MeltPoolDG
 
     // compute residual
     this->template get_function<residual_function_type>(
-          NonlinearSolverFunctions::residual)(solution_update, rhs);
+      NonlinearSolverFunctions::residual)(solution_update, rhs);
 
     // solve linear system
     const int iter = this->template get_function<solve_with_jacobian_function_type>(
-        NonlinearSolverFunctions::solve_with_jacobian)(rhs, solution_update);
+      NonlinearSolverFunctions::solve_with_jacobian)(rhs, solution_update);
     {
       ScopedName sc("linear_solve");
       IterationMonitor::add_linear_iterations(sc, iter);
@@ -163,6 +171,21 @@ namespace MeltPoolDG
     linear_iter_acc += iter;
 
     str_ << std::string(10, ' ') << std::right << std::setw(15) << std::setprecision(0) << iter;
+  }
+
+
+  template <typename VectorType>
+  void
+  NewtonRaphsonSolver<VectorType>::set_nox_solver_parameters()
+  {
+    // specify nonlinear solver type
+    nox_parameters->set("Nonlinear Solver", "Line Search Based");
+    // specify method of line search
+    nox_parameters->sublist("Line Search").set("Method", "Full Step");
+    // specify direction
+    nox_parameters->sublist("Direction").set("Method", "Newton");
+    // prevent output
+    nox_parameters->sublist("Printing").set("Output Information", 0);
   }
 
   template class NewtonRaphsonSolver<dealii::LinearAlgebra::distributed::Vector<double>>;
