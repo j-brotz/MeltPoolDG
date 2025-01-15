@@ -100,7 +100,7 @@ namespace MeltPoolDG::Evaporation
      */
     VectorType evaporation_velocity;
 
-    std::shared_ptr<EvaporationModelBase>                 evapor_model;
+    std::shared_ptr<EvaporationModelBase<double>>         evapor_model;
     std::shared_ptr<EvaporationMassFluxOperatorBase<dim>> evapor_mass_flux_operator;
     std::shared_ptr<EvaporationSourceTermsBase<dim>>      evapor_source_terms_operator;
 

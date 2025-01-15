@@ -10,11 +10,13 @@ namespace MeltPoolDG::Evaporation
 {
   using namespace dealii;
 
-  EvaporationModelHardtWondra::EvaporationModelHardtWondra(const double evaporation_coefficient,
-                                                           const double latent_heat_of_evaporation,
-                                                           const double density_vapor,
-                                                           const double molar_mass_vapor,
-                                                           const double boiling_temperature)
+  template <typename number>
+  EvaporationModelHardtWondra<number>::EvaporationModelHardtWondra(
+    const number evaporation_coefficient,
+    const number latent_heat_of_evaporation,
+    const number density_vapor,
+    const number molar_mass_vapor,
+    const number boiling_temperature)
     : evaporative_mass_transfer_coefficient(
         2. * evaporation_coefficient * latent_heat_of_evaporation * density_vapor /
         ((2. - evaporation_coefficient) *
@@ -32,19 +34,24 @@ namespace MeltPoolDG::Evaporation
         "The boiling temperature must not be zero to compute the evaporation mass transfer coefficient"));
   }
 
-  EvaporationModelHardtWondra::EvaporationModelHardtWondra(
-    const double evaporative_mass_transfer_coefficient,
-    const double boiling_temperature)
+  template <typename number>
+  EvaporationModelHardtWondra<number>::EvaporationModelHardtWondra(
+    const number evaporative_mass_transfer_coefficient,
+    const number boiling_temperature)
     : evaporative_mass_transfer_coefficient(evaporative_mass_transfer_coefficient)
     , boiling_temperature(boiling_temperature)
   {}
 
-  double
-  EvaporationModelHardtWondra::local_compute_evaporative_mass_flux(const double T) const
+
+  template <typename number>
+  number
+  EvaporationModelHardtWondra<number>::local_compute_evaporative_mass_flux(const number T) const
   {
     return (T >= boiling_temperature) ?
              evaporative_mass_transfer_coefficient * (T - boiling_temperature) :
              0.0;
   }
 
+
+  template class EvaporationModelHardtWondra<double>;
 } // namespace MeltPoolDG::Evaporation

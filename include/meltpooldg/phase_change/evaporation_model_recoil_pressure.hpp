@@ -4,6 +4,7 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/phase_change/evaporation_model_base.hpp>
@@ -23,22 +24,24 @@ namespace MeltPoolDG::Evaporation
    * DOI: 10.1016/j.actamat.2016.02.014.
    *
    */
-  class EvaporationModelRecoilPressure : public EvaporationModelBase
+  template <typename number>
+  class EvaporationModelRecoilPressure : public EvaporationModelBase<number>
   {
   private:
-    const RecoilPressurePhenomenologicalModel<double> recoil_model;
+    const RecoilPressurePhenomenologicalModel<number> recoil_model;
 
     // according to Meier 2020
-    const double sticking_constant;
-    const double Cm; // molar_mass/(2*pi*molar_gas_constant)
+    const number sticking_constant;
+    const number Cm;                   // molar_mass/(2*pi*molar_gas_constant)
+    const number temperature_constant; // molar_latent_heat_of_evaporation / molar_gas_constant
 
   public:
-    EvaporationModelRecoilPressure(const RecoilPressureData<double> &recoil_data,
-                                   const double                      boiling_temperature,
-                                   const double                      molar_mass,
-                                   const double                      latent_heat_evaporation);
+    EvaporationModelRecoilPressure(const RecoilPressureData<number> &recoil_data,
+                                   const number                      boiling_temperature,
+                                   const number                      molar_mass,
+                                   const number                      latent_heat_evaporation);
 
-    /*
+    /**
      * The evaporative mass flux is computed as
      *
      *                                  ______
@@ -49,10 +52,37 @@ namespace MeltPoolDG::Evaporation
      * where c_s is the sticking coefficient, p_v(T) the recoil pressure,
      * M the molar mass, R the molar gas constant and T the temperature.
      */
-    double
-    local_compute_evaporative_mass_flux(const double T) const final;
+    number
+    local_compute_evaporative_mass_flux(const number T) const final;
 
-    dealii::VectorizedArray<double>
-    local_compute_evaporative_mass_flux(const dealii::VectorizedArray<double> &T) const final;
+    dealii::VectorizedArray<number>
+    local_compute_evaporative_mass_flux(const dealii::VectorizedArray<number> &T) const;
+
+    /**
+     * Compute the derivative of the evaporative mass flux as
+     *
+     *    .
+     *  d m                 .    /  c_T       1  \
+     * ----- = 0.82 · c_s · m(T) | ----- - ----- |
+     *  d T                      \   T²     2 T  /
+     *
+     * where it is assumed that the recoil pressure p_v(T) is computed as
+     *
+     *                        /       /  1       1  \\
+     *  p_v(T) = s * c_p * exp|-c_T * | ---  -  --- ||
+     *                        \       \  T      T_v //
+     *
+     * according to the phenomenological model by Anisimov and Khokhlov as implemented in
+     * RecoilPressurePhenomenologicalModel.
+     *
+     * S. Anisimov and V. Khokhlov. Instabilities in Laser-Matter Interaction. CRC Press, Boca
+     * Raton, FL, 1995.
+     *
+     */
+    number
+    local_compute_evaporative_mass_flux_derivative(const number T) const;
+
+    dealii::VectorizedArray<number>
+    local_compute_evaporative_mass_flux_derivative(const dealii::VectorizedArray<number> &T) const;
   };
 } // namespace MeltPoolDG::Evaporation

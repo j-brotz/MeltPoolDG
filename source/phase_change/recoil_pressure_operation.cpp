@@ -1,4 +1,10 @@
 #include <meltpooldg/phase_change/recoil_pressure_operation.templates.hpp>
+//
+#include <deal.II/matrix_free/evaluation_flags.h>
+
+#include <meltpooldg/utilities/fe_integrator.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
+
 
 namespace MeltPoolDG::Evaporation
 {

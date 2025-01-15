@@ -37,21 +37,22 @@ namespace MeltPoolDG::Evaporation
    * reported evaporation coefficients to be between 1e−3 and 1.
    *
    */
-  class EvaporationModelHardtWondra : public EvaporationModelBase
+  template <typename number>
+  class EvaporationModelHardtWondra : public EvaporationModelBase<number>
   {
   private:
-    const double evaporative_mass_transfer_coefficient;
-    const double boiling_temperature;
+    const number evaporative_mass_transfer_coefficient;
+    const number boiling_temperature;
 
   public:
-    EvaporationModelHardtWondra(const double evaporation_coefficient,
-                                const double latent_heat_of_evaporation,
-                                const double density_vapor,
-                                const double molar_mass_vapor,
-                                const double boiling_temperature);
+    EvaporationModelHardtWondra(const number evaporation_coefficient,
+                                const number latent_heat_of_evaporation,
+                                const number density_vapor,
+                                const number molar_mass_vapor,
+                                const number boiling_temperature);
 
-    EvaporationModelHardtWondra(const double evaporative_mass_transfer_coefficient,
-                                const double boiling_temperature);
+    EvaporationModelHardtWondra(const number evaporative_mass_transfer_coefficient,
+                                const number boiling_temperature);
 
     /*
      * According to Schrage's theory the evaporative mass flux at the interface is computed
@@ -61,7 +62,7 @@ namespace MeltPoolDG::Evaporation
      *
      *  with the evaporative mass transfer coefficient α_v  and the heaviside function <...>.
      */
-    double
-    local_compute_evaporative_mass_flux(const double T) const final;
+    number
+    local_compute_evaporative_mass_flux(const number T) const final;
   };
 } // namespace MeltPoolDG::Evaporation

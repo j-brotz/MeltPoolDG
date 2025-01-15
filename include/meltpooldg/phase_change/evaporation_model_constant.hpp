@@ -15,7 +15,8 @@
 
 namespace MeltPoolDG::Evaporation
 {
-  class EvaporationModelConstant : public EvaporationModelBase
+  template <typename number>
+  class EvaporationModelConstant : public EvaporationModelBase<number>
   {
   private:
     // function to compute the evaporative mass flux at a given time
@@ -26,8 +27,8 @@ namespace MeltPoolDG::Evaporation
       : m_dot(expr_evaporative_mass_flux)
     {}
 
-    double
-    local_compute_evaporative_mass_flux(const double time /*here used as time*/) const final
+    number
+    local_compute_evaporative_mass_flux(const number time /*here used as time*/) const final
     {
       AssertThrow(!dealii::numbers::is_invalid(time),
                   dealii::ExcMessage("Time must be set to compute the evaporative mass flux."));

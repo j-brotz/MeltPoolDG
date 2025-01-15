@@ -1061,7 +1061,7 @@ namespace MeltPoolDG::MeltPool
             heat_operation->register_evaporative_mass_flux(
               &evaporation_operation->get_evaporative_mass_flux(),
               evapor_mass_flux_dof_idx,
-              base_in->parameters.evapor.evaporative_cooling);
+              base_in->parameters.evapor);
           }
       }
 

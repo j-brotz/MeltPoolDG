@@ -1,10 +1,11 @@
 #pragma once
-#include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/phase_change/recoil_pressure_operation.hpp>
-#include <meltpooldg/utilities/physical_constants.hpp>
+//
+#include <deal.II/base/utilities.h>
 
 #include <cmath>
+
 
 namespace MeltPoolDG::Evaporation
 {

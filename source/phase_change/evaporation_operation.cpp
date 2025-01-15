@@ -87,7 +87,8 @@ namespace MeltPoolDG::Evaporation
 
     if (evapor_data.evaporative_mass_flux_model == EvaporationModelType::analytical)
       {
-        evapor_model = std::make_shared<EvaporationModelConstant>(evapor_data.analytical.function);
+        evapor_model =
+          std::make_shared<EvaporationModelConstant<double>>(evapor_data.analytical.function);
       }
   }
 

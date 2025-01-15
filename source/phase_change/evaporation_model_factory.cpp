@@ -10,16 +10,17 @@
 
 namespace MeltPoolDG::Evaporation
 {
-  std::unique_ptr<EvaporationModelBase>
-  get_evaporation_model(const EvaporationData<double> &evapor_data,
-                        const MaterialData<double>    &material_data)
+  template <typename number>
+  std::unique_ptr<EvaporationModelBase<number>>
+  get_evaporation_model(const EvaporationData<number> &evapor_data,
+                        const MaterialData<number>    &material_data)
   {
-    std::unique_ptr<EvaporationModelBase> evapor_model;
+    std::unique_ptr<EvaporationModelBase<number>> evapor_model;
 
     switch (evapor_data.evaporative_mass_flux_model)
       {
           case EvaporationModelType::recoil_pressure: {
-            evapor_model = std::make_unique<EvaporationModelRecoilPressure>(
+            evapor_model = std::make_unique<EvaporationModelRecoilPressure<number>>(
               evapor_data.recoil,
               material_data.boiling_temperature,
               material_data.molar_mass,
@@ -27,7 +28,7 @@ namespace MeltPoolDG::Evaporation
             break;
           }
           case EvaporationModelType::saturated_vapor_pressure: {
-            evapor_model = std::make_unique<EvaporationModelSaturatedVaporPressure>(
+            evapor_model = std::make_unique<EvaporationModelSaturatedVaporPressure<number>>(
               evapor_data.recoil,
               material_data.boiling_temperature,
               material_data.molar_mass,
@@ -35,7 +36,7 @@ namespace MeltPoolDG::Evaporation
             break;
           }
           case EvaporationModelType::hardt_wondra: {
-            evapor_model = std::make_unique<EvaporationModelHardtWondra>(
+            evapor_model = std::make_unique<EvaporationModelHardtWondra<number>>(
               evapor_data.hardt_wondra.coefficient,
               material_data.latent_heat_of_evaporation,
               material_data.gas.density,
@@ -45,7 +46,7 @@ namespace MeltPoolDG::Evaporation
           }
           case EvaporationModelType::analytical: {
             evapor_model =
-              std::make_unique<EvaporationModelConstant>(evapor_data.analytical.function);
+              std::make_unique<EvaporationModelConstant<number>>(evapor_data.analytical.function);
             break;
           }
         default:
@@ -55,4 +56,8 @@ namespace MeltPoolDG::Evaporation
     return evapor_model;
   }
 
+
+
+  template std::unique_ptr<EvaporationModelBase<double>>
+  get_evaporation_model(const EvaporationData<double> &, const MaterialData<double> &);
 } // namespace MeltPoolDG::Evaporation

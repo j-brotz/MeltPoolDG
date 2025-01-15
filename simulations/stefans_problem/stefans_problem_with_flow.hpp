@@ -179,8 +179,8 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
                                                    generic_data_out.get_dof_handler("velocity"),
                                                    generic_data_out.get_vector("velocity"));
 
-          const auto m_dot =
-            Evaporation::EvaporationModelConstant(this->parameters.evapor.analytical.function);
+          const auto m_dot = Evaporation::EvaporationModelConstant<double>(
+            this->parameters.evapor.analytical.function);
 
           const auto analytical_velocity = [&](const double &ls) -> double {
             return m_dot.local_compute_evaporative_mass_flux(generic_data_out.get_time()) *

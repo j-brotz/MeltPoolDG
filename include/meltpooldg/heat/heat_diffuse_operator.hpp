@@ -184,10 +184,9 @@ namespace MeltPoolDG::Heat
                                   const bool              do_solidifiaction_in      = false);
 
     void
-    register_evaporative_mass_flux(
-      VectorType        *evaporative_mass_flux_in,
-      const unsigned int evapor_mass_flux_dof_idx_in,
-      const typename Evaporation::EvaporationData<number>::EvaporativeCooling &evapor_cooling_data);
+    register_evaporative_mass_flux(VectorType        *evaporative_mass_flux_in,
+                                   const unsigned int evapor_mass_flux_dof_idx_in,
+                                   const Evaporation::EvaporationData<number> &evapor_data);
 
     void
     register_surface_mesh(

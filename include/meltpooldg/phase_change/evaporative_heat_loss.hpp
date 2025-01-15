@@ -1,16 +1,18 @@
 #pragma once
 
-#include <deal.II/base/exceptions.h>
-
+#include <meltpooldg/phase_change/evaporation_data.hpp>
+#include <meltpooldg/phase_change/evaporation_model_recoil_pressure.hpp>
 #include <meltpooldg/utilities/material_data.hpp>
-#include <meltpooldg/utilities/numbers.hpp>
+
+#include <memory>
+
 
 namespace MeltPoolDG::Evaporation
 {
   /**
    * Compute the heat sink due to evaporation
    *             .
-   *    q_s =  - m · ( h_v + h(T))
+   *    q_s =  - m · (h_v + h(T))
    *
    * with the latent heat of evaporation h_v, the specific enthalpy
    *
@@ -59,41 +61,32 @@ namespace MeltPoolDG::Evaporation
   class EvaporativeHeatLoss
   {
   public:
-    EvaporativeHeatLoss(const bool                  do_phenomenological_recoil_pressure_in,
-                        const MaterialData<number> &material_data)
-      : do_phenomenological_recoil_pressure(do_phenomenological_recoil_pressure_in)
-      , latent_heat_of_evaporation(material_data.latent_heat_of_evaporation)
-      , specific_heat_capacity(material_data.liquid.specific_heat_capacity)
-      , specific_enthalpy_reference_temperature(
-          material_data.specific_enthalpy_reference_temperature)
-    {
-      if (do_phenomenological_recoil_pressure)
-        AssertThrow(!dealii::numbers::is_invalid(specific_enthalpy_reference_temperature),
-                    dealii::ExcMessage(
-                      "For the phenomenological recoil pressure model, the reference temperature "
-                      "for computing the specific enthalpy must be specified. Abort..."));
-    }
-
-
-    template <typename ValueType>
-    inline ValueType
-    compute_evaporative_heat_loss(const ValueType                  &mass_flux,
-                                  [[maybe_unused]] const ValueType &temperature)
-    {
-      ValueType specific_enthalpy(0.0);
-
-      if (do_phenomenological_recoil_pressure)
-        {
-          specific_enthalpy =
-            specific_heat_capacity * (temperature - specific_enthalpy_reference_temperature);
-        }
-
-      return mass_flux * (latent_heat_of_evaporation + specific_enthalpy);
-    }
+    EvaporativeHeatLoss(const EvaporationData<number> &evapor_data,
+                        const MaterialData<number>    &material_data,
+                        const bool                     setup_internal_mass_flux_operator = false);
 
 
     /**
-     * derivative of specific enthalpy h(T) with respect to the temperature:
+     * Compute the heat sink with given a constant @param mass_flux as:
+     */
+    template <typename ValueType>
+    inline ValueType
+    compute_evaporative_heat_loss(const ValueType                  &mass_flux,
+                                  [[maybe_unused]] const ValueType &temperature) const;
+
+
+    /**
+     * Compute the heat sink with the internal mass flux operator
+     */
+    template <typename ValueType>
+    inline ValueType
+    compute_evaporative_heat_loss(const ValueType &temperature) const;
+
+
+    /**
+     * Compute the heat sink derivative given a constant @param mass_flux .
+     *
+     * The derivative of specific enthalpy h(T) with respect to the temperature:
      *
      *  d h(T)
      * -------- = c_p^sl
@@ -107,19 +100,32 @@ namespace MeltPoolDG::Evaporation
      */
     template <typename ValueType>
     inline ValueType
-    compute_evaporative_heat_loss_derivative([[maybe_unused]] const ValueType &mass_flux,
-                                             [[maybe_unused]] const ValueType &temperature)
-    {
-      if (not do_phenomenological_recoil_pressure)
-        return 0.0;
+    compute_evaporative_heat_loss_derivative_constant_mass_flux(
+      [[maybe_unused]] const ValueType &mass_flux) const;
 
-      return mass_flux * temperature * specific_heat_capacity;
-    }
+
+    /**
+     * Compute the heat sink derivative with the internal mass flux operator
+     *
+     *                                            .
+     *  d q_s               .                   d m
+     * ------- = - c_p^sl * m - (h_v + h(T)) * -----
+     *    dT                                     dT
+     */
+    template <typename ValueType>
+    inline ValueType
+    compute_evaporative_heat_loss_derivative_with_temperature_dependent_mass_flux(
+      [[maybe_unused]] const ValueType &temperature) const;
 
   private:
-    const bool   do_phenomenological_recoil_pressure;
-    const number latent_heat_of_evaporation;
-    const number specific_heat_capacity;
-    const number specific_enthalpy_reference_temperature;
+    template <typename ValueType>
+    inline ValueType
+    compute_phenomenological_specific_enthalpy(const ValueType &temperature) const;
+
+    const bool                                              do_phenomenological_recoil_pressure;
+    const number                                            latent_heat_of_evaporation;
+    const number                                            specific_heat_capacity;
+    const number                                            specific_enthalpy_reference_temperature;
+    std::unique_ptr<EvaporationModelRecoilPressure<number>> mass_flux_operator;
   };
 } // namespace MeltPoolDG::Evaporation

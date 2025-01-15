@@ -7,7 +7,7 @@
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/heat/heat_diffuse_operator.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
-#include <meltpooldg/phase_change/evaporative_heat_loss.hpp>
+#include <meltpooldg/phase_change/evaporative_heat_loss.templates.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/material.hpp>
 #include <meltpooldg/utilities/material.templates.hpp>
@@ -100,14 +100,14 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatDiffuseMultiPhaseOperator<dim, number>::register_evaporative_mass_flux(
-    VectorType        *evaporative_mass_flux_in,
-    const unsigned int evapor_mass_flux_dof_idx_in,
-    const typename Evaporation::EvaporationData<number>::EvaporativeCooling &evapor_cooling_data)
+    VectorType                                 *evaporative_mass_flux_in,
+    const unsigned int                          evapor_mass_flux_dof_idx_in,
+    const Evaporation::EvaporationData<number> &evapor_data)
   {
     delta_phase_weighted = create_phase_weighted_delta_approximation(
-      evapor_cooling_data.delta_approximation_phase_weighted);
+      evapor_data.evaporative_cooling.delta_approximation_phase_weighted);
 
-    evapor_flux_type = evapor_cooling_data.model;
+    evapor_flux_type = evapor_data.evaporative_cooling.model;
     AssertThrow(surface_mesh_info ||
                   (evapor_flux_type != Evaporation::EvaporCoolingInterfaceFluxType::sharp),
                 ExcMessage("If you would like to use a sharp flux model, you first"
@@ -124,13 +124,10 @@ namespace MeltPoolDG::Heat
     evaporative_mass_flux    = evaporative_mass_flux_in;
     evapor_mass_flux_dof_idx = evapor_mass_flux_dof_idx_in;
 
-    const bool do_phenomenological_recoil_pressure =
-      evapor_cooling_data.consider_enthalpy_transport_vapor_mass_flux == "true";
-
     evaporative_heat_loss = std::make_unique<Evaporation::EvaporativeHeatLoss<number>>(
-      do_phenomenological_recoil_pressure, material.get_data());
+      evapor_data, material.get_data(), false /*setup_internal_mass_flux_operator*/);
 
-    if (do_phenomenological_recoil_pressure)
+    if (evapor_data.evaporative_cooling.consider_enthalpy_transport_vapor_mass_flux == "true")
       {
         const auto &material_data = material.get_data();
         AssertThrow(!do_solidification || (material_data.solid.specific_heat_capacity ==
@@ -515,7 +512,7 @@ namespace MeltPoolDG::Heat
                 const auto heat_sink = evaporative_heat_loss->compute_evaporative_heat_loss(
                   evapor_vals->get_value(q_index), temp_vals.get_value(q_index));
 
-                const auto temp = heat_sink * ls_vals_used.get_gradient(q_index).norm() * weight;
+                const auto temp = -heat_sink * ls_vals_used.get_gradient(q_index).norm() * weight;
 
                 // contribution to heat source for output purposes
                 q_vapor[cell * temp_vals.n_q_points + q_index] = -temp;
@@ -611,7 +608,7 @@ namespace MeltPoolDG::Heat
                     const double heat_sink = evaporative_heat_loss->compute_evaporative_heat_loss(
                       evapor_vals_surf.get_value(q), temp_vals_surf.get_value(q));
 
-                    temp_vals_surf.submit_value(-heat_sink * JxW[q],
+                    temp_vals_surf.submit_value(heat_sink * JxW[q],
                                                 q); // *(-1) for the residual
                   }
                 temp_vals_surf.test_and_sum(buffer,
@@ -681,7 +678,7 @@ namespace MeltPoolDG::Heat
                 const auto heat_sink =
                   evaporative_heat_loss->compute_evaporative_heat_loss(evapor_eval.get_value(q),
                                                                        temp_eval.get_value(q));
-                temp_eval.submit_value(-heat_sink,
+                temp_eval.submit_value(heat_sink,
                                        q); // *(-1) for the residual
               }
             temp_eval.integrate(EvaluationFlags::values);
@@ -1024,10 +1021,11 @@ namespace MeltPoolDG::Heat
               weight = delta_phase_weighted->compute_weight(ls_vals_used.get_value(q_index));
 
             const auto heat_sink_dertivative =
-              evaporative_heat_loss->compute_evaporative_heat_loss_derivative(
-                evapor_vals->get_value(q_index), temp_vals.get_value(q_index));
+              evaporative_heat_loss->compute_evaporative_heat_loss_derivative_constant_mass_flux(
+                evapor_vals->get_value(q_index));
 
-            val += heat_sink_dertivative * ls_vals_used.get_gradient(q_index).norm() * weight;
+            val += -heat_sink_dertivative * ls_vals_used.get_gradient(q_index).norm() * weight *
+                   temp_vals.get_value(q_index);
           }
 
         temp_vals.submit_value(val, q_index);
