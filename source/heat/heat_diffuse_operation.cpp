@@ -88,47 +88,49 @@ namespace MeltPoolDG::Heat
         heat_operator->create_rhs(rhs, solution_history.get_recent_old_solution());
       });
 
-    newton
-      .template set_function<typename NewtonRaphsonSolver<VectorType>::solve_with_jacobian_function_type>(
-        NonlinearSolverFunctions::solve_with_jacobian,
-        [&](const VectorType &rhs, VectorType &solution_update) -> int {
-          if (diag_preconditioner)
-            return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
-              *heat_operator,
-              solution_update,
-              rhs,
-              heat_data.linear_solver,
-              *diag_preconditioner,
-              "heat_operation");
-          else if (trilinos_preconditioner)
-            return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
-              *heat_operator,
-              solution_update,
-              rhs,
-              heat_data.linear_solver,
-              *trilinos_preconditioner,
-              "heat_operation");
-          else
-            AssertThrow(false, ExcNotImplemented());
-        });
-
-    newton.template set_function<typename NewtonRaphsonSolver<VectorType>::reinit_vector_function_type>(
-      NonlinearSolverFunctions::reinit_vector,
-      [&](VectorType &v) { scratch_data.initialize_dof_vector(v, temp_dof_idx); });
+    newton.template set_function<
+      typename NewtonRaphsonSolver<VectorType>::solve_with_jacobian_function_type>(
+      NonlinearSolverFunctions::solve_with_jacobian,
+      [&](const VectorType &rhs, VectorType &solution_update) -> int {
+        if (diag_preconditioner)
+          return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(*heat_operator,
+                                                                            solution_update,
+                                                                            rhs,
+                                                                            heat_data.linear_solver,
+                                                                            *diag_preconditioner,
+                                                                            "heat_operation");
+        else if (trilinos_preconditioner)
+          return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
+            *heat_operator,
+            solution_update,
+            rhs,
+            heat_data.linear_solver,
+            *trilinos_preconditioner,
+            "heat_operation");
+        else
+          AssertThrow(false, ExcNotImplemented());
+      });
 
     newton
-      .template set_function<typename NewtonRaphsonSolver<VectorType>::distribute_constraints_function_type>(
-        NonlinearSolverFunctions::distribute_constraints,
-        [&](VectorType &v) { scratch_data.get_constraint(temp_dof_idx).distribute(v); });
+      .template set_function<typename NewtonRaphsonSolver<VectorType>::reinit_vector_function_type>(
+        NonlinearSolverFunctions::reinit_vector,
+        [&](VectorType &v) { scratch_data.initialize_dof_vector(v, temp_dof_idx); });
 
-    newton
-      .template set_function<typename NewtonRaphsonSolver<VectorType>::norm_of_solution_vector_funtion_type>(
-        NonlinearSolverFunctions::norm_of_solution_vector, [this]() -> double {
-          return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
-                                                            scratch_data,
-                                                            temp_dof_idx,
-                                                            temp_quad_idx);
-        });
+    newton.template set_function<
+      typename NewtonRaphsonSolver<VectorType>::distribute_constraints_function_type>(
+      NonlinearSolverFunctions::distribute_constraints, [&](VectorType &) {
+        scratch_data.get_constraint(temp_dof_idx)
+          .distribute(solution_history.get_current_solution());
+      });
+
+    newton.template set_function<
+      typename NewtonRaphsonSolver<VectorType>::norm_of_solution_vector_function_type>(
+      NonlinearSolverFunctions::norm_of_solution_vector, [this]() -> double {
+        return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
+                                                          scratch_data,
+                                                          temp_dof_idx,
+                                                          temp_quad_idx);
+      });
     newton.reinit();
   }
 

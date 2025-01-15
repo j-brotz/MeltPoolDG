@@ -27,7 +27,7 @@ namespace MeltPoolDG
     typedef std::function<void(VectorType &v)> distribute_constraints_function_type;
 
     // TODO: remove and replace by standard l2_norm() (?)
-    typedef std::function<double()>                 norm_of_solution_vector_funtion_type;
+    typedef std::function<double()>                 norm_of_solution_vector_function_type;
     typedef std::function<void(const VectorType &)> setup_jacobian_function_type;
 
     explicit NewtonRaphsonSolver(const NonlinearSolverData<double> &nlsolve_data);
@@ -57,9 +57,6 @@ namespace MeltPoolDG
     }
 
   private:
-    void
-    solve_increment();
-
     double
     suggest_new_time_increment();
 
@@ -78,9 +75,6 @@ namespace MeltPoolDG
      */
     void
     set_nox_solver_parameters();
-
-    bool
-    is_converged();
 
 
     const NonlinearSolverData<double> nlsolve_data;

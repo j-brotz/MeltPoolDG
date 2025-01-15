@@ -9,8 +9,6 @@
 #include <any>
 #include <unordered_map>
 
-#include "newton_raphson_solver.hpp"
-
 enum NonlinearSolverFunctions
 {
   reinit_vector,

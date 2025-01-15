@@ -340,7 +340,7 @@ namespace MeltPoolDG::Heat
       [&](VectorType &v) { scratch_data.get_constraint(temp_dof_idx).distribute(v); });
 
     newton.template set_function<
-      typename NewtonRaphsonSolver<VectorType>::norm_of_solution_vector_funtion_type>(
+      typename NewtonRaphsonSolver<VectorType>::norm_of_solution_vector_function_type>(
       NonlinearSolverFunctions::norm_of_solution_vector, [this]() -> double {
         return heat_operator->compute_cut_L2_norm(solution_history.get_current_solution());
       });
