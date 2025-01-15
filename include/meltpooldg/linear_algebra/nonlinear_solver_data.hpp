@@ -17,7 +17,7 @@ namespace MeltPoolDG
     //! absolute tolerance of the residual
     number abs_residual_tolerance = 1e-9;
     //! relative tolerance of the residual
-    number rel_residual_tolerance         = 1e-5;
+    number rel_residual_tolerance         = 1e-20;
     //! alternative maximum number of nonlinear iterations
     int    max_nonlinear_iterations_alt   = 0;
     //!

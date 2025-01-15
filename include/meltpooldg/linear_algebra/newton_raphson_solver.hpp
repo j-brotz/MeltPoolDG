@@ -80,6 +80,9 @@ namespace MeltPoolDG
     void
     set_nox_solver_parameters();
 
+    bool
+    is_converged();
+
 
     const NonlinearSolverData<double> nlsolve_data;
 
@@ -99,6 +102,8 @@ namespace MeltPoolDG
     Teuchos::RCP<Teuchos::ParameterList>                                     nox_parameters;
     typename dealii::TrilinosWrappers::NOXSolver<VectorType>::AdditionalData nox_additional_data;
     dealii::TrilinosWrappers::NOXSolver<VectorType>                          nox_solver;
+
+    std::ostringstream str_;
   };
 
 } // namespace MeltPoolDG
