@@ -99,7 +99,7 @@ namespace MeltPoolDG::Heat
      * setup preconditioner for matrix-free computation
      */
     preconditioner_matrixfree = std::make_shared<
-      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
+      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>(
       scratch_data, temp_dof_idx, heat_data.linear_solver.preconditioner_type, *heat_operator);
 
     mesh_classifier = std::make_shared<dealii::NonMatching::MeshClassifier<dim>>(
@@ -301,23 +301,16 @@ namespace MeltPoolDG::Heat
     };
 
     newton.solve_with_jacobian = [&](const VectorType &rhs, VectorType &solution_update) -> int {
-      int iter;
-      if (diag_preconditioner)
-        iter = LinearSolver::solve<VectorType, OperatorBase<dim, double>>(*heat_operator,
-                                                                          solution_update,
-                                                                          rhs,
-                                                                          heat_data.linear_solver,
-                                                                          *diag_preconditioner,
-                                                                          "heat_operation");
-      else if (trilinos_preconditioner)
-        iter = LinearSolver::solve<VectorType, OperatorBase<dim, double>>(*heat_operator,
-                                                                          solution_update,
-                                                                          rhs,
-                                                                          heat_data.linear_solver,
-                                                                          *trilinos_preconditioner,
-                                                                          "heat_operation");
-      else
-        DEAL_II_NOT_IMPLEMENTED();
+      int iter = std::visit(
+        [&](auto &precond_ptr) -> int {
+          return LinearSolver::solve<VectorType>(*heat_operator,
+                                                 solution_update,
+                                                 rhs,
+                                                 heat_data.linear_solver,
+                                                 *precond_ptr,
+                                                 "heat_operation");
+        },
+        preconditioner_used);
 
       scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(solution_update);
       return iter;
@@ -372,23 +365,7 @@ namespace MeltPoolDG::Heat
       solution_history.get_recent_old_solution().update_ghost_values();
     heat_operator->update_ghost_values();
 
-    // setup preconditioner
-    switch (heat_data.linear_solver.preconditioner_type)
-      {
-          case PreconditionerType::Diagonal: {
-            diag_preconditioner = preconditioner_matrixfree->compute_diagonal_preconditioner();
-            break;
-          }
-        case PreconditionerType::Identity:
-        case PreconditionerType::AMG:
-          case PreconditionerType::ILU: {
-            trilinos_preconditioner = preconditioner_matrixfree->compute_trilinos_preconditioner();
-            break;
-          }
-          default: {
-            DEAL_II_NOT_IMPLEMENTED();
-          }
-      }
+    preconditioner_used = preconditioner_matrixfree->compute_preconditioner();
 
     try
       {

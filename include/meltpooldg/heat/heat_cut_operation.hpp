@@ -73,11 +73,12 @@ namespace MeltPoolDG::Heat
 
     std::unique_ptr<HeatCutOperator<dim, double>> heat_operator;
 
-    std::shared_ptr<Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
-                                                                preconditioner_matrixfree;
-    std::shared_ptr<dealii::DiagonalMatrix<VectorType>>         diag_preconditioner;
-    std::shared_ptr<dealii::TrilinosWrappers::PreconditionBase> trilinos_preconditioner;
+    std::shared_ptr<
+      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>
+      preconditioner_matrixfree;
 
+    Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>::
+      PreconditionerObjectType preconditioner_used;
 
   public:
     HeatCutOperation(const ScratchData<dim>                     &scratch_data_in,

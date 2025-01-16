@@ -101,7 +101,7 @@ namespace MeltPoolDG::LevelSet
     /*
      *  This pointer will point to your user-defined advection_diffusion operator.
      */
-    std::unique_ptr<OperatorBase<dim, double>> advec_diff_operator;
+    std::unique_ptr<AdvectionDiffusionOperator<dim, double>> advec_diff_operator;
 
     const TimeIterator<double>                       &time_iterator;
     const LinearAlgebra::distributed::Vector<double> &advection_velocity;
@@ -127,7 +127,8 @@ namespace MeltPoolDG::LevelSet
     /*
      * Preconditioner for the matrix-free advection diffusion operator
      */
-    std::shared_ptr<Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
+    std::shared_ptr<
+      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>
       preconditioner_matrixfree;
 
     VectorType rhs;

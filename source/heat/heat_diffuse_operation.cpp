@@ -68,7 +68,7 @@ namespace MeltPoolDG::Heat
      * setup preconditioner for matrix-free computation
      */
     heat_transfer_preconditioner = std::make_unique<
-      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
+      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>(
       scratch_data, temp_dof_idx, heat_data.linear_solver.preconditioner_type, *heat_operator);
 
     setup_newton();
@@ -81,26 +81,28 @@ namespace MeltPoolDG::Heat
     newton.residual = [&](const VectorType & /*evaluation_point*/, VectorType &rhs) {
       // solely homogeneous dirichlet bc are distributed for the
       // corrected temperature field in the newton solver
-      heat_operator->update_ghost_values();
+      heat_operator->pre();
       rhs.copy_locally_owned_data_from(user_rhs);
       heat_operator->create_rhs(rhs, solution_history.get_recent_old_solution());
     };
 
     newton.solve_with_jacobian = [&](const VectorType &rhs, VectorType &solution_update) -> int {
       if (diag_preconditioner)
-        return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(*heat_operator,
-                                                                          solution_update,
-                                                                          rhs,
-                                                                          heat_data.linear_solver,
-                                                                          *diag_preconditioner,
-                                                                          "heat_operation");
+        return LinearSolver::solve<VectorType, OperatorMatrixFree<dim, double>>(
+          *heat_operator,
+          solution_update,
+          rhs,
+          heat_data.linear_solver,
+          *diag_preconditioner,
+          "heat_operation");
       else if (trilinos_preconditioner)
-        return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(*heat_operator,
-                                                                          solution_update,
-                                                                          rhs,
-                                                                          heat_data.linear_solver,
-                                                                          *trilinos_preconditioner,
-                                                                          "heat_operation");
+        return LinearSolver::solve<VectorType, OperatorMatrixFree<dim, double>>(
+          *heat_operator,
+          solution_update,
+          rhs,
+          heat_data.linear_solver,
+          *trilinos_preconditioner,
+          "heat_operation");
       else
         AssertThrow(false, ExcNotImplemented());
     };
@@ -229,12 +231,12 @@ namespace MeltPoolDG::Heat
       {
         // solely homogeneous dirichlet bc are distributed for the
         // corrected temperature field in the newton solver
-        heat_operator->update_ghost_values();
+        heat_operator->pre();
         temp = user_rhs;
         heat_operator->create_rhs(
           temp, solution_history.get_current_solution() //= old_solution for current time step
         );
-        heat_operator->zero_out_ghost_values();
+        heat_operator->post();
       }
 
     predictor->vmult(*heat_operator, temperature_extrapolated, temp);
@@ -262,7 +264,7 @@ namespace MeltPoolDG::Heat
       AssertThrow(false, ExcNotImplemented());
 
     // setup preconditioner
-    heat_operator->update_ghost_values();
+    heat_operator->pre();
     switch (heat_data.linear_solver.preconditioner_type)
       {
           case PreconditionerType::Diagonal: {
@@ -298,7 +300,7 @@ namespace MeltPoolDG::Heat
   void
   HeatDiffuseOperation<dim>::finish_time_advance()
   {
-    heat_operator->zero_out_ghost_values();
+    heat_operator->post();
     solution_history.update_ghost_values();
     ready_for_time_advance = false;
   }

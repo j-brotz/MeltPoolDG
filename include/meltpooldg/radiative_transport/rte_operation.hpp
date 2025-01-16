@@ -98,7 +98,8 @@ namespace MeltPoolDG::RadiativeTransport
                         const bool         zero_out = true) const;
 
   private:
-    std::shared_ptr<Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
+    std::shared_ptr<
+      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>
                                                         preconditioner_matrixfree;
     std::shared_ptr<DiagonalMatrix<VectorType>>         diag_preconditioner_matrixfree;
     std::shared_ptr<TrilinosWrappers::PreconditionBase> trilinos_preconditioner_matrixfree;

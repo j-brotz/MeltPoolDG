@@ -49,7 +49,7 @@ namespace MeltPoolDG::RadiativeTransport
     rte_operator = std::make_unique<RadiativeTransportOperator<dim, double>>(
       scratch_data, rte_data, laser_direction, heaviside, rte_dof_idx, rte_quad_idx, hs_dof_idx);
     preconditioner_matrixfree = std::make_shared<
-      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
+      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>(
       scratch_data, rte_dof_idx, rte_data.linear_solver.preconditioner_type, *rte_operator);
 
     if (rte_data.predictor_type == RTEPredictorType::pseudo_time_stepping)

@@ -29,7 +29,7 @@ namespace MeltPoolDG::RadiativeTransport
    *                                  (1.- H + ϵ)           \          (1.- H + ϵ)       /
    *                      where ϵ is a small scalar constant to avoid a division by zero (avoid_div_zero_constant)
    *                      and <*> represent MacAulay brackets.
-   *              
+   *
    *  The RTE cast into a weak formulation (Φ is the test function) reads as follows:
    *  ( Φ , ∇ · (s I)  ) + ( Φ ,  µ_A I ) = 0
    *                    Ω                Ω
@@ -48,13 +48,12 @@ namespace MeltPoolDG::RadiativeTransport
    */
   // clang-format on
   template <int dim, typename number = double>
-  class RadiativeTransportOperator : public OperatorBase<dim, number>
+  class RadiativeTransportOperator : public OperatorMatrixFree<dim, number>
   {
     //@todo: to avoid compiler warnings regarding hidden overriden functions
-    using OperatorBase<dim, number>::vmult;
-    using OperatorBase<dim, number>::assemble_matrixbased;
-    using OperatorBase<dim, number>::create_rhs;
-    using OperatorBase<dim, number>::compute_inverse_diagonal_from_matrixfree;
+    using OperatorMatrixFree<dim, number>::vmult;
+    using OperatorMatrixFree<dim, number>::create_rhs;
+    using OperatorMatrixFree<dim, number>::compute_inverse_diagonal_from_matrixfree;
 
   private:
     using VectorType       = LinearAlgebra::distributed::Vector<number>;

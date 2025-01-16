@@ -111,9 +111,6 @@ namespace MeltPoolDG
       void
       create_operator();
 
-      void
-      update_operator();
-
     private:
       const ScratchData<dim>            &scratch_data;
       const ReinitializationData<double> reinit_data;
@@ -135,7 +132,7 @@ namespace MeltPoolDG
       /*
        *  This shared pointer will point to your user-defined reinitialization operator.
        */
-      std::unique_ptr<OperatorBase<dim, double>> reinit_operator;
+      std::unique_ptr<OlssonOperator<dim, double>> reinit_operator;
       /*
        *   Computation of the normal vectors
        */
@@ -153,7 +150,7 @@ namespace MeltPoolDG
        * Preconditioner for the matrix-free reinitialization operator
        */
       std::shared_ptr<
-        Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
+        Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>
         preconditioner_matrixfree;
       /*
        * Cache for diagonal preconditioner matrix-free

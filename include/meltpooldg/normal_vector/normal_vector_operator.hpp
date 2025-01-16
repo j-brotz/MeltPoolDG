@@ -23,13 +23,14 @@ namespace MeltPoolDG
   namespace LevelSet
   {
     template <int dim, typename number = double>
-    class NormalVectorOperator : public OperatorBase<dim, number>
+    class NormalVectorOperator : public OperatorMatrixFree<dim, number>,
+                                 public OperatorMatrixBased<dim, number>
     {
       //@todo: to avoid compiler warnings regarding hidden overriden functions
-      using OperatorBase<dim, number>::vmult;
-      using OperatorBase<dim, number>::assemble_matrixbased;
-      using OperatorBase<dim, number>::create_rhs;
-      using OperatorBase<dim, number>::compute_inverse_diagonal_from_matrixfree;
+      using OperatorMatrixBased<dim, number>::compute_system_matrix_and_rhs;
+      using OperatorMatrixFree<dim, number>::vmult;
+      using OperatorMatrixFree<dim, number>::create_rhs;
+      using OperatorMatrixFree<dim, number>::compute_inverse_diagonal_from_matrixfree;
 
     public:
       using VectorType          = LinearAlgebra::distributed::Vector<number>;
@@ -45,9 +46,8 @@ namespace MeltPoolDG
                            const VectorType               *solution_level_set_in = nullptr);
 
       void
-      assemble_matrixbased(const VectorType &level_set_in,
-                           SparseMatrixType &matrix,
-                           BlockVectorType  &rhs) const final;
+      compute_system_matrix_and_rhs(const VectorType &level_set_in,
+                                    BlockVectorType  &rhs) const final;
 
       /*
        *  matrix-free utility
@@ -71,16 +71,14 @@ namespace MeltPoolDG
                                      const BlockVectorType       &normal_vector_field_in,
                                      std::vector<Tensor<1, dim>> &unit_normal_at_quadrature,
                                      const double                 zero = 1e-16);
+      void
+      reinit() final;
 
     private:
       void
       tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &normal_vals,
                                    FECellIntegrator<dim, 1, number> &level_set_vals,
                                    const bool                        do_reinit_cells) const;
-
-    private:
-      void
-      reinit() final;
 
     private:
       const ScratchData<dim>         &scratch_data;

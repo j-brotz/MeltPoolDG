@@ -54,12 +54,11 @@ namespace MeltPoolDG::RadiativeTransport
 
 
   template <int dim, typename number = double>
-  class PseudoRTEOperator : public OperatorBase<dim, number>
+  class PseudoRTEOperator : public OperatorMatrixFree<dim, number>
   {
-    using OperatorBase<dim, number>::vmult;
-    using OperatorBase<dim, number>::assemble_matrixbased;
-    using OperatorBase<dim, number>::create_rhs;
-    using OperatorBase<dim, number>::compute_inverse_diagonal_from_matrixfree;
+    using OperatorMatrixFree<dim, number>::vmult;
+    using OperatorMatrixFree<dim, number>::create_rhs;
+    using OperatorMatrixFree<dim, number>::compute_inverse_diagonal_from_matrixfree;
 
   private:
     using VectorType       = LinearAlgebra::distributed::Vector<number>;

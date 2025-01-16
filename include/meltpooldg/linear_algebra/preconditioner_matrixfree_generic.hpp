@@ -16,6 +16,7 @@
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_base.hpp>
 
 #include <memory>
+#include <variant>
 
 namespace MeltPoolDG::Preconditioner
 {
@@ -55,28 +56,81 @@ namespace MeltPoolDG::Preconditioner
     TrilinosWrappers::SparseMatrix preconditioner_system_matrix;
 
   public:
+    /**
+     * @brief Type alias representing a variant type for different preconditioner objects.
+     *
+     * This variant type can hold either a shared pointer to a Trilinos-based preconditioner
+     * or a diagonal matrix-based preconditioner.
+     */
+    using PreconditionerObjectType =
+      std::variant<std::shared_ptr<TrilinosWrappers::PreconditionBase>,
+                   std::shared_ptr<DiagonalMatrix<VectorType>>>;
+
+    /**
+     * @brief Constructs a preconditioner with matrix-free settings and specified parameters.
+     *
+     * @param scratch_data_in Reference to the ScratchData object for matrix-free operations.
+     * @param dof_idx_in Index of the current DoF layout.
+     * @param preconditioner_type_in The type of preconditioner to use (e.g., Diagonal, ILU, AMG).
+     * @param operator_base_in Reference to the operator providing necessary functionality.
+     */
     PreconditionerMatrixFreeGeneric(const ScratchData<dim>   &scratch_data_in,
-                                    const unsigned int        curv_dof_idx_in,
+                                    const unsigned int        dof_idx_in,
                                     const PreconditionerType &preconditioner_type_in,
                                     const OperatorType       &operator_base_in);
 
-    /*
-     * setup sparsity pattern of the preconditioner_system_matrix if needed
+    /**
+     * @brief Sets up the sparsity pattern of the preconditioner system matrix if required.
      */
     void
     reinit() override;
 
-    /*
-     * Wrapper to Trilinos preconditioner; supported types: Identity/ILU/AMG
+    /**
+     * @brief Creates a Trilinos-based preconditioner.
+     *
+     * Supported types include Identity, ILU, and AMG. This function serves as a wrapper
+     * for Trilinos preconditioner creation.
+     *
+     * @return A shared pointer to a TrilinosWrappers::PreconditionBase object.
      */
+
     std::shared_ptr<TrilinosWrappers::PreconditionBase>
     compute_trilinos_preconditioner() override;
 
-    /*
-     * compute a diagonal preconditioner
+    /**
+     * @brief Computes a diagonal preconditioner.
+     *
+     * Constructs a diagonal preconditioner useful for matrix-free solver contexts.
+     *
+     * @return A shared pointer to a DiagonalMatrix<VectorType> object.
      */
     std::shared_ptr<DiagonalMatrix<VectorType>>
     compute_diagonal_preconditioner() override;
+
+    /**
+     * @brief Computes and returns the selected preconditioner.
+     *
+     * This method chooses and constructs the appropriate preconditioner based on
+     * internal configuration. It returns a variant type encapsulating either a
+     * Trilinos-based or diagonal preconditioner.
+     *
+     * @return A PreconditionerObjectType containing the selected preconditioner.
+     *
+     * @note use std::visit() to pass the PreconditionerObjectType to a function e.g.
+     * via
+     * std::visit(
+     *   [&](auto &precond_ptr) -> int {
+     *     return LinearSolver::solve<VectorType>(*operator,
+     *                                            solution,
+     *                                            rhs,
+     *                                            data.linear_solver,
+     *                                            *precond_ptr,
+     *                                            "operation");
+     *   },
+     * preconditioner_used);
+     */
+    PreconditionerObjectType
+    compute_preconditioner();
 
     /*
      * compute a diagonal preconditioner for a block vector

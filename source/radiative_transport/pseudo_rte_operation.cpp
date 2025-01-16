@@ -38,7 +38,7 @@ namespace MeltPoolDG::RadiativeTransport
                                                                            rte_quad_idx,
                                                                            hs_dof_idx);
     preconditioner_matrixfree = std::make_shared<
-      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
+      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>(
       scratch_data,
       rte_dof_idx,
       rte_data.pseudo_time_stepping.linear_solver.preconditioner_type,

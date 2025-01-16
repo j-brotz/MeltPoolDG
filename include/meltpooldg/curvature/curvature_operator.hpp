@@ -27,13 +27,14 @@ namespace MeltPoolDG::LevelSet
    *
    */
   template <int dim, typename number = double>
-  class CurvatureOperator : public OperatorBase<dim, number>
+  class CurvatureOperator : public OperatorMatrixFree<dim, number>,
+                            public OperatorMatrixBased<dim, number>
   {
     //@todo: to avoid compiler warnings regarding hidden overriden functions
-    using OperatorBase<dim, number>::vmult;
-    using OperatorBase<dim, number>::assemble_matrixbased;
-    using OperatorBase<dim, number>::create_rhs;
-    using OperatorBase<dim, number>::compute_inverse_diagonal_from_matrixfree;
+    using OperatorMatrixBased<dim, number>::compute_system_matrix_and_rhs;
+    using OperatorMatrixFree<dim, number>::vmult;
+    using OperatorMatrixFree<dim, number>::create_rhs;
+    using OperatorMatrixFree<dim, number>::compute_inverse_diagonal_from_matrixfree;
 
   private:
     using VectorType          = LinearAlgebra::distributed::Vector<number>;
@@ -69,9 +70,8 @@ namespace MeltPoolDG::LevelSet
                       const VectorType            *solution_level_set_in = nullptr);
 
     void
-    assemble_matrixbased(const BlockVectorType &solution_normal_vector_in,
-                         SparseMatrixType      &matrix,
-                         VectorType            &rhs) const final;
+    compute_system_matrix_and_rhs(const BlockVectorType &solution_normal_vector_in,
+                                  VectorType            &rhs) const final;
 
     /*
      *  matrix-free utility

@@ -40,10 +40,9 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  AdvectionDiffusionOperator<dim, number>::assemble_matrixbased(
-    const VectorType                             &advected_field_old,
-    AdvectionDiffusionOperator::SparseMatrixType &matrix,
-    VectorType                                   &rhs) const
+  AdvectionDiffusionOperator<dim, number>::compute_system_matrix_and_rhs(
+    const VectorType &advected_field_old,
+    VectorType       &rhs) const
   {
     AssertThrowZeroTimeIncrement(this->time_increment);
 
@@ -80,8 +79,8 @@ namespace MeltPoolDG::LevelSet
 
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
-    rhs    = 0.0;
-    matrix = 0.0;
+    rhs                 = 0.0;
+    this->system_matrix = 0.0;
 
     std::vector<Tensor<1, dim>> a(n_q_points, Tensor<1, dim>());
 
@@ -116,8 +115,8 @@ namespace MeltPoolDG::LevelSet
                 ( advec_diff_values.shape_value( i, q_index)
                   *
                   advec_diff_values.shape_value( j, q_index)
-                  * 
-                  this->time_increment_inv 
+                  *
+                  this->time_increment_inv
                   +
                   theta * ( data.diffusivity *
                                           advec_diff_values.shape_grad( i, q_index) *
@@ -131,7 +130,7 @@ namespace MeltPoolDG::LevelSet
 
                     // clang-format off
             cell_rhs( i ) +=
-              (  advec_diff_values.shape_value( i, q_index) * phi_at_q[q_index] * this->time_increment_inv 
+              (  advec_diff_values.shape_value( i, q_index) * phi_at_q[q_index] * this->time_increment_inv
                  -
                  ( 1. - theta ) *
                  (
@@ -148,12 +147,13 @@ namespace MeltPoolDG::LevelSet
             cell->get_dof_indices(local_dof_indices);
 
             scratch_data.get_constraint(this->dof_idx)
-              .distribute_local_to_global(cell_matrix, cell_rhs, local_dof_indices, matrix, rhs);
+              .distribute_local_to_global(
+                cell_matrix, cell_rhs, local_dof_indices, this->system_matrix, rhs);
           }
         ++vel_cell;
       }
 
-    matrix.compress(VectorOperation::add);
+    this->system_matrix.compress(VectorOperation::add);
     rhs.compress(VectorOperation::add);
 
     if (vel_update_ghosts)
@@ -167,13 +167,15 @@ namespace MeltPoolDG::LevelSet
   void
   AdvectionDiffusionOperator<dim, number>::reinit()
   {
+    if (!data.linear_solver.do_matrix_free)
+      this->reinit_sparsity_pattern(scratch_data);
     if (data.conv_stab.type == ConvectionStabilizationType::SUPG)
       stab_param.resize_fast(scratch_data.get_matrix_free().n_cell_batches());
   }
 
   template <int dim, typename number>
   void
-  AdvectionDiffusionOperator<dim, number>::prepare()
+  AdvectionDiffusionOperator<dim, number>::pre()
   {
     do_update_stab_param = true;
   }
