@@ -274,6 +274,9 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
                this->parameters.heat.convection.convection_coefficient > 0.0)
         this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(1000),
                                        "heat_transfer");
+      else if (this->parameters.evapor.evaporative_cooling.enable)
+        this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(1960.0, 2040.0),
+                                       "heat_transfer");
       else
         this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(), "heat_transfer");
 

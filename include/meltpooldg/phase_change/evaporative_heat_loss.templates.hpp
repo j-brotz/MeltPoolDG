@@ -18,6 +18,7 @@ namespace MeltPoolDG::Evaporation
     , latent_heat_of_evaporation(material_data.latent_heat_of_evaporation)
     , specific_heat_capacity(material_data.liquid.specific_heat_capacity)
     , specific_enthalpy_reference_temperature(material_data.specific_enthalpy_reference_temperature)
+    , boiling_temperature(material_data.boiling_temperature)
   {
     if (do_phenomenological_recoil_pressure)
       AssertThrow(!dealii::numbers::is_invalid(specific_enthalpy_reference_temperature),
@@ -36,6 +37,20 @@ namespace MeltPoolDG::Evaporation
           material_data.boiling_temperature,
           material_data.molar_mass,
           material_data.latent_heat_of_evaporation);
+
+        if (dealii::numbers::is_invalid(evapor_data.evaporative_cooling.activation_temperature))
+          {
+            // Set the activation temperature so that the transition from the linear activation ramp
+            // is kink-free.
+            activation_temperature =
+              material_data.boiling_temperature -
+              compute_evaporative_heat_loss(material_data.boiling_temperature) /
+                compute_evaporative_heat_loss_derivative_with_temperature_dependent_mass_flux(
+                  material_data.boiling_temperature);
+          }
+        activation_ramp_derivative =
+          compute_evaporative_heat_loss(material_data.boiling_temperature) /
+          (material_data.boiling_temperature - activation_temperature);
       }
   }
 
@@ -56,16 +71,37 @@ namespace MeltPoolDG::Evaporation
 
 
   template <typename number>
-  template <typename ValueType>
-  inline ValueType
-  EvaporativeHeatLoss<number>::compute_evaporative_heat_loss(const ValueType &temperature) const
+  inline number
+  EvaporativeHeatLoss<number>::compute_evaporative_heat_loss(const number temperature) const
   {
     Assert(mass_flux_operator,
            dealii::ExcMessage("To use this function, the class must be constructed with "
                               "setup_internal_mass_flux_operator = true."));
 
-    return compute_evaporative_heat_loss(
-      mass_flux_operator->local_compute_evaporative_mass_flux(temperature), temperature);
+    if (temperature < activation_temperature)
+      return 0.0;
+    else if (temperature >= boiling_temperature)
+      return compute_evaporative_heat_loss(
+        mass_flux_operator->local_compute_evaporative_mass_flux(temperature), temperature);
+    else
+      // linear activation ramp
+      return activation_ramp_derivative * (temperature - activation_temperature);
+  }
+
+
+  template <typename number>
+  VectorizedArray<number>
+  EvaporativeHeatLoss<number>::compute_evaporative_heat_loss(
+    const VectorizedArray<number> &temperature) const
+  {
+    Assert(mass_flux_operator,
+           dealii::ExcMessage("To use this function, the class must be constructed with "
+                              "setup_internal_mass_flux_operator = true."));
+
+    VectorizedArray<number> rv;
+    for (unsigned int i = 0; i < ::VectorizedArray<number>::size(); ++i)
+      rv[i] = compute_evaporative_heat_loss(temperature[i]);
+    return rv;
   }
 
 
@@ -83,27 +119,50 @@ namespace MeltPoolDG::Evaporation
 
 
   template <typename number>
-  template <typename ValueType>
-  inline ValueType
+  inline number
   EvaporativeHeatLoss<number>::
     compute_evaporative_heat_loss_derivative_with_temperature_dependent_mass_flux(
-      [[maybe_unused]] const ValueType &temperature) const
+      const number temperature) const
   {
     Assert(mass_flux_operator,
            dealii::ExcMessage("To use this function, the class must be constructed with "
                               "setup_internal_mass_flux_operator = true."));
 
-    const auto mass_flux_derivative =
-      mass_flux_operator->local_compute_evaporative_mass_flux_derivative(temperature);
-
-    if (do_phenomenological_recoil_pressure)
-      return -specific_heat_capacity *
-               mass_flux_operator->local_compute_evaporative_mass_flux(temperature) -
-             (latent_heat_of_evaporation +
-              compute_phenomenological_specific_enthalpy(temperature)) *
-               mass_flux_derivative;
+    if (temperature < activation_temperature)
+      return 0.0;
+    else if (temperature >= boiling_temperature)
+      {
+        const auto mass_flux_derivative =
+          mass_flux_operator->local_compute_evaporative_mass_flux_derivative(temperature);
+        if (do_phenomenological_recoil_pressure)
+          return -specific_heat_capacity *
+                   mass_flux_operator->local_compute_evaporative_mass_flux(temperature) -
+                 (latent_heat_of_evaporation +
+                  compute_phenomenological_specific_enthalpy(temperature)) *
+                   mass_flux_derivative;
+        else
+          return -specific_heat_capacity * mass_flux_derivative;
+      }
     else
-      return -specific_heat_capacity * mass_flux_derivative;
+      return activation_ramp_derivative;
+  }
+
+
+  template <typename number>
+  VectorizedArray<number>
+  EvaporativeHeatLoss<number>::
+    compute_evaporative_heat_loss_derivative_with_temperature_dependent_mass_flux(
+      const VectorizedArray<number> &temperature) const
+  {
+    Assert(mass_flux_operator,
+           dealii::ExcMessage("To use this function, the class must be constructed with "
+                              "setup_internal_mass_flux_operator = true."));
+
+    VectorizedArray<number> rv;
+    for (unsigned int i = 0; i < ::VectorizedArray<number>::size(); ++i)
+      rv[i] = compute_evaporative_heat_loss_derivative_with_temperature_dependent_mass_flux(
+        temperature[i]);
+    return rv;
   }
 
 

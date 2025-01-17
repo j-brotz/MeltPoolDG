@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deal.II/base/vectorization.h>
+
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/phase_change/evaporation_model_recoil_pressure.hpp>
 #include <meltpooldg/utilities/material_data.hpp>
@@ -78,9 +80,11 @@ namespace MeltPoolDG::Evaporation
     /**
      * Compute the heat sink with the internal mass flux operator
      */
-    template <typename ValueType>
-    inline ValueType
-    compute_evaporative_heat_loss(const ValueType &temperature) const;
+    inline number
+    compute_evaporative_heat_loss(const number temperature) const;
+
+    inline dealii::VectorizedArray<number>
+    compute_evaporative_heat_loss(const dealii::VectorizedArray<number> &temperature) const;
 
 
     /**
@@ -112,10 +116,13 @@ namespace MeltPoolDG::Evaporation
      * ------- = - c_p^sl * m - (h_v + h(T)) * -----
      *    dT                                     dT
      */
-    template <typename ValueType>
-    inline ValueType
+    inline number
     compute_evaporative_heat_loss_derivative_with_temperature_dependent_mass_flux(
-      [[maybe_unused]] const ValueType &temperature) const;
+      const number temperature) const;
+
+    inline dealii::VectorizedArray<number>
+    compute_evaporative_heat_loss_derivative_with_temperature_dependent_mass_flux(
+      const dealii::VectorizedArray<number> &temperature) const;
 
   private:
     template <typename ValueType>
@@ -126,6 +133,9 @@ namespace MeltPoolDG::Evaporation
     const number                                            latent_heat_of_evaporation;
     const number                                            specific_heat_capacity;
     const number                                            specific_enthalpy_reference_temperature;
+    const number                                            boiling_temperature;
+    number                                                  activation_temperature;
+    number                                                  activation_ramp_derivative;
     std::unique_ptr<EvaporationModelRecoilPressure<number>> mass_flux_operator;
   };
 } // namespace MeltPoolDG::Evaporation

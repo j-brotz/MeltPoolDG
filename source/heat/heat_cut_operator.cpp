@@ -1,23 +1,26 @@
 #include <meltpooldg/heat/heat_cut_operator.hpp>
 //
 
+#include <deal.II/base/array_view.h>
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/utilities.h>
-
-#include <deal.II/fe/fe_update_flags.h>
 
 #include <deal.II/matrix_free/fe_evaluation_data.h>
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 #include <deal.II/matrix_free/tools.h>
 
 #include <meltpooldg/core/exceptions.hpp>
+#include <meltpooldg/core/finite_element_data.hpp>
+#include <meltpooldg/phase_change/evaporative_heat_loss.templates.hpp>
 #include <meltpooldg/utilities/cut_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
+#include <algorithm>
 #include <functional>
+
 
 namespace MeltPoolDG::Heat
 {
@@ -60,7 +63,7 @@ namespace MeltPoolDG::Heat
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal_vector)
     {
       Assert(std::abs(laser_direction.norm() - 1.0) < 1e-8,
-             ExcMessage("The laser direction must be a unit vector"));
+             dealii::ExcMessage("The laser direction must be a unit vector"));
       // Assert(std::abs(normal_vector.norm() - 1.0) < 1e-8,
       //        ExcMessage("The laser direction must be a unit vector"));
 
@@ -81,24 +84,6 @@ namespace MeltPoolDG::Heat
       return internal::evaluate_function<dim, number>(*laser_intensity_profile,
                                                       temp_eval.real_point(q)) *
              internal::compute_projection_factor(laser_direction, -temp_eval.normal_vector(q));
-    }
-
-    template <typename number>
-    dealii::VectorizedArray<number>
-    compute_qVapor(const dealii::VectorizedArray<number> &T)
-    {
-      DEAL_II_NOT_IMPLEMENTED();
-      (void)T;
-      return dealii::VectorizedArray<number>(0.0);
-    }
-
-    template <typename number>
-    dealii::VectorizedArray<number>
-    compute_qVapor_derivative(const dealii::VectorizedArray<number> &T)
-    {
-      DEAL_II_NOT_IMPLEMENTED();
-      (void)T;
-      return dealii::VectorizedArray<number>(0.0);
     }
 
     template <typename Evaluation>
@@ -132,7 +117,6 @@ namespace MeltPoolDG::Heat
     : scratch_data(scratch_data_in)
     , heat_data(heat_data_in)
     , material_data(material_data_in)
-    , evapor_data(evapor_data_in)
     , temp_dof_idx(temp_dof_idx_in)
     , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
     , temp_quad_idx(temp_quad_idx_in)
@@ -162,6 +146,21 @@ namespace MeltPoolDG::Heat
     AssertThrow(heat_data.fe.degree == 1, dealii::ExcMessage("only degree 1 is supported for now"));
 
     // TODO material assertion, see heat diffuse operator
+
+    if (evapor_data_in.evaporative_cooling.enable)
+      {
+        evapor_heat_loss = std::make_unique<Evaporation::EvaporativeHeatLoss<number>>(
+          evapor_data_in, material_data, true /*setup_internal_mass_flux_operator*/);
+
+        if (evapor_data_in.evaporative_cooling.consider_enthalpy_transport_vapor_mass_flux ==
+            "true")
+          AssertThrow(!do_solidification || (material_data.solid.specific_heat_capacity ==
+                                             material_data.liquid.specific_heat_capacity),
+                      dealii::ExcMessage(
+                        "The equation for specific enthalpy for evaporative heat sink "
+                        "assumes equality between the solid and liquid "
+                        "phase heat capacity! Abort..."));
+      }
   }
 
 
@@ -263,6 +262,21 @@ namespace MeltPoolDG::Heat
         gradients);
   }
 
+  template <int dim, typename number>
+  dealii::VectorizedArray<number>
+  HeatCutOperator<dim, number>::compute_qVapor(const dealii::VectorizedArray<number> &T) const
+  {
+    return evapor_heat_loss->compute_evaporative_heat_loss(T);
+  }
+
+  template <int dim, typename number>
+  dealii::VectorizedArray<number>
+  HeatCutOperator<dim, number>::compute_qVapor_derivative(
+    const dealii::VectorizedArray<number> &T) const
+  {
+    return evapor_heat_loss
+      ->compute_evaporative_heat_loss_derivative_with_temperature_dependent_mass_flux(T);
+  }
 
 
   /*****************************************************************************
@@ -663,7 +677,7 @@ namespace MeltPoolDG::Heat
           {
             eval_l.reinit(cell_index);
             eval_l.read_dof_values(src);
-            if (evapor_data.evaporative_cooling.enable)
+            if (evapor_heat_loss)
               {
                 T_eval_l.reinit(cell_index);
                 T_eval_l.read_dof_values(temperature);
@@ -686,7 +700,7 @@ namespace MeltPoolDG::Heat
                   cell_index,
                   lane,
                   n_dofs_per_cell);
-                if (evapor_data.evaporative_cooling.enable)
+                if (evapor_heat_loss)
                   {
                     // evaluate for immersed boundary integral
                     CutUtil::evaluate_intersected_domain<dim, number>(eval_surface_l,
@@ -729,7 +743,7 @@ namespace MeltPoolDG::Heat
                                                             n_dofs_per_cell),
                   dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients);
 
-                if (evapor_data.evaporative_cooling.enable)
+                if (evapor_heat_loss)
                   {
                     // do immersed boundary integral
                     for (const unsigned int q : eval_surface_l.quadrature_point_indices())
@@ -737,7 +751,7 @@ namespace MeltPoolDG::Heat
                         eval_surface_l,
                         T_eval_surface_l,
                         [&](const dealii::VectorizedArray<number> &T) {
-                          return internal::compute_qVapor_derivative(T);
+                          return compute_qVapor_derivative(T);
                         },
                         ost_factor_implicit,
                         q);
@@ -789,7 +803,7 @@ namespace MeltPoolDG::Heat
             eval_g.reinit(cell_index);
             eval_l.read_dof_values(src);
             eval_g.read_dof_values(src);
-            if (evapor_data.evaporative_cooling.enable)
+            if (evapor_heat_loss)
               {
                 T_eval_l.reinit(cell_index);
                 T_eval_g.reinit(cell_index);
@@ -836,7 +850,7 @@ namespace MeltPoolDG::Heat
                                                                   cell_index,
                                                                   lane,
                                                                   n_dofs_per_cell);
-                if (evapor_data.evaporative_cooling.enable)
+                if (evapor_heat_loss)
                   {
                     // evaluate T^n+1_l for interface integral
                     CutUtil::evaluate_intersected_domain<dim, number>(
@@ -915,7 +929,7 @@ namespace MeltPoolDG::Heat
                     T_eval_surface_l,
                     T_eval_surface_g,
                     [&](const dealii::VectorizedArray<number> &T) {
-                      return internal::compute_qVapor_derivative(T);
+                      return compute_qVapor_derivative(T);
                     },
                     material_data.liquid.thermal_conductivity,
                     material_data.gas.thermal_conductivity,
@@ -923,7 +937,7 @@ namespace MeltPoolDG::Heat
                     nitsche_factor,
                     kappa_l,
                     kappa_g,
-                    evapor_data.evaporative_cooling.enable,
+                    evapor_heat_loss != nullptr,
                     q);
 
                 eval_surface_l.integrate(
@@ -1213,8 +1227,7 @@ namespace MeltPoolDG::Heat
                 CutUtil::evaluate_intersected_domain<dim, number>(
                   Tnew_eval_surface_l,
                   Tnew_eval_l,
-                  evapor_data.evaporative_cooling.enable ? evaluation_flags_surface :
-                                                           dealii::EvaluationFlags::nothing,
+                  evapor_heat_loss ? evaluation_flags_surface : dealii::EvaluationFlags::nothing,
                   cell_index,
                   lane,
                   n_dofs_per_cell);
@@ -1226,7 +1239,7 @@ namespace MeltPoolDG::Heat
                   cell_index,
                   lane,
                   n_dofs_per_cell);
-                if (evapor_data.evaporative_cooling.enable)
+                if (evapor_heat_loss)
                   // evaluate T^n for immersed boundary integral
                   CutUtil::evaluate_intersected_domain<dim, number>(Told_eval_surface_l,
                                                                     Told_eval_l,
@@ -1270,15 +1283,13 @@ namespace MeltPoolDG::Heat
                   do_immersed_boundary_integral_residual(
                     Tnew_eval_surface_l,
                     Told_eval_surface_l,
-                    [&](const dealii::VectorizedArray<number> &T) {
-                      return internal::compute_qVapor(T);
-                    },
+                    [&](const dealii::VectorizedArray<number> &T) { return compute_qVapor(T); },
                     ost_factor_implicit,
                     ost_factor_explicit,
                     internal::compute_laser_heat_source(
                       laser_intensity_profile.get(), laser_direction, Tnew_eval_surface_l, q) *
                       this->time_increment,
-                    evapor_data.evaporative_cooling.enable,
+                    evapor_heat_loss != nullptr,
                     q);
 
                 Tnew_eval_surface_l.integrate(
@@ -1473,9 +1484,7 @@ namespace MeltPoolDG::Heat
                     Tnew_eval_surface_g,
                     Told_eval_surface_l,
                     Told_eval_surface_g,
-                    [&](const dealii::VectorizedArray<number> &T) {
-                      return internal::compute_qVapor(T);
-                    },
+                    [&](const dealii::VectorizedArray<number> &T) { return compute_qVapor(T); },
                     material_data.liquid.thermal_conductivity,
                     material_data.gas.thermal_conductivity,
                     ost_factor_implicit,
@@ -1486,7 +1495,7 @@ namespace MeltPoolDG::Heat
                       this->time_increment,
                     kappa_l,
                     kappa_g,
-                    evapor_data.evaporative_cooling.enable,
+                    evapor_heat_loss != nullptr,
                     heat_data.cut.do_explicit_symmetry_term,
                     q);
 
@@ -1832,7 +1841,7 @@ namespace MeltPoolDG::Heat
               vel_eval_intersected =
                 std::make_unique<PointEval<dim, number, dim>>(*mapping_info_cells[0], fe_point_vel);
 
-            if (evapor_data.evaporative_cooling.enable and cell_index != old_cell_index)
+            if (evapor_heat_loss and cell_index != old_cell_index)
               {
                 T_eval_l.reinit(cell_index);
                 T_eval_l.read_dof_values(temperature);
@@ -1850,7 +1859,7 @@ namespace MeltPoolDG::Heat
                   cell_index,
                   lane,
                   n_dofs_per_cell);
-                if (evapor_data.evaporative_cooling.enable)
+                if (evapor_heat_loss)
                   {
                     // evaluate for inside surface integral
                     CutUtil::evaluate_intersected_domain<dim, number>(eval_surface_l,
@@ -1893,7 +1902,7 @@ namespace MeltPoolDG::Heat
                                                             n_dofs_per_cell),
                   dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients);
 
-                if (evapor_data.evaporative_cooling.enable)
+                if (evapor_heat_loss)
                   {
                     // do immersed boundary integral
                     for (const unsigned int q : eval_surface_l.quadrature_point_indices())
@@ -1901,7 +1910,7 @@ namespace MeltPoolDG::Heat
                         eval_surface_l,
                         T_eval_surface_l,
                         [&](const dealii::VectorizedArray<number> &T) {
-                          return internal::compute_qVapor_derivative(T);
+                          return compute_qVapor_derivative(T);
                         },
                         ost_factor_implicit,
                         q);
@@ -1930,7 +1939,7 @@ namespace MeltPoolDG::Heat
                                                                 fe_point_vel);
               }
 
-            if (evapor_data.evaporative_cooling.enable and cell_index != old_cell_index)
+            if (evapor_heat_loss and cell_index != old_cell_index)
               {
                 T_eval_l.reinit(cell_index);
                 T_eval_g.reinit(cell_index);
@@ -1972,7 +1981,7 @@ namespace MeltPoolDG::Heat
                                                                   cell_index,
                                                                   lane,
                                                                   n_dofs_per_cell);
-                if (evapor_data.evaporative_cooling.enable)
+                if (evapor_heat_loss)
                   {
                     // evaluate T^n+1_l for inside surface integral
                     CutUtil::evaluate_intersected_domain<dim, number>(T_eval_surface_l,
@@ -2049,7 +2058,7 @@ namespace MeltPoolDG::Heat
                     T_eval_surface_l,
                     T_eval_surface_g,
                     [&](const dealii::VectorizedArray<number> &T) {
-                      return internal::compute_qVapor_derivative(T);
+                      return compute_qVapor_derivative(T);
                     },
                     material_data.liquid.thermal_conductivity,
                     material_data.gas.thermal_conductivity,
@@ -2057,7 +2066,7 @@ namespace MeltPoolDG::Heat
                     nitsche_factor,
                     kappa_l,
                     kappa_g,
-                    evapor_data.evaporative_cooling.enable,
+                    evapor_heat_loss != nullptr,
                     q);
 
                 eval_surface_l.integrate(

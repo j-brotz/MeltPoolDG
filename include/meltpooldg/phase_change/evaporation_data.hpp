@@ -6,8 +6,10 @@
 #include <meltpooldg/phase_change/recoil_pressure_data.hpp>
 #include <meltpooldg/reinitialization/reinitialization_data.hpp>
 #include <meltpooldg/utilities/enum.hpp>
+#include <meltpooldg/utilities/numbers.hpp>
 
 #include <string>
+
 
 namespace MeltPoolDG::Evaporation
 {
@@ -91,12 +93,14 @@ namespace MeltPoolDG::Evaporation
 
     struct EvaporativeCooling
     {
-      bool                           enable          = false;
-      EvaporCoolingInterfaceFluxType model           = EvaporCoolingInterfaceFluxType::regularized;
-      number specific_enthalpy_reference_temperature = numbers::invalid_double;
-      // We consider the type "int" instead of bool to detect whether the
-      // parameter is explicitly set by the user or not.
+      bool enable = false;
+
       std::string consider_enthalpy_transport_vapor_mass_flux = "default";
+
+      number activation_temperature = dealii::numbers::invalid_double;
+
+      // only for the diffuse operator
+      EvaporCoolingInterfaceFluxType model = EvaporCoolingInterfaceFluxType::regularized;
       LevelSet::DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
 
     } evaporative_cooling;
