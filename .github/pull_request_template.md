@@ -11,11 +11,9 @@
      How did you ensure that the solution works? -->
 
 # Screenshots (if appropriate):
+<!-- Do you have an visual results from simulations that relate to this PR? -->
 
-# Documentation
-<!-- Does this fix, modify or introduce new simulation parameters? If so, describe them. -->
-
-# Checklist (will be removed when merged)
+# Checklist (should be removed by the person who merges this PR)
 
 - [ ] The branch is rebased onto master
 - [ ] Code is formatted with format-all
