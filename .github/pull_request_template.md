@@ -10,7 +10,7 @@
      Do you introduce new test? Which features do you intend to test?
      How did you ensure that the solution works? -->
 
-# Screenshots (if appropriate):
+# Screenshots (if appropriate)
 <!-- Do you have an visual results from simulations that relate to this PR? -->
 
 # Checklist (should be removed by the person who merges this PR)
