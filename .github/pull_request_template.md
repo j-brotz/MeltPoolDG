@@ -22,5 +22,4 @@
 - [ ] If this PR closes an issue or is related to a project, it is linked in the "Description" section
 - [ ] All in-code documentation related to this PR is up to date (Doxygen format)
 - [ ] Commit has unit test(s) (preferred) or application test(s)
-- [ ] Changelog (CHANGELOG.md) is up to date
 - [ ] If the fix is temporary, an issue is opened where this PR is referenced
