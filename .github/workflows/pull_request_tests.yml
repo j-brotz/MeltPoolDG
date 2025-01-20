@@ -4,8 +4,6 @@ on:
   pull_request:
     branches: [ master ]
     types: [ opened, synchronize, reopened, labeled ]
-  schedule:
-  - cron:  '0 0 * * *'
     
 concurrency:
   group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
@@ -25,13 +23,8 @@ jobs:
       fail-fast: false
       matrix:
         build_type: ["Release"]
-#        build_type: ["Release", "Debug"]
         dealii_version: ["master"]
-#        adaflo: ["adaflo=on", "adaflo=off"]
         adaflo: ["adaflo=on"]
-        exclude:
-          - build_type: "Release"
-            adaflo: "adaflo=off"
     
     container:
       image: dealii/dealii:${{ matrix.dealii_version }}-jammy
