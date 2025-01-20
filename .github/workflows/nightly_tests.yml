@@ -1,4 +1,4 @@
-name: GitHub CI
+name: Nightly test of GitHub CI
 
 on:
   schedule:
