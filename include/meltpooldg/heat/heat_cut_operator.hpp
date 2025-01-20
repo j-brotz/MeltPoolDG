@@ -19,7 +19,7 @@
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
-#include <meltpooldg/phase_change/evaporative_heat_loss.hpp>
+#include <meltpooldg/phase_change/evaporative_cooling.hpp>
 #include <meltpooldg/utilities/material_data.hpp>
 
 #include <memory>
@@ -79,8 +79,8 @@ namespace MeltPoolDG::Heat
 
     // TODO boundary conditions, radiation etc.
 
-    // optional: evaporative heat loss
-    std::unique_ptr<Evaporation::EvaporativeHeatLoss<number>> evapor_heat_loss;
+    // optional: evaporative heat cooling
+    std::unique_ptr<Evaporation::EvaporativeCooling<number>> evapor_cooling;
 
     // optional: laser intensity and direction
     std::shared_ptr<const dealii::Function<dim, number>> laser_intensity_profile;

@@ -12,7 +12,7 @@
 namespace MeltPoolDG::Evaporation
 {
   /**
-   * Compute the heat sink due to evaporation
+   * Compute the heat sink due to evaporative cooling
    *             .
    *    q_s =  - m · (h_v + h(T))
    *
@@ -60,12 +60,12 @@ namespace MeltPoolDG::Evaporation
    *       h_ref as an input parameter.
    */
   template <typename number>
-  class EvaporativeHeatLoss
+  class EvaporativeCooling
   {
   public:
-    EvaporativeHeatLoss(const EvaporationData<number> &evapor_data,
-                        const MaterialData<number>    &material_data,
-                        const bool                     setup_internal_mass_flux_operator = false);
+    EvaporativeCooling(const EvaporationData<number> &evapor_data,
+                       const MaterialData<number>    &material_data,
+                       const bool                     setup_internal_mass_flux_operator = false);
 
 
     /**
@@ -73,18 +73,18 @@ namespace MeltPoolDG::Evaporation
      */
     template <typename ValueType>
     inline ValueType
-    compute_evaporative_heat_loss(const ValueType                  &mass_flux,
-                                  [[maybe_unused]] const ValueType &temperature) const;
+    compute_evaporative_cooling(const ValueType                  &mass_flux,
+                                [[maybe_unused]] const ValueType &temperature) const;
 
 
     /**
      * Compute the heat sink with the internal mass flux operator
      */
     inline number
-    compute_evaporative_heat_loss(const number temperature) const;
+    compute_evaporative_cooling(const number temperature) const;
 
     inline dealii::VectorizedArray<number>
-    compute_evaporative_heat_loss(const dealii::VectorizedArray<number> &temperature) const;
+    compute_evaporative_cooling(const dealii::VectorizedArray<number> &temperature) const;
 
 
     /**
@@ -104,7 +104,7 @@ namespace MeltPoolDG::Evaporation
      */
     template <typename ValueType>
     inline ValueType
-    compute_evaporative_heat_loss_derivative_constant_mass_flux(
+    compute_evaporative_cooling_derivative_constant_mass_flux(
       [[maybe_unused]] const ValueType &mass_flux) const;
 
 
@@ -117,11 +117,11 @@ namespace MeltPoolDG::Evaporation
      *    dT                                     dT
      */
     inline number
-    compute_evaporative_heat_loss_derivative_with_temperature_dependent_mass_flux(
+    compute_evaporative_cooling_derivative_with_temperature_dependent_mass_flux(
       const number temperature) const;
 
     inline dealii::VectorizedArray<number>
-    compute_evaporative_heat_loss_derivative_with_temperature_dependent_mass_flux(
+    compute_evaporative_cooling_derivative_with_temperature_dependent_mass_flux(
       const dealii::VectorizedArray<number> &temperature) const;
 
   private:

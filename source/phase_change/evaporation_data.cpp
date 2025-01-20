@@ -90,7 +90,7 @@ namespace MeltPoolDG::Evaporation
           "activation temperature",
           evaporative_cooling.activation_temperature,
           "Activation temperature for the evaporative cooling. It must be smaller than or equal to the "
-          "boiling temperature. By default, it will be chosen such that the transition rom the linear "
+          "boiling temperature. By default, it will be chosen such that the transition from the linear "
           "activation ramp is kink-free.");
         prm.add_parameter("model",
                           evaporative_cooling.model,

@@ -7,7 +7,7 @@
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/heat/heat_diffuse_operator.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
-#include <meltpooldg/phase_change/evaporative_heat_loss.templates.hpp>
+#include <meltpooldg/phase_change/evaporative_cooling.templates.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/material.hpp>
 #include <meltpooldg/utilities/material.templates.hpp>
@@ -124,7 +124,7 @@ namespace MeltPoolDG::Heat
     evaporative_mass_flux    = evaporative_mass_flux_in;
     evapor_mass_flux_dof_idx = evapor_mass_flux_dof_idx_in;
 
-    evaporative_heat_loss = std::make_unique<Evaporation::EvaporativeHeatLoss<number>>(
+    evaporative_cooling = std::make_unique<Evaporation::EvaporativeCooling<number>>(
       evapor_data, material.get_data(), false /*setup_internal_mass_flux_operator*/);
 
     if (evapor_data.evaporative_cooling.consider_enthalpy_transport_vapor_mass_flux == "true")
@@ -132,7 +132,7 @@ namespace MeltPoolDG::Heat
         const auto &material_data = material.get_data();
         AssertThrow(!do_solidification || (material_data.solid.specific_heat_capacity ==
                                            material_data.liquid.specific_heat_capacity),
-                    ExcMessage("The equation for specific enthalpy for evaporative heat sink "
+                    ExcMessage("The equation for specific enthalpy for evaporative cooling "
                                "assumes equality between the solid and liquid "
                                "phase heat capacity! Abort..."));
       }
@@ -509,10 +509,11 @@ namespace MeltPoolDG::Heat
                 if (delta_phase_weighted)
                   weight = delta_phase_weighted->compute_weight(ls_vals_used.get_value(q_index));
 
-                const auto heat_sink = evaporative_heat_loss->compute_evaporative_heat_loss(
-                  evapor_vals->get_value(q_index), temp_vals.get_value(q_index));
+                const auto cooling =
+                  evaporative_cooling->compute_evaporative_cooling(evapor_vals->get_value(q_index),
+                                                                   temp_vals.get_value(q_index));
 
-                const auto temp = -heat_sink * ls_vals_used.get_gradient(q_index).norm() * weight;
+                const auto temp = -cooling * ls_vals_used.get_gradient(q_index).norm() * weight;
 
                 // contribution to heat source for output purposes
                 q_vapor[cell * temp_vals.n_q_points + q_index] = -temp;
@@ -533,7 +534,7 @@ namespace MeltPoolDG::Heat
   void
   HeatDiffuseMultiPhaseOperator<dim, number>::rhs_cut_cell_loop(VectorType &dst) const
   {
-    // evaluate the evaporative heat loss term as surface integral
+    // evaluate the evaporative cooling term as surface integral
     if (evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp)
       {
         Assert(evaporative_mass_flux,
@@ -605,10 +606,10 @@ namespace MeltPoolDG::Heat
 
                 for (unsigned int q = 0; q < n_points; ++q)
                   {
-                    const double heat_sink = evaporative_heat_loss->compute_evaporative_heat_loss(
+                    const double cooling = evaporative_cooling->compute_evaporative_cooling(
                       evapor_vals_surf.get_value(q), temp_vals_surf.get_value(q));
 
-                    temp_vals_surf.submit_value(heat_sink * JxW[q],
+                    temp_vals_surf.submit_value(cooling * JxW[q],
                                                 q); // *(-1) for the residual
                   }
                 temp_vals_surf.test_and_sum(buffer,
@@ -650,7 +651,7 @@ namespace MeltPoolDG::Heat
         for (unsigned int face = face_range.first; face < face_range.second; ++face)
           {
             temp_eval.reinit(face);
-            if (evaporative_heat_loss)
+            if (evaporative_cooling)
               temp_eval.gather_evaluate(temperature, EvaluationFlags::values);
 
             evapor_eval.reinit(face);
@@ -675,10 +676,10 @@ namespace MeltPoolDG::Heat
             // loop over quadrature points
             for (unsigned int q = 0; q < temp_eval.n_q_points; ++q)
               {
-                const auto heat_sink =
-                  evaporative_heat_loss->compute_evaporative_heat_loss(evapor_eval.get_value(q),
-                                                                       temp_eval.get_value(q));
-                temp_eval.submit_value(heat_sink,
+                const auto cooling =
+                  evaporative_cooling->compute_evaporative_cooling(evapor_eval.get_value(q),
+                                                                   temp_eval.get_value(q));
+                temp_eval.submit_value(cooling,
                                        q); // *(-1) for the residual
               }
             temp_eval.integrate(EvaluationFlags::values);
@@ -1020,11 +1021,11 @@ namespace MeltPoolDG::Heat
             if (delta_phase_weighted)
               weight = delta_phase_weighted->compute_weight(ls_vals_used.get_value(q_index));
 
-            const auto heat_sink_dertivative =
-              evaporative_heat_loss->compute_evaporative_heat_loss_derivative_constant_mass_flux(
+            const auto cooling_dertivative =
+              evaporative_cooling->compute_evaporative_cooling_derivative_constant_mass_flux(
                 evapor_vals->get_value(q_index));
 
-            val += -heat_sink_dertivative * ls_vals_used.get_gradient(q_index).norm() * weight *
+            val += -cooling_dertivative * ls_vals_used.get_gradient(q_index).norm() * weight *
                    temp_vals.get_value(q_index);
           }
 
@@ -1033,7 +1034,7 @@ namespace MeltPoolDG::Heat
       }
     temp_vals.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
 
-    // evaluate the evaporative heat loss term as surface integral
+    // evaluate the evaporative cooling term as surface integral
     if (evaporative_mass_flux && surface_mesh_info)
       {
         // TODO

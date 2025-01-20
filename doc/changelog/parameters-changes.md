@@ -1136,7 +1136,7 @@ in the level set equation
 
 ## 2022-09-14
 - Add parameter to distinguish between sharp (surface integral) and diffuse
-  (volume integral) of the evaporative heat loss term at the vapor surface
+  (volume integral) of the evaporative cooling term at the vapor surface
 ```json
 {
   "evaporation": {
@@ -1147,7 +1147,7 @@ in the level set equation
 
 ## 2022-09-14
 - Add parameter to distinguish between sharp (surface integral) and diffuse
-  (volume integral) of the evaporative heat loss term at the vapor surface
+  (volume integral) of the evaporative cooling term at the vapor surface
 ```json
 {
   "evaporation": {

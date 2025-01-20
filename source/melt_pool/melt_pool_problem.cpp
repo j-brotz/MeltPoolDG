@@ -1049,7 +1049,7 @@ namespace MeltPoolDG::MeltPool
 #endif
 
         /*
-         * register evaporative mass flux to compute the heat sink
+         * register evaporative mass flux to compute the evaporative cooling
          */
         if (base_in->parameters.evapor.evaporative_cooling.enable)
           {
