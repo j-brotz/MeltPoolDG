@@ -1,4 +1,4 @@
-name: GitHub CI
+name: Pull request run of GitHub CI
 
 on:
   pull_request:
