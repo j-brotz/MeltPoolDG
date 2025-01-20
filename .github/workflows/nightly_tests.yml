@@ -1,0 +1,81 @@
+name: GitHub CI
+
+on:
+  schedule:
+  - cron:  '0 0 * * *'
+    
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+    
+env:
+  COMPILE_JOBS: 4
+  PROJECT_NAME: MeltPoolDG-dev
+
+jobs:
+  build:
+    if: ${{ github.event_name == 'schedule' || contains(github.event.pull_request.labels.*.name, 'ready to test') }}
+    name: Build ${{ matrix.build_type }}-dealii:${{ matrix.dealii_version }}-${{ matrix.adaflo }}
+    runs-on: self-hosted
+
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: ["Release", "Debug"]
+        dealii_version: ["master"]
+        adaflo: ["adaflo=on", "adaflo=off"]
+        exclude:
+          - build_type: "Debug"
+            adaflo: "adaflo=off"
+    
+    container:
+      image: dealii/dealii:${{ matrix.dealii_version }}-jammy
+      options: --user root
+
+    steps:          
+      - uses: actions/checkout@v4
+
+      - name: Compile adaflo
+        if: matrix.adaflo == 'adaflo=on'
+        run: |
+          git clone https://github.com/MeltPoolDG/adaflo.git
+          mkdir adaflo-build
+          cd adaflo-build
+          cmake \
+            -D CMAKE_CXX_STANDARD=20 \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            ../adaflo
+          make -j${{ env.COMPILE_JOBS }} adaflo
+
+      - name: Compile MeltPoolDG
+        run: |
+          mkdir build
+          cd build
+          cmake \
+            -D CMAKE_CXX_STANDARD=20 \
+            -D CMAKE_CXX_FLAGS="-Werror" \
+            -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -D ADAFLO_LIB=/__w/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/adaflo-build/ \
+            -D ADAFLO_INCLUDE=/__w/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/adaflo/include/ \
+            .. 
+          make -j${{ env.COMPILE_JOBS }}
+          
+      - name: Test
+        if: matrix.adaflo == 'adaflo=on'
+        run: |
+          export OMPI_ALLOW_RUN_AS_ROOT=1
+          export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+          cd build
+          ctest -j${{ env.COMPILE_JOBS }} --output-on-failure -E 'tests_not_robust/'
+          
+      - name: Failed test log
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-log
+          path: |
+            build/tests/**/*output*
+            build/tests/**/*stdout*
+            build/unit_tests/**/*output*
+            build/unit_tests/**/*stdout*
