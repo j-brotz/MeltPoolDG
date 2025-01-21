@@ -42,7 +42,7 @@ namespace MeltPoolDG
     : public TimeIntegratorBase<number, PDEOperator>
   {
   public:
-    using VectorType = LinearAlgebra::distributed::Vector<number>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
     /**
      * Constructor. Set the coefficients for the low storage explicit Runge-Kutta scheme.
@@ -51,7 +51,7 @@ namespace MeltPoolDG
      * @param timer Timer used for computation time tracking.
      */
     LowStorageExplicitRungeKuttaIntegrator(const TimeIntegratorData &time_integrator_data,
-                                           TimerOutput              &timer)
+                                           dealii::TimerOutput      &timer)
       : TimeIntegratorBase<number, PDEOperator>(time_integrator_data)
       , timer(timer)
     {
@@ -195,7 +195,10 @@ namespace MeltPoolDG
       const std::function<void(number, VectorType &, const VectorType &)> &stage_post_processing)
       override
     {
-      AssertDimension(ai.size() + 1, bi.size());
+      Assert(solution_history.size() < required_solution_history_size(),
+             dealii::ExcMessage(
+               "The size of the solution history object does not fit the requirements of the "
+               "chosen time integration scheme."));
       TimerOutput::Scope timer_section(timer, "Explicit Runge-Kutta time integration");
       rk_register_ri = 0.;
       if (stage_pre_processing)

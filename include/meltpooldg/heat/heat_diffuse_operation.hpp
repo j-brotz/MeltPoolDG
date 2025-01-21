@@ -84,7 +84,7 @@ namespace MeltPoolDG::Heat
     const unsigned int ls_dof_idx;
     const VectorType  *level_set_as_heaviside;
 
-    NewtonRaphsonSolver<dim> newton;
+    NewtonRaphsonSolver<VectorType> newton;
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 

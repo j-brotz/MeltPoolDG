@@ -161,7 +161,8 @@
             "max nonlinear iterations": "10",
             "max nonlinear iterations alt": "0",
             "residual tolerance": "1e-09",
-            "residual tolerance alt": "1e-08"
+            "residual tolerance alt": "1e-08",
+            "verbosity level": "-1"
         },
         "predictor":
         {
@@ -247,7 +248,27 @@
             },
             "time integration":
             {
-                "type": "crank_nicolson"
+                "type": "crank_nicolson",
+                "linear solver":
+                {
+                    "abs tolerance": "1e-20",
+                    "do matrix free": "true",
+                    "max iterations": "10000",
+                    "monitor type": "none",
+                    "preconditioner type": "Identity",
+                    "rel tolerance": "1e-12",
+                    "solver type": "GMRES"
+                },
+                "nlsolve":
+                {
+                    "field correction tolerance": "1e-10",
+                    "field correction tolerance alt": "1e-09",
+                    "max nonlinear iterations": "10",
+                    "max nonlinear iterations alt": "0",
+                    "residual tolerance": "1e-09",
+                    "residual tolerance alt": "1e-08",
+                    "verbosity level": "-1"
+                }
             }
         },
         "curvature":

@@ -3,6 +3,7 @@
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
+#include <meltpooldg/linear_algebra/nonlinear_solver_data.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 
@@ -20,7 +21,12 @@ namespace MeltPoolDG
               implicit_euler,
               explicit_euler,
               crank_nicolson,
-              bdf_2)
+              bdf_1,
+              bdf_2,
+              bdf_3,
+              bdf_4,
+              bdf_5,
+              bdf_6)
 
   /**
    * Collection of all integrator parameters.
@@ -45,12 +51,17 @@ namespace MeltPoolDG
 
     TimeIntegratorSchemes integrator_type = TimeIntegratorSchemes::not_initialized;
 
+    NonlinearSolverData<double> nlsolver_data;
+    LinearSolverData<double>    linear_solver_data;
+
     void
     add_parameters(dealii::ParameterHandler &prm)
     {
       prm.enter_subsection("time integration");
       {
         prm.add_parameter("type", integrator_type, "Name of the time integration scheme.");
+        nlsolver_data.add_parameters(prm);
+        linear_solver_data.add_parameters(prm);
       }
       prm.leave_subsection();
     }

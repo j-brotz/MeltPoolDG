@@ -20,6 +20,7 @@ namespace MeltPoolDG::Flow
    *
    * @param array_penalty_parameter Array in which the values of the penalty parameter are stored.
    * @param matrix_free Matrix-free object providing the required geometrical data.
+   * @param domain_representation_type Numerical operator type (cut or fitted_mesh).
    * @param dof_index Index of the relevant dof handler in the matrix-free object.
    * @param scaling_factor Additional scaling factor to scale the penalty parameter.
    */
@@ -27,6 +28,7 @@ namespace MeltPoolDG::Flow
   void
   calculate_penalty_parameter(AlignedVector<VectorizedArray<Number>> &array_penalty_parameter,
                               const MatrixFree<dim, Number>          &matrix_free,
+                              const std::string                      &domain_representation_type,
                               const unsigned int                      dof_index      = 0,
                               const double                            scaling_factor = 1.0)
   {
@@ -54,36 +56,57 @@ namespace MeltPoolDG::Flow
                                                                                             1);
     FEFaceValues<dim> fe_face_values(mapping, fe, face_quadrature, update_JxW_values);
 
-    for (unsigned int i = 0; i < n_cells; ++i)
+    if (domain_representation_type == "fitted")
       {
-        for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(i); ++v)
+        for (unsigned int i = 0; i < n_cells; ++i)
           {
-            typename DoFHandler<dim>::cell_iterator cell =
-              matrix_free.get_cell_iterator(i, v, dof_index);
-            fe_values.reinit(cell);
-
-            // calculate cell volume
-            Number volume = 0;
-            for (unsigned int q = 0; q < quadrature.size(); ++q)
+            for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(i); ++v)
               {
-                volume += fe_values.JxW(q);
-              }
+                typename DoFHandler<dim>::cell_iterator cell =
+                  matrix_free.get_cell_iterator(i, v, dof_index);
+                fe_values.reinit(cell);
 
-            // calculate surface area
-            Number surface_area = 0;
-            for (unsigned int const f : cell->face_indices())
-              {
-                fe_face_values.reinit(cell, f);
-                Number const factor =
-                  (cell->at_boundary(f) and not(cell->has_periodic_neighbor(f))) ? 1. : 0.5;
-                for (unsigned int q = 0; q < face_quadrature.size(); ++q)
+                // calculate cell volume
+                Number volume = 0;
+                for (unsigned int q = 0; q < quadrature.size(); ++q)
                   {
-                    surface_area += fe_face_values.JxW(q) * factor;
+                    volume += fe_values.JxW(q);
                   }
-              }
 
-            array_penalty_parameter[i][v] = surface_area / volume * fac;
+                // calculate surface area
+                Number surface_area = 0;
+                for (unsigned int const f : cell->face_indices())
+                  {
+                    fe_face_values.reinit(cell, f);
+                    Number const factor =
+                      (cell->at_boundary(f) and not(cell->has_periodic_neighbor(f))) ? 1. : 0.5;
+                    for (unsigned int q = 0; q < face_quadrature.size(); ++q)
+                      {
+                        surface_area += fe_face_values.JxW(q) * factor;
+                      }
+                  }
+
+                array_penalty_parameter[i][v] = surface_area / volume * fac;
+              }
           }
       }
+    else if (domain_representation_type == "cut")
+      {
+        for (unsigned int i = 0; i < n_cells; ++i)
+          {
+            for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(i); ++v)
+              {
+                typename DoFHandler<dim>::cell_iterator cell =
+                  matrix_free.get_cell_iterator(i, v, dof_index);
+
+                // simplified computation for hypercube elements
+                array_penalty_parameter[i][v] = fac / cell->minimum_vertex_distance();
+              }
+          }
+      }
+    else
+      AssertThrow(false,
+                  dealii::ExcMessage("The domain representation type '" +
+                                     domain_representation_type + "' is not supported."));
   }
 } // namespace MeltPoolDG::Flow

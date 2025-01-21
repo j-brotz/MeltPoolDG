@@ -32,6 +32,9 @@ namespace MeltPoolDG
         "residual tolerance alt",
         residual_tolerance_alt,
         "Set the alternative tolerance for the maximum allowed residual of the nonlinear system.");
+      prm.add_parameter("verbosity level",
+                        verbosity_level,
+                        "Set to one for detailed solver output.");
     }
     prm.leave_subsection();
   }

@@ -112,6 +112,18 @@ namespace TimeIntegration
       return solutions[0];
     }
 
+    /**
+     * Return a reference to the old solution with the number i. Thereby the current solution has
+     * the number zero and the number is increasing with the age of the solution.
+     *
+     * @param i Number of the old solution.
+     */
+    VectorType &
+    get_solution(unsigned int i)
+    {
+      return solutions[i];
+    }
+
     const std::vector<std::shared_ptr<VectorType>> &
     get_old_solutions() const
     {

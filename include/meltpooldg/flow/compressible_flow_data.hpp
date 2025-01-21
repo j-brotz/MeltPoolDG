@@ -28,7 +28,7 @@ namespace MeltPoolDG::Flow
     double dynamic_viscosity = 1.0 / 1600; // set to zero to deactivate viscous effects
 
     // specific gas constant (SI: J/(kg K))
-    double specific_gas_constant = 287;
+    double specific_gas_constant = 287.;
 
     // thermal conductivity (SI: W/(m K))
     double thermal_conductivity =
@@ -58,6 +58,21 @@ namespace MeltPoolDG::Flow
 
     // gravity constant used in the body force computation
     double gravity_constant = 0.0;
+
+    // operator type. The options are "fitted" and "cut"
+    std::string domain_representation_type = "fitted";
+
+    struct Cut
+    {
+      bool two_phase = false;
+
+      struct GhostPenalty
+      {
+        double gamma_degree_0 = 1.0;
+        double gamma_degree_1 = 0.1;
+        double gamma_degree_2 = 0.01;
+      } ghost_penalty;
+    } cut;
 
     void
     add_parameters(dealii::ParameterHandler &prm)
@@ -98,6 +113,29 @@ namespace MeltPoolDG::Flow
           "If set to true, the CFL time step size criteria is used to determine the time step"
           " size in each iteration.");
         prm.add_parameter("gravity constant", gravity_constant, "Gravity constant.");
+        prm.add_parameter("domain representation type",
+                          domain_representation_type,
+                          "Domain representation type. Choose between 'fitted' and 'cut'.");
+
+        prm.enter_subsection("cut");
+        {
+          prm.add_parameter("two phase", cut.two_phase, "Is two-phase case?");
+
+          prm.enter_subsection("ghost-penalty");
+          {
+            prm.add_parameter("gamma degree 0",
+                              cut.ghost_penalty.gamma_degree_0,
+                              "Ghost-penalty parameter for degree 0.");
+            prm.add_parameter("gamma degree 1",
+                              cut.ghost_penalty.gamma_degree_1,
+                              "Ghost-penalty parameter for degree 1.");
+            prm.add_parameter("gamma degree 2",
+                              cut.ghost_penalty.gamma_degree_2,
+                              "Ghost-penalty parameter for degree 2.");
+          }
+          prm.leave_subsection();
+        }
+        prm.leave_subsection();
       }
       prm.leave_subsection();
     }

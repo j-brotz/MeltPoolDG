@@ -8,6 +8,7 @@
 
 #include <meltpooldg/flow/compressible_flow_operation.hpp>
 #include <meltpooldg/flow/compressible_flow_operator_explicit.hpp>
+#include <meltpooldg/flow/compressible_flow_operator_implicit.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -34,24 +35,17 @@ namespace MeltPoolDG::Flow
     , comp_flow_dof_idx(comp_flow_dof_idx_in)
     , comp_flow_quad_idx(comp_flow_quad_idx_in)
   {
-    time_integrator =
-      std::unique_ptr<TimeIntegratorBase<number, CompressibleFlowOperatorExplicit<dim, number>>>(
-        explicit_time_integrator_factory<number, CompressibleFlowOperatorExplicit<dim, number>>(
-          comp_flow_data_.time_integrator, scratch_data_.get_timer()));
-
-    solution_history_.resize(time_integrator->required_solution_history_size());
-
-    comp_flow_operator_ = std::make_unique<CompressibleFlowOperatorExplicit<dim, number>>(
-      comp_flow_data_, scratch_data_in, comp_flow_dof_idx, comp_flow_quad_idx);
+    setup_operator_and_time_integrator();
   }
 
   template <int dim, typename number>
   void
   CompressibleFlowOperation<dim, number>::reinit()
   {
-    scratch_data_.initialize_dof_vector(solution_history_.get_current_solution(),
-                                        comp_flow_dof_idx);
-    time_integrator->reinit(solution_history_);
+    solution_history_.apply(
+      [&scratch_data = scratch_data_, comp_flow_dof_idx = comp_flow_dof_idx](VectorType &v) {
+        scratch_data.initialize_dof_vector(v, comp_flow_dof_idx);
+      });
     comp_flow_operator_->reinit();
   }
 
@@ -59,13 +53,15 @@ namespace MeltPoolDG::Flow
   void
   CompressibleFlowOperation<dim, number>::solve(double current_time, double time_step)
   {
+    solution_history_.commit_old_solutions();
     std::function<void(number, VectorType &, const VectorType &)> pre_processing =
       [&](number time, VectorType &, const VectorType &) -> void {
       comp_flow_operator_->update_boundary_conditions(time);
     };
 
-    time_integrator->perform_time_step(
-      *comp_flow_operator_, current_time, time_step, solution_history_, pre_processing);
+    solution_history_.update_ghost_values();
+
+    comp_flow_operator_->advance_time_step(current_time, time_step, pre_processing);
   }
 
   template <int dim, typename number>
@@ -192,10 +188,10 @@ namespace MeltPoolDG::Flow
           {
             const auto conserved_variables = phi.get_value(q);
             const auto velocity =
-              CompressibleFlowOperatorBase<dim, number>::calculate_velocity(conserved_variables);
+              CompressibleFlowCalculators<dim, number>::calculate_velocity(conserved_variables);
             const auto pressure =
-              CompressibleFlowOperatorBase<dim, number>::calculate_pressure(conserved_variables,
-                                                                            comp_flow_data_.gamma);
+              CompressibleFlowCalculators<dim, number>::calculate_pressure(conserved_variables,
+                                                                           comp_flow_data_.gamma);
 
             const auto              inverse_jacobian = phi.inverse_jacobian(q);
             const auto              convective_speed = inverse_jacobian * velocity;
@@ -296,6 +292,29 @@ namespace MeltPoolDG::Flow
 
     // TODO: Output primitive variables
   }
+
+  template <int dim, typename number>
+  void
+  CompressibleFlowOperation<dim, number>::setup_operator_and_time_integrator()
+  {
+    if (time_integrator_scheme_is_explicit(comp_flow_data_.time_integrator.integrator_type))
+      {
+        comp_flow_operator_ = std::make_unique<CompressibleFlowOperatorExplicit<dim, number>>(
+          comp_flow_data_, scratch_data_, solution_history_, comp_flow_dof_idx, comp_flow_quad_idx);
+      }
+    else if (time_integrator_scheme_is_implicit(comp_flow_data_.time_integrator.integrator_type))
+      {
+        comp_flow_operator_ = std::make_unique<CompressibleFlowOperatorImplicit<dim, number>>(
+          comp_flow_data_, scratch_data_, solution_history_, comp_flow_dof_idx, comp_flow_quad_idx);
+      }
+    else
+      AssertThrow(false,
+                  dealii::ExcMessage(
+                    "The provided time integration scheme '" +
+                    std::to_string(comp_flow_data_.time_integrator.integrator_type) +
+                    "' is not supported!"));
+  }
+
 
   template class CompressibleFlowOperation<1, double>;
   template class CompressibleFlowOperation<2, double>;
