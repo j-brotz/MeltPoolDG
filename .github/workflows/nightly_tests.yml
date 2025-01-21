@@ -3,10 +3,10 @@ name: Nightly test of GitHub CI
 on:
   schedule:
   - cron:  '0 0 * * *'
-    
+
 concurrency:
-  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
-    
+  group: ${{ github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+
 env:
   COMPILE_JOBS: 4
   PROJECT_NAME: MeltPoolDG-dev
@@ -26,12 +26,12 @@ jobs:
         exclude:
           - build_type: "Debug"
             adaflo: "adaflo=off"
-    
+
     container:
       image: dealii/dealii:${{ matrix.dealii_version }}-jammy
       options: --user root
 
-    steps:          
+    steps:
       - uses: actions/checkout@v4
 
       - name: Compile adaflo
@@ -57,9 +57,9 @@ jobs:
             -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -D ADAFLO_LIB=/__w/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/adaflo-build/ \
             -D ADAFLO_INCLUDE=/__w/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/adaflo/include/ \
-            .. 
+            ..
           make -j${{ env.COMPILE_JOBS }}
-          
+
       - name: Run ctest
         if: matrix.adaflo == 'adaflo=on'
         run: |
@@ -67,7 +67,7 @@ jobs:
           export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
           cd build
           ctest -j${{ env.COMPILE_JOBS }} --output-on-failure -E 'tests_not_robust/'
-          
+
       - name: Failed test log
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4

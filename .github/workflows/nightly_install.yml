@@ -1,0 +1,21 @@
+name: Install MeltPoolDG
+
+on:
+  schedule:
+  - cron:  '0 0 * * *'
+
+concurrency:
+  group: ${{ github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true  # Cancels any previous runs still in progress
+
+jobs:
+  build:
+    if: ${{ github.event_name == 'schedule' }}
+    name: Install MeltPoolDG
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile MeltPoolDG
+        run: |
+          bash scripts/config/install.sh --nv
