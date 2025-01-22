@@ -101,7 +101,7 @@ namespace MeltPoolDG
       const std::function<void(number, VectorType &, const VectorType &)> &pre_processing,
       const std::function<void(number, VectorType &, const VectorType &)> &post_processing) override
     {
-      Assert(solution_history.size() < required_solution_history_size(),
+      Assert(solution_history.size() >= required_solution_history_size(),
              dealii::ExcMessage(
                "The size of the solution history object does not fit the requirements of the "
                "chosen time integration scheme."));
