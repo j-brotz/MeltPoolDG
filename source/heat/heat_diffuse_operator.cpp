@@ -1,40 +1,52 @@
-#include <deal.II/base/exceptions.h>
-#include <deal.II/base/vectorization.h>
+#include <meltpooldg/heat/heat_diffuse_operator.hpp>
+//
 
+#include <deal.II/base/array_view.h>
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/utilities.h>
+
+#include <deal.II/dofs/dof_accessor.h>
+
+#include <deal.II/grid/tria_iterator.h>
+
+#include <deal.II/lac/vector_operation.h>
+
+#include <deal.II/matrix_free/evaluation_flags.h>
 #include <deal.II/matrix_free/tools.h>
 
 #include <meltpooldg/core/exceptions.hpp>
-#include <meltpooldg/core/parameters.hpp>
-#include <meltpooldg/heat/heat_diffuse_operator.hpp>
-#include <meltpooldg/phase_change/evaporation_data.hpp>
+#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/phase_change/evaporative_cooling.templates.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/material.hpp>
 #include <meltpooldg/utilities/material.templates.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
-#include <memory>
+#include <algorithm>
+#include <bitset>
+#include <cmath>
+
 
 namespace MeltPoolDG::Heat
 {
   template <int dim, typename number>
   HeatDiffuseMultiPhaseOperator<dim, number>::HeatDiffuseMultiPhaseOperator(
-    const std::shared_ptr<BoundaryConditionManager<dim>> &bc,
-    const ScratchData<dim>                               &scratch_data_in,
-    const HeatData<number>                               &data_in,
-    const Material<number>                               &material,
-    const unsigned int                                    temp_dof_idx_in,
-    const unsigned int                                    temp_quad_idx_in,
-    const unsigned int                                    temp_hanging_nodes_dof_idx_in,
-    const VectorType                                     &temperature_in,
-    const VectorType                                     &temperature_old_in,
-    const VectorType                                     &heat_source_in,
-    const unsigned int                                    vel_dof_idx_in,
-    const VectorType                                     *velocity_in,
-    const unsigned int                                    ls_dof_idx_in,
-    const VectorType                                     *level_set_as_heaviside_in,
-    const bool                                            do_solidification_in)
+    const ScratchData<dim>                                    &scratch_data_in,
+    const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
+    const HeatData<number>                                    &data_in,
+    const Material<number>                                    &material,
+    const unsigned int                                         temp_dof_idx_in,
+    const unsigned int                                         temp_quad_idx_in,
+    const unsigned int                                         temp_hanging_nodes_dof_idx_in,
+    const VectorType                                          &temperature_in,
+    const VectorType                                          &temperature_old_in,
+    const VectorType                                          &heat_source_in,
+    const unsigned int                                         vel_dof_idx_in,
+    const VectorType                                          *velocity_in,
+    const unsigned int                                         ls_dof_idx_in,
+    const VectorType                                          *level_set_as_heaviside_in,
+    const bool                                                 do_solidification_in)
     : scratch_data(scratch_data_in)
     , data(data_in)
     , material(material)
@@ -78,11 +90,11 @@ namespace MeltPoolDG::Heat
       ExcMessage(
         "In case of solidification the liquidus temperature must be greater than the solidus temperature! Abort..."));
 
-    if (bc)
+    if (heat_bc_manager)
       {
-        bc_convection_indices = bc->get_indices_of_type("convection");
-        bc_radiation_indices  = bc->get_indices_of_type("radiation");
-        neumann_bc            = bc->get_bc_of_type("neumann");
+        bc_convection_indices = heat_bc_manager->get_indices_of_type("convection");
+        bc_radiation_indices  = heat_bc_manager->get_indices_of_type("radiation");
+        neumann_bc            = heat_bc_manager->get_bc_of_type("neumann");
       }
   }
 
@@ -148,7 +160,7 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::update_ghost_values(temperature);
     if (do_update_ghosts[i++] = not heat_source.has_ghost_elements())
       MeltPoolDG::VectorTools::update_ghost_values(heat_source);
-    if (velocity && (do_update_ghosts[i++] = not velocity->has_ghost_elements()))
+    if (velocity and (do_update_ghosts[i++] = not velocity->has_ghost_elements()))
       MeltPoolDG::VectorTools::update_ghost_values(*velocity);
     if (level_set_as_heaviside and
         (do_update_ghosts[i++] = not level_set_as_heaviside->has_ghost_elements()))
@@ -279,7 +291,7 @@ namespace MeltPoolDG::Heat
   {
     scratch_data.initialize_dof_vector(diagonal, temp_dof_idx);
 
-    dealii::TrilinosWrappers::SparseMatrix dummy;
+    SparseMatrixType dummy;
     internal_compute_diagonal_or_system_matrix(diagonal, dummy, true);
 
     // ... and invert it

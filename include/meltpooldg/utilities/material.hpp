@@ -9,6 +9,8 @@
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/material_data.hpp>
 
+#include <vector>
+
 namespace MeltPoolDG
 {
   using namespace dealii;
@@ -172,6 +174,21 @@ namespace MeltPoolDG
                        const FECellIntegrator<dim, 1, number>         &temperature_val,
                        const MaterialUpdateFlags::MaterialUpdateFlags &flags,
                        const unsigned int                              q_index) const;
+
+    /**
+     * Same as above, but with the ability to handle a cut temperature.
+     *
+     * The FECellIntegrator for the temperature is wrapped in a std::vector. If that vector has two
+     * entries, the cell is assumed to be an intersected cell and the first entry is the liquid side
+     * and the second entry is the gas side. Then we use the heaviside level set as an indicator to
+     * select the correct temperature value for each quadrature point.
+     */
+    template <typename value_type, int dim>
+    inline MaterialParameterValues<value_type>
+    compute_parameters(const FECellIntegrator<dim, 1, number>              &level_set_heaviside_val,
+                       const std::vector<FECellIntegrator<dim, 1, number>> &temperature_val,
+                       const MaterialUpdateFlags::MaterialUpdateFlags      &flags,
+                       const unsigned int                                   q_index) const;
 
     /**
      * Check whether the material type depends on a certain field variable.

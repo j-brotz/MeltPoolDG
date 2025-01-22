@@ -251,8 +251,9 @@ namespace MeltPoolDG::Heat
                   TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation));
 
             heat_operation = std::make_shared<HeatDiffuseOperation<dim>>(
-              simulation_case->get_boundary_condition_manager("heat_transfer"),
               *scratch_data,
+              simulation_case->get_boundary_condition_manager("heat_transfer"),
+              simulation_case->get_periodic_bc(),
               simulation_case->parameters.heat,
               *material,
               *time_iterator,
@@ -272,20 +273,22 @@ namespace MeltPoolDG::Heat
               simulation_case->get_initial_condition("prescribed_signed_distance",
                                                      false /* is_optional */);
 
-            auto heat_cut_operation =
-              std::make_shared<HeatCutOperation<dim>>(*scratch_data,
-                                                      simulation_case->parameters.heat,
-                                                      simulation_case->parameters.material,
-                                                      simulation_case->parameters.evapor,
-                                                      *time_iterator,
-                                                      temp_dof_idx,
-                                                      temp_hanging_nodes_dof_idx,
-                                                      temp_quad_idx,
-                                                      problem_specific_parameters.do_solidification,
-                                                      level_set_dof_idx,
-                                                      level_set,
-                                                      velocity_dof_idx,
-                                                      velocity_ptr);
+            auto heat_cut_operation = std::make_shared<HeatCutOperation<dim>>(
+              *scratch_data,
+              simulation_case->get_boundary_condition_manager("heat_transfer"),
+              simulation_case->get_periodic_bc(),
+              simulation_case->parameters.heat,
+              simulation_case->parameters.material,
+              simulation_case->parameters.evapor,
+              *time_iterator,
+              temp_dof_idx,
+              temp_hanging_nodes_dof_idx,
+              temp_quad_idx,
+              problem_specific_parameters.do_solidification,
+              level_set_dof_idx,
+              level_set,
+              velocity_dof_idx,
+              velocity_ptr);
 
             if (laser_operation)
               heat_cut_operation->register_laser_intensity_function_and_direction(
@@ -297,12 +300,7 @@ namespace MeltPoolDG::Heat
 
               scratch_data->create_partitioning();
 
-              Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
-                *scratch_data,
-                simulation_case->get_boundary_condition("dirichlet", "heat_transfer"),
-                simulation_case->get_periodic_bc(),
-                temp_dof_idx,
-                temp_hanging_nodes_dof_idx);
+              heat_operation->setup_constraints(*scratch_data);
 
               scratch_data->build(true /*enable_boundary_faces*/,
                                   true /*enable_inner_face_loops*/,
@@ -368,6 +366,7 @@ namespace MeltPoolDG::Heat
     output_results(false /* output_not_converged */);
   }
 
+
   template <int dim>
   void
   HeatTransferProblem<dim>::compute_field_vector(VectorType        &vector,
@@ -388,6 +387,7 @@ namespace MeltPoolDG::Heat
                                      vector);
   }
 
+
   template <int dim>
   void
   HeatTransferProblem<dim>::setup_dof_system()
@@ -395,10 +395,10 @@ namespace MeltPoolDG::Heat
     FiniteElementUtils::distribute_dofs<dim, 1>(simulation_case->parameters.base.fe,
                                                 dof_handler_level_set);
 
-    // before the CutFEM operation can distribute dofs, the mesh must be classified according to
-    // the level set indicator
     if (simulation_case->parameters.heat.operator_type == TwoPhaseOperatorType::cut)
       {
+        // before the CutFEM operation can distribute dofs, the mesh must be classified according to
+        // the level set indicator
         Assert(level_set_field_function != nullptr, ExcInternalError());
         IndexSet locally_relevant_dofs;
         DoFTools::extract_locally_relevant_dofs(dof_handler_level_set, locally_relevant_dofs);
@@ -433,23 +433,25 @@ namespace MeltPoolDG::Heat
                                         simulation_case->get_periodic_bc(),
                                         level_set_dof_idx);
 
-    Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
-      *scratch_data,
-      simulation_case->get_boundary_condition("dirichlet", "heat_transfer"),
-      simulation_case->get_periodic_bc(),
-      temp_dof_idx,
-      temp_hanging_nodes_dof_idx);
+    heat_operation->setup_constraints(*scratch_data);
 
     if (laser_operation)
       laser_operation->setup_constraints();
 
-    scratch_data->build(true /*enable_boundary_faces*/,
-                        simulation_case->parameters.laser.model ==
-                            LaserModelType::interface_projection_sharp_conforming or
-                          simulation_case->parameters.heat.operator_type ==
-                            TwoPhaseOperatorType::cut /*enable_inner_face_loops*/,
-                        simulation_case->parameters.heat.operator_type ==
-                          TwoPhaseOperatorType::cut /*enable_normal_vector_update*/);
+    {
+      const bool enable_inner_face_loops =
+        (simulation_case->parameters.heat.operator_type == TwoPhaseOperatorType::cut) or
+        (laser_operation and
+         (simulation_case->parameters.laser.model ==
+            LaserModelType::interface_projection_sharp_conforming or
+          simulation_case->parameters.heat.operator_type == TwoPhaseOperatorType::cut));
+      const bool enable_normal_vector_update =
+        simulation_case->parameters.heat.operator_type == TwoPhaseOperatorType::cut;
+
+      scratch_data->build(true /*enable_boundary_face_loops*/,
+                          enable_inner_face_loops,
+                          enable_normal_vector_update);
+    }
 
     heat_operation->reinit();
     if (laser_operation)

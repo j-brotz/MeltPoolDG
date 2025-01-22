@@ -5,19 +5,37 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 
-#include <tuple>
+#include <deal.II/base/aligned_vector.h>
+#include <deal.II/base/function.h>
+#include <deal.II/base/point.h>
+#include <deal.II/base/types.h>
+#include <deal.II/base/vectorization.h>
 
-// MeltPoolDG
+#include <deal.II/grid/tria.h>
+
+#include <deal.II/lac/full_matrix.h>
+#include <deal.II/lac/la_parallel_vector.h>
+#include <deal.II/lac/trilinos_sparse_matrix.h>
+
+#include <deal.II/matrix_free/matrix_free.h>
+
 #include <meltpooldg/core/boundary_conditions.hpp>
 #include <meltpooldg/core/operator_base.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/phase_change/evaporative_cooling.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/material.hpp>
-#include <meltpooldg/utilities/physical_constants.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+
+#include <map>
+#include <memory>
+#include <tuple>
+#include <utility>
+#include <vector>
+
 
 namespace MeltPoolDG::Heat
 {
@@ -167,21 +185,22 @@ namespace MeltPoolDG::Heat
     mutable std::vector<bool> do_update_ghosts;
 
   public:
-    HeatDiffuseMultiPhaseOperator(const std::shared_ptr<BoundaryConditionManager<dim>> &bc,
-                                  const ScratchData<dim> &scratch_data_in,
-                                  const HeatData<number> &data_in,
-                                  const Material<number> &material,
-                                  const unsigned int      temp_dof_idx_in,
-                                  const unsigned int      temp_quad_idx_in,
-                                  const unsigned int      temp_hanging_nodes_dof_idx,
-                                  const VectorType       &temperature_in,
-                                  const VectorType       &temperature_old_in,
-                                  const VectorType       &heat_source_in,
-                                  const unsigned int      vel_dof_idx_in            = 0,
-                                  const VectorType       *velocity_in               = nullptr,
-                                  const unsigned int      ls_dof_idx_in             = 0,
-                                  const VectorType       *level_set_as_heaviside_in = nullptr,
-                                  const bool              do_solidifiaction_in      = false);
+    HeatDiffuseMultiPhaseOperator(
+      const ScratchData<dim>                                    &scratch_data_in,
+      const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
+      const HeatData<number>                                    &data_in,
+      const Material<number>                                    &material,
+      const unsigned int                                         temp_dof_idx_in,
+      const unsigned int                                         temp_quad_idx_in,
+      const unsigned int                                         temp_hanging_nodes_dof_idx,
+      const VectorType                                          &temperature_in,
+      const VectorType                                          &temperature_old_in,
+      const VectorType                                          &heat_source_in,
+      const unsigned int                                         vel_dof_idx_in = 0,
+      const VectorType                                          *velocity_in    = nullptr,
+      const unsigned int                                         ls_dof_idx_in  = 0,
+      const VectorType *level_set_as_heaviside_in                               = nullptr,
+      const bool        do_solidifiaction_in                                    = false);
 
     void
     register_evaporative_mass_flux(VectorType        *evaporative_mass_flux_in,
@@ -225,8 +244,7 @@ namespace MeltPoolDG::Heat
     compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const final;
 
     void
-    compute_system_matrix_from_matrixfree(
-      TrilinosWrappers::SparseMatrix &system_matrix) const final;
+    compute_system_matrix_from_matrixfree(SparseMatrixType &system_matrix) const final;
 
     void
     rhs_cell_loop(const MatrixFree<dim, number>        &matrix_free,
@@ -309,10 +327,9 @@ namespace MeltPoolDG::Heat
      * @param do_diagonal: `true` for compute_diagonal and `false` for compute_matrix.
      */
     void
-    internal_compute_diagonal_or_system_matrix(
-      [[maybe_unused]] VectorType                             &diagonal,
-      [[maybe_unused]] dealii::TrilinosWrappers::SparseMatrix &system_matrix,
-      const bool                                               do_diagonal) const;
+    internal_compute_diagonal_or_system_matrix([[maybe_unused]] VectorType       &diagonal,
+                                               [[maybe_unused]] SparseMatrixType &system_matrix,
+                                               const bool do_diagonal) const;
 
     /**
      * Determine the material parameters. This function takes two-phase flow and solidification

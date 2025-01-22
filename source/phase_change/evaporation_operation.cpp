@@ -83,8 +83,6 @@ namespace MeltPoolDG::Evaporation
     else
       Assert(false, ExcMessage("Specified evaporation source term is not implemented!"));
 
-    reinit();
-
     if (evapor_data.evaporative_mass_flux_model == EvaporationModelType::analytical)
       {
         evapor_model =

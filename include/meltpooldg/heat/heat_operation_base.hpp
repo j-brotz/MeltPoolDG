@@ -6,9 +6,9 @@
 
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 
-#include <memory>
 #include <vector>
 
 namespace MeltPoolDG::Heat
@@ -26,10 +26,16 @@ namespace MeltPoolDG::Heat
     distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const = 0;
 
     virtual void
+    setup_constraints(ScratchData<dim> &scratch_data) const = 0;
+
+    virtual void
     set_initial_condition(const dealii::Function<dim> &initial_temperature) = 0;
 
     virtual void
     distribute_constraints() = 0;
+
+    virtual void
+    init_time_advance() = 0;
 
     virtual void
     solve() = 0;
