@@ -163,6 +163,11 @@ namespace MeltPoolDG
           set_up_bdf_parameters(step_count);
         }
 
+      Assert(solution_history.size() > step_count,
+             dealii::ExcMessage(
+               "The size of the solution history object does not fit the requirements of the "
+               "chosen time integration scheme."));
+
       DEAL_II_OPENMP_SIMD_PRAGMA
       for (unsigned int i = 0; i < summed_old_solution.locally_owned_size(); ++i)
         {
@@ -174,10 +179,6 @@ namespace MeltPoolDG
                 solution_history.get_solution(j).local_element(i);
             }
         }
-      Assert(solution_history.size() < step_count + 1,
-             dealii::ExcMessage(
-               "The size of the solution history object does not fit the requirements of the "
-               "chosen time integration scheme."));
 
       // matrix type wrapper for the jacobian
       std::function<void(VectorType &, const VectorType &)> jacobian_multiplication =
