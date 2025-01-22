@@ -8,11 +8,12 @@
 
 namespace MeltPoolDG::Evaporation
 {
-  EvaporationModelSaturatedVaporPressure::EvaporationModelSaturatedVaporPressure(
-    const RecoilPressureData<double> &recoil_data,
-    const double                      boiling_temperature,
-    const double                      molar_mass,
-    const double                      latent_heat_evaporation)
+  template <typename number>
+  EvaporationModelSaturatedVaporPressure<number>::EvaporationModelSaturatedVaporPressure(
+    const RecoilPressureData<number> &recoil_data,
+    const number                      boiling_temperature,
+    const number                      molar_mass,
+    const number                      latent_heat_evaporation)
     : recoil_data(recoil_data)
     , boiling_temperature(boiling_temperature)
     , sticking_constant(recoil_data.sticking_constant)
@@ -21,8 +22,11 @@ namespace MeltPoolDG::Evaporation
     , Cm(molar_mass / (2. * numbers::PI * PhysicalConstants::universal_gas_constant))
   {}
 
-  double
-  EvaporationModelSaturatedVaporPressure::local_compute_evaporative_mass_flux(const double T) const
+
+  template <typename number>
+  number
+  EvaporationModelSaturatedVaporPressure<number>::local_compute_evaporative_mass_flux(
+    const number T) const
   {
     return 0.82 * sticking_constant *
            compute_saturated_gas_pressure(T,
@@ -31,4 +35,6 @@ namespace MeltPoolDG::Evaporation
                                           recoil_data.temperature_constant) *
            std::sqrt(Cm / T);
   }
+
+  template class EvaporationModelSaturatedVaporPressure<double>;
 } // namespace MeltPoolDG::Evaporation

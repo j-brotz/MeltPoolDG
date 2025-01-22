@@ -2,12 +2,10 @@
 
 #include <deal.II/base/function.h>
 #include <deal.II/base/tensor.h>
-#include <deal.II/base/types.h>
 #include <deal.II/base/vectorization.h>
 
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_system.h>
-#include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/lac/la_parallel_vector.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
@@ -21,13 +19,13 @@
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
+#include <meltpooldg/phase_change/evaporative_cooling.hpp>
 #include <meltpooldg/utilities/material_data.hpp>
-#include <meltpooldg/utilities/physical_constants.hpp>
 
-#include <map>
 #include <memory>
 #include <utility>
 #include <vector>
+
 
 namespace MeltPoolDG::Heat
 {
@@ -43,13 +41,12 @@ namespace MeltPoolDG::Heat
     using VectorType       = dealii::LinearAlgebra::distributed::Vector<number>;
     using SparseMatrixType = dealii::TrilinosWrappers::SparseMatrix;
 
-    const ScratchData<dim>                     &scratch_data;
-    const HeatData<number>                     &heat_data;
-    const MaterialData<number>                 &material_data;
-    const Evaporation::EvaporationData<number> &evapor_data;
-    const unsigned int                          temp_dof_idx;
-    const unsigned int                          temp_hanging_nodes_dof_idx;
-    const unsigned int                          temp_quad_idx;
+    const ScratchData<dim>     &scratch_data;
+    const HeatData<number>     &heat_data;
+    const MaterialData<number> &material_data;
+    const unsigned int          temp_dof_idx;
+    const unsigned int          temp_hanging_nodes_dof_idx;
+    const unsigned int          temp_quad_idx;
 
     const VectorType &temperature;
 
@@ -82,7 +79,8 @@ namespace MeltPoolDG::Heat
 
     // TODO boundary conditions, radiation etc.
 
-    // TODO evaporation model
+    // optional: evaporative heat cooling
+    std::unique_ptr<Evaporation::EvaporativeCooling<number>> evapor_cooling;
 
     // optional: laser intensity and direction
     std::shared_ptr<const dealii::Function<dim, number>> laser_intensity_profile;
@@ -153,6 +151,12 @@ namespace MeltPoolDG::Heat
     compute_cut_L2_norm(const VectorType &solution) const;
 
   private:
+    dealii::VectorizedArray<number>
+    compute_qVapor(const dealii::VectorizedArray<number> &T) const;
+
+    dealii::VectorizedArray<number>
+    compute_qVapor_derivative(const dealii::VectorizedArray<number> &T) const;
+
     /*
      * Local appliers for consitent tangent modulus
      */

@@ -20,23 +20,24 @@ namespace MeltPoolDG::Evaporation
    * DOI: 10.1016/j.actamat.2016.02.014.
    *
    */
-  class EvaporationModelSaturatedVaporPressure : public EvaporationModelBase
+  template <typename number>
+  class EvaporationModelSaturatedVaporPressure : public EvaporationModelBase<number>
   {
   private:
-    const RecoilPressureData<double> recoil_data;
-    const double                     boiling_temperature;
-    const double                     sticking_constant;
-    const double                     molar_mass;
-    const double                     latent_heat_evaporation;
+    const RecoilPressureData<number> recoil_data;
+    const number                     boiling_temperature;
+    const number                     sticking_constant;
+    const number                     molar_mass;
+    const number                     latent_heat_evaporation;
 
     // Model constant computed as molar_mass/(2*pi*molar_gas_constant)
-    const double Cm;
+    const number Cm;
 
   public:
-    EvaporationModelSaturatedVaporPressure(const RecoilPressureData<double> &recoil_data,
-                                           const double                      boiling_temperature,
-                                           const double                      molar_mass,
-                                           const double latent_heat_evaporation);
+    EvaporationModelSaturatedVaporPressure(const RecoilPressureData<number> &recoil_data,
+                                           const number                      boiling_temperature,
+                                           const number                      molar_mass,
+                                           const number latent_heat_evaporation);
 
     /*
      * The evaporative mass flux is computed as
@@ -49,7 +50,7 @@ namespace MeltPoolDG::Evaporation
      * where c_s is the sticking coefficient, p_sat(T) is the saturated vapor
      * pressure, M the molar mass, R the molar gas constant and T the temperature.
      */
-    double
-    local_compute_evaporative_mass_flux(const double T) const final;
+    number
+    local_compute_evaporative_mass_flux(const number T) const final;
   };
 } // namespace MeltPoolDG::Evaporation

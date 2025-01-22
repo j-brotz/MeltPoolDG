@@ -1002,7 +1002,6 @@ namespace MeltPoolDG::MeltPool
          */
         evaporation_operation->reinit(&heat_operation->get_temperature(),
                                       level_set_operation->get_distance_to_level_set(),
-                                      base_in->parameters.evapor.recoil,
                                       base_in->parameters.ls.nearest_point,
                                       base_in->parameters.ls.reinit,
                                       temp_dof_idx);
@@ -1050,7 +1049,7 @@ namespace MeltPoolDG::MeltPool
 #endif
 
         /*
-         * register evaporative mass flux to compute the heat sink
+         * register evaporative mass flux to compute the evaporative cooling
          */
         if (base_in->parameters.evapor.evaporative_cooling.enable)
           {
@@ -1062,8 +1061,7 @@ namespace MeltPoolDG::MeltPool
             heat_operation->register_evaporative_mass_flux(
               &evaporation_operation->get_evaporative_mass_flux(),
               evapor_mass_flux_dof_idx,
-              base_in->parameters.material.latent_heat_of_evaporation,
-              base_in->parameters.evapor.evaporative_cooling);
+              base_in->parameters.evapor);
           }
       }
 

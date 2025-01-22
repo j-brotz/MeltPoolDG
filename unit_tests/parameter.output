@@ -36,6 +36,7 @@
         },
         "evaporative cooling":
         {
+            "activation temperature": "-1e+100",
             "consider enthalpy transport vapor mass flux": "default",
             "enable": "false",
             "model": "regularized",

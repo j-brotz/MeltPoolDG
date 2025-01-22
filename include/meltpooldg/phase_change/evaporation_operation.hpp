@@ -5,19 +5,30 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 
+#include <deal.II/base/aligned_vector.h>
+#include <deal.II/base/numbers.h>
+#include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/vectorization.h>
+
+#include <deal.II/grid/tria.h>
+
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/phase_change/evaporation_mass_flux_operator_base.hpp>
 #include <meltpooldg/phase_change/evaporation_model_base.hpp>
 #include <meltpooldg/phase_change/evaporation_source_terms_base.hpp>
-#include <meltpooldg/phase_change/recoil_pressure_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/reinitialization/reinitialization_data.hpp>
 #include <meltpooldg/utilities/material_data.hpp>
+
+#include <memory>
+#include <tuple>
+#include <vector>
 
 namespace MeltPoolDG::Evaporation
 {
@@ -48,9 +59,9 @@ namespace MeltPoolDG::Evaporation
     /**
      *  parameters controlling the evaporation
      */
-    const EvaporationData<double> &evaporation_data;
+    const EvaporationData<double> &evapor_data;
 
-    const MaterialData<double> &material;
+    const MaterialData<double> &material_data;
     /**
      * references to solutions needed for the computation
      */
@@ -89,7 +100,7 @@ namespace MeltPoolDG::Evaporation
      */
     VectorType evaporation_velocity;
 
-    std::shared_ptr<EvaporationModelBase>                 evapor_model;
+    std::shared_ptr<EvaporationModelBase<double>>         evapor_model;
     std::shared_ptr<EvaporationMassFluxOperatorBase<dim>> evapor_mass_flux_operator;
     std::shared_ptr<EvaporationSourceTermsBase<dim>>      evapor_source_terms_operator;
 
@@ -97,8 +108,8 @@ namespace MeltPoolDG::Evaporation
     EvaporationOperation(const ScratchData<dim>        &scratch_data_in,
                          const VectorType              &level_set_as_heaviside_in,
                          const BlockVectorType         &normal_vector_in,
-                         const EvaporationData<double> &evapor_data,
-                         const MaterialData<double>    &material_data,
+                         const EvaporationData<double> &evapor_data_in,
+                         const MaterialData<double>    &material_data_in,
                          const unsigned int             normal_dof_idx_in,
                          const unsigned int             evapor_vel_dof_idx_in,
                          const unsigned int             evapor_mass_flux_dof_idx_in,
@@ -112,7 +123,6 @@ namespace MeltPoolDG::Evaporation
     void
     reinit(const VectorType                             *temperature_in,
            const VectorType                             &distance,
-           const RecoilPressureData<double>             &recoil_data,
            const LevelSet::NearestPointData<double>     &nearest_point_data,
            const LevelSet::ReinitializationData<double> &reinit_data,
            const unsigned int                            temp_dof_idx_in);

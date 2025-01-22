@@ -4,6 +4,7 @@
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/phase_change/recoil_pressure_data.hpp>
 
+
 namespace MeltPoolDG::Evaporation
 {
 
@@ -74,10 +75,6 @@ namespace MeltPoolDG::Evaporation
 
       prm.enter_subsection("evaporative cooling");
       {
-        prm.add_parameter("model",
-                          evaporative_cooling.model,
-                          "Select how the additional source term due to evaporation in the "
-                          "heat equation (evaporative cooling) is computed.");
         prm.add_parameter("enable",
                           evaporative_cooling.enable,
                           "Set this parameter to true to consider evaporative cooling "
@@ -89,7 +86,16 @@ namespace MeltPoolDG::Evaporation
                           "This is only recommended if the vapor mass flux is not "
                           "considered in the Navier-Stokes equations.",
                           Patterns::Selection("default|true|false"));
-
+        prm.add_parameter(
+          "activation temperature",
+          evaporative_cooling.activation_temperature,
+          "Activation temperature for the evaporative cooling. It must be smaller than or equal to the "
+          "boiling temperature. By default, it will be chosen such that the transition from the linear "
+          "activation ramp is kink-free.");
+        prm.add_parameter("model",
+                          evaporative_cooling.model,
+                          "Select how the additional source term due to evaporation in the "
+                          "heat equation (evaporative cooling) is computed.");
         // When the CutFEM heat transfer operator is used, this input parameter is ignored.
         evaporative_cooling.delta_approximation_phase_weighted.add_parameters(prm);
       }

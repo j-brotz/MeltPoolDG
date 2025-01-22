@@ -32,7 +32,7 @@ namespace MeltPoolDG::Evaporation
 
     const ScratchData<dim>                                     &scratch_data;
     mutable LevelSet::NearestPointData<double>                  nearest_point_data;
-    const EvaporationModelBase                                 &evaporation_model;
+    const EvaporationModelBase<double>                         &evaporation_model;
     const VectorType                                           &level_set_as_heaviside;
     const VectorType                                           &distance;
     const BlockVectorType                                      &normal_vector;
@@ -46,13 +46,13 @@ namespace MeltPoolDG::Evaporation
   public:
     EvaporationMassFluxOperatorInterfaceValue(const ScratchData<dim> &scratch_data,
                                               const LevelSet::NearestPointData<double> &data,
-                                              const EvaporationModelBase &evaporation_model,
-                                              const VectorType           &level_set_as_heaviside,
-                                              const VectorType           &distance,
-                                              const BlockVectorType      &normal_vector,
-                                              const unsigned int          ls_dof_idx,
-                                              const unsigned int temp_hanging_nodes_dof_idx,
-                                              const unsigned int evapor_mass_flux_dof_idx);
+                                              const EvaporationModelBase<double> &evaporation_model,
+                                              const VectorType      &level_set_as_heaviside,
+                                              const VectorType      &distance,
+                                              const BlockVectorType &normal_vector,
+                                              const unsigned int     ls_dof_idx,
+                                              const unsigned int     temp_hanging_nodes_dof_idx,
+                                              const unsigned int     evapor_mass_flux_dof_idx);
 
     /**
      * DOCU: TODO

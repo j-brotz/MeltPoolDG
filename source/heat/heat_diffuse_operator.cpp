@@ -7,6 +7,7 @@
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/heat/heat_diffuse_operator.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
+#include <meltpooldg/phase_change/evaporative_cooling.templates.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/material.hpp>
 #include <meltpooldg/utilities/material.templates.hpp>
@@ -99,15 +100,14 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatDiffuseMultiPhaseOperator<dim, number>::register_evaporative_mass_flux(
-    VectorType        *evaporative_mass_flux_in,
-    const unsigned int evapor_mass_flux_dof_idx_in,
-    const double       latent_heat_of_evaporation_in,
-    const typename Evaporation::EvaporationData<number>::EvaporativeCooling &evapor_cooling_data)
+    VectorType                                 *evaporative_mass_flux_in,
+    const unsigned int                          evapor_mass_flux_dof_idx_in,
+    const Evaporation::EvaporationData<number> &evapor_data)
   {
     delta_phase_weighted = create_phase_weighted_delta_approximation(
-      evapor_cooling_data.delta_approximation_phase_weighted);
+      evapor_data.evaporative_cooling.delta_approximation_phase_weighted);
 
-    evapor_flux_type = evapor_cooling_data.model;
+    evapor_flux_type = evapor_data.evaporative_cooling.model;
     AssertThrow(surface_mesh_info ||
                   (evapor_flux_type != Evaporation::EvaporCoolingInterfaceFluxType::sharp),
                 ExcMessage("If you would like to use a sharp flux model, you first"
@@ -121,23 +121,18 @@ namespace MeltPoolDG::Heat
         scratch_data.get_dof_handler(ls_dof_idx),
         true /* do_matrix_free */);
 
-    evaporative_mass_flux      = evaporative_mass_flux_in;
-    evapor_mass_flux_dof_idx   = evapor_mass_flux_dof_idx_in;
-    latent_heat_of_evaporation = latent_heat_of_evaporation_in;
-    do_phenomenological_recoil_pressure =
-      evapor_cooling_data.consider_enthalpy_transport_vapor_mass_flux == "true";
+    evaporative_mass_flux    = evaporative_mass_flux_in;
+    evapor_mass_flux_dof_idx = evapor_mass_flux_dof_idx_in;
 
-    if (do_phenomenological_recoil_pressure)
+    evaporative_cooling = std::make_unique<Evaporation::EvaporativeCooling<number>>(
+      evapor_data, material.get_data(), false /*setup_internal_mass_flux_operator*/);
+
+    if (evapor_data.evaporative_cooling.consider_enthalpy_transport_vapor_mass_flux == "true")
       {
         const auto &material_data = material.get_data();
-        AssertThrow(!numbers::is_invalid(material_data.specific_enthalpy_reference_temperature),
-                    ExcMessage(
-                      "For the phenomenological recoil pressure model, the reference temperature "
-                      "for computing the specific enthalpy must be specified. Abort..."));
-
         AssertThrow(!do_solidification || (material_data.solid.specific_heat_capacity ==
                                            material_data.liquid.specific_heat_capacity),
-                    ExcMessage("The equation for specific enthalpy for evaporative heat sink "
+                    ExcMessage("The equation for specific enthalpy for evaporative cooling "
                                "assumes equality between the solid and liquid "
                                "phase heat capacity! Abort..."));
       }
@@ -510,75 +505,19 @@ namespace MeltPoolDG::Heat
 
             if (evapor_vals)
               {
-                /*
-                 * Compute the heat sink due to evaporation
-                 *             .
-                 *    q_s =  - m · ( h_v + h(T)) · δ
-                 *                                  Γ
-                 *
-                 * with the latent heat of evaporation h_v, the specific enthalpy
-                 *
-                 *          T
-                 *         /
-                 *        |
-                 * h(T) = | c_p  .  (1)
-                 *        |
-                 *       /
-                 *     T_ref
-                 *
-                 * where T_ref denotes an artificial reference temperature for
-                 * the specific enthalpy.
-                 *
-                 * h_v + h(T) is the total enthalpy leaving the system with the
-                 * evaporative mass flux. h(T) can be typically found in tables.
-                 * However, we assume for the computation of the specific
-                 * enthalpy a linear temperature-dependence
-                 *
-                 *    h(T) = h_ref + c_p * T .  (2)
-                 *
-                 * see also
-                 * Meier, Christoph, et al. "A novel smoothed particle hydrodynamics
-                 * formulation for thermo-capillary phase change problems with focus
-                 * on metal additive manufacturing melt pool modeling." CMAME 381
-                 * (2021).
-                 *
-                 * By setting (1) equal to (2) and assuming the heat capacity to
-                 * be temperature-independent, we obtain
-                 *
-                 *    h_ref = - c_p * T_ref
-                 *
-                 * Inserting into (2) yields
-                 *
-                 *    h(T) = c_p * (T - T_ref).
-                 *
-                 *
-                 * @note For the computation of h(T), it is assumed that the
-                 *       specific heat capacity c_p corresponds to the value
-                 *       for the liquid and solid phase.
-                 *
-                 * @note Instead of T_ref we could have also introduced directly
-                 *       h_ref as an input parameter.
-                 */
-                VectorizedArray<number> specific_enthalpy(0.0);
-
-                if (do_phenomenological_recoil_pressure)
-                  {
-                    const auto &material_data = material.get_data();
-                    specific_enthalpy         = material_data.liquid.specific_heat_capacity *
-                                        (temp_vals.get_value(q_index) -
-                                         material_data.specific_enthalpy_reference_temperature);
-                  }
-
                 VectorizedArray<double> weight(1.0);
-
                 if (delta_phase_weighted)
                   weight = delta_phase_weighted->compute_weight(ls_vals_used.get_value(q_index));
 
-                const auto temp = evapor_vals->get_value(q_index) *
-                                  (latent_heat_of_evaporation + specific_enthalpy) *
-                                  ls_vals_used.get_gradient(q_index).norm() * weight;
+                const auto cooling =
+                  evaporative_cooling->compute_evaporative_cooling(evapor_vals->get_value(q_index),
+                                                                   temp_vals.get_value(q_index));
 
+                const auto temp = -cooling * ls_vals_used.get_gradient(q_index).norm() * weight;
+
+                // contribution to heat source for output purposes
                 q_vapor[cell * temp_vals.n_q_points + q_index] = -temp;
+
                 val += temp;
               }
 
@@ -595,7 +534,7 @@ namespace MeltPoolDG::Heat
   void
   HeatDiffuseMultiPhaseOperator<dim, number>::rhs_cut_cell_loop(VectorType &dst) const
   {
-    // evaluate the evaporative heat loss term as surface integral
+    // evaluate the evaporative cooling term as surface integral
     if (evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp)
       {
         Assert(evaporative_mass_flux,
@@ -667,18 +606,10 @@ namespace MeltPoolDG::Heat
 
                 for (unsigned int q = 0; q < n_points; ++q)
                   {
-                    double specific_enthalpy = 0;
+                    const double cooling = evaporative_cooling->compute_evaporative_cooling(
+                      evapor_vals_surf.get_value(q), temp_vals_surf.get_value(q));
 
-                    if (do_phenomenological_recoil_pressure)
-                      {
-                        const auto &material_data = material.get_data();
-                        specific_enthalpy         = material_data.liquid.specific_heat_capacity *
-                                            (temp_vals_surf.get_value(q) -
-                                             material_data.specific_enthalpy_reference_temperature);
-                      }
-                    temp_vals_surf.submit_value(-evapor_vals_surf.get_value(q) *
-                                                  (latent_heat_of_evaporation + specific_enthalpy) *
-                                                  JxW[q],
+                    temp_vals_surf.submit_value(cooling * JxW[q],
                                                 q); // *(-1) for the residual
                   }
                 temp_vals_surf.test_and_sum(buffer,
@@ -720,7 +651,7 @@ namespace MeltPoolDG::Heat
         for (unsigned int face = face_range.first; face < face_range.second; ++face)
           {
             temp_eval.reinit(face);
-            if (do_phenomenological_recoil_pressure)
+            if (evaporative_cooling)
               temp_eval.gather_evaluate(temperature, EvaluationFlags::values);
 
             evapor_eval.reinit(face);
@@ -745,17 +676,10 @@ namespace MeltPoolDG::Heat
             // loop over quadrature points
             for (unsigned int q = 0; q < temp_eval.n_q_points; ++q)
               {
-                VectorizedArray<double> specific_enthalpy = 0;
-
-                if (do_phenomenological_recoil_pressure)
-                  {
-                    const auto &material_data = material.get_data();
-                    specific_enthalpy         = material_data.liquid.specific_heat_capacity *
-                                        (temp_eval.get_value(q) -
-                                         material_data.specific_enthalpy_reference_temperature);
-                  }
-                temp_eval.submit_value(-evapor_eval.get_value(q) *
-                                         (latent_heat_of_evaporation + specific_enthalpy),
+                const auto cooling =
+                  evaporative_cooling->compute_evaporative_cooling(evapor_eval.get_value(q),
+                                                                   temp_eval.get_value(q));
+                temp_eval.submit_value(cooling,
                                        q); // *(-1) for the residual
               }
             temp_eval.integrate(EvaluationFlags::values);
@@ -1091,34 +1015,18 @@ namespace MeltPoolDG::Heat
             // todo: add term containing ∇·u  in case of evaporation
           }
 
-        if (evapor_vals && do_phenomenological_recoil_pressure)
+        if (evapor_vals)
           {
-            /*
-             * derivative of specific enthalpy h(T) with respect to the temperature:
-             *
-             *  d h(T)
-             * -------- = c_p^sl
-             *    dT
-             *
-             * tangent of heat sink due to evaporation:
-             *
-             *  d q_s      .
-             * ------- = - m * c_p^sl * δ
-             *    dT                      Γ
-             *
-             * For the details regarding h(t)/c_p, see the documentation in
-             * rhs_cell_loop().
-             */
-
             VectorizedArray<double> weight(1.0);
             if (delta_phase_weighted)
               weight = delta_phase_weighted->compute_weight(ls_vals_used.get_value(q_index));
 
-            const auto &material_data = material.get_data();
+            const auto cooling_dertivative =
+              evaporative_cooling->compute_evaporative_cooling_derivative_constant_mass_flux(
+                evapor_vals->get_value(q_index));
 
-            val += evapor_vals->get_value(q_index) * temp_vals.get_value(q_index) *
-                   material_data.liquid.specific_heat_capacity *
-                   ls_vals_used.get_gradient(q_index).norm() * weight;
+            val += -cooling_dertivative * ls_vals_used.get_gradient(q_index).norm() * weight *
+                   temp_vals.get_value(q_index);
           }
 
         temp_vals.submit_value(val, q_index);
@@ -1126,8 +1034,8 @@ namespace MeltPoolDG::Heat
       }
     temp_vals.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
 
-    // evaluate the evaporative heat loss term as surface integral
-    if (evaporative_mass_flux && surface_mesh_info && do_phenomenological_recoil_pressure)
+    // evaluate the evaporative cooling term as surface integral
+    if (evaporative_mass_flux && surface_mesh_info)
       {
         // TODO
       }

@@ -4,17 +4,25 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/vectorization.h>
+
+#include <deal.II/lac/full_matrix.h>
+#include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
+
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
 #include <meltpooldg/phase_change/recoil_pressure_data.hpp>
 #include <meltpooldg/utilities/material_data.hpp>
 
+#include <memory>
+
+
 namespace MeltPoolDG::Evaporation
 {
-
-
-
   /**
    * Base class for the recoil pressure model
    */
@@ -25,13 +33,13 @@ namespace MeltPoolDG::Evaporation
     virtual number
     compute_recoil_pressure_coefficient(const number /*T*/) const
     {
-      AssertThrow(false, ExcNotImplemented());
+      AssertThrow(false, dealii::ExcNotImplemented());
     };
 
-    virtual VectorizedArray<number>
-    compute_recoil_pressure_coefficient(const VectorizedArray<number> & /*T*/) const
+    virtual dealii::VectorizedArray<number>
+    compute_recoil_pressure_coefficient(const dealii::VectorizedArray<number> & /*T*/) const
     {
-      AssertThrow(false, ExcNotImplemented());
+      AssertThrow(false, dealii::ExcNotImplemented());
     };
 
     virtual number
@@ -39,15 +47,16 @@ namespace MeltPoolDG::Evaporation
                                         const number /*m_dot*/,
                                         const number /*delta_coefficient*/) const
     {
-      AssertThrow(false, ExcNotImplemented());
+      AssertThrow(false, dealii::ExcNotImplemented());
     };
 
-    virtual VectorizedArray<number>
-    compute_recoil_pressure_coefficient(const VectorizedArray<number> & /*T*/,
-                                        const VectorizedArray<number> & /*m_dot*/,
-                                        const VectorizedArray<number> & /*delta_coefficient*/) const
+    virtual dealii::VectorizedArray<number>
+    compute_recoil_pressure_coefficient(
+      const dealii::VectorizedArray<number> & /*T*/,
+      const dealii::VectorizedArray<number> & /*m_dot*/,
+      const dealii::VectorizedArray<number> & /*delta_coefficient*/) const
     {
-      AssertThrow(false, ExcNotImplemented());
+      AssertThrow(false, dealii::ExcNotImplemented());
     };
   };
 
@@ -105,8 +114,8 @@ namespace MeltPoolDG::Evaporation
     number
     compute_recoil_pressure_coefficient(const number T) const final;
 
-    VectorizedArray<number>
-    compute_recoil_pressure_coefficient(const VectorizedArray<number> &T) const final;
+    dealii::VectorizedArray<number>
+    compute_recoil_pressure_coefficient(const dealii::VectorizedArray<number> &T) const final;
   };
 
   template <typename number>
@@ -147,11 +156,11 @@ namespace MeltPoolDG::Evaporation
                                         const number m_dot,
                                         const number delta_coefficient) const final;
 
-    VectorizedArray<number>
+    dealii::VectorizedArray<number>
     compute_recoil_pressure_coefficient(
-      const VectorizedArray<number> &T,
-      const VectorizedArray<number> &m_dot,
-      const VectorizedArray<number> &delta_coefficient) const final;
+      const dealii::VectorizedArray<number> &T,
+      const dealii::VectorizedArray<number> &m_dot,
+      const dealii::VectorizedArray<number> &delta_coefficient) const final;
   };
 
   /**
@@ -164,8 +173,8 @@ namespace MeltPoolDG::Evaporation
   class RecoilPressureOperation
   {
   private:
-    using VectorType      = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<double>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<double>;
 
     const ScratchData<dim> &scratch_data;
     /*
@@ -177,8 +186,8 @@ namespace MeltPoolDG::Evaporation
     const unsigned int ls_dof_idx;
     const unsigned int temp_dof_idx;
 
-    const bool         do_level_set_pressure_gradient_interpolation;
-    FullMatrix<double> ls_to_pressure_grad_interpolation_matrix;
+    const bool                 do_level_set_pressure_gradient_interpolation;
+    dealii::FullMatrix<double> ls_to_pressure_grad_interpolation_matrix;
 
     const RecoilPressureModelType model_type;
 

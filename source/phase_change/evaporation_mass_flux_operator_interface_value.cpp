@@ -14,7 +14,7 @@ namespace MeltPoolDG::Evaporation
   EvaporationMassFluxOperatorInterfaceValue<dim>::EvaporationMassFluxOperatorInterfaceValue(
     const ScratchData<dim>                   &scratch_data,
     const LevelSet::NearestPointData<double> &data,
-    const EvaporationModelBase               &evaporation_model,
+    const EvaporationModelBase<double>       &evaporation_model,
     const VectorType                         &level_set_as_heaviside,
     const VectorType                         &distance,
     const BlockVectorType                    &normal_vector,
