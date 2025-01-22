@@ -6,8 +6,8 @@ on:
     types: [ opened, synchronize, reopened, labeled ]
 
 concurrency:
-  group: ${{github.event_name }}-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref || github.run_id }}
+  cancel-in-progress: true
 
 env:
   COMPILE_JOBS: 4
@@ -76,3 +76,14 @@ jobs:
             build/tests/**/*stdout*
             build/unit_tests/**/*output*
             build/unit_tests/**/*stdout*
+
+  clean:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'ready to test') }}
+    runs-on: self-hosted
+    env:
+      ACTIONS_RUNNER_DEBUG: true
+      ACTIONS_STEP_DEBUG: true
+    steps:
+      - name: Prune Docker system
+        run: |
+          docker system prune -af
