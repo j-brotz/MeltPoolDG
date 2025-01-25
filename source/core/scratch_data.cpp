@@ -169,7 +169,8 @@ namespace MeltPoolDG
   ScratchData<dim, spacedim, number, VectorizedArrayType>::build(
     const bool enable_boundary_face_loops,
     const bool enable_inner_face_loops,
-    const bool enable_normal_vector_update)
+    const bool enable_normal_vector_update,
+    const bool enable_inner_face_hessians_update)
   {
     enable_inner_faces    = enable_inner_face_loops;
     enable_boundary_faces = enable_boundary_face_loops;
@@ -200,7 +201,9 @@ namespace MeltPoolDG
                                 "Matrix-free: set update flags for inner face loops",
                                 "ScratchData",
                                 0);
-            additional_data.mapping_update_flags_inner_faces = update_flags;
+            additional_data.mapping_update_flags_inner_faces =
+              enable_inner_face_hessians_update == true ? update_flags | update_hessians :
+                                                          update_flags;
           }
 
         if (enable_boundary_face_loops)
@@ -571,7 +574,7 @@ namespace MeltPoolDG
     for (unsigned int i = 0; i <= 10; ++i)
       this->pcout.push_back(
         dealii::ConditionalOStream(std::cout,
-                                   (Utilities::MPI::this_mpi_process(mpi_communicator)) == 0 &&
+                                   (Utilities::MPI::this_mpi_process(mpi_communicator)) == 0 and
                                      (i <= max_verbosity_level)));
   }
 

@@ -194,7 +194,7 @@ namespace MeltPoolDG::Flow
         for (const unsigned int q : phi.quadrature_point_indices())
           {
             auto [value_q, grad_q] =
-              this->template rhs_cell_intergal_kernel<FECellIntegrator<dim, dim + 2, number>>(
+              this->template rhs_cell_integral_kernel<FECellIntegrator<dim, dim + 2, number>>(
                 phi, q, constant_function ? &constant_body_force : nullptr);
             grad_q *= residual_rhs_scaling_factor;
 
@@ -302,7 +302,7 @@ namespace MeltPoolDG::Flow
         for (const unsigned int q : phi.quadrature_point_indices())
           {
             const auto [flux_m, grad_flux_m] = this->template rhs_boundary_face_integral_kernel<
-              FEFaceIntegrator<dim, dim + 2, number>>(phi, q, penalty_parameter);
+              FEFaceIntegrator<dim, dim + 2, number>>(phi, q, face, penalty_parameter);
 
             phi.submit_value(residual_rhs_scaling_factor * flux_m, q);
             phi.submit_gradient(residual_rhs_scaling_factor * grad_flux_m, q);

@@ -24,6 +24,19 @@
             "type": "FE_Q"
         }
     },
+    "cut param":
+    {
+        "nitsche parameter": "1",
+        "ghost-penalty":
+        {
+             "gamma A degree 0": "1",
+             "gamma A degree 1": "1",
+             "gamma A degree 2": "1",
+             "gamma M degree 0": "1",
+             "gamma M degree 1": "1",
+             "gamma M degree 2": "1",
+        }
+    }
     "evaporation":
     {
         "do level set pressure gradient interpolation": "false",
@@ -526,7 +539,7 @@
         "end time": "1",
         "max n steps": "10000000",
         "start time": "0",
-        "time step size": "0.01",
+        "time step size": "0",
         "time step size function": "0.0*t"
     }
 }

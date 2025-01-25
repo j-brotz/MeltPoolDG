@@ -4,8 +4,6 @@
 
 #include <deal.II/lac/la_parallel_vector.h>
 
-#include <deal.II/matrix_free/fe_evaluation.h>
-#include <deal.II/matrix_free/fe_point_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
@@ -28,19 +26,19 @@ namespace MeltPoolDG::Flow
             typename VectorizedArrayType>
   concept CellEvaluatorType =
     std::is_base_of_v<dealii::FEEvaluation<dim, -1, 0, n_components, number, VectorizedArrayType>,
-                      evaluator_type> ||
-    std::is_base_of_v<dealii::FEPointEvaluation<n_components, dim, dim, number>, evaluator_type>;
+                      evaluator_type> or
+    std::is_base_of_v<dealii::FEPointEvaluation<n_components, dim, dim, VectorizedArrayType>,
+                      evaluator_type>;
 
   template <typename evaluator_type,
             int dim,
             int n_components,
             typename number,
             typename VectorizedArrayType>
-  concept FaceEvaluatorType =
-    std::is_base_of_v<
-      dealii::FEFaceEvaluation<dim, -1, 0, n_components, number, VectorizedArrayType>,
-      evaluator_type> ||
-    std::is_base_of_v<dealii::FEFacePointEvaluation<n_components, dim, dim, number>,
+  concept FaceEvaluatorType = std::is_base_of_v<
+    dealii::FEFaceEvaluation<dim, -1, 0, n_components, number, VectorizedArrayType>,
+    evaluator_type> or
+    std::is_base_of_v<dealii::FEFacePointEvaluation<n_components, dim, dim, VectorizedArrayType>,
                       evaluator_type>;
 
   template <int dim, typename number>
@@ -167,6 +165,24 @@ namespace MeltPoolDG::Flow
     set_body_force(std::unique_ptr<dealii::Function<dim>> body_force_in);
 
     /**
+     * Set the inflow field function in the case of an unfitted inflow boundary.
+     */
+    // TODO: eliminate this function from operator base class?
+    virtual void
+    set_inflow_field_unfitted_boundary(std::shared_ptr<Function<dim>> & /*inflow_function*/){
+
+    };
+
+    /**
+     * Set the velocity function in the case of an unfitted (rigid) moving object.
+     */
+    // TODO: eliminate this function from operator base class?
+    virtual void
+    set_unfitted_object_velocity(std::shared_ptr<Function<dim>> & /*velocity_function*/){
+
+    };
+
+    /**
      * Compute the boundary conditions at the given time, i.e. evaluate the corresponding boundary
      * conditions at that time.
      *
@@ -209,7 +225,7 @@ namespace MeltPoolDG::Flow
                                 dealii::VectorizedArray<number>> Integrator>
     inline DEAL_II_ALWAYS_INLINE //
       std::tuple<ConservedVariablesType, ConservedVariablesGradType>
-      rhs_cell_intergal_kernel(
+      rhs_cell_integral_kernel(
         const Integrator                                              &evaluator,
         unsigned int                                                   q,
         const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> *constant_body_force) const;
@@ -265,6 +281,7 @@ namespace MeltPoolDG::Flow
       std::tuple<ConservedVariablesType, ConservedVariablesGradType>
       rhs_boundary_face_integral_kernel(const Integrator               &evaluator_m,
                                         unsigned int                    q,
+                                        const unsigned int              face,
                                         dealii::VectorizedArray<number> penalty_parameter) const;
 
     /**
@@ -335,7 +352,7 @@ namespace MeltPoolDG::Flow
   inline DEAL_II_ALWAYS_INLINE //
     std::tuple<typename CompressibleFlowOperatorBase<dim, number>::ConservedVariablesType,
                typename CompressibleFlowOperatorBase<dim, number>::ConservedVariablesGradType>
-    CompressibleFlowOperatorBase<dim, number>::rhs_cell_intergal_kernel(
+    CompressibleFlowOperatorBase<dim, number>::rhs_cell_integral_kernel(
       const Integrator                                              &evaluator,
       const unsigned int                                             q,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> *constant_body_force) const
@@ -426,6 +443,7 @@ namespace MeltPoolDG::Flow
     CompressibleFlowOperatorBase<dim, number>::rhs_boundary_face_integral_kernel(
       const Integrator                     &evaluator_m,
       const unsigned int                    q,
+      const unsigned int                    face,
       const dealii::VectorizedArray<number> penalty_parameter) const
   {
     const auto w_m      = evaluator_m.get_value(q);
@@ -435,13 +453,10 @@ namespace MeltPoolDG::Flow
     ConservedVariablesType     w_p;
     ConservedVariablesGradType grad_w_p;
 
-    this->get_adjacent_face_values_at_boundary(evaluator_m.quadrature_point(q),
-                                               normal,
-                                               evaluator_m.boundary_id(),
-                                               w_m,
-                                               w_p,
-                                               grad_w_m,
-                                               grad_w_p);
+    const auto boundary_id = scratch_data.get_matrix_free().get_boundary_id(face);
+
+    this->get_adjacent_face_values_at_boundary(
+      evaluator_m.quadrature_point(q), normal, boundary_id, w_m, w_p, grad_w_m, grad_w_p);
 
     auto flux = calculator_functions.calculate_convective_numerical_flux(w_m, w_p, normal);
 

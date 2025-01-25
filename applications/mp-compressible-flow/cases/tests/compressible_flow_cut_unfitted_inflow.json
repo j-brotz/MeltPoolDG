@@ -1,0 +1,55 @@
+{
+  "base": {
+    "problem name": "compressible_flow",
+    "case name": "cut_unfitted_inflow",
+    "dimension": "2",
+    "verbosity level": "0",
+    "do print parameters": "false",
+    "global refinements": "0"
+  },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "1e-5"
+  },
+  "output": {
+    "write frequency": "1",
+    "do user defined postprocessing": "true",
+    "paraview": {
+      "filename": "solution_cut_immersed_inflow",
+      "enable": "false"
+    }
+  },
+  "compressible navier stokes": {
+    "dynamic viscosity": "0.001",
+    "reference density": "0.001",
+    "numerical flux type": "lax_friedrichs_modified",
+    "courant number": "0.05",
+    "viscous courant number": "0.05",
+    "use cfl criteria": "true",
+    "gravity constant": "0.0",
+    "domain representation type": "cut",
+    "cut":  {
+      "two phase": "false",
+      "unfitted flow boundary condition": "inflow",
+      "cut param": {
+        "ghost-penalty": {
+          "gamma M degree 0": "0.1",
+          "gamma M degree 1": "0.01"
+        }
+      }
+    },
+    "time integration": {
+      "linear solver": {
+        "preconditioner type": "Identity",
+        "solver type": "CG",
+        "max iterations": "10000",
+        "rel tolerance": "1e-7",
+        "abs tolerance": "1e-20"
+      }
+    },
+    "fe": {
+      "degree": "1",
+      "type": "FE_DGQ"
+    }
+  }
+}

@@ -1,9 +1,8 @@
 #include <deal.II/matrix_free/operators.h>
 
 #include <meltpooldg/flow/compressible_flow_operator_base.hpp>
+#include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
-
-#include <meltpooldg/flow/compressible_flow_utils.h>
 
 namespace MeltPoolDG::Flow
 {

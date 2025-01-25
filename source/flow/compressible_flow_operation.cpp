@@ -11,6 +11,7 @@
 #include <meltpooldg/flow/compressible_flow_operator_implicit.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
+#include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <algorithm>
@@ -47,6 +48,13 @@ namespace MeltPoolDG::Flow
         scratch_data.initialize_dof_vector(v, comp_flow_dof_idx);
       });
     comp_flow_operator_->reinit();
+  }
+
+  template <int dim, typename number>
+  void
+  CompressibleFlowOperation<dim, number>::distribute_dofs(DoFHandler<dim> &dof_handler) const
+  {
+    FiniteElementUtils::distribute_dofs<dim, dim + 2>(comp_flow_data_.fe, dof_handler);
   }
 
   template <int dim, typename number>
@@ -308,7 +316,7 @@ namespace MeltPoolDG::Flow
           comp_flow_data_, scratch_data_, solution_history_, comp_flow_dof_idx, comp_flow_quad_idx);
       }
     else
-      AssertThrow(false,
+      AssertThrow(comp_flow_data_.domain_representation_type == "cut",
                   dealii::ExcMessage(
                     "The provided time integration scheme '" +
                     std::to_string(comp_flow_data_.time_integrator.integrator_type) +

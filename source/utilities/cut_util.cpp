@@ -18,28 +18,28 @@ namespace MeltPoolDG::CutUtil
   get_face_type(const std::pair<unsigned int, unsigned int> &adjacent_cell_categories)
   {
     // inside_face_liquid: both adjacent cells to the face are completely inside the liquid phase
-    if (adjacent_cell_categories.first == CellCategory::liquid &&
+    if (adjacent_cell_categories.first == CellCategory::liquid and
         adjacent_cell_categories.second == CellCategory::liquid)
       {
         return inside_face_liquid;
       }
     // inside_face_gas: both adjacent cells to the face are completely inside the gas phase
-    else if (adjacent_cell_categories.first == CellCategory::gas &&
+    else if (adjacent_cell_categories.first == CellCategory::gas and
              adjacent_cell_categories.second == CellCategory::gas)
       {
         return inside_face_gas;
       }
     // intersected_face: both adjacent cells to the face are intersected
-    else if (adjacent_cell_categories.first == CellCategory::intersected &&
+    else if (adjacent_cell_categories.first == CellCategory::intersected and
              adjacent_cell_categories.second == CellCategory::intersected)
       {
         return intersected_face;
       }
     // mixed_face_liquid: one adjacent cell of the face is completely inside the liquid phase
     // and the other adjacent cell of the face is intersected
-    else if ((adjacent_cell_categories.first == CellCategory::liquid &&
-              adjacent_cell_categories.second == CellCategory::intersected) ||
-             (adjacent_cell_categories.first == CellCategory::intersected &&
+    else if ((adjacent_cell_categories.first == CellCategory::liquid and
+              adjacent_cell_categories.second == CellCategory::intersected) or
+             (adjacent_cell_categories.first == CellCategory::intersected and
               adjacent_cell_categories.second == CellCategory::liquid))
       {
         return mixed_face_liquid;
@@ -99,11 +99,15 @@ namespace MeltPoolDG::CutUtil
     const VectorType                                                       &level_set,
     const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free,
     const int                                                               fe_degree,
-    const bool                                                              is_two_phase)
+    const bool                                                              is_two_phase,
+    const bool                                                              is_dg,
+    std::vector<
+      std::shared_ptr<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>>
+      mapping_info_faces)
   {
     AssertDimension(mapping_info_cells.size(), is_two_phase ? 2 : 1);
 
-    dealii::hp::QCollection<1> q_collection((dealii::QGauss<1>(fe_degree + 1)));
+    dealii::hp::QCollection<1> q_collection(dealii::QGauss<1>(fe_degree + 1));
 
     const unsigned int n_lanes = dealii::VectorizedArray<number>::size();
     const unsigned int n_cell_batches =
@@ -112,9 +116,14 @@ namespace MeltPoolDG::CutUtil
     dealii::NonMatching::DiscreteQuadratureGenerator<dim> quadrature_generator(
       q_collection, level_set_dof_handler, level_set);
 
+    dealii::NonMatching::DiscreteFaceQuadratureGenerator<dim> face_quadrature_generator(
+      q_collection, level_set_dof_handler, level_set);
+
     std::vector<dealii::Quadrature<dim>>                             quad_vec_cells_liquid_domain;
     std::vector<dealii::Quadrature<dim>>                             quad_vec_cells_gas_domain;
     std::vector<dealii::NonMatching::ImmersedSurfaceQuadrature<dim>> quad_vec_surface;
+    std::vector<std::vector<dealii::Quadrature<dim - 1>>>            quad_vec_faces_liquid_domain;
+    std::vector<std::vector<dealii::Quadrature<dim - 1>>>            quad_vec_faces_gas_domain;
     std::vector<typename dealii::DoFHandler<dim>::cell_iterator>     vector_cell_iterators;
     {
       const unsigned int reserve_size = n_cell_batches * n_lanes;
@@ -122,6 +131,12 @@ namespace MeltPoolDG::CutUtil
       if (is_two_phase)
         quad_vec_cells_gas_domain.reserve(reserve_size);
       quad_vec_surface.reserve(reserve_size);
+      if (is_dg and dim != 1 /*no intersected faces in 1D*/)
+        {
+          quad_vec_faces_liquid_domain.resize(reserve_size);
+          if (is_two_phase)
+            quad_vec_faces_gas_domain.reserve(reserve_size);
+        }
       vector_cell_iterators.reserve(reserve_size);
     }
 
@@ -132,14 +147,45 @@ namespace MeltPoolDG::CutUtil
             {
               vector_cell_iterators.push_back(matrix_free.get_cell_iterator(cell_batch, lane));
               quadrature_generator.generate(matrix_free.get_cell_iterator(cell_batch, lane));
+              if (is_dg and dim != 1)
+                {
+                  for (const auto f : dealii::GeometryInfo<dim>::face_indices())
+                    {
+                      face_quadrature_generator.generate(matrix_free.get_cell_iterator(cell_batch,
+                                                                                       lane),
+                                                         f);
+                      // Currently, the single-phase region is assigned to the positive level-set
+                      // region.
+                      quad_vec_faces_liquid_domain[cell_batch * n_lanes + lane].push_back(
+                        face_quadrature_generator.get_outside_quadrature());
+                      if (is_two_phase)
+                        quad_vec_faces_gas_domain[cell_batch * n_lanes + lane].push_back(
+                          face_quadrature_generator.get_inside_quadrature());
+                    }
+                }
             }
           else
             {
               // fill empty lanes with dummy data
               vector_cell_iterators.push_back(matrix_free.get_cell_iterator(cell_batch, 0));
               quadrature_generator.generate(matrix_free.get_cell_iterator(cell_batch, 0));
+              if (is_dg and dim != 1)
+                {
+                  for (const auto f : dealii::GeometryInfo<dim>::face_indices())
+                    {
+                      face_quadrature_generator.generate(matrix_free.get_cell_iterator(cell_batch,
+                                                                                       0),
+                                                         f);
+                      // Currently, the single-phase region is assigned to the positive level-set
+                      // region.
+                      quad_vec_faces_liquid_domain[cell_batch * n_lanes + lane].push_back(
+                        face_quadrature_generator.get_outside_quadrature());
+                      if (is_two_phase)
+                        quad_vec_faces_gas_domain[cell_batch * n_lanes + lane].push_back(
+                          face_quadrature_generator.get_inside_quadrature());
+                    }
+                }
             }
-
           quad_vec_cells_liquid_domain.push_back(quadrature_generator.get_outside_quadrature());
           if (is_two_phase)
             quad_vec_cells_gas_domain.push_back(quadrature_generator.get_inside_quadrature());
@@ -152,6 +198,13 @@ namespace MeltPoolDG::CutUtil
       mapping_info_cells[1]->reinit_cells(vector_cell_iterators, quad_vec_cells_gas_domain);
 
     mapping_info_surface.reinit_surface(vector_cell_iterators, quad_vec_surface);
+
+    if (is_dg and dim != 1)
+      {
+        mapping_info_faces[0]->reinit_faces(vector_cell_iterators, quad_vec_faces_liquid_domain);
+        if (is_two_phase)
+          mapping_info_faces[1]->reinit_faces(vector_cell_iterators, quad_vec_faces_gas_domain);
+      }
   }
 
 
@@ -177,7 +230,10 @@ namespace MeltPoolDG::CutUtil
     const dealii::LinearAlgebra::distributed::Vector<double> &,
     const dealii::MatrixFree<1, double, dealii::VectorizedArray<double>> &,
     const int,
-    const bool);
+    const bool,
+    const bool,
+    std::vector<
+      std::shared_ptr<dealii::NonMatching::MappingInfo<1, 1, dealii::VectorizedArray<double>>>>);
   template void
   compute_intersected_quadrature(
     std::vector<
@@ -187,7 +243,10 @@ namespace MeltPoolDG::CutUtil
     const dealii::LinearAlgebra::distributed::Vector<double> &,
     const dealii::MatrixFree<2, double, dealii::VectorizedArray<double>> &,
     const int,
-    const bool);
+    const bool,
+    const bool,
+    std::vector<
+      std::shared_ptr<dealii::NonMatching::MappingInfo<2, 2, dealii::VectorizedArray<double>>>>);
   template void
   compute_intersected_quadrature(
     std::vector<
@@ -197,5 +256,8 @@ namespace MeltPoolDG::CutUtil
     const dealii::LinearAlgebra::distributed::Vector<double> &,
     const dealii::MatrixFree<3, double, dealii::VectorizedArray<double>> &,
     const int,
-    const bool);
+    const bool,
+    const bool,
+    std::vector<
+      std::shared_ptr<dealii::NonMatching::MappingInfo<3, 3, dealii::VectorizedArray<double>>>>);
 } // namespace MeltPoolDG::CutUtil

@@ -47,6 +47,7 @@ namespace MeltPoolDG
     output.add_parameters(prm);
     profiling.add_parameters(prm);
     restart.add_parameters(prm);
+    cut_param.add_parameters(prm);
   }
 
   template <typename number>

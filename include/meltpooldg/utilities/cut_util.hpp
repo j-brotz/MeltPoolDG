@@ -97,9 +97,14 @@ namespace MeltPoolDG::CutUtil
    * information computation and mapping data storage of the surface.
    * @param fe_degree
    * @param is_two_phase
+   * @param is_dg Consider FE_DGQ elements?
+   * @param mapping_info_faces Vector of dealii::NonMatching::MappingInfo objects, provides
+   * the mapping information computation and mapping data storage of the faces on the
+   * inner subdomain and the outer subdomain, respectively.
    *
    * @note Currently, the @p fe_degree has to be the same for both subdomains in
    * the case of a two-domain problem.
+   * @note Keep attention of the definition of the level-set field orientation. Currently, the single-phase region is assigned to the positive level-set region.
    *
    */
   template <int dim, typename number, typename VectorType>
@@ -114,7 +119,11 @@ namespace MeltPoolDG::CutUtil
     const VectorType                                                       &level_set,
     const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free,
     const int                                                               fe_degree,
-    const bool                                                              is_two_phase);
+    const bool                                                              is_two_phase,
+    const bool                                                              is_dg = false,
+    std::vector<
+      std::shared_ptr<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>>
+      mapping_info_faces = {});
 
 
 
@@ -179,11 +188,11 @@ namespace MeltPoolDG::CutUtil
     const dealii::NonMatching::LocationToLevelSet neighbor_location =
       mesh_classifier.location_to_level_set(cell->neighbor(face_index));
 
-    if (cell_location == dealii::NonMatching::LocationToLevelSet::intersected &&
+    if (cell_location == dealii::NonMatching::LocationToLevelSet::intersected and
         neighbor_location != inactive_location)
       return true;
 
-    if (neighbor_location == dealii::NonMatching::LocationToLevelSet::intersected &&
+    if (neighbor_location == dealii::NonMatching::LocationToLevelSet::intersected and
         cell_location != inactive_location)
       return true;
 
@@ -244,9 +253,9 @@ namespace MeltPoolDG::CutUtil
     const dealii::NonMatching::LocationToLevelSet neighbor_location_old =
       mesh_classifier_old.location_to_level_set(cell->neighbor(face_index));
 
-    if (cell_location == dealii::NonMatching::LocationToLevelSet::intersected &&
-        neighbor_location == dealii::NonMatching::LocationToLevelSet::intersected &&
-        cell_location_old == inactive_location && neighbor_location_old == inactive_location)
+    if (cell_location == dealii::NonMatching::LocationToLevelSet::intersected and
+        neighbor_location == dealii::NonMatching::LocationToLevelSet::intersected and
+        cell_location_old == inactive_location and neighbor_location_old == inactive_location)
       return true;
 
     return false;

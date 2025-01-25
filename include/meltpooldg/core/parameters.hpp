@@ -19,6 +19,7 @@
 #include <meltpooldg/reinitialization/reinitialization_data.hpp>
 #include <meltpooldg/utilities/amr_data.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
+#include <meltpooldg/utilities/cut_param.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/material_data.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
@@ -87,5 +88,6 @@ namespace MeltPoolDG
     Profiling::ProfilingData<number>                   profiling;
     Restart::RestartData<number>                       restart;
     Flow::AdafloWrapperParameters                      adaflo_params;
+    CutParam<number>                                   cut_param;
   };
 } // namespace MeltPoolDG
