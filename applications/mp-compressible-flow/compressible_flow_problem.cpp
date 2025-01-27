@@ -1,8 +1,10 @@
 #include "compressible_flow_problem.hpp"
 
-#include <deal.II/numerics/vector_tools_interpolate.h>
+#include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/flow/cut_compressible_flow_operation.hpp>
+#include <meltpooldg/flow/compressible_flow_operation.hpp>
+#include <meltpooldg/flow/cutdg_compressible_flow_operation.hpp>
+#include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
@@ -27,14 +29,14 @@ namespace MeltPoolDG::Flow
 
         // use CFL condition to compute time step size if required
         if (simulation_case->parameters.flow.do_cfl_time_stepping)
-          time_iterator->set_current_time_increment(comp_flow_operation->compute_time_step_size(),
+          time_iterator->set_current_time_increment(comp_flow_operation.compute_time_step_size(),
                                                     std::numeric_limits<double>::max());
 
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout(1));
 
-        comp_flow_operation->solve(time_iterator->get_current_time(),
-                                   time_iterator->get_current_time_increment());
+        comp_flow_operation.solve(time_iterator->get_current_time(),
+                                  time_iterator->get_current_time_increment());
 
         // do output if requested
         output_results(time_iterator->get_current_time_step_number(),
@@ -79,7 +81,7 @@ namespace MeltPoolDG::Flow
   CompressibleFlowProblem<dim>::setup_dof_system()
   {
     // distribute DoFs
-    comp_flow_operation->distribute_dofs(dof_handler);
+    comp_flow_operation.distribute_dofs(dof_handler);
 
     scratch_data->create_partitioning();
 
@@ -105,7 +107,7 @@ namespace MeltPoolDG::Flow
 
     // print mesh information
     {
-      ScopedName sc("compFlow::cells");
+      const ScopedName sc("compFlow::cells");
       CellMonitor::add_info(sc,
                             scratch_data->get_triangulation().n_global_active_cells(),
                             scratch_data->get_min_cell_size(),
@@ -159,31 +161,35 @@ namespace MeltPoolDG::Flow
     // and "cut".
     if (simulation_case->parameters.flow.domain_representation_type == "fitted")
       {
-        comp_flow_operation = std::make_unique<CompressibleFlowOperation<dim, double>>(
-          *scratch_data, simulation_case->parameters.flow, comp_flow_dof_idx, comp_flow_quad_idx);
+        std::unique_ptr<DGCompressibleFlowOperation<dim, double>> operation =
+          std::make_unique<DGCompressibleFlowOperation<dim, double>>(
+            *scratch_data, simulation_case->parameters.flow, comp_flow_dof_idx, comp_flow_quad_idx);
+        comp_flow_operation = CompressibleFlowOperation<dim, double>(std::move(operation));
       }
     else if (simulation_case->parameters.flow.domain_representation_type == "cut")
       {
-        comp_flow_operation = std::make_unique<CutCompressibleFlowOperation<dim, double>>(
-          *scratch_data,
-          simulation_case->parameters.flow,
-          *time_iterator,
-          comp_flow_dof_idx,
-          level_set_dof_idx,
-          comp_flow_quad_idx,
-          level_set);
+        std::unique_ptr<CutDGCompressibleFlowOperation<dim, double>> operation =
+          std::make_unique<CutDGCompressibleFlowOperation<dim, double>>(
+            *scratch_data,
+            simulation_case->parameters.flow,
+            *time_iterator,
+            [&](const dealii::DoFHandler<dim> &dh) {
+              Assert(&dh == &scratch_data->get_dof_handler(comp_flow_dof_idx),
+                     dealii::ExcInternalError());
+              scratch_data->create_partitioning();
 
-        // register reinit_matrix_free function for cutDG solution transfer
-        comp_flow_operation->register_reinit_matrix_free([&](const DoFHandler<dim> &dh) {
-          Assert(&dh == &scratch_data->get_dof_handler(comp_flow_dof_idx), ExcInternalError());
+              // create the matrix-free object
+              scratch_data->build(true,
+                                  true,
+                                  true,
+                                  simulation_case->parameters.flow.fe.degree == 2);
 
-          scratch_data->create_partitioning();
-
-          // create the matrix-free object
-          scratch_data->build(true, true, true, simulation_case->parameters.flow.fe.degree == 2);
-
-          comp_flow_operation->reinit();
-        });
+              comp_flow_operation.reinit();
+            },
+            comp_flow_dof_idx,
+            level_set_dof_idx,
+            comp_flow_quad_idx,
+            level_set);
 
         // prescribe a function for the object velocity in the case of a moving immersed (rigid)
         // object
@@ -193,7 +199,7 @@ namespace MeltPoolDG::Flow
                                               "compressible_flow",
                                               true /* is_optional */);
         if (unfitted_object_velocity_function)
-          comp_flow_operation->set_unfitted_object_velocity(unfitted_object_velocity_function);
+          operation->set_unfitted_object_velocity(unfitted_object_velocity_function);
 
         // set inflow function in the case of an unfitted inflow boundary
         std::shared_ptr<Function<dim>> unfitted_inflow_function;
@@ -203,7 +209,9 @@ namespace MeltPoolDG::Flow
           !(simulation_case->parameters.flow.cut.unfitted_flow_boundary_condition ==
             "inflow") /* is_optional */);
         if (unfitted_inflow_function)
-          comp_flow_operation->set_inflow_field_unfitted_boundary(unfitted_inflow_function);
+          operation->set_inflow_field_unfitted_boundary(unfitted_inflow_function);
+
+        comp_flow_operation = CompressibleFlowOperation<dim, double>(std::move(operation));
       }
     else
       DEAL_II_NOT_IMPLEMENTED();
@@ -226,26 +234,31 @@ namespace MeltPoolDG::Flow
     setup_dof_system();
 
     // set boundary conditions
-    comp_flow_operation->set_inflow_boundary(
+    comp_flow_operation.set_boundary_condition(
+      CompressibleBoundaryConditionType::inflow,
       simulation_case->get_boundary_condition("inflow", "compressible_flow"));
 
-    comp_flow_operation->set_subsonic_outflow_with_fixed_static_pressure(
+    comp_flow_operation.set_boundary_condition(
+      CompressibleBoundaryConditionType::subsonic_outflow_fixed_pressure,
       simulation_case->get_boundary_condition("outflow_fixed_pressure", "compressible_flow"));
 
-    comp_flow_operation->set_subsonic_outflow_with_fixed_energy(
+    comp_flow_operation.set_boundary_condition(
+      CompressibleBoundaryConditionType::subsonic_outflow_fixed_energy,
       simulation_case->get_boundary_condition("outflow_fixed_energy", "compressible_flow"));
 
-    comp_flow_operation->set_slip_wall_boundary(
+    comp_flow_operation.set_boundary_condition(
+      CompressibleBoundaryConditionType::slip_wall,
       simulation_case->get_boundary_condition("slip_wall", "compressible_flow"));
 
-    comp_flow_operation->set_no_slip_adiabatic_wall_boundary(
+    comp_flow_operation.set_boundary_condition(
+      CompressibleBoundaryConditionType::no_slip_wall,
       simulation_case->get_boundary_condition("no_slip_wall", "compressible_flow"));
 
     // initialize operation
-    comp_flow_operation->reinit();
+    comp_flow_operation.reinit();
 
     // set initial condition for the flow field
-    comp_flow_operation->set_initial_condition(
+    comp_flow_operation.set_initial_condition(
       *simulation_case->get_initial_condition("compressible_flow"));
 
     // set body force
@@ -256,7 +269,7 @@ namespace MeltPoolDG::Flow
             dim > 2 ?
               std::vector<double>({0., 0., -simulation_case->parameters.flow.gravity_constant}) :
               std::vector<double>({0., -simulation_case->parameters.flow.gravity_constant}));
-        comp_flow_operation->set_body_force(std::move(body_force));
+        comp_flow_operation.set_body_force(std::move(body_force));
       }
 
     // initialize postprocessor
@@ -285,7 +298,7 @@ namespace MeltPoolDG::Flow
       return;
 
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
-      comp_flow_operation->attach_output_vectors(data_out);
+      comp_flow_operation.attach_output_vectors(data_out);
     };
 
     GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
@@ -304,7 +317,6 @@ namespace MeltPoolDG::Flow
     // postprocessing
     post_processor->process(time_step, generic_data_out, current_time);
   }
-
 
   template class CompressibleFlowProblem<1>;
   template class CompressibleFlowProblem<2>;

@@ -40,7 +40,13 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
   public:
     SimulationChannelParticleFlow(std::string parameter_file, const MPI_Comm mpi_communicator)
       : Flow::CompressibleFlowCase<dim>(parameter_file, mpi_communicator)
-    {}
+    {
+      AssertThrow(
+        dim > 1,
+        dealii::ExcMessage(
+          "The cylinder in channel flow case requires dim > 1 but the dimension is set to dim = " +
+          std::to_string(dim) + "."));
+    }
 
     void
     create_spatial_discretization() override
@@ -64,7 +70,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       this->attach_boundary_condition({1, inflow_outflow_solution},
                                       "outflow_fixed_energy",
                                       "compressible_flow");
+      // particle surface
       this->attach_boundary_condition({2, dummy_solution}, "no_slip_wall", "compressible_flow");
+      // channel boundary
       this->attach_boundary_condition({3, dummy_solution}, "slip_wall", "compressible_flow");
     }
 

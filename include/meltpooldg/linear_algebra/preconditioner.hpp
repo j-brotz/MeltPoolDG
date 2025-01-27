@@ -73,7 +73,6 @@ namespace MeltPoolDG
     {
       if (flag_update_preconditioner == always_update or flag_update_preconditioner == update_once)
         preconditioner_pimpl->update(external_setup);
-
       if (flag_update_preconditioner == update_once)
         flag_update_preconditioner = do_not_update;
     }

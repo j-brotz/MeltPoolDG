@@ -15,7 +15,7 @@ namespace dealii::numbers
   // set to invalid_double) to a string via Patterns::Tools::to_string<double>()
   // and then back to a double value. This entails a loss in the number of decimal
   // places and thus round-off errors.
-  const double invalid_double = -1e100;
+  constexpr double invalid_double = -1e100;
 
   // Check if a @p number is invalid, if @p number is smaller or equal to
   // numbers::invalid_double.

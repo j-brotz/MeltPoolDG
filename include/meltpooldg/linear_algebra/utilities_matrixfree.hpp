@@ -7,12 +7,17 @@
 
 #include <deal.II/lac/generic_linear_algebra.h>
 
+#include <deal.II/matrix_free/matrix_free.h>
+#include <deal.II/matrix_free/operators.h>
+
 #include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/utilities/fe_integrator.hpp>
 
 namespace MeltPoolDG::Utilities::MatrixFree
 {
-  using VectorType = LinearAlgebra::distributed::Vector<double>;
+  template <typename number = double>
+  using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
   /**
    * Compute the modified right-handside for (inhomogeneous) dirichlet boundary
    * conditions x_d
@@ -30,8 +35,8 @@ namespace MeltPoolDG::Utilities::MatrixFree
    */
   template <int dim,
             typename number           = double,
-            typename DoFVectorType    = VectorType,
-            typename SrcRhsVectorType = VectorType>
+            typename DoFVectorType    = VectorType<number>,
+            typename SrcRhsVectorType = VectorType<number>>
   inline void
   create_rhs_and_apply_dirichlet_matrixfree(
     OperatorMatrixFree<dim, number> &operator_base,
@@ -100,5 +105,36 @@ namespace MeltPoolDG::Utilities::MatrixFree
     scratch_data.get_constraint(dof_idx).set_zero(rhs);
 
     operator_base.reset_dof_index(dof_idx);
+  }
+
+  /**
+   * Apply the inverse of the mass matrix to the given dof vector.
+   *
+   * @param matrix_free Matrix free object on which the applier works on.
+   * @param dst Destination vector where the solution is stored.
+   * @param src Current solution of the primary variables.
+   * @param cell_range Cell range on which the inverse mass matrix is applied.
+   * @param dof_idx Relevant dof index in the matrix free object.
+   * @param quad_idx Relevant quadrature index in the matrix free object.
+   */
+  template <int dim, typename number>
+  void
+  local_apply_inverse_mass_matrix(const dealii::MatrixFree<dim, number>       &matrix_free,
+                                  VectorType<number>                          &dst,
+                                  const VectorType<number>                    &src,
+                                  const std::pair<unsigned int, unsigned int> &cell_range,
+                                  const unsigned int                           dof_idx,
+                                  const unsigned int                           quad_idx)
+  {
+    FECellIntegrator<dim, dim + 2, number> phi(matrix_free, dof_idx, quad_idx);
+    dealii::MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, dim + 2, number> inverse(phi);
+
+    for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+      {
+        phi.reinit(cell);
+        phi.read_dof_values(src);
+        inverse.apply(phi.begin_dof_values(), phi.begin_dof_values());
+        phi.set_dof_values(dst);
+      }
   }
 } // namespace MeltPoolDG::Utilities::MatrixFree

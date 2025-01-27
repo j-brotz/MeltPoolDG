@@ -124,6 +124,6 @@ namespace MeltPoolDG::LevelSet
 
     AdvectionDGOperator<dim> advection_DG_operator;
 
-    std::shared_ptr<TimeIntegratorBase<double, AdvectionDGOperator<dim>>> advection_integration;
+    std::shared_ptr<TimeIntegratorBase<double>> advection_integration;
   };
 } // namespace MeltPoolDG::LevelSet

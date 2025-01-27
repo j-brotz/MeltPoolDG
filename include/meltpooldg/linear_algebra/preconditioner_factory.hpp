@@ -58,8 +58,10 @@ namespace MeltPoolDG
             if constexpr (JacobiPreconditionerOperatorType<OperatorType, VectorType>)
               {
                 if (do_matrix_free)
-                  return Preconditioner<dim, VectorType>(
-                    JacobiPreconditioner<dim, VectorType, OperatorType>(*operator_in));
+                  {
+                    return Preconditioner<dim, VectorType>(
+                      JacobiPreconditioner<dim, VectorType, OperatorType>(*operator_in));
+                  }
               }
             return Preconditioner<dim, VectorType>(
               DealiiPreconditionerWrapper<dim,

@@ -24,16 +24,18 @@ namespace MeltPoolDG
      TimeIntegratorSchemes::implicit_euler,
      TimeIntegratorSchemes::crank_nicolson}};
 
-  template <typename number, typename PDEOperator = std::monostate>
-  class OneStepTheta final : public TimeIntegratorBase<number, PDEOperator>
+  template <typename number, typename PDEOperator>
+  class OneStepTheta final : public TimeIntegratorBase<number>
   {
   public:
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-    OneStepTheta(const TimeIntegratorData       &time_integrator_data_in,
+    OneStepTheta(const PDEOperator              &pde_operator,
+                 const TimeIntegratorData       &time_integrator_data_in,
                  const LinearSolverData<number> &linear_solver_data_in)
-      : TimeIntegratorBase<number, PDEOperator>(time_integrator_data_in)
+      : TimeIntegratorBase<number>(time_integrator_data_in)
+      , pde_operator(pde_operator)
       , linear_solver_data(linear_solver_data_in)
     {
       switch (this->time_integrator_data.integrator_type)
@@ -77,7 +79,6 @@ namespace MeltPoolDG
      * In addition, if @p monitoring_vector is set in the base class the right-hand-side of the
      * resulting linear equation system is copied to the monitoring vector.
      *
-     * @param pde_operator Class providing the 'apply_operator()' function to compute f(y).
      * @param current_time Current time.
      * @param time_step Current time step size.
      * @param solution_history Solution history object providing the current and all required
@@ -94,7 +95,6 @@ namespace MeltPoolDG
      */
     void
     perform_time_step(
-      const PDEOperator                                                   &pde_operator,
       const number                                                         current_time,
       const number                                                         time_step,
       ::TimeIntegration::SolutionHistory<VectorType>                      &solution_history,
@@ -192,6 +192,7 @@ namespace MeltPoolDG
     mutable VectorType right_hand_side_;
     mutable VectorType buffer;
 
-    const LinearSolverData<number> linear_solver_data;
+    const PDEOperator              &pde_operator;
+    const LinearSolverData<number> &linear_solver_data;
   };
 } // namespace MeltPoolDG

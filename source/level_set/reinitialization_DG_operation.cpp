@@ -47,11 +47,11 @@ namespace MeltPoolDG::LevelSet
       normal_vector_operation->get_solution_normal_vector());
 
     reinitialization_integration =
-      std::shared_ptr<TimeIntegratorBase<double, ReinitilizationDGOperator<dim, double>>>(
-        time_integrator_factory<double, ReinitilizationDGOperator<dim, double>>(
-          reinit_data.reinitilization_DG_specific_data.time_integration_data,
-          reinit_data.linear_solver,
-          scratch_data_in.get_timer()));
+      std::shared_ptr<TimeIntegratorBase<double>>(time_integrator_factory<double>(
+        *reinit_DG_operator,
+        reinit_data.reinitilization_DG_specific_data.time_integration_data,
+        reinit_data.linear_solver,
+        scratch_data_in.get_timer()));
   }
 
   template <int dim>
@@ -88,11 +88,11 @@ namespace MeltPoolDG::LevelSet
       normal_vector_operation->get_solution_normal_vector());
 
     reinitialization_integration =
-      std::shared_ptr<TimeIntegratorBase<double, ReinitilizationDGOperator<dim, double>>>(
-        time_integrator_factory<double, ReinitilizationDGOperator<dim, double>>(
-          reinit_data.reinitilization_DG_specific_data.time_integration_data,
-          reinit_data.linear_solver,
-          scratch_data_in.get_timer()));
+      std::shared_ptr<TimeIntegratorBase<double>>(time_integrator_factory<double>(
+        *reinit_DG_operator,
+        reinit_data.reinitilization_DG_specific_data.time_integration_data,
+        reinit_data.linear_solver,
+        scratch_data_in.get_timer()));
   }
 
   template <int dim>
@@ -238,8 +238,7 @@ namespace MeltPoolDG::LevelSet
             solution_history.set_recent_old_solution(solution_history.get_current_solution());
           }
 
-        reinitialization_integration->perform_time_step(*reinit_DG_operator,
-                                                        time_iterator.get_old_time(),
+        reinitialization_integration->perform_time_step(time_iterator.get_old_time(),
                                                         time_iterator.get_current_time_increment(),
                                                         solution_history);
         solution_history.get_recent_old_solution().add(-1.0,

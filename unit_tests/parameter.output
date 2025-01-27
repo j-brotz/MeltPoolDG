@@ -259,6 +259,7 @@
             },
             "time integration":
             {
+                "preconditioner update frequency": "100",
                 "type": "crank_nicolson",
                 "linear solver":
                 {

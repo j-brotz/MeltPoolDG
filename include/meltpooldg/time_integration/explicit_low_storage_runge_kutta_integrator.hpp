@@ -38,8 +38,7 @@ namespace MeltPoolDG
 
   template <typename number,
             ExplicitPDEOperator<number, LinearAlgebra::distributed::Vector<number>> PDEOperator>
-  class LowStorageExplicitRungeKuttaIntegrator final
-    : public TimeIntegratorBase<number, PDEOperator>
+  class LowStorageExplicitRungeKuttaIntegrator final : public TimeIntegratorBase<number>
   {
   public:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -47,12 +46,16 @@ namespace MeltPoolDG
     /**
      * Constructor. Set the coefficients for the low storage explicit Runge-Kutta scheme.
      *
+     * @param pde_operator Operator providing the necessary functionality to perform the time
+     * integration.
      * @param time_integrator_data Time integrator data struct setting the scheme of the integrator.
      * @param timer Timer used for computation time tracking.
      */
-    LowStorageExplicitRungeKuttaIntegrator(const TimeIntegratorData &time_integrator_data,
+    LowStorageExplicitRungeKuttaIntegrator(const PDEOperator        &pde_operator,
+                                           const TimeIntegratorData &time_integrator_data,
                                            dealii::TimerOutput      &timer)
-      : TimeIntegratorBase<number, PDEOperator>(time_integrator_data)
+      : TimeIntegratorBase<number>(time_integrator_data)
+      , pde_operator(pde_operator)
       , timer(timer)
     {
       switch (time_integrator_data.integrator_type)
@@ -172,7 +175,6 @@ namespace MeltPoolDG
      * Perform the actual time integration for a single time step using the low storage explicit
      * Runge-Kutta scheme.
      *
-     * @param pde_operator Class providing the 'apply_operator()' function to compute f(y).
      * @param current_time Current time.
      * @param time_step Current time step size.
      * @param solution_history Solution history object providing the current and all required
@@ -187,7 +189,6 @@ namespace MeltPoolDG
      */
     void
     perform_time_step(
-      const PDEOperator                                                   &pde_operator,
       const number                                                         current_time,
       const number                                                         time_step,
       ::TimeIntegration::SolutionHistory<VectorType>                      &solution_history,
@@ -276,6 +277,8 @@ namespace MeltPoolDG
     // register for time integrator
     LinearAlgebra::distributed::Vector<number> rk_register_ri;
     LinearAlgebra::distributed::Vector<number> rk_register_ki;
+
+    const PDEOperator &pde_operator;
 
     TimerOutput &timer;
   };
