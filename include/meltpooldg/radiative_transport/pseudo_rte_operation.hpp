@@ -5,7 +5,7 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
+#include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/radiative_transport/pseudo_rte_operator.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
@@ -45,11 +45,7 @@ namespace MeltPoolDG::RadiativeTransport
 
     TimeIterator<double> pseudo_time_iterator;
 
-    std::shared_ptr<
-      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>
-                                                        preconditioner_matrixfree;
-    std::shared_ptr<DiagonalMatrix<VectorType>>         diag_preconditioner_matrixfree;
-    std::shared_ptr<TrilinosWrappers::PreconditionBase> trilinos_preconditioner_matrixfree;
+    Preconditioner<dim, VectorType> preconditioner;
 
   public:
     PseudoRTEOperation(const ScratchData<dim>               &scratch_data_in,

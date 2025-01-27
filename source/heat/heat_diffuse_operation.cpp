@@ -7,6 +7,7 @@
 #include <meltpooldg/heat/heat_diffuse_operation.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
+#include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/linear_algebra/predictor_data.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
@@ -63,13 +64,8 @@ namespace MeltPoolDG::Heat
       level_set_as_heaviside,
       do_solidification);
 
-
-    /*
-     * setup preconditioner for matrix-free computation
-     */
-    heat_transfer_preconditioner = std::make_unique<
-      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>(
-      scratch_data, temp_dof_idx, heat_data.linear_solver.preconditioner_type, *heat_operator);
+    preconditioner = make_preconditioner<dim, HeatDiffuseMultiPhaseOperator<dim>, VectorType>(
+      heat_data.linear_solver.preconditioner_type, heat_operator.get());
 
     setup_newton();
   }
@@ -87,24 +83,13 @@ namespace MeltPoolDG::Heat
     };
 
     newton.solve_with_jacobian = [&](const VectorType &rhs, VectorType &solution_update) -> int {
-      if (diag_preconditioner)
-        return LinearSolver::solve<VectorType, OperatorMatrixFree<dim, double>>(
-          *heat_operator,
-          solution_update,
-          rhs,
-          heat_data.linear_solver,
-          *diag_preconditioner,
-          "heat_operation");
-      else if (trilinos_preconditioner)
-        return LinearSolver::solve<VectorType, OperatorMatrixFree<dim, double>>(
-          *heat_operator,
-          solution_update,
-          rhs,
-          heat_data.linear_solver,
-          *trilinos_preconditioner,
-          "heat_operation");
-      else
-        AssertThrow(false, ExcNotImplemented());
+      return LinearSolver::solve<VectorType, OperatorMatrixFree<dim, double>>(
+        *heat_operator,
+        solution_update,
+        rhs,
+        heat_data.linear_solver,
+        preconditioner,
+        "heat_operation");
     };
 
     newton.reinit_vector = [&](VectorType &v) {
@@ -199,11 +184,7 @@ namespace MeltPoolDG::Heat
 
     heat_operator->reinit();
 
-    /*
-     * setup sparsity pattern of system matrix only if the latter is
-     * needed for computing the preconditioner
-     */
-    heat_transfer_preconditioner->reinit();
+    preconditioner.reinit(scratch_data, temp_dof_idx);
   }
 
   template <int dim>
@@ -263,23 +244,7 @@ namespace MeltPoolDG::Heat
 
     // setup preconditioner
     heat_operator->pre();
-    switch (heat_data.linear_solver.preconditioner_type)
-      {
-          case PreconditionerType::Diagonal: {
-            diag_preconditioner = heat_transfer_preconditioner->compute_diagonal_preconditioner();
-            break;
-          }
-        case PreconditionerType::Identity:
-        case PreconditionerType::AMG:
-          case PreconditionerType::ILU: {
-            trilinos_preconditioner =
-              heat_transfer_preconditioner->compute_trilinos_preconditioner();
-            break;
-          }
-          default: {
-            AssertThrow(false, ExcNotImplemented());
-          }
-      }
+    preconditioner.update();
 
     try
       {

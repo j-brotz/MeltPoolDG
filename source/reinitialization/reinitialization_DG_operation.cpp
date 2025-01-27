@@ -1,4 +1,3 @@
-#include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
 #include <meltpooldg/reinitialization/reinitialization_DG_operation.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>

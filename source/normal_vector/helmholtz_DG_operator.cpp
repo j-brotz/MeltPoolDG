@@ -1,4 +1,5 @@
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
+#include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/normal_vector/helmholtz_DG_operator.hpp>
 
 
@@ -64,7 +65,11 @@ namespace MeltPoolDG::LevelSet
      * Therefore a preconditioner is needed.
      */
     preconditioner =
-      Preconditioner::get_preconditioner_trilinos(system_matrix, preconditioner_type);
+      make_preconditioner<dim, HelmholtzDGOperator<dim, Number>, VectorType>(preconditioner_type,
+                                                                             this,
+                                                                             false);
+    preconditioner.reinit(scratch_data, dof_idx);
+    preconditioner.update(&system_matrix);
   }
 
   template <int dim, typename Number>

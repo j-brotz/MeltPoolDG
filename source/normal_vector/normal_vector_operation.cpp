@@ -1,3 +1,4 @@
+#include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>
@@ -47,46 +48,19 @@ namespace MeltPoolDG::LevelSet
         if (update_ghosts)
           solution_history.get_current_solution().update_ghost_values();
 
-        preconditioner_matrixfree->reinit();
-
-        if (normal_vector_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
-          diag_preconditioner_matrixfree =
-            preconditioner_matrixfree->compute_block_diagonal_preconditioner();
-        else
-          trilinos_preconditioner_matrixfree =
-            preconditioner_matrixfree->compute_trilinos_preconditioner();
+        preconditioner.reinit(scratch_data, normal_dof_idx);
+        preconditioner.update();
 
         if (update_ghosts)
           solution_history.get_current_solution().zero_out_ghost_values();
       }
   }
 
-  template <typename PreconditionerType>
-  class BlockPreconditionerWrapper
-  {
-  public:
-    BlockPreconditionerWrapper(const PreconditionerType &precon)
-      : precon(precon)
-    {}
-
-    template <typename Number>
-    void
-    vmult(LinearAlgebra::distributed::BlockVector<Number>       &dst,
-          const LinearAlgebra::distributed::BlockVector<Number> &src) const
-    {
-      for (unsigned int b = 0; b < dst.n_blocks(); ++b)
-        precon.vmult(dst.block(b), src.block(b));
-    }
-
-  private:
-    const PreconditionerType &precon;
-  };
-
   template <int dim>
   void
   NormalVectorOperation<dim>::solve()
   {
-    ScopedName         sc("normal::solve");
+    const ScopedName   sc("normal::solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
 
     const bool update_ghosts = !solution_level_set.has_ghost_elements();
@@ -115,26 +89,13 @@ namespace MeltPoolDG::LevelSet
 
     if (normal_vector_data.linear_solver.do_matrix_free)
       {
-        Assert(preconditioner_matrixfree, ExcNotImplemented());
-
         normal_vector_operator->create_rhs(rhs, solution_level_set);
-
-        if (diag_preconditioner_matrixfree)
-          iter = LinearSolver::solve<BlockVectorType>(*normal_vector_operator,
-                                                      solution_history.get_current_solution(),
-                                                      rhs,
-                                                      normal_vector_data.linear_solver,
-                                                      *diag_preconditioner_matrixfree,
-                                                      "normal_vector_operation");
-        else
-          iter = LinearSolver::solve<BlockVectorType>(
-            *normal_vector_operator,
-            solution_history.get_current_solution(),
-            rhs,
-            normal_vector_data.linear_solver,
-            BlockPreconditionerWrapper<TrilinosWrappers::PreconditionBase>(
-              *trilinos_preconditioner_matrixfree),
-            "normal_vector_operation");
+        iter = LinearSolver::solve<BlockVectorType>(*normal_vector_operator,
+                                                    solution_history.get_current_solution(),
+                                                    rhs,
+                                                    normal_vector_data.linear_solver,
+                                                    preconditioner,
+                                                    "normal_vector_operation");
       }
     else
       {
@@ -157,7 +118,7 @@ namespace MeltPoolDG::LevelSet
         scratch_data.get_constraint(normal_dof_idx)
           .distribute(solution_history.get_current_solution().block(d));
       }
-    const unsigned int        verbosity_l2_norm = dim > 1 ? 0 : 1;
+    constexpr unsigned int    verbosity_l2_norm = dim > 1 ? 0 : 1;
     const ConditionalOStream &pcout =
       scratch_data.get_pcout(std::max(normal_vector_data.verbosity_level, verbosity_l2_norm));
 
@@ -221,18 +182,11 @@ namespace MeltPoolDG::LevelSet
                                                                          normal_quad_idx,
                                                                          ls_dof_idx,
                                                                          &solution_level_set);
-    /*
-     * initialize preconditioner matrix-free
-     */
-    if (normal_vector_data.linear_solver.do_matrix_free)
-      {
-        preconditioner_matrixfree = std::make_shared<
-          Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>(
-          scratch_data,
-          normal_dof_idx,
-          normal_vector_data.linear_solver.preconditioner_type,
-          *normal_vector_operator);
-      }
+
+    preconditioner = make_preconditioner<dim, NormalVectorOperator<dim>, BlockVectorType>(
+      normal_vector_data.linear_solver.preconditioner_type,
+      normal_vector_operator.get(),
+      normal_vector_data.linear_solver.do_matrix_free);
   }
 
 

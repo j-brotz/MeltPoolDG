@@ -16,7 +16,6 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
-#include <deal.II/lac/trilinos_precondition.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
@@ -25,7 +24,7 @@
 #include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
 #include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
-#include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
+#include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
@@ -90,11 +89,7 @@ namespace MeltPoolDG::Heat
 
     std::unique_ptr<HeatDiffuseMultiPhaseOperator<dim>> heat_operator;
 
-    std::unique_ptr<
-      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>
-                                                        heat_transfer_preconditioner;
-    std::shared_ptr<DiagonalMatrix<VectorType>>         diag_preconditioner;
-    std::shared_ptr<TrilinosWrappers::PreconditionBase> trilinos_preconditioner;
+    Preconditioner<dim, VectorType> preconditioner;
 
     // determine whether solution vectors are prepared for time advance
     bool ready_for_time_advance = false;

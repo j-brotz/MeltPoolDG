@@ -1,4 +1,5 @@
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
+#include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/radiative_transport/pseudo_rte_operation.hpp>
 #include <meltpooldg/utilities/journal.hpp>
@@ -30,19 +31,17 @@ namespace MeltPoolDG::RadiativeTransport
     , solution_history(2)
     , pseudo_time_iterator(rte_data.pseudo_time_stepping.time_stepping_data)
   {
-    pseudo_rte_operator       = std::make_unique<PseudoRTEOperator<dim, double>>(scratch_data,
+    pseudo_rte_operator = std::make_unique<PseudoRTEOperator<dim, double>>(scratch_data,
                                                                            rte_data_in,
                                                                            laser_direction_in,
                                                                            heaviside,
                                                                            rte_dof_idx,
                                                                            rte_quad_idx,
                                                                            hs_dof_idx);
-    preconditioner_matrixfree = std::make_shared<
-      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>(
-      scratch_data,
-      rte_dof_idx,
-      rte_data.pseudo_time_stepping.linear_solver.preconditioner_type,
-      *pseudo_rte_operator);
+    preconditioner      = make_preconditioner<dim, PseudoRTEOperator<dim, double>, VectorType>(
+      rte_data.linear_solver.preconditioner_type,
+      pseudo_rte_operator.get(),
+      rte_data.linear_solver.do_matrix_free);
   }
 
   template <int dim>
@@ -54,7 +53,7 @@ namespace MeltPoolDG::RadiativeTransport
 
     scratch_data.initialize_dof_vector(rhs, rte_hanging_nodes_dof_idx);
 
-    preconditioner_matrixfree->reinit();
+    preconditioner.reinit(scratch_data, rte_dof_idx);
 
     if (rte_data.pseudo_time_stepping.time_stepping_data.time_step_size > 1e-16)
       pseudo_rte_operator->reset_time_increment(
@@ -150,31 +149,13 @@ namespace MeltPoolDG::RadiativeTransport
       rte_hanging_nodes_dof_idx,
       true);
 
-    if (this->rte_data.pseudo_time_stepping.linear_solver.preconditioner_type ==
-        PreconditionerType::Diagonal)
-      {
-        diag_preconditioner_matrixfree =
-          preconditioner_matrixfree->compute_diagonal_preconditioner();
-
-        LinearSolver::solve<VectorType>(*pseudo_rte_operator,
-                                        solution_history.get_current_solution(),
-                                        rhs,
-                                        this->rte_data.pseudo_time_stepping.linear_solver,
-                                        *diag_preconditioner_matrixfree,
-                                        "pseudo_rte");
-      }
-    else
-      {
-        trilinos_preconditioner_matrixfree =
-          preconditioner_matrixfree->compute_trilinos_preconditioner();
-
-        LinearSolver::solve<VectorType>(*pseudo_rte_operator,
-                                        solution_history.get_current_solution(),
-                                        rhs,
-                                        this->rte_data.pseudo_time_stepping.linear_solver,
-                                        *trilinos_preconditioner_matrixfree,
-                                        "pseudo_rte");
-      }
+    preconditioner.update();
+    LinearSolver::solve<VectorType>(*pseudo_rte_operator,
+                                    solution_history.get_current_solution(),
+                                    rhs,
+                                    this->rte_data.pseudo_time_stepping.linear_solver,
+                                    preconditioner,
+                                    "pseudo_rte");
 
     if (sol_update_ghosts)
       solution_history.get_recent_old_solution().zero_out_ghost_values();

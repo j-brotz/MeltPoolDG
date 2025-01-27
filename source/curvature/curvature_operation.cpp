@@ -1,7 +1,10 @@
 #include <meltpooldg/curvature/curvature_operation.hpp>
+#include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
+
+#include <any>
 
 namespace MeltPoolDG::LevelSet
 {
@@ -37,7 +40,7 @@ namespace MeltPoolDG::LevelSet
   void
   CurvatureOperation<dim>::update_normal_vector()
   {
-    ScopedName         sc("curvature::update_normal_vector");
+    const ScopedName   sc("curvature::update_normal_vector");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
 
     normal_vector_operation.solve();
@@ -47,12 +50,10 @@ namespace MeltPoolDG::LevelSet
   void
   CurvatureOperation<dim>::solve()
   {
-    ScopedName         sc("curvature::solve");
+    const ScopedName   sc("curvature::solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
 
-    /*
-     *    compute and solve the normal vector field for the given level set
-     */
+    // compute and solve the normal vector field for the given level set
     normal_vector_operation.solve();
 
     if (!curvature_data.enable)
@@ -81,46 +82,30 @@ namespace MeltPoolDG::LevelSet
     predictor->vmult(*curvature_operator, solution_curvature_predictor, rhs);
 
     // no need to compute curvature in 1d
-    if (dim == 1)
+    if constexpr (dim == 1)
       return;
 
     unsigned int iter = 0;
 
     if (curvature_data.linear_solver.do_matrix_free)
       {
-        Assert(preconditioner_matrixfree, ExcNotImplemented());
-
         curvature_operator->create_rhs(rhs, normal_vector_operation.get_solution_normal_vector());
-
-        if (curvature_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
-          {
-            iter = LinearSolver::solve<VectorType>(*curvature_operator,
-                                                   solution_history.get_current_solution(),
-                                                   rhs,
-                                                   curvature_data.linear_solver,
-                                                   *diag_preconditioner_matrixfree,
-                                                   "curvature_operation");
-          }
-        else
-          {
-            iter = LinearSolver::solve<VectorType>(*curvature_operator,
-                                                   solution_history.get_current_solution(),
-                                                   rhs,
-                                                   curvature_data.linear_solver,
-                                                   *trilinos_preconditioner_matrixfree,
-                                                   "curvature_operation");
-          }
+        iter = LinearSolver::solve<VectorType>(*curvature_operator,
+                                               solution_history.get_current_solution(),
+                                               rhs,
+                                               curvature_data.linear_solver,
+                                               preconditioner,
+                                               "curvature_operation");
       }
     else
       {
         curvature_operator->compute_system_matrix_and_rhs(
           normal_vector_operation.get_solution_normal_vector(), rhs);
-
         iter = LinearSolver::solve<VectorType>(curvature_operator->get_system_matrix(),
                                                solution_history.get_current_solution(),
                                                rhs,
                                                curvature_data.linear_solver,
-                                               PreconditionIdentity(),
+                                               preconditioner,
                                                "curvature_operation");
       }
 
@@ -201,25 +186,16 @@ namespace MeltPoolDG::LevelSet
     if (curvature_operator)
       curvature_operator->reinit();
 
-    if (curvature_data.linear_solver.do_matrix_free)
-      {
-        /*
-         * setup sparsity pattern of system matrix only if the latter is
-         * needed for computing the preconditioner
-         */
-        preconditioner_matrixfree->reinit();
-        /*
-         * precompute system matrix
-         */
-        if (curvature_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
-          diag_preconditioner_matrixfree =
-            preconditioner_matrixfree->compute_diagonal_preconditioner();
-        else
-          trilinos_preconditioner_matrixfree =
-            preconditioner_matrixfree->compute_trilinos_preconditioner();
-      }
-
+    preconditioner.reinit(scratch_data, curv_dof_idx);
     normal_vector_operation.reinit();
+    if (curvature_data.linear_solver.do_matrix_free)
+      preconditioner.update();
+    else
+      {
+        curvature_operator->compute_system_matrix_and_rhs(
+          normal_vector_operation.get_solution_normal_vector(), rhs);
+        preconditioner.update(&curvature_operator->get_system_matrix());
+      }
   }
 
   template <int dim>
@@ -243,16 +219,12 @@ namespace MeltPoolDG::LevelSet
                                                                   normal_dof_idx,
                                                                   ls_dof_idx,
                                                                   &solution_levelset);
-    /*
-     * initialize preconditioner matrix-free
-     */
-    if (curvature_data.linear_solver.do_matrix_free)
-      preconditioner_matrixfree = std::make_shared<
-        Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>(
-        scratch_data,
-        curv_dof_idx,
-        curvature_data.linear_solver.preconditioner_type,
-        *curvature_operator);
+
+
+    preconditioner = make_preconditioner<dim, CurvatureOperator<dim>, VectorType>(
+      curvature_data.linear_solver.preconditioner_type,
+      curvature_operator.get(),
+      curvature_data.linear_solver.do_matrix_free);
   }
 
   template class CurvatureOperation<1>;

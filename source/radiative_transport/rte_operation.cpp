@@ -4,6 +4,7 @@
 #include <deal.II/dofs/dof_tools.h>
 
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
+#include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/radiative_transport/rte_operation.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
@@ -48,9 +49,10 @@ namespace MeltPoolDG::RadiativeTransport
      */
     rte_operator = std::make_unique<RadiativeTransportOperator<dim, double>>(
       scratch_data, rte_data, laser_direction, heaviside, rte_dof_idx, rte_quad_idx, hs_dof_idx);
-    preconditioner_matrixfree = std::make_shared<
-      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>(
-      scratch_data, rte_dof_idx, rte_data.linear_solver.preconditioner_type, *rte_operator);
+    preconditioner = make_preconditioner<dim, RadiativeTransportOperator<dim, double>, VectorType>(
+      rte_data.linear_solver.preconditioner_type,
+      rte_operator.get(),
+      rte_data.linear_solver.do_matrix_free);
 
     if (rte_data.predictor_type == RTEPredictorType::pseudo_time_stepping)
       pseudo_rte_operation = std::make_unique<PseudoRTEOperation<dim>>(scratch_data,
@@ -75,7 +77,7 @@ namespace MeltPoolDG::RadiativeTransport
     scratch_data.initialize_dof_vector(intensity, rte_dof_idx);
     scratch_data.initialize_dof_vector(rhs, rte_dof_idx);
 
-    preconditioner_matrixfree->reinit();
+    preconditioner.reinit(scratch_data, rte_dof_idx);
 
     if (rte_data.predictor_type == RTEPredictorType::pseudo_time_stepping)
       pseudo_rte_operation->reinit();
@@ -129,28 +131,10 @@ namespace MeltPoolDG::RadiativeTransport
                                                                      rte_hanging_nodes_dof_idx,
                                                                      true /*zero out rhs*/);
 
-    if (rte_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
-      {
-        diag_preconditioner_matrixfree =
-          preconditioner_matrixfree->compute_diagonal_preconditioner();
-        iter = LinearSolver::solve<VectorType>(*rte_operator,
-                                               intensity,
-                                               rhs,
-                                               rte_data.linear_solver,
-                                               *diag_preconditioner_matrixfree,
-                                               "rte");
-      }
-    else
-      {
-        trilinos_preconditioner_matrixfree =
-          preconditioner_matrixfree->compute_trilinos_preconditioner();
-        iter = LinearSolver::solve<VectorType>(*rte_operator,
-                                               intensity,
-                                               rhs,
-                                               rte_data.linear_solver,
-                                               *trilinos_preconditioner_matrixfree,
-                                               "rte");
-      }
+
+    preconditioner.update();
+    iter = LinearSolver::solve<VectorType>(
+      *rte_operator, intensity, rhs, rte_data.linear_solver, preconditioner, "rte");
 
     if (update_ghosts)
       heaviside.zero_out_ghost_values();
