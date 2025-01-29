@@ -15,7 +15,7 @@ The aim of `MeltPoolDG` is to provide application-oriented, research-driven solv
 
 The principal developers are (in chronological order of entering the project):
 * [Magdalena Schreter-Fleischhacker](https://www.uibk.ac.at/bft/mitarbeiter/schreter.html) [@mschreter](https://github.com/mschreter), University of Innsbruck (AT)/Technical University of Munich (DE)
-* [Peter Munch](https://peterrum.github.io/) [@peterrum](https://github.com/peterrum), Uppsala University (SWE)
+* [Peter Munch](https://peterrum.github.io/) [@peterrum](https://github.com/peterrum), Technical University of Berlin (DE)
 * [Nils Much](https://www.mw.tum.de/lnm/staff/nils-much/) [@nmuch](https://github.com/nmuch), Technical University of Munich (DE)
 
 We gratefully acknowledge the contributions and discussions with Christoph Meier (Technical University of Munich) and Martin Kronbichler (Ruhr University Bochum).
