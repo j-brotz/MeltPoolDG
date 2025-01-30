@@ -1,18 +1,5 @@
 #pragma once
 
-// TODO This file is the old version of
-// applications/mp-radiative-transport/cases/radiative_transport.hpp.
-//
-// This file is still needed for the tests
-// - radiative_transport_with_heat_transfer
-// - radiative_transport_with_heat_transfer_amr
-// - radiative_transport_with_heat_transfer_do_move
-// Which use the heat transfer problem and this case.
-//
-// After the heat transfer problem has been extracted to it's own standalone we can use it with
-// the new case (applications/mp-radiative-transport/cases/radiative_transport.hpp) instead and
-// delete this file.
-
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
@@ -40,6 +27,8 @@
 #include <string>
 #include <utility>
 
+#include "../radiative_transport_case.hpp"
+
 /**
  * This simulation is mainly meant to test the functionality of RTE
  */
@@ -48,24 +37,23 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
 {
   BETTER_ENUM(InterfaceCase, char, straight, single_powder_particle)
 
-  using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
   template <int dim>
-  class LevelSetHeaviside : public Function<dim>
+  class LevelSetHeaviside : public dealii::Function<dim>
   {
   public:
     LevelSetHeaviside(const InterfaceCase              interface_case_in,
                       const std::pair<double, double> &interface_case_info_in,
                       const double                     epsilon_cell_in)
-      : Function<dim>(1)
+      : dealii::Function<dim>(1)
       , eps(epsilon_cell_in)
       , interface_case(interface_case_in)
       , interface_case_info(interface_case_info_in)
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int) const override
+    value(const dealii::Point<dim> &p, const unsigned int) const override
     {
       if (interface_case == InterfaceCase::straight)
         {
@@ -89,19 +77,19 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
             level - y,
             eps); // 0 side of H() stands for gas, 1 side of H() stands for liquid
 
-          Point<dim> sphere_center;
+          dealii::Point<dim> sphere_center;
           sphere_center[dim - 1] = interface_case_info.first;
 
           // now add a powder particle with gradient:
-          const Functions::SignedDistance::Sphere<dim> distance_sphere(sphere_center,
-                                                                       interface_case_info.second);
-          double                                       powder_particle_value =
+          const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere(
+            sphere_center, interface_case_info.second);
+          double powder_particle_value =
             UtilityFunctions::CharacteristicFunctions::heaviside(-distance_sphere.value(p), eps);
           return std::max(straight_value, powder_particle_value);
         }
       else
         {
-          AssertThrow(false, ExcNotImplemented());
+          AssertThrow(false, dealii::ExcNotImplemented());
           return 0.0;
         }
       return 0.0;
@@ -115,13 +103,13 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
   };
 
 
-
   template <int dim>
-  class RadiativeTransportSimulation : public MeltPoolCase<dim>
+  class SimulationRadTrans : public MeltPoolDG::RadiativeTransport::RadiativeTransportCase<dim>
   {
   public:
-    RadiativeTransportSimulation(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
+    SimulationRadTrans(std::string parameter_file, const MPI_Comm mpi_communicator)
+      : MeltPoolDG::RadiativeTransport::RadiativeTransportCase<dim>(parameter_file,
+                                                                    mpi_communicator)
       , cell_repetitions(dim, 1)
     {}
 
@@ -185,42 +173,42 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP || dim == 1)
         {
 #ifdef DEAL_II_WITH_METIS
-          this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
+          this->triangulation = std::make_shared<dealii::parallel::shared::Triangulation<dim>>(
             this->mpi_communicator,
-            (Triangulation<dim>::MeshSmoothing::none),
+            (dealii::Triangulation<dim>::MeshSmoothing::none),
             true,
-            parallel::shared::Triangulation<dim>::Settings::partition_metis);
+            dealii::parallel::shared::Triangulation<dim>::Settings::partition_metis);
 #else
           AssertThrow(
             false,
-            ExcMessage(
+            dealii::ExcMessage(
               "Missing Metis support of the deal.II installation. "
               "Configure deal.II with -D DEAL_II_WITH_METIS='ON' to execute this example."));
 #endif
         }
       else
         {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+          this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+            this->mpi_communicator);
         }
 
-      const Point<dim> bottom_left =
-        (dim == 1) ? Point<dim>(domain_y_min) :
-        (dim == 2) ? Point<dim>(domain_x_min, domain_y_min) :
-                     Point<dim>(domain_x_min, domain_x_min, domain_y_min);
-      const Point<dim> top_right =
-        (dim == 1) ? Point<dim>(domain_y_max) :
-        (dim == 2) ? Point<dim>(domain_x_max, domain_y_max) :
-                     Point<dim>(domain_x_max, domain_x_max, domain_y_max);
+      const dealii::Point<dim> bottom_left =
+        (dim == 1) ? dealii::Point<dim>(domain_y_min) :
+        (dim == 2) ? dealii::Point<dim>(domain_x_min, domain_y_min) :
+                     dealii::Point<dim>(domain_x_min, domain_x_min, domain_y_min);
+      const dealii::Point<dim> top_right =
+        (dim == 1) ? dealii::Point<dim>(domain_y_max) :
+        (dim == 2) ? dealii::Point<dim>(domain_x_max, domain_y_max) :
+                     dealii::Point<dim>(domain_x_max, domain_x_max, domain_y_max);
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           std::vector<unsigned int> subdivisions(
-            dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
+            dim, 5 * dealii::Utilities::pow(2, this->parameters.base.global_refinements));
           subdivisions[dim - 1] *= 2;
           for (int d = 0; d < dim; d++)
             subdivisions[d] *= cell_repetitions[d];
 
-          GridGenerator::subdivided_hyper_rectangle_with_simplices(
+          dealii::GridGenerator::subdivided_hyper_rectangle_with_simplices(
             *this->triangulation, subdivisions, bottom_left, top_right, true /*colorize*/);
         }
       else
@@ -264,7 +252,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
 
       // determine the interface epsilon parameter from minimum mesh size
       double       thickness_scale_factor = 2.5;
-      const double epsilon_cell           = GridTools::minimal_cell_diameter(*this->triangulation) /
+      const double epsilon_cell = dealii::GridTools::minimal_cell_diameter(*this->triangulation) /
                                   std::sqrt(dim) * thickness_scale_factor;
 
       // attach the prescribed heaviside function field
@@ -274,14 +262,14 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
                                      "prescribed_heaviside");
 
       if (this->parameters.base.problem_name == "radiative_transport")
-        this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(),
+        this->attach_initial_condition(std::make_shared<dealii::Functions::ZeroFunction<dim>>(),
                                        "intensity");
 
       // this is only used to TODO generate the comparison solution with the gaussian laser
       if (this->parameters.base.problem_name == "heat_transfer")
         {
           // attach dummy initial conditions for the heat transfer operation
-          this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(),
+          this->attach_initial_condition(std::make_shared<dealii::Functions::ZeroFunction<dim>>(),
                                          "heat_transfer");
         }
     }
@@ -294,7 +282,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     std::vector<unsigned int> cell_repetitions;
     std::pair<double, double> interface_case_info;
     double                    power_in = 0.1;
-    Point<dim>                center_in;
+    dealii::Point<dim>        center_in;
     double                    radius_in = domain_x_max / 5.;
 
     InterfaceCase interface_case = InterfaceCase::straight;
@@ -304,5 +292,18 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
 
     double powder_particle_offset = domain_x_max / 4.;
     double powder_particle_radius = domain_x_max / 6.;
+
+    // for self-registration
+    static SimulationCaseRegistrar<MeltPoolDG::RadiativeTransport::RadiativeTransportCase<dim>>
+      registrar;
   };
+
+  // for self-registration
+  template <int dim>
+  SimulationCaseRegistrar<MeltPoolDG::RadiativeTransport::RadiativeTransportCase<dim>>
+    SimulationRadTrans<dim>::registrar(
+      "radiative_transport",
+      [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
+        return std::make_unique<SimulationRadTrans<dim>>(parameter_file, mpi_communicator);
+      });
 } // namespace MeltPoolDG::Simulation::RadiativeTransport

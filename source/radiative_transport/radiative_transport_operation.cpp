@@ -6,7 +6,7 @@
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
-#include <meltpooldg/radiative_transport/rte_operation.hpp>
+#include <meltpooldg/radiative_transport/radiative_transport_operation.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
