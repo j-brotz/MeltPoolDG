@@ -128,7 +128,7 @@ namespace MeltPoolDG::MeltPool
     initialize(std::shared_ptr<SimulationType> base_in);
 
     void
-    set_initial_condition(std::shared_ptr<SimulationType> base_in);
+    set_initial_conditions(std::shared_ptr<SimulationType> base_in);
 
     void
     set_initial_condition_level_set(std::shared_ptr<SimulationType> base_in);

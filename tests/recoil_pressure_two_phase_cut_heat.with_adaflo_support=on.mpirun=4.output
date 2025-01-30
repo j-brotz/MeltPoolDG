@@ -79,7 +79,7 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Number of new DoFs:               3                                        cut solution transfer |
-| Newton Raphson solver converged: ||solution|| = 5.13723e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 5.13760e-01                newton_raphson_solver |
 | || velocity ||L2 = 1.362735114774247e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 4.981931006700153e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+

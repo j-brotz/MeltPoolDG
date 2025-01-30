@@ -1205,7 +1205,7 @@ namespace MeltPoolDG::MeltPool
           refine_mesh(base_in);
 
           // set initial conditions after initial AMR
-          set_initial_condition(base_in);
+          set_initial_conditions(base_in);
         }
   }
 
@@ -1321,7 +1321,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolProblem<dim>::set_initial_condition(std::shared_ptr<SimulationType> base_in)
+  MeltPoolProblem<dim>::set_initial_conditions(std::shared_ptr<SimulationType> base_in)
   {
     ScopedName         sc("mp::set_initial_condition");
     TimerOutput::Scope scope(scratch_data->get_timer(), sc);

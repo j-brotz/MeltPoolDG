@@ -144,11 +144,6 @@
     "gravity": "0.0",
     "surface tension": {
       "surface tension coefficient": "1.493"
-    },
-    "TODO darcy damping": {
-      "avoid div zero constant": "1",
-      "mushy zone morphology": "1e11",
-      "formulation": "implicit_formulation"
     }
   }
 }

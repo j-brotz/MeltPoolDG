@@ -4,7 +4,7 @@
 | || advected field ||L2 = 1.8566493155e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.39969e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 6.40000e+01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -12,7 +12,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 1.8566493155e-02                                    advection_diffusion |
 |  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
-| Newton Raphson solver converged: ||solution|| = 6.39939e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 6.40000e+01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
