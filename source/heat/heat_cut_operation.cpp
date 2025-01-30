@@ -19,6 +19,7 @@
 #include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
+#include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/utilities/cut_util.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/functions.hpp>
@@ -95,12 +96,8 @@ namespace MeltPoolDG::Heat
                                                      vel_dof_idx_in,
                                                      velocity_in);
 
-    /*
-     * setup preconditioner for matrix-free computation
-     */
-    preconditioner_matrixfree = std::make_shared<
-      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>(
-      scratch_data, temp_dof_idx, heat_data.linear_solver.preconditioner_type, *heat_operator);
+    preconditioner = make_preconditioner<dim, HeatCutOperator<dim, double>, VectorType>(
+      heat_data.linear_solver.preconditioner_type, heat_operator.get());
 
     mesh_classifier = std::make_shared<dealii::NonMatching::MeshClassifier<dim>>(
       scratch_data.get_dof_handler(ls_dof_idx), mc_level_set);
@@ -156,7 +153,7 @@ namespace MeltPoolDG::Heat
     classify_cells();
 
     {
-      ScopedName         sc("heat::cut_solution_transfer");
+      const ScopedName   sc("heat::cut_solution_transfer");
       TimerOutput::Scope scope(scratch_data.get_timer(), sc);
 
       Assert(reinit_matrix_free != nullptr,
@@ -181,8 +178,6 @@ namespace MeltPoolDG::Heat
     compute_intersected_quadrature();
   }
 
-
-
   template <int dim>
   void
   HeatCutOperation<dim>::compute_intersected_quadrature()
@@ -197,8 +192,6 @@ namespace MeltPoolDG::Heat
                                             heat_data.fe.degree,
                                             heat_data.cut.two_phase);
   }
-
-
 
   template <int dim>
   void
@@ -232,8 +225,6 @@ namespace MeltPoolDG::Heat
     dof_handler.distribute_dofs(fe_collection);
   }
 
-
-
   template <int dim>
   void
   HeatCutOperation<dim>::reinit()
@@ -249,16 +240,10 @@ namespace MeltPoolDG::Heat
 
     heat_operator->reinit();
 
-    /*
-     * setup sparsity pattern of system matrix only if the latter is
-     * needed for computing the preconditioner
-     */
-    preconditioner_matrixfree->reinit();
+    preconditioner.reinit(scratch_data, temp_dof_idx);
 
     compute_intersected_quadrature();
   }
-
-
 
   template <int dim>
   void
@@ -282,14 +267,10 @@ namespace MeltPoolDG::Heat
     solution_history.get_current_solution().update_ghost_values();
   }
 
-
-
   template <int dim>
   void
   HeatCutOperation<dim>::distribute_constraints()
   {}
-
-
 
   template <int dim>
   void
@@ -301,16 +282,12 @@ namespace MeltPoolDG::Heat
     };
 
     newton.solve_with_jacobian = [&](const VectorType &rhs, VectorType &solution_update) -> int {
-      int iter = std::visit(
-        [&](auto &precond_ptr) -> int {
-          return LinearSolver::solve<VectorType>(*heat_operator,
-                                                 solution_update,
-                                                 rhs,
-                                                 heat_data.linear_solver,
-                                                 *precond_ptr,
-                                                 "heat_operation");
-        },
-        preconditioner_used);
+      const int iter = LinearSolver::solve<VectorType>(*heat_operator,
+                                                       solution_update,
+                                                       rhs,
+                                                       heat_data.linear_solver,
+                                                       preconditioner,
+                                                       "heat_operation");
 
       scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(solution_update);
       return iter;
@@ -348,8 +325,6 @@ namespace MeltPoolDG::Heat
     heat_operator->init_time_advance(time_iterator.get_current_time_increment());
   }
 
-
-
   template <int dim>
   void
   HeatCutOperation<dim>::solve()
@@ -365,7 +340,7 @@ namespace MeltPoolDG::Heat
       solution_history.get_recent_old_solution().update_ghost_values();
     heat_operator->update_ghost_values();
 
-    preconditioner_used = preconditioner_matrixfree->compute_preconditioner();
+    preconditioner.update();
 
     try
       {
@@ -377,8 +352,6 @@ namespace MeltPoolDG::Heat
       }
   }
 
-
-
   /**
    * register vectors for adaptive mesh refinement solution transfer
    */
@@ -388,8 +361,6 @@ namespace MeltPoolDG::Heat
   {
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
   }
-
-
 
   template <int dim>
   void
@@ -422,16 +393,12 @@ namespace MeltPoolDG::Heat
       }
   }
 
-
-
   template <int dim>
   void
   HeatCutOperation<dim>::attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const
   {
     (void)data_out;
   }
-
-
 
   template <int dim>
   const HeatCutOperation<dim>::VectorType &

@@ -7,7 +7,6 @@
 #include <deal.II/dofs/dof_handler.h>
 
 #include <deal.II/lac/diagonal_matrix.h>
-#include <deal.II/lac/trilinos_precondition.h>
 
 #include <deal.II/non_matching/mapping_info.h>
 #include <deal.II/non_matching/mesh_classifier.h>
@@ -17,7 +16,7 @@
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/heat_operation_base.hpp>
 #include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
-#include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
+#include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/cut_solution_transfer.hpp>
@@ -36,7 +35,7 @@ namespace MeltPoolDG::Heat
   class HeatCutOperation : public HeatOperationBase<dim>
   {
   private:
-    using VectorType = HeatOperationBase<dim>::VectorType;
+    using VectorType = typename HeatOperationBase<dim>::VectorType;
 
     const ScratchData<dim> &scratch_data;
     const HeatData<double> &heat_data;
@@ -73,12 +72,7 @@ namespace MeltPoolDG::Heat
 
     std::unique_ptr<HeatCutOperator<dim, double>> heat_operator;
 
-    std::shared_ptr<
-      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>
-      preconditioner_matrixfree;
-
-    Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>::
-      PreconditionerObjectType preconditioner_used;
+    Preconditioner<dim, VectorType> preconditioner;
 
   public:
     HeatCutOperation(const ScratchData<dim>                     &scratch_data_in,

@@ -530,17 +530,21 @@ namespace MeltPoolDG
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   bool
   ScratchData<dim, spacedim, number, VectorizedArrayType>::is_FE_Q_iso_Q_1(
-    const unsigned int dof_idx) const
+    const unsigned int dof_idx,
+    const unsigned int component) const
   {
-    return dynamic_cast<const FE_Q_iso_Q1<dim> *>(&this->get_fe(dof_idx)) != nullptr;
+    return dynamic_cast<const FE_Q_iso_Q1<dim> *>(
+             &this->get_fe(dof_idx).get_sub_fe(component, 1)) != nullptr;
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   bool
   ScratchData<dim, spacedim, number, VectorizedArrayType>::is_FE_DGQ(
-    const unsigned int dof_idx) const
+    const unsigned int dof_idx,
+    const unsigned int component) const
   {
-    return dynamic_cast<const FE_DGQ<dim> *>(&this->get_fe(dof_idx)) != nullptr;
+    return dynamic_cast<const FE_DGQ<dim> *>(&this->get_fe(dof_idx).get_sub_fe(component, 1)) !=
+           nullptr;
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>

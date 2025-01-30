@@ -204,10 +204,10 @@ namespace MeltPoolDG
     is_hex_mesh(const unsigned int dof_idx = 0) const;
 
     bool
-    is_FE_Q_iso_Q_1(const unsigned int dof_idx) const;
+    is_FE_Q_iso_Q_1(const unsigned int dof_idx, const unsigned int component = 0) const;
 
     bool
-    is_FE_DGQ(const unsigned int dof_idx) const;
+    is_FE_DGQ(const unsigned int dof_idx, const unsigned int component = 0) const;
 
     TimerOutput &
     get_timer() const;

@@ -9,7 +9,7 @@
 // MeltPoolDG
 #include <meltpooldg/curvature/curvature_operation_base.hpp>
 #include <meltpooldg/curvature/curvature_operator.hpp>
-#include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
+#include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
@@ -109,16 +109,6 @@ namespace MeltPoolDG::LevelSet
     /*
      * Preconditioner for the matrix-free curvature operator
      */
-    std::shared_ptr<
-      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>
-      preconditioner_matrixfree;
-    /*
-     * Cache for diagonal preconditioner matrix-free
-     */
-    std::shared_ptr<DiagonalMatrix<VectorType>> diag_preconditioner_matrixfree;
-    /*
-     * Cache for trilinos preconditioner matrix-free
-     */
-    std::shared_ptr<TrilinosWrappers::PreconditionBase> trilinos_preconditioner_matrixfree;
+    Preconditioner<dim, VectorType> preconditioner;
   };
 } // namespace MeltPoolDG::LevelSet

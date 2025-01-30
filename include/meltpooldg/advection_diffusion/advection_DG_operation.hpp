@@ -13,7 +13,6 @@
 #include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/time_integration/time_integrator_base.hpp>

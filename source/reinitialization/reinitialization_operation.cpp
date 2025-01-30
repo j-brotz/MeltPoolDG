@@ -1,4 +1,4 @@
-#include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
+#include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
@@ -73,15 +73,7 @@ namespace MeltPoolDG::LevelSet
 
     normal_vector_operation->reinit();
     reinit_operator->reinit();
-
-    if (reinit_data.linear_solver.do_matrix_free)
-      {
-        /*
-         * setup sparsity pattern of system matrix only if the latter is
-         * needed for computing the preconditioner
-         */
-        preconditioner_matrixfree->reinit();
-      }
+    preconditioner.reinit(scratch_data, reinit_dof_idx);
   }
 
   template <int dim>
@@ -99,11 +91,7 @@ namespace MeltPoolDG::LevelSet
      *    operator class
      */
     normal_vector_operation->solve();
-    /*
-     * precompute preconditioner system matrix
-     */
-    if (reinit_data.linear_solver.do_matrix_free)
-      update_preconditioner_matrixfree = true;
+    preconditioner.set_do_update_preconditioner(true);
   }
 
   template <int dim>
@@ -126,11 +114,7 @@ namespace MeltPoolDG::LevelSet
      *    operator class
      */
     normal_vector_operation->solve();
-    /*
-     * precompute preconditioner system matrix
-     */
-    if (reinit_data.linear_solver.do_matrix_free)
-      update_preconditioner_matrixfree = true;
+    preconditioner.set_do_update_preconditioner(true);
   }
 
   template <int dim>
@@ -188,54 +172,25 @@ namespace MeltPoolDG::LevelSet
 
     if (reinit_data.linear_solver.do_matrix_free)
       {
-        AssertThrow(preconditioner_matrixfree, ExcNotImplemented());
-
         reinit_operator->create_rhs(rhs, solution_level_set);
+        preconditioner.update();
 
-        if (reinit_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
-          {
-            if (update_preconditioner_matrixfree)
-              {
-                diag_preconditioner_matrixfree =
-                  preconditioner_matrixfree->compute_diagonal_preconditioner();
-                update_preconditioner_matrixfree = false;
-              }
-
-            iter = LinearSolver::solve<VectorType>(*reinit_operator,
-                                                   solution_history.get_current_solution(),
-                                                   rhs,
-                                                   reinit_data.linear_solver,
-                                                   *diag_preconditioner_matrixfree,
-                                                   "reinitialization_operation");
-          }
-        else
-          {
-            if (update_preconditioner_matrixfree)
-              {
-                trilinos_preconditioner_matrixfree =
-                  preconditioner_matrixfree->compute_trilinos_preconditioner();
-                update_preconditioner_matrixfree = false;
-              }
-
-            iter = LinearSolver::solve<VectorType>(*reinit_operator,
-                                                   solution_history.get_current_solution(),
-                                                   rhs,
-                                                   reinit_data.linear_solver,
-                                                   *trilinos_preconditioner_matrixfree,
-                                                   "reinitialization_operation");
-          }
+        iter = LinearSolver::solve<VectorType>(*reinit_operator,
+                                               solution_history.get_current_solution(),
+                                               rhs,
+                                               reinit_data.linear_solver,
+                                               preconditioner,
+                                               "reinitialization_operation");
       }
     else
       {
         reinit_operator->compute_system_matrix_and_rhs(solution_level_set, rhs);
-
-        auto preconditioner = Preconditioner::get_preconditioner_trilinos(
-          reinit_operator->get_system_matrix(), reinit_data.linear_solver.preconditioner_type);
+        preconditioner.update(&reinit_operator->get_system_matrix());
         iter = LinearSolver::solve<VectorType>(reinit_operator->get_system_matrix(),
                                                solution_history.get_current_solution(),
                                                rhs,
                                                reinit_data.linear_solver,
-                                               *preconditioner,
+                                               preconditioner,
                                                "reinitialization_operation");
 
         Journal::print_formatted_norm(
@@ -389,6 +344,12 @@ namespace MeltPoolDG::LevelSet
           reinit_quad_idx,
           ls_dof_idx,
           normal_dof_idx);
+
+        preconditioner = make_preconditioner<dim, OlssonOperator<dim, double>, VectorType>(
+          reinit_data.linear_solver.preconditioner_type,
+          reinit_operator.get(),
+          reinit_data.linear_solver.do_matrix_free);
+        preconditioner.set_do_update_preconditioner(false);
       }
     /*
      * add your desired operators here
@@ -398,14 +359,6 @@ namespace MeltPoolDG::LevelSet
      */
     else
       AssertThrow(false, ExcMessage("Requested reinitialization model not implemented."));
-
-    if (reinit_data.linear_solver.do_matrix_free)
-      preconditioner_matrixfree = std::make_shared<
-        Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>(
-        scratch_data,
-        reinit_dof_idx,
-        reinit_data.linear_solver.preconditioner_type,
-        *reinit_operator);
   }
 
   template class ReinitializationOperation<1>;

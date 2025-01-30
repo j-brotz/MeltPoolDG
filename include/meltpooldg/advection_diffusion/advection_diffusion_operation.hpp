@@ -12,7 +12,7 @@
 #include <meltpooldg/core/boundary_conditions.hpp>
 #include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/core/parameters.hpp>
-#include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
+#include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
@@ -124,12 +124,8 @@ namespace MeltPoolDG::LevelSet
      *    accessible for output_results.
      */
     VectorType solution_advected_field_extrapolated;
-    /*
-     * Preconditioner for the matrix-free advection diffusion operator
-     */
-    std::shared_ptr<
-      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>
-      preconditioner_matrixfree;
+
+    Preconditioner<dim, VectorType> preconditioner;
 
     VectorType rhs;
     VectorType user_rhs;

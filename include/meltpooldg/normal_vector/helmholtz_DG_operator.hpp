@@ -14,7 +14,7 @@
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
+#include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -64,13 +64,11 @@ namespace MeltPoolDG::LevelSet
       return this->system_matrix;
     }
 
-    const std::shared_ptr<TrilinosWrappers::PreconditionBase> &
+    const Preconditioner<dim, VectorType> &
     get_preconditioner() const
     {
       return this->preconditioner;
     }
-
-
 
   private:
     const ScratchData<dim> &scratch_data;
@@ -86,7 +84,7 @@ namespace MeltPoolDG::LevelSet
 
     mutable SparseMatrixType system_matrix;
 
-    mutable std::shared_ptr<TrilinosWrappers::PreconditionBase> preconditioner;
+    mutable Preconditioner<dim, VectorType> preconditioner;
 
     const PreconditionerType preconditioner_type;
 

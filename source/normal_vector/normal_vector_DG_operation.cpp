@@ -62,7 +62,7 @@ namespace MeltPoolDG::LevelSet
                                         solution_history.get_current_solution().block(0),
                                         right_hand_side,
                                         normal_vector_data.linear_solver,
-                                        *helmholtz_operator.get_preconditioner());
+                                        helmholtz_operator.get_preconditioner());
       }
 
     if constexpr (dim > 1)
@@ -78,7 +78,7 @@ namespace MeltPoolDG::LevelSet
                                         solution_history.get_current_solution().block(1),
                                         right_hand_side,
                                         normal_vector_data.linear_solver,
-                                        *helmholtz_operator.get_preconditioner());
+                                        helmholtz_operator.get_preconditioner());
       }
 
     if constexpr (dim > 2)

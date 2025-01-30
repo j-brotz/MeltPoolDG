@@ -7,7 +7,7 @@
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
-#include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
+#include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>
@@ -43,6 +43,8 @@ namespace MeltPoolDG::LevelSet
                                 2U /*TODO: include time integration scheme*/))
   {
     this->advec_diff_data = advec_diff_data_in;
+    preconditioner = make_preconditioner<dim, AdvectionDiffusionOperator<dim, double>, VectorType>(
+      this->advec_diff_data.linear_solver.preconditioner_type, advec_diff_operator.get());
   }
 
   template <int dim>
@@ -79,14 +81,10 @@ namespace MeltPoolDG::LevelSet
     scratch_data.initialize_dof_vector(user_rhs, advec_diff_dof_idx);
     scratch_data.initialize_dof_vector(rhs, advec_diff_dof_idx);
 
-    if (this->advec_diff_data.linear_solver.do_matrix_free && preconditioner_matrixfree)
-      {
-        /*
-         * setup sparsity pattern of system matrix only if the latter is
-         * needed for computing the preconditioner
-         */
-        preconditioner_matrixfree->reinit();
-      }
+    // TODO: setup sparsity pattern of system matrix only if the latter is needed for computing the
+    // preconditioner
+    if (preconditioner.is_initialized())
+      preconditioner.reinit(scratch_data, advec_diff_dof_idx);
 
     if (advec_diff_operator)
       advec_diff_operator->reinit();
@@ -217,22 +215,13 @@ namespace MeltPoolDG::LevelSet
 
         advec_diff_operator->enable_pre_post();
 
-        std::variant<std::shared_ptr<TrilinosWrappers::PreconditionBase>,
-                     std::shared_ptr<DiagonalMatrix<VectorType>>>
-          preconditioner;
-
-        preconditioner = preconditioner_matrixfree->compute_preconditioner();
-
-        std::visit(
-          [&](auto &precond_ptr) -> int {
-            return LinearSolver::solve<VectorType>(*advec_diff_operator,
-                                                   solution_history.get_current_solution(),
-                                                   rhs,
-                                                   this->advec_diff_data.linear_solver,
-                                                   *precond_ptr,
-                                                   "advection_diffusion_operation");
-          },
-          preconditioner);
+        preconditioner.update();
+        LinearSolver::solve<VectorType>(*advec_diff_operator,
+                                        solution_history.get_current_solution(),
+                                        rhs,
+                                        this->advec_diff_data.linear_solver,
+                                        preconditioner,
+                                        "advection_diffusion_operation");
 
         advec_diff_operator->disable_pre_post();
       }
@@ -247,14 +236,12 @@ namespace MeltPoolDG::LevelSet
           .distribute(rhs); //@todo: this could be avoided by introducing a zero_out inside
                             // compute_system_matrix_and_rhs
 
-        auto preconditioner = Preconditioner::get_preconditioner_trilinos(
-          advec_diff_operator->get_system_matrix(),
-          this->advec_diff_data.linear_solver.preconditioner_type);
+        preconditioner.update(&advec_diff_operator->get_system_matrix());
         iter = LinearSolver::solve<VectorType>(advec_diff_operator->get_system_matrix(),
                                                solution_history.get_current_solution(),
                                                rhs,
                                                this->advec_diff_data.linear_solver,
-                                               *preconditioner,
+                                               preconditioner,
                                                "advection_diffusion_operation");
       }
     // inflow/outflow
@@ -326,8 +313,6 @@ namespace MeltPoolDG::LevelSet
     // update ghost values of solution
     solution_history.get_current_solution().update_ghost_values();
   }
-
-
 
   template <int dim>
   void
@@ -521,25 +506,13 @@ namespace MeltPoolDG::LevelSet
                                                                             advec_diff_quad_idx,
                                                                             velocity_dof_idx);
     /*
-     *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
+     *  In case of a matrix-based simulation, set up the distributed sparsity pattern and
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.
      */
-
     advec_diff_operator->reinit();
-    /*
-     * initialize preconditioner matrix-free
-     */
-    if (this->advec_diff_data.linear_solver.do_matrix_free)
-      {
-        preconditioner_matrixfree = std::make_shared<
-          Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>(
-          scratch_data,
-          advec_diff_dof_idx,
-          this->advec_diff_data.linear_solver.preconditioner_type,
-          *advec_diff_operator);
-
-        preconditioner_matrixfree->reinit();
-      }
+    preconditioner = make_preconditioner<dim, AdvectionDiffusionOperator<dim, double>, VectorType>(
+      this->advec_diff_data.linear_solver.preconditioner_type, advec_diff_operator.get());
+    preconditioner.reinit(scratch_data, advec_diff_dof_idx);
   }
 
   template class AdvectionDiffusionOperation<1>;

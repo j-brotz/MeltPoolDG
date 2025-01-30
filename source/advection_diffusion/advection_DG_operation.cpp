@@ -6,7 +6,6 @@
 
 #include <meltpooldg/advection_diffusion/advection_DG_operation.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
-#include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>

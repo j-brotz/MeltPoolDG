@@ -7,7 +7,7 @@
 
 #include <meltpooldg/core/periodic_boundary_conditions.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
+#include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/radiative_transport/pseudo_rte_operation.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
@@ -98,10 +98,6 @@ namespace MeltPoolDG::RadiativeTransport
                         const bool         zero_out = true) const;
 
   private:
-    std::shared_ptr<
-      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorMatrixFree<dim, double>>>
-                                                        preconditioner_matrixfree;
-    std::shared_ptr<DiagonalMatrix<VectorType>>         diag_preconditioner_matrixfree;
-    std::shared_ptr<TrilinosWrappers::PreconditionBase> trilinos_preconditioner_matrixfree;
+    Preconditioner<dim, VectorType> preconditioner;
   };
 } // namespace MeltPoolDG::RadiativeTransport
