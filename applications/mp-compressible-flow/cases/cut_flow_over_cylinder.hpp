@@ -38,30 +38,6 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
   };
 
   template <int dim>
-  class LevelSet : public Function<dim>
-  {
-  public:
-    LevelSet()
-      : Function<dim>()
-    {}
-
-    double
-    value(const Point<dim> &p, const unsigned int /* component */) const override
-    {
-      Point<dim> center_point;
-      center_point[0] = 0.3;
-      center_point[1] = 0.2;
-      if (dim == 3)
-        center_point[2] = 0.2;
-      const Functions::SignedDistance::Sphere<dim> distance(center_point, radius);
-      return distance.value(p);
-    }
-
-  private:
-    const double radius = 0.1;
-  };
-
-  template <int dim>
   class SimulationCutFlowOverCylinder final : public Flow::CompressibleFlowCase<dim>
   {
   public:
@@ -122,7 +98,17 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       auto initial_condition = std::make_shared<FlowField<dim>>();
       this->attach_initial_condition(initial_condition, "compressible_flow");
 
-      const auto level_set = std::make_shared<LevelSet<dim>>();
+      // set level-set function
+      Point<dim> center;
+      center[0] = 0.3;
+      center[1] = 0.2;
+      if constexpr (dim == 3)
+        center[2] = 0.2;
+
+      const double radius = 0.1;
+
+      const auto level_set =
+        std::make_shared<Functions::SignedDistance::Sphere<dim>>(center, radius);
       this->attach_field_function(level_set, "level_set", "compressible_flow");
     }
 

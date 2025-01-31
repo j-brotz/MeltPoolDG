@@ -76,21 +76,6 @@ namespace MeltPoolDG::Flow
   void
   CompressibleFlowProblem<dim>::setup_dof_system()
   {
-    // set up level-set for cutDG
-    if (simulation_case->parameters.flow.domain_representation_type == "cut")
-      {
-        // currently, we use a continuous level-set field with same element degree as the flow field
-        const FE_Q<dim> fe_level_set(simulation_case->parameters.flow.fe.degree);
-        dof_handler_level_set.distribute_dofs(fe_level_set);
-
-        Assert(level_set_field_function != nullptr, ExcInternalError());
-
-        level_set.reinit(dof_handler_level_set.locally_owned_dofs(),
-                         DoFTools::extract_locally_relevant_dofs(dof_handler_level_set),
-                         dof_handler_level_set.get_communicator());
-        compute_level_set();
-      }
-
     // distribute DoFs
     comp_flow_operation->distribute_dofs(dof_handler);
 
@@ -110,10 +95,10 @@ namespace MeltPoolDG::Flow
       {
         // Currently, only homogeneous Cartesian grids without mesh refinements are enabled for
         // cutDG
-        AssertThrow(std::abs(scratch_data->get_min_cell_size() -
-                             scratch_data->get_max_cell_size()) < 1e-10,
-                    dealii::ExcMessage(
-                      "Only homogenous Cartesian grids without grid refinements are enabled!"));
+        AssertThrow(
+          std::abs(scratch_data->get_min_cell_size() - scratch_data->get_max_cell_size()) < 1e-10,
+          dealii::ExcMessage(
+            "Only homogeneous Cartesian grids without local grid refinements are supported!"));
       }
 
     // print mesh information
@@ -221,6 +206,21 @@ namespace MeltPoolDG::Flow
     else
       DEAL_II_NOT_IMPLEMENTED();
 
+    // set up level-set for cutDG
+    if (simulation_case->parameters.flow.domain_representation_type == "cut")
+      {
+        // currently, we use a continuous level-set field with same element degree as the flow field
+        const FE_Q<dim> fe_level_set(simulation_case->parameters.flow.fe.degree);
+        dof_handler_level_set.distribute_dofs(fe_level_set);
+
+        Assert(level_set_field_function != nullptr, ExcInternalError());
+
+        level_set.reinit(dof_handler_level_set.locally_owned_dofs(),
+                         DoFTools::extract_locally_relevant_dofs(dof_handler_level_set),
+                         dof_handler_level_set.get_communicator());
+        compute_level_set();
+      }
+
     setup_dof_system();
 
     // set boundary conditions
@@ -278,8 +278,8 @@ namespace MeltPoolDG::Flow
   CompressibleFlowProblem<dim>::output_results(const unsigned int time_step,
                                                const double       current_time)
   {
-    if (!post_processor->is_output_timestep(time_step, current_time) and
-        !simulation_case->parameters.output.do_user_defined_postprocessing)
+    if (not post_processor->is_output_timestep(time_step, current_time) and
+        not simulation_case->parameters.output.do_user_defined_postprocessing)
       return;
 
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {

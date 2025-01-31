@@ -40,33 +40,6 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
   };
 
   template <int dim>
-  class LevelSetPlane : public Function<dim>
-  {
-  public:
-    LevelSetPlane(const double time)
-      : Function<dim>(1, time)
-    {}
-
-    double
-    value(const Point<dim> &p, const unsigned int /* component */) const override
-    {
-      Point<dim> center;
-      center[0] = 0.5;
-      for (unsigned int d = 1; d < dim; ++d)
-        center[d] = 0.004;
-
-      dealii::Tensor<1, dim> normal;
-      normal[0] = 1.;
-
-      const Functions::SignedDistance::Plane<dim> distance(center, normal);
-
-      return distance.value(p);
-    }
-
-  private:
-  };
-
-  template <int dim>
   class SimulationCutUnfittedInflow final : public Flow::CompressibleFlowCase<dim>
   {
   public:
@@ -125,8 +98,17 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       auto initial_condition = std::make_shared<SteadyInflowField<dim>>();
       this->attach_initial_condition(initial_condition, "compressible_flow");
 
+      // set level-set function
+      Point<dim> center;
+      center[0] = 0.5;
+      for (unsigned int d = 1; d < dim; ++d)
+        center[d] = 0.004;
+
+      dealii::Tensor<1, dim> normal;
+      normal[0] = 1.;
+
       const auto level_set =
-        std::make_shared<LevelSetPlane<dim>>(this->parameters.time_stepping.start_time);
+        std::make_shared<Functions::SignedDistance::Plane<dim>>(center, normal);
       this->attach_field_function(level_set, "level_set", "compressible_flow");
 
       // set inflow function at unfitted object

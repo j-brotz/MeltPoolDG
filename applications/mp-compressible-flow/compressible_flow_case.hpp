@@ -123,7 +123,7 @@ namespace MeltPoolDG::Flow
           is_cut = false;
         }
 
-      if (!is_cut)
+      if (not is_cut)
         {
           // in the fitted mesh case, we can use the DoF values for error computation
 

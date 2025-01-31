@@ -305,6 +305,10 @@ namespace MeltPoolDG::Flow
   void
   CompressibleFlowOperation<dim, number>::setup_operator_and_time_integrator()
   {
+    // cut operator was already created in the constructor
+    if (comp_flow_data_.domain_representation_type == "cut")
+      return;
+
     if (time_integrator_scheme_is_explicit(comp_flow_data_.time_integrator.integrator_type))
       {
         comp_flow_operator_ = std::make_unique<CompressibleFlowOperatorExplicit<dim, number>>(
@@ -316,7 +320,7 @@ namespace MeltPoolDG::Flow
           comp_flow_data_, scratch_data_, solution_history_, comp_flow_dof_idx, comp_flow_quad_idx);
       }
     else
-      AssertThrow(comp_flow_data_.domain_representation_type == "cut",
+      AssertThrow(false,
                   dealii::ExcMessage(
                     "The provided time integration scheme '" +
                     std::to_string(comp_flow_data_.time_integrator.integrator_type) +

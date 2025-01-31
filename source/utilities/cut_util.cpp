@@ -90,20 +90,15 @@ namespace MeltPoolDG::CutUtil
   template <int dim, typename number, typename VectorType>
   void
   compute_intersected_quadrature(
-    std::vector<
-      std::shared_ptr<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>>
-      mapping_info_cells,
-    dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>
-                                                                           &mapping_info_surface,
+    MappingInfoVectorType<dim, number>                                      mapping_info_cells,
+    MappingInfoType<dim, number>                                           &mapping_info_surface,
     const dealii::DoFHandler<dim>                                          &level_set_dof_handler,
     const VectorType                                                       &level_set,
     const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free,
     const int                                                               fe_degree,
     const bool                                                              is_two_phase,
     const bool                                                              is_dg,
-    std::vector<
-      std::shared_ptr<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>>
-      mapping_info_faces)
+    MappingInfoVectorType<dim, number>                                      mapping_info_faces)
   {
     AssertDimension(mapping_info_cells.size(), is_two_phase ? 2 : 1);
 

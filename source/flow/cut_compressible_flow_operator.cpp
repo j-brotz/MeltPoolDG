@@ -16,17 +16,11 @@ namespace MeltPoolDG::Flow
     const CompressibleFlowData                     &comp_flow_data_in,
     const ScratchData<dim>                         &scratch_data_in,
     ::TimeIntegration::SolutionHistory<VectorType> &solution_history_in,
-    dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>
-      &mapping_info_surface_in,
-    const std::vector<
-      std::shared_ptr<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>>
-      &mapping_info_cells_in,
-    const std::vector<
-      std::shared_ptr<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>>
-                &mapping_info_faces_in,
-    VectorType  &rhs_in,
-    unsigned int comp_flow_dof_idx_in,
-    unsigned int comp_flow_quad_idx_in)
+    const MappingInfoType                          &mapping_info_surface_in,
+    const MappingInfoVectorType                    &mapping_info_cells_in,
+    const MappingInfoVectorType                    &mapping_info_faces_in,
+    const unsigned int                              comp_flow_dof_idx_in,
+    const unsigned int                              comp_flow_quad_idx_in)
     : CompressibleFlowOperatorBase<dim, number>(comp_flow_data_in,
                                                 scratch_data_in,
                                                 solution_history_in,
@@ -35,30 +29,9 @@ namespace MeltPoolDG::Flow
     , mapping_info_surface(mapping_info_surface_in)
     , mapping_info_cells(mapping_info_cells_in)
     , mapping_info_faces(mapping_info_faces_in)
-    , rhs(rhs_in)
     , fe_point_temp(FE_DGQ<dim>(comp_flow_data_in.fe.degree), dim + 2)
     , n_dofs_per_cell(fe_point_temp.dofs_per_cell)
   {}
-
-  template <unsigned int dim, typename number>
-  void
-  CutCompressibleFlowOperator<dim, number>::advance_time_step(
-    number current_time,
-    number time_step,
-    std::function<void(number, VectorType &, const VectorType &)> /*pre_processing*/,
-    std::function<void(number, VectorType &, const VectorType &)> /*post_processing*/)
-  {
-    AssertThrow(time_step > 0., ExcMessage("Time step size must be larger than 0!"));
-    inv_time_step = 1. / time_step;
-
-    create_rhs(current_time, rhs, this->solution_history.get_current_solution());
-    rhs *= time_step;
-
-    linear_solver.solve<VectorType>(*this,
-                                    this->solution_history.get_current_solution(),
-                                    rhs,
-                                    this->comp_flow_data.time_integrator.linear_solver_data);
-  }
 
   template <unsigned int dim, typename number>
   void
@@ -90,9 +63,14 @@ namespace MeltPoolDG::Flow
   template <unsigned int dim, typename number>
   void
   CutCompressibleFlowOperator<dim, number>::create_rhs(const number     &time,
+                                                       const number     &time_step,
                                                        VectorType       &dst,
                                                        const VectorType &src) const
   {
+    AssertThrow(!dealii::numbers::is_invalid(this->inv_time_step),
+                dealii::ExcMessage(
+                  "Inverse time step size must be set to compute the rhs vector."));
+
     typedef std::function<void(const MatrixFree<dim, number> &,
                                LinearAlgebra::distributed::Vector<number>       &dst,
                                const LinearAlgebra::distributed::Vector<number> &src,
@@ -112,6 +90,8 @@ namespace MeltPoolDG::Flow
       true,
       MatrixFree<dim, number, VectorizedArray<number>>::DataAccessOnFaces::gradients,
       MatrixFree<dim, number, VectorizedArray<number>>::DataAccessOnFaces::gradients);
+
+    dst *= time_step;
   }
 
   template <unsigned int dim, typename number>
@@ -173,9 +153,9 @@ namespace MeltPoolDG::Flow
 
                 // consider mass term
                 if (this->body_force.get() != nullptr)
-                  phi.submit_value(flux + phi.get_value(q) * inv_time_step, q);
+                  phi.submit_value(flux + phi.get_value(q) * this->inv_time_step, q);
                 else
-                  phi.submit_value(phi.get_value(q) * inv_time_step, q);
+                  phi.submit_value(phi.get_value(q) * this->inv_time_step, q);
                 phi.submit_gradient(grad_flux, q);
               }
 
@@ -226,10 +206,12 @@ namespace MeltPoolDG::Flow
 
                     // consider mass term
                     if (this->body_force.get() != nullptr)
-                      fe_point_eval.submit_value(flux + fe_point_eval.get_value(q) * inv_time_step,
+                      fe_point_eval.submit_value(flux +
+                                                   fe_point_eval.get_value(q) * this->inv_time_step,
                                                  q);
                     else
-                      fe_point_eval.submit_value(fe_point_eval.get_value(q) * inv_time_step, q);
+                      fe_point_eval.submit_value(fe_point_eval.get_value(q) * this->inv_time_step,
+                                                 q);
                     fe_point_eval.submit_gradient(grad_flux, q);
                   }
 

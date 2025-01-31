@@ -497,14 +497,6 @@ namespace MeltPoolDG::CutUtil
     // check if DoFs have to be extrapolated, otherwise no gp-extrapolation is required
     const Number sum_gp_extrap = flags_dofs_gp_extrapolation.l1_norm();
 
-    if (sum_gp_extrap <= 0.)
-      {
-        Journal::print_line(pcout,
-                            "No new DoFs have to be gp-extrapolated.",
-                            "cut_solution_transfer");
-        return;
-      }
-
     // set inhomogeneous Dirichlet constraints for DoFs which do no not require ghost-penalty
     // extrapolation
     const dealii::AffineConstraints<Number> constraints_gp =
@@ -521,11 +513,12 @@ namespace MeltPoolDG::CutUtil
 
     dsp.compress();
 
-    {
-      std::ostringstream str;
-      str << "Number of new DoFs: " << std::setw(15) << sum_gp_extrap;
-      Journal::print_line(pcout, str.str(), "cut solution transfer");
-    }
+    if (verbosity >= 1)
+      {
+        std::ostringstream str;
+        str << "Number of new extrapolated DoFs: " << std::setw(15) << sum_gp_extrap;
+        Journal::print_line(pcout, str.str(), "cut solution transfer");
+      }
     if (verbosity >= 2)
       {
         std::ostringstream str;

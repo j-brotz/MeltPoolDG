@@ -9,6 +9,7 @@
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/flow/compressible_flow_calculator_functions.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
+#include <meltpooldg/utilities/numbers.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -35,9 +36,10 @@ namespace MeltPoolDG::Flow
             int n_components,
             typename number,
             typename VectorizedArrayType>
-  concept FaceEvaluatorType = std::is_base_of_v<
-    dealii::FEFaceEvaluation<dim, -1, 0, n_components, number, VectorizedArrayType>,
-    evaluator_type> or
+  concept FaceEvaluatorType =
+    std::is_base_of_v<
+      dealii::FEFaceEvaluation<dim, -1, 0, n_components, number, VectorizedArrayType>,
+      evaluator_type> or
     std::is_base_of_v<dealii::FEFacePointEvaluation<n_components, dim, dim, VectorizedArrayType>,
                       evaluator_type>;
 
@@ -88,7 +90,7 @@ namespace MeltPoolDG::Flow
       number                                                        current_time,
       number                                                        time_step,
       std::function<void(number, VectorType &, const VectorType &)> pre_processing  = {},
-      std::function<void(number, VectorType &, const VectorType &)> post_processing = {}) = 0;
+      std::function<void(number, VectorType &, const VectorType &)> post_processing = {}){};
 
     /**
      * Set an inflow boundary conditions for all boundary ids occurring in the given std::map and
@@ -190,6 +192,39 @@ namespace MeltPoolDG::Flow
      */
     void
     update_boundary_conditions(number time) const;
+
+    /**
+     * Function for the matrix-free right-hand side vector evaluation.
+     *
+     * @param time Current simulation time.
+     * @param time_step Current time step size.
+     * @param dst Vector where the computed right-hand side rhs(src) is stored.
+     * @param src The solution vector at the current time.
+     */
+    virtual void
+    create_rhs(const number     &time,
+               const number     &time_step,
+               VectorType       &dst,
+               const VectorType &src) const {};
+
+    /**
+     * Function for the matrix-free matrix-vector product evaluation.
+     *
+     * @param dst Vector where the computed evaluated vector-matrix product is stored.
+     * @param src The solution vector at the current time.
+     */
+    virtual void
+    vmult(VectorType &dst, const VectorType &src) const {};
+
+    /**
+     * Function which computes the inverse time step size.
+     */
+    void
+    compute_inverse_time_step(const number &time_step)
+    {
+      AssertThrow(time_step > 0., ExcMessage("Time step size must be larger than 0!"));
+      inv_time_step = 1. / time_step;
+    };
 
   protected:
     /**
@@ -337,6 +372,9 @@ namespace MeltPoolDG::Flow
     std::set<types::boundary_id> no_slip_adiabatic_wall_boundaries;
 
     mutable std::unique_ptr<Function<dim>> body_force;
+
+    // inverse time step
+    number inv_time_step = dealii::numbers::invalid_double;
   };
 
 

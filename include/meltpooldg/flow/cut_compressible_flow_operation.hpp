@@ -32,7 +32,9 @@
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_operation.hpp>
 #include <meltpooldg/flow/cut_compressible_flow_operator.hpp>
+#include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/utilities/cut_solution_transfer.hpp>
+#include <meltpooldg/utilities/cut_util.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <memory>
@@ -44,7 +46,9 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number = double>
   class CutCompressibleFlowOperation final : public CompressibleFlowOperation<dim, number>
   {
-    using VectorType = typename CompressibleFlowOperation<dim, number>::VectorType;
+    using VectorType            = typename CompressibleFlowOperation<dim, number>::VectorType;
+    using MappingInfoType       = CutUtil::MappingInfoType<dim, number>;
+    using MappingInfoVectorType = CutUtil::MappingInfoVectorType<dim, number>;
 
   public:
     /**
@@ -52,7 +56,7 @@ namespace MeltPoolDG::Flow
      *
      * @param scratch_data_in Reference to the used ScratchData object.
      * @param comp_flow_data_in Reference to the compressible flow data struct used.
-     * @param time_iterator_in Reference to the used time integrator data.
+     * @param time_iterator_in Reference to the used time stepping.
      * @param comp_flow_dof_idx_in Index of the used dof handler for solution in @p scratch_data_in.
      * @param level_set_dof_idx_in Index of the used dof handler for level-set in @p scratch_data_in.
      * @param comp_flow_quad_idx_in Index of the used quadrature object in @p scratch_data_in.
@@ -160,13 +164,11 @@ namespace MeltPoolDG::Flow
     FESystem<dim>      fe_point_temp;
     const unsigned int n_dofs_per_cell;
 
-    dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>>
-      mapping_info_surface;
-    std::vector<
-      std::shared_ptr<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>>>>
-      mapping_info_cells;
-    std::vector<std::shared_ptr<NonMatching::MappingInfo<dim, dim, VectorizedArray<double>>>>
-      mapping_info_faces;
+    MappingInfoType       mapping_info_surface;
+    MappingInfoVectorType mapping_info_cells;
+    MappingInfoVectorType mapping_info_faces;
+
+    LinearSolver linear_solver;
 
     /**
      * Compute the convective time step limit for the current mesh and flow field.

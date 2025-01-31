@@ -88,6 +88,5 @@ namespace MeltPoolDG
     Profiling::ProfilingData<number>                   profiling;
     Restart::RestartData<number>                       restart;
     Flow::AdafloWrapperParameters                      adaflo_params;
-    CutParam<number>                                   cut_param;
   };
 } // namespace MeltPoolDG

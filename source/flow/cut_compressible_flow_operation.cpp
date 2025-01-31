@@ -65,7 +65,6 @@ namespace MeltPoolDG::Flow
                                                                  mapping_info_surface,
                                                                  mapping_info_cells,
                                                                  mapping_info_faces,
-                                                                 rhs,
                                                                  this->comp_flow_dof_idx,
                                                                  this->comp_flow_quad_idx);
 
@@ -101,12 +100,10 @@ namespace MeltPoolDG::Flow
   void
   CutCompressibleFlowOperation<dim, number>::reinit()
   {
-    // check if fe is equal to FESystem<dim>[FE_DGQ<dim>(degree)^dim+2]
+    // check if fe type is equal to FE_DGQ<dim>
     AssertThrow(
-      this->scratch_data_.get_fe(this->comp_flow_dof_idx).get_name() ==
-        "FESystem<" + std::to_string(dim) + ">[FE_DGQ<" + std::to_string(dim) + ">(" +
-          std::to_string(this->scratch_data_.get_degree(this->comp_flow_dof_idx)) + ")^" +
-          std::to_string(dim + 2) + "]",
+      dynamic_cast<const FE_DGQ<dim> *>(
+        &(this->scratch_data_.get_fe(this->comp_flow_dof_idx).base_element(0))) != nullptr,
       dealii::ExcMessage(
         "The cutDG compressible flow solver only supports finite element types of FE_DGQ!"));
 
@@ -147,8 +144,20 @@ namespace MeltPoolDG::Flow
     // - reinit matrix-free object, rhs and solution vectors
     adapt_to_new_interface_position();
 
-    // - compute rhs and solve linear and symmetric system of equations with CG
-    this->comp_flow_operator_->advance_time_step(current_time, time_step);
+    // update inverse time step size
+    this->comp_flow_operator_->compute_inverse_time_step(time_step);
+
+    // compute rhs
+    this->comp_flow_operator_->create_rhs(current_time,
+                                          time_step,
+                                          rhs,
+                                          this->solution_history_.get_current_solution());
+
+    // solve linear and symmetric system of equations with CG
+    linear_solver.solve<VectorType>(*this->comp_flow_operator_,
+                                    this->solution_history_.get_current_solution(),
+                                    rhs,
+                                    this->comp_flow_data_.time_integrator.linear_solver_data);
   }
 
   template <int dim, typename number>
