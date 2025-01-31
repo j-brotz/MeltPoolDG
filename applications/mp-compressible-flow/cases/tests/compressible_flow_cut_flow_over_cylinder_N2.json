@@ -27,7 +27,7 @@
     "use cfl criteria": "true",
     "gravity constant": "0.0",
     "domain representation type": "cut",
-    "cut":  {
+    "cut": {
       "two phase": "false",
       "unfitted flow boundary condition": "no_slip_wall",
       "cut param": {
