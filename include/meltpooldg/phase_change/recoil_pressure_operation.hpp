@@ -195,6 +195,12 @@ namespace MeltPoolDG::Evaporation
 
     std::unique_ptr<const LevelSet::DeltaApproximationBase<double>> delta_phase_weighted;
 
+    // For the one phase cut temperature, we need a dummy temperature value for the gas domain -
+    // which doesn't have any temperature information. We use the value that us just below the
+    // recoil pressure activation temperature, so the recoil pressure will reliably be zero in that
+    // domain.
+    const double dummy_temperature;
+
   public:
     RecoilPressureOperation(const ScratchData<dim>   &scratch_data_in,
                             const Parameters<double> &data_in,
