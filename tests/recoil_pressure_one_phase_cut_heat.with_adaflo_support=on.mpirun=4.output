@@ -51,46 +51,46 @@
 | current laser intensity: 1                                                                 laser |
 | No new DoFs have to be gp-extrapolated.                                    cut_solution_transfer |
 | Newton Raphson solver converged: ||solution|| = 2.73212e-01                newton_raphson_solver |
-| || velocity ||L2 = 4.885711650438621e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 4.184121196362512e-02                                    navier_stokes_adaflo |
+| || velocity ||L2 = 2.094725897605413e-06                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.682874812639014e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 2.8000e-05 to 3.2000e-05 ( dt = 4.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 5.9292513957e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 1.00993655895e-03                                               normal_vector |
+| || normal_0 ||L2 = 4.08662879946e-04                                               normal_vector |
 | || normal_1 ||L2 = 3.41427083127e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4e-05                                                                      reinitialization |
 | || delta phi ||L2 = 1.658206193826012e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 7.43115888463e-04                                               normal_vector |
+| || normal_0 ||L2 = 3.00449067091e-04                                               normal_vector |
 | || normal_1 ||L2 = 3.41516978696e+00                                               normal_vector |
-| || curvature ||L2 = 1.44557565611e-03                                                  curvature |
+| || curvature ||L2 = 5.83762604575e-04                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | No new DoFs have to be gp-extrapolated.                                    cut_solution_transfer |
-| Newton Raphson solver converged: ||solution|| = 2.77242e-01                newton_raphson_solver |
-| || velocity ||L2 = 3.971479228458320e-05                                    navier_stokes_adaflo |
-| || pressure ||L2 = 9.983671673459141e-01                                    navier_stokes_adaflo |
+| Newton Raphson solver converged: ||solution|| = 2.77246e-01                newton_raphson_solver |
+| || velocity ||L2 = 3.743720536534935e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 8.943631735121292e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 3.2000e-05 to 3.6000e-05 ( dt = 4.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 5.9304363432e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 1.39560356342e-02                                               normal_vector |
+| || normal_0 ||L2 = 1.20686167121e-02                                               normal_vector |
 | || normal_1 ||L2 = 3.41516093622e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4e-05                                                                      reinitialization |
 | || delta phi ||L2 = 4.796583517845620e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.16177683741e-02                                               normal_vector |
-| || normal_1 ||L2 = 3.41612992506e+00                                               normal_vector |
-| || curvature ||L2 = 2.64778969104e-02                                                  curvature |
+| || normal_0 ||L2 = 1.00525500674e-02                                               normal_vector |
+| || normal_1 ||L2 = 3.41613280709e+00                                               normal_vector |
+| || curvature ||L2 = 2.28981812154e-02                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | No new DoFs have to be gp-extrapolated.                                    cut_solution_transfer |
-| Newton Raphson solver converged: ||solution|| = 2.80983e-01                newton_raphson_solver |
-| || velocity ||L2 = 4.427660906530955e-05                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.267906200920726e-01                                    navier_stokes_adaflo |
+| Newton Raphson solver converged: ||solution|| = 2.80972e-01                newton_raphson_solver |
+| || velocity ||L2 = 4.164812842626966e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.822455810675401e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
