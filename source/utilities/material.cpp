@@ -35,7 +35,7 @@ namespace MeltPoolDG
         if (do_solidification)
           return MaterialTypes::liquid_solid;
         else
-          return MaterialTypes::single_phase;
+          return MaterialTypes::gas;
       }
   }
 
