@@ -79,18 +79,8 @@ namespace MeltPoolDG::Heat
       if (laser_intensity_profile == nullptr)
         return dealii::VectorizedArray<number>(0.0);
 
-      return internal::evaluate_function<dim, number>(*laser_intensity_profile,
-                                                      temp_eval.real_point(q)) *
-             internal::compute_projection_factor(laser_direction, -temp_eval.normal_vector(q));
-    }
-
-    template <typename Evaluation>
-    inline void
-    set_dof_values_zero(Evaluation &eval)
-    {
-      typename Evaluation::value_type *dof_values = eval.begin_dof_values();
-      for (const unsigned int j : eval.dof_indices())
-        dof_values[j] = typename Evaluation::value_type();
+      return evaluate_function<dim, number>(*laser_intensity_profile, temp_eval.real_point(q)) *
+             compute_projection_factor(laser_direction, temp_eval.normal_vector(q));
     }
   } // namespace internal
 
@@ -1638,7 +1628,6 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperator<dim, number>::compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const
   {
-    // TODO: isn't here the DoF index missing?
     scratch_data.initialize_dof_vector(diagonal, temp_dof_idx);
 
     dealii::TrilinosWrappers::SparseMatrix dummy;
@@ -1647,7 +1636,7 @@ namespace MeltPoolDG::Heat
     // invert
     const double linfty_norm = std::max(1.0, diagonal.linfty_norm());
     for (auto &i : diagonal)
-      i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
+      i = std::abs(i) > 1.0e-14 * linfty_norm ? 1.0 / i : 1.0;
   }
 
 

@@ -20,6 +20,7 @@
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
+#include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/cut_util.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/functions.hpp>
@@ -31,21 +32,46 @@
 namespace MeltPoolDG::Heat
 {
   template <int dim>
+  std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
+  construct_dirichlet_bc_map(
+    const bool                                                          two_phase,
+    const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> &dirichlet_bc)
+  {
+    if (two_phase)
+      // For the two-phase case, the initial temperature function must be set up with 2 components
+      // because the FESystem for cut is set up with 2 to handle both phases.
+      {
+        std::map<types::boundary_id, std::shared_ptr<Function<dim>>> temp_bc;
+        for (const auto &bc : dirichlet_bc)
+          temp_bc[bc.first] =
+            std::make_shared<dealii::Functions::TwoComponentFunction<dim>>(*bc.second);
+        return temp_bc;
+      }
+    else
+      return dirichlet_bc;
+  }
+
+  template <int dim>
   HeatCutOperation<dim>::HeatCutOperation(
-    const ScratchData<dim>                     &scratch_data_in,
-    const HeatData<double>                     &heat_data_in,
-    const MaterialData<double>                 &material_data_in,
-    const Evaporation::EvaporationData<double> &evapor_data_in,
-    const TimeIterator<double>                 &time_iterator_in,
-    const unsigned int                          temp_dof_idx_in,
-    const unsigned int                          temp_hanging_nodes_dof_idx_in,
-    const unsigned int                          temp_quad_idx_in,
-    const bool                                  do_solidification_in,
-    const unsigned int                          ls_dof_idx_in,
-    const VectorType                           &level_set_in,
-    const unsigned int                          vel_dof_idx_in,
-    const VectorType                           *velocity_in)
+    const ScratchData<dim>                                    &scratch_data_in,
+    const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
+    const PeriodicBoundaryConditions<dim>                     &periodic_bc_in,
+    const HeatData<double>                                    &heat_data_in,
+    const MaterialData<double>                                &material_data_in,
+    const Evaporation::EvaporationData<double>                &evapor_data_in,
+    const TimeIterator<double>                                &time_iterator_in,
+    const unsigned int                                         temp_dof_idx_in,
+    const unsigned int                                         temp_hanging_nodes_dof_idx_in,
+    const unsigned int                                         temp_quad_idx_in,
+    const bool                                                 do_solidification_in,
+    const unsigned int                                         ls_dof_idx_in,
+    const VectorType                                          &level_set_in,
+    const unsigned int                                         vel_dof_idx_in,
+    const VectorType                                          *velocity_in)
     : scratch_data(scratch_data_in)
+    , dirichlet_bc(construct_dirichlet_bc_map<dim>(heat_data_in.cut.two_phase,
+                                                   heat_bc_manager->get_bc_of_type("dirichlet")))
+    , periodic_bc(periodic_bc_in)
     , heat_data(heat_data_in)
     , time_iterator(time_iterator_in)
     , temp_dof_idx(temp_dof_idx_in)
@@ -178,6 +204,8 @@ namespace MeltPoolDG::Heat
     compute_intersected_quadrature();
   }
 
+
+
   template <int dim>
   void
   HeatCutOperation<dim>::compute_intersected_quadrature()
@@ -192,6 +220,8 @@ namespace MeltPoolDG::Heat
                                             heat_data.fe.degree,
                                             heat_data.cut.two_phase);
   }
+
+
 
   template <int dim>
   void
@@ -225,6 +255,17 @@ namespace MeltPoolDG::Heat
     dof_handler.distribute_dofs(fe_collection);
   }
 
+
+  template <int dim>
+  void
+  HeatCutOperation<dim>::setup_constraints(ScratchData<dim> &mutable_scratch_data) const
+  {
+    Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
+      mutable_scratch_data, dirichlet_bc, periodic_bc, temp_dof_idx, temp_hanging_nodes_dof_idx);
+  }
+
+
+
   template <int dim>
   void
   HeatCutOperation<dim>::reinit()
@@ -244,6 +285,8 @@ namespace MeltPoolDG::Heat
 
     compute_intersected_quadrature();
   }
+
+
 
   template <int dim>
   void
@@ -267,16 +310,21 @@ namespace MeltPoolDG::Heat
     solution_history.get_current_solution().update_ghost_values();
   }
 
+
+
   template <int dim>
   void
   HeatCutOperation<dim>::distribute_constraints()
   {}
+
+
 
   template <int dim>
   void
   HeatCutOperation<dim>::setup_newton()
   {
     newton.residual = [&](const VectorType & /*solution_update*/, VectorType &rhs) {
+      update_ghost_values();
       heat_operator->create_rhs(rhs, solution_history.get_recent_old_solution());
       scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(rhs);
     };
@@ -310,6 +358,9 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperation<dim>::init_time_advance()
   {
+    // TODO detect whether the level set has changed
+    adapt_to_new_interface_position();
+
     // Using solution_history.commit_old_solutions();  messes up the partitioner.
     // This is a workaround.
     auto &solutions = const_cast<std::vector<VectorType> &>(solution_history.get_all_solutions());
@@ -323,22 +374,20 @@ namespace MeltPoolDG::Heat
     solution_history.get_current_solution().swap(temp);
 
     heat_operator->init_time_advance(time_iterator.get_current_time_increment());
+
+    ready_for_time_advance = true;
   }
+
+
 
   template <int dim>
   void
   HeatCutOperation<dim>::solve()
   {
-    // TODO detect whether the level set has changed
-    adapt_to_new_interface_position();
+    if (not ready_for_time_advance)
+      init_time_advance();
 
-    init_time_advance();
-
-    if (not solution_history.get_current_solution().has_ghost_elements())
-      solution_history.get_current_solution().update_ghost_values();
-    if (not solution_history.get_recent_old_solution().has_ghost_elements())
-      solution_history.get_recent_old_solution().update_ghost_values();
-    heat_operator->update_ghost_values();
+    update_ghost_values();
 
     preconditioner.update();
 
@@ -350,7 +399,23 @@ namespace MeltPoolDG::Heat
       {
         AssertThrow(false, ExcHeatTransferNoConvergence());
       }
+
+    ready_for_time_advance = false;
   }
+
+
+  template <int dim>
+  void
+  HeatCutOperation<dim>::update_ghost_values() const
+  {
+    if (not solution_history.get_current_solution().has_ghost_elements())
+      solution_history.get_current_solution().update_ghost_values();
+    if (not solution_history.get_recent_old_solution().has_ghost_elements())
+      solution_history.get_recent_old_solution().update_ghost_values();
+    heat_operator->update_ghost_values();
+  }
+
+
 
   /**
    * register vectors for adaptive mesh refinement solution transfer
@@ -361,6 +426,8 @@ namespace MeltPoolDG::Heat
   {
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
   }
+
+
 
   template <int dim>
   void
@@ -393,12 +460,16 @@ namespace MeltPoolDG::Heat
       }
   }
 
+
+
   template <int dim>
   void
   HeatCutOperation<dim>::attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const
   {
     (void)data_out;
   }
+
+
 
   template <int dim>
   const HeatCutOperation<dim>::VectorType &

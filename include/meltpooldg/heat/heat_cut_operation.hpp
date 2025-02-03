@@ -6,11 +6,12 @@
 
 #include <deal.II/dofs/dof_handler.h>
 
-#include <deal.II/lac/diagonal_matrix.h>
-
 #include <deal.II/non_matching/mapping_info.h>
 #include <deal.II/non_matching/mesh_classifier.h>
 
+#include <meltpooldg/core/boundary_conditions.hpp>
+#include <meltpooldg/core/operator_base.hpp>
+#include <meltpooldg/core/periodic_boundary_conditions.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/heat/heat_cut_operator.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
@@ -37,8 +38,10 @@ namespace MeltPoolDG::Heat
   private:
     using VectorType = typename HeatOperationBase<dim>::VectorType;
 
-    const ScratchData<dim> &scratch_data;
-    const HeatData<double> &heat_data;
+    const ScratchData<dim>                                            &scratch_data;
+    const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> dirichlet_bc;
+    const PeriodicBoundaryConditions<dim>                             &periodic_bc;
+    const HeatData<double>                                            &heat_data;
 
     const TimeIterator<double> &time_iterator;
 
@@ -74,20 +77,25 @@ namespace MeltPoolDG::Heat
 
     Preconditioner<dim, VectorType> preconditioner;
 
+    // determine whether solution vectors are prepared for time advance
+    bool ready_for_time_advance = false;
+
   public:
-    HeatCutOperation(const ScratchData<dim>                     &scratch_data_in,
-                     const HeatData<double>                     &heat_data_in,
-                     const MaterialData<double>                 &material_data_in,
-                     const Evaporation::EvaporationData<double> &evapor_data_in,
-                     const TimeIterator<double>                 &time_iterator_in,
-                     const unsigned int                          temp_dof_idx_in,
-                     const unsigned int                          temp_hanging_nodes_dof_idx_in,
-                     const unsigned int                          temp_quad_idx_in,
-                     const bool                                  do_solidification_in,
-                     const unsigned int                          ls_dof_idx_in,
-                     const VectorType                           &level_set_in,
-                     const unsigned int                          vel_dof_idx_in = 0,
-                     const VectorType                           *velocity_in    = nullptr);
+    HeatCutOperation(const ScratchData<dim>                                    &scratch_data_in,
+                     const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
+                     const PeriodicBoundaryConditions<dim>                     &periodic_bc_in,
+                     const HeatData<double>                                    &heat_data_in,
+                     const MaterialData<double>                                &material_data_in,
+                     const Evaporation::EvaporationData<double>                &evapor_data_in,
+                     const TimeIterator<double>                                &time_iterator_in,
+                     const unsigned int                                         temp_dof_idx_in,
+                     const unsigned int temp_hanging_nodes_dof_idx_in,
+                     const unsigned int temp_quad_idx_in,
+                     const bool         do_solidification_in,
+                     const unsigned int ls_dof_idx_in,
+                     const VectorType  &level_set_in,
+                     const unsigned int vel_dof_idx_in = 0,
+                     const VectorType  *velocity_in    = nullptr);
 
     void
     register_laser_intensity_function_and_direction(
@@ -113,6 +121,9 @@ namespace MeltPoolDG::Heat
     distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const override;
 
     void
+    setup_constraints(ScratchData<dim> &mutable_scratch_data) const override;
+
+    void
     reinit() override;
 
     void
@@ -122,7 +133,7 @@ namespace MeltPoolDG::Heat
     distribute_constraints() override;
 
     void
-    init_time_advance();
+    init_time_advance() override;
 
     void
     solve() override;
@@ -160,5 +171,8 @@ namespace MeltPoolDG::Heat
   private:
     void
     setup_newton();
+
+    void
+    update_ghost_values() const;
   };
 } // namespace MeltPoolDG::Heat

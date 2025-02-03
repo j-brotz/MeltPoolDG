@@ -145,6 +145,54 @@ namespace MeltPoolDG
 
 
   template <typename number>
+  template <typename value_type, int dim>
+  inline MaterialParameterValues<value_type>
+  Material<number>::compute_parameters(
+    const FECellIntegrator<dim, 1, number>              &level_set_heaviside_val,
+    const std::vector<FECellIntegrator<dim, 1, number>> &temperature_val,
+    const MaterialUpdateFlags::MaterialUpdateFlags      &flags,
+    const unsigned int                                   q_index) const
+  {
+    AssertIndexRange(temperature_val.size(), 2);
+
+    const auto get_temperature_value = [&]() {
+      if (temperature_val.size() == 1)
+        return temperature_val[0].get_value(q_index);
+      else if (temperature_val.size() == 2)
+        return compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+          level_set_heaviside_val.get_value(q_index),
+          0.5,
+          temperature_val[0].get_value(q_index),
+          temperature_val[1].get_value(q_index));
+      AssertThrow(not temperature_val.empty(), ExcInternalError());
+      return value_type(0.0);
+    };
+
+    switch (material_type)
+      {
+        case MaterialTypes::gas_liquid_solid:
+        case MaterialTypes::gas_liquid_solid_consistent_with_evaporation:
+          return compute_parameters_internal(level_set_heaviside_val.get_value(q_index),
+                                             get_temperature_value(),
+                                             flags);
+        case MaterialTypes::gas_liquid:
+        case MaterialTypes::gas_liquid_consistent_with_evaporation:
+          return compute_parameters_internal(level_set_heaviside_val.get_value(q_index),
+                                             value_type(0.0),
+                                             flags);
+        case MaterialTypes::liquid_solid:
+          return compute_parameters_internal(get_temperature_value(), value_type(0.0), flags);
+        case MaterialTypes::single_phase:
+          return compute_parameters_internal(value_type(0.0), value_type(0.0), flags);
+        default:
+          Assert(false, dealii::ExcNotImplemented());
+          return MaterialParameterValues<VectorizedArray<number>>();
+      }
+  }
+
+
+
+  template <typename number>
   inline bool
   Material<number>::has_dependency(const FieldType &field_type) const
   {

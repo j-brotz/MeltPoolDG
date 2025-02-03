@@ -1,10 +1,10 @@
-#include <deal.II/base/exceptions.h>
+#include <meltpooldg/heat/heat_diffuse_operation.hpp>
+//
 
-#include <deal.II/dofs/dof_handler.h>
+#include <deal.II/base/exceptions.h>
 
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
-#include <meltpooldg/heat/heat_diffuse_operation.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
@@ -15,25 +15,28 @@
 #include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
+
 namespace MeltPoolDG::Heat
 {
   template <int dim>
   HeatDiffuseOperation<dim>::HeatDiffuseOperation(
-    const std::shared_ptr<BoundaryConditionManager<dim>> bc,
-    const ScratchData<dim>                              &scratch_data_in,
-    const HeatData<double>                              &heat_data_in,
-    const Material<double>                              &material,
-    const TimeIterator<double>                          &time_iterator,
-    const unsigned int                                   temp_dof_idx_in,
-    const unsigned int                                   temp_hanging_nodes_dof_idx_in,
-    const unsigned int                                   temp_quad_idx_in,
-    const unsigned int                                   vel_dof_idx_in,
-    const VectorType                                    *velocity_in,
-    const unsigned int                                   ls_dof_idx_in,
-    const VectorType                                    *level_set_as_heaviside_in,
-    const bool                                           do_solidification)
+    const ScratchData<dim>                                    &scratch_data_in,
+    const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
+    const PeriodicBoundaryConditions<dim>                     &periodic_bc_in,
+    const HeatData<double>                                    &heat_data_in,
+    const Material<double>                                    &material,
+    const TimeIterator<double>                                &time_iterator,
+    const unsigned int                                         temp_dof_idx_in,
+    const unsigned int                                         temp_hanging_nodes_dof_idx_in,
+    const unsigned int                                         temp_quad_idx_in,
+    const unsigned int                                         vel_dof_idx_in,
+    const VectorType                                          *velocity_in,
+    const unsigned int                                         ls_dof_idx_in,
+    const VectorType                                          *level_set_as_heaviside_in,
+    const bool                                                 do_solidification)
     : scratch_data(scratch_data_in)
-    , dirichlet_bc(bc->get_bc_of_type("dirichlet"))
+    , dirichlet_bc(heat_bc_manager->get_bc_of_type("dirichlet"))
+    , periodic_bc(periodic_bc_in)
     , heat_data(heat_data_in)
     , time_iterator(time_iterator)
     , temp_dof_idx(temp_dof_idx_in)
@@ -48,8 +51,8 @@ namespace MeltPoolDG::Heat
                                 2U /*TODO: include time integration scheme*/))
   {
     heat_operator = std::make_unique<HeatDiffuseMultiPhaseOperator<dim>>(
-      bc,
       scratch_data,
+      heat_bc_manager,
       heat_data,
       material,
       temp_dof_idx,
@@ -143,6 +146,15 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
+  HeatDiffuseOperation<dim>::setup_constraints(ScratchData<dim> &mutable_scratch_data) const
+  {
+    Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
+      mutable_scratch_data, dirichlet_bc, periodic_bc, temp_dof_idx, temp_hanging_nodes_dof_idx);
+  }
+
+
+  template <int dim>
+  void
   HeatDiffuseOperation<dim>::set_initial_condition(
     const Function<dim> &initial_field_function_temperature)
   {
@@ -222,6 +234,7 @@ namespace MeltPoolDG::Heat
 
     // apply constraints to predictor
     scratch_data.get_constraint(temp_dof_idx).distribute(solution_history.get_current_solution());
+
     ready_for_time_advance = true;
   }
 

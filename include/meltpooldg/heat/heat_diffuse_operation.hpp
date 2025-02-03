@@ -7,16 +7,19 @@
 
 #include <deal.II/base/function.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/types.h>
 
 #include <deal.II/dofs/dof_handler.h>
 
 #include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/diagonal_matrix.h>
-#include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <meltpooldg/core/boundary_conditions.hpp>
+#include <meltpooldg/core/operator_base.hpp>
+#include <meltpooldg/core/periodic_boundary_conditions.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/heat_diffuse_operator.hpp>
@@ -32,9 +35,11 @@
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
+#include <map>
 #include <memory>
-#include <utility>
+#include <tuple>
 #include <vector>
+
 
 namespace MeltPoolDG::Heat
 {
@@ -49,10 +54,11 @@ namespace MeltPoolDG::Heat
 
     const ScratchData<dim>                                            &scratch_data;
     const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> dirichlet_bc;
+    const PeriodicBoundaryConditions<dim>                             &periodic_bc;
     /**
      * parameters
      */
-    const HeatData<double>      heat_data;
+    const HeatData<double>     &heat_data;
     const TimeIterator<double> &time_iterator;
     /**
      * select the relevant DoFHandlers and quadrature rules
@@ -97,12 +103,13 @@ namespace MeltPoolDG::Heat
     std::unique_ptr<LevelSet::Tools::NearestPoint<dim>> nearest_point_search;
 
   public:
-    HeatDiffuseOperation(const std::shared_ptr<BoundaryConditionManager<dim>> bc_data,
-                         const ScratchData<dim>                              &scratch_data_in,
-                         const HeatData<double>                              &heat_data_in,
-                         const Material<double>                              &material,
-                         const TimeIterator<double>                          &time_iterator,
-                         unsigned int                                         temp_dof_idx_in,
+    HeatDiffuseOperation(const ScratchData<dim>                                    &scratch_data_in,
+                         const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
+                         const PeriodicBoundaryConditions<dim>                     &periodic_bc_in,
+                         const HeatData<double>                                    &heat_data_in,
+                         const Material<double>                                    &material,
+                         const TimeIterator<double>                                &time_iterator,
+                         unsigned int                                               temp_dof_idx_in,
                          unsigned int      temp_hanging_nodes_dof_idx_in,
                          unsigned int      temp_quad_idx_in,
                          unsigned int      vel_dof_idx_in            = 0,
@@ -127,13 +134,16 @@ namespace MeltPoolDG::Heat
     distribute_dofs(DoFHandler<dim> &dof_handler) const override;
 
     void
+    setup_constraints(ScratchData<dim> &mutable_scratch_data) const override;
+
+    void
     set_initial_condition(const Function<dim> &initial_field_function_temperature) override;
 
     void
     reinit() override;
 
     void
-    init_time_advance();
+    init_time_advance() override;
 
     void
     solve() override;

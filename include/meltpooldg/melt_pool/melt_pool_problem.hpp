@@ -20,7 +20,7 @@
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
 #include <meltpooldg/flow/flow_base.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
-#include <meltpooldg/heat/heat_diffuse_operation.hpp>
+#include <meltpooldg/heat/heat_operation_base.hpp>
 #include <meltpooldg/heat/laser_operation.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/phase_change/evaporation_operation.hpp>
@@ -128,7 +128,19 @@ namespace MeltPoolDG::MeltPool
     initialize(std::shared_ptr<SimulationType> base_in);
 
     void
-    set_initial_condition(std::shared_ptr<SimulationType> base_in);
+    set_initial_conditions(std::shared_ptr<SimulationType> base_in);
+
+    void
+    set_initial_condition_level_set(std::shared_ptr<SimulationType> base_in);
+
+    void
+    set_initial_condition_heat_transfer(std::shared_ptr<SimulationType> base_in);
+
+    void
+    set_initial_condition_flow(std::shared_ptr<SimulationType> base_in);
+
+    void
+    set_initial_condition_evaporation(std::shared_ptr<SimulationType> base_in);
 
     void
     setup_dof_system(std::shared_ptr<SimulationType> base_in, const bool do_reinit = true);
@@ -242,7 +254,7 @@ namespace MeltPoolDG::MeltPool
     std::shared_ptr<
       MeltPoolDG::Evaporation::IncompressibleNewtonianFluidEvaporationMaterial<dim, double>>
                                                                evaporation_fluid_material;
-    std::shared_ptr<Heat::HeatDiffuseOperation<dim>>           heat_operation;
+    std::shared_ptr<Heat::HeatOperationBase<dim>>              heat_operation;
     std::shared_ptr<Flow::DarcyDampingOperation<dim>>          darcy_operation;
     std::shared_ptr<Flow::SurfaceTensionOperation<dim>>        surface_tension_operation;
     std::shared_ptr<Evaporation::RecoilPressureOperation<dim>> recoil_pressure_operation;

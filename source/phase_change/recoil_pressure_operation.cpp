@@ -2,8 +2,11 @@
 //
 #include <deal.II/matrix_free/evaluation_flags.h>
 
+#include <meltpooldg/utilities/cut_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
+
+#include <vector>
 
 
 namespace MeltPoolDG::Evaporation
@@ -104,70 +107,93 @@ namespace MeltPoolDG::Evaporation
     const unsigned int evapor_dof_idx,
     bool               zero_out) const
   {
-    const bool temp_update_ghosts = !temperature.has_ghost_elements();
-    if (temp_update_ghosts)
+    if (not temperature.has_ghost_elements())
       temperature.update_ghost_values();
 
-    bool evapor_update_ghosts = false;
-    if (model_type == RecoilPressureModelType::hybrid)
-      {
-        evapor_update_ghosts = !evaporative_mass_flux.has_ghost_elements();
-        if (evapor_update_ghosts)
-          evaporative_mass_flux.update_ghost_values();
-      }
+    if (model_type == RecoilPressureModelType::hybrid and
+        not evaporative_mass_flux.has_ghost_elements())
+      evaporative_mass_flux.update_ghost_values();
+
+    // detect weather the temperature vector is setup for CutFEM by checking if its
+    // dealii::DoFHandler is in hp-mode.
+    const bool temperature_is_cut =
+      scratch_data.get_dof_handler(temp_dof_idx).has_hp_capabilities();
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free,
           auto       &force_rhs,
           const auto &level_set_as_heaviside,
-          auto        macro_cells) {
-        FECellIntegrator<dim, 1, double> level_set(matrix_free, ls_dof_idx, flow_vel_quad_idx);
+          auto        cell_range) {
+        FECellIntegrator<dim, 1, double> heaviside_eval(matrix_free, ls_dof_idx, flow_vel_quad_idx);
 
-        FECellIntegrator<dim, dim, double> recoil_pressure(matrix_free,
-                                                           flow_vel_dof_idx,
-                                                           flow_vel_quad_idx);
+        FECellIntegrator<dim, dim, double> recoil_pressure_eval(matrix_free,
+                                                                flow_vel_dof_idx,
+                                                                flow_vel_quad_idx);
 
-        FECellIntegrator<dim, 1, double> temperature_val(matrix_free,
-                                                         temp_dof_idx,
-                                                         flow_vel_quad_idx);
+        const unsigned int cell_category =
+          temperature_is_cut ? matrix_free.get_cell_range_category(cell_range) : 0;
 
-        FECellIntegrator<dim, 1, double> interpolated_level_set_to_pressure_space(
+        std::vector<FECellIntegrator<dim, 1, double>> temperature_eval;
+        if (not temperature_is_cut)
+          temperature_eval.emplace_back(matrix_free, temp_dof_idx, flow_vel_quad_idx);
+        else // temperature is cut
+          {
+            if (cell_category == CutUtil::CellCategory::liquid or
+                cell_category == CutUtil::CellCategory::intersected)
+              temperature_eval.emplace_back(matrix_free,
+                                            temp_dof_idx,
+                                            flow_vel_quad_idx,
+                                            0 /*selected component*/,
+                                            cell_category /*active_fe_index*/);
+            if (cell_category == CutUtil::CellCategory::gas or
+                cell_category == CutUtil::CellCategory::intersected)
+              temperature_eval.emplace_back(matrix_free,
+                                            temp_dof_idx,
+                                            flow_vel_quad_idx,
+                                            1 /*selected component*/,
+                                            cell_category /*active_fe_index*/);
+          }
+
+        FECellIntegrator<dim, 1, double> heaviside_interpolated_to_pressure_space_eval(
           matrix_free, flow_pressure_dof_idx, flow_vel_quad_idx);
 
         std::unique_ptr<FECellIntegrator<dim, 1, double>> evapor_flux_val;
-
         if (model_type == RecoilPressureModelType::hybrid)
           evapor_flux_val = std::make_unique<FECellIntegrator<dim, 1, double>>(matrix_free,
                                                                                evapor_dof_idx,
                                                                                flow_vel_quad_idx);
 
-        auto &used_level_set = do_level_set_pressure_gradient_interpolation ?
-                                 interpolated_level_set_to_pressure_space :
-                                 level_set;
+        auto &used_heaviside_eval = do_level_set_pressure_gradient_interpolation ?
+                                      heaviside_interpolated_to_pressure_space_eval :
+                                      heaviside_eval;
 
-        for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
+        for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
-            level_set.reinit(cell);
-            level_set.read_dof_values_plain(level_set_as_heaviside);
+            heaviside_eval.reinit(cell);
+            heaviside_eval.read_dof_values_plain(level_set_as_heaviside);
 
             if (do_level_set_pressure_gradient_interpolation)
               {
-                interpolated_level_set_to_pressure_space.reinit(cell);
+                heaviside_interpolated_to_pressure_space_eval.reinit(cell);
 
                 UtilityFunctions::compute_gradient_at_interpolated_dof_values<dim>(
-                  level_set,
-                  interpolated_level_set_to_pressure_space,
+                  heaviside_eval,
+                  heaviside_interpolated_to_pressure_space_eval,
                   ls_to_pressure_grad_interpolation_matrix);
               }
 
-            if (delta_phase_weighted)
-              used_level_set.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+            if (delta_phase_weighted or
+                (temperature_is_cut and cell_category == CutUtil::CellCategory::intersected))
+              used_heaviside_eval.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
             else
-              used_level_set.evaluate(EvaluationFlags::gradients);
+              used_heaviside_eval.evaluate(EvaluationFlags::gradients);
 
-            temperature_val.reinit(cell);
-            temperature_val.read_dof_values_plain(temperature);
-            temperature_val.evaluate(EvaluationFlags::values);
+            for (auto &temp_eval : temperature_eval)
+              {
+                temp_eval.reinit(cell);
+                temp_eval.read_dof_values_plain(temperature);
+                temp_eval.evaluate(EvaluationFlags::values);
+              }
 
             if (evapor_flux_val)
               {
@@ -176,47 +202,46 @@ namespace MeltPoolDG::Evaporation
                 evapor_flux_val->evaluate(EvaluationFlags::values);
               }
 
-            recoil_pressure.reinit(cell);
+            recoil_pressure_eval.reinit(cell);
 
-            for (unsigned int q_index = 0; q_index < recoil_pressure.n_q_points; ++q_index)
+            for (const unsigned int q : recoil_pressure_eval.quadrature_point_indices())
               {
-                const auto &t = temperature_val.get_value(q_index);
+                VectorizedArray<double> temp = temperature_eval[0].get_value(q);
+                if (temperature_is_cut and cell_category == CutUtil::CellCategory::intersected)
+                  // For intersected cut cells, temperature_val[0] contains the temperature values
+                  // of the liquid domain and temperature_val[1] the temperature values of the gas
+                  // domain that each may be ghost values.
+                  // We use the level set as heaviside as in indicator to select the non-ghosted
+                  // values each.
+                  temp = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+                    used_heaviside_eval.get_value(q), 0.5, temp, temperature_eval[1].get_value(q));
 
                 VectorizedArray<double> m_dot = 0.0;
                 if (evapor_flux_val)
-                  m_dot = evapor_flux_val->get_value(q_index);
+                  m_dot = evapor_flux_val->get_value(q);
 
                 VectorizedArray<double> weight = 1.0;
-
                 if (delta_phase_weighted)
-                  weight = delta_phase_weighted->compute_weight(used_level_set.get_value(q_index));
+                  weight = delta_phase_weighted->compute_weight(used_heaviside_eval.get_value(q));
 
                 const VectorizedArray<double> recoil_pressure_coefficient =
                   evapor_flux_val ?
-                    recoil_pressure_model->compute_recoil_pressure_coefficient(t,
+                    recoil_pressure_model->compute_recoil_pressure_coefficient(temp,
                                                                                m_dot,
                                                                                1. / weight) :
-                    recoil_pressure_model->compute_recoil_pressure_coefficient(t);
+                    recoil_pressure_model->compute_recoil_pressure_coefficient(temp);
 
 
-                recoil_pressure.submit_value(recoil_pressure_coefficient *
-                                               used_level_set.get_gradient(q_index) * weight,
-                                             q_index);
+                recoil_pressure_eval.submit_value(recoil_pressure_coefficient *
+                                                    used_heaviside_eval.get_gradient(q) * weight,
+                                                  q);
               }
-            recoil_pressure.integrate_scatter(EvaluationFlags::values, force_rhs);
+            recoil_pressure_eval.integrate_scatter(EvaluationFlags::values, force_rhs);
           }
       },
       force_rhs,
       level_set_as_heaviside,
       zero_out);
-
-    if (temp_update_ghosts)
-      temperature.zero_out_ghost_values();
-    if (model_type == RecoilPressureModelType::hybrid)
-      {
-        if (evapor_update_ghosts)
-          evaporative_mass_flux.zero_out_ghost_values();
-      }
   }
 
   template class RecoilPressureOperation<1>;

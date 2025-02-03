@@ -205,6 +205,7 @@ namespace MeltPoolDG::LevelSet
           ls_hanging_nodes_dof_idx,
           ls_hanging_nodes_dof_idx,
           ls_quad_idx);
+        evaporation_operation->reinit();
       }
     /*
      *  set initial conditions of the level set field ...
