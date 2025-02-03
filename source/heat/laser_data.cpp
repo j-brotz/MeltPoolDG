@@ -101,10 +101,7 @@ namespace MeltPoolDG::Heat
 
   template <typename number>
   void
-  LaserData<number>::post(
-    const unsigned int          dim,
-    const bool                  heat_use_volume_specific_thermal_capacity_for_phase_interpolation,
-    const MaterialData<number> &material)
+  LaserData<number>::post(const unsigned int dim)
   {
     // if the laser starting position is not specified, set it to the origin
     if (starting_position.size() == 0)
@@ -133,6 +130,16 @@ namespace MeltPoolDG::Heat
                                 [](double d) { return d != 0.0; }),
                     ExcMessage("The laser direction cannot be a zero vector."));
       }
+  }
+
+  template <typename number>
+  void
+  LaserData<number>::post(
+    const unsigned int          dim,
+    const bool                  heat_use_volume_specific_thermal_capacity_for_phase_interpolation,
+    const MaterialData<number> &material)
+  {
+    post(dim);
 
     // set automatic weights of asymmetric delta functions, if requested
     if (heat_use_volume_specific_thermal_capacity_for_phase_interpolation)
