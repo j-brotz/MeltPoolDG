@@ -63,32 +63,8 @@ namespace MeltPoolDG::Heat
     , do_solidification(do_solidification_in)
     , do_update_ghosts(6)
   {
-    // TODO move these asserts to a more central place -> to material perhaps?
-    const auto &material_data = material.get_data();
-    // TODO move solidification bool to material?
-    AssertThrow((material_data.gas.thermal_conductivity > 0.0 && material_data.gas.density > 0.0) ||
-                  do_solidification,
-                ExcMessage(
-                  "The material's conductivity and density must be greater than zero! Abort..."));
-    AssertThrow(
-      !level_set_as_heaviside ||
-        (material_data.liquid.thermal_conductivity > 0.0 && material_data.liquid.density > 0.0),
-      ExcMessage(
-        "The secondary material's conductivity and density must be greater than zero! Abort..."));
-    AssertThrow(
-      !do_solidification ||
-        (material_data.solid.thermal_conductivity > 0.0 && material_data.solid.density > 0.0),
-      ExcMessage(
-        "In case of solidification the solid's conductivity and density must be greater than zero! Abort..."));
-    AssertThrow(
-      !do_solidification ||
-        (material_data.liquid.thermal_conductivity > 0.0 && material_data.liquid.density > 0.0),
-      ExcMessage(
-        "In case of solidification the liquid's (material_data.liquid) conductivity and density must be greater than zero! Abort..."));
-    AssertThrow(
-      !do_solidification || material_data.liquidus_temperature > material_data.solidus_temperature,
-      ExcMessage(
-        "In case of solidification the liquidus temperature must be greater than the solidus temperature! Abort..."));
+    material.get_data().check_parameters_heat_transfer(level_set_as_heaviside != nullptr,
+                                                       do_solidification);
 
     if (heat_bc_manager)
       {

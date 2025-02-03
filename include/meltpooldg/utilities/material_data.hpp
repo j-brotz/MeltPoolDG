@@ -89,6 +89,9 @@ namespace MeltPoolDG
     void
     add_parameters(dealii::ParameterHandler &prm);
 
+    void
+    check_parameters_heat_transfer(const bool do_two_phase, const bool do_solidification) const;
+
     /**
      * Creates MaterialData with all parameters set to the values of stainless steel:
      *

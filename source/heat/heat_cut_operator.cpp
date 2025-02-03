@@ -133,7 +133,7 @@ namespace MeltPoolDG::Heat
                 dealii::ExcMessage("only standard FE_Q elements are supported for now"));
     AssertThrow(heat_data.fe.degree == 1, dealii::ExcMessage("only degree 1 is supported for now"));
 
-    // TODO material assertion, see heat diffuse operator
+    material_data.check_parameters_heat_transfer(heat_data.cut.two_phase, do_solidification);
 
     if (evapor_data_in.evaporative_cooling.enable)
       {
@@ -142,8 +142,8 @@ namespace MeltPoolDG::Heat
 
         if (evapor_data_in.evaporative_cooling.consider_enthalpy_transport_vapor_mass_flux ==
             "true")
-          AssertThrow(!do_solidification || (material_data.solid.specific_heat_capacity ==
-                                             material_data.liquid.specific_heat_capacity),
+          AssertThrow(not do_solidification or material_data.solid.specific_heat_capacity ==
+                                                 material_data.liquid.specific_heat_capacity,
                       dealii::ExcMessage(
                         "The equation for specific enthalpy for evaporative cooling "
                         "assumes equality between the solid and liquid "
