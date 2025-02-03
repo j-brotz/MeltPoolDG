@@ -30,7 +30,7 @@
     "cut": {
       "two phase": "false",
       "unfitted flow boundary condition": "no_slip_wall",
-      "cut param": {
+      "stabilization": {
         "ghost-penalty": {
           "gamma M degree 0": "1.0",
           "gamma M degree 1": "0.1"

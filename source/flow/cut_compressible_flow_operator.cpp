@@ -662,12 +662,12 @@ namespace MeltPoolDG::Flow
 
                 const auto ghost_penalty_term_0 =
                   (u_minus - u_plus) *
-                  this->comp_flow_data.cut.cut_param.ghost_penalty.gamma_M_degree_0 *
+                  this->comp_flow_data.cut.stabilization.ghost_penalty.gamma_M_degree_0 *
                   cell_side_length;
 
                 const auto ghost_penalty_term_1 =
                   (u_normal_grad_minus - u_normal_grad_plus) *
-                  this->comp_flow_data.cut.cut_param.ghost_penalty.gamma_M_degree_1 *
+                  this->comp_flow_data.cut.stabilization.ghost_penalty.gamma_M_degree_1 *
                   Utilities::fixed_power<3>(cell_side_length);
 
                 if (this->comp_flow_data.fe.degree == 2)
@@ -677,7 +677,7 @@ namespace MeltPoolDG::Flow
 
                     const auto ghost_penalty_term_2 =
                       (u_normal_hessian_minus - u_normal_hessian_plus) *
-                      this->comp_flow_data.cut.cut_param.ghost_penalty.gamma_M_degree_2 *
+                      this->comp_flow_data.cut.stabilization.ghost_penalty.gamma_M_degree_2 *
                       Utilities::fixed_power<5>(cell_side_length);
 
                     phi_m.submit_normal_hessian(ghost_penalty_term_2, q);

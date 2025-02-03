@@ -42,9 +42,9 @@ namespace MeltPoolDG::Flow
     , time_iterator(time_iterator_in)
     , level_set_dof_idx(level_set_dof_idx_in)
     , level_set(level_set_in)
-    , cut_solution_transfer(this->comp_flow_data_.cut.cut_param.ghost_penalty.gamma_M_degree_0,
-                            this->comp_flow_data_.cut.cut_param.ghost_penalty.gamma_M_degree_1,
-                            this->comp_flow_data_.cut.cut_param.ghost_penalty.gamma_M_degree_2,
+    , cut_solution_transfer(this->comp_flow_data_.cut.stabilization.ghost_penalty.gamma_M_degree_0,
+                            this->comp_flow_data_.cut.stabilization.ghost_penalty.gamma_M_degree_1,
+                            this->comp_flow_data_.cut.stabilization.ghost_penalty.gamma_M_degree_2,
                             false /* is_two_phase*/,
                             this->comp_flow_data_.verbosity_level /*verbosity level*/)
     , fe_point_temp(FE_DGQ<dim>(comp_flow_data_in.fe.degree), dim + 2)

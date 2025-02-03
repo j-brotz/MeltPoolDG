@@ -77,8 +77,8 @@ namespace MeltPoolDG::Flow
       // (choose between: "no_slip_wall", "inflow")
       std::string unfitted_flow_boundary_condition = "no_slip_wall";
 
-      // cut-related numerical parameters
-      CutParam<double> cut_param;
+      // cut-related stabilization parameters
+      CutParam<double> stabilization;
     } cut;
 
     void
@@ -130,7 +130,7 @@ namespace MeltPoolDG::Flow
           prm.add_parameter("unfitted flow boundary condition",
                             cut.unfitted_flow_boundary_condition,
                             "Flow boundary condition type at the unfitted boundary.");
-          cut.cut_param.add_parameters(prm);
+          cut.stabilization.add_parameters(prm);
         }
         prm.leave_subsection();
       }

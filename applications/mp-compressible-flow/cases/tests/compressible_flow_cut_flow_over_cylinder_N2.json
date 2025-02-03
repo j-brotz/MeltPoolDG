@@ -9,7 +9,7 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "0.02"
+    "end time": "0.01"
   },
   "output": {
     "write frequency": "1",
@@ -30,7 +30,7 @@
     "cut": {
       "two phase": "false",
       "unfitted flow boundary condition": "no_slip_wall",
-      "cut param": {
+      "stabilization": {
         "ghost-penalty": {
           "gamma M degree 0": "1.0",
           "gamma M degree 1": "0.1",

@@ -34,7 +34,7 @@ namespace MeltPoolDG
   void
   CutParam<number>::add_parameters(dealii::ParameterHandler &prm)
   {
-    prm.enter_subsection("cut param");
+    prm.enter_subsection("stabilization");
     {
       prm.add_parameter("nitsche parameter", nitsche_parameter, "Nitsche stabilization parameter.");
       ghost_penalty.add_parameters(prm);
