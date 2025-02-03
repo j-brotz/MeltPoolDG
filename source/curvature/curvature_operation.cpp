@@ -192,8 +192,14 @@ namespace MeltPoolDG::LevelSet
       preconditioner.update();
     else
       {
+        bool is_ghosted = false;
+        if ((is_ghosted =
+               not normal_vector_operation.get_solution_normal_vector().has_ghost_elements()))
+          normal_vector_operation.get_solution_normal_vector().update_ghost_values();
         curvature_operator->compute_system_matrix_and_rhs(
           normal_vector_operation.get_solution_normal_vector(), rhs);
+        if (not is_ghosted)
+          normal_vector_operation.get_solution_normal_vector().zero_out_ghost_values();
         preconditioner.update(&curvature_operator->get_system_matrix());
       }
   }

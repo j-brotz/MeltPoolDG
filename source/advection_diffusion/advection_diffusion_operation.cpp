@@ -197,7 +197,6 @@ namespace MeltPoolDG::LevelSet
 
     advec_diff_operator->pre();
 
-
     if (this->advec_diff_data.linear_solver.do_matrix_free)
       {
         rhs = user_rhs;
@@ -214,8 +213,9 @@ namespace MeltPoolDG::LevelSet
           inflow_constraints_indices_and_values);
 
         advec_diff_operator->enable_pre_post();
-
         preconditioner.update();
+
+        solution_history.get_current_solution().zero_out_ghost_values();
         LinearSolver::solve<VectorType>(*advec_diff_operator,
                                         solution_history.get_current_solution(),
                                         rhs,
