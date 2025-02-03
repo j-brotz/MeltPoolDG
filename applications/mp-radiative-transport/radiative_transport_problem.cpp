@@ -62,44 +62,8 @@ namespace MeltPoolDG::RadiativeTransport
 
   template <int dim>
   void
-  RadiativeTransportProblem<dim>::add_parameters(dealii::ParameterHandler &prm)
-  {
-    prm.enter_subsection("problem specific");
-    {
-      prm.add_parameter("direction", laser_direction_input_prm, "radiative transport direction.");
-    }
-    prm.leave_subsection();
-  }
-
-
-  template <int dim>
-  void
-  RadiativeTransportProblem<dim>::check_input_parameters()
-  {
-    // if the laser direction is not specified, set it to the negative dim-1 direction
-    if (laser_direction_input_prm.size() == 0)
-      laser_direction = -dealii::Point<dim>::unit_vector(dim - 1);
-    else
-      {
-        AssertThrow(laser_direction_input_prm.size() == dim,
-                    dealii::ExcMessage(
-                      "There must be dim coordinates of the laser direction given."));
-
-        laser_direction = UtilityFunctions::to_point<dim>(laser_direction_input_prm.begin(),
-                                                          laser_direction_input_prm.end());
-
-        Assert(std::abs(laser_direction.norm() - 1.0) < 1e-8,
-               dealii::ExcMessage("The laser direction must be a unit vector"));
-      }
-  }
-
-
-  template <int dim>
-  void
   RadiativeTransportProblem<dim>::initialize()
   {
-    check_input_parameters();
-
     scratch_data = std::make_shared<ScratchData<dim>>(
       simulation_case->mpi_communicator,
       simulation_case->parameters.base.verbosity_level,
@@ -122,15 +86,15 @@ namespace MeltPoolDG::RadiativeTransport
     rte_quad_idx = scratch_data->attach_quadrature(
       FiniteElementUtils::create_quadrature<dim>(simulation_case->parameters.base.fe));
 
-    rad_trans_operation =
-      std::make_shared<RadiativeTransportOperation<dim>>(*scratch_data,
-                                                         simulation_case->parameters.rad_trans,
-                                                         laser_direction,
-                                                         heaviside,
-                                                         rte_dof_idx,
-                                                         rte_hanging_nodes_dof_idx,
-                                                         rte_quad_idx,
-                                                         hs_dof_idx);
+    rad_trans_operation = std::make_shared<RadiativeTransportOperation<dim>>(
+      *scratch_data,
+      simulation_case->parameters.rad_trans,
+      simulation_case->parameters.laser.template get_direction<dim>(),
+      heaviside,
+      rte_dof_idx,
+      rte_hanging_nodes_dof_idx,
+      rte_quad_idx,
+      hs_dof_idx);
 
     setup_dof_system(false);
 

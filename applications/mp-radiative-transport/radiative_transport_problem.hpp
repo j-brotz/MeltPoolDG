@@ -57,7 +57,6 @@ namespace MeltPoolDG::RadiativeTransport
     std::unique_ptr<Profiling::ProfilingMonitor<double>> profiling_monitor;
 
     dealii::Tensor<1, dim, double> laser_direction;
-    std::vector<double>            laser_direction_input_prm;
 
   public:
     RadiativeTransportProblem(std::unique_ptr<CaseType> simulation_case)
@@ -68,12 +67,6 @@ namespace MeltPoolDG::RadiativeTransport
     run();
 
   private:
-    void
-    add_parameters(dealii::ParameterHandler &);
-
-    void
-    check_input_parameters();
-
     /*
      *  This function initializes the relevant scratch data for the computation of the radiative
      * transfer problem
