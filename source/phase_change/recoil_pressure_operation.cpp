@@ -125,6 +125,11 @@ namespace MeltPoolDG::Evaporation
     // If so, detect weather the temperature vector is in one phase or on two phase cut mode. To
     // that, we check the number of components in the intersected fe collection. If it's 2, the cut
     // mode in two phase.
+    if (temperature_is_cut)
+      Assert(scratch_data.get_dof_handler(temp_dof_idx)
+                 .get_fe_collection()[CutUtil::CellCategory::intersected]
+                 .n_components() <= 2,
+             ExcNotImplemented());
     const bool two_phase_cut =
       temperature_is_cut and scratch_data.get_dof_handler(temp_dof_idx)
                                  .get_fe_collection()[CutUtil::CellCategory::intersected]
