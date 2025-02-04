@@ -136,7 +136,7 @@ namespace MeltPoolDG::CutUtil
   inline void
   evaluate_intersected_domain(
     dealii::FEPointEvaluation<n_components, dim, dim, dealii::VectorizedArray<number>> &point_eval,
-    const dealii::FECellIntegrator<dim, n_components, number> &eval_intersected,
+    const dealii::FECellIntegrator<dim, n_components, number> &eval_whole_cell,
     const dealii::EvaluationFlags::EvaluationFlags             evaluation_flags,
     const unsigned int                                         cell_index,
     const unsigned int                                         lane,
@@ -146,7 +146,7 @@ namespace MeltPoolDG::CutUtil
 
     point_eval.reinit(cell_index * n_lanes + lane);
     point_eval.evaluate(dealii::StridedArrayView<const number, n_lanes>(
-                          &eval_intersected.begin_dof_values()[0][lane], n_dofs_per_cell),
+                          &eval_whole_cell.begin_dof_values()[0][lane], n_dofs_per_cell),
                         evaluation_flags);
   }
 

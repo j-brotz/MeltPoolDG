@@ -80,9 +80,8 @@ namespace MeltPoolDG
                                        const MaterialUpdateFlags::MaterialUpdateFlags &flags) const
   {
     Assert(
-      material_type == MaterialTypes::gas_liquid or
-        material_type == MaterialTypes::gas_liquid_consistent_with_evaporation or
-        material_type == MaterialTypes::liquid_solid,
+      material_type != MaterialTypes::gas_liquid_solid and
+        material_type != MaterialTypes::gas_liquid_solid_consistent_with_evaporation,
       dealii::ExcMessage(
         "This compute_parameters() implementation should not be called for the current material type! Abort..."));
 
@@ -98,12 +97,6 @@ namespace MeltPoolDG
                                        const value_type &temperature,
                                        const MaterialUpdateFlags::MaterialUpdateFlags &flags) const
   {
-    Assert(
-      material_type == MaterialTypes::gas_liquid_solid or
-        material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation,
-      dealii::ExcMessage(
-        "This compute_parameters() implementation should not be called for the current material type! Abort..."));
-
     return compute_parameters_internal(level_set_heaviside, temperature, flags);
   }
 
