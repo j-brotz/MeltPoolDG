@@ -9,7 +9,7 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "0.01"
+    "end time": "0.0005"
   },
   "output": {
     "write frequency": "1",
@@ -20,12 +20,13 @@
     }
   },
   "compressible navier stokes": {
-    "dynamic viscosity": "0.0002",
+    "dynamic viscosity": "0.1",
     "numerical flux type": "lax_friedrichs_modified",
     "courant number": "0.2",
     "viscous courant number": "0.05",
     "use cfl criteria": "true",
     "gravity constant": "0.0",
+    "reference density": "0.7",
     "domain representation type": "cut",
     "cut": {
       "two phase": "false",

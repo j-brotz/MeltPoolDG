@@ -49,7 +49,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     value(const Point<dim> &, const unsigned int component) const final
     {
       if (component == 0)
-        return 0.2;
+        return 0.1;
       else
         return 0.;
     }
@@ -68,7 +68,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     {
       const double t = this->get_time();
       Point<dim>   center;
-      center[0] = 0.2 + 0.2 * t;
+      center[0] = 0.20048 + 0.1 * t;
       for (unsigned int d = 1; d < dim; ++d)
         center[d] = 0.24;
 

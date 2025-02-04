@@ -15,7 +15,7 @@ namespace MeltPoolDG
   {
     number       start_time              = 0.0;
     number       end_time                = 1.0;
-    number       time_step_size          = 0.01;
+    number       time_step_size          = 0.0;
     unsigned int max_n_steps             = 10000000;
     std::string  time_step_size_function = "0.0*t";
 

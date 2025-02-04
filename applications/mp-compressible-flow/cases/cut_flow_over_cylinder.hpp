@@ -29,9 +29,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       if (component == 0)
         return 1.;
       else if (component == 1)
-        return 0.4;
+        return 0.1;
       else if (component == dim + 1)
-        return 3.097857142857143;
+        return 3.0228571429;
       else
         return 0.;
     }
