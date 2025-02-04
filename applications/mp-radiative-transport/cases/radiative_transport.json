@@ -39,7 +39,7 @@
       "preconditioner type": "ILU"
     }
   },
-  "problem specific": {
+  "laser": {
     "direction": "0.0,-1.0"
   },
   "simulation specific parameters": {

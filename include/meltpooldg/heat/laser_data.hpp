@@ -97,6 +97,17 @@ namespace MeltPoolDG::Heat
     void
     add_parameters(ParameterHandler &prm);
 
+    /**
+     * Post operation to set up the laser direction and starting position vectors for the dimension @param dim
+     * This function must be called before you can get_direction() or get_starting_position() even
+     * if it's the default value.
+     */
+    void
+    post(const unsigned int dim);
+
+    /**
+     * Same as above plus set up the parameter-scaled delta function for the laser.
+     */
     void
     post(const unsigned int dim,
          const bool         heat_use_volume_specific_thermal_capacity_for_phase_interpolation,

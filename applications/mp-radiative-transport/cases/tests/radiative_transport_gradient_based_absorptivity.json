@@ -3,7 +3,7 @@
     "problem name": "radiative_transport",
     "case name": "radiative_transport",
     "dimension": "2",
-    "global refinements": "4",
+    "global refinements": "5",
     "do print parameters": "false",
     "verbosity level": "0",
     "fe": {
@@ -12,19 +12,25 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "2.0",
+    "end time": "4.0",
     "time step size": "1.0"
   },
   "rte": {
-    "rte verbosity level": "0",
+    "rte verbosity level": "1",
     "absorptivity type": "gradient_based",
-    "predictor type": "none",
+    "absorptivity": {
+      "absorptivity gas": "-10.",
+      "absorptivity liquid": "3.0 ",
+      "avoid div zero constant": "1e-2"
+    },
+    "predictor type": "pseudo_time_stepping",
     "linear solver": {
       "do matrix free": "true",
+      "abs tolerance": "1e-16",
       "preconditioner type": "AMG"
     }
   },
-  "problem specific": {
+  "laser": {
     "direction": "0.0,-1.0"
   },
   "simulation specific parameters": {
@@ -34,11 +40,9 @@
     "offset": "0.35",
     "droplet radius": "0.06"
   },
-  "adaptive meshing": {
-    "do amr": "true",
-    "upper perc to refine": "0.2",
-    "lower perc to coarsen": "0.1",
-    "max grid refinement level": "6",
-    "n initial refinement cycles": "1"
+  "output": {
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

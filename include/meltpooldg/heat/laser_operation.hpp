@@ -20,7 +20,7 @@
 #include <meltpooldg/heat/laser_heat_source_projection_based.hpp>
 #include <meltpooldg/heat/laser_heat_source_volumetric.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
-#include <meltpooldg/radiative_transport/rte_operation.hpp>
+#include <meltpooldg/radiative_transport/radiative_transport_operation.hpp>
 #include <meltpooldg/utilities/material_data.hpp>
 
 #include <functional>

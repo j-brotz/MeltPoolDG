@@ -10,30 +10,22 @@
       "degree": "1"
     }
   },
-  "profiling": {
-    "enable": "false"
-  },
   "time stepping": {
     "start time": "0.0",
-    "end time": "1.0",
+    "end time": "4.0",
     "time step size": "1.0"
   },
   "rte": {
-    "rte verbosity level": "3",
+    "rte verbosity level": "1",
+    "absorptivity type": "gradient_based",
     "predictor type": "pseudo_time_stepping",
-    "pseudo time stepping": {
-      "time stepping": {
-        "max n steps": "100"
-      },
-      "rel tolerance": "1e-16"
-    },
     "linear solver": {
       "do matrix free": "true",
       "abs tolerance": "1e-16",
-      "preconditioner type": "ILU"
+      "preconditioner type": "AMG"
     }
   },
-  "problem specific": {
+  "laser": {
     "direction": "0.0,-1.0"
   },
   "simulation specific parameters": {

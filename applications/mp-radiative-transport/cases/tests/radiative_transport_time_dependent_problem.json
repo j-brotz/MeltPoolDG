@@ -15,18 +15,25 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "4.0",
+    "end time": "1.0",
     "time step size": "1.0"
   },
   "rte": {
-    "rte verbosity level": "0",
+    "rte verbosity level": "3",
+    "predictor type": "pseudo_time_stepping",
+    "pseudo time stepping": {
+      "time stepping": {
+        "max n steps": "100"
+      },
+      "rel tolerance": "1e-16"
+    },
     "linear solver": {
       "do matrix free": "true",
       "abs tolerance": "1e-16",
-      "preconditioner type": "AMG"
+      "preconditioner type": "ILU"
     }
   },
-  "problem specific": {
+  "laser": {
     "direction": "0.0,-1.0"
   },
   "simulation specific parameters": {

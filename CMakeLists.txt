@@ -35,7 +35,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # find deal.II
 # ##############################################################################
 
-find_package(deal.II 9.3 QUIET
+find_package(deal.II 9.6 QUIET
         HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR})
 if (NOT ${deal.II_FOUND})
     message(
@@ -170,6 +170,7 @@ endforeach ()
 
 option(MPDG_ENABLE_ADVEC_DIFF "Build advection-diffusion executables" ON)
 option(MPDG_ENABLE_COMP_FLOW "Build compressible-flow executables" ON)
+option(MPDG_ENABLE_RTE "Build radiative-transport executables" ON)
 
 if (MPDG_ENABLE_ADVEC_DIFF)
     message(STATUS "Application: advection-diffusion enabled")
@@ -183,5 +184,12 @@ if (MPDG_ENABLE_COMP_FLOW)
     add_subdirectory(applications/mp-compressible-flow)
 else ()
     message(STATUS "Application: compressible-flow disabled")
+endif ()
+
+if (MPDG_ENABLE_RTE)
+    message(STATUS "Application: radiative-transport enabled")
+    add_subdirectory(applications/mp-radiative-transport)
+else ()
+    message(STATUS "Application: radiative-transport disabled")
 endif ()
 

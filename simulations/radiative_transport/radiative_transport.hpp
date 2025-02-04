@@ -1,5 +1,18 @@
 #pragma once
 
+// TODO This file is the old version of
+// applications/mp-radiative-transport/cases/radiative_transport.hpp.
+//
+// This file is still needed for the tests
+// - radiative_transport_with_heat_transfer
+// - radiative_transport_with_heat_transfer_amr
+// - radiative_transport_with_heat_transfer_do_move
+// Which use the heat transfer problem and this case.
+//
+// After the heat transfer problem has been extracted to it's own standalone we can use it with
+// the new case (applications/mp-radiative-transport/cases/radiative_transport.hpp) instead and
+// delete this file.
+
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
