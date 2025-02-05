@@ -64,7 +64,7 @@ namespace MeltPoolDG
   Material<number>::compute_parameters(const MaterialUpdateFlags::MaterialUpdateFlags &flags) const
   {
     Assert(
-      material_type == MaterialTypes::single_phase,
+      material_type == MaterialTypes::gas or material_type == MaterialTypes::liquid,
       dealii::ExcMessage(
         "This compute_parameters() implementation should not be called for the current material type! Abort..."));
 
@@ -80,8 +80,8 @@ namespace MeltPoolDG
                                        const MaterialUpdateFlags::MaterialUpdateFlags &flags) const
   {
     Assert(
-      material_type == MaterialTypes::gas_liquid ||
-        material_type == MaterialTypes::gas_liquid_consistent_with_evaporation ||
+      material_type == MaterialTypes::gas_liquid or
+        material_type == MaterialTypes::gas_liquid_consistent_with_evaporation or
         material_type == MaterialTypes::liquid_solid,
       dealii::ExcMessage(
         "This compute_parameters() implementation should not be called for the current material type! Abort..."));
@@ -99,7 +99,7 @@ namespace MeltPoolDG
                                        const MaterialUpdateFlags::MaterialUpdateFlags &flags) const
   {
     Assert(
-      material_type == MaterialTypes::gas_liquid_solid ||
+      material_type == MaterialTypes::gas_liquid_solid or
         material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation,
       dealii::ExcMessage(
         "This compute_parameters() implementation should not be called for the current material type! Abort..."));
@@ -134,7 +134,8 @@ namespace MeltPoolDG
           return compute_parameters_internal(temperature_val.get_value(q_index),
                                              value_type(0.0),
                                              flags);
-        case MaterialTypes::single_phase:
+        case MaterialTypes::gas:
+        case MaterialTypes::liquid:
           return compute_parameters_internal(value_type(0.0), value_type(0.0), flags);
         default:
           Assert(false, dealii::ExcNotImplemented());
@@ -182,7 +183,8 @@ namespace MeltPoolDG
                                              flags);
         case MaterialTypes::liquid_solid:
           return compute_parameters_internal(get_temperature_value(), value_type(0.0), flags);
-        case MaterialTypes::single_phase:
+        case MaterialTypes::gas:
+        case MaterialTypes::liquid:
           return compute_parameters_internal(value_type(0.0), value_type(0.0), flags);
         default:
           Assert(false, dealii::ExcNotImplemented());
@@ -199,15 +201,15 @@ namespace MeltPoolDG
     switch (field_type)
       {
         case FieldType::none:
-          return material_type == MaterialTypes::single_phase;
+          return material_type == MaterialTypes::gas or material_type == MaterialTypes::liquid;
         case FieldType::temperature:
-          return material_type == MaterialTypes::liquid_solid ||
-                 material_type == MaterialTypes::gas_liquid_solid ||
+          return material_type == MaterialTypes::liquid_solid or
+                 material_type == MaterialTypes::gas_liquid_solid or
                  material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation;
         case FieldType::level_set:
-          return material_type == MaterialTypes::gas_liquid ||
-                 material_type == MaterialTypes::gas_liquid_consistent_with_evaporation ||
-                 material_type == MaterialTypes::gas_liquid_solid ||
+          return material_type == MaterialTypes::gas_liquid or
+                 material_type == MaterialTypes::gas_liquid_consistent_with_evaporation or
+                 material_type == MaterialTypes::gas_liquid_solid or
                  material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation;
         default:
           AssertThrow(false, dealii::ExcNotImplemented());
@@ -228,8 +230,11 @@ namespace MeltPoolDG
     MaterialParameterValues<value_type> t;
     switch (material_type)
       {
-          case MaterialTypes::single_phase: {
+          case MaterialTypes::gas: {
             return gas;
+          }
+          case MaterialTypes::liquid: {
+            return liquid;
           }
         case MaterialTypes::gas_liquid:
           case MaterialTypes::gas_liquid_consistent_with_evaporation: {
@@ -519,7 +524,7 @@ namespace MeltPoolDG
     const value_type &liquid_value,
     const value_type &solid_value) const
   {
-    if (temperature_dependent_solid_fraction == value_type(0.0) ||
+    if (temperature_dependent_solid_fraction == value_type(0.0) or
         temperature_dependent_solid_fraction == value_type(1.0))
       return value_type(0.0);
     return -1.0 * inv_mushy_interval *

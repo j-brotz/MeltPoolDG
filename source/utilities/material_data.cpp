@@ -25,6 +25,7 @@ namespace MeltPoolDG
     prm.leave_subsection();
   }
 
+
   template <typename number>
   void
   MaterialData<number>::add_parameters(dealii::ParameterHandler &prm)
@@ -39,25 +40,24 @@ namespace MeltPoolDG
                         "<material template> in the first place of the <material> "
                         "section in these cases.");
 
-      if (material_template == MaterialTemplate::none)
-        prm.add_action("material template", [this](const std::string &value) {
-          switch (MaterialTemplate::_from_string(value.c_str()))
-            {
-              case MaterialTemplate::none:
-                // nothing to do
+      prm.add_action("material template", [this](const std::string &value) {
+        switch (MaterialTemplate::_from_string(value.c_str()))
+          {
+            case MaterialTemplate::none:
+              // nothing to do
+              break;
+              case MaterialTemplate::stainless_steel: {
+                *this = create_stainless_steel_material_data();
                 break;
-                case MaterialTemplate::stainless_steel: {
-                  *this = create_stainless_steel_material_data();
-                  break;
-                }
-                case MaterialTemplate::Ti64: {
-                  *this = create_Ti64_material_data();
-                  break;
-                }
-              default:
-                AssertThrow(false, dealii::ExcNotImplemented());
-            }
-        });
+              }
+              case MaterialTemplate::Ti64: {
+                *this = create_Ti64_material_data();
+                break;
+              }
+            default:
+              AssertThrow(false, dealii::ExcNotImplemented());
+          }
+      });
 
       gas.add_parameters(prm, "gas");
       liquid.add_parameters(prm, "liquid");
@@ -91,6 +91,33 @@ namespace MeltPoolDG
     prm.leave_subsection();
   }
 
+
+  template <typename number>
+  void
+  MaterialData<number>::check_parameters_heat_transfer(const bool do_two_phase,
+                                                       const bool do_solidification) const
+  {
+    if (do_two_phase)
+      {
+        AssertThrow(liquid.thermal_conductivity > 0.0 and liquid.density > 0.0,
+                    dealii::ExcMessage(
+                      "The liquid's conductivity and density must be greater than zero! Abort..."));
+        AssertThrow(gas.thermal_conductivity > 0.0 and gas.density > 0.0,
+                    dealii::ExcMessage(
+                      "The gas' conductivity and density must be greater than zero! Abort..."));
+      }
+    if (do_solidification)
+      {
+        AssertThrow(
+          solid.thermal_conductivity > 0.0 and solid.density > 0.0,
+          dealii::ExcMessage(
+            "In case of solidification the solid's conductivity and density must be greater than zero! Abort..."));
+        AssertThrow(
+          liquidus_temperature > solidus_temperature,
+          dealii::ExcMessage(
+            "In case of solidification the liquidus temperature must be greater than the solidus temperature! Abort..."));
+      }
+  }
 
 
   template <typename number>

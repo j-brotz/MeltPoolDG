@@ -4,6 +4,7 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/utilities/fe_integrator.hpp>
@@ -50,7 +51,8 @@ namespace MeltPoolDG
 
   enum class MaterialTypes
   {
-    single_phase,
+    gas,
+    liquid,
     gas_liquid,
     gas_liquid_consistent_with_evaporation,
     liquid_solid,

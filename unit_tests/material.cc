@@ -77,9 +77,19 @@ main()
   std::cout
     << "       k|      cp|     rho|      nu| d_k_d_T|d_cp_d_T|d_rho_dT|     X_g|     X_l|     X_s"
     << std::endl;
-  std::cout << "single_phase" << std::endl;
+  std::cout << "gas" << std::endl;
   {
-    const Material material(material_data, MaterialTypes::single_phase);
+    const Material material(material_data, MaterialTypes::gas);
+
+    const auto data_double = material.compute_parameters<double>(update_all);
+    print_material_parameter_values(data_double);
+
+    const auto data_vec = material.compute_parameters<VectorizedArray<double>>(update_all);
+    print_material_parameter_values(data_vec);
+  }
+  std::cout << "liquid" << std::endl;
+  {
+    const Material material(material_data, MaterialTypes::liquid);
 
     const auto data_double = material.compute_parameters<double>(update_all);
     print_material_parameter_values(data_double);
