@@ -113,15 +113,8 @@ namespace MeltPoolDG::Flow
       double errors_squared[3] = {};
 
       bool is_cut = false;
-      try
-        {
-          (void)generic_data_out.get_vector("level_set");
-          is_cut = true;
-        }
-      catch (const std::exception &e)
-        {
-          is_cut = false;
-        }
+      if (dof_handler.get_fe_collection().size() > 1)
+        is_cut = true;
 
       if (not is_cut)
         {
@@ -171,7 +164,9 @@ namespace MeltPoolDG::Flow
         {
           // if cutDG is used, we evaluate the error at the quadrature points
 
-          // reading DoF-vectors and DoFHandlers of level-set
+          // reading DoF-vector and DoFHandler of level-set
+          // (an assert is thrown in the getter functions, if 'level_set' can not be found in
+          // the entries of 'generic_data_out')
           const auto &level_set             = generic_data_out.get_vector("level_set");
           const auto &level_set_dof_handler = generic_data_out.get_dof_handler("level_set");
 

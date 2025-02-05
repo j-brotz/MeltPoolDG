@@ -19,7 +19,6 @@
 | || curvature ||L2 = 2.71838850375e-10                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| No new DoFs have to be gp-extrapolated.                                    cut_solution_transfer |
 | Newton Raphson solver converged: ||solution|| = 2.64795e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -35,7 +34,6 @@
 | || curvature ||L2 = 2.71837702586e-10                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| No new DoFs have to be gp-extrapolated.                                    cut_solution_transfer |
 | Newton Raphson solver converged: ||solution|| = 2.68923e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -49,7 +47,6 @@
 | || curvature ||L2 = 2.71837818165e-10                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| No new DoFs have to be gp-extrapolated.                                    cut_solution_transfer |
 | Newton Raphson solver converged: ||solution|| = 2.73212e-01                newton_raphson_solver |
 | || velocity ||L2 = 2.094725897605413e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.682874812639014e-02                                    navier_stokes_adaflo |
@@ -68,7 +65,6 @@
 | || curvature ||L2 = 5.83762604575e-04                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| No new DoFs have to be gp-extrapolated.                                    cut_solution_transfer |
 | Newton Raphson solver converged: ||solution|| = 2.77246e-01                newton_raphson_solver |
 | || velocity ||L2 = 3.743720536534935e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 8.943631735121292e-01                                    navier_stokes_adaflo |
@@ -87,7 +83,6 @@
 | || curvature ||L2 = 2.28981812154e-02                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| No new DoFs have to be gp-extrapolated.                                    cut_solution_transfer |
 | Newton Raphson solver converged: ||solution|| = 2.80972e-01                newton_raphson_solver |
 | || velocity ||L2 = 4.164812842626966e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.822455810675401e-01                                    navier_stokes_adaflo |
