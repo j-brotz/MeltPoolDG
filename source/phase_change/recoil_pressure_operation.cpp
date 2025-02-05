@@ -6,6 +6,8 @@
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
+#include <cmath>
+#include <limits>
 #include <vector>
 
 
@@ -68,6 +70,8 @@ namespace MeltPoolDG::Evaporation
     , model_type(data_in.evapor.recoil.type)
     , delta_phase_weighted(create_phase_weighted_delta_approximation(
         data_in.evapor.recoil.delta_approximation_phase_weighted))
+    , dummy_temperature(std::nextafter(data_in.evapor.recoil.activation_temperature,
+                                       -std::numeric_limits<double>::infinity()))
   {
     switch (data_in.evapor.recoil.type)
       {
@@ -114,10 +118,22 @@ namespace MeltPoolDG::Evaporation
         not evaporative_mass_flux.has_ghost_elements())
       evaporative_mass_flux.update_ghost_values();
 
-    // detect weather the temperature vector is setup for CutFEM by checking if its
+    // Detect weather the temperature vector is setup for CutFEM by checking if its
     // dealii::DoFHandler is in hp-mode.
     const bool temperature_is_cut =
       scratch_data.get_dof_handler(temp_dof_idx).has_hp_capabilities();
+    // If so, detect weather the temperature vector is in one phase or on two phase cut mode. To
+    // that, we check the number of components in the intersected fe collection. If it's 2, the cut
+    // mode in two phase.
+    if (temperature_is_cut)
+      Assert(scratch_data.get_dof_handler(temp_dof_idx)
+                 .get_fe_collection()[CutUtil::CellCategory::intersected]
+                 .n_components() <= 2,
+             ExcNotImplemented());
+    const bool two_phase_cut =
+      temperature_is_cut and scratch_data.get_dof_handler(temp_dof_idx)
+                                 .get_fe_collection()[CutUtil::CellCategory::intersected]
+                                 .n_components() == 2;
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free,
@@ -145,8 +161,8 @@ namespace MeltPoolDG::Evaporation
                                             flow_vel_quad_idx,
                                             0 /*selected component*/,
                                             cell_category /*active_fe_index*/);
-            if (cell_category == CutUtil::CellCategory::gas or
-                cell_category == CutUtil::CellCategory::intersected)
+            if (two_phase_cut and (cell_category == CutUtil::CellCategory::gas or
+                                   cell_category == CutUtil::CellCategory::intersected))
               temperature_eval.emplace_back(matrix_free,
                                             temp_dof_idx,
                                             flow_vel_quad_idx,
@@ -206,15 +222,48 @@ namespace MeltPoolDG::Evaporation
 
             for (const unsigned int q : recoil_pressure_eval.quadrature_point_indices())
               {
-                VectorizedArray<double> temp = temperature_eval[0].get_value(q);
-                if (temperature_is_cut and cell_category == CutUtil::CellCategory::intersected)
-                  // For intersected cut cells, temperature_val[0] contains the temperature values
-                  // of the liquid domain and temperature_val[1] the temperature values of the gas
-                  // domain that each may be ghost values.
-                  // We use the level set as heaviside as in indicator to select the non-ghosted
-                  // values each.
-                  temp = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
-                    used_heaviside_eval.get_value(q), 0.5, temp, temperature_eval[1].get_value(q));
+                VectorizedArray<double> temp;
+                if (not temperature_is_cut)
+                  temp = temperature_eval[0].get_value(q);
+                else // temperature_is_cut
+                  {
+                    if (two_phase_cut)
+                      {
+                        if (cell_category == CutUtil::CellCategory::intersected)
+                          // For intersected cut cells, temperature_val[0] contains the temperature
+                          // values of the liquid domain and temperature_val[1] the temperature
+                          // values of the gas domain that each may be ghost values. We use the
+                          // level set as heaviside as in indicator to select the non-ghosted values
+                          // each.
+                          temp = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+                            used_heaviside_eval.get_value(q),
+                            0.5,
+                            temperature_eval[0].get_value(q),
+                            temperature_eval[1].get_value(q));
+                        else
+                          temp = temperature_eval[0].get_value(q);
+                      }
+                    else // one phase cut
+                      {
+                        if (cell_category == CutUtil::CellCategory::liquid)
+                          temp = temperature_eval[0].get_value(q);
+                        else if (cell_category == CutUtil::CellCategory::intersected)
+                          // For intersected cut cells, temperature_val[0] contains the temperature
+                          // values of the liquid domain that each may be ghost values. We use the
+                          // level set as heaviside as in indicator to select the non-ghosted values
+                          // each. For ghosted values we insert a dummy temperature.
+                          temp = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+                            used_heaviside_eval.get_value(q),
+                            0.5,
+                            temperature_eval[0].get_value(q),
+                            dummy_temperature);
+                        else if (cell_category == CutUtil::CellCategory::gas)
+                          // we cannot evaluate temperature here so we just use a dummy value
+                          temp = dummy_temperature;
+                        else
+                          DEAL_II_NOT_IMPLEMENTED();
+                      }
+                  }
 
                 VectorizedArray<double> m_dot = 0.0;
                 if (evapor_flux_val)

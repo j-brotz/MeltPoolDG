@@ -929,7 +929,6 @@ namespace MeltPoolDG::MeltPool
               break;
             }
             case Heat::TwoPhaseOperatorType::cut: {
-              AssertThrow(param.heat.cut.two_phase == true, ExcNotImplemented());
               AssertThrow(param.amr.do_amr == false, ExcNotImplemented());
               AssertThrow(base_in->get_periodic_bc().get_data().empty(), ExcNotImplemented());
 
