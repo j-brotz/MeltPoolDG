@@ -35,9 +35,11 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number = double>
   class CompressibleFlowOperation
   {
+  public:
+    virtual ~CompressibleFlowOperation() = default;
+
     using VectorType = LinearAlgebra::distributed::Vector<number>;
 
-  public:
     /**
      * Constructor.
      *
@@ -55,8 +57,16 @@ namespace MeltPoolDG::Flow
      * Set up the required internal data structures. After a call to this function the solve()
      * function of the class can be utilized.
      */
-    void
+    virtual void
     reinit();
+
+    /**
+     * Distribute dofs for a finite element type given in @p CompressibleFlowData.
+     *
+     * @param dof_handler Reference to the used DoFHandler object.
+     */
+    virtual void
+    distribute_dofs(DoFHandler<dim> &dof_handler) const;
 
     /**
      * Solves the compressible Navier-Stokes equations for a single time step.
@@ -64,7 +74,7 @@ namespace MeltPoolDG::Flow
      * @param current_time Current time at t^n.
      * @param time_step Current time step size.
      */
-    void
+    virtual void
     solve(double current_time, double time_step);
 
     /**
@@ -152,6 +162,24 @@ namespace MeltPoolDG::Flow
     set_body_force(std::unique_ptr<Function<dim>> body_force_in);
 
     /**
+     * Set the inflow field function in the case of an unfitted inflow boundary.
+     *
+     * @note The function simply passes the function to the corresponding cut operator function.
+     */
+    // TODO: eliminate this function from this operation class?
+    virtual void
+    set_inflow_field_unfitted_boundary(std::shared_ptr<Function<dim>> & /*inflow_function*/){};
+
+    /**
+     * Set the object velocity function in the case of an unfitted (rigid) moving object.
+     *
+     * @note The function simply passes the function to the corresponding cut operator function.
+     */
+    // TODO: eliminate this function from this operation class?
+    virtual void
+    set_unfitted_object_velocity(std::shared_ptr<Function<dim>> & /*velocity_function*/){};
+
+    /**
      * Compute the maximum time step size arising from the convective and viscous time step limits
      * and optionally print it to the console.
      *
@@ -160,7 +188,12 @@ namespace MeltPoolDG::Flow
     number
     compute_time_step_size(bool do_print = false) const;
 
-    void
+    /**
+     * Set the initial condition of the solution dof vector.
+     *
+     * @param function Given function for initial condition.
+     */
+    virtual void
     set_initial_condition(const Function<dim> &function);
 
     /**
@@ -181,8 +214,19 @@ namespace MeltPoolDG::Flow
     VectorType &
     get_solution();
 
+    /**
+     * Register the reinit_matrix_free lambda function.
+     *
+     * @note This function is only relevant for cutDG. It is used for the solution transfer between
+     * different active mesh topologies in two subsequent time levels in the case of moving unfitted
+     * boundaries/interfaces.
+     */
+    // TODO: eliminate this function from this operation class?
+    virtual void
+    register_reinit_matrix_free(
+      const std::function<void(const dealii::DoFHandler<dim> &)> /*reinit_matrix_free_in*/){};
 
-  private:
+  protected:
     ::TimeIntegration::SolutionHistory<VectorType> solution_history_;
 
     const ScratchData<dim>    &scratch_data_;
@@ -196,13 +240,13 @@ namespace MeltPoolDG::Flow
     /**
      * Compute the convective time step limit for the current mesh and flow field.
      */
-    number
+    virtual number
     compute_convective_time_step_limit() const;
 
     /**
      * Compute the minimum density currently occurring in the flow field.
      */
-    number
+    virtual number
     compute_minimum_density() const;
 
     /**

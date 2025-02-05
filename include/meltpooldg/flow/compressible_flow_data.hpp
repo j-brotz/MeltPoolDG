@@ -7,6 +7,7 @@
 
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
+#include <meltpooldg/utilities/cut_param.hpp>
 
 #include <string>
 
@@ -53,7 +54,7 @@ namespace MeltPoolDG::Flow
     // similar to Courant number but for the viscous time step restriction
     double viscous_courant_number = 1.0;
 
-    // ff set to true the CFL-criteria determines the size of a time step
+    // if set to true the CFL-criteria determines the size of a time step
     bool do_cfl_time_stepping = false;
 
     // gravity constant used in the body force computation
@@ -62,16 +63,22 @@ namespace MeltPoolDG::Flow
     // operator type. The options are "fitted" and "cut"
     std::string domain_representation_type = "fitted";
 
+    // verbosity level
+    int verbosity_level = -1;
+
+    // cut-related data
     struct Cut
     {
+      // consider single-phase or two-phase case?
       bool two_phase = false;
 
-      struct GhostPenalty
-      {
-        double gamma_degree_0 = 1.0;
-        double gamma_degree_1 = 0.1;
-        double gamma_degree_2 = 0.01;
-      } ghost_penalty;
+      // flow boundary condition at the immersed boundary
+      // (only relevant for single phase flow problem)
+      // (choose between: "no_slip_wall", "inflow")
+      std::string unfitted_flow_boundary_condition = "no_slip_wall";
+
+      // cut-related stabilization parameters
+      CutParam<double> stabilization;
     } cut;
 
     void
@@ -116,24 +123,14 @@ namespace MeltPoolDG::Flow
         prm.add_parameter("domain representation type",
                           domain_representation_type,
                           "Domain representation type. Choose between 'fitted' and 'cut'.");
-
+        prm.add_parameter("verbosity level", verbosity_level, "Verbosity level for output.");
         prm.enter_subsection("cut");
         {
           prm.add_parameter("two phase", cut.two_phase, "Is two-phase case?");
-
-          prm.enter_subsection("ghost-penalty");
-          {
-            prm.add_parameter("gamma degree 0",
-                              cut.ghost_penalty.gamma_degree_0,
-                              "Ghost-penalty parameter for degree 0.");
-            prm.add_parameter("gamma degree 1",
-                              cut.ghost_penalty.gamma_degree_1,
-                              "Ghost-penalty parameter for degree 1.");
-            prm.add_parameter("gamma degree 2",
-                              cut.ghost_penalty.gamma_degree_2,
-                              "Ghost-penalty parameter for degree 2.");
-          }
-          prm.leave_subsection();
+          prm.add_parameter("unfitted flow boundary condition",
+                            cut.unfitted_flow_boundary_condition,
+                            "Flow boundary condition type at the unfitted boundary.");
+          cut.stabilization.add_parameters(prm);
         }
         prm.leave_subsection();
       }
@@ -141,12 +138,22 @@ namespace MeltPoolDG::Flow
     }
 
     void
-    post(const FiniteElementData &base_fe_data)
+    post(const FiniteElementData &base_fe_data, const unsigned int base_verbosity_level)
     {
       fe.post(base_fe_data);
       AssertThrow(fe.type == FiniteElementType::FE_DGQ,
                   ExcMessage(
                     "The compressible flow solver only supports elements of type 'FE_DGQ'."));
+
+      // Synchronize verbosity with base verbosity if not set explicitly.
+      if (verbosity_level == -1)
+        verbosity_level = base_verbosity_level;
+
+      // For physical consistency, adjust thermal conductivity based on the user-defined dynamic
+      // viscosity, gamma and specific gas constant. The Prandtl number = 0.71 is currently set
+      // constant.
+      thermal_conductivity =
+        dynamic_viscosity * gamma * specific_gas_constant / (gamma - 1.) * 1. / 0.71;
     }
   };
 } // namespace MeltPoolDG::Flow

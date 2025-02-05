@@ -19,7 +19,6 @@
 | || curvature ||L2 = 2.71838850375e-10                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| No new DoFs have to be gp-extrapolated.                                    cut_solution_transfer |
 | Newton Raphson solver converged: ||solution|| = 4.51089e-01                newton_raphson_solver |
 | || velocity ||L2 = 8.173865429913474e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 4.318700509749691e-01                                    navier_stokes_adaflo |
@@ -40,7 +39,6 @@
 | || curvature ||L2 = 7.93507297219e-02                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| No new DoFs have to be gp-extrapolated.                                    cut_solution_transfer |
 | Newton Raphson solver converged: ||solution|| = 4.72431e-01                newton_raphson_solver |
 | || velocity ||L2 = 1.066065369121173e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.294083748656225e-01                                    navier_stokes_adaflo |
@@ -59,7 +57,6 @@
 | || curvature ||L2 = 1.90764730384e-01                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| No new DoFs have to be gp-extrapolated.                                    cut_solution_transfer |
 | Newton Raphson solver converged: ||solution|| = 4.96104e-01                newton_raphson_solver |
 | || velocity ||L2 = 1.280699158913074e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 6.836991433262093e-01                                    navier_stokes_adaflo |

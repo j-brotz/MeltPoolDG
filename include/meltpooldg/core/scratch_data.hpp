@@ -86,7 +86,8 @@ namespace MeltPoolDG
     void
     build(const bool enable_boundary_face_loops,
           const bool enable_inner_face_loops,
-          const bool enable_normal_vector_update = false);
+          const bool enable_normal_vector_update       = false,
+          const bool enable_inner_face_hessians_update = false);
 
     /**
      * initialize vectors

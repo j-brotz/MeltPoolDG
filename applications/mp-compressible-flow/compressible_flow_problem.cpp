@@ -1,9 +1,11 @@
 #include "compressible_flow_problem.hpp"
 
+#include <meltpooldg/flow/cut_compressible_flow_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 
 #include "compressible_flow_case.hpp"
 
@@ -17,6 +19,10 @@ namespace MeltPoolDG::Flow
 
     while (!time_iterator->is_finished())
       {
+        // update level-set for cutDG
+        if (level_set_field_function)
+          compute_level_set();
+
         // use CFL condition to compute time step size if required
         if (simulation_case->parameters.flow.do_cfl_time_stepping)
           time_iterator->set_current_time_increment(comp_flow_operation->compute_time_step_size(),
@@ -32,7 +38,7 @@ namespace MeltPoolDG::Flow
         output_results(time_iterator->get_current_time_step_number(),
                        time_iterator->get_current_time());
 
-        if (profiling_monitor && profiling_monitor->now())
+        if (profiling_monitor and profiling_monitor->now())
           {
             profiling_monitor->print(scratch_data->get_pcout(),
                                      scratch_data->get_timer(),
@@ -52,12 +58,26 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
+  CompressibleFlowProblem<dim>::compute_level_set()
+  {
+    // set the current time to the field function
+    level_set_field_function->set_time(time_iterator->get_current_time());
+
+    // interpolate the values of the given field function to the dof vector values
+    level_set.zero_out_ghost_values();
+    dealii::VectorTools::interpolate(scratch_data->get_mapping(),
+                                     scratch_data->get_dof_handler(level_set_dof_idx),
+                                     *level_set_field_function,
+                                     level_set);
+    level_set.update_ghost_values();
+  }
+
+  template <int dim>
+  void
   CompressibleFlowProblem<dim>::setup_dof_system()
   {
-    // setup DoFHandler
-    constexpr unsigned int dofs_per_node = dim + 2;
-    FiniteElementUtils::distribute_dofs<dim, dofs_per_node>(simulation_case->parameters.flow.fe,
-                                                            dof_handler);
+    // distribute DoFs
+    comp_flow_operation->distribute_dofs(dof_handler);
 
     scratch_data->create_partitioning();
 
@@ -65,7 +85,21 @@ namespace MeltPoolDG::Flow
       simulation_case->parameters.time_stepping.start_time);
 
     // create the matrix-free object
-    scratch_data->build(true, true);
+    scratch_data->build(true,
+                        true,
+                        simulation_case->parameters.flow.domain_representation_type == "cut",
+                        simulation_case->parameters.flow.fe.degree == 2 and
+                          simulation_case->parameters.flow.domain_representation_type == "cut");
+
+    if (simulation_case->parameters.flow.domain_representation_type == "cut")
+      {
+        // Currently, only homogeneous Cartesian grids without mesh refinements are enabled for
+        // cutDG
+        AssertThrow(
+          std::abs(scratch_data->get_min_cell_size() - scratch_data->get_max_cell_size()) < 1e-10,
+          dealii::ExcMessage(
+            "Only homogeneous Cartesian grids without local grid refinements are supported!"));
+      }
 
     // print mesh information
     {
@@ -83,6 +117,8 @@ namespace MeltPoolDG::Flow
   {
     // setup DoFHandler
     dof_handler.reinit(*simulation_case->triangulation);
+    if (simulation_case->parameters.flow.domain_representation_type == "cut")
+      dof_handler_level_set.reinit(*simulation_case->triangulation);
 
     // setup scratch data
     {
@@ -99,19 +135,93 @@ namespace MeltPoolDG::Flow
         FiniteElementUtils::create_quadrature<dim>(simulation_case->parameters.flow.fe));
 
       comp_flow_dof_idx = scratch_data->attach_dof_handler(dof_handler);
-
       scratch_data->attach_constraint_matrix(constraints);
+      if (simulation_case->parameters.flow.domain_representation_type == "cut")
+        {
+          level_set_dof_idx = scratch_data->attach_dof_handler(dof_handler_level_set);
+          scratch_data->attach_constraint_matrix(constraints_level_set);
+        }
     }
 
-    setup_dof_system();
+    // set analytical level-set field function
+    if (simulation_case->parameters.flow.domain_representation_type == "cut")
+      level_set_field_function = simulation_case->get_field_function("level_set",
+                                                                     "compressible_flow",
+                                                                     false /* is_optional */);
 
     // initialize the time iterator
     time_iterator =
-      std::make_unique<TimeIterator<double>>(simulation_case->parameters.time_stepping);
+      std::make_shared<TimeIterator<double>>(simulation_case->parameters.time_stepping);
 
-    // initialize compressible flow operation
-    comp_flow_operation = std::make_unique<CompressibleFlowOperation<dim, double>>(
-      *scratch_data, simulation_case->parameters.flow, comp_flow_dof_idx, comp_flow_quad_idx);
+    // initialize compressible flow operation. Choose between domain representation type "fitted"
+    // and "cut".
+    if (simulation_case->parameters.flow.domain_representation_type == "fitted")
+      {
+        comp_flow_operation = std::make_unique<CompressibleFlowOperation<dim, double>>(
+          *scratch_data, simulation_case->parameters.flow, comp_flow_dof_idx, comp_flow_quad_idx);
+      }
+    else if (simulation_case->parameters.flow.domain_representation_type == "cut")
+      {
+        comp_flow_operation = std::make_unique<CutCompressibleFlowOperation<dim, double>>(
+          *scratch_data,
+          simulation_case->parameters.flow,
+          *time_iterator,
+          comp_flow_dof_idx,
+          level_set_dof_idx,
+          comp_flow_quad_idx,
+          level_set);
+
+        // register reinit_matrix_free function for cutDG solution transfer
+        comp_flow_operation->register_reinit_matrix_free([&](const DoFHandler<dim> &dh) {
+          Assert(&dh == &scratch_data->get_dof_handler(comp_flow_dof_idx), ExcInternalError());
+
+          scratch_data->create_partitioning();
+
+          // create the matrix-free object
+          scratch_data->build(true, true, true, simulation_case->parameters.flow.fe.degree == 2);
+
+          comp_flow_operation->reinit();
+        });
+
+        // prescribe a function for the object velocity in the case of a moving immersed (rigid)
+        // object
+        std::shared_ptr<Function<dim>> unfitted_object_velocity_function;
+        unfitted_object_velocity_function =
+          simulation_case->get_field_function("unfitted_object_velocity",
+                                              "compressible_flow",
+                                              true /* is_optional */);
+        if (unfitted_object_velocity_function)
+          comp_flow_operation->set_unfitted_object_velocity(unfitted_object_velocity_function);
+
+        // set inflow function in the case of an unfitted inflow boundary
+        std::shared_ptr<Function<dim>> unfitted_inflow_function;
+        unfitted_inflow_function = simulation_case->get_field_function(
+          "unfitted_inflow",
+          "compressible_flow",
+          !(simulation_case->parameters.flow.cut.unfitted_flow_boundary_condition ==
+            "inflow") /* is_optional */);
+        if (unfitted_inflow_function)
+          comp_flow_operation->set_inflow_field_unfitted_boundary(unfitted_inflow_function);
+      }
+    else
+      DEAL_II_NOT_IMPLEMENTED();
+
+    // set up level-set for cutDG
+    if (simulation_case->parameters.flow.domain_representation_type == "cut")
+      {
+        // currently, we use a continuous level-set field with same element degree as the flow field
+        const FE_Q<dim> fe_level_set(simulation_case->parameters.flow.fe.degree);
+        dof_handler_level_set.distribute_dofs(fe_level_set);
+
+        Assert(level_set_field_function != nullptr, ExcInternalError());
+
+        level_set.reinit(dof_handler_level_set.locally_owned_dofs(),
+                         DoFTools::extract_locally_relevant_dofs(dof_handler_level_set),
+                         dof_handler_level_set.get_communicator());
+        compute_level_set();
+      }
+
+    setup_dof_system();
 
     // set boundary conditions
     comp_flow_operation->set_inflow_boundary(
@@ -137,7 +247,7 @@ namespace MeltPoolDG::Flow
       *simulation_case->get_initial_condition("compressible_flow"));
 
     // set body force
-    if (dim > 1 && simulation_case->parameters.flow.gravity_constant > 0.)
+    if (dim > 1 and simulation_case->parameters.flow.gravity_constant > 0.)
       {
         std::unique_ptr<Functions::ConstantFunction<dim>> body_force =
           std::make_unique<Functions::ConstantFunction<dim>>(
@@ -168,8 +278,8 @@ namespace MeltPoolDG::Flow
   CompressibleFlowProblem<dim>::output_results(const unsigned int time_step,
                                                const double       current_time)
   {
-    if (!post_processor->is_output_timestep(time_step, current_time) &&
-        !simulation_case->parameters.output.do_user_defined_postprocessing)
+    if (not post_processor->is_output_timestep(time_step, current_time) and
+        not simulation_case->parameters.output.do_user_defined_postprocessing)
       return;
 
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
@@ -181,8 +291,11 @@ namespace MeltPoolDG::Flow
                                          simulation_case->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
 
+    if (level_set_field_function)
+      generic_data_out.add_data_vector(dof_handler_level_set, level_set, "level_set");
+
     // user-defined postprocessing
-    if (simulation_case->parameters.output.do_user_defined_postprocessing &&
+    if (simulation_case->parameters.output.do_user_defined_postprocessing and
         post_processor->is_output_timestep(time_step, current_time))
       simulation_case->do_postprocessing(generic_data_out);
 
@@ -223,8 +336,8 @@ main(int argc, char *argv[])
                      Flow::CompressibleFlowCase,
                      Flow::CompressibleFlowProblem>(input_file, mpi_comm);
     }
-  else if (argc == 3 &&
-           ((std::string(argv[1]) == "--help") || (std::string(argv[1]) == "--help-detail")))
+  else if (argc == 3 and
+           ((std::string(argv[1]) == "--help") or (std::string(argv[1]) == "--help-detail")))
     {
       input_file = std::string(argv[argc - 1]);
 

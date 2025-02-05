@@ -20,7 +20,7 @@ namespace MeltPoolDG::Flow
    *
    * @param array_penalty_parameter Array in which the values of the penalty parameter are stored.
    * @param matrix_free Matrix-free object providing the required geometrical data.
-   * @param domain_representation_type Numerical operator type (cut or fitted_mesh).
+   * @param domain_representation_type Type of geometrical domain representation (cut or fitted).
    * @param dof_index Index of the relevant dof handler in the matrix-free object.
    * @param scaling_factor Additional scaling factor to scale the penalty parameter.
    */

@@ -24,6 +24,7 @@ namespace MeltPoolDG::Heat
     // TODO diffuse specific
     bool use_volume_specific_thermal_capacity_for_phase_interpolation = false;
 
+    // TODO use CutParam struct for cut-related numerical parameters
     struct Cut
     {
       bool two_phase = true;
