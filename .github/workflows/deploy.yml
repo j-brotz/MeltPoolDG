@@ -1,0 +1,58 @@
+name: Publish doc to GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+
+# Cancels running instances when a pull request is updated by a commit
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  SPHINX_VERSION: 8.1.3
+
+jobs:
+  doc:
+    name: Publish doc to GitHub Pages
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: true  # Fetch Hugo themes (true OR recursive)
+          fetch-depth: 0    # Fetch all history for .GitInfo and .Lastmod
+
+      - name: Setup Sphinx and doxygen
+        run: |
+            sudo apt-get install doxygen
+            sudo apt-get install -y graphviz
+            pip install sphinx==${{ env.SPHINX_VERSION }}
+            pip install sphinx-copybutton
+            pip install -r doc/sphinx/requirements.txt
+
+      - name: Build Sphinx HTML, Doxygen and aggregate files
+        run: |
+          cd doc/sphinx
+          sphinx-build -v -b html -a source/ _build/
+          cp -r _build/html/ aggregate/documentation
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-doc
+          path: doc/sphinx/aggregate/
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          deploy_key: ${{ secrets.PRIVATE_KEY }}
+          external_repository: MeltPoolDG/MeltPoolDG
+          publish_branch: gh-pages
+          publish_dir: ./public
