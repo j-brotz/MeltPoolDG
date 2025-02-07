@@ -41,7 +41,10 @@ A list of available parameters for a certain simulation case, e.g. `../tests/adv
 ./meltpooldg --help ../tests/advection_diffusion.json
 ```
 or in more detail
-
 ```
 ./meltpooldg --help-detail ../tests/advection_diffusion.json
 ```
+
+## Documentation
+
+see https://meltpooldg.github.io/MeltPoolDG/
