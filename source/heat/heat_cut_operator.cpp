@@ -1464,10 +1464,10 @@ namespace MeltPoolDG::Heat
                   {
                     const auto [conductivity_new_l, cv_new_l] =
                       internal::get_liquid_material_parameters(
-                        do_solidification ? &T_new_eval_cell_l : nullptr, material, q);
+                        do_solidification ? &T_new_eval_subdomain_l : nullptr, material, q);
                     const auto [conductivity_old_l, cv_old_l] =
                       internal::get_liquid_material_parameters(
-                        do_solidification ? &T_old_eval_cell_l : nullptr, material, q);
+                        do_solidification ? &T_old_eval_subdomain_l : nullptr, material, q);
                     const auto vel = vel_eval_subdomain_l ? vel_eval_subdomain_l->get_value(q) :
                                                             typename DomainEval<dim>::value_type();
                     internal::do_domain_integral_residual(T_new_eval_subdomain_l,

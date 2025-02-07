@@ -1125,6 +1125,7 @@ namespace MeltPoolDG::MeltPool
         melt_front_propagation = std::make_shared<MeltFrontPropagation<dim>>(
           *scratch_data,
           param,
+          flow_operation->get_dof_handler_idx_pressure(),
           ls_hanging_nodes_dof_idx,
           heat_operation->get_temperature(),
           reinit_dof_idx,
@@ -1148,7 +1149,7 @@ namespace MeltPoolDG::MeltPool
               *scratch_data,
               flow_operation->get_dof_handler_idx_velocity(),
               flow_operation->get_quad_idx_velocity(),
-              temp_hanging_nodes_dof_idx);
+              flow_operation->get_dof_handler_idx_pressure());
           }
       }
 
@@ -1491,16 +1492,11 @@ namespace MeltPoolDG::MeltPool
   {
     // compute damping coefficients at the quadrature points of the fluid solver
     if (darcy_operation)
-      {
-        Assert(parameters.heat.operator_type != Heat::TwoPhaseOperatorType::cut,
-               ExcNotImplemented());
-
-        darcy_operation->set_darcy_damping_at_q(*material,
-                                                level_set_operation->get_level_set_as_heaviside(),
-                                                heat_operation->get_temperature(),
-                                                ls_hanging_nodes_dof_idx,
-                                                temp_dof_idx);
-      }
+      darcy_operation->set_darcy_damping_at_q(*material,
+                                              level_set_operation->get_level_set_as_heaviside(),
+                                              heat_operation->get_temperature(),
+                                              ls_hanging_nodes_dof_idx,
+                                              temp_dof_idx);
 
     // compute density and viscosity at the quadrature points.
 
@@ -1513,6 +1509,7 @@ namespace MeltPoolDG::MeltPool
 
     const bool temperature_is_cut =
       parameters.heat.operator_type == Heat::TwoPhaseOperatorType::cut;
+    const bool two_phase_cut = parameters.heat.cut.two_phase;
 
     double dummy;
     scratch_data->get_matrix_free().template cell_loop<double, VectorType>(
@@ -1540,8 +1537,8 @@ namespace MeltPoolDG::MeltPool
                                                 flow_operation->get_quad_idx_velocity(),
                                                 0 /*selected component*/,
                                                 cell_category /*active_fe_index*/);
-                if (cell_category == CutUtil::CellCategory::gas or
-                    cell_category == CutUtil::CellCategory::intersected)
+                if (two_phase_cut and (cell_category == CutUtil::CellCategory::gas or
+                                       cell_category == CutUtil::CellCategory::intersected))
                   temperature_eval.emplace_back(matrix_free,
                                                 temp_dof_idx,
                                                 flow_operation->get_quad_idx_velocity(),
@@ -1565,16 +1562,68 @@ namespace MeltPoolDG::MeltPool
 
             for (const unsigned int q : heaviside_eval.quadrature_point_indices())
               {
-                auto material_values =
-                  material->template compute_parameters<VectorizedArray<double>>(
-                    heaviside_eval,
-                    temperature_eval,
-                    MaterialUpdateFlags::density | MaterialUpdateFlags::dynamic_viscosity,
-                    q);
+                VectorizedArray<double> density, dynamic_viscosity;
+                if (not temperature_is_cut or two_phase_cut)
+                  {
+                    const auto material_values =
+                      material->template compute_parameters<VectorizedArray<double>>(
+                        heaviside_eval,
+                        temperature_eval,
+                        MaterialUpdateFlags::density | MaterialUpdateFlags::dynamic_viscosity,
+                        q);
+                    density           = material_values.density;
+                    dynamic_viscosity = material_values.dynamic_viscosity;
+                  }
+                else
+                  {
+                    if (cell_category == CutUtil::CellCategory::liquid)
+                      {
+                        const auto material_values =
+                          material->template compute_parameters<VectorizedArray<double>>(
+                            heaviside_eval,
+                            temperature_eval,
+                            MaterialUpdateFlags::density | MaterialUpdateFlags::dynamic_viscosity,
+                            q);
+                        density           = material_values.density;
+                        dynamic_viscosity = material_values.dynamic_viscosity;
+                      }
+                    else if (cell_category == CutUtil::CellCategory::intersected)
+                      {
+                        // For intersected cut cells, temperature_val[0] contains the temperature
+                        // values of the liquid domain that each may be ghost values. We use the
+                        // level set as heaviside as in indicator to select the non-ghosted values
+                        // each. For ghosted values we insert the gas values.
+                        const auto material_values =
+                          material->template compute_parameters<VectorizedArray<double>>(
+                            heaviside_eval,
+                            temperature_eval,
+                            MaterialUpdateFlags::density | MaterialUpdateFlags::dynamic_viscosity,
+                            q);
+                        density = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+                          heaviside_eval.get_value(q),
+                          0.5,
+                          material_values.density,
+                          material->get_data().gas.density);
+                        dynamic_viscosity =
+                          compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+                            heaviside_eval.get_value(q),
+                            0.5,
+                            material_values.dynamic_viscosity,
+                            material->get_data().gas.dynamic_viscosity);
+                      }
+                    else if (cell_category == CutUtil::CellCategory::gas)
+                      {
+                        // we cannot evaluate temperature here so we just use a dummy value
+                        density           = material->get_data().gas.density;
+                        dynamic_viscosity = material->get_data().gas.dynamic_viscosity;
+                      }
+                    else
+                      DEAL_II_NOT_IMPLEMENTED();
+                  }
 
                 // set density and viscosity of the fluid solver
-                flow_operation->get_density(cell, q)   = material_values.density;
-                flow_operation->get_viscosity(cell, q) = material_values.dynamic_viscosity;
+                flow_operation->get_density(cell, q)   = density;
+                flow_operation->get_viscosity(cell, q) = dynamic_viscosity;
 
                 // set damping coefficient of the fluid solver
                 if (darcy_operation and (parameters.flow.darcy_damping.formulation ==

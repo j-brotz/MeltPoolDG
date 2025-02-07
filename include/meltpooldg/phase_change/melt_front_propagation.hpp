@@ -4,155 +4,163 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-#include <deal.II/lac/generic_linear_algebra.h>
+
+#include <deal.II/base/vectorization.h>
+
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/lac/affine_constraints.h>
+#include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/material.hpp>
 
-namespace MeltPoolDG
+#include <vector>
+
+
+namespace MeltPoolDG::MeltPool
 {
-  namespace MeltPool
+  using namespace dealii;
+
+  template <int dim>
+  class MeltFrontPropagation
   {
-    using namespace dealii;
+  private:
+    using VectorType = LinearAlgebra::distributed::Vector<double>;
 
-    template <int dim>
-    class MeltFrontPropagation
-    {
-    private:
-      using VectorType = LinearAlgebra::distributed::Vector<double>;
+    const ScratchData<dim> &scratch_data;
+    /**
+     *  Parameters
+     */
+    const MeltPoolData<double> &mp_data;
 
-      const ScratchData<dim> &scratch_data;
-      /**
-       *  Parameters
-       */
-      const MeltPoolData<double> mp_data;
+    // melting/solidification
+    Material<double> melting_solidification;
+    /*
+     *  Based on the following indices the correct DoFHandler or quadrature rule from
+     *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
+     *  multiple DoFHandlers, quadrature rules, etc.
+     */
+    const unsigned int phase_fraction_dof_idx;
+    const unsigned int ls_dof_idx;
+    const unsigned int reinit_dof_idx;
+    const unsigned int reinit_no_solid_dof_idx;
+    const unsigned int flow_vel_dof_idx;
+    const unsigned int flow_vel_no_solid_dof_idx;
+    const unsigned int temp_hanging_nodes_dof_idx;
+    const VectorType  &temperature;
 
-      // melting/solidification
-      Material<double> melting_solidification;
-      /*
-       *  Based on the following indices the correct DoFHandler or quadrature rule from
-       *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
-       *  multiple DoFHandlers, quadrature rules, etc.
-       */
-      const unsigned int ls_dof_idx;
-      const unsigned int reinit_dof_idx;
-      const unsigned int reinit_no_solid_dof_idx;
-      const unsigned int flow_vel_dof_idx;
-      const unsigned int flow_vel_no_solid_dof_idx;
-      const unsigned int temp_hanging_nodes_dof_idx;
-      const VectorType  &temperature;
+    /*
+     * DoF vectors
+     */
+    VectorType solid;
+    VectorType liquid;
 
-      /*
-       * DoF vectors
-       */
-      VectorType solid;
-      VectorType liquid;
+  public:
+    MeltFrontPropagation(const ScratchData<dim>   &scratch_data_in,
+                         const Parameters<double> &data_in,
+                         const unsigned int        phase_fraction_dof_idx_in,
+                         const unsigned int        ls_dof_idx_in,
+                         const VectorType         &temperature,
+                         const unsigned int        reinit_dof_idx_in,
+                         const unsigned int        reinit_no_solid_dof_idx_in,
+                         const unsigned int        flow_vel_dof_idx_in,
+                         const unsigned int        flow_vel_no_solid_dof_idx_in,
+                         const unsigned int        temp_hanging_nodes_dof_idx_in);
 
-    public:
-      MeltFrontPropagation(const ScratchData<dim>   &scratch_data_in,
-                           const Parameters<double> &data_in,
-                           const unsigned int        ls_dof_idx_in,
-                           const VectorType         &temperature,
-                           const unsigned int        reinit_dof_idx_in,
-                           const unsigned int        reinit_no_solid_dof_idx_in,
-                           const unsigned int        flow_vel_dof_idx_in,
-                           const unsigned int        flow_vel_no_solid_dof_idx_in,
-                           const unsigned int        temp_hanging_nodes_dof_idx_in);
+    void
+    set_initial_condition(const VectorType &level_set_as_heaviside, VectorType &level_set);
 
-      void
-      set_initial_condition(const VectorType &level_set_as_heaviside, VectorType &level_set);
+    void
+    compute_melt_front_propagation(const VectorType &level_set_as_heaviside);
 
-      void
-      compute_melt_front_propagation(const VectorType &level_set_as_heaviside);
+    void
+    reinit();
 
-      void
-      reinit();
+    /*
+     * attach functions
+     */
+    void
+    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
 
-      /*
-       * attach functions
-       */
-      void
-      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
+    void
+    attach_output_vectors(GenericDataOut<dim> &data_out) const;
 
-      void
-      attach_output_vectors(GenericDataOut<dim> &data_out) const;
+    void
+    distribute_constraints();
 
-      void
-      distribute_constraints();
+    /*
+     * getter functions
+     */
+    const VectorType &
+    get_solid() const;
 
-      /*
-       * getter functions
-       */
-      const VectorType &
-      get_solid() const;
+    const VectorType &
+    get_liquid() const;
 
-      const VectorType &
-      get_liquid() const;
+    /**
+     * This function returns the solid fraction from a linear interpolation between the solidus
+     * and liquidus temperatures, i.e. 0 (T>=T_liquidus) and 1 (T<=T_solidus).
+     */
+    double
+    compute_solid_fraction(const double temperature) const;
 
-      /**
-       * This function returns the solid fraction from a linear interpolation between the solidus
-       * and liquidus temperatures, i.e. 0 (T>=T_liquidus) and 1 (T<=T_solidus).
-       */
-      double
-      compute_solid_fraction(const double temperature) const;
+    VectorizedArray<double>
+    compute_solid_fraction(const VectorizedArray<double> &temperature) const;
 
-      VectorizedArray<double>
-      compute_solid_fraction(const VectorizedArray<double> &temperature) const;
-
-    private:
-      void
-      make_constraints_in_spatially_fixed_solid_domain();
+  private:
+    void
+    make_constraints_in_spatially_fixed_solid_domain();
 
 
-      /**
-       * This function determines the solid fraction for a given pair of temperature (T) and
-       * level-set-heaviside values (phi) as follows:
-       *
-       *  ______________________________________________________________________
-       * |         |                                                           |
-       * | phase   |  solid fraction     phi        T                          |
-       * |_________|___________________________________________________________|
-       * |         |                                                           |
-       * | solid   |      1.0             1         T <= T_solidus             |
-       * |         |                                                           |
-       * |         |     T_l  - T                                              |
-       * | mushy   |    ----------        1         T_solidus < T < T_liquidus |
-       * |         |     T_l  - T_s                                            |
-       * |         |                                                           |
-       * | liquid  |       0.0            1         T >= T_liquidus            |
-       * |         |                                                           |
-       * | gas     |       0.0            0         independent                |
-       * |_________|___________________________________________________________|
-       *
-       *
-       * If no mushy zone is prescribed, then T_solidus = T_liquidus = T_melting.
-       *
-       */
-      void
-      compute_solid_and_liquid_phases(const VectorType &level_set_as_heaviside);
+    /**
+     * This function determines the solid fraction for a given pair of temperature (T) and
+     * level-set-heaviside values (phi) as follows:
+     *
+     *  ______________________________________________________________________
+     * |         |                                                           |
+     * | phase   |  solid fraction     phi        T                          |
+     * |_________|___________________________________________________________|
+     * |         |                                                           |
+     * | solid   |      1.0             1         T <= T_solidus             |
+     * |         |                                                           |
+     * |         |     T_l  - T                                              |
+     * | mushy   |    ----------        1         T_solidus < T < T_liquidus |
+     * |         |     T_l  - T_s                                            |
+     * |         |                                                           |
+     * | liquid  |       0.0            1         T >= T_liquidus            |
+     * |         |                                                           |
+     * | gas     |       0.0            0         independent                |
+     * |_________|___________________________________________________________|
+     *
+     *
+     * If no mushy zone is prescribed, then T_solidus = T_liquidus = T_melting.
+     *
+     */
+    void
+    compute_solid_and_liquid_phases(const VectorType &level_set_as_heaviside);
 
-      /**
-       *  The constraints of the flow velocity are modified such that they are zero in solid
-       *  regions.
-       */
-      void
-      set_flow_field_in_solid_regions_to_zero(
-        const DoFHandler<dim>           &flow_dof_handler,
-        const AffineConstraints<double> &flow_constraints_no_solid,
-        AffineConstraints<double>       &flow_constraints);
+    /**
+     *  The constraints of the flow velocity are modified such that they are zero in solid
+     *  regions.
+     */
+    void
+    set_flow_field_in_solid_regions_to_zero(
+      const DoFHandler<dim>           &flow_dof_handler,
+      const AffineConstraints<double> &flow_constraints_no_solid,
+      AffineConstraints<double>       &flow_constraints);
 
-      /**
-       *  The reinitialization constraints are modified such that they are zero in solid
-       *  regions. This means, the level set field is not modified due to reinitialization
-       *  in the solid regions.
-       */
-      void
-      ignore_reinitialization_in_solid_regions(
-        const DoFHandler<dim>           &level_set_dof_handler,
-        const AffineConstraints<double> &reinit_dirichlet_constraints_no_solid,
-        AffineConstraints<double>       &reinit_dirichlet_constraints);
-    };
-  } // namespace MeltPool
-} // namespace MeltPoolDG
+    /**
+     *  The reinitialization constraints are modified such that they are zero in solid
+     *  regions. This means, the level set field is not modified due to reinitialization
+     *  in the solid regions.
+     */
+    void
+    ignore_reinitialization_in_solid_regions(
+      const DoFHandler<dim>           &level_set_dof_handler,
+      const AffineConstraints<double> &reinit_dirichlet_constraints_no_solid,
+      AffineConstraints<double>       &reinit_dirichlet_constraints);
+  };
+} // namespace MeltPoolDG::MeltPool

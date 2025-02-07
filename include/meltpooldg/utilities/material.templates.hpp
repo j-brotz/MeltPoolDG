@@ -147,7 +147,7 @@ namespace MeltPoolDG
     const MaterialUpdateFlags::MaterialUpdateFlags      &flags,
     const unsigned int                                   q_index) const
   {
-    AssertIndexRange(temperature_val.size(), 2);
+    Assert(temperature_val.size() <= 2, ExcInternalError());
 
     const auto get_temperature_value = [&]() {
       if (temperature_val.size() == 1)

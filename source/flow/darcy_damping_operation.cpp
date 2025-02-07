@@ -1,6 +1,7 @@
 #include <deal.II/base/exceptions.h>
 
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
+#include <meltpooldg/utilities/cut_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/material.templates.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -152,41 +153,111 @@ namespace MeltPoolDG::Flow
                     scratch_data.get_matrix_free().n_cell_batches() *
                       scratch_data.get_n_q_points(flow_quad_idx));
 
+    // Detect weather the temperature vector is setup for CutFEM by checking if its
+    // dealii::DoFHandler is in hp-mode.
+    const bool temperature_is_cut =
+      scratch_data.get_dof_handler(temp_dof_idx).has_hp_capabilities();
+    // If so, detect weather the temperature vector is in one phase or on two phase cut mode. To
+    // that, we check the number of components in the intersected fe collection. If it's 2, the cut
+    // mode in two phase.
+    if (temperature_is_cut)
+      Assert(scratch_data.get_dof_handler(temp_dof_idx)
+                 .get_fe_collection()[CutUtil::CellCategory::intersected]
+                 .n_components() <= 2,
+             ExcNotImplemented());
+    const bool two_phase_cut =
+      temperature_is_cut and scratch_data.get_dof_handler(temp_dof_idx)
+                                 .get_fe_collection()[CutUtil::CellCategory::intersected]
+                                 .n_components() == 2;
+
     double dummy;
     scratch_data.get_matrix_free().template cell_loop<double, VectorType>(
-      [&](const auto &matrix_free, auto &, const auto &ls_as_heaviside, auto macro_cells) {
+      [&](const auto &matrix_free, auto &, const auto &ls_as_heaviside, auto cell_range) {
         FECellIntegrator<dim, 1, double> ls_values(matrix_free,
                                                    ls_hanging_nodes_dof_idx,
                                                    flow_quad_idx);
 
-        std::unique_ptr<FECellIntegrator<dim, 1, double>> temp_values;
+        const unsigned int cell_category =
+          temperature_is_cut ? matrix_free.get_cell_range_category(cell_range) : 0;
 
+        std::vector<FECellIntegrator<dim, 1, double>> temperature_eval;
         if (material.has_dependency(Material<double>::FieldType::temperature))
-          temp_values = std::make_unique<FECellIntegrator<dim, 1, double>>(matrix_free,
-                                                                           temp_dof_idx,
-                                                                           flow_quad_idx);
+          if (not temperature_is_cut)
+            temperature_eval.emplace_back(matrix_free, temp_dof_idx, flow_quad_idx);
+          else // temperature is cut
+            {
+              if (cell_category == CutUtil::CellCategory::liquid or
+                  cell_category == CutUtil::CellCategory::intersected)
+                temperature_eval.emplace_back(matrix_free,
+                                              temp_dof_idx,
+                                              flow_quad_idx,
+                                              0 /*selected component*/,
+                                              cell_category /*active_fe_index*/);
+              if (two_phase_cut and (cell_category == CutUtil::CellCategory::gas or
+                                     cell_category == CutUtil::CellCategory::intersected))
+                temperature_eval.emplace_back(matrix_free,
+                                              temp_dof_idx,
+                                              flow_quad_idx,
+                                              1 /*selected component*/,
+                                              cell_category /*active_fe_index*/);
+            }
 
-        for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
+        for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             ls_values.reinit(cell);
             ls_values.read_dof_values_plain(ls_as_heaviside);
             ls_values.evaluate(EvaluationFlags::values);
 
-            if (temp_values)
+            for (auto &temp_eval : temperature_eval)
               {
-                temp_values->reinit(cell);
-                temp_values->read_dof_values_plain(temperature);
-                temp_values->evaluate(EvaluationFlags::values);
+                temp_eval.reinit(cell);
+                temp_eval.read_dof_values_plain(temperature);
+                temp_eval.evaluate(EvaluationFlags::values);
               }
 
             for (unsigned int q = 0; q < ls_values.n_q_points; ++q)
               {
-                const auto material_values =
-                  material.template compute_parameters<VectorizedArray<double>>(
-                    ls_values, *temp_values, MaterialUpdateFlags::phase_fractions, q);
+                VectorizedArray<double> solid_fraction;
+                if (not temperature_is_cut or two_phase_cut)
+                  solid_fraction =
+                    material
+                      .template compute_parameters<VectorizedArray<double>>(
+                        ls_values, temperature_eval, MaterialUpdateFlags::phase_fractions, q)
+                      .solid_fraction;
+                else
+                  {
+                    if (cell_category == CutUtil::CellCategory::liquid)
+                      solid_fraction =
+                        material
+                          .template compute_parameters<VectorizedArray<double>>(
+                            ls_values, temperature_eval, MaterialUpdateFlags::phase_fractions, q)
+                          .solid_fraction;
+                    else if (cell_category == CutUtil::CellCategory::intersected)
+                      {
+                        // For intersected cut cells, temperature_val[0] contains the temperature
+                        // values of the liquid domain that each may be ghost values. We use the
+                        // level set as heaviside as in indicator to select the non-ghosted values
+                        // each. For ghosted values we insert zero solid fraction.
+                        solid_fraction =
+                          compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+                            ls_values.get_value(q),
+                            0.5,
+                            material
+                              .template compute_parameters<VectorizedArray<double>>(
+                                ls_values,
+                                temperature_eval,
+                                MaterialUpdateFlags::phase_fractions,
+                                q)
+                              .solid_fraction,
+                            0.0);
+                      }
+                    else
+                      // we cannot evaluate temperature here so we just leave the solid fraction at
+                      // zero
+                      Assert(cell_category == CutUtil::CellCategory::gas, ExcInternalError());
+                  }
 
-                get_damping(cell, q) =
-                  compute_darcy_damping_coefficient(material_values.solid_fraction);
+                get_damping(cell, q) = compute_darcy_damping_coefficient(solid_fraction);
               }
           }
       },
@@ -220,7 +291,7 @@ namespace MeltPoolDG::Flow
          */
         scratch_data.initialize_dof_vector(damping, solid_dof_idx);
 
-        if (!damping_at_q.empty() && scratch_data.is_hex_mesh())
+        if (not damping_at_q.empty() and scratch_data.is_hex_mesh())
           {
             MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
               damping,
