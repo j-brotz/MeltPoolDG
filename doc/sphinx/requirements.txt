@@ -1,0 +1,6 @@
+sphinx
+nbsphinx
+jupyter
+ipython
+sphinx_rtd_theme
+myst-parser
