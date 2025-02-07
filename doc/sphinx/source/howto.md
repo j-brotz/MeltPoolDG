@@ -1,4 +1,4 @@
-# How to Work With MeltPoolDG
+# 💻 How to Work With MeltPoolDG
 
 ## Testing
 
