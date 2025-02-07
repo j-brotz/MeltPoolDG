@@ -29,10 +29,8 @@ jobs:
           submodules: true  # Fetch Hugo themes (true OR recursive)
           fetch-depth: 0    # Fetch all history for .GitInfo and .Lastmod
 
-      - name: Setup Sphinx and doxygen
+      - name: Install sphinx
         run: |
-            sudo apt-get install doxygen
-            sudo apt-get install -y graphviz
             pip install sphinx==${{ env.SPHINX_VERSION }}
             pip install sphinx-copybutton
             pip install -r doc/sphinx/requirements.txt
@@ -43,11 +41,11 @@ jobs:
           sphinx-build -v -b html -a source/ _build/
           #cp -r _build/ aggregate/sphinx
 
-#      - name: Upload artifacts
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: html-doc
-#          path: doc/sphinx/aggregate/
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-doc
+          path: doc/sphinx/_build
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
