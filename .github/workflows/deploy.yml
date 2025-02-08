@@ -29,8 +29,10 @@ jobs:
           submodules: true  # Fetch Hugo themes (true OR recursive)
           fetch-depth: 0    # Fetch all history for .GitInfo and .Lastmod
 
-      - name: Install sphinx
+      - name: Install sphinx and doxygen
         run: |
+            sudo apt-get install doxygen
+            sudo apt-get install -y graphviz
             pip install sphinx==${{ env.SPHINX_VERSION }}
             pip install sphinx-copybutton
             pip install -r doc/sphinx/requirements.txt
@@ -39,12 +41,22 @@ jobs:
         run: |
           cd doc/sphinx
           sphinx-build -v -b html -a source/ _build/
+          cd ../doxygen
+          doxygen Doxyfile
+          # create temporary folder for deployment
+          cd ..
+          mkdir deploy
+          mkdir deploy/doxygen
+          mkdir deploy/sphinx
+          cp -r sphinx/_build deploy/sphinx
+          cp -r doxygen/html deploy/doxygen
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: html-doc
-          path: doc/sphinx/_build
+          path: |
+            doc/deploy
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
@@ -52,4 +64,4 @@ jobs:
           deploy_key: ${{ secrets.PRIVATE_KEY }}
           external_repository: MeltPoolDG/MeltPoolDG
           publish_branch: gh-pages
-          publish_dir: doc/sphinx/_build
+          publish_dir: doc/deploy
