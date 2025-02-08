@@ -41,13 +41,12 @@ jobs:
         run: |
           cd doc/sphinx
           sphinx-build -v -b html -a source/ _build/
-          cd ../doxygen
-          doxygen Doxyfile
+          cd ../../
+          doxygen doc/doxygen/Doxyfile -o doc/doxygen
           # create temporary folder for deployment
-          cd ..
+          cd doc
           mkdir deploy
           mkdir deploy/doxygen
-          mkdir deploy/sphinx
           cp -r sphinx/_build/* deploy/
           cp -r doxygen/html/* deploy/doxygen
 
