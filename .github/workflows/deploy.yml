@@ -48,7 +48,7 @@ jobs:
           mkdir deploy
           mkdir deploy/doxygen
           mkdir deploy/sphinx
-          cp -r sphinx/_build deploy/sphinx
+          cp -r sphinx/_build deploy/
           cp -r doxygen/html deploy/doxygen
 
       - name: Upload artifacts
