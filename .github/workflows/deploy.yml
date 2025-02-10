@@ -25,9 +25,6 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          submodules: true  # Fetch Hugo themes (true OR recursive)
-          fetch-depth: 0    # Fetch all history for .GitInfo and .Lastmod
 
       - name: Install sphinx and doxygen
         run: |
@@ -42,13 +39,13 @@ jobs:
           cd doc/sphinx
           sphinx-build -v -b html -a source/ _build/
           cd ../../
-          doxygen doc/doxygen/Doxyfile -o doc/doxygen
+          doxygen doc/doxygen/Doxyfile
           # create temporary folder for deployment
           cd doc
           mkdir deploy
           mkdir deploy/doxygen
           cp -r sphinx/_build/* deploy/
-          cp -r doxygen/html/* deploy/doxygen
+          cp -r ../html/* deploy/doxygen
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
