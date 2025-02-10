@@ -182,25 +182,27 @@ namespace MeltPoolDG::Flow
 
         std::vector<FECellIntegrator<dim, 1, double>> temperature_eval;
         if (material.has_dependency(Material<double>::FieldType::temperature))
-          if (not temperature_is_cut)
-            temperature_eval.emplace_back(matrix_free, temp_dof_idx, flow_quad_idx);
-          else // temperature is cut
-            {
-              if (cell_category == CutUtil::CellCategory::liquid or
-                  cell_category == CutUtil::CellCategory::intersected)
-                temperature_eval.emplace_back(matrix_free,
-                                              temp_dof_idx,
-                                              flow_quad_idx,
-                                              0 /*selected component*/,
-                                              cell_category /*active_fe_index*/);
-              if (two_phase_cut and (cell_category == CutUtil::CellCategory::gas or
-                                     cell_category == CutUtil::CellCategory::intersected))
-                temperature_eval.emplace_back(matrix_free,
-                                              temp_dof_idx,
-                                              flow_quad_idx,
-                                              1 /*selected component*/,
-                                              cell_category /*active_fe_index*/);
-            }
+          {
+            if (not temperature_is_cut)
+              temperature_eval.emplace_back(matrix_free, temp_dof_idx, flow_quad_idx);
+            else // temperature is cut
+              {
+                if (cell_category == CutUtil::CellCategory::liquid or
+                    cell_category == CutUtil::CellCategory::intersected)
+                  temperature_eval.emplace_back(matrix_free,
+                                                temp_dof_idx,
+                                                flow_quad_idx,
+                                                0 /*selected component*/,
+                                                cell_category /*active_fe_index*/);
+                if (two_phase_cut and (cell_category == CutUtil::CellCategory::gas or
+                                       cell_category == CutUtil::CellCategory::intersected))
+                  temperature_eval.emplace_back(matrix_free,
+                                                temp_dof_idx,
+                                                flow_quad_idx,
+                                                1 /*selected component*/,
+                                                cell_category /*active_fe_index*/);
+              }
+          }
 
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
