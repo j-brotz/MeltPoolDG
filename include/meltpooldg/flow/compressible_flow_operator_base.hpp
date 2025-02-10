@@ -86,11 +86,12 @@ namespace MeltPoolDG::Flow
      * inegrator.
      */
     virtual void
-    advance_time_step(
-      number                                                        current_time,
-      number                                                        time_step,
-      std::function<void(number, VectorType &, const VectorType &)> pre_processing  = {},
-      std::function<void(number, VectorType &, const VectorType &)> post_processing = {}){};
+    advance_time_step([[maybe_unused]] number current_time,
+                      [[maybe_unused]] number time_step,
+                      [[maybe_unused]] std::function<void(number, VectorType &, const VectorType &)>
+                        pre_processing = {},
+                      [[maybe_unused]] std::function<void(number, VectorType &, const VectorType &)>
+                        post_processing = {}){};
 
     /**
      * Set an inflow boundary conditions for all boundary ids occurring in the given std::map and
@@ -202,10 +203,10 @@ namespace MeltPoolDG::Flow
      * @param src The solution vector at the current time.
      */
     virtual void
-    create_rhs(const number     &time,
-               const number     &time_step,
-               VectorType       &dst,
-               const VectorType &src) const {};
+    create_rhs([[maybe_unused]] const number     &time,
+               [[maybe_unused]] const number     &time_step,
+               [[maybe_unused]] VectorType       &dst,
+               [[maybe_unused]] const VectorType &src) const {};
 
     /**
      * Function for the matrix-free matrix-vector product evaluation.
@@ -214,7 +215,7 @@ namespace MeltPoolDG::Flow
      * @param src The solution vector at the current time.
      */
     virtual void
-    vmult(VectorType &dst, const VectorType &src) const {};
+    vmult([[maybe_unused]] VectorType &dst, [[maybe_unused]] const VectorType &src) const {};
 
     /**
      * Function which computes the inverse time step size.
