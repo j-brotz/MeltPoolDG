@@ -122,7 +122,8 @@ namespace MeltPoolDG::Flow
         prm.add_parameter("gravity constant", gravity_constant, "Gravity constant.");
         prm.add_parameter("domain representation type",
                           domain_representation_type,
-                          "Domain representation type. Choose between 'fitted' and 'cut'.");
+                          "Domain representation type. Choose between 'fitted' and 'cut'.",
+                          Patterns::Selection("fitted|cut"));
         prm.add_parameter("verbosity level", verbosity_level, "Verbosity level for output.");
         prm.enter_subsection("cut");
         {
@@ -144,6 +145,17 @@ namespace MeltPoolDG::Flow
       AssertThrow(fe.type == FiniteElementType::FE_DGQ,
                   ExcMessage(
                     "The compressible flow solver only supports elements of type 'FE_DGQ'."));
+
+      // set default time integration scheme for cut
+      if (domain_representation_type == "cut")
+        {
+          if (time_integrator.integrator_type == TimeIntegratorSchemes::not_initialized)
+            time_integrator.integrator_type = TimeIntegratorSchemes::explicit_euler;
+          AssertThrow(
+            time_integrator.integrator_type == TimeIntegratorSchemes::explicit_euler,
+            ExcMessage(
+              "The cut compressible flow solver only supports explicit Euler time integration."));
+        }
 
       // Synchronize verbosity with base verbosity if not set explicitly.
       if (verbosity_level == -1)
