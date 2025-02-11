@@ -38,19 +38,19 @@
   },
   "material": {
     "gas": {
-      "thermal conductivity": "27.7815",
+      "thermal conductivity": "40.0",
       "specific heat capacity": "230",
       "density": "3925"
     },
     "liquid": {
-      "thermal conductivity": "55.563",
+      "thermal conductivity": "80.0",
       "specific heat capacity": "460",
       "density": "7850"
     },
-    "boiling temperature": "2000.",
-    "latent heat of evaporation": "1.e6",
+    "boiling temperature": "2000.0",
+    "latent heat of evaporation": "1.0e5",
     "molar mass": "0.05224130936",
-    "specific enthalpy reference temperature": "663.731"
+    "specific enthalpy reference temperature": "1990.0"
   },
   "evaporation": {
     "evaporative mass flux model": "recoil_pressure",

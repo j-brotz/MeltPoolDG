@@ -39,9 +39,9 @@
   },
   "material": {
     "liquid": {
-      "thermal conductivity": "55.563",
-      "specific heat capacity": "460",
-      "density": "7850"
+      "thermal conductivity": "40.0",
+      "specific heat capacity": "1000.0",
+      "density": "7850.0"
     }
   },
   "output": {

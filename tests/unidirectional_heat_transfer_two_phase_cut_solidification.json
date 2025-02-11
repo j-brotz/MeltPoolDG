@@ -12,7 +12,7 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "time step size": "0.2",
+    "time step size": "0.5",
     "end time": "10.0",
     "max n steps": "2"
   },
@@ -27,7 +27,7 @@
       "abs tolerance": "1e-11"
     },
     "nlsolve": {
-      "residual tolerance": "1e-7"
+      "residual tolerance": "1e-8"
     }
   },
   "simulation specific": {
@@ -40,22 +40,22 @@
   },
   "material": {
     "gas": {
-      "thermal conductivity": "27.7815",
-      "specific heat capacity": "230",
-      "density": "3925"
+      "thermal conductivity": "20.0",
+      "specific heat capacity": "500.0",
+      "density": "3925.0"
     },
     "liquid": {
-      "thermal conductivity": "55.563",
-      "specific heat capacity": "460.0",
+      "thermal conductivity": "40.0",
+      "specific heat capacity": "1000.0",
       "density": "7850.0"
     },
     "solid": {
-      "thermal conductivity": "17.0",
-      "specific heat capacity": "700.0",
-      "density": "7850.0"
+      "thermal conductivity": "50.0",
+      "specific heat capacity": "900.0",
+      "density": "8000.0"
     },
-    "solidus temperature": "1966.0",
-    "liquidus temperature": "1974.0",
+    "solidus temperature": "1962.5",
+    "liquidus temperature": "1970.0",
     "solid liquid properties transition type": "mushy_zone"
   },
   "output": {
