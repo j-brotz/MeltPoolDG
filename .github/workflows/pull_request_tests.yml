@@ -52,8 +52,12 @@ jobs:
       
           # Remove trailing '|'
           TEST_FILTER=${TEST_FILTER%|}
-          env.CTEST_COMMAND="${{ env.CTEST_COMMAND }} ${TEST_FILTER}"
-          echo "CTest command:  ${{ env.CTEST_COMMAND }}"
+          # Construct the final CTEST_COMMAND
+          FINAL_CTEST_COMMAND="${{ env.CTEST_COMMAND }} ${TEST_FILTER}"
+          echo "CTest command: $FINAL_CTEST_COMMAND"
+          
+          # Save the new command into the environment variable
+          echo "CTEST_COMMAND=$FINAL_CTEST_COMMAND" >> $GITHUB_ENV
 
       - name: Compile adaflo
         if: matrix.adaflo == 'adaflo=on'
