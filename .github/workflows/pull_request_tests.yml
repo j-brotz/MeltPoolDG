@@ -38,8 +38,8 @@ jobs:
           # Save GitHub labels JSON to a variable
           LABELS_JSON='${{ toJson(github.event.pull_request.labels) }}'
           
-          # Extract label names without jq
-          LABELS=$(echo "$LABELS_JSON" | grep -o '"name":"[^"]*"' | sed 's/"name":"//g' | sed 's/"//g')
+          # Extract label names
+          LABELS=$(echo "$LABELS_JSON" | grep -o '"name": "[^"]*"' | cut -d':' -f2 | tr -d '"')
           echo "Labels found: $LABELS"
           
           TEST_FILTER=""
@@ -58,6 +58,7 @@ jobs:
           else
             echo "TEST_CMD=ctest -R \"$TEST_FILTER\"" >> $GITHUB_ENV
           fi
+          echo "Test command:  ${{ env.TEST_CMD }}"
       
 
       - name: Compile adaflo
