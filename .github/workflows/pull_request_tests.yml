@@ -12,6 +12,7 @@ concurrency:
 env:
   COMPILE_JOBS: 4
   PROJECT_NAME: MeltPoolDG-dev
+  CTEST_COMMAND: ctest -R
 
 jobs:
   build:
@@ -32,7 +33,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Determine test command
+      - name: Determine filters for ctest
         id: test_command
         run: |
           # Save GitHub labels JSON to a variable
@@ -51,15 +52,8 @@ jobs:
       
           # Remove trailing '|'
           TEST_FILTER=${TEST_FILTER%|}
-          
-          # Default to running all tests if no filters are set
-          if [ -z "$TEST_FILTER" ]; then
-            echo "TEST_CMD=ctest -R" >> $GITHUB_ENV
-          else
-            echo "TEST_CMD=ctest -R \"$TEST_FILTER\"" >> $GITHUB_ENV
-          fi
-          echo "Test command:  ${{ env.TEST_CMD }}"
-      
+          CTEST_COMMAND="${CTEST_COMMAND} ${TEST_FILTER}$"
+          echo "CTest command:  ${{ env.CTEST_COMMAND }}"
 
       - name: Compile adaflo
         if: matrix.adaflo == 'adaflo=on'
@@ -92,7 +86,7 @@ jobs:
           export OMPI_ALLOW_RUN_AS_ROOT=1
           export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
           cd build
-          ${{ env.TEST_CMD }} -j${{ env.COMPILE_JOBS }} --output-on-failure -E 'tests_not_robust/'
+          ${{ env.CTEST_COMMAND }} -j${{ env.COMPILE_JOBS }} --output-on-failure -E 'tests_not_robust/'
 
       - name: Failed test log
         if: ${{ failure() }}
