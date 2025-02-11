@@ -12,9 +12,9 @@
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
+#include <meltpooldg/level_set/reinitialization_operation.hpp>
+#include <meltpooldg/level_set/reinitialization_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/level_set/utilities.hpp>
-#include <meltpooldg/reinitialization/reinitialization_operation.hpp>
-#include <meltpooldg/reinitialization/reinitialization_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
@@ -110,14 +110,16 @@ namespace MeltPoolDG::LevelSet
 #ifdef MELT_POOL_DG_WITH_ADAFLO
         else if (ls.reinit.implementation == "adaflo")
           {
-            reinit_operation =
-              std::make_shared<ReinitializationOperationAdaflo<dim>>(scratch_data,
-                                                                     reinit_time_iterator,
-                                                                     reinit_dof_idx_in,
-                                                                     ls_quad_idx_in,
-                                                                     normal_dof_idx_in,
-                                                                     time_stepping_data,
-                                                                     ls);
+            reinit_operation = std::make_shared<ReinitializationOperationAdaflo<dim>>(
+              scratch_data,
+              reinit_time_iterator,
+              reinit_dof_idx_in,
+              ls_quad_idx_in,
+              normal_dof_idx_in,
+              time_stepping_data,
+              ls.normal_vec,
+              ls.reinit.interface_thickness_parameter.value,
+              ls.get_n_subdivisions());
           }
 #endif
         else

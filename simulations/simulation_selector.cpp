@@ -14,8 +14,6 @@
 #include "moving_droplet/moving_droplet.hpp"
 #include "oscillating_droplet/oscillating_droplet.hpp"
 #include "recoil_pressure/recoil_pressure.hpp"
-#include "reinit_circle/reinit_circle.hpp"
-#include "reinit_circle/reinit_circle_DG.hpp"
 #include "rising_bubble/rising_bubble.hpp"
 #include "rotating_bubble/rotating_bubble.hpp"
 #include "simulation_selector.hpp"
@@ -38,13 +36,7 @@ namespace MeltPoolDG::Simulation
                                           const std::string parameter_file,
                                           const MPI_Comm    mpi_communicator)
   {
-    if (case_name == "reinit_circle")
-      return std::make_shared<ReinitCircle::SimulationReinit<dim>>(parameter_file,
-                                                                   mpi_communicator);
-    else if (case_name == "reinit_circle_DG")
-      return std::make_shared<ReinitCircleDG::SimulationReinitDG<dim>>(parameter_file,
-                                                                       mpi_communicator);
-    else if (case_name == "rotating_bubble")
+    if (case_name == "rotating_bubble")
       return std::make_shared<RotatingBubble::SimulationRotatingBubble<dim>>(parameter_file,
                                                                              mpi_communicator);
     else if (case_name == "flow_past_cylinder")

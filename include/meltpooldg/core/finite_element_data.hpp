@@ -28,5 +28,8 @@ namespace MeltPoolDG
 
     unsigned int
     get_n_q_points() const;
+
+    unsigned int
+    get_n_subdivisions() const;
   };
 } // namespace MeltPoolDG

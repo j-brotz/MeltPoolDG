@@ -25,7 +25,6 @@ jobs:
       matrix:
         build_type: ["Release"]
         dealii_version: ["master"]
-        adaflo: ["adaflo=on"]
 
     container:
       image: dealii/dealii:${{ matrix.dealii_version }}-jammy
@@ -44,7 +43,7 @@ jobs:
           echo "Labels found: $LABELS"
           
           TEST_FILTER=""
-          for LABEL in mp-compressible-flow mp-advec-diff mp-heat-transfer mp-radiative-transfer; do
+          for LABEL in mp-compressible-flow mp-advec-diff mp-heat-transfer mp-radiative-transfer mp-reinit; do
             if echo "$LABELS" | grep -q "$LABEL"; then
               TEST_FILTER="${TEST_FILTER}${LABEL}|"
             fi
@@ -60,7 +59,7 @@ jobs:
           echo "CTEST_COMMAND=$FINAL_CTEST_COMMAND" >> $GITHUB_ENV
 
       - name: Compile adaflo
-        if: matrix.adaflo == 'adaflo=on'
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'no_adaflo') }}
         run: |
           git clone https://github.com/MeltPoolDG/adaflo.git
           mkdir adaflo-build

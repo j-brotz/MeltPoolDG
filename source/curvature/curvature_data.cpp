@@ -2,7 +2,7 @@
 #include <deal.II/base/patterns.h>
 
 #include <meltpooldg/curvature/curvature_data.hpp>
-#include <meltpooldg/reinitialization/reinitialization_data.hpp>
+#include <meltpooldg/level_set/reinitialization_data.hpp>
 
 namespace MeltPoolDG::LevelSet
 {

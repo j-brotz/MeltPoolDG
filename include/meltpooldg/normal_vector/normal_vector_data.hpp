@@ -2,9 +2,9 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/level_set/reinitialization_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/predictor_data.hpp>
-#include <meltpooldg/reinitialization/reinitialization_data.hpp>
 
 #include <string>
 

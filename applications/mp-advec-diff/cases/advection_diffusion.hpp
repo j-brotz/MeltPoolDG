@@ -22,7 +22,6 @@
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
-#include <iostream>
 #include <memory>
 #include <string>
 

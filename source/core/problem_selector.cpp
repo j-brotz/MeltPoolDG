@@ -2,7 +2,6 @@
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_problem.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
-#include <meltpooldg/reinitialization/reinitialization_problem.hpp>
 /* add your problem here*/
 
 namespace MeltPoolDG
@@ -13,9 +12,6 @@ namespace MeltPoolDG
   {
     if (problem_name == "level_set" || problem_name == "level_set_with_evaporation")
       return std::make_shared<LevelSet::LevelSetProblem<dim>>();
-
-    else if (problem_name == "reinitialization")
-      return std::make_shared<LevelSet::ReinitializationProblem<dim>>();
 
     else if (problem_name == "melt_pool")
       return std::make_shared<MeltPool::MeltPoolProblem<dim>>();

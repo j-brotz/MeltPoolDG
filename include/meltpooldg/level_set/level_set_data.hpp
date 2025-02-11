@@ -6,8 +6,8 @@
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/curvature/curvature_data.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
+#include <meltpooldg/level_set/reinitialization_data.hpp>
 #include <meltpooldg/normal_vector/normal_vector_data.hpp>
-#include <meltpooldg/reinitialization/reinitialization_data.hpp>
 
 namespace MeltPoolDG::LevelSet
 {
