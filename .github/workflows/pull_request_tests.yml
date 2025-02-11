@@ -35,18 +35,18 @@ jobs:
       - name: Determine test command
         id: test_command
         run: |
-          LABELS=$(jq -r '.pull_request.labels[].name' <<< '${{ toJson(github.event.pull_request.labels) }}')
+          # Save GitHub labels JSON to a variable
+          LABELS_JSON='${{ toJson(github.event.pull_request.labels) }}'
+          
+          # Extract label names using jq
+          LABELS=$(echo "$LABELS_JSON" | jq -r '.[].name')
           
           TEST_FILTER=""
-          if echo "$LABELS" | grep -q "mp-compressible-flow"; then
-            TEST_FILTER+="mp-compressible-flow|"
-          fi
-          if echo "$LABELS" | grep -q "another-label"; then
-            TEST_FILTER+="another-test-folder|"
-          fi
-          if echo "$LABELS" | grep -q "yet-another-label"; then
-            TEST_FILTER+="yet-another-folder|"
-          fi
+          for LABEL in mp-compressible-flow mp-advec-diff mp-heat-transfer mp-radiative-transfer; do
+            if echo "$LABELS" | grep -q "$LABEL"; then
+              TEST_FILTER+="$LABEL|"
+            fi
+          done
       
           # Remove trailing '|'
           TEST_FILTER=${TEST_FILTER%|}
