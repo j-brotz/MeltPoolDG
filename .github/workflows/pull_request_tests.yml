@@ -38,8 +38,9 @@ jobs:
           # Save GitHub labels JSON to a variable
           LABELS_JSON='${{ toJson(github.event.pull_request.labels) }}'
           
-          # Extract label names using jq
-          LABELS=$(echo "$LABELS_JSON" | jq -r '.[].name')
+          # Extract label names without jq
+          LABELS=$(echo "$LABELS_JSON" | grep -o '"name":"[^"]*"' | sed 's/"name":"//g' | sed 's/"//g')
+          echo "Labels found: $LABELS"
           
           TEST_FILTER=""
           for LABEL in mp-compressible-flow mp-advec-diff mp-heat-transfer mp-radiative-transfer; do
