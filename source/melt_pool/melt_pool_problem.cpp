@@ -881,9 +881,15 @@ namespace MeltPoolDG::MeltPool
         laser_operation = std::make_shared<Heat::LaserOperation<dim>>(
           *scratch_data,
           base_in->get_periodic_bc(),
-          param,
+          param.laser,
           &level_set_operation->get_level_set_as_heaviside(),
-          ls_dof_idx);
+          ls_dof_idx,
+          &param.rte,
+          true,
+          param.heat.operator_type == Heat::TwoPhaseOperatorType::cut,
+          param.material.two_phase_fluid_properties_transition_type !=
+            TwoPhaseFluidPropertiesTransitionType::sharp,
+          param.output.paraview.print_boundary_id);
         laser_operation->reset(param.time_stepping.start_time);
       }
 

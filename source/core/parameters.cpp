@@ -61,6 +61,7 @@ namespace MeltPoolDG
     laser.post(base.dimension,
                heat.use_volume_specific_thermal_capacity_for_phase_interpolation,
                material);
+    rte.post(base.fe);
     ls.post(base.fe);
     evapor.post(material, heat.use_volume_specific_thermal_capacity_for_phase_interpolation);
     flow.post(material);
@@ -83,6 +84,7 @@ namespace MeltPoolDG
     base.check_input_parameters(ls.get_n_subdivisions());
     heat.check_input_parameters(base.fe);
     laser.check_input_parameters();
+    rte.check_input_parameters(base.fe);
     ls.check_input_parameters(base.fe);
     evapor.check_input_parameters(material, ls.get_n_subdivisions());
     flow.check_input_parameters(ls.curv.enable);

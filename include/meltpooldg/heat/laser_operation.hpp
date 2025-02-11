@@ -6,26 +6,22 @@
 #pragma once
 
 #include <deal.II/base/point.h>
-#include <deal.II/base/tensor.h>
 
 #include <deal.II/dofs/dof_handler.h>
 
 #include <deal.II/lac/affine_constraints.h>
-#include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/core/finite_element_data.hpp>
-#include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_heat_source_projection_based.hpp>
 #include <meltpooldg/heat/laser_heat_source_volumetric.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_operation.hpp>
-#include <meltpooldg/utilities/material_data.hpp>
 
 #include <functional>
 #include <memory>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -72,11 +68,17 @@ namespace MeltPoolDG::Heat
     unsigned int rte_quad_idx;
 
   public:
-    LaserOperation(ScratchData<dim>                      &scratch_data_in,
-                   const PeriodicBoundaryConditions<dim> &periodic_bc_in,
-                   const Parameters<double>              &data_in,
-                   const VectorType                      *heaviside_in  = nullptr,
-                   const unsigned int                     hs_dof_idx_in = 0);
+    LaserOperation(
+      ScratchData<dim>                                         &scratch_data_in,
+      const PeriodicBoundaryConditions<dim>                    &periodic_bc_in,
+      const LaserData<double>                                  &laser_data_in,
+      const VectorType                                         *heaviside_in         = nullptr,
+      const unsigned int                                        hs_dof_idx_in        = 0,
+      const RadiativeTransport::RadiativeTransportData<double> *rad_trans_data_in    = nullptr,
+      const bool                                                problem_is_melt_pool = false,
+      const bool                                                heat_is_cut          = false,
+      const bool material_two_phase_transition_is_diffuse                            = false,
+      const bool print_boundary_ids                                                  = false);
 
     void
     distribute_dofs(const FiniteElementData &fe_data);

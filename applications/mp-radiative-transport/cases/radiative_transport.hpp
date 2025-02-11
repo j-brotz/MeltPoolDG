@@ -4,14 +4,13 @@
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/point.h>
 
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "../radiative_transport_case.hpp"
 
 /**
  * This simulation is mainly meant to test the functionality of RTE
@@ -23,8 +22,8 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
 
   using namespace MeltPoolDG::Simulation;
 
-  template <int dim>
-  class SimulationRadTrans : public MeltPoolDG::RadiativeTransport::RadiativeTransportCase<dim>
+  template <int dim, typename Problem>
+  class SimulationRadTrans : public Problem
   {
   public:
     SimulationRadTrans(std::string parameter_file, const MPI_Comm mpi_communicator);
@@ -61,16 +60,14 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     double powder_particle_radius = domain_x_max / 6.;
 
     // for self-registration
-    static SimulationCaseRegistrar<MeltPoolDG::RadiativeTransport::RadiativeTransportCase<dim>>
-      registrar;
+    static SimulationCaseRegistrar<Problem> registrar;
   };
 
   // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<MeltPoolDG::RadiativeTransport::RadiativeTransportCase<dim>>
-    SimulationRadTrans<dim>::registrar(
-      "radiative_transport",
-      [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
-        return std::make_unique<SimulationRadTrans<dim>>(parameter_file, mpi_communicator);
-      });
+  template <int dim, typename Problem>
+  SimulationCaseRegistrar<Problem> SimulationRadTrans<dim, Problem>::registrar(
+    "radiative_transport",
+    [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
+      return std::make_unique<SimulationRadTrans<dim, Problem>>(parameter_file, mpi_communicator);
+    });
 } // namespace MeltPoolDG::Simulation::RadiativeTransport

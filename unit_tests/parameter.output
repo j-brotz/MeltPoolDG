@@ -485,6 +485,11 @@
             "absorptivity liquid": "0.9",
             "avoid div zero constant": "1e-16"
         },
+        "fe":
+        {
+            "degree": "-1",
+            "type": "not_initialized"
+        },
         "linear solver":
         {
             "abs tolerance": "1e-20",

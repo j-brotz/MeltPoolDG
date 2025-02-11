@@ -16,6 +16,8 @@ namespace MeltPoolDG::RadiativeTransport
   {
     prm.enter_subsection("rte");
     {
+      fe.add_parameters(prm);
+
       prm.add_parameter(
         "rte verbosity level",
         verbosity_level,
@@ -65,6 +67,21 @@ namespace MeltPoolDG::RadiativeTransport
                         "Sets the absorptivity of the liquid phase.");
     }
     prm.leave_subsection();
+  }
+
+  template <typename number>
+  void
+  RadiativeTransportData<number>::post(const FiniteElementData &base_fe_data)
+  {
+    fe.post(base_fe_data);
+  }
+
+  template <typename number>
+  void
+  RadiativeTransportData<number>::check_input_parameters(
+    const FiniteElementData &base_fe_data) const
+  {
+    fe.check_input_parameters(base_fe_data);
   }
 
   template struct RadiativeTransportData<double>;

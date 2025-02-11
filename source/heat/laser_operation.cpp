@@ -10,14 +10,20 @@
 namespace MeltPoolDG::Heat
 {
   template <int dim>
-  LaserOperation<dim>::LaserOperation(ScratchData<dim>                      &scratch_data_in,
-                                      const PeriodicBoundaryConditions<dim> &periodic_bc_in,
-                                      const Parameters<double>              &data_in,
-                                      const VectorType                      *heaviside_in,
-                                      const unsigned int                     hs_dof_idx_in)
+  LaserOperation<dim>::LaserOperation(
+    ScratchData<dim>                                         &scratch_data_in,
+    const PeriodicBoundaryConditions<dim>                    &periodic_bc_in,
+    const LaserData<double>                                  &laser_data_in,
+    const VectorType                                         *heaviside_in,
+    const unsigned int                                        hs_dof_idx_in,
+    const RadiativeTransport::RadiativeTransportData<double> *rad_trans_data_in,
+    const bool                                                problem_is_melt_pool,
+    const bool                                                heat_is_cut,
+    const bool material_two_phase_transition_is_diffuse,
+    const bool print_boundary_ids)
     : scratch_data(scratch_data_in)
     , periodic_bc(periodic_bc_in)
-    , laser_data(data_in.laser)
+    , laser_data(laser_data_in)
     , laser_position(laser_data.get_starting_position<dim>())
   {
     AssertThrow(
@@ -28,7 +34,7 @@ namespace MeltPoolDG::Heat
 
     if (laser_data.model == LaserModelType::analytical_temperature)
       {
-        AssertThrow(data_in.base.problem_name == "melt_pool",
+        AssertThrow(problem_is_melt_pool,
                     ExcMessage(
                       "Only the melt pool problem can handle the analytical laser model."));
         return;
@@ -76,9 +82,8 @@ namespace MeltPoolDG::Heat
     // For the CutFEM heat transfer operator, we don't precompute a sharp laser heat source.
     // Instead, we pass the intensity function to the cut operation, which is then evaluated at the
     // cut interface.
-    if (data_in.heat.operator_type == TwoPhaseOperatorType::cut and
-        (laser_data.model == LaserModelType::interface_projection_sharp or
-         laser_data.model == LaserModelType::interface_projection_sharp_conforming))
+    if (heat_is_cut and (laser_data.model == LaserModelType::interface_projection_sharp or
+                         laser_data.model == LaserModelType::interface_projection_sharp_conforming))
       return;
 
     /*
@@ -98,12 +103,12 @@ namespace MeltPoolDG::Heat
               std::make_unique<Heat::LaserHeatSourceProjectionBased<dim>>(
                 laser_data,
                 intensity_profile,
-                data_in.material.two_phase_fluid_properties_transition_type !=
-                  TwoPhaseFluidPropertiesTransitionType::sharp,
+                material_two_phase_transition_is_diffuse,
                 laser_data.delta_approximation_phase_weighted);
             break;
           }
           case LaserModelType::RTE: {
+            AssertThrow(rad_trans_data_in != nullptr, ExcInternalError());
             AssertThrow(heaviside_in, ExcMessage("The RTE laser model requires a heaviside!"));
 
             rte_dof_handler = std::make_unique<DoFHandler<dim>>(
@@ -122,22 +127,22 @@ namespace MeltPoolDG::Heat
               laser_data.rte_boundary_id != numbers::invalid_boundary_id,
               ExcMessage(
                 "The RTE laser model requires the RTE boundary id to be set by the simulation!"));
-            if (data_in.output.paraview.print_boundary_id)
+            if (print_boundary_ids)
               Journal::print_line(scratch_data.get_pcout(),
                                   "RTE boundary id = " + std::to_string(laser_data.rte_boundary_id),
                                   "laser");
             rte_dirichlet_boundary_condition[laser_data.rte_boundary_id] = intensity_profile;
 
-            if (data_in.base.fe.type == FiniteElementType::FE_SimplexP)
+            if (rad_trans_data_in->fe.type == FiniteElementType::FE_SimplexP)
               rte_quad_idx = scratch_data_in.attach_quadrature(
-                QGaussSimplex<dim>(data_in.base.fe.get_n_q_points()));
+                QGaussSimplex<dim>(rad_trans_data_in->fe.get_n_q_points()));
             else
-              rte_quad_idx =
-                scratch_data_in.attach_quadrature(QGauss<dim>(data_in.base.fe.get_n_q_points()));
+              rte_quad_idx = scratch_data_in.attach_quadrature(
+                QGauss<dim>(rad_trans_data_in->fe.get_n_q_points()));
 
             rte_operation = std::make_unique<RadiativeTransport::RadiativeTransportOperation<dim>>(
               scratch_data,
-              data_in.rte,
+              *rad_trans_data_in,
               laser_data.get_direction<dim>(),
               *heaviside_in,
               rte_dof_idx,
