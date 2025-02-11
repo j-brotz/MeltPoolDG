@@ -32,6 +32,32 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Determine test command
+        id: test_command
+        run: |
+          LABELS=$(jq -r '.pull_request.labels[].name' <<< '${{ toJson(github.event.pull_request.labels) }}')
+          
+          TEST_FILTER=""
+          if echo "$LABELS" | grep -q "mp-compressible-flow"; then
+            TEST_FILTER+="mp-compressible-flow|"
+          fi
+          if echo "$LABELS" | grep -q "another-label"; then
+            TEST_FILTER+="another-test-folder|"
+          fi
+          if echo "$LABELS" | grep -q "yet-another-label"; then
+            TEST_FILTER+="yet-another-folder|"
+          fi
+      
+          # Remove trailing '|'
+          TEST_FILTER=${TEST_FILTER%|}
+          
+          # Default to running all tests if no filters are set
+          if [ -z "$TEST_FILTER" ]; then
+            echo "TEST_CMD=ctest -R" >> $GITHUB_ENV
+          else
+            echo "TEST_CMD=ctest -R \"$TEST_FILTER\"" >> $GITHUB_ENV
+          fi
+      
 
       - name: Compile adaflo
         if: matrix.adaflo == 'adaflo=on'
@@ -64,7 +90,7 @@ jobs:
           export OMPI_ALLOW_RUN_AS_ROOT=1
           export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
           cd build
-          ctest -j${{ env.COMPILE_JOBS }} --output-on-failure -E 'tests_not_robust/'
+          ${{ env.TEST_CMD }} -j${{ env.COMPILE_JOBS }} --output-on-failure -E 'tests_not_robust/'
 
       - name: Failed test log
         if: ${{ failure() }}
