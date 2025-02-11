@@ -52,7 +52,7 @@ jobs:
       
           # Remove trailing '|'
           TEST_FILTER=${TEST_FILTER%|}
-          CTEST_COMMAND="${CTEST_COMMAND} ${TEST_FILTER}$"
+          env.CTEST_COMMAND="${{ env.CTEST_COMMAND }} ${TEST_FILTER}"
           echo "CTest command:  ${{ env.CTEST_COMMAND }}"
 
       - name: Compile adaflo
