@@ -45,7 +45,7 @@ jobs:
           TEST_FILTER=""
           for LABEL in mp-compressible-flow mp-advec-diff mp-heat-transfer mp-radiative-transfer; do
             if echo "$LABELS" | grep -q "$LABEL"; then
-              TEST_FILTER+="$LABEL|"
+              TEST_FILTER="${TEST_FILTER}${LABEL}|"
             fi
           done
       
