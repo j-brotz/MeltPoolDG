@@ -170,6 +170,7 @@ endforeach ()
 
 option(MPDG_ENABLE_ADVEC_DIFF "Build advection-diffusion executables" ON)
 option(MPDG_ENABLE_COMP_FLOW "Build compressible-flow executables" ON)
+option(MPDG_ENABLE_HEAT "Build heat-transfer executables" ON)
 option(MPDG_ENABLE_RTE "Build radiative-transport executables" ON)
 
 if (MPDG_ENABLE_ADVEC_DIFF)
@@ -184,6 +185,13 @@ if (MPDG_ENABLE_COMP_FLOW)
     add_subdirectory(applications/mp-compressible-flow)
 else ()
     message(STATUS "Application: compressible-flow disabled")
+endif ()
+
+if (MPDG_ENABLE_HEAT)
+    message(STATUS "Application: heat-transfer enabled")
+    add_subdirectory(applications/mp-heat-transfer)
+else ()
+    message(STATUS "Application: heat-transfer disabled")
 endif ()
 
 if (MPDG_ENABLE_RTE)

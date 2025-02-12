@@ -1,4 +1,22 @@
 #pragma once
+
+// TODO This file is the old version of
+// applications/mp-heat-transfer/cases/melt_front_propagation.hpp.
+//
+// This file is still needed for the tests
+// - laser_heat_source_gauss_interface_sharp_1d
+// - laser_heat_source_gauss_interface_sharp
+// - melt_pool_tfi_static_interface_gauss_diff_param_consistent_with_evaporation
+// - melt_pool_tfi_static_interface_gauss_diff_param_consistent_with_evaporation
+// - melt_pool_tfi_static_interface_gauss_diff_param
+// - melt_pool_tfi_static_interface_gauss
+// - melt_pool_tfi_static_interface_gauss_no_solidification
+// Which use the heat transfer problem and this case.
+//
+// After the melt pool problem has been extracted to it's own standalone we can use it with
+// the new case (applications/mp-heat-transfer/cases/melt_front_propagation.hpp) instead and
+// delete this file.
+
 // deal-specific libraries
 #include <deal.II/base/function.h>
 #include <deal.II/base/point.h>

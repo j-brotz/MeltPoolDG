@@ -13,15 +13,12 @@
 #include "melt_front_propagation/melt_front_propagation.hpp"
 #include "moving_droplet/moving_droplet.hpp"
 #include "oscillating_droplet/oscillating_droplet.hpp"
-#include "powder_bed/powder_bed.hpp"
-#include "radiative_transport/radiative_transport.hpp"
 #include "recoil_pressure/recoil_pressure.hpp"
 #include "reinit_circle/reinit_circle.hpp"
 #include "reinit_circle/reinit_circle_DG.hpp"
 #include "rising_bubble/rising_bubble.hpp"
 #include "rotating_bubble/rotating_bubble.hpp"
 #include "simulation_selector.hpp"
-#include "solidification_slab/solidification_slab.hpp"
 #include "spurious_currents/spurious_currents.hpp"
 #include "stefans_problem/stefans_problem.hpp"
 #include "stefans_problem/stefans_problem1_with_flow_and_heat.hpp"
@@ -29,7 +26,6 @@
 #include "stefans_problem/stefans_problem_with_flow.hpp"
 #include "thermo_capillary_droplet/thermo_capillary_droplet.hpp"
 #include "thermo_capillary_two_droplets/thermo_capillary_two_droplets.hpp"
-#include "unidirectional_heat_transfer/unidirectional_heat_transfer.hpp"
 #include "vortex_bubble/vortex_bubble.hpp"
 #include "vortex_bubble/vortex_bubble_DG.hpp"
 #include "zalesak_disk/zalesak_disk.hpp"
@@ -96,10 +92,6 @@ namespace MeltPoolDG::Simulation
       return std::make_shared<
         EvaporatingDropletWithHeat::SimulationEvaporatingDropletWithHeat<dim>>(parameter_file,
                                                                                mpi_communicator);
-    else if (case_name == "unidirectional_heat_transfer")
-      return std::make_shared<
-        UnidirectionalHeatTransfer::SimulationUnidirectionalHeatTransfer<dim>>(parameter_file,
-                                                                               mpi_communicator);
     else if (case_name == "thermo_capillary_droplet")
       return std::make_shared<ThermoCapillaryDroplet::SimulationThermoCapillaryDroplet<dim>>(
         parameter_file, mpi_communicator);
@@ -107,9 +99,6 @@ namespace MeltPoolDG::Simulation
       return std::make_shared<
         ThermoCapillaryTwoDroplets::SimulationThermoCapillaryTwoDroplets<dim>>(parameter_file,
                                                                                mpi_communicator);
-    else if (case_name == "solidification_slab")
-      return std::make_shared<SolidificationSlab::SimulationSolidificationSlab<dim>>(
-        parameter_file, mpi_communicator);
     else if (case_name == "film_boiling")
       return std::make_shared<FilmBoiling::SimulationFilmBoiling<dim>>(parameter_file,
                                                                        mpi_communicator);
@@ -122,12 +111,6 @@ namespace MeltPoolDG::Simulation
     else if (case_name == "moving_droplet")
       return std::make_shared<MovingDroplet::SimulationMovingDroplet<dim>>(parameter_file,
                                                                            mpi_communicator);
-    else if (case_name == "radiative_transport")
-      return std::make_shared<RadiativeTransport::RadiativeTransportSimulation<dim>>(
-        parameter_file, mpi_communicator);
-    else if (case_name == "powder_bed")
-      return std::make_shared<PowderBed::SimulationPowderBed<dim>>(parameter_file,
-                                                                   mpi_communicator);
     /* add your simulation here*/
     else
       {

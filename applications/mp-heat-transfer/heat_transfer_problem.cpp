@@ -1,6 +1,7 @@
-#include <meltpooldg/heat/heat_transfer_problem.hpp>
+#include "heat_transfer_problem.hpp"
 //
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/mpi.h>
 #include <deal.II/base/utilities.h>
 
 #include <deal.II/distributed/grid_refinement.h>
@@ -19,6 +20,7 @@
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
 #include <meltpooldg/core/exceptions.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/heat/heat_cut_operation.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/heat_diffuse_operation.hpp>
@@ -31,7 +33,9 @@
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <functional>
+#include <iostream>
 #include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -40,15 +44,13 @@ namespace MeltPoolDG::Heat
 {
   template <int dim>
   void
-  HeatTransferProblem<dim>::run(std::shared_ptr<CaseType> simulation_case_in)
+  HeatTransferProblem<dim>::run()
   {
-    simulation_case = simulation_case_in;
-
     initialize();
 
     try
       {
-        while (!time_iterator->is_finished())
+        while (not time_iterator->is_finished())
           {
             const auto dt = time_iterator->compute_next_time_increment();
             simulation_case->set_time_boundary_conditions(time_iterator->get_current_time());
@@ -134,29 +136,9 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferProblem<dim>::add_parameters(dealii::ParameterHandler &prm)
-  {
-    prm.enter_subsection("problem specific");
-    {
-      prm.add_parameter(
-        "do solidification",
-        problem_specific_parameters.do_solidification,
-        "Set this parameter to true if you want to consider melting/solidification effects.");
-      prm.add_parameter("amr strategy",
-                        problem_specific_parameters.amr_strategy,
-                        "Select the AMR strategy.");
-    }
-    prm.leave_subsection();
-  }
-
-  template <int dim>
-  void
   HeatTransferProblem<dim>::initialize()
   {
-    /*
-     *  Add problem specific parameters defined within add_parameters()
-     */
-    this->add_problem_specific_parameters(simulation_case->parameter_file);
+    const auto &param = simulation_case->parameters;
     /*
      *  setup DoFHandler
      */
@@ -174,8 +156,7 @@ namespace MeltPoolDG::Heat
     /*
      *  setup mapping
      */
-    scratch_data->set_mapping(
-      FiniteElementUtils::create_mapping<dim>(simulation_case->parameters.heat.fe));
+    scratch_data->set_mapping(FiniteElementUtils::create_mapping<dim>(param.heat.fe));
 
     scratch_data->attach_dof_handler(dof_handler);
     scratch_data->attach_dof_handler(dof_handler);
@@ -194,26 +175,32 @@ namespace MeltPoolDG::Heat
     /*
      *  create quadrature rule
      */
-    temp_quad_idx = scratch_data->attach_quadrature(
-      FiniteElementUtils::create_quadrature<dim>(simulation_case->parameters.heat.fe));
+    temp_quad_idx =
+      scratch_data->attach_quadrature(FiniteElementUtils::create_quadrature<dim>(param.heat.fe));
 
     /*
      *  initialize the time stepping scheme
      */
-    time_iterator =
-      std::make_shared<TimeIterator<double>>(simulation_case->parameters.time_stepping);
+    time_iterator = std::make_shared<TimeIterator<double>>(param.time_stepping);
 
     /*
      * laser operation
      */
-    if (simulation_case->parameters.laser.power > 0.0)
+    if (param.laser.power > 0.0)
       {
-        laser_operation = std::make_shared<LaserOperation<dim>>(*scratch_data,
-                                                                simulation_case->get_periodic_bc(),
-                                                                simulation_case->parameters,
-                                                                &level_set_as_heaviside,
-                                                                level_set_dof_idx);
-        laser_operation->reset(simulation_case->parameters.time_stepping.start_time);
+        laser_operation = std::make_shared<LaserOperation<dim>>(
+          *scratch_data,
+          simulation_case->get_periodic_bc(),
+          param.laser,
+          &level_set_as_heaviside,
+          level_set_dof_idx,
+          &param.rad_trans,
+          false,
+          param.heat.operator_type != TwoPhaseOperatorType::cut,
+          param.material.two_phase_fluid_properties_transition_type !=
+            TwoPhaseFluidPropertiesTransitionType::sharp,
+          param.output.paraview.print_boundary_id);
+        laser_operation->reset(param.time_stepping.start_time);
       }
 
     /*
@@ -229,32 +216,31 @@ namespace MeltPoolDG::Heat
     /*
      *    initialize the heat operation class
      */
-    switch (simulation_case->parameters.heat.operator_type)
+    switch (param.heat.operator_type)
       {
           case TwoPhaseOperatorType::diffuse: {
             // set level-set as heaviside field
             VectorType *level_set_as_heaviside_ptr = nullptr;
             heaviside_field_function               = simulation_case->get_initial_condition(
               "prescribed_heaviside",
-              (simulation_case->parameters.laser.model !=
-               LaserModelType::RTE) /*is_optional if laser is not RTE*/);
+              (param.laser.model != LaserModelType::RTE) /*is_optional if laser is not RTE*/);
             if (heaviside_field_function)
               level_set_as_heaviside_ptr = &level_set_as_heaviside;
 
             // initialize (diffuse) material class
             material = std::make_shared<Material<double>>(
-              simulation_case->parameters.material,
+              param.material,
               determine_material_type(
                 heaviside_field_function != nullptr,
-                problem_specific_parameters.do_solidification,
-                simulation_case->parameters.material.two_phase_fluid_properties_transition_type ==
+                param.problem_specific_parameters.do_solidification,
+                param.material.two_phase_fluid_properties_transition_type ==
                   TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation));
 
             heat_operation = std::make_shared<HeatDiffuseOperation<dim>>(
               *scratch_data,
               simulation_case->get_boundary_condition_manager("heat_transfer"),
               simulation_case->get_periodic_bc(),
-              simulation_case->parameters.heat,
+              param.heat,
               *material,
               *time_iterator,
               temp_dof_idx,
@@ -264,7 +250,7 @@ namespace MeltPoolDG::Heat
               velocity_ptr,
               level_set_dof_idx,
               level_set_as_heaviside_ptr,
-              problem_specific_parameters.do_solidification);
+              param.problem_specific_parameters.do_solidification);
             break;
           }
           case TwoPhaseOperatorType::cut: {
@@ -277,14 +263,14 @@ namespace MeltPoolDG::Heat
               *scratch_data,
               simulation_case->get_boundary_condition_manager("heat_transfer"),
               simulation_case->get_periodic_bc(),
-              simulation_case->parameters.heat,
-              simulation_case->parameters.material,
-              simulation_case->parameters.evapor,
+              param.heat,
+              param.material,
+              param.evapor,
               *time_iterator,
               temp_dof_idx,
               temp_hanging_nodes_dof_idx,
               temp_quad_idx,
-              problem_specific_parameters.do_solidification,
+              param.problem_specific_parameters.do_solidification,
               level_set_dof_idx,
               level_set,
               velocity_dof_idx,
@@ -293,7 +279,7 @@ namespace MeltPoolDG::Heat
             if (laser_operation)
               heat_cut_operation->register_laser_intensity_function_and_direction(
                 laser_operation->get_intensity_profile(),
-                simulation_case->parameters.laser.template get_direction<dim>());
+                param.laser.template get_direction<dim>());
 
             heat_cut_operation->register_reinit_matrix_free([&](const DoFHandler<dim> &dh) {
               Assert(&dh == &scratch_data->get_dof_handler(temp_dof_idx), ExcInternalError());
@@ -338,17 +324,16 @@ namespace MeltPoolDG::Heat
      */
     post_processor =
       std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(temp_dof_idx),
-                                           simulation_case->parameters.output,
-                                           simulation_case->parameters.time_stepping,
+                                           param.output,
+                                           param.time_stepping,
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(temp_dof_idx),
                                            scratch_data->get_pcout(1));
     /*
      *    Do initial refinement steps if requested
      */
-    if (simulation_case->parameters.amr.do_amr &&
-        simulation_case->parameters.amr.n_initial_refinement_cycles > 0)
-      for (int i = 0; i < simulation_case->parameters.amr.n_initial_refinement_cycles; ++i)
+    if (param.amr.do_amr and param.amr.n_initial_refinement_cycles > 0)
+      for (int i = 0; i < param.amr.n_initial_refinement_cycles; ++i)
         {
           std::ostringstream str;
           str << " #dofs T: " << heat_operation->get_temperature().size();
@@ -465,8 +450,8 @@ namespace MeltPoolDG::Heat
     const unsigned int n_time_step = time_iterator->get_current_time_step_number();
     const double       time        = time_iterator->get_current_time();
 
-    if (!post_processor->is_output_timestep(n_time_step, time) && !output_not_converged &&
-        !simulation_case->parameters.output.do_user_defined_postprocessing)
+    if (not post_processor->is_output_timestep(n_time_step, time) and not output_not_converged and
+        not simulation_case->parameters.output.do_user_defined_postprocessing)
       return;
 
     GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
@@ -532,7 +517,7 @@ namespace MeltPoolDG::Heat
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       Vector<float> estimated_error_per_cell(simulation_case->triangulation->n_active_cells());
 
-      switch (problem_specific_parameters.amr_strategy)
+      switch (simulation_case->parameters.problem_specific_parameters.amr_strategy)
         {
             case AMRStrategy::KellyErrorEstimator: {
               VectorType locally_relevant_solution;
@@ -622,3 +607,51 @@ namespace MeltPoolDG::Heat
   template class HeatTransferProblem<2>;
   template class HeatTransferProblem<3>;
 } // namespace MeltPoolDG::Heat
+
+
+int
+main(int argc, char *argv[])
+{
+  using namespace MeltPoolDG;
+
+  dealii::Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
+
+  MPI_Comm mpi_comm(MPI_COMM_WORLD);
+
+  std::string input_file;
+  // check command line arguments
+  if (argc == 1)
+    {
+      if (dealii::Utilities::MPI::this_mpi_process(mpi_comm) == 0)
+        std::cout << "ERROR: No .json parameter files has been provided!" << std::endl;
+      return 1;
+    }
+  else if (argc == 2)
+    {
+      input_file = std::string(argv[argc - 1]);
+      run_simulation<Heat::HeatTransferCaseParameters<double>,
+                     Heat::HeatTransferCase,
+                     Heat::HeatTransferProblem>(input_file, mpi_comm);
+    }
+  else if (argc == 3 and
+           (std::string(argv[1]) == "--help" or std::string(argv[1]) == "--help-detail"))
+    {
+      input_file = std::string(argv[argc - 1]);
+
+      dealii::ParameterHandler                 prm;
+      Heat::HeatTransferCaseParameters<double> parameters;
+      parameters.process_parameters_file(prm, input_file);
+
+      if (dealii::Utilities::MPI::this_mpi_process(mpi_comm) == 0)
+        parameters.print_parameters(prm,
+                                    std::cout,
+                                    std::string(argv[1]) == "--help-detail" /*print_details*/);
+
+      return 0;
+    }
+  else
+    AssertThrow(false, dealii::ExcMessage("no input file specified"));
+
+  return 0;
+}
+//

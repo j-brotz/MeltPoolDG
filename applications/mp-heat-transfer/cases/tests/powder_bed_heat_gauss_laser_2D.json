@@ -41,7 +41,7 @@
     "cell repetitions": "4,3",
     "initial temperature": "500.0",
     "powder bed": {
-      "particle list file": "simulations/powder_bed/particles_in_domain.csv",
+      "particle list file": "applications/mp-heat-transfer/cases/particles_in_domain.csv",
       "substrate level": "0.0",
       "slice location": "50e-6"
     }

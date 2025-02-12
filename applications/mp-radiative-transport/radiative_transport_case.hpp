@@ -37,11 +37,13 @@ namespace MeltPoolDG::RadiativeTransport
     post(const std::string &parameter_filename) final
     {
       amr.post(base.global_refinements, false /*restart not supported*/);
+      rad_trans.post(base.fe);
       laser.post(base.dimension);
       output.post(time_stepping.time_step_size, parameter_filename);
       profiling.post(base.verbosity_level);
 
       base.check_input_parameters(1);
+      rad_trans.check_input_parameters(base.fe);
       laser.check_input_parameters();
       profiling.check_input_parameters(time_stepping.time_step_size);
     }

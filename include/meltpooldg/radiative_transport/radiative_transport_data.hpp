@@ -4,8 +4,10 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/radiative_transport/pseudo_rte_data.hpp>
 
@@ -33,6 +35,7 @@ namespace MeltPoolDG::RadiativeTransport
   {
     RadiativeTransportData();
 
+    FiniteElementData        fe;
     LinearSolverData<number> linear_solver;
     unsigned int             verbosity_level                    = 0;
     RTEPredictorType         predictor_type                     = RTEPredictorType::none;
@@ -62,5 +65,11 @@ namespace MeltPoolDG::RadiativeTransport
 
     void
     add_parameters(dealii::ParameterHandler &prm);
+
+    void
+    post(const FiniteElementData &base_fe_data);
+
+    void
+    check_input_parameters(const FiniteElementData &base_fe_data) const;
   };
 } // namespace MeltPoolDG::RadiativeTransport

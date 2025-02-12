@@ -1,12 +1,6 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, UIBK/TUM, February 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/base/function.h>
-#include <deal.II/base/parameter_handler.h>
 
 #include <deal.II/dofs/dof_handler.h>
 
@@ -14,36 +8,32 @@
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
-#include <meltpooldg/core/problem_base.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/heat/heat_operation_base.hpp>
 #include <meltpooldg/heat/laser_operation.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
-#include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/material.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <memory>
-#include <string>
+
+#include "heat_transfer_case.hpp"
 
 
 namespace MeltPoolDG::Heat
 {
   using namespace dealii;
 
-  BETTER_ENUM(AMRStrategy, char, KellyErrorEstimator, generic)
-
   template <int dim>
-  class HeatTransferProblem : public ProblemBase<dim>
+  class HeatTransferProblem
   {
   private:
-    using CaseType        = MeltPoolCase<dim>;
+    using CaseType        = HeatTransferCase<dim>;
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-    std::shared_ptr<CaseType> simulation_case;
+    const std::unique_ptr<CaseType> simulation_case;
 
     VectorType velocity;
     VectorType level_set_as_heaviside;
@@ -77,21 +67,14 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<Heat::LaserOperation<dim>> laser_operation;
 
   public:
-    HeatTransferProblem() = default;
+    HeatTransferProblem(std::unique_ptr<CaseType> simulation_case)
+      : simulation_case(std::move(simulation_case))
+    {}
 
     void
-    run(std::shared_ptr<CaseType> simulation_case_in) final;
-
-  protected:
-    void
-    add_parameters(dealii::ParameterHandler &) final;
+    run();
 
   private:
-    struct
-    {
-      bool        do_solidification = false;
-      AMRStrategy amr_strategy      = AMRStrategy::KellyErrorEstimator;
-    } problem_specific_parameters;
     /*
      *  This function initials the relevant scratch data
      *  for the computation of the level set problem
