@@ -63,6 +63,7 @@ jobs:
       - name: Run ctest
         if: matrix.adaflo == 'adaflo=on'
         run: |
+          export HWLOC_HIDE_ERRORS=2
           export OMPI_ALLOW_RUN_AS_ROOT=1
           export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
           cd build
