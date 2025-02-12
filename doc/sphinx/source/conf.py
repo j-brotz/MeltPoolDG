@@ -4,6 +4,8 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 
+from docutils import nodes
+from sphinx.util import docutils
 import os
 import sys
 
@@ -13,6 +15,14 @@ sys.path.insert(0, os.path.abspath('..'))  # Adjust this if needed
 # Specify the directories myst-parser should look in for include files
 myst_include_dirs = [os.path.abspath('../')]  # Adjust this as needed
 
+# conf.py
+
+# Allow raw HTML in the output (this is required for embedded videos)
+
+# Allow HTML raw directives in reStructuredText files
+raw_enabled = True
+# Allow raw HTML in the documentation
+raw_allowed = ['html']
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -42,6 +52,10 @@ mathjax_path = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js'
 
 # html_theme = 'alabaster'
 html_static_path = ['_static']
+# Add custom JavaScript file
+html_js_files = [
+    'slideshow.js',
+]
 html_css_files = [
     'custom.css',  # Link to the custom CSS file in the _static folder
 ]
