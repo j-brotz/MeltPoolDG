@@ -1,0 +1,200 @@
+
+  start test with DG=0, is_two_phase=1, components of solution=1, dimension=2, is_matrix_free=0, fe_degree=1
+  solution: 5.50713
+| Number of new DoFs:               8                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 5.30112
+
+  start test with DG=1, is_two_phase=1, components of solution=1, dimension=2, is_matrix_free=0, fe_degree=1
+  solution: 10.0491
+| Number of new DoFs:              32                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 9.41591
+
+  start test with DG=0, is_two_phase=0, components of solution=1, dimension=2, is_matrix_free=0, fe_degree=1
+  solution: 3.91515
+| Number of new DoFs:               8                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 4.064
+
+  start test with DG=1, is_two_phase=0, components of solution=1, dimension=2, is_matrix_free=0, fe_degree=1
+  solution: 7.12235
+| Number of new DoFs:              32                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 7.64677
+
+  start test with DG=0, is_two_phase=1, components of solution=1, dimension=3, is_matrix_free=0, fe_degree=1
+  solution: 10.972
+| Number of new DoFs:             132                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 11.4663
+
+  start test with DG=1, is_two_phase=1, components of solution=1, dimension=3, is_matrix_free=0, fe_degree=1
+  solution: 27.8972
+| Number of new DoFs:             768                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 28.6128
+
+  start test with DG=0, is_two_phase=0, components of solution=1, dimension=3, is_matrix_free=0, fe_degree=1
+  solution: 7.57527
+| Number of new DoFs:             132                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 8.57885
+
+  start test with DG=1, is_two_phase=0, components of solution=1, dimension=3, is_matrix_free=0, fe_degree=1
+  solution: 17.81
+| Number of new DoFs:             768                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 21.662
+
+  start test with DG=0, is_two_phase=1, components of solution=1, dimension=2, is_matrix_free=1, fe_degree=1
+  solution: 5.50713
+| Number of new DoFs:               8                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 5.30112
+
+  start test with DG=1, is_two_phase=1, components of solution=1, dimension=2, is_matrix_free=1, fe_degree=1
+  solution: 10.0491
+| Number of new DoFs:              32                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 9.41591
+
+  start test with DG=0, is_two_phase=0, components of solution=1, dimension=2, is_matrix_free=1, fe_degree=1
+  solution: 3.91515
+| Number of new DoFs:               8                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 4.064
+
+  start test with DG=1, is_two_phase=0, components of solution=1, dimension=2, is_matrix_free=1, fe_degree=1
+  solution: 7.12235
+| Number of new DoFs:              32                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 7.64677
+
+  start test with DG=0, is_two_phase=1, components of solution=1, dimension=3, is_matrix_free=1, fe_degree=1
+  solution: 10.972
+| Number of new DoFs:             132                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 11.4663
+
+  start test with DG=1, is_two_phase=1, components of solution=1, dimension=3, is_matrix_free=1, fe_degree=1
+  solution: 27.8972
+| Number of new DoFs:             768                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 28.6128
+
+  start test with DG=0, is_two_phase=0, components of solution=1, dimension=3, is_matrix_free=1, fe_degree=1
+  solution: 7.57527
+| Number of new DoFs:             132                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 8.57885
+
+  start test with DG=1, is_two_phase=0, components of solution=1, dimension=3, is_matrix_free=1, fe_degree=1
+  solution: 17.81
+| Number of new DoFs:             768                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 21.662
+
+  start test with DG=0, is_two_phase=1, components of solution=3, dimension=2, is_matrix_free=0, fe_degree=1
+  solution: 22.7482
+| Number of new DoFs:              24                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 21.8972
+
+  start test with DG=1, is_two_phase=1, components of solution=3, dimension=2, is_matrix_free=0, fe_degree=1
+  solution: 41.5098
+| Number of new DoFs:              96                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 38.8941
+
+  start test with DG=0, is_two_phase=0, components of solution=3, dimension=2, is_matrix_free=0, fe_degree=1
+  solution: 16.1722
+| Number of new DoFs:              24                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 16.7871
+
+  start test with DG=1, is_two_phase=0, components of solution=3, dimension=2, is_matrix_free=0, fe_degree=1
+  solution: 29.4201
+| Number of new DoFs:              96                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 31.5864
+
+  start test with DG=0, is_two_phase=1, components of solution=3, dimension=3, is_matrix_free=0, fe_degree=1
+  solution: 88.4697
+| Number of new DoFs:             396                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 92.4551
+
+  start test with DG=1, is_two_phase=1, components of solution=3, dimension=3, is_matrix_free=0, fe_degree=1
+  solution: 224.941
+| Number of new DoFs:            2304                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 230.711
+
+  start test with DG=0, is_two_phase=0, components of solution=3, dimension=3, is_matrix_free=0, fe_degree=1
+  solution: 61.0812
+| Number of new DoFs:             396                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 69.1732
+
+  start test with DG=1, is_two_phase=0, components of solution=3, dimension=3, is_matrix_free=0, fe_degree=1
+  solution: 143.606
+| Number of new DoFs:            2304                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 174.666
+
+  start test with DG=0, is_two_phase=1, components of solution=3, dimension=2, is_matrix_free=1, fe_degree=1
+  solution: 22.7482
+| Number of new DoFs:              24                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 21.8972
+
+  start test with DG=1, is_two_phase=1, components of solution=3, dimension=2, is_matrix_free=1, fe_degree=1
+  solution: 41.5098
+| Number of new DoFs:              96                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 38.8941
+
+  start test with DG=0, is_two_phase=0, components of solution=3, dimension=2, is_matrix_free=1, fe_degree=1
+  solution: 16.1722
+| Number of new DoFs:              24                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 16.7871
+
+  start test with DG=1, is_two_phase=0, components of solution=3, dimension=2, is_matrix_free=1, fe_degree=1
+  solution: 29.4201
+| Number of new DoFs:              96                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 31.5864
+
+  start test with DG=0, is_two_phase=1, components of solution=3, dimension=3, is_matrix_free=1, fe_degree=1
+  solution: 88.4697
+| Number of new DoFs:             396                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 92.4551
+
+  start test with DG=1, is_two_phase=1, components of solution=3, dimension=3, is_matrix_free=1, fe_degree=1
+  solution: 224.941
+| Number of new DoFs:            2304                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 230.711
+
+  start test with DG=0, is_two_phase=0, components of solution=3, dimension=3, is_matrix_free=1, fe_degree=1
+  solution: 61.0812
+| Number of new DoFs:             396                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 69.1732
+
+  start test with DG=1, is_two_phase=0, components of solution=3, dimension=3, is_matrix_free=1, fe_degree=1
+  solution: 143.606
+| Number of new DoFs:            2304                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 174.666
+
+  start test with DG=0, is_two_phase=1, components of solution=1, dimension=2, is_matrix_free=1, fe_degree=2
+  solution: 5.64927
+| Number of new DoFs:              16                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 4.96909
+
+  start test with DG=1, is_two_phase=1, components of solution=1, dimension=2, is_matrix_free=1, fe_degree=2
+  solution: 8.3862
+| Number of new DoFs:              36                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 7.06974
+
+  start test with DG=0, is_two_phase=0, components of solution=1, dimension=2, is_matrix_free=1, fe_degree=2
+  solution: 3.98926
+| Number of new DoFs:              16                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 4.00253
+
+  start test with DG=1, is_two_phase=0, components of solution=1, dimension=2, is_matrix_free=1, fe_degree=2
+  solution: 5.85905
+| Number of new DoFs:              36                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 6.0115
+
+  start test with DG=0, is_two_phase=1, components of solution=3, dimension=2, is_matrix_free=1, fe_degree=2
+  solution: 23.3353
+| Number of new DoFs:              48                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 20.5257
+
+  start test with DG=1, is_two_phase=1, components of solution=3, dimension=2, is_matrix_free=1, fe_degree=2
+  solution: 34.6407
+| Number of new DoFs:             108                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 29.2028
+
+  start test with DG=0, is_two_phase=0, components of solution=3, dimension=2, is_matrix_free=1, fe_degree=2
+  solution: 16.4784
+| Number of new DoFs:              48                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 16.5332
+
+  start test with DG=1, is_two_phase=0, components of solution=3, dimension=2, is_matrix_free=1, fe_degree=2
+  solution: 24.2018
+| Number of new DoFs:             108                                        cut solution transfer |
+  solution after gp-extrapolation, l2-norm: 24.8316
