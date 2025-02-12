@@ -407,22 +407,24 @@ test()
 
   // output gp-extrapolated solution for new interface/boundary position
 #if false
-  DataOut<dim> data_out;
+  {
+    DataOut<dim> data_out;
 
-  DataOutBase::VtkFlags flags;
-  flags.write_higher_order_cells = true;
-  data_out.set_flags(flags);
+    DataOutBase::VtkFlags flags;
+    flags.write_higher_order_cells = true;
+    data_out.set_flags(flags);
 
-  data_out.add_data_vector(dof_handler, solution_gp_extrapolated, "solution_gp_extrapolated");
-  data_out.add_data_vector(ls_dof_handler, ls_vector, "level_set");
+    data_out.add_data_vector(dof_handler, solution_gp_extrapolated, "solution_gp_extrapolated");
+    data_out.add_data_vector(ls_dof_handler, ls_vector, "level_set");
 
-  Vector<Number> mpi_owner(tria.n_active_cells());
-  mpi_owner = Utilities::MPI::this_mpi_process(tria.get_communicator());
-  data_out.add_data_vector(mpi_owner, "owner");
+    Vector<Number> mpi_owner(tria.n_active_cells());
+    mpi_owner = Utilities::MPI::this_mpi_process(tria.get_communicator());
+    data_out.add_data_vector(mpi_owner, "owner");
 
-  data_out.build_patches();
-  const std::string filename = "moving_grid_new_gp_extrapolated.vtu";
-  data_out.write_vtu_in_parallel(filename, tria.get_communicator());
+    data_out.build_patches();
+    const std::string filename = "moving_grid_new_gp_extrapolated.vtu";
+    data_out.write_vtu_in_parallel(filename, tria.get_communicator());
+  }
 #endif
 }
 
