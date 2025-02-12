@@ -65,10 +65,7 @@ namespace MeltPoolDG::LevelSet
   unsigned int
   LevelSetData<number>::get_n_subdivisions() const
   {
-    if (fe.type == FiniteElementType::FE_Q_iso_Q1)
-      return fe.degree;
-    else
-      return 1;
+    return fe.get_n_subdivisions();
   }
 
   template struct LevelSetData<double>;

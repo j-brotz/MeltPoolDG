@@ -11,10 +11,10 @@
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/level_set/reinitialization_data.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/phase_change/evaporation_mass_flux_operator_base.hpp>
 #include <meltpooldg/phase_change/evaporation_model_base.hpp>
-#include <meltpooldg/reinitialization/reinitialization_data.hpp>
 
 namespace MeltPoolDG::Evaporation
 {

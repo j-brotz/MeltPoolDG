@@ -37,31 +37,6 @@ namespace MeltPoolDG::LevelSet
     run();
 
   private:
-    /*
-     *  This function initials the relevant member data
-     *  for the computation of the advection-diffusion problem
-     */
-    void
-    setup_dof_system();
-
-    void
-    initialize();
-
-    void
-    compute_advection_velocity(Function<dim> &advec_func);
-
-    /*
-     *  perform output of results
-     */
-    void
-    output_results(unsigned int time_step, double current_time);
-
-    /*
-     *  perform mesh refinement
-     */
-    void
-    refine_mesh();
-
     std::unique_ptr<CaseType> simulation_case;
 
     DoFHandler<dim>                       dof_handler;
@@ -85,6 +60,21 @@ namespace MeltPoolDG::LevelSet
     unsigned int advec_diff_quad_idx;
 
     std::unique_ptr<Postprocessor<dim>> post_processor;
+
+    void
+    setup_dof_system();
+
+    void
+    initialize();
+
+    void
+    compute_advection_velocity(Function<dim> &advec_func);
+
+    void
+    output_results(unsigned int time_step, double current_time);
+
+    void
+    refine_mesh();
   };
 
 } // namespace MeltPoolDG::LevelSet

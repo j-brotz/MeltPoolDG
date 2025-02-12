@@ -18,12 +18,12 @@
 
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
+#include <meltpooldg/level_set/reinitialization_data.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/phase_change/evaporation_mass_flux_operator_base.hpp>
 #include <meltpooldg/phase_change/evaporation_model_base.hpp>
 #include <meltpooldg/phase_change/evaporation_source_terms_base.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
-#include <meltpooldg/reinitialization/reinitialization_data.hpp>
 #include <meltpooldg/utilities/material_data.hpp>
 
 #include <memory>

@@ -15,7 +15,7 @@
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_intensity_profiles.hpp>
-#include <meltpooldg/reinitialization/reinitialization_data.hpp>
+#include <meltpooldg/level_set/reinitialization_data.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 
 #include <cmath>

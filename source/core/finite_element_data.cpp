@@ -63,4 +63,13 @@ namespace MeltPoolDG
   {
     return degree + 1;
   }
+
+  unsigned int
+  FiniteElementData::get_n_subdivisions() const
+  {
+    if (type == FiniteElementType::FE_Q_iso_Q1)
+      return degree;
+    else
+      return 1;
+  }
 } // namespace MeltPoolDG
