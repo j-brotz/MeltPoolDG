@@ -24,20 +24,32 @@
     "do solidification": "false",
     "do advect level set": "true",
     "mp heat up": {
-      "time step size": "2e-5",
-      "max temperature": "3000.0"
+      "time step size": "0.001",
+      "max temperature": "700.0"
     }
   },
   "time stepping": {
     "start time": "0.0",
-    "time step size": "4e-6",
+    "time step size": "0.0001",
     "max n steps": "4"
   },
   "material": {
-    "material template": "Ti64",
     "gas": {
-      "density": "4.087"
+      "thermal conductivity": "20.0",
+      "specific heat capacity": "500.0",
+      "density": "3925.0",
+      "dynamic viscosity": "1.0"
     },
+    "liquid": {
+      "thermal conductivity": "40.0",
+      "specific heat capacity": "1000.0",
+      "density": "7850.0",
+      "dynamic viscosity": "2.0"
+    },
+    "boiling temperature": "700.0",
+    "latent heat of evaporation": "1e5",
+    "molar mass": "0.05224130936",
+    "specific enthalpy reference temperature": "699.0",
     "two phase fluid properties transition type": "smooth"
   },
   "heat": {
@@ -45,7 +57,7 @@
     "cut": {
       "do explicit symmetry term": "true",
       "nitsche parameter": "500",
-      "theta": "0.5",
+      "theta": "1.0",
       "two phase": "true",
       "ghost penalty": {
         "gamma A": "1.5",
@@ -66,7 +78,7 @@
   "laser": {
     "model": "interface_projection_sharp",
     "intensity profile": "Gauss",
-    "power": "156",
+    "power": "5.0",
     "radius": "120e-6"
   },
   "evaporation": {
