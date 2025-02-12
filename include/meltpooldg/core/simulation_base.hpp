@@ -599,8 +599,6 @@ namespace MeltPoolDG
   void
   default_main(int argc, char *argv[], MPI_Comm mpi_comm)
   {
-    using namespace LevelSet;
-
     // Ensure at least one input file is provided
     if (argc < 2)
       {
@@ -622,6 +620,10 @@ namespace MeltPoolDG
 
         return;
       }
+
+    AssertThrow(argc < 4,
+                dealii::ExcMessage(
+                  "The provided number of command line parameters is not supported."));
 
     run_simulation<Parameters, Case, Problem>(input_file, mpi_comm);
   }
