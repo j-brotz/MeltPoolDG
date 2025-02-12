@@ -310,50 +310,14 @@ namespace MeltPoolDG::Flow
 
 } // namespace MeltPoolDG::Flow
 
-
 int
 main(int argc, char *argv[])
 {
-  using namespace dealii;
-  using namespace MeltPoolDG;
+  dealii::Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
-  Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
-
-  const MPI_Comm mpi_comm(MPI_COMM_WORLD);
-
-  std::string input_file;
-  // check command line arguments
-  if (argc == 1)
-    {
-      if (Utilities::MPI::this_mpi_process(mpi_comm) == 0)
-        std::cout << "ERROR: No .json parameter files has been provided!" << std::endl;
-      return 1;
-    }
-  else if (argc == 2)
-    {
-      input_file = std::string(argv[argc - 1]);
-      run_simulation<Flow::CompressibleFlowCaseParameters<double>,
-                     Flow::CompressibleFlowCase,
-                     Flow::CompressibleFlowProblem>(input_file, mpi_comm);
-    }
-  else if (argc == 3 and
-           ((std::string(argv[1]) == "--help") or (std::string(argv[1]) == "--help-detail")))
-    {
-      input_file = std::string(argv[argc - 1]);
-
-      ParameterHandler                             prm;
-      Flow::CompressibleFlowCaseParameters<double> parameters;
-      parameters.process_parameters_file(prm, input_file);
-
-      if (Utilities::MPI::this_mpi_process(mpi_comm) == 0)
-        parameters.print_parameters(prm,
-                                    std::cout,
-                                    std::string(argv[1]) == "--help-detail" /*print_details*/);
-
-      return 0;
-    }
-  else
-    AssertThrow(false, ExcMessage("no input file specified"));
-
+  MPI_Comm mpi_comm(MPI_COMM_WORLD);
+  MeltPoolDG::default_main<MeltPoolDG::Flow::CompressibleFlowCaseParameters<double>,
+                           MeltPoolDG::Flow::CompressibleFlowCase,
+                           MeltPoolDG::Flow::CompressibleFlowProblem>(argc, argv, mpi_comm);
   return 0;
 }

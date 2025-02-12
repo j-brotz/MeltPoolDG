@@ -595,5 +595,34 @@ namespace MeltPoolDG
       }
   }
 
+  template <typename Parameters, template <int> class Case, template <int> class Problem>
+  void
+  default_main(int argc, char *argv[], MPI_Comm mpi_comm)
+  {
+    using namespace LevelSet;
 
+    // Ensure at least one input file is provided
+    if (argc < 2)
+      {
+        AssertThrow(false, dealii::ExcMessage("no input file specified"));
+        return;
+      }
+
+    std::string input_file = argv[argc - 1]; // Last argument as input file
+
+    // Handle help options
+    if (argc == 3 && (std::string(argv[1]) == "--help" || std::string(argv[1]) == "--help-detail"))
+      {
+        dealii::ParameterHandler prm;
+        Parameters               parameters;
+        parameters.process_parameters_file(prm, input_file);
+
+        if (dealii::Utilities::MPI::this_mpi_process(mpi_comm) == 0)
+          parameters.print_parameters(prm, std::cout, std::string(argv[1]) == "--help-detail");
+
+        return;
+      }
+
+    run_simulation<Parameters, Case, Problem>(input_file, mpi_comm);
+  }
 } // namespace MeltPoolDG
