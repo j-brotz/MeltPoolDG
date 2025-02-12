@@ -379,47 +379,11 @@ namespace MeltPoolDG::LevelSet
 int
 main(int argc, char *argv[])
 {
-  using namespace dealii;
-  using namespace MeltPoolDG;
-
-  Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
+  dealii::Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
   MPI_Comm mpi_comm(MPI_COMM_WORLD);
-
-  std::string input_file;
-  // check command line arguments
-  if (argc == 1)
-    {
-      if (Utilities::MPI::this_mpi_process(mpi_comm) == 0)
-        std::cout << "ERROR: No .json parameter files has been provided!" << std::endl;
-      return 1;
-    }
-  else if (argc == 2)
-    {
-      input_file = std::string(argv[argc - 1]);
-      run_simulation<LevelSet::AdvectionDiffusionCaseParameters<double>,
-                     LevelSet::AdvectionDiffusionCase,
-                     LevelSet::AdvectionDiffusionProblem>(input_file, mpi_comm);
-    }
-  else if (argc == 3 &&
-           ((std::string(argv[1]) == "--help") || (std::string(argv[1]) == "--help-detail")))
-    {
-      input_file = std::string(argv[argc - 1]);
-
-      ParameterHandler                                   prm;
-      LevelSet::AdvectionDiffusionCaseParameters<double> parameters;
-      parameters.process_parameters_file(prm, input_file);
-
-      if (Utilities::MPI::this_mpi_process(mpi_comm) == 0)
-        parameters.print_parameters(prm,
-                                    std::cout,
-                                    std::string(argv[1]) == "--help-detail" /*print_details*/);
-
-      return 0;
-    }
-  else
-    AssertThrow(false, ExcMessage("no input file specified"));
-
+  MeltPoolDG::default_main<MeltPoolDG::LevelSet::AdvectionDiffusionCaseParameters<double>,
+                           MeltPoolDG::LevelSet::AdvectionDiffusionCase,
+                           MeltPoolDG::LevelSet::AdvectionDiffusionProblem>(argc, argv, mpi_comm);
   return 0;
 }
-//

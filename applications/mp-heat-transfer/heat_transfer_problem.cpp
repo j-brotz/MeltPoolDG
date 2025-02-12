@@ -608,50 +608,14 @@ namespace MeltPoolDG::Heat
   template class HeatTransferProblem<3>;
 } // namespace MeltPoolDG::Heat
 
-
 int
 main(int argc, char *argv[])
 {
-  using namespace MeltPoolDG;
-
   dealii::Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
   MPI_Comm mpi_comm(MPI_COMM_WORLD);
-
-  std::string input_file;
-  // check command line arguments
-  if (argc == 1)
-    {
-      if (dealii::Utilities::MPI::this_mpi_process(mpi_comm) == 0)
-        std::cout << "ERROR: No .json parameter files has been provided!" << std::endl;
-      return 1;
-    }
-  else if (argc == 2)
-    {
-      input_file = std::string(argv[argc - 1]);
-      run_simulation<Heat::HeatTransferCaseParameters<double>,
-                     Heat::HeatTransferCase,
-                     Heat::HeatTransferProblem>(input_file, mpi_comm);
-    }
-  else if (argc == 3 and
-           (std::string(argv[1]) == "--help" or std::string(argv[1]) == "--help-detail"))
-    {
-      input_file = std::string(argv[argc - 1]);
-
-      dealii::ParameterHandler                 prm;
-      Heat::HeatTransferCaseParameters<double> parameters;
-      parameters.process_parameters_file(prm, input_file);
-
-      if (dealii::Utilities::MPI::this_mpi_process(mpi_comm) == 0)
-        parameters.print_parameters(prm,
-                                    std::cout,
-                                    std::string(argv[1]) == "--help-detail" /*print_details*/);
-
-      return 0;
-    }
-  else
-    AssertThrow(false, dealii::ExcMessage("no input file specified"));
-
+  MeltPoolDG::default_main<MeltPoolDG::Heat::HeatTransferCaseParameters<double>,
+                           MeltPoolDG::Heat::HeatTransferCase,
+                           MeltPoolDG::Heat::HeatTransferProblem>(argc, argv, mpi_comm);
   return 0;
 }
-//
