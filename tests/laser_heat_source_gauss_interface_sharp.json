@@ -2,7 +2,7 @@
   "base": {
     "case name": "melt_front_propagation",
     "dimension": "2",
-    "global refinements": "6",
+    "global refinements": "4",
     "problem name": "melt_pool",
     "verbosity level": "0",
     "do print parameters": "false",
@@ -12,7 +12,7 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "time step size": "1e-6",
+    "time step size": "1e-3",
     "max n steps": "1"
   },
   "simulation specific parameters": {
@@ -28,7 +28,7 @@
       "preconditioner type": "AMG"
     },
     "nlsolve": {
-      "residual tolerance": "1e-5"
+      "residual tolerance": "1e-7"
     }
   },
   "laser": {
@@ -41,12 +41,23 @@
     "radius": "0.06e-3"
   },
   "material": {
-    "material template": "Ti64",
+    "gas": {
+      "thermal conductivity": "20.0",
+      "specific heat capacity": "500.0",
+      "density": "3925.0",
+      "dynamic viscosity": "1.0"
+    },
+    "liquid": {
+      "thermal conductivity": "40.0",
+      "specific heat capacity": "1000.0",
+      "density": "7850.0",
+      "dynamic viscosity": "2.0"
+    },
     "two phase fluid properties transition type": "sharp"
   },
   "problem specific": {
     "do heat transfer": "true",
-    "do solidification": "true"
+    "do solidification": "false"
   },
   "output": {
     "paraview": {
