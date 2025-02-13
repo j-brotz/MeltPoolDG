@@ -489,3 +489,15 @@ namespace MeltPoolDG::LevelSet
   template class LevelSetProblem<2>;
   template class LevelSetProblem<3>;
 } // namespace MeltPoolDG::LevelSet
+
+int
+main(int argc, char *argv[])
+{
+  dealii::Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
+
+  MPI_Comm mpi_comm(MPI_COMM_WORLD);
+  MeltPoolDG::default_main<MeltPoolDG::LevelSet::LevelSetCaseParameters<double>,
+                           MeltPoolDG::LevelSet::LevelSetCase,
+                           MeltPoolDG::LevelSet::LevelSetProblem>(argc, argv, mpi_comm);
+  return 0;
+}
