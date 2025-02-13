@@ -1,6 +1,7 @@
 #pragma once
 // deal-specific libraries
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_function.h>
 
@@ -10,13 +11,13 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-// c++
-#include <cmath>
-#include <iostream>
-// MeltPoolDG
-#include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
+
+#include <cmath>
+#include <iostream>
+
+#include "../level_set_case.hpp"
 
 namespace MeltPoolDG::Simulation::StefansProblem
 {
@@ -24,11 +25,11 @@ namespace MeltPoolDG::Simulation::StefansProblem
   using namespace MeltPoolDG::Simulation;
 
   template <int dim>
-  class SimulationStefansProblem : public MeltPoolCase<dim>
+  class SimulationStefansProblem : public LevelSet::LevelSetCase<dim>
   {
   public:
     SimulationStefansProblem(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
+      : LevelSet::LevelSetCase<dim>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -111,5 +112,16 @@ namespace MeltPoolDG::Simulation::StefansProblem
     const double y_min       = 0.0;
     const double y_max       = 1.0;
     const double y_interface = 0.5;
+    // for self-registration
+    static SimulationCaseRegistrar<LevelSet::LevelSetCase<dim>> registrar;
   };
+
+  // for self-registration
+  template <int dim>
+  SimulationCaseRegistrar<MeltPoolDG::LevelSet::LevelSetCase<dim>>
+    SimulationStefansProblem<dim>::registrar(
+      "stefans_problem",
+      [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
+        return std::make_unique<SimulationStefansProblem<dim>>(parameter_file, mpi_communicator);
+      });
 } // namespace MeltPoolDG::Simulation::StefansProblem

@@ -33,7 +33,6 @@ namespace MeltPoolDG::LevelSet
                           Patterns::Selection("generic|refine_all_interface_cells"));
       }
       prm.leave_subsection();
-      // TODO: add evapor and material
     }
 
     void
@@ -58,7 +57,7 @@ namespace MeltPoolDG::LevelSet
     LevelSetData<number>                 ls;
     OutputData<number>                   output;
     Profiling::ProfilingData<number>     profiling;
-    std::string                          amr_strategy;
+    std::string                          amr_strategy = "generic";
     Evaporation::EvaporationData<number> evapor;
     MaterialData<number>                 material;
   };

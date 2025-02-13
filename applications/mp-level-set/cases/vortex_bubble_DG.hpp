@@ -1,8 +1,8 @@
 #pragma once
-// deal-specific libraries
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/table_handler.h>
 #include <deal.II/base/tensor_function.h>
 
 #include <deal.II/distributed/tria.h>
@@ -13,18 +13,20 @@
 
 #include <deal.II/numerics/error_estimator.h>
 #include <deal.II/numerics/vector_tools.h>
-// c++
-#include <cmath>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-// MeltPoolDG
+
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+
+#include <cmath>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+
+#include "../level_set_case.hpp"
 
 namespace MeltPoolDG::Simulation::VortexBubbleDG
 {
@@ -149,11 +151,11 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
    */
 
   template <int dim>
-  class SimulationVortexBubbleDG : public MeltPoolCase<dim>
+  class SimulationVortexBubbleDG : public LevelSet::LevelSetCase<dim>
   {
   public:
     SimulationVortexBubbleDG(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
+      : LevelSet::LevelSetCase<dim>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -286,5 +288,16 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
     double               left_domain  = 0.0;
     double               right_domain = 1.0;
     mutable TableHandler table;
+    // for self-registration
+    static SimulationCaseRegistrar<LevelSet::LevelSetCase<dim>> registrar;
   };
+
+  // for self-registration
+  template <int dim>
+  SimulationCaseRegistrar<MeltPoolDG::LevelSet::LevelSetCase<dim>>
+    SimulationVortexBubbleDG<dim>::registrar(
+      "vortex_bubble_DG",
+      [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
+        return std::make_unique<SimulationVortexBubbleDG<dim>>(parameter_file, mpi_communicator);
+      });
 } // namespace MeltPoolDG::Simulation::VortexBubbleDG
