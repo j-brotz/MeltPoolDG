@@ -35,7 +35,7 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetProblem<dim>::run()
   {
-    initialize(simulation_case);
+    initialize();
     ScopedName         sc("run");
     TimerOutput::Scope scope(scratch_data->get_timer(), sc);
 
@@ -81,11 +81,10 @@ namespace MeltPoolDG::LevelSet
 
         // do output if requested
         output_results(time_iterator->get_current_time_step_number(),
-                       time_iterator->get_current_time(),
-                       simulation_case);
+                       time_iterator->get_current_time());
 
         if (simulation_case->parameters.amr.do_amr)
-          refine_mesh(simulation_case);
+          refine_mesh();
       }
 
     Journal::print_end(scratch_data->get_pcout());
@@ -132,14 +131,14 @@ namespace MeltPoolDG::LevelSet
     ls_quad_idx = scratch_data->attach_quadrature(
       FiniteElementUtils::create_quadrature<dim>(simulation_case->parameters.ls.fe));
     time_iterator =
-      std::make_shared<TimeIterator<double>>(simulation_case->parameters.time_stepping);
+      std::make_unique<TimeIterator<double>>(simulation_case->parameters.time_stepping);
 
-    setup_dof_system(simulation_case, false);
+    setup_dof_system(false);
 
     if (simulation_case->parameters.ls.fe.type != FiniteElementType::FE_DGQ)
       {
         level_set_operation =
-          std::make_shared<LevelSetOperation<dim>>(*scratch_data,
+          std::make_unique<LevelSetOperation<dim>>(*scratch_data,
                                                    *time_iterator,
                                                    *simulation_case->get_boundary_condition_manager(
                                                      "level_set"),
@@ -157,7 +156,7 @@ namespace MeltPoolDG::LevelSet
       }
     else
       {
-        level_set_operation = std::make_shared<LevelSetDGOperation<dim>>(
+        level_set_operation = std::make_unique<LevelSetDGOperation<dim>>(
           *scratch_data,
           *time_iterator,
           simulation_case->parameters.ls,
@@ -176,7 +175,7 @@ namespace MeltPoolDG::LevelSet
 
     if (simulation_case->parameters.base.problem_name == "level_set_with_evaporation")
       {
-        evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim>>(
+        evaporation_operation = std::make_unique<Evaporation::EvaporationOperation<dim>>(
           *scratch_data,
           level_set_operation->get_level_set_as_heaviside(),
           level_set_operation->get_normal_vector(),
@@ -210,7 +209,7 @@ namespace MeltPoolDG::LevelSet
                    "signed distance field must be provided. Abort ..."));
 
     post_processor =
-      std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(ls_dof_idx),
+      std::make_unique<Postprocessor<dim>>(scratch_data->get_mpi_comm(ls_dof_idx),
                                            simulation_case->parameters.output,
                                            simulation_case->parameters.time_stepping,
                                            scratch_data->get_mapping(),
@@ -227,7 +226,7 @@ namespace MeltPoolDG::LevelSet
         {
           scratch_data->get_pcout()
             << "cycle: " << i << " n_dofs: " << dof_handler.n_dofs() << "(ls)" << std::endl;
-          refine_mesh(simulation_case);
+          refine_mesh();
 
           // set initial conditions after initial AMR
           compute_advection_velocity(
@@ -254,7 +253,7 @@ namespace MeltPoolDG::LevelSet
                 "signed distance field must be provided. Abort ..."));
         }
 
-    output_results(0, simulation_case->parameters.time_stepping.start_time, simulation_case);
+    output_results(0, simulation_case->parameters.time_stepping.start_time);
   }
 
   template <int dim>
@@ -366,7 +365,7 @@ namespace MeltPoolDG::LevelSet
     ScopedName         sc("AMR");
     TimerOutput::Scope scope(scratch_data->get_timer(), sc);
     const auto         mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
-      if (problem_specific_parameters.amr.strategy == AMRStrategy::generic)
+      if (simulation_case->parameters.amr_strategy == "generic")
         {
           Vector<float> estimated_error_per_cell(simulation_case->triangulation->n_active_cells());
 
@@ -398,7 +397,7 @@ namespace MeltPoolDG::LevelSet
             simulation_case->parameters.amr.upper_perc_to_refine,
             simulation_case->parameters.amr.lower_perc_to_coarsen);
         }
-      else if (problem_specific_parameters.amr.strategy == AMRStrategy::refine_all_interface_cells)
+      else if (simulation_case->parameters.amr_strategy == "refine_all_interface_cells")
         {
           const bool solution_update_ghosts =
             !level_set_operation->get_level_set().has_ghost_elements();
@@ -475,7 +474,7 @@ namespace MeltPoolDG::LevelSet
       hanging_node_constraints.distribute(level_set_operation->get_level_set_as_heaviside());
     };
 
-    const auto setup_dof_system = [&]() { this->setup_dof_system(simulation_case); };
+    const auto setup_dof_system = [&]() { this->setup_dof_system(); };
 
     refine_grid<dim, VectorType>(mark_cells_for_refinement,
                                  attach_vectors,
