@@ -22,10 +22,10 @@
       "dynamic viscosity": "0.04"
     },
     "liquid": {
-      "density": "0.1",
-      "dynamic viscosity": "0.004"
+      "density": "0.5",
+      "dynamic viscosity": "0.02"
     },
-    "two phase fluid properties transition type": "sharp"
+    "two phase fluid properties transition type": "smooth"
   },
   "output": {
     "paraview": {
@@ -43,7 +43,7 @@
       "type": "olsson2007",
       "interface thickness parameter": {
         "type": "proportional_to_cell_size",
-        "val": "1.5"
+        "val": "2.0"
       }
     },
     "curvature": {
@@ -92,7 +92,7 @@
     },
     "gravity": "0.98",
     "surface tension": {
-      "surface tension coefficient": "0.0245"
+      "surface tension coefficient": "0.00245"
     }
   }
 }
