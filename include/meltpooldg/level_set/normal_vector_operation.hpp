@@ -9,11 +9,11 @@
 
 // MeltPoolDG
 #include <meltpooldg/core/operator_base.hpp>
+#include <meltpooldg/level_set/normal_vector_operation_base.hpp>
+#include <meltpooldg/level_set/normal_vector_operator.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
-#include <meltpooldg/normal_vector/normal_vector_operation_base.hpp>
-#include <meltpooldg/normal_vector/normal_vector_operator.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>

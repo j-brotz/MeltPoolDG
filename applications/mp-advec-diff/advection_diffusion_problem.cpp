@@ -7,9 +7,9 @@
 
 #include <deal.II/numerics/error_estimator.h>
 
-#include <meltpooldg/advection_diffusion/advection_DG_operation.hpp>
-#include <meltpooldg/advection_diffusion/advection_diffusion_adaflo_wrapper.hpp>
-#include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
+#include <meltpooldg/level_set/advection_DG_operation.hpp>
+#include <meltpooldg/level_set/advection_diffusion_adaflo_wrapper.hpp>
+#include <meltpooldg/level_set/advection_diffusion_operation.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>

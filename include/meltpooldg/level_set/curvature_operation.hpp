@@ -7,11 +7,11 @@
 // for parallelization
 #include <deal.II/lac/generic_linear_algebra.h>
 // MeltPoolDG
-#include <meltpooldg/curvature/curvature_operation_base.hpp>
-#include <meltpooldg/curvature/curvature_operator.hpp>
+#include <meltpooldg/level_set/curvature_operation_base.hpp>
+#include <meltpooldg/level_set/curvature_operator.hpp>
+#include <meltpooldg/level_set/normal_vector_operation.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
-#include <meltpooldg/normal_vector/normal_vector_operation.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 
 namespace MeltPoolDG::LevelSet

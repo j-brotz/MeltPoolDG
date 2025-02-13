@@ -35,7 +35,9 @@ author = 'MeltPoolDG'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['nbsphinx', 'myst_parser']
+extensions = ['nbsphinx', 'myst_parser',
+              'sphinx.ext.autodoc'
+              ]
 templates_path = ['_templates']
 exclude_patterns = []
 source_suffix = {

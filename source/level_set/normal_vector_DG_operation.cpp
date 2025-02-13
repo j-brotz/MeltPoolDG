@@ -1,5 +1,5 @@
+#include <meltpooldg/level_set/normal_vector_DG_operation.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
-#include <meltpooldg/normal_vector/normal_vector_DG_operation.hpp>
 
 
 namespace MeltPoolDG::LevelSet

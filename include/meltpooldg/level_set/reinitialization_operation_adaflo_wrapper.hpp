@@ -11,8 +11,8 @@
 
 #  include <meltpooldg/core/scratch_data.hpp>
 #  include <meltpooldg/core/simulation_base.hpp>
+#  include <meltpooldg/level_set/normal_vector_operation_adaflo_wrapper.hpp>
 #  include <meltpooldg/level_set/reinitialization_operation_base.hpp>
-#  include <meltpooldg/normal_vector/normal_vector_operation_adaflo_wrapper.hpp>
 #  include <meltpooldg/post_processing/generic_data_out.hpp>
 #  include <meltpooldg/utilities/conditional_ostream.hpp>
 #  include <meltpooldg/utilities/time_iterator.hpp>

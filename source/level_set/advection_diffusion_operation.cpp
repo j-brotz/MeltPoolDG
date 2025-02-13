@@ -5,7 +5,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
+#include <meltpooldg/level_set/advection_diffusion_operation.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>

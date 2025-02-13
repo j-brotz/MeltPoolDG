@@ -7,11 +7,11 @@
 
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
-#include <meltpooldg/advection_diffusion/advection_diffusion_operator.hpp>
 #include <meltpooldg/core/boundary_conditions.hpp>
 #include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/level_set/advection_diffusion_operation_base.hpp>
+#include <meltpooldg/level_set/advection_diffusion_operator.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>

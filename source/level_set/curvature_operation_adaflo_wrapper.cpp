@@ -1,5 +1,5 @@
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-#  include <meltpooldg/curvature/curvature_operation_adaflo_wrapper.hpp>
+#  include <meltpooldg/level_set/curvature_operation_adaflo_wrapper.hpp>
 #  include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::LevelSet

@@ -13,9 +13,9 @@
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/normal_vector/helmholtz_DG_operator.hpp>
-#include <meltpooldg/normal_vector/normal_vector_data.hpp>
-#include <meltpooldg/normal_vector/normal_vector_operation_base.hpp>
+#include <meltpooldg/level_set/helmholtz_DG_operator.hpp>
+#include <meltpooldg/level_set/normal_vector_data.hpp>
+#include <meltpooldg/level_set/normal_vector_operation_base.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>

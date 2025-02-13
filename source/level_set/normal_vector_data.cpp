@@ -1,13 +1,12 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/patterns.h>
 
-#include <meltpooldg/curvature/curvature_data.hpp>
-#include <meltpooldg/level_set/reinitialization_data.hpp>
+#include <meltpooldg/level_set/normal_vector_data.hpp>
 
 namespace MeltPoolDG::LevelSet
 {
   template <typename number>
-  CurvatureData<number>::CurvatureData()
+  NormalVectorData<number>::NormalVectorData()
   {
     linear_solver.solver_type         = LinearSolverType::CG;
     linear_solver.preconditioner_type = PreconditionerType::Diagonal;
@@ -15,33 +14,25 @@ namespace MeltPoolDG::LevelSet
 
   template <typename number>
   void
-  CurvatureData<number>::add_parameters(dealii::ParameterHandler &prm)
+  NormalVectorData<number>::add_parameters(dealii::ParameterHandler &prm)
   {
-    prm.enter_subsection("curvature");
+    /*
+     *   normal vector
+     */
+    prm.enter_subsection("normal vector");
     {
-      prm.add_parameter(
-        "enable",
-        enable,
-        "Set this parameter to true if curvature should be computed. This is required in case of "
-        "surface tension forces.");
-      prm.add_parameter(
-        "do curvature correction",
-        do_curvature_correction,
-        "Set this parameter to true if the curvature value at the discrete interface "
-        "i.e. where the level set is 0, should be extended to the interface region.");
       prm.add_parameter("filter parameter",
                         filter_parameter,
-                        "curvature computation: damping = (cell size)² * filter parameter");
+                        "normal vector computation: damping = (cell size)²  * filter parameter");
       prm.add_parameter("implementation",
                         implementation,
-                        "Choose the corresponding implementation of the curvature operation.",
+                        "Choose the corresponding implementation of the normal vector operation.",
                         Patterns::Selection("meltpooldg|adaflo"));
       prm.add_parameter(
         "verbosity level",
         verbosity_level,
         "Sets the maximum verbosity level of the console output. The maximum level with respect to the "
-        "base value is decisive.");
-
+        " base value is decisive.");
       prm.enter_subsection("narrow band");
       {
         prm.add_parameter(
@@ -55,48 +46,46 @@ namespace MeltPoolDG::LevelSet
           "treshold for the narrow band.");
       }
       prm.leave_subsection();
+      predictor.add_parameters(prm);
+      linear_solver.add_parameters(prm);
 
       prm.enter_subsection("Discontinous Galerkin");
       {
         prm.add_parameter("penalty factor",
-                          curvature_DG_specific_data.penalty_factor,
+                          normal_DG_specific_data.penalty_factor,
                           "Set the jump penalty factor of the diffusion term");
       }
       prm.leave_subsection();
-
-
-      predictor.add_parameters(prm);
-      linear_solver.add_parameters(prm);
     }
     prm.leave_subsection();
   }
 
   template <typename number>
   void
-  CurvatureData<number>::check_input_parameters(const InterfaceThicknessParameterType &type) const
+  NormalVectorData<number>::check_input_parameters(
+    const InterfaceThicknessParameterType &type) const
   {
-    AssertThrow(type == InterfaceThicknessParameterType::proportional_to_cell_size ||
-                  implementation == "meltpooldg",
-                ExcMessage("For the adaflo implementation, a variable thickness parameter epsilon "
-                           "is mandatory."));
-
     AssertThrow(!narrow_band.enable || narrow_band.level_set_threshold > 0.0,
                 ExcMessage(
                   "The level set threshold for narrow band width must be positive! Abort..."));
     AssertThrow(linear_solver.do_matrix_free || implementation == "meltpooldg",
                 ExcNotImplemented());
+
     AssertThrow(
       !narrow_band.enable || linear_solver.do_matrix_free,
       ExcMessage(
-        "The computation of the curvature in a narrow band is only implemented matrix-free."));
+        "The computation of the normal vector in a narrow band is only implemented matrix-free."));
+    AssertThrow(type == InterfaceThicknessParameterType::proportional_to_cell_size ||
+                  implementation == "meltpooldg",
+                ExcMessage("For the adaflo implementation, a variable thickness parameter epsilon "
+                           "is mandatory."));
   }
 
   template <typename number>
   void
-  CurvatureData<number>::post()
+  NormalVectorData<number>::post()
   {
     predictor.post();
   }
-
-  template struct CurvatureData<double>;
+  template struct NormalVectorData<double>;
 } // namespace MeltPoolDG::LevelSet

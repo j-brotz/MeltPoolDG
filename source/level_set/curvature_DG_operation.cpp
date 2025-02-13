@@ -1,4 +1,4 @@
-#include <meltpooldg/curvature/curvature_DG_operation.hpp>
+#include <meltpooldg/level_set/curvature_DG_operation.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 
 

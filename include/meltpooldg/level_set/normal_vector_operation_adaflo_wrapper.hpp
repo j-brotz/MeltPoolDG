@@ -14,7 +14,7 @@
 // MeltPoolDG
 #  include <meltpooldg/core/operator_base.hpp>
 #  include <meltpooldg/core/parameters.hpp>
-#  include <meltpooldg/normal_vector/normal_vector_operation_base.hpp>
+#  include <meltpooldg/level_set/normal_vector_operation_base.hpp>
 #  include <meltpooldg/utilities/utility_functions.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
 

@@ -1,6 +1,6 @@
 #include <deal.II/matrix_free/tools.h>
 
-#include <meltpooldg/normal_vector/normal_vector_operator.hpp>
+#include <meltpooldg/level_set/normal_vector_operator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 

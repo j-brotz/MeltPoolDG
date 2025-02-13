@@ -12,9 +12,9 @@
 
 // MeltPoolDG
 #  include <meltpooldg/core/operator_base.hpp>
-#  include <meltpooldg/curvature/curvature_operation_base.hpp>
+#  include <meltpooldg/level_set/curvature_operation_base.hpp>
 #  include <meltpooldg/level_set/level_set_data.hpp>
-#  include <meltpooldg/normal_vector/normal_vector_operation_adaflo_wrapper.hpp>
+#  include <meltpooldg/level_set/normal_vector_operation_adaflo_wrapper.hpp>
 
 #  include <adaflo/level_set_okz_compute_curvature.h>
 

@@ -1,4 +1,4 @@
-#include <meltpooldg/curvature/curvature_operation.hpp>
+#include <meltpooldg/level_set/curvature_operation.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>

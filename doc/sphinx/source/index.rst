@@ -22,4 +22,5 @@ Welcome to
    installation
    howto
    contributing
+   theory
    publications

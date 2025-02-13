@@ -1,7 +1,7 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/patterns.h>
 
-#include <meltpooldg/advection_diffusion/advection_diffusion_data.hpp>
+#include <meltpooldg/level_set/advection_diffusion_data.hpp>
 
 namespace MeltPoolDG::LevelSet
 {

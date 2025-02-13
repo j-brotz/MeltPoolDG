@@ -4,7 +4,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/advection_diffusion/advection_DG_operation.hpp>
+#include <meltpooldg/level_set/advection_DG_operation.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>

@@ -1,6 +1,6 @@
+#include <meltpooldg/level_set/normal_vector_operation.hpp>
+#include <meltpooldg/level_set/normal_vector_operator.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
-#include <meltpooldg/normal_vector/normal_vector_operation.hpp>
-#include <meltpooldg/normal_vector/normal_vector_operator.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>

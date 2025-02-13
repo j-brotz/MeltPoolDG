@@ -7,9 +7,9 @@
 // for parallelization
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
-#include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
-#include <meltpooldg/curvature/curvature_operation_base.hpp>
+#include <meltpooldg/level_set/advection_diffusion_operation.hpp>
+#include <meltpooldg/level_set/advection_diffusion_operation_base.hpp>
+#include <meltpooldg/level_set/curvature_operation_base.hpp>
 #include <meltpooldg/level_set/level_set_data.hpp>
 #include <meltpooldg/level_set/level_set_operation_base.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
