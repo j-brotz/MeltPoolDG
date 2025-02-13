@@ -48,6 +48,11 @@ namespace MeltPoolDG::LevelSet
       ls.check_input_parameters(base.fe);
       profiling.check_input_parameters(time_stepping.time_step_size);
       evapor.check_input_parameters(material, ls.get_n_subdivisions());
+
+      AssertThrow(evapor.evaporative_mass_flux_model ==
+                    Evaporation::EvaporationModelType::analytical,
+                  ExcMessage("For the level set case we only support to provide an analytical "
+                             "function for the evaporation rate."));
     }
 
   public:

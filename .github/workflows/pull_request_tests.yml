@@ -37,18 +37,18 @@ jobs:
         run: |
           # Save GitHub labels JSON to a variable
           LABELS_JSON='${{ toJson(github.event.pull_request.labels) }}'
-          
+
           # Extract label names
           LABELS=$(echo "$LABELS_JSON" | grep -o '"name": "[^"]*"' | cut -d':' -f2 | tr -d '"')
           echo "Labels found: $LABELS"
-          
+
           TEST_FILTER=""
-          for LABEL in mp-compressible-flow mp-advec-diff mp-heat-transfer mp-radiative-transfer mp-reinit unit_tests; do
+          for LABEL in mp-compressible-flow mp-advec-diff mp-heat-transfer mp-radiative-transfer mp-reinit mp-level-set unit_tests; do
             if echo "$LABELS" | grep -q "$LABEL"; then
               TEST_FILTER="${TEST_FILTER}${LABEL}|"
             fi
           done
-      
+
           # Remove trailing '|'
           TEST_FILTER=${TEST_FILTER%|}
           # Construct the final CTEST_COMMAND
@@ -58,7 +58,7 @@ jobs:
             FINAL_CTEST_COMMAND="${{ env.CTEST_COMMAND }} -R ${TEST_FILTER}"
           fi
           echo "CTest command: $FINAL_CTEST_COMMAND"
-          
+
           # Save the new command into the environment variable
           echo "CTEST_COMMAND=$FINAL_CTEST_COMMAND" >> $GITHUB_ENV
 

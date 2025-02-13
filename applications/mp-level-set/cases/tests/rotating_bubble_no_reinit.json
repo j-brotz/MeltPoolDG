@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "level_set",
     "case name": "rotating_bubble",
     "dimension": "2",
     "global refinements": "6",

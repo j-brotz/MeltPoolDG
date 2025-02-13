@@ -173,7 +173,7 @@ namespace MeltPoolDG::LevelSet
     compute_advection_velocity(
       *simulation_case->get_field_function("prescribed_velocity", "level_set"));
 
-    if (simulation_case->parameters.base.problem_name == "level_set_with_evaporation")
+    if (simulation_case->parameters.evapor.analytical.function != "not_initialized")
       {
         evaporation_operation = std::make_unique<Evaporation::EvaporationOperation<dim>>(
           *scratch_data,
