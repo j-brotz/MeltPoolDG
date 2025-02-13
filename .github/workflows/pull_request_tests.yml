@@ -12,7 +12,7 @@ concurrency:
 env:
   COMPILE_JOBS: 4
   PROJECT_NAME: MeltPoolDG-dev
-  CTEST_COMMAND: ctest -R
+  CTEST_COMMAND: ctest
 
 jobs:
   build:
@@ -52,7 +52,11 @@ jobs:
           # Remove trailing '|'
           TEST_FILTER=${TEST_FILTER%|}
           # Construct the final CTEST_COMMAND
-          FINAL_CTEST_COMMAND="${{ env.CTEST_COMMAND }} ${TEST_FILTER}"
+          if [ -z ${TEST_FILTER} ] ; then
+            FINAL_CTEST_COMMAND="${{ env.CTEST_COMMAND }}"
+          else
+            FINAL_CTEST_COMMAND="${{ env.CTEST_COMMAND }} -R ${TEST_FILTER}"
+          fi
           echo "CTest command: $FINAL_CTEST_COMMAND"
           
           # Save the new command into the environment variable
