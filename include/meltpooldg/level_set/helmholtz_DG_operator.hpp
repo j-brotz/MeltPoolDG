@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Johannes Resch, TUM, May 2024
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/base/vectorization.h>
@@ -14,6 +9,7 @@
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
