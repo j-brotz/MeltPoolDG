@@ -5,6 +5,7 @@
     "do print parameters": "false",
     "global refinements": "3",
     "dimension": "2",
+    "verbosity level": "0",
     "fe": {
       "type": "FE_SimplexP",
       "degree": "1"
@@ -12,17 +13,17 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "0.14",
-    "time step size": "0.02"
+    "time step size": "0.02",
+    "max n steps": "4"
   },
   "material": {
     "gas": {
       "density": "1",
-      "dynamic viscosity": "0.01"
+      "dynamic viscosity": "0.04"
     },
     "liquid": {
       "density": "0.1",
-      "dynamic viscosity": "0.001"
+      "dynamic viscosity": "0.004"
     },
     "two phase fluid properties transition type": "sharp"
   },
@@ -42,11 +43,11 @@
       "type": "olsson2007",
       "interface thickness parameter": {
         "type": "proportional_to_cell_size",
-        "val": "0.7107"
+        "val": "1.5"
       }
     },
     "curvature": {
-      "filter parameter": "0.0",
+      "filter parameter": "2.0",
       "linear solver": {
         "do matrix free": "false"
       }
@@ -55,7 +56,7 @@
       "linear solver": {
         "do matrix free": "false"
       },
-      "filter parameter": "4"
+      "filter parameter": "2.0"
     },
     "advection diffusion": {
       "linear solver": {
