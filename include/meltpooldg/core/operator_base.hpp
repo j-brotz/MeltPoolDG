@@ -1,8 +1,19 @@
 #pragma once
-#include <deal.II/lac/generic_linear_algebra.h>
+
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/mpi.h>
+#include <deal.II/base/types.h>
+
+#include <deal.II/dofs/dof_tools.h>
+
+#include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
+#include <deal.II/lac/trilinos_sparse_matrix.h>
+#include <deal.II/lac/trilinos_sparsity_pattern.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
+
 
 namespace MeltPoolDG
 {

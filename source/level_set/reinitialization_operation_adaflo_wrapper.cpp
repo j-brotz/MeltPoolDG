@@ -1,3 +1,4 @@
+#include <deal.II/numerics/vector_tools_interpolate.h>
 #ifdef MELT_POOL_DG_WITH_ADAFLO
 #  include <meltpooldg/level_set/reinitialization_operation_adaflo_wrapper.hpp>
 #  include <meltpooldg/utilities/journal.hpp>

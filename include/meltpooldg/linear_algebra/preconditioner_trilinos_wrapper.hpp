@@ -6,8 +6,11 @@
 
 #include <deal.II/base/exceptions.h>
 
+#include <deal.II/dofs/dof_tools.h>
+
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/sparsity_tools.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
@@ -63,7 +66,7 @@ namespace MeltPoolDG
     {
       // deal.II trilinos preconditioner do not support vmult(BlockVectorType& BlockVectorType&).
       // This is done manually if required.
-      // TODO: Can this be done more elegnat?
+      // TODO: Can this be done more elegant?
       if constexpr (std::is_same_v<dealii::LinearAlgebra::distributed::BlockVector<
                                      typename VectorType::value_type>,
                                    VectorType>)

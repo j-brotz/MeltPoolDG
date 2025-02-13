@@ -49,10 +49,10 @@ namespace MeltPoolDG::Flow
     /**
      * Constructor.
      */
-    AdafloWrapper(ScratchData<dim, dim, double, VectorizedArray<double>> &scratch_data,
-                  std::shared_ptr<MeltPoolCase<dim>>                      base_in,
-                  const TimeIterator<double>                             &time_iterator,
-                  const bool                                              do_evaporative_mass_flux);
+    AdafloWrapper(ScratchData<dim, dim, double>     &scratch_data,
+                  std::shared_ptr<MeltPoolCase<dim>> base_in,
+                  const TimeIterator<double>        &time_iterator,
+                  const bool                         do_evaporative_mass_flux);
 
     void
     set_initial_condition(const Function<dim> &initial_field_function_velocity) override;
@@ -225,7 +225,7 @@ namespace MeltPoolDG::Flow
     bool
     time_stepping_synchronized();
 
-    ScratchData<dim, dim, double, VectorizedArray<double>> &scratch_data;
+    ScratchData<dim, dim, double> &scratch_data;
 
     /**
      * Timer

@@ -4,6 +4,10 @@
 
 #pragma once
 
+#include <deal.II/base/exceptions.h>
+
+#include <deal.II/lac/trilinos_precondition.h>
+
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_jacobi.hpp>

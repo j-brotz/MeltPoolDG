@@ -1,12 +1,15 @@
 #pragma once
 
 #include <deal.II/base/tensor.h>
+#include <deal.II/base/vectorization.h>
 
-#include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/la_parallel_vector.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 
 #include <meltpooldg/core/operator_base.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
+#include <meltpooldg/utilities/fe_integrator.hpp>
 
 
 using namespace dealii;

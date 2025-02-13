@@ -5,25 +5,28 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 
-// for parallelization
-#include <deal.II/lac/generic_linear_algebra.h>
-// for using smart pointers
-#include <deal.II/base/smartpointer.h>
+#include <deal.II/base/function.h>
 
-// MeltPoolDG
-#include <meltpooldg/core/operator_base.hpp>
+#include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
+#include <deal.II/lac/trilinos_sparse_matrix.h>
+
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/level_set/normal_vector_operation.hpp>
 #include <meltpooldg/level_set/normal_vector_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/level_set/olsson_operator.hpp>
+#include <meltpooldg/level_set/reinitialization_data.hpp>
 #include <meltpooldg/level_set/reinitialization_operation_base.hpp>
-#include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+
+#include <limits>
+#include <memory>
+#include <vector>
+
 
 namespace MeltPoolDG::LevelSet
 {

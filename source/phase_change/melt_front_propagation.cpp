@@ -16,8 +16,8 @@
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/vector_operation.h>
 
+#include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
-#include <meltpooldg/utilities/cut_util.hpp>
 #include <meltpooldg/utilities/material.templates.hpp>
 
 
@@ -43,7 +43,7 @@ namespace MeltPoolDG::MeltPool
     , reinit_no_solid_dof_idx(reinit_no_solid_dof_idx_in)
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
     , flow_vel_no_solid_dof_idx(flow_vel_no_solid_dof_idx_in)
-    , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in) // TODO remove?
+    , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
     , temperature(temperature)
   {
     reinit();
@@ -202,23 +202,8 @@ namespace MeltPoolDG::MeltPool
     typename DoFHandler<dim>::active_cell_iterator ls_cell =
       scratch_data.get_dof_handler(ls_dof_idx).begin_active();
 
-    // Detect weather the temperature vector is setup for CutFEM by checking if its
-    // dealii::DoFHandler is in hp-mode.
-    const bool temperature_is_cut =
-      scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).has_hp_capabilities();
-    // If so, detect weather the temperature vector is in one phase or on two phase cut mode. To
-    // that, we check the number of components in the intersected fe collection. If it's 2, the cut
-    // mode in two phase.
-    if (temperature_is_cut)
-      Assert(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx)
-                 .get_fe_collection()[CutUtil::CellCategory::intersected]
-                 .n_components() <= 2,
-             ExcNotImplemented());
-    const bool two_phase_cut =
-      temperature_is_cut and scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx)
-                                 .get_fe_collection()[CutUtil::CellCategory::intersected]
-                                 .n_components() == 2;
-    hp::FEValues<dim> hp_temerature_eval(
+    const CutUtil::CutType cut_type = scratch_data.get_cut_type(temp_hanging_nodes_dof_idx);
+    hp::FEValues<dim>      hp_temerature_eval(
       scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).get_fe_collection(),
       hp::QCollection<dim>(Quadrature<dim>(
         scratch_data.get_dof_handler(phase_fraction_dof_idx).get_fe().get_unit_support_points())),
@@ -242,7 +227,7 @@ namespace MeltPoolDG::MeltPool
 
             hp_temerature_eval.reinit(t_cell);
             const FEValues<dim> &temerature_eval = hp_temerature_eval.get_present_fe_values();
-            if (not temperature_is_cut or not two_phase_cut)
+            if (cut_type != CutUtil::CutType::two_phase_cut)
               temerature_eval.get_function_values(temperature, temperature_at_q);
             else
               {

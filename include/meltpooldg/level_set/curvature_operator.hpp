@@ -4,12 +4,19 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-// for parallelization
-#include <deal.II/lac/generic_linear_algebra.h>
 
-// MeltPoolDG
+#include <deal.II/base/aligned_vector.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/vectorization.h>
+
+#include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
+#include <deal.II/lac/trilinos_sparse_matrix.h>
+
 #include <meltpooldg/core/operator_base.hpp>
-#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/level_set/curvature_data.hpp>
+#include <meltpooldg/utilities/fe_integrator.hpp>
 
 using namespace dealii;
 

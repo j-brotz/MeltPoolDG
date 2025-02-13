@@ -163,11 +163,10 @@ namespace MeltPoolDG::Heat
       const typename Evaluation::value_type &conductivity,
       const typename Evaluation::value_type &cv, // density * specific_heat_capacity
       [[maybe_unused]] const typename Evaluation::value_type &d_conductivity_d_T,
-      [[maybe_unused]] const typename Evaluation::value_type
-                                             &d_cv_d_T, // density * specific_heat_capacity
-      const VelocityType<Evaluation>         &velocity,
-      const typename Evaluation::ScalarNumber ost_factor, // delta_t * theta
-      const unsigned int                      q)
+      [[maybe_unused]] const typename Evaluation::value_type &d_cv_d_T,
+      const VelocityType<Evaluation>                         &velocity,
+      const typename Evaluation::ScalarNumber                 ost_factor, // delta_t * theta
+      const unsigned int                                      q)
     {
       const auto flux_1 = ost_factor * evaluator.get_gradient(q);
 

@@ -4,11 +4,17 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+
+#include <meltpooldg/utilities/material.hpp>
+//
 #include <deal.II/base/exceptions.h>
 
 #include <meltpooldg/level_set/level_set_tools.hpp>
-#include <meltpooldg/utilities/material.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
+
+#include <cmath>
+#include <limits>
+
 
 namespace MeltPoolDG
 {
@@ -150,16 +156,25 @@ namespace MeltPoolDG
     Assert(temperature_val.size() <= 2, ExcInternalError());
 
     const auto get_temperature_value = [&]() {
-      if (temperature_val.size() == 1)
+      if (temperature_val.size() == 1) // default case
         return temperature_val[0].get_value(q_index);
-      else if (temperature_val.size() == 2)
+      else if (temperature_val.size() == 2) // two phase cut intersected cell case
+        // For two phase intersected cut cells, temperature_val[0] contains the temperature values
+        // of the liquid domain and temperature_val[1] the temperature values of the gas domain that
+        // each may be ghost values. We use the level set as heaviside as in indicator to select the
+        // non-ghosted values each.
         return compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
           level_set_heaviside_val.get_value(q_index),
           0.5,
           temperature_val[0].get_value(q_index),
           temperature_val[1].get_value(q_index));
-      AssertThrow(not temperature_val.empty(), ExcInternalError());
-      return value_type(0.0);
+      else // temperature_val.empty()
+           // An empty temperature_val vector indicates that the cut case is one phase and the
+           // current cell is fully in the gas domain - which doesn't have any temperature
+           // information. We use the value that is just above the liquidus temperature so that
+           // solid faction is reliably zero in that domain.
+        return value_type(
+          std::nextafter(data.liquidus_temperature, std::numeric_limits<number>::infinity()));
     };
 
     switch (material_type)

@@ -14,6 +14,7 @@
 #include <deal.II/non_matching/mapping_info.h>
 #include <deal.II/non_matching/mesh_classifier.h>
 
+#include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
 #include <memory>
@@ -22,6 +23,8 @@
 
 namespace MeltPoolDG::CutUtil
 {
+  BETTER_ENUM(CutType, char, not_cut, one_phase_cut, two_phase_cut)
+
   /**
    * definition of aliases for MappingInfo types
    */

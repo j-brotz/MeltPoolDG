@@ -1,6 +1,5 @@
-#include <deal.II/base/exceptions.h>
-
 #include <meltpooldg/utilities/material.hpp>
+
 
 namespace MeltPoolDG
 {
