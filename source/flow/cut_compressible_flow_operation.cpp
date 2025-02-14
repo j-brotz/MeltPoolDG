@@ -9,10 +9,10 @@
 
 #include <deal.II/non_matching/mesh_classifier.h>
 
+#include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/cut_compressible_flow_operation.hpp>
 #include <meltpooldg/flow/cut_compressible_flow_operator.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
-#include <meltpooldg/utilities/cut_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 

@@ -1,4 +1,4 @@
-#include <meltpooldg/utilities/cut_util.hpp>
+#include <meltpooldg/cut/util.hpp>
 //
 
 #include <deal.II/base/exceptions.h>

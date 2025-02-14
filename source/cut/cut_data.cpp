@@ -1,4 +1,4 @@
-#include <meltpooldg/utilities/cut_param.hpp>
+#include <meltpooldg/cut/cut_data.hpp>
 
 namespace MeltPoolDG
 {
