@@ -13,7 +13,7 @@
 #include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/core/periodic_boundary_conditions.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/cut/cut_solution_transfer.hpp>
+#include <meltpooldg/cut/solution_transfer.hpp>
 #include <meltpooldg/heat/heat_cut_operator.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/heat_operation_base.hpp>

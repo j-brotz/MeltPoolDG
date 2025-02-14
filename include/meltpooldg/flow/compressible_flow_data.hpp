@@ -6,7 +6,7 @@
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/core/finite_element_data.hpp>
-#include <meltpooldg/cut/cut_param.hpp>
+#include <meltpooldg/cut/cut_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 
 #include <string>

@@ -18,7 +18,7 @@
 
 #include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/core/finite_element_data.hpp>
-#include <meltpooldg/cut/cut_util.hpp>
+#include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/utilities/constraints.hpp>

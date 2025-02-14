@@ -2,7 +2,7 @@
 
 #include <deal.II/fe/fe_system.h>
 
-#include <meltpooldg/cut/cut_util.hpp>
+#include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_operator_base.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>

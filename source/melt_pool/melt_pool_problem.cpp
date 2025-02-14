@@ -37,7 +37,7 @@
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
 #include <meltpooldg/core/exceptions.hpp>
-#include <meltpooldg/cut/cut_util.hpp>
+#include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
 #include <meltpooldg/heat/heat_cut_operation.hpp>
 #include <meltpooldg/heat/heat_diffuse_operation.hpp>

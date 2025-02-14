@@ -29,8 +29,8 @@
 #include <deal.II/non_matching/mesh_classifier.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/cut/cut_solution_transfer.hpp>
-#include <meltpooldg/cut/cut_util.hpp>
+#include <meltpooldg/cut/solution_transfer.hpp>
+#include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_operation.hpp>
 #include <meltpooldg/flow/cut_compressible_flow_operator.hpp>

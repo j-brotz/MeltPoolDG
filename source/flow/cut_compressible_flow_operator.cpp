@@ -3,7 +3,7 @@
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
 
-#include <meltpooldg/cut/cut_util.hpp>
+#include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/cut_compressible_flow_operator.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>

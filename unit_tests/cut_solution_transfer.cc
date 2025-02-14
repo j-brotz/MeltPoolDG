@@ -1,4 +1,4 @@
-// In this test, 'cut_solution_transfer.hpp' and 'cut_util.hpp' are
+// In this test, 'cut/solution_transfer.hpp' and 'cut/util.hpp' are
 // tested.
 
 // Following options are tested:
@@ -9,7 +9,7 @@
 // - two and three space dimensions
 // - default vector initialization and initialization with matrix-free object
 
-// In 'cut_solution_transfer.hpp', the solution projection between function spaces
+// In 'cut/solution_transfer.hpp', the solution projection between function spaces
 // according to the PhD thesis of Schott (2017) 3.6.3.2 is computed.
 
 #include <deal.II/base/conditional_ostream.h>
@@ -38,8 +38,8 @@
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/cut/cut_solution_transfer.hpp>
-#include <meltpooldg/cut/cut_util.hpp>
+#include <meltpooldg/cut/solution_transfer.hpp>
+#include <meltpooldg/cut/util.hpp>
 
 #include <mpi.h>
 
