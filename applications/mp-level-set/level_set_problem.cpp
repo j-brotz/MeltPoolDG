@@ -135,6 +135,8 @@ namespace MeltPoolDG::LevelSet
 
     setup_dof_system(false);
 
+    scratch_data->initialize_dof_vector(advection_velocity, vel_dof_idx);
+
     if (simulation_case->parameters.ls.fe.type != FiniteElementType::FE_DGQ)
       {
         level_set_operation =
@@ -300,6 +302,8 @@ namespace MeltPoolDG::LevelSet
         level_set_operation->reinit();
         if (evaporation_operation)
           evaporation_operation->reinit();
+
+        scratch_data->initialize_dof_vector(advection_velocity, vel_dof_idx);
       }
   }
 
@@ -307,8 +311,7 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetProblem<dim>::compute_advection_velocity(Function<dim> &advec_func)
   {
-    scratch_data->initialize_dof_vector(advection_velocity, vel_dof_idx);
-
+    advection_velocity = 0;
     // set the current time to the advection field function
     advec_func.set_time(time_iterator->get_current_time());
 
