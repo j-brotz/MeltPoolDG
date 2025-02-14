@@ -13,13 +13,13 @@
 // MeltPoolDG
 #include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/level_set/normal_vector_operation.hpp>
+#include <meltpooldg/level_set/normal_vector_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/level_set/olsson_operator.hpp>
 #include <meltpooldg/level_set/reinitialization_operation_base.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
-#include <meltpooldg/normal_vector/normal_vector_operation.hpp>
-#include <meltpooldg/normal_vector/normal_vector_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>

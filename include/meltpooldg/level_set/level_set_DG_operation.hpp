@@ -12,13 +12,13 @@
 
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <meltpooldg/advection_diffusion/advection_DG_operation.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/curvature/curvature_DG_operation.hpp>
+#include <meltpooldg/level_set/advection_DG_operation.hpp>
+#include <meltpooldg/level_set/curvature_DG_operation.hpp>
 #include <meltpooldg/level_set/level_set_data.hpp>
 #include <meltpooldg/level_set/level_set_operation_base.hpp>
+#include <meltpooldg/level_set/normal_vector_DG_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_DG_operation.hpp>
-#include <meltpooldg/normal_vector/normal_vector_DG_operation.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>

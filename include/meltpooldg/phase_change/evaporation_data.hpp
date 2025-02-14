@@ -123,7 +123,7 @@ namespace MeltPoolDG::Evaporation
 
     struct AnalyticalModelData
     {
-      std::string function = "0.0";
+      std::string function = "not_initialized";
     } analytical;
 
     bool do_level_set_pressure_gradient_interpolation = false;

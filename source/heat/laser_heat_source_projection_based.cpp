@@ -21,7 +21,7 @@
 
 #include <meltpooldg/heat/laser_heat_source_projection_based.hpp>
 #include <meltpooldg/heat/laser_intensity_profiles.hpp>
-#include <meltpooldg/normal_vector/normal_vector_operator.hpp>
+#include <meltpooldg/level_set/normal_vector_operator.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>

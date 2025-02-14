@@ -12,8 +12,8 @@
 // MeltPoolDG
 #include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/level_set/normal_vector_operator.hpp>
 #include <meltpooldg/level_set/reinitialization_data.hpp>
-#include <meltpooldg/normal_vector/normal_vector_operator.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 

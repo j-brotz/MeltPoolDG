@@ -9,8 +9,8 @@
 
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/level_set/advection_diffusion_operation_base.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>

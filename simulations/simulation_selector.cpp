@@ -15,18 +15,13 @@
 #include "oscillating_droplet/oscillating_droplet.hpp"
 #include "recoil_pressure/recoil_pressure.hpp"
 #include "rising_bubble/rising_bubble.hpp"
-#include "rotating_bubble/rotating_bubble.hpp"
 #include "simulation_selector.hpp"
 #include "spurious_currents/spurious_currents.hpp"
-#include "stefans_problem/stefans_problem.hpp"
 #include "stefans_problem/stefans_problem1_with_flow_and_heat.hpp"
 #include "stefans_problem/stefans_problem2_with_flow_and_heat.hpp"
 #include "stefans_problem/stefans_problem_with_flow.hpp"
 #include "thermo_capillary_droplet/thermo_capillary_droplet.hpp"
 #include "thermo_capillary_two_droplets/thermo_capillary_two_droplets.hpp"
-#include "vortex_bubble/vortex_bubble.hpp"
-#include "vortex_bubble/vortex_bubble_DG.hpp"
-#include "zalesak_disk/zalesak_disk.hpp"
 
 namespace MeltPoolDG::Simulation
 {
@@ -36,10 +31,7 @@ namespace MeltPoolDG::Simulation
                                           const std::string parameter_file,
                                           const MPI_Comm    mpi_communicator)
   {
-    if (case_name == "rotating_bubble")
-      return std::make_shared<RotatingBubble::SimulationRotatingBubble<dim>>(parameter_file,
-                                                                             mpi_communicator);
-    else if (case_name == "flow_past_cylinder")
+    if (case_name == "flow_past_cylinder")
       return std::make_shared<FlowPastCylinder::SimulationFlowPastCylinder<dim>>(parameter_file,
                                                                                  mpi_communicator);
     else if (case_name == "spurious_currents")
@@ -48,20 +40,8 @@ namespace MeltPoolDG::Simulation
     else if (case_name == "rising_bubble")
       return std::make_shared<RisingBubble::SimulationRisingBubble<dim>>(parameter_file,
                                                                          mpi_communicator);
-    else if (case_name == "zalesak_disk")
-      return std::make_shared<ZalesakDisk::SimulationZalesakDisk<dim>>(parameter_file,
-                                                                       mpi_communicator);
     else if (case_name == "recoil_pressure")
       return std::make_shared<RecoilPressure::SimulationRecoilPressure<dim>>(parameter_file,
-                                                                             mpi_communicator);
-    else if (case_name == "vortex_bubble")
-      return std::make_shared<VortexBubble::SimulationVortexBubble<dim>>(parameter_file,
-                                                                         mpi_communicator);
-    else if (case_name == "vortex_bubble_DG")
-      return std::make_shared<VortexBubbleDG::SimulationVortexBubbleDG<dim>>(parameter_file,
-                                                                             mpi_communicator);
-    else if (case_name == "stefans_problem")
-      return std::make_shared<StefansProblem::SimulationStefansProblem<dim>>(parameter_file,
                                                                              mpi_communicator);
     else if (case_name == "stefans_problem_with_flow")
       return std::make_shared<StefansProblemWithFlow::SimulationStefansProblemWithFlow<dim>>(
