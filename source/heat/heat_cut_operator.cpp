@@ -13,8 +13,8 @@
 
 #include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/core/finite_element_data.hpp>
+#include <meltpooldg/cut/cut_util.hpp>
 #include <meltpooldg/phase_change/evaporative_cooling.templates.hpp>
-#include <meltpooldg/utilities/cut_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 

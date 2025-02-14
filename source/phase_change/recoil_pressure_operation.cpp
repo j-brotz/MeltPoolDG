@@ -2,7 +2,7 @@
 //
 #include <deal.II/matrix_free/evaluation_flags.h>
 
-#include <meltpooldg/utilities/cut_util.hpp>
+#include <meltpooldg/cut/cut_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 

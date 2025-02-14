@@ -29,12 +29,12 @@
 #include <deal.II/non_matching/mesh_classifier.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/cut/cut_solution_transfer.hpp>
+#include <meltpooldg/cut/cut_util.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_operation.hpp>
 #include <meltpooldg/flow/cut_compressible_flow_operator.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
-#include <meltpooldg/utilities/cut_solution_transfer.hpp>
-#include <meltpooldg/utilities/cut_util.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <memory>

@@ -38,8 +38,8 @@
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/utilities/cut_solution_transfer.hpp>
-#include <meltpooldg/utilities/cut_util.hpp>
+#include <meltpooldg/cut/cut_solution_transfer.hpp>
+#include <meltpooldg/cut/cut_util.hpp>
 
 #include <mpi.h>
 

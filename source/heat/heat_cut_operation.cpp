@@ -18,10 +18,10 @@
 
 #include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/core/finite_element_data.hpp>
+#include <meltpooldg/cut/cut_util.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
-#include <meltpooldg/utilities/cut_util.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/functions.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>

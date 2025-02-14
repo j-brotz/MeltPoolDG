@@ -1,4 +1,4 @@
-#include <meltpooldg/utilities/cut_solution_transfer.hpp>
+#include <meltpooldg/cut/cut_solution_transfer.hpp>
 //
 
 #include <deal.II/base/exceptions.h>
@@ -32,7 +32,7 @@
 
 #include <deal.II/numerics/solution_transfer.h>
 
-#include <meltpooldg/utilities/cut_util.hpp>
+#include <meltpooldg/cut/cut_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
 #include <iomanip>
