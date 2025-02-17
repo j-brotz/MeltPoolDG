@@ -1,8 +1,22 @@
 #include <meltpooldg/level_set/reinitialization_operation.hpp>
+//
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/timer.h>
+
+#include <deal.II/numerics/vector_tools_interpolate.h>
+
+#include <meltpooldg/level_set/normal_vector_operation.hpp>
+#include <meltpooldg/level_set/normal_vector_operation_adaflo_wrapper.hpp>
+#include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
+#include <meltpooldg/linear_algebra/predictor_data.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
+
+#include <string>
+
 
 namespace MeltPoolDG::LevelSet
 {

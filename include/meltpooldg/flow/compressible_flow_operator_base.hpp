@@ -4,6 +4,7 @@
 
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <deal.II/matrix_free/fe_point_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/core/scratch_data.hpp>

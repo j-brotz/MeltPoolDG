@@ -10,7 +10,7 @@
 #include <deal.II/lac/la_parallel_vector.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 
-#include <deal.II/matrix_free/evaluation_flags.h>
+#include <deal.II/matrix_free/fe_point_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <deal.II/non_matching/mapping_info.h>
@@ -20,6 +20,8 @@
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/phase_change/evaporative_cooling.hpp>
+#include <meltpooldg/utilities/fe_integrator.hpp>
+#include <meltpooldg/utilities/material.hpp>
 #include <meltpooldg/utilities/material_data.hpp>
 
 #include <memory>
@@ -32,21 +34,28 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   class HeatCutOperator : public OperatorMatrixFree<dim, number>
   {
+  private:
     // to avoid compiler warnings regarding hidden overridden functions
     using OperatorMatrixFree<dim, number>::vmult;
     using OperatorMatrixFree<dim, number>::create_rhs;
     using OperatorMatrixFree<dim, number>::compute_inverse_diagonal_from_matrixfree;
 
-  private:
+    template <int n_components = 1>
+    using DomainEval = dealii::FECellIntegrator<dim, n_components, number>;
+    template <int n_components = 1>
+    using PointEval =
+      dealii::FEPointEvaluation<n_components, dim, dim, dealii::VectorizedArray<number>>;
+    using FaceEval = FEFaceIntegrator<dim, 1, number>;
+
     using VectorType       = dealii::LinearAlgebra::distributed::Vector<number>;
     using SparseMatrixType = dealii::TrilinosWrappers::SparseMatrix;
 
-    const ScratchData<dim>     &scratch_data;
-    const HeatData<number>     &heat_data;
-    const MaterialData<number> &material_data;
-    const unsigned int          temp_dof_idx;
-    const unsigned int          temp_hanging_nodes_dof_idx;
-    const unsigned int          temp_quad_idx;
+    const ScratchData<dim> &scratch_data;
+    const HeatData<number> &heat_data;
+    const Material<number>  material;
+    const unsigned int      temp_dof_idx;
+    const unsigned int      temp_hanging_nodes_dof_idx;
+    const unsigned int      temp_quad_idx;
 
     const VectorType &temperature;
 
@@ -66,8 +75,7 @@ namespace MeltPoolDG::Heat
     const number kappa_l;
     const number kappa_g;
 
-    const EvaluationFlags::EvaluationFlags evaluation_flags_surface;
-    static constexpr unsigned int          n_lanes = dealii::VectorizedArray<number>::size();
+    static constexpr unsigned int n_lanes = dealii::VectorizedArray<number>::size();
 
     // weighted averaged Nitsche term factor for two-phase case
     number weighted_nitsche_factor;
@@ -158,24 +166,67 @@ namespace MeltPoolDG::Heat
     compute_qVapor_derivative(const dealii::VectorizedArray<number> &T) const;
 
     /*
-     * Local appliers for consitent tangent modulus
+     * Local appliers for consistent tangent modulus
      */
     void
-    local_apply_domain_tangent(
+    tangent_cell_operation_liquid(const unsigned int cell_index,
+                                  DomainEval<>      &eval_l,
+                                  DomainEval<>      *T_eval_l,
+                                  DomainEval<dim>   *vel_eval,
+                                  const bool         do_reinit_cell = true) const;
+
+    void
+    tangent_cell_operation_gas(const unsigned int cell_index,
+                               DomainEval<>      &eval_g,
+                               DomainEval<dim>   *vel_eval,
+                               const bool         do_reinit_cell = true) const;
+
+    void
+    tangent_cell_operation_intersected_one_phase(const unsigned int cell_index,
+                                                 DomainEval<>      &eval_cell_l,
+                                                 PointEval<>       &eval_subdomain_l,
+                                                 PointEval<>       *eval_interface_l,
+                                                 DomainEval<>      *T_eval_cell_l,
+                                                 PointEval<>       *T_eval_subdomain_l,
+                                                 PointEval<>       *T_eval_interface_l,
+                                                 DomainEval<dim>   *vel_eval,
+                                                 PointEval<dim>    *vel_eval_subdomain_l,
+                                                 const bool         do_reinit_cell = true) const;
+
+    void
+    tangent_cell_operation_intersected_two_phase(const unsigned int cell_index,
+                                                 DomainEval<>      &eval_cell_l,
+                                                 DomainEval<>      &eval_cell_g,
+                                                 PointEval<>       &eval_subdomain_l,
+                                                 PointEval<>       &eval_subdomain_g,
+                                                 PointEval<>       &eval_interface_l,
+                                                 PointEval<>       &eval_interface_g,
+                                                 DomainEval<>      *T_eval_cell_l,
+                                                 DomainEval<>      *T_eval_cell_g,
+                                                 PointEval<>       *T_eval_subdomain_l,
+                                                 PointEval<>       *T_eval_interface_l,
+                                                 PointEval<>       *T_eval_interface_g,
+                                                 DomainEval<dim>   *vel_eval,
+                                                 PointEval<dim>    *vel_eval_subdomain_l,
+                                                 PointEval<dim>    *vel_eval_subdomain_g,
+                                                 const bool         do_reinit_cell = true) const;
+
+    void
+    tangent_cell_loop(
       const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free_in,
       VectorType                                                             &dst,
       const VectorType                                                       &src,
       const std::pair<unsigned int, unsigned int>                            &cell_range) const;
 
     void
-    local_apply_inner_face_tangent(
+    tangent_inner_face_loop(
       const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free_in,
       VectorType                                                             &dst,
       const VectorType                                                       &src,
       const std::pair<unsigned int, unsigned int>                            &face_range) const;
 
     void
-    local_apply_boundary_face_tangent(
+    tangent_boundary_face_loop(
       const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free_in,
       VectorType                                                             &dst,
       const VectorType                                                       &src,
@@ -185,21 +236,21 @@ namespace MeltPoolDG::Heat
      * Local appliers for residual
      */
     void
-    local_apply_domain_residual(
+    residual_cell_loop(
       const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free,
       VectorType                                                             &residual,
       const VectorType                                                       &temperature_new,
       const std::pair<unsigned int, unsigned int>                            &cell_range) const;
 
     void
-    local_apply_inner_face_residual(
+    residual_inner_face_loop(
       const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free_in,
       VectorType                                                             &residual,
       const VectorType                                                       &temperature_new,
       const std::pair<unsigned int, unsigned int>                            &face_range) const;
 
     void
-    local_apply_boundary_face_residual(
+    residual_boundary_face_loop(
       const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free_in,
       VectorType                                                             &residual,
       const VectorType                                                       &temperature_new,

@@ -1,15 +1,30 @@
-#include <deal.II/dofs/dof_accessor.h>
+#include <meltpooldg/phase_change/evaporation_mass_flux_operator_thickness_integration.hpp>
+//
+#include <deal.II/base/array_view.h>
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/mpi.h>
+#include <deal.II/base/mpi_remote_point_evaluation.h>
+#include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/types.h>
 
-#include <deal.II/fe/fe_system.h>
+#include <deal.II/dofs/dof_handler.h>
 
-#include <deal.II/grid/grid_tools.h>
+#include <deal.II/fe/fe_q.h>
 
-#include <deal.II/matrix_free/fe_point_evaluation.h>
+#include <deal.II/lac/vector.h>
+#include <deal.II/lac/vector_operation.h>
+
+#include <deal.II/numerics/vector_tools_evaluate.h>
 
 #include <meltpooldg/level_set/level_set_tools.hpp>
-#include <meltpooldg/phase_change/evaporation_mass_flux_operator_thickness_integration.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+
+#include <fstream>
+#include <numeric>
+#include <string>
+#include <vector>
+
 
 namespace MeltPoolDG::Evaporation
 {

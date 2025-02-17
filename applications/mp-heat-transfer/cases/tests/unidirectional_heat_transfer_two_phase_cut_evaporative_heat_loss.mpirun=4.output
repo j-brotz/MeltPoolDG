@@ -1,23 +1,23 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 2.0000e-01 ( dt = 2.0000e-01 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 1.99006e+02                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.99946e+02                newton_raphson_solver |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 2.0000e-01 to 4.0000e-01 ( dt = 2.0000e-01 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 1.98588e+02                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.99893e+02                newton_raphson_solver |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 4.0000e-01 to 6.0000e-01 ( dt = 2.0000e-01 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 1.98164e+02                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.99839e+02                newton_raphson_solver |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 6.0000e-01 to 8.0000e-01 ( dt = 2.0000e-01 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 1.97800e+02                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.99787e+02                newton_raphson_solver |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 8.0000e-01 to 1.0000e+00 ( dt = 2.0000e-01 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 1.97464e+02                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.99737e+02                newton_raphson_solver |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+

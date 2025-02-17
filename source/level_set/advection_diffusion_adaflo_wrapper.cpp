@@ -1,5 +1,7 @@
 #ifdef MELT_POOL_DG_WITH_ADAFLO
 
+#  include <deal.II/numerics/vector_tools_interpolate.h>
+
 #  include <meltpooldg/level_set/advection_diffusion_adaflo_wrapper.hpp>
 #  include <meltpooldg/utilities/journal.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>

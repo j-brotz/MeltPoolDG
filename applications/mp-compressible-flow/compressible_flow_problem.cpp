@@ -1,5 +1,7 @@
 #include "compressible_flow_problem.hpp"
 
+#include <deal.II/numerics/vector_tools_interpolate.h>
+
 #include <meltpooldg/flow/cut_compressible_flow_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>

@@ -1,21 +1,35 @@
 #include <meltpooldg/phase_change/melt_front_propagation.hpp>
 //
 
+#include <deal.II/base/index_set.h>
+#include <deal.II/base/quadrature.h>
+#include <deal.II/base/types.h>
+
 #include <deal.II/dofs/dof_tools.h>
 
-#include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <deal.II/fe/fe_update_flags.h>
+#include <deal.II/fe/fe_values.h>
+
+#include <deal.II/hp/fe_values.h>
+#include <deal.II/hp/q_collection.h>
+
+#include <deal.II/lac/vector.h>
+#include <deal.II/lac/vector_operation.h>
+
+#include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/material.templates.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+
 
 namespace MeltPoolDG::MeltPool
 {
   template <int dim>
   MeltFrontPropagation<dim>::MeltFrontPropagation(const ScratchData<dim>   &scratch_data_in,
                                                   const Parameters<double> &data_in,
-                                                  const unsigned int        ls_dof_idx_in,
-                                                  const VectorType         &temperature,
-                                                  const unsigned int        reinit_dof_idx_in,
+                                                  const unsigned int phase_fraction_dof_idx_in,
+                                                  const unsigned int ls_dof_idx_in,
+                                                  const VectorType  &temperature,
+                                                  const unsigned int reinit_dof_idx_in,
                                                   const unsigned int reinit_no_solid_dof_idx_in,
                                                   const unsigned int flow_vel_dof_idx_in,
                                                   const unsigned int flow_vel_no_solid_dof_idx_in,
@@ -23,6 +37,7 @@ namespace MeltPoolDG::MeltPool
     : scratch_data(scratch_data_in)
     , mp_data(data_in.mp)
     , melting_solidification(data_in.material, MaterialTypes::liquid_solid)
+    , phase_fraction_dof_idx(phase_fraction_dof_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
     , reinit_no_solid_dof_idx(reinit_no_solid_dof_idx_in)
@@ -31,11 +46,7 @@ namespace MeltPoolDG::MeltPool
     , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
     , temperature(temperature)
   {
-    /*
-     * initialize the dof_vectors
-     */
-    scratch_data.initialize_dof_vector(solid, temp_hanging_nodes_dof_idx);
-    scratch_data.initialize_dof_vector(liquid, temp_hanging_nodes_dof_idx);
+    reinit();
   }
 
   template <int dim>
@@ -80,8 +91,8 @@ namespace MeltPoolDG::MeltPool
   void
   MeltFrontPropagation<dim>::reinit()
   {
-    scratch_data.initialize_dof_vector(solid, temp_hanging_nodes_dof_idx);
-    scratch_data.initialize_dof_vector(liquid, temp_hanging_nodes_dof_idx);
+    scratch_data.initialize_dof_vector(solid, phase_fraction_dof_idx);
+    scratch_data.initialize_dof_vector(liquid, phase_fraction_dof_idx);
   }
 
   template <int dim>
@@ -101,13 +112,11 @@ namespace MeltPoolDG::MeltPool
     /**
      *  solid
      */
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
-                             solid,
-                             "solid");
+    data_out.add_data_vector(scratch_data.get_dof_handler(phase_fraction_dof_idx), solid, "solid");
     /**
      *  liquid
      */
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(phase_fraction_dof_idx),
                              liquid,
                              "liquid");
   }
@@ -116,8 +125,8 @@ namespace MeltPoolDG::MeltPool
   void
   MeltFrontPropagation<dim>::distribute_constraints()
   {
-    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(solid);
-    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(liquid);
+    scratch_data.get_constraint(phase_fraction_dof_idx).distribute(solid);
+    scratch_data.get_constraint(phase_fraction_dof_idx).distribute(liquid);
   }
 
   template <int dim>
@@ -181,26 +190,33 @@ namespace MeltPoolDG::MeltPool
       temperature.update_ghost_values();
 
     std::vector<types::global_dof_index> local_dof_indices(
-      scratch_data.get_n_dofs_per_cell(temp_hanging_nodes_dof_idx));
+      scratch_data.get_n_dofs_per_cell(phase_fraction_dof_idx));
 
-    FEValues<dim> ls_heaviside_eval(scratch_data.get_mapping(),
-                                    scratch_data.get_dof_handler(ls_dof_idx).get_fe(),
-                                    Quadrature<dim>(
-                                      scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx)
-                                        .get_fe()
-                                        .get_unit_support_points()),
-                                    update_values);
-
+    FEValues<dim> ls_heaviside_eval(
+      scratch_data.get_mapping(),
+      scratch_data.get_dof_handler(ls_dof_idx).get_fe(),
+      Quadrature<dim>(
+        scratch_data.get_dof_handler(phase_fraction_dof_idx).get_fe().get_unit_support_points()),
+      update_values);
     std::vector<double> ls_heaviside_at_q(ls_heaviside_eval.n_quadrature_points);
+    typename DoFHandler<dim>::active_cell_iterator ls_cell =
+      scratch_data.get_dof_handler(ls_dof_idx).begin_active();
+
+    const CutUtil::CutType cut_type = scratch_data.get_cut_type(temp_hanging_nodes_dof_idx);
+    hp::FEValues<dim>      hp_temerature_eval(
+      scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).get_fe_collection(),
+      hp::QCollection<dim>(Quadrature<dim>(
+        scratch_data.get_dof_handler(phase_fraction_dof_idx).get_fe().get_unit_support_points())),
+      update_values);
+    std::vector<double> temperature_at_q(ls_heaviside_eval.n_quadrature_points);
+    typename DoFHandler<dim>::active_cell_iterator t_cell =
+      scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).begin_active();
 
     liquid = 0;
     solid  = 0;
 
-    typename DoFHandler<dim>::active_cell_iterator ls_cell =
-      scratch_data.get_dof_handler(ls_dof_idx).begin_active();
-
     for (const auto &cell :
-         scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).active_cell_iterators())
+         scratch_data.get_dof_handler(phase_fraction_dof_idx).active_cell_iterators())
       {
         if (cell->is_locally_owned())
           {
@@ -209,25 +225,37 @@ namespace MeltPoolDG::MeltPool
             ls_heaviside_eval.reinit(ls_cell);
             ls_heaviside_eval.get_function_values(level_set_as_heaviside, ls_heaviside_at_q);
 
+            hp_temerature_eval.reinit(t_cell);
+            const FEValues<dim> &temerature_eval = hp_temerature_eval.get_present_fe_values();
+            if (cut_type != CutUtil::CutType::two_phase_cut)
+              temerature_eval.get_function_values(temperature, temperature_at_q);
+            else
+              {
+                // for the two phase cut, we have two components
+                std::vector<Vector<double>> cut_temperature_at_q(
+                  temerature_eval.n_quadrature_points, Vector<double>(2));
+                temerature_eval.get_function_values(temperature, cut_temperature_at_q);
+                // we are only interested in the liquid temperature
+                for (unsigned int i = 0; i < temperature_at_q.size(); ++i)
+                  temperature_at_q[i] = cut_temperature_at_q[i](0);
+              }
+
             for (const auto q : ls_heaviside_eval.quadrature_point_indices())
               {
-                solid[local_dof_indices[q]] =
-                  compute_solid_fraction((temperature)[local_dof_indices[q]]) *
-                  ls_heaviside_at_q[q];
-
-                liquid[local_dof_indices[q]] =
-                  (1. - compute_solid_fraction((temperature)[local_dof_indices[q]])) *
-                  ls_heaviside_at_q[q];
+                const double temp            = compute_solid_fraction(temperature_at_q[q]);
+                solid[local_dof_indices[q]]  = temp * ls_heaviside_at_q[q];
+                liquid[local_dof_indices[q]] = (1. - temp) * ls_heaviside_at_q[q];
               }
           }
         ++ls_cell;
+        ++t_cell;
       }
 
     liquid.compress(VectorOperation::insert);
     solid.compress(VectorOperation::insert);
 
-    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(solid);
-    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(liquid);
+    scratch_data.get_constraint(phase_fraction_dof_idx).distribute(solid);
+    scratch_data.get_constraint(phase_fraction_dof_idx).distribute(liquid);
 
     liquid.update_ghost_values();
     solid.update_ghost_values();
@@ -263,7 +291,7 @@ namespace MeltPoolDG::MeltPool
                             update_quadrature_points);
 
     FEValues<dim> solid_eval(scratch_data.get_mapping(),
-                             scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).get_fe(),
+                             scratch_data.get_dof_handler(phase_fraction_dof_idx).get_fe(),
                              Quadrature<dim>(flow_dof_handler.get_fe().get_unit_support_points()),
                              update_values);
 
@@ -272,7 +300,7 @@ namespace MeltPoolDG::MeltPool
     std::vector<double>                  solid_at_q(dofs_per_cell);
 
     typename DoFHandler<dim>::active_cell_iterator solid_cell =
-      scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).begin_active();
+      scratch_data.get_dof_handler(phase_fraction_dof_idx).begin_active();
 
     for (const auto &cell : flow_dof_handler.active_cell_iterators())
       {
@@ -335,7 +363,7 @@ namespace MeltPoolDG::MeltPool
                           update_quadrature_points);
 
     FEValues<dim> solid_eval(scratch_data.get_mapping(),
-                             scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).get_fe(),
+                             scratch_data.get_dof_handler(phase_fraction_dof_idx).get_fe(),
                              Quadrature<dim>(
                                level_set_dof_handler.get_fe().get_unit_support_points()),
                              update_values);
@@ -345,7 +373,7 @@ namespace MeltPoolDG::MeltPool
     std::vector<double>                  solid_at_q(dofs_per_cell);
 
     typename DoFHandler<dim>::active_cell_iterator solid_cell =
-      scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).begin_active();
+      scratch_data.get_dof_handler(phase_fraction_dof_idx).begin_active();
 
     for (const auto &cell : level_set_dof_handler.active_cell_iterators())
       {

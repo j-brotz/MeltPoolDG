@@ -1,6 +1,7 @@
+#include <meltpooldg/utilities/material_data.hpp>
+//
 #include <deal.II/base/exceptions.h>
 
-#include <meltpooldg/utilities/material_data.hpp>
 
 namespace MeltPoolDG
 {

@@ -3,30 +3,36 @@
  * Author: Peter Munch, Magdalena Schreter, TUM, September 2020
  *
  * ---------------------------------------------------------------------*/
-
 #pragma once
-// for parallelization
+
 #include <deal.II/base/index_set.h>
+#include <deal.II/base/mpi.h>
 #include <deal.II/base/mpi_remote_point_evaluation.h>
 #include <deal.II/base/partitioner.h>
+#include <deal.II/base/quadrature.h>
 #include <deal.II/base/timer.h>
+#include <deal.II/base/vectorization.h>
 
-#include <deal.II/lac/generic_linear_algebra.h>
-#include <deal.II/lac/la_parallel_block_vector.h>
-// for dof_handler type
 #include <deal.II/dofs/dof_handler.h>
-// for FE_Q<dim> type
-#include <deal.II/fe/fe_q.h>
-// for mapping
+
+#include <deal.II/fe/fe.h>
 #include <deal.II/fe/mapping.h>
 
-#include <deal.II/grid/grid_tools.h>
-// DoFTools
-#include <deal.II/dofs/dof_tools.h>
+#include <deal.II/grid/tria.h>
 
+#include <deal.II/lac/affine_constraints.h>
+#include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
+
+#include <deal.II/matrix_free/matrix_free.h>
+
+#include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
-#include <meltpooldg/utilities/fe_integrator.hpp>
 
+#include <functional>
+#include <map>
+#include <memory>
+#include <vector>
 
 namespace MeltPoolDG
 {
@@ -36,15 +42,13 @@ namespace MeltPoolDG
    */
   using namespace dealii;
 
-  template <int dim,
-            int spacedim                 = dim,
-            typename number              = double,
-            typename VectorizedArrayType = VectorizedArray<number>>
+  template <int dim, int spacedim = dim, typename number = double>
   class ScratchData
   {
   private:
-    using VectorType      = LinearAlgebra::distributed::Vector<number>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<number>;
+    using VectorizedArrayType = VectorizedArray<number>;
+    using VectorType          = LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType     = LinearAlgebra::distributed::BlockVector<number>;
 
   public:
     ScratchData(const MPI_Comm     mpi_communicator,
@@ -209,6 +213,9 @@ namespace MeltPoolDG
 
     bool
     is_FE_DGQ(const unsigned int dof_idx, const unsigned int component = 0) const;
+
+    CutUtil::CutType
+    get_cut_type(const unsigned int dof_idx) const;
 
     TimerOutput &
     get_timer() const;

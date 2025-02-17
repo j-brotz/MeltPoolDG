@@ -1,15 +1,17 @@
-// for parallelization
+#include <meltpooldg/level_set/level_set_operation.hpp>
+//
 #include <deal.II/base/mpi.h>
 
-#include <deal.II/lac/generic_linear_algebra.h>
-// DoFTools
 #include <deal.II/dofs/dof_tools.h>
-// MeltPoolDG
+
+#include <deal.II/lac/generic_linear_algebra.h>
+
+#include <deal.II/numerics/vector_tools_interpolate.h>
+
 #include <meltpooldg/level_set/advection_diffusion_adaflo_wrapper.hpp>
 #include <meltpooldg/level_set/advection_diffusion_operation.hpp>
 #include <meltpooldg/level_set/curvature_operation.hpp>
 #include <meltpooldg/level_set/curvature_operation_adaflo_wrapper.hpp>
-#include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/level_set/reinitialization_operation.hpp>

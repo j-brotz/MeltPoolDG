@@ -1,18 +1,29 @@
-#include <deal.II/fe/fe_dgq.h>
-#include <deal.II/fe/fe_q_iso_q1.h>
+#include <meltpooldg/core/scratch_data.hpp>
+//
+
+#include <deal.II/base/conditional_ostream.h>
+#include <deal.II/base/exceptions.h>
+
+#include <deal.II/dofs/dof_tools.h>
+
+#include <deal.II/fe/fe_update_flags.h>
+
+#include <deal.II/grid/grid_tools_geometry.h>
 
 #include <deal.II/matrix_free/util.h>
 
-#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+
+#include <cmath>
+#include <iostream>
+
 
 namespace MeltPoolDG
 {
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::ScratchData(
-    const MPI_Comm     mpi_communicator,
-    const unsigned int max_verbosity_level,
-    const bool         do_matrix_free)
+  template <int dim, int spacedim, typename number>
+  ScratchData<dim, spacedim, number>::ScratchData(const MPI_Comm     mpi_communicator,
+                                                  const unsigned int max_verbosity_level,
+                                                  const bool         do_matrix_free)
     : do_matrix_free(do_matrix_free)
     , max_verbosity_level(max_verbosity_level)
   {
@@ -21,9 +32,9 @@ namespace MeltPoolDG
     timer = std::make_shared<TimerOutput>(pcout[0], TimerOutput::never, TimerOutput::wall_times);
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   void
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::reinit(
+  ScratchData<dim, spacedim, number>::reinit(
     const Mapping<dim, spacedim>                         &mapping,
     const std::vector<const DoFHandler<dim, spacedim> *> &dof_handler,
     const std::vector<const AffineConstraints<number> *> &constraint,
@@ -55,44 +66,42 @@ namespace MeltPoolDG
     this->build(enable_boundary_face_loops, enable_inner_face_loops, enable_normal_vector_update);
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   void
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::set_mapping(
-    const Mapping<dim, spacedim> &mapping)
+  ScratchData<dim, spacedim, number>::set_mapping(const Mapping<dim, spacedim> &mapping)
   {
     this->mapping = mapping.clone();
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   void
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::set_mapping(
+  ScratchData<dim, spacedim, number>::set_mapping(
     const std::shared_ptr<Mapping<dim, spacedim>> mapping)
   {
     this->mapping = mapping;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   unsigned int
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::attach_dof_handler(
+  ScratchData<dim, spacedim, number>::attach_dof_handler(
     const DoFHandler<dim, spacedim> &dof_handler)
   {
     this->dof_handler.emplace_back(&dof_handler);
     return this->dof_handler.size() - 1;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   unsigned int
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::attach_constraint_matrix(
+  ScratchData<dim, spacedim, number>::attach_constraint_matrix(
     const AffineConstraints<number> &constraint)
   {
     this->constraint.emplace_back(&constraint);
     return this->constraint.size() - 1;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   unsigned int
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::attach_quadrature(
-    const Quadrature<dim> &quadrature)
+  ScratchData<dim, spacedim, number>::attach_quadrature(const Quadrature<dim> &quadrature)
   {
     this->quad.emplace_back(Quadrature<dim>(quadrature));
 
@@ -122,9 +131,9 @@ namespace MeltPoolDG
     return this->quad.size() - 1;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   void
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::create_partitioning()
+  ScratchData<dim, spacedim, number>::create_partitioning()
   {
     /*
      *  recreate DoF-dependent partitioning data
@@ -164,13 +173,12 @@ namespace MeltPoolDG
       }
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   void
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::build(
-    const bool enable_boundary_face_loops,
-    const bool enable_inner_face_loops,
-    const bool enable_normal_vector_update,
-    const bool enable_inner_face_hessians_update)
+  ScratchData<dim, spacedim, number>::build(const bool enable_boundary_face_loops,
+                                            const bool enable_inner_face_loops,
+                                            const bool enable_normal_vector_update,
+                                            const bool enable_inner_face_hessians_update)
   {
     enable_inner_faces    = enable_inner_face_loops;
     enable_boundary_faces = enable_boundary_face_loops;
@@ -243,11 +251,10 @@ namespace MeltPoolDG
       }
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   void
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::initialize_dof_vector(
-    VectorType        &vec,
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number>::initialize_dof_vector(VectorType        &vec,
+                                                            const unsigned int dof_idx) const
   {
     if (do_matrix_free)
       matrix_free.initialize_dof_vector(vec, dof_idx);
@@ -257,41 +264,38 @@ namespace MeltPoolDG
                  get_mpi_comm(dof_idx));
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   void
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::initialize_dof_vector(
-    BlockVectorType   &vec,
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number>::initialize_dof_vector(BlockVectorType   &vec,
+                                                            const unsigned int dof_idx) const
   {
     vec.reinit(dim);
     for (unsigned int d = 0; d < dim; ++d)
       this->initialize_dof_vector(vec.block(d), dof_idx);
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   void
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::initialize_bc_vector(
-    VectorType        &vec,
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number>::initialize_bc_vector(VectorType        &vec,
+                                                           const unsigned int dof_idx) const
   {
     this->initialize_dof_vector(vec, dof_idx);
     this->get_constraint(dof_idx).distribute(vec);
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   void
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::initialize_bc_vector(
-    BlockVectorType   &vec,
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number>::initialize_bc_vector(BlockVectorType   &vec,
+                                                           const unsigned int dof_idx) const
   {
     vec.reinit(dim);
     for (unsigned int d = 0; d < dim; ++d)
       this->initialize_bc_vector(vec.block(d), dof_idx);
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   void
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::clear()
+  ScratchData<dim, spacedim, number>::clear()
   {
     this->matrix_free.clear();
     this->quad.clear();
@@ -306,9 +310,9 @@ namespace MeltPoolDG
     this->pcout.clear();
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   void
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::create_remote_point_evaluation(
+  ScratchData<dim, spacedim, number>::create_remote_point_evaluation(
     const unsigned int                        dof_idx,
     const std::function<std::vector<bool>()> &marked_vertices)
   {
@@ -318,267 +322,271 @@ namespace MeltPoolDG
                     1e-6 /*tolerance*/, true /*unique mapping*/, 0, marked_vertices)});
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const Mapping<dim, spacedim> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_mapping() const
+  ScratchData<dim, spacedim, number>::get_mapping() const
   {
     return *this->mapping;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const FiniteElement<dim, spacedim> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_fe(const unsigned int fe_index) const
+  ScratchData<dim, spacedim, number>::get_fe(const unsigned int fe_index) const
   {
     return this->dof_handler[fe_index]->get_fe(0);
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const AffineConstraints<number> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_constraint(
-    const unsigned int constraint_index) const
+  ScratchData<dim, spacedim, number>::get_constraint(const unsigned int constraint_index) const
   {
     return *this->constraint[constraint_index];
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   AffineConstraints<number> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_constraint(
-    const unsigned int constraint_index)
+  ScratchData<dim, spacedim, number>::get_constraint(const unsigned int constraint_index)
   {
     return const_cast<AffineConstraints<number> &>(*this->constraint[constraint_index]);
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const std::vector<const AffineConstraints<number> *> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_constraints() const
+  ScratchData<dim, spacedim, number>::get_constraints() const
   {
     return this->constraint;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const Quadrature<dim> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_quadrature(
-    const unsigned int quad_index) const
+  ScratchData<dim, spacedim, number>::get_quadrature(const unsigned int quad_index) const
   {
     return this->quad[quad_index];
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const std::vector<Quadrature<dim>> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_quadratures() const
+  ScratchData<dim, spacedim, number>::get_quadratures() const
   {
     return this->quad;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const Quadrature<dim - 1> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_face_quadrature(
-    const unsigned int quad_index) const
+  ScratchData<dim, spacedim, number>::get_face_quadrature(const unsigned int quad_index) const
   {
     return this->face_quad[quad_index];
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const std::vector<Quadrature<dim - 1>> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_face_quadratures() const
+  ScratchData<dim, spacedim, number>::get_face_quadratures() const
   {
     return this->face_quad;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
-  MatrixFree<dim, number, VectorizedArrayType> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_matrix_free()
+  template <int dim, int spacedim, typename number>
+  MatrixFree<dim, number, VectorizedArray<number>> &
+  ScratchData<dim, spacedim, number>::get_matrix_free()
   {
     return this->matrix_free;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
-  const MatrixFree<dim, number, VectorizedArrayType> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_matrix_free() const
+  template <int dim, int spacedim, typename number>
+  const MatrixFree<dim, number, VectorizedArray<number>> &
+  ScratchData<dim, spacedim, number>::get_matrix_free() const
   {
     return this->matrix_free;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const DoFHandler<dim, spacedim> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_dof_handler(
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number>::get_dof_handler(const unsigned int dof_idx) const
   {
     return *this->dof_handler[dof_idx];
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const std::vector<const DoFHandler<dim, spacedim> *> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_dof_handlers() const
+  ScratchData<dim, spacedim, number>::get_dof_handlers() const
   {
     return this->dof_handler;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const Triangulation<dim> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_triangulation(
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number>::get_triangulation(const unsigned int dof_idx) const
   {
     return this->get_dof_handler(dof_idx).get_triangulation();
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   unsigned int
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_n_dofs_per_cell(
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number>::get_n_dofs_per_cell(const unsigned int dof_idx) const
   {
     return get_dof_handler(dof_idx).get_fe().n_dofs_per_cell();
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   unsigned int
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_degree(
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number>::get_degree(const unsigned int dof_idx) const
   {
     return get_dof_handler(dof_idx).get_fe().tensor_degree();
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   unsigned int
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_n_q_points(
-    const unsigned int quad_idx) const
+  ScratchData<dim, spacedim, number>::get_n_q_points(const unsigned int quad_idx) const
   {
     return get_quadrature(quad_idx).size();
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const double &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_min_cell_size() const
+  ScratchData<dim, spacedim, number>::get_min_cell_size() const
   {
     return this->min_cell_size;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   double
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_min_cell_size(
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number>::get_min_cell_size(const unsigned int dof_idx) const
   {
     return is_FE_Q_iso_Q_1(dof_idx) ? min_cell_size : min_cell_size / get_degree(dof_idx);
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const double &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_max_cell_size() const
+  ScratchData<dim, spacedim, number>::get_max_cell_size() const
   {
     return this->max_cell_size;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const double &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_min_diameter() const
+  ScratchData<dim, spacedim, number>::get_min_diameter() const
   {
     return this->min_diameter;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const AlignedVector<VectorizedArray<double>> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_cell_sizes() const
+  ScratchData<dim, spacedim, number>::get_cell_sizes() const
   {
     return this->cell_sizes;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   MPI_Comm
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_mpi_comm(
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number>::get_mpi_comm(const unsigned int dof_idx) const
   {
     return this->dof_handler[dof_idx]->get_communicator();
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const IndexSet &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_locally_owned_dofs(
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number>::get_locally_owned_dofs(const unsigned int dof_idx) const
   {
     return this->locally_owned_dofs[dof_idx];
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const IndexSet &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_locally_relevant_dofs(
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number>::get_locally_relevant_dofs(const unsigned int dof_idx) const
   {
     return this->locally_relevant_dofs[dof_idx];
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const std::shared_ptr<Utilities::MPI::Partitioner> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_partitioner(
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number>::get_partitioner(const unsigned int dof_idx) const
   {
     return this->partitioner[dof_idx];
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   const ConditionalOStream
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_pcout(const unsigned int level) const
+  ScratchData<dim, spacedim, number>::get_pcout(const unsigned int level) const
   {
     AssertIndexRange(level, pcout.size());
     return pcout[level];
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   bool
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::is_hex_mesh(
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number>::is_hex_mesh(const unsigned int dof_idx) const
   {
     return get_triangulation(dof_idx).all_reference_cells_are_hyper_cube();
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   bool
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::is_FE_Q_iso_Q_1(
-    const unsigned int dof_idx,
-    const unsigned int component) const
+  ScratchData<dim, spacedim, number>::is_FE_Q_iso_Q_1(const unsigned int dof_idx,
+                                                      const unsigned int component) const
   {
-    return dynamic_cast<const FE_Q_iso_Q1<dim> *>(
-             &this->get_fe(dof_idx).get_sub_fe(component, 1)) != nullptr;
+    // as soon as we use C++23, we can use std::string.contains() instead
+    return get_fe(dof_idx).get_sub_fe(component, 1).get_name().find("FE_Q_iso_Q1<") !=
+           std::string::npos;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   bool
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::is_FE_DGQ(
-    const unsigned int dof_idx,
-    const unsigned int component) const
+  ScratchData<dim, spacedim, number>::is_FE_DGQ(const unsigned int dof_idx,
+                                                const unsigned int component) const
   {
-    return dynamic_cast<const FE_DGQ<dim> *>(&this->get_fe(dof_idx).get_sub_fe(component, 1)) !=
-           nullptr;
+    // as soon as we use C++23, we can use std::string.contains() instead
+    return get_fe(dof_idx).get_sub_fe(component, 1).get_name().find("FE_DGQ<") != std::string::npos;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
+  CutUtil::CutType
+  ScratchData<dim, spacedim, number>::get_cut_type(const unsigned int dof_idx) const
+  {
+    AssertIndexRange(dof_idx, dof_handler.size());
+    // Detect weather the temperature vector is setup for CutFEM by checking if its
+    // dealii::DoFHandler is in hp-mode.
+    if (not dof_handler[dof_idx]->has_hp_capabilities())
+      return CutUtil::CutType::not_cut;
+    // If so, detect weather the dof vector is in one phase or on two phase cut mode. To that, we
+    // check the number of components in the intersected fe collection. If it's 2, the cut mode in
+    // two phase.
+    const unsigned int n_components_intersected =
+      dof_handler[dof_idx]->get_fe_collection()[CutUtil::CellCategory::intersected].n_components();
+    if (n_components_intersected == 1)
+      return CutUtil::CutType::one_phase_cut;
+    else if (n_components_intersected == 2)
+      return CutUtil::CutType::two_phase_cut;
+    else
+      DEAL_II_NOT_IMPLEMENTED();
+  }
+
+  template <int dim, int spacedim, typename number>
   TimerOutput &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_timer() const
+  ScratchData<dim, spacedim, number>::get_timer() const
   {
     return *timer;
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   Utilities::MPI::RemotePointEvaluation<dim, dim> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_remote_point_evaluation(
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number>::get_remote_point_evaluation(const unsigned int dof_idx) const
   {
     return *rpe.at(dof_idx);
   }
 
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  template <int dim, int spacedim, typename number>
   void
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::create_pcout(
-    const MPI_Comm mpi_communicator)
+  ScratchData<dim, spacedim, number>::create_pcout(const MPI_Comm mpi_communicator)
   {
     this->pcout.clear();
     for (unsigned int i = 0; i <= 10; ++i)
       this->pcout.push_back(
         dealii::ConditionalOStream(std::cout,
-                                   (Utilities::MPI::this_mpi_process(mpi_communicator)) == 0 and
-                                     (i <= max_verbosity_level)));
+                                   Utilities::MPI::this_mpi_process(mpi_communicator) == 0 and
+                                     i <= max_verbosity_level));
   }
 
-  template class ScratchData<1>;
-  template class ScratchData<2>;
-  template class ScratchData<3>;
+  template class ScratchData<1, 1, double>;
+  template class ScratchData<2, 2, double>;
+  template class ScratchData<3, 3, double>;
 } // namespace MeltPoolDG

@@ -21,7 +21,7 @@
   },
   "problem specific": {
     "do heat transfer": "true",
-    "do solidification": "false",
+    "do solidification": "true",
     "do advect level set": "true",
     "mp heat up": {
       "time step size": "0.0005",
@@ -44,11 +44,20 @@
       "density": "7850.0",
       "dynamic viscosity": "2.0"
     },
+    "solid": {
+      "thermal conductivity": "50.0",
+      "specific heat capacity": "1000.0",
+      "density": "8000.0",
+      "dynamic viscosity": "5.0"
+    },
+    "solidus temperature": "520.0",
+    "liquidus temperature": "600.0",
     "boiling temperature": "700.0",
     "latent heat of evaporation": "1e5",
     "molar mass": "0.05224130936",
     "specific enthalpy reference temperature": "699.0",
-    "two phase fluid properties transition type": "smooth"
+    "two phase fluid properties transition type": "smooth",
+    "solid liquid properties transition type": "mushy_zone"
   },
   "heat": {
     "operator type": "cut",
@@ -154,6 +163,11 @@
     "gravity": "0.0",
     "surface tension": {
       "surface tension coefficient": "1.493"
+    },
+    "darcy damping": {
+      "avoid div zero constant": "1",
+      "mushy zone morphology": "1e9",
+      "formulation": "implicit_formulation"
     }
   }
 }

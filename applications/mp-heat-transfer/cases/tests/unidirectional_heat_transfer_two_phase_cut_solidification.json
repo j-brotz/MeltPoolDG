@@ -5,44 +5,58 @@
     "do print parameters": "false",
     "global refinements": "4",
     "problem name": "heat_transfer",
+    "verbosity level": "0",
     "fe": {
       "degree": "1"
     }
   },
   "time stepping": {
     "start time": "0.0",
-    "time step size": "1.0",
-    "end time": "100.0",
-    "max n steps": "5"
+    "time step size": "0.5",
+    "end time": "10.0",
+    "max n steps": "2"
   },
   "heat": {
     "operator type": "cut",
     "cut": {
-      "two phase": "false"
+      "two phase": "true"
     },
     "linear solver": {
       "preconditioner type": "Diagonal",
       "rel tolerance": "1e-12",
-      "abs tolerance": "1e-10"
+      "abs tolerance": "1e-11"
     },
     "nlsolve": {
-      "residual tolerance": "1e-9"
+      "residual tolerance": "1e-8"
     }
   },
   "simulation specific": {
-    "do solidification": "false",
+    "do solidification": "true",
     "do two phase": "true",
-    "velocity": "0.001"
+    "velocity": "0.0001"
   },
   "problem specific": {
-    "do solidification": "false"
+    "do solidification": "true"
   },
   "material": {
+    "gas": {
+      "thermal conductivity": "20.0",
+      "specific heat capacity": "500.0",
+      "density": "3925.0"
+    },
     "liquid": {
       "thermal conductivity": "40.0",
       "specific heat capacity": "1000.0",
       "density": "7850.0"
-    }
+    },
+    "solid": {
+      "thermal conductivity": "50.0",
+      "specific heat capacity": "900.0",
+      "density": "8000.0"
+    },
+    "solidus temperature": "1962.5",
+    "liquidus temperature": "1970.0",
+    "solid liquid properties transition type": "mushy_zone"
   },
   "output": {
     "paraview": {
