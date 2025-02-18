@@ -5,7 +5,7 @@
     "do print parameters": "false",
     "global refinements": "0",
     "problem name": "melt_pool",
-    "verbosity level": "1",
+    "verbosity level": "0",
     "fe": {
       "degree": "1"
     }
