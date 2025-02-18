@@ -265,12 +265,12 @@ namespace MeltPoolDG::Flow
 
     if (do_print)
       {
-        scratch_data_.get_pcout() << "Time step size: " << time_step
-                                  << ", convective time step limit: " << convective_time_step_limit
-                                  << ", viscous time step limit: " << viscous_time_step_limit
-                                  << ",\nminimum h: " << scratch_data_.get_min_cell_size()
-                                  << ", minimum density: " << min_density << std::endl
-                                  << std::endl;
+        scratch_data_.get_pcout(1) << "Time step size: " << time_step
+                                   << ", convective time step limit: " << convective_time_step_limit
+                                   << ", viscous time step limit: " << viscous_time_step_limit
+                                   << ",\nminimum h: " << scratch_data_.get_min_cell_size()
+                                   << ", minimum density: " << min_density << std::endl
+                                   << std::endl;
       }
 
     return time_step;

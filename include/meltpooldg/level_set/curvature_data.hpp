@@ -16,11 +16,11 @@ namespace MeltPoolDG::LevelSet
   {
     CurvatureData();
 
-    bool         enable                  = true;
-    number       filter_parameter        = 2.0;
-    std::string  implementation          = "meltpooldg";
-    unsigned int verbosity_level         = 0;
-    bool         do_curvature_correction = false;
+    bool        enable                  = true;
+    number      filter_parameter        = 2.0;
+    std::string implementation          = "meltpooldg";
+    int         verbosity_level         = -1;
+    bool        do_curvature_correction = false;
 
     struct NarrowBand
     {
@@ -40,9 +40,9 @@ namespace MeltPoolDG::LevelSet
     add_parameters(dealii::ParameterHandler &prm);
 
     void
-    check_input_parameters(const InterfaceThicknessParameterType &type) const;
+    post(const unsigned int base_verbosity_level);
 
     void
-    post();
+    check_input_parameters(const InterfaceThicknessParameterType &type) const;
   };
 } // namespace MeltPoolDG::LevelSet

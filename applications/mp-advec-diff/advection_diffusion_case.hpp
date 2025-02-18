@@ -29,7 +29,6 @@ namespace MeltPoolDG::LevelSet
       amr.post(base.global_refinements, false /*restart not supported*/);
       advec_diff.post(base.fe);
       output.post(time_stepping.time_step_size, parameter_filename);
-      profiling.post(base.verbosity_level);
 
       // check input parameters for validity
       advec_diff.check_input_parameters();

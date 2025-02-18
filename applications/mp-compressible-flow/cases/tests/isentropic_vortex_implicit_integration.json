@@ -3,7 +3,7 @@
     "problem name": "compressible_flow",
     "case name": "isentropic_vortex",
     "dimension": "2",
-    "verbosity level": "0",
+    "verbosity level": "1",
     "global refinements": "3",
     "do print parameters": "false"
   },

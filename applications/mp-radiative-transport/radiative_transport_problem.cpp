@@ -35,7 +35,7 @@ namespace MeltPoolDG::RadiativeTransport
     while (not time_iterator->is_finished())
       {
         time_iterator->compute_next_time_increment();
-        time_iterator->print_me(scratch_data->get_pcout());
+        time_iterator->print_me(scratch_data->get_pcout(1));
 
         compute_heaviside(*simulation_case->get_initial_condition("prescribed_heaviside"));
 
@@ -52,11 +52,11 @@ namespace MeltPoolDG::RadiativeTransport
     //... print timing statistics
     if (profiling_monitor)
       {
-        profiling_monitor->print(scratch_data->get_pcout(),
+        profiling_monitor->print(scratch_data->get_pcout(1),
                                  scratch_data->get_timer(),
                                  scratch_data->get_mpi_comm());
       }
-    Journal::print_end(scratch_data->get_pcout());
+    Journal::print_end(scratch_data->get_pcout(1));
   }
 
 
@@ -112,7 +112,7 @@ namespace MeltPoolDG::RadiativeTransport
                                            simulation_case->parameters.time_stepping,
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(rte_dof_idx),
-                                           scratch_data->get_pcout(1));
+                                           scratch_data->get_pcout(2));
 
     if (simulation_case->parameters.profiling.enable)
       profiling_monitor =
@@ -125,7 +125,7 @@ namespace MeltPoolDG::RadiativeTransport
         {
           std::ostringstream str;
           str << " #dofs intensity: " << rad_trans_operation->get_intensity().size();
-          Journal::print_line(scratch_data->get_pcout(), str.str(), "RTE");
+          Journal::print_line(scratch_data->get_pcout(1), str.str(), "RTE");
           refine_mesh();
         }
 

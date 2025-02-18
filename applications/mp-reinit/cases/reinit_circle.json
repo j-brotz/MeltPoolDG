@@ -18,16 +18,18 @@
       "enable": "true"
     }
   },
-  "reinitialization": {
-    "linear solver": {
-      "do matrix free": "true"
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "type": "olsson2007"
     },
-    "type": "olsson2007"
-  },
-  "normal vector": {
-    "linear solver": {
-      "do matrix free": "true"
-    },
-    "filter parameter": "0.5"
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "0.5"
+    }
   }
 }

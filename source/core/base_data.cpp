@@ -27,10 +27,13 @@ namespace MeltPoolDG
       prm.add_parameter("do print parameters",
                         do_print_parameters,
                         "Set this parameter to true to list parameters in output");
-      prm.add_parameter(
-        "verbosity level",
-        verbosity_level,
-        "Sets the maximum verbosity level of the console output. Set this parameter to 0 in case of test files.");
+      prm.add_parameter("verbosity level",
+                        verbosity_level,
+                        "Sets the verbosity level of the console output: "
+                        "0: silent: for non-robust tests and benchmark runs; "
+                        "1: minimal: for robust tests; "
+                        "2: detailed; "
+                        "3: full");
 
       fe.add_parameters(prm);
     }

@@ -181,7 +181,7 @@ namespace MeltPoolDG::Evaporation
       }
 
     Journal::print_formatted_norm(
-      scratch_data.get_pcout(1),
+      scratch_data.get_pcout(2),
       [&]() -> double {
         return MeltPoolDG::VectorTools::compute_norm(evaporative_mass_flux,
                                                      scratch_data,

@@ -5,7 +5,7 @@
     "dimension": "1",
     "global refinements": "6",
     "do print parameters": "false",
-    "verbosity level": "0",
+    "verbosity level": "1",
     "fe": {
       "degree": "1"
     }
@@ -71,7 +71,7 @@
       }
     },
     "curvature": {
-      "verbosity level": "1"
+      "verbosity level": "2"
     }
   },
   "flow": {

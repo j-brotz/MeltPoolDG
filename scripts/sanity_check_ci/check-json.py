@@ -18,5 +18,6 @@ if __name__ == "__main__":
                 data = data[key]
             else:
                 sys.exit()
-        if data != sys.argv[2]:
+        options = set(sys.argv[2].split("|"))
+        if not data in options:
             print(sys.argv[3])

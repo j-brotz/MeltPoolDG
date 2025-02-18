@@ -28,15 +28,6 @@ namespace MeltPoolDG::Profiling
 
   template <typename number>
   void
-  ProfilingData<number>::post(const unsigned int base_verbosity_level)
-  {
-    // enable profiling for verbosity level higher than 1
-    if (base_verbosity_level >= 1)
-      enable = true;
-  }
-
-  template <typename number>
-  void
   ProfilingData<number>::check_input_parameters(const number time_step_size) const
   {
     /*

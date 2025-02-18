@@ -5,7 +5,7 @@
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "6",
-    "verbosity level": "0",
+    "verbosity level": "1",
     "fe": {
       "degree": "1"
     }
@@ -17,7 +17,7 @@
     "radius": "0.5"
   },
   "rte": {
-    "rte verbosity level": "1",
+    "rte verbosity level": "2",
     "predictor type": "pseudo_time_stepping",
     "linear solver": {
       "solver type": "GMRES",

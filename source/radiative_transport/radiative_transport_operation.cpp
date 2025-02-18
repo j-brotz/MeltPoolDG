@@ -145,7 +145,7 @@ namespace MeltPoolDG::RadiativeTransport
       pseudo_rte_operation->set_intensity(intensity);
 
     Journal::print_formatted_norm(
-      scratch_data.get_pcout(0),
+      scratch_data.get_pcout(1),
       [&]() -> double {
         return VectorTools::compute_norm<dim>(intensity, scratch_data, rte_dof_idx, rte_quad_idx);
       },

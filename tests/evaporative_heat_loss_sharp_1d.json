@@ -113,14 +113,14 @@
         "do matrix free": "true"
       },
       "filter parameter": "0.5",
-      "verbosity level": "1"
+      "verbosity level": "2"
     },
     "normal vector": {
       "linear solver": {
         "do matrix free": "true"
       },
       "filter parameter": "0.5",
-      "verbosity level": "1"
+      "verbosity level": "2"
     }
   },
   "flow": {

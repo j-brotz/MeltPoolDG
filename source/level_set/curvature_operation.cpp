@@ -120,7 +120,7 @@ namespace MeltPoolDG::LevelSet
     // update ghost values of solution
     solution_history.get_current_solution().update_ghost_values();
 
-    const unsigned int        verbosity_l2_norm = dim > 1 ? 0 : 1;
+    const int                 verbosity_l2_norm = dim > 1 ? 1 : 2;
     const ConditionalOStream &pcout =
       scratch_data.get_pcout(std::max(curvature_data.verbosity_level, verbosity_l2_norm));
 
@@ -138,7 +138,7 @@ namespace MeltPoolDG::LevelSet
       11 /*precision*/
     );
 
-    Journal::print_line(scratch_data.get_pcout(1),
+    Journal::print_line(scratch_data.get_pcout(2),
                         "     * CG: i = " + std::to_string(iter),
                         "curvature");
 

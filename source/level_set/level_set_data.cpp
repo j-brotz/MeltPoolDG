@@ -35,12 +35,13 @@ namespace MeltPoolDG::LevelSet
 
   template <typename number>
   void
-  LevelSetData<number>::post(const FiniteElementData &base_fe_data)
+  LevelSetData<number>::post(const FiniteElementData &base_fe_data,
+                             const unsigned int       base_verbosity_level)
   {
     fe.post(base_fe_data);
     advec_diff.post(fe);
-    normal_vec.post();
-    curv.post();
+    normal_vec.post(base_verbosity_level);
+    curv.post(base_verbosity_level);
     reinit.post(fe);
   }
 

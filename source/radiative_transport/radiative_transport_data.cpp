@@ -71,9 +71,13 @@ namespace MeltPoolDG::RadiativeTransport
 
   template <typename number>
   void
-  RadiativeTransportData<number>::post(const FiniteElementData &base_fe_data)
+  RadiativeTransportData<number>::post(const FiniteElementData &base_fe_data,
+                                       const unsigned int       base_verbosity_level)
   {
     fe.post(base_fe_data);
+
+    if (verbosity_level < 0)
+      verbosity_level = base_verbosity_level;
   }
 
   template <typename number>

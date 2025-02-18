@@ -1,28 +1,37 @@
 #ifdef MELT_POOL_DG_WITH_ADAFLO
+
 #  include <meltpooldg/level_set/normal_vector_operation_adaflo_wrapper.hpp>
+//
 #  include <meltpooldg/utilities/journal.hpp>
+#  include <meltpooldg/utilities/vector_tools.hpp>
+
+#  include <adaflo/level_set_okz_preconditioner.h>
+#  include <adaflo/util.h>
+
+#  include <algorithm>
+
 
 namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   NormalVectorOperationAdaflo<dim>::NormalVectorOperationAdaflo(
     const ScratchData<dim>         &scratch_data,
+    const NormalVectorData<double> &normal_vec_data_in,
     const int                       advec_diff_dof_idx,
     const int                       normal_vec_dof_idx,
     const int                       normal_vec_quad_idx,
     const VectorType               &advected_field_in,
-    const NormalVectorData<double> &data_in,
     const double                    reinit_scale_factor_epsilon)
     : scratch_data(scratch_data)
     , advected_field(advected_field_in)
     , normal_vector_field(dim)
     , rhs(dim)
+    , normal_vec_data(normal_vec_data_in)
   {
     /**
      * set parameters of adaflo
      */
-    set_adaflo_parameters(data_in,
-                          reinit_scale_factor_epsilon,
+    set_adaflo_parameters(reinit_scale_factor_epsilon,
                           advec_diff_dof_idx,
                           normal_vec_dof_idx,
                           normal_vec_quad_idx);
@@ -103,17 +112,16 @@ namespace MeltPoolDG::LevelSet
     initialize_vectors();
     normal_vec_operation->compute_normal(false /* fast computation*/);
 
-    const int verbosity_l2_norm = dim > 1 ? 0 : 1;
+    const int verbosity_l2_norm = dim > 1 ? 1 : 2;
 
     for (unsigned int d = 0; d < dim; ++d)
       Journal::print_formatted_norm(
-        scratch_data.get_pcout(verbosity_l2_norm),
+        scratch_data.get_pcout(std::max(normal_vec_data.verbosity_level, verbosity_l2_norm)),
         [&]() -> double {
-          return MeltPoolDG::VectorTools::compute_norm<dim>(
-            get_solution_normal_vector().block(d),
-            scratch_data,
-            normal_vec_adaflo_params.dof_index_normal,
-            normal_vec_adaflo_params.quad_index);
+          return VectorTools::compute_norm<dim>(get_solution_normal_vector().block(d),
+                                                scratch_data,
+                                                normal_vec_adaflo_params.dof_index_normal,
+                                                normal_vec_adaflo_params.quad_index);
         },
         "normal_" + std::to_string(d),
         "normal_vector_adaflo",
@@ -153,12 +161,10 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  NormalVectorOperationAdaflo<dim>::set_adaflo_parameters(
-    const NormalVectorData<double> &normal_vec_data,
-    const double                    epsilon,
-    const int                       advec_diff_dof_idx,
-    const int                       normal_vec_dof_idx,
-    const int                       normal_vec_quad_idx)
+  NormalVectorOperationAdaflo<dim>::set_adaflo_parameters(const double epsilon,
+                                                          const int    advec_diff_dof_idx,
+                                                          const int    normal_vec_dof_idx,
+                                                          const int    normal_vec_quad_idx)
   {
     normal_vec_adaflo_params.dof_index_ls            = advec_diff_dof_idx;
     normal_vec_adaflo_params.dof_index_normal        = normal_vec_dof_idx;

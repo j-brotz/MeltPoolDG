@@ -395,6 +395,27 @@ def process_special_parameters(dataDict, nErrors):
             nErrors += 1
     except BaseException:
         pass
+    try:
+        val = get_nested_value(
+            dataDict, ["level set", "curvature", "verbosity level"])
+        if float(val) == 1:
+            set_nested_item(
+                dataDict, ["level set", "curvature", "verbosity level"],
+                "2")
+            nErrors += 1
+    except BaseException:
+        pass
+    try:
+        val = get_nested_value(
+            dataDict, ["level set", "normal vector", "verbosity level"])
+        if float(val) == 1:
+            set_nested_item(
+                dataDict, ["level set", "normal vector", "verbosity level"],
+                "2")
+            nErrors += 1
+    except BaseException:
+        pass
+
     return (dataDict, nErrors)
 
 ##############################################################################

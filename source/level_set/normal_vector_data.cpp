@@ -62,6 +62,16 @@ namespace MeltPoolDG::LevelSet
 
   template <typename number>
   void
+  NormalVectorData<number>::post(const unsigned int base_verbosity_level)
+  {
+    if (verbosity_level < 0)
+      verbosity_level = base_verbosity_level;
+
+    predictor.post();
+  }
+
+  template <typename number>
+  void
   NormalVectorData<number>::check_input_parameters(
     const InterfaceThicknessParameterType &type) const
   {
@@ -81,11 +91,5 @@ namespace MeltPoolDG::LevelSet
                            "is mandatory."));
   }
 
-  template <typename number>
-  void
-  NormalVectorData<number>::post()
-  {
-    predictor.post();
-  }
   template struct NormalVectorData<double>;
 } // namespace MeltPoolDG::LevelSet

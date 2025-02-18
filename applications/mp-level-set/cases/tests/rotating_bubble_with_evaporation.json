@@ -60,7 +60,7 @@
       },
       "filter parameter": "4.0",
       "implementation": "meltpooldg",
-      "verbosity level": "1"
+      "verbosity level": "2"
     },
     "advection diffusion": {
       "linear solver": {

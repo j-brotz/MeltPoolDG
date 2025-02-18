@@ -513,13 +513,13 @@ namespace MeltPoolDG::CutUtil
 
     dsp.compress();
 
-    if (sum_gp_extrap > 0)
+    if (verbosity >= 1 and sum_gp_extrap > 0)
       {
         std::ostringstream str;
         str << "Number of new DoFs: " << std::setw(15) << sum_gp_extrap;
         Journal::print_line(pcout, str.str(), "cut solution transfer");
       }
-    if (verbosity >= 2)
+    if (verbosity >= 3)
       {
         std::ostringstream str;
         str << "Number of nonzero elements: " << std::setw(15) << dsp.n_nonzero_elements();

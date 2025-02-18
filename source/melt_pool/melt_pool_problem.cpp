@@ -92,7 +92,7 @@ namespace MeltPoolDG::MeltPool
 
         if (restart_monitor and restart_monitor->do_load())
           {
-            Journal::print_line(scratch_data->get_pcout(0), "load restart data");
+            Journal::print_line(scratch_data->get_pcout(1), "load restart data");
             load(base_in);
           }
         /*
@@ -113,7 +113,7 @@ namespace MeltPoolDG::MeltPool
               const double       T_max = heat_operation->get_temperature().linfty_norm();
               std::ostringstream s;
               s << "heat up period: T_max=" << std::setprecision(5) << std::scientific << T_max;
-              Journal::print_line(scratch_data->get_pcout(0), s.str(), "melt_pool_problem");
+              Journal::print_line(scratch_data->get_pcout(1), s.str(), "melt_pool_problem");
 
               // start to decrease time step size if T > T_heat_up
               if (T_max > problem_specific_parameters.mp_heat_up.max_temperature)
@@ -127,7 +127,7 @@ namespace MeltPoolDG::MeltPool
                   heat_up_finished = std::abs(time_iterator->get_current_time_increment() -
                                               param.time_stepping.time_step_size) < 1e-16;
                   if (heat_up_finished)
-                    Journal::print_line(scratch_data->get_pcout(0),
+                    Journal::print_line(scratch_data->get_pcout(1),
                                         "Heat up period is finished.",
                                         "melt_pool_problem");
                 }
@@ -152,7 +152,7 @@ namespace MeltPoolDG::MeltPool
             const auto dt = time_iterator->compute_next_time_increment();
             base_in->set_time_boundary_conditions(time_iterator->get_current_time());
 
-            time_iterator->print_me(scratch_data->get_pcout());
+            time_iterator->print_me(scratch_data->get_pcout(1));
 
             // use extrapolated solution values in the coupling terms
             if (problem_specific_parameters.do_extrapolate_coupling_terms)
@@ -197,7 +197,7 @@ namespace MeltPoolDG::MeltPool
                         iter_res -= level_set_operation->get_level_set();
                         const double res_norm = iter_res.l2_norm();
 
-                        if (param.base.verbosity_level > 0)
+                        if (param.base.verbosity_level >= 2)
                           {
                             iter_table.add_value("i", i);
                             iter_table.add_value("|res|", res_norm);
@@ -209,24 +209,24 @@ namespace MeltPoolDG::MeltPool
                         // is already very small
                         if (res_norm <= problem_specific_parameters.level_set_evapor_coupling.tol)
                           {
-                            Journal::print_decoration_line(scratch_data->get_pcout(0));
-                            Journal::print_line(scratch_data->get_pcout(0),
+                            Journal::print_decoration_line(scratch_data->get_pcout(1));
+                            Journal::print_line(scratch_data->get_pcout(1),
                                                 "level set - evapor coupling; finished after " +
                                                   std::to_string(i) + " iter at residual " +
                                                   UtilityFunctions::to_string_with_precision(
                                                     res_norm),
                                                 "MeltPoolProblem");
-                            Journal::print_decoration_line(scratch_data->get_pcout(0));
+                            Journal::print_decoration_line(scratch_data->get_pcout(1));
                             break;
                           }
 
                         iter_res.copy_locally_owned_data_from(level_set_operation->get_level_set());
-                        Journal::print_decoration_line(scratch_data->get_pcout(1));
-                        Journal::print_line(scratch_data->get_pcout(1),
+                        Journal::print_decoration_line(scratch_data->get_pcout(2));
+                        Journal::print_line(scratch_data->get_pcout(2),
                                             "level set - evapor coupling; #iter " +
                                               std::to_string(i),
                                             "MeltPoolProblem");
-                        Journal::print_decoration_line(scratch_data->get_pcout(1));
+                        Journal::print_decoration_line(scratch_data->get_pcout(2));
                       }
 
                     this->compute_interface_velocity(param.ls, param.evapor);
@@ -251,17 +251,17 @@ namespace MeltPoolDG::MeltPool
                       }
                   }
 
-                if (param.base.verbosity_level > 0 and do_ls_iteration)
+                if (param.base.verbosity_level >= 2 and do_ls_iteration)
                   {
                     iter_table.set_precision("|res|", 10);
                     iter_table.set_scientific("|res|", true);
                     iter_table.set_precision("|phi|", 10);
                     iter_table.set_scientific("|phi|", true);
 
-                    if (scratch_data->get_pcout(1).is_active())
-                      iter_table.write_text(scratch_data->get_pcout(1).get_stream());
+                    if (scratch_data->get_pcout(2).is_active())
+                      iter_table.write_text(scratch_data->get_pcout(2).get_stream());
 
-                    Journal::print_decoration_line(scratch_data->get_pcout(1));
+                    Journal::print_decoration_line(scratch_data->get_pcout(2));
                   }
 
                 level_set_operation->finish_time_advance();
@@ -344,7 +344,7 @@ namespace MeltPoolDG::MeltPool
                             iter_res -= heat_operation->get_temperature();
                             const double res_norm = iter_res.l2_norm();
 
-                            if (param.base.verbosity_level > 0)
+                            if (param.base.verbosity_level >= 2)
                               {
                                 iter_table.add_value("i", i);
                                 iter_table.add_value("|res|", res_norm);
@@ -356,43 +356,43 @@ namespace MeltPoolDG::MeltPool
                             // field is already very small
                             if (res_norm <= problem_specific_parameters.heat_evapor_coupling.tol)
                               {
-                                Journal::print_decoration_line(scratch_data->get_pcout(0));
-                                Journal::print_line(scratch_data->get_pcout(0),
+                                Journal::print_decoration_line(scratch_data->get_pcout(1));
+                                Journal::print_line(scratch_data->get_pcout(1),
                                                     "heat - evapor coupling; finished after " +
                                                       std::to_string(i) + " iter at residual " +
                                                       UtilityFunctions::to_string_with_precision(
                                                         res_norm),
                                                     "MeltPoolProblem");
-                                Journal::print_decoration_line(scratch_data->get_pcout(0));
+                                Journal::print_decoration_line(scratch_data->get_pcout(1));
                                 break;
                               }
 
                             iter_res.copy_locally_owned_data_from(
                               heat_operation->get_temperature());
-                            Journal::print_decoration_line(scratch_data->get_pcout(1));
-                            Journal::print_line(scratch_data->get_pcout(1),
+                            Journal::print_decoration_line(scratch_data->get_pcout(2));
+                            Journal::print_line(scratch_data->get_pcout(2),
                                                 "heat - evapor coupling; #iter " +
                                                   std::to_string(i),
                                                 "MeltPoolProblem");
-                            Journal::print_decoration_line(scratch_data->get_pcout(1));
+                            Journal::print_decoration_line(scratch_data->get_pcout(2));
 
                             heat_diffuse_operation->solve(false);
 
                             evaporation_operation->compute_evaporative_mass_flux();
                           }
 
-                        if (param.base.verbosity_level > 0)
+                        if (param.base.verbosity_level >= 2)
                           {
                             iter_table.set_precision("|res|", 10);
                             iter_table.set_scientific("|res|", true);
                             iter_table.set_precision("|T|", 10);
                             iter_table.set_scientific("|T|", true);
 
-                            if (scratch_data->get_pcout(1).is_active() and
+                            if (scratch_data->get_pcout(2).is_active() and
                                 Utilities::MPI::this_mpi_process(scratch_data->get_mpi_comm()) == 0)
                               iter_table.write_text(std::cout);
 
-                            Journal::print_decoration_line(scratch_data->get_pcout(1));
+                            Journal::print_decoration_line(scratch_data->get_pcout(2));
                           }
 
                         heat_diffuse_operation->finish_time_advance();
@@ -562,28 +562,28 @@ namespace MeltPoolDG::MeltPool
                 sc    = std::make_unique<ScopedName>("mp::run");
                 scope = std::make_unique<TimerOutput::Scope>(scratch_data->get_timer(), *sc);
 
-                profiling_monitor->print(scratch_data->get_pcout(),
+                profiling_monitor->print(scratch_data->get_pcout(1),
                                          scratch_data->get_timer(),
                                          scratch_data->get_mpi_comm());
               }
 
             if (restart_monitor and restart_monitor->do_save())
               {
-                Journal::print_line(scratch_data->get_pcout(), "save restart data");
+                Journal::print_line(scratch_data->get_pcout(1), "save restart data");
                 restart_monitor->prepare_save();
                 save(base_in);
               }
           }
 
-        Journal::print_end(scratch_data->get_pcout());
+        Journal::print_end(scratch_data->get_pcout(1));
 
         scope.reset();
         sc.reset();
 
         //... always print timing statistics
-        if (profiling_monitor)
+        if (profiling_monitor and base_in->parameters.profiling.enable)
           {
-            profiling_monitor->print(scratch_data->get_pcout(),
+            profiling_monitor->print(scratch_data->get_pcout(1),
                                      scratch_data->get_timer(),
                                      scratch_data->get_mpi_comm());
           }
@@ -1173,7 +1173,7 @@ namespace MeltPoolDG::MeltPool
                                            param.time_stepping,
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(vel_dof_idx),
-                                           scratch_data->get_pcout(1));
+                                           scratch_data->get_pcout(2));
     output_interface_velocity =
       evaporation_operation and param.evapor.evaporative_dilation_rate.enable and
       (param.evapor.formulation_source_term_level_set ==
@@ -1207,7 +1207,7 @@ namespace MeltPoolDG::MeltPool
           if (melt_front_propagation)
             str << " solid.size " << melt_front_propagation->get_solid().size();
 
-          Journal::print_line(scratch_data->get_pcout(), str.str(), "melt_pool_problem");
+          Journal::print_line(scratch_data->get_pcout(1), str.str(), "melt_pool_problem");
           refine_mesh(base_in);
 
           // set initial conditions after initial AMR
@@ -1809,7 +1809,7 @@ namespace MeltPoolDG::MeltPool
 
     //... always print timing statistics
     if (profiling_monitor)
-      profiling_monitor->print(scratch_data->get_pcout(),
+      profiling_monitor->print(scratch_data->get_pcout(1),
                                scratch_data->get_timer(),
                                scratch_data->get_mpi_comm());
   }

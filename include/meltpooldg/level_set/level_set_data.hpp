@@ -35,7 +35,7 @@ namespace MeltPoolDG::LevelSet
     add_parameters(dealii::ParameterHandler &prm);
 
     void
-    post(const FiniteElementData &base_fe_data);
+    post(const FiniteElementData &base_fe_data, const unsigned int base_verbosity_level);
 
     void
     check_input_parameters(const FiniteElementData &base_fe_data) const;

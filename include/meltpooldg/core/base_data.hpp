@@ -14,7 +14,7 @@ namespace MeltPoolDG
     unsigned int      dimension           = 2;
     unsigned int      global_refinements  = 1;
     bool              do_print_parameters = true;
-    unsigned int      verbosity_level     = 0;
+    unsigned int      verbosity_level     = 1;
     FiniteElementData fe;
 
     BaseData();

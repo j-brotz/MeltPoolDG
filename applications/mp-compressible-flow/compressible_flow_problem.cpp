@@ -31,7 +31,7 @@ namespace MeltPoolDG::Flow
                                                     std::numeric_limits<double>::max());
 
         time_iterator->compute_next_time_increment();
-        time_iterator->print_me(scratch_data->get_pcout());
+        time_iterator->print_me(scratch_data->get_pcout(1));
 
         comp_flow_operation->solve(time_iterator->get_current_time(),
                                    time_iterator->get_current_time_increment());
@@ -42,7 +42,7 @@ namespace MeltPoolDG::Flow
 
         if (profiling_monitor and profiling_monitor->now())
           {
-            profiling_monitor->print(scratch_data->get_pcout(),
+            profiling_monitor->print(scratch_data->get_pcout(1),
                                      scratch_data->get_timer(),
                                      scratch_data->get_mpi_comm());
           }
@@ -51,11 +51,11 @@ namespace MeltPoolDG::Flow
     // always print timing statistics
     if (profiling_monitor)
       {
-        profiling_monitor->print(scratch_data->get_pcout(),
+        profiling_monitor->print(scratch_data->get_pcout(1),
                                  scratch_data->get_timer(),
                                  scratch_data->get_mpi_comm());
       }
-    Journal::print_end(scratch_data->get_pcout());
+    Journal::print_end(scratch_data->get_pcout(1));
   }
 
   template <int dim>
@@ -266,7 +266,7 @@ namespace MeltPoolDG::Flow
                                            simulation_case->parameters.time_stepping,
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(comp_flow_dof_idx),
-                                           scratch_data->get_pcout(1));
+                                           scratch_data->get_pcout(2));
 
     // initialize profiling
     if (simulation_case->parameters.profiling.enable)

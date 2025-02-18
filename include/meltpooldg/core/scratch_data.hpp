@@ -52,7 +52,7 @@ namespace MeltPoolDG
 
   public:
     ScratchData(const MPI_Comm     mpi_communicator,
-                const unsigned int max_verbosity_level,
+                const unsigned int verbosity_level_in,
                 const bool         do_matrix_free);
 
     /**
@@ -203,7 +203,7 @@ namespace MeltPoolDG
     get_partitioner(const unsigned int dof_idx) const;
 
     const ConditionalOStream
-    get_pcout(const unsigned int level = 0) const;
+    get_pcout(const unsigned int level = 1) const;
 
     bool
     is_hex_mesh(const unsigned int dof_idx = 0) const;
@@ -242,7 +242,7 @@ namespace MeltPoolDG
     std::vector<IndexSet>                  locally_relevant_dofs;
     std::vector<std::shared_ptr<Utilities::MPI::Partitioner>> partitioner;
     std::map<unsigned int, std::shared_ptr<Utilities::MPI::RemotePointEvaluation<dim, dim>>> rpe;
-    const unsigned int max_verbosity_level;
+    const unsigned int verbosity_level;
 
     mutable std::shared_ptr<TimerOutput> timer;
 

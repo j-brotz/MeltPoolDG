@@ -183,7 +183,7 @@ namespace MeltPoolDG::LevelSet
       solution_history.get_recent_old_solution().update_ghost_values();
 
     Journal::print_formatted_norm(
-      scratch_data.get_pcout(1),
+      scratch_data.get_pcout(2),
       [&]() -> double {
         return VectorTools::compute_norm<dim>(advection_velocity,
                                               scratch_data,
@@ -258,7 +258,7 @@ namespace MeltPoolDG::LevelSet
 
 
     Journal::print_formatted_norm(
-      scratch_data.get_pcout(2),
+      scratch_data.get_pcout(3),
       [&]() -> double { return advec_diff_operator->get_system_matrix().frobenius_norm(); },
       "matrix",
       "advection_diffusion",
@@ -266,14 +266,14 @@ namespace MeltPoolDG::LevelSet
       "F");
 
     Journal::print_formatted_norm(
-      scratch_data.get_pcout(2),
+      scratch_data.get_pcout(3),
       [&]() -> double { return rhs.l2_norm(); },
       "rhs",
       "advection_diffusion",
       6 /*precision*/,
       "l2");
     Journal::print_formatted_norm(
-      scratch_data.get_pcout(2),
+      scratch_data.get_pcout(3),
       [&]() -> double { return solution_history.get_current_solution().l2_norm(); },
       "src",
       "advection_diffusion",
@@ -281,7 +281,7 @@ namespace MeltPoolDG::LevelSet
       "l2");
 
     Journal::print_formatted_norm(
-      scratch_data.get_pcout(0),
+      scratch_data.get_pcout(1),
       [&]() -> double {
         return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
                                                           scratch_data,
@@ -293,7 +293,7 @@ namespace MeltPoolDG::LevelSet
       10 /*precision*/
     );
 
-    Journal::print_line(scratch_data.get_pcout(2),
+    Journal::print_line(scratch_data.get_pcout(3),
                         "     * GMRES: i = " + std::to_string(iter),
                         "advection_diffusion");
 

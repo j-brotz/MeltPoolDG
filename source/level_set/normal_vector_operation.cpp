@@ -118,7 +118,7 @@ namespace MeltPoolDG::LevelSet
         scratch_data.get_constraint(normal_dof_idx)
           .distribute(solution_history.get_current_solution().block(d));
       }
-    constexpr unsigned int    verbosity_l2_norm = dim > 1 ? 0 : 1;
+    constexpr int             verbosity_l2_norm = dim > 1 ? 1 : 2;
     const ConditionalOStream &pcout =
       scratch_data.get_pcout(std::max(normal_vector_data.verbosity_level, verbosity_l2_norm));
 
@@ -137,7 +137,7 @@ namespace MeltPoolDG::LevelSet
         11 /*precision*/
       );
 
-    Journal::print_line(scratch_data.get_pcout(1),
+    Journal::print_line(scratch_data.get_pcout(2),
                         "     * CG: i = " + std::to_string(iter),
                         "normal_vector");
 

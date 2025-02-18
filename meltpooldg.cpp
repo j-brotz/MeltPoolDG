@@ -30,8 +30,8 @@ namespace MeltPoolDG
         Parameters<number> parameters;
         parameters.process_parameters_file(prm, parameter_file);
 
-        // print number of processes and GIT hashes if verbosity level >= 1
-        if (parameters.base.verbosity_level >= 1)
+        // print number of processes and GIT hashes if verbosity level >= 3
+        if (parameters.base.verbosity_level >= 3)
           {
             dealii::ConditionalOStream pcout(std::cout,
                                              Utilities::MPI::this_mpi_process(mpi_communicator) ==

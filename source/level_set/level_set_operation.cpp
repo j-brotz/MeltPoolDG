@@ -482,14 +482,14 @@ namespace MeltPoolDG::LevelSet
 
         reinit_operation->set_initial_condition(get_level_set());
 
-        Journal::print_decoration_line(scratch_data.get_pcout());
+        Journal::print_decoration_line(scratch_data.get_pcout(1));
         while (!reinit_time_iterator.is_finished())
           {
             reinit_time_iterator.compute_next_time_increment();
 
             std::ostringstream str;
             str << " τ = " << std::setw(10) << std::left << reinit_time_iterator.get_current_time();
-            Journal::print_line(scratch_data.get_pcout(), str.str(), "reinitialization", 1);
+            Journal::print_line(scratch_data.get_pcout(1), str.str(), "reinitialization", 1);
 
             reinit_operation->solve();
 
@@ -523,7 +523,7 @@ namespace MeltPoolDG::LevelSet
 
         reinit_time_iterator.reset();
 
-        Journal::print_decoration_line(scratch_data.get_pcout());
+        Journal::print_decoration_line(scratch_data.get_pcout(1));
       }
     else
       {
@@ -531,7 +531,7 @@ namespace MeltPoolDG::LevelSet
         str << " skipped reinit since max(|ΔΦ|) = " << std::setw(10) << std::setprecision(5)
             << std::scientific << std::left << max_d_level_set_since_last_reinit
             << " < level_set_data.reinit_tol";
-        Journal::print_line(scratch_data.get_pcout(), str.str(), "reinitialization", 2);
+        Journal::print_line(scratch_data.get_pcout(1), str.str(), "reinitialization", 2);
       }
   }
 
@@ -773,7 +773,7 @@ namespace MeltPoolDG::LevelSet
     str << "Surface mesh generated, "
         << Utilities::MPI::sum(surface_mesh_info.size(), scratch_data.get_mpi_comm())
         << " cut cells found.";
-    Journal::print_line(scratch_data.get_pcout(), str.str(), "level set", 0);
+    Journal::print_line(scratch_data.get_pcout(1), str.str(), "level set", 0);
   }
 
   template class LevelSetOperation<1>;

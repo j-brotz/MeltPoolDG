@@ -322,7 +322,7 @@ namespace MeltPoolDG::Flow
     distribute_constraints();
 
     Journal::print_formatted_norm(
-      scratch_data.get_pcout(0),
+      scratch_data.get_pcout(1),
       [&]() -> double {
         return VectorTools::compute_norm<dim>(get_velocity(),
                                               scratch_data,
@@ -335,7 +335,7 @@ namespace MeltPoolDG::Flow
     );
 
     Journal::print_formatted_norm(
-      scratch_data.get_pcout(0),
+      scratch_data.get_pcout(1),
       [&]() -> double {
         return VectorTools::compute_norm<dim>(get_pressure(),
                                               scratch_data,

@@ -4,7 +4,7 @@
     "dimension": "1",
     "global refinements": "6",
     "problem name": "melt_pool",
-    "verbosity level": "0",
+    "verbosity level": "1",
     "do print parameters": "false",
     "fe": {
       "degree": "1"
