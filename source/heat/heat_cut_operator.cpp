@@ -424,8 +424,8 @@ namespace MeltPoolDG::Heat
                            const typename Evaluation::ScalarNumber conductivity,
                            const typename Evaluation::ScalarNumber ost_factor, // delta_t * theta
                            const typename Evaluation::ScalarNumber h,
-                           const typename Evaluation::ScalarNumber gamma_M,
-                           const typename Evaluation::ScalarNumber gamma_A,
+                           const typename Evaluation::ScalarNumber gamma_M_degree_1,
+                           const typename Evaluation::ScalarNumber gamma_A_degree_1,
                            const unsigned int                      q,
                            const typename Evaluation::ScalarNumber factor = 1.0)
     {
@@ -433,10 +433,10 @@ namespace MeltPoolDG::Heat
         evaluator_minus.get_normal_derivative(q) - evaluator_plus.get_normal_derivative(q);
 
       // stiffness stabilization
-      auto gp = ost_factor * gamma_A * conductivity * h / 3. * normal_grad_jump;
+      auto gp = ost_factor * gamma_A_degree_1 * conductivity * h / 3. * normal_grad_jump;
 
       // mass stabilizations
-      gp += gamma_M * dealii::Utilities::fixed_power<3>(h) / 3. * normal_grad_jump;
+      gp += gamma_M_degree_1 * dealii::Utilities::fixed_power<3>(h) / 3. * normal_grad_jump;
 
       // submit to [∂_n v]
       evaluator_minus.submit_normal_derivative(gp * factor, q);
@@ -535,7 +535,7 @@ namespace MeltPoolDG::Heat
 
     // precompute Nitsche term factor for the two-phase case
     if (heat_data.cut.two_phase)
-      weighted_nitsche_factor = heat_data.cut.nitsche_parameter *
+      weighted_nitsche_factor = heat_data.cut.stabilization.nitsche_parameter *
                                 (material.get_data().liquid.thermal_conductivity *
                                  material.get_data().gas.thermal_conductivity) /
                                 (material.get_data().liquid.thermal_conductivity +
@@ -1208,14 +1208,15 @@ namespace MeltPoolDG::Heat
             eval_plus_l.gather_evaluate(src, evaluate_gradients);
 
             for (const unsigned int q : eval_minus_l.quadrature_point_indices())
-              internal::do_ghost_penalty_terms(eval_minus_l,
-                                               eval_plus_l,
-                                               material.get_data().liquid.thermal_conductivity,
-                                               ost_factor_implicit,
-                                               cell_side_length,
-                                               heat_data.cut.ghost_penalty.gamma_M,
-                                               heat_data.cut.ghost_penalty.gamma_A,
-                                               q);
+              internal::do_ghost_penalty_terms(
+                eval_minus_l,
+                eval_plus_l,
+                material.get_data().liquid.thermal_conductivity,
+                ost_factor_implicit,
+                cell_side_length,
+                heat_data.cut.stabilization.ghost_penalty.gamma_M_degree_1,
+                heat_data.cut.stabilization.ghost_penalty.gamma_A_degree_1,
+                q);
 
             eval_minus_l.integrate_scatter(evaluate_gradients, dst);
             eval_plus_l.integrate_scatter(evaluate_gradients, dst);
@@ -1248,14 +1249,15 @@ namespace MeltPoolDG::Heat
             eval_plus_g.gather_evaluate(src, evaluate_gradients);
 
             for (const unsigned int q : eval_minus_g.quadrature_point_indices())
-              internal::do_ghost_penalty_terms(eval_minus_g,
-                                               eval_plus_g,
-                                               material.get_data().gas.thermal_conductivity,
-                                               ost_factor_implicit,
-                                               cell_side_length,
-                                               heat_data.cut.ghost_penalty.gamma_M,
-                                               heat_data.cut.ghost_penalty.gamma_A,
-                                               q);
+              internal::do_ghost_penalty_terms(
+                eval_minus_g,
+                eval_plus_g,
+                material.get_data().gas.thermal_conductivity,
+                ost_factor_implicit,
+                cell_side_length,
+                heat_data.cut.stabilization.ghost_penalty.gamma_M_degree_1,
+                heat_data.cut.stabilization.ghost_penalty.gamma_A_degree_1,
+                q);
 
             eval_minus_g.integrate_scatter(evaluate_gradients, dst);
             eval_plus_g.integrate_scatter(evaluate_gradients, dst);
@@ -1769,15 +1771,16 @@ namespace MeltPoolDG::Heat
 
             for (const unsigned int q : T_new_eval_minus_l.quadrature_point_indices())
               {
-                internal::do_ghost_penalty_terms(T_new_eval_minus_l,
-                                                 T_new_eval_plus_l,
-                                                 material.get_data().liquid.thermal_conductivity,
-                                                 ost_factor_implicit,
-                                                 cell_side_length,
-                                                 heat_data.cut.ghost_penalty.gamma_M,
-                                                 heat_data.cut.ghost_penalty.gamma_A,
-                                                 q,
-                                                 -1.0);
+                internal::do_ghost_penalty_terms(
+                  T_new_eval_minus_l,
+                  T_new_eval_plus_l,
+                  material.get_data().liquid.thermal_conductivity,
+                  ost_factor_implicit,
+                  cell_side_length,
+                  heat_data.cut.stabilization.ghost_penalty.gamma_M_degree_1,
+                  heat_data.cut.stabilization.ghost_penalty.gamma_A_degree_1,
+                  q,
+                  -1.0);
               }
             T_new_eval_minus_l.integrate_scatter(evaluate_gradients, residual);
             T_new_eval_plus_l.integrate_scatter(evaluate_gradients, residual);
@@ -1811,15 +1814,16 @@ namespace MeltPoolDG::Heat
 
             for (const unsigned int q : eval_minus_g.quadrature_point_indices())
               {
-                internal::do_ghost_penalty_terms(eval_minus_g,
-                                                 eval_plus_g,
-                                                 material.get_data().gas.thermal_conductivity,
-                                                 ost_factor_implicit,
-                                                 cell_side_length,
-                                                 heat_data.cut.ghost_penalty.gamma_M,
-                                                 heat_data.cut.ghost_penalty.gamma_A,
-                                                 q,
-                                                 -1.0);
+                internal::do_ghost_penalty_terms(
+                  eval_minus_g,
+                  eval_plus_g,
+                  material.get_data().gas.thermal_conductivity,
+                  ost_factor_implicit,
+                  cell_side_length,
+                  heat_data.cut.stabilization.ghost_penalty.gamma_M_degree_1,
+                  heat_data.cut.stabilization.ghost_penalty.gamma_A_degree_1,
+                  q,
+                  -1.0);
               }
             eval_minus_g.integrate_scatter(evaluate_gradients, residual);
             eval_plus_g.integrate_scatter(evaluate_gradients, residual);
@@ -2147,14 +2151,15 @@ namespace MeltPoolDG::Heat
           eval_plus_l.evaluate(evaluate_gradients);
 
           for (const unsigned int q : eval_minus_l.quadrature_point_indices())
-            internal::do_ghost_penalty_terms(eval_minus_l,
-                                             eval_plus_l,
-                                             material.get_data().liquid.thermal_conductivity,
-                                             ost_factor_implicit,
-                                             cell_side_length,
-                                             heat_data.cut.ghost_penalty.gamma_M,
-                                             heat_data.cut.ghost_penalty.gamma_A,
-                                             q);
+            internal::do_ghost_penalty_terms(
+              eval_minus_l,
+              eval_plus_l,
+              material.get_data().liquid.thermal_conductivity,
+              ost_factor_implicit,
+              cell_side_length,
+              heat_data.cut.stabilization.ghost_penalty.gamma_M_degree_1,
+              heat_data.cut.stabilization.ghost_penalty.gamma_A_degree_1,
+              q);
 
           eval_minus_l.integrate(evaluate_gradients);
           eval_plus_l.integrate(evaluate_gradients);
@@ -2172,14 +2177,15 @@ namespace MeltPoolDG::Heat
           eval_plus_g.evaluate(evaluate_gradients);
 
           for (const unsigned int q : eval_minus_g.quadrature_point_indices())
-            internal::do_ghost_penalty_terms(eval_minus_g,
-                                             eval_plus_g,
-                                             material.get_data().gas.thermal_conductivity,
-                                             ost_factor_implicit,
-                                             cell_side_length,
-                                             heat_data.cut.ghost_penalty.gamma_M,
-                                             heat_data.cut.ghost_penalty.gamma_A,
-                                             q);
+            internal::do_ghost_penalty_terms(
+              eval_minus_g,
+              eval_plus_g,
+              material.get_data().gas.thermal_conductivity,
+              ost_factor_implicit,
+              cell_side_length,
+              heat_data.cut.stabilization.ghost_penalty.gamma_M_degree_1,
+              heat_data.cut.stabilization.ghost_penalty.gamma_A_degree_1,
+              q);
 
           eval_minus_g.integrate(evaluate_gradients);
           eval_plus_g.integrate(evaluate_gradients);

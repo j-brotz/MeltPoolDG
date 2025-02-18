@@ -78,7 +78,7 @@ namespace MeltPoolDG::Flow
       std::string unfitted_flow_boundary_condition = "no_slip_wall";
 
       // cut-related stabilization parameters
-      CutParam<double> stabilization;
+      CutStabilizationData<double> stabilization;
     } cut;
 
     void

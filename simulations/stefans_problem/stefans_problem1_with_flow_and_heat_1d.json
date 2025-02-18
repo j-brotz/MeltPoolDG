@@ -89,10 +89,12 @@
       "rel tolerance": "1e-20",
       "preconditioner type": "AMG"
     },
-    "use volume-specific thermal capacity for phase interpolation": "true",
     "nlsolve": {
       "field correction tolerance": "1e-7",
       "residual tolerance": "1e-3"
+    },
+    "diffuse": {
+      "use volume-specific thermal capacity for phase interpolation": "true"
     }
   },
   "output": {

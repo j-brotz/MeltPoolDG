@@ -18,7 +18,14 @@
   "heat": {
     "operator type": "cut",
     "cut": {
-      "two phase": "false"
+      "two phase": "false",
+      "stabilization": {
+        "nitsche parameter": "500",
+        "ghost-penalty": {
+          "gamma A degree 1": "1.5",
+          "gamma M degree 1": "0.75"
+        }
+      }
     },
     "linear solver": {
       "preconditioner type": "Diagonal",

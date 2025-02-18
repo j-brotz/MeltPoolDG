@@ -4,7 +4,7 @@ namespace MeltPoolDG
 {
   template <typename number>
   void
-  GhostPenaltyParam<number>::add_parameters(dealii::ParameterHandler &prm)
+  GhostPenaltyData<number>::add_parameters(dealii::ParameterHandler &prm)
   {
     prm.enter_subsection("ghost-penalty");
     {
@@ -32,7 +32,7 @@ namespace MeltPoolDG
 
   template <typename number>
   void
-  CutParam<number>::add_parameters(dealii::ParameterHandler &prm)
+  CutStabilizationData<number>::add_parameters(dealii::ParameterHandler &prm)
   {
     prm.enter_subsection("stabilization");
     {
@@ -42,6 +42,6 @@ namespace MeltPoolDG
     prm.leave_subsection();
   }
 
-  template struct GhostPenaltyParam<double>;
-  template struct CutParam<double>;
+  template struct GhostPenaltyData<double>;
+  template struct CutStabilizationData<double>;
 } // namespace MeltPoolDG

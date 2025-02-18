@@ -15,7 +15,9 @@
     "time step size": "1e-6"
   },
   "heat": {
-    "use volume-specific thermal capacity for phase interpolation": "true"
+    "diffuse": {
+      "use volume-specific thermal capacity for phase interpolation": "true"
+    }
   },
   "laser": {
     "starting position": "0.0,0.0,0.0",

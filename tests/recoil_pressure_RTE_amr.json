@@ -37,7 +37,6 @@
     "solid liquid properties transition type": "mushy_zone"
   },
   "heat": {
-    "use volume-specific thermal capacity for phase interpolation": "true",
     "linear solver": {
       "rel tolerance": "1e-6",
       "preconditioner type": "Diagonal"
@@ -46,6 +45,9 @@
       "max nonlinear iterations": "20",
       "field correction tolerance": "1e-10",
       "residual tolerance": "1e-7"
+    },
+    "diffuse": {
+      "use volume-specific thermal capacity for phase interpolation": "true"
     }
   },
   "laser": {
