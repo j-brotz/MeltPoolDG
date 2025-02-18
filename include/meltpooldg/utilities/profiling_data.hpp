@@ -19,9 +19,6 @@ namespace MeltPoolDG::Profiling
     add_parameters(dealii::ParameterHandler &prm);
 
     void
-    post(const unsigned int base_verbosity_level);
-
-    void
     check_input_parameters(const number time_step_size) const;
   };
 

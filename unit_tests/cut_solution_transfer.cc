@@ -370,7 +370,7 @@ test()
 
   // verbosity level for solution transfer output (0: nothing, 1: some output, 2: more details for
   // testing)
-  unsigned int verbosity = 0;
+  unsigned int verbosity = 1;
 
   // consider dummy-data input for 'gamma_degree_0' for the cg-case and
   // for 'gamma_degree_2' for polynomial degree 1.

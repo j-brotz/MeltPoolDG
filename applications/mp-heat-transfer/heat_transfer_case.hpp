@@ -62,10 +62,9 @@ namespace MeltPoolDG::Heat
       laser.post(base.dimension,
                  heat.use_volume_specific_thermal_capacity_for_phase_interpolation,
                  material);
-      rad_trans.post(base.fe);
+      rad_trans.post(base.fe, base.verbosity_level);
       evapor.post(material, heat.use_volume_specific_thermal_capacity_for_phase_interpolation);
       output.post(time_stepping.time_step_size, parameter_filename);
-      profiling.post(base.verbosity_level);
 
       base.check_input_parameters(1);
       heat.check_input_parameters(base.fe);

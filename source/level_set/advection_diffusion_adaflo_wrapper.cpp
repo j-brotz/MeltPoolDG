@@ -6,6 +6,8 @@
 #  include <meltpooldg/utilities/journal.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
 
+#  include <adaflo/level_set_okz_preconditioner.h>
+
 namespace MeltPoolDG::LevelSet
 {
   template <int dim>
@@ -23,7 +25,7 @@ namespace MeltPoolDG::LevelSet
     : scratch_data(scratch_data)
     , time_iterator(time_iterator)
     , advection_velocity(advection_velocity)
-    , pcout(scratch_data.get_pcout(1))
+    , pcout(scratch_data.get_pcout(2))
     , dirichlet_dof_idx(advec_diff_dirichlet_dof_idx)
   {
     /**
@@ -145,7 +147,7 @@ namespace MeltPoolDG::LevelSet
                                           scratch_data,
                                           adaflo_params.dof_index_ls,
                                           adaflo_params.quad_index);
-    Journal::print_line(scratch_data.get_pcout(), str.str(), "advection_diffusion_adaflo");
+    Journal::print_line(scratch_data.get_pcout(1), str.str(), "advection_diffusion_adaflo");
 
     if (do_finish_time_step)
       this->finish_time_advance();

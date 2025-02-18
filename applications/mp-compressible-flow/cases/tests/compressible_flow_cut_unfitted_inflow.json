@@ -3,7 +3,7 @@
     "problem name": "compressible_flow",
     "case name": "cut_unfitted_inflow",
     "dimension": "2",
-    "verbosity level": "0",
+    "verbosity level": "1",
     "do print parameters": "false",
     "global refinements": "0"
   },

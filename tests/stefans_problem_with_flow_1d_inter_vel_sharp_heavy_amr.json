@@ -5,6 +5,7 @@
     "dimension": "1",
     "global refinements": "4",
     "do print parameters": "false",
+    "verbosity level": "0",
     "fe": {
       "degree": "1"
     }

@@ -5,7 +5,7 @@
     "dimension": "2",
     "global refinements": "5",
     "do print parameters": "false",
-    "verbosity level": "0",
+    "verbosity level": "1",
     "fe": {
       "degree": "1"
     }
@@ -90,14 +90,14 @@
       },
       "filter parameter": "0.1",
       "implementation": "meltpooldg",
-      "verbosity level": "1"
+      "verbosity level": "2"
     },
     "normal vector": {
       "linear solver": {
         "do matrix free": "true"
       },
       "implementation": "meltpooldg",
-      "verbosity level": "1"
+      "verbosity level": "2"
     },
     "advection diffusion": {
       "linear solver": {

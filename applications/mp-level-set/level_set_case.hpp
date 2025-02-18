@@ -40,9 +40,8 @@ namespace MeltPoolDG::LevelSet
     {
       amr.post(base.global_refinements, false /*restart not supported*/);
       evapor.post(material, false /*does not matter*/);
-      ls.post(base.fe);
+      ls.post(base.fe, base.verbosity_level);
       output.post(time_stepping.time_step_size, parameter_filename);
-      profiling.post(base.verbosity_level);
 
       // check input parameters for validity
       ls.check_input_parameters(base.fe);

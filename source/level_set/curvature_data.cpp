@@ -73,6 +73,16 @@ namespace MeltPoolDG::LevelSet
 
   template <typename number>
   void
+  CurvatureData<number>::post(const unsigned int base_verbosity_level)
+  {
+    if (verbosity_level < 0)
+      verbosity_level = base_verbosity_level;
+
+    predictor.post();
+  }
+
+  template <typename number>
+  void
   CurvatureData<number>::check_input_parameters(const InterfaceThicknessParameterType &type) const
   {
     AssertThrow(type == InterfaceThicknessParameterType::proportional_to_cell_size ||
@@ -89,13 +99,6 @@ namespace MeltPoolDG::LevelSet
       !narrow_band.enable || linear_solver.do_matrix_free,
       ExcMessage(
         "The computation of the curvature in a narrow band is only implemented matrix-free."));
-  }
-
-  template <typename number>
-  void
-  CurvatureData<number>::post()
-  {
-    predictor.post();
   }
 
   template struct CurvatureData<double>;

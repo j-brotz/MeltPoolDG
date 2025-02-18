@@ -42,13 +42,13 @@ namespace MeltPoolDG::LevelSet
     while (!time_iterator->is_finished())
       {
         time_iterator->compute_next_time_increment();
-        time_iterator->print_me(scratch_data->get_pcout());
+        time_iterator->print_me(scratch_data->get_pcout(1));
         simulation_case->set_time_boundary_conditions(time_iterator->get_current_time());
 
         //@todo: adapt in case of adaptive time stepping
         if (profiling_monitor && profiling_monitor->now())
           {
-            profiling_monitor->print(scratch_data->get_pcout(),
+            profiling_monitor->print(scratch_data->get_pcout(1),
                                      scratch_data->get_timer(),
                                      scratch_data->get_mpi_comm());
           }
@@ -87,11 +87,11 @@ namespace MeltPoolDG::LevelSet
           refine_mesh();
       }
 
-    Journal::print_end(scratch_data->get_pcout());
+    Journal::print_end(scratch_data->get_pcout(1));
     //... always print timing statistics
     if (profiling_monitor)
       {
-        profiling_monitor->print(scratch_data->get_pcout(),
+        profiling_monitor->print(scratch_data->get_pcout(1),
                                  scratch_data->get_timer(),
                                  scratch_data->get_mpi_comm());
       }
@@ -216,7 +216,7 @@ namespace MeltPoolDG::LevelSet
                                            simulation_case->parameters.time_stepping,
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(ls_dof_idx),
-                                           scratch_data->get_pcout(1));
+                                           scratch_data->get_pcout(2));
     if (simulation_case->parameters.profiling.enable)
       profiling_monitor =
         std::make_unique<Profiling::ProfilingMonitor<double>>(simulation_case->parameters.profiling,
@@ -226,7 +226,7 @@ namespace MeltPoolDG::LevelSet
         simulation_case->parameters.amr.n_initial_refinement_cycles > 0)
       for (int i = 0; i < simulation_case->parameters.amr.n_initial_refinement_cycles; ++i)
         {
-          scratch_data->get_pcout()
+          scratch_data->get_pcout(1)
             << "cycle: " << i << " n_dofs: " << dof_handler.n_dofs() << "(ls)" << std::endl;
           refine_mesh();
 

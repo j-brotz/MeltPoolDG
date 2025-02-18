@@ -96,10 +96,10 @@ namespace MeltPoolDG::Heat
     fe.post(base_fe_data);
 
     // sync verbosity level with base verbosity if not set
-    if (nlsolve.verbosity_level == -1)
+    if (nlsolve.verbosity_level < 0)
       nlsolve.verbosity_level = base_verbosity_level;
 
-    if (verbosity_level == -1)
+    if (verbosity_level < 0)
       verbosity_level = base_verbosity_level;
 
     predictor.post();

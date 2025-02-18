@@ -143,7 +143,8 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
     {
       dealii::ConditionalOStream pcout(std::cout,
                                        Utilities::MPI::this_mpi_process(this->mpi_communicator) ==
-                                         0);
+                                           0 and
+                                         this->parameters.base.verbosity_level >= 1);
       if (!(n_time_step % this->parameters.output.write_frequency) ||
           generic_data_out.get_time() == this->parameters.time_stepping.end_time)
         {

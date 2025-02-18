@@ -1,8 +1,10 @@
 #pragma once
+
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/core/parameters_base.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
+
 
 namespace MeltPoolDG::LevelSet
 {
@@ -30,10 +32,9 @@ namespace MeltPoolDG::LevelSet
     {
       amr.post(base.global_refinements, false /*restart not supported*/);
       reinit.post(base.fe);
-      normal_vec.post();
-      curv.post();
+      normal_vec.post(base.verbosity_level);
+      curv.post(base.verbosity_level);
       output.post(time_stepping.time_step_size, parameter_filename);
-      profiling.post(base.verbosity_level);
 
       // check input parameters for validity
       reinit.check_input_parameters(normal_vec.linear_solver.do_matrix_free);

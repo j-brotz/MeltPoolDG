@@ -881,7 +881,7 @@ namespace MeltPoolDG::Heat
               }
 
             Journal::print_formatted_norm(
-              scratch_data.get_pcout(2),
+              scratch_data.get_pcout(3),
               [&]() -> double {
                 return VectorTools::compute_norm<dim>(evapor_heat_source_projected,
                                                       scratch_data,

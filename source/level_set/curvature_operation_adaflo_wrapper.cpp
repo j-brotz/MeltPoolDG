@@ -1,6 +1,11 @@
 #ifdef MELT_POOL_DG_WITH_ADAFLO
 #  include <meltpooldg/level_set/curvature_operation_adaflo_wrapper.hpp>
+//
 #  include <meltpooldg/utilities/journal.hpp>
+#  include <meltpooldg/utilities/vector_tools.hpp>
+
+#  include <adaflo/level_set_okz_preconditioner.h>
+#  include <adaflo/util.h>
 
 namespace MeltPoolDG::LevelSet
 {
@@ -56,14 +61,14 @@ namespace MeltPoolDG::LevelSet
   void
   CurvatureOperationAdaflo<dim>::create_normal_vector_operator()
   {
-    normal_vector_operation_adaflo = std::make_shared<LevelSet::NormalVectorOperationAdaflo<dim>>(
-      scratch_data,
-      curv_adaflo_params.dof_index_ls,
-      curv_adaflo_params.dof_index_normal,
-      curv_adaflo_params.quad_index,
-      advected_field,
-      normal_vector_data,
-      curv_adaflo_params.epsilon);
+    normal_vector_operation_adaflo =
+      std::make_shared<NormalVectorOperationAdaflo<dim>>(scratch_data,
+                                                         normal_vector_data,
+                                                         curv_adaflo_params.dof_index_ls,
+                                                         curv_adaflo_params.dof_index_normal,
+                                                         curv_adaflo_params.quad_index,
+                                                         advected_field,
+                                                         curv_adaflo_params.epsilon);
   }
 
   template <int dim>
@@ -130,9 +135,9 @@ namespace MeltPoolDG::LevelSet
     curvature_operation->compute_curvature(
       false); // @todo: adaflo does not use the boolean function argument
 
-    const int verbosity_l2_norm = dim > 1 ? 0 : 1;
+    const int verbosity_l2_norm = dim > 1 ? 1 : 2;
     Journal::print_formatted_norm(
-      scratch_data.get_pcout(verbosity_l2_norm),
+      scratch_data.get_pcout(std::max(normal_vector_data.verbosity_level, verbosity_l2_norm)),
       [&]() -> double {
         return VectorTools::compute_norm<dim>(get_curvature(),
                                               scratch_data,

@@ -244,7 +244,7 @@ namespace MeltPoolDG::Evaporation
     scratch_data.get_constraint(evapor_vel_dof_idx).distribute(evaporation_velocity);
 
     Journal::print_formatted_norm(
-      scratch_data.get_pcout(1),
+      scratch_data.get_pcout(2),
       [&]() -> double {
         return VectorTools::compute_norm<dim>(evaporation_velocity,
                                               scratch_data,
@@ -356,11 +356,11 @@ namespace MeltPoolDG::Evaporation
     str << "evaporation: jump in the velocity field = "
         << Utilities::MPI::sum(mass, scratch_data.get_mpi_comm());
 
-    Journal::print_line(scratch_data.get_pcout(0),
+    Journal::print_line(scratch_data.get_pcout(1),
                         str.str(),
                         "evaporation_source_terms_continuous");
 
-    Journal::print_formatted_norm(scratch_data.get_pcout(0),
+    Journal::print_formatted_norm(scratch_data.get_pcout(1),
                                   mass_balance_source_term.l2_norm(),
                                   "evapartive_mass_source",
                                   "evaporation_source_terms_continuous",

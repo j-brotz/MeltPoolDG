@@ -50,7 +50,7 @@ namespace MeltPoolDG::LevelSet
 
 
         time_iterator->compute_next_time_increment();
-        time_iterator->print_me(scratch_data->get_pcout());
+        time_iterator->print_me(scratch_data->get_pcout(1));
 
         reinit_operation->solve();
 
@@ -60,7 +60,7 @@ namespace MeltPoolDG::LevelSet
         if (param.amr.do_amr)
           refine_mesh();
       }
-    Journal::print_end(scratch_data->get_pcout());
+    Journal::print_end(scratch_data->get_pcout(1));
   }
 
   template <int dim>
@@ -89,6 +89,15 @@ namespace MeltPoolDG::LevelSet
     }
 
     setup_dof_system();
+
+    // initialize postprocessor
+    post_processor =
+      std::make_unique<Postprocessor<dim>>(scratch_data->get_mpi_comm(reinit_dof_idx),
+                                           param.output,
+                                           param.time_stepping,
+                                           scratch_data->get_mapping(),
+                                           scratch_data->get_triangulation(reinit_dof_idx),
+                                           scratch_data->get_pcout(2));
 
     // initialize the time iterator
     time_iterator = std::make_unique<TimeIterator<double>>(param.time_stepping);
@@ -179,15 +188,6 @@ namespace MeltPoolDG::LevelSet
 
     if (reinit_operation)
       reinit_operation->reinit();
-
-    // initialize postprocessor
-    post_processor =
-      std::make_unique<Postprocessor<dim>>(scratch_data->get_mpi_comm(reinit_dof_idx),
-                                           param.output,
-                                           param.time_stepping,
-                                           scratch_data->get_mapping(),
-                                           scratch_data->get_triangulation(reinit_dof_idx),
-                                           scratch_data->get_pcout(1));
   }
 
   template <int dim>

@@ -4,7 +4,7 @@
     "case name": "recoil_pressure",
     "global refinements": "4",
     "dimension": "1",
-    "verbosity level": "0",
+    "verbosity level": "1",
     "do print parameters": "false",
     "fe": {
       "degree": "1"
@@ -111,11 +111,11 @@
     },
     "curvature": {
       "filter parameter": "0.5",
-      "verbosity level": "1"
+      "verbosity level": "2"
     },
     "normal vector": {
       "filter parameter": "0.5",
-      "verbosity level": "1"
+      "verbosity level": "2"
     }
   },
   "flow": {

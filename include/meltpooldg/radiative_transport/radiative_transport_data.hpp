@@ -37,7 +37,7 @@ namespace MeltPoolDG::RadiativeTransport
 
     FiniteElementData        fe;
     LinearSolverData<number> linear_solver;
-    unsigned int             verbosity_level                    = 0;
+    int                      verbosity_level                    = -1;
     RTEPredictorType         predictor_type                     = RTEPredictorType::none;
     AbsorptivityType         absorptivity_type                  = AbsorptivityType::gradient_based;
     double                   avoid_singular_matrix_absorptivity = 1e-16;
@@ -67,7 +67,7 @@ namespace MeltPoolDG::RadiativeTransport
     add_parameters(dealii::ParameterHandler &prm);
 
     void
-    post(const FiniteElementData &base_fe_data);
+    post(const FiniteElementData &base_fe_data, const unsigned int base_verbosity_level);
 
     void
     check_input_parameters(const FiniteElementData &base_fe_data) const;

@@ -128,7 +128,7 @@ namespace MeltPoolDG::Heat
               ExcMessage(
                 "The RTE laser model requires the RTE boundary id to be set by the simulation!"));
             if (print_boundary_ids)
-              Journal::print_line(scratch_data.get_pcout(),
+              Journal::print_line(scratch_data.get_pcout(1),
                                   "RTE boundary id = " + std::to_string(laser_data.rte_boundary_id),
                                   "laser");
             rte_dirichlet_boundary_condition[laser_data.rte_boundary_id] = intensity_profile;
@@ -395,12 +395,13 @@ namespace MeltPoolDG::Heat
   void
   LaserOperation<dim>::print() const
   {
+    // TODO this information can be printed in one line
     std::ostringstream str;
     str << "current laser position: " << laser_position;
-    Journal::print_line(scratch_data.get_pcout(), str.str(), "laser");
+    Journal::print_line(scratch_data.get_pcout(1), str.str(), "laser");
     str.str("");
     str << "current laser intensity: " << laser_intensity;
-    Journal::print_line(scratch_data.get_pcout(), str.str(), "laser");
+    Journal::print_line(scratch_data.get_pcout(1), str.str(), "laser");
   }
 
   template class LaserOperation<1>;

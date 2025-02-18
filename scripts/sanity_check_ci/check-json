@@ -28,7 +28,7 @@ test()
 test 'output,paraview,enable' 'false' 'output is enabled in following files'
 
 # test 2: "base" -> "verbosity level" : 0
-test 'base,verbosity level' '0' 'verbosity level is not correct in following files'
+test 'base,verbosity level' '0|1' 'verbosity level is not correct in following files'
 
 # test 3: "Navier-Stokes" -> "adaflo" -> "Output options" -> "output verbosity" : 0
 test 'Navier-Stokes,adaflo,Output options,output verbosity' '0' 'output verbosity is not correct in following files'

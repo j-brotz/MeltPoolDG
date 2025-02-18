@@ -83,7 +83,7 @@ namespace MeltPoolDG::RadiativeTransport
 
         if (rte_data.verbosity_level >= 4)
           Journal::print_formatted_norm(
-            scratch_data.get_pcout(0),
+            scratch_data.get_pcout(1),
             [&]() -> double { return pseudo_time_iterator.get_current_time(); },
             "pseudo-time-out",
             "RTE::pseudo-time-stepping",
@@ -92,7 +92,7 @@ namespace MeltPoolDG::RadiativeTransport
         // print final pseudo-time stepping solution
         if (rte_data.verbosity_level >= 3)
           Journal::print_formatted_norm(
-            scratch_data.get_pcout(0),
+            scratch_data.get_pcout(1),
             [&]() -> double {
               return VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
                                                     scratch_data,
@@ -104,17 +104,17 @@ namespace MeltPoolDG::RadiativeTransport
             6 /*precision*/);
       }
 
-    if (rte_data.verbosity_level >= 2)
+    if (rte_data.verbosity_level >= 3)
       Journal::print_formatted_norm(
-        scratch_data.get_pcout(0),
+        scratch_data.get_pcout(1),
         [&]() -> double { return pseudo_time_iterator.get_current_time_step_number(); },
         "n_steps",
         "RTE::pseudo-predictor",
         1 /*precision*/,
         "pseudo-time steps");
-    if (rte_data.verbosity_level >= 1)
+    if (rte_data.verbosity_level >= 2)
       Journal::print_formatted_norm(
-        scratch_data.get_pcout(0),
+        scratch_data.get_pcout(1),
         [&]() -> double {
           return VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
                                                 scratch_data,

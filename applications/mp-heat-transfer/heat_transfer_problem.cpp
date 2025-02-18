@@ -55,7 +55,7 @@ namespace MeltPoolDG::Heat
             const auto dt = time_iterator->compute_next_time_increment();
             simulation_case->set_time_boundary_conditions(time_iterator->get_current_time());
 
-            time_iterator->print_me(scratch_data->get_pcout());
+            time_iterator->print_me(scratch_data->get_pcout(1));
 
             if (velocity_field_function)
               compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
@@ -131,7 +131,7 @@ namespace MeltPoolDG::Heat
         output_results(false /* output_not_converged */);
         AssertThrow(false, e);
       }
-    Journal::print_end(scratch_data->get_pcout());
+    Journal::print_end(scratch_data->get_pcout(1));
   }
 
   template <int dim>
@@ -328,7 +328,7 @@ namespace MeltPoolDG::Heat
                                            param.time_stepping,
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(temp_dof_idx),
-                                           scratch_data->get_pcout(1));
+                                           scratch_data->get_pcout(2));
     /*
      *    Do initial refinement steps if requested
      */
@@ -337,7 +337,7 @@ namespace MeltPoolDG::Heat
         {
           std::ostringstream str;
           str << " #dofs T: " << heat_operation->get_temperature().size();
-          Journal::print_line(scratch_data->get_pcout(), str.str(), "heat_transfer");
+          Journal::print_line(scratch_data->get_pcout(1), str.str(), "heat_transfer");
           refine_mesh();
           /*
            *  set initial conditions after initial AMR

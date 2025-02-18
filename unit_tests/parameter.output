@@ -17,7 +17,7 @@
         "do print parameters": "true",
         "global refinements": "1",
         "problem name": "not_initialized",
-        "verbosity level": "0",
+        "verbosity level": "1",
         "fe":
         {
             "degree": "1",
@@ -32,7 +32,7 @@
         "interface temperature evaluation type": "local_value",
         "analytical":
         {
-            "function": "0.0"
+            "function": "not_initialized"
         },
         "evaporative cooling":
         {
@@ -278,7 +278,7 @@
             "enable": "true",
             "filter parameter": "2",
             "implementation": "meltpooldg",
-            "verbosity level": "0",
+            "verbosity level": "-1",
             "Discontinous Galerkin":
             {
                 "penalty factor": "100"
@@ -321,7 +321,7 @@
         {
             "filter parameter": "2",
             "implementation": "meltpooldg",
-            "verbosity level": "0",
+            "verbosity level": "-1",
             "Discontinous Galerkin":
             {
                 "penalty factor": "100"
@@ -478,7 +478,7 @@
         "absorptivity type": "gradient_based",
         "avoid singular matrix absorptivity": "1e-16",
         "predictor type": "none",
-        "rte verbosity level": "0",
+        "rte verbosity level": "-1",
         "absorptivity":
         {
             "absorptivity gas": "0.1",

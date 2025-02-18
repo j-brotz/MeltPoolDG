@@ -46,7 +46,6 @@ namespace MeltPoolDG::Flow
     post(const std::string &parameter_filename) override
     {
       output.post(time_stepping.time_step_size, parameter_filename);
-      profiling.post(base.verbosity_level);
       flow.post(base.fe, base.verbosity_level);
 
       // check input parameters for validity
@@ -102,8 +101,10 @@ namespace MeltPoolDG::Flow
                         const std::string         &norm_name = "Norm") const
     {
       using number = double;
-      const dealii::ConditionalOStream pcout(
-        std::cout, Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0);
+      const dealii::ConditionalOStream pcout(std::cout,
+                                             Utilities::MPI::this_mpi_process(
+                                               this->mpi_communicator) == 0 and
+                                               parameters.base.verbosity_level >= 1);
 
       const auto &dof_vector  = generic_data_out.get_vector("density");
       const auto &dof_handler = generic_data_out.get_dof_handler("density");

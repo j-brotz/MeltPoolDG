@@ -5,7 +5,7 @@
     "dimension": "2",
     "global refinements": "10",
     "do print parameters": "false",
-    "verbosity level": "0",
+    "verbosity level": "1",
     "fe": {
       "degree": "1"
     }
@@ -93,7 +93,7 @@
       },
       "filter parameter": "4",
       "implementation": "meltpooldg",
-      "verbosity level": "1"
+      "verbosity level": "2"
     },
     "normal vector": {
       "linear solver": {

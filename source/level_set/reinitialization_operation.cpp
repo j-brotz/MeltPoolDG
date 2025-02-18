@@ -55,11 +55,11 @@ namespace MeltPoolDG::LevelSet
       {
         normal_vector_operation = std::make_shared<NormalVectorOperationAdaflo<dim>>(
           scratch_data_in,
+          normal_vec_data,
           ls_dof_idx_in,
           normal_dof_idx,
           reinit_quad_idx,
           solution_level_set,
-          normal_vec_data,
           reinit_data.interface_thickness_parameter.value / ls_n_subdivisions);
       }
 #endif
@@ -205,7 +205,7 @@ namespace MeltPoolDG::LevelSet
                                                "reinitialization_operation");
 
         Journal::print_formatted_norm(
-          scratch_data.get_pcout(0),
+          scratch_data.get_pcout(1),
           [&]() -> double { return reinit_operator->get_system_matrix().frobenius_norm(); },
           "matrix",
           "reinitialization",
@@ -230,7 +230,7 @@ namespace MeltPoolDG::LevelSet
     max_change_level_set = solution_history.get_current_solution().linfty_norm();
 
     Journal::print_formatted_norm(
-      scratch_data.get_pcout(1),
+      scratch_data.get_pcout(2),
       [&]() -> double {
         return MeltPoolDG::VectorTools::compute_norm<dim>(rhs,
                                                           scratch_data,
@@ -242,7 +242,7 @@ namespace MeltPoolDG::LevelSet
       15 /*precision*/
     );
     Journal::print_formatted_norm(
-      scratch_data.get_pcout(0),
+      scratch_data.get_pcout(1),
       [&]() -> double {
         return VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
                                               scratch_data,
@@ -254,7 +254,7 @@ namespace MeltPoolDG::LevelSet
       15 /*precision*/
     );
 
-    Journal::print_formatted_norm(scratch_data.get_pcout(1),
+    Journal::print_formatted_norm(scratch_data.get_pcout(2),
                                   max_change_level_set,
                                   "delta phi",
                                   "reinitialization",
@@ -262,7 +262,7 @@ namespace MeltPoolDG::LevelSet
                                   "∞ ",
                                   2);
     Journal::print_formatted_norm(
-      scratch_data.get_pcout(1),
+      scratch_data.get_pcout(2),
       [&]() -> double {
         return VectorTools::compute_norm<dim>(solution_level_set,
                                               scratch_data,
@@ -274,7 +274,7 @@ namespace MeltPoolDG::LevelSet
       15 /*precision*/
     );
 
-    Journal::print_line(scratch_data.get_pcout(1),
+    Journal::print_line(scratch_data.get_pcout(2),
                         "     * CG: i = " + std::to_string(iter),
                         "reinitialization");
 

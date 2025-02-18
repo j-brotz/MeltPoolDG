@@ -22,10 +22,10 @@ namespace MeltPoolDG
 {
   template <int dim, int spacedim, typename number>
   ScratchData<dim, spacedim, number>::ScratchData(const MPI_Comm     mpi_communicator,
-                                                  const unsigned int max_verbosity_level,
+                                                  const unsigned int verbosity_level_in,
                                                   const bool         do_matrix_free)
     : do_matrix_free(do_matrix_free)
-    , max_verbosity_level(max_verbosity_level)
+    , verbosity_level(verbosity_level_in)
   {
     this->create_pcout(mpi_communicator);
 
@@ -205,7 +205,7 @@ namespace MeltPoolDG
 
         if (enable_inner_face_loops)
           {
-            Journal::print_line(get_pcout(2),
+            Journal::print_line(get_pcout(3),
                                 "Matrix-free: set update flags for inner face loops",
                                 "ScratchData",
                                 0);
@@ -216,7 +216,7 @@ namespace MeltPoolDG
 
         if (enable_boundary_face_loops)
           {
-            Journal::print_line(get_pcout(2),
+            Journal::print_line(get_pcout(3),
                                 "Matrix-free: set update flags for boundary face loops",
                                 "ScratchData",
                                 0);
@@ -579,11 +579,13 @@ namespace MeltPoolDG
   ScratchData<dim, spacedim, number>::create_pcout(const MPI_Comm mpi_communicator)
   {
     this->pcout.clear();
-    for (unsigned int i = 0; i <= 10; ++i)
+    // create one dealii::ConditionalOStream for every possible verbosity level (0-3) where 0 is
+    // always inactive
+    for (unsigned int i = 0; i <= 3; ++i)
       this->pcout.push_back(
         dealii::ConditionalOStream(std::cout,
                                    Utilities::MPI::this_mpi_process(mpi_communicator) == 0 and
-                                     i <= max_verbosity_level));
+                                     i <= verbosity_level and verbosity_level > 0));
   }
 
   template class ScratchData<1, 1, double>;

@@ -158,7 +158,7 @@ namespace MeltPoolDG::Flow
         }
 
       // Synchronize verbosity with base verbosity if not set explicitly.
-      if (verbosity_level == -1)
+      if (verbosity_level < 0)
         verbosity_level = base_verbosity_level;
 
       // For physical consistency, adjust thermal conductivity based on the user-defined dynamic

@@ -3,6 +3,7 @@
 #  include <meltpooldg/level_set/reinitialization_operation_adaflo_wrapper.hpp>
 #  include <meltpooldg/utilities/journal.hpp>
 
+#  include <adaflo/level_set_okz_preconditioner.h>
 #  include <adaflo/util.h>
 
 namespace MeltPoolDG::LevelSet
@@ -20,7 +21,7 @@ namespace MeltPoolDG::LevelSet
     const unsigned int              n_subdivisions)
     : scratch_data(scratch_data)
     , time_iterator(time_iterator)
-    , pcout(scratch_data.get_pcout(1))
+    , pcout(scratch_data.get_pcout(2))
     , normal_vector_data(normal_vec_data)
     , eps_cell_factor(interface_thickness_parameter_value / n_subdivisions)
   {
@@ -62,11 +63,11 @@ namespace MeltPoolDG::LevelSet
   {
     normal_vector_operation_adaflo = std::make_shared<LevelSet::NormalVectorOperationAdaflo<dim>>(
       scratch_data,
+      normal_vector_data,
       reinit_params_adaflo.dof_index_ls,
       reinit_params_adaflo.dof_index_normal,
       reinit_params_adaflo.quad_index,
       level_set,
-      normal_vector_data,
       eps_cell_factor);
   }
 
@@ -126,7 +127,7 @@ namespace MeltPoolDG::LevelSet
 
     max_change_level_set = increment.linfty_norm();
 
-    Journal::print_formatted_norm(scratch_data.get_pcout(1),
+    Journal::print_formatted_norm(scratch_data.get_pcout(2),
                                   max_change_level_set,
                                   "delta phi",
                                   "reinitialization",
@@ -134,7 +135,7 @@ namespace MeltPoolDG::LevelSet
                                   "∞ ",
                                   2);
     Journal::print_formatted_norm(
-      scratch_data.get_pcout(0),
+      scratch_data.get_pcout(1),
       [&]() -> double {
         return VectorTools::compute_norm<dim>(increment,
                                               scratch_data,

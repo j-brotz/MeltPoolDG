@@ -5,7 +5,7 @@
     "do print parameters": "false",
     "global refinements": "5",
     "problem name": "melt_pool",
-    "verbosity level": "0",
+    "verbosity level": "1",
     "fe": {
       "degree": "1"
     }
@@ -64,7 +64,7 @@
   "level set": {
     "curvature": {
       "filter parameter": "8",
-      "verbosity level": "1"
+      "verbosity level": "2"
     },
     "normal vector": {
       "filter parameter": "0.1",

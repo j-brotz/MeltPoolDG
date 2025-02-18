@@ -188,7 +188,7 @@ namespace MeltPoolDG::LevelSet
     solution_history.commit_old_solutions();
 
     Journal::print_formatted_norm(
-      scratch_data.get_pcout(0),
+      scratch_data.get_pcout(1),
       [&]() -> double {
         return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
                                                           scratch_data,

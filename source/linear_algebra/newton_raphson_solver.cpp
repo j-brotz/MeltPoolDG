@@ -35,7 +35,7 @@ namespace MeltPoolDG
         solve_increment(solution);
         if (is_converged())
           {
-            if (nlsolve_data.verbosity_level >= 0)
+            if (nlsolve_data.verbosity_level >= 1)
               {
                 std::ostringstream str_sol;
                 str_sol << "Newton Raphson solver converged: ||solution|| = " << std::scientific
@@ -69,7 +69,7 @@ namespace MeltPoolDG
   void
   NewtonRaphsonSolver<VectorType>::print_header() const
   {
-    if (nlsolve_data.verbosity_level >= 1)
+    if (nlsolve_data.verbosity_level >= 2)
       {
         Journal::print_line(pcout);
         Journal::print_line(pcout, std::string(10, ' ') + std::string(60, '_'));
@@ -110,7 +110,7 @@ namespace MeltPoolDG
     const bool residual_converged   = res_norm < residual_tolerance;
     const bool correction_converged = update_norm < field_correction_tolerance;
 
-    if (nlsolve_data.verbosity_level >= 1)
+    if (nlsolve_data.verbosity_level >= 2)
       {
         str_ << std::right << std::setw(15) << std::scientific << std::setprecision(5) << res_norm
              << print_checkmark(residual_converged);
