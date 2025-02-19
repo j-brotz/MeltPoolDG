@@ -3,6 +3,7 @@
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/core/finite_element_data.hpp>
+#include <meltpooldg/cut/cut_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/nonlinear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/predictor_data.hpp>
@@ -19,30 +20,28 @@ namespace MeltPoolDG::Heat
 
     TwoPhaseOperatorType operator_type = TwoPhaseOperatorType::diffuse;
 
-    bool enable_time_dependent_bc = false;
+    struct Diffuse
+    {
+      bool use_volume_specific_thermal_capacity_for_phase_interpolation = false;
+    } diffuse;
 
-    // TODO diffuse specific
-    bool use_volume_specific_thermal_capacity_for_phase_interpolation = false;
-
-    // TODO use CutParam struct for cut-related numerical parameters
     struct Cut
     {
       bool two_phase = true;
-
-      struct GhostPenalty
-      {
-        number gamma_M = 0.75;
-        number gamma_A = 1.5;
-      } ghost_penalty;
-
-      number nitsche_parameter = 500.0;
 
       // factor theta for time integration with one-step-theta method
       // TODO move to a time integrator scheme section
       number theta = 0.5;
 
       bool do_explicit_symmetry_term = true;
+
+      // cut-related stabilization parameters
+      CutStabilizationData<number> stabilization;
     } cut;
+
+    // boundary conditions
+
+    bool enable_time_dependent_bc = false;
 
     struct RadiationBC
     {
@@ -55,6 +54,8 @@ namespace MeltPoolDG::Heat
       number convection_coefficient = 0.0;
       number temperature_infinity   = 0.0;
     } convection;
+
+    // numerics
 
     NonlinearSolverData<number> nlsolve;
     LinearSolverData<number>    linear_solver;

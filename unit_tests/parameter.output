@@ -121,7 +121,6 @@
     {
         "enable time dependent bc": "false",
         "operator type": "diffuse",
-        "use volume-specific thermal capacity for phase interpolation": "false",
         "verbosity level": "-1",
         "convective boundary condition":
         {
@@ -131,14 +130,25 @@
         "cut":
         {
             "do explicit symmetry term": "true",
-            "nitsche parameter": "500",
             "theta": "0.5",
             "two phase": "true",
-            "ghost penalty":
+            "stabilization":
             {
-                "gamma A": "1.5",
-                "gamma M": "0.75"
+                "nitsche parameter": "1",
+                "ghost-penalty":
+                {
+                    "gamma A degree 0": "1",
+                    "gamma A degree 1": "1",
+                    "gamma A degree 2": "1",
+                    "gamma M degree 0": "1",
+                    "gamma M degree 1": "1",
+                    "gamma M degree 2": "1"
+                }
             }
+        },
+        "diffuse":
+        {
+            "use volume-specific thermal capacity for phase interpolation": "false"
         },
         "fe":
         {

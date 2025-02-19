@@ -54,12 +54,14 @@
     "operator type": "cut",
     "cut": {
       "do explicit symmetry term": "true",
-      "nitsche parameter": "500",
       "theta": "1.0",
       "two phase": "false",
-      "ghost penalty": {
-        "gamma A": "1.5",
-        "gamma M": "0.75"
+      "stabilization": {
+        "nitsche parameter": "500",
+        "ghost-penalty": {
+          "gamma A degree 1": "1.5",
+          "gamma M degree 1": "0.75"
+        }
       }
     },
     "linear solver": {

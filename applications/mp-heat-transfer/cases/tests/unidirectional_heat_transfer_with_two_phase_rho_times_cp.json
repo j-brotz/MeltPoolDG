@@ -16,7 +16,6 @@
     "max n steps": "5"
   },
   "heat": {
-    "use volume-specific thermal capacity for phase interpolation": "true",
     "linear solver": {
       "rel tolerance": "1e-12"
     },
@@ -30,6 +29,9 @@
     "convective boundary condition": {
       "convection coefficient": "25",
       "temperature infinity": "300.0"
+    },
+    "diffuse": {
+      "use volume-specific thermal capacity for phase interpolation": "true"
     }
   },
   "simulation specific": {

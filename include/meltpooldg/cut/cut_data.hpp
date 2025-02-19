@@ -5,7 +5,7 @@
 namespace MeltPoolDG
 {
   template <typename number = double>
-  struct GhostPenaltyParam
+  struct GhostPenaltyData
   {
     // mass matrix stabilization
 
@@ -32,13 +32,13 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
-  struct CutParam
+  struct CutStabilizationData
   {
     // Nitsche stabilization parameter
     double nitsche_parameter = 1.;
 
     // parameters for ghost-penalty stabilization
-    GhostPenaltyParam<number> ghost_penalty;
+    GhostPenaltyData<number> ghost_penalty;
 
     void
     add_parameters(dealii::ParameterHandler &prm);

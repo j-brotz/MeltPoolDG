@@ -1081,7 +1081,7 @@ namespace MeltPoolDG::Heat
     const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
     const unsigned int                      q_index) const
   {
-    if (!data.use_volume_specific_thermal_capacity_for_phase_interpolation)
+    if (!data.diffuse.use_volume_specific_thermal_capacity_for_phase_interpolation)
       {
         const auto material_values = material.template compute_parameters<VectorizedArray<number>>(
           ls_heaviside_val,
@@ -1118,7 +1118,7 @@ namespace MeltPoolDG::Heat
     const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
     const unsigned int                      q_index) const
   {
-    if (!data.use_volume_specific_thermal_capacity_for_phase_interpolation)
+    if (!data.diffuse.use_volume_specific_thermal_capacity_for_phase_interpolation)
       {
         const auto material_values = material.template compute_parameters<VectorizedArray<number>>(
           ls_heaviside_val,
