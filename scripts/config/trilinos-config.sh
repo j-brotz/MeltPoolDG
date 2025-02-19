@@ -1,4 +1,4 @@
-trilinos_dir=${1:-../Trilinos-trilinos-release-13-4-1}
+trilinos_dir=${1:-../Trilinos-trilinos-release-14-4-0}
 trilinos_install=${2:-../trilinos-install}
 rm -rf CMakeFiles/ CMakeCache.txt || true
 cmake                                            \
@@ -13,10 +13,12 @@ cmake                                            \
     -DTrilinos_ENABLE_ML=ON                          \
     -DTrilinos_ENABLE_ROL=ON                         \
     -DTrilinos_ENABLE_Tpetra=ON                      \
-    -DTrilinos_ENABLE_COMPLEX_DOUBLE=ON              \
-    -DTrilinos_ENABLE_COMPLEX_FLOAT=ON               \
+    -DTrilinos_ENABLE_COMPLEX_DOUBLE=OFF             \
+    -DTrilinos_ENABLE_COMPLEX_FLOAT=OFF              \
     -DTrilinos_ENABLE_Zoltan=ON                      \
     -DTrilinos_VERBOSE_CONFIGURE=OFF                 \
+    -DTpetra_INST_FLOAT=OFF                          \
+    -DTpetra_INST_COMPLEX_FLOAT=OFF                  \
     -DTPL_ENABLE_MPI=ON                              \
     -DBUILD_SHARED_LIBS=ON                           \
     -DCMAKE_VERBOSE_MAKEFILE=OFF                     \

@@ -328,7 +328,12 @@
             "narrow band threshold": "-1",
             "rel tol": "1e-06",
             "type": "closest_point_normal",
-            "verbosity level": "0"
+            "verbosity level": "0",
+            "marching cube":
+            {
+                "n subdivisions": "3",
+                "tol": "1e-10"
+            }
         },
         "normal vector":
         {

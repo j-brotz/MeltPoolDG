@@ -1,3 +1,4 @@
+#include <meltpooldg/level_set/marching_cube_data.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
 
 namespace MeltPoolDG::LevelSet
@@ -23,6 +24,8 @@ namespace MeltPoolDG::LevelSet
                         type,
                         "Choose the type for calculating the nearest point to the interface.");
       prm.add_parameter("verbosity level", verbosity_level, "Set the verbosity level.");
+
+      mca.add_parameters(prm);
     }
     prm.leave_subsection();
   }

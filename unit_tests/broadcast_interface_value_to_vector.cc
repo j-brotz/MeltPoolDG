@@ -43,6 +43,9 @@
 #include <string>
 #include <vector>
 
+// uncomment to activate debug output
+// #define MPDG_TEST_ENABLE_DEBUG
+
 using namespace dealii;
 using namespace MeltPoolDG;
 
@@ -50,9 +53,7 @@ using VectorType      = LinearAlgebra::distributed::Vector<double>;
 using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
 
-/**
- * Initial fields
- */
+// Initial fields
 template <int dim, unsigned int n_components = 1>
 class InitializeTemperature : public Function<dim>
 {
@@ -66,7 +67,7 @@ public:
   {
     const double T_max = 500;
     const double T_min = 0;
-    return T_max - (T_max - T_min) / 1. * p[component];
+    return T_max - (T_max - T_min) * p[component];
   }
 };
 
@@ -76,21 +77,28 @@ compute_projected_point_analytically(const Point<dim> &p,
                                      const Point<dim> &center,
                                      const double      radius)
 {
-  const double r       = p.distance(center);
-  const double cos_phi = (p[0] - center[0]) / r;
-  const double sin_phi = (p[1] - center[1]) / r;
+  const Tensor<1, dim> vec = p - center;
+  const double         r   = vec.norm();
+
+  if (std::abs(r) < 1e-10)
+    return Point<dim>(0);
 
   Point<dim> p_proj;
-  if constexpr (dim == 2)
+
+  if constexpr (dim == 2 || dim == 3)
     {
-      p_proj[0] = radius * cos_phi;
-      p_proj[1] = radius * sin_phi;
+      for (unsigned int d = 0; d < dim; ++d)
+        p_proj[d] = radius * vec[d] / r;
+    }
+  else
+    {
+      AssertThrow(false, ExcNotImplemented());
     }
 
   return p_proj + center;
 }
 
-template <int n_components, int n_refinements, int n_iter>
+template <int n_components, int n_refinements, int n_iter, int dim = 2>
 void
 run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::closest_point_normal)
 {
@@ -98,13 +106,12 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
   MPI_Comm                   mpi_comm(MPI_COMM_WORLD);
   dealii::ConditionalOStream pcout(std::cout, Utilities::MPI::this_mpi_process(mpi_comm) == 0);
 
-  pcout << "--------------------------------------------------------" << std::endl;
+  pcout << "------------------------------------------------------------------" << std::endl;
   pcout << " START TEST: n_iter=" << n_iter << " type " << type << " #comp " << n_components
-        << " #refine " << n_refinements << std::endl;
-  pcout << "--------------------------------------------------------" << std::endl;
+        << " #refine " << n_refinements << " dim " << dim << std::endl;
+  pcout << "------------------------------------------------------------------" << std::endl;
 
   Timer      timer_total(mpi_comm);
-  const int  dim         = 2;
   const int  degree      = 1;
   const int  degree_temp = 2;
   Point<dim> center;
@@ -119,20 +126,13 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
   GridGenerator::hyper_cube(triangulation, 0, 1);
   triangulation.refine_global(n_refinements);
 
-  /*
-   * Output mesh per processor
-   */
-  GridOut grid_out;
-  grid_out.write_mesh_per_processor_as_vtu(triangulation, "grid");
-
+  // Output mesh per processor
   MappingQGeneric<dim> mapping(degree);
   FE_Q<dim>            fe(degree);
   DoFHandler<dim>      dof_handler(triangulation);
   dof_handler.distribute_dofs(fe);
 
-  /*
-   * setup level set related vectors
-   */
+  // setup level set related vectors
   IndexSet locally_owned_dofs;
   IndexSet locally_relevant_dofs;
   locally_owned_dofs = dof_handler.locally_owned_dofs();
@@ -140,9 +140,8 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
 
   VectorType solution_distance;
   solution_distance.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
-  /*
-   * compute normals
-   */
+
+  // compute normals
   BlockVectorType solution_normal(dim);
 
   for (unsigned int d = 0; d < dim; ++d)
@@ -176,18 +175,13 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
             }
         }
     }
-  /*
-   * interpolate distance onto quadrature points
-   */
+  // interpolate distance onto quadrature points
   VectorTools::interpolate(mapping,
                            dof_handler,
                            Functions::SignedDistance::Sphere<dim>(center, radius),
                            solution_distance);
 
-  /*
-   * setup temperature field
-   */
-
+  // setup temperature field
   DoFHandler<dim> dof_handler_temp(triangulation);
   if constexpr (n_components == 1)
     {
@@ -206,27 +200,25 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
 
   solution_temp.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
   solution_temp_interface.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
-  /*
-   * interpolate temperature onto quadrature points
-   */
+  // interpolate temperature onto quadrature points
   VectorTools::interpolate(mapping,
                            dof_handler_temp,
                            InitializeTemperature<dim, n_components>(),
                            solution_temp);
-  /*
-   * ------------------------------------------------------------------------------------
-   * ------------------------------------------------------------------------------------
-   *      START OF ACTUAL ALGORITHM
-   * ------------------------------------------------------------------------------------
-   * ------------------------------------------------------------------------------------
-   */
+  // ------------------------------------------------------------------------------------
+  // ------------------------------------------------------------------------------------
+  //      START OF ACTUAL ALGORITHM
+  // ------------------------------------------------------------------------------------
+  // ------------------------------------------------------------------------------------
   LevelSet::NearestPointData<double> nearest_point_data;
 
   nearest_point_data.rel_tol               = 1e-10;
   nearest_point_data.narrow_band_threshold = 0.125;
   nearest_point_data.max_iter              = n_iter;
   nearest_point_data.type                  = type;
-  nearest_point_data.verbosity_level       = 2;
+  nearest_point_data.verbosity_level       = 3;
+
+  TimerOutput timer(pcout, TimerOutput::never, TimerOutput::wall_times);
 
   std::vector<Point<dim>> all_marked_vertices;
 
@@ -290,31 +282,38 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
     return marked_vertices;
   };
 
-  Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
-    1e-6 /*tolerance*/,
-    true /*unique mapping*/,
-    0 /*rtree_level=*/,
-    marked_vertices /*marked vertices*/);
+  Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(1e-6 /*tolerance*/,
+                                                                          true /*unique mapping*/,
+                                                                          0 /*rtree_level=*/,
+                                                                          marked_vertices);
 
   const double min_cell_size = GridTools::minimal_cell_diameter(triangulation) / std::sqrt(dim);
 
   timer_total.start();
 
   // 1) compute accuracy of projected points
-
-  LevelSet::Tools::NearestPoint<dim, double> cpp(mapping,
-                                                 dof_handler,
-                                                 solution_distance,
-                                                 solution_normal,
-                                                 remote_point_evaluation,
-                                                 nearest_point_data);
+  LevelSet::Tools::NearestPoint<dim, double> cpp(
+    mapping,
+    dof_handler,
+    solution_distance,
+    solution_normal,
+    remote_point_evaluation,
+#ifdef MPDG_TEST_ENABLE_DEBUG
+    nearest_point_data,
+    std::optional<std::reference_wrapper<dealii::TimerOutput>>{timer});
+#else
+    nearest_point_data);
+#endif
 
   cpp.reinit(&dof_handler_temp);
 
+#ifdef MPDG_TEST_ENABLE_DEBUG
   cpp.write_to_file("interface_points");
+#endif
 
   const auto evaluation_points = cpp.get_points();
-  const auto dof_indices       = cpp.get_dof_indices();
+
+  const auto dof_indices = cpp.get_dof_indices();
 
   FEValues<dim> req_values(mapping,
                            dof_handler_temp.get_fe(),
@@ -338,6 +337,7 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
             quad_points[temp_local_dof_indices[q]] = req_values.quadrature_point(q);
         }
     }
+
   double max_dist = 0;
   for (unsigned int i = 0; i < evaluation_points.size(); ++i)
     {
@@ -346,7 +346,6 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
                                                                     center,
                                                                     0.25)
                             .distance(evaluation_points[i]));
-
       if (false)
         {
           std::cout << "Point: " << quad_points[dof_indices[i][0]] << std::endl;
@@ -355,7 +354,7 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
                                                                  center,
                                                                  0.25)
                     << std::endl;
-          std::cout << "numerical projcet" << evaluation_points[i] << std::endl;
+          std::cout << "numerical project" << evaluation_points[i] << std::endl;
         }
     }
 
@@ -363,6 +362,9 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
   pcout << "max distance to analytical solution (relative): " << max_dist / min_cell_size
         << std::endl;
   {
+    if (nearest_point_data.type == LevelSet::NearestPointType::nearest_point_fast)
+      remote_point_evaluation.reinit(evaluation_points, dof_handler.get_triangulation(), mapping);
+
     solution_distance.update_ghost_values();
     const auto evaluation_values_distance =
       dealii::VectorTools::point_values<1>(remote_point_evaluation, dof_handler, solution_distance);
@@ -377,8 +379,10 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
           << max_distance / min_cell_size << std::endl;
   }
 
-  cpp.fill_dof_vector_with_point_values<n_components>(solution_temp_interface, solution_temp);
+  cpp.template fill_dof_vector_with_point_values<n_components>(solution_temp_interface,
+                                                               solution_temp);
 
+#ifdef MPDG_TEST_ENABLE_DEBUG
   std::ofstream myfile;
   myfile.open("marked_vertices.dat");
 
@@ -390,69 +394,60 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
     }
 
   myfile.close();
+#endif
 
   timer_total.stop();
-  /*
-   * ------------------------------------------------------------------------------------
-   * ------------------------------------------------------------------------------------
-   *      END OF ACTUAL ALGORITHM
-   * ------------------------------------------------------------------------------------
-   * ------------------------------------------------------------------------------------
-   */
 
+  // ------------------------------------------------------------------------------------
+  // ------------------------------------------------------------------------------------
+  //      END OF ACTUAL ALGORITHM
+  // ------------------------------------------------------------------------------------
+  // ------------------------------------------------------------------------------------
   pcout << "norm of interface vals: " << solution_temp_interface.l2_norm() << std::endl;
-  /*
-   * debug
-   */
-  if (false)
+#ifdef MPDG_TEST_ENABLE_DEBUG
+  timer.print_wall_time_statistics(MPI_COMM_WORLD);
+  // add output vectors
+  DataOutBase::VtkFlags flags;
+  flags.write_higher_order_cells = true;
+
+  DataOut<dim> data_out;
+  data_out.set_flags(flags);
+
+  data_out.add_data_vector(dof_handler, solution_distance, "solution_distance");
+  for (unsigned int d = 0; d < dim; ++d)
+    data_out.add_data_vector(dof_handler, solution_normal.block(d), "normal_" + std::to_string(d));
+
+  if constexpr (n_components > 1)
     {
-      /*
-       * add output vectors
-       */
-      DataOutBase::VtkFlags flags;
-      flags.write_higher_order_cells = true;
+      std::vector<DataComponentInterpretation::DataComponentInterpretation>
+        vector_component_interpretation(n_components,
+                                        DataComponentInterpretation::component_is_part_of_vector);
 
-      DataOut<dim> data_out;
-      data_out.set_flags(flags);
+      data_out.add_data_vector(dof_handler_temp,
+                               solution_temp_interface,
+                               std::vector<std::string>(n_components, "solution_temp_interface"),
+                               vector_component_interpretation);
 
-      data_out.add_data_vector(dof_handler, solution_distance, "solution_distance");
-      for (unsigned int d = 0; d < dim; ++d)
-        data_out.add_data_vector(dof_handler,
-                                 solution_normal.block(d),
-                                 "normal_" + std::to_string(d));
-
-      if constexpr (n_components > 1)
-        {
-          std::vector<DataComponentInterpretation::DataComponentInterpretation>
-            vector_component_interpretation(
-              n_components, DataComponentInterpretation::component_is_part_of_vector);
-
-          data_out.add_data_vector(dof_handler_temp,
-                                   solution_temp_interface,
-                                   std::vector<std::string>(n_components,
-                                                            "solution_temp_interface"),
-                                   vector_component_interpretation);
-
-          data_out.add_data_vector(dof_handler_temp,
-                                   solution_temp,
-                                   std::vector<std::string>(n_components, "solution_temp"),
-                                   vector_component_interpretation);
-        }
-      else
-        {
-          data_out.add_data_vector(dof_handler_temp,
-                                   solution_temp_interface,
-                                   "solution_temp_interface");
-          data_out.add_data_vector(dof_handler_temp, solution_temp, "solution_temp");
-        }
-
-
-      pcout << "Elapsed wall time " << timer_total.wall_time() << std::endl;
-      data_out.build_patches(mapping);
-      std::string output = "n_components_" + std::to_string(n_components) + "n_iter_" +
-                           std::to_string(n_iter) + "_output.vtu";
-      data_out.write_vtu_in_parallel(output, mpi_comm);
+      data_out.add_data_vector(dof_handler_temp,
+                               solution_temp,
+                               std::vector<std::string>(n_components, "solution_temp"),
+                               vector_component_interpretation);
     }
+  else
+    {
+      data_out.add_data_vector(dof_handler_temp,
+                               solution_temp_interface,
+                               "solution_temp_interface");
+      data_out.add_data_vector(dof_handler_temp, solution_temp, "solution_temp");
+    }
+
+  pcout << "Elapsed wall time " << timer_total.wall_time() << std::endl;
+  data_out.build_patches(mapping);
+  std::string output = "n_components_" + std::to_string(n_components) + "n_iter_" +
+                       std::to_string(n_iter) + "_" + type._to_string() + "_" + dim._to_string() +
+                       "_output.vtu";
+  data_out.write_vtu_in_parallel(output, mpi_comm);
+#endif
 }
 
 int
@@ -461,10 +456,17 @@ main(int argc, char *argv[])
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
   run_test<1, 6, 1>();
+  run_test<1, 5, 1, 3>(LevelSet::NearestPointType::nearest_point);
+#ifdef DEAL_II_WITH_ARBORX
+  run_test<1, 5, 1, 3>(LevelSet::NearestPointType::nearest_point_fast);
+#endif
   run_test<1, 6, 16>();
   run_test<2, 6, 5>();
   run_test<2, 6, 5>(LevelSet::NearestPointType::closest_point_normal_collinear);
   run_test<2, 6, 1>(LevelSet::NearestPointType::nearest_point);
+#ifdef DEAL_II_WITH_ARBORX
+  run_test<2, 6, 1>(LevelSet::NearestPointType::nearest_point_fast);
+#endif
   run_test<2, 6, 5>(LevelSet::NearestPointType::closest_point_normal_collinear_coquerelle);
 
   return 0;

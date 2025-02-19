@@ -22,52 +22,51 @@ mkdir -p "$(pwd)/p4est-build"
 $configDir/p4est-config.sh p4est-2.2.tar.gz "$(pwd)/p4est-build"
 rm p4est-2.2.tar.gz
 
-##############################################################
+#############################################################
 # install Trilinos
-##############################################################
-# Get the GCC version
-gcc_version=$(gcc --version | head -n 1 | awk '{print $3}')
-
-# Extract the major version
-gcc_major_version=$(log $gcc_version | cut -d'.' -f1)
+#############################################################
 mkdir -p trilinos-build
 
-if [ "$gcc_major_version" -lt 13 ]; then
-  log "Use patched Trilinos version 13.4.1."
-  wget https://github.com/trilinos/Trilinos/archive/trilinos-release-13-4-1.tar.gz
-  mv trilinos-release-13-4-1.tar.gz trilinos-release-13-4-1.tar
-  tar -xvf trilinos-release-13-4-1.tar
-  cd trilinos-build
-  rm -rf *
-  $configDir/trilinos-config.sh ../Trilinos-trilinos-release-13-4-1
-  rm ../trilinos-release-13-4-1.tar
-else
-  log "Use patched Trilinos version 13.4.1 for GCC13"
-  wget https://github.com/MeltPoolDG/Trilinos/archive/trilinos-release-13-4-1-for-gcc-13.zip
-  unzip trilinos-release-13-4-1-for-gcc-13.zip
-  cd trilinos-build
-  rm -rf *
-  $configDir/trilinos-config.sh ../Trilinos-trilinos-release-13-4-1-for-gcc-13
-  rm ../trilinos-release-13-4-1-for-gcc-13.zip
-fi
+log "Use Trilinos version 14.4.0."
+wget https://github.com/trilinos/Trilinos/archive/trilinos-release-14-4-0.tar.gz
+mv trilinos-release-14-4-0.tar.gz trilinos-release-14-4-0.tar
+tar -xvf trilinos-release-14-4-0.tar
+cd trilinos-build
+rm -rf *
+$configDir/trilinos-config.sh ../Trilinos-trilinos-release-14-4-0
+rm ../trilinos-release-14-4-0.tar
 
 make -j$np install
 cd ..
 
+#############################################################
+# install Arborx
+#############################################################
+wget https://github.com/arborx/ArborX/archive/refs/tags/v1.5.tar.gz
+mv v1.5.tar.gz v1.5.tar
+tar -xvf v1.5.tar
+ARBOX_OPTIONS=(
+   -D CMAKE_INSTALL_PREFIX="./ArborX-install"
+   -D ARBORX_ENABLE_MPI=ON
+   -D Kokkos_ROOT="./trilinos-install/lib/cmake/Kokkos/"
+   )
+cmake "${ARBOX_OPTIONS[@]}" "${ARBORX_DIR:-./ArborX-1.5/}"
+make install
+
 ##############################################################
 # install deal.II
 ##############################################################
-git clone https://github.com/dealii/dealii
+#git clone https://github.com/dealii/dealii
 mkdir -p dealii-build
 cd dealii-build
 rm -rf *
-$configDir/dealii-config.sh ../trilinos-install ../p4est-build ../dealii $buildConfig
+$configDir/dealii-config.sh ../trilinos-install ../p4est-build ../ArborX-install ../dealii $buildConfig
 make -j$np
 cd ..
 
-##############################################################
+#############################################################
 # install adaflo
-##############################################################
+#############################################################
 git clone https://github.com/MeltPoolDG/adaflo
 # release
 cd adaflo

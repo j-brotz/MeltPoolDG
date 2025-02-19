@@ -18,6 +18,14 @@ max distance to analytical solution (relative): 0.52281325
 max distance to numerical distance solution (relative): 3.1519602e-15
 norm of interface vals: 61363.343
 ------------------------------------------------------------------
+ START TEST: n_iter=1 type nearest_point_fast #comp 1 #refine 5 dim 3
+------------------------------------------------------------------
+| narrow band threshold 0.125000    isocontour = 0.000000                            nearest_point |
+| no. stencil points: 55638                                                          nearest_point |
+max distance to analytical solution (relative): 0.41387865
+max distance to numerical distance solution (relative): -6.9320105e-09
+norm of interface vals: 61365.304
+------------------------------------------------------------------
  START TEST: n_iter=16 type closest_point_normal #comp 1 #refine 6 dim 2
 ------------------------------------------------------------------
 | narrow band threshold 0.125000    isocontour = 0.000000                            nearest_point |
@@ -94,6 +102,14 @@ norm of interface vals: 30027.037
 max distance to analytical solution (relative): 0.33349596
 max distance to numerical distance solution (relative): 4.9816097e-15
 norm of interface vals: 30027.557
+------------------------------------------------------------------
+ START TEST: n_iter=1 type nearest_point_fast #comp 2 #refine 6 dim 2
+------------------------------------------------------------------
+| narrow band threshold 0.125000    isocontour = 0.000000                            nearest_point |
+| no. stencil points: 6412                                                           nearest_point |
+max distance to analytical solution (relative): 0.26301997
+max distance to numerical distance solution (relative): -6.9202935e-07
+norm of interface vals: 30027.828
 ------------------------------------------------------------------
  START TEST: n_iter=5 type closest_point_normal_collinear_coquerelle #comp 2 #refine 6 dim 2
 ------------------------------------------------------------------

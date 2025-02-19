@@ -13,10 +13,12 @@
 #include <deal.II/dofs/dof_tools.h>
 
 #include <deal.II/fe/fe_nothing.h>
+#include <deal.II/fe/fe_simplex_p.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_update_flags.h>
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/mapping.h>
+#include <deal.II/fe/mapping_fe.h>
 
 #include <deal.II/grid/cell_data.h>
 #include <deal.II/grid/grid_tools.h>
@@ -221,12 +223,59 @@ namespace MeltPoolDG::LevelSet::Tools
   }
 
   /**
-   * This utility function enables the evaluation of variables at interfaces defined
-   * implicitly by a @p level_set_vector at a certain @p contour_value. The marching
-   * cube algorithm is used to determine @p points (unit points at the reference cell)
-   * and corresponding integration @p weights at the interface. The lambda function
-   * @p evaluate_at_interface_points is called for every active cell and can be used
-   * to e.g. fill a DoF vector.
+   * @brief Evaluates user-defined quantities at an implicitly defined interface.
+   *
+   * This utility function enables the evaluation of quantities at interfaces defined
+   * implicitly by a scalar field (level set function), represented by the
+   * @p level_set_vector. The interface is identified as the contour where the
+   * level set function equals the specified @p contour_value.
+   *
+   * The interface is reconstructed on each active cell using the Marching Cubes
+   * algorithm (or an optional alternative method if @p use_mca is false). The
+   * algorithm identifies interface points within the reference cell and computes
+   * corresponding integration weights (JxW values) for numerical integration.
+   *
+   * For each active cell in the provided DoFHandler cut by the interface, the
+   * user-supplied lambda function @p evaluate_at_interface_points is called.
+   *
+   * This interface evaluation can be used to implement a variety of tasks,
+   * such as integrating quantities over the interface, interpolating field
+   * values, or assembling contributions into global data structures like DoF
+   * vectors.
+   *
+   * @tparam dim The spatial dimension.
+   * @tparam number The numeric type used for computations (e.g., float, double).
+   *
+   * @param[in] dof_handler The DoFHandler associated with the finite element
+   *                        space defining the level set function.
+   * @param[in] mapping A Mapping object describing the transformation from
+   *                    reference to real space.
+   * @param[in] level_set_vector A vector representing the level set function,
+   *                             defined at the DoF locations.
+   * @param[in] evaluate_at_interface_points A user-defined callback function
+   *                                         that is called for each active cell
+   *                                         containing interface segments.
+   *                                         The callback signature must be:
+   *                                         ```
+   *                                         void(const active_cell_iterator &cell,
+   *                                              const std::vector<Point<dim>> &points_real,
+   *                                              const std::vector<Point<dim>> &points_reference,
+   *                                              const std::vector<number> &JxW)
+   *                                         ```
+   * @param[in] contour_value The level set value at which the interface is
+   *                          extracted (default is 0.0).
+   * @param[in] n_subdivisions The number of subdivisions per cell used to
+   *                            increase the resolution of the marching cubes grid
+   *                            (default is 1, i.e., no subdivision).
+   * @param[in] tolerance A small tolerance used for numerical comparisons when
+   *                      identifying interface segments (default is 1e-10).
+   * @param[in] use_mca A flag indicating whether to use the Marching Cubes Algorithm
+   *                    (MCA) for interface reconstruction (default is true).
+   *                    If false, the NonMatching infrastructure of deal.II is used.
+   *
+   * @note The accuracy of the interface location depends on the resolution of the
+   *       level set function and the number of subdivisions. For better accuracy,
+   *       consider refining the mesh or increasing @p n_subdivisions.
    */
   template <int dim, typename number>
   void
@@ -240,6 +289,7 @@ namespace MeltPoolDG::LevelSet::Tools
                           const std::vector<number> & /*JxW*/)> &evaluate_at_interface_points,
                         const number                             contour_value  = 0.0,
                         const unsigned int                       n_subdivisions = 1,
+                        const number                             tolerance      = 1e-10,
                         const bool                               use_mca        = true)
   {
     // data structures for marching-cube algorithm
@@ -250,7 +300,7 @@ namespace MeltPoolDG::LevelSet::Tools
       mc(mapping,
          dof_handler.get_fe(), // todo
          n_subdivisions,
-         1e-10);
+         tolerance);
 
     const bool is_ghosted = level_set_vector.has_ghost_elements();
 
@@ -371,9 +421,17 @@ namespace MeltPoolDG::LevelSet::Tools
                   dealii::Triangulation<dim == 1 ? 1 : dim - 1, dim> surface_triangulation;
                   surface_triangulation.create_triangulation(surface_vertices, surface_cells, {});
 
+                  // for 3D MCA
+                  dealii::FE_SimplexP<dim == 1 ? 1 : dim - 1, dim> fe_simplex(
+                    dof_handler.get_fe().tensor_degree());
+                  dealii::MappingFE<dim == 1 ? 1 : dim - 1, dim> simplex_mapping(fe_simplex);
+
                   dealii::FE_Nothing<dim == 1 ? 1 : dim - 1, dim> fe;
                   dealii::FEValues<dim == 1 ? 1 : dim - 1, dim>   fe_eval(
-                    fe, surface_quad, dealii::update_quadrature_points | dealii::update_JxW_values);
+                    simplex_mapping,
+                    fe,
+                    surface_quad,
+                    dealii::update_quadrature_points | dealii::update_JxW_values);
 
                   // loop over all cells ...
                   for (const auto &sub_cell : surface_triangulation.active_cell_iterators())
@@ -386,6 +444,7 @@ namespace MeltPoolDG::LevelSet::Tools
                           points_real.emplace_back(fe_eval.quadrature_point(q));
                           points.emplace_back(
                             mapping.transform_real_to_unit_cell(cell, fe_eval.quadrature_point(q)));
+
                           weights.emplace_back(fe_eval.JxW(q));
                         }
                     }
@@ -436,18 +495,56 @@ namespace MeltPoolDG::LevelSet::Tools
       level_set_vector.zero_out_ghost_values();
   }
 
+  /**
+   * @brief Generates surface mesh data corresponding to an implicit interface.
+   *
+   * This function constructs a surface mesh representation of an interface
+   * implicitly defined by a scalar field (level set function), given in
+   * the form of a `level_set_as_heaviside` vector. The interface corresponds
+   * to the isosurface where the level set equals the specified @p contour_value.
+   *
+   * Internally, this function uses the Marching Cubes algorithm (or an optional
+   * alternative method) to identify interface segments on each active cell.
+   * The resulting surface mesh information is returned as a list of tuples,
+   * where each tuple contains:
+   * - the cell iterator of the active cell containing a portion of the interface,
+   * - the unit (reference space) quadrature points on the interface within that cell,
+   * - and the corresponding (surface) integration weights for those points.
+   *
+   * This mesh information can be used for interface visualization or integration
+   * over implicitly defined surfaces.
+   *
+   * @tparam dim The spatial dimension of the problem.
+   * @tparam number The numeric type used in the computation (e.g., float, double).
+   *
+   * @param[in] dof_handler The DoFHandler associated with the finite element space
+   *                        describing the level set field.
+   * @param[in] mapping A Mapping object used to transform between reference and real space.
+   * @param[in] level_set_as_heaviside A vector representing the level set field.
+   * @param[in] contour_value The value at which to extract the interface (default is 0.0).
+   * @param[in] n_subdivisions The number of subdivisions per cell for resolving
+   *                            the interface (default is 1).
+   * @param[in] tolerance Numerical tolerance for comparing level set values (default is 1e-10).
+   * @param[in] use_mca If true, the Marching Cubes Algorithm is used for interface
+   *                    reconstruction (default is true).
+   *
+   * @return A vector of tuples, each containing:
+   *   - a cell iterator to an active dim-cell containing dim-1 interface geometry,
+   *   - a list of quadrature points (in unit coordinates) lying on the interface,
+   *   - and the associated integration weights (JxW values).
+   */
   template <int dim, typename number>
   std::vector<std::tuple<const typename dealii::Triangulation<dim, dim>::cell_iterator /*cell*/,
-                         std::vector<dealii::Point<dim>> /*quad_points*/,
+                         std::vector<dealii::Point<dim>> /*unit_points*/,
                          std::vector<number> /*weights*/
                          >>
-  generate_surface_mesh_info(
-    const dealii::DoFHandler<dim>                            &dof_handler,
-    const dealii::Mapping<dim>                               &mapping,
-    const dealii::LinearAlgebra::distributed::Vector<number> &level_set_as_heaviside,
-    const number                                              contour_value  = 0.0,
-    const unsigned int                                        n_subdivisions = 1,
-    const bool                                                use_mca        = true)
+  generate_surface_mesh_info(const dealii::DoFHandler<dim>                            &dof_handler,
+                             const dealii::Mapping<dim>                               &mapping,
+                             const dealii::LinearAlgebra::distributed::Vector<number> &level_set,
+                             const number       contour_value  = 0.0,
+                             const unsigned int n_subdivisions = 1,
+                             const number       tolerance      = 1e-10,
+                             const bool         use_mca        = true)
   {
     std::vector<std::tuple<const typename dealii::Triangulation<dim, dim>::cell_iterator /*cell*/,
                            std::vector<dealii::Point<dim>> /*quad_points*/,
@@ -458,18 +555,18 @@ namespace MeltPoolDG::LevelSet::Tools
     evaluate_at_interface<dim, number>(
       dof_handler,
       mapping,
-      level_set_as_heaviside,
+      level_set,
       [&](const auto &cell, const auto &, const auto &unit_points, const auto &weights) {
         if (unit_points.size() > 0)
           surface_mesh_info.emplace_back(cell, unit_points, weights);
       },
       contour_value,
       n_subdivisions,
+      tolerance,
       use_mca);
 
     return surface_mesh_info;
   }
-
 
   /**
    * This utility function computes a point cloud @p global_points_normal_to_interface
