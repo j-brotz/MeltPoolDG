@@ -1,7 +1,6 @@
 #pragma once
 // for distributed vectors/matrices
-#include <deal.II/lac/generic_linear_algebra.h>
-#include <deal.II/lac/trilinos_precondition.h>
+#include <deal.II/lac/precondition.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 // solvers
 #include <deal.II/lac/solver_bicgstab.h>
@@ -15,7 +14,6 @@
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-
 using namespace dealii;
 
 namespace MeltPoolDG
@@ -24,14 +22,14 @@ namespace MeltPoolDG
   {
   public:
     template <typename VectorType,
-              typename OperatorType       = TrilinosWrappers::SparseMatrix,
-              typename PreconditionerType = PreconditionIdentity>
+              typename OperatorType       = dealii::TrilinosWrappers::SparseMatrix,
+              typename PreconditionerType = dealii::PreconditionIdentity>
     static int
     solve(const OperatorType             &system_matrix,
           VectorType                     &solution,
           const VectorType               &rhs,
           const LinearSolverData<double> &data,
-          const PreconditionerType       &preconditioner = PreconditionIdentity(),
+          const PreconditionerType       &preconditioner = dealii::PreconditionIdentity(),
           const std::string               identifier     = "")
     {
       const bool monitor_history = data.monitor_type != LinearSolverMonitorType::none;
@@ -47,10 +45,13 @@ namespace MeltPoolDG
         if constexpr (internal::is_block_vector<VectorType>)
           pcout = std::make_unique<dealii::ConditionalOStream>(
             std::cout,
-            Utilities::MPI::this_mpi_process(solution.block(0).get_mpi_communicator()) == 0);
+            dealii::Utilities::MPI::this_mpi_process(solution.block(0).get_mpi_communicator()) ==
+              0);
         else
-          pcout = std::make_unique<dealii::ConditionalOStream>(
-            std::cout, Utilities::MPI::this_mpi_process(solution.get_mpi_communicator()) == 0);
+          pcout =
+            std::make_unique<dealii::ConditionalOStream>(std::cout,
+                                                         dealii::Utilities::MPI::this_mpi_process(
+                                                           solution.get_mpi_communicator()) == 0);
 
         if (monitor_history)
           {

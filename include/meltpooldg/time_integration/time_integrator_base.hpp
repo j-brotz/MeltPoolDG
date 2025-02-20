@@ -35,7 +35,7 @@ namespace MeltPoolDG
     };
 
 
-  template <typename number, typename PDEOperator>
+  template <typename number>
   class TimeIntegratorBase
   {
     using VectorType = LinearAlgebra::distributed::Vector<number>;
@@ -76,15 +76,17 @@ namespace MeltPoolDG
     /**
      * Perform the actual time integration for a single time step.
      *
-     * @param pde_operator Class providing the 'apply_operator()' function to compute f(y).
      * @param current_time Current time.
      * @param time_step Current time step size.
      * @param solution_history Solution history object providing the current and all required
      * previous solutions.
+     * @param pre_processing A pre-processing step. The exact implementation depends on the
+     * specific time integrator.
+     * @param post_processing A post-processing step. The exact implementation depends on the
+     * specific time integrator.
      */
     virtual void
     perform_time_step(
-      const PDEOperator                                                   &pde_operator,
       number                                                               current_time,
       number                                                               time_step,
       ::TimeIntegration::SolutionHistory<VectorType>                      &solution_history,

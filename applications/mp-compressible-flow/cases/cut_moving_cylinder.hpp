@@ -59,7 +59,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
   class MovingLevelSet : public Function<dim>
   {
   public:
-    MovingLevelSet(const double time)
+    explicit MovingLevelSet(const double time)
       : Function<dim>(1, time)
     {}
 

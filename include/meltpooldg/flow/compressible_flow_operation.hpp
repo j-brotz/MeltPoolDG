@@ -1,72 +1,42 @@
 /**
- * @brief This operator solves the compressible Navier-Stokes equations, comprising
- * the primary variables
- *  - density (ρ)
- *  - momentum (ρ u)
- *  - volume-specific energy (ρ E)
- *
- * It is an extension of deal.II step-67 and is based on the paper
- *
- * Fehn, N., Wall, W. A., & Kronbichler, M. (2019). A matrix‐free high‐order
- * discontinuous Galerkin compressible Navier‐Stokes solver: A performance
- * comparison of compressible and incompressible formulations for turbulent
- * incompressible flows. International Journal for Numerical Methods in Fluids,
- * 89(3), 71-102.
+ * @brief Common interface class for compressible flow operation classes based on the type
+ * erasure idiom.
  */
 
 #pragma once
 
 #include <deal.II/base/function.h>
 
+#include <deal.II/dofs/dof_handler.h>
+
 #include <deal.II/lac/la_parallel_vector.h>
 
-#include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/flow/compressible_flow_data.hpp>
-#include <meltpooldg/flow/compressible_flow_operator_implicit_base.hpp>
-#include <meltpooldg/post_processing/generic_data_out.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
+#include <meltpooldg/flow/compressible_flow_boundary_conditions.hpp>
 
 #include <memory>
+#include <utility>
 
 namespace MeltPoolDG::Flow
 {
-  using namespace dealii;
 
-  template <int dim, typename number = double>
+  template <unsigned int dim, typename number>
   class CompressibleFlowOperation
   {
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
+
   public:
-    virtual ~CompressibleFlowOperation() = default;
-
-    using VectorType = LinearAlgebra::distributed::Vector<number>;
+    CompressibleFlowOperation() = default;
 
     /**
-     * Constructor.
+     * Constructor, takes ownership of the passed unique pointer.
      *
-     * @param scratch_data_in Reference to the used ScratchData object.
-     * @param comp_flow_data_in Reference to the compressible flow data struct used.
-     * @param comp_flow_dof_idx_in Index of the used dof handler in @p scratch_data_in.
-     * @param comp_flow_quad_idx_in Index of the used quadrature object in @p scratch_data_in.
+     * @param operation Unique pointer to an operation object for a specific type of compressible
+     * flow operation.
      */
-    CompressibleFlowOperation(const ScratchData<dim>     &scratch_data_in,
-                              const CompressibleFlowData &comp_flow_data_in,
-                              unsigned int                comp_flow_dof_idx_in  = 0,
-                              unsigned int                comp_flow_quad_idx_in = 0);
-
-    /**
-     * Set up the required internal data structures. After a call to this function the solve()
-     * function of the class can be utilized.
-     */
-    virtual void
-    reinit();
-
-    /**
-     * Distribute dofs for a finite element type given in @p CompressibleFlowData.
-     *
-     * @param dof_handler Reference to the used DoFHandler object.
-     */
-    virtual void
-    distribute_dofs(DoFHandler<dim> &dof_handler) const;
+    template <typename OperationType>
+    explicit CompressibleFlowOperation(std::unique_ptr<OperationType> &&operation)
+      : operation_pimpl(std::make_unique<OperationModel<OperationType>>(std::move(operation)))
+    {}
 
     /**
      * Solves the compressible Navier-Stokes equations for a single time step.
@@ -74,82 +44,74 @@ namespace MeltPoolDG::Flow
      * @param current_time Current time at t^n.
      * @param time_step Current time step size.
      */
-    virtual void
-    solve(double current_time, double time_step);
+    void
+    solve(const number current_time, const number time_step)
+    {
+      operation_pimpl->solve(current_time, time_step);
+    }
 
     /**
-     * Set an inflow boundary conditions for all boundary ids occurring in the given std::map and
-     * applies the corresponding function at this boundary. This corresponds to a Dirichlet boundary
-     * condition to all primary variables.
+     * Distribute the degrees of freedom to the passed dof handler object.
      *
-     * @param inflow_bc Map of boundary ids and corresponding functions for inflow boundaries.
-     *
-     * @note The function simply passes the parameters to the corresponding operator function.
+     * @param dof_handler Dof handler object ussed for the compressible flow solver.
      */
     void
-    set_inflow_boundary(
-      const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> &inflow_bc);
+    distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const
+    {
+      operation_pimpl->distribute_dofs(dof_handler);
+    }
 
     /**
-     * Set a subsonic outflow boundary condition for all boundary ids occurring in the given
-     * std::map and applies the corresponding function at this boundary. This corresponds to a
-     * Dirichlet boundary condition for the static pressure part of the energy. The dynamic part is
-     * added according to the locally present velocity values as it is proposed in Hartmann R. and
-     * Houston P., An Optimal Order Interior Penalty Discontinuous Galerkin Discretization of the
-     * Compressible Navier–Stokes Equations.
-     *
-     * @param outflow_fixed_pressure_bc Map of boundary ids and corresponding functions for the
-     * outflow boundaries.
-     *
-     * @note The function simply passes the parameters to the corresponding operator function.
+     * Set up the required internal data structures. After a call to this function the solve()
+     * function of the class can be utilized.
      */
     void
-    set_subsonic_outflow_with_fixed_static_pressure(
-      const std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
-        &outflow_fixed_pressure_bc);
+    reinit()
+    {
+      operation_pimpl->reinit();
+    }
 
     /**
-     * Set a subsonic outflow boundary condition with prescribed energy for all boundary ids
-     * occurring in the given std::map and applies the corresponding function at this boundary. This
-     * corresponds to a Dirichlet boundary condition for the energy.
+     * Compute the maximum time step size arising from the convective and viscous time step limits
+     * and optionally print it to the console.
      *
-     * @param outflow_fixed_energy_bc Map of boundary ids and corresponding functions for the
-     * outflow boundaries.
-     *
-     * @note The function simply passes the parameters to the corresponding operator function.
+     * @param do_print If true, the time step limit is printed to the console.
      */
-    void
-    set_subsonic_outflow_with_fixed_energy(
-      const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> &outflow_fixed_energy_bc);
+    number
+    compute_time_step_size(const bool do_print = false) const
+    {
+      return operation_pimpl->compute_time_step_size(do_print);
+    }
 
     /**
-     * Set a slip wall boundary condition for all boundary ids occurring in the given std::map,
-     * where the corresponding functions are not used for the boundary condition. This represents a
-     * symmetry condition for the momentum (normal velocity results to zero).
+     * Set the solution vector to the passed initial flow field state.
      *
-     * @param slip_wall_bc Map of boundary ids and corresponding functions for the
-     * outflow boundaries.
-     *
-     * @note The function simply passes the parameters to the corresponding operator function.
+     * @param function Initial condition of the flow field.
      */
     void
-    set_slip_wall_boundary(
-      const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> &slip_wall_bc);
+    set_initial_condition(const Function<dim> &function)
+    {
+      operation_pimpl->set_initial_condition(function);
+    }
 
     /**
-     * Set an adiabatic no-slip wall boundary condition for all boundary ids occurring in the given
-     * std::map, where the corresponding functions are not used for the boundary condition. This
-     * represents a homogeneous Dirichlet boundary condition for the momentum and a homogeneous
-     * Neumann boundary condition for the energy.
+     * Set the boundary condition. This funciton takes to parameters. One defines the tyoe of the
+     * boundary condition and the other one on the one hand defines the boundary (by the boundary
+     * id) at whcih the boundary condition is applied and optionally a corresponding prescribed
+     * function for the boundary condition.
      *
-     * @param no_slip_wall_bc Map of boundary ids and corresponding functions for the
-     * outflow boundaries.
-     *
-     * @note The function simply passes the parameters to the corresponding operator function.
+     * @param boundary_condition Type of the boundary condition.
+     * @param boundary_condition_function A map consisting of the boundary id and the corresponding
+     * boundary codnition function.
      */
     void
-    set_no_slip_adiabatic_wall_boundary(
-      const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> &no_slip_wall_bc);
+    set_boundary_condition(
+      const CompressibleBoundaryConditionType boundary_condition,
+      std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        boundary_condition_function)
+    {
+      operation_pimpl->set_boundary_condition(boundary_condition, boundary_condition_function);
+    }
 
     /**
      * Set a body force, e.g. gravity, specified by the passed function.
@@ -159,42 +121,28 @@ namespace MeltPoolDG::Flow
      * @note The function simply passes the parameters to the corresponding operator function.
      */
     void
-    set_body_force(std::unique_ptr<Function<dim>> body_force_in);
+    set_body_force(std::unique_ptr<Function<dim>> body_force_in)
+    {
+      operation_pimpl->set_body_force(std::move(body_force_in));
+    }
 
-    /**
-     * Set the inflow field function in the case of an unfitted inflow boundary.
-     *
-     * @note The function simply passes the function to the corresponding cut operator function.
-     */
-    // TODO: eliminate this function from this operation class?
-    virtual void
-    set_inflow_field_unfitted_boundary(std::shared_ptr<Function<dim>> & /*inflow_function*/){};
+    const dealii::DoFHandler<dim> &
+    get_dof_handler() const
+    {
+      return operation_pimpl->get_dof_handler();
+    }
 
-    /**
-     * Set the object velocity function in the case of an unfitted (rigid) moving object.
-     *
-     * @note The function simply passes the function to the corresponding cut operator function.
-     */
-    // TODO: eliminate this function from this operation class?
-    virtual void
-    set_unfitted_object_velocity(std::shared_ptr<Function<dim>> & /*velocity_function*/){};
+    const VectorType &
+    get_solution() const
+    {
+      return operation_pimpl->get_solution();
+    }
 
-    /**
-     * Compute the maximum time step size arising from the convective and viscous time step limits
-     * and optionally print it to the console.
-     *
-     * @param do_print If true, the time step limit is printed to the console.
-     */
-    number
-    compute_time_step_size(bool do_print = false) const;
-
-    /**
-     * Set the initial condition of the solution dof vector.
-     *
-     * @param function Given function for initial condition.
-     */
-    virtual void
-    set_initial_condition(const Function<dim> &function);
+    VectorType &
+    get_solution()
+    {
+      return operation_pimpl->get_solution();
+    }
 
     /**
      * Attach the solution to the passed data out object. The solution which are added are the
@@ -203,73 +151,166 @@ namespace MeltPoolDG::Flow
      * @param data_out Object to which the solution vector is attached.
      */
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim> &data_out) const
+    {
+      std::vector<std::string> names;
+      names.emplace_back("density");
+      for (unsigned int d = 0; d < dim; ++d)
+        names.emplace_back("momentum");
+
+      names.emplace_back("energy");
+
+      std::vector<DataComponentInterpretation::DataComponentInterpretation> interpretation;
+      interpretation.push_back(DataComponentInterpretation::component_is_scalar);
+      for (unsigned int d = 0; d < dim; ++d)
+        interpretation.push_back(DataComponentInterpretation::component_is_part_of_vector);
+      interpretation.push_back(DataComponentInterpretation::component_is_scalar);
+
+      data_out.add_data_vector(operation_pimpl->get_dof_handler(),
+                               operation_pimpl->get_solution(),
+                               names,
+                               interpretation);
+    }
 
     /**
-     * Getter functions.
-     */
-    const VectorType &
-    get_solution() const;
-
-    VectorType &
-    get_solution();
-
-    /**
-     * Register the reinit_matrix_free lambda function.
+     * Check if the compressible flow operation is initialized, i.e. that the current object holds a
+     * valid pointer to any compressible flow operation object.
      *
-     * @note This function is only relevant for cutDG. It is used for the solution transfer between
-     * different active mesh topologies in two subsequent time levels in the case of moving unfitted
-     * boundaries/interfaces.
+     * @return True if object holds a valid preconditoner object.
      */
-    // TODO: eliminate this function from this operation class?
-    virtual void
-    register_reinit_matrix_free(
-      const std::function<void(const dealii::DoFHandler<dim> &)> /*reinit_matrix_free_in*/){};
-
-  protected:
-    ::TimeIntegration::SolutionHistory<VectorType> solution_history_;
-
-    const ScratchData<dim>    &scratch_data_;
-    const CompressibleFlowData comp_flow_data_;
-
-    const unsigned int comp_flow_dof_idx  = 0;
-    const unsigned int comp_flow_quad_idx = 0;
-
-    std::unique_ptr<CompressibleFlowOperatorBase<dim, number>> comp_flow_operator_;
+    bool
+    is_initialized() const
+    {
+      return (operation_pimpl != nullptr);
+    }
 
     /**
-     * Compute the convective time step limit for the current mesh and flow field.
-     */
-    virtual number
-    compute_convective_time_step_limit() const;
-
-    /**
-     * Compute the minimum density currently occurring in the flow field.
-     */
-    virtual number
-    compute_minimum_density() const;
-
-    /**
-     * Set up the operator to suit the specified time integration scheme.
+     * Delete the compressible flow operation object stored in this class.
      */
     void
-    setup_operator_and_time_integrator();
+    clear()
+    {
+      operation_pimpl.reset(nullptr);
+    }
+
+  private:
+    struct OperationConcept
+    {
+      virtual ~OperationConcept() = default;
+
+      virtual void
+      solve(number current_time, number time_step) = 0;
+
+      virtual void
+      distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const = 0;
+
+      virtual void
+      reinit() = 0;
+
+      virtual number
+      compute_time_step_size(bool do_print = false) const = 0;
+
+      virtual void
+      set_initial_condition(const Function<dim> &function) = 0;
+
+      virtual void
+      set_boundary_condition(
+        CompressibleBoundaryConditionType boundary_condition,
+        std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+          boundary_condition_function) = 0;
+
+      virtual void
+      set_body_force(std::unique_ptr<Function<dim>> body_force_in) = 0;
+
+      virtual const VectorType &
+      get_solution() const = 0;
+
+      virtual VectorType &
+      get_solution() = 0;
+
+      virtual const dealii::DoFHandler<dim> &
+      get_dof_handler() const = 0;
+    };
+
+    template <typename OperationType>
+    struct OperationModel final : public OperationConcept
+    {
+    public:
+      explicit OperationModel(std::unique_ptr<OperationType> &&operation_in)
+        : operation(std::move(operation_in))
+      {}
+
+      void
+      solve(const number current_time, const number time_step) override
+      {
+        operation->solve(current_time, time_step);
+      }
+
+      void
+      distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const override
+      {
+        operation->distribute_dofs(dof_handler);
+      }
+
+      void
+      reinit() override
+      {
+        operation->reinit();
+      }
+
+      number
+      compute_time_step_size(const bool do_print = false) const override
+      {
+        return operation->compute_time_step_size(do_print);
+      }
+
+      void
+      set_initial_condition(const Function<dim> &function) override
+      {
+        operation->set_initial_condition(function);
+      }
+
+      void
+      set_boundary_condition(
+        const CompressibleBoundaryConditionType boundary_condition,
+        std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+          boundary_condition_function) override
+      {
+        operation->set_boundary_condition(boundary_condition, boundary_condition_function);
+      }
+
+      void
+      set_body_force(std::unique_ptr<Function<dim>> body_force_in) override
+      {
+        operation->set_body_force(std::move(body_force_in));
+      }
+
+      const VectorType &
+      get_solution() const override
+      {
+        return operation->get_solution();
+      }
+
+      VectorType &
+      get_solution() override
+      {
+        return operation->get_solution();
+      }
+
+      const dealii::DoFHandler<dim> &
+      get_dof_handler() const override
+      {
+        return operation->get_dof_handler();
+      }
+
+    private:
+      std::unique_ptr<OperationType> operation;
+    };
+
+    /**
+     * Pointer to the actual compressible flow operation object to which the function calls are
+     * forwarded.
+     */
+    std::unique_ptr<OperationConcept> operation_pimpl;
   };
-
-
-  //! inlined functions
-  template <int dim, typename number>
-  const LinearAlgebra::distributed::Vector<number> &
-  CompressibleFlowOperation<dim, number>::get_solution() const
-  {
-    return solution_history_.get_current_solution();
-  }
-
-  template <int dim, typename number>
-  LinearAlgebra::distributed::Vector<number> &
-  CompressibleFlowOperation<dim, number>::get_solution()
-  {
-    return solution_history_.get_current_solution();
-  }
-
 } // namespace MeltPoolDG::Flow

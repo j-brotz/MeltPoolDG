@@ -26,7 +26,8 @@ namespace MeltPoolDG
               bdf_3,
               bdf_4,
               bdf_5,
-              bdf_6)
+              bdf_6,
+              imex /* first order */)
 
   /**
    * Collection of all integrator parameters.
@@ -51,6 +52,10 @@ namespace MeltPoolDG
 
     TimeIntegratorSchemes integrator_type = TimeIntegratorSchemes::not_initialized;
 
+    /**
+     * Number of time steps after which thre preconditioner gets updated.
+     */
+    unsigned int                preconditioner_update_frequency = 100;
     NonlinearSolverData<double> nlsolver_data;
     LinearSolverData<double>    linear_solver_data;
 
@@ -60,6 +65,9 @@ namespace MeltPoolDG
       prm.enter_subsection("time integration");
       {
         prm.add_parameter("type", integrator_type, "Name of the time integration scheme.");
+        prm.add_parameter("preconditioner update frequency",
+                          preconditioner_update_frequency,
+                          "Frequency at which the preconditioner gets updated.");
         nlsolver_data.add_parameters(prm);
         linear_solver_data.add_parameters(prm);
       }

@@ -137,8 +137,7 @@ namespace MeltPoolDG::LevelSet
 
     std::shared_ptr<ReinitilizationDGOperator<dim>> reinit_DG_operator;
 
-    std::shared_ptr<TimeIntegratorBase<double, ReinitilizationDGOperator<dim>>>
-      reinitialization_integration;
+    std::shared_ptr<TimeIntegratorBase<double>> reinitialization_integration;
 
 
     // maximum change of the level set due to the current reinitialization step

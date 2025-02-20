@@ -1,55 +1,32 @@
 #pragma once
 
-#include <meltpooldg/flow/compressible_flow_operator_implicit_base.hpp>
+#include <deal.II/lac/la_parallel_vector.h>
+
+#include <meltpooldg/flow/compressible_flow_convective_kernels.hpp>
+#include <meltpooldg/flow/compressible_flow_utils.hpp>
+#include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
+#include <meltpooldg/flow/dg_compressible_flow_operator_base.hpp>
 #include <meltpooldg/time_integration/time_integrator_base.hpp>
+
 
 namespace MeltPoolDG::Flow
 {
   template <int dim, typename number>
-  class CompressibleFlowOperatorImplicit final
-    : public CompressibleFlowOperatorImplicitBase<dim, number>
+  class DGCompressibleFlowOperatorImplicit final : public DGCompressibleFlowOperatorBase<number>
   {
-  private:
-    using Base                       = CompressibleFlowOperatorBase<dim, number>;
-    using VectorType                 = typename Base::VectorType;
-    using ConservedVariablesType     = typename Base::ConservedVariablesType;
-    using ConservedVariablesGradType = typename Base::ConservedVariablesGradType;
+    using VectorType             = dealii::LinearAlgebra::distributed::Vector<number>;
+    using ConservedVariablesType = CompressibleFlowTypes::ConservedVariablesType<dim, number>;
+    using ConservedVariablesGradType =
+      CompressibleFlowTypes::ConservedVariablesGradType<dim, number>;
 
   public:
     /**
-     * Constructor, sets up the time integrator and sets the size of the solution_history object.
+     * Constructor.
      *
-     * @param compressible_flow_data_in Reference to the compressible flow data struct used.
-     * @param scratch_data_in Reference to the used ScratchData object.
-     * @param solution_history_in Reference to the used solution_history object.
-     * @param comp_flow_dof_idx_in Index of the used dof handler in @p scratch_data_in.
-     * @param comp_flow_quad_idx_in Index of the used quadrature object in @p scratch_data_in.
+     * @param flow_scratch_data Reference to flow scratch data object.
      */
-    CompressibleFlowOperatorImplicit(
-      const CompressibleFlowData                     &compressible_flow_data_in,
-      const ScratchData<dim>                         &scratch_data_in,
-      ::TimeIntegration::SolutionHistory<VectorType> &solution_history_in,
-      unsigned int                                    comp_flow_dof_idx_in  = 0,
-      unsigned int                                    comp_flow_quad_idx_in = 0);
-
-    /**
-     * Perform a single time step. This effectively just calls time_integrator->perform_time_step().
-     * Anything else including pre- and post-processing not performed by the time integrator needs
-     * to be done ecternally.
-     *
-     * @param current_time Current simulation time.
-     * @param time_step Current time step size.
-     * @param pre_processing Preprocessing function passed to the time integrator (e.g. executed
-     * before each Runge-Kutta step).
-     * @param post_processing Postprocessing function passed to the time integrator (e.g. execcuted
-     * after each Runge-Kutta step).
-     */
-    void
-    advance_time_step(
-      number                                                        current_time,
-      number                                                        time_step,
-      std::function<void(number, VectorType &, const VectorType &)> pre_processing  = {},
-      std::function<void(number, VectorType &, const VectorType &)> post_processing = {}) override;
+    explicit DGCompressibleFlowOperatorImplicit(
+      CompressibleFlowScratchData<dim, number> &flow_scratch_data);
 
     /**
      * Reinitilaize the internal data structures, i.e. allocate memory for vectors storing temporary
@@ -57,6 +34,37 @@ namespace MeltPoolDG::Flow
      */
     void
     reinit() override;
+
+    /**
+     * Compute the matrix representation of the Jacobian.
+     *
+     * @param sparse_matrix Spars matrix in which the resulting matrix representation is stored.
+     */
+    void
+    compute_system_matrix_from_matrixfree(
+      dealii::TrilinosWrappers::SparseMatrix &sparse_matrix) const;
+
+    /**
+     * Compute the inverse elements of the diagonal of the jacobian.
+     *
+     * @param diagonal Vector in which the inverse elements of the diagonal are stored.
+     */
+    void
+    compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const;
+
+    /**
+     * Creates and returns an implicit time integrator object which is set up with the current
+     * operator.
+     *
+     * @param time_integrator_data Reference to the time integrator data object.
+     *
+     * @return Unique pointer to a time integrator which is templated on the own operator type.
+     *
+     * @throws If the time integrator type in the time integrator data is not an implicit time
+     * integrator.
+     */
+    std::unique_ptr<TimeIntegratorBase<number>>
+    make_problem_specific_time_integrator(const TimeIntegratorData &time_integrator_data) override;
 
     /**
      * This function sets class member variables which are constant within a single time stage (e.g.
@@ -75,7 +83,7 @@ namespace MeltPoolDG::Flow
     set_stage_constants(number            current_time,
                         number            time_step,
                         const VectorType &old_solution_in,
-                        number            rhs_scaling_factor = 1.) const;
+                        number            rhs_scaling_factor = 1.) const; // TODO
 
     /**
      * Compute the result of J*x, where J is the jacobian. The method on how to compute/approximate
@@ -88,7 +96,7 @@ namespace MeltPoolDG::Flow
      * @note This function assumes that the function set_stage_constants() has been called in advance.
      */
     void
-    apply_jacobian(VectorType &dst, const VectorType &src) const;
+    apply_jacobian(VectorType &dst, const VectorType &src) const; // TODO
 
     /**
      * Compute the negative residual, i.e. -(y'-F(y)) where y' is the temporal derivative of the
@@ -103,7 +111,52 @@ namespace MeltPoolDG::Flow
      * @note This function assumes that the function set_stage_constants() has been called in advance.
      */
     void
-    compute_residual(number current_time, const VectorType &src, VectorType &dst) const;
+    compute_residual(number current_time, const VectorType &src, VectorType &dst) const; // TODO
+
+
+    /**
+     * Local cell operations at the given quadrature point for computing the jacobian.
+     *
+     * @param delta_phi Cell integrator for the change in the primary variables. Quadrature point
+     * distributions are added to this integrator.
+     * @param phi Cell integrator for the primary varibales.
+     * @param q_index Quadrature point index.
+     */
+    void
+    local_cell_jacobian_kernel(FECellIntegrator<dim, dim + 2, number>       &delta_phi,
+                               const FECellIntegrator<dim, dim + 2, number> &phi,
+                               unsigned int                                  q_index) const;
+
+    /**
+     * Local face operations at the given quadrature point for computing the jacobian.
+     *
+     * @param delta_phi_m Face integrator for the change in the primary variables on the inner face.
+     * Quadrature point distributions are added to this integrator.
+     * @param delta_phi_p Face integrator for the change in the primary variables on the outer face.
+     * Quadrature point distributions are added to this integrator.
+     * @param phi_m Cell integrator for the primary varibales on the inner face.
+     * @param phi_p Cell integrator for the primary varibales on the outer face.
+     * @param q_index Quadrature point index.
+     */
+    void
+    local_face_jacobian_kernel(FEFaceIntegrator<dim, dim + 2, number>       &delta_phi_m,
+                               FEFaceIntegrator<dim, dim + 2, number>       &delta_phi_p,
+                               const FEFaceIntegrator<dim, dim + 2, number> &phi_m,
+                               const FEFaceIntegrator<dim, dim + 2, number> &phi_p,
+                               unsigned int                                  q_index) const;
+
+    /**
+     * Local biundary face operations at the given quadrature point for computing the jacobian.
+     *
+     * @param delta_phi_m Face integrator for the change in the primary variables on the inner face.
+     * Quadrature point distributions are added to this integrator.
+     * @param phi_m Cell integrator for the primary varibales on the inner face.
+     * @param q_index Quadrature point index.
+     */
+    void
+    local_boundary_face_jacobian_kernel(FEFaceIntegrator<dim, dim + 2, number>       &delta_phi_m,
+                                        const FEFaceIntegrator<dim, dim + 2, number> &phi_m,
+                                        unsigned int q_index) const;
 
   private:
     /**
@@ -220,12 +273,6 @@ namespace MeltPoolDG::Flow
                                  const std::pair<unsigned int, unsigned int> &face_range) const;
 
     /**
-     * Implicit time integrator.
-     */
-    std::unique_ptr<TimeIntegratorBase<number, CompressibleFlowOperatorImplicit<dim, number>>>
-      time_integrator;
-
-    /**
      * When computing the residual this factor defines a scaling factor for the right-hand side. The
      * final residual is then given by R=y'-a*f(y), where 'a' is the factor defined by thi variable.
      */
@@ -251,5 +298,11 @@ namespace MeltPoolDG::Flow
      * appliers.
      */
     mutable number current_time_step;
+
+    CompressibleFlowScratchData<dim, number> &flow_scratch_data;
+
+    CompressibleFlowConvectiveKernels<dim, number> convective_terms;
+
+    CompressibleFlowViscousKernels<dim, number> viscous_terms;
   };
 } // namespace MeltPoolDG::Flow

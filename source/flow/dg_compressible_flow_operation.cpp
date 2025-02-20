@@ -1,0 +1,333 @@
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/mpi.h>
+#include <deal.II/base/vectorization.h>
+
+#include <deal.II/matrix_free/operators.h>
+
+#include <deal.II/numerics/data_component_interpretation.h>
+
+#include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
+#include <meltpooldg/flow/dg_compressible_flow_operator_explicit.hpp>
+#include <meltpooldg/flow/dg_compressible_flow_operator_implicit.hpp>
+#include <meltpooldg/flow/dg_compressible_flow_operator_implicit_explicit.hpp>
+#include <meltpooldg/time_integration/time_integrator_util.hpp>
+#include <meltpooldg/utilities/fe_integrator.hpp>
+#include <meltpooldg/utilities/fe_util.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
+
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include <ostream>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace MeltPoolDG::Flow
+{
+  template <int dim, typename number>
+  DGCompressibleFlowOperation<dim, number>::DGCompressibleFlowOperation(
+    const ScratchData<dim>     &scratch_data,
+    const CompressibleFlowData &flow_data,
+    const unsigned int          flow_dof_idx,
+    const unsigned int          flow_quad_idx)
+    : flow_scratch_data(flow_data, scratch_data, flow_dof_idx, flow_quad_idx)
+  {
+    setup_operator_and_time_integrator();
+  }
+
+  template <int dim, typename number>
+  void
+  DGCompressibleFlowOperation<dim, number>::reinit()
+  {
+    flow_scratch_data.reinit(time_integrator->required_solution_history_size());
+    comp_flow_operator->reinit();
+    time_integrator->reinit(flow_scratch_data.solution_history);
+  }
+
+  template <int dim, typename number>
+  void
+  DGCompressibleFlowOperation<dim, number>::distribute_dofs(DoFHandler<dim> &dof_handler) const
+  {
+    FiniteElementUtils::distribute_dofs<dim, dim + 2>(flow_scratch_data.flow_data.fe, dof_handler);
+  }
+
+  template <int dim, typename number>
+  void
+  DGCompressibleFlowOperation<dim, number>::solve(const number current_time, const number time_step)
+  {
+    flow_scratch_data.solution_history.commit_old_solutions();
+    std::function<void(number, VectorType &, const VectorType &)> pre_processing =
+      [&](number time, VectorType &, const VectorType &) -> void {
+      flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
+    };
+
+    flow_scratch_data.solution_history.update_ghost_values();
+
+    time_integrator->perform_time_step(current_time,
+                                       time_step,
+                                       flow_scratch_data.solution_history,
+                                       pre_processing);
+  }
+
+  template <int dim, typename number>
+  void
+  DGCompressibleFlowOperation<dim, number>::set_boundary_condition(
+    const CompressibleBoundaryConditionType boundary_condition,
+    std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+      boundary_condition_function)
+  {
+    flow_scratch_data.boundary_conditions.set_boundary_condition(boundary_condition,
+                                                                 boundary_condition_function);
+  }
+
+  template <int dim, typename number>
+  void
+  DGCompressibleFlowOperation<dim, number>::set_body_force(
+    std::unique_ptr<Function<dim>> body_force_in)
+  {
+    AssertDimension(body_force_in->n_components, dim);
+    flow_scratch_data.body_force = std::move(body_force_in);
+  }
+
+  template <int dim, typename number>
+  void
+  DGCompressibleFlowOperation<dim, number>::set_initial_condition(const Function<dim> &function)
+  {
+    FECellIntegrator<dim, dim + 2, number> phi(flow_scratch_data.scratch_data.get_matrix_free(),
+                                               flow_scratch_data.dof_idx,
+                                               flow_scratch_data.quad_idx);
+    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, dim + 2, number> inverse(phi);
+    flow_scratch_data.solution_history.get_current_solution().zero_out_ghost_values();
+    for (unsigned int cell = 0;
+         cell < flow_scratch_data.scratch_data.get_matrix_free().n_cell_batches();
+         ++cell)
+      {
+        phi.reinit(cell);
+        for (const unsigned int q : phi.quadrature_point_indices())
+          phi.submit_dof_value(
+            VectorTools::evaluate_function_at_vectorized_points<dim, number, dim + 2>(
+              function, phi.quadrature_point(q)),
+            q);
+        inverse.transform_from_q_points_to_basis(dim + 2,
+                                                 phi.begin_dof_values(),
+                                                 phi.begin_dof_values());
+        phi.set_dof_values(flow_scratch_data.solution_history.get_current_solution());
+      }
+  }
+
+  template <int dim, typename number>
+  number
+  DGCompressibleFlowOperation<dim, number>::compute_minimum_density() const
+  {
+    TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), "compute transport speed");
+    // only read density
+    FECellIntegrator<dim, 1, number> phi(flow_scratch_data.scratch_data.get_matrix_free(),
+                                         flow_scratch_data.dof_idx,
+                                         flow_scratch_data.quad_idx);
+    flow_scratch_data.solution_history.get_current_solution().update_ghost_values();
+
+    double min_density = std::numeric_limits<double>::max();
+
+    for (unsigned int cell = 0;
+         cell < flow_scratch_data.scratch_data.get_matrix_free().n_cell_batches();
+         ++cell)
+      {
+        phi.reinit(cell);
+        phi.gather_evaluate(flow_scratch_data.solution_history.get_current_solution(),
+                            EvaluationFlags::values);
+        for (const unsigned int q : phi.quadrature_point_indices())
+          {
+            const auto density = phi.get_value(q);
+            for (unsigned int lane = 0;
+                 lane <
+                 flow_scratch_data.scratch_data.get_matrix_free().n_active_entries_per_cell_batch(
+                   cell);
+                 ++lane)
+              min_density = std::min(density[lane], min_density);
+          }
+      }
+
+    min_density = Utilities::MPI::min(min_density, flow_scratch_data.scratch_data.get_mpi_comm());
+
+    return min_density;
+  }
+
+  template <int dim, typename number>
+  number
+  DGCompressibleFlowOperation<dim, number>::compute_convective_time_step_limit() const
+  {
+    TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), "compute transport speed");
+    number             max_transport              = 0;
+    number             convective_time_step_limit = 0.;
+    FECellIntegrator<dim, dim + 2, number> phi(flow_scratch_data.scratch_data.get_matrix_free(),
+                                               flow_scratch_data.dof_idx,
+                                               flow_scratch_data.quad_idx);
+
+    for (unsigned int cell = 0;
+         cell < flow_scratch_data.scratch_data.get_matrix_free().n_cell_batches();
+         ++cell)
+      {
+        phi.reinit(cell);
+        phi.gather_evaluate(flow_scratch_data.solution_history.get_current_solution(),
+                            EvaluationFlags::values);
+        VectorizedArray<number> local_max = 0.;
+        for (const unsigned int q : phi.quadrature_point_indices())
+          {
+            const auto conserved_variables = phi.get_value(q);
+            const auto velocity            = calculate_velocity<dim, number>(conserved_variables);
+            const auto pressure =
+              calculate_pressure<dim, number>(conserved_variables,
+                                              flow_scratch_data.flow_data.gamma);
+
+            const auto              inverse_jacobian = phi.inverse_jacobian(q);
+            const auto              convective_speed = inverse_jacobian * velocity;
+            VectorizedArray<number> convective_limit = 0.;
+            for (unsigned int d = 0; d < dim; ++d)
+              convective_limit = std::max(convective_limit, std::abs(convective_speed[d]));
+
+            const auto speed_of_sound =
+              std::sqrt(flow_scratch_data.flow_data.gamma * pressure / conserved_variables[0]);
+
+            Tensor<1, dim, VectorizedArray<number>> eigenvector;
+            for (unsigned int d = 0; d < dim; ++d)
+              eigenvector[d] = 1.;
+            for (unsigned int i = 0; i < 5 /* number of iterations */; ++i)
+              {
+                eigenvector = transpose(inverse_jacobian) * (inverse_jacobian * eigenvector);
+                VectorizedArray<number> eigenvector_norm = 0.;
+                for (unsigned int d = 0; d < dim; ++d)
+                  eigenvector_norm = std::max(eigenvector_norm, std::abs(eigenvector[d]));
+                eigenvector /= eigenvector_norm;
+              }
+            const auto jac_times_ev = inverse_jacobian * eigenvector;
+            const auto max_eigenvalue =
+              std::sqrt((jac_times_ev * jac_times_ev) / (eigenvector * eigenvector));
+            local_max = std::max(local_max, max_eigenvalue * speed_of_sound + convective_limit);
+          }
+
+        // Similarly to the previous function, we must make sure to accumulate
+        // speed only on the valid cells of a cell batch.
+        for (unsigned int v = 0;
+             v <
+             flow_scratch_data.scratch_data.get_matrix_free().n_active_entries_per_cell_batch(cell);
+             ++v)
+          max_transport = std::max(max_transport, local_max[v]);
+      }
+
+    max_transport =
+      Utilities::MPI::max(max_transport, flow_scratch_data.scratch_data.get_mpi_comm());
+
+    convective_time_step_limit =
+      flow_scratch_data.flow_data.courant_number /
+      std::pow(flow_scratch_data.scratch_data.get_degree(flow_scratch_data.dof_idx), 1.5) /
+      max_transport;
+
+    return convective_time_step_limit;
+  }
+
+  template <int dim, typename number>
+  number
+  DGCompressibleFlowOperation<dim, number>::compute_time_step_size(const bool do_print) const
+  {
+    const double min_density = compute_minimum_density();
+
+    AssertThrow(min_density > 0, ExcMessage("Minimum density must not be zero."));
+
+    const double viscous_time_step_limit =
+      (flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+        flow_scratch_data.flow_data.viscous_courant_number /
+          std::pow(flow_scratch_data.scratch_data.get_degree(flow_scratch_data.dof_idx), 3) *
+          std::pow(flow_scratch_data.scratch_data.get_min_cell_size(), 2) * min_density /
+          flow_scratch_data.flow_data.dynamic_viscosity :
+        std::numeric_limits<number>::max();
+
+    const double convective_time_step_limit = compute_convective_time_step_limit();
+    const double time_step = std::min(convective_time_step_limit, viscous_time_step_limit);
+
+    if (do_print)
+      {
+        flow_scratch_data.scratch_data.get_pcout()
+          << "Time step size: " << time_step
+          << ", convective time step limit: " << convective_time_step_limit
+          << ", viscous time step limit: " << viscous_time_step_limit
+          << ",\nminimum h: " << flow_scratch_data.scratch_data.get_min_cell_size()
+          << ", minimum density: " << min_density << std::endl
+          << std::endl;
+      }
+
+    return time_step;
+  }
+
+  template <int dim, typename number>
+  void
+  DGCompressibleFlowOperation<dim, number>::attach_output_vectors(
+    GenericDataOut<dim> &data_out) const
+  {
+    std::vector<std::string> names;
+    names.emplace_back("density");
+    for (unsigned int d = 0; d < dim; ++d)
+      names.emplace_back("momentum");
+
+    names.emplace_back("energy");
+
+    std::vector<DataComponentInterpretation::DataComponentInterpretation> interpretation;
+    interpretation.push_back(DataComponentInterpretation::component_is_scalar);
+    for (unsigned int d = 0; d < dim; ++d)
+      interpretation.push_back(DataComponentInterpretation::component_is_part_of_vector);
+    interpretation.push_back(DataComponentInterpretation::component_is_scalar);
+
+    data_out.add_data_vector(flow_scratch_data.scratch_data.get_dof_handler(
+                               flow_scratch_data.dof_idx),
+                             flow_scratch_data.solution_history.get_current_solution(),
+                             names,
+                             interpretation);
+
+    // TODO: Output primitive variables
+  }
+
+  template <int dim, typename number>
+  void
+  DGCompressibleFlowOperation<dim, number>::setup_operator_and_time_integrator()
+  {
+    // cut operator was already created in the constructor
+    if (flow_scratch_data.flow_data.domain_representation_type == "cut")
+      return;
+    if (time_integrator_scheme_is_explicit(
+          flow_scratch_data.flow_data.time_integrator.integrator_type))
+      {
+        comp_flow_operator =
+          std::make_unique<DGCompressibleFlowOperatorExplicit<dim, number>>(flow_scratch_data);
+        time_integrator = comp_flow_operator->make_problem_specific_time_integrator(
+          flow_scratch_data.flow_data.time_integrator);
+      }
+    else if (time_integrator_scheme_is_implicit(
+               flow_scratch_data.flow_data.time_integrator.integrator_type))
+      {
+        comp_flow_operator =
+          std::make_unique<DGCompressibleFlowOperatorImplicit<dim, number>>(flow_scratch_data);
+        time_integrator = comp_flow_operator->make_problem_specific_time_integrator(
+          flow_scratch_data.flow_data.time_integrator);
+      }
+    // TODO
+    else if (flow_scratch_data.flow_data.time_integrator.integrator_type ==
+             TimeIntegratorSchemes::imex)
+      {
+        comp_flow_operator =
+          std::make_unique<DGCompressibleFlowOperatorImplicitExplicit<dim, number>>(
+            flow_scratch_data);
+        time_integrator = comp_flow_operator->make_problem_specific_time_integrator(
+          flow_scratch_data.flow_data.time_integrator);
+      }
+    else
+      AssertThrow(false,
+                  dealii::ExcMessage(
+                    "The provided time integration scheme '" +
+                    std::to_string(flow_scratch_data.flow_data.time_integrator.integrator_type) +
+                    "' is not supported!"));
+  }
+
+  template class DGCompressibleFlowOperation<1, double>;
+  template class DGCompressibleFlowOperation<2, double>;
+  template class DGCompressibleFlowOperation<3, double>;
+} // namespace MeltPoolDG::Flow

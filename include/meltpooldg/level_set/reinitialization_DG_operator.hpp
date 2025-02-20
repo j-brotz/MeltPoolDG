@@ -156,8 +156,7 @@ namespace MeltPoolDG::LevelSet
     /**
      * Time integration scheme for the IMEX integration of the diffusive term.
      */
-    std::shared_ptr<TimeIntegratorBase<double, ReinitializationDGDiffusionOperator<dim>>>
-      IMEX_integration;
+    std::shared_ptr<TimeIntegratorBase<double>> IMEX_integration;
 
 
     /**

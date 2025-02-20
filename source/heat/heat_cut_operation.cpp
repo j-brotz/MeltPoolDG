@@ -204,8 +204,6 @@ namespace MeltPoolDG::Heat
     compute_intersected_quadrature();
   }
 
-
-
   template <int dim>
   void
   HeatCutOperation<dim>::compute_intersected_quadrature()
@@ -220,8 +218,6 @@ namespace MeltPoolDG::Heat
                                             heat_data.fe.degree,
                                             heat_data.cut.two_phase);
   }
-
-
 
   template <int dim>
   void
@@ -255,7 +251,6 @@ namespace MeltPoolDG::Heat
     dof_handler.distribute_dofs(fe_collection);
   }
 
-
   template <int dim>
   void
   HeatCutOperation<dim>::setup_constraints(ScratchData<dim> &mutable_scratch_data) const
@@ -263,8 +258,6 @@ namespace MeltPoolDG::Heat
     Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
       mutable_scratch_data, dirichlet_bc, periodic_bc, temp_dof_idx, temp_hanging_nodes_dof_idx);
   }
-
-
 
   template <int dim>
   void
@@ -285,8 +278,6 @@ namespace MeltPoolDG::Heat
 
     compute_intersected_quadrature();
   }
-
-
 
   template <int dim>
   void
@@ -310,14 +301,10 @@ namespace MeltPoolDG::Heat
     solution_history.get_current_solution().update_ghost_values();
   }
 
-
-
   template <int dim>
   void
   HeatCutOperation<dim>::distribute_constraints()
   {}
-
-
 
   template <int dim>
   void
@@ -378,8 +365,6 @@ namespace MeltPoolDG::Heat
     ready_for_time_advance = true;
   }
 
-
-
   template <int dim>
   void
   HeatCutOperation<dim>::solve()
@@ -388,7 +373,6 @@ namespace MeltPoolDG::Heat
       init_time_advance();
 
     update_ghost_values();
-
     preconditioner.update();
 
     try
@@ -415,8 +399,6 @@ namespace MeltPoolDG::Heat
     heat_operator->update_ghost_values();
   }
 
-
-
   /**
    * register vectors for adaptive mesh refinement solution transfer
    */
@@ -426,8 +408,6 @@ namespace MeltPoolDG::Heat
   {
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
   }
-
-
 
   template <int dim>
   void
@@ -460,16 +440,12 @@ namespace MeltPoolDG::Heat
       }
   }
 
-
-
   template <int dim>
   void
   HeatCutOperation<dim>::attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const
   {
     (void)data_out;
   }
-
-
 
   template <int dim>
   const HeatCutOperation<dim>::VectorType &

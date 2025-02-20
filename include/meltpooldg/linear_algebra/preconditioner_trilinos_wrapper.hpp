@@ -155,7 +155,6 @@ namespace MeltPoolDG
             scratch_data.get_locally_owned_dofs(dof_idx),
             scratch_data.get_mpi_comm(),
             scratch_data.get_locally_relevant_dofs(dof_idx));
-
           preconditioner_system_matrix.reinit(scratch_data.get_locally_owned_dofs(dof_idx),
                                               scratch_data.get_locally_owned_dofs(dof_idx),
                                               dsp,

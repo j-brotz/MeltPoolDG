@@ -542,5 +542,117 @@ namespace MeltPoolDG
       return point;
     }
 
+
+    // TODO: Check performance when the functions below are inlined.
+    /**
+     * Compute the dyadic product of two rank-1 tensors passing a pointer to the start of the values
+     * of the two tensors.
+     */
+    template <int T1_dim, int T2_dim, typename number>
+    dealii::Tensor<1, T1_dim, dealii::Tensor<1, T2_dim, number>>
+    dyadic_product(const number *a_start, const number *b_start)
+    {
+      dealii::Tensor<1, T1_dim, dealii::Tensor<1, T2_dim, number>> c;
+      for (unsigned int i = 0; i < T1_dim; ++i)
+        {
+          for (unsigned int j = 0; j < T2_dim; ++j)
+            {
+              c[i][j] = *(a_start + i) * *(b_start + j);
+            }
+        }
+      return c;
+    }
+
+    /**
+     * Compute the dyadic product of two rank-1 tensors
+     */
+    template <int T1_dim, int T2_dim, typename number>
+    dealii::Tensor<1, T1_dim, dealii::Tensor<1, T2_dim, number>>
+    dyadic_product(const dealii::Tensor<1, T1_dim, number> &a,
+                   const dealii::Tensor<1, T2_dim, number> &b)
+    {
+      return dyadic_product<T1_dim, T2_dim, number>(&a[0], &b[0]);
+    }
+
+    /**
+     * Return the transpose of a dealii::Tensor<dealii::Tensor>
+     */
+    template <int T1_dim, int T2_dim, typename number>
+    dealii::Tensor<1, T2_dim, dealii::Tensor<1, T1_dim, number>>
+    transpose(const dealii::Tensor<1, T1_dim, dealii::Tensor<1, T2_dim, number>> &in)
+    {
+      dealii::Tensor<1, T2_dim, dealii::Tensor<1, T1_dim, number>> out;
+      for (unsigned int i = 0; i < T1_dim; ++i)
+        for (unsigned int j = 0; j < T2_dim; ++j)
+          out[j][i] = in[i][j];
+      return out;
+    }
+
+    /**
+     * Return the trace of a dealii::Tensor<dealii::Tensor>
+     */
+    template <int dim, typename number>
+    number
+    trace(const dealii::Tensor<1, dim, dealii::Tensor<1, dim, number>> &in)
+    {
+      number tr(0.0);
+      for (unsigned int i = 0; i < dim; ++i)
+        tr += in[i][i];
+      return tr;
+    }
+
+    template <int dim, typename number>
+    number
+    trace(const dealii::Tensor<2, dim, number> &in)
+    {
+      number tr(0.0);
+      for (unsigned int i = 0; i < dim; ++i)
+        tr += in[i][i];
+      return tr;
+    }
+
+    /**
+     * Return identity matrix
+     */
+    template <int dim, typename number>
+    dealii::SymmetricTensor<2, dim, number>
+    identity()
+    {
+      dealii::Tensor<1, dim, dealii::Tensor<1, dim, number>> out;
+      for (unsigned int i = 0; i < dim; ++i)
+        out[i][i] = number(1.0);
+      return dealii::SymmetricTensor<2, dim, number>(std::array<number, dim>(1.));
+    }
+
+    /**
+     * Helper functions for matrix-vector and matrix-matrix computations when both matrix and vector
+     * are implemented as dealii::Tensor.
+     */
+    template <int n_rows, int n_columns, typename number>
+    dealii::Tensor<1, n_rows, number>
+    matrix_vector_product(
+      const dealii::Tensor<1, n_rows, dealii::Tensor<1, n_columns, number>> &matrix,
+      const dealii::Tensor<1, n_columns, number>                            &vector)
+    {
+      dealii::Tensor<1, n_rows, number> result;
+      for (unsigned int i = 0; i < n_rows; ++i)
+        for (unsigned int j = 0; j < n_columns; ++j)
+          result[i] += matrix[i][j] * vector[j];
+      return result;
+    }
+
+    template <int a, int b, int c, typename number>
+    dealii::Tensor<1, a, dealii::Tensor<1, c, number>>
+    matrix_matrix_product(const dealii::Tensor<1, a, dealii::Tensor<1, b, number>> &matrix1,
+                          const dealii::Tensor<1, b, dealii::Tensor<1, c, number>> &matrix2)
+    {
+      dealii::Tensor<1, a, dealii::Tensor<1, c, number>> result;
+      for (unsigned int i = 0; i < a; ++i)
+        for (unsigned int j = 0; j < c; ++j)
+          for (unsigned int k = 0; k < b; ++k)
+            result[i][j] += matrix1[i][k] * matrix2[k][j];
+      return result;
+    }
+
   } // namespace UtilityFunctions
 } // namespace MeltPoolDG

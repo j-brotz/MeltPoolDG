@@ -57,15 +57,19 @@ namespace MeltPoolDG
    * (e.g., wrapping it in a smart pointer) to the caller.
    */
   template <typename number, typename PDEOperator>
-  TimeIntegratorBase<number, PDEOperator> *
-  explicit_time_integrator_factory(const TimeIntegratorData &params, dealii::TimerOutput &timer)
+  TimeIntegratorBase<number> *
+  explicit_time_integrator_factory(const PDEOperator        &pde_operator,
+                                   const TimeIntegratorData &params,
+                                   dealii::TimerOutput      &timer)
   {
     if constexpr (ExplicitPDEOperator<PDEOperator,
                                       number,
                                       dealii::LinearAlgebra::distributed::Vector<number>>)
       {
         if (Utils::contains(explicit_lsrk_supported_schemes, params.integrator_type))
-          return new LowStorageExplicitRungeKuttaIntegrator<number, PDEOperator>(params, timer);
+          return new LowStorageExplicitRungeKuttaIntegrator<number, PDEOperator>(pde_operator,
+                                                                                 params,
+                                                                                 timer);
       }
     DEAL_II_NOT_IMPLEMENTED();
   }
@@ -82,16 +86,22 @@ namespace MeltPoolDG
    * @note This function returns a raw pointer, leaving the responsibility for memory management
    * (e.g., wrapping it in a smart pointer) to the caller.
    */
-  template <typename number, typename PDEOperator>
-  TimeIntegratorBase<number, PDEOperator> *
-  implicit_time_integrator_factory(const TimeIntegratorData &params, dealii::TimerOutput &timer)
+  template <int dim, typename number, typename PDEOperator>
+  TimeIntegratorBase<number> *
+  implicit_time_integrator_factory(const PDEOperator        &pde_operator,
+                                   const TimeIntegratorData &params,
+                                   const ScratchData<dim>   &scratch_data,
+                                   const unsigned int        dof_idx)
   {
     if constexpr (BDFImplicitPDEOperator<PDEOperator,
                                          number,
                                          dealii::LinearAlgebra::distributed::Vector<number>>)
       {
         if (Utils::contains(bdf_supported_schemes, params.integrator_type))
-          return new BDFIntegrator<number, PDEOperator>(params, timer);
+          return new BDFIntegrator<dim, number, PDEOperator>(pde_operator,
+                                                             params,
+                                                             scratch_data,
+                                                             dof_idx);
       }
     DEAL_II_NOT_IMPLEMENTED();
   }
@@ -114,24 +124,29 @@ namespace MeltPoolDG
   template <typename number,
             typename PDEOperator,
             typename VectorType = dealii::LinearAlgebra::distributed::Vector<number>>
-  TimeIntegratorBase<number, PDEOperator> *
-  time_integrator_factory(const TimeIntegratorData       &params,
+  TimeIntegratorBase<number> *
+  time_integrator_factory(const PDEOperator              &pde_operator,
+                          const TimeIntegratorData       &params,
                           const LinearSolverData<number> &linear_solver_data,
                           dealii::TimerOutput            &timer)
   {
     if constexpr (ExplicitPDEOperator<PDEOperator, number, VectorType>)
       {
         if (Utils::contains(explicit_lsrk_supported_schemes, params.integrator_type))
-          return new LowStorageExplicitRungeKuttaIntegrator<number, PDEOperator>(params, timer);
+          return new LowStorageExplicitRungeKuttaIntegrator<number, PDEOperator>(pde_operator,
+                                                                                 params,
+                                                                                 timer);
       }
     if constexpr (BDFImplicitPDEOperator<PDEOperator, number, VectorType>)
       {
+        // TODO
+        /*
         if (Utils::contains(bdf_supported_schemes, params.integrator_type))
-          return new BDFIntegrator<number, PDEOperator>(params, timer);
+          return new BDFIntegrator<number, PDEOperator>(pde_operator, params, timer);
+          */
       }
     if (Utils::contains(one_step_theta_supported_schemes, params.integrator_type))
-      return new OneStepTheta<number, PDEOperator>(params, linear_solver_data);
+      return new OneStepTheta<number, PDEOperator>(pde_operator, params, linear_solver_data);
     DEAL_II_NOT_IMPLEMENTED();
   }
-
 } // namespace MeltPoolDG

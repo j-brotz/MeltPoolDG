@@ -17,7 +17,7 @@ namespace MeltPoolDG::Flow
   {
   private:
     using CaseType   = CompressibleFlowCase<dim>;
-    using VectorType = LinearAlgebra::distributed::Vector<double>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<double>;
 
   public:
     explicit CompressibleFlowProblem(std::unique_ptr<CaseType> simulation_case)
@@ -58,7 +58,7 @@ namespace MeltPoolDG::Flow
     output_results(unsigned int time_step, double current_time);
 
     /**
-     * Interpolates the values of an (currently) analytically given level-set function to the
+     * Interpolates the values of a (currently) analytically given level-set function to the
      * level-set dof vector.
      */
     void
@@ -66,15 +66,14 @@ namespace MeltPoolDG::Flow
 
     std::unique_ptr<CaseType> simulation_case;
 
-    DoFHandler<dim>                                         dof_handler;
-    DoFHandler<dim>                                         dof_handler_level_set;
-    AffineConstraints<double>                               constraints;
-    AffineConstraints<double>                               constraints_level_set;
-    DoFHandler<dim>                                         dof_handler_velocity;
-    std::shared_ptr<ScratchData<dim>>                       scratch_data;
-    std::shared_ptr<TimeIterator<double>>                   time_iterator;
-    std::unique_ptr<CompressibleFlowOperation<dim, double>> comp_flow_operation;
-    std::unique_ptr<Profiling::ProfilingMonitor<double>>    profiling_monitor;
+    dealii::DoFHandler<dim>                              dof_handler;
+    dealii::DoFHandler<dim>                              dof_handler_level_set;
+    dealii::AffineConstraints<double>                    constraints;
+    dealii::AffineConstraints<double>                    constraints_level_set;
+    std::shared_ptr<ScratchData<dim>>                    scratch_data;
+    std::shared_ptr<TimeIterator<double>>                time_iterator;
+    CompressibleFlowOperation<dim, double>               comp_flow_operation;
+    std::unique_ptr<Profiling::ProfilingMonitor<double>> profiling_monitor;
 
     unsigned int comp_flow_dof_idx{};
     unsigned int level_set_dof_idx{};
@@ -82,8 +81,8 @@ namespace MeltPoolDG::Flow
 
     std::unique_ptr<Postprocessor<dim>> post_processor;
 
-    std::shared_ptr<Function<dim>> level_set_field_function;
-    VectorType                     level_set;
+    std::shared_ptr<dealii::Function<dim>> level_set_field_function;
+    VectorType                             level_set;
   };
 
 } // namespace MeltPoolDG::Flow

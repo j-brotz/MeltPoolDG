@@ -13,6 +13,16 @@
 
 namespace MeltPoolDG::Flow
 {
+  BETTER_ENUM(NumericalFluxType,
+              char,
+              lax_friedrichs_modified,
+              lax_friedrichs_exact,
+              harten_lax_vanleer)
+
+  BETTER_ENUM(LinearizedConvectiveFluxJumpType, char, analytic, lambda_fd, complete_fd);
+
+  BETTER_ENUM(JacobianType, char, exact, finite_difference);
+
   struct CompressibleFlowData
   {
     // finite element data
@@ -39,14 +49,15 @@ namespace MeltPoolDG::Flow
     double reference_density = 1.0;
 
     // numerical flux type for the convective flux
-    std::string numerical_flux_type = "lax_friedrichs_modified";
+    NumericalFluxType numerical_flux_type = NumericalFluxType::lax_friedrichs_modified;
 
     // calculation method of the linearized jump operator in the convective numerical flux (required
     // for implicit time stepping). The options are "analytic", "complete_fd" and "lambda_fd"
-    std::string linearization_jump_convective_flux = "complete_fd";
+    LinearizedConvectiveFluxJumpType linearization_jump_convective_flux =
+      LinearizedConvectiveFluxJumpType::complete_fd;
 
     // jacobian approximation type. The options are "exact" and "finite_difference"
-    std::string jacobian_type = "exact";
+    JacobianType jacobian_type = JacobianType::exact;
 
     // Courant number for the convective time step restriction
     double courant_number = 0.15;

@@ -49,11 +49,11 @@ namespace MeltPoolDG::LevelSet
   {
     this->advec_diff_data = advec_diff_data_in;
 
-    advection_integration = std::shared_ptr<TimeIntegratorBase<double, AdvectionDGOperator<dim>>>(
-      time_integrator_factory<double, AdvectionDGOperator<dim>>(
-        advec_diff_data_in.time_integrator_data,
-        advec_diff_data_in.linear_solver,
-        scratch_data.get_timer()));
+    advection_integration = std::shared_ptr<TimeIntegratorBase<double>>(
+      time_integrator_factory<double>(advection_DG_operator,
+                                      advec_diff_data_in.time_integrator_data,
+                                      advec_diff_data_in.linear_solver,
+                                      scratch_data.get_timer()));
   }
 
   template <int dim>
@@ -179,8 +179,7 @@ namespace MeltPoolDG::LevelSet
         advection_DG_operator.apply_dirichlet_boundary_operator(time, dst, current_solution);
       };
 
-    advection_integration->perform_time_step(advection_DG_operator,
-                                             time_iterator.get_current_time(),
+    advection_integration->perform_time_step(time_iterator.get_current_time(),
                                              time_iterator.get_current_time_increment(),
                                              solution_history,
                                              pre_processing);

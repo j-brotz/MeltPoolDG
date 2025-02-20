@@ -31,11 +31,11 @@ namespace MeltPoolDG::LevelSet
     if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type !=
         TimeIntegratorSchemes::not_initialized)
       IMEX_integration =
-        std::shared_ptr<TimeIntegratorBase<double, ReinitializationDGDiffusionOperator<dim>>>(
-          time_integrator_factory<double, ReinitializationDGDiffusionOperator<dim>>(
-            reinit_data_in.reinitilization_DG_specific_data.IMEX_integration_data,
-            reinit_data_in.linear_solver,
-            scratch_data.get_timer()));
+        std::shared_ptr<TimeIntegratorBase<double>>(time_integrator_factory<double>(
+          RI_DG_diffusion_operator,
+          reinit_data_in.reinitilization_DG_specific_data.IMEX_integration_data,
+          reinit_data_in.linear_solver,
+          scratch_data.get_timer()));
   }
 
 
@@ -57,10 +57,7 @@ namespace MeltPoolDG::LevelSet
     const Number                                  time_step,
     TimeIntegration::SolutionHistory<VectorType> &solution_history) const
   {
-    IMEX_integration->perform_time_step(RI_DG_diffusion_operator,
-                                        time,
-                                        time_step,
-                                        solution_history);
+    IMEX_integration->perform_time_step(time, time_step, solution_history);
   }
 
   template <int dim, typename Number>

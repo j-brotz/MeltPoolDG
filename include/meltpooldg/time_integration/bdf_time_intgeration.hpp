@@ -1,12 +1,13 @@
 #pragma once
 
 #include <deal.II/base/exceptions.h>
-#include <deal.II/base/timer.h>
 
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
+#include <meltpooldg/linear_algebra/preconditioner.hpp>
+#include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/time_integration/time_integrator_base.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
@@ -78,9 +79,10 @@ namespace MeltPoolDG
      TimeIntegratorSchemes::bdf_5,
      TimeIntegratorSchemes::bdf_6}};
 
-  template <typename number,
+  template <int dim,
+            typename number,
             BDFImplicitPDEOperator<number, LinearAlgebra::distributed::Vector<number>> PDEOperator>
-  class BDFIntegrator final : public TimeIntegratorBase<number, PDEOperator>
+  class BDFIntegrator final : public TimeIntegratorBase<number>
   {
   public:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -88,14 +90,25 @@ namespace MeltPoolDG
     /**
      * Constructor. Set the coefficients for the BDF time integration scheme.
      *
+     * @param pde_operator Operator providing the necessary functionality to perform the time
+     * integration.
      * @param time_integrator_data Time integrator data struct setting the scheme of the integrator.
-     * @param timer Timer used for computation time tracking.
+     * @param scratch_data_in Scratch data object used in the pde operator.
+     * @param dof_idx_in Relevant dof index of the passed operator in the scratch data object.
      */
-    BDFIntegrator(const TimeIntegratorData &time_integrator_data, dealii::TimerOutput &timer)
-      : TimeIntegratorBase<number, PDEOperator>(time_integrator_data)
+    BDFIntegrator(const PDEOperator        &pde_operator,
+                  const TimeIntegratorData &time_integrator_data,
+                  const ScratchData<dim>   &scratch_data_in,
+                  const unsigned int        dof_idx_in)
+      : TimeIntegratorBase<number>(time_integrator_data)
+      , pde_operator(pde_operator)
       , nonlinear_solver(this->time_integrator_data.nlsolver_data)
-      , timer(timer)
-    {}
+      , scratch_data(scratch_data_in)
+      , dof_idx(dof_idx_in)
+    {
+      preconditioner = make_preconditioner<dim, PDEOperator, VectorType>(
+        time_integrator_data.linear_solver_data.preconditioner_type, &pde_operator);
+    }
 
     unsigned int
     required_solution_history_size() const override
@@ -130,6 +143,7 @@ namespace MeltPoolDG
     reinit(const VectorType &vector_template) override
     {
       summed_old_solution.reinit(vector_template, true);
+      preconditioner.reinit(scratch_data, dof_idx);
     }
 
     /**
@@ -142,9 +156,20 @@ namespace MeltPoolDG
       reinit(solution_history.get_current_solution());
     }
 
+    /**
+     * Perform the actual time integration for a single time step using the low storage explicit
+     * Runge-Kutta scheme.
+     *
+     * @param current_time Current time.
+     * @param time_step Current time step size.
+     * @param solution_history Solution history object providing the current and all required
+     * previous solutions.
+     * @param stage_pre_processing Function which is executed before the bdf update step.
+     * @param stage_post_processing Function which is executed after the bdf update step.
+     * Runge-Kutta stage.
+     */
     void
     perform_time_step(
-      const PDEOperator                                                   &pde_operator,
       const number                                                         current_time,
       const number                                                         time_step,
       ::TimeIntegration::SolutionHistory<VectorType>                      &solution_history,
@@ -152,8 +177,6 @@ namespace MeltPoolDG
       const std::function<void(number, VectorType &, const VectorType &)> &stage_post_processing)
       override
     {
-      dealii::TimerOutput::Scope t(timer, "Time Integration: newton solver");
-
       // Perform the initial steps with a bdf scheme of lower order, i.e. 1st step: BDF1, 2nd
       // step BDF2 and so on until the desired BDF scheme is reached
       static unsigned int step_count = 0;
@@ -199,18 +222,22 @@ namespace MeltPoolDG
       nonlinear_solver.reinit_vector = [&solution = solution_history.get_current_solution()](
                                          VectorType &vec) -> void { vec.reinit(solution); };
 
-      nonlinear_solver.residual = [&current_time, &pde_operator](const VectorType &src,
-                                                                 VectorType       &dst) {
-        pde_operator.compute_residual(current_time, src, dst);
-      };
+      nonlinear_solver.residual =
+        [&current_time, &pde_operator = pde_operator](const VectorType &src, VectorType &dst) {
+          pde_operator.compute_residual(current_time, src, dst);
+        };
 
       nonlinear_solver.solve_with_jacobian =
-        [&jacobian = jacobian,
-         &data     = this->time_integrator_data.linear_solver_data](const VectorType &rhs,
-                                                                VectorType       &dst) {
-          // TODO: Preconditioner
-          return LinearSolver::solve(jacobian, dst, rhs, data);
+        [&jacobian       = jacobian,
+         &data           = this->time_integrator_data.linear_solver_data,
+         &preconditioner = preconditioner](const VectorType &rhs, VectorType &dst) {
+          return LinearSolver::solve(jacobian, dst, rhs, data, preconditioner);
         };
+
+      static int count = 0;
+      if (count % this->time_integrator_data.preconditioner_update_frequency == 0)
+        preconditioner.update();
+      count++;
 
       if (stage_pre_processing)
         stage_pre_processing(current_time,
@@ -293,10 +320,14 @@ namespace MeltPoolDG
         }
     }
 
+    //! Operator use duing the time integration
+    const PDEOperator &pde_operator;
+
+    //! Preconditioner for the linear solver
+    Preconditioner<dim, VectorType> preconditioner;
+
     //! Nonlinear solver
     NewtonRaphsonSolver<VectorType> nonlinear_solver;
-
-    dealii::TimerOutput &timer;
 
     //! BDF prefactor for the right-hand side
     number rhs_prefactor;
@@ -306,5 +337,9 @@ namespace MeltPoolDG
 
     //! Sum of old solution with prefactors from BDF method
     VectorType summed_old_solution;
+
+    const ScratchData<dim> &scratch_data;
+
+    const unsigned int dof_idx;
   };
 } // namespace MeltPoolDG
