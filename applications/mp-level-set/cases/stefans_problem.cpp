@@ -1,9 +1,10 @@
 #include "stefans_problem.hpp"
 
+#include <meltpooldg/case_registration.hpp>
+
 namespace MeltPoolDG::Simulation::StefansProblem
 {
-  // Explicit instantiations for the required dimensions
-  template class SimulationStefansProblem<1>;
-  template class SimulationStefansProblem<2>;
-  template class SimulationStefansProblem<3>;
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationStefansProblem, "stefans_problem", 1);
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationStefansProblem, "stefans_problem", 2);
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationStefansProblem, "stefans_problem", 3);
 } // namespace MeltPoolDG::Simulation::StefansProblem

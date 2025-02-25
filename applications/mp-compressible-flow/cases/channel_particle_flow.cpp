@@ -1,8 +1,16 @@
 #include "channel_particle_flow.hpp"
 
+#include <meltpooldg/case_registration.hpp>
+
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {
   // Explicit instantiations for the required dimensions
-  template class SimulationChannelParticleFlow<2>;
-  template class SimulationChannelParticleFlow<3>;
+  MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
+                           SimulationChannelParticleFlow,
+                           "channel_particle_flow",
+                           2);
+  MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
+                           SimulationChannelParticleFlow,
+                           "channel_particle_flow",
+                           3);
 } // namespace MeltPoolDG::Simulation::CompressibleFlow

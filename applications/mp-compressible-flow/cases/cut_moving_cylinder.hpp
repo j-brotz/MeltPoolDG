@@ -152,9 +152,6 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
 
   private:
-    // for self-registration
-    static SimulationCaseRegistrar<Flow::CompressibleFlowCase<dim>> registrar;
-
     /**
      * Set boundary id's for fitted boundaries
      */
@@ -178,13 +175,4 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
           }
     }
   };
-
-  // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<Flow::CompressibleFlowCase<dim>>
-    SimulationCutMovingCylinder<dim>::registrar(
-      "cut_moving_cylinder",
-      [](const std::string &parameter_file, const MPI_Comm mpi_communicator) {
-        return std::make_unique<SimulationCutMovingCylinder<dim>>(parameter_file, mpi_communicator);
-      });
 } // namespace MeltPoolDG::Simulation::CompressibleFlow

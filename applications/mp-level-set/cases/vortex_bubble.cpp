@@ -1,9 +1,10 @@
 #include "vortex_bubble.hpp"
 
+#include <meltpooldg/case_registration.hpp>
+
 namespace MeltPoolDG::Simulation::VortexBubble
 {
-  // Explicit instantiations for the required dimensions
-  template class SimulationVortexBubble<1>;
-  template class SimulationVortexBubble<2>;
-  template class SimulationVortexBubble<3>;
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationVortexBubble, "vortex_bubble", 1);
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationVortexBubble, "vortex_bubble", 2);
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationVortexBubble, "vortex_bubble", 3);
 } // namespace MeltPoolDG::Simulation::VortexBubble

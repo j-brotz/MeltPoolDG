@@ -1,8 +1,15 @@
 #include "cut_unfitted_inflow.hpp"
 
+#include <meltpooldg/case_registration.hpp>
+
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {
-  // Explicit instantiations for the required dimensions
-  template class SimulationCutUnfittedInflow<2>;
-  template class SimulationCutUnfittedInflow<3>;
+  MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
+                           SimulationCutUnfittedInflow,
+                           "cut_unfitted_inflow",
+                           2);
+  MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
+                           SimulationCutUnfittedInflow,
+                           "cut_unfitted_inflow",
+                           3);
 } // namespace MeltPoolDG::Simulation::CompressibleFlow

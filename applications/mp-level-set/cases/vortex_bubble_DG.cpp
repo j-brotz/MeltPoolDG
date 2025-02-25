@@ -2,8 +2,7 @@
 
 namespace MeltPoolDG::Simulation::VortexBubbleDG
 {
-  // Explicit instantiations for the required dimensions
-  template class SimulationVortexBubbleDG<1>;
-  template class SimulationVortexBubbleDG<2>;
-  template class SimulationVortexBubbleDG<3>;
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationVortexBubbleDG, "vortex_bubble_DG", 1);
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationVortexBubbleDG, "vortex_bubble_DG", 2);
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationVortexBubbleDG, "vortex_bubble_DG", 3);
 } // namespace MeltPoolDG::Simulation::VortexBubbleDG

@@ -123,9 +123,6 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
 
   private:
-    // for self-registration
-    static SimulationCaseRegistrar<Flow::CompressibleFlowCase<dim>> registrar;
-
     /**
      * Enumeration for the boundary id's.
      */
@@ -157,13 +154,4 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
           }
     }
   };
-
-  // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<Flow::CompressibleFlowCase<dim>>
-    SimulationCutUnfittedInflow<dim>::registrar(
-      "cut_unfitted_inflow",
-      [](const std::string &parameter_file, const MPI_Comm mpi_communicator) {
-        return std::make_unique<SimulationCutUnfittedInflow<dim>>(parameter_file, mpi_communicator);
-      });
 } // namespace MeltPoolDG::Simulation::CompressibleFlow

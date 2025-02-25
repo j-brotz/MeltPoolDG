@@ -319,17 +319,6 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
     double         right_domain = 0.5;
     mutable bool   init_mass    = true;
     mutable double initial_mass = 0.0;
-    // for self-registration
-    static SimulationCaseRegistrar<MeltPoolDG::LevelSet::ReinitializationCase<dim>> registrar;
   };
-
-  // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<MeltPoolDG::LevelSet::ReinitializationCase<dim>>
-    SimulationReinitDG<dim>::registrar(
-      "reinit_circle_DG",
-      [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
-        return std::make_unique<SimulationReinitDG<dim>>(parameter_file, mpi_communicator);
-      });
 
 } // namespace MeltPoolDG::Simulation::ReinitCircleDG

@@ -11,6 +11,8 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/tria.h>
 
+#include <meltpooldg/case_registration.hpp>
+
 #include <cmath>
 #include <vector>
 
@@ -105,8 +107,16 @@ namespace MeltPoolDG::Simulation::SolidificationSlab
                                    "heat_transfer");
   }
 
-
-  template class SimulationSolidificationSlab<1>;
-  template class SimulationSolidificationSlab<2>;
-  template class SimulationSolidificationSlab<3>;
+  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
+                           SimulationSolidificationSlab,
+                           "solidification_slab",
+                           1);
+  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
+                           SimulationSolidificationSlab,
+                           "solidification_slab",
+                           2);
+  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
+                           SimulationSolidificationSlab,
+                           "solidification_slab",
+                           3);
 } // namespace MeltPoolDG::Simulation::SolidificationSlab

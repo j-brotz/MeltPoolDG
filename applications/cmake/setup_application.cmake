@@ -28,7 +28,10 @@ function(setup_application)
         message("-- Building executable: ${exec}")
 
         # Add an executable target with the current source file, all cases, and headers
-        add_executable(${exec} ${source_file} ${CASES} ${CASES_HEADERS})
+	add_executable(${exec} ${source_file} ${CASES} ${CASES_HEADERS})
+
+	# Add application-specific include files
+	target_include_directories(${exec} PUBLIC ${CMAKE_SOURCE_DIR}/applications/include)
 
         deal_ii_setup_target(${exec})
 

@@ -1,9 +1,19 @@
 #include "reinit_circle_DG.hpp"
 
+#include <meltpooldg/case_registration.hpp>
+
 namespace MeltPoolDG::Simulation::ReinitCircleDG
 {
-  // Explicit instantiations for the required dimensions
-  template class SimulationReinitDG<1>;
-  template class SimulationReinitDG<2>;
-  template class SimulationReinitDG<3>;
+  MELTPOOLDG_REGISTER_CASE(LevelSet::ReinitializationCase,
+                           SimulationReinitDG,
+                           "reinit_circle_DG",
+                           1);
+  MELTPOOLDG_REGISTER_CASE(LevelSet::ReinitializationCase,
+                           SimulationReinitDG,
+                           "reinit_circle_DG",
+                           2);
+  MELTPOOLDG_REGISTER_CASE(LevelSet::ReinitializationCase,
+                           SimulationReinitDG,
+                           "reinit_circle_DG",
+                           3);
 } // namespace MeltPoolDG::Simulation::ReinitCircleDG

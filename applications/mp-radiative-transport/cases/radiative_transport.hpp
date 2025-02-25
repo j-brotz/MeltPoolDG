@@ -12,10 +12,16 @@
 #include <utility>
 #include <vector>
 
+#define MELTPOOLDG_REGISTER_RTE_CASE(CaseClass, ConcreteCaseClass, case_name, dim)         \
+  static bool case_name_is_registered_##dim =                                              \
+    SimulationCaseFactory<CaseClass<dim>>::register_simulation(                            \
+      case_name, [](const std::string parameter_file, const MPI_Comm mpi_communicator) {   \
+        return std::make_unique<ConcreteCaseClass<dim, CaseClass<dim>>>(parameter_file,    \
+                                                                        mpi_communicator); \
+      });
 /**
  * This simulation is mainly meant to test the functionality of RTE
  */
-
 namespace MeltPoolDG::Simulation::RadiativeTransport
 {
   BETTER_ENUM(InterfaceCase, char, straight, single_powder_particle)
@@ -58,16 +64,5 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
 
     double powder_particle_offset = domain_x_max / 4.;
     double powder_particle_radius = domain_x_max / 6.;
-
-    // for self-registration
-    static SimulationCaseRegistrar<Problem> registrar;
   };
-
-  // for self-registration
-  template <int dim, typename Problem>
-  SimulationCaseRegistrar<Problem> SimulationRadTrans<dim, Problem>::registrar(
-    "radiative_transport",
-    [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
-      return std::make_unique<SimulationRadTrans<dim, Problem>>(parameter_file, mpi_communicator);
-    });
 } // namespace MeltPoolDG::Simulation::RadiativeTransport

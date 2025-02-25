@@ -1,9 +1,10 @@
 #include "zalesak_disk.hpp"
 
+#include <meltpooldg/case_registration.hpp>
+
 namespace MeltPoolDG::Simulation::ZalesakDisk
 {
-  // Explicit instantiations for the required dimensions
-  template class SimulationZalesakDisk<1>;
-  template class SimulationZalesakDisk<2>;
-  template class SimulationZalesakDisk<3>;
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationZalesakDisk, "zalesak_disk", 1);
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationZalesakDisk, "zalesak_disk", 2);
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationZalesakDisk, "zalesak_disk", 3);
 } // namespace MeltPoolDG::Simulation::ZalesakDisk

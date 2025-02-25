@@ -12,6 +12,7 @@
 #include <deal.II/grid/grid_tools_geometry.h>
 #include <deal.II/grid/tria.h>
 
+#include <meltpooldg/case_registration.hpp>
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_intensity_profiles.hpp>
@@ -183,7 +184,7 @@ namespace MeltPoolDG::Simulation::PowderBed
       }
   }
 
-  template class SimulationPowderBed<1>;
-  template class SimulationPowderBed<2>;
-  template class SimulationPowderBed<3>;
+  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase, SimulationPowderBed, "powder_bed", 1);
+  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase, SimulationPowderBed, "powder_bed", 2);
+  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase, SimulationPowderBed, "powder_bed", 3);
 } // namespace MeltPoolDG::Simulation::PowderBed

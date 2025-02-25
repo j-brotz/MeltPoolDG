@@ -11,6 +11,7 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/tria.h>
 
+#include <meltpooldg/case_registration.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -261,8 +262,16 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
       }
   }
 
-
-  template class SimulationUnidirectionalHeatTransfer<1>;
-  template class SimulationUnidirectionalHeatTransfer<2>;
-  template class SimulationUnidirectionalHeatTransfer<3>;
+  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
+                           SimulationUnidirectionalHeatTransfer,
+                           "unidirectional_heat_transfer",
+                           1);
+  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
+                           SimulationUnidirectionalHeatTransfer,
+                           "unidirectional_heat_transfer",
+                           2);
+  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
+                           SimulationUnidirectionalHeatTransfer,
+                           "unidirectional_heat_transfer",
+                           3);
 } // namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer

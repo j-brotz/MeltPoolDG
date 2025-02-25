@@ -115,7 +115,9 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
   public:
     SimulationAdvec(std::string parameter_file, const MPI_Comm mpi_communicator)
       : LevelSet::AdvectionDiffusionCase<dim>(parameter_file, mpi_communicator)
-    {}
+    {
+      std::cout << "advec diff case constructed" << std::endl;
+    }
 
     void
     create_spatial_discretization() override
@@ -278,14 +280,15 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
     LevelSetType level_set_type = LevelSetType::level_set;
 
     // for self-registration
-    static SimulationCaseRegistrar<LevelSet::AdvectionDiffusionCase<dim>> registrar;
+    // static SimulationCaseRegistrar<LevelSet::AdvectionDiffusionCase<dim>> registrar;
   };
 
-  // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<LevelSet::AdvectionDiffusionCase<dim>> SimulationAdvec<dim>::registrar(
-    "advection_diffusion",
-    [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
-      return std::make_unique<SimulationAdvec<dim>>(parameter_file, mpi_communicator);
-    });
+  //// for self-registration
+  // template <int dim>
+  // SimulationCaseRegistrar<LevelSet::AdvectionDiffusionCase<dim>> SimulationAdvec<dim>::registrar(
+  //"advection_diffusion",
+  //[](const std::string parameter_file, const MPI_Comm mpi_communicator) {
+  // std::cout << "call registrar" << std::endl;
+  // return std::make_unique<SimulationAdvec<dim>>(parameter_file, mpi_communicator);
+  //});
 } // namespace MeltPoolDG::Simulation::AdvectionDiffusion
