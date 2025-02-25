@@ -379,7 +379,6 @@ namespace MeltPoolDG::LevelSet
 int
 main(int argc, char *argv[])
 {
-  std::cout << "start main " << std::endl;
   dealii::Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
   MPI_Comm mpi_comm(MPI_COMM_WORLD);
