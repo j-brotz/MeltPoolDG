@@ -1,5 +1,7 @@
 #include "vortex_bubble_DG.hpp"
 
+#include <meltpooldg/case_registration.hpp>
+
 namespace MeltPoolDG::Simulation::VortexBubbleDG
 {
   MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationVortexBubbleDG, "vortex_bubble_DG", 1);
