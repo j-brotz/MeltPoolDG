@@ -90,19 +90,5 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       InflowFlowField<dim> reference_values(generic_data_out.get_time());
       this->print_relative_norm(generic_data_out, reference_values, "Norm");
     }
-
-  private:
-    // for self-registration
-    static SimulationCaseRegistrar<Flow::CompressibleFlowCase<dim>> registrar;
   };
-
-  // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<Flow::CompressibleFlowCase<dim>>
-    SimulationChannelParticleFlow<dim>::registrar(
-      "channel_particle_flow",
-      [](const std::string &parameter_file, const MPI_Comm mpi_communicator) {
-        return std::make_unique<SimulationChannelParticleFlow<dim>>(parameter_file,
-                                                                    mpi_communicator);
-      });
 } // namespace MeltPoolDG::Simulation::CompressibleFlow

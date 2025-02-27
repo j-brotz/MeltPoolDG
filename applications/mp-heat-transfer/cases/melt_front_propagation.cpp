@@ -11,6 +11,7 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/tria.h>
 
+#include <meltpooldg/core/case_registration.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
@@ -335,7 +336,17 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     //   }
   }
 
-  template class SimulationMeltFrontPropagation<1>;
-  template class SimulationMeltFrontPropagation<2>;
-  template class SimulationMeltFrontPropagation<3>;
+  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
+                           SimulationMeltFrontPropagation,
+                           "melt_front_propagation",
+                           1);
+  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
+                           SimulationMeltFrontPropagation,
+                           "melt_front_propagation",
+                           2);
+  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
+                           SimulationMeltFrontPropagation,
+                           "melt_front_propagation",
+                           3);
+
 } // namespace MeltPoolDG::Simulation::MeltFrontPropagation

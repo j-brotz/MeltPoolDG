@@ -112,16 +112,5 @@ namespace MeltPoolDG::Simulation::StefansProblem
     const double y_min       = 0.0;
     const double y_max       = 1.0;
     const double y_interface = 0.5;
-    // for self-registration
-    static SimulationCaseRegistrar<LevelSet::LevelSetCase<dim>> registrar;
   };
-
-  // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<MeltPoolDG::LevelSet::LevelSetCase<dim>>
-    SimulationStefansProblem<dim>::registrar(
-      "stefans_problem",
-      [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
-        return std::make_unique<SimulationStefansProblem<dim>>(parameter_file, mpi_communicator);
-      });
 } // namespace MeltPoolDG::Simulation::StefansProblem

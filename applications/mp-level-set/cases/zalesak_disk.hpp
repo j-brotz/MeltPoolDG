@@ -151,16 +151,5 @@ namespace MeltPoolDG::Simulation::ZalesakDisk
   private:
     double left_domain  = -1.0;
     double right_domain = 1.0;
-    // for self-registration
-    static SimulationCaseRegistrar<LevelSet::LevelSetCase<dim>> registrar;
   };
-
-  // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<MeltPoolDG::LevelSet::LevelSetCase<dim>>
-    SimulationZalesakDisk<dim>::registrar(
-      "zalesak_disk",
-      [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
-        return std::make_unique<SimulationZalesakDisk<dim>>(parameter_file, mpi_communicator);
-      });
 } // namespace MeltPoolDG::Simulation::ZalesakDisk

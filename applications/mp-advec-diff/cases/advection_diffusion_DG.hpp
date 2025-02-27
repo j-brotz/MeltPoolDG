@@ -296,16 +296,6 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
   private:
     const double left_domain  = -0.5;
     const double right_domain = 0.5;
-    // for self-registration
-    static SimulationCaseRegistrar<LevelSet::AdvectionDiffusionCase<dim>> registrar;
   };
-
-  // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<LevelSet::AdvectionDiffusionCase<dim>> SimulationAdvecDG<dim>::registrar(
-    "advection_diffusion_DG",
-    [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
-      return std::make_unique<SimulationAdvecDG<dim>>(parameter_file, mpi_communicator);
-    });
 
 } // namespace MeltPoolDG::Simulation::AdvectionDiffusionDG

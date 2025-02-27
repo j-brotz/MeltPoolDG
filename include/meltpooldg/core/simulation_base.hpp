@@ -10,6 +10,7 @@
 #include <deal.II/grid/tria.h>
 
 #include <meltpooldg/core/boundary_conditions.hpp>
+#include <meltpooldg/core/case_factory.hpp>
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/periodic_boundary_conditions.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
@@ -443,65 +444,6 @@ namespace MeltPoolDG
     }
   };
 
-  template <typename CaseType>
-  class SimulationCaseFactory
-  {
-  public:
-    using SimulationCreator =
-      std::function<std::unique_ptr<CaseType>(const std::string, const MPI_Comm)>;
-
-    static SimulationCaseFactory &
-    instance()
-    {
-      static SimulationCaseFactory factory_instance;
-      return factory_instance;
-    }
-
-    void
-    register_simulation(const std::string name, SimulationCreator creator)
-    {
-      creators[name] = creator;
-    }
-
-    std::unique_ptr<CaseType>
-    create_simulation(const std::string name,
-                      const std::string parameter_file,
-                      const MPI_Comm    mpi_communicator)
-    {
-      auto it = creators.find(name);
-      AssertThrow(it != creators.end(),
-                  ExcMessage("Requested simulation case not registered: " + name +
-                             " Did you forget to create a *.cpp file for your simulation case, "
-                             "where you explicitly instantiate your case?"));
-      return it->second(parameter_file, mpi_communicator);
-    }
-
-  private:
-    std::map<std::string, SimulationCreator> creators;
-
-    SimulationCaseFactory() = default;
-  };
-
-  template <typename CaseType>
-  struct SimulationCaseRegistrar
-  {
-    SimulationCaseRegistrar(const std::string                                           name,
-                            typename SimulationCaseFactory<CaseType>::SimulationCreator creator)
-    {
-      SimulationCaseFactory<CaseType>::instance().register_simulation(name, creator);
-    }
-  };
-
-  template <typename CaseType>
-  std::unique_ptr<CaseType>
-  get_simulation_case(const std::string simulation_name,
-                      const std::string parameter_file,
-                      const MPI_Comm    mpi_communicator)
-  {
-    return SimulationCaseFactory<CaseType>::instance().create_simulation(simulation_name,
-                                                                         parameter_file,
-                                                                         mpi_communicator);
-  }
 
   template <typename ParametersType,
             template <int>
@@ -551,24 +493,27 @@ namespace MeltPoolDG
       {
         if (dim == 1)
           {
-            auto sim =
-              get_simulation_case<CaseType<1>>(case_name, parameter_file, mpi_communicator);
+            auto sim = SimulationCaseFactory<CaseType<1>>::create_simulation(case_name,
+                                                                             parameter_file,
+                                                                             mpi_communicator);
             sim->create();
             auto problem = std::make_unique<ProblemType<1>>(std::move(sim));
             problem->run();
           }
         else if (dim == 2)
           {
-            auto sim =
-              get_simulation_case<CaseType<2>>(case_name, parameter_file, mpi_communicator);
+            auto sim = SimulationCaseFactory<CaseType<2>>::create_simulation(case_name,
+                                                                             parameter_file,
+                                                                             mpi_communicator);
             sim->create();
             auto problem = std::make_unique<ProblemType<2>>(std::move(sim));
             problem->run();
           }
         else if (dim == 3)
           {
-            auto sim =
-              get_simulation_case<CaseType<3>>(case_name, parameter_file, mpi_communicator);
+            auto sim = SimulationCaseFactory<CaseType<3>>::create_simulation(case_name,
+                                                                             parameter_file,
+                                                                             mpi_communicator);
             sim->create();
             auto problem = std::make_unique<ProblemType<3>>(std::move(sim));
             problem->run();

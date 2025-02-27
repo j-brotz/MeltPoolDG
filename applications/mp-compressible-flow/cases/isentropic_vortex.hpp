@@ -111,20 +111,5 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
                                                         this->parameters.flow.gamma);
       this->print_relative_norm(generic_data_out, exact_solution, "Error");
     }
-
-
-  private:
-    // for self-registration
-    static SimulationCaseRegistrar<Flow::CompressibleFlowCase<dim>> registrar;
   };
-
-  // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<Flow::CompressibleFlowCase<dim>>
-    SimulationIsentropicVortex<dim>::registrar(
-      "isentropic_vortex",
-      [](const std::string &parameter_file, const MPI_Comm mpi_communicator) {
-        return std::make_unique<SimulationIsentropicVortex<dim>>(parameter_file, mpi_communicator);
-      });
-
 } // namespace MeltPoolDG::Simulation::CompressibleFlow

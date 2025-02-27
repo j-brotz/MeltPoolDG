@@ -46,18 +46,5 @@ namespace MeltPoolDG::Simulation::SolidificationSlab
 
     void
     set_field_conditions() final;
-
-    // for self-registration
-    static SimulationCaseRegistrar<Heat::HeatTransferCase<dim>> registrar;
   };
-
-  // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<MeltPoolDG::Heat::HeatTransferCase<dim>>
-    SimulationSolidificationSlab<dim>::registrar(
-      "solidification_slab",
-      [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
-        return std::make_unique<SimulationSolidificationSlab<dim>>(parameter_file,
-                                                                   mpi_communicator);
-      });
 } // namespace MeltPoolDG::Simulation::SolidificationSlab

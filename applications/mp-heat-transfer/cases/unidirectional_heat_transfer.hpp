@@ -82,18 +82,5 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
 
     void
     set_field_conditions() final;
-
-    // for self-registration
-    static SimulationCaseRegistrar<Heat::HeatTransferCase<dim>> registrar;
   };
-
-  // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<MeltPoolDG::Heat::HeatTransferCase<dim>>
-    SimulationUnidirectionalHeatTransfer<dim>::registrar(
-      "unidirectional_heat_transfer",
-      [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
-        return std::make_unique<SimulationUnidirectionalHeatTransfer<dim>>(parameter_file,
-                                                                           mpi_communicator);
-      });
 } // namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer

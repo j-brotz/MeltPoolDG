@@ -43,17 +43,5 @@ namespace MeltPoolDG::Simulation::PowderBed
 
     void
     set_field_conditions() override;
-
-    // for self-registration
-    static SimulationCaseRegistrar<Heat::HeatTransferCase<dim>> registrar;
   };
-
-  // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<MeltPoolDG::Heat::HeatTransferCase<dim>>
-    SimulationPowderBed<dim>::registrar(
-      "powder_bed",
-      [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
-        return std::make_unique<SimulationPowderBed<dim>>(parameter_file, mpi_communicator);
-      });
 } // namespace MeltPoolDG::Simulation::PowderBed

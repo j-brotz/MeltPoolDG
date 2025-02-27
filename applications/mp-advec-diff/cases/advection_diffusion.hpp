@@ -276,16 +276,5 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
     const double left_domain    = -1.0;
     const double right_domain   = 1.0;
     LevelSetType level_set_type = LevelSetType::level_set;
-
-    // for self-registration
-    static SimulationCaseRegistrar<LevelSet::AdvectionDiffusionCase<dim>> registrar;
   };
-
-  // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<LevelSet::AdvectionDiffusionCase<dim>> SimulationAdvec<dim>::registrar(
-    "advection_diffusion",
-    [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
-      return std::make_unique<SimulationAdvec<dim>>(parameter_file, mpi_communicator);
-    });
 } // namespace MeltPoolDG::Simulation::AdvectionDiffusion

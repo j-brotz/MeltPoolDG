@@ -59,18 +59,5 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
 
     void
     set_field_conditions() final;
-
-    // for self-registration
-    static SimulationCaseRegistrar<Heat::HeatTransferCase<dim>> registrar;
   };
-
-  // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<MeltPoolDG::Heat::HeatTransferCase<dim>>
-    SimulationMeltFrontPropagation<dim>::registrar(
-      "melt_front_propagation",
-      [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
-        return std::make_unique<SimulationMeltFrontPropagation<dim>>(parameter_file,
-                                                                     mpi_communicator);
-      });
 } // namespace MeltPoolDG::Simulation::MeltFrontPropagation

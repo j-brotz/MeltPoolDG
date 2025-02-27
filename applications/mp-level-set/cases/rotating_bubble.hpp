@@ -177,17 +177,5 @@ namespace MeltPoolDG::Simulation::RotatingBubble
   private:
     double left_domain  = -1.0;
     double right_domain = 1.0;
-
-    // for self-registration
-    static SimulationCaseRegistrar<LevelSet::LevelSetCase<dim>> registrar;
   };
-
-  // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<MeltPoolDG::LevelSet::LevelSetCase<dim>>
-    SimulationRotatingBubble<dim>::registrar(
-      "rotating_bubble",
-      [](const std::string parameter_file, const MPI_Comm mpi_communicator) {
-        return std::make_unique<SimulationRotatingBubble<dim>>(parameter_file, mpi_communicator);
-      });
 } // namespace MeltPoolDG::Simulation::RotatingBubble
