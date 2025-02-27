@@ -1,6 +1,6 @@
 #include "vortex_bubble.hpp"
 
-#include <meltpooldg/case_registration.hpp>
+#include <meltpooldg/core/case_registration.hpp>
 
 namespace MeltPoolDG::Simulation::VortexBubble
 {

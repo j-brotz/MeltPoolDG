@@ -10,6 +10,7 @@
 #include <deal.II/grid/tria.h>
 
 #include <meltpooldg/core/boundary_conditions.hpp>
+#include <meltpooldg/core/case_factory.hpp>
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/periodic_boundary_conditions.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
@@ -443,38 +444,6 @@ namespace MeltPoolDG
     }
   };
 
-  template <typename CaseType>
-  class SimulationCaseFactory
-  {
-  public:
-    using SimulationCreator =
-      std::function<std::unique_ptr<CaseType>(const std::string, const MPI_Comm)>;
-
-    static bool
-    register_simulation(const std::string name, SimulationCreator creator)
-    {
-      AssertThrow(not creators.contains(name),
-                  ExcMessage("Requested simulation case already registered: " + name));
-      creators[name] = creator;
-      return true;
-    }
-
-    static std::unique_ptr<CaseType>
-    create_simulation(const std::string name,
-                      const std::string parameter_file,
-                      const MPI_Comm    mpi_communicator)
-    {
-      auto it = creators.find(name);
-      AssertThrow(it != creators.end(),
-                  ExcMessage("Requested simulation case not registered: " + name +
-                             " Did you forget to create a *.cpp file for your simulation case, "
-                             "where you explicitly instantiate your case?"));
-      return it->second(parameter_file, mpi_communicator);
-    }
-
-  private:
-    static inline std::map<std::string, SimulationCreator> creators;
-  };
 
   template <typename ParametersType,
             template <int>

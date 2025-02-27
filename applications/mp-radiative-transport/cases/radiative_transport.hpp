@@ -12,7 +12,7 @@
 #include <utility>
 #include <vector>
 
-#define MELTPOOLDG_REGISTER_RTE_CASE(CaseClass, ConcreteCaseClass, case_name, dim)         \
+#define MELTPOOLDG_REGISTER_MULTI_APP_CASE(CaseClass, ConcreteCaseClass, case_name, dim)   \
   static bool case_name_is_registered_##dim =                                              \
     SimulationCaseFactory<CaseClass<dim>>::register_simulation(                            \
       case_name, [](const std::string parameter_file, const MPI_Comm mpi_communicator) {   \

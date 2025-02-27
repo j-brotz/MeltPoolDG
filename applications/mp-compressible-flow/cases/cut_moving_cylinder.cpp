@@ -1,6 +1,6 @@
 #include "cut_moving_cylinder.hpp"
 
-#include <meltpooldg/case_registration.hpp>
+#include <meltpooldg/core/case_registration.hpp>
 
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {

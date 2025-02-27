@@ -1,6 +1,6 @@
 #include "zalesak_disk.hpp"
 
-#include <meltpooldg/case_registration.hpp>
+#include <meltpooldg/core/case_registration.hpp>
 
 namespace MeltPoolDG::Simulation::ZalesakDisk
 {

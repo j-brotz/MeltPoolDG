@@ -11,7 +11,7 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/tria.h>
 
-#include <meltpooldg/case_registration.hpp>
+#include <meltpooldg/core/case_registration.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>

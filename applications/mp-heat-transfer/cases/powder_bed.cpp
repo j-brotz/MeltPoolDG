@@ -12,7 +12,7 @@
 #include <deal.II/grid/grid_tools_geometry.h>
 #include <deal.II/grid/tria.h>
 
-#include <meltpooldg/case_registration.hpp>
+#include <meltpooldg/core/case_registration.hpp>
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_intensity_profiles.hpp>
