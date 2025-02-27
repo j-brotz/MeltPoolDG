@@ -1,0 +1,98 @@
+#pragma once
+
+#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/flow/compressible_flow_operation.hpp>
+#include <meltpooldg/post_processing/postprocessor.hpp>
+#include <meltpooldg/utilities/profiling_monitor.hpp>
+#include <meltpooldg/utilities/time_iterator.hpp>
+#include <meltpooldg/flow/compressible_flow_operation.hpp>
+
+#include "compressible_multiphase_case.hpp"
+
+namespace MeltPoolDG::Multiphase
+{
+  using namespace dealii;
+
+  template <int dim>
+  class CompressibleMultiphaseProblem
+  {
+  private:
+    using CaseType   = CompressibleMultiphaseCase<dim>;
+    using VectorType = LinearAlgebra::distributed::Vector<double>;
+
+  public:
+    explicit CompressibleMultiphaseProblem(std::unique_ptr<CaseType> simulation_case)
+      : simulation_case(std::move(simulation_case))
+    {}
+
+    /**
+     * Run the simulation. This function internally sets up all required member data and performs
+     * the time loop.
+     */
+    void
+    run();
+
+  private:
+    /**
+     * Set up all dof related data.
+     */
+    void
+    setup_dof_system();
+
+    /**
+     * Initializes the relevant member data required for solving the compressible flow problem
+     * and prepares the object for starting the time loop. This includes setting the necessary
+     * boundary and initial conditions.
+     *
+     * @note Internally calls the setup_dof_system() function.
+     */
+    void
+    initialize();
+
+    /**
+     *  Perform the output of the results.
+     *
+     *  @param time_step Current time step size.
+     *  @param current_time Current time at t^n.
+     */
+    void
+    output_results(unsigned int time_step, double current_time);
+
+    /**
+     * Interpolates the values of an (currently) analytically given level-set function to the
+     * level-set dof vector.
+     */
+    void
+    interpolate_initial_level_set();
+
+    /**
+     * Interpolates the values of an (currently) analytically given level-set function to the
+     * level-set dof vector.
+     */
+    void
+    update_level_set();
+
+    std::unique_ptr<CaseType> simulation_case;
+
+    DoFHandler<dim>                                         dof_handler;
+    DoFHandler<dim>                                         dof_handler_level_set;
+    AffineConstraints<double>                               constraints;
+    AffineConstraints<double>                               constraints_level_set;
+    std::shared_ptr<ScratchData<dim>>                       scratch_data;
+    std::shared_ptr<TimeIterator<double>>                   time_iterator;
+    MeltPoolDG::Flow::CompressibleFlowOperation<dim, double>comp_multiphase_operation;
+    std::unique_ptr<Profiling::ProfilingMonitor<double>>    profiling_monitor;
+
+    unsigned int comp_multiphase_dof_idx{};
+    unsigned int level_set_dof_idx{};
+    unsigned int comp_multiphase_quad_idx{};
+
+    std::unique_ptr<Postprocessor<dim>> post_processor;
+
+    std::shared_ptr<Function<dim>> level_set_field_function;
+    VectorType                     level_set;
+    //TODO: remove
+    unsigned int result_number = 0;
+  };
+
+} // namespace MeltPoolDG::Multiphase

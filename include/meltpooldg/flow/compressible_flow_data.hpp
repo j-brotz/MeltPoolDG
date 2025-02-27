@@ -23,6 +23,17 @@ namespace MeltPoolDG::Flow
 
   BETTER_ENUM(JacobianType, char, exact, finite_difference);
 
+  BETTER_ENUM(EquationOfState,
+              char,
+              ideal_gas,
+              stiffened_ideal_gas,
+              noble_abel_stiffend_gas)
+
+  BETTER_ENUM(InterfaceNumericalMethod,
+              char,
+              HLLC0_and_Nitsche,
+              penalty)
+
   struct CompressibleFlowData
   {
     // finite element data
@@ -31,22 +42,49 @@ namespace MeltPoolDG::Flow
     // time integration data
     TimeIntegratorData time_integrator;
 
+    //TODO: introduce material subgroup
+
     // ratio of specific heat (specific heat at constant pressure divided by
     // specific heat at constant volume)
     double gamma = 1.4;
+    double gamma_2 = 1.4;
 
     // dynamic viscosity (SI: kg/(m s))
     double dynamic_viscosity = 1.0 / 1600; // set to zero to deactivate viscous effects
+    double dynamic_viscosity_2 = 1.0 / 1600;
 
     // specific gas constant (SI: J/(kg K))
-    double specific_gas_constant = 287.;
+    double specific_gas_constant = 287.1;
+    double specific_gas_constant_2 = 287.1;
 
     // thermal conductivity (SI: W/(m K))
     double thermal_conductivity =
       dynamic_viscosity * gamma * specific_gas_constant / (gamma - 1.) * 1 / 0.71;
+    double thermal_conductivity_2 =
+      dynamic_viscosity_2 * gamma_2 * specific_gas_constant_2 / (gamma_2 - 1.) * 1 / 0.71;
 
     // reference density for interior penalty
     double reference_density = 1.0;
+    double reference_density_2 = 1.0;
+
+    // equation of state
+    EquationOfState equation_of_state = EquationOfState::ideal_gas;
+    EquationOfState equation_of_state_2 = EquationOfState::ideal_gas;
+
+    // evaporation mass flux
+    double m_dot_evap = 0.;
+
+    // numerical method for interface jump enforcement
+    InterfaceNumericalMethod interface_numerical_method = InterfaceNumericalMethod::penalty;
+
+    // density constraint penalty factor
+    double density_constraint_penalty_factor = 10.;
+
+    // temperature constraint penalty factor
+    double temperature_constraint_penalty_factor = 10.;
+
+    // symmetric interior penalty parameter for the viscous interface term
+    double symm_int_penalty_parameter_interface = 1.;
 
     // numerical flux type for the convective flux
     NumericalFluxType numerical_flux_type = NumericalFluxType::lax_friedrichs_modified;
@@ -100,12 +138,29 @@ namespace MeltPoolDG::Flow
         fe.add_parameters(prm);
         time_integrator.add_parameters(prm);
         prm.add_parameter("gamma", gamma, "Ratio of specific heat (c_p/c_v).");
+        prm.add_parameter("gamma 2", gamma_2, "Ratio of specific heat (c_p/c_v).");
         prm.add_parameter("dynamic viscosity", dynamic_viscosity, "Dynamic viscosity.");
+        prm.add_parameter("dynamic viscosity 2", dynamic_viscosity_2, "Dynamic viscosity.");
         prm.add_parameter("specific gas constant", specific_gas_constant, "Specific gas constant.");
+        prm.add_parameter("specific gas constant 2", specific_gas_constant_2, "Specific gas constant.");
         prm.add_parameter("thermal conductivity", thermal_conductivity, "Thermal conductivity.");
+        prm.add_parameter("thermal conductivity 2", thermal_conductivity_2, "Thermal conductivity.");
         prm.add_parameter("reference density",
                           reference_density,
                           "Reference density for computing the interior penalty factor.");
+        prm.add_parameter("reference density 2",
+                          reference_density_2,
+                          "Reference density for computing the interior penalty factor.");
+        prm.add_parameter("equation of state",
+                          equation_of_state,
+                          "Equation of state for phase 1.");
+        prm.add_parameter("equation of state 2",
+                          equation_of_state_2,
+                          "Equation of state for phase 2.");
+        prm.add_parameter("evaporation mass flux", m_dot_evap, "Evaporation mass flux.");
+        prm.add_parameter("interface numerical method", interface_numerical_method, "Numerical method for enforcing interface jump conditions.");
+        prm.add_parameter("density constraint penalty factor", density_constraint_penalty_factor, "Density constraint penalty factor.");
+        prm.add_parameter("temperature constraint penalty factor", temperature_constraint_penalty_factor, "Temperature constraint penalty factor.");
         prm.add_parameter(
           "linearization jump convective flux",
           linearization_jump_convective_flux,
@@ -177,6 +232,8 @@ namespace MeltPoolDG::Flow
       // constant.
       thermal_conductivity =
         dynamic_viscosity * gamma * specific_gas_constant / (gamma - 1.) * 1. / 0.71;
+      thermal_conductivity_2 =
+        dynamic_viscosity_2 * gamma_2 * specific_gas_constant_2 / (gamma_2 - 1.) * 1. / 0.71;
     }
   };
 } // namespace MeltPoolDG::Flow
