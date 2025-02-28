@@ -28,6 +28,7 @@
     "use cfl criteria": "true",
     "gravity constant": "0.0",
     "interface numerical method": "HLLC0_and_Nitsche",
+    "domain representation type": "cut",
     "stabilization": {
       "ghost-penalty": {
         "gamma M degree 0": "1.0",

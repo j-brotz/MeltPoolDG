@@ -8,7 +8,7 @@
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/cut/cut_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
-
+#include <meltpooldg/flow/compressible_fluid_material_data.hpp>
 #include <string>
 
 namespace MeltPoolDG::Flow
@@ -42,6 +42,12 @@ namespace MeltPoolDG::Flow
     // time integration data
     TimeIntegratorData time_integrator;
 
+    // gas phase material data
+    CompressibleFluidMaterialPhaseData<double> material_data_gas_phase;
+
+    // only relevant for two-phase case
+    CompressibleFluidMaterialPhaseData<double> material_data_liquid_phase;
+
     //TODO: introduce material subgroup
 
     // ratio of specific heat (specific heat at constant pressure divided by
@@ -66,6 +72,15 @@ namespace MeltPoolDG::Flow
     // reference density for interior penalty
     double reference_density = 1.0;
     double reference_density_2 = 1.0;
+
+    double p_inf = 0.;
+    double p_inf_2 = 0.;
+
+    double q = 0.;
+    double q_2 = 0.;
+
+    double b = 0.;
+    double b_2 = 0.;
 
     // equation of state
     EquationOfState equation_of_state = EquationOfState::ideal_gas;

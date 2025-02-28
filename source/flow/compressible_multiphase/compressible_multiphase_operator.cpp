@@ -139,11 +139,11 @@ namespace MeltPoolDG::Multiphase
         *constant_function, dealii::Point<dim, dealii::VectorizedArray<number>>());
 
     // lambda function for cell integral
-    auto process_cell = [&]<typename T0>(T0 &phi) {
+    auto process_cell = [&]<bool is_gas_phase, typename T0>(T0 &phi) {
       for (const unsigned int q : phi.quadrature_point_indices())
         {
           auto [flux, grad_flux] = MeltPoolDG::Flow::
-            rhs_cell_integral_kernel<dim, number, T0>(
+            rhs_cell_integral_kernel<dim, number, T0, is_gas_phase>(
               phi,
               q,
               constant_function ? &constant_body_force : nullptr,
@@ -170,7 +170,7 @@ namespace MeltPoolDG::Multiphase
                                     ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
                                        EvaluationFlags::gradients :
                                        EvaluationFlags::nothing));
-              process_cell(phi_liquid);
+              process_cell.template operator()<false>(phi_liquid);
               phi_liquid.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
             }
           break;
@@ -184,7 +184,7 @@ namespace MeltPoolDG::Multiphase
                                     ((flow_scratch_data.flow_data.dynamic_viscosity_2 > 0) ?
                                        EvaluationFlags::gradients :
                                        EvaluationFlags::nothing));
-              process_cell(phi_gas);
+              process_cell.template operator()<true>(phi_gas);
               phi_gas.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
             }
           break;
@@ -247,14 +247,14 @@ namespace MeltPoolDG::Multiphase
                                           EvaluationFlags::values | EvaluationFlags::gradients);
 
                 // do domain integral in liquid phase
-                process_cell(phi_point_liquid);
+                process_cell.template operator()<false>(phi_point_liquid);
 
                 phi_point_liquid.integrate(StridedArrayView<number, n_lanes>(
                                           &phi_liquid_intersected.begin_dof_values()[0][lane], n_dofs_per_cell),
                                         EvaluationFlags::values | EvaluationFlags::gradients);
 
                 // do domain integral in gas phase
-                process_cell(phi_point_gas);
+                process_cell.template operator()<true>(phi_point_gas);
 
                 phi_point_gas.integrate(StridedArrayView<number, n_lanes>(
                                           &phi_gas_intersected.begin_dof_values()[0][lane], n_dofs_per_cell),
@@ -270,7 +270,7 @@ namespace MeltPoolDG::Multiphase
                         auto grad_w_liquid = phi_point_surface_liquid.get_gradient(q);
                         auto grad_w_gas = phi_point_surface_gas.get_gradient(q);
 
-                        auto flux_data = calculate_interface_flux_penalty<dim,number,ConservedVariablesType,ConservedVariablesGradType>(w_liquid,w_gas,grad_w_liquid,grad_w_gas, flow_scratch_data, viscous_terms);
+                        auto flux_data = calculate_interface_flux_penalty<dim,number,ConservedVariablesType,ConservedVariablesGradType>(w_liquid,w_gas,grad_w_liquid,grad_w_gas, flow_scratch_data.flow_data, viscous_terms);
 
                         auto flux_m = std::get<0>(flux_data);
                         auto flux_p = std::get<1>(flux_data);
@@ -298,7 +298,8 @@ namespace MeltPoolDG::Multiphase
                             flow_scratch_data.flow_data.gamma,
                             flow_scratch_data.flow_data.gamma_2,
                             flow_scratch_data.flow_data.m_dot_evap,
-                            convective_terms);
+                            convective_terms,
+                            flow_scratch_data.flow_data);
 
                         auto flux_m = std::get<0>(riemann_flux_data);
                         auto flux_p = -std::get<1>(riemann_flux_data); // opposite normal direction for phase 2
@@ -328,7 +329,8 @@ namespace MeltPoolDG::Multiphase
                               flow_scratch_data.flow_data.symm_int_penalty_parameter_interface,
                               0. /*p_inf phase 1*/,
                               0. /*p_inf phase 2*/,
-                              viscous_terms);
+                              viscous_terms,
+                              flow_scratch_data.flow_data);
 
                               flux_m -= viscous_interface_flux_data.first;
                               flux_p += viscous_interface_flux_data.second; // opposite normal direction for phase 2
@@ -353,7 +355,8 @@ namespace MeltPoolDG::Multiphase
                           	    flow_scratch_data.flow_data.m_dot_evap,
                           	    0. /*p_inf phase 1*/,
                                 0. /*p_inf phase 2*/,
-                                viscous_terms);
+                                viscous_terms,
+                                flow_scratch_data.flow_data);
 
                             phi_point_surface_liquid.submit_gradient(-numerical_flux_gradient.first, q);
                             phi_point_surface_gas.submit_gradient(-numerical_flux_gradient.second, q);
@@ -416,7 +419,7 @@ namespace MeltPoolDG::Multiphase
       flow_scratch_data.scratch_data.get_matrix_free().get_face_range_category(face_range);
     const CutUtil::FaceType face_type = CutUtil::get_face_type(face_category);
 
-    auto process_face = [&](auto &phi_m, auto &phi_p) {
+    auto process_face = [&]<bool is_gas_phase>(auto &phi_m, auto &phi_p) {
         for (unsigned int face = face_range.first; face < face_range.second; ++face) {
             phi_m.reinit(face);
             phi_p.reinit(face);
@@ -434,7 +437,7 @@ namespace MeltPoolDG::Multiphase
 
             for (const unsigned int q : phi_m.quadrature_point_indices()) {
                 auto [flux_m, flux_p, grad_flux_m, grad_flux_p] = MeltPoolDG::Flow::
-                    rhs_face_integral_kernel<dim, number, FEFaceIntegrator<dim, dim + 2, number>>(
+                    rhs_face_integral_kernel<dim, number, FEFaceIntegrator<dim, dim + 2, number>, is_gas_phase>(
                         phi_m, phi_p, q, penalty_parameter,
                         convective_terms, viscous_terms,
                         flow_scratch_data.flow_data.dynamic_viscosity_2);
@@ -451,7 +454,7 @@ namespace MeltPoolDG::Multiphase
         }
     };
 
-    auto process_intersected_face = [&](auto &phi_m_int, auto &phi_p_int, const unsigned int mapping_idx) {
+    auto process_intersected_face = [&]<bool is_gas_phase>(auto &phi_m_int, auto &phi_p_int, const unsigned int mapping_idx) {
       FEFacePointEvaluation<dim + 2, dim, dim, VectorizedArray<number>> phi_point_m(
           *mapping_info_faces[mapping_idx], fe_point_temp);
       FEFacePointEvaluation<dim + 2, dim, dim, VectorizedArray<number>> phi_point_p(
@@ -512,7 +515,8 @@ namespace MeltPoolDG::Multiphase
                     auto [flux_m, flux_p, grad_flux_m, grad_flux_p] = MeltPoolDG::Flow::rhs_face_integral_kernel<
                       dim,
                       number,
-                      FEFacePointEvaluation<dim + 2, dim, dim, VectorizedArray<number>>>(
+                      FEFacePointEvaluation<dim + 2, dim, dim, VectorizedArray<number>>,
+                      is_gas_phase>(
                       phi_point_m,
                       phi_point_p,
                       q,
@@ -562,20 +566,20 @@ namespace MeltPoolDG::Multiphase
 
     switch (face_type) {
         case CutUtil::FaceType::inside_face_liquid:
-          process_face(phi_liquid_m, phi_liquid_p);
+          process_face.template operator()<false>(phi_liquid_m, phi_liquid_p);
           break;
         case CutUtil::FaceType::mixed_face_liquid:
-          process_face(phi_liquid_m, phi_liquid_p_intersected);
+          process_face.template operator()<false>(phi_liquid_m, phi_liquid_p_intersected);
           break;
         case CutUtil::FaceType::inside_face_gas:
-          process_face(phi_gas_m, phi_gas_p);
+          process_face.template operator()<true>(phi_gas_m, phi_gas_p);
           break;
         case CutUtil::FaceType::mixed_face_gas:
-          process_face(phi_gas_m, phi_gas_p_intersected);
+          process_face.template operator()<true>(phi_gas_m, phi_gas_p_intersected);
           break;
         case CutUtil::FaceType::intersected_face:
-          process_intersected_face(phi_liquid_m_intersected, phi_liquid_p_intersected, 0);
-          process_intersected_face(phi_gas_m_intersected, phi_gas_p_intersected, 1);
+          process_intersected_face.template operator()<false>(phi_liquid_m_intersected, phi_liquid_p_intersected, 0);
+          process_intersected_face.template operator()<true>(phi_gas_m_intersected, phi_gas_p_intersected, 1);
         default:
           break;
     }
@@ -601,7 +605,7 @@ namespace MeltPoolDG::Multiphase
     const auto face_category =
       flow_scratch_data.scratch_data.get_matrix_free().get_face_range_category(face_range);
 
-    auto process_face = [&](auto &phi_m) {
+    auto process_face = [&]<bool is_gas_phase>(auto &phi_m) {
       for (unsigned int face = face_range.first; face < face_range.second; ++face)
         {
           phi_m.reinit(face);
@@ -619,7 +623,8 @@ namespace MeltPoolDG::Multiphase
               auto [flux_m, grad_flux_m] =
                 MeltPoolDG::Flow::rhs_boundary_face_integral_kernel<dim,
                                                   number,
-                                                  FEFaceIntegrator<dim, dim + 2, number>>(
+                                                  FEFaceIntegrator<dim, dim + 2, number>,
+                                                  is_gas_phase>(
                   phi_m,
                   q,
                   flow_scratch_data.scratch_data.get_matrix_free().get_boundary_id(face),
@@ -640,7 +645,7 @@ namespace MeltPoolDG::Multiphase
         }
     };
 
-    auto process_intersected_faces = [&](auto &phi_m_int, const unsigned int mapping_idx) {
+    auto process_intersected_faces = [&]<bool is_gas_phase>(auto &phi_m_int, const unsigned int mapping_idx) {
       FEFacePointEvaluation<dim + 2, dim, dim, VectorizedArray<number>> phi_point_m_int(
           *mapping_info_faces[mapping_idx], fe_point_temp);
 
@@ -677,7 +682,8 @@ namespace MeltPoolDG::Multiphase
                     auto [flux_m, grad_flux_m] = MeltPoolDG::Flow::rhs_boundary_face_integral_kernel<
                       dim,
                       number,
-                      FEFacePointEvaluation<dim + 2, dim, dim, VectorizedArray<number>>>(
+                      FEFacePointEvaluation<dim + 2, dim, dim, VectorizedArray<number>>,
+                      is_gas_phase>(
                       phi_point_m_int,
                       q,
                       flow_scratch_data.scratch_data.get_matrix_free().get_boundary_id(face),
@@ -706,16 +712,16 @@ namespace MeltPoolDG::Multiphase
 
     switch (face_category.first) {
         case CutUtil::CellCategory::liquid: {
-          process_face(phi_liquid_m);
+          process_face.template operator()<false>(phi_liquid_m);
           break;
         }
         case CutUtil::CellCategory::gas: {
-          process_face(phi_gas_m);
+          process_face.template operator()<true>(phi_gas_m);
           break;
         }
         case CutUtil::CellCategory::intersected: {
-          process_intersected_faces(phi_liquid_m_intersected, 0);
-          process_intersected_faces(phi_gas_m_intersected, 1);
+          process_intersected_faces.template operator()<false>(phi_liquid_m_intersected, 0);
+          process_intersected_faces.template operator()<true>(phi_gas_m_intersected, 1);
           break;
         }
         default:

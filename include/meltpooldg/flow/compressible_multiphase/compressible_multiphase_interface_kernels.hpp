@@ -43,44 +43,44 @@ namespace MeltPoolDG::Multiphase
                                      const ConservedVariablesType &u_p,
                                      const ConservedVariablesGradType &grad_u_m,
                                      const ConservedVariablesGradType &grad_u_p,
-                                     const Flow::CompressibleFlowScratchData<dim, Number> &flow_scratch_data,
+                                     const Flow::CompressibleFlowData &flow_data,
                                      const MeltPoolDG::Flow::CompressibleFlowViscousKernels<dim, Number> &viscous_terms)
   {
     // mass conservation
-    const auto tmp_1 = (u_m[0]/u_p[0]*u_p[1] - u_p[0]/u_m[0]*u_m[1]+(u_p[0]*u_p[0]-u_m[0]*u_m[0])/(u_m[0]*u_p[0])*flow_scratch_data.flow_data.m_dot_evap);
+    const auto tmp_1 = (u_m[0]/u_p[0]*u_p[1] - u_p[0]/u_m[0]*u_m[1]+(u_p[0]*u_p[0]-u_m[0]*u_m[0])/(u_m[0]*u_p[0])*flow_data.m_dot_evap);
 
     const VectorizedArray<double> omega_1 = 0.5;
     const VectorizedArray<double> omega_2 = 0.5;
     const auto tmp_2 = omega_1 * u_p[1] + omega_2 * u_m[1];
 
     // penalty approach for density_2 constraint
-    const auto tmp_5 = flow_scratch_data.flow_data.density_constraint_penalty_factor * (u_p[0] - 1.);
+    const auto tmp_5 = flow_data.density_constraint_penalty_factor * (u_p[0] - 1.);
 
     // momentum conservation
-    const auto tmp_3 = (u_m[1] * u_m[1] / u_m[0] - u_p[1] * u_p[1] / u_p[0]) - (1./u_m[0] - 1./u_p[0]) * flow_scratch_data.flow_data.m_dot_evap * flow_scratch_data.flow_data.m_dot_evap;
+    const auto tmp_3 = (u_m[1] * u_m[1] / u_m[0] - u_p[1] * u_p[1] / u_p[0]) - (1./u_m[0] - 1./u_p[0]) * flow_data.m_dot_evap * flow_data.m_dot_evap;
     const auto grad_vel_m = Flow::calculate_grad_velocity<dim,Number>(u_m, grad_u_m);
     const auto grad_vel_p = Flow::calculate_grad_velocity<dim,Number>(u_p, grad_u_p);
     const auto tau_m = viscous_terms.calculate_viscous_stress_tensor(grad_vel_m);
     auto tau_m_tmp = tau_m[0][0];
     const auto tau_p = viscous_terms.calculate_viscous_stress_tensor(grad_vel_p);
     auto tau_p_tmp = tau_p[0][0];
-    auto tmp_4 = (u_m[1] * u_m[1] / u_m[0] + MeltPoolDG::Flow::calculate_pressure<dim,Number>(u_m, flow_scratch_data.flow_data.gamma)-tau_m_tmp) * omega_2;
-    tmp_4 += (u_p[1] * u_p[1] / u_p[0] + MeltPoolDG::Flow::calculate_pressure<dim,Number>(u_p, flow_scratch_data.flow_data.gamma_2)-tau_p_tmp) * omega_1;
+    auto tmp_4 = (u_m[1] * u_m[1] / u_m[0] + MeltPoolDG::Flow::calculate_pressure<dim,Number,true>(u_m, flow_data)-tau_m_tmp) * omega_2;
+    tmp_4 += (u_p[1] * u_p[1] / u_p[0] + MeltPoolDG::Flow::calculate_pressure<dim,Number,false>(u_p, flow_data)-tau_p_tmp) * omega_1;
 
     // energy conservation
     const auto vel_m = MeltPoolDG::Flow::calculate_velocity<dim,Number>(u_m);
     const auto vel_p = MeltPoolDG::Flow::calculate_velocity<dim,Number>(u_p);
     const VectorizedArray<double> delta_q = 0.;
-    auto tmp_6 = (u_m[dim+1] * u_m[1] / u_m[0] - u_p[dim+1] * u_m[1] / u_m[0] ) - flow_scratch_data.flow_data.m_dot_evap * (u_m[dim+1]/u_m[0] - u_p[dim+1]/u_p[0]) + delta_q;
-    auto tmp_7 = u_m[dim+1] * vel_m + (MeltPoolDG::Flow::calculate_pressure<dim,Number>(u_m, flow_scratch_data.flow_data.gamma) - tau_m_tmp) * vel_m -
-      flow_scratch_data.flow_data.thermal_conductivity * MeltPoolDG::Flow::calculate_grad_T<dim>(u_m, grad_u_m, flow_scratch_data.flow_data.gamma_2, flow_scratch_data.flow_data.specific_gas_constant);
+    auto tmp_6 = (u_m[dim+1] * u_m[1] / u_m[0] - u_p[dim+1] * u_m[1] / u_m[0] ) - flow_data.m_dot_evap * (u_m[dim+1]/u_m[0] - u_p[dim+1]/u_p[0]) + delta_q;
+    auto tmp_7 = u_m[dim+1] * vel_m + (MeltPoolDG::Flow::calculate_pressure<dim,Number,true>(u_m, flow_data) - tau_m_tmp) * vel_m -
+      flow_data.thermal_conductivity * MeltPoolDG::Flow::calculate_grad_T<dim>(u_m, grad_u_m, flow_data.gamma_2, flow_data.specific_gas_constant);
     tmp_7 *= omega_2;
-    tmp_7 += (u_p[dim+1] * vel_p + (MeltPoolDG::Flow::calculate_pressure<dim,Number>(u_p, flow_scratch_data.flow_data.gamma_2) - tau_p_tmp) * vel_p -
-      flow_scratch_data.flow_data.thermal_conductivity_2 * MeltPoolDG::Flow::calculate_grad_T<dim>(u_p, grad_u_p, flow_scratch_data.flow_data.gamma_2, flow_scratch_data.flow_data.specific_gas_constant_2)) * omega_1;
+    tmp_7 += (u_p[dim+1] * vel_p + (MeltPoolDG::Flow::calculate_pressure<dim,Number, false>(u_p, flow_data) - tau_p_tmp) * vel_p -
+      flow_data.thermal_conductivity_2 * MeltPoolDG::Flow::calculate_grad_T<dim>(u_p, grad_u_p, flow_data.gamma_2, flow_data.specific_gas_constant_2)) * omega_1;
 
     // penalty approach for temperature_2 constraint
-    const auto temperature_p = (u_p[dim+1] - 0.5 * u_p[0] * vel_p * vel_p) / (flow_scratch_data.flow_data.specific_gas_constant_2/(flow_scratch_data.flow_data.gamma_2 - 1.)*u_p[0]);
-    auto tmp_8 = flow_scratch_data.flow_data.temperature_constraint_penalty_factor * (temperature_p - 293.15);
+    const auto temperature_p = (u_p[dim+1] - 0.5 * u_p[0] * vel_p * vel_p) / (flow_data.specific_gas_constant_2/(flow_data.gamma_2 - 1.)*u_p[0]);
+    auto tmp_8 = flow_data.temperature_constraint_penalty_factor * (temperature_p - 293.15);
 
     ConservedVariablesType total_flux_m;
     ConservedVariablesType total_flux_p;
@@ -108,7 +108,8 @@ namespace MeltPoolDG::Multiphase
                                         const double                               gamma_m,
                                         const double gamma_p,
                                         const double m_dot_evap,
-                                        const MeltPoolDG::Flow::CompressibleFlowConvectiveKernels<dim, Number> &convective_kernels)
+                                        const MeltPoolDG::Flow::CompressibleFlowConvectiveKernels<dim, Number> &convective_kernels,
+                                        const Flow::CompressibleFlowData &flow_data)
   {
     // 1) compute normal velocities
 
@@ -119,10 +120,10 @@ namespace MeltPoolDG::Multiphase
 
     AssertThrow(u_m[0][0] > 0. && u_p[0][0] > 0., ExcMessage("Minimum density must not be zero."));
 
-    const auto pressure_m = Flow::calculate_pressure<dim>(u_m, gamma_m);
+    const auto pressure_m = Flow::calculate_pressure<dim,Number,true>(u_m, flow_data);
     const auto speed_of_sound_m = std::sqrt(gamma_m * pressure_m / u_m[0]);
 
-    const auto pressure_p = Flow::calculate_pressure<dim>(u_p, gamma_p);
+    const auto pressure_p = Flow::calculate_pressure<dim,Number,false>(u_p, flow_data);
     const auto speed_of_sound_p = std::sqrt(gamma_p * pressure_p / u_p[0]);
 
     const auto s_m = vel_n_m - speed_of_sound_m;
@@ -231,13 +232,12 @@ namespace MeltPoolDG::Multiphase
     ConservedVariablesType
     convert_into_primitive_variables(const ConservedVariablesType &u_cons,
                                      const double &specific_gas_constant,
-                                     const double &gamma,
-                                     const double &pressure_inf = 0.)
+                                     const Flow::CompressibleFlowData &flow_data)
   {
     ConservedVariablesType u_prim;
 
     // pressure
-    u_prim[0] = Flow::calculate_pressure<dim>(u_cons, gamma);
+    u_prim[0] = Flow::calculate_pressure<dim>(u_cons, flow_data);
 
     // velocity
 	for (unsigned int i = 1; i < dim+1; i++)
@@ -291,17 +291,16 @@ namespace MeltPoolDG::Multiphase
                                                        const double &gamma_phase_2,
                                                        const double &m_dot_evap,
                                                        const double &pressure_inf_phase_1,
-                                                       const double &pressure_inf_phase_2)
+                                                       const double &pressure_inf_phase_2,
+                                                       const Flow::CompressibleFlowData &flow_data)
   {
 	  auto u_m_prim = convert_into_primitive_variables<dim, Number, ConservedVariablesType, ConservedVariablesGradType>(u_m_cons,
                                        specific_gas_constant_phase_1,
-                                       gamma_phase_1,
-                                       pressure_inf_phase_1);
+                                       flow_data);
 
   	auto u_p_prim = convert_into_primitive_variables<dim, Number, ConservedVariablesType, ConservedVariablesGradType>(u_p_cons,
                                      specific_gas_constant_phase_2,
-                                     gamma_phase_2,
-                                     pressure_inf_phase_2);
+                                     flow_data);
 
     // TODO: extend to general case dim>1
 	  ConservedVariablesType J_Dir;
@@ -351,7 +350,8 @@ namespace MeltPoolDG::Multiphase
                                         const double tau,
                                         const double pressure_inf_phase_1,
                                         const double pressure_inf_phase_2,
-                                        const MeltPoolDG::Flow::CompressibleFlowViscousKernels<dim, Number> &viscous_terms)
+                                        const MeltPoolDG::Flow::CompressibleFlowViscousKernels<dim, Number> &viscous_terms,
+                                        const Flow::CompressibleFlowData &flow_data)
   {
     // TODO: add contributions for surface tension, interface heat source (laser energy) and Marangoni forces
 
@@ -361,8 +361,8 @@ namespace MeltPoolDG::Multiphase
     const VectorizedArray<Number> vel_n_m = vel_m * normal;
     const VectorizedArray<Number> vel_n_p = vel_p * normal;
 
-    const auto pressure_m = Flow::calculate_pressure<dim>(u_m, gamma_m);
-    const auto pressure_p = Flow::calculate_pressure<dim>(u_p, gamma_p);
+    const auto pressure_m = Flow::calculate_pressure<dim,Number,true>(u_m, flow_data);
+    const auto pressure_p = Flow::calculate_pressure<dim,Number,false>(u_p, flow_data);
 
     const auto grad_vel_m = Flow::calculate_grad_velocity(u_m, grad_u_m);
     const auto grad_vel_p = Flow::calculate_grad_velocity(u_p, grad_u_p);
@@ -409,7 +409,8 @@ namespace MeltPoolDG::Multiphase
                                                        gamma_p,
                                                        m_dot_evap,
                                                        pressure_inf_phase_1,
-                                                       pressure_inf_phase_2);
+                                                       pressure_inf_phase_2,
+                                                       flow_data);
 
     // TODO: understand choice of alpha's
     const auto u_m_star = alpha_2 * u_m + alpha_1 * (u_p + J_Dir_cons);
@@ -449,7 +450,8 @@ namespace MeltPoolDG::Multiphase
                                         const double m_dot_evap,
                                         const double pressure_inf_phase_1,
                                         const double pressure_inf_phase_2,
-                                        const MeltPoolDG::Flow::CompressibleFlowViscousKernels<dim, Number> &viscous_terms)
+                                        const MeltPoolDG::Flow::CompressibleFlowViscousKernels<dim, Number> &viscous_terms,
+                                        const Flow::CompressibleFlowData &flow_data)
   {
     // TODO: add contributions for surface tension, interface heat source (laser energy) and Marangoni forces
 
@@ -461,7 +463,8 @@ namespace MeltPoolDG::Multiphase
                                      				   gamma_p,
                                      				   m_dot_evap,
                                      				   pressure_inf_phase_1,
-                                     				   pressure_inf_phase_2);
+                                     				   pressure_inf_phase_2,
+                                     				   flow_data);
 
     const auto u_m_star = alpha_1 * u_m + alpha_2 * (u_p + J_Dir_cons);
     const auto u_p_star = alpha_2 * u_p + alpha_1 * (u_m - J_Dir_cons);

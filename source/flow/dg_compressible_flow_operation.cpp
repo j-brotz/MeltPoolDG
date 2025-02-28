@@ -14,6 +14,7 @@
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/flow/compressible_fluid_material.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -177,8 +178,7 @@ namespace MeltPoolDG::Flow
             const auto conserved_variables = phi.get_value(q);
             const auto velocity            = calculate_velocity<dim, number>(conserved_variables);
             const auto pressure =
-              calculate_pressure<dim, number>(conserved_variables,
-                                              flow_scratch_data.flow_data.gamma);
+              calculate_pressure<dim, number>(conserved_variables, flow_scratch_data.flow_data);
 
             const auto              inverse_jacobian = phi.inverse_jacobian(q);
             const auto              convective_speed = inverse_jacobian * velocity;

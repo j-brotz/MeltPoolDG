@@ -7,6 +7,7 @@
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/flow/compressible_fluid_material.hpp>
 
 namespace MeltPoolDG::Multiphase
 {

@@ -6,6 +6,7 @@
 
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
+#include <meltpooldg/flow/compressible_fluid_material.hpp>
 
 namespace MeltPoolDG::Flow
 {
@@ -25,6 +26,7 @@ namespace MeltPoolDG::Flow
      *
      * @return Convective flux.
      */
+    template <bool is_gas_phase = true>
     inline DEAL_II_ALWAYS_INLINE //
       ConservedVariablesGradType
       calculate_convective_flux(const ConservedVariablesType &conserved_variables) const;
@@ -38,6 +40,7 @@ namespace MeltPoolDG::Flow
      *
      * @return Convective numerical flux.
      */
+    template <bool is_gas_phase = true>
     inline DEAL_II_ALWAYS_INLINE //
       ConservedVariablesType
       calculate_convective_numerical_flux(
@@ -107,6 +110,7 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim, typename number>
+  template <bool is_gas_phase>
   inline DEAL_II_ALWAYS_INLINE //
     auto
     CompressibleFlowConvectiveKernels<dim, number>::calculate_convective_flux(
@@ -115,7 +119,7 @@ namespace MeltPoolDG::Flow
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> velocity =
       calculate_velocity<dim, number>(conserved_variables);
     const dealii::VectorizedArray<number> pressure =
-      calculate_pressure<dim, number>(conserved_variables, flow_data.gamma);
+      calculate_pressure<dim, number, is_gas_phase>(conserved_variables, flow_data);
 
     ConservedVariablesGradType flux;
     for (unsigned int d = 0; d < dim; ++d)
@@ -130,6 +134,7 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim, typename number>
+  template <bool is_gas_phase>
   inline DEAL_II_ALWAYS_INLINE //
     auto
     CompressibleFlowConvectiveKernels<dim, number>::calculate_convective_numerical_flux(
@@ -141,8 +146,8 @@ namespace MeltPoolDG::Flow
     const auto velocity_m = calculate_velocity<dim, number>(u_m);
     const auto velocity_p = calculate_velocity<dim, number>(u_p);
 
-    const auto pressure_m = calculate_pressure<dim, number>(u_m, flow_data.gamma);
-    const auto pressure_p = calculate_pressure<dim, number>(u_p, flow_data.gamma);
+    const auto pressure_m = calculate_pressure<dim, number, is_gas_phase>(u_m, flow_data);
+    const auto pressure_p = calculate_pressure<dim, number, is_gas_phase>(u_p, flow_data);
 
     const auto flux_m = calculate_convective_flux(u_m);
     const auto flux_p = calculate_convective_flux(u_p);
@@ -330,8 +335,8 @@ namespace MeltPoolDG::Flow
               const auto velocity_m = calculate_velocity<dim, number>(w_m);
               const auto velocity_p = calculate_velocity<dim, number>(w_p);
 
-              const auto pressure_m = calculate_pressure<dim, number>(w_m, flow_data.gamma);
-              const auto pressure_p = calculate_pressure<dim, number>(w_p, flow_data.gamma);
+              const auto pressure_m = calculate_pressure<dim, number>(w_m, flow_data);
+              const auto pressure_p = calculate_pressure<dim, number>(w_p, flow_data);
 
               const auto lambda =
                 std::max(std::abs(velocity_p * normal) +
@@ -353,8 +358,8 @@ namespace MeltPoolDG::Flow
               const auto velocity_m = calculate_velocity<dim, number>(w_m);
               const auto velocity_p = calculate_velocity<dim, number>(w_p);
 
-              const auto pressure_m = calculate_pressure<dim, number>(w_m, flow_data.gamma);
-              const auto pressure_p = calculate_pressure<dim, number>(w_p, flow_data.gamma);
+              const auto pressure_m = calculate_pressure<dim, number>(w_m, flow_data);
+              const auto pressure_p = calculate_pressure<dim, number>(w_p, flow_data);
 
               const auto lambda =
                 0.5 * std::sqrt(std::max(velocity_p.norm_square() +
@@ -448,8 +453,8 @@ namespace MeltPoolDG::Flow
             const auto velocity_m = calculate_velocity<dim, number>(w_m);
             const auto velocity_p = calculate_velocity<dim, number>(w_p);
 
-            const auto pressure_m = calculate_pressure<dim, number>(w_m, flow_data.gamma);
-            const auto pressure_p = calculate_pressure<dim, number>(w_p, flow_data.gamma);
+            const auto pressure_m = calculate_pressure<dim, number>(w_m, flow_data);
+            const auto pressure_p = calculate_pressure<dim, number>(w_p, flow_data);
 
             const auto speed_of_sound_m = std::sqrt(flow_data.gamma * pressure_m / w_m[0]);
             const auto speed_of_sound_p = std::sqrt(flow_data.gamma * pressure_p / w_p[0]);

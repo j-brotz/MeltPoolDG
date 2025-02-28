@@ -17,6 +17,7 @@
 
 namespace MeltPoolDG::Flow
 {
+  struct CompressibleFlowData;
   /**
    * Struct providing type aliases that might be useful in the compressible flow implementations.
    */
@@ -65,22 +66,6 @@ namespace MeltPoolDG::Flow
       const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
       const CompressibleFlowTypes::ConservedVariablesGradType<dim, number>
         &grad_conserved_variables);
-
-  /**
-   * Calculate the pressure from the conserved variables and their gradients by computing
-   * p = (γ-1)*(ρE - 0.5*ρ*||u||^2).
-   *
-   * @param conserved_variables Current values of the conserved variables.
-   * @param gamma Heat capacity ratio.
-   *
-   * @return Pressure resulting from the values of the conserved variables.
-   */
-  template <int dim, typename number>
-  inline DEAL_II_ALWAYS_INLINE //
-    dealii::VectorizedArray<number>
-    calculate_pressure(
-      const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
-      number                                                            gamma);
 
   /**
    * Calculate the gradient of the temperature from the conserved variables and their gradients by
@@ -269,20 +254,6 @@ namespace MeltPoolDG::Flow
           inverse_density * (grad_rho_velocity[d][e] - velocity[d] * grad_rho[e]);
 
     return grad_velocity;
-  }
-
-
-  template <int dim, typename number>
-  inline DEAL_II_ALWAYS_INLINE //
-    dealii::VectorizedArray<number>
-    calculate_pressure(
-      const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
-      number                                                            gamma)
-  {
-    const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> velocity =
-      calculate_velocity<dim, number>(conserved_variables);
-    return (gamma - 1.) * (conserved_variables[dim + 1] -
-                           conserved_variables[0] * 0.5 * scalar_product(velocity, velocity));
   }
 
   template <int dim, typename number>

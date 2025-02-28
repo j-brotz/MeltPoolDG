@@ -181,7 +181,9 @@ namespace MeltPoolDG::Multiphase
           mesh_classifier.reclassify();
 
           // compute quadrature
-          NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>> mapping_info_cell(
+          NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>> mapping_info_cell_liquid(
+            generic_data_out.get_mapping(), update_values | update_JxW_values);
+          NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>> mapping_info_cell_gas(
             generic_data_out.get_mapping(), update_values | update_JxW_values);
 
           hp::QCollection<1> q_collection((dealii::QGauss<1>(fe_degree + 1)));
@@ -189,74 +191,95 @@ namespace MeltPoolDG::Multiphase
                                                                              level_set_dof_handler,
                                                                              level_set);
 
-          auto physical = [&](const typename DoFHandler<dim>::active_cell_iterator &i) {
+          auto physical_liquid = [&](const typename DoFHandler<dim>::active_cell_iterator &i) {
             return (mesh_classifier.location_to_level_set(i) ==
                     NonMatching::LocationToLevelSet::intersected) or
                    (mesh_classifier.location_to_level_set(i) ==
                     NonMatching::LocationToLevelSet::
                       outside /*active phase has positive level-set*/);
           };
+          auto physical_gas = [&](const typename DoFHandler<dim>::active_cell_iterator &i) {
+            return (mesh_classifier.location_to_level_set(i) ==
+                    NonMatching::LocationToLevelSet::intersected) or
+                   (mesh_classifier.location_to_level_set(i) ==
+                    NonMatching::LocationToLevelSet::
+                      inside /*active phase has positive level-set*/);
+          };
 
-          const auto physical_active_cell_iterators =
-            dof_handler.active_cell_iterators() | physical;
+          const auto physical_active_cell_iterators_liquid =
+            dof_handler.active_cell_iterators() | physical_liquid;
+          const auto physical_active_cell_iterators_gas =
+            dof_handler.active_cell_iterators() | physical_gas;
 
-          std::vector<Quadrature<dim>> quad_vec_cell;
+          std::vector<Quadrature<dim>> quad_vec_cell_liquid;
+          std::vector<Quadrature<dim>> quad_vec_cell_gas;
 
           unsigned int n_active_cells = std::distance(dof_handler.active_cell_iterators().begin(),
                                                       dof_handler.active_cell_iterators().end());
 
-          for (const auto &cell : physical_active_cell_iterators)
+          for (const auto &cell : physical_active_cell_iterators_liquid)
             {
               quadrature_generator.generate(cell);
               // active phase has positive level-set
-              quad_vec_cell.push_back(quadrature_generator.get_outside_quadrature());
+              quad_vec_cell_liquid.push_back(quadrature_generator.get_outside_quadrature());
             }
 
-          mapping_info_cell.reinit_cells(physical_active_cell_iterators,
-                                         quad_vec_cell,
+          for (const auto &cell : physical_active_cell_iterators_gas)
+            {
+              quadrature_generator.generate(cell);
+              // active phase has negative level-set
+              quad_vec_cell_gas.push_back(quadrature_generator.get_inside_quadrature());
+            }
+
+          mapping_info_cell_liquid.reinit_cells(physical_active_cell_iterators_liquid,
+                                         quad_vec_cell_liquid,
                                          n_active_cells);
 
-          // cell-loop for error-norm computation
-          FEPointEvaluation<dim + 2, dim, dim, VectorizedArray<number>> fe_point_eval(
-            mapping_info_cell, fe_point_temp);
+          mapping_info_cell_gas.reinit_cells(physical_active_cell_iterators_gas,
+                                         quad_vec_cell_gas,
+                                         n_active_cells);
 
-          for (const auto &cell : dof_handler.active_cell_iterators())
-            {
-              if (cell->is_artificial() or cell->is_ghost() or !physical(cell))
-                continue;
+          FEPointEvaluation<dim + 2, dim, dim, VectorizedArray<number>> fe_point_eval_liquid(
+            mapping_info_cell_liquid, fe_point_temp);
+          FEPointEvaluation<dim + 2, dim, dim, VectorizedArray<number>> fe_point_eval_gas(
+            mapping_info_cell_gas, fe_point_temp);
 
-              std::vector<double> solution_values_in(cell->get_fe().dofs_per_cell);
+          auto compute_error_norm = [&](auto &fe_point_eval, auto &physical_domain) {
+            for (const auto &cell : dof_handler.active_cell_iterators())
+              {
+                if (cell->is_artificial() or cell->is_ghost() or !physical_domain(cell))
+                  continue;
 
-              cell->get_dof_values(dof_vector,
-                                   solution_values_in.begin(),
-                                   solution_values_in.end());
+                std::vector<double> solution_values_in(cell->get_fe().dofs_per_cell);
+                cell->get_dof_values(dof_vector, solution_values_in.begin(), solution_values_in.end());
 
-              fe_point_eval.reinit(cell->active_cell_index());
-              fe_point_eval.evaluate(solution_values_in, EvaluationFlags::values);
+                fe_point_eval.reinit(cell->active_cell_index());
+                fe_point_eval.evaluate(solution_values_in, EvaluationFlags::values);
 
-              VectorizedArray<number> local_errors_squared[3] = {};
+                VectorizedArray<number> local_errors_squared[3] = {};
 
-              for (const unsigned int q : fe_point_eval.quadrature_point_indices())
-                {
-                  const auto error =
-                    VectorTools::evaluate_function_at_vectorized_points<dim, number, dim + 2>(
-                      reference_function, fe_point_eval.quadrature_point(q)) -
-                    fe_point_eval.get_value(q);
+                for (const unsigned int q : fe_point_eval.quadrature_point_indices())
+                  {
+                    const auto error = VectorTools::evaluate_function_at_vectorized_points<dim, number, dim + 2>(
+                                          reference_function, fe_point_eval.quadrature_point(q)) -
+                                        fe_point_eval.get_value(q);
 
-                  const auto JxW          = fe_point_eval.JxW(q);
-                  local_errors_squared[0] = error[0] * error[0] * JxW;
+                    const auto JxW = fe_point_eval.JxW(q);
+                    local_errors_squared[0] = error[0] * error[0] * JxW;
 
-                  for (unsigned int d = 0; d < dim; ++d)
-                    local_errors_squared[1] = (error[d + 1] * error[d + 1]) * JxW;
-                  local_errors_squared[2] = (error[dim + 1] * error[dim + 1]) * JxW;
+                    for (unsigned int d = 0; d < dim; ++d)
+                      local_errors_squared[1] = (error[d + 1] * error[d + 1]) * JxW;
+                    local_errors_squared[2] = (error[dim + 1] * error[dim + 1]) * JxW;
 
-                  for (unsigned int v = 0;
-                       v < fe_point_eval.n_active_entries_per_quadrature_batch(q);
-                       ++v)
-                    for (unsigned int d = 0; d < 3; ++d)
-                      errors_squared[d] += local_errors_squared[d][v];
-                }
-            }
+                    for (unsigned int v = 0; v < fe_point_eval.n_active_entries_per_quadrature_batch(q); ++v)
+                      for (unsigned int d = 0; d < 3; ++d)
+                        errors_squared[d] += local_errors_squared[d][v];
+                  }
+              }
+          };
+
+          compute_error_norm(fe_point_eval_liquid, physical_liquid);
+          compute_error_norm(fe_point_eval_gas, physical_gas);
         }
 
       Utilities::MPI::sum(errors_squared, MPI_COMM_WORLD, errors_squared);

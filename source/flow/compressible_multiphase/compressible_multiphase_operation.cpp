@@ -472,7 +472,7 @@ namespace MeltPoolDG::Multiphase
       const auto velocity =
         MeltPoolDG::Flow::calculate_velocity<dim, number>(conserved_variables);
       const auto pressure = MeltPoolDG::Flow::calculate_pressure<dim, number>(
-        conserved_variables, flow_scratch_data.flow_data.gamma);
+        conserved_variables, flow_scratch_data.flow_data);
 
       const Tensor<2, dim, VectorizedArray<number>>              inverse_jacobian = evaluator.inverse_jacobian(q);
       const auto              convective_speed = inverse_jacobian * velocity;
