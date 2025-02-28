@@ -1365,10 +1365,21 @@ namespace MeltPoolDG::MeltPool
             level_set_operation->get_level_set().reinit(dof_handler_ls.locally_owned_dofs(),
                                                         locally_relevant_dofs,
                                                         dof_handler_ls.get_communicator());
+
+            std::shared_ptr<dealii::Function<dim>> initial_level_set =
+              base_in->get_initial_condition("level_set", true /*is optional*/);
+            if (not initial_level_set)
+              initial_level_set =
+                base_in->get_initial_condition("signed_distance", true /*is optional*/);
+            AssertThrow(
+              initial_level_set,
+              ExcMessage(
+                "For the level set operation either a function for the initial level set or the "
+                "signed distance field must be provided. Abort ..."));
+
             dealii::VectorTools::interpolate(scratch_data->get_mapping(),
                                              dof_handler_ls,
-                                             *base_in->get_initial_condition("signed_distance",
-                                                                             false /*is optional*/),
+                                             *initial_level_set,
                                              level_set_operation->get_level_set());
           }
         heat_operation->distribute_dofs(dof_handler_heat);
