@@ -15,6 +15,7 @@
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <cmath>
+#include <functional>
 #include <vector>
 
 namespace MeltPoolDG::Flow
@@ -131,7 +132,12 @@ namespace MeltPoolDG::Flow
       UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
                                                             scratch_data.get_mapping());
 
-    const CutUtil::CutType cut_type = scratch_data.get_cut_type(temp_dof_idx);
+    const auto cut_type = std::invoke([&]() -> CutUtil::CutType {
+      if (temperature)
+        return scratch_data.get_cut_type(temp_dof_idx);
+      else
+        return CutUtil::CutType::not_cut;
+    });
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free,

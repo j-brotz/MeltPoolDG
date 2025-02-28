@@ -96,7 +96,7 @@ namespace MeltPoolDG::LevelSet
      */
     if (level_set_data.reinit.enable)
       {
-        if ((ls.reinit.implementation == "meltpooldg"))
+        if (ls.reinit.implementation == "meltpooldg")
           {
             reinit_operation =
               std::make_shared<ReinitializationOperation<dim>>(scratch_data,
@@ -275,7 +275,6 @@ namespace MeltPoolDG::LevelSet
     ScopedName         sc("init_time_advance");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
     advec_diff_operation->init_time_advance();
-    transform_level_set_to_smooth_heaviside();
 
     ready_for_time_advance = true;
   }
