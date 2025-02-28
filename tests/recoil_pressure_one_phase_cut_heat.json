@@ -112,9 +112,10 @@
       "n initial steps": "1",
       "max n steps": "1",
       "type": "olsson2007",
+      "implementation": "adaflo",
       "interface thickness parameter": {
-        "type": "absolute_value",
-        "val": "4e-5"
+        "type": "proportional_to_cell_size",
+        "val": "1.5"
       }
     },
     "curvature": {
