@@ -1,21 +1,45 @@
 #pragma once
-// deal-specific libraries
+
+#include <deal.II/base/conditional_ostream.h>
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
+#include <deal.II/base/mpi.h>
+#include <deal.II/base/mpi_remote_point_evaluation.h>
+#include <deal.II/base/parameter_handler.h>
+#include <deal.II/base/point.h>
+#include <deal.II/base/quadrature_lib.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/types.h>
+#include <deal.II/base/utilities.h>
+
+#include <deal.II/distributed/shared_tria.h>
+#include <deal.II/distributed/tria.h>
+
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/fe/fe_update_flags.h>
+#include <deal.II/fe/fe_values.h>
+#include <deal.II/fe/fe_values_extractors.h>
 
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/grid_tools_geometry.h>
+#include <deal.II/grid/tria.h>
 
-// MeltPoolDG
+#include <deal.II/numerics/vector_tools_evaluate.h>
+
+#include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/characteristic_numbers.hpp>
-#include <meltpooldg/utilities/material.hpp>
+#include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
-// c++
-#include <meltpooldg/core/parameters.hpp>
-
 #include <cmath>
+#include <fstream>
 #include <iostream>
+#include <memory>
+#include <vector>
+
 
 /**
  * This example is derived from
@@ -66,7 +90,6 @@
 
 namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
 {
-  using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
 
@@ -74,38 +97,40 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
   static constexpr double grad_T = 200;
 
   template <int dim>
-  class InitialValuesLS : public Function<dim>
+  class InitialValuesLS : public dealii::Function<dim>
   {
   public:
-    InitialValuesLS(const double eps)
-      : Function<dim>()
-      , distance_sphere(dim == 2 ? Point<dim>(0, 0) : Point<dim>(0, 0, 0), a)
+    InitialValuesLS(const double eps, const bool liquid_phase_outside)
+      : dealii::Function<dim>()
+      , distance_sphere(dim == 2 ? dealii::Point<dim>(0, 0) : dealii::Point<dim>(0, 0, 0), a)
       , eps(eps)
+      , factor(liquid_phase_outside ? 1.0 : -1.0)
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
       return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-        -distance_sphere.value(p), eps);
+        factor * distance_sphere.value(p), eps);
     }
 
   private:
-    const Functions::SignedDistance::Sphere<dim> distance_sphere;
-    const double                                 eps;
+    const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere;
+    const double                                         eps;
+    const double                                         factor;
   };
 
 
   template <int dim>
-  class InitialValuesTemperature : public Function<dim>
+  class InitialValuesTemperature : public dealii::Function<dim>
   {
   public:
     InitialValuesTemperature()
-      : Function<dim>()
+      : dealii::Function<dim>()
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
       return 290 + grad_T * (p[dim - 1] + 2 * a);
     }
@@ -121,7 +146,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     SimulationThermoCapillaryDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
       : MeltPoolCase<dim>(parameter_file, mpi_communicator)
     {
-      if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
+      if (dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
         file.open(this->parameters.output.directory + "/" +
                   this->parameters.output.paraview.filename +
                   "_droplet_velocity_over_time_normalized.csv");
@@ -138,60 +163,75 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
         velocity_reference, this->parameters.flow.surface_tension.surface_tension_coefficient);
     }
 
+    bool
+    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    {
+      prm.enter_subsection("simulation specific");
+      {
+        prm.add_parameter(
+          "liquid phase outside",
+          liquid_phase_outside,
+          "set this parameter to true to flip the level set and have the \"liquid\" phase outside the droplet.");
+      }
+      prm.leave_subsection();
+
+      return this->parameters.base.do_print_parameters;
+    }
+
     void
     create_spatial_discretization() override
     {
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
 #ifdef DEAL_II_WITH_METIS
-          this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
+          this->triangulation = std::make_shared<dealii::parallel::shared::Triangulation<dim>>(
             this->mpi_communicator,
-            (Triangulation<dim>::none),
+            dealii::Triangulation<dim>::none,
             false,
-            parallel::shared::Triangulation<dim>::Settings::partition_metis);
+            dealii::parallel::shared::Triangulation<dim>::Settings::partition_metis);
 #else
           AssertThrow(
             false,
-            ExcMessage(
+            dealii::ExcMessage(
               "Missing Metis support of the deal.II installation. "
               "Configure deal.II with -D DEAL_II_WITH_METIS='ON' to execute this example."));
 #endif
         }
       else
         {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+          this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+            this->mpi_communicator);
         }
 
-      if constexpr ((dim == 2) || (dim == 3))
+      if constexpr (dim == 2 or dim == 3)
         {
           // create mesh
-          const Point<dim> bottom_left =
-            (dim == 2) ? Point<dim>(x_min, x_min) : Point<dim>(x_min, x_min, x_min);
-          const Point<dim> top_right =
-            (dim == 2) ? Point<dim>(x_max, x_max) : Point<dim>(x_max, x_max, x_max);
+          const dealii::Point<dim> bottom_left =
+            dim == 2 ? dealii::Point<dim>(x_min, x_min) : dealii::Point<dim>(x_min, x_min, x_min);
+          const dealii::Point<dim> top_right =
+            dim == 2 ? dealii::Point<dim>(x_max, x_max) : dealii::Point<dim>(x_max, x_max, x_max);
 
           if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
             {
               // create mesh
               std::vector<unsigned int> subdivisions(
-                dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
+                dim, 5 * dealii::Utilities::pow(2, this->parameters.base.global_refinements));
               subdivisions[dim - 1] *= 2;
 
-              GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
-                                                                       subdivisions,
-                                                                       bottom_left,
-                                                                       top_right);
+              dealii::GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
+                                                                               subdivisions,
+                                                                               bottom_left,
+                                                                               top_right);
             }
           else
             {
-              GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
+              dealii::GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
               this->triangulation->refine_global(this->parameters.base.global_refinements);
             }
         }
       else
         {
-          AssertThrow(false, ExcNotImplemented());
+          AssertThrow(false, dealii::ExcNotImplemented());
         }
     }
 
@@ -202,10 +242,10 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
        *  create a pair of (boundary_id, dirichlet_function)
        */
 
-      const types::boundary_id lower_bc = 1;
-      const types::boundary_id upper_bc = 2;
-      const types::boundary_id left_bc  = 3;
-      const types::boundary_id right_bc = 4;
+      const dealii::types::boundary_id lower_bc = 1;
+      const dealii::types::boundary_id upper_bc = 2;
+      const dealii::types::boundary_id left_bc  = 3;
+      const dealii::types::boundary_id right_bc = 4;
 
       this->attach_boundary_condition(lower_bc, "no_slip", "navier_stokes_u");
       this->attach_boundary_condition(upper_bc, "no_slip", "navier_stokes_u");
@@ -224,45 +264,47 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
         {
           for (const auto &cell : this->triangulation->cell_iterators())
             for (const auto &face : cell->face_iterators())
-              if ((face->at_boundary()))
-                {
-                  if (face->center()[1] == x_min)
-                    face->set_boundary_id(lower_bc);
-                  else if (face->center()[1] == x_max)
-                    face->set_boundary_id(upper_bc);
-                  else if (face->center()[0] == x_min)
-                    face->set_boundary_id(left_bc);
-                  else if (face->center()[0] == x_max)
-                    face->set_boundary_id(right_bc);
-                }
+              {
+                if (not face->at_boundary())
+                  continue;
+                if (face->center()[1] == x_min)
+                  face->set_boundary_id(lower_bc);
+                else if (face->center()[1] == x_max)
+                  face->set_boundary_id(upper_bc);
+                else if (face->center()[0] == x_min)
+                  face->set_boundary_id(left_bc);
+                else if (face->center()[0] == x_max)
+                  face->set_boundary_id(right_bc);
+              }
         }
       else if constexpr (dim == 3)
         {
-          const types::boundary_id front_bc = 5;
-          const types::boundary_id back_bc  = 6;
+          const dealii::types::boundary_id front_bc = 5;
+          const dealii::types::boundary_id back_bc  = 6;
           this->attach_boundary_condition(front_bc, "symmetry", "navier_stokes_u");
           this->attach_boundary_condition(back_bc, "symmetry", "navier_stokes_u");
           for (const auto &cell : this->triangulation->cell_iterators())
             for (const auto &face : cell->face_iterators())
-              if ((face->at_boundary()))
-                {
-                  if (face->center()[1] == x_min)
-                    face->set_boundary_id(lower_bc);
-                  else if (face->center()[1] == x_max)
-                    face->set_boundary_id(upper_bc);
-                  else if (face->center()[0] == x_min)
-                    face->set_boundary_id(left_bc);
-                  else if (face->center()[0] == x_max)
-                    face->set_boundary_id(right_bc);
-                  else if (face->center()[2] == x_min)
-                    face->set_boundary_id(back_bc);
-                  else if (face->center()[2] == x_max)
-                    face->set_boundary_id(front_bc);
-                }
+              {
+                if (not face->at_boundary())
+                  continue;
+                if (face->center()[1] == x_min)
+                  face->set_boundary_id(lower_bc);
+                else if (face->center()[1] == x_max)
+                  face->set_boundary_id(upper_bc);
+                else if (face->center()[0] == x_min)
+                  face->set_boundary_id(left_bc);
+                else if (face->center()[0] == x_max)
+                  face->set_boundary_id(right_bc);
+                else if (face->center()[2] == x_min)
+                  face->set_boundary_id(back_bc);
+                else if (face->center()[2] == x_max)
+                  face->set_boundary_id(front_bc);
+              }
         }
       else
         {
-          AssertThrow(false, ExcNotImplemented());
+          AssertThrow(false, dealii::ExcNotImplemented());
         }
     }
 
@@ -270,12 +312,14 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     set_field_conditions() final
     {
       const double eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
-        GridTools::minimal_cell_diameter(*this->triangulation) /
+        dealii::GridTools::minimal_cell_diameter(*this->triangulation) /
         this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
 
-      this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(eps), "level_set");
-      this->attach_initial_condition(
-        std::shared_ptr<Function<dim>>(new Functions::ZeroFunction<dim>(dim)), "navier_stokes_u");
+      this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(eps,
+                                                                            liquid_phase_outside),
+                                     "level_set");
+      this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(dim),
+                                     "navier_stokes_u");
       this->attach_initial_condition(std::make_shared<InitialValuesTemperature<dim>>(),
                                      "heat_transfer");
     }
@@ -287,34 +331,37 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
         {
           if constexpr (dim > 1)
             {
-              dealii::ConditionalOStream pcout(
-                std::cout, Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0);
+              dealii::ConditionalOStream pcout(std::cout,
+                                               dealii::Utilities::MPI::this_mpi_process(
+                                                 this->mpi_communicator) == 0 and
+                                                 this->parameters.base.verbosity_level > 0);
 
-              Point<dim> center_of_mass;
+              dealii::Point<dim> center_of_mass;
 
               double average_velocity = 0.0;
               double area_of_phase    = 0.0;
 
-              FEValues<dim> level_set_eval(
+              dealii::FEValues<dim> level_set_eval(
                 generic_data_out.get_mapping(),
                 generic_data_out.get_dof_handler("level_set").get_fe(),
-                QGauss<dim>(generic_data_out.get_dof_handler("level_set").get_fe().tensor_degree() +
-                            1),
-                update_quadrature_points | update_JxW_values | update_values);
+                dealii::QGauss<dim>(
+                  generic_data_out.get_dof_handler("level_set").get_fe().tensor_degree() + 1),
+                dealii::update_quadrature_points | dealii::update_JxW_values |
+                  dealii::update_values);
 
-              const FEValuesExtractors::Vector velocities(0);
-              FEValues<dim>                    vel_eval(
+              const dealii::FEValuesExtractors::Vector velocities(0);
+              dealii::FEValues<dim>                    vel_eval(
                 generic_data_out.get_mapping(),
                 generic_data_out.get_dof_handler("velocity").get_fe(),
-                QGauss<dim>(generic_data_out.get_dof_handler("level_set").get_fe().tensor_degree() +
-                            1),
-                update_values);
+                dealii::QGauss<dim>(
+                  generic_data_out.get_dof_handler("level_set").get_fe().tensor_degree() + 1),
+                dealii::update_values);
 
-              std::vector<double>         ls_at_q(level_set_eval.n_quadrature_points);
-              std::vector<Tensor<1, dim>> vel_at_q(level_set_eval.n_quadrature_points,
-                                                   Tensor<1, dim>());
+              std::vector<double>                 ls_at_q(level_set_eval.n_quadrature_points);
+              std::vector<dealii::Tensor<1, dim>> vel_at_q(level_set_eval.n_quadrature_points,
+                                                           dealii::Tensor<1, dim>());
 
-              typename DoFHandler<dim>::active_cell_iterator vel_cell =
+              typename dealii::DoFHandler<dim>::active_cell_iterator vel_cell =
                 generic_data_out.get_dof_handler("velocity").begin_active();
 
               for (const auto &cell :
@@ -348,15 +395,16 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
               /*
                * area of the phase
                */
-              double global_area = Utilities::MPI::sum(area_of_phase, this->mpi_communicator);
+              double global_area =
+                dealii::Utilities::MPI::sum(area_of_phase, this->mpi_communicator);
 
               /*
                * centroid position
                */
-              Point<dim> global_center_of_mass;
+              dealii::Point<dim> global_center_of_mass;
               for (unsigned int d = 0; d < dim; ++d)
                 global_center_of_mass[d] =
-                  Utilities::MPI::sum(center_of_mass[d], this->mpi_communicator);
+                  dealii::Utilities::MPI::sum(center_of_mass[d], this->mpi_communicator);
 
               global_center_of_mass /= global_area;
 
@@ -364,19 +412,19 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
                * average velocity
                */
               double global_average_velocity =
-                Utilities::MPI::sum(average_velocity, this->mpi_communicator);
+                dealii::Utilities::MPI::sum(average_velocity, this->mpi_communicator);
               global_average_velocity /= global_area;
 
               /*
                * velocity measured at centroid
                */
-              Utilities::MPI::RemotePointEvaluation<dim, dim> cache;
-              std::vector<Tensor<1, dim>>                     velocity_of_center =
-                VectorTools::point_values<dim>(generic_data_out.get_mapping(),
-                                               generic_data_out.get_dof_handler("velocity"),
-                                               generic_data_out.get_vector("velocity"),
-                                               {global_center_of_mass},
-                                               cache);
+              dealii::Utilities::MPI::RemotePointEvaluation<dim, dim> cache;
+              std::vector<dealii::Tensor<1, dim>>                     velocity_of_center =
+                dealii::VectorTools::point_values<dim>(generic_data_out.get_mapping(),
+                                                       generic_data_out.get_dof_handler("velocity"),
+                                                       generic_data_out.get_vector("velocity"),
+                                                       {global_center_of_mass},
+                                                       cache);
 
               pcout << "---------------------------------------------" << std::endl;
               pcout << "    user defined postprocessing" << std::endl;
@@ -419,6 +467,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     double       reynolds_number;
     double       mach_number;
     double       capillary_number;
+    bool         liquid_phase_outside = false;
     // postprocessing
     mutable std::ofstream file;
     mutable bool          print_once = true;
