@@ -15,7 +15,7 @@ namespace MeltPoolDG::Flow
     , convective_terms(flow_scratch_data.flow_data)
     , viscous_terms(flow_scratch_data.flow_data)
   {
-    AssertThrow(flow_scratch_data.flow_data.dynamic_viscosity > 0,
+    AssertThrow(flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0,
                 dealii::ExcMessage(
                   "Using the imex scheme for viscous compressible flows is inefficient. Please use "
                   "either the full explicit or implicit schemes."));
@@ -210,7 +210,7 @@ namespace MeltPoolDG::Flow
         delta_w_m,
         grad_w_m,
         grad_delta_w_m,
-        flow_scratch_data.flow_data.gamma);
+        flow_scratch_data.flow_data.material_data_gas_phase.gamma);
 
     ConservedVariablesGradType numerical_flux =
       viscous_terms.calculate_jacobian_viscous_numerical_flux(
@@ -348,7 +348,7 @@ namespace MeltPoolDG::Flow
                 phi.boundary_id(),
                 w_m,
                 grad_w_m,
-                flow_scratch_data.flow_data.gamma);
+                flow_scratch_data.flow_data.material_data_gas_phase.gamma);
 
             auto flux = convective_terms.calculate_convective_numerical_flux(w_m, w_p, normal);
 
@@ -641,7 +641,7 @@ namespace MeltPoolDG::Flow
                 phi.boundary_id(),
                 w_m,
                 grad_w_m,
-                flow_scratch_data.flow_data.gamma);
+                flow_scratch_data.flow_data.material_data_gas_phase.gamma);
 
             ConservedVariablesType flux = viscous_terms.calculate_viscous_numerical_flux(
               w_m, w_p, grad_w_m, grad_w_p, normal, penalty_parameter);

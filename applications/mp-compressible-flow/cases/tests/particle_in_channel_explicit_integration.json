@@ -24,6 +24,9 @@
     "time integration": {
       "type": "LSRK_stage_5_order_4"
     },
+    "material data gas phase": {
+      "equation of state": "ideal_gas"
+    },
     "fe": {
       "degree": "2",
       "type": "FE_DGQ"

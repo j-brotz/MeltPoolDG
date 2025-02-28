@@ -20,7 +20,6 @@
     }
   },
   "compressible navier stokes": {
-    "dynamic viscosity": 0.0,
     "numerical flux type": "lax_friedrichs_modified",
     "jacobian type": "exact",
     "time integration": {
@@ -32,6 +31,10 @@
       "nlsolve": {
         "residual tolerance": 1e-10
       }
+    },
+    "material data gas phase": {
+      "dynamic viscosity": 0.0,
+      "equation of state": "ideal_gas"
     },
     "fe": {
       "degree": "2",

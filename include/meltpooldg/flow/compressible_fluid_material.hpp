@@ -20,11 +20,11 @@ namespace MeltPoolDG::Flow
 
       number gamma;
       if (is_gas_phase)
-        gamma = flow_data.gamma;
+        gamma = flow_data.material_data_gas_phase.gamma;
       else
-        gamma = flow_data.gamma_2;
+        gamma = flow_data.material_data_liquid_phase.gamma;
 
-      switch (flow_data.equation_of_state)
+      switch (flow_data.material_data_gas_phase.equation_of_state)
         {
           case EOS::ideal_gas: {
             return (gamma - 1.) * (conserved_variables[dim + 1] -
@@ -33,28 +33,28 @@ namespace MeltPoolDG::Flow
           case EOS::stiffened_gas: {
             number p_inf;
             if (is_gas_phase)
-              p_inf = flow_data.p_inf;
+              p_inf = flow_data.material_data_gas_phase.eos_parameters.p_inf;
             else
-              p_inf = flow_data.p_inf_2;
+              p_inf = flow_data.material_data_liquid_phase.eos_parameters.p_inf;
             return (gamma - 1.) * (conserved_variables[dim + 1] -
                              conserved_variables[0] * 0.5 * scalar_product(velocity, velocity))-gamma * p_inf;
           }
           case EOS::noble_abel_stiffend_gas: {
             number p_inf;
             if (is_gas_phase)
-              p_inf = flow_data.p_inf;
+              p_inf = flow_data.material_data_gas_phase.eos_parameters.p_inf;
             else
-              p_inf = flow_data.p_inf_2;
+              p_inf = flow_data.material_data_liquid_phase.eos_parameters.p_inf;
             number b;
             if (is_gas_phase)
-              b = flow_data.b;
+              b = flow_data.material_data_gas_phase.eos_parameters.b;
             else
-              b = flow_data.b_2;
+              b = flow_data.material_data_liquid_phase.eos_parameters.b;
             number q;
             if (is_gas_phase)
-              q = flow_data.q;
+              q = flow_data.material_data_gas_phase.eos_parameters.q;
             else
-              q = flow_data.q_2;
+              q = flow_data.material_data_liquid_phase.eos_parameters.q;
             return (gamma - 1.) * (conserved_variables[dim + 1] -
                              conserved_variables[0] * 0.5 * scalar_product(velocity, velocity)-q)*(gamma-1.)/(1./conserved_variables[0] * b)-gamma * p_inf;
           }
@@ -72,8 +72,8 @@ namespace MeltPoolDG::Flow
       &grad_conserved_variables,
       const CompressibleFlowData &flow_data)
     {
-      const number gamma = is_gas_phase ?flow_data.gamma
-                                    : flow_data.gamma_2;
+      const number gamma = is_gas_phase ?flow_data.material_data_gas_phase.gamma
+                                    : flow_data.material_data_liquid_phase.gamma;
       const number specific_gas_constant = is_gas_phase ? flow_data.specific_gas_constant
                                     : flow_data.specific_gas_constant_2;
 
@@ -101,7 +101,7 @@ namespace MeltPoolDG::Flow
       const auto pressure = calculate_pressure(conserved_variables);
 
       const auto speed_of_sound =
-        std::sqrt(flow_data.gamma * pressure / conserved_variables[0]);
+        std::sqrt(flow_data.material_data_gas_phase.gamma * pressure / conserved_variables[0]);
 
       return speed_of_sound;
     }*/

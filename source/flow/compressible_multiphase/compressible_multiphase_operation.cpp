@@ -145,10 +145,10 @@ namespace MeltPoolDG::Multiphase
     };
 
     const number viscous_time_step_limit_liquid = compute_viscous_time_step_limit(
-        flow_scratch_data.flow_data.dynamic_viscosity, min_density.first);
+        flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity, min_density.first);
 
     const number viscous_time_step_limit_gas = compute_viscous_time_step_limit(
-        flow_scratch_data.flow_data.dynamic_viscosity_2, min_density.second);
+        flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity, min_density.second);
 
     const number viscous_time_step_limit = std::min(viscous_time_step_limit_liquid,viscous_time_step_limit_gas);
 
@@ -481,7 +481,7 @@ namespace MeltPoolDG::Multiphase
         convective_limit = std::max(convective_limit, std::abs(convective_speed[d]));
 
       const auto speed_of_sound =
-        std::sqrt(flow_scratch_data.flow_data.gamma * pressure / conserved_variables[0]);
+        std::sqrt(flow_scratch_data.flow_data.material_data_gas_phase.gamma * pressure / conserved_variables[0]);
 
       Tensor<1, dim, VectorizedArray<number>> eigenvector;
       for (unsigned int d = 0; d < dim; ++d)

@@ -20,8 +20,6 @@
     }
   },
   "compressible navier stokes": {
-    "dynamic viscosity": "0.00002",
-    "dynamic viscosity 2": "0.00002",
     "numerical flux type": "lax_friedrichs_modified",
     "courant number": "0.1",
     "viscous courant number": "0.05",
@@ -43,6 +41,12 @@
         "rel tolerance": "1e-20",
         "abs tolerance": "1e-20"
       }
+    },
+    "material data gas phase": {
+      "dynamic viscosity": "0.00002"
+    },
+    "material data liquid phase": {
+      "dynamic viscosity": "0.00002"
     },
     "fe": {
       "degree": "1",

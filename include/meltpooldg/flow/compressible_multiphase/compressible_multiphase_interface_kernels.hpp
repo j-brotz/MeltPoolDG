@@ -73,13 +73,13 @@ namespace MeltPoolDG::Multiphase
     const VectorizedArray<double> delta_q = 0.;
     auto tmp_6 = (u_m[dim+1] * u_m[1] / u_m[0] - u_p[dim+1] * u_m[1] / u_m[0] ) - flow_data.m_dot_evap * (u_m[dim+1]/u_m[0] - u_p[dim+1]/u_p[0]) + delta_q;
     auto tmp_7 = u_m[dim+1] * vel_m + (MeltPoolDG::Flow::calculate_pressure<dim,Number,true>(u_m, flow_data) - tau_m_tmp) * vel_m -
-      flow_data.thermal_conductivity * MeltPoolDG::Flow::calculate_grad_T<dim>(u_m, grad_u_m, flow_data.gamma_2, flow_data.specific_gas_constant);
+      flow_data.material_data_gas_phase.thermal_conductivity * MeltPoolDG::Flow::calculate_grad_T<dim>(u_m, grad_u_m, flow_data.material_data_liquid_phase.gamma, flow_data.material_data_gas_phase.specific_gas_constant);
     tmp_7 *= omega_2;
     tmp_7 += (u_p[dim+1] * vel_p + (MeltPoolDG::Flow::calculate_pressure<dim,Number, false>(u_p, flow_data) - tau_p_tmp) * vel_p -
-      flow_data.thermal_conductivity_2 * MeltPoolDG::Flow::calculate_grad_T<dim>(u_p, grad_u_p, flow_data.gamma_2, flow_data.specific_gas_constant_2)) * omega_1;
+      flow_data.material_data_liquid_phase.thermal_conductivity * MeltPoolDG::Flow::calculate_grad_T<dim>(u_p, grad_u_p, flow_data.material_data_liquid_phase.gamma, flow_data.material_data_liquid_phase.specific_gas_constant)) * omega_1;
 
     // penalty approach for temperature_2 constraint
-    const auto temperature_p = (u_p[dim+1] - 0.5 * u_p[0] * vel_p * vel_p) / (flow_data.specific_gas_constant_2/(flow_data.gamma_2 - 1.)*u_p[0]);
+    const auto temperature_p = (u_p[dim+1] - 0.5 * u_p[0] * vel_p * vel_p) / (flow_data.material_data_liquid_phase.specific_gas_constant/(flow_data.material_data_liquid_phase.gamma - 1.)*u_p[0]);
     auto tmp_8 = flow_data.temperature_constraint_penalty_factor * (temperature_p - 293.15);
 
     ConservedVariablesType total_flux_m;

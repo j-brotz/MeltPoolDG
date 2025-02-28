@@ -10,6 +10,7 @@
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/flow/compressible_fluid_material_data.hpp>
 #include <string>
+#include <meltpooldg/utilities/numbers.hpp>
 
 namespace MeltPoolDG::Flow
 {
@@ -22,12 +23,6 @@ namespace MeltPoolDG::Flow
   BETTER_ENUM(LinearizedConvectiveFluxJumpType, char, analytic, lambda_fd, complete_fd);
 
   BETTER_ENUM(JacobianType, char, exact, finite_difference);
-
-  BETTER_ENUM(EquationOfState,
-              char,
-              ideal_gas,
-              stiffened_ideal_gas,
-              noble_abel_stiffend_gas)
 
   BETTER_ENUM(InterfaceNumericalMethod,
               char,
@@ -48,44 +43,7 @@ namespace MeltPoolDG::Flow
     // only relevant for two-phase case
     CompressibleFluidMaterialPhaseData<double> material_data_liquid_phase;
 
-    //TODO: introduce material subgroup
-
-    // ratio of specific heat (specific heat at constant pressure divided by
-    // specific heat at constant volume)
-    double gamma = 1.4;
-    double gamma_2 = 1.4;
-
-    // dynamic viscosity (SI: kg/(m s))
-    double dynamic_viscosity = 1.0 / 1600; // set to zero to deactivate viscous effects
-    double dynamic_viscosity_2 = 1.0 / 1600;
-
-    // specific gas constant (SI: J/(kg K))
-    double specific_gas_constant = 287.1;
-    double specific_gas_constant_2 = 287.1;
-
-    // thermal conductivity (SI: W/(m K))
-    double thermal_conductivity =
-      dynamic_viscosity * gamma * specific_gas_constant / (gamma - 1.) * 1 / 0.71;
-    double thermal_conductivity_2 =
-      dynamic_viscosity_2 * gamma_2 * specific_gas_constant_2 / (gamma_2 - 1.) * 1 / 0.71;
-
-    // reference density for interior penalty
-    double reference_density = 1.0;
-    double reference_density_2 = 1.0;
-
-    double p_inf = 0.;
-    double p_inf_2 = 0.;
-
-    double q = 0.;
-    double q_2 = 0.;
-
-    double b = 0.;
-    double b_2 = 0.;
-
-    // equation of state
-    EquationOfState equation_of_state = EquationOfState::ideal_gas;
-    EquationOfState equation_of_state_2 = EquationOfState::ideal_gas;
-
+    //TODO: template type number
     // evaporation mass flux
     double m_dot_evap = 0.;
 
@@ -152,26 +110,8 @@ namespace MeltPoolDG::Flow
       {
         fe.add_parameters(prm);
         time_integrator.add_parameters(prm);
-        prm.add_parameter("gamma", gamma, "Ratio of specific heat (c_p/c_v).");
-        prm.add_parameter("gamma 2", gamma_2, "Ratio of specific heat (c_p/c_v).");
-        prm.add_parameter("dynamic viscosity", dynamic_viscosity, "Dynamic viscosity.");
-        prm.add_parameter("dynamic viscosity 2", dynamic_viscosity_2, "Dynamic viscosity.");
-        prm.add_parameter("specific gas constant", specific_gas_constant, "Specific gas constant.");
-        prm.add_parameter("specific gas constant 2", specific_gas_constant_2, "Specific gas constant.");
-        prm.add_parameter("thermal conductivity", thermal_conductivity, "Thermal conductivity.");
-        prm.add_parameter("thermal conductivity 2", thermal_conductivity_2, "Thermal conductivity.");
-        prm.add_parameter("reference density",
-                          reference_density,
-                          "Reference density for computing the interior penalty factor.");
-        prm.add_parameter("reference density 2",
-                          reference_density_2,
-                          "Reference density for computing the interior penalty factor.");
-        prm.add_parameter("equation of state",
-                          equation_of_state,
-                          "Equation of state for phase 1.");
-        prm.add_parameter("equation of state 2",
-                          equation_of_state_2,
-                          "Equation of state for phase 2.");
+        material_data_gas_phase.add_parameters(prm, true /*is_gas_phase*/);
+        material_data_liquid_phase.add_parameters(prm, false /*is_gas_phase*/);
         prm.add_parameter("evaporation mass flux", m_dot_evap, "Evaporation mass flux.");
         prm.add_parameter("interface numerical method", interface_numerical_method, "Numerical method for enforcing interface jump conditions.");
         prm.add_parameter("density constraint penalty factor", density_constraint_penalty_factor, "Density constraint penalty factor.");
@@ -245,10 +185,37 @@ namespace MeltPoolDG::Flow
       // For physical consistency, adjust thermal conductivity based on the user-defined dynamic
       // viscosity, gamma and specific gas constant. The Prandtl number = 0.71 is currently set
       // constant.
-      thermal_conductivity =
-        dynamic_viscosity * gamma * specific_gas_constant / (gamma - 1.) * 1. / 0.71;
-      thermal_conductivity_2 =
-        dynamic_viscosity_2 * gamma_2 * specific_gas_constant_2 / (gamma_2 - 1.) * 1. / 0.71;
+      material_data_gas_phase.thermal_conductivity =
+        material_data_gas_phase.dynamic_viscosity * material_data_gas_phase.gamma * material_data_gas_phase.specific_gas_constant / (material_data_gas_phase.gamma - 1.) * 1. / 0.71;
+      if (cut.two_phase)
+        material_data_liquid_phase.thermal_conductivity =
+          material_data_liquid_phase.dynamic_viscosity * material_data_liquid_phase.gamma * material_data_liquid_phase.specific_gas_constant / (material_data_liquid_phase.gamma - 1.) * 1. / 0.71;
+
+      // Ensure that parameters are set for advanced EOS
+      if (material_data_gas_phase.equation_of_state == EOS::stiffened_gas)
+        AssertThrow(!dealii::numbers::is_invalid(material_data_gas_phase.eos_parameters.p_inf),
+                  dealii::ExcMessage(
+                    "Inverse time step size must be set to compute the rhs vector."));
+      else if (material_data_gas_phase.equation_of_state == EOS::noble_abel_stiffend_gas)
+        AssertThrow(!dealii::numbers::is_invalid(material_data_gas_phase.eos_parameters.p_inf) &&
+                    !dealii::numbers::is_invalid(material_data_gas_phase.eos_parameters.b) &&
+                    !dealii::numbers::is_invalid(material_data_gas_phase.eos_parameters.q),
+                  dealii::ExcMessage(
+                    "Inverse time step size must be set to compute the rhs vector."));
+
+      if (cut.two_phase)
+        {
+          if (material_data_liquid_phase.equation_of_state == EOS::stiffened_gas)
+            AssertThrow(!dealii::numbers::is_invalid(material_data_liquid_phase.eos_parameters.p_inf),
+                      dealii::ExcMessage(
+                        "Inverse time step size must be set to compute the rhs vector."));
+          else if (material_data_liquid_phase.equation_of_state == EOS::noble_abel_stiffend_gas)
+            AssertThrow(!dealii::numbers::is_invalid(material_data_liquid_phase.eos_parameters.p_inf) &&
+                    !dealii::numbers::is_invalid(material_data_liquid_phase.eos_parameters.b) &&
+                    !dealii::numbers::is_invalid(material_data_liquid_phase.eos_parameters.q),
+                      dealii::ExcMessage(
+                        "Inverse time step size must be set to compute the rhs vector."));
+        }
     }
   };
 } // namespace MeltPoolDG::Flow

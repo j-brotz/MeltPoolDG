@@ -187,7 +187,7 @@ namespace MeltPoolDG::Flow
               convective_limit = std::max(convective_limit, std::abs(convective_speed[d]));
 
             const auto speed_of_sound =
-              std::sqrt(flow_scratch_data.flow_data.gamma * pressure / conserved_variables[0]);
+              std::sqrt(flow_scratch_data.flow_data.material_data_gas_phase.gamma * pressure / conserved_variables[0]);
 
             Tensor<1, dim, VectorizedArray<number>> eigenvector;
             for (unsigned int d = 0; d < dim; ++d)
@@ -235,11 +235,11 @@ namespace MeltPoolDG::Flow
     AssertThrow(min_density > 0, ExcMessage("Minimum density must not be zero."));
 
     const double viscous_time_step_limit =
-      (flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+      (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
         flow_scratch_data.flow_data.viscous_courant_number /
           std::pow(flow_scratch_data.scratch_data.get_degree(flow_scratch_data.dof_idx), 3) *
           std::pow(flow_scratch_data.scratch_data.get_min_cell_size(), 2) * min_density /
-          flow_scratch_data.flow_data.dynamic_viscosity :
+          flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity :
         std::numeric_limits<number>::max();
 
     const double convective_time_step_limit = compute_convective_time_step_limit();

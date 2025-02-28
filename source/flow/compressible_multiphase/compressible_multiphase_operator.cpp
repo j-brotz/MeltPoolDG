@@ -31,13 +31,13 @@ namespace MeltPoolDG::Multiphase
     , fe_point_temp(FE_DGQ<dim>(flow_scratch_data.flow_data.fe.degree), dim + 2)
     , n_dofs_per_cell(fe_point_temp.dofs_per_cell)
   {
-    const double q_1 = 2.*flow_scratch_data.flow_data.dynamic_viscosity+
-              flow_scratch_data.flow_data.thermal_conductivity/flow_scratch_data.flow_data.specific_gas_constant*
-              (flow_scratch_data.flow_data.gamma-1.);
+    const double q_1 = 2.*flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity+
+              flow_scratch_data.flow_data.material_data_gas_phase.thermal_conductivity/flow_scratch_data.flow_data.material_data_gas_phase.specific_gas_constant*
+              (flow_scratch_data.flow_data.material_data_gas_phase.gamma-1.);
 
-    const double q_2 = 2.*flow_scratch_data.flow_data.dynamic_viscosity_2+
-              flow_scratch_data.flow_data.thermal_conductivity_2/flow_scratch_data.flow_data.specific_gas_constant_2*
-              (flow_scratch_data.flow_data.gamma_2-1.);
+    const double q_2 = 2.*flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity+
+              flow_scratch_data.flow_data.material_data_liquid_phase.thermal_conductivity/flow_scratch_data.flow_data.material_data_liquid_phase.specific_gas_constant*
+              (flow_scratch_data.flow_data.material_data_liquid_phase.gamma-1.);
 
     alpha_1 = q_1/(q_1+q_2);
     alpha_2 = 1.-alpha_1;
@@ -167,7 +167,7 @@ namespace MeltPoolDG::Multiphase
               phi_liquid.reinit(cell);
               phi_liquid.gather_evaluate(src,
                                   EvaluationFlags::values |
-                                    ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                    ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                        EvaluationFlags::gradients :
                                        EvaluationFlags::nothing));
               process_cell.template operator()<false>(phi_liquid);
@@ -181,7 +181,7 @@ namespace MeltPoolDG::Multiphase
               phi_gas.reinit(cell);
               phi_gas.gather_evaluate(src,
                                   EvaluationFlags::values |
-                                    ((flow_scratch_data.flow_data.dynamic_viscosity_2 > 0) ?
+                                    ((flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity > 0) ?
                                        EvaluationFlags::gradients :
                                        EvaluationFlags::nothing));
               process_cell.template operator()<true>(phi_gas);
@@ -221,7 +221,7 @@ namespace MeltPoolDG::Multiphase
                 phi_point_liquid.evaluate(
                   StridedArrayView<const number, n_lanes>(&phi_liquid_intersected.begin_dof_values()[0][lane],
                                                           n_dofs_per_cell),
-                  EvaluationFlags::values | ((flow_scratch_data.flow_data.dynamic_viscosity_2 > 0) ?
+                  EvaluationFlags::values | ((flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity > 0) ?
                                                EvaluationFlags::gradients :
                                                EvaluationFlags::nothing));
 
@@ -236,7 +236,7 @@ namespace MeltPoolDG::Multiphase
                 phi_point_gas.evaluate(
                   StridedArrayView<const number, n_lanes>(&phi_gas_intersected.begin_dof_values()[0][lane],
                                                           n_dofs_per_cell),
-                  EvaluationFlags::values | ((flow_scratch_data.flow_data.dynamic_viscosity_2 > 0) ?
+                  EvaluationFlags::values | ((flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity > 0) ?
                                                EvaluationFlags::gradients :
                                                EvaluationFlags::nothing));
 
@@ -295,8 +295,8 @@ namespace MeltPoolDG::Multiphase
                             w_liquid,
                             w_gas,
                             normal,
-                            flow_scratch_data.flow_data.gamma,
-                            flow_scratch_data.flow_data.gamma_2,
+                            flow_scratch_data.flow_data.material_data_gas_phase.gamma,
+                            flow_scratch_data.flow_data.material_data_liquid_phase.gamma,
                             flow_scratch_data.flow_data.m_dot_evap,
                             convective_terms,
                             flow_scratch_data.flow_data);
@@ -306,11 +306,11 @@ namespace MeltPoolDG::Multiphase
                         velocity_interface = std::get<2>(riemann_flux_data)[0];
 
                         const auto penalty_parameter =
-                        (flow_scratch_data.flow_data.dynamic_viscosity_2 > 0) ?
+                        (flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity > 0) ?
                           phi_liquid_intersected.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
                           0.;
 
-                        if (flow_scratch_data.flow_data.dynamic_viscosity > 0)
+                        if (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0)
                           {
                             auto viscous_interface_flux_data = calculate_viscous_interface_flux<dim,number,ConservedVariablesType,ConservedVariablesGradType>(
                               w_liquid,
@@ -319,10 +319,10 @@ namespace MeltPoolDG::Multiphase
                               grad_w_gas,
                               phi_point_surface_liquid.normal_vector(q),
                               penalty_parameter,
-                              flow_scratch_data.flow_data.gamma,
-                              flow_scratch_data.flow_data.gamma_2,
-                              flow_scratch_data.flow_data.specific_gas_constant,
-                              flow_scratch_data.flow_data.specific_gas_constant_2,
+                              flow_scratch_data.flow_data.material_data_gas_phase.gamma,
+                              flow_scratch_data.flow_data.material_data_liquid_phase.gamma,
+                              flow_scratch_data.flow_data.material_data_gas_phase.specific_gas_constant,
+                              flow_scratch_data.flow_data.material_data_liquid_phase.specific_gas_constant,
                               alpha_1,
                               alpha_2,
                               flow_scratch_data.flow_data.m_dot_evap,
@@ -339,17 +339,17 @@ namespace MeltPoolDG::Multiphase
                         phi_point_surface_liquid.submit_value(-flux_m, q);
                         phi_point_surface_gas.submit_value(-flux_p, q);
 
-                        if (flow_scratch_data.flow_data.dynamic_viscosity > 0)
+                        if (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0)
                           {
                             auto numerical_flux_gradient =
                               calculate_viscous_interface_flux_gradient<dim,number,ConservedVariablesType,ConservedVariablesGradType>(
                                 w_liquid,
                                 w_gas,
                                 normal,
-                                flow_scratch_data.flow_data.gamma,
-                                flow_scratch_data.flow_data.gamma_2,
-                                flow_scratch_data.flow_data.specific_gas_constant,
-                                flow_scratch_data.flow_data.specific_gas_constant_2,
+                                flow_scratch_data.flow_data.material_data_gas_phase.gamma,
+                                flow_scratch_data.flow_data.material_data_liquid_phase.gamma,
+                                flow_scratch_data.flow_data.material_data_gas_phase.specific_gas_constant,
+                                flow_scratch_data.flow_data.material_data_liquid_phase.specific_gas_constant,
                                 alpha_1,
                           	    alpha_2,
                           	    flow_scratch_data.flow_data.m_dot_evap,
@@ -425,13 +425,13 @@ namespace MeltPoolDG::Multiphase
             phi_p.reinit(face);
 
             auto eval_flags = EvaluationFlags::values |
-                              (flow_scratch_data.flow_data.dynamic_viscosity_2 > 0 ?
+                              (flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity > 0 ?
                                EvaluationFlags::gradients : EvaluationFlags::nothing);
 
             phi_m.gather_evaluate(src, eval_flags);
             phi_p.gather_evaluate(src, eval_flags);
 
-            const auto penalty_parameter = (flow_scratch_data.flow_data.dynamic_viscosity_2 > 0) ?
+            const auto penalty_parameter = (flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity > 0) ?
                 0.5 * std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
                                phi_p.read_cell_data(flow_scratch_data.interior_penalty_parameter)) : 0.;
 
@@ -440,11 +440,11 @@ namespace MeltPoolDG::Multiphase
                     rhs_face_integral_kernel<dim, number, FEFaceIntegrator<dim, dim + 2, number>, is_gas_phase>(
                         phi_m, phi_p, q, penalty_parameter,
                         convective_terms, viscous_terms,
-                        flow_scratch_data.flow_data.dynamic_viscosity_2);
+                        flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity);
 
                 phi_m.submit_value(flux_m, q);
                 phi_p.submit_value(flux_p, q);
-                if (flow_scratch_data.flow_data.dynamic_viscosity_2 > 0) {
+                if (flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity > 0) {
                     phi_m.submit_gradient(grad_flux_m, q);
                     phi_p.submit_gradient(grad_flux_p, q);
                 }
@@ -468,11 +468,11 @@ namespace MeltPoolDG::Multiphase
             phi_p_int.read_dof_values(src);
 
             phi_m_int.project_to_face(EvaluationFlags::values |
-                                  ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                  ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                      EvaluationFlags::gradients :
                                      EvaluationFlags::nothing));
             phi_p_int.project_to_face(EvaluationFlags::values |
-                                  ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                  ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                      EvaluationFlags::gradients :
                                      EvaluationFlags::nothing));
 
@@ -492,19 +492,19 @@ namespace MeltPoolDG::Multiphase
 
                 phi_point_m.evaluate_in_face(
                   &phi_m_int.get_scratch_data().begin()[0][lane],
-                  EvaluationFlags::values | ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                  EvaluationFlags::values | ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                                EvaluationFlags::gradients :
                                                EvaluationFlags::nothing));
 
                 phi_point_p.evaluate_in_face(
                   &phi_p_int.get_scratch_data().begin()[0][lane],
-                  EvaluationFlags::values | ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                  EvaluationFlags::values | ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                                EvaluationFlags::gradients :
                                                EvaluationFlags::nothing));
 
                 // factor 0.5 for interior face
                 const dealii::VectorizedArray<number> penalty_parameter =
-                  (flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                  (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                     0.5 *
                       std::max(phi_m_int.read_cell_data(flow_scratch_data.interior_penalty_parameter),
                                phi_p_int.read_cell_data(flow_scratch_data.interior_penalty_parameter)) :
@@ -523,11 +523,11 @@ namespace MeltPoolDG::Multiphase
                       penalty_parameter,
                       convective_terms,
                       viscous_terms,
-                      flow_scratch_data.flow_data.dynamic_viscosity);
+                      flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity);
 
                     phi_point_m.submit_value(flux_m, q);
                     phi_point_p.submit_value(flux_p, q);
-                    if (flow_scratch_data.flow_data.dynamic_viscosity > 0)
+                    if (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0)
                       {
                         phi_point_m.submit_gradient(grad_flux_m, q);
                         phi_point_p.submit_gradient(grad_flux_p, q);
@@ -536,25 +536,25 @@ namespace MeltPoolDG::Multiphase
 
                 phi_point_m.integrate_in_face(
                   &phi_m_int.get_scratch_data().begin()[0][lane],
-                  EvaluationFlags::values | ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                  EvaluationFlags::values | ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                                EvaluationFlags::gradients :
                                                EvaluationFlags::nothing));
 
                 phi_point_p.integrate_in_face(
                   &phi_p_int.get_scratch_data().begin()[0][lane],
-                  EvaluationFlags::values | ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                  EvaluationFlags::values | ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                                EvaluationFlags::gradients :
                                                EvaluationFlags::nothing));
               }
 
             phi_m_int.collect_from_face(EvaluationFlags::values |
-                                      ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                      ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                          EvaluationFlags::gradients :
                                          EvaluationFlags::nothing),
                                     phi_m_int.begin_dof_values());
 
             phi_p_int.collect_from_face(EvaluationFlags::values |
-                                      ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                      ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                          EvaluationFlags::gradients :
                                          EvaluationFlags::nothing),
                                     phi_p_int.begin_dof_values());
@@ -614,7 +614,7 @@ namespace MeltPoolDG::Multiphase
                                 dealii::EvaluationFlags::gradients);
 
           const dealii::VectorizedArray<number> penalty_parameter =
-            (flow_scratch_data.flow_data.dynamic_viscosity_2 > 0) ?
+            (flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity > 0) ?
               phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
               0.;
 
@@ -633,12 +633,12 @@ namespace MeltPoolDG::Multiphase
                   viscous_terms,
                   flow_scratch_data);
               phi_m.submit_value(flux_m, q);
-              if (flow_scratch_data.flow_data.dynamic_viscosity_2 > 0)
+              if (flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity > 0)
                 phi_m.submit_gradient(grad_flux_m, q);
             }
 
           phi_m.integrate_scatter(EvaluationFlags::values |
-                                  ((flow_scratch_data.flow_data.dynamic_viscosity_2 > 0) ?
+                                  ((flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity > 0) ?
                                      EvaluationFlags::gradients :
                                      EvaluationFlags::nothing),
                                 dst);
@@ -673,7 +673,7 @@ namespace MeltPoolDG::Multiphase
                                                        EvaluationFlags::gradients);
 
                 const dealii::VectorizedArray<number> penalty_parameter =
-                  (flow_scratch_data.flow_data.dynamic_viscosity_2 > 0) ?
+                  (flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity > 0) ?
                     phi_m_int.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
                     0.;
 
@@ -693,7 +693,7 @@ namespace MeltPoolDG::Multiphase
                       flow_scratch_data);
 
                     phi_point_m_int.submit_value(flux_m, q);
-                    if (flow_scratch_data.flow_data.dynamic_viscosity_2 > 0)
+                    if (flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity > 0)
                       phi_point_m_int.submit_gradient(grad_flux_m, q);
                   }
 

@@ -266,19 +266,19 @@ namespace MeltPoolDG::Flow
         phi_p.reinit(face);
         phi_p.gather_evaluate(src,
                               EvaluationFlags::values |
-                                ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                    EvaluationFlags::gradients :
                                    EvaluationFlags::nothing));
 
         phi_m.reinit(face);
         phi_m.gather_evaluate(src,
                               EvaluationFlags::values |
-                                ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                    EvaluationFlags::gradients :
                                    EvaluationFlags::nothing));
 
         const VectorizedArray<number> penalty_parameter =
-          (flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+          (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
             std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
                      phi_p.read_cell_data(flow_scratch_data.interior_penalty_parameter)) :
             0.;
@@ -293,7 +293,7 @@ namespace MeltPoolDG::Flow
                 penalty_parameter,
                 convective_terms,
                 viscous_terms,
-                flow_scratch_data.flow_data.dynamic_viscosity);
+                flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity);
 
 
             // since we approach the face only once, we submit the contributions
@@ -305,12 +305,12 @@ namespace MeltPoolDG::Flow
           }
 
         phi_p.integrate_scatter(EvaluationFlags::values |
-                                  ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                  ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                      EvaluationFlags::gradients :
                                      EvaluationFlags::nothing),
                                 dst);
         phi_m.integrate_scatter(EvaluationFlags::values |
-                                  ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                  ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                      EvaluationFlags::gradients :
                                      EvaluationFlags::nothing),
                                 dst);
@@ -336,7 +336,7 @@ namespace MeltPoolDG::Flow
         phi.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
         const VectorizedArray<number> penalty_parameter =
-          (flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+          (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
             phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
             0.;
 
@@ -358,7 +358,7 @@ namespace MeltPoolDG::Flow
             phi.submit_gradient(residual_rhs_scaling_factor * grad_flux_m, q);
           }
         phi.integrate_scatter(EvaluationFlags::values |
-                                ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                    EvaluationFlags::gradients :
                                    EvaluationFlags::nothing),
                               dst);
@@ -441,28 +441,28 @@ namespace MeltPoolDG::Flow
         phi_p.reinit(face);
         phi_p.gather_evaluate(flow_scratch_data.solution_history.get_current_solution(),
                               EvaluationFlags::values |
-                                ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                    EvaluationFlags::gradients :
                                    EvaluationFlags::nothing));
 
         phi_m.reinit(face);
         phi_m.gather_evaluate(flow_scratch_data.solution_history.get_current_solution(),
                               EvaluationFlags::values |
-                                ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                    EvaluationFlags::gradients :
                                    EvaluationFlags::nothing));
 
         delta_phi_p.reinit(face);
         delta_phi_p.gather_evaluate(src,
                                     EvaluationFlags::values |
-                                      ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                      ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                          EvaluationFlags::gradients :
                                          EvaluationFlags::nothing));
 
         delta_phi_m.reinit(face);
         delta_phi_m.gather_evaluate(src,
                                     EvaluationFlags::values |
-                                      ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                      ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                          EvaluationFlags::gradients :
                                          EvaluationFlags::nothing));
 
@@ -473,12 +473,12 @@ namespace MeltPoolDG::Flow
           }
 
         delta_phi_p.integrate_scatter(EvaluationFlags::values |
-                                        ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                        ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                            EvaluationFlags::gradients :
                                            EvaluationFlags::nothing),
                                       dst);
         delta_phi_m.integrate_scatter(EvaluationFlags::values |
-                                        ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                        ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                            EvaluationFlags::gradients :
                                            EvaluationFlags::nothing),
                                       dst);
@@ -520,7 +520,7 @@ namespace MeltPoolDG::Flow
           }
 
         delta_phi_m.integrate_scatter(EvaluationFlags::values |
-                                        ((flow_scratch_data.flow_data.dynamic_viscosity > 0) ?
+                                        ((flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0) ?
                                            EvaluationFlags::gradients :
                                            EvaluationFlags::nothing),
                                       dst);
@@ -557,7 +557,7 @@ namespace MeltPoolDG::Flow
       -1.0 * convective_terms.calculate_jacobian_convective_flux(w_q, delta_w_q);
 
     // viscous flux
-    if (flow_scratch_data.flow_data.dynamic_viscosity > 0)
+    if (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0)
       {
         const auto grad_w_q       = phi.get_gradient(q_index);
         const auto grad_delta_w_q = delta_phi.get_gradient(q_index);
@@ -586,7 +586,7 @@ namespace MeltPoolDG::Flow
                                                                     delta_w_q,
                                                                     phi_m.normal_vector(q_index));
 
-    if (flow_scratch_data.flow_data.dynamic_viscosity > 0)
+    if (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0)
       numerical_flux -= viscous_terms.calculate_jacobian_viscous_numerical_flux(
         {phi_m.get_value(q_index), phi_p.get_value(q_index)},
         {phi_m.get_gradient(q_index), phi_p.get_gradient(q_index)},
@@ -601,7 +601,7 @@ namespace MeltPoolDG::Flow
         flux[i] = numerical_flux[i] * phi_m.normal_vector(q_index);
       }
 
-    if (flow_scratch_data.flow_data.dynamic_viscosity > 0)
+    if (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0)
       {
         const ConservedVariablesGradType jump =
           VectorTools::dyadic_product(phi_m.get_value(q_index) - phi_p.get_value(q_index),
@@ -649,14 +649,14 @@ namespace MeltPoolDG::Flow
         delta_w_m,
         grad_w_m,
         grad_delta_w_m,
-        flow_scratch_data.flow_data.gamma);
+        flow_scratch_data.flow_data.material_data_gas_phase.gamma);
 
     ConservedVariablesGradType numerical_flux =
       convective_terms.calculate_jacobian_convective_numerical_flux({w_m, w_p},
                                                                     {delta_w_m, delta_w_p},
                                                                     normal);
 
-    if (flow_scratch_data.flow_data.dynamic_viscosity > 0)
+    if (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0)
       numerical_flux -= viscous_terms.calculate_jacobian_viscous_numerical_flux(
         {w_m, w_p},
         {grad_w_m, grad_w_p},
@@ -670,7 +670,7 @@ namespace MeltPoolDG::Flow
         flux[i] = numerical_flux[i] * phi_m.normal_vector(q_index);
       }
 
-    if (flow_scratch_data.flow_data.dynamic_viscosity > 0)
+    if (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0)
       {
         const ConservedVariablesGradType jump =
           VectorTools::dyadic_product(w_m - w_p, phi_m.normal_vector(q_index));
