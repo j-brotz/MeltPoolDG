@@ -15,6 +15,7 @@
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/flow/compressible_fluid_material.hpp>
 
 #include <boost/math/constants/constants.hpp>
 
@@ -467,12 +468,10 @@ namespace MeltPoolDG::Multiphase
     number                                 convective_time_step_limit = 0.;
 
     // lambda function to compute convective time step limit at quadrature point level
-    auto compute_convective_time_step_limit_at_q = [&](auto &evaluator, unsigned int q, VectorizedArray<number> &local_max) {
+    auto compute_convective_time_step_limit_at_q = [&]<bool is_gas_phase>(auto &evaluator, unsigned int q, VectorizedArray<number> &local_max) {
       const auto conserved_variables = evaluator.get_value(q);
       const auto velocity =
         MeltPoolDG::Flow::calculate_velocity<dim, number>(conserved_variables);
-      const auto pressure = MeltPoolDG::Flow::calculate_pressure<dim, number>(
-        conserved_variables, flow_scratch_data.flow_data);
 
       const Tensor<2, dim, VectorizedArray<number>>              inverse_jacobian = evaluator.inverse_jacobian(q);
       const auto              convective_speed = inverse_jacobian * velocity;
@@ -480,8 +479,7 @@ namespace MeltPoolDG::Multiphase
       for (unsigned int d = 0; d < dim; ++d)
         convective_limit = std::max(convective_limit, std::abs(convective_speed[d]));
 
-      const auto speed_of_sound =
-        std::sqrt(flow_scratch_data.flow_data.material_data_gas_phase.gamma * pressure / conserved_variables[0]);
+      const auto speed_of_sound = MeltPoolDG::Flow::calculate_speed_of_sound<dim, number, is_gas_phase>(conserved_variables, flow_scratch_data.flow_data);
 
       Tensor<1, dim, VectorizedArray<number>> eigenvector;
       for (unsigned int d = 0; d < dim; ++d)
@@ -518,7 +516,7 @@ namespace MeltPoolDG::Multiphase
                                 EvaluationFlags::values);
             VectorizedArray<number> local_max = 0.;
             for (const unsigned int q : phi.quadrature_point_indices())
-              compute_convective_time_step_limit_at_q(phi,q,local_max);
+              compute_convective_time_step_limit_at_q.template operator()<false>(phi,q,local_max);
 
             for (unsigned int v = 0;
                  v < flow_scratch_data.scratch_data.get_matrix_free().n_active_entries_per_cell_batch(cell);
@@ -558,7 +556,7 @@ namespace MeltPoolDG::Multiphase
 
                 for (const unsigned int q : fe_point_eval.quadrature_point_indices())
                   {
-                    compute_convective_time_step_limit_at_q(fe_point_eval,q,local_max);
+                    compute_convective_time_step_limit_at_q.template operator()<false>(fe_point_eval,q,local_max);
 
                     for (unsigned int v = 0;
                          v < fe_point_eval.n_active_entries_per_quadrature_batch(q);
@@ -591,7 +589,7 @@ namespace MeltPoolDG::Multiphase
 
                 for (const unsigned int q : fe_point_eval_outside.quadrature_point_indices())
                   {
-                    compute_convective_time_step_limit_at_q(fe_point_eval_outside,q,local_max);
+                    compute_convective_time_step_limit_at_q.template operator()<true>(fe_point_eval_outside,q,local_max);
 
                     for (unsigned int v = 0;
                          v < fe_point_eval_outside.n_active_entries_per_quadrature_batch(q);
@@ -613,7 +611,7 @@ namespace MeltPoolDG::Multiphase
                                 EvaluationFlags::values);
             VectorizedArray<number> local_max = 0.;
             for (const unsigned int q : phi_outside.quadrature_point_indices())
-              compute_convective_time_step_limit_at_q(phi_outside,q,local_max);
+              compute_convective_time_step_limit_at_q.template operator()<true>(phi_outside,q,local_max);
 
             for (unsigned int v = 0;
                  v < flow_scratch_data.scratch_data.get_matrix_free().n_active_entries_per_cell_batch(cell);

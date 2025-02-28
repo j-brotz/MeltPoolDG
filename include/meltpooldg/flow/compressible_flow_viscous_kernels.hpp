@@ -38,6 +38,7 @@ namespace MeltPoolDG::Flow
      *
      * @return Viscous flux F_v(u, grad(u)).
      */
+    template <bool is_gas_phase = true>
     inline DEAL_II_ALWAYS_INLINE //
       ConservedVariablesGradType
       calculate_viscous_flux(const ConservedVariablesType     &conserved_variables,
@@ -175,6 +176,7 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim, typename number>
+  template <bool is_gas_phase>
   inline DEAL_II_ALWAYS_INLINE //
     auto
     CompressibleFlowViscousKernels<dim, number>::calculate_viscous_flux(
@@ -192,10 +194,9 @@ namespace MeltPoolDG::Flow
 
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> neg_heat_flux =
       flow_data.material_data_gas_phase.thermal_conductivity *
-      calculate_grad_T<dim, number>(conserved_variables,
+      calculate_grad_T<dim, number, is_gas_phase>(conserved_variables,
                                     grad_conserved_variables,
-                                    flow_data.material_data_gas_phase.gamma,
-                                    flow_data.material_data_gas_phase.specific_gas_constant);
+                                    flow_data);
 
     ConservedVariablesGradType flux;
     for (unsigned int d = 0; d < dim; ++d)

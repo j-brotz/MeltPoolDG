@@ -81,7 +81,7 @@ namespace MeltPoolDG::Flow
     if (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0)
       {
         const auto grad_w_q = evaluator.get_gradient(q);
-        flux -= viscous_terms.calculate_viscous_flux(w_q, grad_w_q);
+        flux -= viscous_terms.template calculate_viscous_flux<is_gas_phase>(w_q, grad_w_q);
       }
 
     dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>> forcing;

@@ -155,20 +155,23 @@ namespace MeltPoolDG::Flow
     switch (flow_data.numerical_flux_type)
       {
           case NumericalFluxType::lax_friedrichs_modified: {
-            const auto lambda =
-              0.5 * std::sqrt(std::max(velocity_p.norm_square() +
-                                         std::abs(flow_data.material_data_gas_phase.gamma * pressure_p * (1. / u_p[0])),
-                                       velocity_m.norm_square() +
-                                         std::abs(flow_data.material_data_gas_phase.gamma * pressure_m * (1. / u_m[0]))));
+            const auto sound_speed_p = calculate_speed_of_sound<dim, number, is_gas_phase>(u_p, flow_data);
+            const auto sound_speed_m = calculate_speed_of_sound<dim, number, is_gas_phase>(u_m, flow_data);
+
+            const auto sound_speed_p2 = sound_speed_p * sound_speed_p;
+            const auto sound_speed_m2 = sound_speed_m * sound_speed_m;
+
+            const auto lambda = 0.5 * std::sqrt(std::max(velocity_p.norm_square() + sound_speed_p2,
+                                             velocity_m.norm_square() + sound_speed_m2));
 
             return contract_average_tensor_with_normal(flux_m, flux_p, normal) +
                    0.5 * lambda * (u_m - u_p);
           }
           case NumericalFluxType::lax_friedrichs_exact: {
             const auto lambda = std::max(std::abs(velocity_p * normal) +
-                                           std::sqrt(flow_data.material_data_gas_phase.gamma * pressure_p * (1. / u_p[0])),
+                                           calculate_speed_of_sound<dim, number, is_gas_phase>(u_p, flow_data),
                                          std::abs(velocity_m * normal) +
-                                           std::sqrt(flow_data.material_data_gas_phase.gamma * pressure_m * (1. / u_m[0])));
+                                           calculate_speed_of_sound<dim, number, is_gas_phase>(u_m, flow_data));
 
             return contract_average_tensor_with_normal(flux_m, flux_p, normal) +
                    0.5 * lambda * (u_m - u_p);
