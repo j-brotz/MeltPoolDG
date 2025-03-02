@@ -52,6 +52,9 @@ namespace MeltPoolDG::Flow
    * @param q Index of the quadrature point.
    * @param constant_body_force Value of the body force. If the body force is not constant the
    * pointer must be set to nullptr.
+   * @param convective_terms Collection of convective term computations for the compressible Navier-Stokes equations.
+   * @param viscous_terms Collection of viscous term computations for the compressible Navier-Stokes equations.
+   * @param flow_scratch_data Struct providing the relevant data required by all compressible flow solvers.
    *
    * @return Tuple, containing the flux, weighted with the value of the test function, as first
    * argument, and the flux, weighted with the gradient of the test function, as second argument.
@@ -78,6 +81,7 @@ namespace MeltPoolDG::Flow
 
     auto flux = convective_terms.template calculate_convective_flux<is_gas_phase>(w_q);
 
+    // TODO: introduce a template parameter 'is_viscous'
     if (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0)
       {
         const auto grad_w_q = evaluator.get_gradient(q);
@@ -111,6 +115,9 @@ namespace MeltPoolDG::Flow
    * @param evaluator_p FE-evaluator object reinitialized on the current (outside) face batch.
    * @param q Index of the quadrature point.
    * @param penalty_parameter Value of the symmetric interior penalty parameter on the face.
+   * @param convective_terms Collection of convective term computations for the compressible Navier-Stokes equations.
+   * @param viscous_terms Collection of viscous term computations for the compressible Navier-Stokes equations.
+   * @param dynamic_viscosity Dynamic viscosity.
    *
    * @return Tuple, which containing the fluxes for the inside and outside faces, weighted with
    * the value of the test functions, as first two arguments, and the fluxes for the inside and
@@ -143,7 +150,7 @@ namespace MeltPoolDG::Flow
                                                            evaluator_m.normal_vector(q));
 
     if (dynamic_viscosity > 0)
-      numerical_flux -= viscous_terms.calculate_viscous_numerical_flux(evaluator_m.get_value(q),
+      numerical_flux -= viscous_terms.template calculate_viscous_numerical_flux<is_gas_phase>(evaluator_m.get_value(q),
                                                                        evaluator_p.get_value(q),
                                                                        evaluator_m.get_gradient(q),
                                                                        evaluator_p.get_gradient(q),
@@ -158,7 +165,7 @@ namespace MeltPoolDG::Flow
     if (dynamic_viscosity > 0)
       {
         viscous_numerical_flux =
-          viscous_terms.calculate_viscous_numerical_flux_gradient(evaluator_m.get_value(q),
+          viscous_terms.template calculate_viscous_numerical_flux_gradient<is_gas_phase>(evaluator_m.get_value(q),
                                                                   evaluator_p.get_value(q),
                                                                   evaluator_m.normal_vector(q));
       }
@@ -176,7 +183,11 @@ namespace MeltPoolDG::Flow
    *
    * @param evaluator_m FE-evaluator object reinitialized on the current (inner) face batch.
    * @param q Index of the quadrature point.
+   * @param boundary_id Boundary ID of the considered boundary face.
    * @param penalty_parameter Value of the symmetric interior penalty parameter on the face.
+   * @param convective_terms Collection of convective term computations for the compressible Navier-Stokes equations.
+   * @param viscous_terms Collection of viscous term computations for the compressible Navier-Stokes equations.
+   * @param flow_scratch_data Struct providing the relevant data required by all compressible flow solvers.
    *
    * @return Tuple, containing the flux for the boundary face, weighted with the value of the test
    * function, as first argument, and the flux for the boundary face, weighted with the gradient
@@ -205,6 +216,8 @@ namespace MeltPoolDG::Flow
     const auto normal   = evaluator_m.normal_vector(q);
     const auto grad_w_m = evaluator_m.get_gradient(q);
 
+    const number gamma = is_gas_phase ? flow_scratch_data.flow_data.material_data_gas_phase.gamma : flow_scratch_data.flow_data.material_data_liquid_phase.gamma;
+
     const auto [w_p, grad_w_p] =
       flow_scratch_data.boundary_conditions.get_boundary_face_value_and_gradient(
         evaluator_m.quadrature_point(q),
@@ -212,12 +225,12 @@ namespace MeltPoolDG::Flow
         boundary_id,
         w_m,
         grad_w_m,
-        flow_scratch_data.flow_data.material_data_gas_phase.gamma);
+        gamma);
 
     auto flux = convective_terms.template calculate_convective_numerical_flux<is_gas_phase>(w_m, w_p, normal);
 
     if (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0)
-      flux -= viscous_terms.calculate_viscous_numerical_flux(
+      flux -= viscous_terms.template calculate_viscous_numerical_flux<is_gas_phase>(
         w_m, w_p, grad_w_m, grad_w_p, normal, penalty_parameter);
 
     CompressibleFlowTypes::ConservedVariablesGradType<dim, number> numerical_flux_gradient;
@@ -225,7 +238,7 @@ namespace MeltPoolDG::Flow
     if (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0)
       {
         numerical_flux_gradient =
-          viscous_terms.calculate_viscous_numerical_flux_gradient(w_m, w_p, normal).first;
+          viscous_terms.template calculate_viscous_numerical_flux_gradient<is_gas_phase>(w_m, w_p, normal).first;
       }
 
     return {-flux, numerical_flux_gradient};

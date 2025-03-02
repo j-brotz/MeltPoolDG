@@ -14,7 +14,7 @@
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
-#include <meltpooldg/flow/compressible_fluid_material.hpp>
+#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 
 #include <algorithm>
 #include <cmath>

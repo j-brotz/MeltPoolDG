@@ -291,12 +291,10 @@ namespace MeltPoolDG::Multiphase
                         auto normal   = phi_point_surface_liquid.normal_vector(q);
 
                         auto riemann_flux_data =
-                          calculate_convective_interface_flux_HLLC<dim,number,ConservedVariablesType,ConservedVariablesGradType>(
+                          calculate_convective_interface_flux_HLLP0<dim,number,ConservedVariablesType,ConservedVariablesGradType>(
                             w_liquid,
                             w_gas,
                             normal,
-                            flow_scratch_data.flow_data.material_data_gas_phase.gamma,
-                            flow_scratch_data.flow_data.material_data_liquid_phase.gamma,
                             flow_scratch_data.flow_data.m_dot_evap,
                             convective_terms,
                             flow_scratch_data.flow_data);
@@ -304,11 +302,6 @@ namespace MeltPoolDG::Multiphase
                         auto flux_m = std::get<0>(riemann_flux_data);
                         auto flux_p = -std::get<1>(riemann_flux_data); // opposite normal direction for phase 2
                         velocity_interface = std::get<2>(riemann_flux_data)[0];
-
-                        const auto penalty_parameter =
-                        (flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity > 0) ?
-                          phi_liquid_intersected.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
-                          0.;
 
                         if (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0)
                           {
@@ -318,17 +311,10 @@ namespace MeltPoolDG::Multiphase
                               grad_w_liquid,
                               grad_w_gas,
                               phi_point_surface_liquid.normal_vector(q),
-                              penalty_parameter,
-                              flow_scratch_data.flow_data.material_data_gas_phase.gamma,
-                              flow_scratch_data.flow_data.material_data_liquid_phase.gamma,
-                              flow_scratch_data.flow_data.material_data_gas_phase.specific_gas_constant,
-                              flow_scratch_data.flow_data.material_data_liquid_phase.specific_gas_constant,
                               alpha_1,
                               alpha_2,
                               flow_scratch_data.flow_data.m_dot_evap,
                               flow_scratch_data.flow_data.symm_int_penalty_parameter_interface,
-                              0. /*p_inf phase 1*/,
-                              0. /*p_inf phase 2*/,
                               viscous_terms,
                               flow_scratch_data.flow_data);
 
@@ -346,15 +332,9 @@ namespace MeltPoolDG::Multiphase
                                 w_liquid,
                                 w_gas,
                                 normal,
-                                flow_scratch_data.flow_data.material_data_gas_phase.gamma,
-                                flow_scratch_data.flow_data.material_data_liquid_phase.gamma,
-                                flow_scratch_data.flow_data.material_data_gas_phase.specific_gas_constant,
-                                flow_scratch_data.flow_data.material_data_liquid_phase.specific_gas_constant,
                                 alpha_1,
                           	    alpha_2,
                           	    flow_scratch_data.flow_data.m_dot_evap,
-                          	    0. /*p_inf phase 1*/,
-                                0. /*p_inf phase 2*/,
                                 viscous_terms,
                                 flow_scratch_data.flow_data);
 

@@ -6,7 +6,7 @@
 
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
-#include <meltpooldg/flow/compressible_fluid_material.hpp>
+#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 
 namespace MeltPoolDG::Flow
 {
@@ -22,6 +22,7 @@ namespace MeltPoolDG::Flow
     /**
      * Calculate the convective flux F_c.
      *
+     * @tparam is_gas_phase Boolean variable to consider gas phase (true) or liquid phase (false)
      * @param conserved_variables Current values of the conserved variables.
      *
      * @return Convective flux.
@@ -34,6 +35,7 @@ namespace MeltPoolDG::Flow
     /**
      * Calculate the convective numerical flux F_c^*.
      *
+     * @tparam is_gas_phase Boolean variable to consider gas phase (true) or liquid phase (false)
      * @param u_m Current values of the conserved variables on the inner face.
      * @param u_p Current values of the conserved variables on the outer type.
      * @param normal Outer facing normal vector.
@@ -146,18 +148,15 @@ namespace MeltPoolDG::Flow
     const auto velocity_m = calculate_velocity<dim, number>(u_m);
     const auto velocity_p = calculate_velocity<dim, number>(u_p);
 
-    const auto pressure_m = calculate_pressure<dim, number, is_gas_phase>(u_m, flow_data);
-    const auto pressure_p = calculate_pressure<dim, number, is_gas_phase>(u_p, flow_data);
+    const auto flux_m = calculate_convective_flux<is_gas_phase>(u_m);
+    const auto flux_p = calculate_convective_flux<is_gas_phase>(u_p);
 
-    const auto flux_m = calculate_convective_flux(u_m);
-    const auto flux_p = calculate_convective_flux(u_p);
+    const auto sound_speed_p = calculate_speed_of_sound<dim, number, is_gas_phase>(u_p, flow_data);
+    const auto sound_speed_m = calculate_speed_of_sound<dim, number, is_gas_phase>(u_m, flow_data);
 
     switch (flow_data.numerical_flux_type)
       {
           case NumericalFluxType::lax_friedrichs_modified: {
-            const auto sound_speed_p = calculate_speed_of_sound<dim, number, is_gas_phase>(u_p, flow_data);
-            const auto sound_speed_m = calculate_speed_of_sound<dim, number, is_gas_phase>(u_m, flow_data);
-
             const auto sound_speed_p2 = sound_speed_p * sound_speed_p;
             const auto sound_speed_m2 = sound_speed_m * sound_speed_m;
 
@@ -168,10 +167,8 @@ namespace MeltPoolDG::Flow
                    0.5 * lambda * (u_m - u_p);
           }
           case NumericalFluxType::lax_friedrichs_exact: {
-            const auto lambda = std::max(std::abs(velocity_p * normal) +
-                                           calculate_speed_of_sound<dim, number, is_gas_phase>(u_p, flow_data),
-                                         std::abs(velocity_m * normal) +
-                                           calculate_speed_of_sound<dim, number, is_gas_phase>(u_m, flow_data));
+            const auto lambda = std::max(std::abs(velocity_p * normal) + sound_speed_p,
+                                         std::abs(velocity_m * normal) + sound_speed_m);
 
             return contract_average_tensor_with_normal(flux_m, flux_p, normal) +
                    0.5 * lambda * (u_m - u_p);
@@ -179,7 +176,7 @@ namespace MeltPoolDG::Flow
           case NumericalFluxType::harten_lax_vanleer: {
             const auto avg_velocity_normal = 0.5 * ((velocity_m + velocity_p) * normal);
             const auto avg_c               = std::sqrt(std::abs(
-              0.5 * flow_data.material_data_gas_phase.gamma * (pressure_p * (1. / u_p[0]) + pressure_m * (1. / u_m[0]))));
+              0.5 * (sound_speed_m+sound_speed_p)));
             const dealii::VectorizedArray<number> s_pos =
               std::max(VectorizedArray<number>(), avg_velocity_normal + avg_c);
             const dealii::VectorizedArray<number> s_neg =

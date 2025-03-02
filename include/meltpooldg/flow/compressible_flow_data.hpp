@@ -11,6 +11,7 @@
 #include <meltpooldg/flow/compressible_fluid_material_data.hpp>
 #include <string>
 #include <meltpooldg/utilities/numbers.hpp>
+#include <meltpooldg/time_integration/time_integrator_util.hpp>
 
 namespace MeltPoolDG::Flow
 {
@@ -40,11 +41,12 @@ namespace MeltPoolDG::Flow
     // gas phase material data
     CompressibleFluidMaterialPhaseData<double> material_data_gas_phase;
 
-    // only relevant for two-phase case
+    // fluid phase material data
+    // (only relevant for two-phase case)
     CompressibleFluidMaterialPhaseData<double> material_data_liquid_phase;
 
-    //TODO: template type number
     // evaporation mass flux
+    // (TODO: use Hertz-Knudsen theory and enable constant evaporation mass flux for testing)
     double m_dot_evap = 0.;
 
     // numerical method for interface jump enforcement
@@ -216,6 +218,13 @@ namespace MeltPoolDG::Flow
                       dealii::ExcMessage(
                         "Inverse time step size must be set to compute the rhs vector."));
         }
+
+      // Advanced EOS are currently only allowed for explicit time integration.
+      if (domain_representation_type=="fitted_mesh" && material_data_gas_phase.equation_of_state != EOS::ideal_gas)
+        AssertThrow(
+          !MeltPoolDG::time_integrator_scheme_is_explicit(time_integrator.integrator_type),
+          ExcMessage(
+            "Only the ideal gas EOS is allowed for implicit time integration."));
     }
   };
 } // namespace MeltPoolDG::Flow

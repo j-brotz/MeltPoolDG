@@ -68,27 +68,6 @@ namespace MeltPoolDG::Flow
         &grad_conserved_variables);
 
   /**
-   * Calculate the gradient of the temperature from the conserved variables and their gradients by
-   * computing grad(T) = (γ-1)/R * (grad(E) - grad(u)*u).
-   *
-   * @param conserved_variables Current values of the conserved variables.
-   * @param grad_conserved_variables Current gradient of the conserved variables.
-   * @param gamma Heat capacity ratio of the flow field.
-   * @param specific_gas_constant Specific gas constant of the flow field.
-   *
-   * @return Current gradient of the temperature field.
-   */
-  template <int dim, typename number>
-  inline DEAL_II_ALWAYS_INLINE //
-    dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
-    calculate_grad_T(
-      const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
-      const CompressibleFlowTypes::ConservedVariablesGradType<dim, number>
-            &grad_conserved_variables,
-      number gamma,
-      number specific_gas_constant);
-
-  /**
    * Contracts the given tensor of the gradient of conserved variables with the given normal
    * vector.
    *
@@ -254,30 +233,6 @@ namespace MeltPoolDG::Flow
           inverse_density * (grad_rho_velocity[d][e] - velocity[d] * grad_rho[e]);
 
     return grad_velocity;
-  }
-
-  template <int dim, typename number>
-  inline DEAL_II_ALWAYS_INLINE //
-    dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
-    calculate_grad_T(
-      const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
-      const CompressibleFlowTypes::ConservedVariablesGradType<dim, number>
-                  &grad_conserved_variables,
-      const number gamma,
-      const number specific_gas_constant)
-  {
-    const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> u =
-      calculate_velocity<dim, number>(conserved_variables);
-    const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> grad_u =
-      calculate_grad_velocity<dim, number>(conserved_variables, grad_conserved_variables);
-    const dealii::VectorizedArray<number> rho     = conserved_variables[0];
-    const dealii::VectorizedArray<number> inv_rho = dealii::VectorizedArray<number>(1.) / rho;
-    const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> grad_rho =
-      grad_conserved_variables[0];
-    const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> grad_E =
-      inv_rho *
-      (grad_conserved_variables[dim + 1] - inv_rho * conserved_variables[dim + 1] * grad_rho);
-    return (gamma - 1.0) / specific_gas_constant * (grad_E - grad_u * u);
   }
 
   template <int dim, typename number>

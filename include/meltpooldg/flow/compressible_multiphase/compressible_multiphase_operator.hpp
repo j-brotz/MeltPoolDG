@@ -7,7 +7,7 @@
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
-#include <meltpooldg/flow/compressible_fluid_material.hpp>
+#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 
 namespace MeltPoolDG::Multiphase
 {
@@ -18,11 +18,10 @@ namespace MeltPoolDG::Multiphase
     using MappingInfoType       = CutUtil::MappingInfoType<dim, number>;
     using MappingInfoVectorType = CutUtil::MappingInfoVectorType<dim, number>;
 
+   using ConservedVariablesType     = Flow::CompressibleFlowTypes::ConservedVariablesType<dim, number>;
+   using ConservedVariablesGradType = Flow::CompressibleFlowTypes::ConservedVariablesGradType<dim, number>;
+
   public:
-    using ConservedVariablesType     = Tensor<1, dim + 2, VectorizedArray<number>>;
-    using ConservedVariablesGradType = Tensor<1, dim + 2, Tensor<1, dim, VectorizedArray<number>>>;
-
-
     /**
      * Constructor.
      *
