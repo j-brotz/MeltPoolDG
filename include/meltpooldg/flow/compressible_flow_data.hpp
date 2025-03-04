@@ -48,6 +48,9 @@ namespace MeltPoolDG::Flow
     // reference density for interior penalty
     double reference_density = 1.0;
 
+    // use "dimension_based" or "dimensionless"
+    std::string equation_mode = "dimension_based";
+
     // numerical flux type for the convective flux
     NumericalFluxType numerical_flux_type = NumericalFluxType::lax_friedrichs_modified;
 
@@ -92,6 +95,24 @@ namespace MeltPoolDG::Flow
       CutStabilizationData<double> stabilization;
     } cut;
 
+    // Reference state for dimensionless programming
+    struct ReferenceFlowData
+    {
+      double density      = 0.;
+      double length_scale = 0.;
+      double velocity     = 0.;
+      double viscosity    = 0.;
+
+
+      double time_scale  = 0.;
+      double pressure    = 0.;
+      double energy      = 0.;
+      double temperature = 0.;
+
+      double prandtl_number  = 1.;
+      double reynolds_number = 1.;
+    } reference;
+
     void
     add_parameters(dealii::ParameterHandler &prm)
     {
@@ -106,6 +127,7 @@ namespace MeltPoolDG::Flow
         prm.add_parameter("reference density",
                           reference_density,
                           "Reference density for computing the interior penalty factor.");
+        prm.add_parameter("equation mode", equation_mode);
         prm.add_parameter(
           "linearization jump convective flux",
           linearization_jump_convective_flux,
@@ -145,6 +167,14 @@ namespace MeltPoolDG::Flow
           cut.stabilization.add_parameters(prm);
         }
         prm.leave_subsection();
+        prm.enter_subsection("reference state");
+        {
+          prm.add_parameter("reference density", reference.density);
+          prm.add_parameter("reference length scale", reference.length_scale);
+          prm.add_parameter("reference velocity", reference.velocity);
+          prm.add_parameter("reference viscosity", reference.viscosity);
+        }
+        prm.leave_subsection();
       }
       prm.leave_subsection();
     }
@@ -166,6 +196,16 @@ namespace MeltPoolDG::Flow
             time_integrator.integrator_type == TimeIntegratorSchemes::explicit_euler,
             ExcMessage(
               "The cut compressible flow solver only supports explicit Euler time integration."));
+        }
+
+      if (equation_mode == "dimensionless")
+        {
+          reference.reynolds_number =
+            reference.density * reference.length_scale * reference.velocity / reference.viscosity;
+          reference.prandtl_number = dynamic_viscosity * specific_gas_constant * gamma /
+                                     ((gamma - 1) * thermal_conductivity);
+          reference.pressure = reference.density * reference.velocity * reference.velocity;
+          reference.energy   = reference.pressure / reference.density;
         }
 
       // Synchronize verbosity with base verbosity if not set explicitly.

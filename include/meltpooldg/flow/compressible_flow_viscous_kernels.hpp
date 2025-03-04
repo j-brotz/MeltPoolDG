@@ -197,6 +197,16 @@ namespace MeltPoolDG::Flow
                                     flow_data.gamma,
                                     flow_data.specific_gas_constant);
 
+    number stress_tensor_prefactor = 1.;
+    number temperature_prefactor   = 1.;
+    if (flow_data.equation_mode == "dimensionless")
+      {
+        stress_tensor_prefactor = 1. / flow_data.reference.reynolds_number;
+        temperature_prefactor =
+          flow_data.gamma / (flow_data.reference.reynolds_number *
+                             flow_data.reference.prandtl_number * (flow_data.gamma - 1.));
+      }
+
     ConservedVariablesGradType flux;
     for (unsigned int d = 0; d < dim; ++d)
       {
@@ -205,13 +215,13 @@ namespace MeltPoolDG::Flow
 
         // momentum
         for (unsigned int e = 0; e < dim; ++e)
-          flux[e + 1][d] = viscous_stress[e][d];
+          flux[e + 1][d] = stress_tensor_prefactor * viscous_stress[e][d];
 
         // energy
-        flux[dim + 1][d] = neg_heat_flux[d];
+        flux[dim + 1][d] = temperature_prefactor * neg_heat_flux[d];
 
         for (unsigned int e = 0; e < dim; ++e)
-          flux[dim + 1][d] += velocity[e] * viscous_stress[d][e];
+          flux[dim + 1][d] += stress_tensor_prefactor * velocity[e] * viscous_stress[d][e];
       }
 
     return flux;

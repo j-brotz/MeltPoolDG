@@ -1,5 +1,7 @@
 #include "compressible_flow_problem.hpp"
 
+#include <deal.II/grid/grid_generator.h>
+
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/flow/compressible_flow_operation.hpp>
@@ -119,6 +121,22 @@ namespace MeltPoolDG::Flow
   void
   CompressibleFlowProblem<dim>::initialize()
   {
+    // make the dof handler for the output
+    std::invoke([&]() -> void {
+      triangulation_output = std::make_shared<parallel::distributed::Triangulation<dim>>(
+        simulation_case->mpi_communicator);
+
+      constexpr double factor = 0.0001;
+      dealii::GridGenerator::channel_with_cylinder(
+        *triangulation_output, factor * 0.03, 1, 0, true, factor);
+
+      triangulation_output->refine_global(simulation_case->parameters.base.global_refinements);
+
+      dof_handler_output.reinit(*triangulation_output);
+      FiniteElementUtils::distribute_dofs<dim, dim + 2>(simulation_case->parameters.flow.fe,
+                                                        dof_handler_output);
+    });
+
     // setup DoFHandler
     dof_handler.reinit(*simulation_case->triangulation);
     if (simulation_case->parameters.flow.domain_representation_type == "cut")
@@ -298,7 +316,66 @@ namespace MeltPoolDG::Flow
       return;
 
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
-      comp_flow_operation.attach_output_vectors(data_out);
+      std::vector<std::string> names;
+      names.emplace_back("density");
+      for (unsigned int d = 0; d < dim; ++d)
+        names.emplace_back("momentum");
+
+      names.emplace_back("energy");
+
+      if (simulation_case->parameters.flow.equation_mode == "dimensionless")
+        {
+          solution_output = comp_flow_operation.get_solution();
+          std::map<types::global_dof_index, Point<dim>> support_points =
+            DoFTools::map_dofs_to_support_points(data_out.get_mapping(), dof_handler);
+          for (const auto &cell : dof_handler.active_cell_iterators())
+            {
+              if (cell->is_artificial() or cell->is_ghost())
+                continue;
+              const unsigned int nodes_per_cell = cell->get_fe().dofs_per_cell / (dim + 2);
+              std::vector<types::global_dof_index> local_dof_indices(cell->get_fe().dofs_per_cell);
+              cell->get_dof_indices(local_dof_indices);
+
+              for (unsigned int i = 0; i < local_dof_indices.size(); ++i)
+                {
+                  switch (const unsigned int component = i / nodes_per_cell)
+                    {
+                        case 0: {
+                          solution_output[local_dof_indices[i]] *=
+                            simulation_case->parameters.flow.reference.density;
+                          break;
+                        }
+                        case dim + 1: {
+                          solution_output[local_dof_indices[i]] *=
+                            simulation_case->parameters.flow.reference.energy *
+                            simulation_case->parameters.flow.reference.density;
+                          break;
+                        }
+                        default: {
+                          Assert(component > 0 and component < dim + 1, dealii::ExcInternalError());
+                          solution_output[local_dof_indices[i]] *=
+                            simulation_case->parameters.flow.reference.velocity *
+                            simulation_case->parameters.flow.reference.density;
+                        }
+                    }
+                }
+            }
+        }
+
+      std::vector<DataComponentInterpretation::DataComponentInterpretation> interpretation;
+      interpretation.push_back(DataComponentInterpretation::component_is_scalar);
+      for (unsigned int d = 0; d < dim; ++d)
+        interpretation.push_back(DataComponentInterpretation::component_is_part_of_vector);
+      interpretation.push_back(DataComponentInterpretation::component_is_scalar);
+
+      data_out.add_data_vector(simulation_case->parameters.flow.equation_mode == "dimensionless" ?
+                                 dof_handler_output :
+                                 comp_flow_operation.get_dof_handler(),
+                               simulation_case->parameters.flow.equation_mode == "dimensionless" ?
+                                 solution_output :
+                                 comp_flow_operation.get_solution(),
+                               names,
+                               interpretation);
     };
 
     GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
