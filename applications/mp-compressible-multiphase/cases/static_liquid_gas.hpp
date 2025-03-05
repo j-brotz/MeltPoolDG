@@ -69,7 +69,7 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
         upper_right[d] = 0.;
 
       std::vector<unsigned int> subdivisions(dim, 1);
-      subdivisions[0] = 100;
+      subdivisions[0] = 20;
       for (unsigned int d = 1; d < dim; ++d)
         subdivisions[d] = 1;
 
@@ -106,7 +106,7 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       // set level-set function
       Point<dim> p;
       // avoid phase interface colliding with element face (bug in dealii has to be fixed)
-      p[0] = 0.1548467;
+      p[0] = 0.001447674;//0.1548467;
 
       dealii::Tensor<1, dim> normal;
       normal[0] = -1.;

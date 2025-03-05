@@ -5,11 +5,11 @@
     "dimension": "1",
     "verbosity level": "1",
     "do print parameters": "false",
-    "global refinements": "4"
+    "global refinements": "0"
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "0.00005"
+    "end time": "0.005"
   },
   "output": {
     "write frequency": "1",
@@ -21,8 +21,8 @@
   },
   "compressible navier stokes": {
     "numerical flux type": "lax_friedrichs_modified",
-    "courant number": "0.1",
-    "viscous courant number": "0.05",
+    "courant number": "0.05",
+    "viscous courant number": "0.02",
     "use cfl criteria": "true",
     "gravity constant": "0.0",
     "interface numerical method": "HLLC0_and_Nitsche",
@@ -43,10 +43,20 @@
       }
     },
     "material data gas phase": {
-      "dynamic viscosity": "0.00002"
+      "dynamic viscosity": "0.00002",
+      "specific isobaric heat": "1004.85",
+      "specific gas constant": "287.1",
+      "equation of state": "ideal_gas",
+      "reference density": "1.0",
+      "gamma": "1.4"
     },
     "material data liquid phase": {
-      "dynamic viscosity": "0.00002"
+      "dynamic viscosity": "0.00002",
+      "specific isobaric heat": "1004.85",
+      "specific gas constant": "287.1",
+      "equation of state": "ideal_gas",
+      "reference density": "1.0",
+      "gamma": "1.4"
     },
     "fe": {
       "degree": "1",

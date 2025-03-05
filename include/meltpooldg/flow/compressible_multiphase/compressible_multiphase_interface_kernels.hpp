@@ -75,11 +75,11 @@ namespace MeltPoolDG::Multiphase
     auto       tau_gas_tmp  = tau_gas[0][0];
     auto       tmp_momentum_2 =
       (u_liquid[1] * u_liquid[1] / u_liquid[0] +
-       MeltPoolDG::Flow::calculate_pressure<dim, number, true>(u_liquid, flow_data) - tau_liquid_tmp) *
+       MeltPoolDG::Flow::calculate_pressure<dim, number, false>(u_liquid, flow_data) - tau_liquid_tmp) *
       omega_2;
     tmp_momentum_2 +=
       (u_gas[1] * u_gas[1] / u_gas[0] +
-       MeltPoolDG::Flow::calculate_pressure<dim, number, false>(u_gas, flow_data) - tau_gas_tmp) *
+       MeltPoolDG::Flow::calculate_pressure<dim, number, true>(u_gas, flow_data) - tau_gas_tmp) *
       omega_1;
 
     // energy conservation
@@ -121,7 +121,7 @@ namespace MeltPoolDG::Multiphase
     total_flux_liquid[1] = tmp_momentum_1 * omega_1 + tmp_momentum_2;
     total_flux_liquid[2] = tmp_energy_1 * omega_1 + tmp_energy_2[0][0];
 
-    total_flux_gas[0] = 0. * (omega_2 * tmp_mass_1 - tmp_mass_2 + tmp_mass_3);
+    total_flux_gas[0] = omega_2 * tmp_mass_1 - tmp_mass_2 + tmp_mass_3;
     total_flux_gas[1] = tmp_momentum_1 * omega_2 - tmp_momentum_2;
     total_flux_gas[2] = tmp_energy_1 * omega_2 - tmp_energy_2[0][0] + tmp_energy_3;
 
@@ -301,6 +301,9 @@ inline DEAL_II_ALWAYS_INLINE //
   conv_flux[1] = convective_kernels.calculate_convective_flux(u[1]);
   flux[0] = Flow::contract_tensor_with_normal(conv_flux[0], normal) + shock_speed[0] * (u_star[0] - u[0]);
    flux[1] = Flow::contract_tensor_with_normal(conv_flux[1], normal) + shock_speed[1] * (u_star[1] - u[1]);
+
+    flux[0][dim+1] = 0.;
+    flux[1][dim+1] = 0.;
 
   return {flux[0], flux[1], normal_velocity_interface};
 }

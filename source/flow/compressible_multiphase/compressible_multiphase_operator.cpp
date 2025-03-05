@@ -260,7 +260,7 @@ namespace MeltPoolDG::Multiphase
                                           &phi_gas_intersected.begin_dof_values()[0][lane], n_dofs_per_cell),
                                         EvaluationFlags::values | EvaluationFlags::gradients);
 
-                // do surface integral TODO
+                // do surface integral
                 switch (flow_scratch_data.flow_data.interface_numerical_method){
                   case Flow::InterfaceNumericalMethod::penalty: {
                     for (const unsigned int q : phi_point_surface_liquid.quadrature_point_indices())
@@ -288,7 +288,9 @@ namespace MeltPoolDG::Multiphase
                         auto w_gas      = phi_point_surface_gas.get_value(q);
                         auto grad_w_liquid = phi_point_surface_liquid.get_gradient(q);
                         auto grad_w_gas = phi_point_surface_gas.get_gradient(q);
-                        auto normal   = phi_point_surface_liquid.normal_vector(q);
+                        // Outside pointing normal vector with respect to the liquid domain.
+                        // (The sign depends on the level-set orientation. Currently, we use a positive level-set for the liquid phase.)
+                        auto normal   = -phi_point_surface_liquid.normal_vector(q);
 
                         auto riemann_flux_data =
                           calculate_convective_interface_flux_HLLP0<dim,number,ConservedVariablesType,ConservedVariablesGradType>(
@@ -310,7 +312,7 @@ namespace MeltPoolDG::Multiphase
                               w_gas,
                               grad_w_liquid,
                               grad_w_gas,
-                              phi_point_surface_liquid.normal_vector(q),
+                              normal,
                               alpha_1,
                               alpha_2,
                               flow_scratch_data.flow_data.m_dot_evap,
@@ -351,13 +353,13 @@ namespace MeltPoolDG::Multiphase
                 phi_point_surface_liquid.integrate(StridedArrayView<number, n_lanes>(
                                   &phi_liquid_intersected.begin_dof_values()[0][lane],
                                   n_dofs_per_cell),
-                                  EvaluationFlags::values /*TODO for HLLC0*/, true
+                                  EvaluationFlags::values | (flow_scratch_data.flow_data.interface_numerical_method == Flow::InterfaceNumericalMethod::HLLC0_and_Nitsche ? EvaluationFlags::gradients : EvaluationFlags::nothing) , true
                                   /*specify flag 'true' for summing the integrated values into the solution values*/);
 
                 phi_point_surface_gas.integrate(StridedArrayView<number, n_lanes>(
                                   &phi_gas_intersected.begin_dof_values()[0][lane],
                                   n_dofs_per_cell),
-                                  EvaluationFlags::values /*TODO for HLLC0*/, true
+                                  EvaluationFlags::values | (flow_scratch_data.flow_data.interface_numerical_method == Flow::InterfaceNumericalMethod::HLLC0_and_Nitsche ? EvaluationFlags::gradients : EvaluationFlags::nothing), true
                                   /*specify flag 'true' for summing the integrated values into the solution values*/);
               }
             phi_liquid_intersected.distribute_local_to_global(dst);
@@ -555,11 +557,16 @@ namespace MeltPoolDG::Multiphase
           process_face.template operator()<true>(phi_gas_m, phi_gas_p);
           break;
         case CutUtil::FaceType::mixed_face_gas:
-          process_face.template operator()<true>(phi_gas_m, phi_gas_p_intersected);
+          // Note:
+          // 'process_face.template operator()<true>(phi_gas_m, phi_gas_p_intersected)'
+          // gives wrong results here.
+          process_face.template operator()<true>(phi_gas_m_intersected, phi_gas_p);
           break;
-        case CutUtil::FaceType::intersected_face:
+        case CutUtil::FaceType::intersected_face: {
           process_intersected_face.template operator()<false>(phi_liquid_m_intersected, phi_liquid_p_intersected, 0);
           process_intersected_face.template operator()<true>(phi_gas_m_intersected, phi_gas_p_intersected, 1);
+          break;
+        }
         default:
           break;
     }
