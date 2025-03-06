@@ -31,7 +31,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
           else if (component == 1)
             return 1;
           else if (component == dim + 1)
-            return 10000;
+            return 72.5;
           else
             return 0.;
         }
@@ -73,7 +73,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
         std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
       if (this->parameters.flow.equation_mode == "dimensionless")
-        GridGenerator::channel_with_cylinder(*this->triangulation, 3, 1, 0, true, 100.0);
+        GridGenerator::channel_with_cylinder(*this->triangulation, 0.3, 1, 0, true, 10.0);
       else
         {
           constexpr double factor = 0.0001;

@@ -4,6 +4,7 @@
 #pragma once
 
 #include <deal.II/base/parameter_handler.h>
+#include <deal.II/base/mpi.h>
 
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/cut/cut_data.hpp>
@@ -198,6 +199,12 @@ namespace MeltPoolDG::Flow
               "The cut compressible flow solver only supports explicit Euler time integration."));
         }
 
+      // For physical consistency, adjust thermal conductivity based on the user-defined dynamic
+      // viscosity, gamma and specific gas constant. The Prandtl number = 0.71 is currently set
+      // constant.
+      thermal_conductivity =
+        dynamic_viscosity * gamma * specific_gas_constant / (gamma - 1.) * 1. / 0.71;
+
       if (equation_mode == "dimensionless")
         {
           reference.reynolds_number =
@@ -208,15 +215,17 @@ namespace MeltPoolDG::Flow
           reference.energy   = reference.pressure / reference.density;
         }
 
+      /*
+      if (dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0)
+        {
+          std::cout << "Reynold number: " << reference.reynolds_number << std::endl;
+          std::cout << "Prandtl number: " << reference.prandtl_number << std::endl;
+          std::cin.get();
+        }
+        */
       // Synchronize verbosity with base verbosity if not set explicitly.
       if (verbosity_level < 0)
         verbosity_level = base_verbosity_level;
-
-      // For physical consistency, adjust thermal conductivity based on the user-defined dynamic
-      // viscosity, gamma and specific gas constant. The Prandtl number = 0.71 is currently set
-      // constant.
-      thermal_conductivity =
-        dynamic_viscosity * gamma * specific_gas_constant / (gamma - 1.) * 1. / 0.71;
     }
   };
 } // namespace MeltPoolDG::Flow

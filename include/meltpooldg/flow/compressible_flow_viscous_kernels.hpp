@@ -167,8 +167,8 @@ namespace MeltPoolDG::Flow
     for (unsigned int d = 0; d < dim; ++d)
       {
         for (unsigned int e = 0; e < dim; ++e)
-          out[d][e] = flow_data.dynamic_viscosity * (grad_u[d][e] + grad_u[e][d]);
-        out[d][d] -= flow_data.dynamic_viscosity * div_u;
+          out[d][e] = (grad_u[d][e] + grad_u[e][d]);
+        out[d][d] -= div_u;
       }
 
     return out;
@@ -197,14 +197,14 @@ namespace MeltPoolDG::Flow
                                     flow_data.gamma,
                                     flow_data.specific_gas_constant);
 
-    number stress_tensor_prefactor = 1.;
+    number stress_tensor_prefactor = flow_data.dynamic_viscosity;
     number temperature_prefactor   = 1.;
     if (flow_data.equation_mode == "dimensionless")
       {
         stress_tensor_prefactor = 1. / flow_data.reference.reynolds_number;
-        temperature_prefactor =
-          flow_data.gamma / (flow_data.reference.reynolds_number *
-                             flow_data.reference.prandtl_number * (flow_data.gamma - 1.));
+        temperature_prefactor = 1./flow_data.thermal_conductivity *
+          1. / (flow_data.reference.reynolds_number *
+                             flow_data.reference.prandtl_number);
       }
 
     ConservedVariablesGradType flux;
