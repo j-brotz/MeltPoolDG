@@ -1,8 +1,8 @@
 #!/bin/sh
 
 # format json-files
-for i in $(find simulations/ applications/ tests/ -type f \( -name "*.json" \) ); do 
-  python scripts/formatting/format_json.py $i $i &
+for i in $(find simulations/ applications/ tests/ -type f \( -name "*.json" \) ); do
+  python3 scripts/formatting/format_json.py $i $i &
 done
 
 wait

@@ -1,12 +1,13 @@
 trilinos_install=${1:-../trilinos-install/}
 p4est_dir=${2:-../p4est-install}
 dealii_dir=${3:-../dealii}
+buildConfig=${4:-DebugRelease}
 
 rm -rf CMakeFiles/ CMakeCache.txt || true
 cmake \
     -D CMAKE_CXX_COMPILER="mpicxx" \
     -D CMAKE_CXX_FLAGS="-march=native -Wno-array-bounds -std=c++2a" \
-    -D CMAKE_BUILD_TYPE="DebugRelease" \
+    -D CMAKE_BUILD_TYPE="$buildConfig" \
     -D DEAL_II_CXX_FLAGS_RELEASE="-O3" \
     -D CMAKE_C_COMPILER="mpicc" \
     -D MPIEXEC_PREFLAGS="-bind-to none" \
