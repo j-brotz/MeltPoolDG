@@ -10,80 +10,9 @@ configDir=$(realpath "$configDir")
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source $script_dir/log.sh
 
-# TODO: extract checks
-
-##############################################################
-# check proper cmake version
-##############################################################
-cmp=3.17.0
-ver=$(cmake --version | head -1 | cut -f3 -d" ")
-
-mapfile -t sorted < <(printf "%s\n" "$ver" "$cmp" | sort -V)
-
-if [[ ${sorted[0]} == "$cmp" ]]; then
-    log "cmake version $ver >= $cmp"
-else
-    log "ERROR: cmake version too low; update to at least $cmp."
-    exit 1
-fi
-
-##############################################################
-# check gcc version
-##############################################################
-# Get the GCC version
-gcc_version=$(gcc --version | head -n 1 | awk '{print $3}')
-
-# Extract the major version
-gcc_major_version=$(log $gcc_version | cut -d'.' -f1)
-
-##############################################################
-# check if metis is installed
-##############################################################
-check_metis() {
-  ldconfig -p | grep libmetis
-
-  if [[ $(ldconfig -p | grep libmetis) ]]; then
-      log "Dependency libmetis found."
-  else
-      log "WARNING: Dependency libmetis not found. Make sure to install metis if you want to use the functionalities."
-      exit 1
-  fi
-}
-
-check_metis # Call function
-
-##############################################################
-# check if boost is installed
-##############################################################
-# Function to check if Boost is installed
-check_boost() {
-    if ldconfig -p | grep -q libboost; then
-        log "Boost is installed."
-    elif [[ -f "/usr/include/boost/version.hpp" || -f "/usr/local/include/boost/version.hpp" ]]; then
-        log "Boost headers found."
-    elif pkg-config --exists boost; then
-        log "Boost detected via pkg-config."
-    else
-        log "ERROR: Boost library is missing. Install Boost before proceeding."
-        exit 1
-    fi
-}
-
-check_boost # Call function
-
-##############################################################
-# check if blas is installed
-##############################################################
-check_blas() {
-    if ldconfig -p | grep -E 'libblas\.so|libopenblas\.so' > /dev/null; then
-        log "BLAS is installed."
-    else
-        log "ERROR: BLAS is not installed. Please install BLAS before proceeding."
-        exit 1
-    fi
-}
-
-check_blas  # Call function
+# load and apply checks
+source $script_dir/check.sh
+check_all
 
 ##############################################################
 # install p4est
@@ -96,6 +25,11 @@ rm p4est-2.2.tar.gz
 ##############################################################
 # install Trilinos
 ##############################################################
+# Get the GCC version
+gcc_version=$(gcc --version | head -n 1 | awk '{print $3}')
+
+# Extract the major version
+gcc_major_version=$(log $gcc_version | cut -d'.' -f1)
 mkdir -p trilinos-build
 
 if [ "$gcc_major_version" -lt 13 ]; then
@@ -155,5 +89,5 @@ fi
 
 log ""
 log "Dependencies successfully installed. You may add the folders to your path via"
-log "log 'export PATH=$(realpath $pwd/dealii-build):$PATH' >> ~/.bashrc"
-log "log 'export ADAFLO_INCLUDE=$(realpath $pwd/adaflo/include):$PATH' >> ~/.bashrc"
+log "'export PATH=$(realpath $pwd/dealii-build):$PATH' >> ~/.bashrc"
+log "'export ADAFLO_INCLUDE=$(realpath $pwd/adaflo/include):$PATH' >> ~/.bashrc"

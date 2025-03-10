@@ -18,6 +18,10 @@ current_dir="$(pwd)"
 
 source $script_dir/log.sh
 
+# load and apply checks
+source $script_dir/check.sh
+check_all
+
 rm -f $script_dir/../../install.log
 
 # Compare the directories
@@ -75,9 +79,12 @@ if [ "$skip_prompts" == false ]; then
     log "ERROR: Invalid build configuration. Please choose 'Debug', 'Release' or 'DebugRelease'."
     exit 1
   fi
+
   log "Selected build configuration: $buildConfig"
 
-  read -p "Select path to location of MeltPoolDG build folders. Make sure that the path exists. [Default: .]: " buildPath
+  read -p "Select path to location where the MeltPoolDG 'build' folders (i.e. 'build_debug'
+  and 'build_release' depending on your configuration) will be placed. Make sure that the
+  path exists. [Default: .]: " buildPath
   buildPath=${buildPath:-.}
 
 fi

@@ -3,6 +3,10 @@ adaflo_include=${2:-../adaflo/include}
 adaflo_dir=${3:-../adaflo/build_release}
 buildConfig=${4:-Release}
 
+  if [[ "$buildConfig" != "Debug" && "$buildConfig" != "Release" ]]; then
+    log "ERROR: Invalid build configuration. Please choose 'Debug' or 'Release'."
+    exit 1
+  fi
 
 rm -rf CMakeFiles/ CMakeCache.txt || true
 cmake \
