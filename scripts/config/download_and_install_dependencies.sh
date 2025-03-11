@@ -18,8 +18,8 @@ check_all
 # install p4est
 ##############################################################
 wget http://p4est.github.io/release/p4est-2.2.tar.gz
-mkdir -p `$(pwd)/p4est-build`
-$configDir/p4est-config.sh p4est-2.2.tar.gz `$(pwd)/p4est-build`
+mkdir -p "$(pwd)/p4est-build"
+$configDir/p4est-config.sh p4est-2.2.tar.gz "$(pwd)/p4est-build"
 rm p4est-2.2.tar.gz
 
 ##############################################################
