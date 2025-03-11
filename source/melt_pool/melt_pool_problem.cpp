@@ -983,6 +983,9 @@ namespace MeltPoolDG::MeltPool
                   scratch_data->initialize_dof_vector(heat_operation->get_heat_source(),
                                                       temp_dof_idx);
 
+                  if (darcy_operation)
+                    darcy_operation->reinit();
+
 #ifdef MELT_POOL_DG_WITH_ADAFLO
                   adaflo_flow_operation->reinit_3();
 #endif
