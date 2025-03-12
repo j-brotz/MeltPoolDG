@@ -2,7 +2,7 @@
 
 # Check if help flag is provided
 if [[ "$1" == "--help" ]]; then
-  echo "Usage: $0 [num_processes] [dealii_dir] [adaflo_include] [adaflo_dir] [buildConfig]"
+  echo "Usage: $0 [num_processes] [dealii_dir] [adaflo_include] [adaflo_dir] [buildConfig] [pathToBuild]"
   echo
   echo "Arguments:"
   echo "  num_processes   (default: 4)      Number of parallel processes for make."
@@ -35,15 +35,15 @@ mpDir=$(realpath "$mpDir")
 cd $mpDir
 if [[ "$buildConfig" == "Release" || "$buildConfig" == "DebugRelease" ]]; then
   mkdir -p $pathToBuild/build_release
-  cd build_release
+  cd $pathToBuild/build_release
   $mpDir/scripts/config/meltpooldg-config.sh $dealii_dir $adaflo_include $adaflo_dir Release $pathToBuild
   make -j$np
-  cd ..
+  cd $mpDir
 fi
 if [[ "$buildConfig" == "Debug" || "$buildConfig" == "DebugRelease" ]]; then
   mkdir -p $pathToBuild/build_debug
-  cd build_debug
+  cd $pathToBuild/build_debug
   $mpDir/scripts/config/meltpooldg-config.sh $dealii_dir $adaflo_include $adaflo_dir Debug $pathToBuild
   make -j$np
-  cd ..
+  cd $mpDir
 fi

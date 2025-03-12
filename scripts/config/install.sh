@@ -49,7 +49,7 @@ np=$((core_count - 1))
 buildConfig="DebugRelease"
 
 # Default path to build folders
-buildPath="."
+pathToBuild="."
 
 # Flag to skip prompts if '--nv' argument is provided
 skip_prompts=false
@@ -84,15 +84,15 @@ if [ "$skip_prompts" == false ]; then
 
   read -p "Select path to location where the MeltPoolDG 'build' folders (i.e. 'build_debug'
   and 'build_release' depending on your configuration) will be placed. Make sure that the
-  path exists. [Default: .]: " buildPath
-  buildPath=${buildPath:-.}
+  path exists. [Default: .]: " pathToBuild
+  pathToBuild=${pathToBuild:-.}
 
 fi
 
 # Output the paths and number of processes being used
 log "External libraries will be installed to: $depDir"
 log "Number of processes to be used for installation: $np"
-log "Path to build folders: $buildPath"
+log "Path to build folders: $pathToBuild"
 
 # Resolve the absolute path of the dependency directory
 depDir=$(realpath "$depDir")
