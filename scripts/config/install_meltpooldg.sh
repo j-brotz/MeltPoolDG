@@ -36,14 +36,14 @@ cd $mpDir
 if [[ "$buildConfig" == "Release" || "$buildConfig" == "DebugRelease" ]]; then
   mkdir -p $pathToBuild/build_release
   cd $pathToBuild/build_release
-  $mpDir/scripts/config/meltpooldg-config.sh $dealii_dir $adaflo_include $adaflo_dir Release $pathToBuild
+  $mpDir/scripts/config/meltpooldg-config.sh $dealii_dir $adaflo_include $adaflo_dir Release $mpDir
   make -j$np
   cd $mpDir
 fi
 if [[ "$buildConfig" == "Debug" || "$buildConfig" == "DebugRelease" ]]; then
   mkdir -p $pathToBuild/build_debug
   cd $pathToBuild/build_debug
-  $mpDir/scripts/config/meltpooldg-config.sh $dealii_dir $adaflo_include $adaflo_dir Debug $pathToBuild
+  $mpDir/scripts/config/meltpooldg-config.sh $dealii_dir $adaflo_include $adaflo_dir Debug $mpDir
   make -j$np
   cd $mpDir
 fi

@@ -42,13 +42,14 @@ Follow the command-line instructions. By default, the following directory tree w
 ```bash
 external_libs/
 ├─ dealii-build/
-├─ p4est-install/
+├─ p4est-build/
 ├─ trilinos-install/
 ├─ adaflo/
 │  ├─ build_release/
 │  ├─ build_debug/
 │  ├─ include/
 MeltPoolDG-dev/
+├─ build_debug/
 ├─ build_release/
 ```
 MeltPoolDG is compiled in release mode in `MeltPoolDG-dev/build_release` and in debug mode in `MeltPoolDG-dev/build_debug`.
