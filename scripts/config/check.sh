@@ -35,8 +35,6 @@ check_metis() {
   fi
 }
 
-check_metis # Call function
-
 ##############################################################
 # check if boost is installed
 ##############################################################
@@ -53,8 +51,6 @@ check_boost() {
         exit 1
     fi
 }
-
-check_boost # Call function
 
 ##############################################################
 # check if blas is installed
@@ -103,14 +99,19 @@ check_mpi() {
   fi
 }
 
-
 ##############################################################
 # check all
 ##############################################################
 check_all() {
-  check_cmake_version
-  check_metis
-  check_boost
-  check_blas
-  check_mpi
+  if [ -z "${MPDG_CHECKS_COMPLETED+x}" ]; then
+      log "Run dependency checks:"
+      check_cmake_version
+      check_metis
+      check_boost
+      check_blas
+      check_mpi
+      log "All dependencies found."
+      log " "
+      export MPDG_CHECKS_COMPLETED=true
+  fi
 }

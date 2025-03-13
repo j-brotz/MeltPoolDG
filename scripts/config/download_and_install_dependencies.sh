@@ -54,14 +54,14 @@ fi
 make -j$np install
 cd ..
 
-###############################################################
-## install deal.II
-###############################################################
+##############################################################
+# install deal.II
+##############################################################
 git clone https://github.com/dealii/dealii
 mkdir -p dealii-build
 cd dealii-build
 rm -rf *
-$configDir/dealii-config.sh ../trilinos-install ../p4est-install ../dealii $buildConfig
+$configDir/dealii-config.sh ../trilinos-install ../p4est-build ../dealii $buildConfig
 make -j$np
 cd ..
 

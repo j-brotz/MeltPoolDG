@@ -17,12 +17,11 @@ expected_dir="$(cd "$script_dir/../.." && pwd)"
 current_dir="$(pwd)"
 
 source $script_dir/log.sh
+log "Starting to install MeltPoolDG"
 
 # load and apply checks
 source $script_dir/check.sh
 check_all
-
-rm -f $script_dir/../../install.log
 
 # Compare the directories
 if [[ "$current_dir" == "$expected_dir" ]]; then
@@ -92,7 +91,7 @@ fi
 # Output the paths and number of processes being used
 log "External libraries will be installed to: $depDir"
 log "Number of processes to be used for installation: $np"
-log "Path to build folders: $pathToBuild"
+log "Path to build folders of MeltPoolDG: $pathToBuild"
 
 # Resolve the absolute path of the dependency directory
 depDir=$(realpath "$depDir")

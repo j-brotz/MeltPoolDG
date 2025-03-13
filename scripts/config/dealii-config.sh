@@ -1,5 +1,6 @@
+pwd
 trilinos_install=${1:-../trilinos-install/}
-p4est_dir=${2:-../p4est-install}
+p4est_dir=${2:-../p4est-build}
 dealii_dir=${3:-../dealii}
 buildConfig=${4:-DebugRelease}
 
