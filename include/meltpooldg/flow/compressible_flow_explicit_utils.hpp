@@ -65,6 +65,7 @@ namespace MeltPoolDG::Flow
                               dim + 2,
                               number,
                               dealii::VectorizedArray<number>> Integrator,
+            bool is_viscous = true,
             bool is_gas_phase = true>
   inline DEAL_II_ALWAYS_INLINE //
     std::tuple<CompressibleFlowTypes::ConservedVariablesType<dim, number>,
@@ -82,7 +83,7 @@ namespace MeltPoolDG::Flow
     auto flux = convective_terms.template calculate_convective_flux<is_gas_phase>(w_q);
 
     // TODO: introduce a template parameter 'is_viscous'
-    if (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0)
+    if (is_viscous)
       {
         const auto grad_w_q = evaluator.get_gradient(q);
         flux -= viscous_terms.template calculate_viscous_flux<is_gas_phase>(w_q, grad_w_q);
@@ -130,6 +131,7 @@ namespace MeltPoolDG::Flow
                               dim + 2,
                               number,
                               dealii::VectorizedArray<number>> Integrator,
+            bool is_viscous = true,
             bool is_gas_phase = true>
   inline DEAL_II_ALWAYS_INLINE //
     std::tuple<CompressibleFlowTypes::ConservedVariablesType<dim, number>,
@@ -149,7 +151,7 @@ namespace MeltPoolDG::Flow
                                                            evaluator_p.get_value(q),
                                                            evaluator_m.normal_vector(q));
 
-    if (dynamic_viscosity > 0)
+    if (is_viscous)
       numerical_flux -= viscous_terms.template calculate_viscous_numerical_flux<is_gas_phase>(evaluator_m.get_value(q),
                                                                        evaluator_p.get_value(q),
                                                                        evaluator_m.get_gradient(q),
@@ -162,7 +164,7 @@ namespace MeltPoolDG::Flow
       viscous_numerical_flux;
 
     // interior penalty
-    if (dynamic_viscosity > 0)
+    if (is_viscous)
       {
         viscous_numerical_flux =
           viscous_terms.template calculate_viscous_numerical_flux_gradient<is_gas_phase>(evaluator_m.get_value(q),
@@ -199,6 +201,7 @@ namespace MeltPoolDG::Flow
                               dim + 2,
                               number,
                               dealii::VectorizedArray<number>> Integrator,
+            bool is_viscous = true,
             bool is_gas_phase = true>
   inline DEAL_II_ALWAYS_INLINE //
     std::tuple<CompressibleFlowTypes::ConservedVariablesType<dim, number>,
@@ -228,13 +231,13 @@ namespace MeltPoolDG::Flow
 
     auto flux = convective_terms.template calculate_convective_numerical_flux<is_gas_phase>(w_m, w_p, normal);
 
-    if (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0)
+    if (is_viscous)
       flux -= viscous_terms.template calculate_viscous_numerical_flux<is_gas_phase>(
         w_m, w_p, grad_w_m, grad_w_p, normal, penalty_parameter);
 
     CompressibleFlowTypes::ConservedVariablesGradType<dim, number> numerical_flux_gradient;
 
-    if (flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0)
+    if (is_viscous)
       {
         numerical_flux_gradient =
           viscous_terms.template calculate_viscous_numerical_flux_gradient<is_gas_phase>(w_m, w_p, normal).first;

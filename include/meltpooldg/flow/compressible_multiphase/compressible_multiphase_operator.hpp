@@ -11,7 +11,7 @@
 
 namespace MeltPoolDG::Multiphase
 {
-  template <unsigned int dim, typename number = double>
+  template <unsigned int dim, typename number = double, bool is_viscous_gas = true, bool is_viscous_liquid = true>
   class CompressibleMultiphaseOperator
   {
     using VectorType            = dealii::LinearAlgebra::distributed::Vector<number>;

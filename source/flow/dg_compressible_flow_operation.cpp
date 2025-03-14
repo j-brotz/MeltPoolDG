@@ -293,19 +293,26 @@ namespace MeltPoolDG::Flow
     // cut operator was already created in the constructor
     if (flow_scratch_data.flow_data.domain_representation_type == "cut")
       return;
+    const bool is_viscous = flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0.;
     if (time_integrator_scheme_is_explicit(
           flow_scratch_data.flow_data.time_integrator.integrator_type))
       {
-        comp_flow_operator =
-          std::make_unique<DGCompressibleFlowOperatorExplicit<dim, number>>(flow_scratch_data);
+        if (is_viscous)
+          comp_flow_operator = std::make_unique<DGCompressibleFlowOperatorExplicit<dim, number, true>>(flow_scratch_data);
+        else
+          comp_flow_operator = std::make_unique<DGCompressibleFlowOperatorExplicit<dim, number, false>>(flow_scratch_data);
         time_integrator = comp_flow_operator->make_problem_specific_time_integrator(
-          flow_scratch_data.flow_data.time_integrator);
+            flow_scratch_data.flow_data.time_integrator);
       }
     else if (time_integrator_scheme_is_implicit(
                flow_scratch_data.flow_data.time_integrator.integrator_type))
       {
-        comp_flow_operator =
-          std::make_unique<DGCompressibleFlowOperatorImplicit<dim, number>>(flow_scratch_data);
+        if (is_viscous)
+          comp_flow_operator =
+            std::make_unique<DGCompressibleFlowOperatorImplicit<dim, number, true>>(flow_scratch_data);
+        else
+          comp_flow_operator =
+            std::make_unique<DGCompressibleFlowOperatorImplicit<dim, number, false>>(flow_scratch_data);
         time_integrator = comp_flow_operator->make_problem_specific_time_integrator(
           flow_scratch_data.flow_data.time_integrator);
       }
@@ -313,9 +320,14 @@ namespace MeltPoolDG::Flow
     else if (flow_scratch_data.flow_data.time_integrator.integrator_type ==
              TimeIntegratorSchemes::imex)
       {
-        comp_flow_operator =
-          std::make_unique<DGCompressibleFlowOperatorImplicitExplicit<dim, number>>(
-            flow_scratch_data);
+        if (is_viscous)
+          comp_flow_operator =
+            std::make_unique<DGCompressibleFlowOperatorImplicitExplicit<dim, number, true>>(
+              flow_scratch_data);
+        else
+          comp_flow_operator =
+            std::make_unique<DGCompressibleFlowOperatorImplicitExplicit<dim, number, false>>(
+              flow_scratch_data);
         time_integrator = comp_flow_operator->make_problem_specific_time_integrator(
           flow_scratch_data.flow_data.time_integrator);
       }

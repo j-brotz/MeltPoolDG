@@ -39,6 +39,7 @@
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 
 #include <memory>
+#include <variant>
 
 namespace MeltPoolDG::Multiphase
 {
@@ -48,6 +49,12 @@ namespace MeltPoolDG::Multiphase
     using VectorType            = dealii::LinearAlgebra::distributed::Vector<number>;
     using MappingInfoType       = CutUtil::MappingInfoType<dim, number>;
     using MappingInfoVectorType = CutUtil::MappingInfoVectorType<dim, number>;
+
+   using CompMultiphaseOperatorVariant = std::variant<
+    CompressibleMultiphaseOperator<dim, number, true, true>,
+    CompressibleMultiphaseOperator<dim, number, true, false>,
+    CompressibleMultiphaseOperator<dim, number, false, true>,
+    CompressibleMultiphaseOperator<dim, number, false, false>>;
 
   public:
     /**
@@ -162,6 +169,41 @@ namespace MeltPoolDG::Multiphase
     const dealii::DoFHandler<dim> &
     get_dof_handler() const;
 
+   typename CompressibleMultiphaseOperation<dim, number>::CompMultiphaseOperatorVariant
+   static create_cut_flow_operator_variant(
+   bool is_viscous_gas,
+   bool is_viscous_liquid,
+   MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number> &flow_scratch_data,
+   const MappingInfoType                    &mapping_info_surface_in,
+   const MappingInfoVectorType              &mapping_info_cells_in,
+   const MappingInfoVectorType              &mapping_info_faces_in)
+   {
+    if (is_viscous_gas && is_viscous_liquid)
+     return CompressibleMultiphaseOperator<dim, number, true, true>(
+         flow_scratch_data,
+         mapping_info_surface_in,
+         mapping_info_cells_in,
+         mapping_info_faces_in);
+    else if (is_viscous_gas && !is_viscous_liquid)
+     return CompressibleMultiphaseOperator<dim, number, true, false>(
+         flow_scratch_data,
+         mapping_info_surface_in,
+         mapping_info_cells_in,
+         mapping_info_faces_in);
+    else if (!is_viscous_gas && is_viscous_liquid)
+     return CompressibleMultiphaseOperator<dim, number, false, true>(
+         flow_scratch_data,
+         mapping_info_surface_in,
+         mapping_info_cells_in,
+         mapping_info_faces_in);
+    else
+     return CompressibleMultiphaseOperator<dim, number, false, false>(
+         flow_scratch_data,
+         mapping_info_surface_in,
+         mapping_info_cells_in,
+         mapping_info_faces_in);
+   }
+
   private:
     MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number> flow_scratch_data;
 
@@ -185,7 +227,7 @@ namespace MeltPoolDG::Multiphase
     MappingInfoVectorType mapping_info_cells;
     MappingInfoVectorType mapping_info_faces;
 
-    CompressibleMultiphaseOperator<dim, number> cmp_operator;
+    CompMultiphaseOperatorVariant cmp_operator;
 
     /**
      * Adapt the dof layout and solution vector to a new interface position, which is defined by the

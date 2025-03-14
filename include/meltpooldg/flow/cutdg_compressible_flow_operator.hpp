@@ -10,7 +10,7 @@
 
 namespace MeltPoolDG::Flow
 {
-  template <unsigned int dim, typename number = double>
+  template <unsigned int dim, typename number = double, bool is_viscous = true>
   class CutDGCompressibleFlowOperator
   {
     using VectorType            = dealii::LinearAlgebra::distributed::Vector<number>;

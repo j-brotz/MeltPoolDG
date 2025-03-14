@@ -38,6 +38,7 @@
 #include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <memory>
+#include <variant>
 
 namespace MeltPoolDG::Flow
 {
@@ -47,6 +48,10 @@ namespace MeltPoolDG::Flow
     using VectorType            = dealii::LinearAlgebra::distributed::Vector<number>;
     using MappingInfoType       = CutUtil::MappingInfoType<dim, number>;
     using MappingInfoVectorType = CutUtil::MappingInfoVectorType<dim, number>;
+
+   using CutFlowOperatorVariant = std::variant<
+    CutDGCompressibleFlowOperator<dim, number, true>,
+    CutDGCompressibleFlowOperator<dim, number, false>>;
 
   public:
     /**
@@ -168,6 +173,28 @@ namespace MeltPoolDG::Flow
     const dealii::DoFHandler<dim> &
     get_dof_handler() const;
 
+    typename CutDGCompressibleFlowOperation<dim, number>::CutFlowOperatorVariant
+    static create_cut_flow_operator_variant(
+    bool is_viscous,
+    CompressibleFlowScratchData<dim, number> &flow_scratch_data,
+    const MappingInfoType                    &mapping_info_surface_in,
+    const MappingInfoVectorType              &mapping_info_cells_in,
+    const MappingInfoVectorType              &mapping_info_faces_in)
+   {
+    if (is_viscous)
+     return CutDGCompressibleFlowOperator<dim, number, true>(
+         flow_scratch_data,
+         mapping_info_surface_in,
+         mapping_info_cells_in,
+         mapping_info_faces_in);
+    else
+     return CutDGCompressibleFlowOperator<dim, number, false>(
+         flow_scratch_data,
+         mapping_info_surface_in,
+         mapping_info_cells_in,
+         mapping_info_faces_in);
+   }
+
   private:
     CompressibleFlowScratchData<dim, number> flow_scratch_data;
 
@@ -191,7 +218,7 @@ namespace MeltPoolDG::Flow
     MappingInfoVectorType mapping_info_cells;
     MappingInfoVectorType mapping_info_faces;
 
-    CutDGCompressibleFlowOperator<dim, number> cut_flow_operator;
+    CutFlowOperatorVariant cut_flow_operator;
 
     /**
      * Adapt the dof layout and solution vector to a new interface position, which is defined by the

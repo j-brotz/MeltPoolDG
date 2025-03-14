@@ -8,7 +8,7 @@
 
 namespace MeltPoolDG::Flow
 {
-  template <int dim, typename number>
+  template <int dim, typename number, bool is_viscous = true>
   class DGCompressibleFlowOperatorImplicitExplicit final
     : public DGCompressibleFlowOperatorBase<number>
   {

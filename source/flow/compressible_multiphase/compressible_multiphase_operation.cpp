@@ -58,10 +58,13 @@ namespace MeltPoolDG::Multiphase
     , mapping_info_surface(scratch_data_in.get_mapping(),
                            dealii::update_values | dealii::update_gradients |
                              dealii::update_JxW_values | dealii::update_normal_vectors)
-    , cmp_operator(flow_scratch_data,
-                   mapping_info_surface,
-                   mapping_info_cells,
-                   mapping_info_faces)
+  , cmp_operator(CompressibleMultiphaseOperation<dim, number>::create_cut_flow_operator_variant(
+    comp_flow_data_in.material_data_gas_phase.dynamic_viscosity > 0.,
+    comp_flow_data_in.material_data_liquid_phase.dynamic_viscosity > 0.,
+    flow_scratch_data,
+    mapping_info_surface,
+    mapping_info_cells,
+    mapping_info_faces))
   {
     // Currently, only explicit Euler time discretization with ghost-penalty stabilized mass matrix
     // is enabled for cutDG
@@ -254,20 +257,23 @@ namespace MeltPoolDG::Multiphase
     // - reinit matrix-free object, rhs and solution vectors
     adapt_to_new_interface_position();
 
-    // update inverse time step size
-    cmp_operator.compute_inverse_time_step(time_step);
+    std::visit([&](auto& op) {
+      // update inverse time step size
+      op.compute_inverse_time_step(time_step);
 
-    // compute rhs
-    cmp_operator.create_rhs(current_time,
+      // compute rhs
+      op.create_rhs(current_time,
                                  time_step,
                                  rhs,
                                  flow_scratch_data.solution_history.get_current_solution());
 
-    // solve linear and symmetric system of equations with CG
-    LinearSolver::solve<VectorType>(cmp_operator,
+      // solve linear and symmetric system of equations with CG
+      LinearSolver::solve<VectorType>(op,
                                     flow_scratch_data.solution_history.get_current_solution(),
                                     rhs,
                                     flow_scratch_data.flow_data.time_integrator.linear_solver_data);
+
+    }, cmp_operator);
   }
 
   template <int dim, typename number>
