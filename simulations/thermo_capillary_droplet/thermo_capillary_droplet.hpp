@@ -7,6 +7,7 @@
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/mpi_remote_point_evaluation.h>
 #include <deal.II/base/parameter_handler.h>
+#include <deal.II/base/patterns.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/tensor.h>
@@ -171,7 +172,8 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
         prm.add_parameter(
           "liquid phase outside",
           liquid_phase_outside,
-          "set this parameter to true to flip the level set and have the \"liquid\" phase outside the droplet.");
+          "set this parameter to true to flip the level set and have the \"liquid\" phase outside the droplet.",
+          dealii::Patterns::Bool());
       }
       prm.leave_subsection();
 
