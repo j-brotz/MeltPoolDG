@@ -1,12 +1,6 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, UIBK/TUM, February 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/lac/full_matrix.h>
-#include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
@@ -18,8 +12,6 @@
 
 namespace MeltPoolDG::Flow
 {
-  using namespace dealii;
-
   /**
    *  This class enables to compute the contribution to interfacial forces due
    *  to temperature-(in)dependent surface tension
@@ -54,8 +46,8 @@ namespace MeltPoolDG::Flow
   class SurfaceTensionOperation
   {
   private:
-    using VectorType      = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<double>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<double>;
 
     const SurfaceTensionData<double> &data;
 

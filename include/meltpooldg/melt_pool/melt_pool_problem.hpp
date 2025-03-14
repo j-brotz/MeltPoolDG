@@ -249,10 +249,9 @@ namespace MeltPoolDG::MeltPool
     std::shared_ptr<Flow::FlowBase<dim>>                    flow_operation;
     std::shared_ptr<LevelSet::LevelSetOperation<dim>>       level_set_operation;
     std::shared_ptr<Heat::LaserOperation<dim>>              laser_operation;
-    std::shared_ptr<MeltPool::MeltFrontPropagation<dim>>    melt_front_propagation;
+    std::shared_ptr<MeltFrontPropagation<dim>>              melt_front_propagation;
     std::shared_ptr<Evaporation::EvaporationOperation<dim>> evaporation_operation = nullptr;
-    std::shared_ptr<
-      MeltPoolDG::Evaporation::IncompressibleNewtonianFluidEvaporationMaterial<dim, double>>
+    std::shared_ptr<Evaporation::IncompressibleNewtonianFluidEvaporationMaterial<dim, double>>
                                                                evaporation_fluid_material;
     std::shared_ptr<Heat::HeatOperationBase<dim>>              heat_operation;
     std::shared_ptr<Flow::DarcyDampingOperation<dim>>          darcy_operation;

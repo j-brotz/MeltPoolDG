@@ -295,7 +295,7 @@ namespace MeltPoolDG::LevelSet
                               normal_vector_vals.get_gradient(q_index);
 
         const VectorizedArray<number> narrow_band_mask =
-          (normal_vector_data.narrow_band.enable) ?
+          normal_vector_data.narrow_band.enable ?
             VectorTools::compute_mask_narrow_band<dim>(
               level_set_vals.get_value(q_index),
               normal_vector_data.narrow_band.level_set_threshold) :

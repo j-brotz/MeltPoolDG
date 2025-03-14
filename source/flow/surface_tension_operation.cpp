@@ -1,20 +1,27 @@
+#include <meltpooldg/flow/surface_tension_operation.hpp>
+//
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/numbers.h>
+#include <deal.II/base/tensor.h>
 #include <deal.II/base/utilities.h>
 #include <deal.II/base/vectorization.h>
 
 #include <deal.II/matrix_free/evaluation_flags.h>
 
-#include <meltpooldg/flow/surface_tension_operation.hpp>
+#include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <cmath>
+#include <functional>
+#include <vector>
 
 namespace MeltPoolDG::Flow
 {
+  using namespace dealii;
+
   template <int dim>
   SurfaceTensionOperation<dim>::SurfaceTensionOperation(
     const SurfaceTensionData<double> &data_in,
@@ -38,7 +45,7 @@ namespace MeltPoolDG::Flow
     , do_level_set_pressure_gradient_interpolation(scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx))
     , alpha_residual(data.surface_tension_coefficient * data.coefficient_residual_fraction)
   {
-    AssertThrow(data.time_step_limit.scale_factor >= 0 && data.time_step_limit.scale_factor <= 1.0,
+    AssertThrow(data.time_step_limit.scale_factor >= 0 and data.time_step_limit.scale_factor <= 1.0,
                 ExcMessage(
                   "The scale factor for the time step limit must be between 0 and 1.0. Abort..."));
 
@@ -94,7 +101,7 @@ namespace MeltPoolDG::Flow
   void
   SurfaceTensionOperation<dim>::compute_surface_tension(VectorType &force_rhs, const bool zero_out)
   {
-    const bool curv_update_ghosts = !solution_curvature.has_ghost_elements();
+    const bool curv_update_ghosts = not solution_curvature.has_ghost_elements();
 
     if (curv_update_ghosts)
       solution_curvature.update_ghost_values();
@@ -105,18 +112,18 @@ namespace MeltPoolDG::Flow
 
     if (temperature)
       {
-        normal_update_ghosts = !solution_normal_vector->has_ghost_elements();
+        normal_update_ghosts = not solution_normal_vector->has_ghost_elements();
 
         if (normal_update_ghosts)
           solution_normal_vector->update_ghost_values();
 
-        temperature_update_ghosts = !temperature->has_ghost_elements();
+        temperature_update_ghosts = not temperature->has_ghost_elements();
         if (temperature_update_ghosts)
           temperature->update_ghost_values();
       }
     if (solid)
       {
-        solid_update_ghosts = !solid->has_ghost_elements();
+        solid_update_ghosts = not solid->has_ghost_elements();
         if (solid_update_ghosts)
           solid->update_ghost_values();
       }
@@ -125,129 +132,234 @@ namespace MeltPoolDG::Flow
       UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
                                                             scratch_data.get_mapping());
 
+    const auto cut_type = std::invoke([&]() -> CutUtil::CutType {
+      if (temperature)
+        return scratch_data.get_cut_type(temp_dof_idx);
+      else
+        return CutUtil::CutType::not_cut;
+    });
+
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free,
           auto       &force_rhs,
           const auto &level_set_as_heaviside,
-          auto        macro_cells) {
-        FECellIntegrator<dim, 1, double> level_set(matrix_free, ls_dof_idx, flow_vel_quad_idx);
+          auto        cell_range) {
+        FECellIntegrator<dim, 1, double> heaviside_eval(matrix_free, ls_dof_idx, flow_vel_quad_idx);
 
-        FECellIntegrator<dim, 1, double> curvature(matrix_free, curv_dof_idx, flow_vel_quad_idx);
+        FECellIntegrator<dim, 1, double> curvature_eval(matrix_free,
+                                                        curv_dof_idx,
+                                                        flow_vel_quad_idx);
 
-        FECellIntegrator<dim, 1, double> interpolated_level_set_to_pressure_space(
+        FECellIntegrator<dim, 1, double> heaviside_interpolated_to_pressure_space_eval(
           matrix_free, flow_pressure_hanging_nodes_dof_idx, flow_vel_quad_idx);
 
-        std::unique_ptr<FECellIntegrator<dim, dim, double>> normal_vec;
-        std::unique_ptr<FECellIntegrator<dim, 1, double>>   temperature_val;
-        std::unique_ptr<FECellIntegrator<dim, 1, double>>   solid_val;
+        std::unique_ptr<FECellIntegrator<dim, dim, double>> normal_vec_eval;
+        std::vector<FECellIntegrator<dim, 1, double>>       temperature_eval;
+        std::unique_ptr<FECellIntegrator<dim, 1, double>>   solid_eval;
 
-        auto &used_level_set = do_level_set_pressure_gradient_interpolation ?
-                                 interpolated_level_set_to_pressure_space :
-                                 level_set;
+        auto &used_heaviside_eval = do_level_set_pressure_gradient_interpolation ?
+                                      heaviside_interpolated_to_pressure_space_eval :
+                                      heaviside_eval;
 
+        const unsigned int cell_category = cut_type == CutUtil::CutType::not_cut ?
+                                             0 :
+                                             matrix_free.get_cell_range_category(cell_range);
         if (temperature)
           {
-            normal_vec      = std::make_unique<FECellIntegrator<dim, dim, double>>(matrix_free,
-                                                                              normal_dof_idx,
-                                                                              flow_vel_quad_idx);
-            temperature_val = std::make_unique<FECellIntegrator<dim, 1, double>>(matrix_free,
-                                                                                 temp_dof_idx,
-                                                                                 flow_vel_quad_idx);
+            normal_vec_eval =
+              std::make_unique<FECellIntegrator<dim, dim, double>>(matrix_free,
+                                                                   normal_dof_idx,
+                                                                   flow_vel_quad_idx);
+            if (cut_type == CutUtil::CutType::not_cut)
+              temperature_eval.emplace_back(matrix_free, temp_dof_idx, flow_vel_quad_idx);
+            else // temperature is cut
+              {
+                if (cell_category == CutUtil::CellCategory::liquid or
+                    cell_category == CutUtil::CellCategory::intersected)
+                  temperature_eval.emplace_back(matrix_free,
+                                                temp_dof_idx,
+                                                flow_vel_quad_idx,
+                                                0 /*selected component*/,
+                                                cell_category /*active_fe_index*/);
+                if (cut_type == CutUtil::CutType::two_phase_cut and
+                    (cell_category == CutUtil::CellCategory::gas or
+                     cell_category == CutUtil::CellCategory::intersected))
+                  temperature_eval.emplace_back(matrix_free,
+                                                temp_dof_idx,
+                                                flow_vel_quad_idx,
+                                                1 /*selected component*/,
+                                                cell_category /*active_fe_index*/);
+              }
           }
         if (solid)
-          solid_val = std::make_unique<FECellIntegrator<dim, 1, double>>(matrix_free,
-                                                                         solid_dof_idx,
-                                                                         flow_vel_quad_idx);
+          solid_eval = std::make_unique<FECellIntegrator<dim, 1, double>>(matrix_free,
+                                                                          solid_dof_idx,
+                                                                          flow_vel_quad_idx);
 
-        FECellIntegrator<dim, dim, double> surface_tension(matrix_free,
-                                                           flow_vel_dof_idx,
-                                                           flow_vel_quad_idx);
+        FECellIntegrator<dim, dim, double> surface_tension_eval(matrix_free,
+                                                                flow_vel_dof_idx,
+                                                                flow_vel_quad_idx);
 
         auto alpha = VectorizedArray<double>(data.surface_tension_coefficient);
 
         const double &d_alpha0 = data.temperature_dependent_surface_tension_coefficient;
 
-        for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
+        for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
-            level_set.reinit(cell);
-            level_set.read_dof_values_plain(level_set_as_heaviside);
+            heaviside_eval.reinit(cell);
+            heaviside_eval.read_dof_values_plain(level_set_as_heaviside);
 
             if (do_level_set_pressure_gradient_interpolation)
               {
-                interpolated_level_set_to_pressure_space.reinit(cell);
+                heaviside_interpolated_to_pressure_space_eval.reinit(cell);
 
                 UtilityFunctions::compute_gradient_at_interpolated_dof_values<dim>(
-                  level_set,
-                  interpolated_level_set_to_pressure_space,
+                  heaviside_eval,
+                  heaviside_interpolated_to_pressure_space_eval,
                   ls_to_pressure_grad_interpolation_matrix);
               }
 
-            if (delta_phase_weighted)
-              used_level_set.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+            if (delta_phase_weighted or cut_type != CutUtil::CutType::not_cut)
+              used_heaviside_eval.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
             else
-              used_level_set.evaluate(EvaluationFlags::gradients);
+              used_heaviside_eval.evaluate(EvaluationFlags::gradients);
 
-            surface_tension.reinit(cell);
+            surface_tension_eval.reinit(cell);
 
-            curvature.reinit(cell);
-            curvature.read_dof_values_plain(solution_curvature);
-            curvature.evaluate(EvaluationFlags::values);
+            curvature_eval.reinit(cell);
+            curvature_eval.read_dof_values_plain(solution_curvature);
+            curvature_eval.evaluate(EvaluationFlags::values);
 
-            if (temperature)
+            if (normal_vec_eval)
               {
-                normal_vec->reinit(cell);
-                normal_vec->read_dof_values_plain(*solution_normal_vector);
-                normal_vec->evaluate(EvaluationFlags::values);
-
-                temperature_val->reinit(cell);
-                temperature_val->read_dof_values_plain(*temperature);
-                temperature_val->evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+                normal_vec_eval->reinit(cell);
+                normal_vec_eval->read_dof_values_plain(*solution_normal_vector);
+                normal_vec_eval->evaluate(EvaluationFlags::values);
               }
-            if (solid)
+            for (auto &temp_eval : temperature_eval)
               {
-                solid_val->reinit(cell);
-                solid_val->read_dof_values_plain(*solid);
-                solid_val->evaluate(EvaluationFlags::values);
+                temp_eval.reinit(cell);
+                temp_eval.read_dof_values_plain(*temperature);
+                temp_eval.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+              }
+            if (solid_eval)
+              {
+                solid_eval->reinit(cell);
+                solid_eval->read_dof_values_plain(*solid);
+                solid_eval->evaluate(EvaluationFlags::values);
               }
 
-            for (unsigned int q_index = 0; q_index < surface_tension.n_q_points; ++q_index)
+            for (const unsigned int q : surface_tension_eval.quadrature_point_indices())
               {
                 const auto mask =
-                  solid ? 1. - solid_val->get_value(q_index) : VectorizedArray<double>(1.0);
+                  solid_eval ? 1. - solid_eval->get_value(q) : VectorizedArray<double>(1.0);
 
                 VectorizedArray<double> weight(1.0);
                 if (delta_phase_weighted)
-                  weight = delta_phase_weighted->compute_weight(used_level_set.get_value(q_index));
+                  weight = delta_phase_weighted->compute_weight(used_heaviside_eval.get_value(q));
 
-                if (temperature)
+                if (not temperature_eval.empty())
                   {
-                    const auto n =
-                      MeltPoolDG::VectorTools::normalize<dim>(normal_vec->get_value(q_index),
-                                                              tolerance_normal_vector);
-                    const auto T      = temperature_val->get_value(q_index);
-                    const auto grad_T = temperature_val->get_gradient(q_index);
+                    const auto n = VectorTools::normalize<dim>(normal_vec_eval->get_value(q),
+                                                               tolerance_normal_vector);
+                    VectorizedArray<double>                                  T;
+                    typename FECellIntegrator<dim, 1, double>::gradient_type grad_T;
+                    switch (cut_type)
+                      {
+                          case CutUtil::CutType::not_cut: {
+                            T      = temperature_eval[0].get_value(q);
+                            grad_T = temperature_eval[0].get_gradient(q);
+                            break;
+                          }
+                          case CutUtil::CutType::two_phase_cut: {
+                            if (cell_category == CutUtil::CellCategory::intersected)
+                              {
+                                // For intersected cut cells, temperature_val[0] contains the
+                                // temperature values of the liquid domain and temperature_val[1]
+                                // the temperature values of the gas domain that each may be ghost
+                                // values. We use the level set as heaviside as in indicator to
+                                // select the non-ghosted values each.
+                                const auto indicator = used_heaviside_eval.get_value(q);
+                                T = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+                                  indicator,
+                                  0.5,
+                                  temperature_eval[0].get_value(q),
+                                  temperature_eval[1].get_value(q));
+                                const auto grad_T_liquid = temperature_eval[0].get_gradient(q);
+                                const auto grad_T_gas    = temperature_eval[1].get_gradient(q);
+                                for (int d = 0; d < dim; ++d)
+                                  grad_T[d] =
+                                    compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+                                      indicator, 0.5, grad_T_liquid[d], grad_T_gas[d]);
+                              }
+                            else
+                              {
+                                T      = temperature_eval[0].get_value(q);
+                                grad_T = temperature_eval[0].get_gradient(q);
+                              }
+                            break;
+                          }
+                          case CutUtil::CutType::one_phase_cut: {
+                            if (cell_category == CutUtil::CellCategory::liquid)
+                              {
+                                T      = temperature_eval[0].get_value(q);
+                                grad_T = temperature_eval[0].get_gradient(q);
+                              }
+                            else if (cell_category == CutUtil::CellCategory::intersected)
+                              {
+                                // For intersected cut cells, temperature_val[0] contains the
+                                // temperature values of the liquid domain that each may be ghost
+                                // values. We use the level set as heaviside as in indicator to
+                                // select the non-ghosted values each. For ghosted values we insert
+                                // a dummy temperature.
+                                const auto indicator = used_heaviside_eval.get_value(q);
+                                T = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+                                  indicator,
+                                  0.5,
+                                  temperature_eval[0].get_value(q),
+                                  data.reference_temperature);
+                                const auto grad_T_liquid = temperature_eval[0].get_gradient(q);
+                                for (int d = 0; d < dim; ++d)
+                                  grad_T[d] =
+                                    compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+                                      indicator, 0.5, grad_T_liquid[d], 0.0);
+                              }
+                            else if (cell_category == CutUtil::CellCategory::gas)
+                              {
+                                // we cannot evaluate temperature here so we just use a dummy value
+                                T      = data.reference_temperature;
+                                grad_T = 0.0;
+                              }
+                            else
+                              DEAL_II_NOT_IMPLEMENTED();
+                            break;
+                          }
+                        default:
+                          DEAL_II_NOT_IMPLEMENTED();
+                      }
 
                     // compute constant surface tension
                     alpha = local_compute_temperature_dependent_surface_tension_coefficient(T);
-                    const auto constant_surface_tension = alpha * curvature.get_value(q_index) *
+                    const auto constant_surface_tension = alpha * curvature_eval.get_value(q) *
                                                           weight *
-                                                          used_level_set.get_gradient(q_index);
+                                                          used_heaviside_eval.get_gradient(q);
 
 
                     // compute Marangoni convection
-                    const auto delta = used_level_set.get_gradient(q_index).norm() * weight;
+                    const auto delta = used_heaviside_eval.get_gradient(q).norm() * weight;
                     const Tensor<1, dim, VectorizedArray<double>> temp_surf_ten =
                       -d_alpha0 * (grad_T - n * scalar_product(n, grad_T)) * delta;
 
-                    surface_tension.submit_value(mask * (constant_surface_tension + temp_surf_ten),
-                                                 q_index);
+                    surface_tension_eval.submit_value(mask *
+                                                        (constant_surface_tension + temp_surf_ten),
+                                                      q);
                   }
                 else
-                  surface_tension.submit_value(mask * alpha * curvature.get_value(q_index) *
-                                                 used_level_set.get_gradient(q_index) * weight,
-                                               q_index);
+                  surface_tension_eval.submit_value(mask * alpha * curvature_eval.get_value(q) *
+                                                      used_heaviside_eval.get_gradient(q) * weight,
+                                                    q);
               }
-            surface_tension.integrate_scatter(EvaluationFlags::values, force_rhs);
+            surface_tension_eval.integrate_scatter(EvaluationFlags::values, force_rhs);
           }
       },
       force_rhs,

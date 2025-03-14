@@ -73,6 +73,7 @@
 #include <ios>
 #include <iostream>
 #include <map>
+#include <set>
 #include <sstream>
 
 namespace MeltPoolDG::MeltPool
@@ -968,27 +969,60 @@ namespace MeltPoolDG::MeltPool
 #else
                 [this]
 #endif
-                (const DoFHandler<dim> &dh) {
-                  Assert(&dh == &scratch_data->get_dof_handler(temp_dof_idx), ExcInternalError());
+                (const DoFHandler<dim> &cut_dof_handler) {
+                  Assert(&cut_dof_handler == &scratch_data->get_dof_handler(temp_dof_idx),
+                         ExcInternalError());
 
+                  // 1) copy current solution vector in temporary storage
+                  std::vector<std::pair<const DoFHandler<dim> *,
+                                        std::function<void(std::vector<VectorType *> &)>>>
+                    data;
+                  this->attach_vectors(data);
+                  std::vector<VectorType *> op_vectors;
+                  for (const auto &d : data)
+                    {
+                      if (d.first == &cut_dof_handler) // skip cut DoFHandler
+                        continue;
+                      std::vector<VectorType *> temp_op_vectors;
+                      d.second(temp_op_vectors);
+                      op_vectors.insert(op_vectors.end(),
+                                        temp_op_vectors.begin(),
+                                        temp_op_vectors.end());
+                    }
+                  Assert(std::set(op_vectors.begin(), op_vectors.end()).size() == op_vectors.size(),
+                         dealii::ExcMessage(
+                           "There is at least one duplicate vector attached by attach_vectors()!"));
+                  std::vector<VectorType> temp_vectors(op_vectors.size());
+                  for (unsigned int i = 0; i < op_vectors.size(); ++i)
+                    op_vectors[i]->swap(temp_vectors[i]);
+
+                  // 2) reinit matrix free
                   scratch_data->create_partitioning();
-
                   heat_operation->setup_constraints(*scratch_data);
-
                   scratch_data->build(true /*enable_boundary_faces*/,
                                       true /*enable_inner_face_loops*/,
                                       true /*enable_normal_vector_update*/);
-
-                  // recompute heat source TODO is this even necessary?
-                  scratch_data->initialize_dof_vector(heat_operation->get_heat_source(),
-                                                      temp_dof_idx);
-
+                  // 3) reinit operators
+                  level_set_operation->reinit();
+                  if (laser_operation)
+                    laser_operation->reinit();
+                  if (evaporation_operation)
+                    evaporation_operation->reinit();
+                  if (melt_front_propagation)
+                    melt_front_propagation->reinit();
                   if (darcy_operation)
                     darcy_operation->reinit();
-
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-                  adaflo_flow_operation->reinit_3();
+                  adaflo_flow_operation->reinit_2();
 #endif
+
+                  // 4) copy vectors back
+                  for (unsigned int i = 0; i < op_vectors.size(); ++i)
+                    op_vectors[i]->copy_locally_owned_data_from(temp_vectors[i]);
+
+                  // recompute heat source
+                  scratch_data->initialize_dof_vector(heat_operation->get_heat_source(),
+                                                      temp_dof_idx);
                 });
 
               heat_operation = heat_cut_operation;
@@ -1365,10 +1399,21 @@ namespace MeltPoolDG::MeltPool
             level_set_operation->get_level_set().reinit(dof_handler_ls.locally_owned_dofs(),
                                                         locally_relevant_dofs,
                                                         dof_handler_ls.get_communicator());
+
+            std::shared_ptr<dealii::Function<dim>> initial_level_set =
+              base_in->get_initial_condition("level_set", true /*is optional*/);
+            if (not initial_level_set)
+              initial_level_set =
+                base_in->get_initial_condition("signed_distance", true /*is optional*/);
+            AssertThrow(
+              initial_level_set,
+              ExcMessage(
+                "For the level set operation either a function for the initial level set or the "
+                "signed distance field must be provided. Abort ..."));
+
             dealii::VectorTools::interpolate(scratch_data->get_mapping(),
                                              dof_handler_ls,
-                                             *base_in->get_initial_condition("signed_distance",
-                                                                             false /*is optional*/),
+                                             *initial_level_set,
                                              level_set_operation->get_level_set());
           }
         heat_operation->distribute_dofs(dof_handler_heat);
