@@ -31,13 +31,9 @@ namespace MeltPoolDG::Multiphase
     , fe_point_temp(FE_DGQ<dim>(flow_scratch_data.flow_data.fe.degree), dim + 2)
     , n_dofs_per_cell(fe_point_temp.dofs_per_cell)
   {
-    const double q_1 = 2.*flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity+
-              flow_scratch_data.flow_data.material_data_gas_phase.thermal_conductivity/flow_scratch_data.flow_data.material_data_gas_phase.specific_gas_constant*
-              (flow_scratch_data.flow_data.material_data_gas_phase.gamma-1.);
+    const double q_1 = flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity;
 
-    const double q_2 = 2.*flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity+
-              flow_scratch_data.flow_data.material_data_liquid_phase.thermal_conductivity/flow_scratch_data.flow_data.material_data_liquid_phase.specific_gas_constant*
-              (flow_scratch_data.flow_data.material_data_liquid_phase.gamma-1.);
+    const double q_2 = flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity;
 
     alpha_1 = q_1/(q_1+q_2);
     alpha_2 = 1.-alpha_1;
@@ -830,6 +826,8 @@ namespace MeltPoolDG::Multiphase
             create_face_integrator(true, CutUtil::CellCategory::intersected, 0);
     FEFaceIntegrator<dim, dim + 2, number> phi_gas_m_intersected =
             create_face_integrator(true, CutUtil::CellCategory::intersected, dim + 2);
+    FEFaceIntegrator<dim, dim + 2, number> phi_gas_p =
+            create_face_integrator(false, CutUtil::CellCategory::gas, dim + 2);
 
     const number cell_side_length = flow_scratch_data.scratch_data.get_min_cell_size();
 
@@ -893,7 +891,10 @@ namespace MeltPoolDG::Multiphase
         break;
 
         case CutUtil::FaceType::mixed_face_gas: {
-          apply_ghost_penalty(phi_gas_m, phi_gas_p_intersected);
+          // Note:
+          // 'apply_ghost_penalty(phi_gas_m, phi_gas_p_intersected);'
+          // gives wrong results here.
+          apply_ghost_penalty(phi_gas_m_intersected, phi_gas_p);
         }
         break;
 

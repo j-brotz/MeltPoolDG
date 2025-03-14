@@ -348,7 +348,7 @@ namespace MeltPoolDG::Flow
                 phi.boundary_id(),
                 w_m,
                 grad_w_m,
-                flow_scratch_data.flow_data.material_data_gas_phase.gamma);
+                flow_scratch_data.flow_data);
 
             auto flux = convective_terms.calculate_convective_numerical_flux(w_m, w_p, normal);
 
@@ -641,7 +641,7 @@ namespace MeltPoolDG::Flow
                 phi.boundary_id(),
                 w_m,
                 grad_w_m,
-                flow_scratch_data.flow_data.material_data_gas_phase.gamma);
+                flow_scratch_data.flow_data);
 
             ConservedVariablesType flux = viscous_terms.calculate_viscous_numerical_flux(
               w_m, w_p, grad_w_m, grad_w_p, normal, penalty_parameter);

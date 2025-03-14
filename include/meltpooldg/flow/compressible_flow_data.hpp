@@ -198,7 +198,7 @@ namespace MeltPoolDG::Flow
         AssertThrow(!dealii::numbers::is_invalid(material_data_gas_phase.eos_parameters.p_inf),
                   dealii::ExcMessage(
                     "Inverse time step size must be set to compute the rhs vector."));
-      else if (material_data_gas_phase.equation_of_state == EOS::noble_abel_stiffend_gas)
+      else if (material_data_gas_phase.equation_of_state == EOS::noble_abel_stiffened_gas)
         AssertThrow(!dealii::numbers::is_invalid(material_data_gas_phase.eos_parameters.p_inf) &&
                     !dealii::numbers::is_invalid(material_data_gas_phase.eos_parameters.b) &&
                     !dealii::numbers::is_invalid(material_data_gas_phase.eos_parameters.q),
@@ -211,7 +211,7 @@ namespace MeltPoolDG::Flow
             AssertThrow(!dealii::numbers::is_invalid(material_data_liquid_phase.eos_parameters.p_inf),
                       dealii::ExcMessage(
                         "Inverse time step size must be set to compute the rhs vector."));
-          else if (material_data_liquid_phase.equation_of_state == EOS::noble_abel_stiffend_gas)
+          else if (material_data_liquid_phase.equation_of_state == EOS::noble_abel_stiffened_gas)
             AssertThrow(!dealii::numbers::is_invalid(material_data_liquid_phase.eos_parameters.p_inf) &&
                     !dealii::numbers::is_invalid(material_data_liquid_phase.eos_parameters.b) &&
                     !dealii::numbers::is_invalid(material_data_liquid_phase.eos_parameters.q),

@@ -13,6 +13,7 @@
 
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/flow/compressible_flow_data.hpp>
 
 #include <map>
 #include <memory>
@@ -143,7 +144,8 @@ namespace MeltPoolDG::Flow
       dealii::types::boundary_id                                     boundary_id,
       const ConservedVariablesType                                  &w_m,
       const ConservedVariablesGradType                              &grad_w_m,
-      number                                                         gamma) const;
+      const CompressibleFlowData      &flow_data,
+      bool                            is_gas_phase = true) const;
 
     /**
      * This function sets the corresponding values on the fictional outer face if the face is
@@ -151,7 +153,7 @@ namespace MeltPoolDG::Flow
      * as their linearized version required when for example computing the Jacobian in an implicit
      * scheme.
      *
-     * @param q_point Coordinates of the quadratiure point.
+     * @param q_point Coordinates of the quadrature point.
      * @param normal Outer facing normal vector.
      * @param boundary_id ID of the current boundary.
      * @param w_m Primary variables on the inner face.

@@ -6,7 +6,7 @@
 
 namespace MeltPoolDG::Flow
 {
-  BETTER_ENUM(EOS, char, ideal_gas, stiffened_gas, noble_abel_stiffend_gas)
+  BETTER_ENUM(EOS, char, ideal_gas, stiffened_gas, noble_abel_stiffened_gas)
 
   template <typename number = double>
   struct EOSParameters

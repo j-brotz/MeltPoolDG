@@ -9,6 +9,8 @@
 
 #include <deal.II/non_matching/mesh_classifier.h>
 
+#include <deal.II/numerics/vector_tools.h>
+
 #include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operation.hpp>
 #include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operator.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
@@ -271,49 +273,10 @@ namespace MeltPoolDG::Multiphase
   template <int dim, typename number>
   void CompressibleMultiphaseOperation<dim, number>::set_initial_condition(const Function<dim> &function)
   {
+    if (flow_scratch_data.solution_history.get_current_solution().has_ghost_elements())
       flow_scratch_data.solution_history.get_current_solution().zero_out_ghost_values();
-
-      for (unsigned int cell = 0; cell < flow_scratch_data.scratch_data.get_matrix_free().n_cell_batches(); ++cell)
-      {
-          const auto active_fe_index = flow_scratch_data.scratch_data.get_matrix_free().get_cell_category(cell);
-
-          // lambda function to set initial conditions for given phase
-          auto set_initial_condition_for_phase = [&](const unsigned int component_offset, const CutUtil::CellCategory category)
-          {
-              FECellIntegrator<dim, dim + 2, number> phi(
-                  flow_scratch_data.scratch_data.get_matrix_free(),
-                  flow_scratch_data.dof_idx,
-                  flow_scratch_data.quad_idx,
-                  component_offset,
-                  category);
-
-              MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, dim + 2, number> inverse(phi);
-
-              phi.reinit(cell);
-              for (const unsigned int q : phi.quadrature_point_indices())
-                  phi.submit_dof_value(
-                      VectorTools::evaluate_function_at_vectorized_points<dim, number, dim + 2>(
-                          function, phi.quadrature_point(q)),
-                      q);
-
-              inverse.transform_from_q_points_to_basis(dim + 2, phi.begin_dof_values(), phi.begin_dof_values());
-              phi.set_dof_values(flow_scratch_data.solution_history.get_current_solution());
-          };
-
-          if (active_fe_index == CutUtil::CellCategory::liquid)
-            {
-              set_initial_condition_for_phase(0, CutUtil::CellCategory::liquid);
-            }
-          else if (active_fe_index == CutUtil::CellCategory::intersected)
-            {
-              set_initial_condition_for_phase(0, CutUtil::CellCategory::intersected);
-              set_initial_condition_for_phase(dim+2, CutUtil::CellCategory::intersected);
-            }
-          else if (active_fe_index == CutUtil::CellCategory::gas)
-            {
-              set_initial_condition_for_phase(dim+2, CutUtil::CellCategory::gas);
-            }
-      }
+    dealii::VectorTools::interpolate(flow_scratch_data.scratch_data.get_dof_handler(flow_scratch_data.dof_idx),function,flow_scratch_data.solution_history.get_current_solution());
+    flow_scratch_data.solution_history.get_current_solution().update_ghost_values();
   }
 
   template <int dim, typename number>

@@ -6,6 +6,7 @@
 
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_fluid_material_data.hpp>
+#include <iomanip>
 
 namespace MeltPoolDG::Flow
 {
@@ -29,7 +30,7 @@ namespace MeltPoolDG::Flow
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> velocity =
         MeltPoolDG::Flow::calculate_velocity<dim, number>(conserved_variables);
 
-      switch (flow_data.material_data_gas_phase.equation_of_state)
+      switch (material_data.equation_of_state)
         {
           case EOS::ideal_gas: {
             return (material_data.gamma - 1.) * (conserved_variables[dim + 1] -
@@ -39,9 +40,9 @@ namespace MeltPoolDG::Flow
             return (material_data.gamma - 1.) * (conserved_variables[dim + 1] -
                              conserved_variables[0] * 0.5 * scalar_product(velocity, velocity))-material_data.gamma * material_data.eos_parameters.p_inf;
           }
-          case EOS::noble_abel_stiffend_gas: {
-            return (material_data.gamma - 1.) * (conserved_variables[dim + 1] -
-                             conserved_variables[0] * 0.5 * scalar_product(velocity, velocity)-material_data.eos_parameters.q)*(material_data.gamma-1.)/(1./conserved_variables[0] * material_data.eos_parameters.b)-material_data.gamma * material_data.eos_parameters.p_inf;
+          case EOS::noble_abel_stiffened_gas: {
+            return ((material_data.gamma - 1.) * (conserved_variables[dim + 1]-
+                             0.5 * conserved_variables[0] * scalar_product(velocity, velocity)-conserved_variables[0]*material_data.eos_parameters.q)-material_data.gamma * material_data.eos_parameters.p_inf * (1. - conserved_variables[0] * material_data.eos_parameters.b))/(1. - conserved_variables[0] * material_data.eos_parameters.b);
           }
           default:
            AssertThrow(false, ExcNotImplemented("This code section should never be reached!"));
@@ -81,13 +82,13 @@ namespace MeltPoolDG::Flow
         inv_rho *
         (grad_conserved_variables[dim + 1] - inv_rho * conserved_variables[dim + 1] * grad_rho);
 
-      switch (flow_data.material_data_gas_phase.equation_of_state)
+      switch (material_data.equation_of_state)
         {
           case EOS::ideal_gas: {
             return (material_data.gamma - 1.0) / material_data.specific_gas_constant * (grad_E - grad_u * u);
           }
           case EOS::stiffened_gas:
-          case EOS::noble_abel_stiffend_gas: {
+          case EOS::noble_abel_stiffened_gas: {
             return material_data.gamma / material_data.specific_isobaric_heat * (grad_E - grad_u * u + material_data.eos_parameters.p_inf * inv_rho * inv_rho * grad_rho);
           }
           default:
@@ -115,7 +116,7 @@ namespace MeltPoolDG::Flow
       const auto pressure = calculate_pressure<dim, number, is_gas_phase>(conserved_variables, flow_data);
       const auto density = conserved_variables[0];
 
-      switch (flow_data.material_data_gas_phase.equation_of_state)
+      switch (material_data.equation_of_state)
         {
           case EOS::ideal_gas: {
             return std::sqrt(material_data.gamma * pressure / density);
@@ -123,7 +124,7 @@ namespace MeltPoolDG::Flow
           case EOS::stiffened_gas: {
             return std::sqrt(material_data.gamma * (pressure+material_data.eos_parameters.p_inf) / density);
           }
-          case EOS::noble_abel_stiffend_gas: {
+          case EOS::noble_abel_stiffened_gas: {
             return std::sqrt(material_data.gamma * (pressure+material_data.eos_parameters.p_inf) / (density*(1.-density*material_data.eos_parameters.b)));
           }
           default:
@@ -151,7 +152,7 @@ namespace MeltPoolDG::Flow
       const auto pressure = calculate_pressure<dim, number, is_gas_phase>(conserved_variables, flow_data);
       const auto density = conserved_variables[0];
 
-      switch (flow_data.material_data_gas_phase.equation_of_state)
+      switch (material_data.equation_of_state)
         {
           case EOS::ideal_gas: {
             return pressure / (material_data.specific_gas_constant * density);
@@ -159,7 +160,7 @@ namespace MeltPoolDG::Flow
           case EOS::stiffened_gas: {
             return (pressure+material_data.eos_parameters.p_inf)*material_data.gamma/(material_data.specific_isobaric_heat*density*(material_data.gamma-1.));
           }
-          case EOS::noble_abel_stiffend_gas: {
+          case EOS::noble_abel_stiffened_gas: {
             return (pressure+material_data.eos_parameters.p_inf)*(1./density-material_data.eos_parameters.b)*material_data.gamma/((material_data.gamma-1.)*material_data.specific_isobaric_heat);
           }
           default:
@@ -220,7 +221,7 @@ namespace MeltPoolDG::Flow
           for (unsigned int i = 1; i < dim + 1; i++)
             u_cons[i] = u_prim[i] * u_cons[0];
 
-      switch (flow_data.material_data_gas_phase.equation_of_state)
+      switch (material_data.equation_of_state)
         {
           case EOS::ideal_gas: {
             // density
@@ -242,7 +243,7 @@ namespace MeltPoolDG::Flow
               u_prim[dim + 1] + material_data.eos_parameters.p_inf/u_cons[0] + 0.5 * scalar_product(velocity,velocity));
             break;
           }
-          case EOS::noble_abel_stiffend_gas: {
+          case EOS::noble_abel_stiffened_gas: {
             // density
             u_cons[0] = (u_prim[0]+material_data.eos_parameters.p_inf) / (material_data.specific_isobaric_heat * u_prim[dim + 1] * (material_data.gamma-1.)/material_data.gamma + material_data.eos_parameters.b *(u_prim[0]+material_data.eos_parameters.p_inf));
             // total energy
@@ -257,5 +258,32 @@ namespace MeltPoolDG::Flow
         }
 
       return u_cons;
+    }
+
+  template <int dim, typename number>
+  inline DEAL_II_ALWAYS_INLINE //
+  VectorizedArray<number>
+  compute_inner_energy_from_pressure(const VectorizedArray<number> &pressure,
+                                      const VectorizedArray<number> &density,
+                                      const Flow::CompressibleFluidMaterialPhaseData<number> &material_data)
+    {
+      switch (material_data.equation_of_state)
+        {
+          case EOS::ideal_gas: {
+            return pressure / (material_data.gamma - 1.);
+            break;
+          }
+          case EOS::stiffened_gas: {
+            return (pressure+material_data.gamma * material_data.eos_parameters.p_inf) / (material_data.gamma - 1.);
+            break;
+          }
+          case EOS::noble_abel_stiffened_gas: {
+            return (pressure+material_data.gamma * material_data.eos_parameters.p_inf) / (material_data.gamma - 1.)
+                            * (1.-density * material_data.eos_parameters.b) + density * material_data.eos_parameters.q;
+            break;
+          }
+          default:
+            AssertThrow(false, ExcNotImplemented("This code section should never be reached!"));
+        }
     }
 } // namespace MeltPoolDG::Flow

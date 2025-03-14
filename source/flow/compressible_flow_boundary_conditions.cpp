@@ -1,5 +1,6 @@
 
 #include <meltpooldg/flow/compressible_flow_boundary_conditions.hpp>
+#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 
 namespace MeltPoolDG::Flow
 {
@@ -95,7 +96,8 @@ namespace MeltPoolDG::Flow
     const dealii::types::boundary_id                               boundary_id,
     const ConservedVariablesType                                  &w_m,
     const ConservedVariablesGradType                              &grad_w_m,
-    const number gamma) const -> std::tuple<ConservedVariablesType, ConservedVariablesGradType>
+    const CompressibleFlowData       &flow_data,
+    const bool is_gas_phase) const -> std::tuple<ConservedVariablesType, ConservedVariablesGradType>
   {
     ConservedVariablesType     w_p;
     ConservedVariablesGradType grad_w_p;
@@ -136,8 +138,10 @@ namespace MeltPoolDG::Flow
       }
     else if (boundary_type == BoundaryType::inflow)
       {
+        const unsigned int component_offset = is_gas_phase ? 0 : dim+2;
         // Dirichlet
-        w_p      = get_boundary_value(boundary_id, BoundaryType::inflow, q_point);
+        for (unsigned int i=0; i<dim+2; ++i)
+          w_p[i] = get_boundary_value(boundary_id, BoundaryType::inflow, q_point, i+component_offset);
         grad_w_p = grad_w_m;
       }
     else if (boundary_type == BoundaryType::subsonic_outflow_fixed_pressure)
@@ -152,12 +156,17 @@ namespace MeltPoolDG::Flow
           p_dyn += w_m[i] * w_m[i];
 
         p_dyn /= (w_m[0] * 2.);
-        w_p[dim + 1] = get_boundary_value(boundary_id,
+        const unsigned int component_offset = is_gas_phase ? 0 : dim+2;
+        const VectorizedArray<number> pressure = get_boundary_value(boundary_id,
                                           BoundaryType::subsonic_outflow_fixed_pressure,
                                           q_point,
-                                          dim + 1) /
-                         (gamma - 1.) +
-                       p_dyn;
+                                          dim + 1 + component_offset);
+
+        const auto material_data = is_gas_phase ? flow_data.material_data_gas_phase : flow_data.material_data_liquid_phase;
+        // consider equation of state for computation of inner energy from given pressure
+        const VectorizedArray<number> inner_energy = compute_inner_energy_from_pressure<dim,number>(pressure, w_p[0], material_data);
+
+        w_p[dim + 1] = inner_energy + p_dyn;
         grad_w_p[dim + 1] = grad_w_m[dim + 1];
       }
     else if (boundary_type == BoundaryType::subsonic_outflow_fixed_energy)
@@ -166,10 +175,11 @@ namespace MeltPoolDG::Flow
         w_p      = w_m;
         grad_w_p = -grad_w_m;
         // Dirichlet
+        const unsigned int component_offset = is_gas_phase ? 0 : dim+2;
         w_p[dim + 1]      = get_boundary_value(boundary_id,
                                           BoundaryType::subsonic_outflow_fixed_energy,
                                           q_point,
-                                          dim + 1);
+                                          dim + 1 + component_offset);
         grad_w_p[dim + 1] = grad_w_m[dim + 1];
       }
     else

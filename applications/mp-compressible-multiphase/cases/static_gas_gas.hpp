@@ -16,10 +16,10 @@
 namespace MeltPoolDG::Simulation::CompressibleMultiphase
 {
   template <int dim>
-  class FlowFieldStaticMP : public Function<dim>
+  class FlowField : public Function<dim>
   {
   public:
-    explicit FlowFieldStaticMP(const bool gas_phase_is_first = true)
+    explicit FlowField(const bool gas_phase_is_first = true)
       : Function<dim>(2*(dim + 2)), gas_phase_is_first(gas_phase_is_first)
     {}
 
@@ -45,43 +45,31 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
 
       // gas phase
       if (component == gas_components[0])
-        return 84163.365 / (287.1 * 3000.0);
+        return 1.;
       else if (component == gas_components[1])
         return 0.;
       else if (component == gas_components[2])
-        {
-          constexpr double pressure = 84163.365;
-          constexpr double gamma = 1.4;
-          return pressure / (gamma-1.);
-        }
+        return 1. * 1004.85 / 1.4 * 293.15;
 
       // liquid phase
       else if (component == liquid_components[0])
-        return 3622.736592452169461514105064801466369162687854;//3622.73659245217;
+        return 1.;
       else if (component == liquid_components[1])
         return 0.;
       else if (component == liquid_components[2])
-        {
-          constexpr double pressure = 84163.365;
-          constexpr double b = 1.8759e-4;
-          constexpr double gamma = 1.4355;
-          constexpr double p_inf =  1.1587e10;
-          constexpr double q = -607968.8;
-          constexpr double rho = 3622.736592452169461514105064801466369162687854;//3622.73659245217;
-          return rho*((pressure + gamma * p_inf)/(gamma-1.)*(1./rho - b) + q);
-        }
+        return 1. * 1004.85 / 1.4 * 293.15;
       else
         return 0.;
     }
     private:
-    bool gas_phase_is_first;
+      bool gas_phase_is_first;
   };
 
   template <int dim>
-  class SimulationStaticLiquidGas final : public Multiphase::CompressibleMultiphaseCase<dim>
+  class SimulationStaticGasGas final : public Multiphase::CompressibleMultiphaseCase<dim>
   {
   public:
-    SimulationStaticLiquidGas(std::string parameter_file, const MPI_Comm mpi_communicator)
+    SimulationStaticGasGas(std::string parameter_file, const MPI_Comm mpi_communicator)
       : Multiphase::CompressibleMultiphaseCase<dim>(parameter_file, mpi_communicator)
     {}
 
@@ -120,8 +108,8 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     void
     set_boundary_conditions() override
     {
-      auto inflow_outflow_solution = std::make_shared<FlowFieldStaticMP<dim>>();
-      auto dummy_solution          = std::make_shared<FlowFieldStaticMP<dim>>();
+      auto inflow_outflow_solution = std::make_shared<FlowField<dim>>();
+      auto dummy_solution          = std::make_shared<FlowField<dim>>();
       this->attach_boundary_condition({BoundaryID::inflow, inflow_outflow_solution},
                                       "inflow",
                                       "compressible_multiphase");
@@ -134,7 +122,8 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     void
     set_field_conditions() override
     {
-      auto initial_condition = std::make_shared<FlowFieldStaticMP<dim>>(false /*gas_phase_is_first*/);
+      // The solution vector is ordered, such that the liquid phase is the first phase and the gas phase is the second phase.
+      auto initial_condition = std::make_shared<FlowField<dim>>(false /*gas_phase_is_first*/);
       this->attach_initial_condition(initial_condition, "compressible_multiphase");
 
       // set level-set function
@@ -153,7 +142,7 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     void
     do_postprocessing(const GenericDataOut<dim> &generic_data_out) const override
     {
-      FlowFieldStaticMP<dim> reference_values;
+      FlowField<dim> reference_values;
       this->print_relative_norm(generic_data_out, reference_values, "Norm");
     }
 
@@ -195,10 +184,10 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
   // for self-registration
   template <int dim>
   SimulationCaseRegistrar<Multiphase::CompressibleMultiphaseCase<dim>>
-    SimulationStaticLiquidGas<dim>::registrar(
-      "static_liquid_gas",
+    SimulationStaticGasGas<dim>::registrar(
+      "static_gas_gas",
       [](const std::string &parameter_file, const MPI_Comm mpi_communicator) {
-        return std::make_unique<SimulationStaticLiquidGas<dim>>(parameter_file,
+        return std::make_unique<SimulationStaticGasGas<dim>>(parameter_file,
                                                                     mpi_communicator);
       });
 } // namespace MeltPoolDG::Simulation::CompressibleMultiphase

@@ -216,16 +216,15 @@ namespace MeltPoolDG::Flow
     const auto normal   = evaluator_m.normal_vector(q);
     const auto grad_w_m = evaluator_m.get_gradient(q);
 
-    const number gamma = is_gas_phase ? flow_scratch_data.flow_data.material_data_gas_phase.gamma : flow_scratch_data.flow_data.material_data_liquid_phase.gamma;
-
-    const auto [w_p, grad_w_p] =
+    auto [w_p, grad_w_p] =
       flow_scratch_data.boundary_conditions.get_boundary_face_value_and_gradient(
         evaluator_m.quadrature_point(q),
         normal,
         boundary_id,
         w_m,
         grad_w_m,
-        gamma);
+        flow_scratch_data.flow_data,
+        is_gas_phase);
 
     auto flux = convective_terms.template calculate_convective_numerical_flux<is_gas_phase>(w_m, w_p, normal);
 

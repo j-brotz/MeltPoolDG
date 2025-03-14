@@ -62,7 +62,7 @@ namespace MeltPoolDG::Multiphase
 
     // penalty approach for density constraint in gas phase
     // TODO: remove hardcoded value for density in gas phase
-    const auto tmp_mass_3 = flow_data.density_constraint_penalty_factor * (u_gas[0] - 1.);
+    const auto tmp_mass_3 = flow_data.density_constraint_penalty_factor * (u_gas[0] - 84163.365 / (287.1 * 293.15));
 
     // momentum conservation
     const auto tmp_momentum_1 = (u_liquid[1] * u_liquid[1] / u_liquid[0] - u_gas[1] * u_gas[1] / u_gas[0]) -
@@ -297,10 +297,10 @@ inline DEAL_II_ALWAYS_INLINE //
   std::array<ConservedVariablesType, 2>     flux;
   std::array<ConservedVariablesGradType, 2> conv_flux;
 
-  conv_flux[0] = convective_kernels.calculate_convective_flux(u[0]);
-  conv_flux[1] = convective_kernels.calculate_convective_flux(u[1]);
+  conv_flux[0] = convective_kernels.template calculate_convective_flux<false /*is_gas_phase*/>(u[0]);
+  conv_flux[1] = convective_kernels.template calculate_convective_flux<true /*is_gas_phase*/>(u[1]);
   flux[0] = Flow::contract_tensor_with_normal(conv_flux[0], normal) + shock_speed[0] * (u_star[0] - u[0]);
-   flux[1] = Flow::contract_tensor_with_normal(conv_flux[1], normal) + shock_speed[1] * (u_star[1] - u[1]);
+  flux[1] = Flow::contract_tensor_with_normal(conv_flux[1], normal) + shock_speed[1] * (u_star[1] - u[1]);
 
     flux[0][dim+1] = 0.;
     flux[1][dim+1] = 0.;
@@ -461,8 +461,8 @@ inline DEAL_II_ALWAYS_INLINE //
         m_dot_evap,
         flow_data);
     
-    const auto u_liquid_star = alpha_2 * u_liquid + alpha_1 * (u_gas + J_Dir_cons);
-    const auto u_gas_star = alpha_1 * u_gas + alpha_2 * (u_liquid - J_Dir_cons);
+    const auto u_liquid_star = alpha_1 * u_liquid + alpha_2 * (u_gas + J_Dir_cons);
+    const auto u_gas_star = alpha_2 * u_gas + alpha_1 * (u_liquid - J_Dir_cons);
 
     ConservedVariablesGradType penalty_flux_liquid;
     const auto                 tmp_m = u_liquid - (u_gas_star + J_Dir_cons);
