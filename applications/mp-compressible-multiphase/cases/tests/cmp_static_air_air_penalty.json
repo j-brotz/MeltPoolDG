@@ -1,7 +1,7 @@
 {
   "base": {
     "problem name": "compressible_multiphase",
-    "case name": "static_liquid_gas",
+    "case name": "static_two_phase",
     "dimension": "1",
     "verbosity level": "1",
     "do print parameters": "false",
@@ -9,13 +9,13 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "0.0006"
+    "end time": "0.002"
   },
   "output": {
     "write frequency": "1",
     "do user defined postprocessing": "true",
     "paraview": {
-      "filename": "static_liquid_gas",
+      "filename": "static_air_air_penalty",
       "enable": "true"
     }
   },
@@ -25,15 +25,23 @@
     "viscous courant number": "0.02",
     "use cfl criteria": "true",
     "gravity constant": "0.0",
-    "interface numerical method": "HLLC0_and_Nitsche",
     "domain representation type": "cut",
-    "evaporation mass flux": "0.0",
+    "initial conditions gas phase": "1.0; 0.0; 1. * 1004.85 / 1.4 * 293.15",
+    "initial conditions liquid phase": "1.0; 0.0; 1. * 1004.85 / 1.4 * 293.15",
+    "multiphase": {
+      "interface numerical method": "penalty",
+      "evaporation mass flux": "0.0",
+      "target density gas phase": "1.0",
+      "target temperature gas phase": "293.15",
+      "density constraint penalty factor": "10.0",
+      "temperature constraint penalty factor": "10.0"
+    },
     "cut": {
       "two phase": "true",
       "stabilization": {
         "ghost-penalty": {
           "gamma M degree 0": "1.0",
-          "gamma M degree 1": "0.1"
+          "gamma M degree 1": "1.0"
         }
       }
     },
@@ -55,16 +63,12 @@
       "gamma": "1.4"
     },
     "material data liquid phase": {
-      "dynamic viscosity": "0.0035",
-      "specific isobaric heat": "1126.0",
-      "equation of state": "noble_abel_stiffened_gas",
-      "reference density": "3622.0",
-      "gamma": "1.4355",
-      "EOS parameters": {
-        "p inf": "1.1587e10",
-        "b": "1.8759e-4",
-        "q": "-607968.8"
-      }
+      "dynamic viscosity": "0.00002",
+      "specific isobaric heat": "1004.85",
+      "specific gas constant": "287.1",
+      "equation of state": "ideal_gas",
+      "reference density": "1.0",
+      "gamma": "1.4"
     },
     "fe": {
       "degree": "1",

@@ -4,22 +4,26 @@
 
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/compressible_flow_convective_kernels.hpp>
+#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
-#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 
 namespace MeltPoolDG::Multiphase
 {
-  template <unsigned int dim, typename number = double, bool is_viscous_gas = true, bool is_viscous_liquid = true>
+  template <unsigned int dim,
+            typename number        = double,
+            bool is_viscous_gas    = true,
+            bool is_viscous_liquid = true>
   class CompressibleMultiphaseOperator
   {
     using VectorType            = dealii::LinearAlgebra::distributed::Vector<number>;
     using MappingInfoType       = CutUtil::MappingInfoType<dim, number>;
     using MappingInfoVectorType = CutUtil::MappingInfoVectorType<dim, number>;
 
-   using ConservedVariablesType     = Flow::CompressibleFlowTypes::ConservedVariablesType<dim, number>;
-   using ConservedVariablesGradType = Flow::CompressibleFlowTypes::ConservedVariablesGradType<dim, number>;
+    using ConservedVariablesType = Flow::CompressibleFlowTypes::ConservedVariablesType<dim, number>;
+    using ConservedVariablesGradType =
+      Flow::CompressibleFlowTypes::ConservedVariablesGradType<dim, number>;
 
   public:
     /**
@@ -36,10 +40,11 @@ namespace MeltPoolDG::Multiphase
      * the mapping information computation and mapping data storage of the faces on the
      * inner subdomain and the outer subdomain, respectively.
      */
-    CompressibleMultiphaseOperator(MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-                                  const MappingInfoType                    &mapping_info_surface_in,
-                                  const MappingInfoVectorType              &mapping_info_cells_in,
-                                  const MappingInfoVectorType              &mapping_info_faces_in);
+    CompressibleMultiphaseOperator(
+      MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number> &flow_scratch_data,
+      const MappingInfoType                                      &mapping_info_surface_in,
+      const MappingInfoVectorType                                &mapping_info_cells_in,
+      const MappingInfoVectorType                                &mapping_info_faces_in);
 
     /**
      * Local appliers for right-hand side evaluation.
@@ -122,7 +127,7 @@ namespace MeltPoolDG::Multiphase
     const MappingInfoType       &mapping_info_surface;
     const MappingInfoVectorType &mapping_info_cells;
     const MappingInfoVectorType &mapping_info_faces;
- 
+
     dealii::FESystem<dim> fe_point_temp;
     const unsigned int    n_dofs_per_cell;
 
@@ -139,28 +144,42 @@ namespace MeltPoolDG::Multiphase
     // Inflow function for unfitted inflow boundary
     std::shared_ptr<dealii::Function<dim>> unfitted_inflow;
 
-     // TODO: Move into any util?
-     FECellIntegrator<dim, dim + 2, number> create_cell_integrator(CutUtil::CellCategory category, unsigned int offset = 0) const
-     {
-       return FECellIntegrator<dim, dim + 2, number>(
-           flow_scratch_data.scratch_data.get_matrix_free(),
-           flow_scratch_data.dof_idx,
-           flow_scratch_data.quad_idx,
-           offset,
-           category);
-     }
+    /**
+     * Wrapper for the generation of a FECellIntegrator object.
+     *
+     * @param category Category of the considered cell range (liquid/intersected/gas).
+     * @param offset Offset for the first selected component in a FESystem.
+     */
+    FECellIntegrator<dim, dim + 2, number>
+    create_cell_integrator(CutUtil::CellCategory category, unsigned int offset = 0) const
+    {
+      return FECellIntegrator<dim, dim + 2, number>(
+        flow_scratch_data.scratch_data.get_matrix_free(),
+        flow_scratch_data.dof_idx,
+        flow_scratch_data.quad_idx,
+        offset,
+        category);
+    }
 
-     // TODO: Move into any util?
-     // Create fe_face_integrator lambda function
-     FEFaceIntegrator<dim, dim + 2, number> create_face_integrator(bool is_inner_face, CutUtil::CellCategory category, unsigned int offset = 0) const
-     {
-       return FEFaceIntegrator<dim, dim + 2, number>(
-           flow_scratch_data.scratch_data.get_matrix_free(),
-           is_inner_face,
-           flow_scratch_data.dof_idx,
-           flow_scratch_data.quad_idx,
-           offset,
-           category);
-      };
-   };
+    /**
+     * Wrapper for the generation of a FEFaceIntegrator object.
+     *
+     * @param is_inner_face This selects which of the two cells of an internal face the current evaluator will be based upon. The interior face is the main face along which the normal vectors are oriented.
+     * @param category Category of the considered cell adjacent to the face (liquid/intersected/gas).
+     * @param offset Offset for the first selected component in a FESystem.
+     */
+    FEFaceIntegrator<dim, dim + 2, number>
+    create_face_integrator(bool                  is_inner_face,
+                           CutUtil::CellCategory category,
+                           unsigned int          offset = 0) const
+    {
+      return FEFaceIntegrator<dim, dim + 2, number>(
+        flow_scratch_data.scratch_data.get_matrix_free(),
+        is_inner_face,
+        flow_scratch_data.dof_idx,
+        flow_scratch_data.quad_idx,
+        offset,
+        category);
+    };
+  };
 } // namespace MeltPoolDG::Multiphase

@@ -11,9 +11,9 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
+#include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
-#include <meltpooldg/flow/compressible_flow_data.hpp>
 
 #include <map>
 #include <memory>
@@ -132,7 +132,8 @@ namespace MeltPoolDG::Flow
      * @param boundary_id ID of the boundary.
      * @param w_m Conserved variables on the inner face.
      * @param grad_w_m Gradient of the conserved variables on the inner face.
-     * @param gamma Heat capacity ratio of the flow field.
+     * @param flow_data Collection of parameters required by the compressible Navier-Stokes operator.
+     * @param is_gas_phase Boolean variable to indicate if the gas phase (default for single-phase case) or the liquid phase is considered.
      *
      * @return Tuple containing the corresponding values on the outer face. The first value being
      * the primary variables, the second the gradient of the primary variables.
@@ -144,8 +145,8 @@ namespace MeltPoolDG::Flow
       dealii::types::boundary_id                                     boundary_id,
       const ConservedVariablesType                                  &w_m,
       const ConservedVariablesGradType                              &grad_w_m,
-      const CompressibleFlowData      &flow_data,
-      bool                            is_gas_phase = true) const;
+      const CompressibleFlowData                                    &flow_data,
+      bool                                                           is_gas_phase = true) const;
 
     /**
      * This function sets the corresponding values on the fictional outer face if the face is

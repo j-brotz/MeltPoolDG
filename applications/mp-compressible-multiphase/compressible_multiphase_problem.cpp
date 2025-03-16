@@ -2,13 +2,13 @@
 
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
+#include <meltpooldg/flow/compressible_flow_boundary_conditions.hpp>
 #include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
-#include <meltpooldg/flow/compressible_flow_boundary_conditions.hpp>
 
 #include "compressible_multiphase_case.hpp"
 
@@ -22,24 +22,23 @@ namespace MeltPoolDG::Multiphase
 
     // output initial condition
     output_results(time_iterator->get_current_time_step_number(),
-                       time_iterator->get_current_time());
+                   time_iterator->get_current_time());
 
     while (!time_iterator->is_finished())
       {
         // use CFL condition to compute time step size if required
         if (simulation_case->parameters.flow.do_cfl_time_stepping)
-          time_iterator->set_current_time_increment(comp_multiphase_operation.compute_time_step_size(),
-                                                    std::numeric_limits<double>::max());
+          time_iterator->set_current_time_increment(
+            comp_multiphase_operation.compute_time_step_size(), std::numeric_limits<double>::max());
 
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout(1));
 
-        // update level-set for cutDG
-        if (level_set_field_function)
-          update_level_set();
+        // do level-set advection and reinitialization
+        update_level_set();
 
         comp_multiphase_operation.solve(time_iterator->get_current_time(),
-                                   time_iterator->get_current_time_increment());
+                                        time_iterator->get_current_time_increment());
 
         // do output if requested
         output_results(time_iterator->get_current_time_step_number(),
@@ -83,16 +82,17 @@ namespace MeltPoolDG::Multiphase
   void
   CompressibleMultiphaseProblem<dim>::update_level_set()
   {
-    //level_set += velocity_interface * time_step;
-    //TODO: move with velocity value at interface
-    //TODO: use advection_DG_operation and reinitialization_..._operation for dim>2 cases with distorted level-set
+    // TODO: introduce dof_handler for level-set advection velocity field, compute projection of
+    // interface velocity in normal direction of the interface to reduce the distortion of the
+    // level-set field
+    // TODO: use advection_DG_operation and reinitialization_..._operation for dim>2 cases with
+    // distorted level-set Currently, we only consider static interfaces
   }
 
   template <int dim>
   void
   CompressibleMultiphaseProblem<dim>::setup_dof_system()
   {
-    // distribute DoFs
     comp_multiphase_operation.distribute_dofs(dof_handler);
 
     scratch_data->create_partitioning();
@@ -101,10 +101,7 @@ namespace MeltPoolDG::Multiphase
       simulation_case->parameters.time_stepping.start_time);
 
     // create the matrix-free object
-    scratch_data->build(true,
-                        true,
-                        true,
-                        simulation_case->parameters.flow.fe.degree == 2);
+    scratch_data->build(true, true, true, simulation_case->parameters.flow.fe.degree == 2);
 
     // Currently, only homogeneous Cartesian grids without mesh refinements are enabled for
     // cutDG
@@ -162,27 +159,29 @@ namespace MeltPoolDG::Multiphase
       std::make_shared<TimeIterator<double>>(simulation_case->parameters.time_stepping);
 
     // initialize compressible multiphase operation
-    std::unique_ptr<CompressibleMultiphaseOperation<dim, double>> operation = std::make_unique<CompressibleMultiphaseOperation<dim, double>>(
-      *scratch_data,
-      simulation_case->parameters.flow,
-      *time_iterator,
-      [&](const dealii::DoFHandler<dim> &dh) {
-              Assert(&dh == &scratch_data->get_dof_handler(comp_multiphase_dof_idx),
-                     dealii::ExcInternalError());
+    std::unique_ptr<CompressibleMultiphaseOperation<dim, double>> operation =
+      std::make_unique<CompressibleMultiphaseOperation<dim, double>>(
+        *scratch_data,
+        simulation_case->parameters.flow,
+        *time_iterator,
+        [&](const dealii::DoFHandler<dim> &dh) {
+          Assert(&dh == &scratch_data->get_dof_handler(comp_multiphase_dof_idx),
+                 dealii::ExcInternalError());
 
-      scratch_data->create_partitioning();
+          scratch_data->create_partitioning();
 
-      // create the matrix-free object
-      scratch_data->build(true, true, true, simulation_case->parameters.flow.fe.degree == 2);
+          // create the matrix-free object
+          scratch_data->build(true, true, true, simulation_case->parameters.flow.fe.degree == 2);
 
-      comp_multiphase_operation.reinit();
-    },
-            comp_multiphase_dof_idx,
-            level_set_dof_idx,
-            comp_multiphase_quad_idx,
-            level_set);
+          comp_multiphase_operation.reinit();
+        },
+        comp_multiphase_dof_idx,
+        level_set_dof_idx,
+        comp_multiphase_quad_idx,
+        level_set);
 
-    comp_multiphase_operation = MeltPoolDG::Flow::CompressibleFlowOperation<dim, double>(std::move(operation));
+    comp_multiphase_operation =
+      MeltPoolDG::Flow::CompressibleFlowOperation<dim, double>(std::move(operation));
 
     // set up level-set for cutDG
     // currently, we use a continuous level-set field with same element degree as the flow field
@@ -256,7 +255,7 @@ namespace MeltPoolDG::Multiphase
   template <int dim>
   void
   CompressibleMultiphaseProblem<dim>::output_results(const unsigned int time_step,
-                                               const double       current_time)
+                                                     const double       current_time)
   {
     if (not post_processor->is_output_timestep(time_step, current_time) and
         not simulation_case->parameters.output.do_user_defined_postprocessing)
@@ -280,11 +279,11 @@ namespace MeltPoolDG::Multiphase
 
     // postprocessing
     // TODO: build_patches does not work yet
-    //post_processor->process(time_step, generic_data_out, current_time);
+    // post_processor->process(time_step, generic_data_out, current_time);
 
     DataOut<dim> data_out;
 
-    if (dim==2)
+    if (dim == 2)
       {
         DataOutBase::VtkFlags flags;
         flags.write_higher_order_cells = true;
@@ -296,12 +295,11 @@ namespace MeltPoolDG::Multiphase
 
     // finalize
     data_out.build_patches();
-    const std::string filename = "solution_testcase_static_liquid_gas_" +
+    const std::string filename = simulation_case->parameters.output.paraview.filename +
                                  Utilities::int_to_string(result_number, 3) + ".vtu";
     data_out.write_vtu_in_parallel(filename, scratch_data->get_triangulation().get_communicator());
     result_number++;
   }
-
 
   template class CompressibleMultiphaseProblem<1>;
   template class CompressibleMultiphaseProblem<2>;
@@ -317,6 +315,8 @@ main(int argc, char *argv[])
   MPI_Comm mpi_comm(MPI_COMM_WORLD);
   MeltPoolDG::default_main<MeltPoolDG::Multiphase::CompressibleMultiphaseCaseParameters<double>,
                            MeltPoolDG::Multiphase::CompressibleMultiphaseCase,
-                           MeltPoolDG::Multiphase::CompressibleMultiphaseProblem>(argc, argv, mpi_comm);
+                           MeltPoolDG::Multiphase::CompressibleMultiphaseProblem>(argc,
+                                                                                  argv,
+                                                                                  mpi_comm);
   return 0;
 }

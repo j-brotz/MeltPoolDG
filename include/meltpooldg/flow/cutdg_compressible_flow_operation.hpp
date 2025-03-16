@@ -49,9 +49,8 @@ namespace MeltPoolDG::Flow
     using MappingInfoType       = CutUtil::MappingInfoType<dim, number>;
     using MappingInfoVectorType = CutUtil::MappingInfoVectorType<dim, number>;
 
-   using CutFlowOperatorVariant = std::variant<
-    CutDGCompressibleFlowOperator<dim, number, true>,
-    CutDGCompressibleFlowOperator<dim, number, false>>;
+    using CutFlowOperatorVariant = std::variant<CutDGCompressibleFlowOperator<dim, number, true>,
+                                                CutDGCompressibleFlowOperator<dim, number, false>>;
 
   public:
     /**
@@ -173,27 +172,25 @@ namespace MeltPoolDG::Flow
     const dealii::DoFHandler<dim> &
     get_dof_handler() const;
 
-    typename CutDGCompressibleFlowOperation<dim, number>::CutFlowOperatorVariant
-    static create_cut_flow_operator_variant(
-    bool is_viscous,
-    CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-    const MappingInfoType                    &mapping_info_surface_in,
-    const MappingInfoVectorType              &mapping_info_cells_in,
-    const MappingInfoVectorType              &mapping_info_faces_in)
-   {
-    if (is_viscous)
-     return CutDGCompressibleFlowOperator<dim, number, true>(
-         flow_scratch_data,
-         mapping_info_surface_in,
-         mapping_info_cells_in,
-         mapping_info_faces_in);
-    else
-     return CutDGCompressibleFlowOperator<dim, number, false>(
-         flow_scratch_data,
-         mapping_info_surface_in,
-         mapping_info_cells_in,
-         mapping_info_faces_in);
-   }
+    typename CutDGCompressibleFlowOperation<dim, number>::
+      CutFlowOperatorVariant static create_cut_flow_operator_variant(
+        bool                                      is_viscous,
+        CompressibleFlowScratchData<dim, number> &flow_scratch_data,
+        const MappingInfoType                    &mapping_info_surface_in,
+        const MappingInfoVectorType              &mapping_info_cells_in,
+        const MappingInfoVectorType              &mapping_info_faces_in)
+    {
+      if (is_viscous)
+        return CutDGCompressibleFlowOperator<dim, number, true>(flow_scratch_data,
+                                                                mapping_info_surface_in,
+                                                                mapping_info_cells_in,
+                                                                mapping_info_faces_in);
+      else
+        return CutDGCompressibleFlowOperator<dim, number, false>(flow_scratch_data,
+                                                                 mapping_info_surface_in,
+                                                                 mapping_info_cells_in,
+                                                                 mapping_info_faces_in);
+    }
 
   private:
     CompressibleFlowScratchData<dim, number> flow_scratch_data;

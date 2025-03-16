@@ -6,6 +6,7 @@
 
 #include <deal.II/numerics/data_component_interpretation.h>
 
+#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_explicit.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_implicit.hpp>
@@ -14,7 +15,6 @@
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
-#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -177,8 +177,6 @@ namespace MeltPoolDG::Flow
           {
             const auto conserved_variables = phi.get_value(q);
             const auto velocity            = calculate_velocity<dim, number>(conserved_variables);
-            const auto pressure =
-              calculate_pressure<dim, number>(conserved_variables, flow_scratch_data.flow_data);
 
             const auto              inverse_jacobian = phi.inverse_jacobian(q);
             const auto              convective_speed = inverse_jacobian * velocity;
@@ -187,7 +185,8 @@ namespace MeltPoolDG::Flow
               convective_limit = std::max(convective_limit, std::abs(convective_speed[d]));
 
             const auto speed_of_sound =
-              std::sqrt(flow_scratch_data.flow_data.material_data_gas_phase.gamma * pressure / conserved_variables[0]);
+              calculate_speed_of_sound<dim, number>(conserved_variables,
+                                                    flow_scratch_data.flow_data);
 
             Tensor<1, dim, VectorizedArray<number>> eigenvector;
             for (unsigned int d = 0; d < dim; ++d)
@@ -293,26 +292,33 @@ namespace MeltPoolDG::Flow
     // cut operator was already created in the constructor
     if (flow_scratch_data.flow_data.domain_representation_type == "cut")
       return;
-    const bool is_viscous = flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0.;
+    const bool is_viscous =
+      flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity > 0.;
     if (time_integrator_scheme_is_explicit(
           flow_scratch_data.flow_data.time_integrator.integrator_type))
       {
         if (is_viscous)
-          comp_flow_operator = std::make_unique<DGCompressibleFlowOperatorExplicit<dim, number, true>>(flow_scratch_data);
+          comp_flow_operator =
+            std::make_unique<DGCompressibleFlowOperatorExplicit<dim, number, true>>(
+              flow_scratch_data);
         else
-          comp_flow_operator = std::make_unique<DGCompressibleFlowOperatorExplicit<dim, number, false>>(flow_scratch_data);
+          comp_flow_operator =
+            std::make_unique<DGCompressibleFlowOperatorExplicit<dim, number, false>>(
+              flow_scratch_data);
         time_integrator = comp_flow_operator->make_problem_specific_time_integrator(
-            flow_scratch_data.flow_data.time_integrator);
+          flow_scratch_data.flow_data.time_integrator);
       }
     else if (time_integrator_scheme_is_implicit(
                flow_scratch_data.flow_data.time_integrator.integrator_type))
       {
         if (is_viscous)
           comp_flow_operator =
-            std::make_unique<DGCompressibleFlowOperatorImplicit<dim, number, true>>(flow_scratch_data);
+            std::make_unique<DGCompressibleFlowOperatorImplicit<dim, number, true>>(
+              flow_scratch_data);
         else
           comp_flow_operator =
-            std::make_unique<DGCompressibleFlowOperatorImplicit<dim, number, false>>(flow_scratch_data);
+            std::make_unique<DGCompressibleFlowOperatorImplicit<dim, number, false>>(
+              flow_scratch_data);
         time_integrator = comp_flow_operator->make_problem_specific_time_integrator(
           flow_scratch_data.flow_data.time_integrator);
       }

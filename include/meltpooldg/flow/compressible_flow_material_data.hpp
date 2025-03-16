@@ -1,11 +1,13 @@
 #pragma once
 
 #include <deal.II/base/parameter_handler.h>
+
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
 
 namespace MeltPoolDG::Flow
 {
+  // Currently supported equations of state to model compressible or (nearly) incompressible fluids
   BETTER_ENUM(EOS, char, ideal_gas, stiffened_gas, noble_abel_stiffened_gas)
 
   template <typename number = double>
@@ -45,39 +47,47 @@ namespace MeltPoolDG::Flow
     number specific_isobaric_heat = 1000.0;
 
     // dynamic viscosity (SI: kg/(m s))
-    number dynamic_viscosity      = 1./1600.;
+    number dynamic_viscosity = 1. / 1600.;
 
     // ratio of specific heat (specific heat at constant pressure divided by
     // specific heat at constant volume)
-    number gamma                  = 1.4;
+    number gamma = 1.4;
 
     // specific gas constant (SI: J/(kg K))
-    number specific_gas_constant  = 287.1;
+    number specific_gas_constant = 287.1;
 
-    // reference density for interior penalty
-    number reference_density      = 1.0;
+    // reference density for interior penalty (SI: kg/m3)
+    number reference_density = 1.0;
 
-    // thermal conductivity (SI: W/(m K)) (default definition with Prandtl number Pr=0.71)
-    number thermal_conductivity   = dynamic_viscosity * gamma * specific_gas_constant / (gamma - 1.) * 1 / 0.71;
+    // thermal conductivity (SI: W/(m K))
+    number thermal_conductivity = dealii::numbers::invalid_double;
 
     // equation of state
     EOS equation_of_state = EOS::ideal_gas;
 
+    // parameters for the equation of state
     EOSParameters<number> eos_parameters;
 
     void
     add_parameters(dealii::ParameterHandler &prm, const bool is_gas_phase)
     {
-      const std::string subsection_name = is_gas_phase ? "material data gas phase" : "material data liquid phase";
+      const std::string subsection_name =
+        is_gas_phase ? "material data gas phase" : "material data liquid phase";
       prm.enter_subsection(subsection_name);
       {
-        prm.add_parameter("specific isobaric heat", specific_isobaric_heat, "Specific isobaric heat.");
+        prm.add_parameter("specific isobaric heat",
+                          specific_isobaric_heat,
+                          "Specific isobaric heat.");
         prm.add_parameter("dynamic viscosity", dynamic_viscosity, "Dynamic viscosity.");
-        prm.add_parameter("gamma", gamma, "Isentropic exponent, i.e., ratio of specific heat (c_p/c_v).");
+        prm.add_parameter("gamma",
+                          gamma,
+                          "Isentropic exponent, i.e., ratio of specific heat (c_p/c_v).");
         prm.add_parameter("specific gas constant", specific_gas_constant, "Specific gas constant.");
-        prm.add_parameter("reference density", reference_density,"Reference density for computing the interior penalty factor.");
+        prm.add_parameter("reference density",
+                          reference_density,
+                          "Reference density for computing the interior penalty factor.");
         prm.add_parameter("thermal conductivity", thermal_conductivity, "Thermal conductivity.");
-        prm.add_parameter("equation of state",equation_of_state,"Equation of state.");
+        prm.add_parameter("equation of state", equation_of_state, "Equation of state.");
         eos_parameters.add_parameters(prm);
       }
       prm.leave_subsection();

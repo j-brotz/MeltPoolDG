@@ -23,11 +23,12 @@ namespace MeltPoolDG::Flow
 
   template <unsigned int dim, typename number, bool is_viscous>
   std::unique_ptr<TimeIntegratorBase<number>>
-  DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::make_problem_specific_time_integrator(
-    const TimeIntegratorData &time_integrator_data)
+  DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::
+    make_problem_specific_time_integrator(const TimeIntegratorData &time_integrator_data)
   {
     return std::unique_ptr<TimeIntegratorBase<number>>(
-      explicit_time_integrator_factory<number, DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>>(
+      explicit_time_integrator_factory<number,
+                                       DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>>(
         *this, time_integrator_data, flow_scratch_data.scratch_data.get_timer()));
   }
 
@@ -96,13 +97,16 @@ namespace MeltPoolDG::Flow
         for (const unsigned int q : phi.quadrature_point_indices())
           {
             auto [flux, grad_flux] =
-              rhs_cell_integral_kernel<dim, number, FECellIntegrator<dim, dim + 2, number>, is_viscous>(
-                phi,
-                q,
-                constant_function ? &constant_body_force : nullptr,
-                convective_terms,
-                viscous_terms,
-                flow_scratch_data);
+              rhs_cell_integral_kernel<dim,
+                                       number,
+                                       FECellIntegrator<dim, dim + 2, number>,
+                                       is_viscous>(phi,
+                                                   q,
+                                                   constant_function ? &constant_body_force :
+                                                                       nullptr,
+                                                   convective_terms,
+                                                   viscous_terms,
+                                                   flow_scratch_data);
 
             if (flow_scratch_data.body_force.get() != nullptr)
               phi.submit_value(flux, q);
@@ -138,13 +142,13 @@ namespace MeltPoolDG::Flow
       {
         phi_p.reinit(face);
         phi_p.gather_evaluate(src,
-                              EvaluationFlags::values |
-                                (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
+                              EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
+                                                                      EvaluationFlags::nothing));
 
         phi_m.reinit(face);
         phi_m.gather_evaluate(src,
-                              EvaluationFlags::values |
-                                (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
+                              EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
+                                                                      EvaluationFlags::nothing));
 
         const VectorizedArray<number> penalty_parameter =
           is_viscous ?
@@ -155,14 +159,16 @@ namespace MeltPoolDG::Flow
         for (const unsigned int q : phi_m.quadrature_point_indices())
           {
             auto [flux_m, flux_p, grad_flux_m, grad_flux_p] =
-              rhs_face_integral_kernel<dim, number, FEFaceIntegrator<dim, dim + 2, number>, is_viscous>(
+              rhs_face_integral_kernel<dim,
+                                       number,
+                                       FEFaceIntegrator<dim, dim + 2, number>,
+                                       is_viscous>(
                 phi_m,
                 phi_p,
                 q,
                 penalty_parameter,
                 convective_terms,
-                viscous_terms,
-                flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity);
+                viscous_terms);
 
             phi_m.submit_value(flux_m, q);
             phi_p.submit_value(flux_p, q);
@@ -173,11 +179,11 @@ namespace MeltPoolDG::Flow
               }
           }
 
-        phi_p.integrate_scatter(EvaluationFlags::values |
-                                  (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing),
+        phi_p.integrate_scatter(EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
+                                                                        EvaluationFlags::nothing),
                                 dst);
-        phi_m.integrate_scatter(EvaluationFlags::values |
-                                  (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing),
+        phi_m.integrate_scatter(EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
+                                                                        EvaluationFlags::nothing),
                                 dst);
       }
   }
@@ -208,22 +214,22 @@ namespace MeltPoolDG::Flow
             auto [flux_m, grad_flux_m] =
               rhs_boundary_face_integral_kernel<dim,
                                                 number,
-                                                FEFaceIntegrator<dim, dim + 2, number>, is_viscous>(
-                phi,
-                q,
-                phi.boundary_id(),
-                penalty_parameter,
-                convective_terms,
-                viscous_terms,
-                flow_scratch_data);
+                                                FEFaceIntegrator<dim, dim + 2, number>,
+                                                is_viscous>(phi,
+                                                            q,
+                                                            phi.boundary_id(),
+                                                            penalty_parameter,
+                                                            convective_terms,
+                                                            viscous_terms,
+                                                            flow_scratch_data);
 
             phi.submit_value(flux_m, q);
             if (is_viscous)
               phi.submit_gradient(grad_flux_m, q);
           }
 
-        phi.integrate_scatter(EvaluationFlags::values |
-                                (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing),
+        phi.integrate_scatter(EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
+                                                                      EvaluationFlags::nothing),
                               dst);
       }
   }

@@ -25,8 +25,9 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number, bool is_viscous>
   void
-  DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::compute_system_matrix_from_matrixfree(
-    dealii::TrilinosWrappers::SparseMatrix &sparse_matrix) const
+  DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::
+    compute_system_matrix_from_matrixfree(
+      dealii::TrilinosWrappers::SparseMatrix &sparse_matrix) const
   {
     compute_jacobian_matrix_representation<dim, dim + 2, number>(
       *this,
@@ -40,8 +41,8 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number, bool is_viscous>
   void
-  DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::compute_inverse_diagonal_from_matrixfree(
-    VectorType &diagonal) const
+  DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::
+    compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const
   {
     compute_jacobian_matrix_representation<dim, dim + 2, number>(
       *this,
@@ -61,8 +62,8 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number, bool is_viscous>
   std::unique_ptr<TimeIntegratorBase<number>>
-  DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::make_problem_specific_time_integrator(
-    const TimeIntegratorData &time_integrator_data)
+  DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::
+    make_problem_specific_time_integrator(const TimeIntegratorData &time_integrator_data)
   {
     return std::unique_ptr<TimeIntegratorBase<number>>(
       implicit_time_integrator_factory<dim,
@@ -88,9 +89,10 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number, bool is_viscous>
   void
-  DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::compute_residual(number,
-                                                                    const VectorType &src,
-                                                                    VectorType       &dst) const
+  DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::compute_residual(
+    number,
+    const VectorType &src,
+    VectorType       &dst) const
   {
     Assert(dst.partitioners_are_globally_compatible(*(src.get_partitioner())),
            typename VectorType::ExcVectorTypeNotCompatible());
@@ -106,8 +108,9 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number, bool is_viscous>
   void
-  DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::apply_jacobian(VectorType       &dst,
-                                                                  const VectorType &src) const
+  DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::apply_jacobian(
+    VectorType       &dst,
+    const VectorType &src) const
   {
     Assert(dst.partitioners_are_globally_compatible(*(src.get_partitioner())),
            typename VectorType::ExcVectorTypeNotCompatible());
@@ -128,8 +131,9 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number, bool is_viscous>
   void
-  DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::apply_jacobian_analytic(const VectorType &src,
-                                                                           VectorType &dst) const
+  DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::apply_jacobian_analytic(
+    const VectorType &src,
+    VectorType       &dst) const
   {
     Assert(dst.partitioners_are_globally_compatible(*(src.get_partitioner())),
            typename VectorType::ExcVectorTypeNotCompatible());
@@ -225,13 +229,16 @@ namespace MeltPoolDG::Flow
         for (const unsigned int q : phi.quadrature_point_indices())
           {
             auto [value_q, grad_q] =
-              rhs_cell_integral_kernel<dim, number, FECellIntegrator<dim, dim + 2, number>, is_viscous>(
-                phi,
-                q,
-                constant_function ? &constant_body_force : nullptr,
-                convective_terms,
-                viscous_terms,
-                flow_scratch_data);
+              rhs_cell_integral_kernel<dim,
+                                       number,
+                                       FECellIntegrator<dim, dim + 2, number>,
+                                       is_viscous>(phi,
+                                                   q,
+                                                   constant_function ? &constant_body_force :
+                                                                       nullptr,
+                                                   convective_terms,
+                                                   viscous_terms,
+                                                   flow_scratch_data);
             grad_q *= residual_rhs_scaling_factor;
 
             value_q *= residual_rhs_scaling_factor;
@@ -265,13 +272,13 @@ namespace MeltPoolDG::Flow
       {
         phi_p.reinit(face);
         phi_p.gather_evaluate(src,
-                              EvaluationFlags::values |
-                                (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
+                              EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
+                                                                      EvaluationFlags::nothing));
 
         phi_m.reinit(face);
         phi_m.gather_evaluate(src,
-                              EvaluationFlags::values |
-                                (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
+                              EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
+                                                                      EvaluationFlags::nothing));
 
         const VectorizedArray<number> penalty_parameter =
           is_viscous ?
@@ -282,14 +289,16 @@ namespace MeltPoolDG::Flow
         for (const unsigned int q : phi_m.quadrature_point_indices())
           {
             auto [flux_m, flux_p, grad_flux_m, grad_flux_p] =
-              rhs_face_integral_kernel<dim, number, FEFaceIntegrator<dim, dim + 2, number>, is_viscous>(
+              rhs_face_integral_kernel<dim,
+                                       number,
+                                       FEFaceIntegrator<dim, dim + 2, number>,
+                                       is_viscous>(
                 phi_m,
                 phi_p,
                 q,
                 penalty_parameter,
                 convective_terms,
-                viscous_terms,
-                flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity);
+                viscous_terms);
 
 
             // since we approach the face only once, we submit the contributions
@@ -300,11 +309,11 @@ namespace MeltPoolDG::Flow
             phi_p.submit_value(residual_rhs_scaling_factor * flux_p, q);
           }
 
-        phi_p.integrate_scatter(EvaluationFlags::values |
-                                  (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing),
+        phi_p.integrate_scatter(EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
+                                                                        EvaluationFlags::nothing),
                                 dst);
-        phi_m.integrate_scatter(EvaluationFlags::values |
-                                  (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing),
+        phi_m.integrate_scatter(EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
+                                                                        EvaluationFlags::nothing),
                                 dst);
       }
   }
@@ -336,20 +345,19 @@ namespace MeltPoolDG::Flow
               rhs_boundary_face_integral_kernel<dim,
                                                 number,
                                                 FEFaceIntegrator<dim, dim + 2, number>,
-                                                is_viscous>(
-                phi,
-                q,
-                phi.boundary_id(),
-                penalty_parameter,
-                convective_terms,
-                viscous_terms,
-                flow_scratch_data);
+                                                is_viscous>(phi,
+                                                            q,
+                                                            phi.boundary_id(),
+                                                            penalty_parameter,
+                                                            convective_terms,
+                                                            viscous_terms,
+                                                            flow_scratch_data);
 
             phi.submit_value(residual_rhs_scaling_factor * flux_m, q);
             phi.submit_gradient(residual_rhs_scaling_factor * grad_flux_m, q);
           }
-        phi.integrate_scatter(EvaluationFlags::values |
-                                (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing),
+        phi.integrate_scatter(EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
+                                                                      EvaluationFlags::nothing),
                               dst);
       }
   }
@@ -429,23 +437,25 @@ namespace MeltPoolDG::Flow
       {
         phi_p.reinit(face);
         phi_p.gather_evaluate(flow_scratch_data.solution_history.get_current_solution(),
-                              EvaluationFlags::values |
-                                (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
+                              EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
+                                                                      EvaluationFlags::nothing));
 
         phi_m.reinit(face);
         phi_m.gather_evaluate(flow_scratch_data.solution_history.get_current_solution(),
-                              EvaluationFlags::values |
-                                (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
+                              EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
+                                                                      EvaluationFlags::nothing));
 
         delta_phi_p.reinit(face);
         delta_phi_p.gather_evaluate(src,
                                     EvaluationFlags::values |
-                                      (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
+                                      (is_viscous ? EvaluationFlags::gradients :
+                                                    EvaluationFlags::nothing));
 
         delta_phi_m.reinit(face);
         delta_phi_m.gather_evaluate(src,
                                     EvaluationFlags::values |
-                                      (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
+                                      (is_viscous ? EvaluationFlags::gradients :
+                                                    EvaluationFlags::nothing));
 
 
         for (const unsigned int q_index : phi_m.quadrature_point_indices())
@@ -454,10 +464,12 @@ namespace MeltPoolDG::Flow
           }
 
         delta_phi_p.integrate_scatter(EvaluationFlags::values |
-                                        (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing),
+                                        (is_viscous ? EvaluationFlags::gradients :
+                                                      EvaluationFlags::nothing),
                                       dst);
         delta_phi_m.integrate_scatter(EvaluationFlags::values |
-                                        (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing),
+                                        (is_viscous ? EvaluationFlags::gradients :
+                                                      EvaluationFlags::nothing),
                                       dst);
       }
   }
@@ -497,7 +509,8 @@ namespace MeltPoolDG::Flow
           }
 
         delta_phi_m.integrate_scatter(EvaluationFlags::values |
-                                        (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing),
+                                        (is_viscous ? EvaluationFlags::gradients :
+                                                      EvaluationFlags::nothing),
                                       dst);
       }
   }

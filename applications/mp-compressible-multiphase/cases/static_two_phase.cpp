@@ -1,9 +1,9 @@
-#include "static_liquid_gas.hpp"
+#include "static_two_phase.hpp"
 
 namespace MeltPoolDG::Simulation::CompressibleMultiphase
 {
   // Explicit instantiations for the required dimensions
-  template class SimulationStaticLiquidGas<1>;
-  template class SimulationStaticLiquidGas<2>;
-  template class SimulationStaticLiquidGas<3>;
+  template class SimulationStaticTwoPhase<1>;
+  template class SimulationStaticTwoPhase<2>;
+  template class SimulationStaticTwoPhase<3>;
 } // namespace MeltPoolDG::Simulation::CompressibleMultiphase

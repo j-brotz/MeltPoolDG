@@ -1,7 +1,7 @@
 {
   "base": {
     "problem name": "compressible_multiphase",
-    "case name": "static_gas_gas",
+    "case name": "static_two_phase",
     "dimension": "1",
     "verbosity level": "1",
     "do print parameters": "false",
@@ -9,13 +9,13 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "0.002"
+    "end time": "0.00006"
   },
   "output": {
     "write frequency": "1",
     "do user defined postprocessing": "true",
     "paraview": {
-      "filename": "static_gas_gas",
+      "filename": "static_liquid_Ti-6Al-4V_air_HLLP0",
       "enable": "true"
     }
   },
@@ -25,14 +25,20 @@
     "viscous courant number": "0.02",
     "use cfl criteria": "true",
     "gravity constant": "0.0",
-    "interface numerical method": "penalty",
     "domain representation type": "cut",
+    "initial conditions gas phase": "84163.365 / (287.1 * 3000.0); 0.0; 84163.365 / (1.4-1.)",
+    "initial conditions liquid phase": "3622.73659245216946; 0.0; 3622.73659245216946*((84163.365 + 1.4355 * 1.1587e10)/(1.4355-1.)*(1./3622.73659245216946 - 1.8759e-4) -607968.8)",
+    "multiphase": {
+      "interface numerical method": "HLLP0_and_Nitsche",
+      "evaporation mass flux": "0.0",
+      "symm int penalty parameter interface": "10.0"
+    },
     "cut": {
       "two phase": "true",
       "stabilization": {
         "ghost-penalty": {
           "gamma M degree 0": "1.0",
-          "gamma M degree 1": "1.0"
+          "gamma M degree 1": "0.1"
         }
       }
     },
@@ -54,12 +60,16 @@
       "gamma": "1.4"
     },
     "material data liquid phase": {
-      "dynamic viscosity": "0.00002",
-      "specific isobaric heat": "1004.85",
-      "specific gas constant": "287.1",
-      "equation of state": "ideal_gas",
-      "reference density": "1.0",
-      "gamma": "1.4"
+      "dynamic viscosity": "0.0035",
+      "specific isobaric heat": "1126.0",
+      "equation of state": "noble_abel_stiffened_gas",
+      "reference density": "3622.0",
+      "gamma": "1.4355",
+      "EOS parameters": {
+        "p inf": "1.1587e10",
+        "b": "1.8759e-4",
+        "q": "-607968.8"
+      }
     },
     "fe": {
       "degree": "1",

@@ -159,8 +159,9 @@ namespace MeltPoolDG::Flow
     const CompressibleFlowData &flow_data)
     : flow_data(flow_data)
   {
-    lambda_div_c =
-      flow_data.material_data_gas_phase.thermal_conductivity / flow_data.material_data_gas_phase.specific_gas_constant * (flow_data.material_data_gas_phase.gamma - 1.0);
+    lambda_div_c = flow_data.material_data_gas_phase.thermal_conductivity /
+                   flow_data.material_data_gas_phase.specific_gas_constant *
+                   (flow_data.material_data_gas_phase.gamma - 1.0);
   }
 
   template <int dim, typename number>
@@ -170,7 +171,9 @@ namespace MeltPoolDG::Flow
     CompressibleFlowViscousKernels<dim, number>::calculate_viscous_stress_tensor(
       const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> &grad_u) const
   {
-    const number dynamic_viscosity = is_gas_phase ? flow_data.material_data_gas_phase.dynamic_viscosity : flow_data.material_data_liquid_phase.dynamic_viscosity;
+    const number dynamic_viscosity = is_gas_phase ?
+                                       flow_data.material_data_gas_phase.dynamic_viscosity :
+                                       flow_data.material_data_liquid_phase.dynamic_viscosity;
 
     const dealii::VectorizedArray<number> div_u = (2. / 3.) * trace(grad_u);
 
@@ -202,13 +205,14 @@ namespace MeltPoolDG::Flow
     const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> viscous_stress =
       calculate_viscous_stress_tensor<is_gas_phase>(grad_u);
 
-    const number thermal_conductivity = is_gas_phase ? flow_data.material_data_gas_phase.thermal_conductivity : flow_data.material_data_liquid_phase.thermal_conductivity;
+    const number thermal_conductivity = is_gas_phase ?
+                                          flow_data.material_data_gas_phase.thermal_conductivity :
+                                          flow_data.material_data_liquid_phase.thermal_conductivity;
 
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> neg_heat_flux =
-      thermal_conductivity *
-      calculate_grad_T<dim, number, is_gas_phase>(conserved_variables,
-                                    grad_conserved_variables,
-                                    flow_data);
+      thermal_conductivity * calculate_grad_T<dim, number, is_gas_phase>(conserved_variables,
+                                                                         grad_conserved_variables,
+                                                                         flow_data);
 
     ConservedVariablesGradType flux;
     for (unsigned int d = 0; d < dim; ++d)
@@ -246,8 +250,12 @@ namespace MeltPoolDG::Flow
 
     const auto flux_p = calculate_viscous_flux<is_gas_phase>(u_p, grad_u_p);
 
-    const number dynamic_viscosity = is_gas_phase ? flow_data.material_data_gas_phase.dynamic_viscosity : flow_data.material_data_liquid_phase.dynamic_viscosity;
-    const number reference_density = is_gas_phase ? flow_data.material_data_gas_phase.reference_density : flow_data.material_data_liquid_phase.reference_density;
+    const number dynamic_viscosity = is_gas_phase ?
+                                       flow_data.material_data_gas_phase.dynamic_viscosity :
+                                       flow_data.material_data_liquid_phase.dynamic_viscosity;
+    const number reference_density = is_gas_phase ?
+                                       flow_data.material_data_gas_phase.reference_density :
+                                       flow_data.material_data_liquid_phase.reference_density;
 
     return contract_average_tensor_with_normal(flux_m, flux_p, normal) -
            penalty_parameter * dynamic_viscosity / reference_density * (u_m - u_p);
@@ -269,8 +277,10 @@ namespace MeltPoolDG::Flow
         jump_u[e][d] = (u_m[e] - u_p[e]) * normal[d];
 
     // use jumps instead of gradients for evaluating the viscous flux
-    const ConservedVariablesGradType flux_m = 0.5 * calculate_viscous_flux<is_gas_phase>(u_m, jump_u);
-    const ConservedVariablesGradType flux_p = 0.5 * calculate_viscous_flux<is_gas_phase>(u_p, jump_u);
+    const ConservedVariablesGradType flux_m =
+      0.5 * calculate_viscous_flux<is_gas_phase>(u_m, jump_u);
+    const ConservedVariablesGradType flux_p =
+      0.5 * calculate_viscous_flux<is_gas_phase>(u_p, jump_u);
 
     return std::make_pair(flux_m, flux_p);
   }
@@ -442,7 +452,8 @@ namespace MeltPoolDG::Flow
         dealii::VectorizedArray<number> penalty_parameter) const -> ConservedVariablesGradType
   {
     return VectorTools::matrix_matrix_product(
-      penalty_parameter * flow_data.material_data_gas_phase.dynamic_viscosity / flow_data.material_data_gas_phase.reference_density *
+      penalty_parameter * flow_data.material_data_gas_phase.dynamic_viscosity /
+        flow_data.material_data_gas_phase.reference_density *
         VectorTools::identity<dim + 2, dealii::VectorizedArray<number>>(),
       VectorTools::dyadic_product(delta_w_q.first - delta_w_q.second, normal));
   }

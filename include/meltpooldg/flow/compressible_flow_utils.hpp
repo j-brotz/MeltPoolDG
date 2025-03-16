@@ -6,7 +6,6 @@
 #include <deal.II/dofs/dof_handler.h>
 
 #include <deal.II/fe/fe.h>
-#include <deal.II/fe/mapping.h>
 
 #include <deal.II/matrix_free/matrix_free.h>
 
@@ -161,7 +160,8 @@ namespace MeltPoolDG::Flow
           scratch_data.initialize_dof_vector(v, comp_flow_dof_idx);
         });
 
-      if (flow_data.material_data_gas_phase.dynamic_viscosity > 0.)
+      if (flow_data.material_data_gas_phase.dynamic_viscosity > 0. or
+          (flow_data.cut.two_phase and flow_data.material_data_liquid_phase.dynamic_viscosity > 0.))
         calculate_penalty_parameter(interior_penalty_parameter,
                                     scratch_data.get_matrix_free(),
                                     flow_data.domain_representation_type,

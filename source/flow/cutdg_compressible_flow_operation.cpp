@@ -9,13 +9,13 @@
 
 #include <deal.II/non_matching/mesh_classifier.h>
 
+#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 #include <meltpooldg/flow/cutdg_compressible_flow_operation.hpp>
 #include <meltpooldg/flow/cutdg_compressible_flow_operator.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
-#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -54,12 +54,13 @@ namespace MeltPoolDG::Flow
     , mapping_info_surface(scratch_data_in.get_mapping(),
                            dealii::update_values | dealii::update_gradients |
                              dealii::update_JxW_values | dealii::update_normal_vectors)
-    , cut_flow_operator(CutDGCompressibleFlowOperation<dim, number>::create_cut_flow_operator_variant(
-      comp_flow_data_in.material_data_gas_phase.dynamic_viscosity > 0.,
-      flow_scratch_data,
-      mapping_info_surface,
-      mapping_info_cells,
-      mapping_info_faces))
+    , cut_flow_operator(
+        CutDGCompressibleFlowOperation<dim, number>::create_cut_flow_operator_variant(
+          comp_flow_data_in.material_data_gas_phase.dynamic_viscosity > 0.,
+          flow_scratch_data,
+          mapping_info_surface,
+          mapping_info_cells,
+          mapping_info_faces))
   {
     // Currently, only explicit Euler time discretization with ghost-penalty stabilized mass matrix
     // is enabled for cutDG
@@ -196,21 +197,25 @@ namespace MeltPoolDG::Flow
     // - reinit matrix-free object, rhs and solution vectors
     adapt_to_new_interface_position();
 
-    std::visit([&](auto& op) {
-      // update inverse time step size
-      op.compute_inverse_time_step(time_step);
+    std::visit(
+      [&](auto &op) {
+        // update inverse time step size
+        op.compute_inverse_time_step(time_step);
 
-      // compute rhs
-      op.create_rhs(current_time,
-                                 time_step,
-                                 rhs,
-                                 flow_scratch_data.solution_history.get_current_solution());
+        // compute rhs
+        op.create_rhs(current_time,
+                      time_step,
+                      rhs,
+                      flow_scratch_data.solution_history.get_current_solution());
 
-      // solve linear and symmetric system of equations with CG
-      LinearSolver::solve<VectorType>(op, flow_scratch_data.solution_history.get_current_solution(),
-                                      rhs,
-                                      flow_scratch_data.flow_data.time_integrator.linear_solver_data);
-    }, cut_flow_operator);
+        // solve linear and symmetric system of equations with CG
+        LinearSolver::solve<VectorType>(
+          op,
+          flow_scratch_data.solution_history.get_current_solution(),
+          rhs,
+          flow_scratch_data.flow_data.time_integrator.linear_solver_data);
+      },
+      cut_flow_operator);
   }
 
   template <int dim, typename number>
@@ -251,7 +256,8 @@ namespace MeltPoolDG::Flow
   CutDGCompressibleFlowOperation<dim, number>::set_inflow_field_unfitted_boundary(
     std::shared_ptr<dealii::Function<dim>> &inflow_function)
   {
-    std::visit([&](auto& op) {op.set_inflow_field_unfitted_boundary(inflow_function);}, cut_flow_operator);
+    std::visit([&](auto &op) { op.set_inflow_field_unfitted_boundary(inflow_function); },
+               cut_flow_operator);
   }
 
   template <int dim, typename number>
@@ -259,7 +265,8 @@ namespace MeltPoolDG::Flow
   CutDGCompressibleFlowOperation<dim, number>::set_unfitted_object_velocity(
     std::shared_ptr<dealii::Function<dim>> &velocity_function)
   {
-    std::visit([&](auto& op) {op.set_unfitted_object_velocity(velocity_function);}, cut_flow_operator);
+    std::visit([&](auto &op) { op.set_unfitted_object_velocity(velocity_function); },
+               cut_flow_operator);
   }
 
   template <int dim, typename number>
@@ -423,9 +430,6 @@ namespace MeltPoolDG::Flow
               {
                 const auto conserved_variables = phi.get_value(q);
                 const auto velocity = calculate_velocity<dim, number>(conserved_variables);
-                const auto pressure =
-                  calculate_pressure<dim, number>(conserved_variables,
-                                                  flow_scratch_data.flow_data);
 
                 const auto                      inverse_jacobian = phi.inverse_jacobian(q);
                 const auto                      convective_speed = inverse_jacobian * velocity;
@@ -434,7 +438,8 @@ namespace MeltPoolDG::Flow
                   convective_limit = std::max(convective_limit, std::abs(convective_speed[d]));
 
                 const auto speed_of_sound =
-                  std::sqrt(flow_scratch_data.flow_data.material_data_gas_phase.gamma * pressure / conserved_variables[0]);
+                  calculate_speed_of_sound<dim, number>(conserved_variables,
+                                                        flow_scratch_data.flow_data);
 
                 dealii::Tensor<1, dim, dealii::VectorizedArray<number>> eigenvector;
                 for (unsigned int d = 0; d < dim; ++d)
@@ -490,9 +495,6 @@ namespace MeltPoolDG::Flow
                   {
                     const auto conserved_variables = fe_point_eval.get_value(q);
                     const auto velocity = calculate_velocity<dim, number>(conserved_variables);
-                    const auto pressure =
-                      calculate_pressure<dim, number>(conserved_variables,
-                                                      flow_scratch_data.flow_data);
 
                     const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> inverse_jacobian =
                       fe_point_eval.inverse_jacobian(q);
@@ -501,8 +503,9 @@ namespace MeltPoolDG::Flow
                     for (unsigned int d = 0; d < dim; ++d)
                       convective_limit = std::max(convective_limit, std::abs(convective_speed[d]));
 
-                    const auto speed_of_sound = std::sqrt(flow_scratch_data.flow_data.material_data_gas_phase.gamma *
-                                                          pressure / conserved_variables[0]);
+                    const auto speed_of_sound =
+                      calculate_speed_of_sound<dim, number>(conserved_variables,
+                                                            flow_scratch_data.flow_data);
 
                     dealii::Tensor<1, dim, dealii::VectorizedArray<number>> eigenvector;
                     for (unsigned int d = 0; d < dim; ++d)

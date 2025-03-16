@@ -11,13 +11,12 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 #include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operation.hpp>
 #include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operator.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
-#include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
-#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 
 #include <boost/math/constants/constants.hpp>
 
@@ -58,13 +57,13 @@ namespace MeltPoolDG::Multiphase
     , mapping_info_surface(scratch_data_in.get_mapping(),
                            dealii::update_values | dealii::update_gradients |
                              dealii::update_JxW_values | dealii::update_normal_vectors)
-  , cmp_operator(CompressibleMultiphaseOperation<dim, number>::create_cut_flow_operator_variant(
-    comp_flow_data_in.material_data_gas_phase.dynamic_viscosity > 0.,
-    comp_flow_data_in.material_data_liquid_phase.dynamic_viscosity > 0.,
-    flow_scratch_data,
-    mapping_info_surface,
-    mapping_info_cells,
-    mapping_info_faces))
+    , cmp_operator(CompressibleMultiphaseOperation<dim, number>::create_cut_flow_operator_variant(
+        comp_flow_data_in.material_data_gas_phase.dynamic_viscosity > 0.,
+        comp_flow_data_in.material_data_liquid_phase.dynamic_viscosity > 0.,
+        flow_scratch_data,
+        mapping_info_surface,
+        mapping_info_cells,
+        mapping_info_faces))
   {
     // Currently, only explicit Euler time discretization with ghost-penalty stabilized mass matrix
     // is enabled for cutDG
@@ -93,7 +92,8 @@ namespace MeltPoolDG::Multiphase
     // gas phase
     mapping_info_cells.push_back(
       std::make_shared<NonMatching::MappingInfo<dim, dim, VectorizedArray<number>>>(
-        this->flow_scratch_data.scratch_data.get_mapping(), update_values | update_gradients | update_JxW_values | update_normal_vectors));
+        this->flow_scratch_data.scratch_data.get_mapping(),
+        update_values | update_gradients | update_JxW_values | update_normal_vectors));
 
     UpdateFlags update_flags_faces =
       update_values | update_gradients | update_JxW_values | update_normal_vectors;
@@ -106,8 +106,8 @@ namespace MeltPoolDG::Multiphase
         this->flow_scratch_data.scratch_data.get_mapping(), update_flags_faces));
     // gas phase
     mapping_info_faces.push_back(
-    std::make_shared<NonMatching::MappingInfo<dim, dim, VectorizedArray<number>>>(
-      this->flow_scratch_data.scratch_data.get_mapping(), update_flags_faces));
+      std::make_shared<NonMatching::MappingInfo<dim, dim, VectorizedArray<number>>>(
+        this->flow_scratch_data.scratch_data.get_mapping(), update_flags_faces));
   }
 
   template <int dim, typename number>
@@ -134,16 +134,20 @@ namespace MeltPoolDG::Multiphase
   number
   CompressibleMultiphaseOperation<dim, number>::compute_time_step_size(const bool do_print) const
   {
-    const std::pair<number,number> min_density = compute_minimum_density();
+    const std::pair<number, number> min_density = compute_minimum_density();
 
-    AssertThrow(min_density.first > 0 && min_density.second > 0 , ExcMessage("Minimum density must not be zero."));
+    AssertThrow(min_density.first > 0 and min_density.second > 0,
+                ExcMessage("Minimum density must not be zero."));
 
-    const auto compute_viscous_time_step_limit = [&](number dynamic_viscosity, number min_density_in) -> number {
-      if (dynamic_viscosity <= 0) {
+    const auto compute_viscous_time_step_limit = [&](number dynamic_viscosity,
+                                                     number min_density_in) -> number {
+      if (dynamic_viscosity <= 0)
+        {
           return std::numeric_limits<number>::max();
-      }
+        }
 
-      const number degree_factor = std::pow(flow_scratch_data.scratch_data.get_degree(flow_scratch_data.dof_idx), 3);
+      const number degree_factor =
+        std::pow(flow_scratch_data.scratch_data.get_degree(flow_scratch_data.dof_idx), 3);
       const number cell_size_sq = std::pow(flow_scratch_data.scratch_data.get_min_cell_size(), 2);
 
       return (flow_scratch_data.flow_data.viscous_courant_number * min_density_in * cell_size_sq) /
@@ -151,12 +155,13 @@ namespace MeltPoolDG::Multiphase
     };
 
     const number viscous_time_step_limit_liquid = compute_viscous_time_step_limit(
-        flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity, min_density.first);
+      flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity, min_density.first);
 
     const number viscous_time_step_limit_gas = compute_viscous_time_step_limit(
-        flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity, min_density.second);
+      flow_scratch_data.flow_data.material_data_liquid_phase.dynamic_viscosity, min_density.second);
 
-    const number viscous_time_step_limit = std::min(viscous_time_step_limit_liquid,viscous_time_step_limit_gas);
+    const number viscous_time_step_limit =
+      std::min(viscous_time_step_limit_liquid, viscous_time_step_limit_gas);
 
     const number convective_time_step_limit = compute_convective_time_step_limit();
 
@@ -182,6 +187,7 @@ namespace MeltPoolDG::Multiphase
   CompressibleMultiphaseOperation<dim, number>::attach_output_vectors(
     GenericDataOut<dim> &data_out) const
   {
+    // TODO: modify function for two phases!
     std::vector<std::string> names;
     names.emplace_back("density");
     for (unsigned int d = 0; d < dim; ++d)
@@ -214,7 +220,7 @@ namespace MeltPoolDG::Multiphase
         &(flow_scratch_data.scratch_data.get_fe(flow_scratch_data.dof_idx).base_element(0))) !=
         nullptr,
       dealii::ExcMessage(
-        "The cutDG compressible flow solver only supports finite element types of FE_DGQ!"));
+        "The cutDG compressible multiphase flow solver only supports finite element types of FE_DGQ!"));
 
     flow_scratch_data.reinit(2);
 
@@ -234,14 +240,17 @@ namespace MeltPoolDG::Multiphase
     classify_cells();
 
     dealii::hp::FECollection<dim> fe_collection;
-    const unsigned int n_solution_components = dim+2;
+    const unsigned int            n_solution_components = dim + 2;
 
     FE_DGQ<dim>     fe_dgq(flow_scratch_data.flow_data.fe.degree);
     FE_Nothing<dim> fe_n;
 
-    fe_collection.push_back(FESystem<dim, dim>(fe_dgq, n_solution_components, fe_n, n_solution_components)); // liquid
-    fe_collection.push_back(FESystem<dim, dim>(fe_dgq, n_solution_components, fe_dgq, n_solution_components)); // intersected
-    fe_collection.push_back(FESystem<dim, dim>(fe_n, n_solution_components, fe_dgq, n_solution_components)); // gas
+    fe_collection.push_back(
+      FESystem<dim, dim>(fe_dgq, n_solution_components, fe_n, n_solution_components)); // liquid
+    fe_collection.push_back(FESystem<dim, dim>(
+      fe_dgq, n_solution_components, fe_dgq, n_solution_components)); // intersected
+    fe_collection.push_back(
+      FESystem<dim, dim>(fe_n, n_solution_components, fe_dgq, n_solution_components)); // gas
 
     CutUtil::set_fe_index<dim>(dof_handler, *mesh_classifier, false /* set_future */);
     dof_handler.distribute_dofs(fe_collection);
@@ -250,38 +259,44 @@ namespace MeltPoolDG::Multiphase
   template <int dim, typename number>
   void
   CompressibleMultiphaseOperation<dim, number>::solve(const number current_time,
-                                                     const number time_step)
+                                                      const number time_step)
   {
     // - setup new dof layout, reinit vectors
     // - compute new quadrature rules for intersected elements, intersected faces and phase surface
     // - reinit matrix-free object, rhs and solution vectors
     adapt_to_new_interface_position();
 
-    std::visit([&](auto& op) {
-      // update inverse time step size
-      op.compute_inverse_time_step(time_step);
+    std::visit(
+      [&](auto &op) {
+        // update inverse time step size
+        op.compute_inverse_time_step(time_step);
 
-      // compute rhs
-      op.create_rhs(current_time,
-                                 time_step,
-                                 rhs,
-                                 flow_scratch_data.solution_history.get_current_solution());
+        // compute rhs
+        op.create_rhs(current_time,
+                      time_step,
+                      rhs,
+                      flow_scratch_data.solution_history.get_current_solution());
 
-      // solve linear and symmetric system of equations with CG
-      LinearSolver::solve<VectorType>(op,
-                                    flow_scratch_data.solution_history.get_current_solution(),
-                                    rhs,
-                                    flow_scratch_data.flow_data.time_integrator.linear_solver_data);
-
-    }, cmp_operator);
+        // solve linear and symmetric system of equations with CG
+        LinearSolver::solve<VectorType>(
+          op,
+          flow_scratch_data.solution_history.get_current_solution(),
+          rhs,
+          flow_scratch_data.flow_data.time_integrator.linear_solver_data);
+      },
+      cmp_operator);
   }
 
   template <int dim, typename number>
-  void CompressibleMultiphaseOperation<dim, number>::set_initial_condition(const Function<dim> &function)
+  void
+  CompressibleMultiphaseOperation<dim, number>::set_initial_condition(const Function<dim> &function)
   {
     if (flow_scratch_data.solution_history.get_current_solution().has_ghost_elements())
       flow_scratch_data.solution_history.get_current_solution().zero_out_ghost_values();
-    dealii::VectorTools::interpolate(flow_scratch_data.scratch_data.get_dof_handler(flow_scratch_data.dof_idx),function,flow_scratch_data.solution_history.get_current_solution());
+    dealii::VectorTools::interpolate(flow_scratch_data.scratch_data.get_dof_handler(
+                                       flow_scratch_data.dof_idx),
+                                     function,
+                                     flow_scratch_data.solution_history.get_current_solution());
     flow_scratch_data.solution_history.get_current_solution().update_ghost_values();
   }
 
@@ -328,85 +343,109 @@ namespace MeltPoolDG::Multiphase
   }
 
   template <int dim, typename number>
-  std::pair<number,number> CompressibleMultiphaseOperation<dim, number>::compute_minimum_density() const
+  std::pair<number, number>
+  CompressibleMultiphaseOperation<dim, number>::compute_minimum_density() const
   {
     flow_scratch_data.solution_history.get_current_solution().update_ghost_values();
 
-    constexpr unsigned int n_lanes = VectorizedArray<number>::size();
-    double min_density_liquid = std::numeric_limits<double>::max();
-    double min_density_gas = std::numeric_limits<double>::max();
-    const auto &matrix_free = flow_scratch_data.scratch_data.get_matrix_free();
+    constexpr unsigned int n_lanes            = VectorizedArray<number>::size();
+    double                 min_density_liquid = std::numeric_limits<double>::max();
+    double                 min_density_gas    = std::numeric_limits<double>::max();
+    const auto            &matrix_free        = flow_scratch_data.scratch_data.get_matrix_free();
 
     // lambda function for computing min density using FECellIntegrator
     auto compute_min_density_standard = [&](auto &phi, unsigned int cell, number min_density) {
-        phi.reinit(cell);
-        phi.gather_evaluate(flow_scratch_data.solution_history.get_current_solution(), EvaluationFlags::values);
-        for (const unsigned int q : phi.quadrature_point_indices())
-          {
-            const auto density = phi.get_value(q);
-            for (unsigned int lane = 0; lane < matrix_free.n_active_entries_per_cell_batch(cell); ++lane)
-              min_density = std::min(density[lane], min_density);
-          }
+      phi.reinit(cell);
+      phi.gather_evaluate(flow_scratch_data.solution_history.get_current_solution(),
+                          EvaluationFlags::values);
+      for (const unsigned int q : phi.quadrature_point_indices())
+        {
+          const auto density = phi.get_value(q);
+          for (unsigned int lane = 0; lane < matrix_free.n_active_entries_per_cell_batch(cell);
+               ++lane)
+            min_density = std::min(density[lane], min_density);
+        }
     };
 
     // lambda function for computing min density using FEPointEvaluation for intersected elements
-    auto compute_min_density_intersected = [&](auto &phi, auto &fe_point_eval, unsigned int cell, number min_density)
-      {
+    auto compute_min_density_intersected =
+      [&](auto &phi, auto &fe_point_eval, unsigned int cell, number min_density) {
         phi.reinit(cell);
         phi.read_dof_values(flow_scratch_data.solution_history.get_current_solution());
 
-        for (unsigned int lane = 0; lane < matrix_free.n_active_entries_per_cell_batch(cell); ++lane)
-        {
-          fe_point_eval.reinit(cell * n_lanes + lane);
-          fe_point_eval.evaluate(
-              StridedArrayView<const number, n_lanes>(
-                  &phi.begin_dof_values()[0][lane], n_dofs_per_cell),
-              EvaluationFlags::values);
+        for (unsigned int lane = 0; lane < matrix_free.n_active_entries_per_cell_batch(cell);
+             ++lane)
+          {
+            fe_point_eval.reinit(cell * n_lanes + lane);
+            fe_point_eval.evaluate(StridedArrayView<const number, n_lanes>(
+                                     &phi.begin_dof_values()[0][lane], n_dofs_per_cell),
+                                   EvaluationFlags::values);
 
-          for (const unsigned int q : fe_point_eval.quadrature_point_indices())
-            {
-              const auto density = fe_point_eval.get_value(q);
-              for (unsigned int v = 0; v < fe_point_eval.n_active_entries_per_quadrature_batch(q); ++v)
-                min_density = std::min(density[v], min_density);
-            }
-        }
+            for (const unsigned int q : fe_point_eval.quadrature_point_indices())
+              {
+                const auto density = fe_point_eval.get_value(q);
+                for (unsigned int v = 0; v < fe_point_eval.n_active_entries_per_quadrature_batch(q);
+                     ++v)
+                  min_density = std::min(density[v], min_density);
+              }
+          }
       };
 
     for (unsigned int cell = 0; cell < matrix_free.n_cell_batches(); ++cell)
-    {
-      const auto active_fe_index = matrix_free.get_cell_category(cell);
-
-      if (active_fe_index == CutUtil::CellCategory::liquid)
       {
-        FECellIntegrator<dim, 1, number> phi(matrix_free, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx, 0, CutUtil::CellCategory::liquid);
-        compute_min_density_standard(phi, cell, min_density_liquid);
-      }
-      else if (active_fe_index == CutUtil::CellCategory::intersected)
-      {
-        // liquid phase (inside)
-        FECellIntegrator<dim, 1, number> phi(matrix_free, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx, 0, CutUtil::CellCategory::intersected);
-        FEPointEvaluation<1, dim, dim, VectorizedArray<number>> fe_point_eval(*mapping_info_cells[0], fe_point_temp);
-        compute_min_density_intersected(phi, fe_point_eval, cell, min_density_liquid);
+        const auto active_fe_index = matrix_free.get_cell_category(cell);
 
-        // gas phase (outside)
-        FECellIntegrator<dim, 1, number> phi_outside(matrix_free, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx, dim + 2, CutUtil::CellCategory::intersected);
-        FEPointEvaluation<1, dim, dim, VectorizedArray<number>> fe_point_eval_outside(*mapping_info_cells[1], fe_point_temp);
-        compute_min_density_intersected(phi_outside, fe_point_eval_outside, cell, min_density_gas);
+        if (active_fe_index == CutUtil::CellCategory::liquid)
+          {
+            FECellIntegrator<dim, 1, number> phi(matrix_free,
+                                                 flow_scratch_data.dof_idx,
+                                                 flow_scratch_data.quad_idx,
+                                                 0,
+                                                 CutUtil::CellCategory::liquid);
+            compute_min_density_standard(phi, cell, min_density_liquid);
+          }
+        else if (active_fe_index == CutUtil::CellCategory::intersected)
+          {
+            // liquid phase (inside)
+            FECellIntegrator<dim, 1, number>                        phi(matrix_free,
+                                                 flow_scratch_data.dof_idx,
+                                                 flow_scratch_data.quad_idx,
+                                                 0,
+                                                 CutUtil::CellCategory::intersected);
+            FEPointEvaluation<1, dim, dim, VectorizedArray<number>> fe_point_eval(
+              *mapping_info_cells[0], fe_point_temp);
+            compute_min_density_intersected(phi, fe_point_eval, cell, min_density_liquid);
+
+            // gas phase (outside)
+            FECellIntegrator<dim, 1, number>                        phi_outside(matrix_free,
+                                                         flow_scratch_data.dof_idx,
+                                                         flow_scratch_data.quad_idx,
+                                                         dim + 2,
+                                                         CutUtil::CellCategory::intersected);
+            FEPointEvaluation<1, dim, dim, VectorizedArray<number>> fe_point_eval_outside(
+              *mapping_info_cells[1], fe_point_temp);
+            compute_min_density_intersected(phi_outside,
+                                            fe_point_eval_outside,
+                                            cell,
+                                            min_density_gas);
+          }
+        else if (active_fe_index == CutUtil::CellCategory::gas)
+          {
+            FECellIntegrator<dim, 1, number> phi_outside(matrix_free,
+                                                         flow_scratch_data.dof_idx,
+                                                         flow_scratch_data.quad_idx,
+                                                         dim + 2,
+                                                         CutUtil::CellCategory::gas);
+            compute_min_density_standard(phi_outside, cell, min_density_gas);
+          }
       }
-      else if (active_fe_index == CutUtil::CellCategory::gas)
-        {
-          FECellIntegrator<dim, 1, number> phi_outside(matrix_free, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx, dim + 2, CutUtil::CellCategory::gas);
-          compute_min_density_standard(phi_outside, cell, min_density_gas);
-        }
-    }
 
     // compute the minimum density across all MPI processes
     min_density_liquid = Utilities::MPI::min(
-        min_density_liquid,
-        matrix_free.get_dof_handler(flow_scratch_data.dof_idx).get_communicator());
+      min_density_liquid,
+      matrix_free.get_dof_handler(flow_scratch_data.dof_idx).get_communicator());
     min_density_gas = Utilities::MPI::min(
-        min_density_gas,
-        matrix_free.get_dof_handler(flow_scratch_data.dof_idx).get_communicator());
+      min_density_gas, matrix_free.get_dof_handler(flow_scratch_data.dof_idx).get_communicator());
 
     return {min_density_liquid, min_density_gas};
   }
@@ -433,62 +472,71 @@ namespace MeltPoolDG::Multiphase
   number
   CompressibleMultiphaseOperation<dim, number>::compute_convective_time_step_limit() const
   {
-    number                                 max_transport              = 0;
-    number                                 convective_time_step_limit = 0.;
+    number max_transport              = 0;
+    number convective_time_step_limit = 0.;
 
     // lambda function to compute convective time step limit at quadrature point level
-    auto compute_convective_time_step_limit_at_q = [&]<bool is_gas_phase>(auto &evaluator, unsigned int q, VectorizedArray<number> &local_max) {
-      const auto conserved_variables = evaluator.get_value(q);
-      const auto velocity =
-        MeltPoolDG::Flow::calculate_velocity<dim, number>(conserved_variables);
+    auto compute_convective_time_step_limit_at_q =
+      [&]<bool is_gas_phase>(auto &evaluator, unsigned int q, VectorizedArray<number> &local_max) {
+        const auto conserved_variables = evaluator.get_value(q);
+        const auto velocity =
+          MeltPoolDG::Flow::calculate_velocity<dim, number>(conserved_variables);
 
-      const Tensor<2, dim, VectorizedArray<number>>              inverse_jacobian = evaluator.inverse_jacobian(q);
-      const auto              convective_speed = inverse_jacobian * velocity;
-      VectorizedArray<number> convective_limit = 0.;
-      for (unsigned int d = 0; d < dim; ++d)
-        convective_limit = std::max(convective_limit, std::abs(convective_speed[d]));
+        const Tensor<2, dim, VectorizedArray<number>> inverse_jacobian =
+          evaluator.inverse_jacobian(q);
+        const auto              convective_speed = inverse_jacobian * velocity;
+        VectorizedArray<number> convective_limit = 0.;
+        for (unsigned int d = 0; d < dim; ++d)
+          convective_limit = std::max(convective_limit, std::abs(convective_speed[d]));
 
-      const auto speed_of_sound = MeltPoolDG::Flow::calculate_speed_of_sound<dim, number, is_gas_phase>(conserved_variables, flow_scratch_data.flow_data);
+        const auto speed_of_sound =
+          MeltPoolDG::Flow::calculate_speed_of_sound<dim, number, is_gas_phase>(
+            conserved_variables, flow_scratch_data.flow_data);
 
-      Tensor<1, dim, VectorizedArray<number>> eigenvector;
-      for (unsigned int d = 0; d < dim; ++d)
-        eigenvector[d] = 1.;
-      for (unsigned int i = 0; i < 5 /* number of iterations */; ++i)
-        {
-          eigenvector = transpose(inverse_jacobian) * (inverse_jacobian * eigenvector);
-          VectorizedArray<number> eigenvector_norm = 0.;
-          for (unsigned int d = 0; d < dim; ++d)
-            eigenvector_norm = std::max(eigenvector_norm, std::abs(eigenvector[d]));
-          eigenvector /= eigenvector_norm;
-        }
-      const auto jac_times_ev = inverse_jacobian * eigenvector;
-      const auto max_eigenvalue =
-        std::sqrt((jac_times_ev * jac_times_ev) / (eigenvector * eigenvector));
-      local_max = std::max(local_max, max_eigenvalue * speed_of_sound + convective_limit);
-    };
+        Tensor<1, dim, VectorizedArray<number>> eigenvector;
+        for (unsigned int d = 0; d < dim; ++d)
+          eigenvector[d] = 1.;
+        for (unsigned int i = 0; i < 5 /* number of iterations */; ++i)
+          {
+            eigenvector = transpose(inverse_jacobian) * (inverse_jacobian * eigenvector);
+            VectorizedArray<number> eigenvector_norm = 0.;
+            for (unsigned int d = 0; d < dim; ++d)
+              eigenvector_norm = std::max(eigenvector_norm, std::abs(eigenvector[d]));
+            eigenvector /= eigenvector_norm;
+          }
+        const auto jac_times_ev = inverse_jacobian * eigenvector;
+        const auto max_eigenvalue =
+          std::sqrt((jac_times_ev * jac_times_ev) / (eigenvector * eigenvector));
+        local_max = std::max(local_max, max_eigenvalue * speed_of_sound + convective_limit);
+      };
 
-    for (unsigned int cell = 0; cell < this->flow_scratch_data.scratch_data.get_matrix_free().n_cell_batches();
+    for (unsigned int cell = 0;
+         cell < this->flow_scratch_data.scratch_data.get_matrix_free().n_cell_batches();
          ++cell)
       {
-        const auto active_fe_index = this->flow_scratch_data.scratch_data.get_matrix_free().get_cell_category(cell);
+        const auto active_fe_index =
+          this->flow_scratch_data.scratch_data.get_matrix_free().get_cell_category(cell);
 
         if (active_fe_index == CutUtil::CellCategory::liquid)
           {
-            FECellIntegrator<dim, dim + 2, number> phi(flow_scratch_data.scratch_data.get_matrix_free(),
-                                               flow_scratch_data.dof_idx,
-                                               flow_scratch_data.quad_idx,
-                                               0,
-                                               CutUtil::CellCategory::liquid);
+            FECellIntegrator<dim, dim + 2, number> phi(
+              flow_scratch_data.scratch_data.get_matrix_free(),
+              flow_scratch_data.dof_idx,
+              flow_scratch_data.quad_idx,
+              0,
+              CutUtil::CellCategory::liquid);
 
             phi.reinit(cell);
             phi.gather_evaluate(flow_scratch_data.solution_history.get_current_solution(),
                                 EvaluationFlags::values);
             VectorizedArray<number> local_max = 0.;
             for (const unsigned int q : phi.quadrature_point_indices())
-              compute_convective_time_step_limit_at_q.template operator()<false>(phi,q,local_max);
+              compute_convective_time_step_limit_at_q.template operator()<false>(phi, q, local_max);
 
             for (unsigned int v = 0;
-                 v < flow_scratch_data.scratch_data.get_matrix_free().n_active_entries_per_cell_batch(cell);
+                 v <
+                 flow_scratch_data.scratch_data.get_matrix_free().n_active_entries_per_cell_batch(
+                   cell);
                  ++v)
               max_transport = std::max(max_transport, local_max[v]);
           }
@@ -499,11 +547,12 @@ namespace MeltPoolDG::Multiphase
             // base element?
 
             // liquid phase (inside)
-            FECellIntegrator<dim, dim + 2, number> phi(flow_scratch_data.scratch_data.get_matrix_free(),
-                                               flow_scratch_data.dof_idx,
-                                               flow_scratch_data.quad_idx,
-                                               0,
-                                               CutUtil::CellCategory::intersected);
+            FECellIntegrator<dim, dim + 2, number> phi(
+              flow_scratch_data.scratch_data.get_matrix_free(),
+              flow_scratch_data.dof_idx,
+              flow_scratch_data.quad_idx,
+              0,
+              CutUtil::CellCategory::intersected);
 
             FEPointEvaluation<dim + 2, dim, dim, VectorizedArray<number>> fe_point_eval(
               *mapping_info_cells[0], fe_point_temp);
@@ -515,7 +564,9 @@ namespace MeltPoolDG::Multiphase
             phi.read_dof_values(flow_scratch_data.solution_history.get_current_solution());
 
             for (unsigned int lane = 0;
-                 lane < flow_scratch_data.scratch_data.get_matrix_free().n_active_entries_per_cell_batch(cell);
+                 lane <
+                 flow_scratch_data.scratch_data.get_matrix_free().n_active_entries_per_cell_batch(
+                   cell);
                  ++lane)
               {
                 fe_point_eval.reinit(cell * n_lanes + lane);
@@ -525,7 +576,8 @@ namespace MeltPoolDG::Multiphase
 
                 for (const unsigned int q : fe_point_eval.quadrature_point_indices())
                   {
-                    compute_convective_time_step_limit_at_q.template operator()<false>(fe_point_eval,q,local_max);
+                    compute_convective_time_step_limit_at_q.template operator()<false>(
+                      fe_point_eval, q, local_max);
 
                     for (unsigned int v = 0;
                          v < fe_point_eval.n_active_entries_per_quadrature_batch(q);
@@ -535,11 +587,12 @@ namespace MeltPoolDG::Multiphase
               }
 
             // gas phase (outside) for two-phase case
-            FECellIntegrator<dim, dim + 2, number> phi_outside(flow_scratch_data.scratch_data.get_matrix_free(),
-                                               flow_scratch_data.dof_idx,
-                                               flow_scratch_data.quad_idx,
-                                               dim+2,
-                                               CutUtil::CellCategory::intersected);
+            FECellIntegrator<dim, dim + 2, number> phi_outside(
+              flow_scratch_data.scratch_data.get_matrix_free(),
+              flow_scratch_data.dof_idx,
+              flow_scratch_data.quad_idx,
+              dim + 2,
+              CutUtil::CellCategory::intersected);
 
             FEPointEvaluation<dim + 2, dim, dim, VectorizedArray<number>> fe_point_eval_outside(
               *mapping_info_cells[1], fe_point_temp);
@@ -548,17 +601,21 @@ namespace MeltPoolDG::Multiphase
             phi_outside.read_dof_values(flow_scratch_data.solution_history.get_current_solution());
 
             for (unsigned int lane = 0;
-                 lane < flow_scratch_data.scratch_data.get_matrix_free().n_active_entries_per_cell_batch(cell);
+                 lane <
+                 flow_scratch_data.scratch_data.get_matrix_free().n_active_entries_per_cell_batch(
+                   cell);
                  ++lane)
               {
                 fe_point_eval_outside.reinit(cell * n_lanes + lane);
-                fe_point_eval_outside.evaluate(StridedArrayView<const number, n_lanes>(
-                                         &phi_outside.begin_dof_values()[0][lane], n_dofs_per_cell),
-                                       EvaluationFlags::values);
+                fe_point_eval_outside.evaluate(
+                  StridedArrayView<const number, n_lanes>(&phi_outside.begin_dof_values()[0][lane],
+                                                          n_dofs_per_cell),
+                  EvaluationFlags::values);
 
                 for (const unsigned int q : fe_point_eval_outside.quadrature_point_indices())
                   {
-                    compute_convective_time_step_limit_at_q.template operator()<true>(fe_point_eval_outside,q,local_max);
+                    compute_convective_time_step_limit_at_q.template operator()<true>(
+                      fe_point_eval_outside, q, local_max);
 
                     for (unsigned int v = 0;
                          v < fe_point_eval_outside.n_active_entries_per_quadrature_batch(q);
@@ -569,31 +626,38 @@ namespace MeltPoolDG::Multiphase
           }
         else if (active_fe_index == CutUtil::CellCategory::gas)
           {
-            FECellIntegrator<dim, dim + 2, number> phi_outside(flow_scratch_data.scratch_data.get_matrix_free(),
-                                               flow_scratch_data.dof_idx,
-                                               flow_scratch_data.quad_idx,
-                                               dim+2,
-                                               CutUtil::CellCategory::gas);
+            FECellIntegrator<dim, dim + 2, number> phi_outside(
+              flow_scratch_data.scratch_data.get_matrix_free(),
+              flow_scratch_data.dof_idx,
+              flow_scratch_data.quad_idx,
+              dim + 2,
+              CutUtil::CellCategory::gas);
 
             phi_outside.reinit(cell);
             phi_outside.gather_evaluate(flow_scratch_data.solution_history.get_current_solution(),
-                                EvaluationFlags::values);
+                                        EvaluationFlags::values);
             VectorizedArray<number> local_max = 0.;
             for (const unsigned int q : phi_outside.quadrature_point_indices())
-              compute_convective_time_step_limit_at_q.template operator()<true>(phi_outside,q,local_max);
+              compute_convective_time_step_limit_at_q.template operator()<true>(phi_outside,
+                                                                                q,
+                                                                                local_max);
 
             for (unsigned int v = 0;
-                 v < flow_scratch_data.scratch_data.get_matrix_free().n_active_entries_per_cell_batch(cell);
+                 v <
+                 flow_scratch_data.scratch_data.get_matrix_free().n_active_entries_per_cell_batch(
+                   cell);
                  ++v)
               max_transport = std::max(max_transport, local_max[v]);
           }
       }
 
-    max_transport = Utilities::MPI::max(max_transport, flow_scratch_data.scratch_data.get_mpi_comm());
+    max_transport =
+      Utilities::MPI::max(max_transport, flow_scratch_data.scratch_data.get_mpi_comm());
 
     convective_time_step_limit =
       flow_scratch_data.flow_data.courant_number /
-      std::pow(flow_scratch_data.scratch_data.get_degree(flow_scratch_data.dof_idx), 1.5) / max_transport;
+      std::pow(flow_scratch_data.scratch_data.get_degree(flow_scratch_data.dof_idx), 1.5) /
+      max_transport;
 
     return convective_time_step_limit;
   }

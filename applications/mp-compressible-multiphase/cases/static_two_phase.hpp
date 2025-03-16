@@ -1,7 +1,18 @@
+/**
+* @brief Simulation of (currently) one-dimensional two-phase flows.
+* The initial conditions are used from the user input file.
+* There is an inflow boundary for the liquid phase and an outflow boundary with fixed total energy
+* for the gas phase.
+*       _____________________________________
+*    ->|      liquid      |        gas      | ->
+*     x=-5              x=0.13             x=5
+*/
+
 #pragma once
 
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_parser.h>
 #include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
 
@@ -9,86 +20,97 @@
 
 #include <deal.II/grid/grid_generator.h>
 
-#include <meltpooldg/utilities/utility_functions.hpp>
-
 #include "../compressible_multiphase_case.hpp"
 
 namespace MeltPoolDG::Simulation::CompressibleMultiphase
 {
   template <int dim>
-  class FlowFieldStaticMP : public Function<dim>
+  class FlowField : public Function<dim>
   {
   public:
-    explicit FlowFieldStaticMP(const bool gas_phase_is_first = true)
-      : Function<dim>(2*(dim + 2)), gas_phase_is_first(gas_phase_is_first)
-    {}
+    explicit FlowField(std::string ic_gas_phase,
+                       std::string ic_liquid_phase,
+                       const bool  gas_phase_is_first = true)
+      : Function<dim>(2 * (dim + 2))
+      , gas_phase_is_first(gas_phase_is_first)
+    {
+      parsing_function_gas->initialize(dim == 3 ?
+                                         std::string("x,y,z") :
+                                         (dim == 2 ? std::string("x,y") : std::string("x")),
+                                       ic_gas_phase,
+                                       constants,
+                                       false);
+      parsing_function_liquid->initialize(dim == 3 ?
+                                            std::string("x,y,z") :
+                                            (dim == 2 ? std::string("x,y") : std::string("x")),
+                                          ic_liquid_phase,
+                                          constants,
+                                          false);
+
+      // Currently, only 1D simulations are possible
+      Assert(dim == 1, ExcNotImplemented());
+    }
 
     double
-    value(const Point<dim> &, const unsigned int component) const final
+    value(const Point<dim> &p, const unsigned int component) const final
     {
-      unsigned int gas_components[dim+2];
-      unsigned int liquid_components[dim+2];
+      unsigned int gas_components[dim + 2];
+      unsigned int liquid_components[dim + 2];
 
-      for (unsigned int i = 0; i<dim+2; ++i)
+      for (unsigned int i = 0; i < dim + 2; ++i)
         {
           if (gas_phase_is_first)
             {
-              gas_components[i] = i;
-              liquid_components[i] = i+dim+2;
+              gas_components[i]    = i;
+              liquid_components[i] = i + dim + 2;
             }
           else
             {
-              gas_components[i] = i+dim+2;
+              gas_components[i]    = i + dim + 2;
               liquid_components[i] = i;
             }
         }
 
       // gas phase
       if (component == gas_components[0])
-        return 84163.365 / (287.1 * 3000.0);
+        return parsing_function_gas->value(p, 0);
       else if (component == gas_components[1])
-        return 0.;
+        return parsing_function_gas->value(p, 1);
       else if (component == gas_components[2])
-        {
-          constexpr double pressure = 84163.365;
-          constexpr double gamma = 1.4;
-          return pressure / (gamma-1.);
-        }
+        return parsing_function_gas->value(p, 2);
 
       // liquid phase
       else if (component == liquid_components[0])
-        return 3622.736592452169461514105064801466369162687854;//3622.73659245217;
+        return parsing_function_liquid->value(p, 0);
       else if (component == liquid_components[1])
-        return 0.;
+        return parsing_function_liquid->value(p, 1);
       else if (component == liquid_components[2])
-        {
-          constexpr double pressure = 84163.365;
-          constexpr double b = 1.8759e-4;
-          constexpr double gamma = 1.4355;
-          constexpr double p_inf =  1.1587e10;
-          constexpr double q = -607968.8;
-          constexpr double rho = 3622.736592452169461514105064801466369162687854;//3622.73659245217;
-          return rho*((pressure + gamma * p_inf)/(gamma-1.)*(1./rho - b) + q);
-        }
+        return parsing_function_liquid->value(p, 2);
       else
         return 0.;
     }
-    private:
-    bool gas_phase_is_first;
+
+  private:
+    bool                                         gas_phase_is_first;
+    std::map<std::string, double>                constants;
+    std::unique_ptr<dealii::FunctionParser<dim>> parsing_function_gas =
+      std::make_unique<dealii::FunctionParser<dim>>(dim + 2);
+    std::unique_ptr<dealii::FunctionParser<dim>> parsing_function_liquid =
+      std::make_unique<dealii::FunctionParser<dim>>(dim + 2);
   };
 
   template <int dim>
-  class SimulationStaticLiquidGas final : public Multiphase::CompressibleMultiphaseCase<dim>
+  class SimulationStaticTwoPhase final : public Multiphase::CompressibleMultiphaseCase<dim>
   {
   public:
-    SimulationStaticLiquidGas(std::string parameter_file, const MPI_Comm mpi_communicator)
+    SimulationStaticTwoPhase(std::string parameter_file, const MPI_Comm mpi_communicator)
       : Multiphase::CompressibleMultiphaseCase<dim>(parameter_file, mpi_communicator)
     {}
 
     void
     create_spatial_discretization() override
     {
-      //TODO: no distributed triangulation possible for d=1
+      // TODO: no distributed triangulation possible for dim=1
       this->triangulation =
         std::make_shared<parallel::shared::Triangulation<dim>>(this->mpi_communicator);
 
@@ -120,8 +142,9 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     void
     set_boundary_conditions() override
     {
-      auto inflow_outflow_solution = std::make_shared<FlowFieldStaticMP<dim>>();
-      auto dummy_solution          = std::make_shared<FlowFieldStaticMP<dim>>();
+      auto inflow_outflow_solution =
+        std::make_shared<FlowField<dim>>(ic_gas_phase, ic_liquid_phase);
+      auto dummy_solution = std::make_shared<FlowField<dim>>(ic_gas_phase, ic_liquid_phase);
       this->attach_boundary_condition({BoundaryID::inflow, inflow_outflow_solution},
                                       "inflow",
                                       "compressible_multiphase");
@@ -134,7 +157,11 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     void
     set_field_conditions() override
     {
-      auto initial_condition = std::make_shared<FlowFieldStaticMP<dim>>(false /*gas_phase_is_first*/);
+      // The solution vector is ordered, such that the liquid phase is the first phase and the gas
+      // phase is the second phase.
+      auto initial_condition = std::make_shared<FlowField<dim>>(ic_gas_phase,
+                                                                ic_liquid_phase,
+                                                                false /*gas_phase_is_first*/);
       this->attach_initial_condition(initial_condition, "compressible_multiphase");
 
       // set level-set function
@@ -145,21 +172,24 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       dealii::Tensor<1, dim> normal;
       normal[0] = -1.;
 
-      const auto level_set =
-        std::make_shared<Functions::/*ConstantFunction<dim,double>>(1.);*/SignedDistance::Plane<dim>>(p, normal);
+      const auto level_set = std::make_shared<Functions::SignedDistance::Plane<dim>>(p, normal);
       this->attach_field_function(level_set, "level_set", "compressible_multiphase");
     }
 
     void
     do_postprocessing(const GenericDataOut<dim> &generic_data_out) const override
     {
-      FlowFieldStaticMP<dim> reference_values;
+      FlowField<dim> reference_values(ic_gas_phase, ic_liquid_phase);
       this->print_relative_norm(generic_data_out, reference_values, "Norm");
     }
 
   private:
     // for self-registration
     static SimulationCaseRegistrar<Multiphase::CompressibleMultiphaseCase<dim>> registrar;
+
+    // initial conditions functions
+    std::string ic_gas_phase    = this->parameters.flow.initial_conditions_gas_phase;
+    std::string ic_liquid_phase = this->parameters.flow.initial_conditions_liquid_phase;
 
     /**
      * Enumeration for the fitted boundary id's.
@@ -185,7 +215,7 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
                 // outflow boundary with fixed energy
                 if (center(0) > 5. - 1e-12)
                   face->set_boundary_id(BoundaryID::subsonic_outflow_with_fixed_energy);
-                if (center(0) < -5.+1e-12)
+                if (center(0) < -5. + 1e-12)
                   face->set_boundary_id(BoundaryID::inflow);
               }
           }
@@ -195,10 +225,9 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
   // for self-registration
   template <int dim>
   SimulationCaseRegistrar<Multiphase::CompressibleMultiphaseCase<dim>>
-    SimulationStaticLiquidGas<dim>::registrar(
-      "static_liquid_gas",
+    SimulationStaticTwoPhase<dim>::registrar(
+      "static_two_phase",
       [](const std::string &parameter_file, const MPI_Comm mpi_communicator) {
-        return std::make_unique<SimulationStaticLiquidGas<dim>>(parameter_file,
-                                                                    mpi_communicator);
+        return std::make_unique<SimulationStaticTwoPhase<dim>>(parameter_file, mpi_communicator);
       });
 } // namespace MeltPoolDG::Simulation::CompressibleMultiphase

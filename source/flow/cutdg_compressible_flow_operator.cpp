@@ -31,7 +31,8 @@ namespace MeltPoolDG::Flow
 
   template <unsigned int dim, typename number, bool is_viscous>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::compute_inverse_time_step(const number &time_step)
+  CutDGCompressibleFlowOperator<dim, number, is_viscous>::compute_inverse_time_step(
+    const number &time_step)
   {
     Assert(time_step > 0., dealii::ExcMessage("Time step size must be larger than 0!"));
     inv_time_step = 1. / time_step;
@@ -39,7 +40,8 @@ namespace MeltPoolDG::Flow
 
   template <unsigned int dim, typename number, bool is_viscous>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::vmult(VectorType &dst, const VectorType &src) const
+  CutDGCompressibleFlowOperator<dim, number, is_viscous>::vmult(VectorType       &dst,
+                                                                const VectorType &src) const
   {
     typedef std::function<void(const dealii::MatrixFree<dim, number> &,
                                dealii::LinearAlgebra::distributed::Vector<number>       &dst,
@@ -65,9 +67,9 @@ namespace MeltPoolDG::Flow
   template <unsigned int dim, typename number, bool is_viscous>
   void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::create_rhs(const number     &time,
-                                                         const number     &time_step,
-                                                         VectorType       &dst,
-                                                         const VectorType &src) const
+                                                                     const number     &time_step,
+                                                                     VectorType       &dst,
+                                                                     const VectorType &src) const
   {
     AssertThrow(!dealii::numbers::is_invalid(inv_time_step),
                 dealii::ExcMessage(
@@ -141,10 +143,8 @@ namespace MeltPoolDG::Flow
           {
             phi.reinit(cell);
             phi.gather_evaluate(src,
-                                EvaluationFlags::values |
-                                  (is_viscous ?
-                                     EvaluationFlags::gradients :
-                                     EvaluationFlags::nothing));
+                                EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
+                                                                        EvaluationFlags::nothing));
 
             for (const unsigned int q : phi.quadrature_point_indices())
               {
@@ -194,9 +194,8 @@ namespace MeltPoolDG::Flow
                 fe_point_eval.evaluate(
                   StridedArrayView<const number, n_lanes>(&phi.begin_dof_values()[0][lane],
                                                           n_dofs_per_cell),
-                  EvaluationFlags::values | (is_viscous ?
-                                               EvaluationFlags::gradients :
-                                               EvaluationFlags::nothing));
+                  EvaluationFlags::values |
+                    (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
 
                 // evaluate for surface integral
                 fe_point_surface.reinit(cell_batch * n_lanes + lane);
@@ -232,9 +231,8 @@ namespace MeltPoolDG::Flow
                                         EvaluationFlags::values | EvaluationFlags::gradients);
 
                 const auto penalty_parameter =
-                  is_viscous ?
-                    phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
-                    0.;
+                  is_viscous ? phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
+                               0.;
 
                 // do surface integral
                 for (const unsigned int q : fe_point_surface.quadrature_point_indices())
@@ -313,16 +311,14 @@ namespace MeltPoolDG::Flow
             phi_p.reinit(face);
             phi_p.gather_evaluate(src,
                                   EvaluationFlags::values |
-                                    (is_viscous ?
-                                       EvaluationFlags::gradients :
-                                       EvaluationFlags::nothing));
+                                    (is_viscous ? EvaluationFlags::gradients :
+                                                  EvaluationFlags::nothing));
 
             phi_m.reinit(face);
             phi_m.gather_evaluate(src,
                                   EvaluationFlags::values |
-                                    (is_viscous ?
-                                       EvaluationFlags::gradients :
-                                       EvaluationFlags::nothing));
+                                    (is_viscous ? EvaluationFlags::gradients :
+                                                  EvaluationFlags::nothing));
 
             // factor 0.5 for interior face
             const dealii::VectorizedArray<number> penalty_parameter =
@@ -340,8 +336,7 @@ namespace MeltPoolDG::Flow
                     q,
                     penalty_parameter,
                     convective_terms,
-                    viscous_terms,
-                    flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity);
+                    viscous_terms);
 
                 phi_m.submit_value(flux_m, q);
                 phi_p.submit_value(flux_p, q);
@@ -353,14 +348,12 @@ namespace MeltPoolDG::Flow
               }
 
             phi_p.integrate_scatter(EvaluationFlags::values |
-                                      (is_viscous ?
-                                         EvaluationFlags::gradients :
-                                         EvaluationFlags::nothing),
+                                      (is_viscous ? EvaluationFlags::gradients :
+                                                    EvaluationFlags::nothing),
                                     dst);
             phi_m.integrate_scatter(EvaluationFlags::values |
-                                      (is_viscous ?
-                                         EvaluationFlags::gradients :
-                                         EvaluationFlags::nothing),
+                                      (is_viscous ? EvaluationFlags::gradients :
+                                                    EvaluationFlags::nothing),
                                     dst);
           }
       }
@@ -378,14 +371,12 @@ namespace MeltPoolDG::Flow
             phi_m.reinit(face);
             phi_m.read_dof_values(src);
 
-            phi_p.project_to_face(EvaluationFlags::values |
-                                  (is_viscous ?
-                                     EvaluationFlags::gradients :
-                                     EvaluationFlags::nothing));
-            phi_m.project_to_face(EvaluationFlags::values |
-                                  (is_viscous ?
-                                     EvaluationFlags::gradients :
-                                     EvaluationFlags::nothing));
+            phi_p.project_to_face(
+              EvaluationFlags::values |
+              (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
+            phi_m.project_to_face(
+              EvaluationFlags::values |
+              (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
 
 
             const auto face_info =
@@ -402,17 +393,15 @@ namespace MeltPoolDG::Flow
                 fe_point_eval_plus.reinit(face_info.cells_exterior[lane],
                                           static_cast<int>(face_info.exterior_face_no));
 
-                fe_point_eval_minus.evaluate_in_face(
-                  &phi_m.get_scratch_data().begin()[0][lane],
-                  EvaluationFlags::values | (is_viscous ?
-                                               EvaluationFlags::gradients :
-                                               EvaluationFlags::nothing));
+                fe_point_eval_minus.evaluate_in_face(&phi_m.get_scratch_data().begin()[0][lane],
+                                                     EvaluationFlags::values |
+                                                       (is_viscous ? EvaluationFlags::gradients :
+                                                                     EvaluationFlags::nothing));
 
-                fe_point_eval_plus.evaluate_in_face(
-                  &phi_p.get_scratch_data().begin()[0][lane],
-                  EvaluationFlags::values | (is_viscous ?
-                                               EvaluationFlags::gradients :
-                                               EvaluationFlags::nothing));
+                fe_point_eval_plus.evaluate_in_face(&phi_p.get_scratch_data().begin()[0][lane],
+                                                    EvaluationFlags::values |
+                                                      (is_viscous ? EvaluationFlags::gradients :
+                                                                    EvaluationFlags::nothing));
 
                 // factor 0.5 for interior face
                 const dealii::VectorizedArray<number> penalty_parameter =
@@ -433,8 +422,7 @@ namespace MeltPoolDG::Flow
                       q,
                       penalty_parameter,
                       convective_terms,
-                      viscous_terms,
-                      flow_scratch_data.flow_data.material_data_gas_phase.dynamic_viscosity);
+                      viscous_terms);
 
                     fe_point_eval_minus.submit_value(flux_m, q);
                     fe_point_eval_plus.submit_value(flux_p, q);
@@ -445,29 +433,25 @@ namespace MeltPoolDG::Flow
                       }
                   }
 
-                fe_point_eval_minus.integrate_in_face(
-                  &phi_m.get_scratch_data().begin()[0][lane],
-                  EvaluationFlags::values | (is_viscous ?
-                                               EvaluationFlags::gradients :
-                                               EvaluationFlags::nothing));
+                fe_point_eval_minus.integrate_in_face(&phi_m.get_scratch_data().begin()[0][lane],
+                                                      EvaluationFlags::values |
+                                                        (is_viscous ? EvaluationFlags::gradients :
+                                                                      EvaluationFlags::nothing));
 
-                fe_point_eval_plus.integrate_in_face(
-                  &phi_p.get_scratch_data().begin()[0][lane],
-                  EvaluationFlags::values | (is_viscous ?
-                                               EvaluationFlags::gradients :
-                                               EvaluationFlags::nothing));
+                fe_point_eval_plus.integrate_in_face(&phi_p.get_scratch_data().begin()[0][lane],
+                                                     EvaluationFlags::values |
+                                                       (is_viscous ? EvaluationFlags::gradients :
+                                                                     EvaluationFlags::nothing));
               }
 
             phi_m.collect_from_face(EvaluationFlags::values |
-                                      (is_viscous ?
-                                         EvaluationFlags::gradients :
-                                         EvaluationFlags::nothing),
+                                      (is_viscous ? EvaluationFlags::gradients :
+                                                    EvaluationFlags::nothing),
                                     phi_m.begin_dof_values());
 
             phi_p.collect_from_face(EvaluationFlags::values |
-                                      (is_viscous ?
-                                         EvaluationFlags::gradients :
-                                         EvaluationFlags::nothing),
+                                      (is_viscous ? EvaluationFlags::gradients :
+                                                    EvaluationFlags::nothing),
                                     phi_p.begin_dof_values());
 
             phi_m.distribute_local_to_global(dst);
@@ -502,9 +486,7 @@ namespace MeltPoolDG::Flow
                                   dealii::EvaluationFlags::gradients);
 
             const dealii::VectorizedArray<number> penalty_parameter =
-              is_viscous ?
-                phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
-                0.;
+              is_viscous ? phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) : 0.;
 
             for (const unsigned int q : phi.quadrature_point_indices())
               {
@@ -525,9 +507,8 @@ namespace MeltPoolDG::Flow
               }
 
             phi.integrate_scatter(EvaluationFlags::values |
-                                    (is_viscous ?
-                                       EvaluationFlags::gradients :
-                                       EvaluationFlags::nothing),
+                                    (is_viscous ? EvaluationFlags::gradients :
+                                                  EvaluationFlags::nothing),
                                   dst);
           }
       }
@@ -560,9 +541,8 @@ namespace MeltPoolDG::Flow
                                                        EvaluationFlags::gradients);
 
                 const dealii::VectorizedArray<number> penalty_parameter =
-                  is_viscous ?
-                    phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
-                    0.;
+                  is_viscous ? phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
+                               0.;
 
                 for (const unsigned int q : fe_point_eval_minus.quadrature_point_indices())
                   {
@@ -761,12 +741,13 @@ namespace MeltPoolDG::Flow
 
   template <unsigned int dim, typename number, bool is_viscous>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::get_adjacent_face_values_at_unfitted_boundary(
-    const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
-    const ConservedVariablesType                              &w_m,
-    ConservedVariablesType                                    &w_p,
-    const ConservedVariablesGradType                          &grad_w_m,
-    ConservedVariablesGradType                                &grad_w_p) const
+  CutDGCompressibleFlowOperator<dim, number, is_viscous>::
+    get_adjacent_face_values_at_unfitted_boundary(
+      const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
+      const ConservedVariablesType                              &w_m,
+      ConservedVariablesType                                    &w_p,
+      const ConservedVariablesGradType                          &grad_w_m,
+      ConservedVariablesGradType                                &grad_w_p) const
   {
     if (flow_scratch_data.flow_data.cut.unfitted_flow_boundary_condition == "no_slip_wall")
       {

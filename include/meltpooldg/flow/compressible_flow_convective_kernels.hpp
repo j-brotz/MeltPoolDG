@@ -5,8 +5,8 @@
 #pragma once
 
 #include <meltpooldg/flow/compressible_flow_data.hpp>
-#include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
+#include <meltpooldg/flow/compressible_flow_utils.hpp>
 
 namespace MeltPoolDG::Flow
 {
@@ -108,6 +108,7 @@ namespace MeltPoolDG::Flow
     const CompressibleFlowData &flow_data)
     : flow_data(flow_data)
   {
+    // Currently, only relevant for the single phase (gas) solver
     rs_div_c = flow_data.material_data_gas_phase.gamma - 1.0;
   }
 
@@ -160,8 +161,9 @@ namespace MeltPoolDG::Flow
             const auto sound_speed_p2 = sound_speed_p * sound_speed_p;
             const auto sound_speed_m2 = sound_speed_m * sound_speed_m;
 
-            const auto lambda = 0.5 * std::sqrt(std::max(velocity_p.norm_square() + sound_speed_p2,
-                                             velocity_m.norm_square() + sound_speed_m2));
+            const auto lambda =
+              0.5 * std::sqrt(std::max(velocity_p.norm_square() + sound_speed_p2,
+                                       velocity_m.norm_square() + sound_speed_m2));
 
             return contract_average_tensor_with_normal(flux_m, flux_p, normal) +
                    0.5 * lambda * (u_m - u_p);
@@ -175,8 +177,7 @@ namespace MeltPoolDG::Flow
           }
           case NumericalFluxType::harten_lax_vanleer: {
             const auto avg_velocity_normal = 0.5 * ((velocity_m + velocity_p) * normal);
-            const auto avg_c               = std::sqrt(std::abs(
-              0.5 * (sound_speed_m+sound_speed_p)));
+            const auto avg_c = std::sqrt(std::abs(0.5 * (sound_speed_m + sound_speed_p)));
             const dealii::VectorizedArray<number> s_pos =
               std::max(VectorizedArray<number>(), avg_velocity_normal + avg_c);
             const dealii::VectorizedArray<number> s_neg =
@@ -205,7 +206,7 @@ namespace MeltPoolDG::Flow
     -> ConservedVariablesGradType
   {
     // For now only the exact and modified Lax-Friedrichs flux are supported
-    AssertThrow(flow_data.numerical_flux_type == NumericalFluxType::lax_friedrichs_exact ||
+    AssertThrow(flow_data.numerical_flux_type == NumericalFluxType::lax_friedrichs_exact or
                   flow_data.numerical_flux_type == NumericalFluxType::lax_friedrichs_modified,
                 dealii::ExcMessage(
                   "The chosen convective numerical flux type is not supported within the "
@@ -338,11 +339,11 @@ namespace MeltPoolDG::Flow
               const auto pressure_m = calculate_pressure<dim, number>(w_m, flow_data);
               const auto pressure_p = calculate_pressure<dim, number>(w_p, flow_data);
 
-              const auto lambda =
-                std::max(std::abs(velocity_p * normal) +
-                           std::sqrt(flow_data.material_data_gas_phase.gamma * pressure_p * (1. / w_p[0])),
-                         std::abs(velocity_m * normal) +
-                           std::sqrt(flow_data.material_data_gas_phase.gamma * pressure_m * (1. / w_m[0])));
+              const auto lambda = std::max(
+                std::abs(velocity_p * normal) +
+                  std::sqrt(flow_data.material_data_gas_phase.gamma * pressure_p * (1. / w_p[0])),
+                std::abs(velocity_m * normal) +
+                  std::sqrt(flow_data.material_data_gas_phase.gamma * pressure_m * (1. / w_m[0])));
               return lambda * (delta_w_m - delta_w_p);
             };
             break;
@@ -363,9 +364,11 @@ namespace MeltPoolDG::Flow
 
               const auto lambda =
                 0.5 * std::sqrt(std::max(velocity_p.norm_square() +
-                                           std::abs(flow_data.material_data_gas_phase.gamma * pressure_p * (1. / w_p[0])),
+                                           std::abs(flow_data.material_data_gas_phase.gamma *
+                                                    pressure_p * (1. / w_p[0])),
                                          velocity_m.norm_square() +
-                                           std::abs(flow_data.material_data_gas_phase.gamma * pressure_m * (1. / w_m[0]))));
+                                           std::abs(flow_data.material_data_gas_phase.gamma *
+                                                    pressure_m * (1. / w_m[0]))));
               return lambda * (delta_w_m - delta_w_p);
             };
             break;
@@ -374,7 +377,7 @@ namespace MeltPoolDG::Flow
           DEAL_II_ASSERT_UNREACHABLE();
       }
 
-    // We do not ue the square root of machine precisio here as this prevents the Newton solver to
+    // We do not ue the square root of machine precision here as this prevents the Newton solver to
     // convergence
     constexpr number epsilon     = 1e-3;
     constexpr number epsilon_inv = 1e3;
@@ -420,12 +423,13 @@ namespace MeltPoolDG::Flow
                   delta_m_q[i] = delta_w_q[i + 1];
                 }
               dealii::VectorizedArray<number> rho_inv = 1. / w_q[0];
-              dealii::VectorizedArray<number> lin_c   = delta_w_q[0] / (2.0 * c) * flow_data.material_data_gas_phase.gamma *
-                                                      rho_inv * rho_inv * rs_div_c *
-                                                      (rho_inv * m_q * m_q - w_q[dim + 1]);
-              lin_c -=
-                1. / (2.0 * c) * flow_data.material_data_gas_phase.gamma * rho_inv * rho_inv * rs_div_c * m_q * delta_m_q;
-              lin_c += 1. / (2.0 * c) * flow_data.material_data_gas_phase.gamma * rho_inv * rs_div_c * delta_w_q[dim + 1];
+              dealii::VectorizedArray<number> lin_c =
+                delta_w_q[0] / (2.0 * c) * flow_data.material_data_gas_phase.gamma * rho_inv *
+                rho_inv * rs_div_c * (rho_inv * m_q * m_q - w_q[dim + 1]);
+              lin_c -= 1. / (2.0 * c) * flow_data.material_data_gas_phase.gamma * rho_inv *
+                       rho_inv * rs_div_c * m_q * delta_m_q;
+              lin_c += 1. / (2.0 * c) * flow_data.material_data_gas_phase.gamma * rho_inv *
+                       rs_div_c * delta_w_q[dim + 1];
               return lin_c;
             };
 
@@ -456,8 +460,10 @@ namespace MeltPoolDG::Flow
             const auto pressure_m = calculate_pressure<dim, number>(w_m, flow_data);
             const auto pressure_p = calculate_pressure<dim, number>(w_p, flow_data);
 
-            const auto speed_of_sound_m = std::sqrt(flow_data.material_data_gas_phase.gamma * pressure_m / w_m[0]);
-            const auto speed_of_sound_p = std::sqrt(flow_data.material_data_gas_phase.gamma * pressure_p / w_p[0]);
+            const auto speed_of_sound_m =
+              std::sqrt(flow_data.material_data_gas_phase.gamma * pressure_m / w_m[0]);
+            const auto speed_of_sound_p =
+              std::sqrt(flow_data.material_data_gas_phase.gamma * pressure_p / w_p[0]);
 
             const auto lin_lambda_p =
               signum(velocity_p * normal) * norm_lin_velocity(w_p, delta_w_p, normal) +

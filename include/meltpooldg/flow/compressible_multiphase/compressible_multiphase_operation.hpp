@@ -1,23 +1,20 @@
 /**
- * @brief This operator solves the compressible Navier-Stokes equations, comprising
+ * @brief This operator solves the compressible two-phase Navier-Stokes equations, comprising
  * the primary variables
  *  - density (ρ)
  *  - momentum (ρ u)
  *  - volume-specific energy (ρ E)
- *  using the cutDG method for two-phase problems.
  *
- * It is an extension of deal.II step-67 and is based on
+ *  The following equations of state are currently enabled:
+ *  - ideal gas
+ *  - stiffened gas
+ *  - Noble-Abel stiffened gas
  *
- * Fehn, N., Wall, W. A., & Kronbichler, M. (2019). A matrix‐free high‐order
- * discontinuous Galerkin compressible Navier‐Stokes solver: A performance
- * comparison of compressible and incompressible formulations for turbulent
- * incompressible flows. International Journal for Numerical Methods in Fluids,
- * 89(3), 71-102.
- *
- * and
- *
- * Ritthaler, A. (2024). A matrix-free cutDG formulation for complex flows,
- * Master's Thesis.
+ *  Two different methods for enforcing the interface jump conditions are enabled:
+ * - strong enforcement in the weak formulation and penalty enforcement for Dirichlet density and
+ *   temperature constraint for the gas phase
+ * - HLLP0 approximate Riemann solver for convective fluxes and weighted average Nitsche-type method
+ *   for viscous fluxes
  */
 
 #pragma once
@@ -35,8 +32,8 @@
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operation.hpp>
 #include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operator.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <memory>
 #include <variant>
@@ -50,11 +47,11 @@ namespace MeltPoolDG::Multiphase
     using MappingInfoType       = CutUtil::MappingInfoType<dim, number>;
     using MappingInfoVectorType = CutUtil::MappingInfoVectorType<dim, number>;
 
-   using CompMultiphaseOperatorVariant = std::variant<
-    CompressibleMultiphaseOperator<dim, number, true, true>,
-    CompressibleMultiphaseOperator<dim, number, true, false>,
-    CompressibleMultiphaseOperator<dim, number, false, true>,
-    CompressibleMultiphaseOperator<dim, number, false, false>>;
+    using CompMultiphaseOperatorVariant =
+      std::variant<CompressibleMultiphaseOperator<dim, number, true, true>,
+                   CompressibleMultiphaseOperator<dim, number, true, false>,
+                   CompressibleMultiphaseOperator<dim, number, false, true>,
+                   CompressibleMultiphaseOperator<dim, number, false, false>>;
 
   public:
     /**
@@ -77,7 +74,7 @@ namespace MeltPoolDG::Multiphase
       unsigned int                                                comp_flow_dof_idx_in  = 0,
       unsigned int                                                level_set_dof_idx_in  = 0,
       unsigned int                                                comp_flow_quad_idx_in = 0,
-      const VectorType                                           &level_set_in = 0);
+      const VectorType                                           &level_set_in          = 0);
 
     /**
      * Set up the required internal data structures. After a call to this function the solve()
@@ -116,7 +113,7 @@ namespace MeltPoolDG::Multiphase
     distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const;
 
     /**
-     * Solves the compressible Navier-Stokes equations for a single time step.
+     * Solves the compressible two-phase Navier-Stokes equations for a single time step.
      *
      * @param current_time Current time at t^n.
      * @param time_step Current time step size.
@@ -133,17 +130,17 @@ namespace MeltPoolDG::Multiphase
     set_initial_condition(const Function<dim> &function);
 
     /**
-      * Attach the solution to the passed data out object. The solution which are added are the
-      * density, the momentum and the energy density.
-      *
-      * @param data_out Object to which the solution vector is attached.
-      */
+     * Attach the solution to the passed data out object. The solution which are added are the
+     * density, the momentum and the energy density.
+     *
+     * @param data_out Object to which the solution vector is attached.
+     */
     void
     attach_output_vectors(GenericDataOut<dim> &data_out) const;
 
     /**
-     * Set the (standard compressible flow, i.e. non-cut specific) boundary condition. This funciton
-     * takes to parameters. One defines the tyoe of the boundary condition and the other one on the
+     * Set the boundary condition. This function takes to parameters.
+     * One defines the tyoe of the boundary condition and the other one on the
      * one hand defines the boundary (by the boundary id) at whcih the boundary condition is applied
      * and optionally a corresponding prescribed function for the boundary condition.
      *
@@ -169,40 +166,36 @@ namespace MeltPoolDG::Multiphase
     const dealii::DoFHandler<dim> &
     get_dof_handler() const;
 
-   typename CompressibleMultiphaseOperation<dim, number>::CompMultiphaseOperatorVariant
-   static create_cut_flow_operator_variant(
-   bool is_viscous_gas,
-   bool is_viscous_liquid,
-   MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-   const MappingInfoType                    &mapping_info_surface_in,
-   const MappingInfoVectorType              &mapping_info_cells_in,
-   const MappingInfoVectorType              &mapping_info_faces_in)
-   {
-    if (is_viscous_gas && is_viscous_liquid)
-     return CompressibleMultiphaseOperator<dim, number, true, true>(
-         flow_scratch_data,
-         mapping_info_surface_in,
-         mapping_info_cells_in,
-         mapping_info_faces_in);
-    else if (is_viscous_gas && !is_viscous_liquid)
-     return CompressibleMultiphaseOperator<dim, number, true, false>(
-         flow_scratch_data,
-         mapping_info_surface_in,
-         mapping_info_cells_in,
-         mapping_info_faces_in);
-    else if (!is_viscous_gas && is_viscous_liquid)
-     return CompressibleMultiphaseOperator<dim, number, false, true>(
-         flow_scratch_data,
-         mapping_info_surface_in,
-         mapping_info_cells_in,
-         mapping_info_faces_in);
-    else
-     return CompressibleMultiphaseOperator<dim, number, false, false>(
-         flow_scratch_data,
-         mapping_info_surface_in,
-         mapping_info_cells_in,
-         mapping_info_faces_in);
-   }
+    typename CompressibleMultiphaseOperation<dim, number>::
+      CompMultiphaseOperatorVariant static create_cut_flow_operator_variant(
+        bool                                                        is_viscous_gas,
+        bool                                                        is_viscous_liquid,
+        MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number> &flow_scratch_data,
+        const MappingInfoType                                      &mapping_info_surface_in,
+        const MappingInfoVectorType                                &mapping_info_cells_in,
+        const MappingInfoVectorType                                &mapping_info_faces_in)
+    {
+      if (is_viscous_gas and is_viscous_liquid)
+        return CompressibleMultiphaseOperator<dim, number, true, true>(flow_scratch_data,
+                                                                       mapping_info_surface_in,
+                                                                       mapping_info_cells_in,
+                                                                       mapping_info_faces_in);
+      else if (is_viscous_gas and !is_viscous_liquid)
+        return CompressibleMultiphaseOperator<dim, number, true, false>(flow_scratch_data,
+                                                                        mapping_info_surface_in,
+                                                                        mapping_info_cells_in,
+                                                                        mapping_info_faces_in);
+      else if (!is_viscous_gas and is_viscous_liquid)
+        return CompressibleMultiphaseOperator<dim, number, false, true>(flow_scratch_data,
+                                                                        mapping_info_surface_in,
+                                                                        mapping_info_cells_in,
+                                                                        mapping_info_faces_in);
+      else
+        return CompressibleMultiphaseOperator<dim, number, false, false>(flow_scratch_data,
+                                                                         mapping_info_surface_in,
+                                                                         mapping_info_cells_in,
+                                                                         mapping_info_faces_in);
+    }
 
   private:
     MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number> flow_scratch_data;
@@ -256,7 +249,7 @@ namespace MeltPoolDG::Multiphase
     /**
      * Compute the minimum density currently occurring in the flow field.
      */
-    std::pair<number,number>
+    std::pair<number, number>
     compute_minimum_density() const;
 
     /**
