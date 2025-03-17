@@ -48,13 +48,17 @@ namespace MeltPoolDG::Heat
 
     const TimeIterator<number> &time_iterator;
 
-    const unsigned int temp_dof_idx;
-    const unsigned int temp_hanging_nodes_dof_idx;
+    // ScratchData's DoFHandler indices for ..
+    const unsigned int temp_cut_dof_idx;        // .. CutFEM DoFs with Dirichlet BCs
+    const unsigned int temp_cut_no_bc_dof_idx;  // .. CutFEM DoFs without Dirichlet BCs
+    const unsigned int temp_cont_no_bc_dof_idx; // .. continuous DoFs without Dirichlet BCs
+    // ScratchData's Quadrature index
     const unsigned int temp_quad_idx;
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
     VectorType                                   interface_temperature;
-    VectorType                                   volumetric_heat_source;
+    // TODO: note that this is not jet implemented in the operator
+    VectorType volumetric_heat_source;
 
     // level set which defines the interface with its zero contour
     const unsigned int ls_dof_idx;
@@ -92,8 +96,9 @@ namespace MeltPoolDG::Heat
                      const MaterialData<number>                                &material_data_in,
                      const Evaporation::EvaporationData<number>                &evapor_data_in,
                      const TimeIterator<number>                                &time_iterator_in,
-                     const unsigned int                                         temp_dof_idx_in,
-                     const unsigned int temp_hanging_nodes_dof_idx_in,
+                     const unsigned int                                         temp_cut_dof_idx_in,
+                     const unsigned int temp_cut_no_bc_dof_idx_in,
+                     const unsigned int temp_cont_no_bc_dof_idx_in,
                      const unsigned int temp_quad_idx_in,
                      const bool         do_solidification_in,
                      const unsigned int ls_dof_idx_in,

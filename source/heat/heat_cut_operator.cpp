@@ -451,8 +451,9 @@ namespace MeltPoolDG::Heat
     const HeatData<number>                     &heat_data_in,
     const MaterialData<number>                 &material_data_in,
     const Evaporation::EvaporationData<number> &evapor_data_in,
-    const unsigned int                          temp_dof_idx_in,
-    const unsigned int                          temp_hanging_nodes_dof_idx_in,
+    const unsigned int                          temp_cut_dof_idx_in,
+    const unsigned int                          temp_cut_no_bc_dof_idx_in,
+    const unsigned int                          temp_cont_no_bc_dof_idx_in,
     const unsigned int                          temp_quad_idx_in,
     const VectorType                           &temperature_in,
     dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>
@@ -467,8 +468,9 @@ namespace MeltPoolDG::Heat
     , heat_data(heat_data_in)
     , material(material_data_in,
                do_solidification_in ? MaterialTypes::liquid_solid : MaterialTypes::liquid)
-    , temp_dof_idx(temp_dof_idx_in)
-    , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
+    , temp_cut_dof_idx(temp_cut_dof_idx_in)
+    , temp_cut_no_bc_dof_idx(temp_cut_no_bc_dof_idx_in)
+    , temp_cont_no_bc_dof_idx(temp_cont_no_bc_dof_idx_in)
     , temp_quad_idx(temp_quad_idx_in)
     , temperature(temperature_in)
     , mapping_info_surface(mapping_info_interface_in)
@@ -1009,7 +1011,7 @@ namespace MeltPoolDG::Heat
     if (cell_category == CutUtil::CellCategory::liquid)
       {
         DomainEval                    eval_l(matrix_free,
-                          temp_dof_idx /*dof_no*/,
+                          temp_cut_dof_idx /*dof_no*/,
                           temp_quad_idx /*quad_no*/,
                           0 /*selected component*/,
                           CutUtil::CellCategory::liquid /*active_fe_index*/);
@@ -1031,7 +1033,7 @@ namespace MeltPoolDG::Heat
     else if (cell_category == CutUtil::CellCategory::gas and heat_data.cut.two_phase)
       {
         DomainEval eval_g(matrix_free,
-                          temp_dof_idx /*dof_no*/,
+                          temp_cut_dof_idx /*dof_no*/,
                           temp_quad_idx /*quad_no*/,
                           1 /*selected component*/,
                           CutUtil::CellCategory::gas /*active_fe_index*/);
@@ -1051,7 +1053,7 @@ namespace MeltPoolDG::Heat
       {
         // use FEEvaluation and FEPointEvaluation in combination for intersected cells
         DomainEval                    eval_cell_l(matrix_free,
-                               temp_dof_idx /*dof_no*/,
+                               temp_cut_dof_idx /*dof_no*/,
                                temp_quad_idx /*quad_no*/,
                                0 /*selected component*/,
                                CutUtil::CellCategory::intersected /*active_fe_index*/);
@@ -1099,7 +1101,7 @@ namespace MeltPoolDG::Heat
       {
         // use FEEvaluation and FEPointEvaluation in combination for intersected cells
         DomainEval                    eval_cell_l(matrix_free,
-                               temp_dof_idx /*dof_no*/,
+                               temp_cut_dof_idx /*dof_no*/,
                                temp_quad_idx /*quad_no*/,
                                0 /*selected component*/,
                                CutUtil::CellCategory::intersected /*active_fe_index*/);
@@ -1122,7 +1124,7 @@ namespace MeltPoolDG::Heat
           T_eval_interface_l = std::make_unique<PointEval<>>(eval_interface_l);
 
         DomainEval                    eval_cell_g(matrix_free,
-                               temp_dof_idx /*dof_no*/,
+                               temp_cut_dof_idx /*dof_no*/,
                                temp_quad_idx /*quad_no*/,
                                1 /*selected component*/,
                                CutUtil::CellCategory::intersected /*active_fe_index*/);
@@ -1188,13 +1190,13 @@ namespace MeltPoolDG::Heat
       {
         FaceEval eval_minus_l(matrix_free,
                               true /*is_interior_face*/,
-                              temp_dof_idx /*dof_no*/,
+                              temp_cut_dof_idx /*dof_no*/,
                               temp_quad_idx /*quad_no*/,
                               0 /*selected component*/,
                               CutUtil::CellCategory::liquid /*active_fe_index*/);
         FaceEval eval_plus_l(matrix_free,
                              false /*is_interior_face*/,
-                             temp_dof_idx /*dof_no*/,
+                             temp_cut_dof_idx /*dof_no*/,
                              temp_quad_idx /*quad_no*/,
                              0 /*selected component*/,
                              CutUtil::CellCategory::liquid /*active_fe_index*/);
@@ -1228,14 +1230,14 @@ namespace MeltPoolDG::Heat
       {
         FaceEval eval_minus_g(matrix_free,
                               true /*is_interior_face*/,
-                              temp_dof_idx /*dof_no*/,
+                              temp_cut_dof_idx /*dof_no*/,
                               temp_quad_idx /*quad_no*/,
                               1 /*selected component*/,
                               CutUtil::CellCategory::gas /*active_fe_index*/);
 
         FaceEval eval_plus_g(matrix_free,
                              false /*is_interior_face*/,
-                             temp_dof_idx /*dof_no*/,
+                             temp_cut_dof_idx /*dof_no*/,
                              temp_quad_idx /*quad_no*/,
                              1 /*selected component*/,
                              CutUtil::CellCategory::gas /*active_fe_index*/);
@@ -1300,7 +1302,7 @@ namespace MeltPoolDG::Heat
     if (cell_category == CutUtil::CellCategory::liquid)
       {
         DomainEval   T_new_eval_l(matrix_free,
-                                temp_dof_idx /*dof_no*/,
+                                temp_cut_dof_idx /*dof_no*/,
                                 temp_quad_idx /*quad_no*/,
                                 0 /*selected component*/,
                                 CutUtil::CellCategory::liquid /*active_fe_index*/);
@@ -1346,7 +1348,7 @@ namespace MeltPoolDG::Heat
     else if (cell_category == CutUtil::CellCategory::gas and heat_data.cut.two_phase)
       {
         DomainEval    T_new_eval_g(matrix_free,
-                                temp_dof_idx /*dof_no*/,
+                                temp_cut_dof_idx /*dof_no*/,
                                 temp_quad_idx /*quad_no*/,
                                 1 /*selected component*/,
                                 CutUtil::CellCategory::gas /*active_fe_index*/);
@@ -1390,7 +1392,7 @@ namespace MeltPoolDG::Heat
       {
         // use FEEvaluation and FEPointEvaluation in combination for intersected cells
         DomainEval    T_new_eval_cell_l(matrix_free,
-                                     temp_dof_idx /*dof_no*/,
+                                     temp_cut_dof_idx /*dof_no*/,
                                      temp_quad_idx /*quad_no*/,
                                      0 /*selected component*/,
                                      CutUtil::CellCategory::intersected /*active_fe_index*/);
@@ -1515,7 +1517,7 @@ namespace MeltPoolDG::Heat
       {
         // use FEEvaluation and FEPointEvaluation in combination for intersected cells
         DomainEval    T_new_eval_cell_l(matrix_free,
-                                     temp_dof_idx /*dof_no*/,
+                                     temp_cut_dof_idx /*dof_no*/,
                                      temp_quad_idx /*quad_no*/,
                                      0 /*selected component*/,
                                      CutUtil::CellCategory::intersected /*active_fe_index*/);
@@ -1529,7 +1531,7 @@ namespace MeltPoolDG::Heat
         PointEval     T_new_eval_interface_l(mapping_info_surface, fe_point_temp);
         PointEval     T_old_eval_interface_l(T_new_eval_interface_l);
         DomainEval    T_new_eval_cell_g(matrix_free,
-                                     temp_dof_idx /*dof_no*/,
+                                     temp_cut_dof_idx /*dof_no*/,
                                      temp_quad_idx /*quad_no*/,
                                      1 /*selected component*/,
                                      CutUtil::CellCategory::intersected /*active_fe_index*/);
@@ -1750,13 +1752,13 @@ namespace MeltPoolDG::Heat
       {
         FaceEval T_new_eval_minus_l(matrix_free,
                                     true /*is_interior_face*/,
-                                    temp_dof_idx /*dof_no*/,
+                                    temp_cut_dof_idx /*dof_no*/,
                                     temp_quad_idx /*quad_no*/,
                                     0 /*selected component*/,
                                     CutUtil::CellCategory::liquid /*active_fe_index*/);
         FaceEval T_new_eval_plus_l(matrix_free,
                                    false /*is_interior_face*/,
-                                   temp_dof_idx /*dof_no*/,
+                                   temp_cut_dof_idx /*dof_no*/,
                                    temp_quad_idx /*quad_no*/,
                                    0 /*selected component*/,
                                    CutUtil::CellCategory::liquid /*active_fe_index*/);
@@ -1792,14 +1794,14 @@ namespace MeltPoolDG::Heat
       {
         FaceEval eval_minus_g(matrix_free,
                               true /*is_interior_face*/,
-                              temp_dof_idx /*dof_no*/,
+                              temp_cut_dof_idx /*dof_no*/,
                               temp_quad_idx /*quad_no*/,
                               1 /*selected component*/,
                               CutUtil::CellCategory::gas /*active_fe_index*/);
 
         FaceEval eval_plus_g(matrix_free,
                              false /*is_interior_face*/,
-                             temp_dof_idx /*dof_no*/,
+                             temp_cut_dof_idx /*dof_no*/,
                              temp_quad_idx /*quad_no*/,
                              1 /*selected component*/,
                              CutUtil::CellCategory::gas /*active_fe_index*/);
@@ -1854,7 +1856,7 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperator<dim, number>::compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const
   {
-    scratch_data.initialize_dof_vector(diagonal, temp_dof_idx);
+    scratch_data.initialize_dof_vector(diagonal, temp_cut_dof_idx);
 
     dealii::TrilinosWrappers::SparseMatrix dummy;
     internal_compute_diagonal_or_system_matrix(diagonal, dummy, true);
@@ -1894,7 +1896,7 @@ namespace MeltPoolDG::Heat
     if (evapor_cooling or do_solidification)
       T_eval_cell_l =
         std::make_unique<DomainEval<>>(matrix_free,
-                                       temp_dof_idx /*dof_no*/,
+                                       temp_cut_dof_idx /*dof_no*/,
                                        temp_quad_idx /*quad_no*/,
                                        0 /*selected component*/,
                                        CutUtil::CellCategory::intersected /*active_fe_index*/);
@@ -1921,7 +1923,7 @@ namespace MeltPoolDG::Heat
     if (evapor_cooling)
       T_eval_cell_g =
         std::make_unique<DomainEval<>>(matrix_free,
-                                       temp_dof_idx /*dof_no*/,
+                                       temp_cut_dof_idx /*dof_no*/,
                                        temp_quad_idx /*quad_no*/,
                                        heat_data.cut.two_phase ? 1 : 0 /*selected component*/,
                                        CutUtil::CellCategory::intersected /*active_fe_index*/);
@@ -1949,27 +1951,30 @@ namespace MeltPoolDG::Heat
 
     if (heat_data.cut.two_phase)
       {
-        data_cell.dof_numbers               = {temp_dof_idx, temp_dof_idx};
+        data_cell.dof_numbers               = {temp_cut_dof_idx, temp_cut_dof_idx};
         data_cell.quad_numbers              = {0, 0};
         data_cell.n_components              = {1, 1};
         data_cell.first_selected_components = {0, 1};
         data_cell.batch_type                = {0, 0}; // 0 for cell
 
-        data_face.dof_numbers  = {temp_dof_idx, temp_dof_idx, temp_dof_idx, temp_dof_idx};
-        data_face.quad_numbers = {0, 0, 0, 0};
-        data_face.n_components = {1, 1, 1, 1};
+        data_face.dof_numbers               = {temp_cut_dof_idx,
+                                               temp_cut_dof_idx,
+                                               temp_cut_dof_idx,
+                                               temp_cut_dof_idx};
+        data_face.quad_numbers              = {0, 0, 0, 0};
+        data_face.n_components              = {1, 1, 1, 1};
         data_face.first_selected_components = {0, 0, 1, 1};
         data_face.batch_type = {1, 2, 1, 2}; // 1 for interior face, 2 for exterior face
       }
     else
       {
-        data_cell.dof_numbers               = {temp_dof_idx};
+        data_cell.dof_numbers               = {temp_cut_dof_idx};
         data_cell.quad_numbers              = {0};
         data_cell.n_components              = {1};
         data_cell.first_selected_components = {0};
         data_cell.batch_type                = {0}; // 0 for cell
 
-        data_face.dof_numbers               = {temp_dof_idx, temp_dof_idx};
+        data_face.dof_numbers               = {temp_cut_dof_idx, temp_cut_dof_idx};
         data_face.quad_numbers              = {0, 0};
         data_face.n_components              = {1, 1};
         data_face.first_selected_components = {0, 0};
@@ -2205,7 +2210,7 @@ namespace MeltPoolDG::Heat
         dealii::MatrixFreeTools::internal::
           compute_matrix<dim, number, dealii::VectorizedArray<number>>(matrix_free,
                                                                        scratch_data.get_constraint(
-                                                                         temp_dof_idx),
+                                                                         temp_cut_dof_idx),
                                                                        data_cell,
                                                                        data_face,
                                                                        {} /*data_boundary*/,
@@ -2231,7 +2236,7 @@ namespace MeltPoolDG::Heat
         if (cell_category == CutUtil::CellCategory::liquid)
           {
             DomainEval eval_l(matrix_free,
-                              temp_hanging_nodes_dof_idx /*dof_no*/,
+                              temp_cut_no_bc_dof_idx /*dof_no*/,
                               0 /*quad_no*/,
                               0 /*selected component*/,
                               CutUtil::CellCategory::liquid /*active_fe_index*/);
@@ -2249,7 +2254,7 @@ namespace MeltPoolDG::Heat
         else if (cell_category == CutUtil::CellCategory::gas and heat_data.cut.two_phase)
           {
             DomainEval eval_g(matrix_free,
-                              temp_hanging_nodes_dof_idx /*dof_no*/,
+                              temp_cut_no_bc_dof_idx /*dof_no*/,
                               0 /*quad_no*/,
                               1 /*selected component*/,
                               CutUtil::CellCategory::gas /*active_fe_index*/);
@@ -2269,7 +2274,7 @@ namespace MeltPoolDG::Heat
           {
             // use FEEvaluation and FEPointEvaluation in combination for intersected cells
             DomainEval eval_l(matrix_free,
-                              temp_hanging_nodes_dof_idx /*dof_no*/,
+                              temp_cut_no_bc_dof_idx /*dof_no*/,
                               0 /*quad_no*/,
                               0 /*selected component*/,
                               CutUtil::CellCategory::liquid /*active_fe_index*/);
@@ -2295,13 +2300,13 @@ namespace MeltPoolDG::Heat
           {
             // use FEEvaluation and FEPointEvaluation in combination for intersected cells
             DomainEval eval_l(matrix_free,
-                              temp_hanging_nodes_dof_idx /*dof_no*/,
+                              temp_cut_no_bc_dof_idx /*dof_no*/,
                               0 /*quad_no*/,
                               0 /*selected component*/,
                               CutUtil::CellCategory::liquid /*active_fe_index*/);
             PointEval  eval_subdomain_l(*mapping_info_cells[0], fe_point_temp);
             DomainEval eval_g(matrix_free,
-                              temp_hanging_nodes_dof_idx /*dof_no*/,
+                              temp_cut_no_bc_dof_idx /*dof_no*/,
                               0 /*quad_no*/,
                               1 /*selected component*/,
                               CutUtil::CellCategory::gas /*active_fe_index*/);

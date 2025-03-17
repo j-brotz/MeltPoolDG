@@ -50,9 +50,13 @@ namespace MeltPoolDG::Heat
     const ScratchData<dim, dim, number> &scratch_data;
     const HeatData<number>              &heat_data;
     const Material<number>               material;
-    const unsigned int                   temp_dof_idx;
-    const unsigned int                   temp_hanging_nodes_dof_idx;
-    const unsigned int                   temp_quad_idx;
+
+    // ScratchData's DoFHandler indices for ..
+    const unsigned int temp_cut_dof_idx;        // .. CutFEM DoFs with Dirichlet BCs
+    const unsigned int temp_cut_no_bc_dof_idx;  // .. CutFEM DoFs without Dirichlet BCs
+    const unsigned int temp_cont_no_bc_dof_idx; // .. continuous DoFs without Dirichlet BCs
+    // ScratchData's Quadrature index
+    const unsigned int temp_quad_idx;
 
     const VectorType &temperature;
 
@@ -103,8 +107,9 @@ namespace MeltPoolDG::Heat
                     const HeatData<number>                     &heat_data_in,
                     const MaterialData<number>                 &material_data_in,
                     const Evaporation::EvaporationData<number> &evapor_data_in,
-                    const unsigned int                          temp_dof_idx_in,
-                    const unsigned int                          temp_hanging_nodes_dof_idx_in,
+                    const unsigned int                          temp_cut_dof_idx_in,
+                    const unsigned int                          temp_cut_no_bc_dof_idx_in,
+                    const unsigned int                          temp_cont_no_bc_dof_idx_in,
                     const unsigned int                          temp_quad_idx_in,
                     const VectorType                           &temperature_in,
                     dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>

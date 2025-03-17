@@ -12,8 +12,7 @@
 
 #include <deal.II/hp/fe_collection.h>
 
-#include <deal.II/lac/precondition.h>
-
+#include <deal.II/numerics/data_component_interpretation.h>
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
 #include <meltpooldg/core/exceptions.hpp>
@@ -62,8 +61,9 @@ namespace MeltPoolDG::Heat
     const MaterialData<number>                                &material_data_in,
     const Evaporation::EvaporationData<number>                &evapor_data_in,
     const TimeIterator<number>                                &time_iterator_in,
-    const unsigned int                                         temp_dof_idx_in,
-    const unsigned int                                         temp_hanging_nodes_dof_idx_in,
+    const unsigned int                                         temp_cut_dof_idx_in,
+    const unsigned int                                         temp_cut_no_bc_dof_idx_in,
+    const unsigned int                                         temp_cont_no_bc_dof_idx_in,
     const unsigned int                                         temp_quad_idx_in,
     const bool                                                 do_solidification_in,
     const unsigned int                                         ls_dof_idx_in,
@@ -76,8 +76,9 @@ namespace MeltPoolDG::Heat
     , periodic_bc(periodic_bc_in)
     , heat_data(heat_data_in)
     , time_iterator(time_iterator_in)
-    , temp_dof_idx(temp_dof_idx_in)
-    , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
+    , temp_cut_dof_idx(temp_cut_dof_idx_in)
+    , temp_cut_no_bc_dof_idx(temp_cut_no_bc_dof_idx_in)
+    , temp_cont_no_bc_dof_idx(temp_cont_no_bc_dof_idx_in)
     , temp_quad_idx(temp_quad_idx_in)
     , solution_history(std::max(2U, heat_data.predictor.n_old_solution_vectors))
     , ls_dof_idx(ls_dof_idx_in)
@@ -114,8 +115,9 @@ namespace MeltPoolDG::Heat
                                                      heat_data,
                                                      material_data_in,
                                                      evapor_data_in,
-                                                     temp_dof_idx,
-                                                     temp_hanging_nodes_dof_idx,
+                                                     temp_cut_dof_idx,
+                                                     temp_cut_no_bc_dof_idx,
+                                                     temp_cont_no_bc_dof_idx,
                                                      temp_quad_idx,
                                                      solution_history.get_current_solution(),
                                                      mapping_info_surface,
@@ -135,9 +137,9 @@ namespace MeltPoolDG::Heat
     setup_newton();
 
     reinit_vector = [this](VectorType &vec, const DoFHandler<dim> &dh) {
-      Assert(&dh == &scratch_data.get_dof_handler(temp_dof_idx), dealii::ExcInternalError());
+      Assert(&dh == &scratch_data.get_dof_handler(temp_cut_dof_idx), dealii::ExcInternalError());
       vec.reinit(dh.locally_owned_dofs(),
-                 scratch_data.get_locally_relevant_dofs(temp_dof_idx),
+                 scratch_data.get_locally_relevant_dofs(temp_cut_dof_idx),
                  dh.get_communicator());
     };
   }
@@ -190,7 +192,7 @@ namespace MeltPoolDG::Heat
       // transfer old solution according to the new interface position,
       // the matrix-free object is reinitialized within the reinit function
       cut_solution_transfer.reinit(
-        const_cast<dealii::DoFHandler<dim> &>(scratch_data.get_dof_handler(temp_dof_idx)),
+        const_cast<dealii::DoFHandler<dim> &>(scratch_data.get_dof_handler(temp_cut_dof_idx)),
         const_cast<dealii::Triangulation<dim> &>(scratch_data.get_triangulation()),
         solution_history.get_current_solution(),
         *mesh_classifier_old,
@@ -198,7 +200,7 @@ namespace MeltPoolDG::Heat
         reinit_vector,
         reinit_matrix_free);
     }
-    scratch_data.initialize_dof_vector(solution_history.get_current_solution(), temp_dof_idx);
+    scratch_data.initialize_dof_vector(solution_history.get_current_solution(), temp_cut_dof_idx);
     solution_history.get_current_solution().copy_locally_owned_data_from(
       cut_solution_transfer.get_updated_solution());
     solution_history.get_current_solution().update_ghost_values();
@@ -227,6 +229,14 @@ namespace MeltPoolDG::Heat
   {
     AssertThrow(heat_data.fe.type == FiniteElementType::FE_Q,
                 dealii::ExcMessage("For now, only standard FE_Q elements are supported."));
+    Assert(
+      &dof_handler == &scratch_data.get_dof_handler(temp_cut_dof_idx),
+      dealii::ExcMessage(
+        "Please make sure to distribute the dofs of the DoFHandler that is used by this operation!"));
+    Assert(
+      &dof_handler == &scratch_data.get_dof_handler(temp_cut_no_bc_dof_idx),
+      dealii::ExcMessage(
+        "Please make sure to distribute the dofs of the DoFHandler that is used by this operation!"));
 
     classify_cells();
 
@@ -259,7 +269,8 @@ namespace MeltPoolDG::Heat
     ScratchData<dim, dim, number> &mutable_scratch_data) const
   {
     Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
-      mutable_scratch_data, dirichlet_bc, periodic_bc, temp_dof_idx, temp_hanging_nodes_dof_idx);
+      mutable_scratch_data, dirichlet_bc, periodic_bc, temp_cut_dof_idx, temp_cut_no_bc_dof_idx);
+    Constraints::make_HNC_plus_PBC<dim>(mutable_scratch_data, periodic_bc, temp_cont_no_bc_dof_idx);
   }
 
   template <int dim, typename number>
@@ -268,16 +279,18 @@ namespace MeltPoolDG::Heat
   {
     {
       ScopedName sc("heat::n_dofs");
-      DoFMonitor::add_n_dofs(sc, scratch_data.get_dof_handler(temp_dof_idx).n_dofs());
+      DoFMonitor::add_n_dofs(sc, scratch_data.get_dof_handler(temp_cut_dof_idx).n_dofs());
     }
     solution_history.apply(
-      [this](VectorType &v) { scratch_data.initialize_dof_vector(v, temp_hanging_nodes_dof_idx); });
+      [this](VectorType &v) { scratch_data.initialize_dof_vector(v, temp_cut_no_bc_dof_idx); });
 
-    scratch_data.initialize_dof_vector(volumetric_heat_source, temp_hanging_nodes_dof_idx);
+    // TODO can we avoid initializing these vectors if they are not needed?
+    scratch_data.initialize_dof_vector(interface_temperature, temp_cont_no_bc_dof_idx);
+    scratch_data.initialize_dof_vector(volumetric_heat_source, temp_cont_no_bc_dof_idx);
 
     heat_operator->reinit();
 
-    preconditioner.reinit(scratch_data, temp_dof_idx);
+    preconditioner.reinit(scratch_data, temp_cut_dof_idx);
 
     compute_intersected_quadrature();
   }
@@ -291,17 +304,18 @@ namespace MeltPoolDG::Heat
       // For the two-phase case, the initial temperature function must be set up with 2 components
       // because the FESystem for cut is set up with 2 to handle both phases.
       dealii::VectorTools::interpolate(scratch_data.get_mapping(),
-                                       scratch_data.get_dof_handler(temp_dof_idx),
+                                       scratch_data.get_dof_handler(temp_cut_dof_idx),
                                        dealii::Functions::TwoComponentFunction<dim>(
                                          initial_temperature),
                                        solution_history.get_current_solution());
     else
       dealii::VectorTools::interpolate(scratch_data.get_mapping(),
-                                       scratch_data.get_dof_handler(temp_dof_idx),
+                                       scratch_data.get_dof_handler(temp_cut_dof_idx),
                                        initial_temperature,
                                        solution_history.get_current_solution());
 
-    scratch_data.get_constraint(temp_dof_idx).distribute(solution_history.get_current_solution());
+    scratch_data.get_constraint(temp_cut_dof_idx)
+      .distribute(solution_history.get_current_solution());
     solution_history.get_current_solution().update_ghost_values();
   }
 
@@ -317,7 +331,7 @@ namespace MeltPoolDG::Heat
     newton.residual = [&](const VectorType & /*solution_update*/, VectorType &rhs) {
       update_ghost_values();
       heat_operator->create_rhs(rhs, solution_history.get_recent_old_solution());
-      scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(rhs);
+      scratch_data.get_constraint(temp_cut_no_bc_dof_idx).distribute(rhs);
     };
 
     newton.solve_with_jacobian = [&](const VectorType &rhs, VectorType &solution_update) -> int {
@@ -328,16 +342,16 @@ namespace MeltPoolDG::Heat
                                                        preconditioner,
                                                        "heat_operation");
 
-      scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(solution_update);
+      scratch_data.get_constraint(temp_cut_no_bc_dof_idx).distribute(solution_update);
       return iter;
     };
 
     newton.reinit_vector = [&](VectorType &v) {
-      scratch_data.initialize_dof_vector(v, temp_dof_idx);
+      scratch_data.initialize_dof_vector(v, temp_cut_dof_idx);
     };
 
     newton.distribute_constraints = [&](VectorType &v) {
-      scratch_data.get_constraint(temp_dof_idx).distribute(v);
+      scratch_data.get_constraint(temp_cut_dof_idx).distribute(v);
     };
 
     newton.norm_of_solution_vector = [this]() -> number {
@@ -431,29 +445,33 @@ namespace MeltPoolDG::Heat
   {
     if (heat_data.cut.two_phase)
       {
-        data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+        const std::vector component_interpretation(
+          2, dealii::DataComponentInterpretation::component_is_scalar);
+        data_out.add_data_vector(scratch_data.get_dof_handler(temp_cut_dof_idx),
                                  solution_history.get_current_solution(),
-                                 std::vector<std::string>{"temperature", "temperature_gas"});
-        data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+                                 std::vector<std::string>{"temperature", "temperature_gas"},
+                                 component_interpretation);
+        data_out.add_data_vector(scratch_data.get_dof_handler(temp_cut_dof_idx),
                                  solution_history.get_recent_old_solution(),
-                                 std::vector<std::string>{"temperature_old",
-                                                          "temperature_old_gas"});
-        data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
-                                 volumetric_heat_source,
-                                 std::vector<std::string>{"heat_source", "heat_source_gas"});
+                                 std::vector<std::string>{"temperature_old", "temperature_old_gas"},
+                                 component_interpretation);
       }
     else // one-phase
       {
-        data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+        data_out.add_data_vector(scratch_data.get_dof_handler(temp_cut_dof_idx),
                                  solution_history.get_current_solution(),
                                  "temperature");
-        data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+        data_out.add_data_vector(scratch_data.get_dof_handler(temp_cut_dof_idx),
                                  solution_history.get_recent_old_solution(),
                                  "temperature_old");
-        data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
-                                 volumetric_heat_source,
-                                 "heat_source");
       }
+    // TODO do not output these vectors if they are not initialized
+    data_out.add_data_vector(scratch_data.get_dof_handler(temp_cont_no_bc_dof_idx),
+                             interface_temperature,
+                             "interface_temperature");
+    data_out.add_data_vector(scratch_data.get_dof_handler(temp_cont_no_bc_dof_idx),
+                             volumetric_heat_source,
+                             "heat_source");
   }
 
   template <int dim, typename number>
@@ -461,7 +479,35 @@ namespace MeltPoolDG::Heat
   HeatCutOperation<dim, number>::attach_output_vectors_failed_step(
     GenericDataOut<dim, number> &data_out) const
   {
-    (void)data_out;
+    if (heat_data.cut.two_phase)
+      {
+        const std::vector component_interpretation(
+          2, dealii::DataComponentInterpretation::component_is_scalar);
+        data_out.add_data_vector(
+          scratch_data.get_dof_handler(temp_cut_no_bc_dof_idx),
+          newton.get_solution_update(),
+          std::vector<std::string>{"temperature_newton_last_solution_update",
+                                   "temperature_newton_last_solution_update_gas"},
+          component_interpretation,
+          true /* force output */);
+        data_out.add_data_vector(scratch_data.get_dof_handler(temp_cut_no_bc_dof_idx),
+                                 newton.get_residual(),
+                                 std::vector<std::string>{"temperature_newton_failed_residual",
+                                                          "temperature_newton_failed_residual_gas"},
+                                 component_interpretation,
+                                 true /* force output */);
+      }
+    else
+      {
+        data_out.add_data_vector(scratch_data.get_dof_handler(temp_cut_no_bc_dof_idx),
+                                 newton.get_solution_update(),
+                                 "temperature_newton_last_solution_update",
+                                 true /* force output */);
+        data_out.add_data_vector(scratch_data.get_dof_handler(temp_cut_no_bc_dof_idx),
+                                 newton.get_residual(),
+                                 "temperature_newton_failed_residual",
+                                 true /* force output */);
+      }
   }
 
   template <int dim, typename number>

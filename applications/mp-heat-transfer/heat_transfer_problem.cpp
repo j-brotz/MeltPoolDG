@@ -75,7 +75,7 @@ namespace MeltPoolDG::Heat
             if (const auto source_field_function = simulation_case->get_field_function(
                   "prescribed_heat_source", "heat_transfer", true /*is_optional*/))
               compute_field_vector(heat_operation->get_heat_source(),
-                                   temp_dof_idx,
+                                   temp_cont_dof_idx,
                                    *source_field_function);
             // add laser heat source if given
             if (laser_operation)
@@ -87,12 +87,12 @@ namespace MeltPoolDG::Heat
                   {
                     auto heat_diffuse_operation =
                       dynamic_cast<HeatDiffuseOperation<dim, double> *>(heat_operation.get());
-                    Assert(heat_diffuse_operation != nullptr, ExcInternalError());
+                    Assert(heat_diffuse_operation != nullptr, dealii::ExcInternalError());
                     laser_operation->compute_heat_source(heat_diffuse_operation->get_heat_source(),
                                                          heat_diffuse_operation->get_user_rhs(),
                                                          level_set_as_heaviside,
                                                          level_set_dof_idx,
-                                                         temp_hanging_nodes_dof_idx,
+                                                         temp_cont_dof_idx,
                                                          temp_quad_idx,
                                                          false /* zero_out */);
                   }
@@ -103,7 +103,7 @@ namespace MeltPoolDG::Heat
               [&]() -> double {
                 return VectorTools::compute_norm(heat_operation->get_heat_source(),
                                                  *scratch_data,
-                                                 temp_dof_idx,
+                                                 temp_cont_dof_idx,
                                                  temp_quad_idx,
                                                  dealii::VectorTools::NormType::L1_norm);
               },
@@ -126,7 +126,7 @@ namespace MeltPoolDG::Heat
         output_results(true /* output_not_converged */);
         AssertThrow(false, e);
       }
-    catch (const SolverControl::NoConvergence &e)
+    catch (const dealii::SolverControl::NoConvergence &e)
       {
         output_results(false /* output_not_converged */);
         AssertThrow(false, e);
@@ -158,8 +158,8 @@ namespace MeltPoolDG::Heat
      */
     scratch_data->set_mapping(FiniteElementUtils::create_mapping<dim>(param.heat.fe));
 
-    scratch_data->attach_dof_handler(dof_handler);
-    scratch_data->attach_dof_handler(dof_handler);
+    scratch_data->attach_dof_handler(dof_handler); // temp_constraints
+    scratch_data->attach_dof_handler(dof_handler); // temp_hanging_nodes_constraints
     scratch_data->attach_dof_handler(dof_handler_velocity);
     scratch_data->attach_dof_handler(dof_handler_level_set);
 
@@ -219,11 +219,13 @@ namespace MeltPoolDG::Heat
     switch (param.heat.operator_type)
       {
           case TwoPhaseOperatorType::diffuse: {
+            temp_cont_dof_idx = temp_hanging_nodes_dof_idx;
+
             // set level-set as heaviside field
             VectorType *level_set_as_heaviside_ptr = nullptr;
             heaviside_field_function               = simulation_case->get_initial_condition(
               "prescribed_heaviside",
-              (param.laser.model != LaserModelType::RTE) /*is_optional if laser is not RTE*/);
+              param.laser.model != LaserModelType::RTE /*is_optional if laser is not RTE*/);
             if (heaviside_field_function)
               level_set_as_heaviside_ptr = &level_set_as_heaviside;
 
@@ -254,6 +256,8 @@ namespace MeltPoolDG::Heat
             break;
           }
           case TwoPhaseOperatorType::cut: {
+            temp_cont_dof_idx = level_set_dof_idx;
+
             // set level-set field that defines the interface at the zero contour
             level_set_field_function =
               simulation_case->get_initial_condition("prescribed_signed_distance",
@@ -269,6 +273,7 @@ namespace MeltPoolDG::Heat
               *time_iterator,
               temp_dof_idx,
               temp_hanging_nodes_dof_idx,
+              temp_cont_dof_idx,
               temp_quad_idx,
               param.problem_specific_parameters.do_solidification,
               level_set_dof_idx,
@@ -293,11 +298,12 @@ namespace MeltPoolDG::Heat
                                   true /*enable_normal_vector_update*/);
 
               // recompute heat source
-              scratch_data->initialize_dof_vector(heat_operation->get_heat_source(), temp_dof_idx);
+              scratch_data->initialize_dof_vector(heat_operation->get_heat_source(),
+                                                  temp_cont_dof_idx);
               if (const auto source_field_function = simulation_case->get_field_function(
                     "prescribed_heat_source", "heat_transfer", true /*is_optional*/))
                 compute_field_vector(heat_operation->get_heat_source(),
-                                     temp_dof_idx,
+                                     temp_cont_dof_idx,
                                      *source_field_function);
             });
 

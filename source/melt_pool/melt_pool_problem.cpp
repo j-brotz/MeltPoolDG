@@ -815,14 +815,26 @@ namespace MeltPoolDG::MeltPool
 
     if (problem_specific_parameters.do_heat_transfer)
       {
-        dof_handler_heat.reinit(*base_in->triangulation);
+        dof_handler_heat = std::make_unique<DoFHandler<dim>>(*base_in->triangulation);
+        scratch_data->attach_dof_handler(*dof_handler_heat); // temp_constraints_dirichlet
+        scratch_data->attach_dof_handler(*dof_handler_heat); // temp_hanging_node_constraints
 
-        scratch_data->attach_dof_handler(dof_handler_heat); // temp_constraints_dirichlet
-        scratch_data->attach_dof_handler(dof_handler_heat); // temp_hanging_node_constraints
-
-        temp_dof_idx = scratch_data->attach_constraint_matrix(temp_constraints_dirichlet);
+        temp_constraints_dirichlet    = std::make_unique<AffineConstraints<double>>();
+        temp_hanging_node_constraints = std::make_unique<AffineConstraints<double>>();
+        temp_dof_idx = scratch_data->attach_constraint_matrix(*temp_constraints_dirichlet);
         temp_hanging_nodes_dof_idx =
-          scratch_data->attach_constraint_matrix(temp_hanging_node_constraints);
+          scratch_data->attach_constraint_matrix(*temp_hanging_node_constraints);
+
+        if (param.heat.operator_type == Heat::TwoPhaseOperatorType::cut)
+          {
+            dof_handler_heat_cont = std::make_unique<DoFHandler<dim>>(*base_in->triangulation);
+            scratch_data->attach_dof_handler(
+              *dof_handler_heat_cont); // temp_cont_hanging_node_constraints
+
+            temp_cont_hanging_node_constraints = std::make_unique<AffineConstraints<double>>();
+            temp_cont_dof_idx =
+              scratch_data->attach_constraint_matrix(*temp_cont_hanging_node_constraints);
+          }
 
         temp_quad_idx = scratch_data->attach_quadrature(
           FiniteElementUtils::create_quadrature<dim>(param.heat.fe));
@@ -950,6 +962,7 @@ namespace MeltPoolDG::MeltPool
                 *time_iterator,
                 temp_dof_idx,
                 temp_hanging_nodes_dof_idx,
+                temp_cont_dof_idx,
                 temp_quad_idx,
                 problem_specific_parameters.do_solidification,
                 ls_hanging_nodes_dof_idx,
@@ -1020,10 +1033,6 @@ namespace MeltPoolDG::MeltPool
                   // 4) copy vectors back
                   for (unsigned int i = 0; i < op_vectors.size(); ++i)
                     op_vectors[i]->copy_locally_owned_data_from(temp_vectors[i]);
-
-                  // recompute heat source
-                  scratch_data->initialize_dof_vector(heat_operation->get_heat_source(),
-                                                      temp_dof_idx);
                 });
 
               heat_operation = heat_cut_operation;
@@ -1393,6 +1402,8 @@ namespace MeltPoolDG::MeltPool
       {
         if (param.heat.operator_type == Heat::TwoPhaseOperatorType::cut)
           {
+            FiniteElementUtils::distribute_dofs<dim, 1>(param.heat.fe, *dof_handler_heat_cont);
+
             // before the CutFEM operation can distribute dofs, the mesh must be classified
             // according to the level set indicator
             IndexSet locally_relevant_dofs;
@@ -1417,7 +1428,7 @@ namespace MeltPoolDG::MeltPool
                                              *initial_level_set,
                                              level_set_operation->get_level_set());
           }
-        heat_operation->distribute_dofs(dof_handler_heat);
+        heat_operation->distribute_dofs(*dof_handler_heat);
       }
 
     if (laser_operation)
@@ -2342,7 +2353,7 @@ namespace MeltPoolDG::MeltPool
                       });
 
     if (melt_front_propagation)
-      data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
+      data.emplace_back(dof_handler_heat.get(), [&](std::vector<VectorType *> &vectors) {
         melt_front_propagation->attach_vectors(vectors); // temperature + solid + liquid
       });
 
@@ -2352,13 +2363,13 @@ namespace MeltPoolDG::MeltPool
                           [&](std::vector<VectorType *> &vectors) {
                             evaporation_operation->attach_dim_vectors(vectors);
                           });
-        data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
+        data.emplace_back(dof_handler_heat.get(), [&](std::vector<VectorType *> &vectors) {
           evaporation_operation->attach_vectors(vectors);
         });
       }
 
     if (heat_operation)
-      data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
+      data.emplace_back(dof_handler_heat.get(), [&](std::vector<VectorType *> &vectors) {
         heat_operation->attach_vectors(vectors);
       });
 
