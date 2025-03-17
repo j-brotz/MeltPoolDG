@@ -493,7 +493,7 @@ namespace MeltPoolDG::MeltPool
                         recoil_pressure_operation->compute_recoil_pressure_force(
                           vel_force_rhs,
                           level_set_operation->get_level_set_as_heaviside(),
-                          heat_diffuse_operation->get_temperature_interface(),
+                          heat_diffuse_operation->get_interface_temperature(),
                           evaporation_operation->get_evaporative_mass_flux(),
                           evapor_mass_flux_dof_idx,
                           false /*false means add to force vector*/);

@@ -192,7 +192,7 @@ namespace MeltPoolDG::Heat
 
     scratch_data.initialize_dof_vector(user_rhs, temp_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(heat_source, temp_hanging_nodes_dof_idx);
-    scratch_data.initialize_dof_vector(temperature_interface, temp_hanging_nodes_dof_idx);
+    scratch_data.initialize_dof_vector(interface_temperature, temp_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(temperature_extrapolated, temp_dof_idx);
 
     if (heat_data.predictor.type == PredictorType::least_squares_projection)
@@ -304,9 +304,9 @@ namespace MeltPoolDG::Heat
     nearest_point_search->reinit(scratch_data.get_dof_handler(temp_dof_idx));
 
     nearest_point_search->template fill_dof_vector_with_point_values(
-      temperature_interface, scratch_data.get_dof_handler(temp_dof_idx), get_temperature());
+      interface_temperature, scratch_data.get_dof_handler(temp_dof_idx), get_temperature());
 
-    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(temperature_interface);
+    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(interface_temperature);
   }
 
   template <int dim, typename number>
@@ -314,7 +314,7 @@ namespace MeltPoolDG::Heat
   HeatDiffuseOperation<dim, number>::attach_vectors(std::vector<VectorType *> &vectors)
   {
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
-    vectors.push_back(&temperature_interface);
+    vectors.push_back(&interface_temperature);
     heat_operator->attach_vectors(vectors);
   }
 
@@ -360,8 +360,8 @@ namespace MeltPoolDG::Heat
      *  temperature interface
      */
     data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
-                             temperature_interface,
-                             "temperature_interface");
+                             interface_temperature,
+                             "interface_temperature");
     /*
      *  user rhs
      */
@@ -417,16 +417,16 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   const typename HeatOperationBase<dim, number>::VectorType &
-  HeatDiffuseOperation<dim, number>::get_temperature_interface() const
+  HeatDiffuseOperation<dim, number>::get_interface_temperature() const
   {
-    return temperature_interface;
+    return interface_temperature;
   }
 
   template <int dim, typename number>
   typename HeatOperationBase<dim, number>::VectorType &
-  HeatDiffuseOperation<dim, number>::get_temperature_interface()
+  HeatDiffuseOperation<dim, number>::get_interface_temperature()
   {
-    return temperature_interface;
+    return interface_temperature;
   }
 
   template <int dim, typename number>

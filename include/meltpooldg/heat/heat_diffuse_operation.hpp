@@ -65,7 +65,7 @@ namespace MeltPoolDG::Heat
     VectorType heat_source;
     VectorType user_rhs;
     VectorType temp;
-    VectorType temperature_interface;
+    VectorType interface_temperature;
 
     // for output only
     mutable VectorType user_rhs_projected;
@@ -170,10 +170,10 @@ namespace MeltPoolDG::Heat
     get_temperature() override;
 
     const VectorType &
-    get_temperature_interface() const;
+    get_interface_temperature() const;
 
     VectorType &
-    get_temperature_interface();
+    get_interface_temperature();
 
     const VectorType &
     get_heat_source() const override;
