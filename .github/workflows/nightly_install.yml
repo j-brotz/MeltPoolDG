@@ -2,7 +2,7 @@ name: Install MeltPoolDG
 
 on:
   schedule:
-  - cron:  '0 0 * * *'
+  - cron:  '0 0 * * 6' # run every Saturday at 00:00 UTC
 
 concurrency:
   group: ${{ github.event_name }}-${{ github.workflow }}-${{ github.ref }}
