@@ -391,6 +391,18 @@ namespace MeltPoolDG::Heat
     ready_for_time_advance = false;
   }
 
+  template <int dim, typename number>
+  void
+  HeatCutOperation<dim, number>::compute_interface_temperature(
+    const VectorType                         &distance,
+    const BlockVectorType                    &normal_vector,
+    const LevelSet::NearestPointData<double> &nearest_point_data)
+  {
+    (void)distance;
+    (void)normal_vector;
+    (void)nearest_point_data;
+  }
+
 
   template <int dim, typename number>
   void
@@ -464,6 +476,20 @@ namespace MeltPoolDG::Heat
   HeatCutOperation<dim, number>::get_temperature()
   {
     return solution_history.get_current_solution();
+  }
+
+  template <int dim, typename number>
+  const HeatCutOperation<dim, number>::VectorType &
+  HeatCutOperation<dim, number>::get_interface_temperature() const
+  {
+    return interface_temperature;
+  }
+
+  template <int dim, typename number>
+  HeatCutOperation<dim, number>::VectorType &
+  HeatCutOperation<dim, number>::get_interface_temperature()
+  {
+    return interface_temperature;
   }
 
   template <int dim, typename number>

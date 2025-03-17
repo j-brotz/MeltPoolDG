@@ -4,9 +4,11 @@
 
 #include <deal.II/dofs/dof_handler.h>
 
+#include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/level_set/nearest_point_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 
 #include <vector>
@@ -17,7 +19,8 @@ namespace MeltPoolDG::Heat
   class HeatOperationBase
   {
   public:
-    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
     virtual void
     reinit() = 0;
@@ -39,6 +42,11 @@ namespace MeltPoolDG::Heat
 
     virtual void
     solve() = 0;
+
+    virtual void
+    compute_interface_temperature(const VectorType                         &distance,
+                                  const BlockVectorType                    &normal_vector,
+                                  const LevelSet::NearestPointData<double> &nearest_point_data) = 0;
 
     /**
      * register vectors for adaptive mesh refinement solution transfer
@@ -63,6 +71,12 @@ namespace MeltPoolDG::Heat
 
     virtual VectorType &
     get_temperature() = 0;
+
+    virtual const VectorType &
+    get_interface_temperature() const = 0;
+
+    virtual VectorType &
+    get_interface_temperature() = 0;
 
     virtual const VectorType &
     get_heat_source() const = 0;

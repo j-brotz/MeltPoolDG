@@ -136,8 +136,7 @@ namespace dealii
 namespace MeltPoolDG
 {
   using namespace dealii;
-  using VectorType      = LinearAlgebra::distributed::Vector<double>;
-  using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+  using VectorType = LinearAlgebra::distributed::Vector<double>;
 
   enum BooleanType
   {
