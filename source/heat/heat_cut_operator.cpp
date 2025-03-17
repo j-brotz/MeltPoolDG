@@ -2265,15 +2265,18 @@ namespace MeltPoolDG::Heat
                               0 /*selected component*/,
                               CutUtil::CellCategory::liquid /*active_fe_index*/);
 
-            eval_l.reinit(cell_index);
-            eval_l.gather_evaluate(solution, evaluate_values);
+            internal::reinit_and_read_plain(eval_l, solution, cell_index);
+            eval_l.evaluate(evaluate_values);
 
             for (const unsigned int q : eval_l.quadrature_point_indices())
-              for (unsigned int lane = 0;
-                   lane < matrix_free.n_active_entries_per_cell_batch(cell_index);
-                   ++lane)
-                error_L2_squared += dealii::Utilities::fixed_power<2>(eval_l.get_value(q)[lane]) *
-                                    eval_l.JxW(q)[lane];
+              {
+                const auto error_squared =
+                  dealii::Utilities::fixed_power<2>(eval_l.get_value(q)) * eval_l.JxW(q);
+                for (unsigned int lane = 0;
+                     lane < matrix_free.n_active_entries_per_cell_batch(cell_index);
+                     ++lane)
+                  error_L2_squared += error_squared[lane];
+              }
           }
         else if (cell_category == CutUtil::CellCategory::gas and heat_data.cut.two_phase)
           {
@@ -2283,15 +2286,18 @@ namespace MeltPoolDG::Heat
                               1 /*selected component*/,
                               CutUtil::CellCategory::gas /*active_fe_index*/);
 
-            eval_g.reinit(cell_index);
-            eval_g.gather_evaluate(solution, evaluate_values);
+            internal::reinit_and_read_plain(eval_g, solution, cell_index);
+            eval_g.evaluate(evaluate_values);
 
             for (const unsigned int q : eval_g.quadrature_point_indices())
-              for (unsigned int lane = 0;
-                   lane < matrix_free.n_active_entries_per_cell_batch(cell_index);
-                   ++lane)
-                error_L2_squared += dealii::Utilities::fixed_power<2>(eval_g.get_value(q)[lane]) *
-                                    eval_g.JxW(q)[lane];
+              {
+                const auto error_squared =
+                  dealii::Utilities::fixed_power<2>(eval_g.get_value(q)) * eval_g.JxW(q);
+                for (unsigned int lane = 0;
+                     lane < matrix_free.n_active_entries_per_cell_batch(cell_index);
+                     ++lane)
+                  error_L2_squared += error_squared[lane];
+              }
           }
         else if (cell_category == CutUtil::CellCategory::intersected and
                  not heat_data.cut.two_phase)
@@ -2315,10 +2321,15 @@ namespace MeltPoolDG::Heat
                   eval_subdomain_l, eval_l, evaluate_values, cell_index, lane, n_dofs_per_cell);
 
                 for (const unsigned int q : eval_subdomain_l.quadrature_point_indices())
-                  for (unsigned int v = 0; v < n_lanes; ++v)
-                    error_L2_squared +=
-                      dealii::Utilities::fixed_power<2>(eval_subdomain_l.get_value(q)[v]) *
-                      eval_subdomain_l.JxW(q)[v];
+                  {
+                    const auto error_squared =
+                      dealii::Utilities::fixed_power<2>(eval_subdomain_l.get_value(q)) *
+                      eval_subdomain_l.JxW(q);
+                    for (unsigned int v = 0;
+                         v < eval_subdomain_l.n_active_entries_per_quadrature_batch(q);
+                         ++v)
+                      error_L2_squared += error_squared[v];
+                  }
               }
           }
         else if (cell_category == CutUtil::CellCategory::intersected and heat_data.cut.two_phase)
@@ -2360,16 +2371,26 @@ namespace MeltPoolDG::Heat
                                                                   n_dofs_per_cell);
 
                 for (const unsigned int q : eval_subdomain_l.quadrature_point_indices())
-                  for (unsigned int v = 0; v < n_lanes; ++v)
-                    error_L2_squared +=
-                      dealii::Utilities::fixed_power<2>(eval_subdomain_l.get_value(q)[v]) *
-                      eval_subdomain_l.JxW(q)[v];
+                  {
+                    const auto error_squared =
+                      dealii::Utilities::fixed_power<2>(eval_subdomain_l.get_value(q)) *
+                      eval_subdomain_l.JxW(q);
+                    for (unsigned int v = 0;
+                         v < eval_subdomain_l.n_active_entries_per_quadrature_batch(q);
+                         ++v)
+                      error_L2_squared += error_squared[v];
+                  }
 
                 for (const unsigned int q : eval_subdomain_g.quadrature_point_indices())
-                  for (unsigned int v = 0; v < n_lanes; ++v)
-                    error_L2_squared +=
-                      dealii::Utilities::fixed_power<2>(eval_subdomain_g.get_value(q)[v]) *
-                      eval_subdomain_g.JxW(q)[v];
+                  {
+                    const auto error_squared =
+                      dealii::Utilities::fixed_power<2>(eval_subdomain_g.get_value(q)) *
+                      eval_subdomain_g.JxW(q);
+                    for (unsigned int v = 0;
+                         v < eval_subdomain_g.n_active_entries_per_quadrature_batch(q);
+                         ++v)
+                      error_L2_squared += error_squared[v];
+                  }
               }
           }
       }

@@ -1,0 +1,81 @@
++--------------------------------------------------------------------------------------------------+
+|  τ = 0.00018                                                                    reinitialization |
+| || normal_0 ||L2 = 2.8680025935e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 2.8680024743e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 2.9475352221e-06                                     reinitialization_adaflo |
+|  τ = 0.00036                                                                    reinitialization |
+| || normal_0 ||L2 = 2.8694074154e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 2.8694074154e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 2.4933488021e-06                                     reinitialization_adaflo |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 3.23651647568e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.23651647568e+00                                               normal_vector |
+| || curvature ||L2 = 4.52795362473e+00                                                  curvature |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 1      t = 0.0000e+00 to 5.0000e-03 ( dt = 5.0000e-03 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 5.1490040496e-03                                    advection_diffusion |
+|  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
+| || normal_0 ||L2 = 3.23651647568e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.23651647568e+00                                               normal_vector |
+| || curvature ||L2 = 4.52795362473e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 1.50097e+00                newton_raphson_solver |
+| || velocity ||L2 = 8.558870174917254e-06                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.329361791830431e-02                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 2      t = 5.0000e-03 to 1.0000e-02 ( dt = 5.0000e-03 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 5.1490032299e-03                                    advection_diffusion |
++--------------------------------------------------------------------------------------------------+
+|  τ = 0.00018                                                                    reinitialization |
+| || normal_0 ||L2 = 2.8707054195e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 2.8707642792e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 2.6020599771e-06                                     reinitialization_adaflo |
+|  τ = 0.00036                                                                    reinitialization |
+| || delta phi ||L2 = 2.3234220530e-06                                     reinitialization_adaflo |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 3.23969989245e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.23975948186e+00                                               normal_vector |
+| || curvature ||L2 = 4.53028909739e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 1.50094e+00                newton_raphson_solver |
+| || velocity ||L2 = 1.357343288319012e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.328057643360896e-02                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 3      t = 1.0000e-02 to 1.5000e-02 ( dt = 5.0000e-03 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 5.1511426285e-03                                    advection_diffusion |
++--------------------------------------------------------------------------------------------------+
+|  τ = 0.00018                                                                    reinitialization |
+| || normal_0 ||L2 = 2.8729759932e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 2.8733200018e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 3.5504796468e-06                                     reinitialization_adaflo |
+|  τ = 0.00036                                                                    reinitialization |
+| || delta phi ||L2 = 3.1286706599e-06                                     reinitialization_adaflo |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 3.24236125533e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.24271155230e+00                                               normal_vector |
+| || curvature ||L2 = 4.53162248956e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 1.50090e+00                newton_raphson_solver |
+| || velocity ||L2 = 1.689644365021551e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.326782422699383e-02                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 4      t = 1.5000e-02 to 2.0000e-02 ( dt = 5.0000e-03 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 5.1529560106e-03                                    advection_diffusion |
++--------------------------------------------------------------------------------------------------+
+|  τ = 0.00018                                                                    reinitialization |
+| || normal_0 ||L2 = 2.8747668534e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 2.8756897105e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 4.9729020118e-06                                     reinitialization_adaflo |
+|  τ = 0.00036                                                                    reinitialization |
+| || delta phi ||L2 = 4.3623524634e-06                                     reinitialization_adaflo |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 3.24445663469e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.24539394492e+00                                               normal_vector |
+| || curvature ||L2 = 4.53274937915e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 1.50085e+00                newton_raphson_solver |
+| || velocity ||L2 = 1.879041067855487e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.325184783713472e-02                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  end of simulation                                                                               |
++--------------------------------------------------------------------------------------------------+
