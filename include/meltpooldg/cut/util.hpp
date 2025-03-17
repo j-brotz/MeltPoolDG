@@ -67,8 +67,10 @@ namespace MeltPoolDG::CutUtil
     inside_face_liquid,
     inside_face_gas,
     intersected_face,
-    mixed_face_liquid,
-    mixed_face_gas
+    mixed_face_liquid_intersected,
+    mixed_face_intersected_liquid,
+    mixed_face_gas_intersected,
+    mixed_face_intersected_gas
   };
 
   /**

@@ -304,7 +304,8 @@ namespace MeltPoolDG::Flow
 
     if (const CutUtil::FaceType face_type = CutUtil::get_face_type(face_category);
         face_type == CutUtil::FaceType::inside_face_liquid or
-        face_type == CutUtil::FaceType::mixed_face_liquid)
+        face_type == CutUtil::FaceType::mixed_face_liquid_intersected or
+        face_type == CutUtil::FaceType::mixed_face_intersected_liquid)
       {
         for (unsigned int face = face_range.first; face < face_range.second; ++face)
           {
@@ -665,7 +666,8 @@ namespace MeltPoolDG::Flow
                                                  flow_scratch_data.quad_idx);
 
     if (face_type == CutUtil::FaceType::intersected_face or
-        face_type == CutUtil::FaceType::mixed_face_liquid)
+        face_type == CutUtil::FaceType::mixed_face_liquid_intersected or
+        face_type == CutUtil::FaceType::mixed_face_intersected_liquid)
       {
         EvaluationFlags::EvaluationFlags evaluation_flags =
           dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients |

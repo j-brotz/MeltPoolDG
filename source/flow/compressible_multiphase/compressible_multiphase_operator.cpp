@@ -571,26 +571,36 @@ namespace MeltPoolDG::Multiphase
         case CutUtil::FaceType::inside_face_liquid:
           process_face.template operator()<false, is_viscous_liquid>(phi_liquid_m, phi_liquid_p);
           break;
-        case CutUtil::FaceType::mixed_face_liquid:
+
+        case CutUtil::FaceType::mixed_face_liquid_intersected:
           process_face.template operator()<false, is_viscous_liquid>(phi_liquid_m,
                                                                      phi_liquid_p_intersected);
           break;
+
+        case CutUtil::FaceType::mixed_face_intersected_liquid:
+          process_face.template operator()<false, is_viscous_liquid>(phi_liquid_m_intersected,
+                                                                     phi_liquid_p);
+        break;
+
         case CutUtil::FaceType::inside_face_gas:
           process_face.template operator()<true, is_viscous_gas>(phi_gas_m, phi_gas_p);
           break;
-        case CutUtil::FaceType::mixed_face_gas:
-          // Note:
-          // 'process_face.template operator()<true>(phi_gas_m, phi_gas_p_intersected)'
-          // gives wrong results here.
-          process_face.template operator()<true, is_viscous_gas>(phi_gas_m_intersected, phi_gas_p);
+
+        case CutUtil::FaceType::mixed_face_gas_intersected:
+          process_face.template operator()<true, is_viscous_gas>(phi_gas_m, phi_gas_p_intersected);
           break;
-          case CutUtil::FaceType::intersected_face: {
-            process_intersected_face.template operator()<false, is_viscous_liquid>(
-              phi_liquid_m_intersected, phi_liquid_p_intersected, 0);
-            process_intersected_face.template operator()<true, is_viscous_gas>(
-              phi_gas_m_intersected, phi_gas_p_intersected, 1);
-            break;
-          }
+
+        case CutUtil::FaceType::mixed_face_intersected_gas:
+          process_face.template operator()<true, is_viscous_gas>(phi_gas_m_intersected, phi_gas_p);
+        break;
+
+        case CutUtil::FaceType::intersected_face: {
+          process_intersected_face.template operator()<false, is_viscous_liquid>(
+            phi_liquid_m_intersected, phi_liquid_p_intersected, 0);
+          process_intersected_face.template operator()<true, is_viscous_gas>(
+            phi_gas_m_intersected, phi_gas_p_intersected, 1);
+          break;
+        }
         default:
           break;
       }
@@ -841,6 +851,7 @@ namespace MeltPoolDG::Multiphase
     const CutUtil::FaceType face_type = CutUtil::get_face_type(face_category);
 
     auto phi_liquid_m = create_face_integrator(true, CutUtil::CellCategory::liquid, 0);
+    auto phi_liquid_p = create_face_integrator(false, CutUtil::CellCategory::liquid, 0);
     auto phi_liquid_p_intersected =
       create_face_integrator(false, CutUtil::CellCategory::intersected, 0);
     auto phi_gas_m = create_face_integrator(true, CutUtil::CellCategory::gas, dim + 2);
@@ -916,24 +927,27 @@ namespace MeltPoolDG::Multiphase
 
     switch (face_type)
       {
-          case CutUtil::FaceType::mixed_face_liquid: {
-            apply_ghost_penalty(phi_liquid_m, phi_liquid_p_intersected);
-          }
+        case CutUtil::FaceType::mixed_face_liquid_intersected:
+          apply_ghost_penalty(phi_liquid_m, phi_liquid_p_intersected);
           break;
 
-          case CutUtil::FaceType::mixed_face_gas: {
-            // Note:
-            // 'apply_ghost_penalty(phi_gas_m, phi_gas_p_intersected);'
-            // gives wrong results here.
-            apply_ghost_penalty(phi_gas_m_intersected, phi_gas_p);
-          }
+        case CutUtil::FaceType::mixed_face_intersected_liquid:
+          apply_ghost_penalty(phi_liquid_m_intersected, phi_liquid_p);
           break;
 
-          case CutUtil::FaceType::intersected_face: {
-            apply_ghost_penalty(phi_liquid_m_intersected, phi_liquid_p_intersected);
-            apply_ghost_penalty(phi_gas_m_intersected, phi_gas_p_intersected);
-          }
+        case CutUtil::FaceType::mixed_face_gas_intersected:
+          apply_ghost_penalty(phi_gas_m, phi_gas_p_intersected);
           break;
+
+        case CutUtil::FaceType::mixed_face_intersected_gas:
+          apply_ghost_penalty(phi_gas_m_intersected, phi_gas_p);
+          break;
+
+        case CutUtil::FaceType::intersected_face: {
+          apply_ghost_penalty(phi_liquid_m_intersected, phi_liquid_p_intersected);
+          apply_ghost_penalty(phi_gas_m_intersected, phi_gas_p_intersected);
+        }
+        break;
 
         default:
           break;

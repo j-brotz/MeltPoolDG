@@ -57,20 +57,36 @@ namespace MeltPoolDG::CutUtil
       {
         return intersected_face;
       }
-    // mixed_face_liquid: one adjacent cell of the face is completely inside the liquid phase
-    // and the other adjacent cell of the face is intersected
+    // mixed_face_liquid_intersected: the adjacent cell of the face in "inside" direction is
+    // completely inside the liquid phase and the adjacent cell of the face in "outside" direction
+    // is intersected
     else if ((adjacent_cell_categories.first == CellCategory::liquid and
-              adjacent_cell_categories.second == CellCategory::intersected) or
-             (adjacent_cell_categories.first == CellCategory::intersected and
+              adjacent_cell_categories.second == CellCategory::intersected))
+      {
+        return mixed_face_liquid_intersected;
+      }
+    // mixed_face_intersected_liquid: the adjacent cell of the face in "outside" direction is
+    // completely inside the liquid phase and the adjacent cell of the face in "inside" direction
+    // is intersected
+    else if ((adjacent_cell_categories.first == CellCategory::intersected and
               adjacent_cell_categories.second == CellCategory::liquid))
       {
-        return mixed_face_liquid;
+        return mixed_face_intersected_liquid;
       }
-    // mixed_face_gas one adjacent cell of the face is completely inside th gas phase
-    // and the other adjacent cell of the face is intersected by the immersed boundary
+    // mixed_face_gas_intersected: the adjacent cell of the face in "inside" direction is
+    // completely inside the gas phase and the adjacent cell of the face in "outside" direction
+    // is intersected
+    else if ((adjacent_cell_categories.first == CellCategory::gas and
+              adjacent_cell_categories.second == CellCategory::intersected))
+      {
+        return mixed_face_gas_intersected;
+      }
+    // mixed_face_intersected_gas: the adjacent cell of the face in "outside" direction is
+    // completely inside the gas phase and the adjacent cell of the face in "inside" direction
+    // is intersected
     else
       {
-        return mixed_face_gas;
+        return mixed_face_intersected_gas;
       }
   }
 

@@ -1192,7 +1192,8 @@ namespace MeltPoolDG::Heat
     const auto              face_category = matrix_free.get_face_range_category(face_range);
     const CutUtil::FaceType face_type     = CutUtil::get_face_type(face_category);
     if (face_type == CutUtil::FaceType::intersected_face or
-        face_type == CutUtil::FaceType::mixed_face_liquid)
+        face_type == CutUtil::FaceType::mixed_face_liquid_intersected or
+        face_type == CutUtil::FaceType::mixed_face_intersected_liquid)
       {
         FaceEval eval_minus_l(matrix_free,
                               true /*is_interior_face*/,
@@ -1231,7 +1232,8 @@ namespace MeltPoolDG::Heat
           }
       }
     if ((face_type == CutUtil::FaceType::intersected_face or
-         face_type == CutUtil::FaceType::mixed_face_gas) and
+         face_type == CutUtil::FaceType::mixed_face_gas_intersected or
+         face_type == CutUtil::FaceType::mixed_face_intersected_gas) and
         heat_data.cut.two_phase)
       {
         FaceEval eval_minus_g(matrix_free,
@@ -1762,7 +1764,8 @@ namespace MeltPoolDG::Heat
     const auto              face_category = matrix_free.get_face_range_category(face_range);
     const CutUtil::FaceType face_type     = CutUtil::get_face_type(face_category);
     if (face_type == CutUtil::FaceType::intersected_face or
-        face_type == CutUtil::FaceType::mixed_face_liquid)
+        face_type == CutUtil::FaceType::mixed_face_liquid_intersected or
+        face_type == CutUtil::FaceType::mixed_face_intersected_liquid)
       {
         FaceEval T_new_eval_minus_l(matrix_free,
                                     true /*is_interior_face*/,
@@ -1803,7 +1806,8 @@ namespace MeltPoolDG::Heat
           }
       }
     if ((face_type == CutUtil::FaceType::intersected_face or
-         face_type == CutUtil::FaceType::mixed_face_gas) and
+         face_type == CutUtil::FaceType::mixed_face_gas_intersected or
+         face_type == CutUtil::FaceType::mixed_face_intersected_gas) and
         heat_data.cut.two_phase)
       {
         FaceEval eval_minus_g(matrix_free,
@@ -2133,13 +2137,15 @@ namespace MeltPoolDG::Heat
       const CutUtil::FaceType face_type     = CutUtil::get_face_type(face_category);
 
       if (face_type == CutUtil::FaceType ::intersected_face or
-          face_type == CutUtil::FaceType ::mixed_face_liquid)
+          face_type == CutUtil::FaceType ::mixed_face_liquid_intersected or
+          face_type == CutUtil::FaceType ::mixed_face_intersected_liquid)
         {
           emplace_face_eval(0);
           emplace_face_eval(1);
         }
       if ((face_type == CutUtil::FaceType ::intersected_face or
-           face_type == CutUtil::FaceType ::mixed_face_gas) and
+           face_type == CutUtil::FaceType ::mixed_face_gas_intersected or
+           face_type == CutUtil::FaceType ::mixed_face_intersected_gas) and
           heat_data.cut.two_phase)
         {
           emplace_face_eval(2);
@@ -2166,7 +2172,8 @@ namespace MeltPoolDG::Heat
       const CutUtil::FaceType face_type     = CutUtil::get_face_type(face_category);
 
       if (face_type == CutUtil::FaceType ::intersected_face or
-          face_type == CutUtil::FaceType ::mixed_face_liquid)
+          face_type == CutUtil::FaceType ::mixed_face_liquid_intersected or
+          face_type == CutUtil::FaceType ::mixed_face_intersected_liquid)
         {
           eval_minus_l.evaluate(evaluate_gradients);
           eval_plus_l.evaluate(evaluate_gradients);
@@ -2186,7 +2193,8 @@ namespace MeltPoolDG::Heat
           eval_plus_l.integrate(evaluate_gradients);
         }
       if ((face_type == CutUtil::FaceType ::intersected_face or
-           face_type == CutUtil::FaceType ::mixed_face_gas) and
+           face_type == CutUtil::FaceType ::mixed_face_gas_intersected or
+           face_type == CutUtil::FaceType ::mixed_face_intersected_gas) and
           heat_data.cut.two_phase)
         {
           const int eval_idx = evaluators.size() == 4 ? 2 : 0;
