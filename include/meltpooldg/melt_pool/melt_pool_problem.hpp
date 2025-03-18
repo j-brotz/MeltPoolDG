@@ -273,6 +273,7 @@ namespace MeltPoolDG::MeltPool
     std::unique_ptr<Profiling::ProfilingMonitor<double>>       profiling_monitor;
     std::shared_ptr<Restart::RestartMonitor<double>>           restart_monitor;
 
-    bool output_interface_velocity = false;
+    bool output_interface_velocity     = false;
+    bool compute_interface_temperature = false;
   };
 } // namespace MeltPoolDG::MeltPool

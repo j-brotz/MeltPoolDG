@@ -403,6 +403,9 @@ namespace MeltPoolDG::MeltPool
                       heat_operation->solve();
                   }
 
+                if (compute_interface_temperature)
+                  heat_operation->compute_interface_temperature();
+
                 if (melt_front_propagation)
                   {
                     ScopedName         sc("melt_front_propagation");
@@ -483,27 +486,21 @@ namespace MeltPoolDG::MeltPool
                     if (param.evapor.recoil.interface_distributed_flux_type ==
                         Evaporation::RegularizedRecoilPressureTemperatureEvaluationType::
                           interface_value)
-                      {
-                        heat_operation->compute_interface_temperature();
-
-                        recoil_pressure_operation->compute_recoil_pressure_force(
-                          vel_force_rhs,
-                          level_set_operation->get_level_set_as_heaviside(),
-                          heat_operation->get_interface_temperature(),
-                          evaporation_operation->get_evaporative_mass_flux(),
-                          evapor_mass_flux_dof_idx,
-                          false /*false means add to force vector*/);
-                      }
+                      recoil_pressure_operation->compute_recoil_pressure_force(
+                        vel_force_rhs,
+                        level_set_operation->get_level_set_as_heaviside(),
+                        heat_operation->get_interface_temperature(),
+                        evaporation_operation->get_evaporative_mass_flux(),
+                        evapor_mass_flux_dof_idx,
+                        false /*false means add to force vector*/);
                     else // interface_distributed_flux_type == local_value
-                      {
-                        recoil_pressure_operation->compute_recoil_pressure_force(
-                          vel_force_rhs,
-                          level_set_operation->get_level_set_as_heaviside(),
-                          heat_operation->get_temperature(),
-                          evaporation_operation->get_evaporative_mass_flux(),
-                          evapor_mass_flux_dof_idx,
-                          false /*false means add to force vector*/);
-                      }
+                      recoil_pressure_operation->compute_recoil_pressure_force(
+                        vel_force_rhs,
+                        level_set_operation->get_level_set_as_heaviside(),
+                        heat_operation->get_temperature(),
+                        evaporation_operation->get_evaporative_mass_flux(),
+                        evapor_mass_flux_dof_idx,
+                        false /*false means add to force vector*/);
                   }
 
                 // ... f) explicit Darcy damping force
@@ -831,6 +828,8 @@ namespace MeltPoolDG::MeltPool
             temp_cont_dof_idx =
               scratch_data->attach_constraint_matrix(*temp_cont_hanging_node_constraints);
           }
+        else
+          temp_cont_dof_idx = temp_hanging_nodes_dof_idx;
 
         temp_quad_idx = scratch_data->attach_quadrature(
           FiniteElementUtils::create_quadrature<dim>(param.heat.fe));
@@ -1061,15 +1060,43 @@ namespace MeltPoolDG::MeltPool
     // Register temperature and normal vector in case of temperature dependent surface tension
     if (heat_operation and
         param.flow.surface_tension.temperature_dependent_surface_tension_coefficient != 0.0)
-      surface_tension_operation->register_temperature_and_normal_vector(
-        temp_dof_idx,
-        normal_dof_idx,
-        &heat_operation->get_temperature(),
-        &level_set_operation->get_normal_vector());
+      {
+        if (param.flow.surface_tension.interface_temperature_evaluation_type ==
+            Flow::RegularizedSurfaceTensionTemperatureEvaluationType::local_value)
+          {
+            surface_tension_operation->register_temperature_and_normal_vector(
+              temp_dof_idx,
+              normal_dof_idx,
+              &heat_operation->get_temperature(),
+              &level_set_operation->get_normal_vector());
+          }
+        else if (param.flow.surface_tension.interface_temperature_evaluation_type ==
+                 Flow::RegularizedSurfaceTensionTemperatureEvaluationType::interface_value)
+          {
+            surface_tension_operation->register_temperature_and_normal_vector(
+              temp_cont_dof_idx,
+              normal_dof_idx,
+              &heat_operation->get_interface_temperature(),
+              &level_set_operation->get_normal_vector());
+            compute_interface_temperature = true;
+          }
+      }
 
     // create recoil pressure operation
     if (param.evapor.recoil.enable)
       {
+        AssertThrow(heat_operation,
+                    dealii::ExcMessage(
+                      "The recoil pressure can only be enabled if heat transfer is!"));
+        unsigned int used_temp_dof_idx = temp_dof_idx;
+        if (param.evapor.recoil.interface_distributed_flux_type ==
+            Evaporation::RegularizedRecoilPressureTemperatureEvaluationType::interface_value)
+          {
+            used_temp_dof_idx = param.heat.operator_type == Heat::TwoPhaseOperatorType::cut ?
+                                  temp_cont_dof_idx :
+                                  temp_hanging_nodes_dof_idx;
+            compute_interface_temperature = true;
+          }
         recoil_pressure_operation = std::make_shared<Evaporation::RecoilPressureOperation<dim>>(
           *scratch_data,
           param,
@@ -1077,10 +1104,7 @@ namespace MeltPoolDG::MeltPool
           flow_operation->get_quad_idx_velocity(),
           flow_operation->get_dof_handler_idx_pressure(),
           ls_hanging_nodes_dof_idx,
-          (param.evapor.recoil.interface_distributed_flux_type ==
-           Evaporation::RegularizedRecoilPressureTemperatureEvaluationType::interface_value) ?
-            temp_hanging_nodes_dof_idx :
-            temp_dof_idx);
+          used_temp_dof_idx);
       }
 
     // setup evaporation operation
@@ -1206,9 +1230,7 @@ namespace MeltPoolDG::MeltPool
     set_initial_condition_evaporation(base_in);
 
     // setup interface temperature projection if needed
-    if (heat_operation and recoil_pressure_operation and
-        param.evapor.recoil.interface_distributed_flux_type ==
-          Evaporation::RegularizedRecoilPressureTemperatureEvaluationType::interface_value)
+    if (compute_interface_temperature)
       {
         scratch_data->create_remote_point_evaluation(temp_hanging_nodes_dof_idx);
         heat_operation->register_interface_projection_data(

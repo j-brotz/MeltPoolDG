@@ -21,6 +21,10 @@ namespace MeltPoolDG::Flow
       prm.add_parameter("reference temperature",
                         reference_temperature,
                         "Reference temperature for calculating surface tension");
+      prm.add_parameter("interface temperature evaluation type",
+                        interface_temperature_evaluation_type,
+                        "Type that determines how the temperature-dependent surface tension "
+                        "is computed in the interfacial zone.");
       prm.add_parameter(
         "coefficient residual fraction",
         coefficient_residual_fraction,
