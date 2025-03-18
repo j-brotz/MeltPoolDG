@@ -8,7 +8,7 @@
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/cut/cut_data.hpp>
 #include <meltpooldg/flow/compressible_flow_material_data.hpp>
-#include <meltpooldg/flow/compressible_multiphase/compressible_muliphase_data.hpp>
+#include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/numbers.hpp>

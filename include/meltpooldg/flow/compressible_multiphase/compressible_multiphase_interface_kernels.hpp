@@ -338,9 +338,6 @@ namespace MeltPoolDG::Multiphase
     flux[1] =
       Flow::contract_tensor_with_normal(conv_flux[1], normal) + shock_speed[1] * (u_star[1] - u[1]);
 
-    flux[0][dim + 1] = 0.;
-    flux[1][dim + 1] = 0.;
-
     return {flux[0], flux[1], normal_velocity_interface};
   }
 

@@ -286,9 +286,8 @@ namespace MeltPoolDG::Multiphase
                                 auto flux_liquid = std::get<0>(flux_data);
                                 auto flux_gas    = std::get<1>(flux_data);
                                 // TODO: How to determine interface velocity for penalty method?
-                                // Currently, the velocity of the liquid phase at the old time level
-                                // is chosen.
-                                velocity_interface = w_liquid[1][0] / w_liquid[0][0];
+                                velocity_interface =
+                                  (w_liquid[1][0] - w_gas[1][0]) / (w_liquid[0][0] - w_gas[0][0]);
 
                                 phi_point_surface_liquid.submit_value(-flux_liquid, q);
                                 phi_point_surface_gas.submit_value(-flux_gas, q);
@@ -456,12 +455,7 @@ namespace MeltPoolDG::Multiphase
                                                            FEFaceIntegrator<dim, dim + 2, number>,
                                                            is_viscous,
                                                            is_gas_phase>(
-                  phi_m,
-                  phi_p,
-                  q,
-                  penalty_parameter,
-                  convective_terms,
-                  viscous_terms);
+                  phi_m, phi_p, q, penalty_parameter, convective_terms, viscous_terms);
 
               phi_m.submit_value(flux_m, q);
               phi_p.submit_value(flux_p, q);
@@ -534,13 +528,12 @@ namespace MeltPoolDG::Multiphase
                         number,
                         FEFacePointEvaluation<dim + 2, dim, dim, VectorizedArray<number>>,
                         is_viscous,
-                        is_gas_phase>(
-                        phi_point_m,
-                        phi_point_p,
-                        q,
-                        penalty_parameter,
-                        convective_terms,
-                        viscous_terms);
+                        is_gas_phase>(phi_point_m,
+                                      phi_point_p,
+                                      q,
+                                      penalty_parameter,
+                                      convective_terms,
+                                      viscous_terms);
 
                     phi_point_m.submit_value(flux_m, q);
                     phi_point_p.submit_value(flux_p, q);
@@ -580,7 +573,7 @@ namespace MeltPoolDG::Multiphase
         case CutUtil::FaceType::mixed_face_intersected_liquid:
           process_face.template operator()<false, is_viscous_liquid>(phi_liquid_m_intersected,
                                                                      phi_liquid_p);
-        break;
+          break;
 
         case CutUtil::FaceType::inside_face_gas:
           process_face.template operator()<true, is_viscous_gas>(phi_gas_m, phi_gas_p);
@@ -592,15 +585,15 @@ namespace MeltPoolDG::Multiphase
 
         case CutUtil::FaceType::mixed_face_intersected_gas:
           process_face.template operator()<true, is_viscous_gas>(phi_gas_m_intersected, phi_gas_p);
-        break;
-
-        case CutUtil::FaceType::intersected_face: {
-          process_intersected_face.template operator()<false, is_viscous_liquid>(
-            phi_liquid_m_intersected, phi_liquid_p_intersected, 0);
-          process_intersected_face.template operator()<true, is_viscous_gas>(
-            phi_gas_m_intersected, phi_gas_p_intersected, 1);
           break;
-        }
+
+          case CutUtil::FaceType::intersected_face: {
+            process_intersected_face.template operator()<false, is_viscous_liquid>(
+              phi_liquid_m_intersected, phi_liquid_p_intersected, 0);
+            process_intersected_face.template operator()<true, is_viscous_gas>(
+              phi_gas_m_intersected, phi_gas_p_intersected, 1);
+            break;
+          }
         default:
           break;
       }
@@ -943,11 +936,11 @@ namespace MeltPoolDG::Multiphase
           apply_ghost_penalty(phi_gas_m_intersected, phi_gas_p);
           break;
 
-        case CutUtil::FaceType::intersected_face: {
-          apply_ghost_penalty(phi_liquid_m_intersected, phi_liquid_p_intersected);
-          apply_ghost_penalty(phi_gas_m_intersected, phi_gas_p_intersected);
-        }
-        break;
+          case CutUtil::FaceType::intersected_face: {
+            apply_ghost_penalty(phi_liquid_m_intersected, phi_liquid_p_intersected);
+            apply_ghost_penalty(phi_gas_m_intersected, phi_gas_p_intersected);
+          }
+          break;
 
         default:
           break;

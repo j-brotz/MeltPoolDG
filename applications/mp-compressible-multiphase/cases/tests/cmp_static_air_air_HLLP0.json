@@ -16,7 +16,7 @@
     "do user defined postprocessing": "true",
     "paraview": {
       "filename": "static_air_air_HLLP0",
-      "enable": "true"
+      "enable": "false"
     }
   },
   "compressible navier stokes": {

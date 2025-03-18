@@ -137,13 +137,13 @@ namespace MeltPoolDG::Multiphase
         return (mesh_classifier.location_to_level_set(i) ==
                 NonMatching::LocationToLevelSet::intersected) or
                (mesh_classifier.location_to_level_set(i) ==
-                NonMatching::LocationToLevelSet::outside /*active phase has positive level-set*/);
+                NonMatching::LocationToLevelSet::outside);
       };
       auto physical_gas = [&](const typename DoFHandler<dim>::active_cell_iterator &i) {
         return (mesh_classifier.location_to_level_set(i) ==
                 NonMatching::LocationToLevelSet::intersected) or
                (mesh_classifier.location_to_level_set(i) ==
-                NonMatching::LocationToLevelSet::inside /*active phase has positive level-set*/);
+                NonMatching::LocationToLevelSet::inside);
       };
 
       const auto physical_active_cell_iterators_liquid =

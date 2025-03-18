@@ -133,16 +133,11 @@ namespace MeltPoolDG::Multiphase
 
     mutable number velocity_interface = 0.;
 
-    // Weighting factors for viscous phase interface flux
+    // Weighting factors for Nitsche-type viscous interface flux (for HLLP0+Nitsche method)
     double alpha_1;
     double alpha_2;
 
     number inv_time_step;
-
-    // Function, which describes the velocity of the unfitted object
-    std::shared_ptr<dealii::Function<dim>> unfitted_object_velocity;
-    // Inflow function for unfitted inflow boundary
-    std::shared_ptr<dealii::Function<dim>> unfitted_inflow;
 
     /**
      * Wrapper for the generation of a FECellIntegrator object.

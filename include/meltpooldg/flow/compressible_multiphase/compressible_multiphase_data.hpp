@@ -1,7 +1,7 @@
 /**
-* @brief Data structure, which contains parameters specifically for the phase coupling of compressible multiphase
-* simulations.
-*/
+ * @brief Data structure, which contains parameters specifically for the phase coupling of compressible multiphase
+ * simulations.
+ */
 
 #pragma once
 

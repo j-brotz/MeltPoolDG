@@ -1,12 +1,12 @@
 /**
-* @brief Simulation of (currently) one-dimensional two-phase flows.
-* The initial conditions are used from the user input file.
-* There is an inflow boundary for the liquid phase and an outflow boundary with fixed total energy
-* for the gas phase.
-*       _____________________________________
-*    ->|      liquid      |        gas      | ->
-*     x=-5              x=0.13             x=5
-*/
+ * @brief Simulation of (currently) one-dimensional two-phase flows.
+ * The initial conditions are used from the user input file.
+ * There is an inflow boundary for the liquid phase and an outflow boundary with fixed total energy
+ * for the gas phase.
+ *       _____________________________________
+ *    ->|      liquid      |        gas      | ->
+ *     x=-5              x=0.13             x=5
+ */
 
 #pragma once
 

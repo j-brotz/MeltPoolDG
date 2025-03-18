@@ -163,12 +163,7 @@ namespace MeltPoolDG::Flow
                                        number,
                                        FEFaceIntegrator<dim, dim + 2, number>,
                                        is_viscous>(
-                phi_m,
-                phi_p,
-                q,
-                penalty_parameter,
-                convective_terms,
-                viscous_terms);
+                phi_m, phi_p, q, penalty_parameter, convective_terms, viscous_terms);
 
             phi_m.submit_value(flux_m, q);
             phi_p.submit_value(flux_p, q);

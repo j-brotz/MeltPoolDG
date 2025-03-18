@@ -85,8 +85,11 @@ namespace MeltPoolDG::Multiphase
     // TODO: introduce dof_handler for level-set advection velocity field, compute projection of
     // interface velocity in normal direction of the interface to reduce the distortion of the
     // level-set field
+
     // TODO: use advection_DG_operation and reinitialization_..._operation for dim>2 cases with
-    // distorted level-set Currently, we only consider static interfaces
+    // distorted level-set.
+
+    // Currently, we only consider static interfaces
   }
 
   template <int dim>

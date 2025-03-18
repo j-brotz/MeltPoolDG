@@ -1,0 +1,12 @@
+
+Test case with liquid_phase_is_left: 1
+Number of mixed_face_liquid_intersected: 1
+Number of mixed_face_intersected_liquid: 0
+Number of mixed_face_gas_intersected: 0
+Number of mixed_face_intersected_gas: 1
+
+Test case with liquid_phase_is_left: 0
+Number of mixed_face_liquid_intersected: 1
+Number of mixed_face_intersected_liquid: 0
+Number of mixed_face_gas_intersected: 0
+Number of mixed_face_intersected_gas: 1

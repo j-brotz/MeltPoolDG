@@ -332,12 +332,7 @@ namespace MeltPoolDG::Flow
               {
                 auto [flux_m, flux_p, grad_flux_m, grad_flux_p] =
                   rhs_face_integral_kernel<dim, number, FEFaceIntegrator<dim, dim + 2, number>>(
-                    phi_m,
-                    phi_p,
-                    q,
-                    penalty_parameter,
-                    convective_terms,
-                    viscous_terms);
+                    phi_m, phi_p, q, penalty_parameter, convective_terms, viscous_terms);
 
                 phi_m.submit_value(flux_m, q);
                 phi_p.submit_value(flux_p, q);
