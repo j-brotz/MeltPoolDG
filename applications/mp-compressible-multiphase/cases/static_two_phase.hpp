@@ -184,9 +184,6 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     }
 
   private:
-    // for self-registration
-    static SimulationCaseRegistrar<Multiphase::CompressibleMultiphaseCase<dim>> registrar;
-
     // initial conditions functions
     std::string ic_gas_phase    = this->parameters.flow.initial_conditions_gas_phase;
     std::string ic_liquid_phase = this->parameters.flow.initial_conditions_liquid_phase;
@@ -221,13 +218,4 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
           }
     }
   };
-
-  // for self-registration
-  template <int dim>
-  SimulationCaseRegistrar<Multiphase::CompressibleMultiphaseCase<dim>>
-    SimulationStaticTwoPhase<dim>::registrar(
-      "static_two_phase",
-      [](const std::string &parameter_file, const MPI_Comm mpi_communicator) {
-        return std::make_unique<SimulationStaticTwoPhase<dim>>(parameter_file, mpi_communicator);
-      });
 } // namespace MeltPoolDG::Simulation::CompressibleMultiphase

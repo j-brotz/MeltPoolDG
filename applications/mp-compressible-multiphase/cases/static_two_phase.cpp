@@ -1,9 +1,20 @@
 #include "static_two_phase.hpp"
 
+#include <meltpooldg/core/case_registration.hpp>
+
 namespace MeltPoolDG::Simulation::CompressibleMultiphase
 {
   // Explicit instantiations for the required dimensions
-  template class SimulationStaticTwoPhase<1>;
-  template class SimulationStaticTwoPhase<2>;
-  template class SimulationStaticTwoPhase<3>;
+  MELTPOOLDG_REGISTER_CASE(Multiphase::CompressibleMultiphaseCase,
+                           SimulationStaticTwoPhase,
+                           "static_two_phase",
+                           1);
+  MELTPOOLDG_REGISTER_CASE(Multiphase::CompressibleMultiphaseCase,
+                           SimulationStaticTwoPhase,
+                           "static_two_phase",
+                           2);
+  MELTPOOLDG_REGISTER_CASE(Multiphase::CompressibleMultiphaseCase,
+                           SimulationStaticTwoPhase,
+                           "static_two_phase",
+                           3);
 } // namespace MeltPoolDG::Simulation::CompressibleMultiphase
