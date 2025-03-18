@@ -192,7 +192,8 @@ namespace MeltPoolDG::Heat
 
     scratch_data.initialize_dof_vector(user_rhs, temp_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(heat_source, temp_hanging_nodes_dof_idx);
-    scratch_data.initialize_dof_vector(interface_temperature, temp_hanging_nodes_dof_idx);
+    if (nearest_point_search)
+      scratch_data.initialize_dof_vector(interface_temperature, temp_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(temperature_extrapolated, temp_dof_idx);
 
     if (heat_data.predictor.type == PredictorType::least_squares_projection)
@@ -287,19 +288,31 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim, number>::compute_interface_temperature(
+  HeatDiffuseOperation<dim, number>::register_interface_projection_data(
     const VectorType                         &distance,
     const BlockVectorType                    &normal_vector,
     const LevelSet::NearestPointData<number> &nearest_point_data)
   {
-    if (!nearest_point_search)
-      nearest_point_search = std::make_unique<LevelSet::Tools::NearestPoint<dim>>(
-        scratch_data.get_mapping(),
-        scratch_data.get_dof_handler(ls_dof_idx),
-        distance,
-        normal_vector,
-        scratch_data.get_remote_point_evaluation(temp_hanging_nodes_dof_idx),
-        nearest_point_data);
+    nearest_point_search =
+      std::make_unique<LevelSet::Tools::NearestPoint<dim>>(scratch_data.get_mapping(),
+                                                           scratch_data.get_dof_handler(ls_dof_idx),
+                                                           distance,
+                                                           normal_vector,
+                                                           scratch_data.get_remote_point_evaluation(
+                                                             temp_hanging_nodes_dof_idx),
+                                                           nearest_point_data);
+    scratch_data.initialize_dof_vector(interface_temperature, temp_hanging_nodes_dof_idx);
+  }
+
+  template <int dim, typename number>
+  void
+  HeatDiffuseOperation<dim, number>::compute_interface_temperature()
+  {
+    AssertThrow(
+      nearest_point_search,
+      dealii::ExcMessage(
+        "Before computing the interface temperature, you must register the necessary data "
+        "for interface projection using register_interface_projection_data()!"));
 
     nearest_point_search->reinit(scratch_data.get_dof_handler(temp_dof_idx));
 
@@ -314,7 +327,10 @@ namespace MeltPoolDG::Heat
   HeatDiffuseOperation<dim, number>::attach_vectors(std::vector<VectorType *> &vectors)
   {
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
-    vectors.push_back(&interface_temperature);
+
+    if (nearest_point_search)
+      vectors.push_back(&interface_temperature);
+
     heat_operator->attach_vectors(vectors);
   }
 
@@ -334,43 +350,30 @@ namespace MeltPoolDG::Heat
   HeatDiffuseOperation<dim, number>::attach_output_vectors(
     GenericDataOut<dim, number> &data_out) const
   {
-    /**
-     *  temperature
-     */
     data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
                              solution_history.get_current_solution(),
                              "temperature");
-    /**
-     *  temperature old
-     */
+
     data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                              solution_history.get_recent_old_solution(),
                              "temperature_old");
-    /**
-     *  heat source
-     */
+
     data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                              heat_source,
                              "heat_source");
-    /**
-     *  evaporative heat source/sink
-     */
+
+    // evaporative heat source/sink
     heat_operator->attach_output_vectors(data_out);
-    /**
-     *  temperature interface
-     */
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
-                             interface_temperature,
-                             "interface_temperature");
-    /*
-     *  user rhs
-     */
+
+    if (nearest_point_search)
+      data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+                               interface_temperature,
+                               "interface_temperature");
+
     data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                              user_rhs,
                              "heat_user_rhs");
-    /*
-     *  user rhs projected
-     */
+
     if (data_out.is_requested("heat_user_rhs_projected"))
       {
         scratch_data.initialize_dof_vector(user_rhs_projected, temp_hanging_nodes_dof_idx);

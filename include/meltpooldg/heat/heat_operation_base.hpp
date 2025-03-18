@@ -44,9 +44,13 @@ namespace MeltPoolDG::Heat
     solve() = 0;
 
     virtual void
-    compute_interface_temperature(const VectorType                         &distance,
-                                  const BlockVectorType                    &normal_vector,
-                                  const LevelSet::NearestPointData<double> &nearest_point_data) = 0;
+    register_interface_projection_data(
+      const VectorType                         &distance,
+      const BlockVectorType                    &normal_vector,
+      const LevelSet::NearestPointData<double> &nearest_point_data) = 0;
+
+    virtual void
+    compute_interface_temperature() = 0;
 
     /**
      * register vectors for adaptive mesh refinement solution transfer

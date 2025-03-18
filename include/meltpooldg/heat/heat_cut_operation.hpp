@@ -17,6 +17,7 @@
 #include <meltpooldg/heat/heat_cut_operator.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/heat_operation_base.hpp>
+#include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
 #include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
@@ -85,6 +86,8 @@ namespace MeltPoolDG::Heat
 
     Preconditioner<dim, VectorType> preconditioner;
 
+    std::unique_ptr<LevelSet::Tools::NearestPoint<dim>> nearest_point_search;
+
     // determine whether solution vectors are prepared for time advance
     bool ready_for_time_advance = false;
 
@@ -148,10 +151,13 @@ namespace MeltPoolDG::Heat
     solve() override;
 
     void
-    compute_interface_temperature(
+    register_interface_projection_data(
       const VectorType                         &distance,
       const BlockVectorType                    &normal_vector,
       const LevelSet::NearestPointData<double> &nearest_point_data) override;
+
+    void
+    compute_interface_temperature() override;
 
     /**
      * register vectors for adaptive mesh refinement solution transfer

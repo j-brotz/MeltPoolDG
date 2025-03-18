@@ -147,10 +147,13 @@ namespace MeltPoolDG::Heat
     finish_time_advance();
 
     void
-    compute_interface_temperature(
+    register_interface_projection_data(
       const VectorType                         &distance,
       const BlockVectorType                    &normal_vector,
       const LevelSet::NearestPointData<number> &nearest_point_data) override;
+
+    void
+    compute_interface_temperature() override;
 
     void
     attach_vectors(std::vector<VectorType *> &vectors) override;

@@ -316,7 +316,7 @@ namespace MeltPoolDG
     const unsigned int                        dof_idx,
     const std::function<std::vector<bool>()> &marked_vertices)
   {
-    if (!rpe.contains(dof_idx))
+    if (not rpe.contains(dof_idx))
       rpe.insert({dof_idx,
                   std::make_shared<Utilities::MPI::RemotePointEvaluation<dim, dim>>(
                     1e-6 /*tolerance*/, true /*unique mapping*/, 0, marked_vertices)});
@@ -571,6 +571,10 @@ namespace MeltPoolDG
   Utilities::MPI::RemotePointEvaluation<dim, dim> &
   ScratchData<dim, spacedim, number>::get_remote_point_evaluation(const unsigned int dof_idx) const
   {
+    AssertThrow(rpe.contains(dof_idx),
+                dealii::ExcMessage(
+                  "The remote point evaluation you requested does not exist yet. "
+                  "First, it must be created using create_remote_point_evaluation()!"));
     return *rpe.at(dof_idx);
   }
 

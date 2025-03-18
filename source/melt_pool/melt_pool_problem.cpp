@@ -484,16 +484,12 @@ namespace MeltPoolDG::MeltPool
                         Evaporation::RegularizedRecoilPressureTemperatureEvaluationType::
                           interface_value)
                       {
-                        AssertThrow(heat_diffuse_operation, ExcNotImplemented());
-                        heat_diffuse_operation->compute_interface_temperature(
-                          level_set_operation->get_distance_to_level_set(),
-                          level_set_operation->get_normal_vector(),
-                          param.ls.nearest_point);
+                        heat_operation->compute_interface_temperature();
 
                         recoil_pressure_operation->compute_recoil_pressure_force(
                           vel_force_rhs,
                           level_set_operation->get_level_set_as_heaviside(),
-                          heat_diffuse_operation->get_interface_temperature(),
+                          heat_operation->get_interface_temperature(),
                           evaporation_operation->get_evaporative_mass_flux(),
                           evapor_mass_flux_dof_idx,
                           false /*false means add to force vector*/);
@@ -1085,10 +1081,6 @@ namespace MeltPoolDG::MeltPool
            Evaporation::RegularizedRecoilPressureTemperatureEvaluationType::interface_value) ?
             temp_hanging_nodes_dof_idx :
             temp_dof_idx);
-
-        if (param.evapor.recoil.interface_distributed_flux_type ==
-            Evaporation::RegularizedRecoilPressureTemperatureEvaluationType::interface_value)
-          scratch_data->create_remote_point_evaluation(temp_hanging_nodes_dof_idx);
       }
 
     // setup evaporation operation
@@ -1212,6 +1204,18 @@ namespace MeltPoolDG::MeltPool
     set_initial_condition_flow(base_in);
 
     set_initial_condition_evaporation(base_in);
+
+    // setup interface temperature projection if needed
+    if (heat_operation and recoil_pressure_operation and
+        param.evapor.recoil.interface_distributed_flux_type ==
+          Evaporation::RegularizedRecoilPressureTemperatureEvaluationType::interface_value)
+      {
+        scratch_data->create_remote_point_evaluation(temp_hanging_nodes_dof_idx);
+        heat_operation->register_interface_projection_data(
+          level_set_operation->get_distance_to_level_set(),
+          level_set_operation->get_normal_vector(),
+          param.ls.nearest_point);
+      }
 
     // initialize postprocessor
     post_processor =

@@ -284,8 +284,10 @@ namespace MeltPoolDG::Heat
     solution_history.apply(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, temp_cut_no_bc_dof_idx); });
 
-    // TODO can we avoid initializing these vectors if they are not needed?
-    scratch_data.initialize_dof_vector(interface_temperature, temp_cont_no_bc_dof_idx);
+    if (nearest_point_search)
+      scratch_data.initialize_dof_vector(interface_temperature, temp_cont_no_bc_dof_idx);
+
+    // TODO can we avoid initializing this vector if its not used?
     scratch_data.initialize_dof_vector(volumetric_heat_source, temp_cont_no_bc_dof_idx);
 
     heat_operator->reinit();
@@ -407,14 +409,38 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatCutOperation<dim, number>::compute_interface_temperature(
+  HeatCutOperation<dim, number>::register_interface_projection_data(
     const VectorType                         &distance,
     const BlockVectorType                    &normal_vector,
     const LevelSet::NearestPointData<double> &nearest_point_data)
   {
-    (void)distance;
-    (void)normal_vector;
-    (void)nearest_point_data;
+    nearest_point_search =
+      std::make_unique<LevelSet::Tools::NearestPoint<dim>>(scratch_data.get_mapping(),
+                                                           scratch_data.get_dof_handler(ls_dof_idx),
+                                                           distance,
+                                                           normal_vector,
+                                                           scratch_data.get_remote_point_evaluation(
+                                                             temp_cut_no_bc_dof_idx),
+                                                           nearest_point_data);
+    scratch_data.initialize_dof_vector(interface_temperature, temp_cont_no_bc_dof_idx);
+  }
+
+  template <int dim, typename number>
+  void
+  HeatCutOperation<dim, number>::compute_interface_temperature()
+  {
+    AssertThrow(
+      nearest_point_search,
+      dealii::ExcMessage(
+        "Before computing the interface temperature, you must register the necessary data "
+        "for interface projection using register_interface_projection_data()!"));
+
+    nearest_point_search->reinit(scratch_data.get_dof_handler(temp_cut_dof_idx));
+
+    nearest_point_search->fill_dof_vector_with_point_values(
+      interface_temperature, scratch_data.get_dof_handler(temp_cut_dof_idx), get_temperature());
+
+    scratch_data.get_constraint(temp_cut_no_bc_dof_idx).distribute(interface_temperature);
   }
 
 
@@ -465,10 +491,12 @@ namespace MeltPoolDG::Heat
                                  solution_history.get_recent_old_solution(),
                                  "temperature_old");
       }
-    // TODO do not output these vectors if they are not initialized
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_cont_no_bc_dof_idx),
-                             interface_temperature,
-                             "interface_temperature");
+
+    if (nearest_point_search)
+      data_out.add_data_vector(scratch_data.get_dof_handler(temp_cont_no_bc_dof_idx),
+                               interface_temperature,
+                               "interface_temperature");
+
     data_out.add_data_vector(scratch_data.get_dof_handler(temp_cont_no_bc_dof_idx),
                              volumetric_heat_source,
                              "heat_source");
