@@ -293,14 +293,13 @@ namespace MeltPoolDG::Heat
     const BlockVectorType                    &normal_vector,
     const LevelSet::NearestPointData<number> &nearest_point_data)
   {
-    nearest_point_search =
-      std::make_unique<LevelSet::Tools::NearestPoint<dim>>(scratch_data.get_mapping(),
-                                                           scratch_data.get_dof_handler(ls_dof_idx),
-                                                           distance,
-                                                           normal_vector,
-                                                           scratch_data.get_remote_point_evaluation(
-                                                             temp_hanging_nodes_dof_idx),
-                                                           nearest_point_data);
+    nearest_point_search = std::make_unique<LevelSet::Tools::NearestPoint<dim, double>>(
+      scratch_data.get_mapping(),
+      scratch_data.get_dof_handler(ls_dof_idx),
+      distance,
+      normal_vector,
+      scratch_data.get_remote_point_evaluation(temp_hanging_nodes_dof_idx),
+      nearest_point_data);
     scratch_data.initialize_dof_vector(interface_temperature, temp_hanging_nodes_dof_idx);
   }
 

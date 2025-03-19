@@ -91,7 +91,7 @@ namespace MeltPoolDG::Heat
     // determine whether solution vectors are prepared for time advance
     bool ready_for_time_advance = false;
 
-    std::unique_ptr<LevelSet::Tools::NearestPoint<dim>> nearest_point_search;
+    std::unique_ptr<LevelSet::Tools::NearestPoint<dim, double>> nearest_point_search;
 
   public:
     HeatDiffuseOperation(const ScratchData<dim, dim, number>                       &scratch_data_in,

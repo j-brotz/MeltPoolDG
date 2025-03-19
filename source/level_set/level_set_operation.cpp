@@ -721,7 +721,7 @@ namespace MeltPoolDG::LevelSet
             return marked_vertices;
           });
 
-        nearest_point_search = std::make_unique<Tools::NearestPoint<dim>>(
+        nearest_point_search = std::make_unique<Tools::NearestPoint<dim, double>>(
           scratch_data.get_mapping(),
           scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
           distance_to_level_set,

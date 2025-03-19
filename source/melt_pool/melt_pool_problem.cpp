@@ -1818,7 +1818,7 @@ namespace MeltPoolDG::MeltPool
           DEAL_II_NOT_IMPLEMENTED();
       }
 
-    LevelSet::Tools::NearestPoint<dim> nearest_point(
+    LevelSet::Tools::NearestPoint<dim, double> nearest_point(
       scratch_data->get_mapping(),
       scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx),
       level_set_operation->get_distance_to_level_set(),

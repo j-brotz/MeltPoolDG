@@ -86,7 +86,7 @@ namespace MeltPoolDG::Heat
 
     Preconditioner<dim, VectorType> preconditioner;
 
-    std::unique_ptr<LevelSet::Tools::NearestPoint<dim>> nearest_point_search;
+    std::unique_ptr<LevelSet::Tools::NearestPoint<dim, double>> nearest_point_search;
 
     // determine whether solution vectors are prepared for time advance
     bool ready_for_time_advance = false;

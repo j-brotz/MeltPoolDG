@@ -302,12 +302,12 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
 
   // 1) compute accuracy of projected points
 
-  LevelSet::Tools::NearestPoint<dim> cpp(mapping,
-                                         dof_handler,
-                                         solution_distance,
-                                         solution_normal,
-                                         remote_point_evaluation,
-                                         nearest_point_data);
+  LevelSet::Tools::NearestPoint<dim, double> cpp(mapping,
+                                                 dof_handler,
+                                                 solution_distance,
+                                                 solution_normal,
+                                                 remote_point_evaluation,
+                                                 nearest_point_data);
 
   cpp.reinit(dof_handler_temp);
 

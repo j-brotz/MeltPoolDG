@@ -47,11 +47,6 @@
 
 namespace MeltPoolDG::LevelSet::Tools
 {
-  using namespace dealii;
-
-  using VectorType      = LinearAlgebra::distributed::Vector<double>;
-  using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
-
   /**
    * Compute nearest points to the isocontour of a level set function
    *
@@ -69,9 +64,12 @@ namespace MeltPoolDG::LevelSet::Tools
    *      ensure that the closest point is collinear to the interface (algorithm proposed by
    *      Coquerelle and Glockner (2014))
    */
-  template <int dim>
+  template <int dim, typename number>
   class NearestPoint
   {
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
+
   public:
     /**
      * Constructor
@@ -82,13 +80,13 @@ namespace MeltPoolDG::LevelSet::Tools
      * @param remote_point_evaluation Cache for MPI::RemotePointEvaluation.
      * @param additional_data Parameters for calculating nearest point.
      */
-    NearestPoint(const Mapping<dim>                                &mapping,
-                 const DoFHandler<dim>                             &dof_handler_signed_distance,
-                 const VectorType                                  &signed_distance,
-                 const BlockVectorType                             &normal_vector,
-                 Utilities::MPI::RemotePointEvaluation<dim, dim>   &remote_point_evaluation,
-                 const NearestPointData<double>                    &additional_data,
-                 std::optional<std::reference_wrapper<TimerOutput>> timer_output = {})
+    NearestPoint(const dealii::Mapping<dim>    &mapping,
+                 const dealii::DoFHandler<dim> &dof_handler_signed_distance,
+                 const VectorType              &signed_distance,
+                 const BlockVectorType         &normal_vector,
+                 dealii::Utilities::MPI::RemotePointEvaluation<dim, dim>   &remote_point_evaluation,
+                 const NearestPointData<number>                            &additional_data,
+                 std::optional<std::reference_wrapper<dealii::TimerOutput>> timer_output = {})
       : mapping(mapping)
       , dof_handler_ls(dof_handler_signed_distance)
       , signed_distance(signed_distance)
@@ -96,7 +94,7 @@ namespace MeltPoolDG::LevelSet::Tools
       , additional_data(additional_data)
       , remote_point_evaluation(remote_point_evaluation)
       , tol_distance(additional_data.rel_tol *
-                     GridTools::minimal_cell_diameter(dof_handler_ls.get_triangulation()) /
+                     dealii::GridTools::minimal_cell_diameter(dof_handler_ls.get_triangulation()) /
                      std::sqrt(dim))
       , narrow_band_threshold(additional_data.narrow_band_threshold > 0 ?
                                 additional_data.narrow_band_threshold :
@@ -106,7 +104,8 @@ namespace MeltPoolDG::LevelSet::Tools
                                                                 mapping))
       , mpi_comm(dof_handler_ls.get_communicator())
       , pcout(std::cout,
-              Utilities::MPI::this_mpi_process(dof_handler_signed_distance.get_communicator()) == 0)
+              dealii::Utilities::MPI::this_mpi_process(
+                dof_handler_signed_distance.get_communicator()) == 0)
       , timer_output(timer_output)
     {
       if (additional_data.verbosity_level > 0)
@@ -116,28 +115,29 @@ namespace MeltPoolDG::LevelSet::Tools
                                 "    isocontour = " + std::to_string(additional_data.isocontour),
                               "nearest_point");
         }
-      AssertThrow(dim <= 2 ||
+      AssertThrow(dim <= 2 or
                     additional_data.type != NearestPointType::closest_point_normal_collinear,
-                  ExcNotImplemented());
+                  dealii::ExcNotImplemented());
 
       AssertThrow(narrow_band_threshold > 0,
-                  ExcMessage("Narrow band threshold must be larger than zero."));
+                  dealii::ExcMessage("Narrow band threshold must be larger than zero."));
     }
 
     /**
      * Update the nearest points of the nodal points from a given DoFHandler @p dof_handler_req.
      */
     void
-    reinit(const DoFHandler<dim> &dof_handler_req)
+    reinit(const dealii::DoFHandler<dim> &dof_handler_req)
     {
-      std::unique_ptr<TimerOutput::Scope> timer_scope;
+      std::unique_ptr<dealii::TimerOutput::Scope> timer_scope;
       if (timer_output)
-        timer_scope = std::make_unique<TimerOutput::Scope>(timer_output.value(),
-                                                           ScopedName("nearest_point::reinit"));
+        timer_scope =
+          std::make_unique<dealii::TimerOutput::Scope>(timer_output.value(),
+                                                       ScopedName("nearest_point::reinit"));
 
-      std::unique_ptr<TimerOutput::Scope> timer_scope_local;
+      std::unique_ptr<dealii::TimerOutput::Scope> timer_scope_local;
       if (timer_output)
-        timer_scope_local = std::make_unique<TimerOutput::Scope>(
+        timer_scope_local = std::make_unique<dealii::TimerOutput::Scope>(
           timer_output.value(), ScopedName("nearest_point::reinit::collect_support_points"));
 
       is_reinit_called = true;
@@ -145,32 +145,34 @@ namespace MeltPoolDG::LevelSet::Tools
       // located within the narrow band region
       const unsigned int n_components = dof_handler_req.get_fe().n_components();
 
-      const bool signed_distance_update_ghosts = !signed_distance.has_ghost_elements();
+      const bool signed_distance_update_ghosts = not signed_distance.has_ghost_elements();
       if (signed_distance_update_ghosts)
         signed_distance.update_ghost_values();
 
-      const bool normal_vector_update_ghosts = !normal_vector.has_ghost_elements();
+      const bool normal_vector_update_ghosts = not normal_vector.has_ghost_elements();
       if (normal_vector_update_ghosts)
         normal_vector.update_ghost_values();
 
-      FEValues<dim> distance_values(
+      dealii::FEValues<dim> distance_values(
         mapping,
         dof_handler_ls.get_fe(),
-        Quadrature<dim>(dof_handler_req.get_fe().base_element(0).get_unit_support_points()),
-        update_values);
+        dealii::Quadrature<dim>(dof_handler_req.get_fe().base_element(0).get_unit_support_points()),
+        dealii::update_values);
 
-      FEValues<dim> req_values(
+      dealii::FEValues<dim> req_values(
         mapping,
         dof_handler_req.get_fe(),
-        Quadrature<dim>(dof_handler_req.get_fe().base_element(0).get_unit_support_points()),
-        update_quadrature_points);
+        dealii::Quadrature<dim>(dof_handler_req.get_fe().base_element(0).get_unit_support_points()),
+        dealii::update_quadrature_points);
 
       // fill initial evaluation points with node coordinates (stencil)
-      const unsigned int                   n_q_points = distance_values.get_quadrature().size();
-      std::vector<double>                  temp_distance(n_q_points);
-      std::vector<types::global_dof_index> temp_local_dof_indices(n_q_points * n_components);
+      const unsigned int  n_q_points = distance_values.get_quadrature().size();
+      std::vector<number> temp_distance(n_q_points);
+      std::vector<dealii::types::global_dof_index> temp_local_dof_indices(n_q_points *
+                                                                          n_components);
 
-      typename DoFHandler<dim>::active_cell_iterator req_cell = dof_handler_req.begin_active();
+      typename dealii::DoFHandler<dim>::active_cell_iterator req_cell =
+        dof_handler_req.begin_active();
 
       // free caches of stencil points, corresponding nearest points and dof indices
       stencil.clear();
@@ -197,7 +199,7 @@ namespace MeltPoolDG::LevelSet::Tools
                   unsigned int lowest_rank = numbers::invalid_unsigned_int;
 
                   const auto active_cells_around_point =
-                    GridTools::find_all_active_cells_around_point<dim>(
+                    dealii::GridTools::find_all_active_cells_around_point<dim>(
                       mapping,
                       dof_handler_ls.get_triangulation(),
                       req_values.quadrature_point(q),
@@ -208,7 +210,7 @@ namespace MeltPoolDG::LevelSet::Tools
                   for (const auto &cell : active_cells_around_point)
                     lowest_rank = std::min(lowest_rank, cell.first->subdomain_id());
 
-                  if (lowest_rank != Utilities::MPI::this_mpi_process(mpi_comm))
+                  if (lowest_rank != dealii::Utilities::MPI::this_mpi_process(mpi_comm))
                     continue;
                   // end of copy from dealii::GridTools
 
@@ -217,7 +219,7 @@ namespace MeltPoolDG::LevelSet::Tools
                       stencil.end())
                     continue;
 
-                  std::vector<types::global_dof_index> dofs_at_q;
+                  std::vector<dealii::types::global_dof_index> dofs_at_q;
 
                   // collect points of narrow band
                   if (std::abs(temp_distance[q]) < narrow_band_threshold)
@@ -240,16 +242,16 @@ namespace MeltPoolDG::LevelSet::Tools
       // set initial guess for closest point projection
       projected_points_at_interface = stencil;
 
-      Assert(Utilities::MPI::sum(stencil.size(), mpi_comm) > 0,
-             ExcMessage("Number of points in narrow band equal to zero."));
+      Assert(dealii::Utilities::MPI::sum(stencil.size(), mpi_comm) > 0,
+             dealii::ExcMessage("Number of points in narrow band equal to zero."));
 
       if (timer_scope_local)
         timer_scope_local->stop();
 
       if (timer_output)
         timer_scope_local =
-          std::make_unique<TimerOutput::Scope>(timer_output.value(),
-                                               ScopedName("nearest_point::reinit::search"));
+          std::make_unique<dealii::TimerOutput::Scope>(timer_output.value(),
+                                                       ScopedName("nearest_point::reinit::search"));
 
       total_points_rpe = 0;
       points_not_found.clear();
@@ -271,13 +273,14 @@ namespace MeltPoolDG::LevelSet::Tools
           local_compute_normal_and_tangential_correction_coquerelle(projected_points_at_interface);
         }
       else
-        AssertThrow(false, ExcNotImplemented());
+        AssertThrow(false, dealii::ExcNotImplemented());
 
-      if (additional_data.verbosity_level > 0 &&
+      if (additional_data.verbosity_level > 0 and
           additional_data.type != NearestPointType::nearest_point)
         Journal::print_line(pcout,
                             "total number of RPE points: " +
-                              std::to_string(Utilities::MPI::sum(total_points_rpe, mpi_comm)),
+                              std::to_string(
+                                dealii::Utilities::MPI::sum(total_points_rpe, mpi_comm)),
                             "nearest_point");
 
       if (signed_distance_update_ghosts)
@@ -286,14 +289,14 @@ namespace MeltPoolDG::LevelSet::Tools
         normal_vector.zero_out_ghost_values();
 
       AssertThrow(dof_indices.size() == projected_points_at_interface.size(),
-                  ExcMessage("The size of vectors does not match."));
+                  dealii::ExcMessage("The size of vectors does not match."));
       if (timer_scope_local)
         timer_scope_local->stop();
 
       if (timer_output)
         timer_scope_local =
-          std::make_unique<TimerOutput::Scope>(timer_output.value(),
-                                               ScopedName("nearest_point::reinit::rpe"));
+          std::make_unique<dealii::TimerOutput::Scope>(timer_output.value(),
+                                                       ScopedName("nearest_point::reinit::rpe"));
       // TODO: where to update remote points (?)
       remote_point_evaluation.reinit(projected_points_at_interface,
                                      dof_handler_ls.get_triangulation(),
@@ -308,10 +311,10 @@ namespace MeltPoolDG::LevelSet::Tools
      *
      * @note Make sure that you have called reinit() before.
      */
-    const std::vector<Point<dim>> &
+    const std::vector<dealii::Point<dim>> &
     get_points() const
     {
-      AssertThrow(is_reinit_called, ExcMessage("You need to call reinit() first."));
+      AssertThrow(is_reinit_called, dealii::ExcMessage("You need to call reinit() first."));
 
       return projected_points_at_interface;
     }
@@ -322,10 +325,10 @@ namespace MeltPoolDG::LevelSet::Tools
      *
      * @note Make sure that you have called reinit() before.
      */
-    const std::vector<std::vector<types::global_dof_index>> &
+    const std::vector<std::vector<dealii::types::global_dof_index>> &
     get_dof_indices() const
     {
-      AssertThrow(is_reinit_called, ExcMessage("You need to call reinit() first."));
+      AssertThrow(is_reinit_called, dealii::ExcMessage("You need to call reinit() first."));
 
       return dof_indices;
     }
@@ -344,24 +347,23 @@ namespace MeltPoolDG::LevelSet::Tools
     void
     fill_dof_vector_with_point_values(
       VectorType                                &solution_out,
-      const DoFHandler<dim>                     &dof_handler_req, // TODO: remove
+      const dealii::DoFHandler<dim>             &dof_handler_req, // TODO: remove
       const VectorType                          &solution_in,
       const bool                                 zero_out  = false,
-      const std::function<double(const double)> &operation = {}) const
+      const std::function<number(const number)> &operation = {}) const
     {
-      std::unique_ptr<TimerOutput::Scope> timer_scope;
+      std::unique_ptr<dealii::TimerOutput::Scope> timer_scope;
       if (timer_output)
-        timer_scope =
-          std::make_unique<TimerOutput::Scope>(timer_output.value(),
-                                               ScopedName("nearest_point::fill_dof_vector"));
+        timer_scope = std::make_unique<dealii::TimerOutput::Scope>(
+          timer_output.value(), ScopedName("nearest_point::fill_dof_vector"));
 
       AssertThrow(n_components == dof_handler_req.get_fe().n_components(),
-                  ExcMessage("There is a mismatch in the number of components "
-                             "between your passed DoFHandler and the template parameter."));
+                  dealii::ExcMessage("There is a mismatch in the number of components "
+                                     "between your passed DoFHandler and the template parameter."));
 
-      AssertThrow(is_reinit_called, ExcMessage("You need to call reinit() first."));
+      AssertThrow(is_reinit_called, dealii::ExcMessage("You need to call reinit() first."));
 
-      const bool update_ghosts = !solution_in.has_ghost_elements();
+      const bool update_ghosts = not solution_in.has_ghost_elements();
 
       if (update_ghosts)
         solution_in.update_ghost_values();
@@ -383,10 +385,11 @@ namespace MeltPoolDG::LevelSet::Tools
             {
               for (unsigned int d = 0; d < dof_indices[i].size(); ++d)
                 if (solution_out.locally_owned_elements().is_element(dof_indices[i][d]))
-                  solution_out[dof_indices[i][d]] = !operation ? vals[i][d] : operation(vals[i][d]);
+                  solution_out[dof_indices[i][d]] =
+                    not operation ? vals[i][d] : operation(vals[i][d]);
             }
           else if (solution_out.locally_owned_elements().is_element(dof_indices[i][0]))
-            solution_out[dof_indices[i][0]] = !operation ? vals[i] : operation(vals[i]);
+            solution_out[dof_indices[i][0]] = not operation ? vals[i] : operation(vals[i]);
         }
     }
 
@@ -398,14 +401,14 @@ namespace MeltPoolDG::LevelSet::Tools
     write_to_file(const std::string filename = "unmatched_points") const
     {
       const auto global_points_normal_to_interface_all =
-        Utilities::MPI::reduce<std::vector<Point<dim>>>(
+        dealii::Utilities::MPI::reduce<std::vector<dealii::Point<dim>>>(
           projected_points_at_interface, mpi_comm, [](const auto &a, const auto &b) {
             auto result = a;
             result.insert(result.end(), b.begin(), b.end());
             return result;
           });
 
-      if (Utilities::MPI::this_mpi_process(mpi_comm) == 0)
+      if (dealii::Utilities::MPI::this_mpi_process(mpi_comm) == 0)
         {
           std::ofstream myfile;
           myfile.open(filename + ".dat");
@@ -420,14 +423,16 @@ namespace MeltPoolDG::LevelSet::Tools
           myfile.close();
         }
       {
-        const auto all_points_not_found = Utilities::MPI::reduce<std::vector<Point<dim>>>(
-          points_not_found, mpi_comm, [](const auto &a, const auto &b) {
-            auto result = a;
-            result.insert(result.end(), b.begin(), b.end());
-            return result;
-          });
+        const auto all_points_not_found =
+          dealii::Utilities::MPI::reduce<std::vector<dealii::Point<dim>>>(
+            points_not_found, mpi_comm, [](const auto &a, const auto &b) {
+              auto result = a;
+              result.insert(result.end(), b.begin(), b.end());
+              return result;
+            });
 
-        if (Utilities::MPI::this_mpi_process(mpi_comm) == 0 && all_points_not_found.size() > 0)
+        if (dealii::Utilities::MPI::this_mpi_process(mpi_comm) == 0 and
+            all_points_not_found.size() > 0)
           {
             std::ofstream myfile;
             myfile.open(filename + "_not_found.dat");
@@ -444,7 +449,7 @@ namespace MeltPoolDG::LevelSet::Tools
           }
       }
     }
-    mutable std::vector<Point<dim>> points_not_found;
+    mutable std::vector<dealii::Point<dim>> points_not_found;
 
   private:
     /**
@@ -460,26 +465,27 @@ namespace MeltPoolDG::LevelSet::Tools
      * d is achieved for all points within the input/output list of points @p y.
      */
     bool
-    local_compute_normal_correction(std::vector<Point<dim>> &y)
+    local_compute_normal_correction(std::vector<dealii::Point<dim>> &y)
     {
       // points that are not (yet) at the interface and still needs to be processed
       std::vector<unsigned int> unmatched_points_idx(y.size());
       std::iota(unmatched_points_idx.begin(), unmatched_points_idx.end(), 0);
-      int n_unmatched_points = Utilities::MPI::sum(unmatched_points_idx.size(), MPI_COMM_WORLD);
+      int n_unmatched_points =
+        dealii::Utilities::MPI::sum(unmatched_points_idx.size(), MPI_COMM_WORLD);
 
       // temporary variable for signed distance
-      std::vector<double> evaluation_values_distance;
+      std::vector<number> evaluation_values_distance;
 
       for (int j = 0; j < additional_data.max_iter; ++j)
         {
-          std::vector<Point<dim>> unmatched_points(unmatched_points_idx.size());
+          std::vector<dealii::Point<dim>> unmatched_points(unmatched_points_idx.size());
 
           for (unsigned int counter = 0; counter < unmatched_points_idx.size(); ++counter)
             unmatched_points[counter] = y[unmatched_points_idx[counter]];
 
           std::ostringstream str;
           str << "     j=" << j << " (normal) "
-              << Utilities::MPI::sum(unmatched_points_idx.size(), MPI_COMM_WORLD);
+              << dealii::Utilities::MPI::sum(unmatched_points_idx.size(), MPI_COMM_WORLD);
 
           total_points_rpe += unmatched_points.size();
 
@@ -487,15 +493,15 @@ namespace MeltPoolDG::LevelSet::Tools
                                          dof_handler_ls.get_triangulation(),
                                          mapping);
 
-          if (!remote_point_evaluation.all_points_found())
+          if (not remote_point_evaluation.all_points_found())
             {
               for (unsigned int i = 0; i < unmatched_points.size(); ++i)
-                if (!remote_point_evaluation.point_found(i))
+                if (not remote_point_evaluation.point_found(i))
                   points_not_found.emplace_back(unmatched_points[i]);
 
               write_to_file();
 
-              AssertThrow(false, ExcMessage("Processed point is outside domain."));
+              AssertThrow(false, dealii::ExcMessage("Processed point is outside domain."));
             }
 
           // compute signed distance at unmatched_points
@@ -511,9 +517,9 @@ namespace MeltPoolDG::LevelSet::Tools
             }
 
           // compute unit normal
-          std::vector<Point<dim>> evaluation_values_unit_normal;
+          std::vector<dealii::Point<dim>> evaluation_values_unit_normal;
 
-          std::array<std::vector<double>, dim> evaluation_values_normal;
+          std::array<std::vector<number>, dim> evaluation_values_normal;
 
           for (int comp = 0; comp < dim; ++comp)
             {
@@ -525,13 +531,13 @@ namespace MeltPoolDG::LevelSet::Tools
 
           for (unsigned int counter = 0; counter < unmatched_points.size(); ++counter)
             {
-              Point<dim> unit_normal;
+              dealii::Point<dim> unit_normal;
               for (unsigned int comp = 0; comp < dim; ++comp)
                 unit_normal[comp] = evaluation_values_normal[comp][counter];
 
               const auto n_norm = unit_normal.norm();
               unit_normal =
-                (n_norm > tolerance_normal_vector) ? unit_normal / n_norm : Point<dim>();
+                n_norm > tolerance_normal_vector ? unit_normal / n_norm : dealii::Point<dim>();
 
               evaluation_values_unit_normal.emplace_back(unit_normal);
             }
@@ -557,7 +563,7 @@ namespace MeltPoolDG::LevelSet::Tools
           unmatched_points_idx.swap(unmatched_points_idx_next);
 
           // if every point is close enough to the interface, we are finished
-          n_unmatched_points = Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm);
+          n_unmatched_points = dealii::Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm);
 
           str << " -> " << n_unmatched_points << " (✗)";
           if (additional_data.verbosity_level > 1)
@@ -568,12 +574,12 @@ namespace MeltPoolDG::LevelSet::Tools
         }
 
       // compute maximum distance of projected points to the level set 0 isosurface
-      double max_distance =
-        (evaluation_values_distance.size() == 0) ?
+      number max_distance =
+        evaluation_values_distance.size() == 0 ?
           0.0 :
           *std::max_element(evaluation_values_distance.begin(), evaluation_values_distance.end());
 
-      max_distance = Utilities::MPI::max(max_distance, mpi_comm);
+      max_distance = dealii::Utilities::MPI::max(max_distance, mpi_comm);
 
       if (n_unmatched_points > 0)
         {
@@ -613,10 +619,10 @@ namespace MeltPoolDG::LevelSet::Tools
      * d is achieved for all points within the input/output list of points @p y.
      */
     bool
-    local_compute_normal_and_tangential_correction_coquerelle(std::vector<Point<dim>> &y)
+    local_compute_normal_and_tangential_correction_coquerelle(std::vector<dealii::Point<dim>> &y)
     {
-      AssertThrow(dim == 2 || dim == 3,
-                  ExcMessage("Use local_compute_normal_correction for dim==1."));
+      AssertThrow(dim == 2 or dim == 3,
+                  dealii::ExcMessage("Use local_compute_normal_correction for dim==1."));
 
       total_points_rpe = 0;
 
@@ -627,14 +633,15 @@ namespace MeltPoolDG::LevelSet::Tools
       std::vector<unsigned int> unmatched_points_idx(y.size());
       std::iota(unmatched_points_idx.begin(), unmatched_points_idx.end(), 0);
 
-      int n_unmatched_points = Utilities::MPI::sum(unmatched_points_idx.size(), MPI_COMM_WORLD);
+      int n_unmatched_points =
+        dealii::Utilities::MPI::sum(unmatched_points_idx.size(), MPI_COMM_WORLD);
 
-      double max_tangential_distance = 0.0;
+      number max_tangential_distance = 0.0;
 
       // 1) Perform correction in tangential direction
-      for (int it = 0; it < additional_data.max_iter && n_unmatched_points > 0; ++it)
+      for (int it = 0; it < additional_data.max_iter and n_unmatched_points > 0; ++it)
         {
-          std::vector<Point<dim>> unmatched_points(unmatched_points_idx.size());
+          std::vector<dealii::Point<dim>> unmatched_points(unmatched_points_idx.size());
           for (unsigned int i = 0; i < unmatched_points_idx.size(); ++i)
             unmatched_points[i] = y[unmatched_points_idx[i]];
 
@@ -651,10 +658,10 @@ namespace MeltPoolDG::LevelSet::Tools
                                          mapping);
 
           // compute unit normal for each unmatched point
-          std::vector<Point<dim>>              evaluation_values_unit_normal;
-          std::vector<std::vector<Point<dim>>> evaluation_values_unit_tangent;
+          std::vector<dealii::Point<dim>>              evaluation_values_unit_normal;
+          std::vector<std::vector<dealii::Point<dim>>> evaluation_values_unit_tangent;
 
-          std::array<std::vector<double>, dim> evaluation_values_normal;
+          std::array<std::vector<number>, dim> evaluation_values_normal;
 
           for (int comp = 0; comp < dim; ++comp)
             {
@@ -666,18 +673,18 @@ namespace MeltPoolDG::LevelSet::Tools
 
           for (unsigned int counter = 0; counter < unmatched_points.size(); ++counter)
             {
-              Point<dim> unit_normal;
+              dealii::Point<dim> unit_normal;
               for (unsigned int comp = 0; comp < dim; ++comp)
                 unit_normal[comp] = evaluation_values_normal[comp][counter];
 
               const auto n_norm = unit_normal.norm();
               unit_normal =
-                (n_norm > tolerance_normal_vector) ? unit_normal / n_norm : Point<dim>();
+                n_norm > tolerance_normal_vector ? unit_normal / n_norm : dealii::Point<dim>();
 
               evaluation_values_unit_normal.emplace_back(unit_normal);
 
               // compute the tangent(s) for each point
-              std::vector<Point<dim>> tangent;
+              std::vector<dealii::Point<dim>> tangent;
               tangent.resize(dim - 1);
 
               if (n_norm > tolerance_normal_vector)
@@ -689,13 +696,13 @@ namespace MeltPoolDG::LevelSet::Tools
                     }
                   else if constexpr (dim == 3)
                     {
-                      Point<dim> temp_vec = Point<dim>::unit_vector(0);
+                      dealii::Point<dim> temp_vec = dealii::Point<dim>::unit_vector(0);
 
                       // if normal vector is identical with unit vector
                       // choose different unit vector to compute the
                       // tangent
                       if ((temp_vec - unit_normal).norm() < 1e-10)
-                        temp_vec = Point<dim>::unit_vector(1);
+                        temp_vec = dealii::Point<dim>::unit_vector(1);
 
                       tangent[0] = temp_vec - (temp_vec * unit_normal) * unit_normal;
                       tangent[1] = cross_product_3d(unit_normal, tangent[0]);
@@ -704,7 +711,7 @@ namespace MeltPoolDG::LevelSet::Tools
               else
                 {
                   for (unsigned int d = 0; d < dim - 1; ++d)
-                    tangent[d] = Point<dim>();
+                    tangent[d] = dealii::Point<dim>();
                 }
 
               evaluation_values_unit_tangent.emplace_back(tangent);
@@ -720,12 +727,12 @@ namespace MeltPoolDG::LevelSet::Tools
                 unmatched_points[counter] - stencil[unmatched_points_idx[counter]];
 
               // determine tangential offset for each direction
-              std::vector<double> omega(dim - 1);
+              std::vector<number> omega(dim - 1);
               for (unsigned int d = 0; d < dim - 1; ++d)
                 omega[d] = distance_vec * evaluation_values_unit_tangent[counter][d];
 
               // determine maximum tangential offset
-              double max_omega = 0;
+              number max_omega = 0;
               for (unsigned int d = 0; d < dim - 1; ++d)
                 max_omega = std::max(max_omega, std::abs(omega[d]));
 
@@ -751,13 +758,13 @@ namespace MeltPoolDG::LevelSet::Tools
           unmatched_points_idx.swap(unmatched_points_idx_next);
 
           // if every point is close enough to the interface, we are finished
-          n_unmatched_points = Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm);
+          n_unmatched_points = dealii::Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm);
 
           if (n_unmatched_points == 0)
             break;
         }
 
-      max_tangential_distance = Utilities::MPI::max(max_tangential_distance, mpi_comm);
+      max_tangential_distance = dealii::Utilities::MPI::max(max_tangential_distance, mpi_comm);
 
       if (n_unmatched_points > 0)
         {
@@ -794,10 +801,10 @@ namespace MeltPoolDG::LevelSet::Tools
      *
      */
     bool
-    local_compute_normal_and_tangential_correction(std::vector<Point<dim>> &y)
+    local_compute_normal_and_tangential_correction(std::vector<dealii::Point<dim>> &y)
     {
-      AssertThrow(dim == 2 || dim == 3,
-                  ExcMessage("Use local_compute_normal_correction for dim==1."));
+      AssertThrow(dim == 2 or dim == 3,
+                  dealii::ExcMessage("Use local_compute_normal_correction for dim==1."));
 
       total_points_rpe = 0;
 
@@ -806,14 +813,15 @@ namespace MeltPoolDG::LevelSet::Tools
       std::iota(unmatched_points_idx.begin(), unmatched_points_idx.end(), 0);
 
       // temporary variable for signed distance
-      std::vector<double>       evaluation_values_distance;
+      std::vector<number>       evaluation_values_distance;
       std::vector<unsigned int> unmatched_points_normal_idx_next;
 
       for (int k = 0; k < additional_data.max_iter; ++k)
         {
           // correct entire points
-          double max_tangential_distance = 0;
-          int    n_unmatched_points = Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm);
+          number max_tangential_distance = 0;
+          int    n_unmatched_points =
+            dealii::Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm);
 
           std::vector<unsigned int> unmatched_points_normal_and_tangential_idx_next;
 
@@ -827,14 +835,14 @@ namespace MeltPoolDG::LevelSet::Tools
           // correct only unmatched points
           for (int j = 0; j < additional_data.max_iter; ++j)
             {
-              std::vector<Point<dim>> unmatched_points(unmatched_points_idx.size());
+              std::vector<dealii::Point<dim>> unmatched_points(unmatched_points_idx.size());
               for (unsigned int i = 0; i < unmatched_points_idx.size(); ++i)
                 unmatched_points[i] = y[unmatched_points_idx[i]];
 
               // just for output purposes
               std::ostringstream str;
               str << "   j=" << j << " "
-                  << Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm) << " -> ";
+                  << dealii::Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm) << " -> ";
               total_points_rpe += unmatched_points.size();
 
               remote_point_evaluation.reinit(unmatched_points,
@@ -842,7 +850,7 @@ namespace MeltPoolDG::LevelSet::Tools
                                              mapping);
 
               AssertThrow(remote_point_evaluation.all_points_found(),
-                          ExcMessage("Processed point is outside domain."));
+                          dealii::ExcMessage("Processed point is outside domain."));
 
               // compute signed distance at unmatched_points
               evaluation_values_distance =
@@ -857,10 +865,10 @@ namespace MeltPoolDG::LevelSet::Tools
                 }
 
               // compute unit normal and tangent
-              std::vector<Point<dim>>              evaluation_values_unit_normal;
-              std::vector<std::vector<Point<dim>>> evaluation_values_unit_tangent;
+              std::vector<dealii::Point<dim>>              evaluation_values_unit_normal;
+              std::vector<std::vector<dealii::Point<dim>>> evaluation_values_unit_tangent;
 
-              std::array<std::vector<double>, dim> evaluation_values_normal;
+              std::array<std::vector<number>, dim> evaluation_values_normal;
 
               for (int comp = 0; comp < dim; ++comp)
                 {
@@ -872,17 +880,17 @@ namespace MeltPoolDG::LevelSet::Tools
 
               for (unsigned int counter = 0; counter < unmatched_points.size(); ++counter)
                 {
-                  Point<dim> unit_normal;
+                  dealii::Point<dim> unit_normal;
                   for (unsigned int comp = 0; comp < dim; ++comp)
                     unit_normal[comp] = evaluation_values_normal[comp][counter];
 
                   const auto n_norm = unit_normal.norm();
                   unit_normal =
-                    (n_norm > tolerance_normal_vector) ? unit_normal / n_norm : Point<dim>();
+                    n_norm > tolerance_normal_vector ? unit_normal / n_norm : dealii::Point<dim>();
 
                   evaluation_values_unit_normal.emplace_back(unit_normal);
                   // compute the tangent(s) for each point
-                  std::vector<Point<dim>> tangent;
+                  std::vector<dealii::Point<dim>> tangent;
                   tangent.resize(dim - 1);
 
                   if constexpr (dim == 2)
@@ -892,13 +900,13 @@ namespace MeltPoolDG::LevelSet::Tools
                     }
                   else if constexpr (dim == 3)
                     {
-                      Point<dim> temp_vec = Point<dim>::unit_vector(0);
+                      dealii::Point<dim> temp_vec = dealii::Point<dim>::unit_vector(0);
 
                       // if normal vector is identical with unit vector
                       // choose different unit vector to compute the
                       // tangent
                       if ((temp_vec - unit_normal).norm() < 1e-10)
-                        temp_vec = Point<dim>::unit_vector(1);
+                        temp_vec = dealii::Point<dim>::unit_vector(1);
 
                       tangent[0] = temp_vec - (temp_vec * unit_normal) * unit_normal;
                       tangent[1] = cross_product_3d(unit_normal, tangent[0]);
@@ -921,12 +929,12 @@ namespace MeltPoolDG::LevelSet::Tools
                         unmatched_points[counter] - stencil[unmatched_points_idx[counter]];
 
                       // determine tangential offset for each direction
-                      std::vector<double> omega(dim - 1);
+                      std::vector<number> omega(dim - 1);
                       for (unsigned int d = 0; d < dim - 1; ++d)
                         omega[d] = distance_vec * evaluation_values_unit_tangent[counter][d];
 
                       // determine maximum tangential offset
-                      double max_omega = std::numeric_limits<double>::lowest();
+                      number max_omega = std::numeric_limits<number>::lowest();
                       for (unsigned int d = 0; d < dim - 1; ++d)
                         max_omega = std::max(max_omega, std::abs(omega[d]));
 
@@ -956,18 +964,19 @@ namespace MeltPoolDG::LevelSet::Tools
                     }
                 }
 
-              n_complete = Utilities::MPI::sum(n_complete, mpi_comm);
+              n_complete = dealii::Utilities::MPI::sum(n_complete, mpi_comm);
 
 
               // remove points from processing that are already at the interface
               unmatched_points_idx.swap(unmatched_points_normal_idx_next);
 
               // if every point is close enough to the interface, we are finished
-              n_unmatched_points = Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm);
+              n_unmatched_points =
+                dealii::Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm);
 
               str << n_unmatched_points << " (n ✗) "
-                  << Utilities::MPI::sum(unmatched_points_normal_and_tangential_idx_next.size(),
-                                         mpi_comm)
+                  << dealii::Utilities::MPI::sum(
+                       unmatched_points_normal_and_tangential_idx_next.size(), mpi_comm)
                   << " (n ✓ | t ✗) " << n_complete << " (n ✓ | t ✓) ";
               if (additional_data.verbosity_level > 1)
                 Journal::print_line(pcout, str.str(), "nearest_point", 10 /*special characters*/);
@@ -990,14 +999,14 @@ namespace MeltPoolDG::LevelSet::Tools
           unmatched_points_idx.swap(unmatched_points_normal_and_tangential_idx_next);
 
           // compute maximum distance of projected points to the level set 0 isosurface
-          double max_distance = (evaluation_values_distance.size() == 0) ?
+          number max_distance = evaluation_values_distance.size() == 0 ?
                                   0.0 :
                                   *std::max_element(evaluation_values_distance.begin(),
                                                     evaluation_values_distance.end());
 
-          max_distance = Utilities::MPI::max(max_distance, mpi_comm);
+          max_distance = dealii::Utilities::MPI::max(max_distance, mpi_comm);
 
-          if (n_unmatched_points > 0 && k == additional_data.max_iter - 1)
+          if (n_unmatched_points > 0 and k == additional_data.max_iter - 1)
             {
               pcout << "WARNING: The tolerance of " << n_unmatched_points
                     << " points is not yet attained. Max distance value: " << max_distance
@@ -1005,12 +1014,12 @@ namespace MeltPoolDG::LevelSet::Tools
               return false;
             }
 
-          max_tangential_distance = Utilities::MPI::max(max_tangential_distance, mpi_comm);
+          max_tangential_distance = dealii::Utilities::MPI::max(max_tangential_distance, mpi_comm);
 
-          if (max_tangential_distance > tol_distance && k == additional_data.max_iter - 1)
+          if (max_tangential_distance > tol_distance and k == additional_data.max_iter - 1)
             {
               pcout << "WARNING: The tolerance of the tangential correction of "
-                    << Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm)
+                    << dealii::Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm)
                     << " points is not yet attained. Max tangential distance value: "
                     << max_tangential_distance << " max tolerance: " << tol_distance << std::endl;
               return false;
@@ -1027,22 +1036,23 @@ namespace MeltPoolDG::LevelSet::Tools
     void
     local_compute_nearest_point()
     {
-      std::unique_ptr<TimerOutput::Scope> timer_scope;
+      std::unique_ptr<dealii::TimerOutput::Scope> timer_scope;
       if (timer_output)
-        timer_scope =
-          std::make_unique<TimerOutput::Scope>(timer_output.value(),
-                                               ScopedName("nearest_point::reinit::local::mca"));
+        timer_scope = std::make_unique<dealii::TimerOutput::Scope>(
+          timer_output.value(), ScopedName("nearest_point::reinit::local::mca"));
       // create a point cloud of the surface
-      GridTools::MarchingCubeAlgorithm<dim, VectorType> mc(mapping,
-                                                           dof_handler_ls.get_fe(), // todo
-                                                           3 /*n subdivisions TODO: add parameter*/,
-                                                           1e-10 /*tolerance TODO: add parameter*/);
+      dealii::GridTools::MarchingCubeAlgorithm<dim, VectorType> mc(
+        mapping,
+        dof_handler_ls.get_fe(), // todo
+        3 /*n subdivisions TODO: add parameter*/,
+        1e-10 /*tolerance TODO: add parameter*/);
 
-      std::vector<Point<dim>> surface_points;
+      std::vector<dealii::Point<dim>> surface_points;
       mc.process(dof_handler_ls, signed_distance, additional_data.isocontour, surface_points);
 
       // all gather surface points
-      const auto surface_points_global = Utilities::MPI::all_gather(mpi_comm, surface_points);
+      const auto surface_points_global =
+        dealii::Utilities::MPI::all_gather(mpi_comm, surface_points);
 
       // TODO: find a faster way to get a single vector for all processes
       surface_points.clear();
@@ -1054,23 +1064,22 @@ namespace MeltPoolDG::LevelSet::Tools
         timer_scope->stop();
 
       if (timer_output)
-        timer_scope =
-          std::make_unique<TimerOutput::Scope>(timer_output.value(),
-                                               ScopedName("nearest_point::reinit::local::search"));
+        timer_scope = std::make_unique<dealii::TimerOutput::Scope>(
+          timer_output.value(), ScopedName("nearest_point::reinit::local::search"));
 
       const auto used_vertices_rtree = pack_rtree(surface_points);
 
-      if (!used_vertices_rtree.empty())
+      if (not used_vertices_rtree.empty())
         {
           // search for nearest point
           for (unsigned int i = 0; i < stencil.size(); ++i)
             {
-              std::vector<Point<dim>> closest_vertex_in_domain;
+              std::vector<dealii::Point<dim>> closest_vertex_in_domain;
               used_vertices_rtree.query(boost::geometry::index::nearest(stencil[i], 1),
                                         std::back_inserter(closest_vertex_in_domain));
 
               AssertThrow(closest_vertex_in_domain.size() == 1,
-                          ExcMessage("The number of nearest points is wrong."));
+                          dealii::ExcMessage("The number of nearest points is wrong."));
 
               projected_points_at_interface[i] = closest_vertex_in_domain[0];
             }
@@ -1079,35 +1088,35 @@ namespace MeltPoolDG::LevelSet::Tools
         timer_scope->stop();
     }
 
-    const Mapping<dim>             &mapping;
-    const DoFHandler<dim>          &dof_handler_ls;
+    const dealii::Mapping<dim>     &mapping;
+    const dealii::DoFHandler<dim>  &dof_handler_ls;
     const VectorType               &signed_distance;
     const BlockVectorType          &normal_vector;
-    const NearestPointData<double> &additional_data;
+    const NearestPointData<number> &additional_data;
 
-    Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation;
+    dealii::Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation;
 
     // Tolerance to be reached for the distance of the projected points to the distance = 0
     // isosurface
-    const double tol_distance;
+    const number tol_distance;
     // In the default case, we limit the interval for closest point projection to
     // max(distance)*0.9999 to avoid projection in regions, where the distance is constant at
     // max(distance).
-    const double narrow_band_threshold;
+    const number narrow_band_threshold;
 
-    const double tolerance_normal_vector;
+    const number tolerance_normal_vector;
 
     const MPI_Comm mpi_comm;
 
-    ConditionalOStream pcout;
+    dealii::ConditionalOStream pcout;
 
-    std::optional<std::reference_wrapper<TimerOutput>> timer_output;
+    std::optional<std::reference_wrapper<dealii::TimerOutput>> timer_output;
 
 
     // vectors to be filled: projected points to the interface corresponding to DoF indices
-    std::vector<Point<dim>>                           projected_points_at_interface;
-    std::vector<std::vector<types::global_dof_index>> dof_indices;
-    std::vector<Point<dim>>                           stencil;
+    std::vector<dealii::Point<dim>>                           projected_points_at_interface;
+    std::vector<std::vector<dealii::types::global_dof_index>> dof_indices;
+    std::vector<dealii::Point<dim>>                           stencil;
 
     bool is_reinit_called = false;
 
