@@ -543,21 +543,7 @@ namespace MeltPoolDG
   ScratchData<dim, spacedim, number>::get_cut_type(const unsigned int dof_idx) const
   {
     AssertIndexRange(dof_idx, dof_handler.size());
-    // Detect weather the temperature vector is setup for CutFEM by checking if its
-    // dealii::DoFHandler is in hp-mode.
-    if (not dof_handler[dof_idx]->has_hp_capabilities())
-      return CutUtil::CutType::not_cut;
-    // If so, detect weather the dof vector is in one phase or on two phase cut mode. To that, we
-    // check the number of components in the intersected fe collection. If it's 2, the cut mode in
-    // two phase.
-    const unsigned int n_components_intersected =
-      dof_handler[dof_idx]->get_fe_collection()[CutUtil::CellCategory::intersected].n_components();
-    if (n_components_intersected == 1)
-      return CutUtil::CutType::one_phase_cut;
-    else if (n_components_intersected == 2)
-      return CutUtil::CutType::two_phase_cut;
-    else
-      DEAL_II_NOT_IMPLEMENTED();
+    return CutUtil::get_cut_type(*dof_handler[dof_idx]);
   }
 
   template <int dim, int spacedim, typename number>

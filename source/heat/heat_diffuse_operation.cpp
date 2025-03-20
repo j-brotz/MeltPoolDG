@@ -313,10 +313,10 @@ namespace MeltPoolDG::Heat
         "Before computing the interface temperature, you must register the necessary data "
         "for interface projection using register_interface_projection_data()!"));
 
-    nearest_point_search->reinit(scratch_data.get_dof_handler(temp_dof_idx));
+    nearest_point_search->reinit(&scratch_data.get_dof_handler(temp_dof_idx));
 
-    nearest_point_search->template fill_dof_vector_with_point_values(
-      interface_temperature, scratch_data.get_dof_handler(temp_dof_idx), get_temperature());
+    nearest_point_search->template fill_dof_vector_with_point_values(interface_temperature,
+                                                                     get_temperature());
 
     scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(interface_temperature);
   }

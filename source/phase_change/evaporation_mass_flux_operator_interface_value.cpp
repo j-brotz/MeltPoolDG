@@ -42,7 +42,7 @@ namespace MeltPoolDG::Evaporation
     VectorType       &evaporative_mass_flux,
     const VectorType &temperature) const
   {
-    if (!nearest_point_search)
+    if (not nearest_point_search)
       nearest_point_search = std::make_unique<LevelSet::Tools::NearestPoint<dim, double>>(
         scratch_data.get_mapping(),
         scratch_data.get_dof_handler(ls_dof_idx),
@@ -52,18 +52,16 @@ namespace MeltPoolDG::Evaporation
         nearest_point_data,
         scratch_data.get_timer());
 
-    nearest_point_search->reinit(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx));
+    nearest_point_search->reinit(&scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx));
 
     // get temperature values at projected interface points
     scratch_data.initialize_dof_vector(evaporative_mass_flux, evapor_mass_flux_dof_idx);
     evaporative_mass_flux = 0.0;
 
     nearest_point_search->fill_dof_vector_with_point_values(
-      evaporative_mass_flux,
-      scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
-      temperature,
-      true /*zero out*/,
-      [&](const double x) { return evaporation_model.local_compute_evaporative_mass_flux(x); });
+      evaporative_mass_flux, temperature, true /*zero out*/, [&](const double x) {
+        return evaporation_model.local_compute_evaporative_mass_flux(x);
+      });
 
     scratch_data.get_constraint(evapor_mass_flux_dof_idx).distribute(evaporative_mass_flux);
   }

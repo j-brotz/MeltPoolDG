@@ -24,6 +24,7 @@
 #include <deal.II/numerics/rtree.h>
 #include <deal.II/numerics/vector_tools_evaluate.h>
 
+#include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/journal.hpp>
@@ -124,119 +125,154 @@ namespace MeltPoolDG::LevelSet::Tools
     }
 
     /**
-     * Update the nearest points of the nodal points from a given DoFHandler @p dof_handler_req.
+     * Update the nearest points of the nodal points from a given DoFHandler @p dof_handler_src_in.
+     * Note: @p dof_handler_req may be a CutFEM DofHandler. If so, you must provide a @p
+     * dof_handler_dst_in for the destination vector, which must have the identical unit support
+     * points and number of components as dof_handler_src_in.
      */
     void
-    reinit(const dealii::DoFHandler<dim> &dof_handler_req)
+    reinit(const dealii::DoFHandler<dim> *dof_handler_src_in,
+           const dealii::DoFHandler<dim> *dof_handler_dst_in = nullptr)
     {
       std::unique_ptr<dealii::TimerOutput::Scope> timer_scope;
       if (timer_output)
         timer_scope =
           std::make_unique<dealii::TimerOutput::Scope>(timer_output.value(),
                                                        ScopedName("nearest_point::reinit"));
-
       std::unique_ptr<dealii::TimerOutput::Scope> timer_scope_local;
       if (timer_output)
         timer_scope_local = std::make_unique<dealii::TimerOutput::Scope>(
           timer_output.value(), ScopedName("nearest_point::reinit::collect_support_points"));
 
-      is_reinit_called = true;
-      // calculate point cloud corresponding to nodes of the requested DoFHandler
-      // located within the narrow band region
-      const unsigned int n_components = dof_handler_req.get_fe().n_components();
-
       const bool signed_distance_update_ghosts = not signed_distance.has_ghost_elements();
       if (signed_distance_update_ghosts)
         signed_distance.update_ghost_values();
-
       const bool normal_vector_update_ghosts = not normal_vector.has_ghost_elements();
       if (normal_vector_update_ghosts)
         normal_vector.update_ghost_values();
-
-      dealii::FEValues<dim> distance_values(
-        mapping,
-        dof_handler_ls.get_fe(),
-        dealii::Quadrature<dim>(dof_handler_req.get_fe().base_element(0).get_unit_support_points()),
-        dealii::update_values);
-
-      dealii::FEValues<dim> req_values(
-        mapping,
-        dof_handler_req.get_fe(),
-        dealii::Quadrature<dim>(dof_handler_req.get_fe().base_element(0).get_unit_support_points()),
-        dealii::update_quadrature_points);
-
-      // fill initial evaluation points with node coordinates (stencil)
-      const unsigned int  n_q_points = distance_values.get_quadrature().size();
-      std::vector<number> temp_distance(n_q_points);
-      std::vector<dealii::types::global_dof_index> temp_local_dof_indices(n_q_points *
-                                                                          n_components);
-
-      typename dealii::DoFHandler<dim>::active_cell_iterator req_cell =
-        dof_handler_req.begin_active();
 
       // free caches of stencil points, corresponding nearest points and dof indices
       stencil.clear();
       dof_indices.clear();
       projected_points_at_interface.clear();
+      total_points_rpe = 0;
+      points_not_found.clear();
+
+      // register DoFHandler
+      AssertThrow(dof_handler_src_in != nullptr, dealii::ExcInternalError());
+      dof_handler_src = dof_handler_src_in;
+
+      // prepare for CutFEM input vector if necessary
+      const CutUtil::CutType cut_type = CutUtil::get_cut_type(*dof_handler_src);
+      if (cut_type == CutUtil::CutType::not_cut)
+        {
+          Assert(dof_handler_dst_in == nullptr, dealii::ExcNotImplemented());
+          dof_handler_dst     = nullptr;
+          input_vector_is_cut = false;
+        }
+      else
+        {
+          AssertThrow(
+            dof_handler_dst_in != nullptr,
+            dealii::ExcMessage(
+              "If the dof_handler_src is set up for CutFEM you must provide a dof_handler_dst "
+              "that is set up for continuous FEM with the identical number of components as "
+              "dof_handler_src!"));
+          dof_handler_dst = dof_handler_dst_in;
+          AssertThrow(CutUtil::get_cut_type(*dof_handler_dst) == CutUtil::CutType::not_cut,
+                      dealii::ExcMessage(
+                        "The destination DoFHandler must not be setup for CutFEM!"));
+          input_vector_is_cut = true;
+        }
+
+      // compute point cloud
+      const auto &used_dst_dof_handler = input_vector_is_cut ? *dof_handler_dst : *dof_handler_src;
+      const unsigned int n_components  = used_dst_dof_handler.get_fe().n_components();
+      if (input_vector_is_cut)
+        {
+          unsigned int cut_n_comp = dof_handler_src->get_fe().n_components();
+          if (cut_type == CutUtil::CutType::two_phase_cut)
+            // for two phase cut, dof_handler_req.get_fe().n_components() returns double the number
+            // of components
+            cut_n_comp /= 2;
+          AssertThrow(n_components == cut_n_comp,
+                      dealii::ExcMessage(
+                        "The DoFHandlers must have the same number of components!"));
+        }
+      const auto &unit_support_point =
+        used_dst_dof_handler.get_fe().base_element(0).get_unit_support_points();
+
+      dealii::FEValues<dim> signed_distance_eval(mapping,
+                                                 dof_handler_ls.get_fe(),
+                                                 dealii::Quadrature<dim>(unit_support_point),
+                                                 dealii::update_values);
+      dealii::FEValues<dim> dst_eval(mapping,
+                                     used_dst_dof_handler.get_fe(),
+                                     dealii::Quadrature<dim>(unit_support_point),
+                                     dealii::update_quadrature_points);
+
+      // fill initial evaluation points with node coordinates (stencil)
+      const unsigned int                           n_points = dst_eval.get_quadrature().size();
+      const unsigned int                           n_dofs   = n_points * n_components;
+      std::vector<number>                          signed_distance_values(n_points);
+      std::vector<dealii::types::global_dof_index> local_dof_indices(n_dofs);
+
+      typename dealii::DoFHandler<dim>::active_cell_iterator dst_cell =
+        used_dst_dof_handler.begin_active();
 
       for (const auto &cell : dof_handler_ls.active_cell_iterators())
         {
           if (cell->is_locally_owned())
             {
-              distance_values.reinit(cell);
-              distance_values.get_function_values(signed_distance, temp_distance);
+              signed_distance_eval.reinit(cell);
+              signed_distance_eval.get_function_values(signed_distance, signed_distance_values);
 
-              req_values.reinit(req_cell);
-              req_cell->get_dof_indices(temp_local_dof_indices);
+              dst_eval.reinit(dst_cell);
+              dst_cell->get_dof_indices(local_dof_indices);
 
-              for (const auto q : req_values.quadrature_point_indices())
+              for (const auto q : dst_eval.quadrature_point_indices())
                 {
+                  // early return if point is outside of narrow band
+                  if (std::abs(signed_distance_values[q]) >= narrow_band_threshold)
+                    continue;
+
+                  const auto &current_point = dst_eval.quadrature_point(q);
+
                   // copied from dealii::GridTools and modified
                   //
                   // check if the rank of this process is the lowest of all cells
                   // if not, the other process will handle this cell and we don't
                   // have to do here anything in the case of unique mapping
                   unsigned int lowest_rank = numbers::invalid_unsigned_int;
-
-                  const auto active_cells_around_point =
+                  const auto   active_cells_around_point =
                     dealii::GridTools::find_all_active_cells_around_point<dim>(
                       mapping,
                       dof_handler_ls.get_triangulation(),
-                      req_values.quadrature_point(q),
+                      current_point,
                       1e-6 /*tolerance*/,
-                      {cell,
-                       mapping.transform_real_to_unit_cell(cell, req_values.quadrature_point(q))});
-
+                      {cell, mapping.transform_real_to_unit_cell(cell, current_point)});
                   for (const auto &cell : active_cells_around_point)
                     lowest_rank = std::min(lowest_rank, cell.first->subdomain_id());
-
                   if (lowest_rank != dealii::Utilities::MPI::this_mpi_process(mpi_comm))
                     continue;
                   // end of copy from dealii::GridTools
 
                   // early return if point was already collected in stencil
-                  if (std::find(stencil.begin(), stencil.end(), req_values.quadrature_point(q)) !=
-                      stencil.end())
+                  if (std::find(stencil.begin(), stencil.end(), current_point) != stencil.end())
                     continue;
 
-                  std::vector<dealii::types::global_dof_index> dofs_at_q;
+                  stencil.emplace_back(current_point);
 
-                  // collect points of narrow band
-                  if (std::abs(temp_distance[q]) < narrow_band_threshold)
-                    {
-                      stencil.emplace_back(req_values.quadrature_point(q));
-
-                      // create a list of component-wise dof indices
-                      for (unsigned int c = 0; c < n_components; ++c)
-                        dofs_at_q.emplace_back(
-                          temp_local_dof_indices[dof_handler_req.get_fe().component_to_system_index(
-                            c, q)]);
-
-                      dof_indices.emplace_back(dofs_at_q);
-                    }
+                  std::vector<dealii::types::global_dof_index> temp_local_dof_indices;
+                  // create a list of component-wise dof indices
+                  for (unsigned int c = 0; c < n_components; ++c)
+                    temp_local_dof_indices.emplace_back(
+                      local_dof_indices[used_dst_dof_handler.get_fe().component_to_system_index(
+                        c, q)]);
+                  dof_indices.emplace_back(temp_local_dof_indices);
                 }
             }
-          ++req_cell;
+          ++dst_cell;
         }
 
       // set initial guess for closest point projection
@@ -252,9 +288,6 @@ namespace MeltPoolDG::LevelSet::Tools
         timer_scope_local =
           std::make_unique<dealii::TimerOutput::Scope>(timer_output.value(),
                                                        ScopedName("nearest_point::reinit::search"));
-
-      total_points_rpe = 0;
-      points_not_found.clear();
 
       if (additional_data.type == NearestPointType::nearest_point)
         {
@@ -290,6 +323,7 @@ namespace MeltPoolDG::LevelSet::Tools
 
       AssertThrow(dof_indices.size() == projected_points_at_interface.size(),
                   dealii::ExcMessage("The size of vectors does not match."));
+
       if (timer_scope_local)
         timer_scope_local->stop();
 
@@ -301,6 +335,9 @@ namespace MeltPoolDG::LevelSet::Tools
       remote_point_evaluation.reinit(projected_points_at_interface,
                                      dof_handler_ls.get_triangulation(),
                                      mapping);
+
+      is_reinit_called = true;
+
       if (timer_scope_local)
         timer_scope_local->stop();
     }
@@ -320,8 +357,8 @@ namespace MeltPoolDG::LevelSet::Tools
     }
 
     /**
-     * Getter function for the DoF indices of the nearest points,  corresponding to the nodal points
-     * of the DoFHandler passed into the reinit() function.
+     * Getter function for the DoF indices of the nearest points, corresponding to the nodal points
+     * of the source DoFHandler passed into the reinit() function.
      *
      * @note Make sure that you have called reinit() before.
      */
@@ -347,7 +384,6 @@ namespace MeltPoolDG::LevelSet::Tools
     void
     fill_dof_vector_with_point_values(
       VectorType                                &solution_out,
-      const dealii::DoFHandler<dim>             &dof_handler_req, // TODO: remove
       const VectorType                          &solution_in,
       const bool                                 zero_out  = false,
       const std::function<number(const number)> &operation = {}) const
@@ -357,9 +393,29 @@ namespace MeltPoolDG::LevelSet::Tools
         timer_scope = std::make_unique<dealii::TimerOutput::Scope>(
           timer_output.value(), ScopedName("nearest_point::fill_dof_vector"));
 
-      AssertThrow(n_components == dof_handler_req.get_fe().n_components(),
-                  dealii::ExcMessage("There is a mismatch in the number of components "
-                                     "between your passed DoFHandler and the template parameter."));
+      if (not input_vector_is_cut)
+        AssertThrow(n_components == dof_handler_src->get_fe().n_components(),
+                    dealii::ExcMessage(
+                      "There is a mismatch in the number of components "
+                      "between your passed DoFHandler and the template parameter."));
+      else
+        {
+          AssertThrow(dof_handler_dst != nullptr, dealii::ExcInternalError());
+
+          unsigned int n_comp = dof_handler_src->get_fe().n_components();
+          // for two phase cut, dof_handler_src->get_fe().n_components() returns double the number
+          // of components
+          if (CutUtil::get_cut_type(*dof_handler_src) == CutUtil::CutType::two_phase_cut)
+            n_comp /= 2;
+          AssertThrow(n_components == n_comp,
+                      dealii::ExcMessage(
+                        "There is a mismatch in the number of components "
+                        "between your passed DoFHandler and the template parameter."));
+          AssertThrow(n_components == dof_handler_dst->get_fe().n_components(),
+                      dealii::ExcMessage(
+                        "There is a mismatch in the number of components "
+                        "between your passed DoFHandler and the template parameter."));
+        }
 
       AssertThrow(is_reinit_called, dealii::ExcMessage("You need to call reinit() first."));
 
@@ -369,7 +425,7 @@ namespace MeltPoolDG::LevelSet::Tools
         solution_in.update_ghost_values();
 
       const auto vals = dealii::VectorTools::point_values<n_components>(remote_point_evaluation,
-                                                                        dof_handler_req,
+                                                                        *dof_handler_src,
                                                                         solution_in);
 
       if (update_ghosts)
@@ -1112,13 +1168,18 @@ namespace MeltPoolDG::LevelSet::Tools
 
     std::optional<std::reference_wrapper<dealii::TimerOutput>> timer_output;
 
+    // DoFHandler of the source vector
+    const dealii::DoFHandler<dim> *dof_handler_src = nullptr;
+    // optional DoFHandler of the destination vector. If src_is_cut = true, this is not optional
+    const dealii::DoFHandler<dim> *dof_handler_dst = nullptr;
 
     // vectors to be filled: projected points to the interface corresponding to DoF indices
     std::vector<dealii::Point<dim>>                           projected_points_at_interface;
     std::vector<std::vector<dealii::types::global_dof_index>> dof_indices;
     std::vector<dealii::Point<dim>>                           stencil;
 
-    bool is_reinit_called = false;
+    bool is_reinit_called    = false;
+    bool input_vector_is_cut = false;
 
     // this is just a temporary variable to be called within the projection operators
     int total_points_rpe = 0;

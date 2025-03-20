@@ -28,7 +28,7 @@ namespace MeltPoolDG::MeltPool
                                                   const Parameters<double> &data_in,
                                                   const unsigned int phase_fraction_dof_idx_in,
                                                   const unsigned int ls_dof_idx_in,
-                                                  const VectorType  &temperature,
+                                                  const VectorType  &temperature_in,
                                                   const unsigned int reinit_dof_idx_in,
                                                   const unsigned int reinit_no_solid_dof_idx_in,
                                                   const unsigned int flow_vel_dof_idx_in,
@@ -44,7 +44,7 @@ namespace MeltPoolDG::MeltPool
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
     , flow_vel_no_solid_dof_idx(flow_vel_no_solid_dof_idx_in)
     , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
-    , temperature(temperature)
+    , temperature(temperature_in)
   {
     reinit();
   }

@@ -309,7 +309,7 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
                                                  remote_point_evaluation,
                                                  nearest_point_data);
 
-  cpp.reinit(dof_handler_temp);
+  cpp.reinit(&dof_handler_temp);
 
   cpp.write_to_file("interface_points");
 
@@ -377,9 +377,7 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
           << max_distance / min_cell_size << std::endl;
   }
 
-  cpp.fill_dof_vector_with_point_values<n_components>(solution_temp_interface,
-                                                      dof_handler_temp,
-                                                      solution_temp);
+  cpp.fill_dof_vector_with_point_values<n_components>(solution_temp_interface, solution_temp);
 
   std::ofstream myfile;
   myfile.open("marked_vertices.dat");

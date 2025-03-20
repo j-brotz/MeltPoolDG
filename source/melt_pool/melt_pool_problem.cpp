@@ -1188,7 +1188,7 @@ namespace MeltPoolDG::MeltPool
         melt_front_propagation = std::make_shared<MeltFrontPropagation<dim>>(
           *scratch_data,
           param,
-          flow_operation->get_dof_handler_idx_pressure(),
+          temp_cont_dof_idx,
           ls_hanging_nodes_dof_idx,
           heat_operation->get_temperature(),
           reinit_dof_idx,
@@ -1827,10 +1827,10 @@ namespace MeltPoolDG::MeltPool
       nearest_point_data,
       scratch_data->get_timer());
 
-    nearest_point.reinit(scratch_data->get_dof_handler(vel_dof_idx));
+    nearest_point.reinit(&scratch_data->get_dof_handler(vel_dof_idx));
 
-    nearest_point.template fill_dof_vector_with_point_values<dim>(
-      interface_velocity_interface, scratch_data->get_dof_handler(vel_dof_idx), interface_velocity);
+    nearest_point.template fill_dof_vector_with_point_values<dim>(interface_velocity_interface,
+                                                                  interface_velocity);
     interface_velocity.swap(interface_velocity_interface);
   }
 

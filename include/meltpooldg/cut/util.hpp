@@ -26,6 +26,13 @@ namespace MeltPoolDG::CutUtil
   BETTER_ENUM(CutType, char, not_cut, one_phase_cut, two_phase_cut)
 
   /**
+   * determine the CutType of a DoFHandler
+   */
+  template <int dim>
+  CutType
+  get_cut_type(const dealii::DoFHandler<dim> &dof_handler);
+
+  /**
    * definition of aliases for MappingInfo types
    */
   template <int dim, typename number>
