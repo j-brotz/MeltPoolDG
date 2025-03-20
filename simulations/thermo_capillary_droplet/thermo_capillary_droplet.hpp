@@ -329,136 +329,139 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     void
     do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const final
     {
-      if (this->parameters.output.do_user_defined_postprocessing)
+      if (not this->parameters.output.do_user_defined_postprocessing)
+        return;
+
+      if constexpr (dim > 1)
         {
-          if constexpr (dim > 1)
+          dealii::ConditionalOStream pcout(std::cout,
+                                           dealii::Utilities::MPI::this_mpi_process(
+                                             this->mpi_communicator) == 0 and
+                                             this->parameters.base.verbosity_level > 0);
+
+          const auto &level_set = generic_data_out.get_vector("level_set");
+          const auto &velocity  = generic_data_out.get_vector("velocity");
+          if (not level_set.has_ghost_elements())
+            level_set.update_ghost_values();
+          if (not velocity.has_ghost_elements())
+            velocity.update_ghost_values();
+
+          const auto &level_set_dof_handler = generic_data_out.get_dof_handler("level_set");
+          const auto &velocity_dof_handler  = generic_data_out.get_dof_handler("velocity");
+
+          dealii::Point<dim> center_of_mass;
+
+          double average_velocity = 0.0;
+          double area_of_phase    = 0.0;
+
+          dealii::FEValues<dim> level_set_eval(
+            generic_data_out.get_mapping(),
+            level_set_dof_handler.get_fe(),
+            dealii::QGauss<dim>(level_set_dof_handler.get_fe().tensor_degree() + 1),
+            dealii::update_quadrature_points | dealii::update_JxW_values | dealii::update_values);
+
+          const dealii::FEValuesExtractors::Vector velocities(0);
+          dealii::FEValues<dim>                    vel_eval(generic_data_out.get_mapping(),
+                                         velocity_dof_handler.get_fe(),
+                                         dealii::QGauss<dim>(
+                                           level_set_dof_handler.get_fe().tensor_degree() + 1),
+                                         dealii::update_values);
+
+          std::vector<double>                 ls_at_q(level_set_eval.n_quadrature_points);
+          std::vector<dealii::Tensor<1, dim>> vel_at_q(level_set_eval.n_quadrature_points,
+                                                       dealii::Tensor<1, dim>());
+
+          typename dealii::DoFHandler<dim>::active_cell_iterator vel_cell =
+            velocity_dof_handler.begin_active();
+
+          for (const auto &cell : level_set_dof_handler.active_cell_iterators())
             {
-              dealii::ConditionalOStream pcout(std::cout,
-                                               dealii::Utilities::MPI::this_mpi_process(
-                                                 this->mpi_communicator) == 0 and
-                                                 this->parameters.base.verbosity_level > 0);
-
-              dealii::Point<dim> center_of_mass;
-
-              double average_velocity = 0.0;
-              double area_of_phase    = 0.0;
-
-              dealii::FEValues<dim> level_set_eval(
-                generic_data_out.get_mapping(),
-                generic_data_out.get_dof_handler("level_set").get_fe(),
-                dealii::QGauss<dim>(
-                  generic_data_out.get_dof_handler("level_set").get_fe().tensor_degree() + 1),
-                dealii::update_quadrature_points | dealii::update_JxW_values |
-                  dealii::update_values);
-
-              const dealii::FEValuesExtractors::Vector velocities(0);
-              dealii::FEValues<dim>                    vel_eval(
-                generic_data_out.get_mapping(),
-                generic_data_out.get_dof_handler("velocity").get_fe(),
-                dealii::QGauss<dim>(
-                  generic_data_out.get_dof_handler("level_set").get_fe().tensor_degree() + 1),
-                dealii::update_values);
-
-              std::vector<double>                 ls_at_q(level_set_eval.n_quadrature_points);
-              std::vector<dealii::Tensor<1, dim>> vel_at_q(level_set_eval.n_quadrature_points,
-                                                           dealii::Tensor<1, dim>());
-
-              typename dealii::DoFHandler<dim>::active_cell_iterator vel_cell =
-                generic_data_out.get_dof_handler("velocity").begin_active();
-
-              for (const auto &cell :
-                   generic_data_out.get_dof_handler("level_set").active_cell_iterators())
+              if (cell->is_locally_owned())
                 {
-                  if (cell->is_locally_owned())
+                  level_set_eval.reinit(cell);
+                  level_set_eval.get_function_values(level_set, ls_at_q);
+
+                  vel_eval.reinit(vel_cell);
+                  vel_eval[velocities].get_function_values(velocity, vel_at_q);
+
+                  for (const auto q : level_set_eval.quadrature_point_indices())
                     {
-                      level_set_eval.reinit(cell);
-                      level_set_eval.get_function_values(generic_data_out.get_vector("level_set"),
-                                                         ls_at_q);
-
-                      vel_eval.reinit(vel_cell);
-                      vel_eval[velocities].get_function_values(
-                        generic_data_out.get_vector("velocity"), vel_at_q);
-
-                      for (const auto q : level_set_eval.quadrature_point_indices())
+                      if (ls_at_q[q] > 0.0)
                         {
-                          if (ls_at_q[q] > 0.0)
-                            {
-                              area_of_phase += level_set_eval.JxW(q);
-                              average_velocity += vel_at_q[q][dim - 1] * level_set_eval.JxW(q);
-                              for (unsigned int d = 0; d < dim; ++d)
-                                center_of_mass[d] +=
-                                  level_set_eval.quadrature_point(q)[d] * level_set_eval.JxW(q);
-                            }
+                          area_of_phase += level_set_eval.JxW(q);
+                          average_velocity += vel_at_q[q][dim - 1] * level_set_eval.JxW(q);
+                          for (unsigned int d = 0; d < dim; ++d)
+                            center_of_mass[d] +=
+                              level_set_eval.quadrature_point(q)[d] * level_set_eval.JxW(q);
                         }
                     }
-                  ++vel_cell;
                 }
-
-              /*
-               * area of the phase
-               */
-              double global_area =
-                dealii::Utilities::MPI::sum(area_of_phase, this->mpi_communicator);
-
-              /*
-               * centroid position
-               */
-              dealii::Point<dim> global_center_of_mass;
-              for (unsigned int d = 0; d < dim; ++d)
-                global_center_of_mass[d] =
-                  dealii::Utilities::MPI::sum(center_of_mass[d], this->mpi_communicator);
-
-              global_center_of_mass /= global_area;
-
-              /*
-               * average velocity
-               */
-              double global_average_velocity =
-                dealii::Utilities::MPI::sum(average_velocity, this->mpi_communicator);
-              global_average_velocity /= global_area;
-
-              /*
-               * velocity measured at centroid
-               */
-              dealii::Utilities::MPI::RemotePointEvaluation<dim, dim> cache;
-              std::vector<dealii::Tensor<1, dim>>                     velocity_of_center =
-                dealii::VectorTools::point_values<dim>(generic_data_out.get_mapping(),
-                                                       generic_data_out.get_dof_handler("velocity"),
-                                                       generic_data_out.get_vector("velocity"),
-                                                       {global_center_of_mass},
-                                                       cache);
-
-              pcout << "---------------------------------------------" << std::endl;
-              pcout << "    user defined postprocessing" << std::endl;
-              pcout << "---------------------------------------------" << std::endl;
-              if (print_once)
-                {
-                  pcout << "reference velocity: " << velocity_reference << std::endl;
-                  pcout << "reference time: " << time_reference << std::endl;
-                  pcout << "Reynolds number: " << reynolds_number << std::endl;
-                  pcout << "Mach number: " << mach_number << std::endl;
-                  pcout << "Capillary number: " << capillary_number << std::endl;
-                }
-
-              const auto max_vel = generic_data_out.get_vector("velocity").linfty_norm();
-              if (file.is_open())
-                {
-                  pcout << "centroid: " << global_center_of_mass << std::endl;
-                  pcout << "vel: " << velocity_of_center[0][dim - 1] << std::endl;
-                  if (print_once)
-                    file << "time,y_center,t/tr,u/ur,u_max/ur,u_avg/ur" << std::endl;
-
-                  file << generic_data_out.get_time() << ", " << global_center_of_mass[dim - 1]
-                       << ", " << generic_data_out.get_time() / time_reference << ", "
-                       << velocity_of_center[0][dim - 1] / velocity_reference << ", "
-                       << max_vel / velocity_reference << ", "
-                       << global_average_velocity / velocity_reference << std::endl;
-                }
-              pcout << "---------------------------------------------" << std::endl;
-              pcout << "---------------------------------------------" << std::endl;
+              ++vel_cell;
             }
-          print_once = false;
+
+          /*
+           * area of the phase
+           */
+          double global_area = dealii::Utilities::MPI::sum(area_of_phase, this->mpi_communicator);
+
+          /*
+           * centroid position
+           */
+          dealii::Point<dim> global_center_of_mass;
+          for (unsigned int d = 0; d < dim; ++d)
+            global_center_of_mass[d] =
+              dealii::Utilities::MPI::sum(center_of_mass[d], this->mpi_communicator);
+
+          global_center_of_mass /= global_area;
+
+          /*
+           * average velocity
+           */
+          double global_average_velocity =
+            dealii::Utilities::MPI::sum(average_velocity, this->mpi_communicator);
+          global_average_velocity /= global_area;
+
+          /*
+           * velocity measured at centroid
+           */
+          dealii::Utilities::MPI::RemotePointEvaluation<dim, dim> cache;
+          std::vector<dealii::Tensor<1, dim>>                     velocity_of_center =
+            dealii::VectorTools::point_values<dim>(generic_data_out.get_mapping(),
+                                                   velocity_dof_handler,
+                                                   velocity,
+                                                   {global_center_of_mass},
+                                                   cache);
+
+          pcout << "---------------------------------------------" << std::endl;
+          pcout << "    user defined postprocessing" << std::endl;
+          pcout << "---------------------------------------------" << std::endl;
+          if (print_once)
+            {
+              pcout << "reference velocity: " << velocity_reference << std::endl;
+              pcout << "reference time: " << time_reference << std::endl;
+              pcout << "Reynolds number: " << reynolds_number << std::endl;
+              pcout << "Mach number: " << mach_number << std::endl;
+              pcout << "Capillary number: " << capillary_number << std::endl;
+            }
+
+          const auto max_vel = velocity.linfty_norm();
+          if (file.is_open())
+            {
+              pcout << "centroid: " << global_center_of_mass << std::endl;
+              pcout << "vel: " << velocity_of_center[0][dim - 1] << std::endl;
+              if (print_once)
+                file << "time,y_center,t/tr,u/ur,u_max/ur,u_avg/ur" << std::endl;
+
+              file << generic_data_out.get_time() << ", " << global_center_of_mass[dim - 1] << ", "
+                   << generic_data_out.get_time() / time_reference << ", "
+                   << velocity_of_center[0][dim - 1] / velocity_reference << ", "
+                   << max_vel / velocity_reference << ", "
+                   << global_average_velocity / velocity_reference << std::endl;
+            }
+          pcout << "---------------------------------------------" << std::endl;
+          pcout << "---------------------------------------------" << std::endl;
         }
+      print_once = false;
     }
 
   private:
