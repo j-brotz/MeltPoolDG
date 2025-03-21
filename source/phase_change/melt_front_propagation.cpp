@@ -251,9 +251,6 @@ namespace MeltPoolDG::MeltPool
         ++t_cell;
       }
 
-    liquid.compress(VectorOperation::insert);
-    solid.compress(VectorOperation::insert);
-
     scratch_data.get_constraint(phase_fraction_dof_idx).distribute(solid);
     scratch_data.get_constraint(phase_fraction_dof_idx).distribute(liquid);
 
