@@ -1,12 +1,5 @@
 #!/bin/bash
 
-# dry run
-#make() {
-    #echo "Dummy make command: make $* (Ignoring actual execution)"
-#}
-
-#!/bin/bash
-
 # Get the absolute path of the script
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
