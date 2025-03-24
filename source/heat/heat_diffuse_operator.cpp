@@ -34,7 +34,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   HeatDiffuseMultiPhaseOperator<dim, number>::HeatDiffuseMultiPhaseOperator(
-    const ScratchData<dim>                                    &scratch_data_in,
+    const ScratchData<dim, dim, number>                       &scratch_data_in,
     const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
     const HeatData<number>                                    &data_in,
     const Material<number>                                    &material,
@@ -280,7 +280,7 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatDiffuseMultiPhaseOperator<dim, number>::compute_system_matrix_from_matrixfree(
-    TrilinosWrappers::SparseMatrix &system_matrix) const
+    SparseMatrixType &system_matrix) const
   {
     system_matrix = 0.0;
 
@@ -291,9 +291,9 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatDiffuseMultiPhaseOperator<dim, number>::internal_compute_diagonal_or_system_matrix(
-    [[maybe_unused]] VectorType                             &diagonal,
-    [[maybe_unused]] dealii::TrilinosWrappers::SparseMatrix &system_matrix,
-    const bool                                               do_diagonal) const
+    [[maybe_unused]] VectorType       &diagonal,
+    [[maybe_unused]] SparseMatrixType &system_matrix,
+    const bool                         do_diagonal) const
   {
     const auto &matrix_free = scratch_data.get_matrix_free();
 

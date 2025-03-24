@@ -7,8 +7,6 @@
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_system.h>
 
-#include <deal.II/lac/trilinos_sparse_matrix.h>
-
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
 
@@ -47,14 +45,14 @@ namespace MeltPoolDG::Heat
     using FaceEval = FEFaceIntegrator<dim, 1, number>;
 
     using VectorType       = typename OperatorMatrixFree<dim, number>::VectorType;
-    using SparseMatrixType = dealii::TrilinosWrappers::SparseMatrix;
+    using SparseMatrixType = typename OperatorMatrixFree<dim, number>::SparseMatrixType;
 
-    const ScratchData<dim> &scratch_data;
-    const HeatData<number> &heat_data;
-    const Material<number>  material;
-    const unsigned int      temp_dof_idx;
-    const unsigned int      temp_hanging_nodes_dof_idx;
-    const unsigned int      temp_quad_idx;
+    const ScratchData<dim, dim, number> &scratch_data;
+    const HeatData<number>              &heat_data;
+    const Material<number>               material;
+    const unsigned int                   temp_dof_idx;
+    const unsigned int                   temp_hanging_nodes_dof_idx;
+    const unsigned int                   temp_quad_idx;
 
     const VectorType &temperature;
 
@@ -101,7 +99,7 @@ namespace MeltPoolDG::Heat
     const bool do_solidification;
 
   public:
-    HeatCutOperator(const ScratchData<dim>                     &scratch_data_in,
+    HeatCutOperator(const ScratchData<dim, dim, number>        &scratch_data_in,
                     const HeatData<number>                     &heat_data_in,
                     const MaterialData<number>                 &material_data_in,
                     const Evaporation::EvaporationData<number> &evapor_data_in,

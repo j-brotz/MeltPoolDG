@@ -31,7 +31,7 @@ namespace MeltPoolDG::Heat
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
-    const ScratchData<dim>                &scratch_data;
+    const ScratchData<dim, dim, number>   &scratch_data;
     const PeriodicBoundaryConditions<dim> &periodic_bc;
 
     // Laser parameters
@@ -65,7 +65,7 @@ namespace MeltPoolDG::Heat
 
   public:
     LaserOperation(
-      ScratchData<dim>                                         &scratch_data_in,
+      ScratchData<dim, dim, number>                            &scratch_data_in,
       const PeriodicBoundaryConditions<dim>                    &periodic_bc_in,
       const LaserData<number>                                  &laser_data_in,
       const VectorType                                         *heaviside_in         = nullptr,

@@ -13,7 +13,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   LaserOperation<dim, number>::LaserOperation(
-    ScratchData<dim>                                         &scratch_data_in,
+    ScratchData<dim, dim, number>                            &scratch_data_in,
     const PeriodicBoundaryConditions<dim>                    &periodic_bc_in,
     const LaserData<number>                                  &laser_data_in,
     const VectorType                                         *heaviside_in,

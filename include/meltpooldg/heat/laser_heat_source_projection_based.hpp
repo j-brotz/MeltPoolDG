@@ -36,28 +36,28 @@ namespace MeltPoolDG::Heat
      * Compute a DoF vector of the interfacial heat source.
      */
     void
-    compute_interfacial_heat_source(VectorType             &heat_source_vector,
-                                    const ScratchData<dim> &scratch_data,
-                                    const unsigned int      temp_dof_idx,
-                                    const VectorType       &level_set_heaviside,
-                                    const unsigned int      ls_dof_idx,
-                                    const bool              zero_out       = true,
-                                    const BlockVectorType  *normal_vector  = nullptr,
-                                    const unsigned int      normal_dof_idx = 0) const;
+    compute_interfacial_heat_source(VectorType                          &heat_source_vector,
+                                    const ScratchData<dim, dim, number> &scratch_data,
+                                    const unsigned int                   temp_dof_idx,
+                                    const VectorType                    &level_set_heaviside,
+                                    const unsigned int                   ls_dof_idx,
+                                    const bool                           zero_out       = true,
+                                    const BlockVectorType               *normal_vector  = nullptr,
+                                    const unsigned int                   normal_dof_idx = 0) const;
 
     /**
      * Compute a DoF vector of the interfacial heat source by evaluating the surface
      * integral.
      */
     void
-    compute_interfacial_heat_source_sharp(VectorType             &heat_rhs,
-                                          const ScratchData<dim> &scratch_data,
-                                          const unsigned int      temp_dof_idx,
-                                          const VectorType       &level_set_heaviside,
-                                          const unsigned int      ls_dof_idx,
-                                          const bool              zero_out       = true,
-                                          const BlockVectorType  *normal_vector  = nullptr,
-                                          const unsigned int      normal_dof_idx = 0) const;
+    compute_interfacial_heat_source_sharp(VectorType                          &heat_rhs,
+                                          const ScratchData<dim, dim, number> &scratch_data,
+                                          const unsigned int                   temp_dof_idx,
+                                          const VectorType                    &level_set_heaviside,
+                                          const unsigned int                   ls_dof_idx,
+                                          const bool                           zero_out = true,
+                                          const BlockVectorType *normal_vector          = nullptr,
+                                          const unsigned int     normal_dof_idx         = 0) const;
 
     /**
      * For a given finite element discretization, hidden within @p scratch_data,
@@ -78,15 +78,16 @@ namespace MeltPoolDG::Heat
      * is aligned with element faces and does not cross the cells.
      */
     void
-    compute_interfacial_heat_source_sharp_conforming(VectorType             &heat_rhs,
-                                                     const ScratchData<dim> &scratch_data,
-                                                     const unsigned int      temp_dof_idx,
-                                                     const unsigned int      temp_quad_idx,
-                                                     const VectorType       &level_set_heaviside,
-                                                     const unsigned int      ls_dof_idx,
-                                                     const bool              zero_out,
-                                                     const BlockVectorType  *normal_vector,
-                                                     const unsigned int      normal_dof_idx) const;
+    compute_interfacial_heat_source_sharp_conforming(
+      VectorType                          &heat_rhs,
+      const ScratchData<dim, dim, number> &scratch_data,
+      const unsigned int                   temp_dof_idx,
+      const unsigned int                   temp_quad_idx,
+      const VectorType                    &level_set_heaviside,
+      const unsigned int                   ls_dof_idx,
+      const bool                           zero_out,
+      const BlockVectorType               *normal_vector,
+      const unsigned int                   normal_dof_idx) const;
 
   private:
     /**
