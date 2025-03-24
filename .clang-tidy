@@ -1,7 +1,4 @@
-# Settings file automatically used by clang-tidy
-#
-# See ./contrib/utilities/run_clang_tidy.sh for details
-
+# Settings file automatically used by clang-tidy; derived from deal.II
 #
 # Rationale for disabling warnings:
 #
@@ -24,11 +21,7 @@ Checks: >
   -*,
   cppcoreguidelines-pro-type-static-cast-downcast,
   modernize-*,
-  -modernize-avoid-c-arrays,
-  -modernize-concat-nested-namespaces,
-  -modernize-pass-by-value,
   -modernize-raw-string-literal,
-  -modernize-return-braced-init-list,
   -modernize-use-auto,
   -modernize-use-default-member-init,
   -modernize-use-nodiscard,
