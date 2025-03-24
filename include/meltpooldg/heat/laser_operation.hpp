@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, UIBK/TUM, February 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/base/point.h>
@@ -10,6 +5,8 @@
 #include <deal.II/dofs/dof_handler.h>
 
 #include <deal.II/lac/affine_constraints.h>
+#include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
@@ -27,41 +24,40 @@
 
 namespace MeltPoolDG::Heat
 {
-  using namespace dealii;
-
-  template <int dim>
+  template <int dim, typename number>
   class LaserOperation
   {
   private:
-    using VectorType      = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
     const ScratchData<dim>                &scratch_data;
     const PeriodicBoundaryConditions<dim> &periodic_bc;
 
     // Laser parameters
-    const LaserData<double> &laser_data;
+    const LaserData<number> &laser_data;
 
     // current time
-    double current_time;
+    number current_time;
     // current intensity of the laser (between 0 and 1)
-    double laser_intensity;
-    double current_power;
+    number laser_intensity;
+    number current_power;
     // current laser position defined as spot center of the laser beam
-    Point<dim> laser_position;
+    dealii::Point<dim> laser_position;
 
-    std::shared_ptr<Function<dim, double>> intensity_profile;
+    std::shared_ptr<dealii::Function<dim, number>> intensity_profile;
 
     // Requested laser model
-    std::unique_ptr<LaserHeatSourceVolumetric<dim>>      laser_heat_source_operation_volumetric;
-    std::unique_ptr<LaserHeatSourceProjectionBased<dim>> laser_heat_source_operation_projection;
+    std::unique_ptr<LaserHeatSourceVolumetric<dim, number>> laser_heat_source_operation_volumetric;
+    std::unique_ptr<LaserHeatSourceProjectionBased<dim, number>>
+      laser_heat_source_operation_projection;
 
     // RTE
     std::unique_ptr<RadiativeTransport::RadiativeTransportOperation<dim>> rte_operation;
-    std::unique_ptr<DoFHandler<dim>>                                      rte_dof_handler;
-    std::unique_ptr<AffineConstraints<double>>                            rte_constraints_dirichlet;
-    std::unique_ptr<AffineConstraints<double>> rte_hanging_node_constraints;
-    std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>>
+    std::unique_ptr<dealii::DoFHandler<dim>>                              rte_dof_handler;
+    std::unique_ptr<dealii::AffineConstraints<number>>                    rte_constraints_dirichlet;
+    std::unique_ptr<dealii::AffineConstraints<number>> rte_hanging_node_constraints;
+    std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
                  rte_dirichlet_boundary_condition;
     unsigned int rte_dof_idx;
     unsigned int rte_hanging_nodes_dof_idx;
@@ -71,10 +67,10 @@ namespace MeltPoolDG::Heat
     LaserOperation(
       ScratchData<dim>                                         &scratch_data_in,
       const PeriodicBoundaryConditions<dim>                    &periodic_bc_in,
-      const LaserData<double>                                  &laser_data_in,
+      const LaserData<number>                                  &laser_data_in,
       const VectorType                                         *heaviside_in         = nullptr,
       const unsigned int                                        hs_dof_idx_in        = 0,
-      const RadiativeTransport::RadiativeTransportData<double> *rad_trans_data_in    = nullptr,
+      const RadiativeTransport::RadiativeTransportData<number> *rad_trans_data_in    = nullptr,
       const bool                                                problem_is_melt_pool = false,
       const bool                                                heat_is_cut          = false,
       const bool material_two_phase_transition_is_diffuse                            = false,
@@ -93,7 +89,7 @@ namespace MeltPoolDG::Heat
     reinit();
 
     void
-    attach_vectors(std::vector<std::pair<const DoFHandler<dim> *,
+    attach_vectors(std::vector<std::pair<const dealii::DoFHandler<dim> *,
                                          std::function<void(std::vector<VectorType *> &)>>> &data);
 
     void
@@ -128,31 +124,31 @@ namespace MeltPoolDG::Heat
      * Reset the time.
      */
     void
-    reset(const double start_time);
+    reset(const number start_time);
 
     /**
      * Move the laser position according to the provided scan speed for a time interface_value
      * @p dt.
      */
     void
-    move_laser(double dt);
+    move_laser(number dt);
 
     /**
      * Getter function for the laser position.
      */
-    const Point<dim> &
+    const dealii::Point<dim> &
     get_laser_position() const;
 
     /**
      * Getter function for the current laser power.
      */
-    double
+    number
     get_laser_power() const;
 
     /**
      * Getter function for the underlying intensity profile.
      */
-    std::shared_ptr<const Function<dim, double>>
+    std::shared_ptr<const dealii::Function<dim, number>>
     get_intensity_profile() const;
 
   private:

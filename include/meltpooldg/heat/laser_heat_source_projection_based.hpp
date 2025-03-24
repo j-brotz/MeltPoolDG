@@ -3,8 +3,8 @@
 #include <deal.II/base/function.h>
 #include <deal.II/base/point.h>
 
-#include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
@@ -15,23 +15,21 @@
 
 namespace MeltPoolDG::Heat
 {
-  using namespace dealii;
-
   /**
    * Projection based laser heat source model.
    */
-  template <int dim>
+  template <int dim, typename number>
   class LaserHeatSourceProjectionBased
   {
-    using VectorType      = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
   public:
     LaserHeatSourceProjectionBased(
-      const LaserData<double>                           &laser_data_in,
-      const std::shared_ptr<const Function<dim, double>> intensity_profile_in,
-      const bool                                         variable_properties_over_interface_in,
-      const LevelSet::DeltaApproximationPhaseWeightedData<double>
+      const LaserData<number>                                   &laser_data_in,
+      const std::shared_ptr<const dealii::Function<dim, number>> intensity_profile_in,
+      const bool variable_properties_over_interface_in,
+      const LevelSet::DeltaApproximationPhaseWeightedData<number>
         &delta_approximation_phase_weighted_data);
 
     /**
@@ -96,20 +94,20 @@ namespace MeltPoolDG::Heat
      *
      * For the sharp interfacial heat source, set @param delta_value to 1.
      */
-    double
-    local_compute_interfacial_heat_source(const Point<dim>             &p,
-                                          const Tensor<1, dim, double> &normal_vector,
-                                          const double                  delta_value,
-                                          const double                  heaviside) const;
+    number
+    local_compute_interfacial_heat_source(const dealii::Point<dim>             &p,
+                                          const dealii::Tensor<1, dim, number> &normal_vector,
+                                          const number                          delta_value,
+                                          const number                          heaviside) const;
 
-    const LaserData<double> &laser_data;
+    const LaserData<number> &laser_data;
 
-    const std::shared_ptr<const Function<dim, double>> intensity_profile;
+    const std::shared_ptr<const dealii::Function<dim, number>> intensity_profile;
 
-    const Tensor<1, dim, double> laser_direction;
+    const dealii::Tensor<1, dim, number> laser_direction;
 
     const bool variable_properties_over_interface;
 
-    std::unique_ptr<const LevelSet::DeltaApproximationBase<double>> delta_phase_weighted;
+    std::unique_ptr<const LevelSet::DeltaApproximationBase<number>> delta_phase_weighted;
   };
 } // namespace MeltPoolDG::Heat

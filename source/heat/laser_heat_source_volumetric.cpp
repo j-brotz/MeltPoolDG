@@ -11,15 +11,15 @@ namespace MeltPoolDG::Heat
 {
   using namespace dealii;
 
-  template <int dim>
-  LaserHeatSourceVolumetric<dim>::LaserHeatSourceVolumetric(
-    const std::shared_ptr<const Function<dim, double>> intensity_profile_in)
+  template <int dim, typename number>
+  LaserHeatSourceVolumetric<dim, number>::LaserHeatSourceVolumetric(
+    const std::shared_ptr<const Function<dim, number>> intensity_profile_in)
     : intensity_profile(intensity_profile_in)
   {}
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LaserHeatSourceVolumetric<dim>::compute_volumetric_heat_source(
+  LaserHeatSourceVolumetric<dim, number>::compute_volumetric_heat_source(
     VectorType             &heat_source_vector,
     const ScratchData<dim> &scratch_data,
     const unsigned int      heat_source_dof_idx,
@@ -57,7 +57,7 @@ namespace MeltPoolDG::Heat
     scratch_data.get_constraint(heat_source_dof_idx).distribute(heat_source_vector);
   }
 
-  template class LaserHeatSourceVolumetric<1>;
-  template class LaserHeatSourceVolumetric<2>;
-  template class LaserHeatSourceVolumetric<3>;
+  template class LaserHeatSourceVolumetric<1, double>;
+  template class LaserHeatSourceVolumetric<2, double>;
+  template class LaserHeatSourceVolumetric<3, double>;
 } // namespace MeltPoolDG::Heat

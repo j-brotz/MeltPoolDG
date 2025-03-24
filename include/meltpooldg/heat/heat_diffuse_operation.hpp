@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, UIBK/TUM, February 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/base/function.h>
@@ -15,7 +10,6 @@
 
 #include <deal.II/lac/diagonal_matrix.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
-#include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/boundary_conditions.hpp>
 #include <meltpooldg/core/operator_base.hpp>
@@ -43,23 +37,21 @@
 
 namespace MeltPoolDG::Heat
 {
-  using namespace dealii;
-
-  template <int dim>
-  class HeatDiffuseOperation : public HeatOperationBase<dim>
+  template <int dim, typename number>
+  class HeatDiffuseOperation : public HeatOperationBase<dim, number>
   {
   private:
-    using VectorType      = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+    using VectorType      = typename HeatOperationBase<dim, number>::VectorType;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
-    const ScratchData<dim>                                            &scratch_data;
-    const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> dirichlet_bc;
-    const PeriodicBoundaryConditions<dim>                             &periodic_bc;
+    const ScratchData<dim>                                                            &scratch_data;
+    const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> dirichlet_bc;
+    const PeriodicBoundaryConditions<dim>                                             &periodic_bc;
     /**
      * parameters
      */
-    const HeatData<double>     &heat_data;
-    const TimeIterator<double> &time_iterator;
+    const HeatData<number>     &heat_data;
+    const TimeIterator<number> &time_iterator;
     /**
      * select the relevant DoFHandlers and quadrature rules
      */
@@ -79,7 +71,7 @@ namespace MeltPoolDG::Heat
     // for output only
     mutable VectorType user_rhs_projected;
 
-    std::unique_ptr<Predictor<VectorType, double>> predictor;
+    std::unique_ptr<Predictor<VectorType, number>> predictor;
 
     // optional flow velocity for internal convection
     const unsigned int vel_dof_idx;
@@ -93,7 +85,7 @@ namespace MeltPoolDG::Heat
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 
-    std::unique_ptr<HeatDiffuseMultiPhaseOperator<dim>> heat_operator;
+    std::unique_ptr<HeatDiffuseMultiPhaseOperator<dim, number>> heat_operator;
 
     Preconditioner<dim, VectorType> preconditioner;
 
@@ -106,9 +98,9 @@ namespace MeltPoolDG::Heat
     HeatDiffuseOperation(const ScratchData<dim>                                    &scratch_data_in,
                          const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
                          const PeriodicBoundaryConditions<dim>                     &periodic_bc_in,
-                         const HeatData<double>                                    &heat_data_in,
-                         const Material<double>                                    &material,
-                         const TimeIterator<double>                                &time_iterator,
+                         const HeatData<number>                                    &heat_data_in,
+                         const Material<number>                                    &material,
+                         const TimeIterator<number>                                &time_iterator,
                          unsigned int                                               temp_dof_idx_in,
                          unsigned int      temp_hanging_nodes_dof_idx_in,
                          unsigned int      temp_quad_idx_in,
@@ -121,23 +113,24 @@ namespace MeltPoolDG::Heat
     void
     register_evaporative_mass_flux(VectorType        *evaporative_mass_flux_in,
                                    const unsigned int evapor_mass_flux_dof_idx_in,
-                                   const Evaporation::EvaporationData<double> &evapor_data);
+                                   const Evaporation::EvaporationData<number> &evapor_data);
 
     void
     register_surface_mesh(
-      const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
-                                   std::vector<Point<dim>> /*quad_points*/,
-                                   std::vector<double> /*weights*/
-                                   >> &surface_mesh_info_in);
+      const std::vector<
+        std::tuple<const typename dealii::Triangulation<dim, dim>::cell_iterator /*cell*/,
+                   std::vector<dealii::Point<dim>> /*quad_points*/,
+                   std::vector<number> /*weights*/
+                   >> &surface_mesh_info_in);
 
     void
-    distribute_dofs(DoFHandler<dim> &dof_handler) const override;
+    distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const override;
 
     void
     setup_constraints(ScratchData<dim> &mutable_scratch_data) const override;
 
     void
-    set_initial_condition(const Function<dim> &initial_field_function_temperature) override;
+    set_initial_condition(const dealii::Function<dim> &initial_field_function_temperature) override;
 
     void
     reinit() override;
@@ -157,10 +150,10 @@ namespace MeltPoolDG::Heat
     void
     compute_interface_temperature(const VectorType                         &distance,
                                   const BlockVectorType                    &normal_vector,
-                                  const LevelSet::NearestPointData<double> &nearest_point_data);
+                                  const LevelSet::NearestPointData<number> &nearest_point_data);
 
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
+    attach_vectors(std::vector<VectorType *> &vectors) override;
 
     void
     distribute_constraints() override;

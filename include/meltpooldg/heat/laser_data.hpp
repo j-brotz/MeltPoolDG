@@ -15,8 +15,6 @@
 
 namespace MeltPoolDG::Heat
 {
-  using namespace dealii;
-
   BETTER_ENUM(
     LaserModelType,
     char,
@@ -65,18 +63,18 @@ namespace MeltPoolDG::Heat
     number scan_speed = 0.0;
 
     template <int dim>
-    Point<dim, number>
+    dealii::Point<dim, number>
     get_starting_position() const;
 
     // return unit direction vector
     template <int dim>
-    Tensor<1, dim, number>
+    dealii::Tensor<1, dim, number>
     get_direction() const;
 
     number radius = 0.0;
 
     // if model = RTE, this value must be set by the simulation
-    types::boundary_id rte_boundary_id = numbers::invalid_boundary_id;
+    dealii::types::boundary_id rte_boundary_id = dealii::numbers::invalid_boundary_id;
 
     LevelSet::DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
 
@@ -95,7 +93,7 @@ namespace MeltPoolDG::Heat
     } analytical;
 
     void
-    add_parameters(ParameterHandler &prm);
+    add_parameters(dealii::ParameterHandler &prm);
 
     /**
      * Post operation to set up the laser direction and starting position vectors for the dimension @param dim

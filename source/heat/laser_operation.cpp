@@ -9,14 +9,16 @@
 
 namespace MeltPoolDG::Heat
 {
-  template <int dim>
-  LaserOperation<dim>::LaserOperation(
+  using namespace dealii;
+
+  template <int dim, typename number>
+  LaserOperation<dim, number>::LaserOperation(
     ScratchData<dim>                                         &scratch_data_in,
     const PeriodicBoundaryConditions<dim>                    &periodic_bc_in,
-    const LaserData<double>                                  &laser_data_in,
+    const LaserData<number>                                  &laser_data_in,
     const VectorType                                         *heaviside_in,
     const unsigned int                                        hs_dof_idx_in,
-    const RadiativeTransport::RadiativeTransportData<double> *rad_trans_data_in,
+    const RadiativeTransport::RadiativeTransportData<number> *rad_trans_data_in,
     const bool                                                problem_is_melt_pool,
     const bool                                                heat_is_cut,
     const bool material_two_phase_transition_is_diffuse,
@@ -24,7 +26,7 @@ namespace MeltPoolDG::Heat
     : scratch_data(scratch_data_in)
     , periodic_bc(periodic_bc_in)
     , laser_data(laser_data_in)
-    , laser_position(laser_data.get_starting_position<dim>())
+    , laser_position(laser_data.template get_starting_position<dim>())
   {
     AssertThrow(
       laser_data.power_end_time > laser_data.power_start_time,
@@ -46,31 +48,31 @@ namespace MeltPoolDG::Heat
     switch (laser_data.intensity_profile)
       {
           case LaserIntensityProfileType::uniform: {
-            intensity_profile = std::make_shared<UniformIntensityProfile<dim, double>>(
+            intensity_profile = std::make_shared<UniformIntensityProfile<dim, number>>(
               [&]() { return get_laser_power(); });
             break;
           }
           case LaserIntensityProfileType::Gauss: {
             if (laser_data.model == LaserModelType::volumetric)
-              intensity_profile = std::make_shared<GaussVolumetricIntensityProfile<dim, double>>(
+              intensity_profile = std::make_shared<GaussVolumetricIntensityProfile<dim, number>>(
                 laser_data.radius,
-                [&]() -> const GaussVolumetricIntensityProfile<dim, double>::State {
+                [&]() -> const GaussVolumetricIntensityProfile<dim, number>::State {
                   return {.power = get_laser_power(), .position = get_laser_position()};
                 });
             else
-              intensity_profile = std::make_shared<GaussProjectionIntensityProfile<dim, double>>(
+              intensity_profile = std::make_shared<GaussProjectionIntensityProfile<dim, number>>(
                 laser_data.radius,
-                laser_data.get_direction<dim>(),
-                [&]() -> const GaussProjectionIntensityProfile<dim, double>::State {
+                laser_data.template get_direction<dim>(),
+                [&]() -> const GaussProjectionIntensityProfile<dim, number>::State {
                   return {.power = get_laser_power(), .position = get_laser_position()};
                 });
             break;
           }
           case LaserIntensityProfileType::Gusarov: {
-            intensity_profile = std::make_shared<GusarovIntensityProfile<dim, double>>(
+            intensity_profile = std::make_shared<GusarovIntensityProfile<dim, number>>(
               laser_data.gusarov,
               laser_data.radius,
-              [&]() -> const GusarovIntensityProfile<dim, double>::State {
+              [&]() -> const GusarovIntensityProfile<dim, number>::State {
                 return {.power = get_laser_power(), .position = get_laser_position()};
               });
             break;
@@ -93,14 +95,14 @@ namespace MeltPoolDG::Heat
       {
           case LaserModelType::volumetric: {
             laser_heat_source_operation_volumetric =
-              std::make_unique<Heat::LaserHeatSourceVolumetric<dim>>(intensity_profile);
+              std::make_unique<Heat::LaserHeatSourceVolumetric<dim, number>>(intensity_profile);
             break;
           }
         case LaserModelType::interface_projection_regularized:
         case LaserModelType::interface_projection_sharp:
           case LaserModelType::interface_projection_sharp_conforming: {
             laser_heat_source_operation_projection =
-              std::make_unique<Heat::LaserHeatSourceProjectionBased<dim>>(
+              std::make_unique<Heat::LaserHeatSourceProjectionBased<dim, number>>(
                 laser_data,
                 intensity_profile,
                 material_two_phase_transition_is_diffuse,
@@ -117,8 +119,8 @@ namespace MeltPoolDG::Heat
             scratch_data_in.attach_dof_handler(*rte_dof_handler);
             scratch_data_in.attach_dof_handler(*rte_dof_handler);
 
-            rte_constraints_dirichlet    = std::make_unique<AffineConstraints<double>>();
-            rte_hanging_node_constraints = std::make_unique<AffineConstraints<double>>();
+            rte_constraints_dirichlet    = std::make_unique<AffineConstraints<number>>();
+            rte_hanging_node_constraints = std::make_unique<AffineConstraints<number>>();
             rte_dof_idx = scratch_data_in.attach_constraint_matrix(*rte_constraints_dirichlet);
             rte_hanging_nodes_dof_idx =
               scratch_data_in.attach_constraint_matrix(*rte_hanging_node_constraints);
@@ -143,7 +145,7 @@ namespace MeltPoolDG::Heat
             rte_operation = std::make_unique<RadiativeTransport::RadiativeTransportOperation<dim>>(
               scratch_data,
               *rad_trans_data_in,
-              laser_data.get_direction<dim>(),
+              laser_data.template get_direction<dim>(),
               *heaviside_in,
               rte_dof_idx,
               rte_hanging_nodes_dof_idx,
@@ -159,17 +161,17 @@ namespace MeltPoolDG::Heat
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LaserOperation<dim>::distribute_dofs(const FiniteElementData &fe_data)
+  LaserOperation<dim, number>::distribute_dofs(const FiniteElementData &fe_data)
   {
     if (laser_data.model == LaserModelType::RTE)
       FiniteElementUtils::distribute_dofs<dim, 1>(fe_data, *rte_dof_handler);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LaserOperation<dim>::setup_constraints()
+  LaserOperation<dim, number>::setup_constraints()
   {
     if (laser_data.model == LaserModelType::RTE)
       {
@@ -180,9 +182,9 @@ namespace MeltPoolDG::Heat
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LaserOperation<dim>::distribute_constraints()
+  LaserOperation<dim, number>::distribute_constraints()
   {
     if (laser_data.model == LaserModelType::RTE)
       {
@@ -190,9 +192,9 @@ namespace MeltPoolDG::Heat
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LaserOperation<dim>::reinit()
+  LaserOperation<dim, number>::reinit()
   {
     if (laser_data.model == LaserModelType::RTE)
       {
@@ -200,9 +202,9 @@ namespace MeltPoolDG::Heat
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LaserOperation<dim>::attach_vectors(
+  LaserOperation<dim, number>::attach_vectors(
     std::vector<
       std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>> &data)
   {
@@ -214,9 +216,9 @@ namespace MeltPoolDG::Heat
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LaserOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  LaserOperation<dim, number>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
     if (laser_data.model == LaserModelType::RTE)
       {
@@ -224,9 +226,9 @@ namespace MeltPoolDG::Heat
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LaserOperation<dim>::reset(const double start_time)
+  LaserOperation<dim, number>::reset(const number start_time)
   {
     current_time = start_time;
     compute_laser_intensity();
@@ -239,9 +241,9 @@ namespace MeltPoolDG::Heat
     print();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LaserOperation<dim>::move_laser(const double dt)
+  LaserOperation<dim, number>::move_laser(const number dt)
   {
     bool intensity_or_laser_position_has_changed = false;
 
@@ -267,33 +269,33 @@ namespace MeltPoolDG::Heat
     print();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const Point<dim> &
-  LaserOperation<dim>::get_laser_position() const
+  LaserOperation<dim, number>::get_laser_position() const
   {
     return laser_position;
   }
 
-  template <int dim>
-  double
-  LaserOperation<dim>::get_laser_power() const
+  template <int dim, typename number>
+  number
+  LaserOperation<dim, number>::get_laser_power() const
   {
     return current_power;
   }
 
-  template <int dim>
-  std::shared_ptr<const Function<dim, double>>
-  LaserOperation<dim>::get_intensity_profile() const
+  template <int dim, typename number>
+  std::shared_ptr<const Function<dim, number>>
+  LaserOperation<dim, number>::get_intensity_profile() const
   {
     Assert(intensity_profile != nullptr, ExcInternalError());
     return intensity_profile;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   bool
-  LaserOperation<dim>::compute_laser_intensity()
+  LaserOperation<dim, number>::compute_laser_intensity()
   {
-    const double previous_intensity = laser_intensity;
+    const number previous_intensity = laser_intensity;
     if (laser_data.power_over_time == "ramp")
       {
         laser_intensity = (current_time - laser_data.power_start_time) /
@@ -318,17 +320,17 @@ namespace MeltPoolDG::Heat
   }
 
   /* TODO: add function parameters*/
-  template <int dim>
+  template <int dim, typename number>
   void
-  LaserOperation<dim>::compute_heat_source(VectorType            &heat_source,
-                                           VectorType            &heat_user_rhs,
-                                           const VectorType      &level_set_as_heaviside,
-                                           const unsigned int     ls_dof_idx,
-                                           const unsigned int     temp_hanging_nodes_dof_idx,
-                                           const unsigned int     temp_quad_idx,
-                                           const bool             zero_out,
-                                           const BlockVectorType *normal_vector,
-                                           const unsigned int     normal_dof_idx) const
+  LaserOperation<dim, number>::compute_heat_source(VectorType        &heat_source,
+                                                   VectorType        &heat_user_rhs,
+                                                   const VectorType  &level_set_as_heaviside,
+                                                   const unsigned int ls_dof_idx,
+                                                   const unsigned int temp_hanging_nodes_dof_idx,
+                                                   const unsigned int temp_quad_idx,
+                                                   const bool         zero_out,
+                                                   const BlockVectorType *normal_vector,
+                                                   const unsigned int     normal_dof_idx) const
   {
     switch (laser_data.model)
       {
@@ -391,9 +393,9 @@ namespace MeltPoolDG::Heat
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LaserOperation<dim>::print() const
+  LaserOperation<dim, number>::print() const
   {
     // TODO this information can be printed in one line
     std::ostringstream str;
@@ -404,7 +406,7 @@ namespace MeltPoolDG::Heat
     Journal::print_line(scratch_data.get_pcout(1), str.str(), "laser");
   }
 
-  template class LaserOperation<1>;
-  template class LaserOperation<2>;
-  template class LaserOperation<3>;
+  template class LaserOperation<1, double>;
+  template class LaserOperation<2, double>;
+  template class LaserOperation<3, double>;
 } // namespace MeltPoolDG::Heat

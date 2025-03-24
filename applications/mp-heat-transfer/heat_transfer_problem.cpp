@@ -86,7 +86,7 @@ namespace MeltPoolDG::Heat
                 if (simulation_case->parameters.heat.operator_type != TwoPhaseOperatorType::cut)
                   {
                     auto heat_diffuse_operation =
-                      dynamic_cast<HeatDiffuseOperation<dim> *>(heat_operation.get());
+                      dynamic_cast<HeatDiffuseOperation<dim, double> *>(heat_operation.get());
                     Assert(heat_diffuse_operation != nullptr, ExcInternalError());
                     laser_operation->compute_heat_source(heat_diffuse_operation->get_heat_source(),
                                                          heat_diffuse_operation->get_user_rhs(),
@@ -188,7 +188,7 @@ namespace MeltPoolDG::Heat
      */
     if (param.laser.power > 0.0)
       {
-        laser_operation = std::make_shared<LaserOperation<dim>>(
+        laser_operation = std::make_shared<LaserOperation<dim, double>>(
           *scratch_data,
           simulation_case->get_periodic_bc(),
           param.laser,
@@ -236,7 +236,7 @@ namespace MeltPoolDG::Heat
                 param.material.two_phase_fluid_properties_transition_type ==
                   TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation));
 
-            heat_operation = std::make_shared<HeatDiffuseOperation<dim>>(
+            heat_operation = std::make_shared<HeatDiffuseOperation<dim, double>>(
               *scratch_data,
               simulation_case->get_boundary_condition_manager("heat_transfer"),
               simulation_case->get_periodic_bc(),
@@ -259,7 +259,7 @@ namespace MeltPoolDG::Heat
               simulation_case->get_initial_condition("prescribed_signed_distance",
                                                      false /* is_optional */);
 
-            auto heat_cut_operation = std::make_shared<HeatCutOperation<dim>>(
+            auto heat_cut_operation = std::make_shared<HeatCutOperation<dim, double>>(
               *scratch_data,
               simulation_case->get_boundary_condition_manager("heat_transfer"),
               simulation_case->get_periodic_bc(),

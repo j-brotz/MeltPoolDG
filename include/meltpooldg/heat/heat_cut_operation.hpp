@@ -32,18 +32,18 @@
 
 namespace MeltPoolDG::Heat
 {
-  template <int dim>
-  class HeatCutOperation : public HeatOperationBase<dim>
+  template <int dim, typename number>
+  class HeatCutOperation : public HeatOperationBase<dim, number>
   {
   private:
-    using VectorType = typename HeatOperationBase<dim>::VectorType;
+    using VectorType = typename HeatOperationBase<dim, number>::VectorType;
 
     const ScratchData<dim>                                            &scratch_data;
     const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> dirichlet_bc;
     const PeriodicBoundaryConditions<dim>                             &periodic_bc;
-    const HeatData<double>                                            &heat_data;
+    const HeatData<number>                                            &heat_data;
 
-    const TimeIterator<double> &time_iterator;
+    const TimeIterator<number> &time_iterator;
 
     const unsigned int temp_dof_idx;
     const unsigned int temp_hanging_nodes_dof_idx;
@@ -61,19 +61,19 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier;
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier_old;
 
-    CutUtil::SolutionTransferOperator<dim, double>                     cut_solution_transfer;
+    CutUtil::SolutionTransferOperator<dim, number>                     cut_solution_transfer;
     std::function<void(const dealii::DoFHandler<dim> &)>               reinit_matrix_free;
     std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> reinit_vector;
 
-    dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>>
+    dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>
       mapping_info_surface;
     std::vector<
-      std::shared_ptr<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>>>>
+      std::shared_ptr<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>>
       mapping_info_cells;
 
     NewtonRaphsonSolver<VectorType> newton;
 
-    std::unique_ptr<HeatCutOperator<dim, double>> heat_operator;
+    std::unique_ptr<HeatCutOperator<dim, number>> heat_operator;
 
     Preconditioner<dim, VectorType> preconditioner;
 
@@ -84,10 +84,10 @@ namespace MeltPoolDG::Heat
     HeatCutOperation(const ScratchData<dim>                                    &scratch_data_in,
                      const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
                      const PeriodicBoundaryConditions<dim>                     &periodic_bc_in,
-                     const HeatData<double>                                    &heat_data_in,
-                     const MaterialData<double>                                &material_data_in,
-                     const Evaporation::EvaporationData<double>                &evapor_data_in,
-                     const TimeIterator<double>                                &time_iterator_in,
+                     const HeatData<number>                                    &heat_data_in,
+                     const MaterialData<number>                                &material_data_in,
+                     const Evaporation::EvaporationData<number>                &evapor_data_in,
+                     const TimeIterator<number>                                &time_iterator_in,
                      const unsigned int                                         temp_dof_idx_in,
                      const unsigned int temp_hanging_nodes_dof_idx_in,
                      const unsigned int temp_quad_idx_in,
@@ -99,8 +99,8 @@ namespace MeltPoolDG::Heat
 
     void
     register_laser_intensity_function_and_direction(
-      std::shared_ptr<const dealii::Function<dim, double>> laser_intensity_profile_in,
-      const dealii::Tensor<1, dim, double>                &laser_direction_in);
+      std::shared_ptr<const dealii::Function<dim, number>> laser_intensity_profile_in,
+      const dealii::Tensor<1, dim, number>                &laser_direction_in);
 
     void
     register_reinit_matrix_free(

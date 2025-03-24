@@ -13,11 +13,11 @@
 
 namespace MeltPoolDG::Heat
 {
-  template <int dim>
+  template <int dim, typename number>
   class HeatOperationBase
   {
   public:
-    using VectorType = dealii::LinearAlgebra::distributed::Vector<double>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
     virtual void
     reinit() = 0;

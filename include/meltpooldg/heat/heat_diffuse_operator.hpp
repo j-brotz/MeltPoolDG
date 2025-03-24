@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, UIBK/TUM, February 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/base/aligned_vector.h>
@@ -14,7 +9,6 @@
 #include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/full_matrix.h>
-#include <deal.II/lac/la_parallel_vector.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 
 #include <deal.II/matrix_free/matrix_free.h>
@@ -39,8 +33,6 @@
 
 namespace MeltPoolDG::Heat
 {
-  using namespace dealii;
-
   /*
    * This operator computes the residual and its consistent tangent of the discretized heat
    * equation with temperature dependent material properties:
@@ -115,7 +107,7 @@ namespace MeltPoolDG::Heat
    *
    */
 
-  template <int dim, typename number = double>
+  template <int dim, typename number>
   class HeatDiffuseMultiPhaseOperator : public OperatorMatrixFree<dim, number>
   {
   private:
@@ -124,8 +116,8 @@ namespace MeltPoolDG::Heat
     using OperatorMatrixFree<dim, number>::compute_inverse_diagonal_from_matrixfree;
     using OperatorMatrixFree<dim, number>::vmult;
 
-    using VectorType       = LinearAlgebra::distributed::Vector<number>;
-    using SparseMatrixType = TrilinosWrappers::SparseMatrix;
+    using VectorType       = typename OperatorMatrixFree<dim, number>::VectorType;
+    using SparseMatrixType = dealii::TrilinosWrappers::SparseMatrix;
 
     const ScratchData<dim> &scratch_data;
     const HeatData<number> &data;
@@ -136,13 +128,12 @@ namespace MeltPoolDG::Heat
 
     const VectorType &temperature;
     const VectorType &temperature_old;
-    std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
-                                    neumann_bc; //@todo find a nice way to provide BC
-    std::vector<types::boundary_id> bc_radiation_indices;
-    std::vector<types::boundary_id> bc_convection_indices;
+    std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+                                            neumann_bc; //@todo find a nice way to provide BC
+    std::vector<dealii::types::boundary_id> bc_radiation_indices;
+    std::vector<dealii::types::boundary_id> bc_convection_indices;
 
     const VectorType &heat_source;
-
 
     // optional: flow velocity for internal convection
     const unsigned int vel_dof_idx;
@@ -161,25 +152,25 @@ namespace MeltPoolDG::Heat
     const bool do_solidification;
 
     // interpolation of the level set space to the temperature space
-    FullMatrix<double> ls_to_temp_grad_interpolation_matrix;
-    bool               do_level_set_temperature_gradient_interpolation = false;
+    dealii::FullMatrix<number> ls_to_temp_grad_interpolation_matrix;
+    bool                       do_level_set_temperature_gradient_interpolation = false;
 
     /*
      * contribution to heat source due to evaporation;
      * just for output purposes
      */
-    mutable VectorType                             evapor_heat_source;
-    mutable VectorType                             evapor_heat_source_projected;
-    mutable AlignedVector<VectorizedArray<double>> q_vapor;
+    mutable VectorType                                             evapor_heat_source;
+    mutable VectorType                                             evapor_heat_source_projected;
+    mutable dealii::AlignedVector<dealii::VectorizedArray<number>> q_vapor;
 
     // phase weighted delta function, only used for evaporative cooling
-    std::unique_ptr<const LevelSet::DeltaApproximationBase<double>> delta_phase_weighted;
+    std::unique_ptr<const LevelSet::DeltaApproximationBase<number>> delta_phase_weighted;
 
-    mutable AlignedVector<VectorizedArray<double>> conductivity_at_q;
-    mutable VectorType                             conductivity_vec;
+    mutable dealii::AlignedVector<dealii::VectorizedArray<number>> conductivity_at_q;
+    mutable VectorType                                             conductivity_vec;
 
-    mutable AlignedVector<VectorizedArray<double>> rho_cp_at_q;
-    mutable VectorType                             rho_cp_vec;
+    mutable dealii::AlignedVector<dealii::VectorizedArray<number>> rho_cp_at_q;
+    mutable VectorType                                             rho_cp_vec;
 
     // for efficient ghost value update
     mutable std::vector<bool> do_update_ghosts;
@@ -209,10 +200,11 @@ namespace MeltPoolDG::Heat
 
     void
     register_surface_mesh(
-      const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
-                                   std::vector<Point<dim>> /*quad_points*/,
-                                   std::vector<double> /*weights*/
-                                   >> &surface_mesh_info);
+      const std::vector<
+        std::tuple<const typename dealii::Triangulation<dim, dim>::cell_iterator /*cell*/,
+                   std::vector<dealii::Point<dim>> /*quad_points*/,
+                   std::vector<number> /*weights*/
+                   >> &surface_mesh_info);
 
     void
     pre() final;
@@ -226,19 +218,19 @@ namespace MeltPoolDG::Heat
     vmult(VectorType &dst, const VectorType &src /*solution_update*/) const final;
 
     void
-    tangent_cell_loop(const MatrixFree<dim, number>        &matrix_free,
-                      VectorType                           &dst,
-                      const VectorType                     &src,
-                      std::pair<unsigned int, unsigned int> cell_range) const;
+    tangent_cell_loop(const dealii::MatrixFree<dim, number> &matrix_free,
+                      VectorType                            &dst,
+                      const VectorType                      &src,
+                      std::pair<unsigned int, unsigned int>  cell_range) const;
 
     /*
      * compute the tangent of Robin-type boundary conditions for convection and radiation
      */
     void
-    tangent_boundary_loop(const MatrixFree<dim, number>        &matrix_free,
-                          VectorType                           &dst,
-                          const VectorType                     &src,
-                          std::pair<unsigned int, unsigned int> face_range) const;
+    tangent_boundary_loop(const dealii::MatrixFree<dim, number> &matrix_free,
+                          VectorType                            &dst,
+                          const VectorType                      &src,
+                          std::pair<unsigned int, unsigned int>  face_range) const;
 
     void
     compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const final;
@@ -247,10 +239,10 @@ namespace MeltPoolDG::Heat
     compute_system_matrix_from_matrixfree(SparseMatrixType &system_matrix) const final;
 
     void
-    rhs_cell_loop(const MatrixFree<dim, number>        &matrix_free,
-                  VectorType                           &dst,
-                  const VectorType                     &src, /* temperature_old*/
-                  std::pair<unsigned int, unsigned int> cell_range) const;
+    rhs_cell_loop(const dealii::MatrixFree<dim, number> &matrix_free,
+                  VectorType                            &dst,
+                  const VectorType                      &src, /* temperature_old*/
+                  std::pair<unsigned int, unsigned int>  cell_range) const;
 
     /*
      * compute the RHS due to Neumann and Robin-type boundary conditions for convection and
@@ -259,10 +251,10 @@ namespace MeltPoolDG::Heat
      * @todo: add equations
      */
     void
-    rhs_boundary_loop(const MatrixFree<dim, number>        &matrix_free,
-                      VectorType                           &dst,
-                      [[maybe_unused]] const VectorType    &src,
-                      std::pair<unsigned int, unsigned int> face_range) const;
+    rhs_boundary_loop(const dealii::MatrixFree<dim, number> &matrix_free,
+                      VectorType                            &dst,
+                      [[maybe_unused]] const VectorType     &src,
+                      std::pair<unsigned int, unsigned int>  face_range) const;
 
     void
     rhs_cut_cell_loop(VectorType &dst) const;
@@ -277,7 +269,7 @@ namespace MeltPoolDG::Heat
      * attach vector for solution transfer for AMR
      */
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
+    attach_vectors(std::vector<VectorType *> &vectors);
 
     void
     distribute_constraints();
@@ -299,14 +291,14 @@ namespace MeltPoolDG::Heat
      */
     void
     tangent_local_cell_operation(
-      FECellIntegrator<dim, 1, number>                        &temp_vals,
-      FECellIntegrator<dim, 1, number>                        &temp_lin_vals,
-      FECellIntegrator<dim, 1, number>                        &temp_old_vals,
-      FECellIntegrator<dim, dim, number>                      &velocity_vals,
-      FECellIntegrator<dim, 1, number>                        &ls_vals,
-      FECellIntegrator<dim, 1, number>                        &ls_interpolated_vals,
-      const std::unique_ptr<FECellIntegrator<dim, 1, number>> &evapor_vals,
-      bool                                                     do_reinit_cells) const;
+      dealii::FECellIntegrator<dim, 1, number>                        &temp_vals,
+      dealii::FECellIntegrator<dim, 1, number>                        &temp_lin_vals,
+      dealii::FECellIntegrator<dim, 1, number>                        &temp_old_vals,
+      dealii::FECellIntegrator<dim, dim, number>                      &velocity_vals,
+      dealii::FECellIntegrator<dim, 1, number>                        &ls_vals,
+      dealii::FECellIntegrator<dim, 1, number>                        &ls_interpolated_vals,
+      const std::unique_ptr<dealii::FECellIntegrator<dim, 1, number>> &evapor_vals,
+      bool                                                             do_reinit_cells) const;
 
     /**
      * This function executes the local boundary operation for computing the tangent.
@@ -317,9 +309,9 @@ namespace MeltPoolDG::Heat
      *   temp_vals.distribute_local_to_global(dst).
      */
     void
-    tangent_local_boundary_operation(FEFaceIntegrator<dim, 1, number> &dQ_dT,
-                                     FEFaceIntegrator<dim, 1, number> &temp_vals,
-                                     bool                              do_reinit_face) const;
+    tangent_local_boundary_operation(dealii::FEFaceIntegrator<dim, 1, number> &dQ_dT,
+                                     dealii::FEFaceIntegrator<dim, 1, number> &temp_vals,
+                                     bool do_reinit_face) const;
     /**
      * The setup for dealii::MatrixFreeTools::internal::compute_diagonal and
      * dealii::MatrixFreeTools::internal::compute_matrix is identical. To avoid duplicate code this
@@ -339,10 +331,10 @@ namespace MeltPoolDG::Heat
      * initially. This function only modifies their values if necessary. I.e. in case of no
      * two-phase flow and no solidification this function does nothing.
      */
-    std::tuple<VectorizedArray<number>, VectorizedArray<number>>
-    get_material_parameters(const FECellIntegrator<dim, 1, number> &temp_lin_val,
-                            const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
-                            unsigned int                            q_index) const;
+    std::tuple<dealii::VectorizedArray<number>, dealii::VectorizedArray<number>>
+    get_material_parameters(const dealii::FECellIntegrator<dim, 1, number> &temp_lin_val,
+                            const dealii::FECellIntegrator<dim, 1, number> &ls_heaviside_val,
+                            unsigned int                                    q_index) const;
 
     /**
      * Determine the material parameters and their temperature derivatives. This function takes
@@ -356,19 +348,20 @@ namespace MeltPoolDG::Heat
      * @note The derivatives @p d_rho_cp_d_T and @p d_conductivity_dT are only non-zero in the case of solidification
      * and if the temperature is between the solidus- and liquidus temperature.
      */
-    std::tuple<VectorizedArray<number>,
-               VectorizedArray<number>,
-               VectorizedArray<number>,
-               VectorizedArray<number>>
+    std::tuple<dealii::VectorizedArray<number>,
+               dealii::VectorizedArray<number>,
+               dealii::VectorizedArray<number>,
+               dealii::VectorizedArray<number>>
     get_material_parameters_and_derivatives(
-      const FECellIntegrator<dim, 1, number> &temp_lin_val,
-      const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
-      unsigned int                            q_index) const;
+      const dealii::FECellIntegrator<dim, 1, number> &temp_lin_val,
+      const dealii::FECellIntegrator<dim, 1, number> &ls_heaviside_val,
+      unsigned int                                    q_index) const;
 
-    const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
-                                 std::vector<Point<dim>> /*quad_points*/,
-                                 std::vector<double> /*weights*/
-                                 >> *surface_mesh_info = nullptr;
+    const std::vector<
+      std::tuple<const typename dealii::Triangulation<dim, dim>::cell_iterator /*cell*/,
+                 std::vector<dealii::Point<dim>> /*quad_points*/,
+                 std::vector<number> /*weights*/
+                 >> *surface_mesh_info = nullptr;
 
     Evaporation::EvaporCoolingInterfaceFluxType evapor_flux_type =
       Evaporation::EvaporCoolingInterfaceFluxType::none;
