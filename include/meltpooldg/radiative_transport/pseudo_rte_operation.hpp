@@ -2,7 +2,7 @@
 
 #include <deal.II/base/tensor.h>
 
-#include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
@@ -15,20 +15,18 @@
 
 namespace MeltPoolDG::RadiativeTransport
 {
-  using namespace dealii;
-
   /*
    * TODO
    */
-  template <int dim>
+  template <int dim, typename number>
   class PseudoRTEOperation
   {
   private:
-    using VectorType = LinearAlgebra::distributed::Vector<double>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim, dim, number> &scratch_data;
 
-    const RadiativeTransportData<double> &rte_data;
+    const RadiativeTransportData<number> &rte_data;
 
     const VectorType &heaviside;
 
@@ -39,18 +37,18 @@ namespace MeltPoolDG::RadiativeTransport
 
     VectorType rhs;
 
-    std::unique_ptr<PseudoRTEOperator<dim, double>> pseudo_rte_operator;
+    std::unique_ptr<PseudoRTEOperator<dim, number>> pseudo_rte_operator;
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 
-    TimeIterator<double> pseudo_time_iterator;
+    TimeIterator<number> pseudo_time_iterator;
 
     Preconditioner<dim, VectorType> preconditioner;
 
   public:
-    PseudoRTEOperation(const ScratchData<dim>               &scratch_data_in,
-                       const RadiativeTransportData<double> &rte_data_in,
-                       const Tensor<1, dim, double>         &laser_direction_in,
+    PseudoRTEOperation(const ScratchData<dim, dim, number>  &scratch_data_in,
+                       const RadiativeTransportData<number> &rte_data_in,
+                       const dealii::Tensor<1, dim, number> &laser_direction_in,
                        const VectorType                     &heaviside_in,
                        const unsigned int                    rte_dof_idx_in,
                        const unsigned int                    rte_hanging_nodes_dof_idx_in,
@@ -67,9 +65,9 @@ namespace MeltPoolDG::RadiativeTransport
     solve();
 
     void
-    set_intensity(const LinearAlgebra::distributed::Vector<double> &intensity_in);
+    set_intensity(const VectorType &intensity_in);
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const VectorType &
     get_predicted_intensity() const;
   };
 } // namespace MeltPoolDG::RadiativeTransport

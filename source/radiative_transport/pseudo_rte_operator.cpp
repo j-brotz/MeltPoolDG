@@ -11,8 +11,8 @@ namespace MeltPoolDG::RadiativeTransport
 {
   template <int dim, typename number>
   PseudoRTEOperator<dim, number>::PseudoRTEOperator(
-    const ScratchData<dim>               &scratch_data_in,
-    const RadiativeTransportData<double> &rte_data_in,
+    const ScratchData<dim, dim, number>  &scratch_data_in,
+    const RadiativeTransportData<number> &rte_data_in,
     const Tensor<1, dim, number>         &laser_direction_in,
     const VectorType                     &heaviside_in,
     const unsigned int                    rte_dof_idx_in,
@@ -86,8 +86,8 @@ namespace MeltPoolDG::RadiativeTransport
 
                 const scalar mu_A = compare_and_apply_mask<SIMDComparison::greater_than>(
                   compute_invalid_mask(last_I, last_grad_I, H, pure_liquid_level_set),
-                  VectorizedArray<double>(1e-16),
-                  /*true*/ VectorizedArray<double>(rte_data.avoid_singular_matrix_absorptivity),
+                  VectorizedArray<number>(1e-16),
+                  /*true*/ VectorizedArray<number>(rte_data.avoid_singular_matrix_absorptivity),
                   /*false*/
                   compute_mu(rte_data,
                              H,
@@ -115,7 +115,7 @@ namespace MeltPoolDG::RadiativeTransport
   template <int dim, typename number>
   void
   PseudoRTEOperator<dim, number>::compute_system_matrix_from_matrixfree(
-    TrilinosWrappers::SparseMatrix &system_matrix) const
+    SparseMatrixType &system_matrix) const
   {
     system_matrix = 0.0;
 
@@ -160,7 +160,7 @@ namespace MeltPoolDG::RadiativeTransport
       rte_quad_idx);
 
     // ... and invert it
-    const double linfty_norm = std::max(1.0, diagonal.linfty_norm());
+    const number linfty_norm = std::max(1.0, diagonal.linfty_norm());
     for (auto &i : diagonal)
       i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
   }

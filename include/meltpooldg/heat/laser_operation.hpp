@@ -53,9 +53,9 @@ namespace MeltPoolDG::Heat
       laser_heat_source_operation_projection;
 
     // RTE
-    std::unique_ptr<RadiativeTransport::RadiativeTransportOperation<dim>> rte_operation;
-    std::unique_ptr<dealii::DoFHandler<dim>>                              rte_dof_handler;
-    std::unique_ptr<dealii::AffineConstraints<number>>                    rte_constraints_dirichlet;
+    std::unique_ptr<RadiativeTransport::RadiativeTransportOperation<dim, number>> rte_operation;
+    std::unique_ptr<dealii::DoFHandler<dim>>                                      rte_dof_handler;
+    std::unique_ptr<dealii::AffineConstraints<number>> rte_constraints_dirichlet;
     std::unique_ptr<dealii::AffineConstraints<number>> rte_hanging_node_constraints;
     std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
                  rte_dirichlet_boundary_condition;

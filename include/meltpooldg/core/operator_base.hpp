@@ -188,8 +188,9 @@ namespace MeltPoolDG
   class OperatorMatrixFree : public virtual OperatorBase
   {
   public:
-    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
-    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
+    using VectorType       = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType  = dealii::LinearAlgebra::distributed::BlockVector<number>;
+    using SparseMatrixType = dealii::TrilinosWrappers::SparseMatrix;
 
     virtual ~OperatorMatrixFree() = default;
 
@@ -253,7 +254,7 @@ namespace MeltPoolDG
      * @param matrix Sparse matrix to compute.
      */
     virtual void
-    compute_system_matrix_from_matrixfree(dealii::TrilinosWrappers::SparseMatrix & /*matrix*/) const
+    compute_system_matrix_from_matrixfree(TrilinosWrappers::SparseMatrix & /*matrix*/) const
     {
       DEAL_II_NOT_IMPLEMENTED();
     }
