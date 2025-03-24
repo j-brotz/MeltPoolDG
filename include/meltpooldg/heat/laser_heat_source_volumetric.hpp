@@ -1,9 +1,8 @@
 #pragma once
 
 #include <deal.II/base/function.h>
-#include <deal.II/base/point.h>
 
-#include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
 
@@ -11,19 +10,17 @@
 
 namespace MeltPoolDG::Heat
 {
-  using namespace dealii;
-
   /**
    * Volumetric laser heat source model.
    */
-  template <int dim>
+  template <int dim, typename number>
   class LaserHeatSourceVolumetric
   {
-    using VectorType = LinearAlgebra::distributed::Vector<double>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
   public:
     LaserHeatSourceVolumetric(
-      const std::shared_ptr<const Function<dim, double>> intensity_profile_in);
+      const std::shared_ptr<const dealii::Function<dim, number>> intensity_profile_in);
 
     /**
      * Compute a DoF vector of the volumetric heat source.
@@ -35,6 +32,6 @@ namespace MeltPoolDG::Heat
                                    const bool              zero_out = true) const;
 
   private:
-    const std::shared_ptr<const Function<dim, double>> intensity_profile;
+    const std::shared_ptr<const dealii::Function<dim, number>> intensity_profile;
   };
 } // namespace MeltPoolDG::Heat

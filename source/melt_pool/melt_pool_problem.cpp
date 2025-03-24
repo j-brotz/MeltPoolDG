@@ -136,11 +136,12 @@ namespace MeltPoolDG::MeltPool
         };
 
         // get a pointer to the heat diffuse operation if it's used
-        Heat::HeatDiffuseOperation<dim> *const heat_diffuse_operation = std::invoke([&]() {
-          Heat::HeatDiffuseOperation<dim> *temp_ptr = nullptr;
+        Heat::HeatDiffuseOperation<dim, double> *const heat_diffuse_operation = std::invoke([&]() {
+          Heat::HeatDiffuseOperation<dim, double> *temp_ptr = nullptr;
           if (heat_operation and param.heat.operator_type == Heat::TwoPhaseOperatorType::diffuse)
             {
-              temp_ptr = dynamic_cast<Heat::HeatDiffuseOperation<dim> *>(heat_operation.get());
+              temp_ptr =
+                dynamic_cast<Heat::HeatDiffuseOperation<dim, double> *>(heat_operation.get());
               AssertThrow(temp_ptr != nullptr, ExcInternalError());
             }
           return temp_ptr;
@@ -288,7 +289,7 @@ namespace MeltPoolDG::MeltPool
                     laser_operation->move_laser(dt);
 
                     if (param.laser.model == Heat::LaserModelType::analytical_temperature)
-                      Heat::LaserAnalyticalTemperatureField<dim>::compute_temperature_field(
+                      Heat::LaserAnalyticalTemperatureField<dim, double>::compute_temperature_field(
                         *scratch_data,
                         param.material,
                         param.laser,
@@ -879,7 +880,7 @@ namespace MeltPoolDG::MeltPool
     // initialize laser operation
     if (problem_specific_parameters.do_heat_transfer and param.laser.power > 0.0)
       {
-        laser_operation = std::make_shared<Heat::LaserOperation<dim>>(
+        laser_operation = std::make_shared<Heat::LaserOperation<dim, double>>(
           *scratch_data,
           base_in->get_periodic_bc(),
           param.laser,
@@ -912,12 +913,12 @@ namespace MeltPoolDG::MeltPool
         ls_quad_idx);
 
     // initialize the heat operation class
-    std::shared_ptr<Heat::HeatDiffuseOperation<dim>> heat_diffuse_operation;
+    std::shared_ptr<Heat::HeatDiffuseOperation<dim, double>> heat_diffuse_operation;
     if (problem_specific_parameters.do_heat_transfer)
       switch (param.heat.operator_type)
         {
             case Heat::TwoPhaseOperatorType::diffuse: {
-              heat_diffuse_operation = std::make_shared<Heat::HeatDiffuseOperation<dim>>(
+              heat_diffuse_operation = std::make_shared<Heat::HeatDiffuseOperation<dim, double>>(
                 *scratch_data,
                 base_in->get_boundary_condition_manager("heat_transfer"),
                 base_in->get_periodic_bc(),
@@ -939,7 +940,7 @@ namespace MeltPoolDG::MeltPool
               AssertThrow(param.amr.do_amr == false, ExcNotImplemented());
               AssertThrow(base_in->get_periodic_bc().get_data().empty(), ExcNotImplemented());
 
-              auto heat_cut_operation = std::make_shared<Heat::HeatCutOperation<dim>>(
+              auto heat_cut_operation = std::make_shared<Heat::HeatCutOperation<dim, double>>(
                 *scratch_data,
                 base_in->get_boundary_condition_manager("heat_transfer"),
                 base_in->get_periodic_bc(),
@@ -1291,7 +1292,7 @@ namespace MeltPoolDG::MeltPool
 
     if (laser_operation and
         base_in->parameters.laser.model == Heat::LaserModelType::analytical_temperature)
-      Heat::LaserAnalyticalTemperatureField<dim>::compute_temperature_field(
+      Heat::LaserAnalyticalTemperatureField<dim, double>::compute_temperature_field(
         *scratch_data,
         base_in->parameters.material,
         base_in->parameters.laser,

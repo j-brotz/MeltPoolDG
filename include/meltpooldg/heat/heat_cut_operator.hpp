@@ -7,7 +7,6 @@
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_system.h>
 
-#include <deal.II/lac/la_parallel_vector.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 
 #include <deal.II/matrix_free/fe_point_evaluation.h>
@@ -47,7 +46,7 @@ namespace MeltPoolDG::Heat
       dealii::FEPointEvaluation<n_components, dim, dim, dealii::VectorizedArray<number>>;
     using FaceEval = FEFaceIntegrator<dim, 1, number>;
 
-    using VectorType       = dealii::LinearAlgebra::distributed::Vector<number>;
+    using VectorType       = typename OperatorMatrixFree<dim, number>::VectorType;
     using SparseMatrixType = dealii::TrilinosWrappers::SparseMatrix;
 
     const ScratchData<dim> &scratch_data;

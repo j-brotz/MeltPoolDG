@@ -30,6 +30,8 @@
 
 namespace MeltPoolDG::Heat
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   HeatDiffuseMultiPhaseOperator<dim, number>::HeatDiffuseMultiPhaseOperator(
     const ScratchData<dim>                                    &scratch_data_in,
@@ -79,7 +81,7 @@ namespace MeltPoolDG::Heat
   HeatDiffuseMultiPhaseOperator<dim, number>::register_surface_mesh(
     const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
                                  std::vector<Point<dim>> /*quad_points*/,
-                                 std::vector<double> /*weights*/
+                                 std::vector<number> /*weights*/
                                  >> &surface_mesh_info_in)
   {
     surface_mesh_info = &surface_mesh_info_in;
@@ -493,7 +495,7 @@ namespace MeltPoolDG::Heat
 
             if (evapor_vals)
               {
-                VectorizedArray<double> weight(1.0);
+                VectorizedArray<number> weight(1.0);
                 if (delta_phase_weighted)
                   weight = delta_phase_weighted->compute_weight(ls_vals_used.get_value(q_index));
 
@@ -538,7 +540,7 @@ namespace MeltPoolDG::Heat
                                                  scratch_data.get_fe(temp_dof_idx),
                                                  update_values);
 
-        std::vector<double>                  buffer;
+        std::vector<number>                  buffer;
         std::vector<types::global_dof_index> local_dof_indices;
 
         const int n_dofs_evapor = scratch_data.get_fe(evapor_mass_flux_dof_idx).n_dofs_per_cell();
@@ -551,7 +553,7 @@ namespace MeltPoolDG::Heat
                 const unsigned int n_points = quad_points.size();
 
                 const ArrayView<const Point<dim>> unit_points(quad_points.data(), n_points);
-                const ArrayView<const double>     JxW(weights.data(), n_points);
+                const ArrayView<const number>     JxW(weights.data(), n_points);
 
                 evapor_vals_surf.reinit(cell, unit_points);
                 temp_vals_surf.reinit(cell, unit_points);
@@ -594,7 +596,7 @@ namespace MeltPoolDG::Heat
 
                 for (unsigned int q = 0; q < n_points; ++q)
                   {
-                    const double cooling = evaporative_cooling->compute_evaporative_cooling(
+                    const number cooling = evaporative_cooling->compute_evaporative_cooling(
                       evapor_vals_surf.get_value(q), temp_vals_surf.get_value(q));
 
                     temp_vals_surf.submit_value(cooling * JxW[q],
@@ -624,11 +626,11 @@ namespace MeltPoolDG::Heat
                                                         *level_set_as_heaviside);
 
         // step 2: evaluate and fill rhs
-        FEFaceIntegrator<dim, 1, double> temp_eval(scratch_data.get_matrix_free(),
+        FEFaceIntegrator<dim, 1, number> temp_eval(scratch_data.get_matrix_free(),
                                                    true /*is_interior_face*/,
                                                    temp_dof_idx,
                                                    temp_quad_idx);
-        FEFaceIntegrator<dim, 1, double> evapor_eval(scratch_data.get_matrix_free(),
+        FEFaceIntegrator<dim, 1, number> evapor_eval(scratch_data.get_matrix_free(),
                                                      true /*is_interior_face*/,
                                                      evapor_mass_flux_dof_idx,
                                                      temp_quad_idx);
@@ -720,7 +722,7 @@ namespace MeltPoolDG::Heat
           {
             auto temp_vals = dQ_dT.get_value(q_index);
 
-            VectorizedArray<double> temp = 0;
+            VectorizedArray<number> temp = 0;
             if (do_neumann)
               {
                 auto quad_point = dQ_dT.quadrature_point(q_index);
@@ -771,7 +773,7 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatDiffuseMultiPhaseOperator<dim, number>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> & /*vectors*/)
+    std::vector<VectorType *> & /*vectors*/)
   {
     // none
   }
@@ -812,7 +814,7 @@ namespace MeltPoolDG::Heat
             temp_hanging_nodes_dof_idx,
             temp_quad_idx,
             [&](const unsigned int cell,
-                const unsigned int quad) -> const VectorizedArray<double> & {
+                const unsigned int quad) -> const VectorizedArray<number> & {
               return conductivity_at_q[cell * scratch_data.get_n_q_points(temp_quad_idx) + quad];
             });
 
@@ -834,7 +836,7 @@ namespace MeltPoolDG::Heat
             temp_hanging_nodes_dof_idx,
             temp_quad_idx,
             [&](const unsigned int cell,
-                const unsigned int quad) -> const VectorizedArray<double> & {
+                const unsigned int quad) -> const VectorizedArray<number> & {
               return rho_cp_at_q[cell * scratch_data.get_n_q_points(temp_quad_idx) + quad];
             });
 
@@ -875,14 +877,14 @@ namespace MeltPoolDG::Heat
                     temp_hanging_nodes_dof_idx,
                     temp_quad_idx,
                     [&](const unsigned int cell,
-                        const unsigned int quad) -> const VectorizedArray<double> & {
+                        const unsigned int quad) -> const VectorizedArray<number> & {
                       return q_vapor[cell * scratch_data.get_n_q_points(temp_quad_idx) + quad];
                     });
               }
 
             Journal::print_formatted_norm(
               scratch_data.get_pcout(3),
-              [&]() -> double {
+              [&]() -> number {
                 return VectorTools::compute_norm<dim>(evapor_heat_source_projected,
                                                       scratch_data,
                                                       temp_hanging_nodes_dof_idx,
@@ -1005,7 +1007,7 @@ namespace MeltPoolDG::Heat
 
         if (evapor_vals)
           {
-            VectorizedArray<double> weight(1.0);
+            VectorizedArray<number> weight(1.0);
             if (delta_phase_weighted)
               weight = delta_phase_weighted->compute_weight(ls_vals_used.get_value(q_index));
 
@@ -1059,13 +1061,13 @@ namespace MeltPoolDG::Heat
       {
         auto inc_temp_vals_at_q = dQ_dT.get_value(q_index);
 
-        VectorizedArray<double> temp = 0;
+        VectorizedArray<number> temp = 0;
 
         if (do_convection)
           temp += data.convection.convection_coefficient * inc_temp_vals_at_q;
         if (do_radiation)
           temp += 4. * data.radiation.emissivity * PhysicalConstants::stefan_boltzmann_constant *
-                  pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
+                  pow<number>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
 
         dQ_dT.submit_value(temp, q_index);
       }

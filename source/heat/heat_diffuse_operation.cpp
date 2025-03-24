@@ -18,14 +18,16 @@
 
 namespace MeltPoolDG::Heat
 {
-  template <int dim>
-  HeatDiffuseOperation<dim>::HeatDiffuseOperation(
+  using namespace dealii;
+
+  template <int dim, typename number>
+  HeatDiffuseOperation<dim, number>::HeatDiffuseOperation(
     const ScratchData<dim>                                    &scratch_data_in,
     const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
     const PeriodicBoundaryConditions<dim>                     &periodic_bc_in,
-    const HeatData<double>                                    &heat_data_in,
-    const Material<double>                                    &material,
-    const TimeIterator<double>                                &time_iterator,
+    const HeatData<number>                                    &heat_data_in,
+    const Material<number>                                    &material,
+    const TimeIterator<number>                                &time_iterator,
     const unsigned int                                         temp_dof_idx_in,
     const unsigned int                                         temp_hanging_nodes_dof_idx_in,
     const unsigned int                                         temp_quad_idx_in,
@@ -50,7 +52,7 @@ namespace MeltPoolDG::Heat
     , solution_history(std::max(heat_data.predictor.n_old_solution_vectors,
                                 2U /*TODO: include time integration scheme*/))
   {
-    heat_operator = std::make_unique<HeatDiffuseMultiPhaseOperator<dim>>(
+    heat_operator = std::make_unique<HeatDiffuseMultiPhaseOperator<dim, number>>(
       scratch_data,
       heat_bc_manager,
       heat_data,
@@ -67,15 +69,16 @@ namespace MeltPoolDG::Heat
       level_set_as_heaviside,
       do_solidification);
 
-    preconditioner = make_preconditioner<dim, HeatDiffuseMultiPhaseOperator<dim>, VectorType>(
-      heat_data.linear_solver.preconditioner_type, heat_operator.get());
+    preconditioner =
+      make_preconditioner<dim, HeatDiffuseMultiPhaseOperator<dim, number>, VectorType>(
+        heat_data.linear_solver.preconditioner_type, heat_operator.get());
 
     setup_newton();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim>::setup_newton()
+  HeatDiffuseOperation<dim, number>::setup_newton()
   {
     newton.residual = [&](const VectorType & /*evaluation_point*/, VectorType &rhs) {
       // solely homogeneous dirichlet bc are distributed for the
@@ -86,7 +89,7 @@ namespace MeltPoolDG::Heat
     };
 
     newton.solve_with_jacobian = [&](const VectorType &rhs, VectorType &solution_update) -> int {
-      return LinearSolver::solve<VectorType, OperatorMatrixFree<dim, double>>(
+      return LinearSolver::solve<VectorType, OperatorMatrixFree<dim, number>>(
         *heat_operator,
         solution_update,
         rhs,
@@ -103,7 +106,7 @@ namespace MeltPoolDG::Heat
       scratch_data.get_constraint(temp_dof_idx).distribute(v);
     };
 
-    newton.norm_of_solution_vector = [this]() -> double {
+    newton.norm_of_solution_vector = [this]() -> number {
       return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
                                                         scratch_data,
                                                         temp_dof_idx,
@@ -111,12 +114,12 @@ namespace MeltPoolDG::Heat
     };
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim>::register_evaporative_mass_flux(
+  HeatDiffuseOperation<dim, number>::register_evaporative_mass_flux(
     VectorType                                 *evaporative_mass_flux_in,
     const unsigned int                          evapor_mass_flux_dof_idx_in,
-    const Evaporation::EvaporationData<double> &evapor_data)
+    const Evaporation::EvaporationData<number> &evapor_data)
   {
     heat_operator->register_evaporative_mass_flux(evaporative_mass_flux_in,
                                                   evapor_mass_flux_dof_idx_in,
@@ -124,38 +127,38 @@ namespace MeltPoolDG::Heat
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim>::register_surface_mesh(
+  HeatDiffuseOperation<dim, number>::register_surface_mesh(
     const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
                                  std::vector<Point<dim>> /*quad_points*/,
-                                 std::vector<double> /*weights*/
+                                 std::vector<number> /*weights*/
                                  >> &surface_mesh_info_in)
   {
     heat_operator->register_surface_mesh(surface_mesh_info_in);
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim>::distribute_dofs(DoFHandler<dim> &dof_handler) const
+  HeatDiffuseOperation<dim, number>::distribute_dofs(DoFHandler<dim> &dof_handler) const
   {
     FiniteElementUtils::distribute_dofs<dim, 1>(heat_data.fe, dof_handler);
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim>::setup_constraints(ScratchData<dim> &mutable_scratch_data) const
+  HeatDiffuseOperation<dim, number>::setup_constraints(ScratchData<dim> &mutable_scratch_data) const
   {
     Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
       mutable_scratch_data, dirichlet_bc, periodic_bc, temp_dof_idx, temp_hanging_nodes_dof_idx);
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim>::set_initial_condition(
+  HeatDiffuseOperation<dim, number>::set_initial_condition(
     const Function<dim> &initial_field_function_temperature)
   {
     dealii::VectorTools::interpolate(scratch_data.get_mapping(),
@@ -174,9 +177,9 @@ namespace MeltPoolDG::Heat
     solution_history.get_current_solution().update_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim>::reinit()
+  HeatDiffuseOperation<dim, number>::reinit()
   {
     {
       ScopedName sc("heat::n_dofs");
@@ -199,9 +202,9 @@ namespace MeltPoolDG::Heat
     preconditioner.reinit(scratch_data, temp_dof_idx);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim>::init_time_advance()
+  HeatDiffuseOperation<dim, number>::init_time_advance()
   {
     heat_operator->reset_time_increment(time_iterator.get_current_time_increment());
 
@@ -215,7 +218,7 @@ namespace MeltPoolDG::Heat
       }
 
     if (!predictor)
-      predictor = std::make_unique<Predictor<VectorType, double>>(heat_data.predictor,
+      predictor = std::make_unique<Predictor<VectorType, number>>(heat_data.predictor,
                                                                   solution_history,
                                                                   &time_iterator);
     if (this->heat_data.predictor.type == PredictorType::least_squares_projection)
@@ -238,16 +241,16 @@ namespace MeltPoolDG::Heat
     ready_for_time_advance = true;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim>::solve()
+  HeatDiffuseOperation<dim, number>::solve()
   {
     solve(true);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim>::solve(const bool do_finish_time_step)
+  HeatDiffuseOperation<dim, number>::solve(const bool do_finish_time_step)
   {
     if (!ready_for_time_advance)
       init_time_advance();
@@ -272,21 +275,21 @@ namespace MeltPoolDG::Heat
       finish_time_advance();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim>::finish_time_advance()
+  HeatDiffuseOperation<dim, number>::finish_time_advance()
   {
     heat_operator->post();
     solution_history.update_ghost_values();
     ready_for_time_advance = false;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim>::compute_interface_temperature(
+  HeatDiffuseOperation<dim, number>::compute_interface_temperature(
     const VectorType                         &distance,
     const BlockVectorType                    &normal_vector,
-    const LevelSet::NearestPointData<double> &nearest_point_data)
+    const LevelSet::NearestPointData<number> &nearest_point_data)
   {
     if (!nearest_point_search)
       nearest_point_search = std::make_unique<LevelSet::Tools::NearestPoint<dim>>(
@@ -305,19 +308,18 @@ namespace MeltPoolDG::Heat
     scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(temperature_interface);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  HeatDiffuseOperation<dim, number>::attach_vectors(std::vector<VectorType *> &vectors)
   {
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
     vectors.push_back(&temperature_interface);
     heat_operator->attach_vectors(vectors);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim>::distribute_constraints()
+  HeatDiffuseOperation<dim, number>::distribute_constraints()
   {
     scratch_data.get_constraint(temp_dof_idx).distribute(solution_history.get_current_solution());
     solution_history.apply_old([this](VectorType &v) {
@@ -326,9 +328,9 @@ namespace MeltPoolDG::Heat
     heat_operator->distribute_constraints();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  HeatDiffuseOperation<dim, number>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
     /**
      *  temperature
@@ -382,9 +384,10 @@ namespace MeltPoolDG::Heat
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim>::attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const
+  HeatDiffuseOperation<dim, number>::attach_output_vectors_failed_step(
+    GenericDataOut<dim> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                              newton.get_solution_update(),
@@ -396,63 +399,63 @@ namespace MeltPoolDG::Heat
                              true /* force output */);
   }
 
-  template <int dim>
-  const VectorType &
-  HeatDiffuseOperation<dim>::get_temperature() const
+  template <int dim, typename number>
+  const typename HeatOperationBase<dim, number>::VectorType &
+  HeatDiffuseOperation<dim, number>::get_temperature() const
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim>
-  VectorType &
-  HeatDiffuseOperation<dim>::get_temperature()
+  template <int dim, typename number>
+  typename HeatOperationBase<dim, number>::VectorType &
+  HeatDiffuseOperation<dim, number>::get_temperature()
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim>
-  const VectorType &
-  HeatDiffuseOperation<dim>::get_temperature_interface() const
+  template <int dim, typename number>
+  const typename HeatOperationBase<dim, number>::VectorType &
+  HeatDiffuseOperation<dim, number>::get_temperature_interface() const
   {
     return temperature_interface;
   }
 
-  template <int dim>
-  VectorType &
-  HeatDiffuseOperation<dim>::get_temperature_interface()
+  template <int dim, typename number>
+  typename HeatOperationBase<dim, number>::VectorType &
+  HeatDiffuseOperation<dim, number>::get_temperature_interface()
   {
     return temperature_interface;
   }
 
-  template <int dim>
-  const VectorType &
-  HeatDiffuseOperation<dim>::get_heat_source() const
+  template <int dim, typename number>
+  const typename HeatOperationBase<dim, number>::VectorType &
+  HeatDiffuseOperation<dim, number>::get_heat_source() const
   {
     return heat_source;
   }
 
-  template <int dim>
-  VectorType &
-  HeatDiffuseOperation<dim>::get_heat_source()
+  template <int dim, typename number>
+  typename HeatOperationBase<dim, number>::VectorType &
+  HeatDiffuseOperation<dim, number>::get_heat_source()
   {
     return heat_source;
   }
 
-  template <int dim>
-  const VectorType &
-  HeatDiffuseOperation<dim>::get_user_rhs() const
+  template <int dim, typename number>
+  const typename HeatOperationBase<dim, number>::VectorType &
+  HeatDiffuseOperation<dim, number>::get_user_rhs() const
   {
     return user_rhs;
   }
 
-  template <int dim>
-  VectorType &
-  HeatDiffuseOperation<dim>::get_user_rhs()
+  template <int dim, typename number>
+  typename HeatOperationBase<dim, number>::VectorType &
+  HeatDiffuseOperation<dim, number>::get_user_rhs()
   {
     return user_rhs;
   }
 
-  template class HeatDiffuseOperation<1>;
-  template class HeatDiffuseOperation<2>;
-  template class HeatDiffuseOperation<3>;
+  template class HeatDiffuseOperation<1, double>;
+  template class HeatDiffuseOperation<2, double>;
+  template class HeatDiffuseOperation<3, double>;
 } // namespace MeltPoolDG::Heat

@@ -31,6 +31,8 @@
 
 namespace MeltPoolDG::Heat
 {
+  using namespace dealii;
+
   template <int dim>
   std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
   construct_dirichlet_bc_map(
@@ -51,15 +53,15 @@ namespace MeltPoolDG::Heat
       return dirichlet_bc;
   }
 
-  template <int dim>
-  HeatCutOperation<dim>::HeatCutOperation(
+  template <int dim, typename number>
+  HeatCutOperation<dim, number>::HeatCutOperation(
     const ScratchData<dim>                                    &scratch_data_in,
     const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
     const PeriodicBoundaryConditions<dim>                     &periodic_bc_in,
-    const HeatData<double>                                    &heat_data_in,
-    const MaterialData<double>                                &material_data_in,
-    const Evaporation::EvaporationData<double>                &evapor_data_in,
-    const TimeIterator<double>                                &time_iterator_in,
+    const HeatData<number>                                    &heat_data_in,
+    const MaterialData<number>                                &material_data_in,
+    const Evaporation::EvaporationData<number>                &evapor_data_in,
+    const TimeIterator<number>                                &time_iterator_in,
     const unsigned int                                         temp_dof_idx_in,
     const unsigned int                                         temp_hanging_nodes_dof_idx_in,
     const unsigned int                                         temp_quad_idx_in,
@@ -94,7 +96,7 @@ namespace MeltPoolDG::Heat
 
     // liquid domain
     mapping_info_cells.push_back(
-      std::make_shared<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>>>(
+      std::make_shared<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>(
         scratch_data.get_mapping(),
         dealii::update_values | dealii::update_gradients | dealii::update_JxW_values |
           dealii::update_normal_vectors));
@@ -102,13 +104,13 @@ namespace MeltPoolDG::Heat
     if (heat_data.cut.two_phase)
       mapping_info_cells.push_back(
         std::make_shared<
-          dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>>>(
+          dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>(
           scratch_data.get_mapping(),
           dealii::update_values | dealii::update_gradients | dealii::update_JxW_values |
             dealii::update_normal_vectors));
 
     heat_operator =
-      std::make_unique<HeatCutOperator<dim, double>>(scratch_data,
+      std::make_unique<HeatCutOperator<dim, number>>(scratch_data,
                                                      heat_data,
                                                      material_data_in,
                                                      evapor_data_in,
@@ -122,7 +124,7 @@ namespace MeltPoolDG::Heat
                                                      vel_dof_idx_in,
                                                      velocity_in);
 
-    preconditioner = make_preconditioner<dim, HeatCutOperator<dim, double>, VectorType>(
+    preconditioner = make_preconditioner<dim, HeatCutOperator<dim, number>, VectorType>(
       heat_data.linear_solver.preconditioner_type, heat_operator.get());
 
     mesh_classifier = std::make_shared<dealii::NonMatching::MeshClassifier<dim>>(
@@ -140,27 +142,27 @@ namespace MeltPoolDG::Heat
     };
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::register_laser_intensity_function_and_direction(
-    std::shared_ptr<const dealii::Function<dim, double>> laser_intensity_profile_in,
-    const dealii::Tensor<1, dim, double>                &laser_direction_in)
+  HeatCutOperation<dim, number>::register_laser_intensity_function_and_direction(
+    std::shared_ptr<const dealii::Function<dim, number>> laser_intensity_profile_in,
+    const dealii::Tensor<1, dim, number>                &laser_direction_in)
   {
     heat_operator->register_laser_intensity_function_and_direction(laser_intensity_profile_in,
                                                                    laser_direction_in);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::register_reinit_matrix_free(
+  HeatCutOperation<dim, number>::register_reinit_matrix_free(
     const std::function<void(const dealii::DoFHandler<dim> &)> reinit_matrix_free_in)
   {
     reinit_matrix_free = reinit_matrix_free_in;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::classify_cells() const
+  HeatCutOperation<dim, number>::classify_cells() const
   {
     const auto &ls_dof_handler = scratch_data.get_dof_handler(ls_dof_idx);
     mc_level_set.reinit(ls_dof_handler.locally_owned_dofs(),
@@ -171,9 +173,9 @@ namespace MeltPoolDG::Heat
     mesh_classifier->reclassify();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::adapt_to_new_interface_position()
+  HeatCutOperation<dim, number>::adapt_to_new_interface_position()
   {
     std::swap(mesh_classifier_old, mesh_classifier);
     classify_cells();
@@ -204,9 +206,9 @@ namespace MeltPoolDG::Heat
     compute_intersected_quadrature();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::compute_intersected_quadrature()
+  HeatCutOperation<dim, number>::compute_intersected_quadrature()
   {
     level_set.update_ghost_values();
 
@@ -219,9 +221,9 @@ namespace MeltPoolDG::Heat
                                             heat_data.cut.two_phase);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const
+  HeatCutOperation<dim, number>::distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const
   {
     AssertThrow(heat_data.fe.type == FiniteElementType::FE_Q,
                 dealii::ExcMessage("For now, only standard FE_Q elements are supported."));
@@ -251,17 +253,17 @@ namespace MeltPoolDG::Heat
     dof_handler.distribute_dofs(fe_collection);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::setup_constraints(ScratchData<dim> &mutable_scratch_data) const
+  HeatCutOperation<dim, number>::setup_constraints(ScratchData<dim> &mutable_scratch_data) const
   {
     Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
       mutable_scratch_data, dirichlet_bc, periodic_bc, temp_dof_idx, temp_hanging_nodes_dof_idx);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::reinit()
+  HeatCutOperation<dim, number>::reinit()
   {
     {
       ScopedName sc("heat::n_dofs");
@@ -279,9 +281,10 @@ namespace MeltPoolDG::Heat
     compute_intersected_quadrature();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::set_initial_condition(const dealii::Function<dim> &initial_temperature)
+  HeatCutOperation<dim, number>::set_initial_condition(
+    const dealii::Function<dim> &initial_temperature)
   {
     if (heat_data.cut.two_phase)
       // For the two-phase case, the initial temperature function must be set up with 2 components
@@ -301,14 +304,14 @@ namespace MeltPoolDG::Heat
     solution_history.get_current_solution().update_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::distribute_constraints()
+  HeatCutOperation<dim, number>::distribute_constraints()
   {}
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::setup_newton()
+  HeatCutOperation<dim, number>::setup_newton()
   {
     newton.residual = [&](const VectorType & /*solution_update*/, VectorType &rhs) {
       update_ghost_values();
@@ -336,14 +339,14 @@ namespace MeltPoolDG::Heat
       scratch_data.get_constraint(temp_dof_idx).distribute(v);
     };
 
-    newton.norm_of_solution_vector = [this]() -> double {
+    newton.norm_of_solution_vector = [this]() -> number {
       return heat_operator->compute_cut_L2_norm(solution_history.get_current_solution());
     };
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::init_time_advance()
+  HeatCutOperation<dim, number>::init_time_advance()
   {
     // TODO detect whether the level set has changed
     adapt_to_new_interface_position();
@@ -365,9 +368,9 @@ namespace MeltPoolDG::Heat
     ready_for_time_advance = true;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::solve()
+  HeatCutOperation<dim, number>::solve()
   {
     if (not ready_for_time_advance)
       init_time_advance();
@@ -388,9 +391,9 @@ namespace MeltPoolDG::Heat
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::update_ghost_values() const
+  HeatCutOperation<dim, number>::update_ghost_values() const
   {
     if (not solution_history.get_current_solution().has_ghost_elements())
       solution_history.get_current_solution().update_ghost_values();
@@ -402,16 +405,16 @@ namespace MeltPoolDG::Heat
   /**
    * register vectors for adaptive mesh refinement solution transfer
    */
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::attach_vectors(std::vector<VectorType *> &vectors)
+  HeatCutOperation<dim, number>::attach_vectors(std::vector<VectorType *> &vectors)
   {
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  HeatCutOperation<dim, number>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
     if (heat_data.cut.two_phase)
       {
@@ -440,44 +443,45 @@ namespace MeltPoolDG::Heat
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatCutOperation<dim>::attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const
+  HeatCutOperation<dim, number>::attach_output_vectors_failed_step(
+    GenericDataOut<dim> &data_out) const
   {
     (void)data_out;
   }
 
-  template <int dim>
-  const HeatCutOperation<dim>::VectorType &
-  HeatCutOperation<dim>::get_temperature() const
+  template <int dim, typename number>
+  const HeatCutOperation<dim, number>::VectorType &
+  HeatCutOperation<dim, number>::get_temperature() const
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim>
-  HeatCutOperation<dim>::VectorType &
-  HeatCutOperation<dim>::get_temperature()
+  template <int dim, typename number>
+  HeatCutOperation<dim, number>::VectorType &
+  HeatCutOperation<dim, number>::get_temperature()
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim>
-  const HeatCutOperation<dim>::VectorType &
-  HeatCutOperation<dim>::get_heat_source() const
+  template <int dim, typename number>
+  const HeatCutOperation<dim, number>::VectorType &
+  HeatCutOperation<dim, number>::get_heat_source() const
   {
     return volumetric_heat_source;
   }
 
-  template <int dim>
-  HeatCutOperation<dim>::VectorType &
-  HeatCutOperation<dim>::get_heat_source()
+  template <int dim, typename number>
+  HeatCutOperation<dim, number>::VectorType &
+  HeatCutOperation<dim, number>::get_heat_source()
   {
     return volumetric_heat_source;
   }
 
 
 
-  template class HeatCutOperation<1>;
-  template class HeatCutOperation<2>;
-  template class HeatCutOperation<3>;
+  template class HeatCutOperation<1, double>;
+  template class HeatCutOperation<2, double>;
+  template class HeatCutOperation<3, double>;
 } // namespace MeltPoolDG::Heat

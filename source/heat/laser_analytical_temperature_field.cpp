@@ -3,13 +3,15 @@
 
 namespace MeltPoolDG::Heat
 {
-  template <int dim>
+  using namespace dealii;
+
+  template <int dim, typename number>
   void
-  LaserAnalyticalTemperatureField<dim>::compute_temperature_field(
+  LaserAnalyticalTemperatureField<dim, number>::compute_temperature_field(
     const ScratchData<dim>     &scratch_data,
-    const MaterialData<double> &material,
-    const LaserData<double>    &laser_data,
-    const double                laser_power,
+    const MaterialData<number> &material,
+    const LaserData<number>    &laser_data,
+    const number                laser_power,
     const Point<dim>           &laser_position,
     VectorType                 &temperature,
     const VectorType           &level_set_as_heaviside,
@@ -39,7 +41,7 @@ namespace MeltPoolDG::Heat
           cell->get_dof_indices(local_dof_indices);
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
-              const double T =
+              const number T =
                 local_compute_temperature_field(material,
                                                 laser_data,
                                                 support_points[local_dof_indices[i]],
@@ -63,38 +65,38 @@ namespace MeltPoolDG::Heat
       level_set_as_heaviside.zero_out_ghost_values();
   }
 
-  template <int dim>
-  double
-  LaserAnalyticalTemperatureField<dim>::local_compute_temperature_field(
-    const MaterialData<double> &material,
-    const LaserData<double>    &laser_data,
+  template <int dim, typename number>
+  number
+  LaserAnalyticalTemperatureField<dim, number>::local_compute_temperature_field(
+    const MaterialData<number> &material,
+    const LaserData<number>    &laser_data,
     const Point<dim>           &point,
-    const double                heaviside,
-    const double                scan_speed,
-    const double                laser_power,
+    const number                heaviside,
+    const number                scan_speed,
+    const number                laser_power,
     const Point<dim>           &laser_position)
   {
-    const double P  = laser_power;
-    const double v  = scan_speed;
-    const double T0 = laser_data.analytical.ambient_temperature;
+    const number P  = laser_power;
+    const number v  = scan_speed;
+    const number T0 = laser_data.analytical.ambient_temperature;
 
-    const double weight = (material.two_phase_fluid_properties_transition_type !=
+    const number weight = (material.two_phase_fluid_properties_transition_type !=
                            TwoPhaseFluidPropertiesTransitionType::sharp) ?
                             heaviside :
                             ((heaviside > 0.5) ? 1.0 : 0.0);
 
-    const double absorptivity = LevelSet::Tools::interpolate(weight,
+    const number absorptivity = LevelSet::Tools::interpolate(weight,
                                                              laser_data.absorptivity_gas,
                                                              laser_data.absorptivity_liquid);
 
-    const double conductivity = LevelSet::Tools::interpolate(weight,
+    const number conductivity = LevelSet::Tools::interpolate(weight,
                                                              material.gas.thermal_conductivity,
                                                              material.liquid.thermal_conductivity);
-    const double capacity     = LevelSet::Tools::interpolate(weight,
+    const number capacity     = LevelSet::Tools::interpolate(weight,
                                                          material.gas.specific_heat_capacity,
                                                          material.liquid.specific_heat_capacity);
 
-    const double density =
+    const number density =
       material.two_phase_fluid_properties_transition_type ==
           TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation ?
         LevelSet::Tools::interpolate_reciprocal(weight,
@@ -102,7 +104,7 @@ namespace MeltPoolDG::Heat
                                                 material.liquid.density) :
         LevelSet::Tools::interpolate(weight, material.gas.density, material.liquid.density);
 
-    const double thermal_diffusivity = conductivity / (density * capacity);
+    const number thermal_diffusivity = conductivity / (density * capacity);
 
     // modify temperature profile to be anisotropic
     Point<dim> point_scaled = point;
@@ -111,19 +113,19 @@ namespace MeltPoolDG::Heat
       for (int d = 0; d < dim - 1; d++)
         point_scaled[d] *= laser_data.analytical.temperature_x_to_y_ratio;
 
-    double R = point_scaled.distance(laser_position);
+    number R = point_scaled.distance(laser_position);
 
     if (R == 0.0)
       R = 1e-16;
 
-    double T = P * absorptivity / (4 * numbers::PI * R * conductivity) *
+    number T = P * absorptivity / (4 * numbers::PI * R * conductivity) *
                  std::exp(-v * R / (2. * thermal_diffusivity)) +
                T0;
 
     return T;
   }
 
-  template class LaserAnalyticalTemperatureField<1>;
-  template class LaserAnalyticalTemperatureField<2>;
-  template class LaserAnalyticalTemperatureField<3>;
+  template class LaserAnalyticalTemperatureField<1, double>;
+  template class LaserAnalyticalTemperatureField<2, double>;
+  template class LaserAnalyticalTemperatureField<3, double>;
 } // namespace MeltPoolDG::Heat

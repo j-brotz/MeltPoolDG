@@ -55,16 +55,16 @@ namespace MeltPoolDG::Heat
     unsigned int velocity_dof_idx;
     unsigned int level_set_dof_idx;
 
-    std::shared_ptr<ScratchData<dim>>       scratch_data;
-    std::shared_ptr<HeatOperationBase<dim>> heat_operation;
-    std::shared_ptr<Material<double>>       material;
-    std::shared_ptr<Postprocessor<dim>>     post_processor;
+    std::shared_ptr<ScratchData<dim>>               scratch_data;
+    std::shared_ptr<HeatOperationBase<dim, double>> heat_operation;
+    std::shared_ptr<Material<double>>               material;
+    std::shared_ptr<Postprocessor<dim>>             post_processor;
 
     std::shared_ptr<Function<dim>> velocity_field_function;
     std::shared_ptr<Function<dim>> heaviside_field_function;
     std::shared_ptr<Function<dim>> level_set_field_function;
 
-    std::shared_ptr<Heat::LaserOperation<dim>> laser_operation;
+    std::shared_ptr<Heat::LaserOperation<dim, double>> laser_operation;
 
   public:
     HeatTransferProblem(std::unique_ptr<CaseType> simulation_case)

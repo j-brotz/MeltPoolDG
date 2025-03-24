@@ -17,10 +17,7 @@
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
   // Base class for both MatrixFree and MatrixBased operators
-  template <int dim, typename number = double>
   class OperatorBase
   {
   public:
@@ -76,13 +73,13 @@ namespace MeltPoolDG
 
   protected:
     // DoF index assigned to the operator
-    unsigned int dof_idx = numbers::invalid_unsigned_int;
+    unsigned int dof_idx = dealii::numbers::invalid_unsigned_int;
 
     // time increment value
-    double time_increment = numbers::invalid_double;
+    double time_increment = dealii::numbers::invalid_double;
 
     // inverse of time increment
-    double time_increment_inv = numbers::invalid_double;
+    double time_increment_inv = dealii::numbers::invalid_double;
   };
 
   /**
@@ -91,16 +88,15 @@ namespace MeltPoolDG
    * This class implements methods for creating and managing
    * system matrices and right-hand side vectors.
    */
-  template <int dim, typename number = double>
-  class OperatorMatrixBased : public virtual OperatorBase<dim, number>
+  template <int dim, typename number>
+  class OperatorMatrixBased : public virtual OperatorBase
   {
-  private:
-    using SparseMatrixType    = TrilinosWrappers::SparseMatrix;
-    using SparsityPatternType = TrilinosWrappers::SparsityPattern;
-    using VectorType          = LinearAlgebra::distributed::Vector<number>;
-    using BlockVectorType     = LinearAlgebra::distributed::BlockVector<number>;
-
   public:
+    using SparseMatrixType    = dealii::TrilinosWrappers::SparseMatrix;
+    using SparsityPatternType = dealii::TrilinosWrappers::SparsityPattern;
+    using VectorType          = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType     = dealii::LinearAlgebra::distributed::BlockVector<number>;
+
     virtual ~OperatorMatrixBased() = default;
 
     /**
@@ -143,19 +139,20 @@ namespace MeltPoolDG
     virtual void
     reinit_sparsity_pattern(const ScratchData<dim> &scratch_data)
     {
-      AssertThrow(this->dof_idx < numbers::invalid_unsigned_int,
-                  ExcMessage("reset_dof_index() must be called."));
+      AssertThrow(this->dof_idx < dealii::numbers::invalid_unsigned_int,
+                  dealii::ExcMessage("reset_dof_index() must be called."));
       const MPI_Comm mpi_communicator = scratch_data.get_mpi_comm(this->dof_idx);
       dsp.reinit(scratch_data.get_locally_owned_dofs(this->dof_idx),
                  scratch_data.get_locally_owned_dofs(this->dof_idx),
                  scratch_data.get_locally_relevant_dofs(this->dof_idx),
                  mpi_communicator);
 
-      DoFTools::make_sparsity_pattern(scratch_data.get_dof_handler(this->dof_idx),
-                                      this->dsp,
-                                      scratch_data.get_constraint(this->dof_idx),
-                                      true,
-                                      Utilities::MPI::this_mpi_process(mpi_communicator));
+      dealii::DoFTools::make_sparsity_pattern(scratch_data.get_dof_handler(this->dof_idx),
+                                              this->dsp,
+                                              scratch_data.get_constraint(this->dof_idx),
+                                              true,
+                                              dealii::Utilities::MPI::this_mpi_process(
+                                                mpi_communicator));
       dsp.compress();
 
       system_matrix.reinit(dsp);
@@ -187,14 +184,13 @@ namespace MeltPoolDG
    * This class implements methods for performing operations
    * without explicit assembly of matrices.
    */
-  template <int dim, typename number = double>
-  class OperatorMatrixFree : public virtual OperatorBase<dim, number>
+  template <int dim, typename number>
+  class OperatorMatrixFree : public virtual OperatorBase
   {
-  private:
-    using VectorType      = LinearAlgebra::distributed::Vector<number>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<number>;
-
   public:
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
+
     virtual ~OperatorMatrixFree() = default;
 
     /**
@@ -257,7 +253,7 @@ namespace MeltPoolDG
      * @param matrix Sparse matrix to compute.
      */
     virtual void
-    compute_system_matrix_from_matrixfree(TrilinosWrappers::SparseMatrix & /*matrix*/) const
+    compute_system_matrix_from_matrixfree(dealii::TrilinosWrappers::SparseMatrix & /*matrix*/) const
     {
       DEAL_II_NOT_IMPLEMENTED();
     }
