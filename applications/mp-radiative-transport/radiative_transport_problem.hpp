@@ -53,7 +53,7 @@ namespace MeltPoolDG::RadiativeTransport
 
     std::shared_ptr<RadiativeTransportOperation<dim, double>> rad_trans_operation;
 
-    std::shared_ptr<Postprocessor<dim>>                  post_processor;
+    std::shared_ptr<Postprocessor<dim, double>>          post_processor;
     std::unique_ptr<Profiling::ProfilingMonitor<double>> profiling_monitor;
 
     dealii::Tensor<1, dim, double> laser_direction;

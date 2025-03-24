@@ -331,7 +331,8 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim, number>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  HeatDiffuseOperation<dim, number>::attach_output_vectors(
+    GenericDataOut<dim, number> &data_out) const
   {
     /**
      *  temperature
@@ -388,7 +389,7 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatDiffuseOperation<dim, number>::attach_output_vectors_failed_step(
-    GenericDataOut<dim> &data_out) const
+    GenericDataOut<dim, number> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                              newton.get_solution_update(),

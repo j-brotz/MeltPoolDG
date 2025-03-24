@@ -302,7 +302,8 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  ReinitializationDGOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  ReinitializationDGOperation<dim>::attach_output_vectors(
+    GenericDataOut<dim, double> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(reinit_dof_idx),
                              solution_history.get_current_solution(),

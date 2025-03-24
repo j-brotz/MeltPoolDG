@@ -262,7 +262,7 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   void
   DGCompressibleFlowOperation<dim, number>::attach_output_vectors(
-    GenericDataOut<dim> &data_out) const
+    GenericDataOut<dim, double> &data_out) const
   {
     std::vector<std::string> names;
     names.emplace_back("density");

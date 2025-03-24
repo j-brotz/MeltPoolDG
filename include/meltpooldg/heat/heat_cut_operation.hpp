@@ -148,10 +148,10 @@ namespace MeltPoolDG::Heat
      * attach vectors for output
      */
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const override;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const override;
 
     void
-    attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const override;
+    attach_output_vectors_failed_step(GenericDataOut<dim, number> &data_out) const override;
 
     /*
      * getters

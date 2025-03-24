@@ -417,7 +417,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  LevelSetOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  LevelSetOperation<dim>::attach_output_vectors(GenericDataOut<dim, double> &data_out) const
   {
     /*
      * output advected field

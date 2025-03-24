@@ -107,7 +107,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltFrontPropagation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  MeltFrontPropagation<dim>::attach_output_vectors(GenericDataOut<dim, double> &data_out) const
   {
     /**
      *  solid

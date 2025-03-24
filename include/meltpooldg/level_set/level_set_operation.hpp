@@ -171,7 +171,7 @@ namespace MeltPoolDG::LevelSet
     attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
 
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const override;
+    attach_output_vectors(GenericDataOut<dim, double> &data_out) const override;
 
     void
     update_surface_mesh() override;

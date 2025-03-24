@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, TUM, October 2022
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/post_processing/post_processor_base.hpp>
@@ -16,17 +11,17 @@ namespace MeltPoolDG::PostProcessingTools
    *   ∫ ∇·u dΩ
    *  Ω
    */
-  template <int dim>
-  class DivergenceCalculator : public PostProcessorBase<dim>
+  template <int dim, typename number>
+  class DivergenceCalculator : public PostProcessorBase<dim, number>
   {
   private:
-    const GenericDataOut<dim> *generic_data_out = nullptr;
-    const std::string          request_variable;
-    double                     diver;
+    const GenericDataOut<dim, number> *generic_data_out = nullptr;
+    const std::string                  request_variable;
+    number                             diver;
 
   public:
-    DivergenceCalculator(const GenericDataOut<dim> &generic_data_out,
-                         const std::string          request_variable)
+    DivergenceCalculator(const GenericDataOut<dim, number> &generic_data_out,
+                         const std::string                  request_variable)
       : generic_data_out(&generic_data_out)
       , request_variable(request_variable)
     {}
@@ -34,7 +29,7 @@ namespace MeltPoolDG::PostProcessingTools
     /**
      * Main result of this postprocessor.
      */
-    double
+    number
     get_divergence() const
     {
       return diver;
@@ -66,9 +61,9 @@ namespace MeltPoolDG::PostProcessingTools
 
       const FEValuesExtractors::Vector velocities(0);
 
-      std::vector<double> div(vel_values.get_quadrature().size());
+      std::vector<number> div(vel_values.get_quadrature().size());
 
-      double diver_local = 0;
+      number diver_local = 0;
       for (const auto &cell :
            generic_data_out->get_dof_handler(request_variable).active_cell_iterators())
         {
@@ -94,7 +89,7 @@ namespace MeltPoolDG::PostProcessingTools
      * Reinit with new GenericDataOut object.
      */
     void
-    reinit(const GenericDataOut<dim> &generic_data_out_in) override
+    reinit(const GenericDataOut<dim, number> &generic_data_out_in) override
     {
       generic_data_out = &generic_data_out_in;
     }

@@ -798,7 +798,7 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatDiffuseMultiPhaseOperator<dim, number>::attach_output_vectors(
-    GenericDataOut<dim> &data_out) const
+    GenericDataOut<dim, number> &data_out) const
   {
     /**
      * write conductivity vector to dof vector

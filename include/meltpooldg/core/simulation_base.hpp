@@ -238,7 +238,7 @@ namespace MeltPoolDG
      * @param generic_data_out The postprocessing data.
      */
     virtual void
-    do_postprocessing([[maybe_unused]] const GenericDataOut<dim> &generic_data_out) const
+    do_postprocessing([[maybe_unused]] const GenericDataOut<dim, double> &generic_data_out) const
     {
       // do nothing default
     }

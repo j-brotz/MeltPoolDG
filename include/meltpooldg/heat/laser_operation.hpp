@@ -93,7 +93,7 @@ namespace MeltPoolDG::Heat
                                          std::function<void(std::vector<VectorType *> &)>>> &data);
 
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
 
     /**
      * Compute either the @p heat_source vector (for LaserImpactType::interface and

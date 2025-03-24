@@ -114,7 +114,7 @@ namespace MeltPoolDG::Flow
      * Store the damping coefficients in a global DoF vector and attach it to the output data.
      */
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim, double> &data_out) const;
 
     /**
      * Getter functions for the damping coefficients cellwise at each quadrature point.

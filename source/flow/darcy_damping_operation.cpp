@@ -236,7 +236,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  DarcyDampingOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  DarcyDampingOperation<dim>::attach_output_vectors(GenericDataOut<dim, double> &data_out) const
   {
     if (data_out.is_requested("Darcy_damping"))
       {

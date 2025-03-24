@@ -173,7 +173,7 @@ namespace MeltPoolDG::Evaporation
     distribute_constraints();
 
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim, double> &data_out) const;
 
     /*
      * getter functions

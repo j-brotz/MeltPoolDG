@@ -58,7 +58,7 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<ScratchData<dim>>               scratch_data;
     std::shared_ptr<HeatOperationBase<dim, double>> heat_operation;
     std::shared_ptr<Material<double>>               material;
-    std::shared_ptr<Postprocessor<dim>>             post_processor;
+    std::shared_ptr<Postprocessor<dim, double>>     post_processor;
 
     std::shared_ptr<Function<dim>> velocity_field_function;
     std::shared_ptr<Function<dim>> heaviside_field_function;
@@ -97,7 +97,7 @@ namespace MeltPoolDG::Heat
      * collect all relevant output data
      */
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim, double> &data_out) const;
     /*
      *  perform adaptive mesh refinement
      */

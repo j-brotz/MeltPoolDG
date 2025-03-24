@@ -79,7 +79,7 @@ namespace MeltPoolDG::Flow
     unsigned int level_set_dof_idx{};
     unsigned int comp_flow_quad_idx{};
 
-    std::unique_ptr<Postprocessor<dim>> post_processor;
+    std::unique_ptr<Postprocessor<dim, double>> post_processor;
 
     std::shared_ptr<dealii::Function<dim>> level_set_field_function;
     VectorType                             level_set;

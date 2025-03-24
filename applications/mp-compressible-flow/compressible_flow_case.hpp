@@ -96,9 +96,9 @@ namespace MeltPoolDG::Flow
      * @param norm_name Choose between "Norm" and "Error"
      */
     void
-    print_relative_norm(const GenericDataOut<dim> &generic_data_out,
-                        dealii::Function<dim>     &reference_function,
-                        const std::string         &norm_name = "Norm") const
+    print_relative_norm(const GenericDataOut<dim, double> &generic_data_out,
+                        dealii::Function<dim>             &reference_function,
+                        const std::string                 &norm_name = "Norm") const
     {
       using number = double;
       const dealii::ConditionalOStream pcout(std::cout,

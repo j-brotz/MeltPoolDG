@@ -26,34 +26,32 @@
 
 namespace MeltPoolDG::PostProcessingTools
 {
-  using namespace dealii;
-
   /**
    * Create a (dim-1,dim) slice through a (dim,dim) triangulation.
    *
    * @note The post processor only supports dim > 1.
    */
-  template <int dim>
-  class SliceCreator : public PostProcessorBase<dim>
+  template <int dim, typename number>
+  class SliceCreator : public PostProcessorBase<dim, number>
   {
   private:
-    const GenericDataOut<dim>         *generic_data_out = nullptr;
+    const GenericDataOut<dim, number> *generic_data_out = nullptr;
     const Triangulation<dim - 1, dim> &tria_slice;
     const std::vector<std::string>     request_variables;
-    const OutputData<double>          &output_data;
+    const OutputData<number>          &output_data;
 
     // Collect file name and corresponding time step for the pvd-file
-    std::vector<std::pair<double, std::string>> times_and_names;
+    std::vector<std::pair<number, std::string>> times_and_names;
     std::vector<unsigned int>                   idx_req_vars;
 
   public:
     /**
      * Constructor.
      */
-    SliceCreator(const GenericDataOut<dim>         &generic_data_out,
+    SliceCreator(const GenericDataOut<dim, number> &generic_data_out,
                  const Triangulation<dim - 1, dim> &tria_slice,
                  const std::vector<std::string>     request_variables,
-                 const OutputData<double>          &output_data_in)
+                 const OutputData<number>          &output_data_in)
       : generic_data_out(&generic_data_out)
       , tria_slice(tria_slice)
       , request_variables(request_variables)
@@ -66,7 +64,7 @@ namespace MeltPoolDG::PostProcessingTools
      * reinit function passing the new @p generic_data_out_in.
      */
     void
-    reinit(const GenericDataOut<dim> &generic_data_out_in) override
+    reinit(const GenericDataOut<dim, number> &generic_data_out_in) override
     {
       generic_data_out = &generic_data_out_in;
       idx_req_vars     = generic_data_out->get_indices_data_request(request_variables);

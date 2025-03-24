@@ -86,7 +86,7 @@ namespace MeltPoolDG::MeltPool
     attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
 
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim, double> &data_out) const;
 
     void
     distribute_constraints();

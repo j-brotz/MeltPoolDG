@@ -87,7 +87,7 @@ namespace MeltPoolDG::RadiativeTransport
      * attach vectors for output
      */
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim, double> &data_out) const;
 
     void
     compute_heat_source(VectorType        &heat_source,

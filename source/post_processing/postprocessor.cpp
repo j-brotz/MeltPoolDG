@@ -17,13 +17,13 @@
 
 namespace MeltPoolDG
 {
-  template <int dim>
-  Postprocessor<dim>::Postprocessor(const MPI_Comm                  mpi_communicator_in,
-                                    const OutputData<double>       &output_data_in,
-                                    const TimeSteppingData<double> &time_data,
-                                    const Mapping<dim>             &mapping_in,
-                                    const Triangulation<dim>       &triangulation_in,
-                                    const ConditionalOStream       &pcout_in)
+  template <int dim, typename number>
+  Postprocessor<dim, number>::Postprocessor(const MPI_Comm                  mpi_communicator_in,
+                                            const OutputData<number>       &output_data_in,
+                                            const TimeSteppingData<number> &time_data,
+                                            const Mapping<dim>             &mapping_in,
+                                            const Triangulation<dim>       &triangulation_in,
+                                            const ConditionalOStream       &pcout_in)
     : mpi_communicator(mpi_communicator_in)
     , output_data(output_data_in)
     , mapping(mapping_in)
@@ -45,13 +45,13 @@ namespace MeltPoolDG
   /*
    *  This function collects and performs all relevant postprocessing steps.
    */
-  template <int dim>
+  template <int dim, typename number>
   void
-  Postprocessor<dim>::process(const int                  n_time_step,
-                              const GenericDataOut<dim> &data_out,
-                              const double               time,
-                              const bool                 force_output,
-                              const bool                 force_update_requested_output_variables)
+  Postprocessor<dim, number>::process(const int                          n_time_step,
+                                      const GenericDataOut<dim, number> &data_out,
+                                      const number                       time,
+                                      const bool                         force_output,
+                                      const bool force_update_requested_output_variables)
   {
     if (not(is_output_timestep(n_time_step, time) || force_output))
       return;
@@ -71,19 +71,19 @@ namespace MeltPoolDG
   /*
    *  This function collects and performs all relevant postprocessing steps.
    */
-  template <int dim>
+  template <int dim, typename number>
   void
-  Postprocessor<dim>::process(
-    const int                                         n_time_step,
-    const std::function<void(GenericDataOut<dim> &)> &attach_output_vectors,
-    const double                                      time)
+  Postprocessor<dim, number>::process(
+    const int                                                 n_time_step,
+    const std::function<void(GenericDataOut<dim, number> &)> &attach_output_vectors,
+    const number                                              time)
   {
     if (not is_output_timestep(n_time_step, time))
       return;
 
     if (output_data.paraview.enable)
       {
-        GenericDataOut<dim> data_out(mapping, time, output_data.output_variables);
+        GenericDataOut<dim, number> data_out(mapping, time, output_data.output_variables);
 
         attach_output_vectors(data_out);
 
@@ -97,12 +97,13 @@ namespace MeltPoolDG
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  Postprocessor<dim>::write_paraview_files(const unsigned int         n_time_step,
-                                           const double               time,
-                                           const GenericDataOut<dim> &generic_data_out,
-                                           const bool force_update_requested_output_variables)
+  Postprocessor<dim, number>::write_paraview_files(
+    const unsigned int                 n_time_step,
+    const number                       time,
+    const GenericDataOut<dim, number> &generic_data_out,
+    const bool                         force_update_requested_output_variables)
   {
     Journal::print_line(pcout, "write paraview files", "postprocessor");
 
@@ -126,7 +127,7 @@ namespace MeltPoolDG
     if (output_data.paraview.output_subdomains)
       {
         const auto &tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
-        dealii::Vector<double> subdomains(tria.n_active_cells());
+        dealii::Vector<number> subdomains(tria.n_active_cells());
         subdomains = dealii::Utilities::MPI::this_mpi_process(mpi_communicator);
 
         data_out.add_data_vector(subdomains, "subdomains");
@@ -134,7 +135,7 @@ namespace MeltPoolDG
     if (output_data.paraview.output_material_id)
       {
         const auto &tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
-        dealii::Vector<double> material_id(tria.n_active_cells());
+        dealii::Vector<number> material_id(tria.n_active_cells());
 
         for (const auto &cell : tria.active_cell_iterators())
           material_id[cell->active_cell_index()] = cell->material_id();
@@ -196,9 +197,9 @@ namespace MeltPoolDG
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  Postprocessor<dim>::clean_pvd()
+  Postprocessor<dim, number>::clean_pvd()
   {
     namespace fs = std::filesystem;
 
@@ -207,14 +208,14 @@ namespace MeltPoolDG
     // This is used if we perform a restart and write the output to a different directory
     // compared to the original simulation.
     //
-    std::erase_if(times_and_names, [this](const std::pair<double, std::string> &x) {
+    std::erase_if(times_and_names, [this](const std::pair<number, std::string> &x) {
       return !fs::exists(fs::path(output_data.directory) / fs::path(x.second));
     });
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  Postprocessor<dim>::print_boundary_ids()
+  Postprocessor<dim, number>::print_boundary_ids()
   {
     const unsigned int rank    = dealii::Utilities::MPI::this_mpi_process(mpi_communicator);
     const unsigned int n_ranks = dealii::Utilities::MPI::n_mpi_processes(mpi_communicator);
@@ -237,7 +238,7 @@ namespace MeltPoolDG
     grid_out.write_vtk(triangulation, output);
   }
 
-  template class Postprocessor<1>;
-  template class Postprocessor<2>;
-  template class Postprocessor<3>;
+  template class Postprocessor<1, double>;
+  template class Postprocessor<2, double>;
+  template class Postprocessor<3, double>;
 } // namespace MeltPoolDG

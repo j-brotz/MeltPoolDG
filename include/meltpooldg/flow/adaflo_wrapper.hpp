@@ -205,10 +205,10 @@ namespace MeltPoolDG::Flow
     distribute_constraints() override;
 
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const override;
+    attach_output_vectors(GenericDataOut<dim, double> &data_out) const override;
 
     void
-    attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const override;
+    attach_output_vectors_failed_step(GenericDataOut<dim, double> &data_out) const override;
 
     void
     set_face_average_density(const typename Triangulation<dim>::cell_iterator &cell,

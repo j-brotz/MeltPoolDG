@@ -151,7 +151,7 @@ namespace MeltPoolDG::Flow
      * @param data_out Object to which the solution vector is attached.
      */
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const
+    attach_output_vectors(GenericDataOut<dim, double> &data_out) const
     {
       std::vector<std::string> names;
       names.emplace_back("density");

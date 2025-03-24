@@ -219,7 +219,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  LaserOperation<dim, number>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  LaserOperation<dim, number>::attach_output_vectors(GenericDataOut<dim, number> &data_out) const
   {
     if (laser_data.model == LaserModelType::RTE)
       {

@@ -56,7 +56,7 @@ namespace MeltPoolDG
       class SimulationEvaporatingDroplet : public MeltPoolCase<dim>
       {
       private:
-        mutable std::shared_ptr<PostProcessingTools::DivergenceCalculator<dim>> diver;
+        mutable std::shared_ptr<PostProcessingTools::DivergenceCalculator<dim, double>> diver;
 
       public:
         SimulationEvaporatingDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
@@ -169,12 +169,12 @@ namespace MeltPoolDG
         }
 
         void
-        do_postprocessing(const GenericDataOut<dim> &generic_data_out) const final
+        do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const final
         {
           dealii::ConditionalOStream pcout(
             std::cout, Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0);
           if (!diver)
-            diver = std::make_shared<PostProcessingTools::DivergenceCalculator<dim>>(
+            diver = std::make_shared<PostProcessingTools::DivergenceCalculator<dim, double>>(
               generic_data_out, "interface_velocity");
           else
             // @todo: We need to reinit, since generic_data_out is currently created

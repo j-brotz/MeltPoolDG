@@ -266,7 +266,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  AdvectionDGOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  AdvectionDGOperation<dim>::attach_output_vectors(GenericDataOut<dim, double> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(advec_diff_dof_idx),
                              solution_history.get_current_solution(),

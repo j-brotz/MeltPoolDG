@@ -85,7 +85,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim> &generic_data_out) const override
+    do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const override
     {
       InflowFlowField<dim> reference_values(generic_data_out.get_time());
       this->print_relative_norm(generic_data_out, reference_values, "Norm");

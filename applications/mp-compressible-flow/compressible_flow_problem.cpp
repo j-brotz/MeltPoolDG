@@ -274,12 +274,13 @@ namespace MeltPoolDG::Flow
 
     // initialize postprocessor
     post_processor =
-      std::make_unique<Postprocessor<dim>>(scratch_data->get_mpi_comm(comp_flow_dof_idx),
-                                           simulation_case->parameters.output,
-                                           simulation_case->parameters.time_stepping,
-                                           scratch_data->get_mapping(),
-                                           scratch_data->get_triangulation(comp_flow_dof_idx),
-                                           scratch_data->get_pcout(2));
+      std::make_unique<Postprocessor<dim, double>>(scratch_data->get_mpi_comm(comp_flow_dof_idx),
+                                                   simulation_case->parameters.output,
+                                                   simulation_case->parameters.time_stepping,
+                                                   scratch_data->get_mapping(),
+                                                   scratch_data->get_triangulation(
+                                                     comp_flow_dof_idx),
+                                                   scratch_data->get_pcout(2));
 
     // initialize profiling
     if (simulation_case->parameters.profiling.enable)
@@ -297,13 +298,14 @@ namespace MeltPoolDG::Flow
         not simulation_case->parameters.output.do_user_defined_postprocessing)
       return;
 
-    const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
+    const auto attach_output_vectors = [&](GenericDataOut<dim, double> &data_out) {
       comp_flow_operation.attach_output_vectors(data_out);
     };
 
-    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
-                                         current_time,
-                                         simulation_case->parameters.output.output_variables);
+    GenericDataOut<dim, double> generic_data_out(
+      scratch_data->get_mapping(),
+      current_time,
+      simulation_case->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
 
     if (level_set_field_function)

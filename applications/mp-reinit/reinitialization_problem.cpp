@@ -92,12 +92,12 @@ namespace MeltPoolDG::LevelSet
 
     // initialize postprocessor
     post_processor =
-      std::make_unique<Postprocessor<dim>>(scratch_data->get_mpi_comm(reinit_dof_idx),
-                                           param.output,
-                                           param.time_stepping,
-                                           scratch_data->get_mapping(),
-                                           scratch_data->get_triangulation(reinit_dof_idx),
-                                           scratch_data->get_pcout(2));
+      std::make_unique<Postprocessor<dim, double>>(scratch_data->get_mpi_comm(reinit_dof_idx),
+                                                   param.output,
+                                                   param.time_stepping,
+                                                   scratch_data->get_mapping(),
+                                                   scratch_data->get_triangulation(reinit_dof_idx),
+                                                   scratch_data->get_pcout(2));
 
     // initialize the time iterator
     time_iterator = std::make_unique<TimeIterator<double>>(param.time_stepping);
@@ -252,13 +252,13 @@ namespace MeltPoolDG::LevelSet
     if (!post_processor->is_output_timestep(time_step, time) &&
         !param.output.do_user_defined_postprocessing)
       return;
-    const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
+    const auto attach_output_vectors = [&](GenericDataOut<dim, double> &data_out) {
       reinit_operation->attach_output_vectors(data_out);
     };
 
-    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
-                                         time,
-                                         param.output.output_variables);
+    GenericDataOut<dim, double> generic_data_out(scratch_data->get_mapping(),
+                                                 time,
+                                                 param.output.output_variables);
     attach_output_vectors(generic_data_out);
 
     // user-defined postprocessing

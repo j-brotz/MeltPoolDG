@@ -60,7 +60,7 @@ namespace MeltPoolDG
       unsigned int                                        normal_dof_idx  = -1;
       unsigned int                                        reinit_quad_idx = -1;
 
-      std::unique_ptr<Postprocessor<dim>> post_processor;
+      std::unique_ptr<Postprocessor<dim, double>> post_processor;
 
       void
       initialize();

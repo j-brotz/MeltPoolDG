@@ -92,9 +92,9 @@ namespace MeltPoolDG::Simulation::RecoilPressure
     Point<dim> local_refinement_2_top_right;
 
     // triangulation of a slice for reduced output in 3D
-    parallel::distributed::Triangulation<2, 3>                    tria_slice;
-    mutable std::shared_ptr<PostProcessingTools::SliceCreator<3>> slice;
-    mutable unsigned int                                          n_written_time_step_slice = 0;
+    parallel::distributed::Triangulation<2, 3>                            tria_slice;
+    mutable std::shared_ptr<PostProcessingTools::SliceCreator<3, double>> slice;
+    mutable unsigned int n_written_time_step_slice = 0;
 
     struct SliceData
     {
@@ -599,7 +599,8 @@ namespace MeltPoolDG::Simulation::RecoilPressure
     }
 
     void
-    do_postprocessing([[maybe_unused]] const GenericDataOut<dim> &generic_data_out) const final
+    do_postprocessing(
+      [[maybe_unused]] const GenericDataOut<dim, double> &generic_data_out) const final
     {
       if (this->parameters.output.do_user_defined_postprocessing == false || !slice_data.enable)
         return;
@@ -609,7 +610,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
         {
           if (!slice)
             {
-              slice = std::make_shared<PostProcessingTools::SliceCreator<3>>(
+              slice = std::make_shared<PostProcessingTools::SliceCreator<3, double>>(
                 generic_data_out, tria_slice, slice_data.output_variables, this->parameters.output);
             }
           // @todo: We need to reinit, since generic_data_out is currently created

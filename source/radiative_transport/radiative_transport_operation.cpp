@@ -281,7 +281,7 @@ namespace MeltPoolDG::RadiativeTransport
   template <int dim, typename number>
   void
   RadiativeTransportOperation<dim, number>::attach_output_vectors(
-    GenericDataOut<dim> &data_out) const
+    GenericDataOut<dim, number> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(rte_dof_idx), intensity, "intensity");
     data_out.add_data_vector(scratch_data.get_dof_handler(rte_dof_idx), rhs, "rte_rhs");

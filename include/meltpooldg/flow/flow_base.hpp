@@ -119,10 +119,10 @@ namespace MeltPoolDG
       distribute_constraints() = 0;
 
       virtual void
-      attach_output_vectors(GenericDataOut<dim> &data_out) const = 0;
+      attach_output_vectors(GenericDataOut<dim, double> &data_out) const = 0;
 
       virtual void
-      attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const = 0;
+      attach_output_vectors_failed_step(GenericDataOut<dim, double> &data_out) const = 0;
     };
 
   } // namespace Flow
