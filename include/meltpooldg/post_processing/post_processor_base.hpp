@@ -1,7 +1,7 @@
 #pragma once
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 
-namespace MeltPoolDGPost::ProcessingTools
+namespace MeltPoolDG::PostProcessingTools
 {
   template <int dim, typename number>
   class PostProcessorBase
@@ -13,4 +13,4 @@ namespace MeltPoolDGPost::ProcessingTools
     virtual void
     reinit(const GenericDataOut<dim, number> &generic_data_out_in) = 0;
   };
-} // namespace MeltPoolDGPost::ProcessingTools
+} // namespace MeltPoolDG::PostProcessingTools
