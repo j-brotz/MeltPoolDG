@@ -38,7 +38,7 @@ namespace MeltPoolDG::Heat
   private:
     using VectorType = typename HeatOperationBase<dim, number>::VectorType;
 
-    const ScratchData<dim>                                            &scratch_data;
+    const ScratchData<dim, dim, number>                               &scratch_data;
     const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> dirichlet_bc;
     const PeriodicBoundaryConditions<dim>                             &periodic_bc;
     const HeatData<number>                                            &heat_data;
@@ -81,7 +81,7 @@ namespace MeltPoolDG::Heat
     bool ready_for_time_advance = false;
 
   public:
-    HeatCutOperation(const ScratchData<dim>                                    &scratch_data_in,
+    HeatCutOperation(const ScratchData<dim, dim, number>                       &scratch_data_in,
                      const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
                      const PeriodicBoundaryConditions<dim>                     &periodic_bc_in,
                      const HeatData<number>                                    &heat_data_in,
@@ -121,7 +121,7 @@ namespace MeltPoolDG::Heat
     distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const override;
 
     void
-    setup_constraints(ScratchData<dim> &mutable_scratch_data) const override;
+    setup_constraints(ScratchData<dim, dim, number> &mutable_scratch_data) const override;
 
     void
     reinit() override;

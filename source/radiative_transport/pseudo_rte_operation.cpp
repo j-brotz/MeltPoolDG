@@ -12,15 +12,16 @@ namespace MeltPoolDG::RadiativeTransport
 {
   using namespace dealii;
 
-  template <int dim>
-  PseudoRTEOperation<dim>::PseudoRTEOperation(const ScratchData<dim>               &scratch_data_in,
-                                              const RadiativeTransportData<double> &rte_data_in,
-                                              const Tensor<1, dim, double> &laser_direction_in,
-                                              const VectorType             &heaviside_in,
-                                              const unsigned int            rte_dof_idx_in,
-                                              const unsigned int rte_hanging_nodes_dof_idx_in,
-                                              const unsigned int rte_quad_idx_in,
-                                              const unsigned int hs_dof_idx_in)
+  template <int dim, typename number>
+  PseudoRTEOperation<dim, number>::PseudoRTEOperation(
+    const ScratchData<dim, dim, number>  &scratch_data_in,
+    const RadiativeTransportData<number> &rte_data_in,
+    const Tensor<1, dim, number>         &laser_direction_in,
+    const VectorType                     &heaviside_in,
+    const unsigned int                    rte_dof_idx_in,
+    const unsigned int                    rte_hanging_nodes_dof_idx_in,
+    const unsigned int                    rte_quad_idx_in,
+    const unsigned int                    hs_dof_idx_in)
     : scratch_data(scratch_data_in)
     , rte_data(rte_data_in)
     , heaviside(heaviside_in)
@@ -31,22 +32,22 @@ namespace MeltPoolDG::RadiativeTransport
     , solution_history(2)
     , pseudo_time_iterator(rte_data.pseudo_time_stepping.time_stepping_data)
   {
-    pseudo_rte_operator = std::make_unique<PseudoRTEOperator<dim, double>>(scratch_data,
+    pseudo_rte_operator = std::make_unique<PseudoRTEOperator<dim, number>>(scratch_data,
                                                                            rte_data_in,
                                                                            laser_direction_in,
                                                                            heaviside,
                                                                            rte_dof_idx,
                                                                            rte_quad_idx,
                                                                            hs_dof_idx);
-    preconditioner      = make_preconditioner<dim, PseudoRTEOperator<dim, double>, VectorType>(
+    preconditioner      = make_preconditioner<dim, PseudoRTEOperator<dim, number>, VectorType>(
       rte_data.linear_solver.preconditioner_type,
       pseudo_rte_operator.get(),
       rte_data.linear_solver.do_matrix_free);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  PseudoRTEOperation<dim>::reinit()
+  PseudoRTEOperation<dim, number>::reinit()
   {
     solution_history.apply(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, rte_dof_idx); });
@@ -63,13 +64,13 @@ namespace MeltPoolDG::RadiativeTransport
                                                 rte_data.pseudo_time_stepping.pseudo_time_scaling);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  PseudoRTEOperation<dim>::perform_pseudo_time_stepping()
+  PseudoRTEOperation<dim, number>::perform_pseudo_time_stepping()
   {
     pseudo_time_iterator.reset();
 
-    double pseudo_rel_change = std::numeric_limits<double>::max();
+    number pseudo_rel_change = std::numeric_limits<number>::max();
 
     while (!pseudo_time_iterator.is_finished() &&
            pseudo_rel_change >= rte_data.pseudo_time_stepping.rel_tolerance)
@@ -84,7 +85,7 @@ namespace MeltPoolDG::RadiativeTransport
         if (rte_data.verbosity_level >= 4)
           Journal::print_formatted_norm(
             scratch_data.get_pcout(1),
-            [&]() -> double { return pseudo_time_iterator.get_current_time(); },
+            [&]() -> number { return pseudo_time_iterator.get_current_time(); },
             "pseudo-time-out",
             "RTE::pseudo-time-stepping",
             1 /*precision*/,
@@ -93,7 +94,7 @@ namespace MeltPoolDG::RadiativeTransport
         if (rte_data.verbosity_level >= 3)
           Journal::print_formatted_norm(
             scratch_data.get_pcout(1),
-            [&]() -> double {
+            [&]() -> number {
               return VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
                                                     scratch_data,
                                                     rte_dof_idx,
@@ -107,7 +108,7 @@ namespace MeltPoolDG::RadiativeTransport
     if (rte_data.verbosity_level >= 3)
       Journal::print_formatted_norm(
         scratch_data.get_pcout(1),
-        [&]() -> double { return pseudo_time_iterator.get_current_time_step_number(); },
+        [&]() -> number { return pseudo_time_iterator.get_current_time_step_number(); },
         "n_steps",
         "RTE::pseudo-predictor",
         1 /*precision*/,
@@ -115,7 +116,7 @@ namespace MeltPoolDG::RadiativeTransport
     if (rte_data.verbosity_level >= 2)
       Journal::print_formatted_norm(
         scratch_data.get_pcout(1),
-        [&]() -> double {
+        [&]() -> number {
           return VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
                                                 scratch_data,
                                                 rte_dof_idx,
@@ -127,9 +128,9 @@ namespace MeltPoolDG::RadiativeTransport
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  PseudoRTEOperation<dim>::solve()
+  PseudoRTEOperation<dim, number>::solve()
   {
     const bool sol_update_ghosts = !solution_history.get_recent_old_solution().has_ghost_elements();
     if (sol_update_ghosts)
@@ -168,23 +169,23 @@ namespace MeltPoolDG::RadiativeTransport
     scratch_data.get_constraint(rte_dof_idx).distribute(solution_history.get_current_solution());
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  PseudoRTEOperation<dim>::set_intensity(
-    const LinearAlgebra::distributed::Vector<double> &intensity_in)
+  PseudoRTEOperation<dim, number>::set_intensity(
+    const LinearAlgebra::distributed::Vector<number> &intensity_in)
   {
     solution_history.get_current_solution() = intensity_in;
   }
 
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  PseudoRTEOperation<dim>::get_predicted_intensity() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  PseudoRTEOperation<dim, number>::get_predicted_intensity() const
   {
     return solution_history.get_current_solution();
   }
 
-  template class PseudoRTEOperation<1>;
-  template class PseudoRTEOperation<2>;
-  template class PseudoRTEOperation<3>;
+  template class PseudoRTEOperation<1, double>;
+  template class PseudoRTEOperation<2, double>;
+  template class PseudoRTEOperation<3, double>;
 } // namespace MeltPoolDG::RadiativeTransport

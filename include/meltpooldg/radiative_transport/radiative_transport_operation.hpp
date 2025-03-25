@@ -2,8 +2,7 @@
 
 #include <deal.II/base/tensor.h>
 
-#include <deal.II/lac/diagonal_matrix.h>
-#include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/periodic_boundary_conditions.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
@@ -18,22 +17,20 @@
 
 namespace MeltPoolDG::RadiativeTransport
 {
-  using namespace dealii;
-
   /*
    * TODO
    */
-  template <int dim>
+  template <int dim, typename number>
   class RadiativeTransportOperation
   {
   private:
-    using VectorType = LinearAlgebra::distributed::Vector<double>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim, dim, number> &scratch_data;
 
-    const RadiativeTransportData<double> rte_data;
+    const RadiativeTransportData<number> rte_data;
 
-    const Tensor<1, dim, double> laser_direction;
+    const dealii::Tensor<1, dim, number> laser_direction;
 
     const VectorType &heaviside;
 
@@ -45,14 +42,14 @@ namespace MeltPoolDG::RadiativeTransport
     VectorType intensity;
     VectorType rhs;
 
-    std::unique_ptr<RadiativeTransportOperator<dim, double>> rte_operator;
+    std::unique_ptr<RadiativeTransportOperator<dim, number>> rte_operator;
 
-    std::unique_ptr<PseudoRTEOperation<dim>> pseudo_rte_operation;
+    std::unique_ptr<PseudoRTEOperation<dim, number>> pseudo_rte_operation;
 
   public:
-    RadiativeTransportOperation(const ScratchData<dim>               &scratch_data_in,
-                                const RadiativeTransportData<double> &rte_data_in,
-                                const Tensor<1, dim, double>         &laser_direction_in,
+    RadiativeTransportOperation(const ScratchData<dim, dim, number>  &scratch_data_in,
+                                const RadiativeTransportData<number> &rte_data_in,
+                                const dealii::Tensor<1, dim, number> &laser_direction_in,
                                 const VectorType                     &heaviside_in,
                                 const unsigned int                    rte_dof_idx_in,
                                 const unsigned int                    rte_hanging_nodes_dof_idx_in,
@@ -67,24 +64,24 @@ namespace MeltPoolDG::RadiativeTransport
 
     void
     setup_constraints(
-      ScratchData<dim>                                                           &scratch_data,
-      const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> &bc_data,
-      const PeriodicBoundaryConditions<dim>                                      &pbc);
+      ScratchData<dim, dim, number> &scratch_data,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> &bc_data,
+      const PeriodicBoundaryConditions<dim>                                              &pbc);
 
     void
     solve();
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const VectorType &
     get_intensity() const;
 
-    LinearAlgebra::distributed::Vector<double> &
+    VectorType &
     get_intensity();
 
     /**
      * register vectors for adaptive mesh refinement
      */
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
+    attach_vectors(std::vector<VectorType *> &vectors);
 
     /**
      * attach vectors for output

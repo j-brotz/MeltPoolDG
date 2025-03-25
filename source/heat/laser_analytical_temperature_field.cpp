@@ -8,14 +8,14 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   LaserAnalyticalTemperatureField<dim, number>::compute_temperature_field(
-    const ScratchData<dim>     &scratch_data,
-    const MaterialData<number> &material,
-    const LaserData<number>    &laser_data,
-    const number                laser_power,
-    const Point<dim>           &laser_position,
-    VectorType                 &temperature,
-    const VectorType           &level_set_as_heaviside,
-    const unsigned int          temp_dof_idx)
+    const ScratchData<dim, dim, number> &scratch_data,
+    const MaterialData<number>          &material,
+    const LaserData<number>             &laser_data,
+    const number                         laser_power,
+    const Point<dim>                    &laser_position,
+    VectorType                          &temperature,
+    const VectorType                    &level_set_as_heaviside,
+    const unsigned int                   temp_dof_idx)
   {
     // set the maximum temperature of the melt pool if not specified
 

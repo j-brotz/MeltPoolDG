@@ -8,7 +8,6 @@
 
 #include <deal.II/grid/tria.h>
 
-#include <deal.II/lac/diagonal_matrix.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
 
 #include <meltpooldg/core/boundary_conditions.hpp>
@@ -44,7 +43,7 @@ namespace MeltPoolDG::Heat
     using VectorType      = typename HeatOperationBase<dim, number>::VectorType;
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
-    const ScratchData<dim>                                                            &scratch_data;
+    const ScratchData<dim, dim, number>                                               &scratch_data;
     const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> dirichlet_bc;
     const PeriodicBoundaryConditions<dim>                                             &periodic_bc;
     /**
@@ -95,7 +94,7 @@ namespace MeltPoolDG::Heat
     std::unique_ptr<LevelSet::Tools::NearestPoint<dim>> nearest_point_search;
 
   public:
-    HeatDiffuseOperation(const ScratchData<dim>                                    &scratch_data_in,
+    HeatDiffuseOperation(const ScratchData<dim, dim, number>                       &scratch_data_in,
                          const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
                          const PeriodicBoundaryConditions<dim>                     &periodic_bc_in,
                          const HeatData<number>                                    &heat_data_in,
@@ -127,7 +126,7 @@ namespace MeltPoolDG::Heat
     distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const override;
 
     void
-    setup_constraints(ScratchData<dim> &mutable_scratch_data) const override;
+    setup_constraints(ScratchData<dim, dim, number> &mutable_scratch_data) const override;
 
     void
     set_initial_condition(const dealii::Function<dim> &initial_field_function_temperature) override;

@@ -86,7 +86,7 @@ namespace MeltPoolDG::RadiativeTransport
     rte_quad_idx = scratch_data->attach_quadrature(
       FiniteElementUtils::create_quadrature<dim>(simulation_case->parameters.base.fe));
 
-    rad_trans_operation = std::make_shared<RadiativeTransportOperation<dim>>(
+    rad_trans_operation = std::make_shared<RadiativeTransportOperation<dim, double>>(
       *scratch_data,
       simulation_case->parameters.rad_trans,
       simulation_case->parameters.laser.template get_direction<dim>(),

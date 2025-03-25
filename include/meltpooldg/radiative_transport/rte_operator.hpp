@@ -3,15 +3,11 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
-#include <deal.II/lac/generic_linear_algebra.h>
-#include <deal.II/lac/trilinos_sparse_matrix.h>
-
 #include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
-using namespace dealii;
 
 namespace MeltPoolDG::RadiativeTransport
 {
@@ -47,7 +43,7 @@ namespace MeltPoolDG::RadiativeTransport
    *                                                                Ω
    */
   // clang-format on
-  template <int dim, typename number = double>
+  template <int dim, typename number>
   class RadiativeTransportOperator : public OperatorMatrixFree<dim, number>
   {
     //@todo: to avoid compiler warnings regarding hidden overriden functions
@@ -56,16 +52,16 @@ namespace MeltPoolDG::RadiativeTransport
     using OperatorMatrixFree<dim, number>::compute_inverse_diagonal_from_matrixfree;
 
   private:
-    using VectorType       = LinearAlgebra::distributed::Vector<number>;
-    using SparseMatrixType = TrilinosWrappers::SparseMatrix;
-    using vector           = Tensor<1, dim, VectorizedArray<number>>;
-    using scalar           = VectorizedArray<number>;
+    using VectorType       = typename OperatorMatrixFree<dim, number>::VectorType;
+    using SparseMatrixType = typename OperatorMatrixFree<dim, number>::SparseMatrixType;
+    using vector           = dealii::Tensor<1, dim, dealii::VectorizedArray<number>>;
+    using scalar           = dealii::VectorizedArray<number>;
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim, dim, number> &scratch_data;
 
-    const RadiativeTransportData<double> &rte_data;
+    const RadiativeTransportData<number> &rte_data;
 
-    const Tensor<1, dim, number> &laser_direction;
+    const dealii::Tensor<1, dim, number> &laser_direction;
 
     const VectorType &heaviside;
 
@@ -74,12 +70,12 @@ namespace MeltPoolDG::RadiativeTransport
     const unsigned int hs_dof_idx;
 
 
-    const double pure_liquid_level_set;
+    const number pure_liquid_level_set;
 
   public:
-    RadiativeTransportOperator(const ScratchData<dim>               &scratch_data_in,
-                               const RadiativeTransportData<double> &rte_data,
-                               const Tensor<1, dim, number>         &laser_direction_in,
+    RadiativeTransportOperator(const ScratchData<dim, dim, number>  &scratch_data_in,
+                               const RadiativeTransportData<number> &rte_data,
+                               const dealii::Tensor<1, dim, number> &laser_direction_in,
                                const VectorType                     &heaviside_in,
                                const unsigned int                    rte_dof_idx_in,
                                const unsigned int                    rte_quad_idx_in,
@@ -96,16 +92,15 @@ namespace MeltPoolDG::RadiativeTransport
     create_rhs(VectorType &dst, const VectorType &src) const final;
 
     void
-    compute_system_matrix_from_matrixfree(
-      TrilinosWrappers::SparseMatrix &system_matrix) const final;
+    compute_system_matrix_from_matrixfree(SparseMatrixType &system_matrix) const final;
 
     void
     compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const final;
 
   private:
     void
-    tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &intensity_vals,
-                                 FECellIntegrator<dim, 1, number> &level_set_vals,
-                                 const bool                        do_reinit_cells) const;
+    tangent_local_cell_operation(dealii::FECellIntegrator<dim, 1, number> &intensity_vals,
+                                 dealii::FECellIntegrator<dim, 1, number> &level_set_vals,
+                                 const bool                                do_reinit_cells) const;
   };
 } // namespace MeltPoolDG::RadiativeTransport

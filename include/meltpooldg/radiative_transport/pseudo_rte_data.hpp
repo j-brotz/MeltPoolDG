@@ -7,17 +7,17 @@
 
 namespace MeltPoolDG::RadiativeTransport
 {
-  template <typename number = double>
+  template <typename number>
   struct PseudoTimeSteppingData
   {
     PseudoTimeSteppingData();
 
     LinearSolverData<number> linear_solver;
     TimeSteppingData<number> time_stepping_data;
-    double                   diffusion_term_scaling = 1.;
-    double                   advection_term_scaling = 1.;
-    double                   pseudo_time_scaling    = 0.01;
-    double                   rel_tolerance          = 1e-3;
+    number                   diffusion_term_scaling = 1.;
+    number                   advection_term_scaling = 1.;
+    number                   pseudo_time_scaling    = 0.01;
+    number                   rel_tolerance          = 1e-3;
 
     void
     add_parameters(dealii::ParameterHandler &prm);

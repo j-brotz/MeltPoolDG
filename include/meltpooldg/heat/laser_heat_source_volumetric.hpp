@@ -26,10 +26,10 @@ namespace MeltPoolDG::Heat
      * Compute a DoF vector of the volumetric heat source.
      */
     void
-    compute_volumetric_heat_source(VectorType             &heat_source_vector,
-                                   const ScratchData<dim> &scratch_data,
-                                   const unsigned int      temp_dof_idx,
-                                   const bool              zero_out = true) const;
+    compute_volumetric_heat_source(VectorType                          &heat_source_vector,
+                                   const ScratchData<dim, dim, number> &scratch_data,
+                                   const unsigned int                   temp_dof_idx,
+                                   const bool                           zero_out = true) const;
 
   private:
     const std::shared_ptr<const dealii::Function<dim, number>> intensity_profile;

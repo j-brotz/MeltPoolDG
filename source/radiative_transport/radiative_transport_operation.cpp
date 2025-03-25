@@ -20,11 +20,11 @@ namespace MeltPoolDG::RadiativeTransport
 {
   using namespace dealii;
 
-  template <int dim>
-  RadiativeTransportOperation<dim>::RadiativeTransportOperation(
-    const ScratchData<dim>               &scratch_data_in,
-    const RadiativeTransportData<double> &rte_data_in,
-    const Tensor<1, dim, double>         &laser_direction_in,
+  template <int dim, typename number>
+  RadiativeTransportOperation<dim, number>::RadiativeTransportOperation(
+    const ScratchData<dim, dim, number>  &scratch_data_in,
+    const RadiativeTransportData<number> &rte_data_in,
+    const Tensor<1, dim, number>         &laser_direction_in,
     const VectorType                     &heaviside_in,
     const unsigned int                    rte_dof_idx_in,
     const unsigned int                    rte_hanging_nodes_dof_idx_in,
@@ -47,27 +47,28 @@ namespace MeltPoolDG::RadiativeTransport
     /*
      * operator init and setup preconditioner for matrix-free computation
      */
-    rte_operator = std::make_unique<RadiativeTransportOperator<dim, double>>(
+    rte_operator = std::make_unique<RadiativeTransportOperator<dim, number>>(
       scratch_data, rte_data, laser_direction, heaviside, rte_dof_idx, rte_quad_idx, hs_dof_idx);
-    preconditioner = make_preconditioner<dim, RadiativeTransportOperator<dim, double>, VectorType>(
+    preconditioner = make_preconditioner<dim, RadiativeTransportOperator<dim, number>, VectorType>(
       rte_data.linear_solver.preconditioner_type,
       rte_operator.get(),
       rte_data.linear_solver.do_matrix_free);
 
     if (rte_data.predictor_type == RTEPredictorType::pseudo_time_stepping)
-      pseudo_rte_operation = std::make_unique<PseudoRTEOperation<dim>>(scratch_data,
-                                                                       rte_data,
-                                                                       laser_direction,
-                                                                       heaviside,
-                                                                       rte_dof_idx,
-                                                                       rte_hanging_nodes_dof_idx,
-                                                                       rte_quad_idx,
-                                                                       hs_dof_idx);
+      pseudo_rte_operation =
+        std::make_unique<PseudoRTEOperation<dim, number>>(scratch_data,
+                                                          rte_data,
+                                                          laser_direction,
+                                                          heaviside,
+                                                          rte_dof_idx,
+                                                          rte_hanging_nodes_dof_idx,
+                                                          rte_quad_idx,
+                                                          hs_dof_idx);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  RadiativeTransportOperation<dim>::reinit()
+  RadiativeTransportOperation<dim, number>::reinit()
   {
     {
       ScopedName sc("rte::n_dofs");
@@ -83,17 +84,17 @@ namespace MeltPoolDG::RadiativeTransport
       pseudo_rte_operation->reinit();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  RadiativeTransportOperation<dim>::distribute_constraints()
+  RadiativeTransportOperation<dim, number>::distribute_constraints()
   {
     scratch_data.get_constraint(rte_dof_idx).distribute(intensity);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  RadiativeTransportOperation<dim>::setup_constraints(
-    ScratchData<dim>                                                           &scratch_data_in,
+  RadiativeTransportOperation<dim, number>::setup_constraints(
+    ScratchData<dim, dim, number>                                              &scratch_data_in,
     const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> &bc_data,
     const PeriodicBoundaryConditions<dim>                                      &pbc)
   {
@@ -101,9 +102,9 @@ namespace MeltPoolDG::RadiativeTransport
       scratch_data_in, bc_data, pbc, rte_dof_idx, rte_hanging_nodes_dof_idx, true);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  RadiativeTransportOperation<dim>::solve()
+  RadiativeTransportOperation<dim, number>::solve()
   {
     ScopedName         sc("rte::solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
@@ -146,7 +147,7 @@ namespace MeltPoolDG::RadiativeTransport
 
     Journal::print_formatted_norm(
       scratch_data.get_pcout(1),
-      [&]() -> double {
+      [&]() -> number {
         return VectorTools::compute_norm<dim>(intensity, scratch_data, rte_dof_idx, rte_quad_idx);
       },
       "intensity",
@@ -159,11 +160,12 @@ namespace MeltPoolDG::RadiativeTransport
     IterationMonitor::add_linear_iterations(sc, iter);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  RadiativeTransportOperation<dim>::compute_heat_source(VectorType        &heat_source,
-                                                        const unsigned int heat_source_dof_idx,
-                                                        const bool         zero_out) const
+  RadiativeTransportOperation<dim, number>::compute_heat_source(
+    VectorType        &heat_source,
+    const unsigned int heat_source_dof_idx,
+    const bool         zero_out) const
   {
     if (zero_out)
       heat_source = 0.0;
@@ -185,7 +187,7 @@ namespace MeltPoolDG::RadiativeTransport
       update_gradients); // src
     const unsigned int dofs_per_cell = scratch_data.get_fe(heat_source_dof_idx).n_dofs_per_cell();
     std::vector<types::global_dof_index>        local_dof_indices(dofs_per_cell);
-    std::vector<dealii::Tensor<1, dim, double>> intensity_grad_at_q(
+    std::vector<dealii::Tensor<1, dim, number>> intensity_grad_at_q(
       intensity_grad_eval.n_quadrature_points);
     VectorType heat_source_multiplicity;
     heat_source_multiplicity.reinit(heat_source);
@@ -210,7 +212,7 @@ namespace MeltPoolDG::RadiativeTransport
             heat_source_dof_cell->get_dof_indices(local_dof_indices);
 
             // record multiplicity entry
-            Vector<double> heat_source_multiplicity_local(dofs_per_cell);
+            Vector<number> heat_source_multiplicity_local(dofs_per_cell);
             for (auto &val : heat_source_multiplicity_local)
               val = 1.0;
             scratch_data.get_constraint(heat_source_dof_idx)
@@ -223,7 +225,7 @@ namespace MeltPoolDG::RadiativeTransport
             intensity_grad_eval.reinit(intensity_grad_dof_cell);
             intensity_grad_eval.get_function_gradients(intensity, intensity_grad_at_q);
 
-            Vector<double> heat_source_vector_local(dofs_per_cell);
+            Vector<number> heat_source_vector_local(dofs_per_cell);
 
             // get local evaluation
             for (const auto q : heat_source_eval.quadrature_point_indices())
@@ -254,37 +256,38 @@ namespace MeltPoolDG::RadiativeTransport
       intensity.zero_out_ghost_values();
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  RadiativeTransportOperation<dim>::get_intensity() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  RadiativeTransportOperation<dim, number>::get_intensity() const
   {
     return intensity;
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  RadiativeTransportOperation<dim>::get_intensity()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::Vector<number> &
+  RadiativeTransportOperation<dim, number>::get_intensity()
   {
     return intensity;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  RadiativeTransportOperation<dim>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  RadiativeTransportOperation<dim, number>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     vectors.push_back(&intensity);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  RadiativeTransportOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  RadiativeTransportOperation<dim, number>::attach_output_vectors(
+    GenericDataOut<dim> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(rte_dof_idx), intensity, "intensity");
     data_out.add_data_vector(scratch_data.get_dof_handler(rte_dof_idx), rhs, "rte_rhs");
   }
 
-  template class RadiativeTransportOperation<1>;
-  template class RadiativeTransportOperation<2>;
-  template class RadiativeTransportOperation<3>;
+  template class RadiativeTransportOperation<1, double>;
+  template class RadiativeTransportOperation<2, double>;
+  template class RadiativeTransportOperation<3, double>;
 } // namespace MeltPoolDG::RadiativeTransport

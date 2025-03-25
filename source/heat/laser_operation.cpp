@@ -13,7 +13,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   LaserOperation<dim, number>::LaserOperation(
-    ScratchData<dim>                                         &scratch_data_in,
+    ScratchData<dim, dim, number>                            &scratch_data_in,
     const PeriodicBoundaryConditions<dim>                    &periodic_bc_in,
     const LaserData<number>                                  &laser_data_in,
     const VectorType                                         *heaviside_in,
@@ -142,15 +142,16 @@ namespace MeltPoolDG::Heat
               rte_quad_idx = scratch_data_in.attach_quadrature(
                 QGauss<dim>(rad_trans_data_in->fe.get_n_q_points()));
 
-            rte_operation = std::make_unique<RadiativeTransport::RadiativeTransportOperation<dim>>(
-              scratch_data,
-              *rad_trans_data_in,
-              laser_data.template get_direction<dim>(),
-              *heaviside_in,
-              rte_dof_idx,
-              rte_hanging_nodes_dof_idx,
-              rte_quad_idx,
-              hs_dof_idx_in);
+            rte_operation =
+              std::make_unique<RadiativeTransport::RadiativeTransportOperation<dim, number>>(
+                scratch_data,
+                *rad_trans_data_in,
+                laser_data.template get_direction<dim>(),
+                *heaviside_in,
+                rte_dof_idx,
+                rte_hanging_nodes_dof_idx,
+                rte_quad_idx,
+                hs_dof_idx_in);
             break;
           }
         default:

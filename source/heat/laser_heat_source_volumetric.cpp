@@ -20,10 +20,10 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   LaserHeatSourceVolumetric<dim, number>::compute_volumetric_heat_source(
-    VectorType             &heat_source_vector,
-    const ScratchData<dim> &scratch_data,
-    const unsigned int      heat_source_dof_idx,
-    const bool              zero_out) const
+    VectorType                          &heat_source_vector,
+    const ScratchData<dim, dim, number> &scratch_data,
+    const unsigned int                   heat_source_dof_idx,
+    const bool                           zero_out) const
   {
     if (zero_out)
       heat_source_vector = 0;

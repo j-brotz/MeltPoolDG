@@ -447,7 +447,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   HeatCutOperator<dim, number>::HeatCutOperator(
-    const ScratchData<dim>                     &scratch_data_in,
+    const ScratchData<dim, dim, number>        &scratch_data_in,
     const HeatData<number>                     &heat_data_in,
     const MaterialData<number>                 &material_data_in,
     const Evaporation::EvaporationData<number> &evapor_data_in,

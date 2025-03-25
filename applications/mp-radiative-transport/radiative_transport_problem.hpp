@@ -51,7 +51,7 @@ namespace MeltPoolDG::RadiativeTransport
     std::shared_ptr<ScratchData<dim>>     scratch_data;
     std::shared_ptr<TimeIterator<double>> time_iterator;
 
-    std::shared_ptr<RadiativeTransportOperation<dim>> rad_trans_operation;
+    std::shared_ptr<RadiativeTransportOperation<dim, double>> rad_trans_operation;
 
     std::shared_ptr<Postprocessor<dim>>                  post_processor;
     std::unique_ptr<Profiling::ProfilingMonitor<double>> profiling_monitor;

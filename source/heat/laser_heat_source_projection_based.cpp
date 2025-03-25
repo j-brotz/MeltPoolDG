@@ -75,14 +75,14 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   LaserHeatSourceProjectionBased<dim, number>::compute_interfacial_heat_source(
-    VectorType             &heat_source_vector,
-    const ScratchData<dim> &scratch_data,
-    const unsigned int      temp_dof_idx,
-    const VectorType       &level_set_heaviside,
-    const unsigned int      ls_dof_idx,
-    const bool              zero_out,
-    const BlockVectorType  *normal_vector,
-    const unsigned int      normal_dof_idx) const
+    VectorType                          &heat_source_vector,
+    const ScratchData<dim, dim, number> &scratch_data,
+    const unsigned int                   temp_dof_idx,
+    const VectorType                    &level_set_heaviside,
+    const unsigned int                   ls_dof_idx,
+    const bool                           zero_out,
+    const BlockVectorType               *normal_vector,
+    const unsigned int                   normal_dof_idx) const
   {
     if (zero_out)
       heat_source_vector = 0.0;
@@ -319,15 +319,15 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   LaserHeatSourceProjectionBased<dim, number>::compute_interfacial_heat_source_sharp_conforming(
-    VectorType             &heat_rhs,
-    const ScratchData<dim> &scratch_data,
-    const unsigned int      temp_dof_idx,
-    const unsigned int      temp_quad_idx,
-    const VectorType       &level_set_heaviside,
-    const unsigned int      ls_dof_idx,
-    const bool              zero_out,
-    const BlockVectorType  *normal_vector,
-    const unsigned int      normal_dof_idx) const
+    VectorType                          &heat_rhs,
+    const ScratchData<dim, dim, number> &scratch_data,
+    const unsigned int                   temp_dof_idx,
+    const unsigned int                   temp_quad_idx,
+    const VectorType                    &level_set_heaviside,
+    const unsigned int                   ls_dof_idx,
+    const bool                           zero_out,
+    const BlockVectorType               *normal_vector,
+    const unsigned int                   normal_dof_idx) const
   {
     if (zero_out)
       scratch_data.initialize_dof_vector(heat_rhs, temp_dof_idx);
@@ -440,14 +440,14 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   LaserHeatSourceProjectionBased<dim, number>::compute_interfacial_heat_source_sharp(
-    VectorType             &heat_rhs,
-    const ScratchData<dim> &scratch_data,
-    const unsigned int      temp_dof_idx,
-    const VectorType       &level_set_heaviside,
-    const unsigned int      ls_dof_idx,
-    const bool              zero_out,
-    const BlockVectorType  *normal_vector,
-    const unsigned int      normal_dof_idx) const
+    VectorType                          &heat_rhs,
+    const ScratchData<dim, dim, number> &scratch_data,
+    const unsigned int                   temp_dof_idx,
+    const VectorType                    &level_set_heaviside,
+    const unsigned int                   ls_dof_idx,
+    const bool                           zero_out,
+    const BlockVectorType               *normal_vector,
+    const unsigned int                   normal_dof_idx) const
   {
     if (zero_out)
       scratch_data.initialize_dof_vector(heat_rhs, temp_dof_idx);

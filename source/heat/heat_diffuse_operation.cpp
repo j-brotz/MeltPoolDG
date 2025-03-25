@@ -22,7 +22,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   HeatDiffuseOperation<dim, number>::HeatDiffuseOperation(
-    const ScratchData<dim>                                    &scratch_data_in,
+    const ScratchData<dim, dim, number>                       &scratch_data_in,
     const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
     const PeriodicBoundaryConditions<dim>                     &periodic_bc_in,
     const HeatData<number>                                    &heat_data_in,
@@ -149,7 +149,8 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim, number>::setup_constraints(ScratchData<dim> &mutable_scratch_data) const
+  HeatDiffuseOperation<dim, number>::setup_constraints(
+    ScratchData<dim, dim, number> &mutable_scratch_data) const
   {
     Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
       mutable_scratch_data, dirichlet_bc, periodic_bc, temp_dof_idx, temp_hanging_nodes_dof_idx);

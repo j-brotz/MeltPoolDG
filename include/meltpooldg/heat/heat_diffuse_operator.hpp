@@ -9,7 +9,6 @@
 #include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/full_matrix.h>
-#include <deal.II/lac/trilinos_sparse_matrix.h>
 
 #include <deal.II/matrix_free/matrix_free.h>
 
@@ -117,14 +116,14 @@ namespace MeltPoolDG::Heat
     using OperatorMatrixFree<dim, number>::vmult;
 
     using VectorType       = typename OperatorMatrixFree<dim, number>::VectorType;
-    using SparseMatrixType = dealii::TrilinosWrappers::SparseMatrix;
+    using SparseMatrixType = typename OperatorMatrixFree<dim, number>::SparseMatrixType;
 
-    const ScratchData<dim> &scratch_data;
-    const HeatData<number> &data;
-    const Material<number> &material;
-    const unsigned int      temp_dof_idx;
-    const unsigned int      temp_quad_idx;
-    const unsigned int      temp_hanging_nodes_dof_idx;
+    const ScratchData<dim, dim, number> &scratch_data;
+    const HeatData<number>              &data;
+    const Material<number>              &material;
+    const unsigned int                   temp_dof_idx;
+    const unsigned int                   temp_quad_idx;
+    const unsigned int                   temp_hanging_nodes_dof_idx;
 
     const VectorType &temperature;
     const VectorType &temperature_old;
@@ -177,7 +176,7 @@ namespace MeltPoolDG::Heat
 
   public:
     HeatDiffuseMultiPhaseOperator(
-      const ScratchData<dim>                                    &scratch_data_in,
+      const ScratchData<dim, dim, number>                       &scratch_data_in,
       const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
       const HeatData<number>                                    &data_in,
       const Material<number>                                    &material,
