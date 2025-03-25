@@ -52,11 +52,11 @@ namespace MeltPoolDG::Heat
     const Material<number>               material;
 
     // ScratchData's DoFHandler indices for ..
-    const unsigned int temp_cut_dof_idx;        // .. CutFEM DoFs with Dirichlet BCs
-    const unsigned int temp_cut_no_bc_dof_idx;  // .. CutFEM DoFs without Dirichlet BCs
-    const unsigned int temp_cont_no_bc_dof_idx; // .. continuous DoFs without Dirichlet BCs
+    const unsigned int heat_cut_dof_idx;              // .. CutFEM DoFs with Dirichlet BCs
+    const unsigned int heat_cut_no_bc_dof_idx;        // .. CutFEM DoFs without Dirichlet BCs
+    const unsigned int heat_continuous_no_bc_dof_idx; // .. continuous DoFs without Dirichlet BCs
     // ScratchData's Quadrature index
-    const unsigned int temp_quad_idx;
+    const unsigned int heat_quad_idx;
 
     const VectorType &temperature;
 
@@ -67,9 +67,9 @@ namespace MeltPoolDG::Heat
       &mapping_info_cells;
 
     // use FE_DGQ for FEPointEvaluation (DoF numbering reasons)
-    const dealii::FE_DGQ<dim>   fe_point_temp;
+    const dealii::FE_DGQ<dim>   temperature_reference_finite_element;
     const unsigned int          n_dofs_per_cell;
-    const dealii::FESystem<dim> fe_point_vel;
+    const dealii::FESystem<dim> velocity_reference_finite_element;
     const unsigned int          n_dofs_per_cell_vel;
 
     // coefficients for weighted average operator for two-phase case
@@ -107,10 +107,10 @@ namespace MeltPoolDG::Heat
                     const HeatData<number>                     &heat_data_in,
                     const MaterialData<number>                 &material_data_in,
                     const Evaporation::EvaporationData<number> &evapor_data_in,
-                    const unsigned int                          temp_cut_dof_idx_in,
-                    const unsigned int                          temp_cut_no_bc_dof_idx_in,
-                    const unsigned int                          temp_cont_no_bc_dof_idx_in,
-                    const unsigned int                          temp_quad_idx_in,
+                    const unsigned int                          heat_cut_dof_idx_in,
+                    const unsigned int                          heat_cut_no_bc_dof_idx_in,
+                    const unsigned int                          heat_continuous_no_bc_dof_idx_in,
+                    const unsigned int                          heat_quad_idx_in,
                     const VectorType                           &temperature_in,
                     dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>
                       &mapping_info_surface_in,

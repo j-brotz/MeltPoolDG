@@ -28,9 +28,9 @@ namespace MeltPoolDG::Heat
     const HeatData<number>                                    &heat_data_in,
     const Material<number>                                    &material,
     const TimeIterator<number>                                &time_iterator,
-    const unsigned int                                         temp_dof_idx_in,
-    const unsigned int                                         temp_hanging_nodes_dof_idx_in,
-    const unsigned int                                         temp_quad_idx_in,
+    const unsigned int                                         heat_dof_idx_in,
+    const unsigned int                                         heat_no_bc_dof_idx_in,
+    const unsigned int                                         heat_quad_idx_in,
     const unsigned int                                         vel_dof_idx_in,
     const VectorType                                          *velocity_in,
     const unsigned int                                         ls_dof_idx_in,
@@ -41,25 +41,25 @@ namespace MeltPoolDG::Heat
     , periodic_bc(periodic_bc_in)
     , heat_data(heat_data_in)
     , time_iterator(time_iterator)
-    , temp_dof_idx(temp_dof_idx_in)
-    , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
-    , temp_quad_idx(temp_quad_idx_in)
+    , heat_dof_idx(heat_dof_idx_in)
+    , heat_no_bc_dof_idx(heat_no_bc_dof_idx_in)
+    , heat_quad_idx(heat_quad_idx_in)
+    , solution_history(std::max(heat_data.predictor.n_old_solution_vectors,
+                                2U /*TODO: include time integration scheme*/))
     , vel_dof_idx(vel_dof_idx_in)
     , velocity(velocity_in)
     , ls_dof_idx(ls_dof_idx_in)
     , level_set_as_heaviside(level_set_as_heaviside_in)
     , newton(heat_data.nlsolve)
-    , solution_history(std::max(heat_data.predictor.n_old_solution_vectors,
-                                2U /*TODO: include time integration scheme*/))
   {
     heat_operator = std::make_unique<HeatDiffuseMultiPhaseOperator<dim, number>>(
       scratch_data,
       heat_bc_manager,
       heat_data,
       material,
-      temp_dof_idx,
-      temp_quad_idx,
-      temp_hanging_nodes_dof_idx,
+      heat_dof_idx,
+      heat_quad_idx,
+      heat_no_bc_dof_idx,
       solution_history.get_current_solution(),
       solution_history.get_recent_old_solution(),
       heat_source,
@@ -99,18 +99,18 @@ namespace MeltPoolDG::Heat
     };
 
     newton.reinit_vector = [&](VectorType &v) {
-      scratch_data.initialize_dof_vector(v, temp_dof_idx);
+      scratch_data.initialize_dof_vector(v, heat_dof_idx);
     };
 
     newton.distribute_constraints = [&](VectorType &v) {
-      scratch_data.get_constraint(temp_dof_idx).distribute(v);
+      scratch_data.get_constraint(heat_dof_idx).distribute(v);
     };
 
     newton.norm_of_solution_vector = [this]() -> number {
       return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
                                                         scratch_data,
-                                                        temp_dof_idx,
-                                                        temp_quad_idx);
+                                                        heat_dof_idx,
+                                                        heat_quad_idx);
     };
   }
 
@@ -153,7 +153,7 @@ namespace MeltPoolDG::Heat
     ScratchData<dim, dim, number> &mutable_scratch_data) const
   {
     Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
-      mutable_scratch_data, dirichlet_bc, periodic_bc, temp_dof_idx, temp_hanging_nodes_dof_idx);
+      mutable_scratch_data, dirichlet_bc, periodic_bc, heat_dof_idx, heat_no_bc_dof_idx);
   }
 
 
@@ -163,7 +163,7 @@ namespace MeltPoolDG::Heat
     const Function<dim> &initial_field_function_temperature)
   {
     dealii::VectorTools::interpolate(scratch_data.get_mapping(),
-                                     scratch_data.get_dof_handler(temp_dof_idx),
+                                     scratch_data.get_dof_handler(heat_dof_idx),
                                      initial_field_function_temperature,
                                      solution_history.get_current_solution());
 
@@ -171,10 +171,10 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
         const_cast<ScratchData<dim> &>(scratch_data),
         dirichlet_bc,
-        temp_dof_idx,
-        temp_hanging_nodes_dof_idx);
+        heat_dof_idx,
+        heat_no_bc_dof_idx);
 
-    scratch_data.get_constraint(temp_dof_idx).distribute(solution_history.get_current_solution());
+    scratch_data.get_constraint(heat_dof_idx).distribute(solution_history.get_current_solution());
     solution_history.get_current_solution().update_ghost_values();
   }
 
@@ -184,24 +184,21 @@ namespace MeltPoolDG::Heat
   {
     {
       ScopedName sc("heat::n_dofs");
-      DoFMonitor::add_n_dofs(sc, scratch_data.get_dof_handler(temp_dof_idx).n_dofs());
+      DoFMonitor::add_n_dofs(sc, scratch_data.get_dof_handler(heat_dof_idx).n_dofs());
     }
-    scratch_data.initialize_dof_vector(solution_history.get_current_solution(), temp_dof_idx);
+    scratch_data.initialize_dof_vector(solution_history.get_current_solution(), heat_dof_idx);
     solution_history.apply_old(
-      [this](VectorType &v) { scratch_data.initialize_dof_vector(v, temp_hanging_nodes_dof_idx); });
+      [this](VectorType &v) { scratch_data.initialize_dof_vector(v, heat_no_bc_dof_idx); });
 
-    scratch_data.initialize_dof_vector(user_rhs, temp_hanging_nodes_dof_idx);
-    scratch_data.initialize_dof_vector(heat_source, temp_hanging_nodes_dof_idx);
+    scratch_data.initialize_dof_vector(predictor_buffer, heat_dof_idx);
+    scratch_data.initialize_dof_vector(user_rhs, heat_no_bc_dof_idx);
+    scratch_data.initialize_dof_vector(heat_source, heat_no_bc_dof_idx);
     if (nearest_point_search)
-      scratch_data.initialize_dof_vector(interface_temperature, temp_hanging_nodes_dof_idx);
-    scratch_data.initialize_dof_vector(temperature_extrapolated, temp_dof_idx);
-
-    if (heat_data.predictor.type == PredictorType::least_squares_projection)
-      scratch_data.initialize_dof_vector(temp, temp_hanging_nodes_dof_idx);
+      scratch_data.initialize_dof_vector(interface_temperature, heat_no_bc_dof_idx);
 
     heat_operator->reinit();
 
-    preconditioner.reinit(scratch_data, temp_dof_idx);
+    preconditioner.reinit(scratch_data, heat_dof_idx);
   }
 
   template <int dim, typename number>
@@ -212,33 +209,35 @@ namespace MeltPoolDG::Heat
 
     if (heat_data.enable_time_dependent_bc)
       {
-        MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
-          const_cast<ScratchData<dim> &>(scratch_data),
-          dirichlet_bc,
-          temp_dof_idx,
-          temp_hanging_nodes_dof_idx);
+        Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(const_cast<ScratchData<dim> &>(
+                                                                    scratch_data),
+                                                                  dirichlet_bc,
+                                                                  heat_dof_idx,
+                                                                  heat_no_bc_dof_idx);
       }
 
-    if (!predictor)
+    if (not predictor)
       predictor = std::make_unique<Predictor<VectorType, number>>(heat_data.predictor,
                                                                   solution_history,
                                                                   &time_iterator);
+    VectorType predictor_rhs;
     if (this->heat_data.predictor.type == PredictorType::least_squares_projection)
       {
         // solely homogeneous dirichlet bc are distributed for the
         // corrected temperature field in the newton solver
         heat_operator->pre();
-        temp = user_rhs;
+        predictor_rhs = user_rhs;
         heat_operator->create_rhs(
-          temp, solution_history.get_current_solution() //= old_solution for current time step
+          predictor_rhs,
+          solution_history.get_current_solution() //= old_solution for current time step
         );
         heat_operator->post();
       }
-
-    predictor->vmult(*heat_operator, temperature_extrapolated, temp);
+    scratch_data.initialize_dof_vector(predictor_buffer, heat_dof_idx);
+    predictor->vmult(*heat_operator, predictor_buffer, predictor_rhs);
 
     // apply constraints to predictor
-    scratch_data.get_constraint(temp_dof_idx).distribute(solution_history.get_current_solution());
+    scratch_data.get_constraint(heat_dof_idx).distribute(solution_history.get_current_solution());
 
     ready_for_time_advance = true;
   }
@@ -298,9 +297,9 @@ namespace MeltPoolDG::Heat
       scratch_data.get_dof_handler(ls_dof_idx),
       distance,
       normal_vector,
-      scratch_data.get_remote_point_evaluation(temp_hanging_nodes_dof_idx),
+      scratch_data.get_remote_point_evaluation(heat_no_bc_dof_idx),
       nearest_point_data);
-    scratch_data.initialize_dof_vector(interface_temperature, temp_hanging_nodes_dof_idx);
+    scratch_data.initialize_dof_vector(interface_temperature, heat_no_bc_dof_idx);
   }
 
   template <int dim, typename number>
@@ -313,12 +312,12 @@ namespace MeltPoolDG::Heat
         "Before computing the interface temperature, you must register the necessary data "
         "for interface projection using register_interface_projection_data()!"));
 
-    nearest_point_search->reinit(&scratch_data.get_dof_handler(temp_dof_idx));
+    nearest_point_search->reinit(&scratch_data.get_dof_handler(heat_dof_idx));
 
     nearest_point_search->template fill_dof_vector_with_point_values(interface_temperature,
                                                                      get_temperature());
 
-    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(interface_temperature);
+    scratch_data.get_constraint(heat_no_bc_dof_idx).distribute(interface_temperature);
   }
 
   template <int dim, typename number>
@@ -337,10 +336,9 @@ namespace MeltPoolDG::Heat
   void
   HeatDiffuseOperation<dim, number>::distribute_constraints()
   {
-    scratch_data.get_constraint(temp_dof_idx).distribute(solution_history.get_current_solution());
-    solution_history.apply_old([this](VectorType &v) {
-      scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(v);
-    });
+    scratch_data.get_constraint(heat_dof_idx).distribute(solution_history.get_current_solution());
+    solution_history.apply_old(
+      [this](VectorType &v) { scratch_data.get_constraint(heat_no_bc_dof_idx).distribute(v); });
     heat_operator->distribute_constraints();
   }
 
@@ -349,15 +347,15 @@ namespace MeltPoolDG::Heat
   HeatDiffuseOperation<dim, number>::attach_output_vectors(
     GenericDataOut<dim, number> &data_out) const
   {
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(heat_dof_idx),
                              solution_history.get_current_solution(),
                              "temperature");
 
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(heat_no_bc_dof_idx),
                              solution_history.get_recent_old_solution(),
                              "temperature_old");
 
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(heat_no_bc_dof_idx),
                              heat_source,
                              "heat_source");
 
@@ -365,24 +363,24 @@ namespace MeltPoolDG::Heat
     heat_operator->attach_output_vectors(data_out);
 
     if (nearest_point_search)
-      data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+      data_out.add_data_vector(scratch_data.get_dof_handler(heat_no_bc_dof_idx),
                                interface_temperature,
                                "interface_temperature");
 
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(heat_no_bc_dof_idx),
                              user_rhs,
                              "heat_user_rhs");
 
     if (data_out.is_requested("heat_user_rhs_projected"))
       {
-        scratch_data.initialize_dof_vector(user_rhs_projected, temp_hanging_nodes_dof_idx);
+        scratch_data.initialize_dof_vector(user_rhs_projected, heat_no_bc_dof_idx);
         VectorTools::project_vector<1>(scratch_data.get_mapping(),
-                                       scratch_data.get_dof_handler(temp_dof_idx),
-                                       scratch_data.get_constraint(temp_dof_idx),
-                                       scratch_data.get_quadrature(temp_quad_idx),
+                                       scratch_data.get_dof_handler(heat_dof_idx),
+                                       scratch_data.get_constraint(heat_dof_idx),
+                                       scratch_data.get_quadrature(heat_quad_idx),
                                        user_rhs,
                                        user_rhs_projected);
-        data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+        data_out.add_data_vector(scratch_data.get_dof_handler(heat_dof_idx),
                                  user_rhs_projected,
                                  "heat_user_rhs_projected");
       }
@@ -393,11 +391,11 @@ namespace MeltPoolDG::Heat
   HeatDiffuseOperation<dim, number>::attach_output_vectors_failed_step(
     GenericDataOut<dim, number> &data_out) const
   {
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(heat_no_bc_dof_idx),
                              newton.get_solution_update(),
                              "temperature_newton_last_solution_update",
                              true /* force output */);
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(heat_no_bc_dof_idx),
                              newton.get_residual(),
                              "temperature_newton_failed_residual",
                              true /* force output */);

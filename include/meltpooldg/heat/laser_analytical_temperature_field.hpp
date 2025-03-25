@@ -24,7 +24,7 @@ namespace MeltPoolDG::Heat
                               const dealii::Point<dim>            &laser_position,
                               VectorType                          &temperature,
                               const VectorType                    &level_set_as_heaviside,
-                              const unsigned int                   temp_dof_idx);
+                              const unsigned int                   heat_dof_idx);
 
   private:
     /**

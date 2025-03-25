@@ -121,9 +121,9 @@ namespace MeltPoolDG::Heat
     const ScratchData<dim, dim, number> &scratch_data;
     const HeatData<number>              &data;
     const Material<number>              &material;
-    const unsigned int                   temp_dof_idx;
-    const unsigned int                   temp_quad_idx;
-    const unsigned int                   temp_hanging_nodes_dof_idx;
+    const unsigned int                   heat_dof_idx;
+    const unsigned int                   heat_quad_idx;
+    const unsigned int                   heat_no_bc_dof_idx;
 
     const VectorType &temperature;
     const VectorType &temperature_old;
@@ -143,15 +143,15 @@ namespace MeltPoolDG::Heat
     const VectorType  *level_set_as_heaviside;
 
     // optional: two phase flow with evaporation
-    VectorType                                              *evaporative_mass_flux    = nullptr;
-    unsigned int                                             evapor_mass_flux_dof_idx = 0;
+    VectorType                                              *evaporative_mass_flux = nullptr;
+    unsigned int                                             mass_flux_dof_idx     = 0;
     std::unique_ptr<Evaporation::EvaporativeCooling<number>> evaporative_cooling;
 
     // optional: melting/solidification effects
     const bool do_solidification;
 
     // interpolation of the level set space to the temperature space
-    dealii::FullMatrix<number> ls_to_temp_grad_interpolation_matrix;
+    dealii::FullMatrix<number> ls_to_heat_grad_interpolation_matrix;
     bool                       do_level_set_temperature_gradient_interpolation = false;
 
     /*
@@ -180,9 +180,9 @@ namespace MeltPoolDG::Heat
       const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
       const HeatData<number>                                    &data_in,
       const Material<number>                                    &material,
-      const unsigned int                                         temp_dof_idx_in,
-      const unsigned int                                         temp_quad_idx_in,
-      const unsigned int                                         temp_hanging_nodes_dof_idx,
+      const unsigned int                                         heat_dof_idx_in,
+      const unsigned int                                         heat_quad_idx_in,
+      const unsigned int                                         heat_no_bc_dof_idx,
       const VectorType                                          &temperature_in,
       const VectorType                                          &temperature_old_in,
       const VectorType                                          &heat_source_in,
@@ -194,7 +194,7 @@ namespace MeltPoolDG::Heat
 
     void
     register_evaporative_mass_flux(VectorType        *evaporative_mass_flux_in,
-                                   const unsigned int evapor_mass_flux_dof_idx_in,
+                                   const unsigned int mass_flux_dof_idx_in,
                                    const Evaporation::EvaporationData<number> &evapor_data);
 
     void
@@ -283,33 +283,33 @@ namespace MeltPoolDG::Heat
     /**
      * This function executes the local cell operation for computing the tangent.
      *
-     * @note The function assumes that @p temp_vals has been already initialized
-     *   and the dof-values of @p temp_vals are already set a priori. Afterwards, the
-     *   dof-values held by @p temp_vals can be written back to the global vector via
-     *   temp_vals.distribute_local_to_global(dst).
+     * @note The function assumes that @p eval has been already initialized
+     *   and the dof-values of @p eval are already set a priori. Afterwards, the
+     *   dof-values held by @p eval can be written back to the global vector via
+     *   eval.distribute_local_to_global(dst).
      */
     void
     tangent_local_cell_operation(
-      dealii::FECellIntegrator<dim, 1, number>                        &temp_vals,
-      dealii::FECellIntegrator<dim, 1, number>                        &temp_lin_vals,
-      dealii::FECellIntegrator<dim, 1, number>                        &temp_old_vals,
-      dealii::FECellIntegrator<dim, dim, number>                      &velocity_vals,
-      dealii::FECellIntegrator<dim, 1, number>                        &ls_vals,
-      dealii::FECellIntegrator<dim, 1, number>                        &ls_interpolated_vals,
-      const std::unique_ptr<dealii::FECellIntegrator<dim, 1, number>> &evapor_vals,
+      dealii::FECellIntegrator<dim, 1, number>                        &eval,
+      dealii::FECellIntegrator<dim, 1, number>                        &T_new_eval,
+      dealii::FECellIntegrator<dim, 1, number>                        &T_old_eval,
+      dealii::FECellIntegrator<dim, dim, number>                      &vel_eval,
+      dealii::FECellIntegrator<dim, 1, number>                        &heaviside_eval,
+      dealii::FECellIntegrator<dim, 1, number>                        &heaviside_interpolated_eval,
+      const std::unique_ptr<dealii::FECellIntegrator<dim, 1, number>> &mass_flux_eval,
       bool                                                             do_reinit_cells) const;
 
     /**
      * This function executes the local boundary operation for computing the tangent.
      *
-     * @note The function assumes that @p temp_vals has been already initialized
-     *   and the dof-values of @p temp_vals are already set a priori. Afterwards, the
-     *   dof-values held by @p temp_vals can be written back to the global vector via
-     *   temp_vals.distribute_local_to_global(dst).
+     * @note The function assumes that @p face_eval has been already initialized
+     *   and the dof-values of @p face_eval are already set a priori. Afterwards, the
+     *   dof-values held by @p face_eval can be written back to the global vector via
+     *   face_eval.distribute_local_to_global(dst).
      */
     void
-    tangent_local_boundary_operation(dealii::FEFaceIntegrator<dim, 1, number> &dQ_dT,
-                                     dealii::FEFaceIntegrator<dim, 1, number> &temp_vals,
+    tangent_local_boundary_operation(dealii::FEFaceIntegrator<dim, 1, number> &face_eval,
+                                     dealii::FEFaceIntegrator<dim, 1, number> &T_face_eval,
                                      bool do_reinit_face) const;
     /**
      * The setup for dealii::MatrixFreeTools::internal::compute_diagonal and
@@ -331,9 +331,9 @@ namespace MeltPoolDG::Heat
      * two-phase flow and no solidification this function does nothing.
      */
     std::tuple<dealii::VectorizedArray<number>, dealii::VectorizedArray<number>>
-    get_material_parameters(const dealii::FECellIntegrator<dim, 1, number> &temp_lin_val,
-                            const dealii::FECellIntegrator<dim, 1, number> &ls_heaviside_val,
-                            unsigned int                                    q_index) const;
+    get_material_parameters(const dealii::FECellIntegrator<dim, 1, number> &T_eval,
+                            const dealii::FECellIntegrator<dim, 1, number> &heaviside_eval,
+                            unsigned int                                    q) const;
 
     /**
      * Determine the material parameters and their temperature derivatives. This function takes
@@ -352,9 +352,9 @@ namespace MeltPoolDG::Heat
                dealii::VectorizedArray<number>,
                dealii::VectorizedArray<number>>
     get_material_parameters_and_derivatives(
-      const dealii::FECellIntegrator<dim, 1, number> &temp_lin_val,
-      const dealii::FECellIntegrator<dim, 1, number> &ls_heaviside_val,
-      unsigned int                                    q_index) const;
+      const dealii::FECellIntegrator<dim, 1, number> &T_eval,
+      const dealii::FECellIntegrator<dim, 1, number> &heaviside_eval,
+      unsigned int                                    q) const;
 
     const std::vector<
       std::tuple<const typename dealii::Triangulation<dim, dim>::cell_iterator /*cell*/,
@@ -362,7 +362,7 @@ namespace MeltPoolDG::Heat
                  std::vector<number> /*weights*/
                  >> *surface_mesh_info = nullptr;
 
-    Evaporation::EvaporCoolingInterfaceFluxType evapor_flux_type =
+    Evaporation::EvaporCoolingInterfaceFluxType mass_flux_type =
       Evaporation::EvaporCoolingInterfaceFluxType::none;
   };
 } // namespace MeltPoolDG::Heat

@@ -50,11 +50,11 @@ namespace MeltPoolDG::Heat
     const TimeIterator<number> &time_iterator;
 
     // ScratchData's DoFHandler indices for ..
-    const unsigned int temp_cut_dof_idx;        // .. CutFEM DoFs with Dirichlet BCs
-    const unsigned int temp_cut_no_bc_dof_idx;  // .. CutFEM DoFs without Dirichlet BCs
-    const unsigned int temp_cont_no_bc_dof_idx; // .. continuous DoFs without Dirichlet BCs
+    const unsigned int heat_cut_dof_idx;        // .. CutFEM DoFs with Dirichlet BCs
+    const unsigned int heat_cut_no_bc_dof_idx;  // .. CutFEM DoFs without Dirichlet BCs
+    const unsigned int heat_cont_no_bc_dof_idx; // .. continuous DoFs without Dirichlet BCs
     // ScratchData's Quadrature index
-    const unsigned int temp_quad_idx;
+    const unsigned int heat_quad_idx;
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
     VectorType                                   interface_temperature;
@@ -99,10 +99,10 @@ namespace MeltPoolDG::Heat
                      const MaterialData<number>                                &material_data_in,
                      const Evaporation::EvaporationData<number>                &evapor_data_in,
                      const TimeIterator<number>                                &time_iterator_in,
-                     const unsigned int                                         temp_cut_dof_idx_in,
-                     const unsigned int temp_cut_no_bc_dof_idx_in,
-                     const unsigned int temp_cont_no_bc_dof_idx_in,
-                     const unsigned int temp_quad_idx_in,
+                     const unsigned int                                         heat_cut_dof_idx_in,
+                     const unsigned int heat_cut_no_bc_dof_idx_in,
+                     const unsigned int heat_continuous_no_bc_dof_idx_in,
+                     const unsigned int heat_quad_idx_in,
                      const bool         do_solidification_in,
                      const unsigned int ls_dof_idx_in,
                      const VectorType  &level_set_in,

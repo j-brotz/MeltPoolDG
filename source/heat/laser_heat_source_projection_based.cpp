@@ -77,7 +77,7 @@ namespace MeltPoolDG::Heat
   LaserHeatSourceProjectionBased<dim, number>::compute_interfacial_heat_source(
     VectorType                          &heat_source_vector,
     const ScratchData<dim, dim, number> &scratch_data,
-    const unsigned int                   temp_dof_idx,
+    const unsigned int                   heat_dof_idx,
     const VectorType                    &level_set_heaviside,
     const unsigned int                   ls_dof_idx,
     const bool                           zero_out,
@@ -106,9 +106,9 @@ namespace MeltPoolDG::Heat
 
     FEValues<dim> heat_source_eval(
       scratch_data.get_mapping(),
-      scratch_data.get_dof_handler(temp_dof_idx).get_fe(),
+      scratch_data.get_dof_handler(heat_dof_idx).get_fe(),
       Quadrature<dim>(
-        scratch_data.get_dof_handler(temp_dof_idx).get_fe().get_unit_support_points()),
+        scratch_data.get_dof_handler(heat_dof_idx).get_fe().get_unit_support_points()),
       update_quadrature_points);
 
     const VectorType              *used_level_set  = &level_set_heaviside;
@@ -119,18 +119,18 @@ namespace MeltPoolDG::Heat
       scratch_data.get_mapping(),
       scratch_data.get_dof_handler(ls_dof_idx).get_fe(),
       Quadrature<dim>(
-        scratch_data.get_dof_handler(temp_dof_idx).get_fe().get_unit_support_points()),
+        scratch_data.get_dof_handler(heat_dof_idx).get_fe().get_unit_support_points()),
       update_values | update_gradients);
 
     FEValues<dim> normal_eval(
       scratch_data.get_mapping(),
       scratch_data.get_dof_handler(normal_dof_idx).get_fe(),
       Quadrature<dim>(
-        scratch_data.get_dof_handler(temp_dof_idx).get_fe().get_unit_support_points()),
+        scratch_data.get_dof_handler(heat_dof_idx).get_fe().get_unit_support_points()),
       update_values);
 
     const unsigned int dofs_per_cell =
-      scratch_data.get_dof_handler(temp_dof_idx).get_fe().n_dofs_per_cell();
+      scratch_data.get_dof_handler(heat_dof_idx).get_fe().n_dofs_per_cell();
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
     std::vector<number> ls_heaviside_at_q(ls_heaviside_eval->n_quadrature_points);
@@ -147,15 +147,15 @@ namespace MeltPoolDG::Heat
       {
         const auto ls_to_temperature_grad_interpolation_matrix =
           UtilityFunctions::create_dof_interpolation_matrix<dim>(
-            scratch_data.get_dof_handler(temp_dof_idx),
+            scratch_data.get_dof_handler(heat_dof_idx),
             scratch_data.get_dof_handler(ls_dof_idx),
             false);
 
         ls_heaviside_eval = std::make_unique<FEValues<dim>>(
           scratch_data.get_mapping(),
-          scratch_data.get_dof_handler(temp_dof_idx).get_fe(),
+          scratch_data.get_dof_handler(heat_dof_idx).get_fe(),
           Quadrature<dim>(
-            scratch_data.get_dof_handler(temp_dof_idx).get_fe().get_unit_support_points()),
+            scratch_data.get_dof_handler(heat_dof_idx).get_fe().get_unit_support_points()),
           update_values | update_gradients);
 
         std::vector<types::global_dof_index> ls_local_dof_indices(
@@ -163,8 +163,8 @@ namespace MeltPoolDG::Heat
 
         // create vector of interpolated values of level set at DoF points of the temperature field
         used_level_set  = &interpolated_vec;
-        used_ls_dof_idx = temp_dof_idx;
-        scratch_data.initialize_dof_vector(interpolated_vec, temp_dof_idx);
+        used_ls_dof_idx = heat_dof_idx;
+        scratch_data.initialize_dof_vector(interpolated_vec, heat_dof_idx);
 
         for (const auto &cell : scratch_data.get_triangulation().active_cell_iterators())
           {
@@ -177,13 +177,13 @@ namespace MeltPoolDG::Heat
                   &scratch_data.get_dof_handler(ls_dof_idx));
                 ls_dof_cell->get_dof_indices(ls_local_dof_indices);
 
-                TriaIterator<DoFCellAccessor<dim, dim, false>> temp_dof_cell(
+                TriaIterator<DoFCellAccessor<dim, dim, false>> T_dof_cell(
                   &scratch_data.get_triangulation(),
                   cell->level(),
                   cell->index(),
-                  &scratch_data.get_dof_handler(temp_dof_idx));
+                  &scratch_data.get_dof_handler(heat_dof_idx));
 
-                temp_dof_cell->get_dof_indices(local_dof_indices);
+                T_dof_cell->get_dof_indices(local_dof_indices);
 
                 for (unsigned int i = 0; i < dofs_per_cell; ++i)
                   {
@@ -225,11 +225,11 @@ namespace MeltPoolDG::Heat
               cell->index(),
               &scratch_data.get_dof_handler(used_ls_dof_idx));
 
-            TriaIterator<DoFCellAccessor<dim, dim, false>> temp_dof_cell(
+            TriaIterator<DoFCellAccessor<dim, dim, false>> T_dof_cell(
               &scratch_data.get_triangulation(),
               cell->level(),
               cell->index(),
-              &scratch_data.get_dof_handler(temp_dof_idx));
+              &scratch_data.get_dof_handler(heat_dof_idx));
 
             TriaIterator<DoFCellAccessor<dim, dim, false>> normal_dof_cell(
               &scratch_data.get_triangulation(),
@@ -237,19 +237,19 @@ namespace MeltPoolDG::Heat
               cell->index(),
               &scratch_data.get_dof_handler(normal_dof_idx));
 
-            temp_dof_cell->get_dof_indices(local_dof_indices);
+            T_dof_cell->get_dof_indices(local_dof_indices);
 
             // fill multiplicity
             Vector<number> heat_source_vector_multiplicity_local(dofs_per_cell);
             for (auto &val : heat_source_vector_multiplicity_local)
               val = 1.0;
-            scratch_data.get_constraint(temp_dof_idx)
+            scratch_data.get_constraint(heat_dof_idx)
               .distribute_local_to_global(heat_source_vector_multiplicity_local,
                                           local_dof_indices,
                                           heat_source_vector_multiplicity);
 
 
-            heat_source_eval.reinit(temp_dof_cell);
+            heat_source_eval.reinit(T_dof_cell);
             normal_eval.reinit(normal_dof_cell);
             ls_heaviside_eval->reinit(ls_dof_cell);
 
@@ -288,7 +288,7 @@ namespace MeltPoolDG::Heat
                                                         ls_heaviside_at_q[q]);
               }
 
-            scratch_data.get_constraint(temp_dof_idx)
+            scratch_data.get_constraint(heat_dof_idx)
               .distribute_local_to_global(heat_source_vector_local,
                                           local_dof_indices,
                                           heat_source_vector);
@@ -306,7 +306,7 @@ namespace MeltPoolDG::Heat
       if (heat_source_vector_multiplicity.local_element(i) > 1.0)
         heat_source_vector.local_element(i) /= heat_source_vector_multiplicity.local_element(i);
 
-    scratch_data.get_constraint(temp_dof_idx).distribute(heat_source_vector);
+    scratch_data.get_constraint(heat_dof_idx).distribute(heat_source_vector);
 
     heat_source_vector.zero_out_ghost_values();
 
@@ -321,8 +321,8 @@ namespace MeltPoolDG::Heat
   LaserHeatSourceProjectionBased<dim, number>::compute_interfacial_heat_source_sharp_conforming(
     VectorType                          &heat_rhs,
     const ScratchData<dim, dim, number> &scratch_data,
-    const unsigned int                   temp_dof_idx,
-    const unsigned int                   temp_quad_idx,
+    const unsigned int                   heat_dof_idx,
+    const unsigned int                   heat_quad_idx,
     const VectorType                    &level_set_heaviside,
     const unsigned int                   ls_dof_idx,
     const bool                           zero_out,
@@ -330,7 +330,7 @@ namespace MeltPoolDG::Heat
     const unsigned int                   normal_dof_idx) const
   {
     if (zero_out)
-      scratch_data.initialize_dof_vector(heat_rhs, temp_dof_idx);
+      scratch_data.initialize_dof_vector(heat_rhs, heat_dof_idx);
 
     const bool update_ghosts = !level_set_heaviside.has_ghost_elements();
     if (update_ghosts)
@@ -352,12 +352,12 @@ namespace MeltPoolDG::Heat
     FEFaceIntegrator<dim, 1, number> ls_eval(scratch_data.get_matrix_free(),
                                              true /*is_interior_face*/,
                                              ls_dof_idx,
-                                             temp_quad_idx);
+                                             heat_quad_idx);
 
     FEFaceIntegrator<dim, 1, number> rhs_eval(scratch_data.get_matrix_free(),
                                               true /*is_interior_face*/,
-                                              temp_dof_idx,
-                                              temp_quad_idx);
+                                              heat_dof_idx,
+                                              heat_quad_idx);
 
     std::unique_ptr<FEFaceIntegrator<dim, dim, number>> normal_eval;
 
@@ -367,7 +367,7 @@ namespace MeltPoolDG::Heat
 
     if (normal_vector)
       normal_eval = std::make_unique<FEFaceIntegrator<dim, dim, number>>(
-        scratch_data.get_matrix_free(), true, normal_dof_idx, temp_quad_idx);
+        scratch_data.get_matrix_free(), true, normal_dof_idx, heat_quad_idx);
 
     std::pair<unsigned int, unsigned int> face_range = {
       0, scratch_data.get_matrix_free().n_inner_face_batches()};
@@ -442,7 +442,7 @@ namespace MeltPoolDG::Heat
   LaserHeatSourceProjectionBased<dim, number>::compute_interfacial_heat_source_sharp(
     VectorType                          &heat_rhs,
     const ScratchData<dim, dim, number> &scratch_data,
-    const unsigned int                   temp_dof_idx,
+    const unsigned int                   heat_dof_idx,
     const VectorType                    &level_set_heaviside,
     const unsigned int                   ls_dof_idx,
     const bool                           zero_out,
@@ -450,7 +450,7 @@ namespace MeltPoolDG::Heat
     const unsigned int                   normal_dof_idx) const
   {
     if (zero_out)
-      scratch_data.initialize_dof_vector(heat_rhs, temp_dof_idx);
+      scratch_data.initialize_dof_vector(heat_rhs, heat_dof_idx);
 
     const bool update_ghosts = !level_set_heaviside.has_ghost_elements();
     if (update_ghosts)
@@ -480,7 +480,7 @@ namespace MeltPoolDG::Heat
       }
 
     FEPointEvaluation<1, dim> heat_source_vals(scratch_data.get_mapping(),
-                                               scratch_data.get_fe(temp_dof_idx),
+                                               scratch_data.get_fe(heat_dof_idx),
                                                update_values);
 
     std::vector<number>                  buffer;
@@ -544,17 +544,17 @@ namespace MeltPoolDG::Heat
             normal_vals->evaluate(make_array_view(buffer_dim), EvaluationFlags::values);
           }
 
-        TriaIterator<DoFCellAccessor<dim, dim, false>> temp_dof_cell(
-          &scratch_data.get_triangulation(),
-          cell->level(),
-          cell->index(),
-          &scratch_data.get_dof_handler(temp_dof_idx));
+        TriaIterator<DoFCellAccessor<dim, dim, false>> T_dof_cell(&scratch_data.get_triangulation(),
+                                                                  cell->level(),
+                                                                  cell->index(),
+                                                                  &scratch_data.get_dof_handler(
+                                                                    heat_dof_idx));
 
-        local_dof_indices.resize(temp_dof_cell->get_fe().n_dofs_per_cell());
-        temp_dof_cell->get_dof_indices(local_dof_indices);
-        buffer.resize(temp_dof_cell->get_fe().n_dofs_per_cell());
+        local_dof_indices.resize(T_dof_cell->get_fe().n_dofs_per_cell());
+        T_dof_cell->get_dof_indices(local_dof_indices);
+        buffer.resize(T_dof_cell->get_fe().n_dofs_per_cell());
 
-        heat_source_vals.reinit(temp_dof_cell, unit_points);
+        heat_source_vals.reinit(T_dof_cell, unit_points);
 
         for (unsigned int q = 0; q < n_points; ++q)
           {
@@ -575,7 +575,7 @@ namespace MeltPoolDG::Heat
         // integrate laser heat source
         heat_source_vals.test_and_sum(buffer, EvaluationFlags::values);
 
-        scratch_data.get_constraint(temp_dof_idx)
+        scratch_data.get_constraint(heat_dof_idx)
           .distribute_local_to_global(buffer, local_dof_indices, heat_rhs);
       },
       0.5, /*contour value*/
@@ -598,7 +598,7 @@ namespace MeltPoolDG::Heat
         DataOut<dim> data_out;
         data_out.set_flags(flags);
 
-        data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+        data_out.add_data_vector(scratch_data.get_dof_handler(heat_dof_idx),
                                  heat_rhs,
                                  "heat_source");
         data_out.build_patches(scratch_data.get_mapping());

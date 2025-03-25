@@ -223,9 +223,9 @@ namespace MeltPoolDG::MeltPool
     AffineConstraints<double> reinit_constraints_dirichlet;
     AffineConstraints<double> reinit_no_solid_constraints_dirichlet;
 
-    std::unique_ptr<AffineConstraints<double>> temp_constraints_dirichlet;
-    std::unique_ptr<AffineConstraints<double>> temp_hanging_node_constraints;
-    std::unique_ptr<AffineConstraints<double>> temp_cont_hanging_node_constraints;
+    std::unique_ptr<AffineConstraints<double>> heat_dirichlet_constraints;
+    std::unique_ptr<AffineConstraints<double>> heat_hanging_node_constraints;
+    std::unique_ptr<AffineConstraints<double>> heat_continuous_hanging_node_constraints;
 
     AffineConstraints<double> flow_velocity_constraints_no_solid;
 
@@ -242,10 +242,10 @@ namespace MeltPoolDG::MeltPool
 
     // optional DoFHandler indices
     // default value is invalid so we don't accidentally use a different DoFHandler
-    unsigned int temp_dof_idx               = -1;
-    unsigned int temp_hanging_nodes_dof_idx = -1;
-    unsigned int temp_cont_dof_idx          = -1;
-    unsigned int temp_quad_idx              = -1;
+    unsigned int heat_dof_idx                  = -1;
+    unsigned int heat_no_bc_dof_idx            = -1;
+    unsigned int heat_continuous_no_bc_dof_idx = -1;
+    unsigned int heat_quad_idx                 = -1;
 
     unsigned int vel_dof_idx;
     unsigned int pressure_dof_idx;
@@ -254,7 +254,7 @@ namespace MeltPoolDG::MeltPool
     const unsigned int &curv_dof_idx             = ls_hanging_nodes_dof_idx;
     const unsigned int &normal_dof_idx           = ls_hanging_nodes_dof_idx;
     const unsigned int &evapor_vel_dof_idx       = vel_dof_idx;
-    const unsigned int &evapor_mass_flux_dof_idx = temp_hanging_nodes_dof_idx;
+    const unsigned int &evapor_mass_flux_dof_idx = heat_no_bc_dof_idx;
 
     std::shared_ptr<ScratchData<dim>>                       scratch_data;
     std::shared_ptr<Material<double>>                       material;

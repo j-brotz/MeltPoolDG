@@ -297,7 +297,7 @@ namespace MeltPoolDG::MeltPool
                         laser_operation->get_laser_position(),
                         heat_operation->get_temperature(),
                         level_set_operation->get_level_set_as_heaviside(),
-                        temp_dof_idx);
+                        heat_dof_idx);
                     else if (heat_diffuse_operation)
                       // only precompute the laser heat source if it's not passed to the CutFEM
                       // Operator
@@ -306,8 +306,8 @@ namespace MeltPoolDG::MeltPool
                         heat_diffuse_operation->get_user_rhs(),
                         level_set_operation->get_level_set_as_heaviside(),
                         ls_dof_idx,
-                        temp_hanging_nodes_dof_idx,
-                        temp_quad_idx,
+                        heat_no_bc_dof_idx,
+                        heat_quad_idx,
                         true /* zero_out */,
                         &level_set_operation->get_normal_vector(),
                         normal_dof_idx);
@@ -336,7 +336,7 @@ namespace MeltPoolDG::MeltPool
                         TableHandler iter_table;
                         VectorType   iter_res;
 
-                        scratch_data->initialize_dof_vector(iter_res, temp_dof_idx);
+                        scratch_data->initialize_dof_vector(iter_res, heat_dof_idx);
                         iter_res = 1e10; // any large number
 
                         for (int i = 0;
@@ -809,29 +809,29 @@ namespace MeltPoolDG::MeltPool
     if (problem_specific_parameters.do_heat_transfer)
       {
         dof_handler_heat = std::make_unique<DoFHandler<dim>>(*base_in->triangulation);
-        scratch_data->attach_dof_handler(*dof_handler_heat); // temp_constraints_dirichlet
-        scratch_data->attach_dof_handler(*dof_handler_heat); // temp_hanging_node_constraints
+        scratch_data->attach_dof_handler(*dof_handler_heat); // heat_dirichlet_constraints
+        scratch_data->attach_dof_handler(*dof_handler_heat); // heat_hanging_node_constraints
 
-        temp_constraints_dirichlet    = std::make_unique<AffineConstraints<double>>();
-        temp_hanging_node_constraints = std::make_unique<AffineConstraints<double>>();
-        temp_dof_idx = scratch_data->attach_constraint_matrix(*temp_constraints_dirichlet);
-        temp_hanging_nodes_dof_idx =
-          scratch_data->attach_constraint_matrix(*temp_hanging_node_constraints);
+        heat_dirichlet_constraints    = std::make_unique<AffineConstraints<double>>();
+        heat_hanging_node_constraints = std::make_unique<AffineConstraints<double>>();
+        heat_dof_idx       = scratch_data->attach_constraint_matrix(*heat_dirichlet_constraints);
+        heat_no_bc_dof_idx = scratch_data->attach_constraint_matrix(*heat_hanging_node_constraints);
 
         if (param.heat.operator_type == Heat::TwoPhaseOperatorType::cut)
           {
             dof_handler_heat_cont = std::make_unique<DoFHandler<dim>>(*base_in->triangulation);
             scratch_data->attach_dof_handler(
-              *dof_handler_heat_cont); // temp_cont_hanging_node_constraints
+              *dof_handler_heat_cont); // heat_continuous_hanging_node_constraints
 
-            temp_cont_hanging_node_constraints = std::make_unique<AffineConstraints<double>>();
-            temp_cont_dof_idx =
-              scratch_data->attach_constraint_matrix(*temp_cont_hanging_node_constraints);
+            heat_continuous_hanging_node_constraints =
+              std::make_unique<AffineConstraints<double>>();
+            heat_continuous_no_bc_dof_idx =
+              scratch_data->attach_constraint_matrix(*heat_continuous_hanging_node_constraints);
           }
         else
-          temp_cont_dof_idx = temp_hanging_nodes_dof_idx;
+          heat_continuous_no_bc_dof_idx = heat_no_bc_dof_idx;
 
-        temp_quad_idx = scratch_data->attach_quadrature(
+        heat_quad_idx = scratch_data->attach_quadrature(
           FiniteElementUtils::create_quadrature<dim>(param.heat.fe));
       }
 
@@ -932,9 +932,9 @@ namespace MeltPoolDG::MeltPool
                 param.heat,
                 *material,
                 *time_iterator,
-                temp_dof_idx,
-                temp_hanging_nodes_dof_idx,
-                temp_quad_idx,
+                heat_dof_idx,
+                heat_no_bc_dof_idx,
+                heat_quad_idx,
                 vel_dof_idx,
                 &flow_operation->get_velocity(),
                 ls_hanging_nodes_dof_idx,
@@ -955,10 +955,10 @@ namespace MeltPoolDG::MeltPool
                 param.material,
                 param.evapor,
                 *time_iterator,
-                temp_dof_idx,
-                temp_hanging_nodes_dof_idx,
-                temp_cont_dof_idx,
-                temp_quad_idx,
+                heat_dof_idx,
+                heat_no_bc_dof_idx,
+                heat_continuous_no_bc_dof_idx,
+                heat_quad_idx,
                 problem_specific_parameters.do_solidification,
                 ls_hanging_nodes_dof_idx,
                 level_set_operation->get_level_set(),
@@ -979,7 +979,7 @@ namespace MeltPoolDG::MeltPool
                 [this]
 #endif
                 (const DoFHandler<dim> &cut_dof_handler) {
-                  Assert(&cut_dof_handler == &scratch_data->get_dof_handler(temp_dof_idx),
+                  Assert(&cut_dof_handler == &scratch_data->get_dof_handler(heat_dof_idx),
                          ExcInternalError());
 
                   // 1) copy current solution vector in temporary storage
@@ -992,18 +992,18 @@ namespace MeltPoolDG::MeltPool
                     {
                       if (d.first == &cut_dof_handler) // skip cut DoFHandler
                         continue;
-                      std::vector<VectorType *> temp_op_vectors;
-                      d.second(temp_op_vectors);
+                      std::vector<VectorType *> current_op_vectors;
+                      d.second(current_op_vectors);
                       op_vectors.insert(op_vectors.end(),
-                                        temp_op_vectors.begin(),
-                                        temp_op_vectors.end());
+                                        current_op_vectors.begin(),
+                                        current_op_vectors.end());
                     }
                   Assert(std::set(op_vectors.begin(), op_vectors.end()).size() == op_vectors.size(),
                          dealii::ExcMessage(
                            "There is at least one duplicate vector attached by attach_vectors()!"));
-                  std::vector<VectorType> temp_vectors(op_vectors.size());
+                  std::vector<VectorType> vectors_buffer(op_vectors.size());
                   for (unsigned int i = 0; i < op_vectors.size(); ++i)
-                    op_vectors[i]->swap(temp_vectors[i]);
+                    op_vectors[i]->swap(vectors_buffer[i]);
 
                   // 2) reinit matrix free
                   scratch_data->create_partitioning();
@@ -1027,7 +1027,7 @@ namespace MeltPoolDG::MeltPool
 
                   // 4) copy vectors back
                   for (unsigned int i = 0; i < op_vectors.size(); ++i)
-                    op_vectors[i]->copy_locally_owned_data_from(temp_vectors[i]);
+                    op_vectors[i]->copy_locally_owned_data_from(vectors_buffer[i]);
                 });
 
               heat_operation = heat_cut_operation;
@@ -1065,7 +1065,7 @@ namespace MeltPoolDG::MeltPool
             Flow::RegularizedSurfaceTensionTemperatureEvaluationType::local_value)
           {
             surface_tension_operation->register_temperature_and_normal_vector(
-              temp_dof_idx,
+              heat_dof_idx,
               normal_dof_idx,
               &heat_operation->get_temperature(),
               &level_set_operation->get_normal_vector());
@@ -1074,7 +1074,7 @@ namespace MeltPoolDG::MeltPool
                  Flow::RegularizedSurfaceTensionTemperatureEvaluationType::interface_value)
           {
             surface_tension_operation->register_temperature_and_normal_vector(
-              temp_cont_dof_idx,
+              heat_continuous_no_bc_dof_idx,
               normal_dof_idx,
               &heat_operation->get_interface_temperature(),
               &level_set_operation->get_normal_vector());
@@ -1088,13 +1088,13 @@ namespace MeltPoolDG::MeltPool
         AssertThrow(heat_operation,
                     dealii::ExcMessage(
                       "The recoil pressure can only be enabled if heat transfer is!"));
-        unsigned int used_temp_dof_idx = temp_dof_idx;
+        unsigned int used_heat_dof_idx = heat_dof_idx;
         if (param.evapor.recoil.interface_distributed_flux_type ==
             Evaporation::RegularizedRecoilPressureTemperatureEvaluationType::interface_value)
           {
-            used_temp_dof_idx = param.heat.operator_type == Heat::TwoPhaseOperatorType::cut ?
-                                  temp_cont_dof_idx :
-                                  temp_hanging_nodes_dof_idx;
+            used_heat_dof_idx = param.heat.operator_type == Heat::TwoPhaseOperatorType::cut ?
+                                  heat_continuous_no_bc_dof_idx :
+                                  heat_no_bc_dof_idx;
             compute_interface_temperature = true;
           }
         recoil_pressure_operation = std::make_shared<Evaporation::RecoilPressureOperation<dim>>(
@@ -1104,7 +1104,7 @@ namespace MeltPoolDG::MeltPool
           flow_operation->get_quad_idx_velocity(),
           flow_operation->get_dof_handler_idx_pressure(),
           ls_hanging_nodes_dof_idx,
-          used_temp_dof_idx);
+          used_heat_dof_idx);
       }
 
     // setup evaporation operation
@@ -1127,7 +1127,7 @@ namespace MeltPoolDG::MeltPool
                                       level_set_operation->get_distance_to_level_set(),
                                       param.ls.nearest_point,
                                       param.ls.reinit,
-                                      temp_dof_idx);
+                                      heat_dof_idx);
 
         if (param.evapor.evaporative_dilation_rate.enable and
             param.evapor.evaporative_dilation_rate.model == Evaporation::InterfaceFluxType::sharp)
@@ -1188,18 +1188,18 @@ namespace MeltPoolDG::MeltPool
         melt_front_propagation = std::make_shared<MeltFrontPropagation<dim>>(
           *scratch_data,
           param,
-          temp_cont_dof_idx,
+          heat_continuous_no_bc_dof_idx,
           ls_hanging_nodes_dof_idx,
           heat_operation->get_temperature(),
           reinit_dof_idx,
           reinit_no_solid_dof_idx,
           flow_operation->get_dof_handler_idx_velocity(),
           flow_vel_no_solid_dof_idx,
-          temp_hanging_nodes_dof_idx);
+          heat_no_bc_dof_idx);
 
         // Register solid fraction in surface tension
         if (param.flow.surface_tension.zero_surface_tension_in_solid)
-          surface_tension_operation->register_solid_fraction(temp_hanging_nodes_dof_idx,
+          surface_tension_operation->register_solid_fraction(heat_no_bc_dof_idx,
                                                              &melt_front_propagation->get_solid());
         // initialize the darcy damping operation class
         if (param.flow.darcy_damping.mushy_zone_morphology > 0.0)
@@ -1232,7 +1232,7 @@ namespace MeltPoolDG::MeltPool
     // setup interface temperature projection if needed
     if (compute_interface_temperature)
       {
-        scratch_data->create_remote_point_evaluation(temp_hanging_nodes_dof_idx);
+        scratch_data->create_remote_point_evaluation(heat_no_bc_dof_idx);
         heat_operation->register_interface_projection_data(
           level_set_operation->get_distance_to_level_set(),
           level_set_operation->get_normal_vector(),
@@ -1335,7 +1335,7 @@ namespace MeltPoolDG::MeltPool
         laser_operation->get_laser_position(),
         heat_operation->get_temperature(),
         level_set_operation->get_level_set_as_heaviside(),
-        temp_dof_idx);
+        heat_dof_idx);
     else if (not(evaporation_operation and base_in->parameters.evapor.evaporative_mass_flux_model ==
                                              Evaporation::EvaporationModelType::analytical))
       // constant evaporative mass flux --> no need to set initial condition
@@ -1582,7 +1582,7 @@ namespace MeltPoolDG::MeltPool
                                               level_set_operation->get_level_set_as_heaviside(),
                                               heat_operation->get_temperature(),
                                               ls_hanging_nodes_dof_idx,
-                                              temp_dof_idx);
+                                              heat_dof_idx);
 
     // compute density and viscosity at the quadrature points.
 
@@ -1612,21 +1612,21 @@ namespace MeltPoolDG::MeltPool
           {
             if (not temperature_is_cut)
               temperature_eval.emplace_back(matrix_free,
-                                            temp_dof_idx,
+                                            heat_dof_idx,
                                             flow_operation->get_quad_idx_velocity());
             else // temperature is cut
               {
                 if (cell_category == CutUtil::CellCategory::liquid or
                     cell_category == CutUtil::CellCategory::intersected)
                   temperature_eval.emplace_back(matrix_free,
-                                                temp_dof_idx,
+                                                heat_dof_idx,
                                                 flow_operation->get_quad_idx_velocity(),
                                                 0 /*selected component*/,
                                                 cell_category /*active_fe_index*/);
                 if (two_phase_cut and (cell_category == CutUtil::CellCategory::gas or
                                        cell_category == CutUtil::CellCategory::intersected))
                   temperature_eval.emplace_back(matrix_free,
-                                                temp_dof_idx,
+                                                heat_dof_idx,
                                                 flow_operation->get_quad_idx_velocity(),
                                                 1 /*selected component*/,
                                                 cell_category /*active_fe_index*/);
@@ -1676,7 +1676,7 @@ namespace MeltPoolDG::MeltPool
         level_set_operation->get_level_set_as_heaviside(),
         ls_hanging_nodes_dof_idx,
         heat_operation ? &heat_operation->get_temperature() : nullptr,
-        temp_dof_idx);
+        heat_dof_idx);
 #endif
   }
 
@@ -2114,11 +2114,10 @@ namespace MeltPoolDG::MeltPool
             if (problem_specific_parameters.do_solidification)
               {
                 // 3a) copy the solution
-                locally_relevant_solution.reinit(
-                  scratch_data->get_partitioner(temp_hanging_nodes_dof_idx));
+                locally_relevant_solution.reinit(scratch_data->get_partitioner(heat_no_bc_dof_idx));
                 locally_relevant_solution.copy_locally_owned_data_from(
                   melt_front_propagation->get_solid());
-                scratch_data->get_constraint(temp_hanging_nodes_dof_idx)
+                scratch_data->get_constraint(heat_no_bc_dof_idx)
                   .distribute(locally_relevant_solution);
                 locally_relevant_solution.update_ghost_values();
 
@@ -2126,8 +2125,8 @@ namespace MeltPoolDG::MeltPool
                 Vector<float> estimated_error_per_cell_solid(
                   base_in->triangulation->n_active_cells());
                 KellyErrorEstimator<dim>::estimate(
-                  scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx),
-                  scratch_data->get_face_quadrature(temp_hanging_nodes_dof_idx),
+                  scratch_data->get_dof_handler(heat_no_bc_dof_idx),
+                  scratch_data->get_face_quadrature(heat_no_bc_dof_idx),
                   {},
                   locally_relevant_solution,
                   estimated_error_per_cell_solid);
@@ -2279,25 +2278,23 @@ namespace MeltPoolDG::MeltPool
         if (sol_update_ghosts)
           melt_front_propagation->get_solid().update_ghost_values();
 
-        const bool temp_update_ghosts = not heat_operation->get_temperature().has_ghost_elements();
-        if (temp_update_ghosts)
+        const bool heat_update_ghosts = not heat_operation->get_temperature().has_ghost_elements();
+        if (heat_update_ghosts)
           heat_operation->get_temperature().update_ghost_values();
 
-        Vector<double> liq_vals(scratch_data->get_fe(temp_hanging_nodes_dof_idx).n_dofs_per_cell());
-        Vector<double> solid_vals(
-          scratch_data->get_fe(temp_hanging_nodes_dof_idx).n_dofs_per_cell());
-        Vector<double> temp_vals(
-          scratch_data->get_fe(temp_hanging_nodes_dof_idx).n_dofs_per_cell());
+        Vector<double> liq_vals(scratch_data->get_fe(heat_no_bc_dof_idx).n_dofs_per_cell());
+        Vector<double> solid_vals(scratch_data->get_fe(heat_no_bc_dof_idx).n_dofs_per_cell());
+        Vector<double> temperature_vals(scratch_data->get_fe(heat_no_bc_dof_idx).n_dofs_per_cell());
 
         for (const auto &cell :
-             scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx).active_cell_iterators())
+             scratch_data->get_dof_handler(heat_no_bc_dof_idx).active_cell_iterators())
           {
             if (cell->is_locally_owned() == false)
               continue;
 
             cell->get_dof_values(melt_front_propagation->get_liquid(), liq_vals);
             cell->get_dof_values(melt_front_propagation->get_solid(), solid_vals);
-            cell->get_dof_values(heat_operation->get_temperature(), temp_vals);
+            cell->get_dof_values(heat_operation->get_temperature(), temperature_vals);
 
             for (unsigned int i = 0; i < liq_vals.size(); ++i)
               // ensure that the entire liquid region is refined
@@ -2311,9 +2308,9 @@ namespace MeltPoolDG::MeltPool
               // ensure that solid regions at high temperatures are refined
               else if ((solid_vals[i] > 0.0 or
                         problem_specific_parameters.amr.refine_gas_domain) and
-                       temp_vals[i] >= problem_specific_parameters.amr
-                                           .fraction_of_melting_point_refined_in_solid *
-                                         base_in->parameters.material.solidus_temperature)
+                       temperature_vals[i] >= problem_specific_parameters.amr
+                                                  .fraction_of_melting_point_refined_in_solid *
+                                                base_in->parameters.material.solidus_temperature)
                 {
                   cell->clear_coarsen_flag();
                   cell->set_refine_flag();
@@ -2324,7 +2321,7 @@ namespace MeltPoolDG::MeltPool
           melt_front_propagation->get_liquid().zero_out_ghost_values();
         if (sol_update_ghosts)
           melt_front_propagation->get_solid().zero_out_ghost_values();
-        if (temp_update_ghosts)
+        if (heat_update_ghosts)
           heat_operation->get_temperature().zero_out_ghost_values();
       }
 

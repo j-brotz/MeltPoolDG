@@ -54,18 +54,17 @@ namespace MeltPoolDG::Heat
     /**
      * select the relevant DoFHandlers and quadrature rules
      */
-    const unsigned int temp_dof_idx;
-    const unsigned int temp_hanging_nodes_dof_idx;
-    const unsigned int temp_quad_idx;
-    /*
-     *    This are the primary solution variables of this module, which will be also publically
-     *    accessible for output_results.
-     */
-    VectorType temperature_extrapolated;
-    VectorType heat_source;
-    VectorType user_rhs;
-    VectorType temp;
-    VectorType interface_temperature;
+    const unsigned int heat_dof_idx;
+    const unsigned int heat_no_bc_dof_idx;
+    const unsigned int heat_quad_idx;
+
+    // These are the primary solution variables of this module, which will be also publicly
+    // accessible for output_results.
+    TimeIntegration::SolutionHistory<VectorType> solution_history;
+    VectorType                                   predictor_buffer;
+    VectorType                                   heat_source;
+    VectorType                                   user_rhs;
+    VectorType                                   interface_temperature;
 
     // for output only
     mutable VectorType user_rhs_projected;
@@ -81,8 +80,6 @@ namespace MeltPoolDG::Heat
     const VectorType  *level_set_as_heaviside;
 
     NewtonRaphsonSolver<VectorType> newton;
-
-    TimeIntegration::SolutionHistory<VectorType> solution_history;
 
     std::unique_ptr<HeatDiffuseMultiPhaseOperator<dim, number>> heat_operator;
 
@@ -100,9 +97,9 @@ namespace MeltPoolDG::Heat
                          const HeatData<number>                                    &heat_data_in,
                          const Material<number>                                    &material,
                          const TimeIterator<number>                                &time_iterator,
-                         unsigned int                                               temp_dof_idx_in,
-                         unsigned int      temp_hanging_nodes_dof_idx_in,
-                         unsigned int      temp_quad_idx_in,
+                         unsigned int                                               heat_dof_idx_in,
+                         unsigned int      heat_no_bc_dof_idx_in,
+                         unsigned int      heat_quad_idx_in,
                          unsigned int      vel_dof_idx_in            = 0,
                          const VectorType *velocity_in               = nullptr,
                          unsigned int      ls_dof_idx_in             = 0,

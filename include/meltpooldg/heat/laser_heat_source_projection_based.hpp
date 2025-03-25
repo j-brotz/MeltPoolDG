@@ -38,7 +38,7 @@ namespace MeltPoolDG::Heat
     void
     compute_interfacial_heat_source(VectorType                          &heat_source_vector,
                                     const ScratchData<dim, dim, number> &scratch_data,
-                                    const unsigned int                   temp_dof_idx,
+                                    const unsigned int                   heat_dof_idx,
                                     const VectorType                    &level_set_heaviside,
                                     const unsigned int                   ls_dof_idx,
                                     const bool                           zero_out       = true,
@@ -52,7 +52,7 @@ namespace MeltPoolDG::Heat
     void
     compute_interfacial_heat_source_sharp(VectorType                          &heat_rhs,
                                           const ScratchData<dim, dim, number> &scratch_data,
-                                          const unsigned int                   temp_dof_idx,
+                                          const unsigned int                   heat_dof_idx,
                                           const VectorType                    &level_set_heaviside,
                                           const unsigned int                   ls_dof_idx,
                                           const bool                           zero_out = true,
@@ -62,12 +62,12 @@ namespace MeltPoolDG::Heat
     /**
      * For a given finite element discretization, hidden within @p scratch_data,
      * compute a right-hand-side contribution for heat-transfer and store it
-     * into the DoF-vector @p heat_rhs (with the corresponding index @p temp_dof_idx).
+     * into the DoF-vector @p heat_rhs (with the corresponding index @p heat_dof_idx).
      * Based on the level-set indicator function (@p level_set_heaviside and
      * corresponding DoFHandler index @p ls_dof_idx), cells
      * will be categorized into the different phases. We loop over all element
      * faces that are along the phase boundary and perform a surface integral
-     * based on the quadrature rule, given by the index @p temp_quad_idx,
+     * based on the quadrature rule, given by the index @p heat_dof_idx,
      * to compute the laser impact. The laser parameters are @p laser_power and
      * @p laser_position. Set @p zero_out to true to zero out the right-hand-side
      * vector @p heat_rhs in advance. The optional arguments
@@ -81,8 +81,8 @@ namespace MeltPoolDG::Heat
     compute_interfacial_heat_source_sharp_conforming(
       VectorType                          &heat_rhs,
       const ScratchData<dim, dim, number> &scratch_data,
-      const unsigned int                   temp_dof_idx,
-      const unsigned int                   temp_quad_idx,
+      const unsigned int                   heat_dof_idx,
+      const unsigned int                   heat_quad_idx,
       const VectorType                    &level_set_heaviside,
       const unsigned int                   ls_dof_idx,
       const bool                           zero_out,

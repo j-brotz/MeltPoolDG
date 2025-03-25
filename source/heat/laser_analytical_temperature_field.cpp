@@ -15,7 +15,7 @@ namespace MeltPoolDG::Heat
     const Point<dim>                    &laser_position,
     VectorType                          &temperature,
     const VectorType                    &level_set_as_heaviside,
-    const unsigned int                   temp_dof_idx)
+    const unsigned int                   heat_dof_idx)
   {
     // set the maximum temperature of the melt pool if not specified
 
@@ -24,18 +24,18 @@ namespace MeltPoolDG::Heat
     if (update_ghosts)
       level_set_as_heaviside.update_ghost_values();
 
-    scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
+    scratch_data.initialize_dof_vector(temperature, heat_dof_idx);
 
-    const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(temp_dof_idx);
+    const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(heat_dof_idx);
 
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
     std::map<types::global_dof_index, Point<dim>> support_points;
     DoFTools::map_dofs_to_support_points(scratch_data.get_mapping(),
-                                         scratch_data.get_dof_handler(temp_dof_idx),
+                                         scratch_data.get_dof_handler(heat_dof_idx),
                                          support_points);
 
-    for (const auto &cell : scratch_data.get_dof_handler(temp_dof_idx).active_cell_iterators())
+    for (const auto &cell : scratch_data.get_dof_handler(heat_dof_idx).active_cell_iterators())
       if (cell->is_locally_owned())
         {
           cell->get_dof_indices(local_dof_indices);
@@ -56,7 +56,7 @@ namespace MeltPoolDG::Heat
         }
 
     temperature.compress(VectorOperation::insert);
-    scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
+    scratch_data.get_constraint(heat_dof_idx).distribute(temperature);
 
     // update ghost values of solution
     temperature.update_ghost_values();

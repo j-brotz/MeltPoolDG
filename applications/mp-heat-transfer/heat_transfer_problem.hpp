@@ -42,20 +42,20 @@ namespace MeltPoolDG::Heat
     dealii::DoFHandler<dim>               dof_handler_velocity;
     dealii::DoFHandler<dim>               dof_handler_level_set;
 
-    dealii::AffineConstraints<double> temp_constraints;
-    dealii::AffineConstraints<double> temp_hanging_nodes_constraints;
+    dealii::AffineConstraints<double> heat_dirichlet_constraints;
+    dealii::AffineConstraints<double> heat_hanging_nodes_constraints;
     dealii::AffineConstraints<double> velocity_hanging_nodes_constraints;
     dealii::AffineConstraints<double> level_set_hanging_nodes_constraints;
 
-    unsigned int temp_dof_idx;
-    unsigned int temp_hanging_nodes_dof_idx;
-    unsigned int temp_quad_idx;
+    unsigned int heat_dof_idx;
+    unsigned int heat_no_bc_dof_idx;
+    unsigned int heat_quad_idx;
     unsigned int velocity_dof_idx;
     unsigned int level_set_dof_idx;
 
     // optional DoFHandler index for the HeatCutOperation's continuous DoFs
     // default value is invalid so we don't accidentally use a different DoFHandler
-    unsigned int temp_cont_dof_idx = -1;
+    unsigned int heat_continuous_no_bc_dof_idx = -1;
 
     std::shared_ptr<ScratchData<dim>>               scratch_data;
     std::shared_ptr<HeatOperationBase<dim, double>> heat_operation;

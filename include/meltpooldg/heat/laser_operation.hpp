@@ -99,7 +99,7 @@ namespace MeltPoolDG::Heat
      * Compute either the @p heat_source vector (for LaserImpactType::interface and
      * LaserImpactType::volumetric) or @p heat_user_rhs (for LaserImpactType::interface_sharp),
      * which is the weak form of the heat_source, both with the DoF layout provided
-     * by @p temp_hanging_nodes_dof_idx. The input parameter comprise the
+     * by @p heat_no_bc_dof_idx. The input parameter comprise the
      * level set indicator, @p level_set_as_heaviside and the corresponding
      * index of the DoFHandler @p ls_dof_idx.
      *
@@ -114,8 +114,8 @@ namespace MeltPoolDG::Heat
                         VectorType            &heat_user_rhs,
                         const VectorType      &level_set_as_heaviside,
                         const unsigned int     ls_dof_idx,
-                        const unsigned int     temp_hanging_nodes_dof_idx,
-                        const unsigned int     temp_quad_idx,
+                        const unsigned int     heat_no_bc_dof_idx,
+                        const unsigned int     heat_quad_idx,
                         const bool             zero_out       = false,
                         const BlockVectorType *normal_vector  = nullptr,
                         const unsigned int     normal_dof_idx = 0) const;
