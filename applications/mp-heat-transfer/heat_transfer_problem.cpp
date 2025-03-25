@@ -323,12 +323,12 @@ namespace MeltPoolDG::Heat
      *  initialize postprocessor
      */
     post_processor =
-      std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(temp_dof_idx),
-                                           param.output,
-                                           param.time_stepping,
-                                           scratch_data->get_mapping(),
-                                           scratch_data->get_triangulation(temp_dof_idx),
-                                           scratch_data->get_pcout(2));
+      std::make_shared<Postprocessor<dim, double>>(scratch_data->get_mpi_comm(temp_dof_idx),
+                                                   param.output,
+                                                   param.time_stepping,
+                                                   scratch_data->get_mapping(),
+                                                   scratch_data->get_triangulation(temp_dof_idx),
+                                                   scratch_data->get_pcout(2));
     /*
      *    Do initial refinement steps if requested
      */
@@ -454,9 +454,8 @@ namespace MeltPoolDG::Heat
         not simulation_case->parameters.output.do_user_defined_postprocessing)
       return;
 
-    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
-                                         time,
-                                         simulation_case->parameters.output.output_variables);
+    GenericDataOut<dim, double> generic_data_out(
+      scratch_data->get_mapping(), time, simulation_case->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
 
     if (output_not_converged)
@@ -476,7 +475,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferProblem<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  HeatTransferProblem<dim>::attach_output_vectors(GenericDataOut<dim, double> &data_out) const
   {
     heat_operation->attach_output_vectors(data_out);
 

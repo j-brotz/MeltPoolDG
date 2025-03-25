@@ -248,7 +248,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim> &generic_data_out) const final
+    do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const final
     {
       dealii::ConditionalOStream pcout(std::cout,
                                        Utilities::MPI::this_mpi_process(this->mpi_communicator) ==

@@ -179,7 +179,7 @@ namespace MeltPoolDG::MeltPool
      * collect all relevant output data
      */
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim, double> &data_out) const;
     /*
      * finalize simulation in the case that an operaion didn't converge
      */
@@ -257,7 +257,7 @@ namespace MeltPoolDG::MeltPool
     std::shared_ptr<Flow::DarcyDampingOperation<dim>>          darcy_operation;
     std::shared_ptr<Flow::SurfaceTensionOperation<dim>>        surface_tension_operation;
     std::shared_ptr<Evaporation::RecoilPressureOperation<dim>> recoil_pressure_operation;
-    std::shared_ptr<Postprocessor<dim>>                        post_processor;
+    std::shared_ptr<Postprocessor<dim, double>>                post_processor;
     std::unique_ptr<Profiling::ProfilingMonitor<double>>       profiling_monitor;
     std::shared_ptr<Restart::RestartMonitor<double>>           restart_monitor;
 

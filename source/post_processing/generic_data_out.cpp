@@ -2,19 +2,21 @@
 
 namespace MeltPoolDG
 {
-  template <int dim>
-  GenericDataOut<dim>::GenericDataOut(const Mapping<dim>            &mapping,
-                                      const double                   current_time,
-                                      const std::vector<std::string> req_vars)
+  using namespace dealii;
+
+  template <int dim, typename number>
+  GenericDataOut<dim, number>::GenericDataOut(const Mapping<dim>            &mapping,
+                                              const number                   current_time,
+                                              const std::vector<std::string> req_vars)
     : mapping(mapping)
     , current_time(current_time)
     , req_vars(req_vars)
     , req_all(req_vars.size() == 1 && req_vars[0] == "all")
   {}
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  GenericDataOut<dim>::add_data_vector(
+  GenericDataOut<dim, number>::add_data_vector(
     const DoFHandler<dim>          &dof_handler,
     const VectorType               &data,
     const std::vector<std::string> &names,
@@ -29,14 +31,14 @@ namespace MeltPoolDG
     entry_id[names[0]] = entries.size() - 1;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  GenericDataOut<dim>::add_data_vector(const DoFHandler<dim> &dof_handler,
-                                       const VectorType      &data,
-                                       const std::string     &name,
-                                       const bool             force_output)
+  GenericDataOut<dim, number>::add_data_vector(const DoFHandler<dim> &dof_handler,
+                                               const VectorType      &data,
+                                               const std::string     &name,
+                                               const bool             force_output)
   {
-    if (not(is_requested(name) || force_output))
+    if (not(is_requested(name) or force_output))
       return;
 
     entries.emplace_back(&dof_handler,
@@ -47,9 +49,9 @@ namespace MeltPoolDG
     entry_id[name] = entries.size() - 1;
   }
 
-  template <int dim>
-  const typename GenericDataOut<dim>::VectorType &
-  GenericDataOut<dim>::get_vector(const std::string &name) const
+  template <int dim, typename number>
+  const typename GenericDataOut<dim, number>::VectorType &
+  GenericDataOut<dim, number>::get_vector(const std::string &name) const
   {
     if (entry_id.find(name) == entry_id.end())
       {
@@ -67,9 +69,9 @@ namespace MeltPoolDG
     return *std::get<1>(entries[entry_id.at(name)]);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const DoFHandler<dim> &
-  GenericDataOut<dim>::get_dof_handler(const std::string &name) const
+  GenericDataOut<dim, number>::get_dof_handler(const std::string &name) const
   {
     if (entry_id.find(name) == entry_id.end())
       {
@@ -87,23 +89,23 @@ namespace MeltPoolDG
     return *std::get<0>(entries[entry_id.at(name)]);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const Mapping<dim> &
-  GenericDataOut<dim>::get_mapping() const
+  GenericDataOut<dim, number>::get_mapping() const
   {
     return mapping;
   }
 
-  template <int dim>
-  const double &
-  GenericDataOut<dim>::get_time() const
+  template <int dim, typename number>
+  const number &
+  GenericDataOut<dim, number>::get_time() const
   {
     return current_time;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   bool
-  GenericDataOut<dim>::is_requested(const std::string &name) const
+  GenericDataOut<dim, number>::is_requested(const std::string &name) const
   {
     if (req_all)
       return true;
@@ -128,9 +130,10 @@ namespace MeltPoolDG
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   std::vector<unsigned int>
-  GenericDataOut<dim>::get_indices_data_request(const std::vector<std::string> req_var) const
+  GenericDataOut<dim, number>::get_indices_data_request(
+    const std::vector<std::string> req_var) const
   {
     AssertThrow((req_var.size() == 1 && req_var[0] == "all") ||
                   (std::find(req_var.begin(), req_var.end(), "all") == req_var.end()),
@@ -173,7 +176,7 @@ namespace MeltPoolDG
     return req_idx;
   }
 
-  template class GenericDataOut<1>;
-  template class GenericDataOut<2>;
-  template class GenericDataOut<3>;
+  template class GenericDataOut<1, double>;
+  template class GenericDataOut<2, double>;
+  template class GenericDataOut<3, double>;
 } // namespace MeltPoolDG

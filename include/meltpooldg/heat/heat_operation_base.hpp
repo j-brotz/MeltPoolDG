@@ -50,10 +50,10 @@ namespace MeltPoolDG::Heat
      * attach vectors for output
      */
     virtual void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const = 0;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const = 0;
 
     virtual void
-    attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const = 0;
+    attach_output_vectors_failed_step(GenericDataOut<dim, number> &data_out) const = 0;
 
     /*
      * getters

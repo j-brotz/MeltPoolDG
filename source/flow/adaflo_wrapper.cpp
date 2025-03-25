@@ -687,7 +687,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  AdafloWrapper<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  AdafloWrapper<dim>::attach_output_vectors(GenericDataOut<dim, double> &data_out) const
   {
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
       vector_component_interpretation(dim,
@@ -804,7 +804,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  AdafloWrapper<dim>::attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const
+  AdafloWrapper<dim>::attach_output_vectors_failed_step(GenericDataOut<dim, double> &data_out) const
   {
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
       vector_component_interpretation(dim,

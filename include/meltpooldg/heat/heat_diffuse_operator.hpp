@@ -277,7 +277,7 @@ namespace MeltPoolDG::Heat
     reinit() final;
 
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
 
   private:
     /**

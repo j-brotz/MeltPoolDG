@@ -415,7 +415,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatCutOperation<dim, number>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  HeatCutOperation<dim, number>::attach_output_vectors(GenericDataOut<dim, number> &data_out) const
   {
     if (heat_data.cut.two_phase)
       {
@@ -447,7 +447,7 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatCutOperation<dim, number>::attach_output_vectors_failed_step(
-    GenericDataOut<dim> &data_out) const
+    GenericDataOut<dim, number> &data_out) const
   {
     (void)data_out;
   }

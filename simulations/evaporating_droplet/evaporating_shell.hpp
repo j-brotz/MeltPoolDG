@@ -226,7 +226,7 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim> &generic_data_out) const final
+    do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const final
     {
       // Compare numerical vs. analytical solution based on the last computed time-step.
       // This is sufficient since the test case is stationary.

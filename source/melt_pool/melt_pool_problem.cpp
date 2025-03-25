@@ -1206,12 +1206,12 @@ namespace MeltPoolDG::MeltPool
 
     // initialize postprocessor
     post_processor =
-      std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(vel_dof_idx),
-                                           param.output,
-                                           param.time_stepping,
-                                           scratch_data->get_mapping(),
-                                           scratch_data->get_triangulation(vel_dof_idx),
-                                           scratch_data->get_pcout(2));
+      std::make_shared<Postprocessor<dim, double>>(scratch_data->get_mpi_comm(vel_dof_idx),
+                                                   param.output,
+                                                   param.time_stepping,
+                                                   scratch_data->get_mapping(),
+                                                   scratch_data->get_triangulation(vel_dof_idx),
+                                                   scratch_data->get_pcout(2));
     output_interface_velocity =
       evaporation_operation and param.evapor.evaporative_dilation_rate.enable and
       (param.evapor.formulation_source_term_level_set ==
@@ -1813,9 +1813,9 @@ namespace MeltPoolDG::MeltPool
         not base_in->parameters.output.do_user_defined_postprocessing)
       return;
 
-    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
-                                         current_time,
-                                         base_in->parameters.output.output_variables);
+    GenericDataOut<dim, double> generic_data_out(scratch_data->get_mapping(),
+                                                 current_time,
+                                                 base_in->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
 
     switch (output_not_converged_operation)
@@ -1865,7 +1865,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolProblem<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  MeltPoolProblem<dim>::attach_output_vectors(GenericDataOut<dim, double> &data_out) const
   {
     level_set_operation->attach_output_vectors(data_out);
 

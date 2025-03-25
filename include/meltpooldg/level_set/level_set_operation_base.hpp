@@ -89,7 +89,7 @@ namespace MeltPoolDG::LevelSet
     attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) = 0;
 
     virtual void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const = 0;
+    attach_output_vectors(GenericDataOut<dim, double> &data_out) const = 0;
 
     virtual void
     update_surface_mesh() = 0;

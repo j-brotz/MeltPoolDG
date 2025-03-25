@@ -201,7 +201,7 @@ namespace MeltPoolDG::Simulation::VortexBubble
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim> &generic_data_out) const final
+    do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const final
     {
       if constexpr (dim == 2)
         {

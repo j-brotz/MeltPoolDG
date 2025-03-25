@@ -197,7 +197,8 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  AdvectionDiffusionOperationAdaflo<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  AdvectionDiffusionOperationAdaflo<dim>::attach_output_vectors(
+    GenericDataOut<dim, double> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(adaflo_params.dof_index_ls),
                              advected_field,

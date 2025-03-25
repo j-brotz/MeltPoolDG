@@ -6,51 +6,51 @@
 
 #include <string>
 
-using namespace dealii;
-
 namespace MeltPoolDG
 {
-  template <int dim>
+  template <int dim, typename number>
   class GenericDataOut
   {
   public:
-    using VectorType = LinearAlgebra::distributed::Vector<double>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
-    GenericDataOut(const Mapping<dim>            &mapping,
-                   const double                   current_time,
+    GenericDataOut(const dealii::Mapping<dim>    &mapping,
+                   const number                   current_time,
                    const std::vector<std::string> req_var = {"all"});
 
     void
-    add_data_vector(const DoFHandler<dim>          &dof_handler,
-                    const VectorType               &data,
-                    const std::vector<std::string> &names,
-                    const std::vector<DataComponentInterpretation::DataComponentInterpretation>
-                      &data_component_interpretation =
-                        std::vector<DataComponentInterpretation::DataComponentInterpretation>(),
-                    const bool force_output = false);
+    add_data_vector(
+      const dealii::DoFHandler<dim>  &dof_handler,
+      const VectorType               &data,
+      const std::vector<std::string> &names,
+      const std::vector<dealii::DataComponentInterpretation::DataComponentInterpretation>
+        &data_component_interpretation =
+          std::vector<dealii::DataComponentInterpretation::DataComponentInterpretation>(),
+      const bool force_output = false);
 
     void
-    add_data_vector(const DoFHandler<dim> &dof_handler,
-                    const VectorType      &data,
-                    const std::string     &name,
-                    const bool             force_output = false);
+    add_data_vector(const dealii::DoFHandler<dim> &dof_handler,
+                    const VectorType              &data,
+                    const std::string             &name,
+                    const bool                     force_output = false);
 
-    std::vector<std::tuple<const DoFHandler<dim> *,
-                           const VectorType *,
-                           const std::vector<std::string>,
-                           std::vector<DataComponentInterpretation::DataComponentInterpretation>>>
+    std::vector<
+      std::tuple<const dealii::DoFHandler<dim> *,
+                 const VectorType *,
+                 const std::vector<std::string>,
+                 std::vector<dealii::DataComponentInterpretation::DataComponentInterpretation>>>
       entries;
 
     const VectorType &
     get_vector(const std::string &name) const;
 
-    const DoFHandler<dim> &
+    const dealii::DoFHandler<dim> &
     get_dof_handler(const std::string &name) const;
 
-    const Mapping<dim> &
+    const dealii::Mapping<dim> &
     get_mapping() const;
 
-    const double &
+    const number &
     get_time() const;
 
     bool
@@ -61,8 +61,8 @@ namespace MeltPoolDG
 
   private:
     std::map<std::string, unsigned int> entry_id;
-    const Mapping<dim>                 &mapping;
-    double                              current_time;
+    const dealii::Mapping<dim>         &mapping;
+    number                              current_time;
     const std::vector<std::string>      req_vars;
     mutable std::map<std::string, bool> req_vars_info;
     const bool                          req_all = false;

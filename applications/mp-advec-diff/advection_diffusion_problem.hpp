@@ -59,7 +59,7 @@ namespace MeltPoolDG::LevelSet
 
     unsigned int advec_diff_quad_idx;
 
-    std::unique_ptr<Postprocessor<dim>> post_processor;
+    std::unique_ptr<Postprocessor<dim, double>> post_processor;
 
     void
     setup_dof_system();

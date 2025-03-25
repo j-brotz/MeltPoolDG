@@ -211,12 +211,12 @@ namespace MeltPoolDG::LevelSet
                    "signed distance field must be provided. Abort ..."));
 
     post_processor =
-      std::make_unique<Postprocessor<dim>>(scratch_data->get_mpi_comm(ls_dof_idx),
-                                           simulation_case->parameters.output,
-                                           simulation_case->parameters.time_stepping,
-                                           scratch_data->get_mapping(),
-                                           scratch_data->get_triangulation(ls_dof_idx),
-                                           scratch_data->get_pcout(2));
+      std::make_unique<Postprocessor<dim, double>>(scratch_data->get_mpi_comm(ls_dof_idx),
+                                                   simulation_case->parameters.output,
+                                                   simulation_case->parameters.time_stepping,
+                                                   scratch_data->get_mapping(),
+                                                   scratch_data->get_triangulation(ls_dof_idx),
+                                                   scratch_data->get_pcout(2));
     if (simulation_case->parameters.profiling.enable)
       profiling_monitor =
         std::make_unique<Profiling::ProfilingMonitor<double>>(simulation_case->parameters.profiling,
@@ -332,7 +332,7 @@ namespace MeltPoolDG::LevelSet
     if (!post_processor->is_output_timestep(time_step, time))
       return;
 
-    const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
+    const auto attach_output_vectors = [&](GenericDataOut<dim, double> &data_out) {
       level_set_operation->attach_output_vectors(data_out);
       if (evaporation_operation)
         evaporation_operation->attach_output_vectors(data_out);
@@ -348,9 +348,8 @@ namespace MeltPoolDG::LevelSet
                                vector_component_interpretation);
     };
 
-    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
-                                         time,
-                                         simulation_case->parameters.output.output_variables);
+    GenericDataOut<dim, double> generic_data_out(
+      scratch_data->get_mapping(), time, simulation_case->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
 
     // user-defined postprocessing

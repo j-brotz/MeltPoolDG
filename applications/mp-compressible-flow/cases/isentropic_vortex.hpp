@@ -105,7 +105,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim> &generic_data_out) const override
+    do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const override
     {
       IsentropicVortexExactSolution<dim> exact_solution(generic_data_out.get_time(),
                                                         this->parameters.flow.gamma);

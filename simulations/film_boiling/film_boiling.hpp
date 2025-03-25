@@ -341,7 +341,8 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     }
 
     void
-    do_postprocessing([[maybe_unused]] const GenericDataOut<dim> &generic_data_out) const final
+    do_postprocessing(
+      [[maybe_unused]] const GenericDataOut<dim, double> &generic_data_out) const final
     {
       if (this->parameters.output.do_user_defined_postprocessing == false)
         return;
@@ -353,7 +354,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
             {
               const std::vector<std::string> req_vars = {"level_set", "temperature", "velocity"};
 
-              slice = std::make_shared<PostProcessingTools::SliceCreator<3>>(
+              slice = std::make_shared<PostProcessingTools::SliceCreator<3, double>>(
                 generic_data_out, tria_slice, req_vars, this->parameters.output);
             }
           // @todo: We need to reinit, since generic_data_out is currently created
@@ -396,6 +397,6 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     mutable unsigned int                       n_written_time_step = 0;
     parallel::distributed::Triangulation<2, 3> tria_slice;
 
-    mutable std::shared_ptr<PostProcessingTools::SliceCreator<3>> slice;
+    mutable std::shared_ptr<PostProcessingTools::SliceCreator<3, double>> slice;
   };
 } // namespace MeltPoolDG::Simulation::FilmBoiling

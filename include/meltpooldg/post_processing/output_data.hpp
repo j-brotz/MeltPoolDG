@@ -24,7 +24,7 @@ namespace MeltPoolDG
     add_parameters(dealii::ParameterHandler &prm);
   };
 
-  template <typename number = double>
+  template <typename number>
   struct OutputData
   {
     std::string              directory                      = "./";
