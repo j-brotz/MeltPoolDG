@@ -343,7 +343,7 @@ namespace MeltPoolDG::VectorTools
   {
     const bool is_ghosted = solution.has_ghost_elements();
 
-    if (!is_ghosted)
+    if (not is_ghosted)
       solution.update_ghost_values();
 
     Vector<float> difference_per_cell(triangulation.n_active_cells());
@@ -357,7 +357,7 @@ namespace MeltPoolDG::VectorTools
                                               quadrature,
                                               norm_type);
 
-    if (!is_ghosted)
+    if (not is_ghosted)
       solution.zero_out_ghost_values();
 
     return dealii::VectorTools::compute_global_error(triangulation, difference_per_cell, norm_type);

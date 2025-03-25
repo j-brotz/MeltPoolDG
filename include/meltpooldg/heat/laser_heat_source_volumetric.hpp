@@ -28,7 +28,7 @@ namespace MeltPoolDG::Heat
     void
     compute_volumetric_heat_source(VectorType                          &heat_source_vector,
                                    const ScratchData<dim, dim, number> &scratch_data,
-                                   const unsigned int                   temp_dof_idx,
+                                   const unsigned int                   heat_dof_idx,
                                    const bool                           zero_out = true) const;
 
   private:

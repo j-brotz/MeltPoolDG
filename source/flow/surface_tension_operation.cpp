@@ -132,11 +132,11 @@ namespace MeltPoolDG::Flow
       UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
                                                             scratch_data.get_mapping());
 
-    const auto cut_type = std::invoke([&]() -> CutUtil::CutType {
+    const auto cut_type = std::invoke([&]() -> CutUtil::CutPhaseType {
       if (temperature)
         return scratch_data.get_cut_type(temp_dof_idx);
       else
-        return CutUtil::CutType::not_cut;
+        return CutUtil::CutPhaseType::not_cut;
     });
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
@@ -161,7 +161,7 @@ namespace MeltPoolDG::Flow
                                       heaviside_interpolated_to_pressure_space_eval :
                                       heaviside_eval;
 
-        const unsigned int cell_category = cut_type == CutUtil::CutType::not_cut ?
+        const unsigned int cell_category = cut_type == CutUtil::CutPhaseType::not_cut ?
                                              0 :
                                              matrix_free.get_cell_range_category(cell_range);
         if (temperature)
@@ -170,7 +170,7 @@ namespace MeltPoolDG::Flow
               std::make_unique<FECellIntegrator<dim, dim, double>>(matrix_free,
                                                                    normal_dof_idx,
                                                                    flow_vel_quad_idx);
-            if (cut_type == CutUtil::CutType::not_cut)
+            if (cut_type == CutUtil::CutPhaseType::not_cut)
               temperature_eval.emplace_back(matrix_free, temp_dof_idx, flow_vel_quad_idx);
             else // temperature is cut
               {
@@ -181,7 +181,7 @@ namespace MeltPoolDG::Flow
                                                 flow_vel_quad_idx,
                                                 0 /*selected component*/,
                                                 cell_category /*active_fe_index*/);
-                if (cut_type == CutUtil::CutType::two_phase_cut and
+                if (cut_type == CutUtil::CutPhaseType::two_phase_cut and
                     (cell_category == CutUtil::CellCategory::gas or
                      cell_category == CutUtil::CellCategory::intersected))
                   temperature_eval.emplace_back(matrix_free,
@@ -219,7 +219,7 @@ namespace MeltPoolDG::Flow
                   ls_to_pressure_grad_interpolation_matrix);
               }
 
-            if (delta_phase_weighted or cut_type != CutUtil::CutType::not_cut)
+            if (delta_phase_weighted or cut_type != CutUtil::CutPhaseType::not_cut)
               used_heaviside_eval.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
             else
               used_heaviside_eval.evaluate(EvaluationFlags::gradients);
@@ -266,12 +266,12 @@ namespace MeltPoolDG::Flow
                     typename FECellIntegrator<dim, 1, double>::gradient_type grad_T;
                     switch (cut_type)
                       {
-                          case CutUtil::CutType::not_cut: {
+                          case CutUtil::CutPhaseType::not_cut: {
                             T      = temperature_eval[0].get_value(q);
                             grad_T = temperature_eval[0].get_gradient(q);
                             break;
                           }
-                          case CutUtil::CutType::two_phase_cut: {
+                          case CutUtil::CutPhaseType::two_phase_cut: {
                             if (cell_category == CutUtil::CellCategory::intersected)
                               {
                                 // For intersected cut cells, temperature_val[0] contains the
@@ -299,7 +299,7 @@ namespace MeltPoolDG::Flow
                               }
                             break;
                           }
-                          case CutUtil::CutType::one_phase_cut: {
+                          case CutUtil::CutPhaseType::one_phase_cut: {
                             if (cell_category == CutUtil::CellCategory::liquid)
                               {
                                 T      = temperature_eval[0].get_value(q);

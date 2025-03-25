@@ -214,7 +214,7 @@ namespace MeltPoolDG
     bool
     is_FE_DGQ(const unsigned int dof_idx, const unsigned int component = 0) const;
 
-    CutUtil::CutType
+    CutUtil::CutPhaseType
     get_cut_type(const unsigned int dof_idx) const;
 
     TimerOutput &

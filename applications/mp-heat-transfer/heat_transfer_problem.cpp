@@ -75,7 +75,7 @@ namespace MeltPoolDG::Heat
             if (const auto source_field_function = simulation_case->get_field_function(
                   "prescribed_heat_source", "heat_transfer", true /*is_optional*/))
               compute_field_vector(heat_operation->get_heat_source(),
-                                   temp_dof_idx,
+                                   heat_continuous_no_bc_dof_idx,
                                    *source_field_function);
             // add laser heat source if given
             if (laser_operation)
@@ -87,13 +87,13 @@ namespace MeltPoolDG::Heat
                   {
                     auto heat_diffuse_operation =
                       dynamic_cast<HeatDiffuseOperation<dim, double> *>(heat_operation.get());
-                    Assert(heat_diffuse_operation != nullptr, ExcInternalError());
+                    Assert(heat_diffuse_operation != nullptr, dealii::ExcInternalError());
                     laser_operation->compute_heat_source(heat_diffuse_operation->get_heat_source(),
                                                          heat_diffuse_operation->get_user_rhs(),
                                                          level_set_as_heaviside,
                                                          level_set_dof_idx,
-                                                         temp_hanging_nodes_dof_idx,
-                                                         temp_quad_idx,
+                                                         heat_continuous_no_bc_dof_idx,
+                                                         heat_quad_idx,
                                                          false /* zero_out */);
                   }
               }
@@ -103,8 +103,8 @@ namespace MeltPoolDG::Heat
               [&]() -> double {
                 return VectorTools::compute_norm(heat_operation->get_heat_source(),
                                                  *scratch_data,
-                                                 temp_dof_idx,
-                                                 temp_quad_idx,
+                                                 heat_continuous_no_bc_dof_idx,
+                                                 heat_quad_idx,
                                                  dealii::VectorTools::NormType::L1_norm);
               },
               "heat-source",
@@ -126,7 +126,7 @@ namespace MeltPoolDG::Heat
         output_results(true /* output_not_converged */);
         AssertThrow(false, e);
       }
-    catch (const SolverControl::NoConvergence &e)
+    catch (const dealii::SolverControl::NoConvergence &e)
       {
         output_results(false /* output_not_converged */);
         AssertThrow(false, e);
@@ -158,24 +158,23 @@ namespace MeltPoolDG::Heat
      */
     scratch_data->set_mapping(FiniteElementUtils::create_mapping<dim>(param.heat.fe));
 
-    scratch_data->attach_dof_handler(dof_handler);
-    scratch_data->attach_dof_handler(dof_handler);
+    scratch_data->attach_dof_handler(dof_handler); // heat_dirichlet_constraints
+    scratch_data->attach_dof_handler(dof_handler); // heat_hanging_nodes_constraints
     scratch_data->attach_dof_handler(dof_handler_velocity);
     scratch_data->attach_dof_handler(dof_handler_level_set);
 
     /*
      * attach constraints
      */
-    temp_dof_idx = scratch_data->attach_constraint_matrix(temp_constraints);
-    temp_hanging_nodes_dof_idx =
-      scratch_data->attach_constraint_matrix(temp_hanging_nodes_constraints);
-    velocity_dof_idx  = scratch_data->attach_constraint_matrix(velocity_hanging_nodes_constraints);
+    heat_dof_idx       = scratch_data->attach_constraint_matrix(heat_dirichlet_constraints);
+    heat_no_bc_dof_idx = scratch_data->attach_constraint_matrix(heat_hanging_nodes_constraints);
+    velocity_dof_idx   = scratch_data->attach_constraint_matrix(velocity_hanging_nodes_constraints);
     level_set_dof_idx = scratch_data->attach_constraint_matrix(level_set_hanging_nodes_constraints);
 
     /*
      *  create quadrature rule
      */
-    temp_quad_idx =
+    heat_quad_idx =
       scratch_data->attach_quadrature(FiniteElementUtils::create_quadrature<dim>(param.heat.fe));
 
     /*
@@ -219,11 +218,13 @@ namespace MeltPoolDG::Heat
     switch (param.heat.operator_type)
       {
           case TwoPhaseOperatorType::diffuse: {
+            heat_continuous_no_bc_dof_idx = heat_no_bc_dof_idx;
+
             // set level-set as heaviside field
             VectorType *level_set_as_heaviside_ptr = nullptr;
             heaviside_field_function               = simulation_case->get_initial_condition(
               "prescribed_heaviside",
-              (param.laser.model != LaserModelType::RTE) /*is_optional if laser is not RTE*/);
+              param.laser.model != LaserModelType::RTE /*is_optional if laser is not RTE*/);
             if (heaviside_field_function)
               level_set_as_heaviside_ptr = &level_set_as_heaviside;
 
@@ -243,9 +244,9 @@ namespace MeltPoolDG::Heat
               param.heat,
               *material,
               *time_iterator,
-              temp_dof_idx,
-              temp_hanging_nodes_dof_idx,
-              temp_quad_idx,
+              heat_dof_idx,
+              heat_no_bc_dof_idx,
+              heat_quad_idx,
               velocity_dof_idx,
               velocity_ptr,
               level_set_dof_idx,
@@ -254,6 +255,8 @@ namespace MeltPoolDG::Heat
             break;
           }
           case TwoPhaseOperatorType::cut: {
+            heat_continuous_no_bc_dof_idx = level_set_dof_idx;
+
             // set level-set field that defines the interface at the zero contour
             level_set_field_function =
               simulation_case->get_initial_condition("prescribed_signed_distance",
@@ -267,9 +270,10 @@ namespace MeltPoolDG::Heat
               param.material,
               param.evapor,
               *time_iterator,
-              temp_dof_idx,
-              temp_hanging_nodes_dof_idx,
-              temp_quad_idx,
+              heat_dof_idx,
+              heat_no_bc_dof_idx,
+              heat_continuous_no_bc_dof_idx,
+              heat_quad_idx,
               param.problem_specific_parameters.do_solidification,
               level_set_dof_idx,
               level_set,
@@ -282,7 +286,7 @@ namespace MeltPoolDG::Heat
                 param.laser.template get_direction<dim>());
 
             heat_cut_operation->register_reinit_matrix_free([&](const DoFHandler<dim> &dh) {
-              Assert(&dh == &scratch_data->get_dof_handler(temp_dof_idx), ExcInternalError());
+              Assert(&dh == &scratch_data->get_dof_handler(heat_dof_idx), ExcInternalError());
 
               scratch_data->create_partitioning();
 
@@ -293,11 +297,12 @@ namespace MeltPoolDG::Heat
                                   true /*enable_normal_vector_update*/);
 
               // recompute heat source
-              scratch_data->initialize_dof_vector(heat_operation->get_heat_source(), temp_dof_idx);
+              scratch_data->initialize_dof_vector(heat_operation->get_heat_source(),
+                                                  heat_continuous_no_bc_dof_idx);
               if (const auto source_field_function = simulation_case->get_field_function(
                     "prescribed_heat_source", "heat_transfer", true /*is_optional*/))
                 compute_field_vector(heat_operation->get_heat_source(),
-                                     temp_dof_idx,
+                                     heat_continuous_no_bc_dof_idx,
                                      *source_field_function);
             });
 
@@ -323,11 +328,11 @@ namespace MeltPoolDG::Heat
      *  initialize postprocessor
      */
     post_processor =
-      std::make_shared<Postprocessor<dim, double>>(scratch_data->get_mpi_comm(temp_dof_idx),
+      std::make_shared<Postprocessor<dim, double>>(scratch_data->get_mpi_comm(heat_dof_idx),
                                                    param.output,
                                                    param.time_stepping,
                                                    scratch_data->get_mapping(),
-                                                   scratch_data->get_triangulation(temp_dof_idx),
+                                                   scratch_data->get_triangulation(heat_dof_idx),
                                                    scratch_data->get_pcout(2));
     /*
      *    Do initial refinement steps if requested
@@ -520,15 +525,15 @@ namespace MeltPoolDG::Heat
         {
             case AMRStrategy::KellyErrorEstimator: {
               VectorType locally_relevant_solution;
-              locally_relevant_solution.reinit(scratch_data->get_partitioner(temp_dof_idx));
+              locally_relevant_solution.reinit(scratch_data->get_partitioner(heat_dof_idx));
               locally_relevant_solution.copy_locally_owned_data_from(
                 heat_operation->get_temperature());
-              scratch_data->get_constraint(temp_dof_idx).distribute(locally_relevant_solution);
+              scratch_data->get_constraint(heat_dof_idx).distribute(locally_relevant_solution);
               locally_relevant_solution.update_ghost_values();
 
               KellyErrorEstimator<dim>::estimate(scratch_data->get_mapping(),
-                                                 scratch_data->get_dof_handler(temp_dof_idx),
-                                                 scratch_data->get_face_quadrature(temp_quad_idx),
+                                                 scratch_data->get_dof_handler(heat_dof_idx),
+                                                 scratch_data->get_face_quadrature(heat_quad_idx),
                                                  {}, // neumann bc
                                                  locally_relevant_solution,
                                                  estimated_error_per_cell);
@@ -551,7 +556,7 @@ namespace MeltPoolDG::Heat
                                                         locally_relevant_solution,
                                                         Functions::ZeroFunction<dim>(),
                                                         estimated_error_per_cell,
-                                                        scratch_data->get_quadrature(temp_dof_idx),
+                                                        scratch_data->get_quadrature(heat_dof_idx),
                                                         dealii::VectorTools::L2_norm);
               break;
             }

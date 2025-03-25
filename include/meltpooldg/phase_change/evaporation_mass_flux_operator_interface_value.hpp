@@ -30,17 +30,17 @@ namespace MeltPoolDG::Evaporation
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-    const ScratchData<dim>                                     &scratch_data;
-    mutable LevelSet::NearestPointData<double>                  nearest_point_data;
-    const EvaporationModelBase<double>                         &evaporation_model;
-    const VectorType                                           &level_set_as_heaviside;
-    const VectorType                                           &distance;
-    const BlockVectorType                                      &normal_vector;
-    const unsigned int                                          ls_dof_idx;
-    const unsigned int                                          temp_hanging_nodes_dof_idx;
-    const unsigned int                                          evapor_mass_flux_dof_idx;
-    const double                                                tolerance_normal_vector;
-    mutable std::unique_ptr<LevelSet::Tools::NearestPoint<dim>> nearest_point_search;
+    const ScratchData<dim>                                             &scratch_data;
+    mutable LevelSet::NearestPointData<double>                          nearest_point_data;
+    const EvaporationModelBase<double>                                 &evaporation_model;
+    const VectorType                                                   &level_set_as_heaviside;
+    const VectorType                                                   &distance;
+    const BlockVectorType                                              &normal_vector;
+    const unsigned int                                                  ls_dof_idx;
+    const unsigned int                                                  temp_hanging_nodes_dof_idx;
+    const unsigned int                                                  evapor_mass_flux_dof_idx;
+    const double                                                        tolerance_normal_vector;
+    mutable std::unique_ptr<LevelSet::Tools::NearestPoint<dim, double>> nearest_point_search;
 
 
   public:

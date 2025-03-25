@@ -2,6 +2,7 @@
 
 #include <deal.II/base/function.h>
 #include <deal.II/base/tensor.h>
+#include <deal.II/base/types.h>
 #include <deal.II/base/vectorization.h>
 
 #include <deal.II/dofs/dof_handler.h>
@@ -10,13 +11,14 @@
 #include <deal.II/non_matching/mesh_classifier.h>
 
 #include <meltpooldg/core/boundary_conditions.hpp>
-#include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/core/periodic_boundary_conditions.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/cut/solution_transfer.hpp>
 #include <meltpooldg/heat/heat_cut_operator.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/heat_operation_base.hpp>
+#include <meltpooldg/level_set/nearest_point.hpp>
+#include <meltpooldg/level_set/nearest_point_data.hpp>
 #include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
@@ -26,6 +28,7 @@
 #include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -36,21 +39,27 @@ namespace MeltPoolDG::Heat
   class HeatCutOperation : public HeatOperationBase<dim, number>
   {
   private:
-    using VectorType = typename HeatOperationBase<dim, number>::VectorType;
+    using VectorType      = typename HeatOperationBase<dim, number>::VectorType;
+    using BlockVectorType = typename HeatOperationBase<dim, number>::BlockVectorType;
 
-    const ScratchData<dim, dim, number>                               &scratch_data;
-    const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> dirichlet_bc;
-    const PeriodicBoundaryConditions<dim>                             &periodic_bc;
-    const HeatData<number>                                            &heat_data;
+    const ScratchData<dim, dim, number>                                               &scratch_data;
+    const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> dirichlet_bc;
+    const PeriodicBoundaryConditions<dim>                                             &periodic_bc;
+    const HeatData<number>                                                            &heat_data;
 
     const TimeIterator<number> &time_iterator;
 
-    const unsigned int temp_dof_idx;
-    const unsigned int temp_hanging_nodes_dof_idx;
-    const unsigned int temp_quad_idx;
+    // ScratchData's DoFHandler indices for ..
+    const unsigned int heat_cut_dof_idx;        // .. CutFEM DoFs with Dirichlet BCs
+    const unsigned int heat_cut_no_bc_dof_idx;  // .. CutFEM DoFs without Dirichlet BCs
+    const unsigned int heat_cont_no_bc_dof_idx; // .. continuous DoFs without Dirichlet BCs
+    // ScratchData's Quadrature index
+    const unsigned int heat_quad_idx;
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
-    VectorType                                   volumetric_heat_source;
+    VectorType                                   interface_temperature;
+    // TODO: note that this is not jet implemented in the operator
+    VectorType volumetric_heat_source;
 
     // level set which defines the interface with its zero contour
     const unsigned int ls_dof_idx;
@@ -77,6 +86,8 @@ namespace MeltPoolDG::Heat
 
     Preconditioner<dim, VectorType> preconditioner;
 
+    std::unique_ptr<LevelSet::Tools::NearestPoint<dim, double>> nearest_point_search;
+
     // determine whether solution vectors are prepared for time advance
     bool ready_for_time_advance = false;
 
@@ -88,9 +99,10 @@ namespace MeltPoolDG::Heat
                      const MaterialData<number>                                &material_data_in,
                      const Evaporation::EvaporationData<number>                &evapor_data_in,
                      const TimeIterator<number>                                &time_iterator_in,
-                     const unsigned int                                         temp_dof_idx_in,
-                     const unsigned int temp_hanging_nodes_dof_idx_in,
-                     const unsigned int temp_quad_idx_in,
+                     const unsigned int                                         heat_cut_dof_idx_in,
+                     const unsigned int heat_cut_no_bc_dof_idx_in,
+                     const unsigned int heat_continuous_no_bc_dof_idx_in,
+                     const unsigned int heat_quad_idx_in,
                      const bool         do_solidification_in,
                      const unsigned int ls_dof_idx_in,
                      const VectorType  &level_set_in,
@@ -138,6 +150,15 @@ namespace MeltPoolDG::Heat
     void
     solve() override;
 
+    void
+    register_interface_projection_data(
+      const VectorType                         &distance,
+      const BlockVectorType                    &normal_vector,
+      const LevelSet::NearestPointData<double> &nearest_point_data) override;
+
+    void
+    compute_interface_temperature() override;
+
     /**
      * register vectors for adaptive mesh refinement solution transfer
      */
@@ -161,6 +182,12 @@ namespace MeltPoolDG::Heat
 
     VectorType &
     get_temperature() override;
+
+    const VectorType &
+    get_interface_temperature() const override;
+
+    VectorType &
+    get_interface_temperature() override;
 
     const VectorType &
     get_heat_source() const override;

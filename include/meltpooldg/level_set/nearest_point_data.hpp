@@ -28,8 +28,8 @@ namespace MeltPoolDG::LevelSet
     number           rel_tol               = 1e-6;
     int              max_iter              = 20;
     NearestPointType type                  = NearestPointType::closest_point_normal;
-    double           narrow_band_threshold = -1;
-    double           isocontour            = 0.0;
+    number           narrow_band_threshold = -1;
+    number           isocontour            = 0.0;
     unsigned int     verbosity_level       = 0;
 
     void

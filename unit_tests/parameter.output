@@ -97,6 +97,7 @@
         "surface tension":
         {
             "coefficient residual fraction": "0",
+            "interface temperature evaluation type": "local_value",
             "reference temperature": "-1e+100",
             "surface tension coefficient": "0",
             "temperature dependent surface tension coefficient": "0",

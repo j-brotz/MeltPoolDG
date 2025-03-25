@@ -323,13 +323,13 @@ namespace MeltPoolDG::Heat
   /* TODO: add function parameters*/
   template <int dim, typename number>
   void
-  LaserOperation<dim, number>::compute_heat_source(VectorType        &heat_source,
-                                                   VectorType        &heat_user_rhs,
-                                                   const VectorType  &level_set_as_heaviside,
-                                                   const unsigned int ls_dof_idx,
-                                                   const unsigned int temp_hanging_nodes_dof_idx,
-                                                   const unsigned int temp_quad_idx,
-                                                   const bool         zero_out,
+  LaserOperation<dim, number>::compute_heat_source(VectorType            &heat_source,
+                                                   VectorType            &heat_user_rhs,
+                                                   const VectorType      &level_set_as_heaviside,
+                                                   const unsigned int     ls_dof_idx,
+                                                   const unsigned int     heat_no_bc_dof_idx,
+                                                   const unsigned int     heat_quad_idx,
+                                                   const bool             zero_out,
                                                    const BlockVectorType *normal_vector,
                                                    const unsigned int     normal_dof_idx) const
   {
@@ -338,7 +338,7 @@ namespace MeltPoolDG::Heat
           case LaserModelType::volumetric: {
             Assert(laser_heat_source_operation_volumetric != nullptr, ExcInternalError());
             laser_heat_source_operation_volumetric->compute_volumetric_heat_source(
-              heat_source, scratch_data, temp_hanging_nodes_dof_idx, zero_out);
+              heat_source, scratch_data, heat_no_bc_dof_idx, zero_out);
             break;
           }
           case LaserModelType::interface_projection_regularized: {
@@ -346,7 +346,7 @@ namespace MeltPoolDG::Heat
             laser_heat_source_operation_projection->compute_interfacial_heat_source(
               heat_source,
               scratch_data,
-              temp_hanging_nodes_dof_idx,
+              heat_no_bc_dof_idx,
               level_set_as_heaviside,
               ls_dof_idx,
               zero_out,
@@ -359,7 +359,7 @@ namespace MeltPoolDG::Heat
             laser_heat_source_operation_projection->compute_interfacial_heat_source_sharp(
               heat_user_rhs,
               scratch_data,
-              temp_hanging_nodes_dof_idx,
+              heat_no_bc_dof_idx,
               level_set_as_heaviside,
               ls_dof_idx,
               zero_out,
@@ -372,8 +372,8 @@ namespace MeltPoolDG::Heat
             laser_heat_source_operation_projection
               ->compute_interfacial_heat_source_sharp_conforming(heat_user_rhs,
                                                                  scratch_data,
-                                                                 temp_hanging_nodes_dof_idx,
-                                                                 temp_quad_idx,
+                                                                 heat_no_bc_dof_idx,
+                                                                 heat_quad_idx,
                                                                  level_set_as_heaviside,
                                                                  ls_dof_idx,
                                                                  zero_out,
@@ -384,7 +384,7 @@ namespace MeltPoolDG::Heat
           case LaserModelType::RTE: {
             Assert(rte_operation != nullptr, ExcInternalError());
             rte_operation->solve();
-            rte_operation->compute_heat_source(heat_source, temp_hanging_nodes_dof_idx, zero_out);
+            rte_operation->compute_heat_source(heat_source, heat_no_bc_dof_idx, zero_out);
             break;
           }
           default: {

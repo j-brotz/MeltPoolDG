@@ -316,7 +316,7 @@ namespace MeltPoolDG
     const unsigned int                        dof_idx,
     const std::function<std::vector<bool>()> &marked_vertices)
   {
-    if (!rpe.contains(dof_idx))
+    if (not rpe.contains(dof_idx))
       rpe.insert({dof_idx,
                   std::make_shared<Utilities::MPI::RemotePointEvaluation<dim, dim>>(
                     1e-6 /*tolerance*/, true /*unique mapping*/, 0, marked_vertices)});
@@ -539,25 +539,11 @@ namespace MeltPoolDG
   }
 
   template <int dim, int spacedim, typename number>
-  CutUtil::CutType
+  CutUtil::CutPhaseType
   ScratchData<dim, spacedim, number>::get_cut_type(const unsigned int dof_idx) const
   {
     AssertIndexRange(dof_idx, dof_handler.size());
-    // Detect weather the temperature vector is setup for CutFEM by checking if its
-    // dealii::DoFHandler is in hp-mode.
-    if (not dof_handler[dof_idx]->has_hp_capabilities())
-      return CutUtil::CutType::not_cut;
-    // If so, detect weather the dof vector is in one phase or on two phase cut mode. To that, we
-    // check the number of components in the intersected fe collection. If it's 2, the cut mode in
-    // two phase.
-    const unsigned int n_components_intersected =
-      dof_handler[dof_idx]->get_fe_collection()[CutUtil::CellCategory::intersected].n_components();
-    if (n_components_intersected == 1)
-      return CutUtil::CutType::one_phase_cut;
-    else if (n_components_intersected == 2)
-      return CutUtil::CutType::two_phase_cut;
-    else
-      DEAL_II_NOT_IMPLEMENTED();
+    return CutUtil::get_cut_type(*dof_handler[dof_idx]);
   }
 
   template <int dim, int spacedim, typename number>
@@ -571,6 +557,10 @@ namespace MeltPoolDG
   Utilities::MPI::RemotePointEvaluation<dim, dim> &
   ScratchData<dim, spacedim, number>::get_remote_point_evaluation(const unsigned int dof_idx) const
   {
+    AssertThrow(rpe.contains(dof_idx),
+                dealii::ExcMessage(
+                  "The remote point evaluation you requested does not exist yet. "
+                  "First, it must be created using create_remote_point_evaluation()!"));
     return *rpe.at(dof_idx);
   }
 

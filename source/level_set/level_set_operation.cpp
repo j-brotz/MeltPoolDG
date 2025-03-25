@@ -721,7 +721,7 @@ namespace MeltPoolDG::LevelSet
             return marked_vertices;
           });
 
-        nearest_point_search = std::make_unique<Tools::NearestPoint<dim>>(
+        nearest_point_search = std::make_unique<Tools::NearestPoint<dim, double>>(
           scratch_data.get_mapping(),
           scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
           distance_to_level_set,
@@ -730,16 +730,13 @@ namespace MeltPoolDG::LevelSet
           level_set_data.nearest_point);
       }
 
-    nearest_point_search->reinit(scratch_data.get_dof_handler(curv_dof_idx));
+    nearest_point_search->reinit(&scratch_data.get_dof_handler(curv_dof_idx));
 
     // zero out because it is overwritten
     curvature_operation->get_curvature().zero_out_ghost_values();
 
     nearest_point_search->template fill_dof_vector_with_point_values(
-      curvature_operation->get_curvature(),
-      scratch_data.get_dof_handler(curv_dof_idx),
-      curvature_operation->get_curvature(),
-      true);
+      curvature_operation->get_curvature(), curvature_operation->get_curvature(), true);
 
     curvature_operation->get_curvature().update_ghost_values();
 

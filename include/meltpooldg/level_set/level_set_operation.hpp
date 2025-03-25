@@ -82,7 +82,7 @@ namespace MeltPoolDG::LevelSet
                              >>;
     SurfaceMeshInfo surface_mesh_info;
 
-    std::unique_ptr<Tools::NearestPoint<dim>> nearest_point_search;
+    std::unique_ptr<Tools::NearestPoint<dim, double>> nearest_point_search;
 
   public:
     LevelSetOperation(const ScratchData<dim>                          &scratch_data_in,

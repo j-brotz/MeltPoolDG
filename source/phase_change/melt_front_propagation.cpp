@@ -28,7 +28,7 @@ namespace MeltPoolDG::MeltPool
                                                   const Parameters<double> &data_in,
                                                   const unsigned int phase_fraction_dof_idx_in,
                                                   const unsigned int ls_dof_idx_in,
-                                                  const VectorType  &temperature,
+                                                  const VectorType  &temperature_in,
                                                   const unsigned int reinit_dof_idx_in,
                                                   const unsigned int reinit_no_solid_dof_idx_in,
                                                   const unsigned int flow_vel_dof_idx_in,
@@ -44,7 +44,7 @@ namespace MeltPoolDG::MeltPool
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
     , flow_vel_no_solid_dof_idx(flow_vel_no_solid_dof_idx_in)
     , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
-    , temperature(temperature)
+    , temperature(temperature_in)
   {
     reinit();
   }
@@ -202,8 +202,8 @@ namespace MeltPoolDG::MeltPool
     typename DoFHandler<dim>::active_cell_iterator ls_cell =
       scratch_data.get_dof_handler(ls_dof_idx).begin_active();
 
-    const CutUtil::CutType cut_type = scratch_data.get_cut_type(temp_hanging_nodes_dof_idx);
-    hp::FEValues<dim>      hp_temerature_eval(
+    const CutUtil::CutPhaseType cut_type = scratch_data.get_cut_type(temp_hanging_nodes_dof_idx);
+    hp::FEValues<dim>           hp_temerature_eval(
       scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).get_fe_collection(),
       hp::QCollection<dim>(Quadrature<dim>(
         scratch_data.get_dof_handler(phase_fraction_dof_idx).get_fe().get_unit_support_points())),
@@ -227,7 +227,7 @@ namespace MeltPoolDG::MeltPool
 
             hp_temerature_eval.reinit(t_cell);
             const FEValues<dim> &temerature_eval = hp_temerature_eval.get_present_fe_values();
-            if (cut_type != CutUtil::CutType::two_phase_cut)
+            if (cut_type != CutUtil::CutPhaseType::two_phase_cut)
               temerature_eval.get_function_values(temperature, temperature_at_q);
             else
               {

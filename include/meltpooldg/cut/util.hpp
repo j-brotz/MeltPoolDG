@@ -23,7 +23,21 @@
 
 namespace MeltPoolDG::CutUtil
 {
-  BETTER_ENUM(CutType, char, not_cut, one_phase_cut, two_phase_cut)
+  /**
+   * Enum that names a type of CutFEM in use.
+   * - not_cut: no CutFEM in use, the field in continuous
+   * - one_phase_cut: The domain of the field is restricted to the liquid domain, i.e., positive
+   *                  level set values. CutFEM is used for cells that contain the interface.
+   * - two_phase_cut: The domain is cut at the interface with the liquid domain
+   */
+  BETTER_ENUM(CutPhaseType, char, not_cut, one_phase_cut, two_phase_cut)
+
+  /**
+   * determine the CutType of the @param dof_handler
+   */
+  template <int dim>
+  CutPhaseType
+  get_cut_type(const dealii::DoFHandler<dim> &dof_handler);
 
   /**
    * definition of aliases for MappingInfo types
