@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, UIBK/TUM, June 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 #include <deal.II/lac/la_parallel_vector.h>
 
@@ -13,19 +8,17 @@
 
 namespace MeltPoolDG::Evaporation
 {
-  using namespace dealii;
-
   /**
    * TODO: DOCU
    */
-  template <int dim>
-  class EvaporationSourceTermsContinuous : public EvaporationSourceTermsBase<dim>
+  template <int dim, typename number>
+  class EvaporationSourceTermsContinuous : public EvaporationSourceTermsBase<dim, number>
   {
   private:
-    using VectorType      = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
     const ScratchData<dim>        &scratch_data;
-    const EvaporationData<double> &evapor_data;
+    const EvaporationData<number> &evapor_data;
     /**
      * references to solutions needed for the computation
      */
@@ -40,28 +33,28 @@ namespace MeltPoolDG::Evaporation
     const unsigned int                          normal_dof_idx;
     const unsigned int                          evapor_vel_dof_idx;
     const unsigned int                          evapor_mass_flux_dof_idx;
-    const double                                tolerance_normal_vector;
-    const double                                density_vapor;
-    const double                                density_liquid;
+    const number                                tolerance_normal_vector;
+    const number                                density_vapor;
+    const number                                density_liquid;
     const TwoPhaseFluidPropertiesTransitionType two_phase_properties_transition_type;
 
     // interpolation matrix to interpolate the level set gradient to pressure space
-    FullMatrix<double> ls_to_pressure_grad_interpolation_matrix;
+    dealii::FullMatrix<number> ls_to_pressure_grad_interpolation_matrix;
     /**
      * evaporation velocity at quadrature points
      */
-    AlignedVector<Tensor<1, dim, VectorizedArray<double>>> evaporation_velocities;
+    dealii::AlignedVector<Tensor<1, dim, dealii::VectorizedArray<number>>> evaporation_velocities;
 
-    inline Tensor<1, dim, VectorizedArray<double>> *
+    inline dealii::Tensor<1, dim, dealii::VectorizedArray<number>> *
     begin_evaporation_velocity(const unsigned int macro_cell);
 
-    inline const Tensor<1, dim, VectorizedArray<double>> &
+    inline const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &
     begin_evaporation_velocity(const unsigned int macro_cell) const;
 
   public:
     EvaporationSourceTermsContinuous(
       const ScratchData<dim>                      &scratch_data,
-      const EvaporationData<double>               &evapor_data,
+      const EvaporationData<number>               &evapor_data,
       const VectorType                            &level_set_as_heaviside,
       const BlockVectorType                       &normal_vector,
       const VectorType                            &evaporative_mass_flux,
@@ -70,9 +63,9 @@ namespace MeltPoolDG::Evaporation
       const unsigned int                           normal_dof_idx,
       const unsigned int                           evapor_vel_dof_idx,
       const unsigned int                           evapor_mass_flux_dof_idx,
-      const double                                 tolerance_normal_vector,
-      const double                                 density_vapor,
-      const double                                 density_liquid,
+      const number                                 tolerance_normal_vector,
+      const number                                 density_vapor,
+      const number                                 density_liquid,
       const TwoPhaseFluidPropertiesTransitionType &two_phase_properties_transition_type);
 
     void

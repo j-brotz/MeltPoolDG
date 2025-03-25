@@ -1,28 +1,23 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, UIBK/TUM, June 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 #include <deal.II/lac/la_parallel_vector.h>
 
 namespace MeltPoolDG::Evaporation
 {
-  using namespace dealii;
-
   /**
    * Base class for implementing different ways to compute the source terms for
    *    -- the level set equation
    *    -- the mass balance equation
    *    -- the heat equation
    */
-  template <int dim>
+  template <int dim, typename number>
   class EvaporationSourceTermsBase
   {
   private:
-    using VectorType = LinearAlgebra::distributed::Vector<double>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
   public:
+    virtual ~EvaporationSourceTermsBase() = default;
+
     virtual void
     compute_evaporation_velocity(VectorType &evaporation_velocity) = 0;
 

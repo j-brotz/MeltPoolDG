@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, Peter Munch, TUM, May 2022
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/base/tensor_accessors.h>
@@ -13,8 +8,6 @@
 
 namespace MeltPoolDG::Evaporation
 {
-  using namespace dealii;
-
   /**
    * Class for the shear stress computation of an incompressible vapor/liquid mixture,
    * where the velocity field is not divergence-free in the interfacial region. The
@@ -31,21 +24,21 @@ namespace MeltPoolDG::Evaporation
    *
    * the interfacial unit normal vector n and the dyadic product ⊗ .
    */
-  template <int dim, typename number = double>
+  template <int dim, typename number>
   class IncompressibleNewtonianFluidEvaporationMaterial
     : public Flow::IncompressibleMaterialBase<dim, number>
   {
   private:
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
   public:
     IncompressibleNewtonianFluidEvaporationMaterial(
-      const ScratchData<dim>                                                    &scratch_data,
-      const std::function<const VectorizedArray<number> &(const unsigned int cell,
-                                                          const unsigned int q)> get_viscosity,
-      const BlockVectorType                                                     &normal_vector,
-      const VectorType                                                          &heaviside,
-      const unsigned int                                                         normal_dof_idx,
+      const ScratchData<dim>                                                 &scratch_data,
+      const std::function<const dealii::VectorizedArray<number>
+                            &(const unsigned int cell, const unsigned int q)> get_viscosity,
+      const BlockVectorType                                                  &normal_vector,
+      const VectorType                                                       &heaviside,
+      const unsigned int                                                      normal_dof_idx,
       const unsigned int ls_hanging_nodes_dof_idx,
       const unsigned int velocity_quad_idx)
       : scratch_data(scratch_data)
@@ -65,9 +58,9 @@ namespace MeltPoolDG::Evaporation
      * @p cell_idx and the current quadrature point index @p quad_idx are known.
      */
     void
-    reinit(const Tensor<2, dim, VectorizedArray<number>> &velocity_gradient,
-           const unsigned int                             cell_idx,
-           const unsigned int                             quad_idx) final
+    reinit(const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> &velocity_gradient,
+           const unsigned int                                             cell_idx,
+           const unsigned int                                             quad_idx) final
     {
       grad_u = velocity_gradient;
       div_u  = trace(velocity_gradient);
@@ -103,7 +96,7 @@ namespace MeltPoolDG::Evaporation
      *
      * the interfacial unit normal vector n and the dyadic product ⊗ .
      */
-    Tensor<2, dim, VectorizedArray<number>>
+    dealii::Tensor<2, dim, dealii::VectorizedArray<number>>
     get_tau() final
     {
       const auto mask = compare_and_apply_mask<SIMDComparison::less_than>(
@@ -133,7 +126,7 @@ namespace MeltPoolDG::Evaporation
      * with the Kronecker delta δ.
      *
      */
-    Tensor<2, dim, VectorizedArray<number>>
+    dealii::Tensor<2, dim, dealii::VectorizedArray<number>>
     get_vmult_d_tau_d_grad_vel() final
     {
       // Since the velocity DoFs occur linear in the expression for tau, the vmult of the derivative
@@ -150,7 +143,7 @@ namespace MeltPoolDG::Evaporation
       // VectorizedArray<number>>());
 
       // const auto temp = 2. * viscosity * (identity - outer_product(identity2,
-      // outer_product(normal, normal))); return double_contract<0,0,1,1>(temp, grad_u);
+      // outer_product(normal, normal))); return number_contract<0,0,1,1>(temp, grad_u);
     }
 
     /**
@@ -183,8 +176,8 @@ namespace MeltPoolDG::Evaporation
 
   private:
     const ScratchData<dim> &scratch_data;
-    const std::function<const VectorizedArray<number> &(const unsigned int cell,
-                                                        const unsigned int q)>
+    const std::function<const dealii::VectorizedArray<number> &(const unsigned int cell,
+                                                                const unsigned int q)>
                                        get_viscosity;
     const BlockVectorType             &normal_vector;
     const VectorType                  &heaviside;
@@ -195,12 +188,12 @@ namespace MeltPoolDG::Evaporation
     FECellIntegrator<dim, 1, number>   ls_vals;
 
     // temporary quadrature point values
-    Tensor<2, dim, VectorizedArray<number>> grad_u;
-    VectorizedArray<number>                 div_u;
-    VectorizedArray<number>                 viscosity;
-    Tensor<1, dim, VectorizedArray<number>> normal;
-    VectorizedArray<number>                 hs;
-    unsigned int                            cell;
+    dealii::Tensor<2, dim, dealii::VectorizedArray<number>> grad_u;
+    dealii::VectorizedArray<number>                         div_u;
+    dealii::VectorizedArray<number>                         viscosity;
+    dealii::Tensor<1, dim, dealii::VectorizedArray<number>> normal;
+    dealii::VectorizedArray<number>                         hs;
+    unsigned int                                            cell;
 
     mutable bool ls_update_ghosts     = true;
     mutable bool normal_update_ghosts = true;

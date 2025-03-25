@@ -52,6 +52,5 @@ namespace MeltPoolDG::Evaporation
              0.0;
   }
 
-
   template class EvaporationModelHardtWondra<double>;
 } // namespace MeltPoolDG::Evaporation

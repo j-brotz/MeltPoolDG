@@ -77,7 +77,7 @@ namespace MeltPoolDG::Evaporation
               // edges.
               sharp_conforming)
 
-  template <typename number = double>
+  template <typename number>
   struct EvaporationData
   {
     EvaporationModelType evaporative_mass_flux_model = EvaporationModelType::analytical;

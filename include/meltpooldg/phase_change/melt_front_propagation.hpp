@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, TUM, November 2020
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/base/vectorization.h>
@@ -22,22 +17,20 @@
 
 namespace MeltPoolDG::MeltPool
 {
-  using namespace dealii;
-
-  template <int dim>
+  template <int dim, typename number>
   class MeltFrontPropagation
   {
   private:
-    using VectorType = LinearAlgebra::distributed::Vector<double>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
     const ScratchData<dim> &scratch_data;
     /**
      *  Parameters
      */
-    const MeltPoolData<double> &mp_data;
+    const MeltPoolData<number> &mp_data;
 
     // melting/solidification
-    Material<double> melting_solidification;
+    Material<number> melting_solidification;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
      *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
@@ -49,7 +42,7 @@ namespace MeltPoolDG::MeltPool
     const unsigned int reinit_no_solid_dof_idx;
     const unsigned int flow_vel_dof_idx;
     const unsigned int flow_vel_no_solid_dof_idx;
-    const unsigned int temp_hanging_nodes_dof_idx;
+    const unsigned int heat_hanging_nodes_dof_idx;
     const VectorType  &temperature;
 
     /*
@@ -60,7 +53,7 @@ namespace MeltPoolDG::MeltPool
 
   public:
     MeltFrontPropagation(const ScratchData<dim>   &scratch_data_in,
-                         const Parameters<double> &data_in,
+                         const Parameters<number> &data_in,
                          const unsigned int        phase_fraction_dof_idx_in,
                          const unsigned int        ls_dof_idx_in,
                          const VectorType         &temperature_in,
@@ -68,7 +61,7 @@ namespace MeltPoolDG::MeltPool
                          const unsigned int        reinit_no_solid_dof_idx_in,
                          const unsigned int        flow_vel_dof_idx_in,
                          const unsigned int        flow_vel_no_solid_dof_idx_in,
-                         const unsigned int        temp_hanging_nodes_dof_idx_in);
+                         const unsigned int        heat_hanging_nodes_dof_idx_in);
 
     void
     set_initial_condition(const VectorType &level_set_as_heaviside, VectorType &level_set);
@@ -83,10 +76,10 @@ namespace MeltPoolDG::MeltPool
      * attach functions
      */
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
+    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors);
 
     void
-    attach_output_vectors(GenericDataOut<dim, double> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
 
     void
     distribute_constraints();
@@ -104,11 +97,11 @@ namespace MeltPoolDG::MeltPool
      * This function returns the solid fraction from a linear interpolation between the solidus
      * and liquidus temperatures, i.e. 0 (T>=T_liquidus) and 1 (T<=T_solidus).
      */
-    double
-    compute_solid_fraction(const double temperature) const;
+    number
+    compute_solid_fraction(const number temperature) const;
 
-    VectorizedArray<double>
-    compute_solid_fraction(const VectorizedArray<double> &temperature) const;
+    dealii::VectorizedArray<number>
+    compute_solid_fraction(const dealii::VectorizedArray<number> &temperature) const;
 
   private:
     void
@@ -148,9 +141,9 @@ namespace MeltPoolDG::MeltPool
      */
     void
     set_flow_field_in_solid_regions_to_zero(
-      const DoFHandler<dim>           &flow_dof_handler,
-      const AffineConstraints<double> &flow_constraints_no_solid,
-      AffineConstraints<double>       &flow_constraints);
+      const dealii::DoFHandler<dim>           &flow_dof_handler,
+      const dealii::AffineConstraints<number> &flow_constraints_no_solid,
+      AffineConstraints<number>               &flow_constraints);
 
     /**
      *  The reinitialization constraints are modified such that they are zero in solid
@@ -159,8 +152,8 @@ namespace MeltPoolDG::MeltPool
      */
     void
     ignore_reinitialization_in_solid_regions(
-      const DoFHandler<dim>           &level_set_dof_handler,
-      const AffineConstraints<double> &reinit_dirichlet_constraints_no_solid,
-      AffineConstraints<double>       &reinit_dirichlet_constraints);
+      const dealii::DoFHandler<dim>           &level_set_dof_handler,
+      const dealii::AffineConstraints<number> &reinit_dirichlet_constraints_no_solid,
+      dealii::AffineConstraints<number>       &reinit_dirichlet_constraints);
   };
 } // namespace MeltPoolDG::MeltPool

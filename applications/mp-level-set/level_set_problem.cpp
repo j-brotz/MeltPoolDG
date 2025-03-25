@@ -178,7 +178,7 @@ namespace MeltPoolDG::LevelSet
 
     if (simulation_case->parameters.evapor.analytical.function != "not_initialized")
       {
-        evaporation_operation = std::make_unique<Evaporation::EvaporationOperation<dim>>(
+        evaporation_operation = std::make_unique<Evaporation::EvaporationOperation<dim, double>>(
           *scratch_data,
           level_set_operation->get_level_set_as_heaviside(),
           level_set_operation->get_normal_vector(),

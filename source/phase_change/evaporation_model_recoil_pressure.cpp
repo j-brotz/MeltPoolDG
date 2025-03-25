@@ -6,7 +6,6 @@
 
 #include <cmath>
 
-
 namespace MeltPoolDG::Evaporation
 {
   template <typename number>
@@ -21,7 +20,6 @@ namespace MeltPoolDG::Evaporation
     , temperature_constant(recoil_data.temperature_constant)
   {}
 
-
   template <typename number>
   number
   EvaporationModelRecoilPressure<number>::local_compute_evaporative_mass_flux(const number T) const
@@ -29,7 +27,6 @@ namespace MeltPoolDG::Evaporation
     return 0.82 * sticking_constant * recoil_model.compute_recoil_pressure_coefficient(T) *
            std::sqrt(Cm / T); //@todo: replace recoil pressure by saturated vapor pressure
   }
-
 
   template <typename number>
   dealii::VectorizedArray<number>
@@ -39,7 +36,6 @@ namespace MeltPoolDG::Evaporation
     return 0.82 * sticking_constant * recoil_model.compute_recoil_pressure_coefficient(T) *
            std::sqrt(Cm / T);
   }
-
 
   template <typename number>
   number

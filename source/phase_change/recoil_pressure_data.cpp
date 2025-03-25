@@ -54,7 +54,6 @@ namespace MeltPoolDG::Evaporation
     prm.leave_subsection();
   }
 
-
   template <typename number>
   void
   RecoilPressureData<number>::post(const MaterialData<number> &material)
@@ -73,5 +72,6 @@ namespace MeltPoolDG::Evaporation
       temperature_constant = material.latent_heat_of_evaporation * material.molar_mass /
                              PhysicalConstants::universal_gas_constant;
   }
+
   template struct RecoilPressureData<double>;
 } // namespace MeltPoolDG::Evaporation

@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, Peter Munch, UIBK/TUM, May 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/lac/la_parallel_vector.h>
@@ -13,24 +8,22 @@
 
 namespace MeltPoolDG::Evaporation
 {
-  using namespace dealii;
-
   /**
    *                               .
    * DOCU: TODO
    */
-  template <int dim>
-  class EvaporationMassFluxOperatorContinuous : public EvaporationMassFluxOperatorBase<dim>
+  template <int dim, typename number>
+  class EvaporationMassFluxOperatorContinuous : public EvaporationMassFluxOperatorBase<dim, number>
   {
   private:
-    using VectorType = LinearAlgebra::distributed::Vector<double>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
     const ScratchData<dim>             &scratch_data;
-    const EvaporationModelBase<double> &evaporation_model;
+    const EvaporationModelBase<number> &evaporation_model;
 
   public:
     EvaporationMassFluxOperatorContinuous(const ScratchData<dim>             &scratch_data,
-                                          const EvaporationModelBase<double> &evaporation_model);
+                                          const EvaporationModelBase<number> &evaporation_model);
 
     /**
      * DOCU: TODO

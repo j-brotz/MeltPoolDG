@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, UIBK/TUM, January 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/base/vectorization.h>

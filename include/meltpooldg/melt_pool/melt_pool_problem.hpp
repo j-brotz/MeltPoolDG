@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, Peter Munch, TUM, October 2020
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 #include <deal.II/base/parameter_handler.h>
 
@@ -256,22 +251,22 @@ namespace MeltPoolDG::MeltPool
     const unsigned int &evapor_vel_dof_idx       = vel_dof_idx;
     const unsigned int &evapor_mass_flux_dof_idx = heat_no_bc_dof_idx;
 
-    std::shared_ptr<ScratchData<dim>>                       scratch_data;
-    std::shared_ptr<Material<double>>                       material;
-    std::shared_ptr<Flow::FlowBase<dim>>                    flow_operation;
-    std::shared_ptr<LevelSet::LevelSetOperation<dim>>       level_set_operation;
-    std::shared_ptr<Heat::LaserOperation<dim, double>>      laser_operation;
-    std::shared_ptr<MeltFrontPropagation<dim>>              melt_front_propagation;
-    std::shared_ptr<Evaporation::EvaporationOperation<dim>> evaporation_operation = nullptr;
+    std::shared_ptr<ScratchData<dim>>                               scratch_data;
+    std::shared_ptr<Material<double>>                               material;
+    std::shared_ptr<Flow::FlowBase<dim>>                            flow_operation;
+    std::shared_ptr<LevelSet::LevelSetOperation<dim>>               level_set_operation;
+    std::shared_ptr<Heat::LaserOperation<dim, double>>              laser_operation;
+    std::shared_ptr<MeltFrontPropagation<dim, double>>              melt_front_propagation;
+    std::shared_ptr<Evaporation::EvaporationOperation<dim, double>> evaporation_operation = nullptr;
     std::shared_ptr<Evaporation::IncompressibleNewtonianFluidEvaporationMaterial<dim, double>>
-                                                               evaporation_fluid_material;
-    std::shared_ptr<Heat::HeatOperationBase<dim, double>>      heat_operation;
-    std::shared_ptr<Flow::DarcyDampingOperation<dim>>          darcy_operation;
-    std::shared_ptr<Flow::SurfaceTensionOperation<dim>>        surface_tension_operation;
-    std::shared_ptr<Evaporation::RecoilPressureOperation<dim>> recoil_pressure_operation;
-    std::shared_ptr<Postprocessor<dim, double>>                post_processor;
-    std::unique_ptr<Profiling::ProfilingMonitor<double>>       profiling_monitor;
-    std::shared_ptr<Restart::RestartMonitor<double>>           restart_monitor;
+                                                                       evaporation_fluid_material;
+    std::shared_ptr<Heat::HeatOperationBase<dim, double>>              heat_operation;
+    std::shared_ptr<Flow::DarcyDampingOperation<dim>>                  darcy_operation;
+    std::shared_ptr<Flow::SurfaceTensionOperation<dim>>                surface_tension_operation;
+    std::shared_ptr<Evaporation::RecoilPressureOperation<dim, double>> recoil_pressure_operation;
+    std::shared_ptr<Postprocessor<dim, double>>                        post_processor;
+    std::unique_ptr<Profiling::ProfilingMonitor<double>>               profiling_monitor;
+    std::shared_ptr<Restart::RestartMonitor<double>>                   restart_monitor;
 
     bool output_interface_velocity     = false;
     bool compute_interface_temperature = false;

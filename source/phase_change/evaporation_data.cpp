@@ -7,7 +7,6 @@
 
 namespace MeltPoolDG::Evaporation
 {
-
   template <typename number>
   void
   EvaporationData<number>::add_parameters(dealii::ParameterHandler &prm)

@@ -30,7 +30,7 @@ namespace MeltPoolDG::Evaporation
               // in the phenomenological recoil pressure model.
               hybrid)
 
-  template <typename number = double>
+  template <typename number>
   struct RecoilPressureData
   {
     // Enable or disable recoil-pressure related effects.
@@ -56,7 +56,7 @@ namespace MeltPoolDG::Evaporation
     // activation temperature of the recoil pressure; must be smaller than or equal to the boiling
     // temperature; this parameter enables a smooth activation of the recoil pressure
     number activation_temperature =
-      dealii::numbers::invalid_double; //@todo: introduce invalid_number
+      dealii::numbers::invalid_double; //@todo: introduce invalid_double
 
     // Choose how the recoil pressure flux across the interface should be computed:
     // * local_value: use the local temperature value
