@@ -539,7 +539,7 @@ namespace MeltPoolDG
   }
 
   template <int dim, int spacedim, typename number>
-  CutUtil::CutType
+  CutUtil::CutPhaseType
   ScratchData<dim, spacedim, number>::get_cut_type(const unsigned int dof_idx) const
   {
     AssertIndexRange(dof_idx, dof_handler.size());

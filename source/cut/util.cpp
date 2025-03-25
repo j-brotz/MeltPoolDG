@@ -15,23 +15,23 @@
 namespace MeltPoolDG::CutUtil
 {
   template <int dim>
-  CutType
+  CutPhaseType
   get_cut_type(const dealii::DoFHandler<dim> &dof_handler)
   {
     // Detect weather the DoFHandler is setup for CutFEM by checking if it is in hp-mode.
     if (not dof_handler.has_hp_capabilities())
-      return CutType::not_cut;
+      return CutPhaseType::not_cut;
     // If so, detect weather it is in one phase or on two phase cut mode. To that, we  check the
     // number of components in the intersected fe collection. If it's 2, the cut mode is two phase.
     const unsigned int n_components_intersected =
       dof_handler.get_fe_collection()[CellCategory::intersected].n_components();
     if (n_components_intersected == 1)
-      return CutUtil::CutType::one_phase_cut;
+      return CutUtil::CutPhaseType::one_phase_cut;
     else if (n_components_intersected == 2)
-      return CutUtil::CutType::two_phase_cut;
+      return CutUtil::CutPhaseType::two_phase_cut;
 
     DEAL_II_NOT_IMPLEMENTED();
-    return CutType::not_cut;
+    return CutPhaseType::not_cut;
   }
 
 
@@ -225,11 +225,11 @@ namespace MeltPoolDG::CutUtil
   }
 
 
-  template CutType
+  template CutPhaseType
   get_cut_type(const dealii::DoFHandler<1> &dof_handler);
-  template CutType
+  template CutPhaseType
   get_cut_type(const dealii::DoFHandler<2> &dof_handler);
-  template CutType
+  template CutPhaseType
   get_cut_type(const dealii::DoFHandler<3> &dof_handler);
 
 

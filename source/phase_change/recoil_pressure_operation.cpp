@@ -118,7 +118,7 @@ namespace MeltPoolDG::Evaporation
         not evaporative_mass_flux.has_ghost_elements())
       evaporative_mass_flux.update_ghost_values();
 
-    const CutUtil::CutType cut_type = scratch_data.get_cut_type(temp_dof_idx);
+    const CutUtil::CutPhaseType cut_type = scratch_data.get_cut_type(temp_dof_idx);
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free,
@@ -131,12 +131,12 @@ namespace MeltPoolDG::Evaporation
                                                                 flow_vel_dof_idx,
                                                                 flow_vel_quad_idx);
 
-        const unsigned int cell_category = cut_type == CutUtil::CutType::not_cut ?
+        const unsigned int cell_category = cut_type == CutUtil::CutPhaseType::not_cut ?
                                              0 :
                                              matrix_free.get_cell_range_category(cell_range);
 
         std::vector<FECellIntegrator<dim, 1, double>> temperature_eval;
-        if (cut_type == CutUtil::CutType::not_cut)
+        if (cut_type == CutUtil::CutPhaseType::not_cut)
           temperature_eval.emplace_back(matrix_free, temp_dof_idx, flow_vel_quad_idx);
         else // temperature is cut
           {
@@ -147,7 +147,7 @@ namespace MeltPoolDG::Evaporation
                                             flow_vel_quad_idx,
                                             0 /*selected component*/,
                                             cell_category /*active_fe_index*/);
-            if (cut_type == CutUtil::CutType::two_phase_cut and
+            if (cut_type == CutUtil::CutPhaseType::two_phase_cut and
                 (cell_category == CutUtil::CellCategory::gas or
                  cell_category == CutUtil::CellCategory::intersected))
               temperature_eval.emplace_back(matrix_free,
@@ -185,7 +185,7 @@ namespace MeltPoolDG::Evaporation
                   ls_to_pressure_grad_interpolation_matrix);
               }
 
-            if (delta_phase_weighted or (cut_type != CutUtil::CutType::not_cut and
+            if (delta_phase_weighted or (cut_type != CutUtil::CutPhaseType::not_cut and
                                          cell_category == CutUtil::CellCategory::intersected))
               used_heaviside_eval.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
             else
@@ -212,11 +212,11 @@ namespace MeltPoolDG::Evaporation
                 VectorizedArray<double> temp;
                 switch (cut_type)
                   {
-                      case CutUtil::CutType::not_cut: {
+                      case CutUtil::CutPhaseType::not_cut: {
                         temp = temperature_eval[0].get_value(q);
                         break;
                       }
-                      case CutUtil::CutType::two_phase_cut: {
+                      case CutUtil::CutPhaseType::two_phase_cut: {
                         if (cell_category == CutUtil::CellCategory::intersected)
                           // For intersected cut cells, temperature_val[0] contains the temperature
                           // values of the liquid domain and temperature_val[1] the temperature
@@ -232,7 +232,7 @@ namespace MeltPoolDG::Evaporation
                           temp = temperature_eval[0].get_value(q);
                         break;
                       }
-                      case CutUtil::CutType::one_phase_cut: {
+                      case CutUtil::CutPhaseType::one_phase_cut: {
                         if (cell_category == CutUtil::CellCategory::liquid)
                           temp = temperature_eval[0].get_value(q);
                         else if (cell_category == CutUtil::CellCategory::intersected)

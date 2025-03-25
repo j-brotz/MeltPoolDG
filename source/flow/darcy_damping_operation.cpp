@@ -153,7 +153,7 @@ namespace MeltPoolDG::Flow
                     scratch_data.get_matrix_free().n_cell_batches() *
                       scratch_data.get_n_q_points(flow_quad_idx));
 
-    const CutUtil::CutType cut_type = scratch_data.get_cut_type(temp_dof_idx);
+    const CutUtil::CutPhaseType cut_type = scratch_data.get_cut_type(temp_dof_idx);
 
     double dummy;
     scratch_data.get_matrix_free().template cell_loop<double, VectorType>(
@@ -162,14 +162,14 @@ namespace MeltPoolDG::Flow
                                                    ls_hanging_nodes_dof_idx,
                                                    flow_quad_idx);
 
-        const unsigned int cell_category = cut_type == CutUtil::CutType::not_cut ?
+        const unsigned int cell_category = cut_type == CutUtil::CutPhaseType::not_cut ?
                                              0 :
                                              matrix_free.get_cell_range_category(cell_range);
 
         std::vector<FECellIntegrator<dim, 1, double>> temperature_eval;
         if (material.has_dependency(Material<double>::FieldType::temperature))
           {
-            if (cut_type == CutUtil::CutType::not_cut)
+            if (cut_type == CutUtil::CutPhaseType::not_cut)
               temperature_eval.emplace_back(matrix_free, temp_dof_idx, flow_quad_idx);
             else // temperature is cut
               {
@@ -180,7 +180,7 @@ namespace MeltPoolDG::Flow
                                                 flow_quad_idx,
                                                 0 /*selected component*/,
                                                 cell_category /*active_fe_index*/);
-                if (cut_type == CutUtil::CutType::two_phase_cut and
+                if (cut_type == CutUtil::CutPhaseType::two_phase_cut and
                     (cell_category == CutUtil::CellCategory::gas or
                      cell_category == CutUtil::CellCategory::intersected))
                   temperature_eval.emplace_back(matrix_free,

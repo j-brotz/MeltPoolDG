@@ -113,8 +113,8 @@ namespace MeltPoolDG::LevelSet::Tools
     dof_handler_src = dof_handler_src_in;
 
     // prepare for CutFEM input vector if necessary
-    const CutUtil::CutType cut_type = CutUtil::get_cut_type(*dof_handler_src);
-    if (cut_type == CutUtil::CutType::not_cut)
+    const CutUtil::CutPhaseType cut_type = CutUtil::get_cut_type(*dof_handler_src);
+    if (cut_type == CutUtil::CutPhaseType::not_cut)
       {
         Assert(dof_handler_dst_in == nullptr, dealii::ExcNotImplemented());
         dof_handler_dst     = nullptr;
@@ -129,7 +129,7 @@ namespace MeltPoolDG::LevelSet::Tools
             "that is set up for continuous FEM with the identical number of components as "
             "dof_handler_src!"));
         dof_handler_dst = dof_handler_dst_in;
-        AssertThrow(CutUtil::get_cut_type(*dof_handler_dst) == CutUtil::CutType::not_cut,
+        AssertThrow(CutUtil::get_cut_type(*dof_handler_dst) == CutUtil::CutPhaseType::not_cut,
                     dealii::ExcMessage("The destination DoFHandler must not be setup for CutFEM!"));
         input_vector_is_cut = true;
       }
@@ -140,7 +140,7 @@ namespace MeltPoolDG::LevelSet::Tools
     if (input_vector_is_cut)
       {
         unsigned int cut_n_comp = dof_handler_src->get_fe().n_components();
-        if (cut_type == CutUtil::CutType::two_phase_cut)
+        if (cut_type == CutUtil::CutPhaseType::two_phase_cut)
           // for two phase cut, dof_handler_req.get_fe().n_components() returns double the number
           // of components
           cut_n_comp /= 2;
@@ -337,7 +337,7 @@ namespace MeltPoolDG::LevelSet::Tools
         unsigned int n_comp = dof_handler_src->get_fe().n_components();
         // for two phase cut, dof_handler_src->get_fe().n_components() returns double the number
         // of components
-        if (CutUtil::get_cut_type(*dof_handler_src) == CutUtil::CutType::two_phase_cut)
+        if (CutUtil::get_cut_type(*dof_handler_src) == CutUtil::CutPhaseType::two_phase_cut)
           n_comp /= 2;
         AssertThrow(n_components == n_comp,
                     dealii::ExcMessage(

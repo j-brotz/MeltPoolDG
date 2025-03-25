@@ -2253,7 +2253,7 @@ namespace MeltPoolDG::Heat
           {
             DomainEval eval_l(matrix_free,
                               heat_cut_no_bc_dof_idx /*dof_no*/,
-                              0 /*quad_no*/,
+                              heat_quad_idx /*quad_no*/,
                               0 /*selected component*/,
                               CutUtil::CellCategory::liquid /*active_fe_index*/);
 
@@ -2271,7 +2271,7 @@ namespace MeltPoolDG::Heat
           {
             DomainEval eval_g(matrix_free,
                               heat_cut_no_bc_dof_idx /*dof_no*/,
-                              0 /*quad_no*/,
+                              heat_quad_idx /*quad_no*/,
                               1 /*selected component*/,
                               CutUtil::CellCategory::gas /*active_fe_index*/);
 
@@ -2291,7 +2291,7 @@ namespace MeltPoolDG::Heat
             // use FEEvaluation and FEPointEvaluation in combination for intersected cells
             DomainEval eval_l(matrix_free,
                               heat_cut_no_bc_dof_idx /*dof_no*/,
-                              0 /*quad_no*/,
+                              heat_quad_idx /*quad_no*/,
                               0 /*selected component*/,
                               CutUtil::CellCategory::liquid /*active_fe_index*/);
             PointEval  eval_subdomain_l(*mapping_info_cells[0],
@@ -2318,14 +2318,14 @@ namespace MeltPoolDG::Heat
             // use FEEvaluation and FEPointEvaluation in combination for intersected cells
             DomainEval eval_l(matrix_free,
                               heat_cut_no_bc_dof_idx /*dof_no*/,
-                              0 /*quad_no*/,
+                              heat_quad_idx /*quad_no*/,
                               0 /*selected component*/,
                               CutUtil::CellCategory::liquid /*active_fe_index*/);
             PointEval  eval_subdomain_l(*mapping_info_cells[0],
                                        temperature_reference_finite_element);
             DomainEval eval_g(matrix_free,
                               heat_cut_no_bc_dof_idx /*dof_no*/,
-                              0 /*quad_no*/,
+                              heat_quad_idx /*quad_no*/,
                               1 /*selected component*/,
                               CutUtil::CellCategory::gas /*active_fe_index*/);
             PointEval  eval_subdomain_g(*mapping_info_cells[1],
