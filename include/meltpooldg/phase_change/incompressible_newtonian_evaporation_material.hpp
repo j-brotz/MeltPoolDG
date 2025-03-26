@@ -143,7 +143,7 @@ namespace MeltPoolDG::Evaporation
       // VectorizedArray<number>>());
 
       // const auto temp = 2. * viscosity * (identity - outer_product(identity2,
-      // outer_product(normal, normal))); return number_contract<0,0,1,1>(temp, grad_u);
+      // outer_product(normal, normal))); return double_contract<0,0,1,1>(temp, grad_u);
     }
 
     /**
