@@ -8,21 +8,23 @@
 
 namespace MeltPoolDG::Evaporation
 {
-  template <int dim>
-  EvaporationSourceTermsSharp<dim>::EvaporationSourceTermsSharp(
-    const ScratchData<dim>        &scratch_data,
-    const EvaporationData<double> &evapor_data,
-    const VectorType              &level_set_as_heaviside,
-    const BlockVectorType         &normal_vector,
-    const VectorType              &evaporative_mass_flux,
-    const unsigned int             ls_hanging_nodes_dof_idx,
-    const unsigned int             ls_quad_idx,
-    const unsigned int             normal_dof_idx,
-    const unsigned int             evapor_vel_dof_idx,
-    const unsigned int             evapor_mass_flux_dof_idx,
-    const double                   tolerance_normal_vector,
-    const double                   density_vapor,
-    const double                   density_liquid)
+  using namespace dealii;
+
+  template <int dim, typename number>
+  EvaporationSourceTermsSharp<dim, number>::EvaporationSourceTermsSharp(
+    const ScratchData<dim, dim, number> &scratch_data,
+    const EvaporationData<number>       &evapor_data,
+    const VectorType                    &level_set_as_heaviside,
+    const BlockVectorType               &normal_vector,
+    const VectorType                    &evaporative_mass_flux,
+    const unsigned int                   ls_hanging_nodes_dof_idx,
+    const unsigned int                   ls_quad_idx,
+    const unsigned int                   normal_dof_idx,
+    const unsigned int                   evapor_vel_dof_idx,
+    const unsigned int                   evapor_mass_flux_dof_idx,
+    const number                         tolerance_normal_vector,
+    const number                         density_vapor,
+    const number                         density_liquid)
     : scratch_data(scratch_data)
     , evapor_data(evapor_data)
     , level_set_as_heaviside(level_set_as_heaviside)
@@ -38,36 +40,37 @@ namespace MeltPoolDG::Evaporation
     , density_liquid(density_liquid)
   {}
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  EvaporationSourceTermsSharp<dim>::register_surface_mesh(
+  EvaporationSourceTermsSharp<dim, number>::register_surface_mesh(
     const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
                                  std::vector<Point<dim>> /*quad_points*/,
-                                 std::vector<double> /*weights*/
+                                 std::vector<number> /*weights*/
                                  >> &surface_mesh_info_in)
   {
     surface_mesh_info = &surface_mesh_info_in;
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  EvaporationSourceTermsSharp<dim>::compute_level_set_source_term(VectorType &,
-                                                                  const unsigned int,
-                                                                  const VectorType &,
-                                                                  const unsigned int)
+  EvaporationSourceTermsSharp<dim, number>::compute_level_set_source_term(VectorType &,
+                                                                          const unsigned int,
+                                                                          const VectorType &,
+                                                                          const unsigned int)
   {
     AssertThrow(false, ExcNotImplemented());
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  EvaporationSourceTermsSharp<dim>::compute_evaporation_velocity(VectorType &evaporation_velocity)
+  EvaporationSourceTermsSharp<dim, number>::compute_evaporation_velocity(
+    VectorType &evaporation_velocity)
   {
     /**
      * evaporation velocity at quadrature points
      */
-    AlignedVector<Tensor<1, dim, VectorizedArray<double>>> evaporation_velocities;
+    AlignedVector<Tensor<1, dim, VectorizedArray<number>>> evaporation_velocities;
 
     const bool update_ghosts = !level_set_as_heaviside.has_ghost_elements();
     if (update_ghosts)
@@ -80,15 +83,15 @@ namespace MeltPoolDG::Evaporation
     if (evapor_update_ghosts)
       evaporative_mass_flux.update_ghost_values();
 
-    FECellIntegrator<dim, 1, double> ls(scratch_data.get_matrix_free(),
+    FECellIntegrator<dim, 1, number> ls(scratch_data.get_matrix_free(),
                                         ls_hanging_nodes_dof_idx,
                                         ls_quad_idx);
 
-    FECellIntegrator<dim, dim, double> normal_vec(scratch_data.get_matrix_free(),
+    FECellIntegrator<dim, dim, number> normal_vec(scratch_data.get_matrix_free(),
                                                   normal_dof_idx,
                                                   ls_quad_idx);
 
-    FECellIntegrator<dim, 1, double> evap_flux(scratch_data.get_matrix_free(),
+    FECellIntegrator<dim, 1, number> evap_flux(scratch_data.get_matrix_free(),
                                                evapor_mass_flux_dof_idx,
                                                ls_quad_idx);
 
@@ -96,7 +99,7 @@ namespace MeltPoolDG::Evaporation
 
     for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
       {
-        Tensor<1, dim, VectorizedArray<double>> *evapor_vel =
+        Tensor<1, dim, VectorizedArray<number>> *evapor_vel =
           &evaporation_velocities[scratch_data.get_matrix_free().get_n_q_points(ls_quad_idx) *
                                   cell];
 
@@ -119,7 +122,7 @@ namespace MeltPoolDG::Evaporation
 
             auto is_liquid = compare_and_apply_mask<SIMDComparison::less_than>(
               ls.get_value(q_index),
-              VectorizedArray<double>(0.5),
+              VectorizedArray<number>(0.5),
               evap_flux.get_value(q_index) / density_vapor,
               evap_flux.get_value(q_index) / density_liquid);
 
@@ -147,8 +150,8 @@ namespace MeltPoolDG::Evaporation
         evapor_vel_dof_idx,
         ls_quad_idx,
         [&](const unsigned int cell,
-            const unsigned int quad) -> const Tensor<1, dim, VectorizedArray<double>> & {
-          return const_cast<const Tensor<1, dim, VectorizedArray<double>> &>(
+            const unsigned int quad) -> const Tensor<1, dim, VectorizedArray<number>> & {
+          return const_cast<const Tensor<1, dim, VectorizedArray<number>> &>(
             evaporation_velocities[scratch_data.get_matrix_free().get_n_q_points(ls_quad_idx) *
                                      cell +
                                    quad]);
@@ -158,7 +161,7 @@ namespace MeltPoolDG::Evaporation
 
     Journal::print_formatted_norm(
       scratch_data.get_pcout(1),
-      [&]() -> double {
+      [&]() -> number {
         return VectorTools::compute_norm<dim>(evaporation_velocity,
                                               scratch_data,
                                               evapor_vel_dof_idx,
@@ -171,9 +174,9 @@ namespace MeltPoolDG::Evaporation
     evaporation_velocity.zero_out_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  EvaporationSourceTermsSharp<dim>::compute_mass_balance_source_term(
+  EvaporationSourceTermsSharp<dim, number>::compute_mass_balance_source_term(
     VectorType                         &mass_balance_source_term,
     const unsigned int                  pressure_dof_idx,
     [[maybe_unused]] const unsigned int pressure_quad_idx,
@@ -197,7 +200,7 @@ namespace MeltPoolDG::Evaporation
       scratch_data.get_dof_handler(pressure_dof_idx).get_fe(),
       update_values);
 
-    std::vector<double>                  buffer;
+    std::vector<number>                  buffer;
     std::vector<types::global_dof_index> local_dof_indices;
 
     // evaluate rhs term
@@ -207,7 +210,7 @@ namespace MeltPoolDG::Evaporation
           {
             const unsigned int                n_points = points.size();
             const ArrayView<const Point<dim>> unit_points(points.data(), n_points);
-            const ArrayView<const double>     JxW(weights.data(), n_points);
+            const ArrayView<const number>     JxW(weights.data(), n_points);
 
             // prepare pressure cell
             TriaIterator<DoFCellAccessor<dim, dim, false>> pressure_dof_cell(
@@ -265,15 +268,15 @@ namespace MeltPoolDG::Evaporation
       level_set_as_heaviside.zero_out_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  EvaporationSourceTermsSharp<dim>::compute_heat_source_term(
+  EvaporationSourceTermsSharp<dim, number>::compute_heat_source_term(
     [[maybe_unused]] VectorType &heat_source_term)
   {
     AssertThrow(false, ExcNotImplemented());
   }
 
-  template class EvaporationSourceTermsSharp<1>;
-  template class EvaporationSourceTermsSharp<2>;
-  template class EvaporationSourceTermsSharp<3>;
+  template class EvaporationSourceTermsSharp<1, double>;
+  template class EvaporationSourceTermsSharp<2, double>;
+  template class EvaporationSourceTermsSharp<3, double>;
 } // namespace MeltPoolDG::Evaporation

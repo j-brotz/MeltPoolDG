@@ -13,6 +13,8 @@
 
 namespace MeltPoolDG::Evaporation
 {
+  using namespace dealii;
+
   /*******************************************************************
    * Phenomenological model
    *******************************************************************/
@@ -52,33 +54,34 @@ namespace MeltPoolDG::Evaporation
                               material.latent_heat_of_evaporation)
   {}
 
-  template <int dim>
-  RecoilPressureOperation<dim>::RecoilPressureOperation(const ScratchData<dim>   &scratch_data_in,
-                                                        const Parameters<double> &data_in,
-                                                        const unsigned int flow_vel_dof_idx_in,
-                                                        const unsigned int flow_vel_quad_idx_in,
-                                                        const unsigned int flow_pressure_dof_idx_in,
-                                                        const unsigned int ls_dof_idx_in,
-                                                        const unsigned int temp_dof_idx_in)
+  template <int dim, typename number>
+  RecoilPressureOperation<dim, number>::RecoilPressureOperation(
+    const ScratchData<dim, dim, number> &scratch_data_in,
+    const Parameters<number>            &data_in,
+    const unsigned int                   flow_vel_dof_idx_in,
+    const unsigned int                   flow_vel_quad_idx_in,
+    const unsigned int                   flow_pressure_dof_idx_in,
+    const unsigned int                   ls_dof_idx_in,
+    const unsigned int                   heat_dof_idx_in)
     : scratch_data(scratch_data_in)
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
     , flow_vel_quad_idx(flow_vel_quad_idx_in)
     , flow_pressure_dof_idx(flow_pressure_dof_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
-    , temp_dof_idx(temp_dof_idx_in)
+    , heat_dof_idx(heat_dof_idx_in)
     , do_level_set_pressure_gradient_interpolation(scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx_in))
     , model_type(data_in.evapor.recoil.type)
     , delta_phase_weighted(create_phase_weighted_delta_approximation(
         data_in.evapor.recoil.delta_approximation_phase_weighted))
     , dummy_temperature(std::nextafter(data_in.evapor.recoil.activation_temperature,
-                                       -std::numeric_limits<double>::infinity()))
+                                       -std::numeric_limits<number>::infinity()))
   {
     switch (data_in.evapor.recoil.type)
       {
         default:
         case RecoilPressureModelType::phenomenological:
           recoil_pressure_model =
-            std::make_unique<const RecoilPressurePhenomenologicalModel<double>>(
+            std::make_unique<const RecoilPressurePhenomenologicalModel<number>>(
               data_in.evapor.recoil,
               data_in.material.boiling_temperature,
               data_in.material.molar_mass,
@@ -86,7 +89,7 @@ namespace MeltPoolDG::Evaporation
           break;
         case RecoilPressureModelType::hybrid:
           recoil_pressure_model =
-            std::make_unique<const RecoilPressureHybridModel<double>>(data_in.evapor.recoil,
+            std::make_unique<const RecoilPressureHybridModel<number>>(data_in.evapor.recoil,
                                                                       data_in.material);
           break;
       }
@@ -101,9 +104,9 @@ namespace MeltPoolDG::Evaporation
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  RecoilPressureOperation<dim>::compute_recoil_pressure_force(
+  RecoilPressureOperation<dim, number>::compute_recoil_pressure_force(
     VectorType        &force_rhs,
     const VectorType  &level_set_as_heaviside,
     const VectorType  &temperature,
@@ -118,16 +121,16 @@ namespace MeltPoolDG::Evaporation
         not evaporative_mass_flux.has_ghost_elements())
       evaporative_mass_flux.update_ghost_values();
 
-    const CutUtil::CutPhaseType cut_type = scratch_data.get_cut_type(temp_dof_idx);
+    const CutUtil::CutPhaseType cut_type = scratch_data.get_cut_type(heat_dof_idx);
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free,
           auto       &force_rhs,
           const auto &level_set_as_heaviside,
           auto        cell_range) {
-        FECellIntegrator<dim, 1, double> heaviside_eval(matrix_free, ls_dof_idx, flow_vel_quad_idx);
+        FECellIntegrator<dim, 1, number> heaviside_eval(matrix_free, ls_dof_idx, flow_vel_quad_idx);
 
-        FECellIntegrator<dim, dim, double> recoil_pressure_eval(matrix_free,
+        FECellIntegrator<dim, dim, number> recoil_pressure_eval(matrix_free,
                                                                 flow_vel_dof_idx,
                                                                 flow_vel_quad_idx);
 
@@ -135,15 +138,15 @@ namespace MeltPoolDG::Evaporation
                                              0 :
                                              matrix_free.get_cell_range_category(cell_range);
 
-        std::vector<FECellIntegrator<dim, 1, double>> temperature_eval;
+        std::vector<FECellIntegrator<dim, 1, number>> temperature_eval;
         if (cut_type == CutUtil::CutPhaseType::not_cut)
-          temperature_eval.emplace_back(matrix_free, temp_dof_idx, flow_vel_quad_idx);
+          temperature_eval.emplace_back(matrix_free, heat_dof_idx, flow_vel_quad_idx);
         else // temperature is cut
           {
             if (cell_category == CutUtil::CellCategory::liquid or
                 cell_category == CutUtil::CellCategory::intersected)
               temperature_eval.emplace_back(matrix_free,
-                                            temp_dof_idx,
+                                            heat_dof_idx,
                                             flow_vel_quad_idx,
                                             0 /*selected component*/,
                                             cell_category /*active_fe_index*/);
@@ -151,18 +154,18 @@ namespace MeltPoolDG::Evaporation
                 (cell_category == CutUtil::CellCategory::gas or
                  cell_category == CutUtil::CellCategory::intersected))
               temperature_eval.emplace_back(matrix_free,
-                                            temp_dof_idx,
+                                            heat_dof_idx,
                                             flow_vel_quad_idx,
                                             1 /*selected component*/,
                                             cell_category /*active_fe_index*/);
           }
 
-        FECellIntegrator<dim, 1, double> heaviside_interpolated_to_pressure_space_eval(
+        FECellIntegrator<dim, 1, number> heaviside_interpolated_to_pressure_space_eval(
           matrix_free, flow_pressure_dof_idx, flow_vel_quad_idx);
 
-        std::unique_ptr<FECellIntegrator<dim, 1, double>> evapor_flux_val;
+        std::unique_ptr<FECellIntegrator<dim, 1, number>> evapor_flux_val;
         if (model_type == RecoilPressureModelType::hybrid)
-          evapor_flux_val = std::make_unique<FECellIntegrator<dim, 1, double>>(matrix_free,
+          evapor_flux_val = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
                                                                                evapor_dof_idx,
                                                                                flow_vel_quad_idx);
 
@@ -191,11 +194,11 @@ namespace MeltPoolDG::Evaporation
             else
               used_heaviside_eval.evaluate(EvaluationFlags::gradients);
 
-            for (auto &temp_eval : temperature_eval)
+            for (auto &heat_eval : temperature_eval)
               {
-                temp_eval.reinit(cell);
-                temp_eval.read_dof_values_plain(temperature);
-                temp_eval.evaluate(EvaluationFlags::values);
+                heat_eval.reinit(cell);
+                heat_eval.read_dof_values_plain(temperature);
+                heat_eval.evaluate(EvaluationFlags::values);
               }
 
             if (evapor_flux_val)
@@ -209,7 +212,7 @@ namespace MeltPoolDG::Evaporation
 
             for (const unsigned int q : recoil_pressure_eval.quadrature_point_indices())
               {
-                VectorizedArray<double> temp;
+                VectorizedArray<number> temp;
                 switch (cut_type)
                   {
                       case CutUtil::CutPhaseType::not_cut: {
@@ -256,15 +259,15 @@ namespace MeltPoolDG::Evaporation
                       DEAL_II_NOT_IMPLEMENTED();
                   }
 
-                VectorizedArray<double> m_dot = 0.0;
+                VectorizedArray<number> m_dot = 0.0;
                 if (evapor_flux_val)
                   m_dot = evapor_flux_val->get_value(q);
 
-                VectorizedArray<double> weight = 1.0;
+                VectorizedArray<number> weight = 1.0;
                 if (delta_phase_weighted)
                   weight = delta_phase_weighted->compute_weight(used_heaviside_eval.get_value(q));
 
-                const VectorizedArray<double> recoil_pressure_coefficient =
+                const VectorizedArray<number> recoil_pressure_coefficient =
                   evapor_flux_val ?
                     recoil_pressure_model->compute_recoil_pressure_coefficient(temp,
                                                                                m_dot,
@@ -284,9 +287,9 @@ namespace MeltPoolDG::Evaporation
       zero_out);
   }
 
-  template class RecoilPressureOperation<1>;
-  template class RecoilPressureOperation<2>;
-  template class RecoilPressureOperation<3>;
+  template class RecoilPressureOperation<1, double>;
+  template class RecoilPressureOperation<2, double>;
+  template class RecoilPressureOperation<3, double>;
 
   template class RecoilPressurePhenomenologicalModel<double>;
   template class RecoilPressureHybridModel<double>;

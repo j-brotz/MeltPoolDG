@@ -23,17 +23,20 @@
 
 namespace MeltPoolDG::MeltPool
 {
-  template <int dim>
-  MeltFrontPropagation<dim>::MeltFrontPropagation(const ScratchData<dim>   &scratch_data_in,
-                                                  const Parameters<double> &data_in,
-                                                  const unsigned int phase_fraction_dof_idx_in,
-                                                  const unsigned int ls_dof_idx_in,
-                                                  const VectorType  &temperature_in,
-                                                  const unsigned int reinit_dof_idx_in,
-                                                  const unsigned int reinit_no_solid_dof_idx_in,
-                                                  const unsigned int flow_vel_dof_idx_in,
-                                                  const unsigned int flow_vel_no_solid_dof_idx_in,
-                                                  const unsigned int temp_hanging_nodes_dof_idx_in)
+  using namespace dealii;
+
+  template <int dim, typename number>
+  MeltFrontPropagation<dim, number>::MeltFrontPropagation(
+    const ScratchData<dim, dim, number> &scratch_data_in,
+    const Parameters<number>            &data_in,
+    const unsigned int                   phase_fraction_dof_idx_in,
+    const unsigned int                   ls_dof_idx_in,
+    const VectorType                    &temperature_in,
+    const unsigned int                   reinit_dof_idx_in,
+    const unsigned int                   reinit_no_solid_dof_idx_in,
+    const unsigned int                   flow_vel_dof_idx_in,
+    const unsigned int                   flow_vel_no_solid_dof_idx_in,
+    const unsigned int                   heat_hanging_nodes_dof_idx_in)
     : scratch_data(scratch_data_in)
     , mp_data(data_in.mp)
     , melting_solidification(data_in.material, MaterialTypes::liquid_solid)
@@ -43,16 +46,16 @@ namespace MeltPoolDG::MeltPool
     , reinit_no_solid_dof_idx(reinit_no_solid_dof_idx_in)
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
     , flow_vel_no_solid_dof_idx(flow_vel_no_solid_dof_idx_in)
-    , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
+    , heat_hanging_nodes_dof_idx(heat_hanging_nodes_dof_idx_in)
     , temperature(temperature_in)
   {
     reinit();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  MeltFrontPropagation<dim>::set_initial_condition(const VectorType &level_set_as_heaviside,
-                                                   VectorType       &level_set)
+  MeltFrontPropagation<dim, number>::set_initial_condition(const VectorType &level_set_as_heaviside,
+                                                           VectorType       &level_set)
   {
     /*
      *  Compute the initial solid and liquid phases
@@ -69,9 +72,9 @@ namespace MeltPoolDG::MeltPool
       scratch_data.get_constraint(ls_dof_idx).distribute(level_set);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  MeltFrontPropagation<dim>::compute_melt_front_propagation(
+  MeltFrontPropagation<dim, number>::compute_melt_front_propagation(
     const VectorType &level_set_as_heaviside)
   {
     // 1) update phases
@@ -87,27 +90,27 @@ namespace MeltPoolDG::MeltPool
     // scratch_data.get_constraint(ls_dof_idx).distribute(level_set);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  MeltFrontPropagation<dim>::reinit()
+  MeltFrontPropagation<dim, number>::reinit()
   {
     scratch_data.initialize_dof_vector(solid, phase_fraction_dof_idx);
     scratch_data.initialize_dof_vector(liquid, phase_fraction_dof_idx);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  MeltFrontPropagation<dim>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  MeltFrontPropagation<dim, number>::attach_vectors(std::vector<VectorType *> &vectors)
   {
     // TODO: remove -- not needed
     vectors.push_back(&solid);
     vectors.push_back(&liquid);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  MeltFrontPropagation<dim>::attach_output_vectors(GenericDataOut<dim, double> &data_out) const
+  MeltFrontPropagation<dim, number>::attach_output_vectors(
+    GenericDataOut<dim, number> &data_out) const
   {
     /**
      *  solid
@@ -121,31 +124,31 @@ namespace MeltPoolDG::MeltPool
                              "liquid");
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  MeltFrontPropagation<dim>::distribute_constraints()
+  MeltFrontPropagation<dim, number>::distribute_constraints()
   {
     scratch_data.get_constraint(phase_fraction_dof_idx).distribute(solid);
     scratch_data.get_constraint(phase_fraction_dof_idx).distribute(liquid);
   }
 
-  template <int dim>
-  const VectorType &
-  MeltFrontPropagation<dim>::get_solid() const
+  template <int dim, typename number>
+  const typename MeltFrontPropagation<dim, number>::VectorType &
+  MeltFrontPropagation<dim, number>::get_solid() const
   {
     return solid;
   }
 
-  template <int dim>
-  const VectorType &
-  MeltFrontPropagation<dim>::get_liquid() const
+  template <int dim, typename number>
+  const typename MeltFrontPropagation<dim, number>::VectorType &
+  MeltFrontPropagation<dim, number>::get_liquid() const
   {
     return liquid;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  MeltFrontPropagation<dim>::make_constraints_in_spatially_fixed_solid_domain()
+  MeltFrontPropagation<dim, number>::make_constraints_in_spatially_fixed_solid_domain()
   {
     /*
      *  Do not reinitialize the level set field in the solid domain
@@ -153,7 +156,7 @@ namespace MeltPoolDG::MeltPool
     if (mp_data.solid.do_not_reinitialize)
       ignore_reinitialization_in_solid_regions(scratch_data.get_dof_handler(reinit_dof_idx),
                                                scratch_data.get_constraint(reinit_no_solid_dof_idx),
-                                               const_cast<AffineConstraints<double> &>(
+                                               const_cast<AffineConstraints<number> &>(
                                                  scratch_data.get_constraint(reinit_dof_idx)));
 
     /*
@@ -163,7 +166,7 @@ namespace MeltPoolDG::MeltPool
       set_flow_field_in_solid_regions_to_zero(
         scratch_data.get_dof_handler(flow_vel_dof_idx),
         scratch_data.get_constraint(flow_vel_no_solid_dof_idx),
-        const_cast<AffineConstraints<double> &>(scratch_data.get_constraint(flow_vel_dof_idx)));
+        const_cast<AffineConstraints<number> &>(scratch_data.get_constraint(flow_vel_dof_idx)));
 
     // In the melt pool simulations, the solid domain
     // can be considered as rigid by setting the constraints
@@ -173,20 +176,20 @@ namespace MeltPoolDG::MeltPool
     // constrained indices in matrix-free have to be updated
     // which is done in the following by rebuilding matrix-free.
     if (mp_data.solid.set_velocity_to_zero || mp_data.solid.do_not_reinitialize)
-      const_cast<ScratchData<dim> &>(scratch_data)
+      const_cast<ScratchData<dim, dim, number> &>(scratch_data)
         .build(scratch_data.enable_boundary_faces, scratch_data.enable_inner_faces);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  MeltFrontPropagation<dim>::compute_solid_and_liquid_phases(
+  MeltFrontPropagation<dim, number>::compute_solid_and_liquid_phases(
     const VectorType &level_set_as_heaviside)
   {
     const bool update_ghosts = !level_set_as_heaviside.has_ghost_elements();
     if (update_ghosts)
       level_set_as_heaviside.update_ghost_values();
-    const bool temp_update_ghosts = !temperature.has_ghost_elements();
-    if (temp_update_ghosts)
+    const bool heat_update_ghosts = !temperature.has_ghost_elements();
+    if (heat_update_ghosts)
       temperature.update_ghost_values();
 
     std::vector<types::global_dof_index> local_dof_indices(
@@ -198,19 +201,19 @@ namespace MeltPoolDG::MeltPool
       Quadrature<dim>(
         scratch_data.get_dof_handler(phase_fraction_dof_idx).get_fe().get_unit_support_points()),
       update_values);
-    std::vector<double> ls_heaviside_at_q(ls_heaviside_eval.n_quadrature_points);
+    std::vector<number> ls_heaviside_at_q(ls_heaviside_eval.n_quadrature_points);
     typename DoFHandler<dim>::active_cell_iterator ls_cell =
       scratch_data.get_dof_handler(ls_dof_idx).begin_active();
 
-    const CutUtil::CutPhaseType cut_type = scratch_data.get_cut_type(temp_hanging_nodes_dof_idx);
+    const CutUtil::CutPhaseType cut_type = scratch_data.get_cut_type(heat_hanging_nodes_dof_idx);
     hp::FEValues<dim>           hp_temerature_eval(
-      scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).get_fe_collection(),
+      scratch_data.get_dof_handler(heat_hanging_nodes_dof_idx).get_fe_collection(),
       hp::QCollection<dim>(Quadrature<dim>(
         scratch_data.get_dof_handler(phase_fraction_dof_idx).get_fe().get_unit_support_points())),
       update_values);
-    std::vector<double> temperature_at_q(ls_heaviside_eval.n_quadrature_points);
+    std::vector<number> temperature_at_q(ls_heaviside_eval.n_quadrature_points);
     typename DoFHandler<dim>::active_cell_iterator t_cell =
-      scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).begin_active();
+      scratch_data.get_dof_handler(heat_hanging_nodes_dof_idx).begin_active();
 
     liquid = 0;
     solid  = 0;
@@ -232,8 +235,8 @@ namespace MeltPoolDG::MeltPool
             else
               {
                 // for the two phase cut, we have two components
-                std::vector<Vector<double>> cut_temperature_at_q(
-                  temerature_eval.n_quadrature_points, Vector<double>(2));
+                std::vector<Vector<number>> cut_temperature_at_q(
+                  temerature_eval.n_quadrature_points, Vector<number>(2));
                 temerature_eval.get_function_values(temperature, cut_temperature_at_q);
                 // we are only interested in the liquid temperature
                 for (unsigned int i = 0; i < temperature_at_q.size(); ++i)
@@ -242,7 +245,7 @@ namespace MeltPoolDG::MeltPool
 
             for (const auto q : ls_heaviside_eval.quadrature_point_indices())
               {
-                const double temp            = compute_solid_fraction(temperature_at_q[q]);
+                const number temp            = compute_solid_fraction(temperature_at_q[q]);
                 solid[local_dof_indices[q]]  = temp * ls_heaviside_at_q[q];
                 liquid[local_dof_indices[q]] = (1. - temp) * ls_heaviside_at_q[q];
               }
@@ -257,18 +260,18 @@ namespace MeltPoolDG::MeltPool
     liquid.update_ghost_values();
     solid.update_ghost_values();
 
-    if (temp_update_ghosts)
+    if (heat_update_ghosts)
       temperature.zero_out_ghost_values();
     if (update_ghosts)
       level_set_as_heaviside.zero_out_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  MeltFrontPropagation<dim>::set_flow_field_in_solid_regions_to_zero(
+  MeltFrontPropagation<dim, number>::set_flow_field_in_solid_regions_to_zero(
     const DoFHandler<dim>           &flow_dof_handler,
-    const AffineConstraints<double> &flow_constraints_no_solid,
-    AffineConstraints<double>       &flow_constraints)
+    const AffineConstraints<number> &flow_constraints_no_solid,
+    AffineConstraints<number>       &flow_constraints)
   {
     const bool update_ghosts = !solid.has_ghost_elements();
     if (update_ghosts)
@@ -279,7 +282,7 @@ namespace MeltPoolDG::MeltPool
     IndexSet flow_locally_relevant_dofs;
     DoFTools::extract_locally_relevant_dofs(flow_dof_handler, flow_locally_relevant_dofs);
 
-    AffineConstraints<double> solid_constraints;
+    AffineConstraints<number> solid_constraints;
     solid_constraints.reinit(flow_locally_relevant_dofs);
 
     FEValues<dim> flow_eval(scratch_data.get_mapping(),
@@ -294,7 +297,7 @@ namespace MeltPoolDG::MeltPool
 
     const unsigned int dofs_per_cell = flow_dof_handler.get_fe().n_dofs_per_cell();
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-    std::vector<double>                  solid_at_q(dofs_per_cell);
+    std::vector<number>                  solid_at_q(dofs_per_cell);
 
     typename DoFHandler<dim>::active_cell_iterator solid_cell =
       scratch_data.get_dof_handler(phase_fraction_dof_idx).begin_active();
@@ -325,7 +328,7 @@ namespace MeltPoolDG::MeltPool
     Constraints::check_constraints(flow_dof_handler, solid_constraints);
 
     flow_constraints.merge(solid_constraints,
-                           AffineConstraints<double>::MergeConflictBehavior::left_object_wins);
+                           AffineConstraints<number>::MergeConflictBehavior::left_object_wins);
     flow_constraints.close();
 
     Constraints::check_constraints(flow_dof_handler, flow_constraints);
@@ -334,12 +337,12 @@ namespace MeltPoolDG::MeltPool
       solid.zero_out_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  MeltFrontPropagation<dim>::ignore_reinitialization_in_solid_regions(
+  MeltFrontPropagation<dim, number>::ignore_reinitialization_in_solid_regions(
     const DoFHandler<dim>           &level_set_dof_handler,
-    const AffineConstraints<double> &reinit_dirichlet_constraints_no_solid,
-    AffineConstraints<double>       &reinit_dirichlet_constraints)
+    const AffineConstraints<number> &reinit_dirichlet_constraints_no_solid,
+    AffineConstraints<number>       &reinit_dirichlet_constraints)
   {
     reinit_dirichlet_constraints.copy_from(reinit_dirichlet_constraints_no_solid);
 
@@ -347,7 +350,7 @@ namespace MeltPoolDG::MeltPool
     if (update_ghosts)
       solid.update_ghost_values();
 
-    AffineConstraints<double> solid_constraints;
+    AffineConstraints<number> solid_constraints;
 
     IndexSet ls_locally_relevant_dofs;
     DoFTools::extract_locally_relevant_dofs(level_set_dof_handler, ls_locally_relevant_dofs);
@@ -367,7 +370,7 @@ namespace MeltPoolDG::MeltPool
 
     const unsigned int dofs_per_cell = level_set_dof_handler.get_fe().n_dofs_per_cell();
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-    std::vector<double>                  solid_at_q(dofs_per_cell);
+    std::vector<number>                  solid_at_q(dofs_per_cell);
 
     typename DoFHandler<dim>::active_cell_iterator solid_cell =
       scratch_data.get_dof_handler(phase_fraction_dof_idx).begin_active();
@@ -398,7 +401,7 @@ namespace MeltPoolDG::MeltPool
     Constraints::check_constraints(level_set_dof_handler, solid_constraints);
 
     reinit_dirichlet_constraints.merge(
-      solid_constraints, AffineConstraints<double>::MergeConflictBehavior::left_object_wins);
+      solid_constraints, AffineConstraints<number>::MergeConflictBehavior::left_object_wins);
     reinit_dirichlet_constraints.close();
 
     Constraints::check_constraints(level_set_dof_handler, reinit_dirichlet_constraints);
@@ -407,26 +410,26 @@ namespace MeltPoolDG::MeltPool
       solid.zero_out_ghost_values();
   }
 
-  template <int dim>
-  double
-  MeltFrontPropagation<dim>::compute_solid_fraction(const double T) const
+  template <int dim, typename number>
+  number
+  MeltFrontPropagation<dim, number>::compute_solid_fraction(const number T) const
   {
     return melting_solidification.compute_parameters(T, MaterialUpdateFlags::phase_fractions)
       .solid_fraction;
   }
 
-  template <int dim>
-  VectorizedArray<double>
-  MeltFrontPropagation<dim>::compute_solid_fraction(
-    const VectorizedArray<double> &current_temperature) const
+  template <int dim, typename number>
+  VectorizedArray<number>
+  MeltFrontPropagation<dim, number>::compute_solid_fraction(
+    const VectorizedArray<number> &current_temperature) const
   {
-    VectorizedArray<double> result;
-    for (unsigned int i = 0; i < VectorizedArray<double>::size(); ++i)
+    VectorizedArray<number> result;
+    for (unsigned int i = 0; i < VectorizedArray<number>::size(); ++i)
       result[i] = compute_solid_fraction(current_temperature[i]);
     return result;
   }
 
-  template class MeltFrontPropagation<1>;
-  template class MeltFrontPropagation<2>;
-  template class MeltFrontPropagation<3>;
+  template class MeltFrontPropagation<1, double>;
+  template class MeltFrontPropagation<2, double>;
+  template class MeltFrontPropagation<3, double>;
 } // namespace MeltPoolDG::MeltPool

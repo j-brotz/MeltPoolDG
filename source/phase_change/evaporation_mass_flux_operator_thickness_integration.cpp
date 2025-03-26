@@ -32,18 +32,18 @@ namespace MeltPoolDG::Evaporation
 
   static int count = 0;
 
-  template <int dim>
-  EvaporationMassFluxOperatorThicknessIntegration<dim>::
+  template <int dim, typename number>
+  EvaporationMassFluxOperatorThicknessIntegration<dim, number>::
     EvaporationMassFluxOperatorThicknessIntegration(
-      const ScratchData<dim>                                  &scratch_data,
-      const EvaporationModelBase<double>                      &evaporation_model,
-      const EvaporationData<double>::ThicknessIntegrationData &thickness_integration_data,
-      const LevelSet::ReinitializationData<double>            &reinit_data,
+      const ScratchData<dim, dim, number>                     &scratch_data,
+      const EvaporationModelBase<number>                      &evaporation_model,
+      const EvaporationData<number>::ThicknessIntegrationData &thickness_integration_data,
+      const LevelSet::ReinitializationData<number>            &reinit_data,
       const VectorType                                        &level_set_as_heaviside,
       const BlockVectorType                                   &normal_vector,
       const unsigned int                                       ls_hanging_nodes_dof_idx,
       const unsigned int                                       normal_dof_idx,
-      const unsigned int                                       temp_hanging_nodes_dof_idx,
+      const unsigned int                                       heat_hanging_nodes_dof_idx,
       const unsigned int                                       evapor_mass_flux_dof_idx)
     : scratch_data(scratch_data)
     , evaporation_model(evaporation_model)
@@ -53,14 +53,14 @@ namespace MeltPoolDG::Evaporation
     , normal_vector(normal_vector)
     , ls_hanging_nodes_dof_idx(ls_hanging_nodes_dof_idx)
     , normal_dof_idx(normal_dof_idx)
-    , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx)
+    , heat_hanging_nodes_dof_idx(heat_hanging_nodes_dof_idx)
     , evapor_mass_flux_dof_idx(evapor_mass_flux_dof_idx)
     , fe_dim(FE_Q<dim>(scratch_data.get_degree(normal_dof_idx)), dim)
   {}
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  EvaporationMassFluxOperatorThicknessIntegration<dim>::compute_evaporative_mass_flux(
+  EvaporationMassFluxOperatorThicknessIntegration<dim, number>::compute_evaporative_mass_flux(
     VectorType       &evaporative_mass_flux,
     const VectorType &temperature) const
   {
@@ -99,8 +99,8 @@ namespace MeltPoolDG::Evaporation
         const bool update_ghosts = !level_set_as_heaviside.has_ghost_elements();
         if (update_ghosts)
           level_set_as_heaviside.update_ghost_values();
-        const bool temp_update_ghosts = !temperature.has_ghost_elements();
-        if (temp_update_ghosts)
+        const bool heat_update_ghosts = !temperature.has_ghost_elements();
+        if (heat_update_ghosts)
           temperature.update_ghost_values();
 
 
@@ -147,10 +147,10 @@ namespace MeltPoolDG::Evaporation
         const auto temperature_evaluation_values =
           dealii::VectorTools::point_values<1>(remote_point_evaluation,
                                                scratch_data.get_dof_handler(
-                                                 temp_hanging_nodes_dof_idx),
+                                                 heat_hanging_nodes_dof_idx),
                                                temperature);
 
-        const std::vector<Tensor<1, dim, double>> level_set_gradient_values =
+        const std::vector<Tensor<1, dim, number>> level_set_gradient_values =
           dealii::VectorTools::point_gradients<1>(remote_point_evaluation,
                                                   scratch_data.get_dof_handler(
                                                     ls_hanging_nodes_dof_idx),
@@ -162,7 +162,7 @@ namespace MeltPoolDG::Evaporation
          * value better than 5*epsilon?
          *
          */
-        std::vector<double> mass_flux_val;
+        std::vector<number> mass_flux_val;
         mass_flux_val.resize(global_points_normal_to_interface_pointer.back());
 
         // loop over points located at the interface and determined by means of MCA
@@ -172,7 +172,7 @@ namespace MeltPoolDG::Evaporation
             const auto end   = global_points_normal_to_interface_pointer[i + 1];
             const auto size  = end - start;
 
-            std::vector<double> func_vals(size);
+            std::vector<number> func_vals(size);
 
             // loop over all points along normal at one MC point
             for (unsigned int l = 0; l < size; ++l)
@@ -182,7 +182,7 @@ namespace MeltPoolDG::Evaporation
                                level_set_gradient_values[start + l].norm();
               }
 
-            double mass_flux_average = UtilityFunctions::integrate_over_line<dim>(
+            number mass_flux_average = UtilityFunctions::integrate_over_line<dim>(
               func_vals,
               std::vector(global_points_normal_to_interface.begin() + start,
                           global_points_normal_to_interface.begin() + end));
@@ -216,7 +216,7 @@ namespace MeltPoolDG::Evaporation
                 &scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx)};
 
               // values at the points along normal in reference coordinates
-              const ArrayView<const double> temp_vals(values.data() +
+              const ArrayView<const number> heat_vals(values.data() +
                                                         cell_data.reference_point_ptrs[i],
                                                       cell_data.reference_point_ptrs[i + 1] -
                                                         cell_data.reference_point_ptrs[i]);
@@ -230,10 +230,10 @@ namespace MeltPoolDG::Evaporation
                * Compute mean value from the values of points within the cell and set the values at
                * the cell nodes equal to the latter.
                */
-              Vector<double> nodal_values(cell->get_fe().n_dofs_per_cell());
+              Vector<number> nodal_values(cell->get_fe().n_dofs_per_cell());
 
-              const double average =
-                std::accumulate(temp_vals.begin(), temp_vals.end(), 0.0) / temp_vals.size();
+              const number average =
+                std::accumulate(heat_vals.begin(), heat_vals.end(), 0.0) / heat_vals.size();
 
               for (auto &n : nodal_values)
                 n = average;
@@ -251,9 +251,9 @@ namespace MeltPoolDG::Evaporation
         };
 
         // fill dof vector
-        std::vector<double> buffer;
+        std::vector<number> buffer;
 
-        remote_point_evaluation.template process_and_evaluate<double>(mass_flux_val,
+        remote_point_evaluation.template process_and_evaluate<number>(mass_flux_val,
                                                                       buffer,
                                                                       broadcast_function);
 
@@ -267,7 +267,7 @@ namespace MeltPoolDG::Evaporation
 
         scratch_data.get_constraint(evapor_mass_flux_dof_idx).distribute(evaporative_mass_flux);
 
-        if (temp_update_ghosts)
+        if (heat_update_ghosts)
           temperature.zero_out_ghost_values();
 
         if (update_ghosts)
@@ -275,7 +275,7 @@ namespace MeltPoolDG::Evaporation
       }
   }
 
-  template class EvaporationMassFluxOperatorThicknessIntegration<1>;
-  template class EvaporationMassFluxOperatorThicknessIntegration<2>;
-  template class EvaporationMassFluxOperatorThicknessIntegration<3>;
+  template class EvaporationMassFluxOperatorThicknessIntegration<1, double>;
+  template class EvaporationMassFluxOperatorThicknessIntegration<2, double>;
+  template class EvaporationMassFluxOperatorThicknessIntegration<3, double>;
 } // namespace MeltPoolDG::Evaporation

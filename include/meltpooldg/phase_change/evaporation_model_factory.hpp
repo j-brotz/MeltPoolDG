@@ -4,9 +4,6 @@
 #include <meltpooldg/phase_change/evaporation_model_base.hpp>
 #include <meltpooldg/utilities/material_data.hpp>
 
-#include <memory>
-
-
 namespace MeltPoolDG::Evaporation
 {
   template <typename number>

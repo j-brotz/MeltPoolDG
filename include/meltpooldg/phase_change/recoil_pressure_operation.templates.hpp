@@ -9,7 +9,6 @@
 
 namespace MeltPoolDG::Evaporation
 {
-  using namespace dealii;
   /**
    * Compute saturated gas pressure.
    *
@@ -48,8 +47,10 @@ namespace MeltPoolDG::Evaporation
     // with @p T_ac the activation temperature of the recoil pressure and @p T_v the boiling temperature.
 
     template <typename number>
-    inline VectorizedArray<number>
-    compute_scaling_coeff(const VectorizedArray<number> &T, const number T_ac, const number T_v)
+    inline dealii::VectorizedArray<number>
+    compute_scaling_coeff(const dealii::VectorizedArray<number> &T,
+                          const number                           T_ac,
+                          const number                           T_v)
     {
       return compare_and_apply_mask<SIMDComparison::less_than>(
         T,
@@ -79,25 +80,26 @@ namespace MeltPoolDG::Evaporation
   }
 
   template <typename number>
-  inline VectorizedArray<number>
+  inline dealii::VectorizedArray<number>
   RecoilPressureHybridModel<number>::compute_recoil_pressure_coefficient(
-    const VectorizedArray<number> &T,
-    const VectorizedArray<number> &m_dot,
-    const VectorizedArray<number> &delta_coefficient) const
+    const dealii::VectorizedArray<number> &T,
+    const dealii::VectorizedArray<number> &m_dot,
+    const dealii::VectorizedArray<number> &delta_coefficient) const
   {
     return recoil_phenomenological.compute_recoil_pressure_coefficient(T) -
            Utilities::fixed_power<2>(m_dot) * density_coeff * delta_coefficient;
   }
 
   template <typename number>
-  inline VectorizedArray<number>
+  inline dealii::VectorizedArray<number>
   RecoilPressurePhenomenologicalModel<number>::compute_recoil_pressure_coefficient(
-    const VectorizedArray<number> &T) const
+    const dealii::VectorizedArray<number> &T) const
   {
     const number T_ac = recoil_data.activation_temperature;
     const number T_v  = boiling_temperature;
 
-    const VectorizedArray<number> scaling_coeff = internal::compute_scaling_coeff(T, T_ac, T_v);
+    const dealii::VectorizedArray<number> scaling_coeff =
+      internal::compute_scaling_coeff(T, T_ac, T_v);
 
     return scaling_coeff * recoil_data.pressure_coefficient *
            compute_saturated_gas_pressure(T,

@@ -7,18 +7,18 @@ namespace MeltPoolDG::Evaporation
 {
   using namespace dealii;
 
-  template <int dim>
-  EvaporationMassFluxOperatorContinuous<dim>::EvaporationMassFluxOperatorContinuous(
-    const ScratchData<dim>             &scratch_data,
-    const EvaporationModelBase<double> &evaporation_model)
+  template <int dim, typename number>
+  EvaporationMassFluxOperatorContinuous<dim, number>::EvaporationMassFluxOperatorContinuous(
+    const ScratchData<dim, dim, number> &scratch_data,
+    const EvaporationModelBase<number>  &evaporation_model)
     : scratch_data(scratch_data)
     , evaporation_model(evaporation_model)
   {}
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  EvaporationMassFluxOperatorContinuous<dim>::compute_evaporative_mass_flux(
+  EvaporationMassFluxOperatorContinuous<dim, number>::compute_evaporative_mass_flux(
     VectorType       &evaporative_mass_flux,
     const VectorType &temperature) const
   {
@@ -34,7 +34,7 @@ namespace MeltPoolDG::Evaporation
       temperature.zero_out_ghost_values();
   }
 
-  template class EvaporationMassFluxOperatorContinuous<1>;
-  template class EvaporationMassFluxOperatorContinuous<2>;
-  template class EvaporationMassFluxOperatorContinuous<3>;
+  template class EvaporationMassFluxOperatorContinuous<1, double>;
+  template class EvaporationMassFluxOperatorContinuous<2, double>;
+  template class EvaporationMassFluxOperatorContinuous<3, double>;
 } // namespace MeltPoolDG::Evaporation

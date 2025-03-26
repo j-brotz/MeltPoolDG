@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, UIBK/TUM, January 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/base/aligned_vector.h>
@@ -32,7 +27,6 @@
 
 namespace MeltPoolDG::Evaporation
 {
-  using namespace dealii;
   /**
    *     This module computes for a given evaporative mass flux $\f\dot{m}\f$ the corresponding
    * interface velocity according to
@@ -48,20 +42,20 @@ namespace MeltPoolDG::Evaporation
    *     with the delta-function \f$\delta\f$.
    *
    */
-  template <int dim>
+  template <int dim, typename number>
   class EvaporationOperation
   {
   private:
-    using VectorType      = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim, dim, number> &scratch_data;
     /**
      *  parameters controlling the evaporation
      */
-    const EvaporationData<double> &evapor_data;
+    const EvaporationData<number> &evapor_data;
 
-    const MaterialData<double> &material_data;
+    const MaterialData<number> &material_data;
     /**
      * references to solutions needed for the computation
      */
@@ -78,15 +72,15 @@ namespace MeltPoolDG::Evaporation
     /*
      * cut-off value for normalizing the normal vector field
      */
-    const double tolerance_normal_vector;
+    const number tolerance_normal_vector;
     /*
      * optional: temperature-dependent evaporation
      */
     mutable const VectorType *temperature;
-    unsigned int              temp_dof_idx;
+    unsigned int              heat_dof_idx;
 
     // only needed if a time-dependent function is given
-    mutable double time = numbers::invalid_double;
+    mutable number time = numbers::invalid_double;
     /**
      * evaporative mass flux
      */
@@ -94,27 +88,27 @@ namespace MeltPoolDG::Evaporation
     /**
      * evaporation velocity at quadrature points
      */
-    AlignedVector<Tensor<1, dim, VectorizedArray<double>>> evaporation_velocities;
+    AlignedVector<dealii::Tensor<1, dim, dealii::VectorizedArray<number>>> evaporation_velocities;
     /**
      * evaporation velocity due to evaporation and flow
      */
     VectorType evaporation_velocity;
 
-    std::shared_ptr<EvaporationModelBase<double>>         evapor_model;
-    std::shared_ptr<EvaporationMassFluxOperatorBase<dim>> evapor_mass_flux_operator;
-    std::shared_ptr<EvaporationSourceTermsBase<dim>>      evapor_source_terms_operator;
+    std::shared_ptr<EvaporationModelBase<number>>                 evapor_model;
+    std::shared_ptr<EvaporationMassFluxOperatorBase<dim, number>> evapor_mass_flux_operator;
+    std::shared_ptr<EvaporationSourceTermsBase<dim, number>>      evapor_source_terms_operator;
 
   public:
-    EvaporationOperation(const ScratchData<dim>        &scratch_data_in,
-                         const VectorType              &level_set_as_heaviside_in,
-                         const BlockVectorType         &normal_vector_in,
-                         const EvaporationData<double> &evapor_data_in,
-                         const MaterialData<double>    &material_data_in,
-                         const unsigned int             normal_dof_idx_in,
-                         const unsigned int             evapor_vel_dof_idx_in,
-                         const unsigned int             evapor_mass_flux_dof_idx_in,
-                         const unsigned int             ls_hanging_nodes_dof_idx_in,
-                         const unsigned int             ls_quad_idx_in);
+    EvaporationOperation(const ScratchData<dim, dim, number> &scratch_data_in,
+                         const VectorType                    &level_set_as_heaviside_in,
+                         const BlockVectorType               &normal_vector_in,
+                         const EvaporationData<number>       &evapor_data_in,
+                         const MaterialData<number>          &material_data_in,
+                         const unsigned int                   normal_dof_idx_in,
+                         const unsigned int                   evapor_vel_dof_idx_in,
+                         const unsigned int                   evapor_mass_flux_dof_idx_in,
+                         const unsigned int                   ls_hanging_nodes_dof_idx_in,
+                         const unsigned int                   ls_quad_idx_in);
 
 
     /*
@@ -123,9 +117,9 @@ namespace MeltPoolDG::Evaporation
     void
     reinit(const VectorType                             *temperature_in,
            const VectorType                             &distance,
-           const LevelSet::NearestPointData<double>     &nearest_point_data,
-           const LevelSet::ReinitializationData<double> &reinit_data,
-           const unsigned int                            temp_dof_idx_in);
+           const LevelSet::NearestPointData<number>     &nearest_point_data,
+           const LevelSet::ReinitializationData<number> &reinit_data,
+           const unsigned int                            heat_dof_idx_in);
 
     /*
      * Compute DoF vector holding evaporative mass flux depending on the given evaporation model
@@ -153,41 +147,41 @@ namespace MeltPoolDG::Evaporation
     register_surface_mesh(
       const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
                                    std::vector<Point<dim>> /*quad_points*/,
-                                   std::vector<double> /*weights*/
+                                   std::vector<number> /*weights*/
                                    >> &surface_mesh_info);
     void
     reinit();
 
     void
-    set_time(const double &time);
+    set_time(const number &time);
     /*
      * attach functions
      */
     void
-    attach_dim_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
+    attach_dim_vectors(std::vector<VectorType *> &vectors);
 
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
+    attach_vectors(std::vector<VectorType *> &vectors);
 
     void
     distribute_constraints();
 
     void
-    attach_output_vectors(GenericDataOut<dim, double> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
 
     /*
      * getter functions
      */
-    inline Tensor<1, dim, VectorizedArray<double>> *
+    inline dealii::Tensor<1, dim, dealii::VectorizedArray<number>> *
     begin_evaporation_velocity(const unsigned int macro_cell);
 
-    inline const Tensor<1, dim, VectorizedArray<double>> &
+    inline const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &
     begin_evaporation_velocity(const unsigned int macro_cell) const;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const VectorType &
     get_velocity() const;
 
-    LinearAlgebra::distributed::Vector<double> &
+    VectorType &
     get_velocity();
 
     const VectorType &

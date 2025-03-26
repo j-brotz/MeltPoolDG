@@ -48,12 +48,12 @@ namespace MeltPoolDG::LevelSet
 
     VectorType advection_velocity;
 
-    std::unique_ptr<LevelSetOperationBase<dim>>             level_set_operation;
-    std::unique_ptr<Evaporation::EvaporationOperation<dim>> evaporation_operation;
-    std::shared_ptr<ScratchData<dim>>                       scratch_data;
-    std::unique_ptr<TimeIterator<double>>                   time_iterator;
-    std::unique_ptr<Postprocessor<dim, double>>             post_processor;
-    std::unique_ptr<Profiling::ProfilingMonitor<double>>    profiling_monitor;
+    std::unique_ptr<LevelSetOperationBase<dim>>                     level_set_operation;
+    std::unique_ptr<Evaporation::EvaporationOperation<dim, double>> evaporation_operation;
+    std::shared_ptr<ScratchData<dim>>                               scratch_data;
+    std::unique_ptr<TimeIterator<double>>                           time_iterator;
+    std::unique_ptr<Postprocessor<dim, double>>                     post_processor;
+    std::unique_ptr<Profiling::ProfilingMonitor<double>>            profiling_monitor;
 
     void
     initialize();

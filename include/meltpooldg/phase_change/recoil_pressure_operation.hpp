@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, UIBK/TUM, February 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/base/exceptions.h>
@@ -169,14 +164,14 @@ namespace MeltPoolDG::Evaporation
    * is however possible. First, the temperature is updated and second, the recoil pressure is
    * computed.
    */
-  template <int dim>
+  template <int dim, typename number>
   class RecoilPressureOperation
   {
   private:
-    using VectorType      = dealii::LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<double>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim, dim, number> &scratch_data;
     /*
      * indices for getting DoFHandler<dim> and Quadrature<dim> of relevant subproblems
      */
@@ -184,31 +179,31 @@ namespace MeltPoolDG::Evaporation
     const unsigned int flow_vel_quad_idx;
     const unsigned int flow_pressure_dof_idx;
     const unsigned int ls_dof_idx;
-    const unsigned int temp_dof_idx;
+    const unsigned int heat_dof_idx;
 
     const bool                 do_level_set_pressure_gradient_interpolation;
-    dealii::FullMatrix<double> ls_to_pressure_grad_interpolation_matrix;
+    dealii::FullMatrix<number> ls_to_pressure_grad_interpolation_matrix;
 
     const RecoilPressureModelType model_type;
 
-    std::unique_ptr<const RecoilPressureModelBase<double>> recoil_pressure_model;
+    std::unique_ptr<const RecoilPressureModelBase<number>> recoil_pressure_model;
 
-    std::unique_ptr<const LevelSet::DeltaApproximationBase<double>> delta_phase_weighted;
+    std::unique_ptr<const LevelSet::DeltaApproximationBase<number>> delta_phase_weighted;
 
     // For the one phase cut temperature, we need a dummy temperature value for the gas domain -
     // which doesn't have any temperature information. We use the value that is just below the
     // recoil pressure activation temperature, so the recoil pressure will reliably be zero in that
     // domain.
-    const double dummy_temperature;
+    const number dummy_temperature;
 
   public:
-    RecoilPressureOperation(const ScratchData<dim>   &scratch_data_in,
-                            const Parameters<double> &data_in,
-                            const unsigned int        flow_vel_dof_idx_in,
-                            const unsigned int        flow_vel_quad_idx_in,
-                            const unsigned int        flow_pressure_dof_idx_in,
-                            const unsigned int        ls_dof_idx_in,
-                            const unsigned int        temp_dof_idx_in);
+    RecoilPressureOperation(const ScratchData<dim, dim, number> &scratch_data_in,
+                            const Parameters<number>            &data_in,
+                            const unsigned int                   flow_vel_dof_idx_in,
+                            const unsigned int                   flow_vel_quad_idx_in,
+                            const unsigned int                   flow_pressure_dof_idx_in,
+                            const unsigned int                   ls_dof_idx_in,
+                            const unsigned int                   heat_dof_idx_in);
 
     /**
      * Compute the contribution of the recoil pressure to the force vector of the Navier-Stokes

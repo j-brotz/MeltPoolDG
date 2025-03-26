@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, UIBK/TUM, June 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 #include <meltpooldg/phase_change/evaporation_model_base.hpp>
 

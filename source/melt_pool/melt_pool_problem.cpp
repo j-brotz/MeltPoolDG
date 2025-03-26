@@ -907,7 +907,7 @@ namespace MeltPoolDG::MeltPool
         (problem_specific_parameters.do_heat_transfer and
          param.evapor.evaporative_cooling.enable and
          param.heat.operator_type == Heat::TwoPhaseOperatorType::diffuse))
-      evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim>>(
+      evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim, double>>(
         *scratch_data,
         level_set_operation->get_level_set_as_heaviside(),
         level_set_operation->get_normal_vector(),
@@ -1097,14 +1097,15 @@ namespace MeltPoolDG::MeltPool
                                   heat_no_bc_dof_idx;
             compute_interface_temperature = true;
           }
-        recoil_pressure_operation = std::make_shared<Evaporation::RecoilPressureOperation<dim>>(
-          *scratch_data,
-          param,
-          flow_operation->get_dof_handler_idx_velocity(),
-          flow_operation->get_quad_idx_velocity(),
-          flow_operation->get_dof_handler_idx_pressure(),
-          ls_hanging_nodes_dof_idx,
-          used_heat_dof_idx);
+        recoil_pressure_operation =
+          std::make_shared<Evaporation::RecoilPressureOperation<dim, double>>(
+            *scratch_data,
+            param,
+            flow_operation->get_dof_handler_idx_velocity(),
+            flow_operation->get_quad_idx_velocity(),
+            flow_operation->get_dof_handler_idx_pressure(),
+            ls_hanging_nodes_dof_idx,
+            used_heat_dof_idx);
       }
 
     // setup evaporation operation
@@ -1185,7 +1186,7 @@ namespace MeltPoolDG::MeltPool
     // initialize the melt pool operation class
     if (problem_specific_parameters.do_solidification)
       {
-        melt_front_propagation = std::make_shared<MeltFrontPropagation<dim>>(
+        melt_front_propagation = std::make_shared<MeltFrontPropagation<dim, double>>(
           *scratch_data,
           param,
           heat_continuous_no_bc_dof_idx,

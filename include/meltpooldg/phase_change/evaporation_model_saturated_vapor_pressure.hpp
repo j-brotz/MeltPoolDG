@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, TUM, February 2024
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 #include <meltpooldg/phase_change/evaporation_model_base.hpp>
 #include <meltpooldg/phase_change/recoil_pressure_data.hpp>

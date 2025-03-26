@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, UIBK/TUM, June 2022
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/function_parser.h>

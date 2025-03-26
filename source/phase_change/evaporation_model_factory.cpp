@@ -56,8 +56,6 @@ namespace MeltPoolDG::Evaporation
     return evapor_model;
   }
 
-
-
   template std::unique_ptr<EvaporationModelBase<double>>
   get_evaporation_model(const EvaporationData<double> &, const MaterialData<double> &);
 } // namespace MeltPoolDG::Evaporation
