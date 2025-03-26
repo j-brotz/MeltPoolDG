@@ -23,19 +23,19 @@
 namespace MeltPoolDG::LevelSet
 {
 
-  template <int dim, typename Number = double>
+  template <int dim, typename number>
   class ReinitilizationDGOperator
   {
   public:
-    using VectorType      = LinearAlgebra::distributed::Vector<Number>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<Number>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
-    ReinitilizationDGOperator(const MeltPoolDG::ScratchData<dim> &scratch_data_in,
-                              const ReinitializationData<double> &reinit_data_in,
-                              const unsigned int                  reinit_dof_idx_in,
-                              const unsigned int                  reinit_quad_idx_in,
-                              const VectorType                   &curvature_in,
-                              const BlockVectorType              &normal_vector_in);
+    ReinitilizationDGOperator(const MeltPoolDG::ScratchData<dim, dim, number> &scratch_data_in,
+                              const ReinitializationData<number>              &reinit_data_in,
+                              const unsigned int                               reinit_dof_idx_in,
+                              const unsigned int                               reinit_quad_idx_in,
+                              const VectorType                                &curvature_in,
+                              const BlockVectorType                           &normal_vector_in);
 
 
     /**
@@ -53,7 +53,7 @@ namespace MeltPoolDG::LevelSet
      * @param src source vector for the operator
      */
     void
-    apply_operator(Number const                                           time,
+    apply_operator(number const                                           time,
                    VectorType                                            &dst,
                    VectorType const                                      &src,
                    const std::function<void(unsigned int, unsigned int)> &func) const;
@@ -66,7 +66,7 @@ namespace MeltPoolDG::LevelSet
      * @param src source vector for the operator
      */
     void
-    apply_dirichlet_boundary_operator([[maybe_unused]] Number const      time,
+    apply_dirichlet_boundary_operator([[maybe_unused]] number const      time,
                                       [[maybe_unused]] VectorType       &dst,
                                       [[maybe_unused]] VectorType const &src) const {};
     /**
@@ -76,9 +76,9 @@ namespace MeltPoolDG::LevelSet
     reinit();
 
     void
-    local_apply_inverse_mass_matrix(const MatrixFree<dim, Number>                    &data,
-                                    LinearAlgebra::distributed::Vector<Number>       &dst,
-                                    const LinearAlgebra::distributed::Vector<Number> &src,
+    local_apply_inverse_mass_matrix(const dealii::MatrixFree<dim, number>                    &data,
+                                    dealii::LinearAlgebra::distributed::Vector<number>       &dst,
+                                    const dealii::LinearAlgebra::distributed::Vector<number> &src,
                                     const std::pair<unsigned int, unsigned int> &cell_range) const;
 
     /**
@@ -91,8 +91,8 @@ namespace MeltPoolDG::LevelSet
      */
     void
     apply_diffusion_implicit(
-      Number const                                                   time,
-      Number const                                                   time_step,
+      number const                                                   time,
+      number const                                                   time_step,
       [[maybe_unused]] TimeIntegration::SolutionHistory<VectorType> &solution_history) const;
 
     /**
@@ -105,9 +105,9 @@ namespace MeltPoolDG::LevelSet
      * @param time current time
      */
     void
-    set_field_functions([[maybe_unused]] Number const time) const {};
+    set_field_functions([[maybe_unused]] number const time) const {};
 
-    double
+    number
     get_max_diffusitivity() const;
 
     VectorType &
@@ -126,12 +126,12 @@ namespace MeltPoolDG::LevelSet
     set_artificial_diffusitivity();
 
   private:
-    const MeltPoolDG::ScratchData<dim> &scratch_data;
+    const MeltPoolDG::ScratchData<dim, dim, number> &scratch_data;
 
     const unsigned int reinit_dof_idx;
     const unsigned int reinit_quad_idx;
 
-    const ReinitializationData<Number> &reinit_data;
+    const ReinitializationData<number> &reinit_data;
 
     mutable VectorType num_Hamiltonian;
     mutable VectorType signum_smoothed;
@@ -149,14 +149,14 @@ namespace MeltPoolDG::LevelSet
     /**
      *operators
      */
-    ReinitializationDGDiffusionOperator<dim> RI_DG_diffusion_operator;
-    mutable RIGradOperator<dim>              RI_grad_operator;
+    ReinitializationDGDiffusionOperator<dim, number> RI_DG_diffusion_operator;
+    mutable RIGradOperator<dim, number>              RI_grad_operator;
 
 
     /**
      * Time integration scheme for the IMEX integration of the diffusive term.
      */
-    std::shared_ptr<TimeIntegratorBase<double>> IMEX_integration;
+    std::shared_ptr<TimeIntegratorBase<number>> IMEX_integration;
 
 
     /**
@@ -179,7 +179,7 @@ namespace MeltPoolDG::LevelSet
      * @param min_vertex_distance smallest vertex distance of the mesh
      */
     void
-    compute_smoothed_signum(const VectorType &solution, const Number min_vertex_distance) const;
+    compute_smoothed_signum(const VectorType &solution, const number min_vertex_distance) const;
 
     /**
      * Adds a penalty term to reinit equation when the interface moves a lot
@@ -189,7 +189,7 @@ namespace MeltPoolDG::LevelSet
      * @param cell_range
      */
     void
-    interface_movement_penalty(const MatrixFree<dim, Number>               &data,
+    interface_movement_penalty(const dealii::MatrixFree<dim, number>       &data,
                                VectorType                                  &dst,
                                const VectorType                            &src,
                                const std::pair<unsigned int, unsigned int> &cell_range) const;
@@ -199,7 +199,7 @@ namespace MeltPoolDG::LevelSet
      */
     void
     local_apply_domain_num_Hamiltonian(
-      const MatrixFree<dim, Number>               &data,
+      const dealii::MatrixFree<dim, number>       &data,
       VectorType                                  &dst,
       const VectorType                            &src,
       const std::pair<unsigned int, unsigned int> &cell_range) const;

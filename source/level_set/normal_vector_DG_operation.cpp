@@ -4,13 +4,15 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  template <int dim, typename Number>
-  NormalVectorDGOperation<dim, Number>::NormalVectorDGOperation(
-    const ScratchData<dim>         &scratch_data_in,
-    const unsigned int              normal_dof_idx_in,
-    const unsigned int              normal_quad_idx_in,
-    const VectorType               &solution_level_set_in,
-    const NormalVectorData<Number> &normal_vector_data_in)
+  using namespace dealii;
+
+  template <int dim, typename number>
+  NormalVectorDGOperation<dim, number>::NormalVectorDGOperation(
+    const ScratchData<dim, dim, number> &scratch_data_in,
+    const unsigned int                   normal_dof_idx_in,
+    const unsigned int                   normal_quad_idx_in,
+    const VectorType                    &solution_level_set_in,
+    const NormalVectorData<number>      &normal_vector_data_in)
     : scratch_data(scratch_data_in)
     , solution_level_set(solution_level_set_in)
     , normal_vector_data(normal_vector_data_in)
@@ -25,9 +27,9 @@ namespace MeltPoolDG::LevelSet
                          normal_vector_data.linear_solver.preconditioner_type)
   {}
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  NormalVectorDGOperation<dim, Number>::reinit()
+  NormalVectorDGOperation<dim, number>::reinit()
   {
     solution_history.apply(
       [this](BlockVectorType &v) { scratch_data.initialize_dof_vector(v, normal_dof_idx); });
@@ -36,10 +38,10 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
 
   void
-  NormalVectorDGOperation<dim, Number>::solve()
+  NormalVectorDGOperation<dim, number>::solve()
   {
     VectorType right_hand_side;
     scratch_data.initialize_dof_vector(right_hand_side, normal_dof_idx);
@@ -52,7 +54,7 @@ namespace MeltPoolDG::LevelSet
     if constexpr (dim > 0)
       {
         scratch_data.get_matrix_free().cell_loop(
-          &NormalVectorDGOperation<dim, Number>::right_hand_side_domain<0>,
+          &NormalVectorDGOperation<dim, number>::right_hand_side_domain<0>,
           this,
           right_hand_side,
           solution_level_set,
@@ -68,7 +70,7 @@ namespace MeltPoolDG::LevelSet
     if constexpr (dim > 1)
       {
         scratch_data.get_matrix_free().cell_loop(
-          &NormalVectorDGOperation<dim, Number>::right_hand_side_domain<1>,
+          &NormalVectorDGOperation<dim, number>::right_hand_side_domain<1>,
           this,
           right_hand_side,
           solution_level_set,
@@ -84,7 +86,7 @@ namespace MeltPoolDG::LevelSet
     if constexpr (dim > 2)
       {
         scratch_data.get_matrix_free().cell_loop(
-          &NormalVectorDGOperation<dim, Number>::right_hand_side_domain<2>,
+          &NormalVectorDGOperation<dim, number>::right_hand_side_domain<2>,
           this,
           right_hand_side,
           solution_level_set,
@@ -102,16 +104,16 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   template <uint direction>
   void
-  NormalVectorDGOperation<dim, Number>::right_hand_side_domain(
-    const MatrixFree<dim, Number>               &data,
+  NormalVectorDGOperation<dim, number>::right_hand_side_domain(
+    const MatrixFree<dim, number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
     const std::pair<unsigned int, unsigned int> &cell_range) const
   {
-    FECellIntegrator<dim, 1, Number> eval(data, normal_dof_idx, normal_quad_idx);
+    FECellIntegrator<dim, 1, number> eval(data, normal_dof_idx, normal_quad_idx);
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
@@ -127,27 +129,27 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
 
-  const typename NormalVectorDGOperation<dim, Number>::BlockVectorType &
-  NormalVectorDGOperation<dim, Number>::get_solution_normal_vector() const
+  const typename NormalVectorDGOperation<dim, number>::BlockVectorType &
+  NormalVectorDGOperation<dim, number>::get_solution_normal_vector() const
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
 
-  typename NormalVectorDGOperation<dim, Number>::BlockVectorType &
-  NormalVectorDGOperation<dim, Number>::get_solution_normal_vector()
+  typename NormalVectorDGOperation<dim, number>::BlockVectorType &
+  NormalVectorDGOperation<dim, number>::get_solution_normal_vector()
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
 
   void
-  NormalVectorDGOperation<dim, Number>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<Number> *> &vectors)
+  NormalVectorDGOperation<dim, number>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     solution_history.apply([&](BlockVectorType &v) {
       for (unsigned int d = 0; d < dim; ++d)
@@ -155,7 +157,7 @@ namespace MeltPoolDG::LevelSet
     });
   }
 
-  template class NormalVectorDGOperation<1>;
-  template class NormalVectorDGOperation<2>;
-  template class NormalVectorDGOperation<3>;
+  template class NormalVectorDGOperation<1, double>;
+  template class NormalVectorDGOperation<2, double>;
+  template class NormalVectorDGOperation<3, double>;
 } // namespace MeltPoolDG::LevelSet

@@ -20,12 +20,12 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  template <int dim>
-  AdvectionDiffusionOperation<dim>::AdvectionDiffusionOperation(
-    const ScratchData<dim>                                             &scratch_data_in,
+  template <int dim, typename number>
+  AdvectionDiffusionOperation<dim, number>::AdvectionDiffusionOperation(
+    const ScratchData<dim, dim, number>                                &scratch_data_in,
     const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> &dirichlet_bc_in,
-    const AdvectionDiffusionData<double>                               &advec_diff_data_in,
-    const TimeIterator<double>                                         &time_iterator,
+    const AdvectionDiffusionData<number>                               &advec_diff_data_in,
+    const TimeIterator<number>                                         &time_iterator,
     const VectorType                                                   &advection_velocity,
     const unsigned int                                                  advec_diff_dof_idx_in,
     const unsigned int advec_diff_hanging_nodes_dof_idx_in,
@@ -43,13 +43,13 @@ namespace MeltPoolDG::LevelSet
                                 2U /*TODO: include time integration scheme*/))
   {
     this->advec_diff_data = advec_diff_data_in;
-    preconditioner = make_preconditioner<dim, AdvectionDiffusionOperator<dim, double>, VectorType>(
+    preconditioner = make_preconditioner<dim, AdvectionDiffusionOperator<dim, number>, VectorType>(
       this->advec_diff_data.linear_solver.preconditioner_type, advec_diff_operator.get());
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperation<dim>::set_initial_condition(
+  AdvectionDiffusionOperation<dim, number>::set_initial_condition(
     const Function<dim> &initial_field_function)
   {
     if (solution_history.get_current_solution().has_ghost_elements())
@@ -69,9 +69,9 @@ namespace MeltPoolDG::LevelSet
     solution_history.update_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperation<dim>::reinit()
+  AdvectionDiffusionOperation<dim, number>::reinit()
   {
     solution_history.apply(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, advec_diff_dof_idx); });
@@ -91,9 +91,9 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperation<dim>::init_time_advance()
+  AdvectionDiffusionOperation<dim, number>::init_time_advance()
   {
     if (!advec_diff_operator)
       create_operator(advection_velocity);
@@ -104,7 +104,7 @@ namespace MeltPoolDG::LevelSet
     if (this->advec_diff_data.enable_time_dependent_bc)
       {
         MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
-          const_cast<ScratchData<dim> &>(scratch_data),
+          const_cast<ScratchData<dim, dim, number> &>(scratch_data),
           dirichlet_bc,
           advec_diff_dof_idx,
           advec_diff_hanging_nodes_dof_idx);
@@ -148,7 +148,7 @@ namespace MeltPoolDG::LevelSet
       }
 
     if (!predictor)
-      predictor = std::make_unique<Predictor<VectorType, double>>(this->advec_diff_data.predictor,
+      predictor = std::make_unique<Predictor<VectorType, number>>(this->advec_diff_data.predictor,
                                                                   solution_history,
                                                                   &time_iterator);
 
@@ -163,9 +163,9 @@ namespace MeltPoolDG::LevelSet
 
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperation<dim>::solve(const bool do_finish_time_step)
+  AdvectionDiffusionOperation<dim, number>::solve(const bool do_finish_time_step)
   {
     ScopedName         sc("advection_diffusion::solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
@@ -184,7 +184,7 @@ namespace MeltPoolDG::LevelSet
 
     Journal::print_formatted_norm(
       scratch_data.get_pcout(2),
-      [&]() -> double {
+      [&]() -> number {
         return VectorTools::compute_norm<dim>(advection_velocity,
                                               scratch_data,
                                               velocity_dof_idx,
@@ -259,7 +259,7 @@ namespace MeltPoolDG::LevelSet
 
     Journal::print_formatted_norm(
       scratch_data.get_pcout(3),
-      [&]() -> double { return advec_diff_operator->get_system_matrix().frobenius_norm(); },
+      [&]() -> number { return advec_diff_operator->get_system_matrix().frobenius_norm(); },
       "matrix",
       "advection_diffusion",
       6 /*precision*/,
@@ -267,14 +267,14 @@ namespace MeltPoolDG::LevelSet
 
     Journal::print_formatted_norm(
       scratch_data.get_pcout(3),
-      [&]() -> double { return rhs.l2_norm(); },
+      [&]() -> number { return rhs.l2_norm(); },
       "rhs",
       "advection_diffusion",
       6 /*precision*/,
       "l2");
     Journal::print_formatted_norm(
       scratch_data.get_pcout(3),
-      [&]() -> double { return solution_history.get_current_solution().l2_norm(); },
+      [&]() -> number { return solution_history.get_current_solution().l2_norm(); },
       "src",
       "advection_diffusion",
       6 /*precision*/,
@@ -282,7 +282,7 @@ namespace MeltPoolDG::LevelSet
 
     Journal::print_formatted_norm(
       scratch_data.get_pcout(1),
-      [&]() -> double {
+      [&]() -> number {
         return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
                                                           scratch_data,
                                                           advec_diff_dof_idx,
@@ -314,9 +314,9 @@ namespace MeltPoolDG::LevelSet
     solution_history.get_current_solution().update_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperation<dim>::create_inflow_outflow_constraints()
+  AdvectionDiffusionOperation<dim, number>::create_inflow_outflow_constraints()
   {
     if (!inflow_outflow_bc.empty())
       {
@@ -415,67 +415,67 @@ namespace MeltPoolDG::LevelSet
                                             inflow_constraints_indices_and_values.second);
 
         // set indices in operator
-        dynamic_cast<AdvectionDiffusionOperator<dim> *>(advec_diff_operator.get())
+        dynamic_cast<AdvectionDiffusionOperator<dim, number> *>(advec_diff_operator.get())
           ->set_inflow_outflow_bc(inflow_constraints_indices_and_values.first);
       }
   }
 
 
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  AdvectionDiffusionOperation<dim>::get_advected_field() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  AdvectionDiffusionOperation<dim, number>::get_advected_field() const
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  AdvectionDiffusionOperation<dim>::get_advected_field()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::Vector<number> &
+  AdvectionDiffusionOperation<dim, number>::get_advected_field()
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  AdvectionDiffusionOperation<dim>::get_advected_field_old() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  AdvectionDiffusionOperation<dim, number>::get_advected_field_old() const
   {
     return solution_history.get_recent_old_solution();
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  AdvectionDiffusionOperation<dim>::get_advected_field_old()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::Vector<number> &
+  AdvectionDiffusionOperation<dim, number>::get_advected_field_old()
   {
     return solution_history.get_recent_old_solution();
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  AdvectionDiffusionOperation<dim>::get_user_rhs()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::Vector<number> &
+  AdvectionDiffusionOperation<dim, number>::get_user_rhs()
   {
     return user_rhs;
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  AdvectionDiffusionOperation<dim>::get_user_rhs() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  AdvectionDiffusionOperation<dim, number>::get_user_rhs() const
   {
     return user_rhs;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperation<dim>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  AdvectionDiffusionOperation<dim, number>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperation<dim>::attach_output_vectors(
-    GenericDataOut<dim, double> &data_out) const
+  AdvectionDiffusionOperation<dim, number>::attach_output_vectors(
+    GenericDataOut<dim, number> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(advec_diff_dof_idx),
                              solution_history.get_current_solution(),
@@ -486,9 +486,9 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperation<dim>::set_inflow_outflow_bc(
+  AdvectionDiffusionOperation<dim, number>::set_inflow_outflow_bc(
     const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> inflow_outflow_bc_)
   {
     inflow_outflow_bc = inflow_outflow_bc_;
@@ -496,27 +496,28 @@ namespace MeltPoolDG::LevelSet
 
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperation<dim>::create_operator(const VectorType &advection_velocity)
+  AdvectionDiffusionOperation<dim, number>::create_operator(const VectorType &advection_velocity)
   {
-    advec_diff_operator = std::make_unique<AdvectionDiffusionOperator<dim>>(scratch_data,
-                                                                            advection_velocity,
-                                                                            this->advec_diff_data,
-                                                                            advec_diff_dof_idx,
-                                                                            advec_diff_quad_idx,
-                                                                            velocity_dof_idx);
+    advec_diff_operator =
+      std::make_unique<AdvectionDiffusionOperator<dim, number>>(scratch_data,
+                                                                advection_velocity,
+                                                                this->advec_diff_data,
+                                                                advec_diff_dof_idx,
+                                                                advec_diff_quad_idx,
+                                                                velocity_dof_idx);
     /*
      *  In case of a matrix-based simulation, set up the distributed sparsity pattern and
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.
      */
     advec_diff_operator->reinit();
-    preconditioner = make_preconditioner<dim, AdvectionDiffusionOperator<dim, double>, VectorType>(
+    preconditioner = make_preconditioner<dim, AdvectionDiffusionOperator<dim, number>, VectorType>(
       this->advec_diff_data.linear_solver.preconditioner_type, advec_diff_operator.get());
     preconditioner.reinit(scratch_data, advec_diff_dof_idx);
   }
 
-  template class AdvectionDiffusionOperation<1>;
-  template class AdvectionDiffusionOperation<2>;
-  template class AdvectionDiffusionOperation<3>;
+  template class AdvectionDiffusionOperation<1, double>;
+  template class AdvectionDiffusionOperation<2, double>;
+  template class AdvectionDiffusionOperation<3, double>;
 } // namespace MeltPoolDG::LevelSet

@@ -22,7 +22,7 @@ namespace MeltPoolDG::LevelSet
               // nearest point in the point cloud
               nearest_point)
 
-  template <typename number = double>
+  template <typename number>
   struct NearestPointData
   {
     number           rel_tol               = 1e-6;

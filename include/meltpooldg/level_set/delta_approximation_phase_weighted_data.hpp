@@ -6,8 +6,6 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  using namespace dealii;
-
   BETTER_ENUM(
     DiracDeltaFunctionApproximationType,
     char,
@@ -28,7 +26,7 @@ namespace MeltPoolDG::LevelSet
               specific_heat_capacity_times_density,
               density)
 
-  template <typename number = double>
+  template <typename number>
   struct DeltaApproximationPhaseWeightedData
   {
     DiracDeltaFunctionApproximationType type =

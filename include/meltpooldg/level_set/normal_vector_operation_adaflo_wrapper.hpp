@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, TUM, September 2020
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
@@ -28,27 +23,25 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  using namespace dealii;
-
-  template <int dim>
-  class NormalVectorOperationAdaflo : public NormalVectorOperationBase<dim>
+  template <int dim, typename number>
+  class NormalVectorOperationAdaflo : public NormalVectorOperationBase<dim, number>
   {
   private:
-    using VectorType       = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType  = LinearAlgebra::distributed::BlockVector<double>;
-    using SparseMatrixType = TrilinosWrappers::SparseMatrix;
+    using VectorType       = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType  = dealii::LinearAlgebra::distributed::BlockVector<number>;
+    using SparseMatrixType = dealii::TrilinosWrappers::SparseMatrix;
 
   public:
     /**
      * Constructor.
      */
-    NormalVectorOperationAdaflo(const ScratchData<dim>         &scratch_data,
-                                const NormalVectorData<double> &normal_vec_data_in,
-                                const int                       advec_diff_dof_idx,
-                                const int                       normal_vec_dof_idx,
-                                const int                       normal_vec_quad_idx,
-                                const VectorType               &advected_field_in,
-                                const double                    reinit_scale_factor_epsilon);
+    NormalVectorOperationAdaflo(const ScratchData<dim, dim, number> &scratch_data,
+                                const NormalVectorData<number>      &normal_vec_data_in,
+                                const int                            advec_diff_dof_idx,
+                                const int                            normal_vec_dof_idx,
+                                const int                            normal_vec_quad_idx,
+                                const VectorType                    &advected_field_in,
+                                const number                         reinit_scale_factor_epsilon);
 
     void
     reinit() override;
@@ -62,21 +55,22 @@ namespace MeltPoolDG::LevelSet
     /**
      *  getter
      */
-    const LinearAlgebra::distributed::BlockVector<double> &
+    const dealii::LinearAlgebra::distributed::BlockVector<number> &
     get_solution_normal_vector() const override;
 
-    LinearAlgebra::distributed::BlockVector<double> &
+    dealii::LinearAlgebra::distributed::BlockVector<number> &
     get_solution_normal_vector() override;
 
     LevelSetOKZSolverComputeNormal<dim> &
     get_adaflo_obj();
 
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
+    attach_vectors(
+      std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) override;
 
   private:
     void
-    set_adaflo_parameters(const double epsilon,
+    set_adaflo_parameters(const number epsilon,
                           const int    advec_diff_dof_idx,
                           const int    normal_vec_dof_idx,
                           const int    normal_vec_quad_idx);
@@ -88,7 +82,7 @@ namespace MeltPoolDG::LevelSet
     void
     create_operator();
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim, dim, number> &scratch_data;
 
     const VectorType &advected_field;
 
@@ -109,15 +103,15 @@ namespace MeltPoolDG::LevelSet
     /**
      *  Diagonal preconditioner @todo
      */
-    DiagonalPreconditioner<double>         preconditioner;
-    std::shared_ptr<BlockMatrixExtension>  projection_matrix;
-    std::shared_ptr<BlockILUExtension>     ilu_projection_matrix;
-    AlignedVector<VectorizedArray<double>> cell_diameters;
-    double                                 cell_diameter_min;
-    double                                 cell_diameter_max;
-    double                                 epsilon_used;
+    DiagonalPreconditioner<number>                 preconditioner;
+    std::shared_ptr<BlockMatrixExtension>          projection_matrix;
+    std::shared_ptr<BlockILUExtension>             ilu_projection_matrix;
+    AlignedVector<dealii::VectorizedArray<number>> cell_diameters;
+    number                                         cell_diameter_min;
+    number                                         cell_diameter_max;
+    number                                         epsilon_used;
 
-    const NormalVectorData<double> &normal_vec_data;
+    const NormalVectorData<number> &normal_vec_data;
   };
 } // namespace MeltPoolDG::LevelSet
 #endif

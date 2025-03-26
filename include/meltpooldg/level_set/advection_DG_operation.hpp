@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Johannes Resch, TUM, April 2024
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/lac/generic_linear_algebra.h>
@@ -24,21 +19,19 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  using namespace dealii;
-
-  template <int dim>
-  class AdvectionDGOperation : public AdvectionDiffusionOperationBase<dim>
+  template <int dim, typename number>
+  class AdvectionDGOperation : public AdvectionDiffusionOperationBase<dim, number>
   {
   private:
-    using VectorType       = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType  = LinearAlgebra::distributed::BlockVector<double>;
-    using SparseMatrixType = TrilinosWrappers::SparseMatrix;
+    using VectorType       = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType  = dealii::LinearAlgebra::distributed::BlockVector<number>;
+    using SparseMatrixType = dealii::TrilinosWrappers::SparseMatrix;
 
   public:
     AdvectionDGOperation(
-      const ScratchData<dim>                                &scratch_data_in,
-      const AdvectionDiffusionData<double>                  &advec_diff_data_in,
-      const TimeIterator<double>                            &time_iterator,
+      const ScratchData<dim, dim, number>                   &scratch_data_in,
+      const AdvectionDiffusionData<number>                  &advec_diff_data_in,
+      const TimeIterator<number>                            &time_iterator,
       VectorType                                            &advection_velocity,
       const unsigned int                                     advec_diff_dof_idx_in,
       const unsigned int                                     advec_diff_quad_idx_in,
@@ -55,7 +48,7 @@ namespace MeltPoolDG::LevelSet
      */
 
     void
-    set_initial_condition(const Function<dim> &initial_field_function) override;
+    set_initial_condition(const dealii::Function<dim> &initial_field_function) override;
 
     /**
      * Copies a given field to the initial conditions
@@ -78,40 +71,40 @@ namespace MeltPoolDG::LevelSet
     void
     solve(const bool do_finish_time_step = true) override;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const VectorType &
     get_advected_field() const override;
 
-    LinearAlgebra::distributed::Vector<double> &
+    VectorType &
     get_advected_field() override;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const VectorType &
     get_advected_field_old() const override;
 
-    LinearAlgebra::distributed::Vector<double> &
+    VectorType &
     get_advected_field_old() override;
 
-    LinearAlgebra::distributed::Vector<double> &
+    VectorType &
     get_user_rhs() override;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const VectorType &
     get_user_rhs() const override;
 
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
+    attach_vectors(std::vector<VectorType *> &vectors) override;
 
     void
-    attach_output_vectors(GenericDataOut<dim, double> &data_out) const override;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const override;
 
 
   private:
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim, dim, number> &scratch_data;
 
-    const TimeIterator<double>                       &time_iterator;
-    const LinearAlgebra::distributed::Vector<double> &advection_velocity;
+    const TimeIterator<number> &time_iterator;
+    const VectorType           &advection_velocity;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
-     *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
-     *  multiple DoFHandlers, quadrature rules, etc.
+     *  ScratchData<dim,dim,number> object is selected. This is important when
+     * ScratchData<dim,dim,number> holds multiple DoFHandlers, quadrature rules, etc.
      */
     const unsigned int advec_diff_dof_idx  = 0;
     const unsigned int advec_diff_quad_idx = 0;
@@ -122,8 +115,8 @@ namespace MeltPoolDG::LevelSet
     VectorType rhs;
     VectorType user_rhs;
 
-    AdvectionDGOperator<dim> advection_DG_operator;
+    AdvectionDGOperator<dim, number> advection_DG_operator;
 
-    std::shared_ptr<TimeIntegratorBase<double>> advection_integration;
+    std::shared_ptr<TimeIntegratorBase<number>> advection_integration;
   };
 } // namespace MeltPoolDG::LevelSet

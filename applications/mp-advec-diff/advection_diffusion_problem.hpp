@@ -48,8 +48,8 @@ namespace MeltPoolDG::LevelSet
     std::shared_ptr<ScratchData<dim>>     scratch_data;
     VectorType                            advection_velocity;
     std::unique_ptr<TimeIterator<double>> time_iterator;
-    std::unique_ptr<AdvectionDiffusionOperationBase<dim>> advec_diff_operation;
-    std::unique_ptr<Profiling::ProfilingMonitor<double>>  profiling_monitor;
+    std::unique_ptr<AdvectionDiffusionOperationBase<dim, double>> advec_diff_operation;
+    std::unique_ptr<Profiling::ProfilingMonitor<double>>          profiling_monitor;
 
 
     unsigned int advec_diff_dof_idx;

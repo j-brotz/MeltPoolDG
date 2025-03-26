@@ -402,7 +402,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
           std::vector<double>                  buffer;
           std::vector<types::global_dof_index> local_dof_indices;
 
-          LevelSet::Tools::evaluate_at_interface<dim>(
+          LevelSet::Tools::evaluate_at_interface<dim, double>(
             generic_data_out.get_dof_handler("level_set"),
             generic_data_out.get_mapping(),
             generic_data_out.get_vector("level_set"),

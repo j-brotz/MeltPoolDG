@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Johannes Resch, TUM, May 2024
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/base/vectorization.h>
@@ -33,21 +28,21 @@ namespace MeltPoolDG::LevelSet
    *    !!!!
    */
 
-  using namespace dealii;
-  template <int dim, typename Number = double>
-  class NormalVectorDGOperation : public NormalVectorOperationBase<dim>
+
+  template <int dim, typename number>
+  class NormalVectorDGOperation : public NormalVectorOperationBase<dim, number>
   {
   private:
-    using VectorType       = LinearAlgebra::distributed::Vector<Number>;
-    using BlockVectorType  = LinearAlgebra::distributed::BlockVector<Number>;
-    using SparseMatrixType = TrilinosWrappers::SparseMatrix;
+    using VectorType       = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType  = dealii::LinearAlgebra::distributed::BlockVector<number>;
+    using SparseMatrixType = dealii::TrilinosWrappers::SparseMatrix;
 
   public:
-    NormalVectorDGOperation(const ScratchData<dim>         &scratch_data_in,
-                            const unsigned int              normal_dof_idx_in,
-                            const unsigned int              normal_quad_idx_in,
-                            const VectorType               &solution_level_set_in,
-                            const NormalVectorData<Number> &normal_vector_data);
+    NormalVectorDGOperation(const ScratchData<dim, dim, number> &scratch_data_in,
+                            const unsigned int                   normal_dof_idx_in,
+                            const unsigned int                   normal_quad_idx_in,
+                            const VectorType                    &solution_level_set_in,
+                            const NormalVectorData<number>      &normal_vector_data);
 
     void
     reinit() override;
@@ -62,24 +57,25 @@ namespace MeltPoolDG::LevelSet
     get_solution_normal_vector() override;
 
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<Number> *> &vectors) override;
+    attach_vectors(
+      std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) override;
 
   private:
-    const ScratchData<dim>        &scratch_data;
-    const VectorType              &solution_level_set;
-    const NormalVectorData<Number> normal_vector_data;
+    const ScratchData<dim, dim, number> &scratch_data;
+    const VectorType                    &solution_level_set;
+    const NormalVectorData<number>       normal_vector_data;
 
     TimeIntegration::SolutionHistory<BlockVectorType> solution_history;
 
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
-     *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
-     *  multiple DoFHandlers, quadrature rules, etc.
+     *  ScratchData<dim,dim,number> object is selected. This is important when
+     * ScratchData<dim,dim,number> holds multiple DoFHandlers, quadrature rules, etc.
      */
     const unsigned int normal_dof_idx;
     const unsigned int normal_quad_idx;
 
-    const HelmholtzDGOperator<dim, Number> helmholtz_operator;
+    const HelmholtzDGOperator<dim, number> helmholtz_operator;
 
     /**
      * Applies the domain integral of the right hand side
@@ -90,7 +86,7 @@ namespace MeltPoolDG::LevelSet
      */
     template <uint direction>
     void
-    right_hand_side_domain(const MatrixFree<dim, Number>               &data,
+    right_hand_side_domain(const dealii::MatrixFree<dim, number>       &data,
                            VectorType                                  &dst,
                            const VectorType                            &src,
                            const std::pair<unsigned int, unsigned int> &cell_range) const;

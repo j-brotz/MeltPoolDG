@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Peter Munch, Magdalena Schreter, TUM, December 2020
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
@@ -21,26 +16,26 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  template <int dim>
-  class AdvectionDiffusionOperationAdaflo : public AdvectionDiffusionOperationBase<dim>
+  template <int dim, typename number>
+  class AdvectionDiffusionOperationAdaflo : public AdvectionDiffusionOperationBase<dim, number>
   {
   private:
-    using VectorType      = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
   public:
     /**
      * Constructor.
      */
-    AdvectionDiffusionOperationAdaflo(const ScratchData<dim>     &scratch_data,
-                                      const TimeIterator<double> &time_iterator,
-                                      const VectorType           &advection_velocity,
-                                      const int                   advec_diff_zero_dirichlet_dof_idx,
-                                      const int                   advec_diff_dirichlet_dof_idx,
-                                      const int                   advec_diff_quad_idx,
-                                      const int                   velocity_dof_idx,
-                                      const TimeSteppingData<double>       &time_stepping,
-                                      const AdvectionDiffusionData<double> &ls,
+    AdvectionDiffusionOperationAdaflo(const ScratchData<dim, dim, number> &scratch_data,
+                                      const TimeIterator<number>          &time_iterator,
+                                      const VectorType                    &advection_velocity,
+                                      const int advec_diff_zero_dirichlet_dof_idx,
+                                      const int advec_diff_dirichlet_dof_idx,
+                                      const int advec_diff_quad_idx,
+                                      const int velocity_dof_idx,
+                                      const TimeSteppingData<number>       &time_stepping,
+                                      const AdvectionDiffusionData<number> &ls,
                                       const BoundaryConditionManager<dim>  &bc);
 
     void
@@ -50,7 +45,7 @@ namespace MeltPoolDG::LevelSet
      *  set initial solution of advected field
      */
     void
-    set_initial_condition(const Function<dim> &initial_field_function) override;
+    set_initial_condition(const dealii::Function<dim> &initial_field_function) override;
 
     void
     init_time_advance() override;
@@ -61,37 +56,38 @@ namespace MeltPoolDG::LevelSet
     void
     solve(const bool do_finish_time_step = true) override;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_advected_field() const override;
 
-    LinearAlgebra::distributed::Vector<double> &
+    dealii::LinearAlgebra::distributed::Vector<number> &
     get_advected_field() override;
 
-    LinearAlgebra::distributed::Vector<double> &
+    dealii::LinearAlgebra::distributed::Vector<number> &
     get_user_rhs() override;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_user_rhs() const override;
 
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
+    attach_vectors(
+      std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) override;
 
     void
-    attach_output_vectors(GenericDataOut<dim, double> &data_out) const override;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const override;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_advected_field_old() const override;
 
-    LinearAlgebra::distributed::Vector<double> &
+    dealii::LinearAlgebra::distributed::Vector<number> &
     get_advected_field_old() override;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_advected_field_old_old() const;
 
   private:
     void
-    set_adaflo_parameters(const TimeSteppingData<double>       &time_stepping,
-                          const AdvectionDiffusionData<double> &ls,
+    set_adaflo_parameters(const TimeSteppingData<number>       &time_stepping,
+                          const AdvectionDiffusionData<number> &ls,
                           int                                   advec_diff_dof_idx,
                           int                                   advec_diff_quad_idx,
                           int                                   velocity_dof_idx);
@@ -102,9 +98,9 @@ namespace MeltPoolDG::LevelSet
     void
     initialize_vectors();
 
-    const ScratchData<dim>                           &scratch_data;
-    const TimeIterator<double>                       &time_iterator;
-    const LinearAlgebra::distributed::Vector<double> &advection_velocity;
+    const ScratchData<dim, dim, number>                      &scratch_data;
+    const TimeIterator<number>                               &time_iterator;
+    const dealii::LinearAlgebra::distributed::Vector<number> &advection_velocity;
     /**
      *  advected field
      */
@@ -140,11 +136,11 @@ namespace MeltPoolDG::LevelSet
     /**
      *  maximum velocity --> set by adaflo
      */
-    double global_max_velocity;
+    number global_max_velocity;
     /**
      *  Diagonal preconditioner @todo
      */
-    DiagonalPreconditioner<double> preconditioner;
+    DiagonalPreconditioner<number> preconditioner;
     const ConditionalOStream       pcout;
     /**
      *  dof idx for constraints with dirichlet values (relevant for dirichlet neq 0)

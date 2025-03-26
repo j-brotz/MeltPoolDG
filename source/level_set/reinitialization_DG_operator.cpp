@@ -5,15 +5,16 @@
 
 namespace MeltPoolDG::LevelSet
 {
+  using namespace dealii;
 
-  template <int dim, typename Number>
-  ReinitilizationDGOperator<dim, Number>::ReinitilizationDGOperator(
-    const MeltPoolDG::ScratchData<dim> &scratch_data_in,
-    const ReinitializationData<double> &reinit_data_in,
-    const unsigned int                  reinit_dof_idx_in,
-    const unsigned int                  reinit_quad_idx_in,
-    const VectorType                   &curvature_in,
-    const BlockVectorType              &normal_vector_in)
+  template <int dim, typename number>
+  ReinitilizationDGOperator<dim, number>::ReinitilizationDGOperator(
+    const MeltPoolDG::ScratchData<dim, dim, number> &scratch_data_in,
+    const ReinitializationData<number>              &reinit_data_in,
+    const unsigned int                               reinit_dof_idx_in,
+    const unsigned int                               reinit_quad_idx_in,
+    const VectorType                                &curvature_in,
+    const BlockVectorType                           &normal_vector_in)
     : scratch_data(scratch_data_in)
     , reinit_dof_idx(reinit_dof_idx_in)
     , reinit_quad_idx(reinit_quad_idx_in)
@@ -31,7 +32,7 @@ namespace MeltPoolDG::LevelSet
     if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type !=
         TimeIntegratorSchemes::not_initialized)
       IMEX_integration =
-        std::shared_ptr<TimeIntegratorBase<double>>(time_integrator_factory<double>(
+        std::shared_ptr<TimeIntegratorBase<number>>(time_integrator_factory<number>(
           RI_DG_diffusion_operator,
           reinit_data_in.reinitilization_DG_specific_data.IMEX_integration_data,
           reinit_data_in.linear_solver,
@@ -39,31 +40,31 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, Number>::prepare_operator(const VectorType &solution)
+  ReinitilizationDGOperator<dim, number>::prepare_operator(const VectorType &solution)
   {
-    Number const min_vertex_distance = scratch_data.get_min_cell_size();
+    number const min_vertex_distance = scratch_data.get_min_cell_size();
     compute_godunov_gradient(solution);
     compute_smoothed_signum(solution, min_vertex_distance);
     RI_DG_diffusion_operator.compute_diffusitivity_value();
     RI_DG_diffusion_operator.compute_penalty_parameter();
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, Number>::apply_diffusion_implicit(
-    const Number                                  time,
-    const Number                                  time_step,
+  ReinitilizationDGOperator<dim, number>::apply_diffusion_implicit(
+    const number                                  time,
+    const number                                  time_step,
     TimeIntegration::SolutionHistory<VectorType> &solution_history) const
   {
     IMEX_integration->perform_time_step(time, time_step, solution_history);
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, Number>::apply_operator(
-    Number const                                           time,
+  ReinitilizationDGOperator<dim, number>::apply_operator(
+    number const                                           time,
     VectorType                                            &dst,
     VectorType const                                      &src,
     const std::function<void(unsigned int, unsigned int)> &func) const
@@ -71,14 +72,14 @@ namespace MeltPoolDG::LevelSet
     compute_godunov_hamiltonian(src);
 
     scratch_data.get_matrix_free().cell_loop(
-      &ReinitilizationDGOperator<dim, Number>::local_apply_domain_num_Hamiltonian,
+      &ReinitilizationDGOperator<dim, number>::local_apply_domain_num_Hamiltonian,
       this,
       dst,
       num_Hamiltonian,
       true);
 
     scratch_data.get_matrix_free().cell_loop(
-      &ReinitilizationDGOperator<dim, Number>::local_apply_inverse_mass_matrix, this, dst, dst);
+      &ReinitilizationDGOperator<dim, number>::local_apply_inverse_mass_matrix, this, dst, dst);
 
 
 
@@ -94,14 +95,14 @@ namespace MeltPoolDG::LevelSet
     if (reinit_data.reinitilization_DG_specific_data.use_interface_movement_penalization)
       {
         scratch_data.get_matrix_free().cell_loop(
-          &ReinitilizationDGOperator<dim, Number>::interface_movement_penalty,
+          &ReinitilizationDGOperator<dim, number>::interface_movement_penalty,
           this,
           num_Hamiltonian,
           src,
           true);
 
         scratch_data.get_matrix_free().cell_loop(
-          &ReinitilizationDGOperator<dim, Number>::local_apply_inverse_mass_matrix,
+          &ReinitilizationDGOperator<dim, number>::local_apply_inverse_mass_matrix,
           this,
           num_Hamiltonian,
           num_Hamiltonian);
@@ -111,17 +112,17 @@ namespace MeltPoolDG::LevelSet
     func(0, dst.locally_owned_size());
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, Number>::local_apply_inverse_mass_matrix(
-    const MatrixFree<dim, Number>                    &data,
-    LinearAlgebra::distributed::Vector<Number>       &dst,
-    const LinearAlgebra::distributed::Vector<Number> &src,
+  ReinitilizationDGOperator<dim, number>::local_apply_inverse_mass_matrix(
+    const MatrixFree<dim, number>                    &data,
+    LinearAlgebra::distributed::Vector<number>       &dst,
+    const LinearAlgebra::distributed::Vector<number> &src,
     const std::pair<unsigned int, unsigned int>      &cell_range) const
   {
-    FECellIntegrator<dim, 1, Number> eval(data, reinit_dof_idx, reinit_quad_idx);
+    FECellIntegrator<dim, 1, number> eval(data, reinit_dof_idx, reinit_quad_idx);
 
-    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, Number> inverse(eval);
+    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, number> inverse(eval);
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
@@ -135,9 +136,9 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, Number>::reinit()
+  ReinitilizationDGOperator<dim, number>::reinit()
   {
     scratch_data.initialize_dof_vector(num_Hamiltonian, reinit_dof_idx);
     scratch_data.initialize_dof_vector(signum_smoothed, reinit_dof_idx);
@@ -161,12 +162,12 @@ namespace MeltPoolDG::LevelSet
     RI_DG_diffusion_operator.compute_penalty_parameter();
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, Number>::compute_godunov_hamiltonian(
+  ReinitilizationDGOperator<dim, number>::compute_godunov_hamiltonian(
     const VectorType &solution) const
   {
-    Number const gradient_goal = 1.;
+    number const gradient_goal = 1.;
 
     if (reinit_data.reinitilization_DG_specific_data.use_const_gradient_in_RI == false)
       {
@@ -178,15 +179,15 @@ namespace MeltPoolDG::LevelSet
     num_Hamiltonian.scale(signum_smoothed);
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, Number>::local_apply_domain_num_Hamiltonian(
-    const MatrixFree<dim, Number>               &data,
+  ReinitilizationDGOperator<dim, number>::local_apply_domain_num_Hamiltonian(
+    const MatrixFree<dim, number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
     const std::pair<unsigned int, unsigned int> &cell_range) const
   {
-    FECellIntegrator<dim, 1, Number> eval(data, reinit_dof_idx, reinit_quad_idx);
+    FECellIntegrator<dim, 1, number> eval(data, reinit_dof_idx, reinit_quad_idx);
 
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
@@ -206,16 +207,16 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, Number>::interface_movement_penalty(
-    const MatrixFree<dim, Number>               &data,
+  ReinitilizationDGOperator<dim, number>::interface_movement_penalty(
+    const MatrixFree<dim, number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
     const std::pair<unsigned int, unsigned int> &cell_range) const
   {
-    FECellIntegrator<dim, 1, Number> eval(data, reinit_dof_idx, reinit_quad_idx);
-    FECellIntegrator<dim, 1, Number> eval_sig_indicator(data, reinit_dof_idx, reinit_quad_idx);
+    FECellIntegrator<dim, 1, number> eval(data, reinit_dof_idx, reinit_quad_idx);
+    FECellIntegrator<dim, 1, number> eval_sig_indicator(data, reinit_dof_idx, reinit_quad_idx);
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
@@ -231,13 +232,13 @@ namespace MeltPoolDG::LevelSet
             const auto sign_indicator = eval_sig_indicator.get_value(q);
             const auto flux =
               compare_and_apply_mask<SIMDComparison::greater_than>(u,
-                                                                   VectorizedArray<Number>(0.),
-                                                                   VectorizedArray<Number>(1.),
-                                                                   VectorizedArray<Number>(0.)) -
+                                                                   VectorizedArray<number>(0.),
+                                                                   VectorizedArray<number>(1.),
+                                                                   VectorizedArray<number>(0.)) -
               compare_and_apply_mask<SIMDComparison::greater_than>(sign_indicator,
-                                                                   VectorizedArray<Number>(0.),
-                                                                   VectorizedArray<Number>(1.),
-                                                                   VectorizedArray<Number>(0.));
+                                                                   VectorizedArray<number>(0.),
+                                                                   VectorizedArray<number>(1.),
+                                                                   VectorizedArray<number>(0.));
             eval.submit_value(-flux, q);
           }
 
@@ -245,9 +246,9 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, Number>::compute_godunov_gradient(const VectorType &solution) const
+  ReinitilizationDGOperator<dim, number>::compute_godunov_gradient(const VectorType &solution) const
   {
     {
       // compute local upwind and downwind gradients
@@ -272,7 +273,7 @@ namespace MeltPoolDG::LevelSet
     DEAL_II_OPENMP_SIMD_PRAGMA
     for (unsigned int i = 0; i < grad_x_l.locally_owned_size(); ++i)
       {
-        double argument_one = std::max(std::min(grad_x_l.local_element(i), 0.0) *
+        number argument_one = std::max(std::min(grad_x_l.local_element(i), 0.0) *
                                          std::min(grad_x_l.local_element(i), 0.0),
                                        std::max(grad_x_r.local_element(i), 0.0) *
                                          std::max(grad_x_r.local_element(i), 0.0));
@@ -294,7 +295,7 @@ namespace MeltPoolDG::LevelSet
           }
 
 
-        double argument_two = std::max(std::max(grad_x_l.local_element(i), 0.0) *
+        number argument_two = std::max(std::max(grad_x_l.local_element(i), 0.0) *
                                          std::max(grad_x_l.local_element(i), 0.0),
                                        std::min(grad_x_r.local_element(i), 0.0) *
                                          std::min(grad_x_r.local_element(i), 0.0));
@@ -325,24 +326,24 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, Number>::compute_smoothed_signum(
+  ReinitilizationDGOperator<dim, number>::compute_smoothed_signum(
     const VectorType &solution,
-    const Number      min_vertex_distance) const
+    const number      min_vertex_distance) const
   {
     const auto  &data      = scratch_data.get_matrix_free();
-    const Number fe_degree = ((static_cast<Number>(scratch_data.get_degree(reinit_dof_idx))));
+    const number fe_degree = ((static_cast<number>(scratch_data.get_degree(reinit_dof_idx))));
 
     {
       // Use maximum element size for the calculation of the argument of tanh
-      const dealii::VectorizedArray<Number> eta_vector =
+      const dealii::VectorizedArray<number> eta_vector =
         reinit_data.reinitilization_DG_specific_data.signum_smoothness_paramater *
         min_vertex_distance / fe_degree;
 
 
-      FECellIntegrator<dim, 1, Number> source(data, reinit_dof_idx, reinit_quad_idx);
-      FECellIntegrator<dim, 1, Number> God_grad_p(data, reinit_dof_idx, reinit_quad_idx);
+      FECellIntegrator<dim, 1, number> source(data, reinit_dof_idx, reinit_quad_idx);
+      FECellIntegrator<dim, 1, number> God_grad_p(data, reinit_dof_idx, reinit_quad_idx);
 
       for (unsigned int cell = 0; cell < data.n_cell_batches(); ++cell)
         {
@@ -378,22 +379,22 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template <int dim, typename Number>
-  double
-  ReinitilizationDGOperator<dim, Number>::get_max_diffusitivity() const
+  template <int dim, typename number>
+  number
+  ReinitilizationDGOperator<dim, number>::get_max_diffusitivity() const
   {
     return RI_DG_diffusion_operator.get_max_diffusitivity();
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, Number>::set_artificial_diffusitivity()
+  ReinitilizationDGOperator<dim, number>::set_artificial_diffusitivity()
   {
     RI_DG_diffusion_operator.compute_diffusitivity_value();
     RI_DG_diffusion_operator.compute_penalty_parameter();
   }
 
-  template class ReinitilizationDGOperator<1>;
-  template class ReinitilizationDGOperator<2>;
-  template class ReinitilizationDGOperator<3>;
+  template class ReinitilizationDGOperator<1, double>;
+  template class ReinitilizationDGOperator<2, double>;
+  template class ReinitilizationDGOperator<3, double>;
 } // namespace MeltPoolDG::LevelSet

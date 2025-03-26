@@ -34,6 +34,8 @@
 
 namespace MeltPoolDG::LevelSet::Tools
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   NearestPoint<dim, number>::NearestPoint(
     const dealii::Mapping<dim>                                &mapping,
@@ -141,7 +143,7 @@ namespace MeltPoolDG::LevelSet::Tools
       {
         unsigned int cut_n_comp = dof_handler_src->get_fe().n_components();
         if (cut_type == CutUtil::CutPhaseType::two_phase_cut)
-          // for two phase cut, dof_handler_req.get_fe().n_components() returns double the number
+          // for two phase cut, dof_handler_req.get_fe().n_components() returns twice the number
           // of components
           cut_n_comp /= 2;
         AssertThrow(n_components == cut_n_comp,
@@ -227,7 +229,7 @@ namespace MeltPoolDG::LevelSet::Tools
     projected_points_at_interface = stencil;
 
     Assert(dealii::Utilities::MPI::sum(stencil.size(), mpi_comm) > 0,
-           dealii::ExcMessage("Number of points in narrow band equal to zero."));
+           dealii::ExcMessage("number of points in narrow band equal to zero."));
 
     if (timer_scope_local)
       timer_scope_local->stop();
@@ -335,7 +337,7 @@ namespace MeltPoolDG::LevelSet::Tools
         AssertThrow(dof_handler_dst != nullptr, dealii::ExcInternalError());
 
         unsigned int n_comp = dof_handler_src->get_fe().n_components();
-        // for two phase cut, dof_handler_src->get_fe().n_components() returns double the number
+        // for two phase cut, dof_handler_src->get_fe().n_components() returns twice the number
         // of components
         if (CutUtil::get_cut_type(*dof_handler_src) == CutUtil::CutPhaseType::two_phase_cut)
           n_comp /= 2;
@@ -1030,6 +1032,12 @@ namespace MeltPoolDG::LevelSet::Tools
     const std::function<double(const double)> &) const;
   template void
   NearestPoint<3, double>::fill_dof_vector_with_point_values<1>(
+    VectorType &,
+    const VectorType &,
+    const bool,
+    const std::function<double(const double)> &) const;
+  template void
+  NearestPoint<3, double>::fill_dof_vector_with_point_values<2>(
     VectorType &,
     const VectorType &,
     const bool,

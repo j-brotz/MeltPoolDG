@@ -13,15 +13,17 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  template <int dim>
-  NormalVectorOperationAdaflo<dim>::NormalVectorOperationAdaflo(
-    const ScratchData<dim>         &scratch_data,
-    const NormalVectorData<double> &normal_vec_data_in,
-    const int                       advec_diff_dof_idx,
-    const int                       normal_vec_dof_idx,
-    const int                       normal_vec_quad_idx,
-    const VectorType               &advected_field_in,
-    const double                    reinit_scale_factor_epsilon)
+  using namespace dealii;
+
+  template <int dim, typename number>
+  NormalVectorOperationAdaflo<dim, number>::NormalVectorOperationAdaflo(
+    const ScratchData<dim, dim, number> &scratch_data,
+    const NormalVectorData<number>      &normal_vec_data_in,
+    const int                            advec_diff_dof_idx,
+    const int                            normal_vec_dof_idx,
+    const int                            normal_vec_quad_idx,
+    const VectorType                    &advected_field_in,
+    const number                         reinit_scale_factor_epsilon)
     : scratch_data(scratch_data)
     , advected_field(advected_field_in)
     , normal_vector_field(dim)
@@ -43,9 +45,9 @@ namespace MeltPoolDG::LevelSet
     ilu_projection_matrix = std::make_shared<BlockILUExtension>();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  NormalVectorOperationAdaflo<dim>::create_operator()
+  NormalVectorOperationAdaflo<dim, number>::create_operator()
   {
     normal_vec_operation = std::make_shared<LevelSetOKZSolverComputeNormal<dim>>(
       normal_vector_field,
@@ -62,9 +64,9 @@ namespace MeltPoolDG::LevelSet
       ilu_projection_matrix);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  NormalVectorOperationAdaflo<dim>::reinit()
+  NormalVectorOperationAdaflo<dim, number>::reinit()
   {
     /**
      *  initialize the dof vectors
@@ -85,7 +87,7 @@ namespace MeltPoolDG::LevelSet
     /**
      * initialize the preconditioner -->  @todo: currently not used in adaflo
      */
-    initialize_mass_matrix_diagonal<dim, double>(scratch_data.get_matrix_free(),
+    initialize_mass_matrix_diagonal<dim, number>(scratch_data.get_matrix_free(),
                                                  scratch_data.get_constraint(
                                                    normal_vec_adaflo_params.dof_index_normal),
                                                  normal_vec_adaflo_params.dof_index_normal,
@@ -93,7 +95,7 @@ namespace MeltPoolDG::LevelSet
                                                  preconditioner);
 
 
-    initialize_projection_matrix<dim, double, VectorizedArray<double>>(
+    initialize_projection_matrix<dim, number, VectorizedArray<number>>(
       scratch_data.get_matrix_free(),
       scratch_data.get_constraint(normal_vec_adaflo_params.dof_index_normal),
       normal_vec_adaflo_params.dof_index_normal,
@@ -105,9 +107,9 @@ namespace MeltPoolDG::LevelSet
       *ilu_projection_matrix);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  NormalVectorOperationAdaflo<dim>::solve()
+  NormalVectorOperationAdaflo<dim, number>::solve()
   {
     initialize_vectors();
     normal_vec_operation->compute_normal(false /* fast computation*/);
@@ -117,7 +119,7 @@ namespace MeltPoolDG::LevelSet
     for (unsigned int d = 0; d < dim; ++d)
       Journal::print_formatted_norm(
         scratch_data.get_pcout(std::max(normal_vec_data.verbosity_level, verbosity_l2_norm)),
-        [&]() -> double {
+        [&]() -> number {
           return VectorTools::compute_norm<dim>(get_solution_normal_vector().block(d),
                                                 scratch_data,
                                                 normal_vec_adaflo_params.dof_index_normal,
@@ -129,42 +131,42 @@ namespace MeltPoolDG::LevelSet
       );
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::BlockVector<double> &
-  NormalVectorOperationAdaflo<dim>::get_solution_normal_vector() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::BlockVector<number> &
+  NormalVectorOperationAdaflo<dim, number>::get_solution_normal_vector() const
   {
     return normal_vector_field;
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::BlockVector<double> &
-  NormalVectorOperationAdaflo<dim>::get_solution_normal_vector()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::BlockVector<number> &
+  NormalVectorOperationAdaflo<dim, number>::get_solution_normal_vector()
   {
     return normal_vector_field;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   LevelSetOKZSolverComputeNormal<dim> &
-  NormalVectorOperationAdaflo<dim>::get_adaflo_obj()
+  NormalVectorOperationAdaflo<dim, number>::get_adaflo_obj()
   {
     return *normal_vec_operation;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  NormalVectorOperationAdaflo<dim>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  NormalVectorOperationAdaflo<dim, number>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     for (unsigned int d = 0; d < dim; ++d)
       vectors.push_back(&normal_vector_field.block(d));
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  NormalVectorOperationAdaflo<dim>::set_adaflo_parameters(const double epsilon,
-                                                          const int    advec_diff_dof_idx,
-                                                          const int    normal_vec_dof_idx,
-                                                          const int    normal_vec_quad_idx)
+  NormalVectorOperationAdaflo<dim, number>::set_adaflo_parameters(const number epsilon,
+                                                                  const int    advec_diff_dof_idx,
+                                                                  const int    normal_vec_dof_idx,
+                                                                  const int    normal_vec_quad_idx)
   {
     normal_vec_adaflo_params.dof_index_ls            = advec_diff_dof_idx;
     normal_vec_adaflo_params.dof_index_normal        = normal_vec_dof_idx;
@@ -174,9 +176,9 @@ namespace MeltPoolDG::LevelSet
     normal_vec_adaflo_params.approximate_projections = false; // not used in adaflo
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  NormalVectorOperationAdaflo<dim>::initialize_vectors()
+  NormalVectorOperationAdaflo<dim, number>::initialize_vectors()
   {
     /**
      * initialize advected field dof vectors
@@ -190,8 +192,8 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template class NormalVectorOperationAdaflo<1>;
-  template class NormalVectorOperationAdaflo<2>;
-  template class NormalVectorOperationAdaflo<3>;
+  template class NormalVectorOperationAdaflo<1, double>;
+  template class NormalVectorOperationAdaflo<2, double>;
+  template class NormalVectorOperationAdaflo<3, double>;
 } // namespace MeltPoolDG::LevelSet
 #endif

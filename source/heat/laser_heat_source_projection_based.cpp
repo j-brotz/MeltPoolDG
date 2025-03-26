@@ -258,7 +258,7 @@ namespace MeltPoolDG::Heat
 
             // use filtered normal vector computation ..
             if (normal_vector)
-              LevelSet::NormalVectorOperator<dim>::get_unit_normals_at_quadrature(
+              LevelSet::NormalVectorOperator<dim, number>::get_unit_normals_at_quadrature(
                 normal_eval, *normal_vector, normal_at_q, tolerance_normal_vector);
 
             Vector<number> heat_source_vector_local(dofs_per_cell);
@@ -487,7 +487,7 @@ namespace MeltPoolDG::Heat
     std::vector<number>                  buffer_dim;
     std::vector<types::global_dof_index> local_dof_indices;
 
-    LevelSet::Tools::evaluate_at_interface<dim>(
+    LevelSet::Tools::evaluate_at_interface<dim, number>(
       scratch_data.get_dof_handler(ls_dof_idx),
       scratch_data.get_mapping(),
       level_set_heaviside,

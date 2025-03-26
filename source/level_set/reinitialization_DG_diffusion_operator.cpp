@@ -5,16 +5,17 @@
 
 namespace MeltPoolDG::LevelSet
 {
+  using namespace dealii;
 
-  template <int dim, typename Number>
-  ReinitializationDGDiffusionOperator<dim, Number>::ReinitializationDGDiffusionOperator(
-    const MeltPoolDG::ScratchData<dim> &scratch_datain,
-    const ReinitializationData<Number> &reinit_data_in,
-    const unsigned int                  reinit_dof_idx_in,
-    const unsigned int                  reinit_quad_idx_in,
-    const VectorType                   &curvature_in,
-    const BlockVectorType              &normal_vector_in,
-    const VectorType                   &smooth_signum_in)
+  template <int dim, typename number>
+  ReinitializationDGDiffusionOperator<dim, number>::ReinitializationDGDiffusionOperator(
+    const MeltPoolDG::ScratchData<dim, dim, number> &scratch_datain,
+    const ReinitializationData<number>              &reinit_data_in,
+    const unsigned int                               reinit_dof_idx_in,
+    const unsigned int                               reinit_quad_idx_in,
+    const VectorType                                &curvature_in,
+    const BlockVectorType                           &normal_vector_in,
+    const VectorType                                &smooth_signum_in)
     : scratch_data(scratch_datain)
     , reinit_data(reinit_data_in)
     , reinit_dof_idx(reinit_dof_idx_in)
@@ -24,21 +25,21 @@ namespace MeltPoolDG::LevelSet
     , smooth_signum(smooth_signum_in)
   {}
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitializationDGDiffusionOperator<dim, Number>::compute_diffusitivity_value()
+  ReinitializationDGDiffusionOperator<dim, number>::compute_diffusitivity_value()
   {
     scratch_data.initialize_dof_vector(diffusitivity, reinit_dof_idx);
 
     const auto &data = scratch_data.get_matrix_free();
 
     {
-      FECellIntegrator<dim, 1, Number> eval_diffusitivity(data, reinit_dof_idx, reinit_quad_idx);
-      FECellIntegrator<dim, 1, Number> eval_smooth_signum(data, reinit_dof_idx, reinit_quad_idx);
+      FECellIntegrator<dim, 1, number> eval_diffusitivity(data, reinit_dof_idx, reinit_quad_idx);
+      FECellIntegrator<dim, 1, number> eval_smooth_signum(data, reinit_dof_idx, reinit_quad_idx);
 
       auto const diffusion_const_factor =
         scratch_data.get_min_cell_size() /
-        ((static_cast<Number>(scratch_data.get_degree(reinit_dof_idx))));
+        ((static_cast<number>(scratch_data.get_degree(reinit_dof_idx))));
 
       for (unsigned int cell = 0; cell < data.n_cell_batches(); ++cell)
         {
@@ -55,7 +56,7 @@ namespace MeltPoolDG::LevelSet
                    * The value for the artificial diffusitivity is determined by the smallest
                    * enabled element size.
                    */
-                  const VectorizedArray<Number> diffusitivity_value =
+                  const VectorizedArray<number> diffusitivity_value =
                     reinit_data.reinitilization_DG_specific_data.factor_diffusivity *
                     diffusion_const_factor;
                   eval_diffusitivity.submit_dof_value(diffusitivity_value, q);
@@ -80,11 +81,11 @@ namespace MeltPoolDG::LevelSet
     }
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitializationDGDiffusionOperator<dim, Number>::compute_penalty_parameter()
+  ReinitializationDGDiffusionOperator<dim, number>::compute_penalty_parameter()
   {
-    const Number fe_degree = (static_cast<Number>(scratch_data.get_degree(reinit_dof_idx)));
+    const number fe_degree = (static_cast<number>(scratch_data.get_degree(reinit_dof_idx)));
     // Resize
     const unsigned int n_macro_cells = scratch_data.get_matrix_free().n_cell_batches() +
                                        scratch_data.get_matrix_free().n_ghost_cell_batches();
@@ -104,18 +105,18 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitializationDGDiffusionOperator<dim, Number>::local_apply_domain(
-    const MatrixFree<dim, Number>               &data,
+  ReinitializationDGDiffusionOperator<dim, number>::local_apply_domain(
+    const MatrixFree<dim, number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
     const std::pair<unsigned int, unsigned int> &cell_range) const
   {
-    FECellIntegrator<dim, 1, Number>   eval(data, reinit_dof_idx, reinit_quad_idx);
-    FECellIntegrator<dim, 1, Number>   eval_curvature(data, reinit_dof_idx, reinit_quad_idx);
-    FECellIntegrator<dim, dim, Number> eval_normal(data, reinit_dof_idx, reinit_quad_idx);
-    FECellIntegrator<dim, 1, Number>   eval_diffusitivity(data, reinit_dof_idx, reinit_quad_idx);
+    FECellIntegrator<dim, 1, number>   eval(data, reinit_dof_idx, reinit_quad_idx);
+    FECellIntegrator<dim, 1, number>   eval_curvature(data, reinit_dof_idx, reinit_quad_idx);
+    FECellIntegrator<dim, dim, number> eval_normal(data, reinit_dof_idx, reinit_quad_idx);
+    FECellIntegrator<dim, 1, number>   eval_diffusitivity(data, reinit_dof_idx, reinit_quad_idx);
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
@@ -146,7 +147,7 @@ namespace MeltPoolDG::LevelSet
 
             if (reinit_data.reinitilization_DG_specific_data.use_directed_diffusion_stabilization)
               {
-                const Tensor<1, dim, VectorizedArray<Number>> n_phi =
+                const Tensor<1, dim, VectorizedArray<number>> n_phi =
                   MeltPoolDG::VectorTools::normalize<dim>(eval_normal.get_value(q), 1.0e-16);
                 auto const directed_diffusion_flux =
                   (diffusitivity_gradient * n_phi -
@@ -168,21 +169,21 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitializationDGDiffusionOperator<dim, Number>::local_apply_inner_face(
-    const MatrixFree<dim, Number>               &data,
+  ReinitializationDGDiffusionOperator<dim, number>::local_apply_inner_face(
+    const MatrixFree<dim, number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
     const std::pair<unsigned int, unsigned int> &face_range) const
   {
-    FEFaceIntegrator<dim, 1, Number> eval_minus(data, true, reinit_dof_idx, reinit_quad_idx);
-    FEFaceIntegrator<dim, 1, Number> eval_plus(data, false, reinit_dof_idx, reinit_quad_idx);
-    FEFaceIntegrator<dim, 1, Number> eval_diffusitivity_minus(data,
+    FEFaceIntegrator<dim, 1, number> eval_minus(data, true, reinit_dof_idx, reinit_quad_idx);
+    FEFaceIntegrator<dim, 1, number> eval_plus(data, false, reinit_dof_idx, reinit_quad_idx);
+    FEFaceIntegrator<dim, 1, number> eval_diffusitivity_minus(data,
                                                               true,
                                                               reinit_dof_idx,
                                                               reinit_quad_idx);
-    FEFaceIntegrator<dim, 1, Number> eval_diffusitivity_plus(data,
+    FEFaceIntegrator<dim, 1, number> eval_diffusitivity_plus(data,
                                                              false,
                                                              reinit_dof_idx,
                                                              reinit_quad_idx);
@@ -230,16 +231,16 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitializationDGDiffusionOperator<dim, Number>::local_apply_boundary_face(
-    const MatrixFree<dim, Number>               &data,
+  ReinitializationDGDiffusionOperator<dim, number>::local_apply_boundary_face(
+    const MatrixFree<dim, number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
     const std::pair<unsigned int, unsigned int> &face_range) const
   {
-    FEFaceIntegrator<dim, 1, Number> eval_minus(data, true, reinit_dof_idx, reinit_quad_idx);
-    FEFaceIntegrator<dim, 1, Number> eval_diffusitivity_minus(data,
+    FEFaceIntegrator<dim, 1, number> eval_minus(data, true, reinit_dof_idx, reinit_quad_idx);
+    FEFaceIntegrator<dim, 1, number> eval_diffusitivity_minus(data,
                                                               true,
                                                               reinit_dof_idx,
                                                               reinit_quad_idx);
@@ -278,35 +279,35 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim, typename Number>
-  double
-  ReinitializationDGDiffusionOperator<dim, Number>::get_max_diffusitivity() const
+  template <int dim, typename number>
+  number
+  ReinitializationDGDiffusionOperator<dim, number>::get_max_diffusitivity() const
   {
     return diffusitivity.linfty_norm();
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitializationDGDiffusionOperator<dim, Number>::apply_operator(
-    [[maybe_unused]] const Number                          time,
+  ReinitializationDGDiffusionOperator<dim, number>::apply_operator(
+    [[maybe_unused]] const number                          time,
     VectorType                                            &dst,
     const VectorType                                      &src,
     const std::function<void(unsigned int, unsigned int)> &func) const
   {
     scratch_data.get_matrix_free().loop(
-      &ReinitializationDGDiffusionOperator<dim, Number>::local_apply_domain,
-      &ReinitializationDGDiffusionOperator<dim, Number>::local_apply_inner_face,
-      &ReinitializationDGDiffusionOperator<dim, Number>::local_apply_boundary_face,
+      &ReinitializationDGDiffusionOperator<dim, number>::local_apply_domain,
+      &ReinitializationDGDiffusionOperator<dim, number>::local_apply_inner_face,
+      &ReinitializationDGDiffusionOperator<dim, number>::local_apply_boundary_face,
       this,
       dst,
       src,
       true,
-      MatrixFree<dim, Number>::DataAccessOnFaces::unspecified,
-      MatrixFree<dim, Number>::DataAccessOnFaces::unspecified);
+      MatrixFree<dim, number>::DataAccessOnFaces::unspecified,
+      MatrixFree<dim, number>::DataAccessOnFaces::unspecified);
 
 
     this->scratch_data.get_matrix_free().cell_loop(
-      &ReinitializationDGDiffusionOperator<dim, Number>::local_apply_inverse_mass_matrix,
+      &ReinitializationDGDiffusionOperator<dim, number>::local_apply_inverse_mass_matrix,
       this,
       dst,
       dst,
@@ -315,17 +316,17 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  ReinitializationDGDiffusionOperator<dim, Number>::local_apply_inverse_mass_matrix(
-    const MatrixFree<dim, Number>                    &data,
-    LinearAlgebra::distributed::Vector<Number>       &dst,
-    const LinearAlgebra::distributed::Vector<Number> &src,
+  ReinitializationDGDiffusionOperator<dim, number>::local_apply_inverse_mass_matrix(
+    const MatrixFree<dim, number>                    &data,
+    LinearAlgebra::distributed::Vector<number>       &dst,
+    const LinearAlgebra::distributed::Vector<number> &src,
     const std::pair<unsigned int, unsigned int>      &cell_range) const
   {
-    FECellIntegrator<dim, 1, Number> eval(data, reinit_dof_idx, reinit_quad_idx);
+    FECellIntegrator<dim, 1, number> eval(data, reinit_dof_idx, reinit_quad_idx);
 
-    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, Number> inverse(eval);
+    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, number> inverse(eval);
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
@@ -338,7 +339,7 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template class ReinitializationDGDiffusionOperator<1>;
-  template class ReinitializationDGDiffusionOperator<2>;
-  template class ReinitializationDGDiffusionOperator<3>;
+  template class ReinitializationDGDiffusionOperator<1, double>;
+  template class ReinitializationDGDiffusionOperator<2, double>;
+  template class ReinitializationDGDiffusionOperator<3, double>;
 } // namespace MeltPoolDG::LevelSet

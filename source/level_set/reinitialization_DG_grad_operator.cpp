@@ -4,49 +4,49 @@
 
 namespace MeltPoolDG::LevelSet
 {
+  using namespace dealii;
 
-  template <int dim, typename Number>
-  RIGradOperator<dim, Number>::RIGradOperator(const MeltPoolDG::ScratchData<dim> &scratch_data_in,
-                                              const unsigned int                  reinit_dof_idx_in,
-                                              const unsigned int reinit_quad_idx_in)
+  template <int dim, typename number>
+  RIGradOperator<dim, number>::RIGradOperator(
+    const MeltPoolDG::ScratchData<dim, dim, number> &scratch_data_in,
+    const unsigned int                               reinit_dof_idx_in,
+    const unsigned int                               reinit_quad_idx_in)
     : scratch_data(scratch_data_in)
     , reinit_dof_idx(reinit_dof_idx_in)
     , reinit_quad_idx(reinit_quad_idx_in)
   {}
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   template <bool is_right, uint component>
   void
-  RIGradOperator<dim, Number>::apply(const VectorType &src, VectorType &dst)
+  RIGradOperator<dim, number>::apply(const VectorType &src, VectorType &dst)
   {
     scratch_data.get_matrix_free().loop(
-      &RIGradOperator<dim, Number>::local_apply_domain<component>,
-      &RIGradOperator<dim, Number>::local_apply_inner_face<is_right, component>,
-      &RIGradOperator<dim, Number>::local_apply_boundary_face<is_right, component>,
+      &RIGradOperator<dim, number>::local_apply_domain<component>,
+      &RIGradOperator<dim, number>::local_apply_inner_face<is_right, component>,
+      &RIGradOperator<dim, number>::local_apply_boundary_face<is_right, component>,
       this,
       dst,
       src,
       true,
-      MatrixFree<dim, Number>::DataAccessOnFaces::values,
-      MatrixFree<dim, Number>::DataAccessOnFaces::values);
+      MatrixFree<dim, number>::DataAccessOnFaces::values,
+      MatrixFree<dim, number>::DataAccessOnFaces::values);
 
-    scratch_data.get_matrix_free().cell_loop(&RIGradOperator<dim>::local_apply_inverse_mass_matrix,
-                                             this,
-                                             dst,
-                                             dst);
+    scratch_data.get_matrix_free().cell_loop(
+      &RIGradOperator<dim, number>::local_apply_inverse_mass_matrix, this, dst, dst);
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  RIGradOperator<dim, Number>::local_apply_inverse_mass_matrix(
-    const MatrixFree<dim, Number>               &data,
+  RIGradOperator<dim, number>::local_apply_inverse_mass_matrix(
+    const MatrixFree<dim, number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
     const std::pair<unsigned int, unsigned int> &cell_range) const
   {
-    FECellIntegrator<dim, 1, Number> eval(data, reinit_dof_idx, reinit_quad_idx);
+    FECellIntegrator<dim, 1, number> eval(data, reinit_dof_idx, reinit_quad_idx);
 
-    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, Number> inverse(eval);
+    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, number> inverse(eval);
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
@@ -61,18 +61,18 @@ namespace MeltPoolDG::LevelSet
 
 
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   template <uint component>
   void
-  RIGradOperator<dim, Number>::local_apply_domain(
-    const MatrixFree<dim, Number>               &data,
+  RIGradOperator<dim, number>::local_apply_domain(
+    const MatrixFree<dim, number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
     const std::pair<unsigned int, unsigned int> &cell_range) const
   {
-    FECellIntegrator<dim, 1, Number> eval(data, reinit_dof_idx, reinit_quad_idx);
+    FECellIntegrator<dim, 1, number> eval(data, reinit_dof_idx, reinit_quad_idx);
 
-    const Tensor<1, dim, Number> unit_vector = Point<dim>::unit_vector(component);
+    const Tensor<1, dim, number> unit_vector = Point<dim>::unit_vector(component);
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
@@ -91,17 +91,17 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   template <bool is_right, uint component>
   void
-  RIGradOperator<dim, Number>::local_apply_inner_face(
-    const MatrixFree<dim, Number>               &data,
+  RIGradOperator<dim, number>::local_apply_inner_face(
+    const MatrixFree<dim, number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
     const std::pair<unsigned int, unsigned int> &face_range) const
   {
-    FEFaceIntegrator<dim, 1, Number> eval_minus(data, true, reinit_dof_idx, reinit_quad_idx);
-    FEFaceIntegrator<dim, 1, Number> eval_plus(data, false, reinit_dof_idx, reinit_quad_idx);
+    FEFaceIntegrator<dim, 1, number> eval_minus(data, true, reinit_dof_idx, reinit_quad_idx);
+    FEFaceIntegrator<dim, 1, number> eval_plus(data, false, reinit_dof_idx, reinit_quad_idx);
 
     for (unsigned int face = face_range.first; face < face_range.second; face++)
       {
@@ -133,16 +133,16 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   template <bool is_right, uint component>
   void
-  RIGradOperator<dim, Number>::local_apply_boundary_face(
-    const MatrixFree<dim, Number>               &data,
+  RIGradOperator<dim, number>::local_apply_boundary_face(
+    const MatrixFree<dim, number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
     const std::pair<unsigned int, unsigned int> &face_range) const
   {
-    FEFaceIntegrator<dim, 1, Number> eval_minus(data, true, reinit_dof_idx, reinit_quad_idx);
+    FEFaceIntegrator<dim, 1, number> eval_minus(data, true, reinit_dof_idx, reinit_quad_idx);
 
 
     for (unsigned int face = face_range.first; face < face_range.second; face++)
@@ -172,9 +172,9 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template class RIGradOperator<1>;
-  template class RIGradOperator<2>;
-  template class RIGradOperator<3>;
+  template class RIGradOperator<1, double>;
+  template class RIGradOperator<2, double>;
+  template class RIGradOperator<3, double>;
 
   //@todo: Is there a more elegant way??
   template void

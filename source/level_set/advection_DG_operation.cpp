@@ -17,11 +17,11 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  template <int dim>
-  AdvectionDGOperation<dim>::AdvectionDGOperation(
-    const ScratchData<dim>                                &scratch_data_in,
-    const AdvectionDiffusionData<double>                  &advec_diff_data_in,
-    const TimeIterator<double>                            &time_iterator,
+  template <int dim, typename number>
+  AdvectionDGOperation<dim, number>::AdvectionDGOperation(
+    const ScratchData<dim, dim, number>                   &scratch_data_in,
+    const AdvectionDiffusionData<number>                  &advec_diff_data_in,
+    const TimeIterator<number>                            &time_iterator,
     VectorType                                            &advection_velocity,
     const unsigned int                                     advec_diff_dof_idx_in,
     const unsigned int                                     advec_diff_quad_idx_in,
@@ -49,23 +49,24 @@ namespace MeltPoolDG::LevelSet
   {
     this->advec_diff_data = advec_diff_data_in;
 
-    advection_integration = std::shared_ptr<TimeIntegratorBase<double>>(
-      time_integrator_factory<double>(advection_DG_operator,
+    advection_integration = std::shared_ptr<TimeIntegratorBase<number>>(
+      time_integrator_factory<number>(advection_DG_operator,
                                       advec_diff_data_in.time_integrator_data,
                                       advec_diff_data_in.linear_solver,
                                       scratch_data.get_timer()));
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDGOperation<dim>::set_initial_condition(const Function<dim> &initial_field_function)
+  AdvectionDGOperation<dim, number>::set_initial_condition(
+    const Function<dim> &initial_field_function)
   {
-    FECellIntegrator<dim, 1, double> phi(scratch_data.get_matrix_free(),
+    FECellIntegrator<dim, 1, number> phi(scratch_data.get_matrix_free(),
                                          advec_diff_dof_idx,
                                          advec_diff_quad_idx);
 
 
-    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, double> inverse(phi);
+    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, number> inverse(phi);
 
     solution_history.get_current_solution().zero_out_ghost_values();
 
@@ -75,8 +76,8 @@ namespace MeltPoolDG::LevelSet
         for (unsigned int q = 0; q < phi.n_q_points; ++q)
           {
             // Workaround for the Vectorized Array
-            dealii::VectorizedArray<double> helper;
-            for (unsigned int i = 0; i < VectorizedArray<double>::size(); i++)
+            dealii::VectorizedArray<number> helper;
+            for (unsigned int i = 0; i < VectorizedArray<number>::size(); i++)
               {
                 if constexpr (dim == 1)
                   {
@@ -108,9 +109,9 @@ namespace MeltPoolDG::LevelSet
     solution_history.update_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDGOperation<dim>::set_initial_condition(const VectorType &solution_level_set_in)
+  AdvectionDGOperation<dim, number>::set_initial_condition(const VectorType &solution_level_set_in)
   {
     // copy the given solution into the member variable
     solution_history.get_current_solution().zero_out_ghost_values();
@@ -121,9 +122,9 @@ namespace MeltPoolDG::LevelSet
     solution_history.update_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDGOperation<dim>::reinit()
+  AdvectionDGOperation<dim, number>::reinit()
   {
     solution_history.apply(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, advec_diff_dof_idx); });
@@ -136,9 +137,9 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDGOperation<dim>::init_time_advance()
+  AdvectionDGOperation<dim, number>::init_time_advance()
   {
     const bool solution_update_ghosts =
       !solution_history.get_current_solution().has_ghost_elements();
@@ -148,9 +149,9 @@ namespace MeltPoolDG::LevelSet
     this->ready_for_time_advance = true;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDGOperation<dim>::solve(const bool do_finish_time_step)
+  AdvectionDGOperation<dim, number>::solve(const bool do_finish_time_step)
   {
     ScopedName         sc("advection_diffusion::solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
@@ -170,11 +171,11 @@ namespace MeltPoolDG::LevelSet
     rhs = user_rhs;
 
     // type alias for the pre- and post-processing functions
-    std::function<void(double, VectorType &, const VectorType &)> pre_processing;
+    std::function<void(number, VectorType &, const VectorType &)> pre_processing;
 
     if (time_integrator_scheme_is_explicit(advection_integration->get_integrator_type()))
       pre_processing =
-        [&](double time, VectorType &dst, const VectorType &current_solution) -> void {
+        [&](number time, VectorType &dst, const VectorType &current_solution) -> void {
         advection_DG_operator.set_field_functions(time);
         advection_DG_operator.apply_dirichlet_boundary_operator(time, dst, current_solution);
       };
@@ -188,7 +189,7 @@ namespace MeltPoolDG::LevelSet
 
     Journal::print_formatted_norm(
       scratch_data.get_pcout(1),
-      [&]() -> double {
+      [&]() -> number {
         return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
                                                           scratch_data,
                                                           advec_diff_dof_idx,
@@ -214,59 +215,60 @@ namespace MeltPoolDG::LevelSet
     solution_history.get_current_solution().update_ghost_values();
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  AdvectionDGOperation<dim>::get_advected_field() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  AdvectionDGOperation<dim, number>::get_advected_field() const
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  AdvectionDGOperation<dim>::get_advected_field()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::Vector<number> &
+  AdvectionDGOperation<dim, number>::get_advected_field()
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  AdvectionDGOperation<dim>::get_advected_field_old() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  AdvectionDGOperation<dim, number>::get_advected_field_old() const
   {
     return solution_history.get_recent_old_solution();
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  AdvectionDGOperation<dim>::get_advected_field_old()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::Vector<number> &
+  AdvectionDGOperation<dim, number>::get_advected_field_old()
   {
     return solution_history.get_recent_old_solution();
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  AdvectionDGOperation<dim>::get_user_rhs()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::Vector<number> &
+  AdvectionDGOperation<dim, number>::get_user_rhs()
   {
     return user_rhs;
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  AdvectionDGOperation<dim>::get_user_rhs() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  AdvectionDGOperation<dim, number>::get_user_rhs() const
   {
     return user_rhs;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDGOperation<dim>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  AdvectionDGOperation<dim, number>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDGOperation<dim>::attach_output_vectors(GenericDataOut<dim, double> &data_out) const
+  AdvectionDGOperation<dim, number>::attach_output_vectors(
+    GenericDataOut<dim, number> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(advec_diff_dof_idx),
                              solution_history.get_current_solution(),
@@ -277,7 +279,10 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template class AdvectionDGOperation<1>;
-  template class AdvectionDGOperation<2>;
-  template class AdvectionDGOperation<3>;
+  template class AdvectionDGOperation<1, double>;
+  ;
+  template class AdvectionDGOperation<2, double>;
+  ;
+  template class AdvectionDGOperation<3, double>;
+  ;
 } // namespace MeltPoolDG::LevelSet

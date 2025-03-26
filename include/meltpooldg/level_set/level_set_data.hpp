@@ -11,8 +11,7 @@
 
 namespace MeltPoolDG::LevelSet
 {
-
-  template <typename number = double>
+  template <typename number>
   struct LevelSetData
   {
     FiniteElementData fe;

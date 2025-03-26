@@ -4,9 +4,9 @@
 namespace MeltPoolDG::LevelSet
 {
 
-  template <int dim, typename Number>
-  AdvectionDGOperator<dim, Number>::AdvectionDGOperator(
-    const MeltPoolDG::ScratchData<dim>                              &scratch_data_in,
+  template <int dim, typename number>
+  AdvectionDGOperator<dim, number>::AdvectionDGOperator(
+    const MeltPoolDG::ScratchData<dim, dim, number>                 &scratch_data_in,
     VectorType                                                      &advection_velocity_in,
     const unsigned int                                               advec_diff_dof_idx_in,
     const unsigned int                                               advec_diff_quad_idx_in,
@@ -25,9 +25,9 @@ namespace MeltPoolDG::LevelSet
     , enable_analytical_velocity_update(enable_analytical_velocity_update_in)
   {}
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  AdvectionDGOperator<dim, Number>::set_field_functions(const Number time) const
+  AdvectionDGOperator<dim, number>::set_field_functions(const number time) const
   {
     if (enable_analytical_velocity_update)
       {
@@ -42,17 +42,17 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  AdvectionDGOperator<dim, Number>::local_apply_domain(
-    const MatrixFree<dim, Number>                    &data,
-    LinearAlgebra::distributed::Vector<Number>       &dst,
-    const LinearAlgebra::distributed::Vector<Number> &src,
+  AdvectionDGOperator<dim, number>::local_apply_domain(
+    const MatrixFree<dim, number>                    &data,
+    LinearAlgebra::distributed::Vector<number>       &dst,
+    const LinearAlgebra::distributed::Vector<number> &src,
     const std::pair<unsigned int, unsigned int>      &cell_range) const
   {
-    FECellIntegrator<dim, 1, Number> eval(data, advec_diff_dof_idx, advec_diff_quad_idx);
+    FECellIntegrator<dim, 1, number> eval(data, advec_diff_dof_idx, advec_diff_quad_idx);
 
-    FECellIntegrator<dim, dim, Number> eval_vel(data, velocity_dof_idx, advec_diff_quad_idx);
+    FECellIntegrator<dim, dim, number> eval_vel(data, velocity_dof_idx, advec_diff_quad_idx);
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
@@ -74,25 +74,25 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  AdvectionDGOperator<dim, Number>::local_apply_inner_face(
-    const MatrixFree<dim, Number>                    &data,
-    LinearAlgebra::distributed::Vector<Number>       &dst,
-    const LinearAlgebra::distributed::Vector<Number> &src,
+  AdvectionDGOperator<dim, number>::local_apply_inner_face(
+    const MatrixFree<dim, number>                    &data,
+    LinearAlgebra::distributed::Vector<number>       &dst,
+    const LinearAlgebra::distributed::Vector<number> &src,
     const std::pair<unsigned int, unsigned int>      &face_range) const
   {
-    FEFaceIntegrator<dim, 1, Number> eval_minus(data,
+    FEFaceIntegrator<dim, 1, number> eval_minus(data,
                                                 true,
                                                 advec_diff_dof_idx,
                                                 advec_diff_quad_idx);
 
-    FEFaceIntegrator<dim, 1, Number> eval_plus(data,
+    FEFaceIntegrator<dim, 1, number> eval_plus(data,
                                                false,
                                                advec_diff_dof_idx,
                                                advec_diff_quad_idx);
 
-    FEFaceIntegrator<dim, dim, Number> eval_vel(data, true, velocity_dof_idx, advec_diff_quad_idx);
+    FEFaceIntegrator<dim, dim, number> eval_vel(data, true, velocity_dof_idx, advec_diff_quad_idx);
 
     for (unsigned int face = face_range.first; face < face_range.second; face++)
       {
@@ -127,20 +127,20 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  AdvectionDGOperator<dim, Number>::local_apply_homogenous_boundary_face(
-    const MatrixFree<dim, Number>                    &data,
-    LinearAlgebra::distributed::Vector<Number>       &dst,
-    const LinearAlgebra::distributed::Vector<Number> &src,
+  AdvectionDGOperator<dim, number>::local_apply_homogenous_boundary_face(
+    const MatrixFree<dim, number>                    &data,
+    LinearAlgebra::distributed::Vector<number>       &dst,
+    const LinearAlgebra::distributed::Vector<number> &src,
     const std::pair<unsigned int, unsigned int>      &face_range) const
   {
-    FEFaceIntegrator<dim, 1, Number> eval_minus(data,
+    FEFaceIntegrator<dim, 1, number> eval_minus(data,
                                                 true,
                                                 advec_diff_dof_idx,
                                                 advec_diff_quad_idx);
 
-    FEFaceIntegrator<dim, dim, Number> eval_vel(data, true, velocity_dof_idx, advec_diff_quad_idx);
+    FEFaceIntegrator<dim, dim, number> eval_vel(data, true, velocity_dof_idx, advec_diff_quad_idx);
 
     for (unsigned int face = face_range.first; face < face_range.second; face++)
       {
@@ -158,7 +158,7 @@ namespace MeltPoolDG::LevelSet
             const vector normal_vector =
               MeltPoolDG::VectorTools::to_vector<dim>(eval_minus.get_normal_vector(q));
 
-            dealii::VectorizedArray<Number> u_plus;
+            dealii::VectorizedArray<number> u_plus;
             const auto                      boundary_id = data.get_boundary_id(face);
             if (boundary_conditions->get_type(boundary_id) == "dirichlet")
               {
@@ -184,20 +184,20 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  AdvectionDGOperator<dim, Number>::local_apply_inhomogenous_boundary_face(
-    [[maybe_unused]] const MatrixFree<dim, Number>                    &data,
-    [[maybe_unused]] LinearAlgebra::distributed::Vector<Number>       &dst,
-    [[maybe_unused]] const LinearAlgebra::distributed::Vector<Number> &src,
+  AdvectionDGOperator<dim, number>::local_apply_inhomogenous_boundary_face(
+    [[maybe_unused]] const MatrixFree<dim, number>                    &data,
+    [[maybe_unused]] LinearAlgebra::distributed::Vector<number>       &dst,
+    [[maybe_unused]] const LinearAlgebra::distributed::Vector<number> &src,
     [[maybe_unused]] const std::pair<unsigned int, unsigned int>      &face_range) const
   {
-    FEFaceIntegrator<dim, 1, Number> eval_minus(data,
+    FEFaceIntegrator<dim, 1, number> eval_minus(data,
                                                 true,
                                                 advec_diff_dof_idx,
                                                 advec_diff_quad_idx);
 
-    FEFaceIntegrator<dim, dim, Number> eval_vel(data, true, velocity_dof_idx, advec_diff_quad_idx);
+    FEFaceIntegrator<dim, dim, number> eval_vel(data, true, velocity_dof_idx, advec_diff_quad_idx);
 
     for (unsigned int face = face_range.first; face < face_range.second; face++)
       {
@@ -217,9 +217,9 @@ namespace MeltPoolDG::LevelSet
                 const vector normal_vector =
                   MeltPoolDG::VectorTools::to_vector<dim>(eval_minus.get_normal_vector(q));
 
-                // dealii::VectorizedArray<Number> u_plus;
+                // dealii::VectorizedArray<number> u_plus;
                 auto const u_plus =
-                  VectorTools::evaluate_function_at_vectorized_points<dim, Number>(
+                  VectorTools::evaluate_function_at_vectorized_points<dim, number>(
                     *(boundary_conditions->get_bc_of_type("dirichlet", false /*not optional*/)
                         .at(boundary_id)),
                     eval_minus.quadrature_point(q),
@@ -238,29 +238,29 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  AdvectionDGOperator<dim, Number>::apply_operator(
-    const Number                                           time,
-    LinearAlgebra::distributed::Vector<Number>            &dst,
-    LinearAlgebra::distributed::Vector<Number> const      &src,
+  AdvectionDGOperator<dim, number>::apply_operator(
+    const number                                           time,
+    LinearAlgebra::distributed::Vector<number>            &dst,
+    LinearAlgebra::distributed::Vector<number> const      &src,
     const std::function<void(unsigned int, unsigned int)> &func) const
   {
     boundary_conditions->set_time(time);
 
     this->scratch_data_.get_matrix_free().loop(
-      &AdvectionDGOperator<dim, Number>::local_apply_domain,
-      &AdvectionDGOperator<dim, Number>::local_apply_inner_face,
-      &AdvectionDGOperator<dim, Number>::local_apply_homogenous_boundary_face,
+      &AdvectionDGOperator<dim, number>::local_apply_domain,
+      &AdvectionDGOperator<dim, number>::local_apply_inner_face,
+      &AdvectionDGOperator<dim, number>::local_apply_homogenous_boundary_face,
       this,
       dst,
       src,
       false,
-      MatrixFree<dim, Number>::DataAccessOnFaces::values,
-      MatrixFree<dim, Number>::DataAccessOnFaces::values);
+      MatrixFree<dim, number>::DataAccessOnFaces::values,
+      MatrixFree<dim, number>::DataAccessOnFaces::values);
 
     this->scratch_data_.get_matrix_free().cell_loop(
-      &AdvectionDGOperator<dim, Number>::local_apply_inverse_mass_matrix,
+      &AdvectionDGOperator<dim, number>::local_apply_inverse_mass_matrix,
       this,
       dst,
       dst,
@@ -268,43 +268,43 @@ namespace MeltPoolDG::LevelSet
       func);
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  AdvectionDGOperator<dim, Number>::apply_dirichlet_boundary_operator(
-    const Number                                      time,
-    LinearAlgebra::distributed::Vector<Number>       &dst,
-    const LinearAlgebra::distributed::Vector<Number> &src) const
+  AdvectionDGOperator<dim, number>::apply_dirichlet_boundary_operator(
+    const number                                      time,
+    LinearAlgebra::distributed::Vector<number>       &dst,
+    const LinearAlgebra::distributed::Vector<number> &src) const
   {
     boundary_conditions->set_time(time);
 
     scratch_data_.get_matrix_free().loop(
-      &AdvectionDGOperator<dim, Number>::local_apply_domain_dummy,
-      &AdvectionDGOperator<dim, Number>::local_apply_inner_face_dummy,
-      &AdvectionDGOperator<dim, Number>::local_apply_inhomogenous_boundary_face,
+      &AdvectionDGOperator<dim, number>::local_apply_domain_dummy,
+      &AdvectionDGOperator<dim, number>::local_apply_inner_face_dummy,
+      &AdvectionDGOperator<dim, number>::local_apply_inhomogenous_boundary_face,
       this,
       dst,
       src,
       false,
-      MatrixFree<dim, Number>::DataAccessOnFaces::values,
-      MatrixFree<dim, Number>::DataAccessOnFaces::values);
+      MatrixFree<dim, number>::DataAccessOnFaces::values,
+      MatrixFree<dim, number>::DataAccessOnFaces::values);
 
 
     this->scratch_data_.get_matrix_free().cell_loop(
-      &AdvectionDGOperator<dim, Number>::local_apply_inverse_mass_matrix, this, dst, dst);
+      &AdvectionDGOperator<dim, number>::local_apply_inverse_mass_matrix, this, dst, dst);
   }
 
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  AdvectionDGOperator<dim, Number>::local_apply_inverse_mass_matrix(
-    const MatrixFree<dim, Number>                    &data,
-    LinearAlgebra::distributed::Vector<Number>       &dst,
-    const LinearAlgebra::distributed::Vector<Number> &src,
+  AdvectionDGOperator<dim, number>::local_apply_inverse_mass_matrix(
+    const MatrixFree<dim, number>                    &data,
+    LinearAlgebra::distributed::Vector<number>       &dst,
+    const LinearAlgebra::distributed::Vector<number> &src,
     const std::pair<unsigned int, unsigned int>      &cell_range) const
   {
-    FECellIntegrator<dim, 1, Number> eval(data, advec_diff_dof_idx, advec_diff_quad_idx);
+    FECellIntegrator<dim, 1, number> eval(data, advec_diff_dof_idx, advec_diff_quad_idx);
 
-    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, Number> inverse(eval);
+    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, number> inverse(eval);
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
@@ -317,7 +317,7 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template class AdvectionDGOperator<1>;
-  template class AdvectionDGOperator<2>;
-  template class AdvectionDGOperator<3>;
+  template class AdvectionDGOperator<1, double>;
+  template class AdvectionDGOperator<2, double>;
+  template class AdvectionDGOperator<3, double>;
 } // namespace MeltPoolDG::LevelSet

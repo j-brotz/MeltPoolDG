@@ -186,7 +186,7 @@ namespace MeltPoolDG::LevelSet
       {
         if (simulation_case->parameters.advec_diff.fe.type != FiniteElementType::FE_DGQ)
           {
-            advec_diff_operation = std::make_unique<AdvectionDiffusionOperation<dim>>(
+            advec_diff_operation = std::make_unique<AdvectionDiffusionOperation<dim, double>>(
               *scratch_data,
               simulation_case->get_boundary_condition("dirichlet", "advection_diffusion"),
               simulation_case->parameters.advec_diff,
@@ -197,13 +197,13 @@ namespace MeltPoolDG::LevelSet
               advec_diff_quad_idx,
               velocity_dof_idx);
 
-            dynamic_cast<AdvectionDiffusionOperation<dim> *>(advec_diff_operation.get())
+            dynamic_cast<AdvectionDiffusionOperation<dim, double> *>(advec_diff_operation.get())
               ->set_inflow_outflow_bc(
                 simulation_case->get_boundary_condition("inflow_outflow", "advection_diffusion"));
           }
         else
           {
-            advec_diff_operation = std::make_unique<AdvectionDGOperation<dim>>(
+            advec_diff_operation = std::make_unique<AdvectionDGOperation<dim, double>>(
               *scratch_data,
               simulation_case->parameters.advec_diff,
               *time_iterator,
@@ -227,7 +227,7 @@ namespace MeltPoolDG::LevelSet
           ExcMessage(
             "Inflow/outflow boundary condition not supported from the adaflo implementation."));
 
-        advec_diff_operation = std::make_unique<AdvectionDiffusionOperationAdaflo<dim>>(
+        advec_diff_operation = std::make_unique<AdvectionDiffusionOperationAdaflo<dim, double>>(
           *scratch_data,
           *time_iterator,
           advection_velocity,

@@ -6,8 +6,6 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  using namespace dealii;
-
   template <typename number>
   class DeltaApproximationBase
   {
@@ -15,8 +13,8 @@ namespace MeltPoolDG::LevelSet
     virtual number
     compute_weight(const number ls_heaviside) const = 0;
 
-    virtual VectorizedArray<number>
-    compute_weight(const VectorizedArray<number> &ls_heaviside) const = 0;
+    virtual dealii::VectorizedArray<number>
+    compute_weight(const dealii::VectorizedArray<number> &ls_heaviside) const = 0;
   };
 
 
@@ -47,11 +45,11 @@ namespace MeltPoolDG::LevelSet
       return compute_weight_internal(level_set_heaviside);
     }
 
-    inline VectorizedArray<number>
-    compute_weight(const VectorizedArray<number> &level_set_heaviside) const override
+    inline dealii::VectorizedArray<number>
+    compute_weight(const dealii::VectorizedArray<number> &level_set_heaviside) const override
     {
-      VectorizedArray<number> temp(0.0);
-      for (unsigned int v = 0; v < VectorizedArray<number>::size(); ++v)
+      dealii::VectorizedArray<number> temp(0.0);
+      for (unsigned int v = 0; v < dealii::VectorizedArray<number>::size(); ++v)
         temp = compute_weight_internal(level_set_heaviside[v]);
       return temp;
     }
@@ -119,8 +117,8 @@ namespace MeltPoolDG::LevelSet
       return compute_weight_internal(level_set_heaviside);
     }
 
-    inline VectorizedArray<number>
-    compute_weight(const VectorizedArray<number> &level_set_heaviside) const override
+    inline dealii::VectorizedArray<number>
+    compute_weight(const dealii::VectorizedArray<number> &level_set_heaviside) const override
     {
       return compute_weight_internal(level_set_heaviside);
     }
@@ -155,7 +153,7 @@ namespace MeltPoolDG::LevelSet
   };
 
   /**
-   * Asymmetric, double phase weighted Dirac delta approximation function.
+   * Asymmetric, number phase weighted Dirac delta approximation function.
    *
    * This function can be used to approximate the Dirac delta function for diffuse interfaces. The
    * approximation is asymmetric and you can choose two weights for each phase individually. The
@@ -204,8 +202,8 @@ namespace MeltPoolDG::LevelSet
       return compute_weight_internal(level_set_heaviside);
     }
 
-    inline VectorizedArray<number>
-    compute_weight(const VectorizedArray<number> &level_set_heaviside) const override
+    inline dealii::VectorizedArray<number>
+    compute_weight(const dealii::VectorizedArray<number> &level_set_heaviside) const override
     {
       return compute_weight_internal(level_set_heaviside);
     }
@@ -300,8 +298,8 @@ namespace MeltPoolDG::LevelSet
       return compute_weight_internal(level_set_heaviside);
     }
 
-    inline VectorizedArray<number>
-    compute_weight(const VectorizedArray<number> &level_set_heaviside) const override
+    inline dealii::VectorizedArray<number>
+    compute_weight(const dealii::VectorizedArray<number> &level_set_heaviside) const override
     {
       return compute_weight_internal(level_set_heaviside);
     }
@@ -431,8 +429,8 @@ namespace MeltPoolDG::LevelSet
       return compute_weight_internal(level_set_heaviside);
     }
 
-    inline VectorizedArray<number>
-    compute_weight(const VectorizedArray<number> &level_set_heaviside) const override
+    inline dealii::VectorizedArray<number>
+    compute_weight(const dealii::VectorizedArray<number> &level_set_heaviside) const override
     {
       return compute_weight_internal(level_set_heaviside);
     }

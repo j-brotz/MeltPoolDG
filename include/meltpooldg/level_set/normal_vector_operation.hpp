@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, TUM, August 2020
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 // for parallelization
 #include <deal.II/lac/generic_linear_algebra.h>
@@ -20,8 +15,6 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  using namespace dealii;
-
   /**
    *  This function calculates the normal vector of the current level set function being
    *  the solution of an intermediate projection step
@@ -39,21 +32,21 @@ namespace MeltPoolDG::LevelSet
    *    !!!!
    */
 
-  template <int dim>
-  class NormalVectorOperation : public NormalVectorOperationBase<dim>
+  template <int dim, typename number>
+  class NormalVectorOperation : public NormalVectorOperationBase<dim, number>
   {
   private:
-    using VectorType       = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType  = LinearAlgebra::distributed::BlockVector<double>;
-    using SparseMatrixType = TrilinosWrappers::SparseMatrix;
+    using VectorType       = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType  = dealii::LinearAlgebra::distributed::BlockVector<number>;
+    using SparseMatrixType = dealii::TrilinosWrappers::SparseMatrix;
 
   public:
-    NormalVectorOperation(const ScratchData<dim>         &scratch_data_in,
-                          const NormalVectorData<double> &normal_vector_data,
-                          const VectorType               &solution_level_set,
-                          const unsigned int              normal_dof_idx_in,
-                          const unsigned int              normal_quad_idx_in,
-                          const unsigned int              ls_dof_idx_in);
+    NormalVectorOperation(const ScratchData<dim, dim, number> &scratch_data_in,
+                          const NormalVectorData<number>      &normal_vector_data,
+                          const VectorType                    &solution_level_set,
+                          const unsigned int                   normal_dof_idx_in,
+                          const unsigned int                   normal_quad_idx_in,
+                          const unsigned int                   ls_dof_idx_in);
 
     void
     reinit() override;
@@ -68,7 +61,8 @@ namespace MeltPoolDG::LevelSet
     get_solution_normal_vector() override;
 
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
+    attach_vectors(
+      std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) override;
 
   private:
     /**
@@ -79,13 +73,13 @@ namespace MeltPoolDG::LevelSet
     create_operator();
 
   private:
-    const ScratchData<dim>        &scratch_data;
-    const NormalVectorData<double> normal_vector_data;
-    const VectorType              &solution_level_set;
+    const ScratchData<dim, dim, number> &scratch_data;
+    const NormalVectorData<number>       normal_vector_data;
+    const VectorType                    &solution_level_set;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
-     *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
-     *  multiple DoFHandlers, quadrature rules, etc.
+     *  ScratchData<dim,dim,number> object is selected. This is important when
+     * ScratchData<dim,dim,number> holds multiple DoFHandlers, quadrature rules, etc.
      */
     const unsigned int normal_dof_idx;
     const unsigned int normal_quad_idx;
@@ -93,7 +87,7 @@ namespace MeltPoolDG::LevelSet
 
     TimeIntegration::SolutionHistory<BlockVectorType> solution_history;
 
-    std::unique_ptr<Predictor<BlockVectorType, double>> predictor;
+    std::unique_ptr<Predictor<BlockVectorType, number>> predictor;
     /*
      *    This is the primary solution variable of this module, which will be also publically
      *    accessible for output_results.
@@ -103,7 +97,7 @@ namespace MeltPoolDG::LevelSet
     /*
      *  This pointer will point to your user-defined normal vector operator.
      */
-    std::unique_ptr<NormalVectorOperator<dim, double>> normal_vector_operator;
+    std::unique_ptr<NormalVectorOperator<dim, number>> normal_vector_operator;
     /*
      * Preconditioner for the curvature operator
      */
