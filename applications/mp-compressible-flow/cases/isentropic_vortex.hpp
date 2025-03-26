@@ -91,8 +91,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     set_boundary_conditions() override
     {
       auto exact_solution = std::make_shared<IsentropicVortexExactSolution<dim>>(
-        this->parameters.time_stepping.start_time,
-        this->parameters.flow.material_data_gas_phase.gamma);
+        this->parameters.time_stepping.start_time, this->parameters.flow.material.gas.gamma);
       this->attach_boundary_condition({0, exact_solution}, "inflow", "compressible_flow");
     }
 
@@ -100,8 +99,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     set_field_conditions() override
     {
       auto exact_solution = std::make_shared<IsentropicVortexExactSolution<dim>>(
-        this->parameters.time_stepping.start_time,
-        this->parameters.flow.material_data_gas_phase.gamma);
+        this->parameters.time_stepping.start_time, this->parameters.flow.material.gas.gamma);
       this->attach_initial_condition(exact_solution, "compressible_flow");
       this->attach_field_function(exact_solution, "exact_solution", "compressible_flow");
     }
@@ -109,9 +107,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     void
     do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const override
     {
-      IsentropicVortexExactSolution<dim> exact_solution(
-        generic_data_out.get_time(), this->parameters.flow.material_data_gas_phase.gamma);
-      this->print_relative_norm(generic_data_out, exact_solution, "Error");
+      IsentropicVortexExactSolution<dim> exact_solution(generic_data_out.get_time(),
+                                                        this->parameters.flow.material.gas.gamma);
+      this->print_relative_norm(generic_data_out, exact_solution, "error");
     }
   };
 } // namespace MeltPoolDG::Simulation::CompressibleFlow

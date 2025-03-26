@@ -31,8 +31,8 @@ namespace MeltPoolDG::Multiphase
      *
      * @param flow_scratch_data Flow scratch data object holding all relevant compressible flow data
      * required by the operator.
-     * @param mapping_info_surface_in dealii::NonMatching::MappingInfo object, provides the mapping
-     * information computation and mapping data storage of the surface.
+     * @param mapping_info_interface_in dealii::NonMatching::MappingInfo object, provides the mapping
+     * information computation and mapping data storage of the interface.
      * @param mapping_info_cells_in Vector of dealii::NonMatching::MappingInfo objects, provides
      * the mapping information computation and mapping data storage of the cells on the
      * inner subdomain and the outer subdomain, respectively.
@@ -42,7 +42,7 @@ namespace MeltPoolDG::Multiphase
      */
     CompressibleMultiphaseOperator(
       MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-      const MappingInfoType                                      &mapping_info_surface_in,
+      const MappingInfoType                                      &mapping_info_interface_in,
       const MappingInfoVectorType                                &mapping_info_cells_in,
       const MappingInfoVectorType                                &mapping_info_faces_in);
 
@@ -111,20 +111,20 @@ namespace MeltPoolDG::Multiphase
     void
     vmult(VectorType &dst, const VectorType &src) const;
 
-    /**
-     * Function which sets the inverse time step size.
-     */
-    void
-    compute_inverse_time_step(const number &time_step);
-
   private:
     MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number> &flow_scratch_data;
 
-    const MeltPoolDG::Flow::CompressibleFlowConvectiveKernels<dim, number> convective_terms;
+    const MeltPoolDG::Flow::CompressibleFlowConvectiveKernels<dim, number, false /*is_gas_phase*/>
+      convective_terms_liquid;
+    const MeltPoolDG::Flow::CompressibleFlowConvectiveKernels<dim, number, true /*is_gas_phase*/>
+      convective_terms_gas;
 
-    const MeltPoolDG::Flow::CompressibleFlowViscousKernels<dim, number> viscous_terms;
+    const MeltPoolDG::Flow::CompressibleFlowViscousKernels<dim, number, false /*is_gas_phase*/>
+      viscous_terms_liquid;
+    const MeltPoolDG::Flow::CompressibleFlowViscousKernels<dim, number, true /*is_gas_phase*/>
+      viscous_terms_gas;
 
-    const MappingInfoType       &mapping_info_surface;
+    const MappingInfoType       &mapping_info_interface;
     const MappingInfoVectorType &mapping_info_cells;
     const MappingInfoVectorType &mapping_info_faces;
 
@@ -134,10 +134,10 @@ namespace MeltPoolDG::Multiphase
     mutable number velocity_interface = 0.;
 
     // Weighting factors for Nitsche-type viscous interface flux (for HLLP0+Nitsche method)
-    double alpha_1;
-    double alpha_2;
+    number alpha_1;
+    number alpha_2;
 
-    number inv_time_step;
+    mutable number inv_time_step = 0.;
 
     /**
      * Wrapper for the generation of a FECellIntegrator object.
@@ -146,7 +146,8 @@ namespace MeltPoolDG::Multiphase
      * @param offset Offset for the first selected component in a FESystem.
      */
     FECellIntegrator<dim, dim + 2, number>
-    create_cell_integrator(CutUtil::CellCategory category, unsigned int offset = 0) const
+    create_cell_integrator(const CutUtil::CellCategory category,
+                           const unsigned int          offset = 0) const
     {
       return FECellIntegrator<dim, dim + 2, number>(
         flow_scratch_data.scratch_data.get_matrix_free(),
@@ -159,14 +160,17 @@ namespace MeltPoolDG::Multiphase
     /**
      * Wrapper for the generation of a FEFaceIntegrator object.
      *
-     * @param is_inner_face This selects which of the two cells of an internal face the current evaluator will be based upon. The interior face is the main face along which the normal vectors are oriented.
-     * @param category Category of the considered cell adjacent to the face (liquid/intersected/gas).
+     * @param is_inner_face This selects which of the two cells of an internal face the current
+     * evaluator will be based upon. The interior face is the main face along which the normal
+     * vectors are oriented.
+     * @param category Category of the considered cell adjacent to the face
+     * (liquid/intersected/gas).
      * @param offset Offset for the first selected component in a FESystem.
      */
     FEFaceIntegrator<dim, dim + 2, number>
-    create_face_integrator(bool                  is_inner_face,
-                           CutUtil::CellCategory category,
-                           unsigned int          offset = 0) const
+    create_face_integrator(const bool                  is_inner_face,
+                           const CutUtil::CellCategory category,
+                           const unsigned int          offset = 0) const
     {
       return FEFaceIntegrator<dim, dim + 2, number>(
         flow_scratch_data.scratch_data.get_matrix_free(),
@@ -175,6 +179,26 @@ namespace MeltPoolDG::Multiphase
         flow_scratch_data.quad_idx,
         offset,
         category);
+    };
+
+    /**
+     * Wrapper for the generation of a pair of FEFaceIntegrator objects for the "interior" face
+     * and the "exterior" face. The "interior" face is the main face along which the normal
+     * vectors are oriented.
+     *
+     * @param category Category of the considered cell adjacent to the face
+     * (liquid/intersected/gas).
+     * @param offset Offset for the first selected component in a FESystem.
+     *
+     * @return Pair of FEFaceIntegrator objects. The first one corresponds to the "interior" face
+     * and the second one to the "exterior" face.
+     */
+    std::pair<FEFaceIntegrator<dim, dim + 2, number>, FEFaceIntegrator<dim, dim + 2, number>>
+    create_face_integrators(const CutUtil::CellCategory category,
+                            const unsigned int          offset = 0) const
+    {
+      return {create_face_integrator(true, category, offset),
+              create_face_integrator(false, category, offset)};
     };
   };
 } // namespace MeltPoolDG::Multiphase

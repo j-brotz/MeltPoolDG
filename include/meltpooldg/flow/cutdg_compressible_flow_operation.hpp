@@ -67,7 +67,7 @@ namespace MeltPoolDG::Flow
      */
     CutDGCompressibleFlowOperation(
       const ScratchData<dim>                                     &scratch_data_in,
-      const CompressibleFlowData                                 &comp_flow_data_in,
+      const CompressibleFlowData<number>                         &comp_flow_data_in,
       const TimeIterator<number>                                 &time_iterator_in,
       const std::function<void(const dealii::DoFHandler<dim> &)> &reinit_matrix_free_in,
       unsigned int                                                comp_flow_dof_idx_in  = 0,
@@ -145,20 +145,17 @@ namespace MeltPoolDG::Flow
     set_unfitted_object_velocity(std::shared_ptr<Function<dim>> &velocity_function);
 
     /**
-     * Set the (standard compressible flow, i.e. non-cut specific) boundary condition. This funciton
-     * takes to parameters. One defines the tyoe of the boundary condition and the other one on the
-     * one hand defines the boundary (by the boundary id) at whcih the boundary condition is applied
-     * and optionally a corresponding prescribed function for the boundary condition.
+     * Set the (standard compressible flow, i.e. non-cut specific) boundary conditions.
      *
-     * @param boundary_condition Type of the boundary condition.
-     * @param boundary_condition_function A map consisting of the boundary id and the corresponding
-     * boundary codnition function.
+     * @param simulation_case Pointer to the considered simulation case class.
+     * @param operation_name String for the name of the considered operation.
+     *
+     * @note The function simply passes the parameters to the set_boundary_conditions function in the
+     * CompressibleFlowBoundaryConditions object.
      */
     void
-    set_boundary_condition(
-      CompressibleBoundaryConditionType boundary_condition,
-      std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-        boundary_condition_function);
+    set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
+                            const std::string                              &operation_name);
 
     /**
      * Getter functions.

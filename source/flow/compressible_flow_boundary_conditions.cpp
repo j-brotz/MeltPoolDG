@@ -96,7 +96,7 @@ namespace MeltPoolDG::Flow
     const dealii::types::boundary_id                               boundary_id,
     const ConservedVariablesType                                  &w_m,
     const ConservedVariablesGradType                              &grad_w_m,
-    const CompressibleFlowData                                    &flow_data,
+    const CompressibleFlowData<number>                            &flow_data,
     const bool is_gas_phase) const -> std::tuple<ConservedVariablesType, ConservedVariablesGradType>
   {
     ConservedVariablesType     w_p;
@@ -165,10 +165,10 @@ namespace MeltPoolDG::Flow
                              dim + 1 + component_offset);
 
         const auto material_data =
-          is_gas_phase ? flow_data.material_data_gas_phase : flow_data.material_data_liquid_phase;
+          is_gas_phase ? flow_data.material.gas : flow_data.material.liquid;
         // consider equation of state for computation of inner energy from given pressure
         const VectorizedArray<number> inner_energy =
-          compute_inner_energy_from_pressure<dim, number>(pressure, w_p[0], material_data);
+          EOS::compute_inner_energy_from_pressure<dim, number>(pressure, w_p[0], material_data);
 
         w_p[dim + 1]      = inner_energy + p_dyn;
         grad_w_p[dim + 1] = grad_w_m[dim + 1];

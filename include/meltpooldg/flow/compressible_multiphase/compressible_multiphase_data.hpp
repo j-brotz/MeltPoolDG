@@ -1,6 +1,6 @@
 /**
- * @brief Data structure, which contains parameters specifically for the phase coupling of compressible multiphase
- * simulations.
+ * @brief Data structure, which contains parameters specifically for the phase coupling of
+ * compressible multiphase simulations.
  */
 
 #pragma once
@@ -18,52 +18,113 @@ namespace MeltPoolDG::Multiphase
   {
     // evaporation mass flux
     // TODO: use Hertz-Knudsen theory and enable constant evaporation mass flux for testing
-    double m_dot_evap = 0.;
+    number m_dot_evap = 0.;
 
     // numerical method for interface jump enforcement
-    InterfaceNumericalMethod interface_numerical_method = InterfaceNumericalMethod::penalty;
+    InterfaceNumericalMethod type = InterfaceNumericalMethod::penalty;
 
-    // density constraint penalty factor
-    double density_constraint_penalty_factor = 10.;
+    struct Penalty
+    {
+      struct Coefficients
+      {
+        // density constraint penalty factor
+        number density = std::numeric_limits<number>::max();
 
-    // temperature constraint penalty factor
-    double temperature_constraint_penalty_factor = 10.;
+        // temperature constraint penalty factor
+        number temperature = std::numeric_limits<number>::max();
+      } coefficients;
 
-    // TODO: remove from input file, only temporary required for testing
-    // target values for density and temperature for gas phase, required for penalty approach of
-    // interface jump conditions
-    double target_density_gas_phase     = 0.;
-    double target_temperature_gas_phase = 0.;
+      struct TargetValues
+      {
+        // TODO: remove from input file, only temporary required for testing
+        // target values for density and temperature for gas phase, required for penalty approach of
+        // interface jump conditions
+        number density_gas_phase     = 0.;
+        number temperature_gas_phase = 0.;
+      } target_values;
 
-    // symmetric interior penalty parameter for the viscous interface term
-    double symm_int_penalty_parameter_interface = 1.;
+    } penalty;
+
+    struct HLLP0
+    {
+      // symmetric interior penalty parameter for the viscous interface term
+      number interior_penalty_parameter_interface = 1.;
+    } hllp0_and_nitsche;
 
     void
     add_parameters(dealii::ParameterHandler &prm)
     {
-      prm.enter_subsection("multiphase");
+      prm.enter_subsection("interface jump conditions");
       {
-        prm.add_parameter("evaporation mass flux", m_dot_evap, "Evaporation mass flux.");
-        prm.add_parameter("interface numerical method",
-                          interface_numerical_method,
-                          "Numerical method for enforcing interface jump conditions.");
-        prm.add_parameter("density constraint penalty factor",
-                          density_constraint_penalty_factor,
-                          "Density constraint penalty factor.");
-        prm.add_parameter("temperature constraint penalty factor",
-                          temperature_constraint_penalty_factor,
-                          "Temperature constraint penalty factor.");
-        prm.add_parameter("symm int penalty parameter interface",
-                          symm_int_penalty_parameter_interface,
-                          "Symmetric interior penalty parameter for interface term.");
-        prm.add_parameter("target density gas phase",
-                          target_density_gas_phase,
-                          "Target density of gas phase.");
-        prm.add_parameter("target temperature gas phase",
-                          target_temperature_gas_phase,
-                          "Target temperature of gas phase.");
+        // TODO: add parameter "bool const_m_dot_evap" when Hertz-Knudsen theory is enabled
+        prm.add_parameter(
+          "evaporation mass flux",
+          m_dot_evap,
+          "Evaporation mass"
+          " flux at the phase interface. This parameter is only relevant if a given "
+          "mass flux is considered, i.e. no thermodynamical model (Hertz-Knudsen "
+          "theory) is applied.",
+          dealii::Patterns::Double());
+        prm.add_parameter("type",
+                          type,
+                          "Numerical method for enforcing interface jump conditions. "
+                          "The options are \"penalty\", \"HLLP0_and_Nitsche\".",
+                          dealii::Patterns::Selection("penalty|HLLP0_and_Nitsche"));
+        prm.enter_subsection("penalty");
+        prm.enter_subsection("coefficients");
+        prm.add_parameter(
+          "density",
+          penalty.coefficients.density,
+          "Density constraint penalty factor for enforcing the density in the gas phase. "
+          "The minimum value is 0.",
+          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+        prm.add_parameter(
+          "temperature",
+          penalty.coefficients.temperature,
+          "Temperature constraint penalty factor for enforcing the temperature in the "
+          "gas phase. The minimum value is 0.",
+          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+        prm.leave_subsection();
+        // TODO: In the case that the Hertz-Knudsen theory is considered, no target values should be
+        // set in the user input
+        prm.enter_subsection("target values");
+        prm.add_parameter("density gas phase",
+                          penalty.target_values.density_gas_phase,
+                          "Target density of gas phase.",
+                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+        prm.add_parameter("temperature gas phase",
+                          penalty.target_values.temperature_gas_phase,
+                          "Target temperature of gas phase.",
+                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+        prm.leave_subsection();
+        prm.leave_subsection();
+        prm.enter_subsection("HLLP0 and Nitsche");
+        prm.add_parameter(
+          "interior penalty parameter interface",
+          hllp0_and_nitsche.interior_penalty_parameter_interface,
+          "Symmetric interior penalty parameter for the interface term. A good first "
+          "guess is O(1/cell_size). Increase the parameter in the case of instabilities at the "
+          "interface. The minimum value is 0.",
+          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+        prm.leave_subsection();
       }
       prm.leave_subsection();
+    };
+
+    void
+    post()
+    {
+      if (type == InterfaceNumericalMethod::penalty)
+        {
+          AssertThrow(penalty.coefficients.density != std::numeric_limits<number>::max(),
+                      dealii::ExcMessage(
+                        "You have to set the density constraint penalty factor for penalty "
+                        "method."));
+          AssertThrow(penalty.coefficients.temperature != std::numeric_limits<number>::max(),
+                      dealii::ExcMessage(
+                        "You have to set the temperature constraint penalty factor for penalty "
+                        "method."));
+        }
     };
   };
 } // namespace MeltPoolDG::Multiphase

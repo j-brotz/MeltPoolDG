@@ -26,6 +26,7 @@
 #include <deal.II/non_matching/mesh_classifier.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/cut/solution_transfer.hpp>
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/compressible_flow_boundary_conditions.hpp>
@@ -68,7 +69,7 @@ namespace MeltPoolDG::Multiphase
      */
     CompressibleMultiphaseOperation(
       const ScratchData<dim>                                     &scratch_data_in,
-      const MeltPoolDG::Flow::CompressibleFlowData               &comp_flow_data_in,
+      const MeltPoolDG::Flow::CompressibleFlowData<number>       &comp_flow_data_in,
       const TimeIterator<number>                                 &time_iterator_in,
       const std::function<void(const dealii::DoFHandler<dim> &)> &reinit_matrix_free_in,
       unsigned int                                                comp_flow_dof_idx_in  = 0,
@@ -91,7 +92,7 @@ namespace MeltPoolDG::Multiphase
      * @note The function simply passes the parameters to the corresponding operator function.
      */
     void
-    set_body_force(std::unique_ptr<Function<dim>> body_force_in);
+    set_body_force(std::unique_ptr<dealii::Function<dim>> body_force_in);
 
     /**
      * Compute the maximum time step size arising from the convective and viscous time step limits
@@ -127,7 +128,7 @@ namespace MeltPoolDG::Multiphase
      * @param function Given function for initial condition.
      */
     void
-    set_initial_condition(const Function<dim> &function);
+    set_initial_condition(const dealii::Function<dim> &function);
 
     /**
      * Attach the solution to the passed data out object. The solution which are added are the
@@ -139,20 +140,17 @@ namespace MeltPoolDG::Multiphase
     attach_output_vectors(GenericDataOut<dim> &data_out) const;
 
     /**
-     * Set the boundary condition. This function takes to parameters.
-     * One defines the tyoe of the boundary condition and the other one on the
-     * one hand defines the boundary (by the boundary id) at whcih the boundary condition is applied
-     * and optionally a corresponding prescribed function for the boundary condition.
+     * Set the boundary conditions.
      *
-     * @param boundary_condition Type of the boundary condition.
-     * @param boundary_condition_function A map consisting of the boundary id and the corresponding
-     * boundary condition function.
+     * @param simulation_case Pointer to the considered simulation case class.
+     * @param operation_name String for the name of the considered operation.
+     *
+     * @note The function simply passes the parameters to the set_boundary_conditions function in the
+     * CompressibleFlowBoundaryConditions class.
      */
     void
-    set_boundary_condition(
-      MeltPoolDG::Flow::CompressibleBoundaryConditionType boundary_condition,
-      std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-        boundary_condition_function);
+    set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
+                            const std::string                              &operation_name);
 
     /**
      * Getter functions.

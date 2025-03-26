@@ -234,25 +234,8 @@ namespace MeltPoolDG::Flow
     setup_dof_system();
 
     // set boundary conditions
-    comp_flow_operation.set_boundary_condition(
-      CompressibleBoundaryConditionType::inflow,
-      simulation_case->get_boundary_condition("inflow", "compressible_flow"));
-
-    comp_flow_operation.set_boundary_condition(
-      CompressibleBoundaryConditionType::subsonic_outflow_fixed_pressure,
-      simulation_case->get_boundary_condition("outflow_fixed_pressure", "compressible_flow"));
-
-    comp_flow_operation.set_boundary_condition(
-      CompressibleBoundaryConditionType::subsonic_outflow_fixed_energy,
-      simulation_case->get_boundary_condition("outflow_fixed_energy", "compressible_flow"));
-
-    comp_flow_operation.set_boundary_condition(
-      CompressibleBoundaryConditionType::slip_wall,
-      simulation_case->get_boundary_condition("slip_wall", "compressible_flow"));
-
-    comp_flow_operation.set_boundary_condition(
-      CompressibleBoundaryConditionType::no_slip_wall,
-      simulation_case->get_boundary_condition("no_slip_wall", "compressible_flow"));
+    const std::string operation_name = "compressible_flow";
+    comp_flow_operation.set_boundary_conditions(simulation_case, operation_name);
 
     // initialize operation
     comp_flow_operation.reinit();

@@ -280,7 +280,7 @@ namespace MeltPoolDG::Flow
                               EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
                                                                       EvaluationFlags::nothing));
 
-        const VectorizedArray<number> penalty_parameter =
+        const VectorizedArray<number> interior_penalty_parameter =
           is_viscous ?
             std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
                      phi_p.read_cell_data(flow_scratch_data.interior_penalty_parameter)) :
@@ -293,7 +293,7 @@ namespace MeltPoolDG::Flow
                                        number,
                                        FEFaceIntegrator<dim, dim + 2, number>,
                                        is_viscous>(
-                phi_m, phi_p, q, penalty_parameter, convective_terms, viscous_terms);
+                phi_m, phi_p, q, interior_penalty_parameter, convective_terms, viscous_terms);
 
 
             // since we approach the face only once, we submit the contributions
@@ -331,7 +331,7 @@ namespace MeltPoolDG::Flow
         phi.reinit(face);
         phi.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
-        const VectorizedArray<number> penalty_parameter =
+        const VectorizedArray<number> interior_penalty_parameter =
           is_viscous ? phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) : 0.;
 
         for (const unsigned int q : phi.quadrature_point_indices())
@@ -343,7 +343,7 @@ namespace MeltPoolDG::Flow
                                                 is_viscous>(phi,
                                                             q,
                                                             phi.boundary_id(),
-                                                            penalty_parameter,
+                                                            interior_penalty_parameter,
                                                             convective_terms,
                                                             viscous_terms,
                                                             flow_scratch_data);
@@ -632,7 +632,7 @@ namespace MeltPoolDG::Flow
         delta_w_m,
         grad_w_m,
         grad_delta_w_m,
-        flow_scratch_data.flow_data.material_data_gas_phase.gamma);
+        flow_scratch_data.flow_data.material.gas.gamma);
 
     ConservedVariablesGradType numerical_flux =
       convective_terms.calculate_jacobian_convective_numerical_flux({w_m, w_p},

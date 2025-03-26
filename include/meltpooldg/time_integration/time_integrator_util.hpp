@@ -2,7 +2,7 @@
 #pragma once
 
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
-#include <meltpooldg/time_integration/bdf_time_intgeration.hpp>
+#include <meltpooldg/time_integration/bdf_time_integration.hpp>
 #include <meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp>
 #include <meltpooldg/time_integration/one_step_theta.hpp>
 #include <meltpooldg/time_integration/time_integrator_base.hpp>

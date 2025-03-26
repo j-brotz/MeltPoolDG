@@ -10,14 +10,14 @@
 
 namespace MeltPoolDG::Multiphase
 {
-  using namespace dealii;
-
   template <int dim>
   class CompressibleMultiphaseProblem
   {
+    using number = double;
+
   private:
     using CaseType   = CompressibleMultiphaseCase<dim>;
-    using VectorType = LinearAlgebra::distributed::Vector<double>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
   public:
     explicit CompressibleMultiphaseProblem(std::unique_ptr<CaseType> simulation_case)
@@ -55,7 +55,7 @@ namespace MeltPoolDG::Multiphase
      *  @param current_time Current time at t^n.
      */
     void
-    output_results(unsigned int time_step, double current_time);
+    output_results(unsigned int time_step, number current_time);
 
     /**
      * Interpolates the values of a (currently) analytically given level-set function to the
@@ -70,16 +70,16 @@ namespace MeltPoolDG::Multiphase
     void
     update_level_set();
 
-    std::unique_ptr<CaseType> simulation_case;
+    std::shared_ptr<CaseType> simulation_case;
 
     DoFHandler<dim>                                          dof_handler;
     DoFHandler<dim>                                          dof_handler_level_set;
-    AffineConstraints<double>                                constraints;
-    AffineConstraints<double>                                constraints_level_set;
+    AffineConstraints<number>                                constraints;
+    AffineConstraints<number>                                constraints_level_set;
     std::shared_ptr<ScratchData<dim>>                        scratch_data;
-    std::shared_ptr<TimeIterator<double>>                    time_iterator;
-    MeltPoolDG::Flow::CompressibleFlowOperation<dim, double> comp_multiphase_operation;
-    std::unique_ptr<Profiling::ProfilingMonitor<double>>     profiling_monitor;
+    std::shared_ptr<TimeIterator<number>>                    time_iterator;
+    MeltPoolDG::Flow::CompressibleFlowOperation<dim, number> comp_multiphase_operation;
+    std::unique_ptr<Profiling::ProfilingMonitor<number>>     profiling_monitor;
 
     unsigned int comp_multiphase_dof_idx{};
     unsigned int level_set_dof_idx{};
@@ -89,8 +89,6 @@ namespace MeltPoolDG::Multiphase
 
     std::shared_ptr<Function<dim>> level_set_field_function;
     VectorType                     level_set;
-    // TODO: remove when "post_processor->process()" works for two-phase case
-    unsigned int result_number = 0;
   };
 
 } // namespace MeltPoolDG::Multiphase

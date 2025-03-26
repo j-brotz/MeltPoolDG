@@ -68,11 +68,11 @@ namespace MeltPoolDG::Flow
   DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>::make_initial_guess(
     VectorType &solution) const
   {
-    typedef std::function<void(const MatrixFree<dim, number> &,
-                               LinearAlgebra::distributed::Vector<number>       &dst,
-                               const LinearAlgebra::distributed::Vector<number> &src,
-                               const std::pair<unsigned int, unsigned int> &)>
-                                                          local_applier_type;
+    using local_applier_type =
+      std::function<void(const dealii::MatrixFree<dim, number> &,
+                         dealii::LinearAlgebra::distributed::Vector<number>       &dst,
+                         const dealii::LinearAlgebra::distributed::Vector<number> &src,
+                         const std::pair<unsigned int, unsigned int> &)>;
     const std::function<void(unsigned int, unsigned int)> func;
     local_applier_type                                    inverse =
       [dof_idx = flow_scratch_data.dof_idx,
@@ -129,10 +129,9 @@ namespace MeltPoolDG::Flow
                                const std::pair<unsigned int, unsigned int> &)>
       local_applier_type;
 
-    local_applier_type cell = MELT_POOL_DG_LAMBDA_WRAPPER(local_cell_explicit_stage);
-    local_applier_type face = MELT_POOL_DG_LAMBDA_WRAPPER(local_face_explicit_stage);
-    local_applier_type boundary_face =
-      MELT_POOL_DG_LAMBDA_WRAPPER(local_boundary_face_explicit_stage);
+    local_applier_type cell          = MPDG_LAMBDA_WRAPPER(local_cell_explicit_stage);
+    local_applier_type face          = MPDG_LAMBDA_WRAPPER(local_face_explicit_stage);
+    local_applier_type boundary_face = MPDG_LAMBDA_WRAPPER(local_boundary_face_explicit_stage);
     flow_scratch_data.scratch_data.get_matrix_free().loop(
       cell, face, boundary_face, dst, src, zero_dst_vec);
   }
@@ -211,7 +210,7 @@ namespace MeltPoolDG::Flow
         delta_w_m,
         grad_w_m,
         grad_delta_w_m,
-        flow_scratch_data.flow_data.material_data_gas_phase.gamma);
+        flow_scratch_data.flow_data.material.gas.gamma);
 
     ConservedVariablesGradType numerical_flux =
       viscous_terms.calculate_jacobian_viscous_numerical_flux(
@@ -584,7 +583,7 @@ namespace MeltPoolDG::Flow
         phi_m.reinit(face);
         phi_m.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
-        const VectorizedArray<number> penalty_parameter =
+        const VectorizedArray<number> interior_penalty_parameter =
           std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
                    phi_p.read_cell_data(flow_scratch_data.interior_penalty_parameter));
 
@@ -596,7 +595,7 @@ namespace MeltPoolDG::Flow
                                                              phi_m.get_gradient(q),
                                                              phi_p.get_gradient(q),
                                                              phi_m.normal_vector(q),
-                                                             penalty_parameter);
+                                                             interior_penalty_parameter);
 
             // since we approach the face only once, we submit the contributions
             // to the face integral of the two neighbouring elements.
@@ -627,7 +626,7 @@ namespace MeltPoolDG::Flow
         phi.reinit(face);
         phi.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
-        const VectorizedArray<number> penalty_parameter =
+        const VectorizedArray<number> interior_penalty_parameter =
           phi.read_cell_data(flow_scratch_data.interior_penalty_parameter);
 
         for (const unsigned int q : phi.quadrature_point_indices())
@@ -646,7 +645,7 @@ namespace MeltPoolDG::Flow
                 flow_scratch_data.flow_data);
 
             ConservedVariablesType flux = viscous_terms.calculate_viscous_numerical_flux(
-              w_m, w_p, grad_w_m, grad_w_p, normal, penalty_parameter);
+              w_m, w_p, grad_w_m, grad_w_p, normal, interior_penalty_parameter);
 
             phi.submit_value(current_time_increment * flux, q);
           }

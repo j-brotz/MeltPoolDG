@@ -7,7 +7,7 @@
 #include <meltpooldg/flow/compressible_flow_material_data.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::Flow::EOS
 {
   /**
    * Calculate the pressure from the conserved variables for a specific equation of state.
@@ -20,37 +20,37 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number = double, bool is_gas_phase = true>
   inline DEAL_II_ALWAYS_INLINE //
     dealii::VectorizedArray<number>
-    calculate_pressure(
+    calculate_thermodynamic_pressure(
       const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
-      const CompressibleFlowData                                       &flow_data)
+      const CompressibleFlowData<number>                               &flow_data)
   {
     const CompressibleFluidMaterialPhaseData<number> &material_data =
-      is_gas_phase ? flow_data.material_data_gas_phase : flow_data.material_data_liquid_phase;
+      is_gas_phase ? flow_data.material.gas : flow_data.material.liquid;
 
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> velocity =
       MeltPoolDG::Flow::calculate_velocity<dim, number>(conserved_variables);
 
-    switch (material_data.equation_of_state)
+    switch (material_data.eos_data.type)
       {
-          case EOS::ideal_gas: {
+          case EquationOfState::ideal_gas: {
             return (material_data.gamma - 1.) *
                    (conserved_variables[dim + 1] -
                     conserved_variables[0] * 0.5 * scalar_product(velocity, velocity));
           }
-          case EOS::stiffened_gas: {
+          case EquationOfState::stiffened_gas: {
             return (material_data.gamma - 1.) *
                      (conserved_variables[dim + 1] -
                       conserved_variables[0] * 0.5 * scalar_product(velocity, velocity)) -
-                   material_data.gamma * material_data.eos_parameters.p_inf;
+                   material_data.gamma * material_data.eos_data.p_inf;
           }
-          case EOS::noble_abel_stiffened_gas: {
+          case EquationOfState::noble_abel_stiffened_gas: {
             return ((material_data.gamma - 1.) *
                       (conserved_variables[dim + 1] -
                        0.5 * conserved_variables[0] * scalar_product(velocity, velocity) -
-                       conserved_variables[0] * material_data.eos_parameters.q) -
-                    material_data.gamma * material_data.eos_parameters.p_inf *
-                      (1. - conserved_variables[0] * material_data.eos_parameters.b)) /
-                   (1. - conserved_variables[0] * material_data.eos_parameters.b);
+                       conserved_variables[0] * material_data.eos_data.q) -
+                    material_data.gamma * material_data.eos_data.p_inf *
+                      (1. - conserved_variables[0] * material_data.eos_data.b)) /
+                   (1. - conserved_variables[0] * material_data.eos_data.b);
           }
         default:
           AssertThrow(false, ExcNotImplemented("The given EOS is not supported."));
@@ -73,11 +73,11 @@ namespace MeltPoolDG::Flow
     calculate_grad_T(
       const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
       const CompressibleFlowTypes::ConservedVariablesGradType<dim, number>
-                                 &grad_conserved_variables,
-      const CompressibleFlowData &flow_data)
+                                         &grad_conserved_variables,
+      const CompressibleFlowData<number> &flow_data)
   {
     const CompressibleFluidMaterialPhaseData<number> &material_data =
-      is_gas_phase ? flow_data.material_data_gas_phase : flow_data.material_data_liquid_phase;
+      is_gas_phase ? flow_data.material.gas : flow_data.material.liquid;
 
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> u =
       calculate_velocity<dim, number>(conserved_variables);
@@ -91,17 +91,17 @@ namespace MeltPoolDG::Flow
       inv_rho *
       (grad_conserved_variables[dim + 1] - inv_rho * conserved_variables[dim + 1] * grad_rho);
 
-    switch (material_data.equation_of_state)
+    switch (material_data.eos_data.type)
       {
-          case EOS::ideal_gas: {
+          case EquationOfState::ideal_gas: {
             return (material_data.gamma - 1.0) / material_data.specific_gas_constant *
                    (grad_E - grad_u * u);
           }
-        case EOS::stiffened_gas:
-          case EOS::noble_abel_stiffened_gas: {
+        case EquationOfState::stiffened_gas:
+          case EquationOfState::noble_abel_stiffened_gas: {
             return material_data.gamma / material_data.specific_isobaric_heat *
                    (grad_E - grad_u * u +
-                    material_data.eos_parameters.p_inf * inv_rho * inv_rho * grad_rho);
+                    material_data.eos_data.p_inf * inv_rho * inv_rho * grad_rho);
           }
         default:
           AssertThrow(false, ExcNotImplemented("The given EOS is not supported."));
@@ -121,27 +121,27 @@ namespace MeltPoolDG::Flow
     dealii::VectorizedArray<number>
     calculate_speed_of_sound(
       const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
-      const CompressibleFlowData                                       &flow_data)
+      const CompressibleFlowData<number>                               &flow_data)
   {
     const CompressibleFluidMaterialPhaseData<number> &material_data =
-      is_gas_phase ? flow_data.material_data_gas_phase : flow_data.material_data_liquid_phase;
+      is_gas_phase ? flow_data.material.gas : flow_data.material.liquid;
 
     const auto pressure =
-      calculate_pressure<dim, number, is_gas_phase>(conserved_variables, flow_data);
+      calculate_thermodynamic_pressure<dim, number, is_gas_phase>(conserved_variables, flow_data);
     const auto density = conserved_variables[0];
 
-    switch (material_data.equation_of_state)
+    switch (material_data.eos_data.type)
       {
-          case EOS::ideal_gas: {
+          case EquationOfState::ideal_gas: {
             return std::sqrt(material_data.gamma * pressure / density);
           }
-          case EOS::stiffened_gas: {
-            return std::sqrt(material_data.gamma * (pressure + material_data.eos_parameters.p_inf) /
+          case EquationOfState::stiffened_gas: {
+            return std::sqrt(material_data.gamma * (pressure + material_data.eos_data.p_inf) /
                              density);
           }
-          case EOS::noble_abel_stiffened_gas: {
-            return std::sqrt(material_data.gamma * (pressure + material_data.eos_parameters.p_inf) /
-                             (density * (1. - density * material_data.eos_parameters.b)));
+          case EquationOfState::noble_abel_stiffened_gas: {
+            return std::sqrt(material_data.gamma * (pressure + material_data.eos_data.p_inf) /
+                             (density * (1. - density * material_data.eos_data.b)));
           }
         default:
           AssertThrow(false, ExcNotImplemented("The given EOS is not supported."));
@@ -161,32 +161,66 @@ namespace MeltPoolDG::Flow
     dealii::VectorizedArray<number>
     calculate_temperature(
       const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
-      const CompressibleFlowData                                       &flow_data)
+      const CompressibleFlowData<number>                               &flow_data)
   {
     const CompressibleFluidMaterialPhaseData<number> &material_data =
-      is_gas_phase ? flow_data.material_data_gas_phase : flow_data.material_data_liquid_phase;
+      is_gas_phase ? flow_data.material.gas : flow_data.material.liquid;
 
     const auto pressure =
-      calculate_pressure<dim, number, is_gas_phase>(conserved_variables, flow_data);
+      calculate_thermodynamic_pressure<dim, number, is_gas_phase>(conserved_variables, flow_data);
     const auto density = conserved_variables[0];
 
-    switch (material_data.equation_of_state)
+    switch (material_data.eos_data.type)
       {
-          case EOS::ideal_gas: {
+          case EquationOfState::ideal_gas: {
             return pressure / (material_data.specific_gas_constant * density);
           }
-          case EOS::stiffened_gas: {
-            return (pressure + material_data.eos_parameters.p_inf) * material_data.gamma /
+          case EquationOfState::stiffened_gas: {
+            return (pressure + material_data.eos_data.p_inf) * material_data.gamma /
                    (material_data.specific_isobaric_heat * density * (material_data.gamma - 1.));
           }
-          case EOS::noble_abel_stiffened_gas: {
-            return (pressure + material_data.eos_parameters.p_inf) *
-                   (1. / density - material_data.eos_parameters.b) * material_data.gamma /
+          case EquationOfState::noble_abel_stiffened_gas: {
+            return (pressure + material_data.eos_data.p_inf) *
+                   (1. / density - material_data.eos_data.b) * material_data.gamma /
                    ((material_data.gamma - 1.) * material_data.specific_isobaric_heat);
           }
         default:
           AssertThrow(false, ExcNotImplemented("The given EOS is not supported."));
       }
+  }
+
+  /**
+   * Calculate the total stress tensor from pressure contribution and viscous stress contribution.
+   * sigma_ij = tau_ij - p * delta_ij
+   *
+   * @param conserved_variables Current values of the conserved variables.
+   * @param grad_conserved_variables Current gradient of the conserved variables.
+   * @param flow_data Collection of parameters required by the compressible Navier-Stokes operator.
+   * @param viscous_terms Collection of viscous term computations for the compressible Navier-Stokes
+   * equations.
+   *
+   * @return Stress tensor resulting from the values and gradients of the conserved variables.
+   */
+  template <int dim, typename number = double, bool is_gas_phase = true>
+  inline DEAL_II_ALWAYS_INLINE //
+    dealii::Tensor<2, dim, VectorizedArray<number>>
+    calculate_stress_tensor(
+      const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
+      const CompressibleFlowTypes::ConservedVariablesGradType<dim, number>
+                                         &grad_conserved_variables,
+      const CompressibleFlowData<number> &flow_data,
+      const auto                         &viscous_terms)
+  {
+    const auto grad_vel =
+      Flow::calculate_grad_velocity<dim, number>(conserved_variables, grad_conserved_variables);
+
+    const auto viscous_stress_tensor = viscous_terms.calculate_viscous_stress_tensor(grad_vel);
+
+    const auto pressure_tensor =
+      calculate_thermodynamic_pressure<dim, number, is_gas_phase>(conserved_variables, flow_data) *
+      dealii::unit_symmetric_tensor<dim, VectorizedArray<number>>();
+
+    return viscous_stress_tensor - pressure_tensor;
   }
 
   /**
@@ -203,12 +237,12 @@ namespace MeltPoolDG::Flow
     CompressibleFlowTypes::ConservedVariablesType<dim, number>
     convert_conservative_into_primitive_variables(
       const CompressibleFlowTypes::ConservedVariablesType<dim, number> &u_cons,
-      const Flow::CompressibleFlowData                                 &flow_data)
+      const Flow::CompressibleFlowData<number>                         &flow_data)
   {
     CompressibleFlowTypes::ConservedVariablesType<dim, number> u_prim;
 
     // pressure
-    u_prim[0] = calculate_pressure<dim, number, is_gas_phase>(u_cons, flow_data);
+    u_prim[0] = calculate_thermodynamic_pressure<dim, number, is_gas_phase>(u_cons, flow_data);
 
     // velocity
     for (unsigned int i = 1; i < dim + 1; i++)
@@ -234,16 +268,16 @@ namespace MeltPoolDG::Flow
     CompressibleFlowTypes::ConservedVariablesType<dim, number>
     convert_primitive_into_conservative_variables(
       const CompressibleFlowTypes::ConservedVariablesType<dim, number> &u_prim,
-      const Flow::CompressibleFlowData                                 &flow_data)
+      const Flow::CompressibleFlowData<number>                         &flow_data)
   {
     CompressibleFlowTypes::ConservedVariablesType<dim, number> u_cons;
 
     const CompressibleFluidMaterialPhaseData<number> &material_data =
-      is_gas_phase ? flow_data.material_data_gas_phase : flow_data.material_data_liquid_phase;
+      is_gas_phase ? flow_data.material.gas : flow_data.material.liquid;
 
-    switch (material_data.equation_of_state)
+    switch (material_data.eos_data.type)
       {
-          case EOS::ideal_gas: {
+          case EquationOfState::ideal_gas: {
             // density
             u_cons[0] = u_prim[0] / (material_data.specific_gas_constant * u_prim[dim + 1]);
             // momentum
@@ -257,30 +291,11 @@ namespace MeltPoolDG::Flow
                                            0.5 * scalar_product(velocity, velocity));
             break;
           }
-          case EOS::stiffened_gas: {
+          case EquationOfState::stiffened_gas: {
             // density
             u_cons[0] =
-              (u_prim[0] + material_data.eos_parameters.p_inf) * material_data.gamma /
+              (u_prim[0] + material_data.eos_data.p_inf) * material_data.gamma /
               (material_data.specific_isobaric_heat * u_prim[dim + 1] * (material_data.gamma - 1.));
-            // momentum
-            for (unsigned int i = 1; i < dim + 1; i++)
-              u_cons[i] = u_prim[i] * u_cons[0];
-            // total energy
-            const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> velocity =
-              MeltPoolDG::Flow::calculate_velocity<dim, number>(u_cons);
-            u_cons[dim + 1] = u_cons[0] * (material_data.specific_isobaric_heat /
-                                             material_data.gamma * u_prim[dim + 1] +
-                                           material_data.eos_parameters.p_inf / u_cons[0] +
-                                           0.5 * scalar_product(velocity, velocity));
-            break;
-          }
-          case EOS::noble_abel_stiffened_gas: {
-            // density
-            u_cons[0] =
-              (u_prim[0] + material_data.eos_parameters.p_inf) /
-              (material_data.specific_isobaric_heat * u_prim[dim + 1] * (material_data.gamma - 1.) /
-                 material_data.gamma +
-               material_data.eos_parameters.b * (u_prim[0] + material_data.eos_parameters.p_inf));
             // momentum
             for (unsigned int i = 1; i < dim + 1; i++)
               u_cons[i] = u_prim[i] * u_cons[0];
@@ -290,9 +305,26 @@ namespace MeltPoolDG::Flow
             u_cons[dim + 1] =
               u_cons[0] *
               (material_data.specific_isobaric_heat / material_data.gamma * u_prim[dim + 1] +
-               material_data.eos_parameters.p_inf *
-                 (1. / u_cons[0] - material_data.eos_parameters.b) +
-               material_data.eos_parameters.q + 0.5 * scalar_product(velocity, velocity));
+               material_data.eos_data.p_inf / u_cons[0] + 0.5 * scalar_product(velocity, velocity));
+            break;
+          }
+          case EquationOfState::noble_abel_stiffened_gas: {
+            // density
+            u_cons[0] = (u_prim[0] + material_data.eos_data.p_inf) /
+                        (material_data.specific_isobaric_heat * u_prim[dim + 1] *
+                           (material_data.gamma - 1.) / material_data.gamma +
+                         material_data.eos_data.b * (u_prim[0] + material_data.eos_data.p_inf));
+            // momentum
+            for (unsigned int i = 1; i < dim + 1; i++)
+              u_cons[i] = u_prim[i] * u_cons[0];
+            // total energy
+            const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> velocity =
+              MeltPoolDG::Flow::calculate_velocity<dim, number>(u_cons);
+            u_cons[dim + 1] =
+              u_cons[0] *
+              (material_data.specific_isobaric_heat / material_data.gamma * u_prim[dim + 1] +
+               material_data.eos_data.p_inf * (1. / u_cons[0] - material_data.eos_data.b) +
+               material_data.eos_data.q + 0.5 * scalar_product(velocity, velocity));
             break;
           }
         default:
@@ -319,22 +351,22 @@ namespace MeltPoolDG::Flow
       const VectorizedArray<number>                          &density,
       const Flow::CompressibleFluidMaterialPhaseData<number> &material_data)
   {
-    switch (material_data.equation_of_state)
+    switch (material_data.eos_data.type)
       {
-          case EOS::ideal_gas: {
+          case EquationOfState::ideal_gas: {
             return pressure / (material_data.gamma - 1.);
           }
-          case EOS::stiffened_gas: {
-            return (pressure + material_data.gamma * material_data.eos_parameters.p_inf) /
+          case EquationOfState::stiffened_gas: {
+            return (pressure + material_data.gamma * material_data.eos_data.p_inf) /
                    (material_data.gamma - 1.);
           }
-          case EOS::noble_abel_stiffened_gas: {
-            return (pressure + material_data.gamma * material_data.eos_parameters.p_inf) /
-                     (material_data.gamma - 1.) * (1. - density * material_data.eos_parameters.b) +
-                   density * material_data.eos_parameters.q;
+          case EquationOfState::noble_abel_stiffened_gas: {
+            return (pressure + material_data.gamma * material_data.eos_data.p_inf) /
+                     (material_data.gamma - 1.) * (1. - density * material_data.eos_data.b) +
+                   density * material_data.eos_data.q;
           }
         default:
           AssertThrow(false, ExcNotImplemented("The given EOS is not supported."));
       }
   }
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::Flow::EOS

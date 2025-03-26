@@ -1,22 +1,28 @@
 // In this test, the function get_face_type() in 'cut/util.hpp' in combination with
 // FEFaceEvaluation objects is tested, to correctly choose the active_fe_indices for mixed faces in
-// cut applications. For a mixed face, one adjacent cell of the face is completeley inside the
+// cut applications. For a mixed face, one adjacent cell of the face is completely inside the
 // active phase and the other adjacent cell is cut.
+// The test is done for dim=1 and dim=2.
 
 // case 1:
 //
-//       liquid \  gas
-//  |----|----|--\--|----|
-// x=-1           \     x=1
-//                phi
+//           1D:                     2D:
+//                                 __ __ _|_ __
+//       liquid \  gas            |__|__|_|_|__|
+//  |----|----|--\--|----|        |__|__|_|_|__|
+// x=-1           \     x=1       |__|__|_|_|__|
+//                phi             |__|__|_|_|__|
+//                               liquid   |   gas
 
 // case 2:
 //
-//       gas      /  liquid
-//  |----|----|--/--|----|
-// x=-1         /       x=1
-//            phi
-
+//           1D:                     2D:
+//                                   __ __ _|_ __
+//       gas      /  liquid         |__|__|_|_|__|
+//  |----|----|--/--|----|          |__|__|_|_|__|
+// x=-1         /       x=1         |__|__|_|_|__|
+//            phi                   |__|__|_|_|__|
+//                                  gas     |   liquid
 
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/function_signed_distance.h>
@@ -98,9 +104,9 @@ public:
                                const std::pair<unsigned int, unsigned int> &)>
       local_applier_type;
 
-    local_applier_type cell          = MELT_POOL_DG_LAMBDA_WRAPPER(local_apply_cell);
-    local_applier_type face          = MELT_POOL_DG_LAMBDA_WRAPPER(local_apply_face);
-    local_applier_type boundary_face = MELT_POOL_DG_LAMBDA_WRAPPER(local_apply_boundary_face);
+    local_applier_type cell          = MPDG_LAMBDA_WRAPPER(local_apply_cell);
+    local_applier_type face          = MPDG_LAMBDA_WRAPPER(local_apply_face);
+    local_applier_type boundary_face = MPDG_LAMBDA_WRAPPER(local_apply_boundary_face);
     data.loop(cell,
               face,
               boundary_face,
@@ -127,30 +133,32 @@ public:
     const auto              face_category = data.get_face_range_category(face_range);
     const CutUtil::FaceType face_type     = CutUtil::get_face_type(face_category);
 
-    switch (face_type)
+    for (unsigned int face = face_range.first; face < face_range.second; ++face)
       {
-        case CutUtil::FaceType::mixed_face_liquid_intersected:
-          for (unsigned int face = face_range.first; face < face_range.second; ++face)
-            ++counter_mixed_face_liquid_intersected;
-          break;
+        for (unsigned int lane = 0; lane < data.n_active_entries_per_face_batch(face); ++lane)
+          {
+            switch (face_type)
+              {
+                case CutUtil::FaceType::mixed_face_liquid_intersected:
+                  ++counter_mixed_face_liquid_intersected;
+                  break;
 
-        case CutUtil::FaceType::mixed_face_intersected_liquid:
-          for (unsigned int face = face_range.first; face < face_range.second; ++face)
-            ++counter_mixed_face_intersected_liquid;
-          break;
+                case CutUtil::FaceType::mixed_face_intersected_liquid:
+                  ++counter_mixed_face_intersected_liquid;
+                  break;
 
-        case CutUtil::FaceType::mixed_face_gas_intersected:
-          for (unsigned int face = face_range.first; face < face_range.second; ++face)
-            ++counter_mixed_face_gas_intersected;
-          break;
+                case CutUtil::FaceType::mixed_face_gas_intersected:
+                  ++counter_mixed_face_gas_intersected;
+                  break;
 
-        case CutUtil::FaceType::mixed_face_intersected_gas:
-          for (unsigned int face = face_range.first; face < face_range.second; ++face)
-            ++counter_mixed_face_intersected_gas;
-          break;
+                case CutUtil::FaceType::mixed_face_intersected_gas:
+                  ++counter_mixed_face_intersected_gas;
+                  break;
 
-        default:
-          break;
+                default:
+                  break;
+              }
+          }
       }
   }
 
@@ -188,7 +196,8 @@ test()
 {
   ConditionalOStream pcout(std::cout, (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0));
   pcout << std::endl;
-  pcout << "Test case with liquid_phase_is_left: " << liquid_phase_is_left << std::endl;
+  pcout << "Test case with liquid_phase_is_left=" << liquid_phase_is_left << ", Dim=" << dim << ":"
+        << std::endl;
 
   // create mesh with 4 elements
   Triangulation<dim> tria;
@@ -259,7 +268,8 @@ test()
   DataOut<dim> data_out;
 
   DataOutBase::VtkFlags flags;
-  flags.write_higher_order_cells = true;
+  if constexpr (dim>1)
+    flags.write_higher_order_cells = true;
   data_out.set_flags(flags);
 
   data_out.add_data_vector(ls_dof_handler, ls_vector, "level_set");
@@ -267,18 +277,31 @@ test()
 
   data_out.build_patches();
   std::ofstream out("cut_mixed_faces.vtu");
-  data_out.write_gnuplot(out);
+  if (dim>1)
+    data_out.write_vtu(out);
+  else
+    data_out.write_gnuplot(out);
 #endif
 }
 
 int
 main(int argc, char *argv[])
 {
+  ///////// 1D /////////
+
   // case 1: liquid phase is left:
-  test<1 /*dim*/, true /*is_dg*/, 1 /*fe_degreee*/, true /*liquid_phase_is_left*/>();
+  test<1 /*dim*/, true /*is_dg*/, 1 /*fe_degree*/, true /*liquid_phase_is_left*/>();
 
   // case 2: liquid phase is right:
-  test<1 /*dim*/, true /*is_dg*/, 1 /*fe_degreee*/, false /*liquid_phase_is_left*/>();
+  test<1 /*dim*/, true /*is_dg*/, 1 /*fe_degree*/, false /*liquid_phase_is_left*/>();
+
+  ///////// 2D /////////
+
+  // case 1: liquid phase is left:
+  test<2 /*dim*/, true /*is_dg*/, 1 /*fe_degree*/, true /*liquid_phase_is_left*/>();
+
+  // case 2: liquid phase is right:
+  test<2 /*dim*/, true /*is_dg*/, 1 /*fe_degree*/, false /*liquid_phase_is_left*/>();
 
   return 0;
 }

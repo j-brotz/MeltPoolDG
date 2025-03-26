@@ -16,6 +16,7 @@
 
 namespace MeltPoolDG::Flow
 {
+  template <typename number>
   struct CompressibleFlowData;
   /**
    * Struct providing type aliases that might be useful in the compressible flow implementations.
@@ -35,6 +36,13 @@ namespace MeltPoolDG::Flow
     using ConservedVariablesGradType =
       dealii::Tensor<1, dim + 2, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
   };
+
+  /**
+   * Index set for the components of the compressible Navier-Stokes equations.
+   */
+  BETTER_ENUM(Idx1D, char, density, momentum_x, energy);
+  BETTER_ENUM(Idx2D, char, density, momentum_x, momentum_y, energy);
+  BETTER_ENUM(Idx3D, char, density, momentum_x, momentum_y, momentum_z, energy);
 
   /**
    * Calculate the velocity from the conserved variables by computing u = (ρu)/ρ.
@@ -65,40 +73,6 @@ namespace MeltPoolDG::Flow
       const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
       const CompressibleFlowTypes::ConservedVariablesGradType<dim, number>
         &grad_conserved_variables);
-
-  /**
-   * Contracts the given tensor of the gradient of conserved variables with the given normal
-   * vector.
-   *
-   * @param grad Current gradient of the conserved variables.
-   * @param normal Normal vector.
-   *
-   * @return Result of the contraction, i.e. grad*normal.
-   */
-  template <int dim, typename number>
-  inline DEAL_II_ALWAYS_INLINE //
-    CompressibleFlowTypes::ConservedVariablesType<dim, number>
-    contract_tensor_with_normal(
-      const CompressibleFlowTypes::ConservedVariablesGradType<dim, number> &grad,
-      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>        &normal);
-
-  /**
-   * Computes the average of the passed tensors and contracts the corresponding result with the
-   * given normal vector. In other words the function computes 0.5*(grad_m+grad_p)*normal.
-   *
-   * @param grad_m Current gradient of the conserved variables on the inner face.
-   * @param grad_p Current gradient of the conserved variables on the outer face.
-   * @param normal Normal vector.
-   *
-   * @return Result of the contraction.
-   */
-  template <int dim, typename number>
-  inline DEAL_II_ALWAYS_INLINE //
-    CompressibleFlowTypes::ConservedVariablesType<dim, number>
-    contract_average_tensor_with_normal(
-      const CompressibleFlowTypes::ConservedVariablesGradType<dim, number> &grad_m,
-      const CompressibleFlowTypes::ConservedVariablesGradType<dim, number> &grad_p,
-      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>        &normal);
 
   /**
    * This function computes the local values of the internal penalty parameter used in the viscous
@@ -134,10 +108,10 @@ namespace MeltPoolDG::Flow
      * @param dof_idx_in Relevant dof index of the flow solver in the scratch data object.
      * @param quad_idx_in Relevant quadrature index of the flow solver in the scratch data object.
      */
-    CompressibleFlowScratchData(const CompressibleFlowData &flow_data_in,
-                                const ScratchData<dim>     &scratch_data_in,
-                                const unsigned int          dof_idx_in,
-                                const unsigned int          quad_idx_in)
+    CompressibleFlowScratchData(const CompressibleFlowData<number> &flow_data_in,
+                                const ScratchData<dim>             &scratch_data_in,
+                                const unsigned int                  dof_idx_in,
+                                const unsigned int                  quad_idx_in)
       : flow_data(flow_data_in)
       , scratch_data(scratch_data_in)
       , dof_idx(dof_idx_in)
@@ -148,8 +122,8 @@ namespace MeltPoolDG::Flow
      * Set up the internal data structures, i.e. allocate memory for the solution history object and
      * precompute the penalty parameter for the symmetric interior penalty method.
      *
-     * @param solution_history_size Size of the solution history object, i.e. the number of vectors at different
-     * concrete times n for which the solution history is responsible.
+     * @param solution_history_size Size of the solution history object, i.e. the number of vectors
+     * at different concrete times n for which the solution history is responsible.
      */
     void
     reinit(const unsigned solution_history_size)
@@ -160,15 +134,15 @@ namespace MeltPoolDG::Flow
           scratch_data.initialize_dof_vector(v, comp_flow_dof_idx);
         });
 
-      if (flow_data.material_data_gas_phase.dynamic_viscosity > 0. or
-          (flow_data.cut.two_phase and flow_data.material_data_liquid_phase.dynamic_viscosity > 0.))
+      if (flow_data.material.gas.dynamic_viscosity > 0. or
+          (flow_data.cut.two_phase and flow_data.material.gas.dynamic_viscosity > 0.))
         calculate_penalty_parameter(interior_penalty_parameter,
                                     scratch_data.get_matrix_free(),
                                     flow_data.domain_representation_type,
                                     dof_idx);
     }
 
-    const CompressibleFlowData flow_data;
+    const CompressibleFlowData<number> flow_data;
 
     const ScratchData<dim> &scratch_data;
 
@@ -203,7 +177,6 @@ namespace MeltPoolDG::Flow
     return velocity;
   }
 
-
   template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     dealii::Tensor<2, dim, dealii::VectorizedArray<number>>
@@ -233,45 +206,6 @@ namespace MeltPoolDG::Flow
           inverse_density * (grad_rho_velocity[d][e] - velocity[d] * grad_rho[e]);
 
     return grad_velocity;
-  }
-
-  template <int dim, typename number>
-  inline DEAL_II_ALWAYS_INLINE //
-    CompressibleFlowTypes::ConservedVariablesType<dim, number>
-    contract_tensor_with_normal(
-      const CompressibleFlowTypes::ConservedVariablesGradType<dim, number> &grad,
-      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>        &normal)
-  {
-    CompressibleFlowTypes::ConservedVariablesType<dim, number> result;
-
-    result[0] = grad[0] * normal;
-
-    for (unsigned int e = 0; e < dim; ++e)
-      result[e + 1] = grad[e + 1] * normal;
-
-    result[dim + 1] = grad[dim + 1] * normal;
-
-    return result;
-  }
-
-  template <int dim, typename number>
-  DEAL_II_ALWAYS_INLINE //
-    CompressibleFlowTypes::ConservedVariablesType<dim, number>
-    contract_average_tensor_with_normal(
-      const CompressibleFlowTypes::ConservedVariablesGradType<dim, number> &grad_m,
-      const CompressibleFlowTypes::ConservedVariablesGradType<dim, number> &grad_p,
-      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>        &normal)
-  {
-    CompressibleFlowTypes::ConservedVariablesType<dim, number> result;
-
-    result[0] = (grad_m[0] + grad_p[0]) * normal;
-
-    for (unsigned int e = 0; e < dim; ++e)
-      result[e + 1] = (grad_m[e + 1] + grad_p[e + 1]) * normal;
-
-    result[dim + 1] = (grad_m[dim + 1] + grad_p[dim + 1]) * normal;
-
-    return 0.5 * result;
   }
 
   template <int dim, typename Number>

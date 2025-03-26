@@ -26,15 +26,23 @@
     "use cfl criteria": "true",
     "gravity constant": "0.0",
     "domain representation type": "cut",
-    "initial conditions gas phase": "1.0; 0.0; 1. * 1004.85 / 1.4 * 293.15",
-    "initial conditions liquid phase": "1.0; 0.0; 1. * 1004.85 / 1.4 * 293.15",
-    "multiphase": {
-      "interface numerical method": "penalty",
+    "initial conditions": {
+      "gas": "1.0; 0.0; 1. * 1004.85 / 1.4 * 293.15",
+      "liquid": "1.0; 0.0; 1. * 1004.85 / 1.4 * 293.15"
+    },
+    "interface jump conditions": {
+      "type": "penalty",
       "evaporation mass flux": "0.0",
-      "target density gas phase": "1.0",
-      "target temperature gas phase": "293.15",
-      "density constraint penalty factor": "10.0",
-      "temperature constraint penalty factor": "10.0"
+      "penalty": {
+        "coefficients": {
+          "density": "10.0",
+          "temperature": "10.0"
+        },
+        "target values": {
+          "density gas phase": "1.0",
+          "temperature gas phase": "293.15"
+        }
+      }
     },
     "cut": {
       "two phase": "true",
@@ -54,21 +62,27 @@
         "abs tolerance": "1e-20"
       }
     },
-    "material data gas phase": {
-      "dynamic viscosity": "0.00002",
-      "specific isobaric heat": "1004.85",
-      "specific gas constant": "287.1",
-      "equation of state": "ideal_gas",
-      "reference density": "1.0",
-      "gamma": "1.4"
-    },
-    "material data liquid phase": {
-      "dynamic viscosity": "0.00002",
-      "specific isobaric heat": "1004.85",
-      "specific gas constant": "287.1",
-      "equation of state": "ideal_gas",
-      "reference density": "1.0",
-      "gamma": "1.4"
+    "material": {
+      "gas": {
+        "dynamic viscosity": "0.00002",
+        "specific isobaric heat": "1004.85",
+        "specific gas constant": "287.1",
+        "reference density": "1.0",
+        "gamma": "1.4",
+        "equation of state": {
+          "type": "ideal_gas"
+        }
+      },
+      "liquid": {
+        "dynamic viscosity": "0.00002",
+        "specific isobaric heat": "1004.85",
+        "specific gas constant": "287.1",
+        "reference density": "1.0",
+        "gamma": "1.4",
+        "equation of state": {
+          "type": "ideal_gas"
+        }
+      }
     },
     "fe": {
       "degree": "1",

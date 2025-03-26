@@ -20,18 +20,20 @@
 
 #include <deal.II/grid/grid_generator.h>
 
+#include <meltpooldg/utilities/boundary_ids_colorized.hpp>
+
 #include "../compressible_multiphase_case.hpp"
 
 namespace MeltPoolDG::Simulation::CompressibleMultiphase
 {
   template <int dim>
-  class FlowField : public Function<dim>
+  class InitialField : public dealii::Function<dim>
   {
   public:
-    explicit FlowField(std::string ic_gas_phase,
-                       std::string ic_liquid_phase,
-                       const bool  gas_phase_is_first = true)
-      : Function<dim>(2 * (dim + 2))
+    explicit InitialField(std::string ic_gas_phase,
+                          std::string ic_liquid_phase,
+                          const bool  gas_phase_is_first = true)
+      : dealii::Function<dim>(2 * (dim + 2))
       , gas_phase_is_first(gas_phase_is_first)
     {
       parsing_function_gas->initialize(dim == 3 ?
@@ -48,11 +50,11 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
                                           false);
 
       // Currently, only 1D simulations are possible
-      Assert(dim == 1, ExcNotImplemented());
+      Assert(dim == 1, dealii::ExcNotImplemented());
     }
 
     double
-    value(const Point<dim> &p, const unsigned int component) const final
+    value(const dealii::Point<dim> &p, const unsigned int component) const final
     {
       unsigned int gas_components[dim + 2];
       unsigned int liquid_components[dim + 2];
@@ -114,12 +116,12 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       this->triangulation =
         std::make_shared<parallel::shared::Triangulation<dim>>(this->mpi_communicator);
 
-      Point<dim> lower_left;
+      dealii::Point<dim> lower_left;
       lower_left[0] = -5.;
       for (unsigned int d = 1; d < dim; ++d)
         lower_left[d] = 0.;
 
-      Point<dim> upper_right;
+      dealii::Point<dim> upper_right;
       upper_right[0] = 5.;
       for (unsigned int d = 1; d < dim; ++d)
         upper_right[d] = 0.;
@@ -129,12 +131,8 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       for (unsigned int d = 1; d < dim; ++d)
         subdivisions[d] = 1;
 
-      GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                subdivisions,
-                                                lower_left,
-                                                upper_right);
-
-      set_fitted_boundary_id(*this->triangulation);
+      GridGenerator::subdivided_hyper_rectangle(
+        *this->triangulation, subdivisions, lower_left, upper_right, true);
 
       this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
@@ -143,15 +141,19 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     set_boundary_conditions() override
     {
       auto inflow_outflow_solution =
-        std::make_shared<FlowField<dim>>(ic_gas_phase, ic_liquid_phase);
-      auto dummy_solution = std::make_shared<FlowField<dim>>(ic_gas_phase, ic_liquid_phase);
-      this->attach_boundary_condition({BoundaryID::inflow, inflow_outflow_solution},
+        std::make_shared<InitialField<dim>>(ic_gas_phase, ic_liquid_phase);
+      auto dummy_solution = std::make_shared<InitialField<dim>>(ic_gas_phase, ic_liquid_phase);
+
+      // face numbering according to the deal.II colorize flag
+      const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
+        get_colorized_rectangle_boundary_ids<dim>();
+
+      this->attach_boundary_condition({lower_bc, inflow_outflow_solution},
                                       "inflow",
-                                      "compressible_multiphase");
-      this->attach_boundary_condition({BoundaryID::subsonic_outflow_with_fixed_energy,
-                                       inflow_outflow_solution},
+                                      "compressible_multiphase_flow");
+      this->attach_boundary_condition({upper_bc, inflow_outflow_solution},
                                       "outflow_fixed_energy",
-                                      "compressible_multiphase");
+                                      "compressible_multiphase_flow");
     }
 
     void
@@ -159,63 +161,34 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     {
       // The solution vector is ordered, such that the liquid phase is the first phase and the gas
       // phase is the second phase.
-      auto initial_condition = std::make_shared<FlowField<dim>>(ic_gas_phase,
-                                                                ic_liquid_phase,
-                                                                false /*gas_phase_is_first*/);
-      this->attach_initial_condition(initial_condition, "compressible_multiphase");
+      auto initial_condition = std::make_shared<InitialField<dim>>(ic_gas_phase,
+                                                                   ic_liquid_phase,
+                                                                   false /*gas_phase_is_first*/);
+      this->attach_initial_condition(initial_condition, "compressible_multiphase_flow");
 
       // set level-set function
-      Point<dim> p;
+      dealii::Point<dim> p;
       // avoid phase interface colliding with element face (bug in dealii has to be fixed)
       p[0] = 0.13;
 
       dealii::Tensor<1, dim> normal;
       normal[0] = -1.;
 
-      const auto level_set = std::make_shared<Functions::SignedDistance::Plane<dim>>(p, normal);
-      this->attach_field_function(level_set, "level_set", "compressible_multiphase");
+      const auto level_set =
+        std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(p, normal);
+      this->attach_field_function(level_set, "level_set", "compressible_multiphase_flow");
     }
 
     void
     do_postprocessing(const GenericDataOut<dim> &generic_data_out) const override
     {
-      FlowField<dim> reference_values(ic_gas_phase, ic_liquid_phase);
-      this->print_relative_norm(generic_data_out, reference_values, "Norm");
+      InitialField<dim> reference_values(ic_gas_phase, ic_liquid_phase);
+      this->print_relative_norm(generic_data_out, reference_values, "norm");
     }
 
   private:
     // initial conditions functions
-    std::string ic_gas_phase    = this->parameters.flow.initial_conditions_gas_phase;
-    std::string ic_liquid_phase = this->parameters.flow.initial_conditions_liquid_phase;
-
-    /**
-     * Enumeration for the fitted boundary id's.
-     */
-    enum BoundaryID
-    {
-      inflow,
-      subsonic_outflow_with_fixed_energy
-    };
-
-    /**
-     * Set boundary id's for fitted boundaries
-     */
-    void
-    set_fitted_boundary_id(const auto &triangulation) const
-    {
-      for (const auto &cell : triangulation.cell_iterators())
-        if (cell->at_boundary())
-          {
-            for (const auto &face : cell->face_iterators())
-              {
-                const auto center = face->center();
-                // outflow boundary with fixed energy
-                if (center(0) > 5. - 1e-12)
-                  face->set_boundary_id(BoundaryID::subsonic_outflow_with_fixed_energy);
-                if (center(0) < -5. + 1e-12)
-                  face->set_boundary_id(BoundaryID::inflow);
-              }
-          }
-    }
+    std::string ic_gas_phase    = this->parameters.flow.initial_conditions.gas;
+    std::string ic_liquid_phase = this->parameters.flow.initial_conditions.liquid;
   };
 } // namespace MeltPoolDG::Simulation::CompressibleMultiphase

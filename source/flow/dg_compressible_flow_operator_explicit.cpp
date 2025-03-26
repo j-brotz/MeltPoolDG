@@ -40,16 +40,16 @@ namespace MeltPoolDG::Flow
     const VectorType                                      &src,
     const std::function<void(unsigned int, unsigned int)> &func) const
   {
-    typedef std::function<void(const MatrixFree<dim, number> &,
-                               LinearAlgebra::distributed::Vector<number>       &dst,
-                               const LinearAlgebra::distributed::Vector<number> &src,
-                               const std::pair<unsigned int, unsigned int> &)>
-      local_applier_type;
+    using local_applier_type =
+      std::function<void(const dealii::MatrixFree<dim, number> &,
+                         dealii::LinearAlgebra::distributed::Vector<number>       &dst,
+                         const dealii::LinearAlgebra::distributed::Vector<number> &src,
+                         const std::pair<unsigned int, unsigned int> &)>;
 
     flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
-    local_applier_type cell          = MELT_POOL_DG_LAMBDA_WRAPPER(this->local_apply_cell);
-    local_applier_type face          = MELT_POOL_DG_LAMBDA_WRAPPER(this->local_apply_face);
-    local_applier_type boundary_face = MELT_POOL_DG_LAMBDA_WRAPPER(this->local_apply_boundary_face);
+    local_applier_type cell          = MPDG_LAMBDA_WRAPPER(this->local_apply_cell);
+    local_applier_type face          = MPDG_LAMBDA_WRAPPER(this->local_apply_face);
+    local_applier_type boundary_face = MPDG_LAMBDA_WRAPPER(this->local_apply_boundary_face);
     flow_scratch_data.scratch_data.get_matrix_free().loop(
       cell, face, boundary_face, dst, src, false);
 
@@ -150,7 +150,7 @@ namespace MeltPoolDG::Flow
                               EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
                                                                       EvaluationFlags::nothing));
 
-        const VectorizedArray<number> penalty_parameter =
+        const VectorizedArray<number> interior_penalty_parameter =
           is_viscous ?
             std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
                      phi_p.read_cell_data(flow_scratch_data.interior_penalty_parameter)) :
@@ -163,7 +163,7 @@ namespace MeltPoolDG::Flow
                                        number,
                                        FEFaceIntegrator<dim, dim + 2, number>,
                                        is_viscous>(
-                phi_m, phi_p, q, penalty_parameter, convective_terms, viscous_terms);
+                phi_m, phi_p, q, interior_penalty_parameter, convective_terms, viscous_terms);
 
             phi_m.submit_value(flux_m, q);
             phi_p.submit_value(flux_p, q);
@@ -201,7 +201,7 @@ namespace MeltPoolDG::Flow
         phi.reinit(face);
         phi.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
-        const VectorizedArray<number> penalty_parameter =
+        const VectorizedArray<number> interior_penalty_parameter =
           is_viscous ? phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) : 0.;
 
         for (const unsigned int q : phi.quadrature_point_indices())
@@ -213,7 +213,7 @@ namespace MeltPoolDG::Flow
                                                 is_viscous>(phi,
                                                             q,
                                                             phi.boundary_id(),
-                                                            penalty_parameter,
+                                                            interior_penalty_parameter,
                                                             convective_terms,
                                                             viscous_terms,
                                                             flow_scratch_data);

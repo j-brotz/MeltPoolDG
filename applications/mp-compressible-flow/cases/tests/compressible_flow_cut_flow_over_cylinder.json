@@ -45,9 +45,13 @@
         "abs tolerance": "1e-20"
       }
     },
-    "material data gas phase": {
-      "dynamic viscosity": "0.0002",
-      "equation of state": "ideal_gas"
+    "material": {
+      "gas": {
+        "dynamic viscosity": "0.0002",
+        "equation of state": {
+          "type": "ideal_gas"
+        }
+      }
     },
     "fe": {
       "degree": "1",

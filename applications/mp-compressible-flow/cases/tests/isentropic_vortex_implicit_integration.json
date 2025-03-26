@@ -32,9 +32,13 @@
         "residual tolerance": 1e-10
       }
     },
-    "material data gas phase": {
-      "dynamic viscosity": 0.0,
-      "equation of state": "ideal_gas"
+    "material": {
+      "gas": {
+        "dynamic viscosity": 0.0,
+        "equation of state": {
+          "type": "ideal_gas"
+        }
+      }
     },
     "fe": {
       "degree": "2",

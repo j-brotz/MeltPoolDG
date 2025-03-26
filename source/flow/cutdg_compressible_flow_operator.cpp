@@ -31,28 +31,18 @@ namespace MeltPoolDG::Flow
 
   template <unsigned int dim, typename number, bool is_viscous>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::compute_inverse_time_step(
-    const number &time_step)
-  {
-    Assert(time_step > 0., dealii::ExcMessage("Time step size must be larger than 0!"));
-    inv_time_step = 1. / time_step;
-  }
-
-  template <unsigned int dim, typename number, bool is_viscous>
-  void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::vmult(VectorType       &dst,
                                                                 const VectorType &src) const
   {
-    typedef std::function<void(const dealii::MatrixFree<dim, number> &,
-                               dealii::LinearAlgebra::distributed::Vector<number>       &dst,
-                               const dealii::LinearAlgebra::distributed::Vector<number> &src,
-                               const std::pair<unsigned int, unsigned int> &)>
-      local_applier_type;
+    using local_applier_type =
+      std::function<void(const dealii::MatrixFree<dim, number> &,
+                         dealii::LinearAlgebra::distributed::Vector<number>       &dst,
+                         const dealii::LinearAlgebra::distributed::Vector<number> &src,
+                         const std::pair<unsigned int, unsigned int> &)>;
 
-    local_applier_type cell = MELT_POOL_DG_LAMBDA_WRAPPER(this->local_apply_cell_lhs);
-    local_applier_type face = MELT_POOL_DG_LAMBDA_WRAPPER(this->local_apply_face_lhs);
-    local_applier_type boundary_face =
-      MELT_POOL_DG_LAMBDA_WRAPPER(this->local_apply_boundary_face_lhs);
+    local_applier_type cell          = MPDG_LAMBDA_WRAPPER(this->local_apply_cell_lhs);
+    local_applier_type face          = MPDG_LAMBDA_WRAPPER(this->local_apply_face_lhs);
+    local_applier_type boundary_face = MPDG_LAMBDA_WRAPPER(this->local_apply_boundary_face_lhs);
     flow_scratch_data.scratch_data.get_matrix_free().loop(
       cell,
       face,
@@ -71,9 +61,9 @@ namespace MeltPoolDG::Flow
                                                                      VectorType       &dst,
                                                                      const VectorType &src) const
   {
-    AssertThrow(!dealii::numbers::is_invalid(inv_time_step),
-                dealii::ExcMessage(
-                  "Inverse time step size must be set to compute the rhs vector."));
+    // compute inverse time step size
+    AssertThrow(time_step > 0., dealii::ExcMessage("Time step size must be larger than 0."));
+    inv_time_step = 1. / time_step;
 
     typedef std::function<void(const MatrixFree<dim, number> &,
                                LinearAlgebra::distributed::Vector<number>       &dst,
@@ -82,9 +72,9 @@ namespace MeltPoolDG::Flow
       local_applier_type;
 
     flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
-    local_applier_type cell          = MELT_POOL_DG_LAMBDA_WRAPPER(local_apply_cell_rhs);
-    local_applier_type face          = MELT_POOL_DG_LAMBDA_WRAPPER(local_apply_face_rhs);
-    local_applier_type boundary_face = MELT_POOL_DG_LAMBDA_WRAPPER(local_apply_boundary_face_rhs);
+    local_applier_type cell          = MPDG_LAMBDA_WRAPPER(local_apply_cell_rhs);
+    local_applier_type face          = MPDG_LAMBDA_WRAPPER(local_apply_face_rhs);
+    local_applier_type boundary_face = MPDG_LAMBDA_WRAPPER(local_apply_boundary_face_rhs);
     flow_scratch_data.scratch_data.get_matrix_free().loop(
       cell,
       face,
@@ -230,7 +220,7 @@ namespace MeltPoolDG::Flow
                                           &phi.begin_dof_values()[0][lane], n_dofs_per_cell),
                                         EvaluationFlags::values | EvaluationFlags::gradients);
 
-                const auto penalty_parameter =
+                const auto interior_penalty_parameter =
                   is_viscous ? phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
                                0.;
 
@@ -255,7 +245,7 @@ namespace MeltPoolDG::Flow
 
                     if (is_viscous)
                       flux -= viscous_terms.calculate_viscous_numerical_flux(
-                        w_m, w_p, grad_w_m, grad_w_p, normal, penalty_parameter);
+                        w_m, w_p, grad_w_m, grad_w_p, normal, interior_penalty_parameter);
 
                     fe_point_surface.submit_value(-flux, q);
 
@@ -322,7 +312,7 @@ namespace MeltPoolDG::Flow
                                                   EvaluationFlags::nothing));
 
             // factor 0.5 for interior face
-            const dealii::VectorizedArray<number> penalty_parameter =
+            const dealii::VectorizedArray<number> interior_penalty_parameter =
               is_viscous ?
                 0.5 * std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
                                phi_p.read_cell_data(flow_scratch_data.interior_penalty_parameter)) :
@@ -332,7 +322,7 @@ namespace MeltPoolDG::Flow
               {
                 auto [flux_m, flux_p, grad_flux_m, grad_flux_p] =
                   rhs_face_integral_kernel<dim, number, FEFaceIntegrator<dim, dim + 2, number>>(
-                    phi_m, phi_p, q, penalty_parameter, convective_terms, viscous_terms);
+                    phi_m, phi_p, q, interior_penalty_parameter, convective_terms, viscous_terms);
 
                 phi_m.submit_value(flux_m, q);
                 phi_p.submit_value(flux_p, q);
@@ -400,7 +390,7 @@ namespace MeltPoolDG::Flow
                                                                     EvaluationFlags::nothing));
 
                 // factor 0.5 for interior face
-                const dealii::VectorizedArray<number> penalty_parameter =
+                const dealii::VectorizedArray<number> interior_penalty_parameter =
                   is_viscous ?
                     0.5 *
                       std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
@@ -416,7 +406,7 @@ namespace MeltPoolDG::Flow
                       fe_point_eval_minus,
                       fe_point_eval_minus,
                       q,
-                      penalty_parameter,
+                      interior_penalty_parameter,
                       convective_terms,
                       viscous_terms);
 
@@ -481,7 +471,7 @@ namespace MeltPoolDG::Flow
                                 dealii::EvaluationFlags::values |
                                   dealii::EvaluationFlags::gradients);
 
-            const dealii::VectorizedArray<number> penalty_parameter =
+            const dealii::VectorizedArray<number> interior_penalty_parameter =
               is_viscous ? phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) : 0.;
 
             for (const unsigned int q : phi.quadrature_point_indices())
@@ -493,7 +483,7 @@ namespace MeltPoolDG::Flow
                     phi,
                     q,
                     flow_scratch_data.scratch_data.get_matrix_free().get_boundary_id(face),
-                    penalty_parameter,
+                    interior_penalty_parameter,
                     convective_terms,
                     viscous_terms,
                     flow_scratch_data);
@@ -536,7 +526,7 @@ namespace MeltPoolDG::Flow
                                                      EvaluationFlags::values |
                                                        EvaluationFlags::gradients);
 
-                const dealii::VectorizedArray<number> penalty_parameter =
+                const dealii::VectorizedArray<number> interior_penalty_parameter =
                   is_viscous ? phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
                                0.;
 
@@ -549,7 +539,7 @@ namespace MeltPoolDG::Flow
                       fe_point_eval_minus,
                       q,
                       flow_scratch_data.scratch_data.get_matrix_free().get_boundary_id(face),
-                      penalty_parameter,
+                      interior_penalty_parameter,
                       convective_terms,
                       viscous_terms,
                       flow_scratch_data);

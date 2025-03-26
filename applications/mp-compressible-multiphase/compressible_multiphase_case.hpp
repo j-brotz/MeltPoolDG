@@ -22,8 +22,6 @@
 
 namespace MeltPoolDG::Multiphase
 {
-  using namespace dealii;
-
   template <typename number = double>
   struct CompressibleMultiphaseCaseParameters final : public ParametersBase
   {
@@ -56,11 +54,11 @@ namespace MeltPoolDG::Multiphase
     }
 
   public:
-    BaseData                               base;
-    MeltPoolDG::Flow::CompressibleFlowData flow;
-    TimeSteppingData<number>               time_stepping;
-    OutputData<number>                     output;
-    Profiling::ProfilingData<number>       profiling;
+    BaseData                                       base;
+    MeltPoolDG::Flow::CompressibleFlowData<number> flow;
+    TimeSteppingData<number>                       time_stepping;
+    OutputData<number>                             output;
+    Profiling::ProfilingData<number>               profiling;
   };
 
   template <int dim>
@@ -78,20 +76,23 @@ namespace MeltPoolDG::Multiphase
 
   protected:
     /**
-     * This function calculates and prints the l2-norm of the solution given in @p generic_data_out
-     * compared to a reference state given by the function @p reference_function, i.e. it computes
-     * ||solution-reference||_2 for the primary variables density, momentum and energy density. The
-     * string @p norm_name is printed to the console to indicate what the calculated values
-     * represent.
+     * This function calculates and prints the l2-norm/l2-error of the solution given in
+     * @p generic_data_out compared to a reference state given by the function
+     * @p reference_function, i.e. it computes ||solution-reference||_2 for the primary variables
+     * density, momentum and energy density. The string @p norm_name is printed to the console to
+     * indicate what the calculated values represent. If the reference solution represents an exact
+     * analytical solution, the norm_name @p "error" should be chosen. Otherwise, the @p norm_name
+     * "norm" is appropriate for the l2-norm of the deviation to a certain defined reference state,
+     * e.g. initial conditions. It is necessary to provide a reference function for both cases.
      *
      * @param generic_data_out The postprocessing data.
-     * @param reference_function Analytical reference function for error/norm computation
-     * @param norm_name Choose between "Norm" and "Error"
+     * @param reference_function Analytical reference function for error/norm computation.
+     * @param norm_name Choose between "norm" and "error".
      */
     void
-    print_relative_norm(const GenericDataOut<dim> &generic_data_out,
-                        dealii::Function<dim>     &reference_function,
-                        const std::string         &norm_name = "Norm") const
+    print_relative_norm(const GenericDataOut<dim, double>   &generic_data_out,
+                        dealii::Function<dim>               &reference_function,
+                        const std::string                   &norm_name = "norm") const
     {
       using number = double;
       const dealii::ConditionalOStream pcout(std::cout,
@@ -99,8 +100,8 @@ namespace MeltPoolDG::Multiphase
                                                this->mpi_communicator) == 0 and
                                                parameters.base.verbosity_level >= 1);
 
-      const auto &dof_vector  = generic_data_out.get_vector("density");
-      const auto &dof_handler = generic_data_out.get_dof_handler("density");
+      const auto &dof_vector  = generic_data_out.get_vector("density_liquid");
+      const auto &dof_handler = generic_data_out.get_dof_handler("density_liquid");
 
       const unsigned int n_dofs_per_element_per_phase =
         0.5 * dof_handler.get_fe_collection().max_dofs_per_cell();
@@ -154,8 +155,8 @@ namespace MeltPoolDG::Multiphase
       std::vector<Quadrature<dim>> quad_vec_cell_liquid;
       std::vector<Quadrature<dim>> quad_vec_cell_gas;
 
-      unsigned int n_active_cells = std::distance(dof_handler.active_cell_iterators().begin(),
-                                                  dof_handler.active_cell_iterators().end());
+      const unsigned int n_active_cells = std::distance(dof_handler.active_cell_iterators().begin(),
+                                                        dof_handler.active_cell_iterators().end());
 
       for (const auto &cell : physical_active_cell_iterators_liquid)
         {
@@ -261,9 +262,8 @@ namespace MeltPoolDG::Multiphase
         errors[d] = std::sqrt(errors_squared[d]);
 
       std::ostringstream output;
-      output << norm_name << " rho: " << std::setprecision(4) << errors[0]
-             << ", rho * u: " << std::setprecision(4) << errors[1]
-             << ", rho * energy: " << std::setprecision(4) << errors[2];
+      output << std::scientific << std::setprecision(4) << norm_name << " rho: " << errors[0]
+             << ", rho * u: " << errors[1] << ", rho * energy: " << errors[2];
       Journal::print_line(pcout, output.str(), "compressible_multiphase");
     }
   };
