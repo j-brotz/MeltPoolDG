@@ -227,13 +227,13 @@ namespace MeltPoolDG::Multiphase
       }
 
     // initialize postprocessor
-    post_processor =
-      std::make_unique<Postprocessor<dim>>(scratch_data->get_mpi_comm(comp_multiphase_dof_idx),
-                                           simulation_case->parameters.output,
-                                           simulation_case->parameters.time_stepping,
-                                           scratch_data->get_mapping(),
-                                           scratch_data->get_triangulation(comp_multiphase_dof_idx),
-                                           scratch_data->get_pcout(2));
+    post_processor = std::make_unique<Postprocessor<dim, number>>(
+      scratch_data->get_mpi_comm(comp_multiphase_dof_idx),
+      simulation_case->parameters.output,
+      simulation_case->parameters.time_stepping,
+      scratch_data->get_mapping(),
+      scratch_data->get_triangulation(comp_multiphase_dof_idx),
+      scratch_data->get_pcout(2));
 
     // initialize profiling
     if (simulation_case->parameters.profiling.enable)
@@ -251,13 +251,14 @@ namespace MeltPoolDG::Multiphase
         not simulation_case->parameters.output.do_user_defined_postprocessing)
       return;
 
-    const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
+    const auto attach_output_vectors = [&](GenericDataOut<dim, number> &data_out) {
       comp_multiphase_operation.attach_output_vectors(data_out);
     };
 
-    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
-                                         current_time,
-                                         simulation_case->parameters.output.output_variables);
+    GenericDataOut<dim, number> generic_data_out(
+      scratch_data->get_mapping(),
+      current_time,
+      simulation_case->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
 
     generic_data_out.add_data_vector(dof_handler_level_set, level_set, "level_set");

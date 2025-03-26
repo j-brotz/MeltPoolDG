@@ -98,10 +98,10 @@ namespace MeltPoolDG::Multiphase
     total_flux_gas[Idx::density]    = omega_2 * interface_mass_flux_conservation_term;
 
     const VectorizedArray<number> weighted_average_momentum =
-      UtilityFunctions::calculate_weighted_average(omega_1,
-                                                   u_gas[Idx::momentum_x],
-                                                   omega_2,
-                                                   u_liquid[Idx::momentum_x]);
+      UtilityFunctions::calculate_arithmetic_phase_weighted_average(omega_1,
+                                                                    u_gas[Idx::momentum_x],
+                                                                    omega_2,
+                                                                    u_liquid[Idx::momentum_x]);
 
     total_flux_liquid[Idx::density] += weighted_average_momentum;
     total_flux_gas[Idx::density] -= weighted_average_momentum;
@@ -144,10 +144,11 @@ namespace MeltPoolDG::Multiphase
     const VectorizedArray<number> weighted_average_momentum_term_gas =
       u_gas[Idx::momentum_x] * u_gas[Idx::momentum_x] / u_gas[Idx::density] - stress_tensor_gas;
     const VectorizedArray<number> weighted_average_momentum_term =
-      UtilityFunctions::calculate_weighted_average(omega_2,
-                                                   weighted_average_momentum_term_liquid,
-                                                   omega_1,
-                                                   weighted_average_momentum_term_gas);
+      UtilityFunctions::calculate_arithmetic_phase_weighted_average(
+        omega_2,
+        weighted_average_momentum_term_liquid,
+        omega_1,
+        weighted_average_momentum_term_gas);
 
     total_flux_liquid[Idx::momentum_x] += weighted_average_momentum_term;
     total_flux_gas[Idx::momentum_x] -= weighted_average_momentum_term;
@@ -186,10 +187,8 @@ namespace MeltPoolDG::Multiphase
                                                                                     grad_u_gas,
                                                                                     flow_data)[0];
     const VectorizedArray<number> weighted_average_energy_term =
-      UtilityFunctions::calculate_weighted_average(omega_2,
-                                                   weighted_average_energy_term_liquid,
-                                                   omega_1,
-                                                   weighted_average_energy_term_gas);
+      UtilityFunctions::calculate_arithmetic_phase_weighted_average(
+        omega_2, weighted_average_energy_term_liquid, omega_1, weighted_average_energy_term_gas);
 
     total_flux_liquid[Idx::energy] += weighted_average_energy_term;
     total_flux_gas[Idx::energy] -= weighted_average_energy_term;
@@ -472,6 +471,12 @@ namespace MeltPoolDG::Multiphase
       const ConservedVariablesType             &u_gas_cons,
       const Flow::CompressibleFlowData<number> &flow_data)
   {
+    // enumeration for conserved variables component indices
+    using Idx = std::conditional_t<
+      dim == 1,
+      Flow::Idx1D,
+      std::conditional_t<dim == 2, Flow::Idx2D, std::conditional_t<dim == 3, Flow::Idx3D, void>>>;
+
     auto u_liquid_prim =
       Flow::EOS::convert_conservative_into_primitive_variables<dim, number, false /*is_gas_phase*/>(
         u_liquid_cons, flow_data);
@@ -490,11 +495,11 @@ namespace MeltPoolDG::Multiphase
     ConservedVariablesType J_Dir;
 
     // TODO: consider evaporation mass flux from Hertz-Knudsen theory here
-    J_Dir[0] =
+    J_Dir[Idx::density] =
       delta_p - flow_data.interface_jump_conditions.m_dot_evap * (u_liquid_prim[1] - u_gas_prim[1]);
-    J_Dir[1] =
+    J_Dir[Idx::momentum_x] =
       flow_data.interface_jump_conditions.m_dot_evap * (1. / u_liquid_prim[0] - 1. / u_gas_prim[0]);
-    J_Dir[2] = delta_T;
+    J_Dir[Idx::energy] = delta_T;
 
     u_liquid_prim = u_gas_prim + J_Dir;
     u_gas_prim    = u_liquid_prim - J_Dir;
@@ -621,10 +626,10 @@ namespace MeltPoolDG::Multiphase
       calculate_Dirichlet_jump_in_conservative_variables<dim, number, ConservedVariablesType>(
         u_liquid, u_gas, flow_data);
 
-    const auto u_liquid_star =
-      UtilityFunctions::calculate_weighted_average(alpha_1, u_liquid, alpha_2, u_gas + J_Dir_cons);
-    const auto u_gas_star =
-      UtilityFunctions::calculate_weighted_average(alpha_2, u_gas, alpha_1, u_liquid - J_Dir_cons);
+    const auto u_liquid_star = UtilityFunctions::calculate_arithmetic_phase_weighted_average(
+      alpha_1, u_liquid, alpha_2, u_gas + J_Dir_cons);
+    const auto u_gas_star = UtilityFunctions::calculate_arithmetic_phase_weighted_average(
+      alpha_2, u_gas, alpha_1, u_liquid - J_Dir_cons);
 
     ConservedVariablesGradType penalty_flux_liquid;
     const auto                 tmp_m = u_liquid - (u_gas_star + J_Dir_cons);
@@ -682,10 +687,10 @@ namespace MeltPoolDG::Multiphase
       calculate_Dirichlet_jump_in_conservative_variables<dim, number, ConservedVariablesType>(
         u_liquid, u_gas, flow_data);
 
-    const auto u_liquid_star =
-      UtilityFunctions::calculate_weighted_average(alpha_1, u_liquid, alpha_2, u_gas + J_Dir_cons);
-    const auto u_gas_star =
-      UtilityFunctions::calculate_weighted_average(alpha_2, u_gas, alpha_1, u_liquid - J_Dir_cons);
+    const auto u_liquid_star = UtilityFunctions::calculate_arithmetic_phase_weighted_average(
+      alpha_1, u_liquid, alpha_2, u_gas + J_Dir_cons);
+    const auto u_gas_star = UtilityFunctions::calculate_arithmetic_phase_weighted_average(
+      alpha_2, u_gas, alpha_1, u_liquid - J_Dir_cons);
 
     auto tmp_liquid = u_liquid_star - u_liquid;
     auto tmp_gas    = u_gas_star - u_gas;

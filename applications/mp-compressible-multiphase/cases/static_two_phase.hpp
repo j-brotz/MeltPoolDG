@@ -180,7 +180,7 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim> &generic_data_out) const override
+    do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const override
     {
       InitialField<dim> reference_values(ic_gas_phase, ic_liquid_phase);
       this->print_relative_norm(generic_data_out, reference_values, "norm");

@@ -137,7 +137,7 @@ namespace MeltPoolDG::Multiphase
      * @param data_out Object to which the solution vector is attached.
      */
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
 
     /**
      * Set the boundary conditions.

@@ -659,10 +659,10 @@ namespace MeltPoolDG
      */
     template <typename TypeWeight, typename TypeTerm>
     TypeTerm
-    calculate_weighted_average(const TypeWeight &weight_a,
-                               const TypeTerm   &term_a,
-                               const TypeWeight &weight_b,
-                               const TypeTerm   &term_b)
+    calculate_arithmetic_phase_weighted_average(const TypeWeight &weight_a,
+                                                const TypeTerm   &term_a,
+                                                const TypeWeight &weight_b,
+                                                const TypeTerm   &term_b)
     {
       return weight_a * term_a + weight_b * term_b;
     }

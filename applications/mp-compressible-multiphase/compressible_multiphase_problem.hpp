@@ -85,7 +85,7 @@ namespace MeltPoolDG::Multiphase
     unsigned int level_set_dof_idx{};
     unsigned int comp_multiphase_quad_idx{};
 
-    std::unique_ptr<Postprocessor<dim>> post_processor;
+    std::unique_ptr<Postprocessor<dim, number>> post_processor;
 
     std::shared_ptr<Function<dim>> level_set_field_function;
     VectorType                     level_set;
