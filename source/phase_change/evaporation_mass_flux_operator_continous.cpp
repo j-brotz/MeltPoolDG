@@ -9,8 +9,8 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim, typename number>
   EvaporationMassFluxOperatorContinuous<dim, number>::EvaporationMassFluxOperatorContinuous(
-    const ScratchData<dim>             &scratch_data,
-    const EvaporationModelBase<number> &evaporation_model)
+    const ScratchData<dim, dim, number> &scratch_data,
+    const EvaporationModelBase<number>  &evaporation_model)
     : scratch_data(scratch_data)
     , evaporation_model(evaporation_model)
   {}

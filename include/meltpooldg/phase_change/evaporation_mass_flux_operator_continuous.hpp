@@ -18,12 +18,12 @@ namespace MeltPoolDG::Evaporation
   private:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
-    const ScratchData<dim>             &scratch_data;
-    const EvaporationModelBase<number> &evaporation_model;
+    const ScratchData<dim, dim, number> &scratch_data;
+    const EvaporationModelBase<number>  &evaporation_model;
 
   public:
-    EvaporationMassFluxOperatorContinuous(const ScratchData<dim>             &scratch_data,
-                                          const EvaporationModelBase<number> &evaporation_model);
+    EvaporationMassFluxOperatorContinuous(const ScratchData<dim, dim, number> &scratch_data,
+                                          const EvaporationModelBase<number>  &evaporation_model);
 
     /**
      * DOCU: TODO

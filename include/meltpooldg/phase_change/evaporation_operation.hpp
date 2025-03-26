@@ -49,7 +49,7 @@ namespace MeltPoolDG::Evaporation
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim, dim, number> &scratch_data;
     /**
      *  parameters controlling the evaporation
      */
@@ -99,16 +99,16 @@ namespace MeltPoolDG::Evaporation
     std::shared_ptr<EvaporationSourceTermsBase<dim, number>>      evapor_source_terms_operator;
 
   public:
-    EvaporationOperation(const ScratchData<dim>        &scratch_data_in,
-                         const VectorType              &level_set_as_heaviside_in,
-                         const BlockVectorType         &normal_vector_in,
-                         const EvaporationData<number> &evapor_data_in,
-                         const MaterialData<number>    &material_data_in,
-                         const unsigned int             normal_dof_idx_in,
-                         const unsigned int             evapor_vel_dof_idx_in,
-                         const unsigned int             evapor_mass_flux_dof_idx_in,
-                         const unsigned int             ls_hanging_nodes_dof_idx_in,
-                         const unsigned int             ls_quad_idx_in);
+    EvaporationOperation(const ScratchData<dim, dim, number> &scratch_data_in,
+                         const VectorType                    &level_set_as_heaviside_in,
+                         const BlockVectorType               &normal_vector_in,
+                         const EvaporationData<number>       &evapor_data_in,
+                         const MaterialData<number>          &material_data_in,
+                         const unsigned int                   normal_dof_idx_in,
+                         const unsigned int                   evapor_vel_dof_idx_in,
+                         const unsigned int                   evapor_mass_flux_dof_idx_in,
+                         const unsigned int                   ls_hanging_nodes_dof_idx_in,
+                         const unsigned int                   ls_quad_idx_in);
 
 
     /*

@@ -17,8 +17,8 @@ namespace MeltPoolDG::Evaporation
   private:
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
-    const ScratchData<dim>        &scratch_data;
-    const EvaporationData<number> &evapor_data;
+    const ScratchData<dim, dim, number> &scratch_data;
+    const EvaporationData<number>       &evapor_data;
     /**
      * references to solutions needed for the computation
      */
@@ -53,7 +53,7 @@ namespace MeltPoolDG::Evaporation
 
   public:
     EvaporationSourceTermsContinuous(
-      const ScratchData<dim>                      &scratch_data,
+      const ScratchData<dim, dim, number>         &scratch_data,
       const EvaporationData<number>               &evapor_data,
       const VectorType                            &level_set_as_heaviside,
       const BlockVectorType                       &normal_vector,

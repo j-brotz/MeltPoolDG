@@ -16,8 +16,8 @@ namespace MeltPoolDG::Evaporation
   private:
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
-    const ScratchData<dim>        &scratch_data;
-    const EvaporationData<number> &evapor_data;
+    const ScratchData<dim, dim, number> &scratch_data;
+    const EvaporationData<number>       &evapor_data;
     /**
      * references to solutions needed for the computation
      */
@@ -42,19 +42,19 @@ namespace MeltPoolDG::Evaporation
                                  >> *surface_mesh_info = nullptr;
 
   public:
-    EvaporationSourceTermsSharp(const ScratchData<dim>        &scratch_data,
-                                const EvaporationData<number> &evapor_data,
-                                const VectorType              &level_set_as_heaviside,
-                                const BlockVectorType         &normal_vector,
-                                const VectorType              &evaporative_mass_flux,
-                                const unsigned int             ls_hanging_nodes_dof_idx,
-                                const unsigned int             ls_quad_idx,
-                                const unsigned int             normal_dof_idx,
-                                const unsigned int             evapor_vel_dof_idx,
-                                const unsigned int             evapor_mass_flux_dof_idx,
-                                const number                   tolerance_normal_vector,
-                                const number                   density_vapor,
-                                const number                   density_liquid);
+    EvaporationSourceTermsSharp(const ScratchData<dim, dim, number> &scratch_data,
+                                const EvaporationData<number>       &evapor_data,
+                                const VectorType                    &level_set_as_heaviside,
+                                const BlockVectorType               &normal_vector,
+                                const VectorType                    &evaporative_mass_flux,
+                                const unsigned int                   ls_hanging_nodes_dof_idx,
+                                const unsigned int                   ls_quad_idx,
+                                const unsigned int                   normal_dof_idx,
+                                const unsigned int                   evapor_vel_dof_idx,
+                                const unsigned int                   evapor_mass_flux_dof_idx,
+                                const number                         tolerance_normal_vector,
+                                const number                         density_vapor,
+                                const number                         density_liquid);
 
     void
     compute_evaporation_velocity(VectorType &evaporation_velocity) final;

@@ -25,7 +25,7 @@ namespace MeltPoolDG::Evaporation
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
-    const ScratchData<dim>                                             &scratch_data;
+    const ScratchData<dim, dim, number>                                &scratch_data;
     mutable LevelSet::NearestPointData<number>                          nearest_point_data;
     const EvaporationModelBase<number>                                 &evaporation_model;
     const VectorType                                                   &level_set_as_heaviside;
@@ -39,7 +39,7 @@ namespace MeltPoolDG::Evaporation
 
 
   public:
-    EvaporationMassFluxOperatorInterfaceValue(const ScratchData<dim> &scratch_data,
+    EvaporationMassFluxOperatorInterfaceValue(const ScratchData<dim, dim, number> &scratch_data,
                                               const LevelSet::NearestPointData<number> &data,
                                               const EvaporationModelBase<number> &evaporation_model,
                                               const VectorType      &level_set_as_heaviside,

@@ -15,7 +15,7 @@ namespace MeltPoolDG::Evaporation
    */
   template <int dim, typename number>
   EvaporationSourceTermsContinuous<dim, number>::EvaporationSourceTermsContinuous(
-    const ScratchData<dim>                      &scratch_data,
+    const ScratchData<dim, dim, number>         &scratch_data,
     const EvaporationData<number>               &evapor_data,
     const VectorType                            &level_set_as_heaviside,
     const BlockVectorType                       &normal_vector,

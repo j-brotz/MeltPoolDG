@@ -23,7 +23,7 @@ namespace MeltPoolDG::MeltPool
   private:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim, dim, number> &scratch_data;
     /**
      *  Parameters
      */
@@ -33,8 +33,8 @@ namespace MeltPoolDG::MeltPool
     Material<number> melting_solidification;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
-     *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
-     *  multiple DoFHandlers, quadrature rules, etc.
+     *  ScratchData<dim,dim,number> object is selected. This is important when
+     * ScratchData<dim,dim,number> holds multiple DoFHandlers, quadrature rules, etc.
      */
     const unsigned int phase_fraction_dof_idx;
     const unsigned int ls_dof_idx;
@@ -52,16 +52,16 @@ namespace MeltPoolDG::MeltPool
     VectorType liquid;
 
   public:
-    MeltFrontPropagation(const ScratchData<dim>   &scratch_data_in,
-                         const Parameters<number> &data_in,
-                         const unsigned int        phase_fraction_dof_idx_in,
-                         const unsigned int        ls_dof_idx_in,
-                         const VectorType         &temperature_in,
-                         const unsigned int        reinit_dof_idx_in,
-                         const unsigned int        reinit_no_solid_dof_idx_in,
-                         const unsigned int        flow_vel_dof_idx_in,
-                         const unsigned int        flow_vel_no_solid_dof_idx_in,
-                         const unsigned int        heat_hanging_nodes_dof_idx_in);
+    MeltFrontPropagation(const ScratchData<dim, dim, number> &scratch_data_in,
+                         const Parameters<number>            &data_in,
+                         const unsigned int                   phase_fraction_dof_idx_in,
+                         const unsigned int                   ls_dof_idx_in,
+                         const VectorType                    &temperature_in,
+                         const unsigned int                   reinit_dof_idx_in,
+                         const unsigned int                   reinit_no_solid_dof_idx_in,
+                         const unsigned int                   flow_vel_dof_idx_in,
+                         const unsigned int                   flow_vel_no_solid_dof_idx_in,
+                         const unsigned int                   heat_hanging_nodes_dof_idx_in);
 
     void
     set_initial_condition(const VectorType &level_set_as_heaviside, VectorType &level_set);

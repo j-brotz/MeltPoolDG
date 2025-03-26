@@ -56,13 +56,13 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim, typename number>
   RecoilPressureOperation<dim, number>::RecoilPressureOperation(
-    const ScratchData<dim>   &scratch_data_in,
-    const Parameters<number> &data_in,
-    const unsigned int        flow_vel_dof_idx_in,
-    const unsigned int        flow_vel_quad_idx_in,
-    const unsigned int        flow_pressure_dof_idx_in,
-    const unsigned int        ls_dof_idx_in,
-    const unsigned int        heat_dof_idx_in)
+    const ScratchData<dim, dim, number> &scratch_data_in,
+    const Parameters<number>            &data_in,
+    const unsigned int                   flow_vel_dof_idx_in,
+    const unsigned int                   flow_vel_quad_idx_in,
+    const unsigned int                   flow_pressure_dof_idx_in,
+    const unsigned int                   ls_dof_idx_in,
+    const unsigned int                   heat_dof_idx_in)
     : scratch_data(scratch_data_in)
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
     , flow_vel_quad_idx(flow_vel_quad_idx_in)

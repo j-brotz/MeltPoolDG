@@ -27,16 +27,16 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   MeltFrontPropagation<dim, number>::MeltFrontPropagation(
-    const ScratchData<dim>   &scratch_data_in,
-    const Parameters<number> &data_in,
-    const unsigned int        phase_fraction_dof_idx_in,
-    const unsigned int        ls_dof_idx_in,
-    const VectorType         &temperature_in,
-    const unsigned int        reinit_dof_idx_in,
-    const unsigned int        reinit_no_solid_dof_idx_in,
-    const unsigned int        flow_vel_dof_idx_in,
-    const unsigned int        flow_vel_no_solid_dof_idx_in,
-    const unsigned int        heat_hanging_nodes_dof_idx_in)
+    const ScratchData<dim, dim, number> &scratch_data_in,
+    const Parameters<number>            &data_in,
+    const unsigned int                   phase_fraction_dof_idx_in,
+    const unsigned int                   ls_dof_idx_in,
+    const VectorType                    &temperature_in,
+    const unsigned int                   reinit_dof_idx_in,
+    const unsigned int                   reinit_no_solid_dof_idx_in,
+    const unsigned int                   flow_vel_dof_idx_in,
+    const unsigned int                   flow_vel_no_solid_dof_idx_in,
+    const unsigned int                   heat_hanging_nodes_dof_idx_in)
     : scratch_data(scratch_data_in)
     , mp_data(data_in.mp)
     , melting_solidification(data_in.material, MaterialTypes::liquid_solid)
@@ -176,7 +176,7 @@ namespace MeltPoolDG::MeltPool
     // constrained indices in matrix-free have to be updated
     // which is done in the following by rebuilding matrix-free.
     if (mp_data.solid.set_velocity_to_zero || mp_data.solid.do_not_reinitialize)
-      const_cast<ScratchData<dim> &>(scratch_data)
+      const_cast<ScratchData<dim, dim, number> &>(scratch_data)
         .build(scratch_data.enable_boundary_faces, scratch_data.enable_inner_faces);
   }
 

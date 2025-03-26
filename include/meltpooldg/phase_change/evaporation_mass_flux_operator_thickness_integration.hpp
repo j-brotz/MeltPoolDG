@@ -26,7 +26,7 @@ namespace MeltPoolDG::Evaporation
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
-    const ScratchData<dim>                                  &scratch_data;
+    const ScratchData<dim, dim, number>                     &scratch_data;
     const EvaporationModelBase<number>                      &evaporation_model;
     const EvaporationData<number>::ThicknessIntegrationData &thickness_integration_data;
     const LevelSet::ReinitializationData<number>            &reinit_data;
@@ -43,7 +43,7 @@ namespace MeltPoolDG::Evaporation
 
   public:
     EvaporationMassFluxOperatorThicknessIntegration(
-      const ScratchData<dim>                                  &scratch_data,
+      const ScratchData<dim, dim, number>                     &scratch_data,
       const EvaporationModelBase<number>                      &evaporation_model,
       const EvaporationData<number>::ThicknessIntegrationData &thickness_integration_data,
       const LevelSet::ReinitializationData<number>            &reinit_data,

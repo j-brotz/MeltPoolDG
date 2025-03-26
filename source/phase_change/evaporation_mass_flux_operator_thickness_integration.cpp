@@ -35,7 +35,7 @@ namespace MeltPoolDG::Evaporation
   template <int dim, typename number>
   EvaporationMassFluxOperatorThicknessIntegration<dim, number>::
     EvaporationMassFluxOperatorThicknessIntegration(
-      const ScratchData<dim>                                  &scratch_data,
+      const ScratchData<dim, dim, number>                     &scratch_data,
       const EvaporationModelBase<number>                      &evaporation_model,
       const EvaporationData<number>::ThicknessIntegrationData &thickness_integration_data,
       const LevelSet::ReinitializationData<number>            &reinit_data,

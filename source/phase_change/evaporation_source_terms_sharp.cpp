@@ -12,19 +12,19 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim, typename number>
   EvaporationSourceTermsSharp<dim, number>::EvaporationSourceTermsSharp(
-    const ScratchData<dim>        &scratch_data,
-    const EvaporationData<number> &evapor_data,
-    const VectorType              &level_set_as_heaviside,
-    const BlockVectorType         &normal_vector,
-    const VectorType              &evaporative_mass_flux,
-    const unsigned int             ls_hanging_nodes_dof_idx,
-    const unsigned int             ls_quad_idx,
-    const unsigned int             normal_dof_idx,
-    const unsigned int             evapor_vel_dof_idx,
-    const unsigned int             evapor_mass_flux_dof_idx,
-    const number                   tolerance_normal_vector,
-    const number                   density_vapor,
-    const number                   density_liquid)
+    const ScratchData<dim, dim, number> &scratch_data,
+    const EvaporationData<number>       &evapor_data,
+    const VectorType                    &level_set_as_heaviside,
+    const BlockVectorType               &normal_vector,
+    const VectorType                    &evaporative_mass_flux,
+    const unsigned int                   ls_hanging_nodes_dof_idx,
+    const unsigned int                   ls_quad_idx,
+    const unsigned int                   normal_dof_idx,
+    const unsigned int                   evapor_vel_dof_idx,
+    const unsigned int                   evapor_mass_flux_dof_idx,
+    const number                         tolerance_normal_vector,
+    const number                         density_vapor,
+    const number                         density_liquid)
     : scratch_data(scratch_data)
     , evapor_data(evapor_data)
     , level_set_as_heaviside(level_set_as_heaviside)

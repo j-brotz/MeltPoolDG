@@ -171,7 +171,7 @@ namespace MeltPoolDG::Evaporation
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim, dim, number> &scratch_data;
     /*
      * indices for getting DoFHandler<dim> and Quadrature<dim> of relevant subproblems
      */
@@ -197,13 +197,13 @@ namespace MeltPoolDG::Evaporation
     const number dummy_temperature;
 
   public:
-    RecoilPressureOperation(const ScratchData<dim>   &scratch_data_in,
-                            const Parameters<number> &data_in,
-                            const unsigned int        flow_vel_dof_idx_in,
-                            const unsigned int        flow_vel_quad_idx_in,
-                            const unsigned int        flow_pressure_dof_idx_in,
-                            const unsigned int        ls_dof_idx_in,
-                            const unsigned int        heat_dof_idx_in);
+    RecoilPressureOperation(const ScratchData<dim, dim, number> &scratch_data_in,
+                            const Parameters<number>            &data_in,
+                            const unsigned int                   flow_vel_dof_idx_in,
+                            const unsigned int                   flow_vel_quad_idx_in,
+                            const unsigned int                   flow_pressure_dof_idx_in,
+                            const unsigned int                   ls_dof_idx_in,
+                            const unsigned int                   heat_dof_idx_in);
 
     /**
      * Compute the contribution of the recoil pressure to the force vector of the Navier-Stokes
