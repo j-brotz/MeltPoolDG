@@ -90,9 +90,9 @@ namespace MeltPoolDG::Multiphase
      * @param norm_name Choose between "norm" and "error".
      */
     void
-    print_relative_norm(const GenericDataOut<dim, double>   &generic_data_out,
-                        dealii::Function<dim>               &reference_function,
-                        const std::string                   &norm_name = "norm") const
+    print_relative_norm(const GenericDataOut<dim, double> &generic_data_out,
+                        dealii::Function<dim>             &reference_function,
+                        const std::string                 &norm_name = "norm") const
     {
       using number = double;
       const dealii::ConditionalOStream pcout(std::cout,
