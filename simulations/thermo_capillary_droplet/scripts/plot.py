@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -7,23 +9,21 @@ import pandas as pd
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Plot the droplet velocity over time!')
-    parser.add_argument('--folder', type=str,
-                        help='define the folder, where the existing pvd-file is located')
     parser.add_argument('--file', type=str, required=True,
                         help='define the name of the text file, where the data is stored')
     args = parser.parse_args()
     plt.close('all')
 
-    data_file = os.path.join(os.getcwd(), args.folder, args.file)
+    data_file = os.path.join(os.getcwd(), args.file)
 
     data = pd.read_csv(data_file)
 
-    time = pd.DataFrame(data, columns=['time']).to_numpy()
-    time_normalized = pd.DataFrame(data, columns=['t/tr']).to_numpy()
-    vel_normalized = pd.DataFrame(data, columns=['u/ur']).to_numpy()
-    vel_max = pd.DataFrame(data, columns=['u_max/ur']).to_numpy()
-    vel_average = pd.DataFrame(data, columns=['u_avg/ur']).to_numpy()
-    center_position = pd.DataFrame(data, columns=['y_center']).to_numpy()
+    time = pd.DataFrame(data, columns=['time']).to_numpy()[:, 0]
+    time_normalized = pd.DataFrame(data, columns=['t/tr']).to_numpy()[:, 0]
+    vel_normalized = pd.DataFrame(data, columns=['u/ur']).to_numpy()[:, 0]
+    vel_max = pd.DataFrame(data, columns=['u_max/ur']).to_numpy()[:, 0]
+    vel_average = pd.DataFrame(data, columns=['u_avg/ur']).to_numpy()[:, 0]
+    center_position = pd.DataFrame(data, columns=['y_center']).to_numpy()[:, 0]
 
     # data from Ma (2013)
     analytical_t = np.asarray([
@@ -91,14 +91,18 @@ if __name__ == "__main__":
     ax.set_ylabel(r"$y_{center}$")
     ax.set_xlabel("t/tr")
     ax.set_xlim([0, 2])
-    ax.scatter([time_normalized[-100], time_normalized[-1]],
-               [center_position[-100], center_position[-1]])
-    ax.plot([time_normalized[-100], time_normalized[-1], time_normalized[-1]],
-            [center_position[-100], center_position[-100], center_position[-1]], "k")
-    vel = (center_position[-1] - center_position[-500]) / \
-        (time[-1] - time[-500]) / 0.024
+
+    end_idx = np.searchsorted(time_normalized, 2)
+    centre_idx = np.searchsorted(time_normalized, 1)
+
+    ax.scatter([time_normalized[centre_idx], time_normalized[end_idx]],
+               [center_position[centre_idx], center_position[end_idx]])
+    ax.plot([time_normalized[centre_idx], time_normalized[end_idx], time_normalized[end_idx]],
+            [center_position[centre_idx], center_position[centre_idx], center_position[end_idx]], "k")
+    vel = (center_position[end_idx] - center_position[centre_idx]) / \
+        (time[end_idx] - time[centre_idx]) / 0.024
     ax.annotate("u/ur={:}".format(float(vel)),
-                (time_normalized[-500], center_position[-500]))
+                (time_normalized[centre_idx], center_position[centre_idx]))
 
     fig.tight_layout()
     fig.savefig(data_file[:-4] + ".png")

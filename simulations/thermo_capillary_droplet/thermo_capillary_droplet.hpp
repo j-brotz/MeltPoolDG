@@ -147,7 +147,8 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     SimulationThermoCapillaryDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
       : MeltPoolCase<dim>(parameter_file, mpi_communicator)
     {
-      if (dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
+      if (this->parameters.output.do_user_defined_postprocessing and
+          dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
         file.open(this->parameters.output.directory + "/" +
                   this->parameters.output.paraview.filename +
                   "_droplet_velocity_over_time_normalized.csv");
@@ -386,14 +387,13 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
 
                   for (const auto q : level_set_eval.quadrature_point_indices())
                     {
-                      if (ls_at_q[q] > 0.0)
-                        {
-                          area_of_phase += level_set_eval.JxW(q);
-                          average_velocity += vel_at_q[q][dim - 1] * level_set_eval.JxW(q);
-                          for (unsigned int d = 0; d < dim; ++d)
-                            center_of_mass[d] +=
-                              level_set_eval.quadrature_point(q)[d] * level_set_eval.JxW(q);
-                        }
+                      if (ls_at_q[q] <= 0.0)
+                        continue;
+                      area_of_phase += level_set_eval.JxW(q);
+                      average_velocity += vel_at_q[q][dim - 1] * level_set_eval.JxW(q);
+                      for (unsigned int d = 0; d < dim; ++d)
+                        center_of_mass[d] +=
+                          level_set_eval.quadrature_point(q)[d] * level_set_eval.JxW(q);
                     }
                 }
               ++vel_cell;
