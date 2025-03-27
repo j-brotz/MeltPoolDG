@@ -153,7 +153,7 @@ namespace MeltPoolDG::LevelSet
   };
 
   /**
-   * Asymmetric, number phase weighted Dirac delta approximation function.
+   * Asymmetric, double phase weighted Dirac delta approximation function.
    *
    * This function can be used to approximate the Dirac delta function for diffuse interfaces. The
    * approximation is asymmetric and you can choose two weights for each phase individually. The
