@@ -513,11 +513,7 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-
   template class AdvectionDiffusionOperator<1, double>;
-  ;
   template class AdvectionDiffusionOperator<2, double>;
-  ;
   template class AdvectionDiffusionOperator<3, double>;
-  ;
 } // namespace MeltPoolDG::LevelSet

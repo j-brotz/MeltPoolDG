@@ -278,11 +278,7 @@ namespace MeltPoolDG::LevelSet
                              "advec_diff_user_rhs");
   }
 
-
   template class AdvectionDGOperation<1, double>;
-  ;
   template class AdvectionDGOperation<2, double>;
-  ;
   template class AdvectionDGOperation<3, double>;
-  ;
 } // namespace MeltPoolDG::LevelSet
