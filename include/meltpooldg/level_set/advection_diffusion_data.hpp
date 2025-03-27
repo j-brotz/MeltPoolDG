@@ -18,7 +18,7 @@ namespace MeltPoolDG::LevelSet
               // streamline upwind Petrov-Galerkin stabilization
               SUPG)
 
-  template <typename number = double>
+  template <typename number>
   struct AdvectionDiffusionData
   {
     AdvectionDiffusionData();
@@ -34,7 +34,7 @@ namespace MeltPoolDG::LevelSet
     struct ConvectionStabilizationData
     {
       ConvectionStabilizationType type        = ConvectionStabilizationType::none;
-      double                      coefficient = -1.0;
+      number                      coefficient = -1.0;
     } conv_stab;
 
     PredictorData<number>    predictor;

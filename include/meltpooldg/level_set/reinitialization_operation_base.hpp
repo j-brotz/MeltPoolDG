@@ -1,84 +1,73 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Peter Munch, Magdalena Schreter, TUM, October 2020
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 #include <deal.II/dofs/dof_handler.h>
 
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 
-namespace MeltPoolDG
+namespace MeltPoolDG::LevelSet
 {
-  namespace LevelSet
+  template <int dim, typename number>
+  class ReinitializationOperationBase
   {
-    using namespace dealii;
+  public:
+    virtual void
+    solve() = 0;
 
-    template <int dim>
-    class ReinitializationOperationBase
+    virtual void
+    reinit() = 0;
+
+    virtual void
+    update_dof_idx(const unsigned int &reinit_dof_idx_in) = 0;
+
+    virtual void
+    set_initial_condition(
+      const dealii::LinearAlgebra::distributed::Vector<number> &solution_level_set_in) = 0;
+
+    virtual void
+    set_initial_condition(const dealii::Function<dim> & /*initial_field_function*/) = 0;
+
+    virtual const dealii::LinearAlgebra::distributed::Vector<number> &
+    get_level_set() const = 0;
+
+    virtual dealii::LinearAlgebra::distributed::Vector<number> &
+    get_level_set() = 0;
+
+    virtual number
+    get_max_change_level_set() const = 0;
+
+    virtual const dealii::LinearAlgebra::distributed::BlockVector<number> &
+    get_normal_vector() const = 0;
+
+    virtual dealii::LinearAlgebra::distributed::BlockVector<number> &
+    get_normal_vector() = 0;
+
+    virtual void
+    attach_vectors(std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) = 0;
+
+    virtual void
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const = 0;
+
+    virtual number
+    compute_CFL_based_timestep() const
     {
-    public:
-      virtual void
-      solve() = 0;
-
-      virtual void
-      reinit() = 0;
-
-      virtual void
-      update_dof_idx(const unsigned int &reinit_dof_idx_in) = 0;
-
-      virtual void
-      set_initial_condition(
-        const LinearAlgebra::distributed::Vector<double> &solution_level_set_in) = 0;
-
-      virtual void
-      set_initial_condition(const Function<dim> & /*initial_field_function*/) = 0;
-
-      virtual const LinearAlgebra::distributed::Vector<double> &
-      get_level_set() const = 0;
-
-      virtual LinearAlgebra::distributed::Vector<double> &
-      get_level_set() = 0;
-
-      virtual double
-      get_max_change_level_set() const = 0;
-
-      virtual const LinearAlgebra::distributed::BlockVector<double> &
-      get_normal_vector() const = 0;
-
-      virtual LinearAlgebra::distributed::BlockVector<double> &
-      get_normal_vector() = 0;
-
-      virtual void
-      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) = 0;
-
-      virtual void
-      attach_output_vectors(GenericDataOut<dim, double> &data_out) const = 0;
-
-      virtual double
-      compute_CFL_based_timestep() const
-      {
-        AssertThrow(
-          false, ExcMessage("CFL based time stepping is not implemented for continous elements!"));
-      };
-
-      virtual void
-      set_artificial_diffusitivity()
-      {
-        /**
-         * Does nothing in the CG case
-         */
-      }
-
-      virtual LinearAlgebra::distributed::Vector<double> *
-      get_sign_indicator_function()
-      {
-        /**
-         * Is not needed in the CG case
-         */
-        return nullptr;
-      }
+      AssertThrow(false,
+                  ExcMessage("CFL based time stepping is not implemented for continous elements!"));
     };
 
-  } // namespace LevelSet
-} // namespace MeltPoolDG
+    virtual void
+    set_artificial_diffusitivity()
+    {
+      /**
+       * Does nothing in the CG case
+       */
+    }
+
+    virtual dealii::LinearAlgebra::distributed::Vector<number> *
+    get_sign_indicator_function()
+    {
+      /**
+       * Is not needed in the CG case
+       */
+      return nullptr;
+    }
+  };
+} // namespace MeltPoolDG::LevelSet

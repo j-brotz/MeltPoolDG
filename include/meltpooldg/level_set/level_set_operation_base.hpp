@@ -1,32 +1,25 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Johannes Ressch TUM, June 2024
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 namespace MeltPoolDG::LevelSet
 {
-  using namespace dealii;
-
-  template <int dim>
+  template <int dim, typename number>
   class LevelSetOperationBase
   {
     // triangulation info on surface mesh of zero level set contour
     using SurfaceMeshInfo =
       std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
                              std::vector<Point<dim>> /*quad_points*/,
-                             std::vector<double> /*weights*/
+                             std::vector<number> /*weights*/
                              >>;
 
   public:
     virtual void
-    set_initial_condition(const Function<dim> &initial_field_function_level_set,
+    set_initial_condition(const dealii::Function<dim> &initial_field_function_level_set,
                           const bool is_signed_distance_initial_field_function = false) = 0;
 
     virtual void
-    set_inflow_outflow_bc(
-      const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> inflow_outflow_bc) = 0;
+    set_inflow_outflow_bc(const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>>
+                            inflow_outflow_bc) = 0;
 
     virtual void
     reinit() = 0;
@@ -53,31 +46,31 @@ namespace MeltPoolDG::LevelSet
     /*
      *  getter functions for solution vectors
      */
-    virtual const LinearAlgebra::distributed::Vector<double> &
+    virtual const dealii::LinearAlgebra::distributed::Vector<number> &
     get_curvature() const = 0;
 
-    virtual LinearAlgebra::distributed::Vector<double> &
+    virtual dealii::LinearAlgebra::distributed::Vector<number> &
     get_curvature() = 0;
 
-    virtual const LinearAlgebra::distributed::BlockVector<double> &
+    virtual const dealii::LinearAlgebra::distributed::BlockVector<number> &
     get_normal_vector() const = 0;
 
-    virtual LinearAlgebra::distributed::BlockVector<double> &
+    virtual dealii::LinearAlgebra::distributed::BlockVector<number> &
     get_normal_vector() = 0;
 
-    virtual const LinearAlgebra::distributed::Vector<double> &
+    virtual const dealii::LinearAlgebra::distributed::Vector<number> &
     get_level_set() const = 0;
 
-    virtual LinearAlgebra::distributed::Vector<double> &
+    virtual dealii::LinearAlgebra::distributed::Vector<number> &
     get_level_set() = 0;
 
-    virtual const LinearAlgebra::distributed::Vector<double> &
+    virtual const dealii::LinearAlgebra::distributed::Vector<number> &
     get_level_set_as_heaviside() const = 0;
 
-    virtual LinearAlgebra::distributed::Vector<double> &
+    virtual dealii::LinearAlgebra::distributed::Vector<number> &
     get_level_set_as_heaviside() = 0;
 
-    virtual const LinearAlgebra::distributed::Vector<double> &
+    virtual const dealii::LinearAlgebra::distributed::Vector<number> &
     get_distance_to_level_set() const = 0;
 
     virtual const SurfaceMeshInfo &
@@ -86,10 +79,10 @@ namespace MeltPoolDG::LevelSet
      * register vectors for adaptive mesh refinement
      */
     virtual void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) = 0;
+    attach_vectors(std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) = 0;
 
     virtual void
-    attach_output_vectors(GenericDataOut<dim, double> &data_out) const = 0;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const = 0;
 
     virtual void
     update_surface_mesh() = 0;

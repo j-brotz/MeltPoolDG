@@ -10,20 +10,19 @@
 /**
  * Compute the gradient of the level set function using Godunov's scheme
  */
-
 namespace MeltPoolDG::LevelSet
 {
-  template <int dim, typename Number = double>
+  template <int dim, typename number>
   class RIGradOperator
   {
   public:
-    using VectorType      = LinearAlgebra::distributed::Vector<Number>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<Number>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
 
-    RIGradOperator(const MeltPoolDG::ScratchData<dim> &scratch_data_in,
-                   const unsigned int                  reinit_dof_idx_in,
-                   const unsigned int                  reinit_quad_idx_in);
+    RIGradOperator(const MeltPoolDG::ScratchData<dim, dim, number> &scratch_data_in,
+                   const unsigned int                               reinit_dof_idx_in,
+                   const unsigned int                               reinit_quad_idx_in);
 
 
     /**
@@ -38,7 +37,7 @@ namespace MeltPoolDG::LevelSet
     apply(const VectorType &src, VectorType &dst);
 
   private:
-    const MeltPoolDG::ScratchData<dim> &scratch_data;
+    const MeltPoolDG::ScratchData<dim, dim, number> &scratch_data;
 
     const unsigned int reinit_dof_idx;
     const unsigned int reinit_quad_idx;
@@ -52,7 +51,7 @@ namespace MeltPoolDG::LevelSet
      */
     template <uint component>
     void
-    local_apply_domain(const MatrixFree<dim, Number>               &data,
+    local_apply_domain(const dealii::MatrixFree<dim, number>       &data,
                        VectorType                                  &dst,
                        const VectorType                            &src,
                        const std::pair<unsigned int, unsigned int> &cell_range) const;
@@ -66,7 +65,7 @@ namespace MeltPoolDG::LevelSet
      */
     template <bool is_right, uint component>
     void
-    local_apply_inner_face(const MatrixFree<dim, Number>               &data,
+    local_apply_inner_face(const dealii::MatrixFree<dim, number>       &data,
                            VectorType                                  &dst,
                            const VectorType                            &src,
                            const std::pair<unsigned int, unsigned int> &face_range) const;
@@ -80,7 +79,7 @@ namespace MeltPoolDG::LevelSet
      */
     template <bool is_right, uint component>
     void
-    local_apply_boundary_face(const MatrixFree<dim, Number>               &data,
+    local_apply_boundary_face(const dealii::MatrixFree<dim, number>       &data,
                               VectorType                                  &dst,
                               const VectorType                            &src,
                               const std::pair<unsigned int, unsigned int> &face_range) const;
@@ -93,7 +92,7 @@ namespace MeltPoolDG::LevelSet
      * @param cell_range
      */
     void
-    local_apply_inverse_mass_matrix(const MatrixFree<dim, Number>               &data,
+    local_apply_inverse_mass_matrix(const dealii::MatrixFree<dim, number>       &data,
                                     VectorType                                  &dst,
                                     const VectorType                            &src,
                                     const std::pair<unsigned int, unsigned int> &cell_range) const;

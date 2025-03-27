@@ -4,13 +4,13 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  template <int dim, typename Number>
-  CurvatureDGOperation<dim, Number>::CurvatureDGOperation(
-    const ScratchData<dim>      &scratch_data_in,
-    const unsigned int           curvature_dof_idx_in,
-    const unsigned int           curvature_quad_idx_in,
-    const BlockVectorType       &solution_normal_vector_in,
-    const CurvatureData<double> &curvature_data_in)
+  template <int dim, typename number>
+  CurvatureDGOperation<dim, number>::CurvatureDGOperation(
+    const ScratchData<dim, dim, number> &scratch_data_in,
+    const unsigned int                   curvature_dof_idx_in,
+    const unsigned int                   curvature_quad_idx_in,
+    const BlockVectorType               &solution_normal_vector_in,
+    const CurvatureData<number>         &curvature_data_in)
     : scratch_data(scratch_data_in)
     , solution_normal_vector(solution_normal_vector_in)
     , curvature_data(curvature_data_in)
@@ -25,9 +25,9 @@ namespace MeltPoolDG::LevelSet
                          curvature_data.linear_solver.preconditioner_type)
   {}
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  CurvatureDGOperation<dim, Number>::reinit()
+  CurvatureDGOperation<dim, number>::reinit()
   {
     solution_history.apply(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, curvature_dof_idx); });
@@ -36,9 +36,9 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  CurvatureDGOperation<dim, Number>::solve()
+  CurvatureDGOperation<dim, number>::solve()
   {
     const bool update_ghosts = !solution_normal_vector.has_ghost_elements();
     if (update_ghosts)
@@ -48,15 +48,15 @@ namespace MeltPoolDG::LevelSet
     scratch_data.initialize_dof_vector(right_hand_side, curvature_dof_idx);
 
     scratch_data.get_matrix_free().loop(
-      &CurvatureDGOperation<dim, Number>::right_hand_side_domain,
-      &CurvatureDGOperation<dim, Number>::right_hand_side_inner_face<0>,
-      &CurvatureDGOperation<dim, Number>::right_hand_side_boundary_face<0>,
+      &CurvatureDGOperation<dim, number>::right_hand_side_domain,
+      &CurvatureDGOperation<dim, number>::right_hand_side_inner_face<0>,
+      &CurvatureDGOperation<dim, number>::right_hand_side_boundary_face<0>,
       this,
       right_hand_side,
       solution_normal_vector,
       true,
-      MatrixFree<dim, Number>::DataAccessOnFaces::unspecified,
-      MatrixFree<dim, Number>::DataAccessOnFaces::unspecified);
+      MatrixFree<dim, number>::DataAccessOnFaces::unspecified,
+      MatrixFree<dim, number>::DataAccessOnFaces::unspecified);
 
     LinearSolver::solve<VectorType>(helmholtz_operator,
                                     solution_history.get_current_solution(),
@@ -64,16 +64,16 @@ namespace MeltPoolDG::LevelSet
                                     curvature_data.linear_solver);
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  CurvatureDGOperation<dim, Number>::right_hand_side_domain(
-    const MatrixFree<dim, Number>               &data,
+  CurvatureDGOperation<dim, number>::right_hand_side_domain(
+    const MatrixFree<dim, number>               &data,
     VectorType                                  &dst,
     const CurvatureDGOperation::BlockVectorType &src,
     const std::pair<unsigned int, unsigned int> &cell_range) const
   {
-    FECellIntegrator<dim, dim, Number> eval_normal(data, curvature_dof_idx, curvature_quad_idx);
-    FECellIntegrator<dim, 1, Number>   eval(data, curvature_dof_idx, curvature_quad_idx);
+    FECellIntegrator<dim, dim, number> eval_normal(data, curvature_dof_idx, curvature_quad_idx);
+    FECellIntegrator<dim, 1, number>   eval(data, curvature_dof_idx, curvature_quad_idx);
 
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
@@ -91,7 +91,7 @@ namespace MeltPoolDG::LevelSet
           {
             if constexpr (dim > 1)
               {
-                const Tensor<1, dim, VectorizedArray<Number>> n_phi =
+                const Tensor<1, dim, VectorizedArray<number>> n_phi =
                   MeltPoolDG::VectorTools::normalize<dim>(eval_normal.get_dof_value(i), 1.0e-16
 
                   );
@@ -99,7 +99,7 @@ namespace MeltPoolDG::LevelSet
               }
             else
               {
-                const VectorizedArray<double> n_phi =
+                const VectorizedArray<number> n_phi =
                   compare_and_apply_mask<SIMDComparison::greater_than>(eval_normal.get_dof_value(i),
                                                                        1.0e-16,
                                                                        1.0,
@@ -128,29 +128,29 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim, typename Number>
-  const LinearAlgebra::distributed::Vector<double> &
-  CurvatureDGOperation<dim, Number>::get_curvature() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  CurvatureDGOperation<dim, number>::get_curvature() const
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim, typename Number>
-  LinearAlgebra::distributed::Vector<double> &
-  CurvatureDGOperation<dim, Number>::get_curvature()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::Vector<number> &
+  CurvatureDGOperation<dim, number>::get_curvature()
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  CurvatureDGOperation<dim, Number>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  CurvatureDGOperation<dim, number>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
   }
 
-  template class CurvatureDGOperation<1>;
-  template class CurvatureDGOperation<2>;
-  template class CurvatureDGOperation<3>;
+  template class CurvatureDGOperation<1, double>;
+  template class CurvatureDGOperation<2, double>;
+  template class CurvatureDGOperation<3, double>;
 } // namespace MeltPoolDG::LevelSet

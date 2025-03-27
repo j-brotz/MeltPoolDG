@@ -1,7 +1,3 @@
-/* ---------------------------------------------------------------------
- * Johannes Resch, TUM, July 2024
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 // for parallelization
 #include <deal.II/base/exceptions.h>
@@ -31,45 +27,43 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  using namespace dealii;
-
   /*
    *     Level set model including advection, reinitialization and curvature computation
    *     of the level set function.
    */
-  template <int dim>
-  class LevelSetDGOperation : public LevelSetOperationBase<dim>
+  template <int dim, typename number>
+  class LevelSetDGOperation : public LevelSetOperationBase<dim, number>
   {
   private:
-    using VectorType      = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim, dim, number> &scratch_data;
 
     // Time stepping of the overall problem
-    const TimeIterator<double> &time_stepping;
+    const TimeIterator<number> &time_stepping;
     /*
      *  The following objects are the operations, which are performed for solving the
      *  level set equation.
      */
-    std::shared_ptr<AdvectionDGOperation<dim>>        advec_operation;
-    std::shared_ptr<ReinitializationDGOperation<dim>> reinit_operation;
+    std::shared_ptr<AdvectionDGOperation<dim, number>>        advec_operation;
+    std::shared_ptr<ReinitializationDGOperation<dim, number>> reinit_operation;
 
     // Is used to track the unreinitialized interface movement
-    std::shared_ptr<AdvectionDGOperation<dim>> advec_smoothed_signum_operation;
+    std::shared_ptr<AdvectionDGOperation<dim, number>> advec_smoothed_signum_operation;
 
     /*
      *   Computation of the normal vectors
      */
-    std::shared_ptr<NormalVectorOperationBase<dim>> normal_vector_operation;
+    std::shared_ptr<NormalVectorOperationBase<dim, number>> normal_vector_operation;
     /*
      *   Computation of the curvature
      */
-    std::shared_ptr<CurvatureDGOperation<dim>> curvature_operation;
+    std::shared_ptr<CurvatureDGOperation<dim, number>> curvature_operation;
     /*
      *  necessary parameters
      */
-    const LevelSetData<double> &level_set_data;
+    const LevelSetData<number> &level_set_data;
     /*
      * select the relevant DoFHandler
      */
@@ -81,7 +75,7 @@ namespace MeltPoolDG::LevelSet
      *  equation, which is solved up to quasi-steady state. Thus a time iterator is
      *  needed.
      */
-    TimeIterator<double> reinit_time_iterator;
+    TimeIterator<number> reinit_time_iterator;
 
     bool ready_for_time_advance = false;
     /*
@@ -90,23 +84,23 @@ namespace MeltPoolDG::LevelSet
      */
     VectorType level_set_as_heaviside;
 
-    double max_d_level_set_since_last_reinit = std::numeric_limits<double>::max();
+    number max_d_level_set_since_last_reinit = std::numeric_limits<number>::max();
 
 
     // triangulation info on surface mesh of zero level set contour
     using SurfaceMeshInfo =
       std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
                              std::vector<Point<dim>> /*quad_points*/,
-                             std::vector<double> /*weights*/
+                             std::vector<number> /*weights*/
                              >>;
     SurfaceMeshInfo surface_mesh_info;
 
     int iter = 0;
 
   public:
-    LevelSetDGOperation(const ScratchData<dim>                              &scratch_data_in,
-                        const TimeIterator<double>                          &time_stepping,
-                        const LevelSetData<double>                          &ls_data,
+    LevelSetDGOperation(const ScratchData<dim, dim, number>                 &scratch_data_in,
+                        const TimeIterator<number>                          &time_stepping,
+                        const LevelSetData<number>                          &ls_data,
                         const std::shared_ptr<BoundaryConditionManager<dim>> boundary_conditions_in,
                         std::shared_ptr<dealii::Function<dim>> prescribed_velocity_function,
                         VectorType                            &advection_velocity,
@@ -118,12 +112,12 @@ namespace MeltPoolDG::LevelSet
      * set initial condition
      */
     void
-    set_initial_condition(const Function<dim> &initial_field_function_level_set,
+    set_initial_condition(const dealii::Function<dim> &initial_field_function_level_set,
                           const bool is_signed_distance_initial_field_function = false) override;
 
     void
     set_inflow_outflow_bc(
-      [[maybe_unused]] const std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
+      [[maybe_unused]] const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>>
         inflow_outflow_bc) override
     { // Not needed in the DG case sinde BCs are applied weakly within the operator
       DEAL_II_NOT_IMPLEMENTED();
@@ -169,31 +163,31 @@ namespace MeltPoolDG::LevelSet
     /*
      *  getter functions for solution vectors
      */
-    const LinearAlgebra::distributed::Vector<double> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_curvature() const override;
 
-    LinearAlgebra::distributed::Vector<double> &
+    dealii::LinearAlgebra::distributed::Vector<number> &
     get_curvature() override;
 
-    const LinearAlgebra::distributed::BlockVector<double> &
+    const dealii::LinearAlgebra::distributed::BlockVector<number> &
     get_normal_vector() const override;
 
-    LinearAlgebra::distributed::BlockVector<double> &
+    dealii::LinearAlgebra::distributed::BlockVector<number> &
     get_normal_vector() override;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_level_set() const override;
 
-    LinearAlgebra::distributed::Vector<double> &
+    dealii::LinearAlgebra::distributed::Vector<number> &
     get_level_set() override;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_level_set_as_heaviside() const override;
 
-    LinearAlgebra::distributed::Vector<double> &
+    dealii::LinearAlgebra::distributed::Vector<number> &
     get_level_set_as_heaviside() override;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_distance_to_level_set() const override;
 
     const SurfaceMeshInfo &
@@ -203,10 +197,11 @@ namespace MeltPoolDG::LevelSet
      * register vectors for adaptive mesh refinement
      */
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
+    attach_vectors(
+      std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) override;
 
     void
-    attach_output_vectors(GenericDataOut<dim, double> &data_out) const override;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const override;
 
     void
     update_surface_mesh() override;
@@ -219,7 +214,7 @@ namespace MeltPoolDG::LevelSet
     do_reinitialization(const bool update_normal_vector_in_every_cycle = false);
 
     // Computes a given error norm of the level set field
-    double
+    number
     compute_level_set_gradient_error(const VectorType &solution);
   };
 } // namespace MeltPoolDG::LevelSet

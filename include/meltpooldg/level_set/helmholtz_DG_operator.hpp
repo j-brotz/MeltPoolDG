@@ -25,31 +25,29 @@ namespace MeltPoolDG::LevelSet
    * vector. It is used for both the normal vector calculation and the calculation of the
    * interface curvature.
    */
-
-  using namespace dealii;
-  template <int dim, typename Number = double>
+  template <int dim, typename number>
   class HelmholtzDGOperator
   {
   private:
-    using VectorType          = LinearAlgebra::distributed::Vector<Number>;
-    using SparseMatrixType    = TrilinosWrappers::SparseMatrix;
-    using SparsityPatternType = TrilinosWrappers::SparsityPattern;
+    using VectorType          = dealii::LinearAlgebra::distributed::Vector<number>;
+    using SparseMatrixType    = dealii::TrilinosWrappers::SparseMatrix;
+    using SparsityPatternType = dealii::TrilinosWrappers::SparsityPattern;
 
   public:
-    HelmholtzDGOperator(const ScratchData<dim>  &scratch_data_in,
-                        const unsigned int       dof_idx_in,
-                        const unsigned int       quad_idx_in,
-                        const Number             filter_parameter_in,
-                        const Number             interior_penalty_parameter_in,
-                        const PreconditionerType preconditioner_type_in);
+    HelmholtzDGOperator(const ScratchData<dim, dim, number> &scratch_data_in,
+                        const unsigned int                   dof_idx_in,
+                        const unsigned int                   quad_idx_in,
+                        const number                         filter_parameter_in,
+                        const number                         interior_penalty_parameter_in,
+                        const PreconditionerType             preconditioner_type_in);
     /**
      * Applies the operator to @p src and safes the result in @p dst
      * @param dst destination vector
      *  @param src source vector
      */
     void
-    vmult(LinearAlgebra::distributed::Vector<Number>       &dst,
-          const LinearAlgebra::distributed::Vector<Number> &src) const;
+    vmult(LinearAlgebra::distributed::Vector<number>               &dst,
+          const dealii::LinearAlgebra::distributed::Vector<number> &src) const;
 
     void
     reinit() const;
@@ -67,16 +65,16 @@ namespace MeltPoolDG::LevelSet
     }
 
   private:
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim, dim, number> &scratch_data;
 
     const unsigned int dof_idx;
     const unsigned int quad_idx;
 
-    mutable AlignedVector<VectorizedArray<Number>> damping;
-    mutable AlignedVector<VectorizedArray<Number>> array_penalty_parameter;
+    mutable dealii::AlignedVector<dealii::VectorizedArray<number>> damping;
+    mutable dealii::AlignedVector<dealii::VectorizedArray<number>> array_penalty_parameter;
 
-    const Number filter_parameter;
-    const Number interior_penalty_parameter;
+    const number filter_parameter;
+    const number interior_penalty_parameter;
 
     mutable SparseMatrixType system_matrix;
 
@@ -93,7 +91,7 @@ namespace MeltPoolDG::LevelSet
      * @param cell_range
      */
     void
-    local_apply_domain(const MatrixFree<dim, Number>               &data,
+    local_apply_domain(const dealii::MatrixFree<dim, number>       &data,
                        VectorType                                  &dst,
                        const VectorType                            &src,
                        const std::pair<unsigned int, unsigned int> &cell_range) const;
@@ -106,7 +104,7 @@ namespace MeltPoolDG::LevelSet
      * @param face_range
      */
     void
-    local_apply_inner_face(const MatrixFree<dim, Number>               &data,
+    local_apply_inner_face(const dealii::MatrixFree<dim, number>       &data,
                            VectorType                                  &dst,
                            const VectorType                            &src,
                            const std::pair<unsigned int, unsigned int> &face_range) const;
@@ -119,7 +117,7 @@ namespace MeltPoolDG::LevelSet
      * @param face_range
      */
     void
-    local_apply_boundary_face(const MatrixFree<dim, Number>               &data,
+    local_apply_boundary_face(const dealii::MatrixFree<dim, number>       &data,
                               VectorType                                  &dst,
                               const VectorType                            &src,
                               const std::pair<unsigned int, unsigned int> &face_range) const;
@@ -133,21 +131,21 @@ namespace MeltPoolDG::LevelSet
      * @param cell_integrator
      */
     void
-    do_cell_integral_local(FECellIntegrator<dim, 1, Number> &cell_integrator) const;
+    do_cell_integral_local(FECellIntegrator<dim, 1, number> &cell_integrator) const;
 
     /**
      * @param face_integrator_minus
      * @param face_integrator_plus
      */
     void
-    do_face_integral_local(FEFaceIntegrator<dim, 1, Number> &face_integrator_minus,
-                           FEFaceIntegrator<dim, 1, Number> &face_integrator_plus) const;
+    do_face_integral_local(FEFaceIntegrator<dim, 1, number> &face_integrator_minus,
+                           FEFaceIntegrator<dim, 1, number> &face_integrator_plus) const;
 
     /**
      * @param face_integrator_minus
      */
     void
-    do_bounary_integral_local(FEFaceIntegrator<dim, 1, Number> &face_integrator_minus) const;
+    do_bounary_integral_local(FEFaceIntegrator<dim, 1, number> &face_integrator_minus) const;
 
     /**
      * Builds the matrix of the operator

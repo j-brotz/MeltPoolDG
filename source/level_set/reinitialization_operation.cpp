@@ -20,17 +20,19 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  template <int dim>
-  ReinitializationOperation<dim>::ReinitializationOperation(
-    const ScratchData<dim>             &scratch_data_in,
-    const ReinitializationData<double> &reinit_data,
-    const NormalVectorData<double>     &normal_vec_data,
-    const int                           ls_n_subdivisions_in,
-    const TimeIterator<double>         &time_iterator,
-    const unsigned int                  reinit_dof_idx_in,
-    const unsigned int                  reinit_quad_idx_in,
-    const unsigned int                  ls_dof_idx_in,
-    const unsigned int                  normal_dof_idx_in)
+  using namespace dealii;
+
+  template <int dim, typename number>
+  ReinitializationOperation<dim, number>::ReinitializationOperation(
+    const ScratchData<dim, dim, number> &scratch_data_in,
+    const ReinitializationData<number>  &reinit_data,
+    const NormalVectorData<number>      &normal_vec_data,
+    const int                            ls_n_subdivisions_in,
+    const TimeIterator<number>          &time_iterator,
+    const unsigned int                   reinit_dof_idx_in,
+    const unsigned int                   reinit_quad_idx_in,
+    const unsigned int                   ls_dof_idx_in,
+    const unsigned int                   normal_dof_idx_in)
     : scratch_data(scratch_data_in)
     , reinit_data(reinit_data)
     , ls_n_subdivisions(ls_n_subdivisions_in)
@@ -43,17 +45,18 @@ namespace MeltPoolDG::LevelSet
   {
     if (normal_vec_data.implementation == "meltpooldg")
       {
-        normal_vector_operation = std::make_shared<NormalVectorOperation<dim>>(scratch_data_in,
-                                                                               normal_vec_data,
-                                                                               solution_level_set,
-                                                                               normal_dof_idx,
-                                                                               reinit_quad_idx,
-                                                                               ls_dof_idx);
+        normal_vector_operation =
+          std::make_shared<NormalVectorOperation<dim, number>>(scratch_data_in,
+                                                               normal_vec_data,
+                                                               solution_level_set,
+                                                               normal_dof_idx,
+                                                               reinit_quad_idx,
+                                                               ls_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (normal_vec_data.implementation == "adaflo")
       {
-        normal_vector_operation = std::make_shared<NormalVectorOperationAdaflo<dim>>(
+        normal_vector_operation = std::make_shared<NormalVectorOperationAdaflo<dim, number>>(
           scratch_data_in,
           normal_vec_data,
           ls_dof_idx_in,
@@ -73,9 +76,9 @@ namespace MeltPoolDG::LevelSet
     create_operator();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationOperation<dim>::reinit()
+  ReinitializationOperation<dim, number>::reinit()
   {
     solution_history.apply(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, reinit_dof_idx); });
@@ -90,9 +93,10 @@ namespace MeltPoolDG::LevelSet
     preconditioner.reinit(scratch_data, reinit_dof_idx);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationOperation<dim>::set_initial_condition(const VectorType &solution_level_set_in)
+  ReinitializationOperation<dim, number>::set_initial_condition(
+    const VectorType &solution_level_set_in)
   {
     // copy the given solution into the member variable
     solution_level_set.zero_out_ghost_values();
@@ -105,9 +109,10 @@ namespace MeltPoolDG::LevelSet
     preconditioner.set_do_update_preconditioner(true);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationOperation<dim>::set_initial_condition(const Function<dim> &initial_field_function)
+  ReinitializationOperation<dim, number>::set_initial_condition(
+    const Function<dim> &initial_field_function)
   {
     solution_level_set.zero_out_ghost_values();
 
@@ -128,17 +133,17 @@ namespace MeltPoolDG::LevelSet
     preconditioner.set_do_update_preconditioner(true);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationOperation<dim>::update_dof_idx(const unsigned int &reinit_dof_idx_in)
+  ReinitializationOperation<dim, number>::update_dof_idx(const unsigned int &reinit_dof_idx_in)
   {
     reinit_dof_idx = reinit_dof_idx_in;
     create_operator();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationOperation<dim>::init_time_advance()
+  ReinitializationOperation<dim, number>::init_time_advance()
   {
     reinit_operator->reset_time_increment(time_iterator.get_current_time_increment());
 
@@ -151,7 +156,7 @@ namespace MeltPoolDG::LevelSet
       }
 
     if (!predictor)
-      predictor = std::make_unique<Predictor<VectorType, double>>(reinit_data.predictor,
+      predictor = std::make_unique<Predictor<VectorType, number>>(reinit_data.predictor,
                                                                   solution_history,
                                                                   &time_iterator);
 
@@ -162,9 +167,9 @@ namespace MeltPoolDG::LevelSet
     solution_history.get_current_solution().zero_out_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationOperation<dim>::solve()
+  ReinitializationOperation<dim, number>::solve()
   {
     ScopedName         sc("reinitialization::solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
@@ -206,7 +211,7 @@ namespace MeltPoolDG::LevelSet
 
         Journal::print_formatted_norm(
           scratch_data.get_pcout(1),
-          [&]() -> double { return reinit_operator->get_system_matrix().frobenius_norm(); },
+          [&]() -> number { return reinit_operator->get_system_matrix().frobenius_norm(); },
           "matrix",
           "reinitialization",
           15 /*precision*/,
@@ -231,7 +236,7 @@ namespace MeltPoolDG::LevelSet
 
     Journal::print_formatted_norm(
       scratch_data.get_pcout(2),
-      [&]() -> double {
+      [&]() -> number {
         return MeltPoolDG::VectorTools::compute_norm<dim>(rhs,
                                                           scratch_data,
                                                           reinit_dof_idx,
@@ -243,7 +248,7 @@ namespace MeltPoolDG::LevelSet
     );
     Journal::print_formatted_norm(
       scratch_data.get_pcout(1),
-      [&]() -> double {
+      [&]() -> number {
         return VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
                                               scratch_data,
                                               reinit_dof_idx,
@@ -263,7 +268,7 @@ namespace MeltPoolDG::LevelSet
                                   2);
     Journal::print_formatted_norm(
       scratch_data.get_pcout(2),
-      [&]() -> double {
+      [&]() -> number {
         return VectorTools::compute_norm<dim>(solution_level_set,
                                               scratch_data,
                                               reinit_dof_idx,
@@ -281,45 +286,45 @@ namespace MeltPoolDG::LevelSet
     IterationMonitor::add_linear_iterations(sc, iter);
   }
 
-  template <int dim>
-  double
-  ReinitializationOperation<dim>::get_max_change_level_set() const
+  template <int dim, typename number>
+  number
+  ReinitializationOperation<dim, number>::get_max_change_level_set() const
   {
     return max_change_level_set;
   }
 
-  template <int dim>
-  const typename ReinitializationOperation<dim>::BlockVectorType &
-  ReinitializationOperation<dim>::get_normal_vector() const
+  template <int dim, typename number>
+  const typename ReinitializationOperation<dim, number>::BlockVectorType &
+  ReinitializationOperation<dim, number>::get_normal_vector() const
   {
     return normal_vector_operation->get_solution_normal_vector();
   }
 
-  template <int dim>
-  const VectorType &
-  ReinitializationOperation<dim>::get_level_set() const
+  template <int dim, typename number>
+  const typename ReinitializationOperation<dim, number>::VectorType &
+  ReinitializationOperation<dim, number>::get_level_set() const
   {
     return solution_level_set;
   }
 
-  template <int dim>
-  VectorType &
-  ReinitializationOperation<dim>::get_level_set()
+  template <int dim, typename number>
+  typename ReinitializationOperation<dim, number>::VectorType &
+  ReinitializationOperation<dim, number>::get_level_set()
   {
     return solution_level_set;
   }
 
-  template <int dim>
-  typename ReinitializationOperation<dim>::BlockVectorType &
-  ReinitializationOperation<dim>::get_normal_vector()
+  template <int dim, typename number>
+  typename ReinitializationOperation<dim, number>::BlockVectorType &
+  ReinitializationOperation<dim, number>::get_normal_vector()
   {
     return normal_vector_operation->get_solution_normal_vector();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationOperation<dim>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  ReinitializationOperation<dim, number>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     normal_vector_operation->attach_vectors(vectors);
 
@@ -328,9 +333,10 @@ namespace MeltPoolDG::LevelSet
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationOperation<dim>::attach_output_vectors(GenericDataOut<dim, double> &data_out) const
+  ReinitializationOperation<dim, number>::attach_output_vectors(
+    GenericDataOut<dim, number> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(reinit_dof_idx), get_level_set(), "psi");
 
@@ -340,13 +346,13 @@ namespace MeltPoolDG::LevelSet
                                "normal_" + std::to_string(d));
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationOperation<dim>::create_operator()
+  ReinitializationOperation<dim, number>::create_operator()
   {
     if (reinit_data.modeltype == "olsson2007")
       {
-        reinit_operator = std::make_unique<OlssonOperator<dim, double>>(
+        reinit_operator = std::make_unique<OlssonOperator<dim, number>>(
           scratch_data,
           reinit_data,
           ls_n_subdivisions,
@@ -356,7 +362,7 @@ namespace MeltPoolDG::LevelSet
           ls_dof_idx,
           normal_dof_idx);
 
-        preconditioner = make_preconditioner<dim, OlssonOperator<dim, double>, VectorType>(
+        preconditioner = make_preconditioner<dim, OlssonOperator<dim, number>, VectorType>(
           reinit_data.linear_solver.preconditioner_type,
           reinit_operator.get(),
           reinit_data.linear_solver.do_matrix_free);
@@ -372,7 +378,7 @@ namespace MeltPoolDG::LevelSet
       AssertThrow(false, ExcMessage("Requested reinitialization model not implemented."));
   }
 
-  template class ReinitializationOperation<1>;
-  template class ReinitializationOperation<2>;
-  template class ReinitializationOperation<3>;
+  template class ReinitializationOperation<1, double>;
+  template class ReinitializationOperation<2, double>;
+  template class ReinitializationOperation<3, double>;
 } // namespace MeltPoolDG::LevelSet

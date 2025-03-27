@@ -370,7 +370,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
         {
           Triangulation<dim - 1, dim> tria;
 
-          GridGenerator::create_triangulation_with_marching_cube_algorithm(
+          GridGenerator::create_triangulation_with_marching_cube_algorithm<dim, double>(
             tria,
             generic_data_out.get_mapping(),
             generic_data_out.get_dof_handler("level_set"),

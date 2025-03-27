@@ -7,14 +7,14 @@
 namespace MeltPoolDG::LevelSet
 {
   template <int dim, typename number>
-  OlssonOperator<dim, number>::OlssonOperator(const ScratchData<dim>             &scratch_data_in,
-                                              const ReinitializationData<number> &reinit_data_in,
-                                              const int                           ls_n_subdivisions,
-                                              const BlockVectorType              &n_in,
-                                              const unsigned int                  reinit_dof_idx_in,
-                                              const unsigned int reinit_quad_idx_in,
-                                              const unsigned int ls_dof_idx_in,
-                                              const unsigned int normal_dof_idx_in)
+  OlssonOperator<dim, number>::OlssonOperator(const ScratchData<dim, dim, number> &scratch_data_in,
+                                              const ReinitializationData<number>  &reinit_data_in,
+                                              const int              ls_n_subdivisions,
+                                              const BlockVectorType &n_in,
+                                              const unsigned int     reinit_dof_idx_in,
+                                              const unsigned int     reinit_quad_idx_in,
+                                              const unsigned int     ls_dof_idx_in,
+                                              const unsigned int     normal_dof_idx_in)
     : scratch_data(scratch_data_in)
     , reinit_data(reinit_data_in)
     , ls_n_subdivisions(ls_n_subdivisions)
@@ -43,12 +43,12 @@ namespace MeltPoolDG::LevelSet
                               update_JxW_values);
     const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(this->dof_idx);
 
-    FullMatrix<double> cell_matrix(dofs_per_cell, dofs_per_cell);
-    Vector<double>     cell_rhs(dofs_per_cell);
+    FullMatrix<number> cell_matrix(dofs_per_cell, dofs_per_cell);
+    Vector<number>     cell_rhs(dofs_per_cell);
 
     const unsigned int n_q_points = fe_values.get_quadrature().size();
 
-    std::vector<double>         psi_at_q(n_q_points);
+    std::vector<number>         psi_at_q(n_q_points);
     std::vector<Tensor<1, dim>> grad_psi_at_q(n_q_points, Tensor<1, dim>());
     std::vector<Tensor<1, dim>> normal_at_q(n_q_points, Tensor<1, dim>());
 
@@ -64,7 +64,7 @@ namespace MeltPoolDG::LevelSet
           cell_rhs    = 0.0;
           fe_values.reinit(cell);
 
-          const double epsilon_cell = reinit_data.compute_interface_thickness_parameter_epsilon(
+          const number epsilon_cell = reinit_data.compute_interface_thickness_parameter_epsilon(
             cell->diameter() / std::sqrt(dim) / ls_n_subdivisions);
 
           Assert(
@@ -76,21 +76,19 @@ namespace MeltPoolDG::LevelSet
                                         psi_at_q); // compute values of old solution at tau_n
           fe_values.get_function_gradients(
             levelset_old, grad_psi_at_q); // compute gradients of old solution at tau_n
-          NormalVectorOperator<dim>::get_unit_normals_at_quadrature(fe_values,
-                                                                    this->normal_vec,
-                                                                    normal_at_q,
-                                                                    tolerance_normal_vector);
+          NormalVectorOperator<dim, number>::get_unit_normals_at_quadrature(
+            fe_values, this->normal_vec, normal_at_q, tolerance_normal_vector);
 
           for (const unsigned int q_index : fe_values.quadrature_point_indices())
             {
               for (const unsigned int i : fe_values.dof_indices())
                 {
-                  const double nTimesGradient_i =
+                  const number nTimesGradient_i =
                     normal_at_q[q_index] * fe_values.shape_grad(i, q_index);
 
                   for (const unsigned int j : fe_values.dof_indices())
                     {
-                      const double nTimesGradient_j =
+                      const number nTimesGradient_j =
                         normal_at_q[q_index] * fe_values.shape_grad(j, q_index);
                       //clang-format off
                       cell_matrix(i, j) +=
@@ -101,11 +99,11 @@ namespace MeltPoolDG::LevelSet
                       //clang-format on
                     }
 
-                  const double diffRhs =
+                  const number diffRhs =
                     epsilon_cell * normal_at_q[q_index] * grad_psi_at_q[q_index];
 
                   //clang-format off
-                  const auto compressive_flux = [](const double psi) {
+                  const auto compressive_flux = [](const number psi) {
                     return 0.5 * (1. - psi * psi);
                   };
                   cell_rhs(i) += (compressive_flux(psi_at_q[q_index]) - diffRhs) *
@@ -186,7 +184,7 @@ namespace MeltPoolDG::LevelSet
             for (unsigned int q_index = 0; q_index < rhs.n_q_points; ++q_index)
               {
                 const scalar                                  val = psi_old.get_value(q_index);
-                const Tensor<1, dim, VectorizedArray<double>> n_phi =
+                const Tensor<1, dim, VectorizedArray<number>> n_phi =
                   MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
                                                           tolerance_normal_vector);
                 unit_normal[cell * rhs.n_q_points + q_index] = n_phi;
@@ -260,7 +258,7 @@ namespace MeltPoolDG::LevelSet
       reinit_quad_idx);
 
     // ... and invert it
-    const double linfty_norm = std::max(1.0, diagonal.linfty_norm());
+    const number linfty_norm = std::max(1.0, diagonal.linfty_norm());
     for (auto &i : diagonal)
       i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
   }

@@ -24,11 +24,11 @@ namespace MeltPoolDG::LevelSet
 {
   using namespace dealii;
 
-  template <int dim>
-  LevelSetDGOperation<dim>::LevelSetDGOperation(
-    const ScratchData<dim>                              &scratch_data_in,
-    const TimeIterator<double>                          &time_stepping,
-    const LevelSetData<double>                          &ls_data,
+  template <int dim, typename number>
+  LevelSetDGOperation<dim, number>::LevelSetDGOperation(
+    const ScratchData<dim, dim, number>                 &scratch_data_in,
+    const TimeIterator<number>                          &time_stepping,
+    const LevelSetData<number>                          &ls_data,
     const std::shared_ptr<BoundaryConditionManager<dim>> boundary_conditions_in,
     std::shared_ptr<dealii::Function<dim>>               prescribed_velocity_function,
     VectorType                                          &advection_velocity,
@@ -43,8 +43,8 @@ namespace MeltPoolDG::LevelSet
     , ls_quad_idx(ls_quad_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
     , reinit_time_iterator(
-        TimeSteppingData<double>{0.0 /*start_time*/,
-                                 std::numeric_limits<double>::max() /*end_time*/,
+        TimeSteppingData<number>{0.0 /*start_time*/,
+                                 std::numeric_limits<number>::max() /*end_time*/,
                                  -1.0 /*time step size --> will be set before each cycle*/,
                                  level_set_data.reinit.max_n_steps})
   {
@@ -52,41 +52,41 @@ namespace MeltPoolDG::LevelSet
      *    initialize the advection diffusion operation
      */
     advec_operation =
-      std::make_shared<AdvectionDGOperation<dim>>(scratch_data,
-                                                  ls_data.advec_diff,
-                                                  time_stepping,
-                                                  advection_velocity,
-                                                  ls_dof_idx,
-                                                  ls_quad_idx,
-                                                  vel_dof_idx,
-                                                  std::move(boundary_conditions_in),
-                                                  std::move(prescribed_velocity_function),
-                                                  false);
+      std::make_shared<AdvectionDGOperation<dim, number>>(scratch_data,
+                                                          ls_data.advec_diff,
+                                                          time_stepping,
+                                                          advection_velocity,
+                                                          ls_dof_idx,
+                                                          ls_quad_idx,
+                                                          vel_dof_idx,
+                                                          std::move(boundary_conditions_in),
+                                                          std::move(prescribed_velocity_function),
+                                                          false);
 
     /*
      *    initialize the advection smoothed signum operation
      */
     advec_smoothed_signum_operation =
-      std::make_shared<AdvectionDGOperation<dim>>(scratch_data,
-                                                  ls_data.advec_diff,
-                                                  time_stepping,
-                                                  advection_velocity,
-                                                  ls_dof_idx,
-                                                  ls_quad_idx,
-                                                  vel_dof_idx,
-                                                  std::move(boundary_conditions_in),
-                                                  std::move(prescribed_velocity_function),
-                                                  false);
+      std::make_shared<AdvectionDGOperation<dim, number>>(scratch_data,
+                                                          ls_data.advec_diff,
+                                                          time_stepping,
+                                                          advection_velocity,
+                                                          ls_dof_idx,
+                                                          ls_quad_idx,
+                                                          vel_dof_idx,
+                                                          std::move(boundary_conditions_in),
+                                                          std::move(prescribed_velocity_function),
+                                                          false);
 
 
     /*
      *    initialize the curvature normal vector operation class
      */
-    normal_vector_operation = std::make_shared<NormalVectorDGOperation<dim>>(
+    normal_vector_operation = std::make_shared<NormalVectorDGOperation<dim, number>>(
       scratch_data_in, ls_dof_idx, ls_quad_idx, get_level_set(), ls_data.normal_vec);
 
 
-    curvature_operation = std::make_shared<CurvatureDGOperation<dim>>(
+    curvature_operation = std::make_shared<CurvatureDGOperation<dim, number>>(
       scratch_data_in,
       ls_dof_idx,
       ls_quad_idx,
@@ -100,15 +100,15 @@ namespace MeltPoolDG::LevelSet
     if (level_set_data.reinit.enable)
       {
         reinit_operation =
-          std::make_shared<ReinitializationDGOperation<dim>>(scratch_data,
-                                                             ls_data.reinit,
-                                                             reinit_time_iterator,
-                                                             ls_dof_idx,
-                                                             ls_quad_idx,
-                                                             ls_dof_idx,
-                                                             normal_vector_operation,
-                                                             curvature_operation,
-                                                             true // if is coupled problem
+          std::make_shared<ReinitializationDGOperation<dim, number>>(scratch_data,
+                                                                     ls_data.reinit,
+                                                                     reinit_time_iterator,
+                                                                     ls_dof_idx,
+                                                                     ls_quad_idx,
+                                                                     ls_dof_idx,
+                                                                     normal_vector_operation,
+                                                                     curvature_operation,
+                                                                     true // if is coupled problem
           );
       }
   }
@@ -116,9 +116,9 @@ namespace MeltPoolDG::LevelSet
   /**
    * set initial condition
    */
-  template <int dim>
+  template <int dim, typename number>
   void
-  LevelSetDGOperation<dim>::set_initial_condition(
+  LevelSetDGOperation<dim, number>::set_initial_condition(
     const Function<dim> &initial_field_function,
     const bool is_signed_distance_initial_field_function) //@todo: provide separate function for
                                                           // this argument
@@ -163,9 +163,9 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LevelSetDGOperation<dim>::reinit()
+  LevelSetDGOperation<dim, number>::reinit()
   {
     advec_operation->reinit();
     advec_smoothed_signum_operation->reinit();
@@ -179,9 +179,9 @@ namespace MeltPoolDG::LevelSet
     scratch_data.initialize_dof_vector(level_set_as_heaviside, ls_dof_idx);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LevelSetDGOperation<dim>::init_time_advance()
+  LevelSetDGOperation<dim, number>::init_time_advance()
   {
     advec_operation->init_time_advance();
     advec_smoothed_signum_operation->init_time_advance();
@@ -189,9 +189,9 @@ namespace MeltPoolDG::LevelSet
     ready_for_time_advance = true;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LevelSetDGOperation<dim>::solve(const bool do_finish_time_step)
+  LevelSetDGOperation<dim, number>::solve(const bool do_finish_time_step)
   {
     ScopedName         sc("solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
@@ -209,9 +209,9 @@ namespace MeltPoolDG::LevelSet
       finish_time_advance();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LevelSetDGOperation<dim>::finish_time_advance()
+  LevelSetDGOperation<dim, number>::finish_time_advance()
   {
     ScopedName         sc("finish_time_advance");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
@@ -239,82 +239,82 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  LevelSetDGOperation<dim>::get_curvature() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  LevelSetDGOperation<dim, number>::get_curvature() const
   {
     return curvature_operation->get_curvature();
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  LevelSetDGOperation<dim>::get_curvature()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::Vector<number> &
+  LevelSetDGOperation<dim, number>::get_curvature()
   {
     return curvature_operation->get_curvature();
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::BlockVector<double> &
-  LevelSetDGOperation<dim>::get_normal_vector() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::BlockVector<number> &
+  LevelSetDGOperation<dim, number>::get_normal_vector() const
   {
     return normal_vector_operation->get_solution_normal_vector();
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::BlockVector<double> &
-  LevelSetDGOperation<dim>::get_normal_vector()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::BlockVector<number> &
+  LevelSetDGOperation<dim, number>::get_normal_vector()
   {
     return normal_vector_operation->get_solution_normal_vector();
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  LevelSetDGOperation<dim>::get_level_set() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  LevelSetDGOperation<dim, number>::get_level_set() const
   {
     return advec_operation->get_advected_field();
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  LevelSetDGOperation<dim>::get_level_set()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::Vector<number> &
+  LevelSetDGOperation<dim, number>::get_level_set()
   {
     return advec_operation->get_advected_field();
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  LevelSetDGOperation<dim>::get_level_set_as_heaviside() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  LevelSetDGOperation<dim, number>::get_level_set_as_heaviside() const
   {
     return level_set_as_heaviside;
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  LevelSetDGOperation<dim>::get_level_set_as_heaviside()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::Vector<number> &
+  LevelSetDGOperation<dim, number>::get_level_set_as_heaviside()
   {
     return level_set_as_heaviside;
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  LevelSetDGOperation<dim>::get_distance_to_level_set() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  LevelSetDGOperation<dim, number>::get_distance_to_level_set() const
   {
     return get_level_set();
   }
 
-  template <int dim>
-  const typename LevelSetDGOperation<dim>::SurfaceMeshInfo &
-  LevelSetDGOperation<dim>::get_surface_mesh_info() const
+  template <int dim, typename number>
+  const typename LevelSetDGOperation<dim, number>::SurfaceMeshInfo &
+  LevelSetDGOperation<dim, number>::get_surface_mesh_info() const
   {
     return surface_mesh_info;
   }
   /**
    * register vectors for adaptive mesh refinement
    */
-  template <int dim>
+  template <int dim, typename number>
   void
-  LevelSetDGOperation<dim>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  LevelSetDGOperation<dim, number>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     advec_operation->attach_vectors(vectors);
     advec_smoothed_signum_operation->attach_vectors(vectors);
@@ -332,9 +332,10 @@ namespace MeltPoolDG::LevelSet
     curvature_operation->attach_vectors(vectors);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LevelSetDGOperation<dim>::attach_output_vectors(GenericDataOut<dim, double> &data_out) const
+  LevelSetDGOperation<dim, number>::attach_output_vectors(
+    GenericDataOut<dim, number> &data_out) const
   {
     /*
      * output advected field
@@ -378,11 +379,12 @@ namespace MeltPoolDG::LevelSet
     reinit_operation->attach_output_vectors(data_out);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LevelSetDGOperation<dim>::do_reinitialization(const bool update_normal_vector_in_every_cycle)
+  LevelSetDGOperation<dim, number>::do_reinitialization(
+    const bool update_normal_vector_in_every_cycle)
   {
-    double gradient_error = compute_level_set_gradient_error(get_level_set());
+    number gradient_error = compute_level_set_gradient_error(get_level_set());
 
 
     // A reinitialization is only performed if the error of the gradient surpasses a user defined
@@ -390,7 +392,7 @@ namespace MeltPoolDG::LevelSet
     if (gradient_error > level_set_data.reinit.tolerance)
       {
         reinit_operation->set_initial_condition(get_level_set());
-        const double time_step_size = reinit_operation->compute_CFL_based_timestep();
+        const number time_step_size = reinit_operation->compute_CFL_based_timestep();
 
         reinit_time_iterator.set_current_time_increment(time_step_size);
 
@@ -412,7 +414,7 @@ namespace MeltPoolDG::LevelSet
 
             reinit_operation->solve();
 
-            const double new_gradient_error =
+            const number new_gradient_error =
               compute_level_set_gradient_error(reinit_operation->get_level_set());
 
             // If the reinit has reached a stationary point or the error is low enough the reinit is
@@ -463,9 +465,9 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LevelSetDGOperation<dim>::transform_level_set_to_smooth_heaviside()
+  LevelSetDGOperation<dim, number>::transform_level_set_to_smooth_heaviside()
   {
     const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(ls_dof_idx);
 
@@ -476,7 +478,7 @@ namespace MeltPoolDG::LevelSet
         {
           cell->get_dof_indices(local_dof_indices);
 
-          const double epsilon_cell =
+          const number epsilon_cell =
             level_set_data.reinit.compute_interface_thickness_parameter_epsilon(
               cell->diameter() / std::sqrt(dim) / level_set_data.get_n_subdivisions());
 
@@ -499,9 +501,9 @@ namespace MeltPoolDG::LevelSet
     level_set_as_heaviside.update_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LevelSetDGOperation<dim>::update_surface_mesh()
+  LevelSetDGOperation<dim, number>::update_surface_mesh()
   {
     surface_mesh_info.clear();
     surface_mesh_info = Tools::generate_surface_mesh_info(scratch_data.get_dof_handler(ls_dof_idx),
@@ -518,31 +520,31 @@ namespace MeltPoolDG::LevelSet
     Journal::print_line(scratch_data.get_pcout(1), str.str(), "level set", 0);
   }
 
-  template <int dim>
-  double
-  LevelSetDGOperation<dim>::compute_level_set_gradient_error(const VectorType &solution)
+  template <int dim, typename number>
+  number
+  LevelSetDGOperation<dim, number>::compute_level_set_gradient_error(const VectorType &solution)
   {
     // The first entry is the numerator and the second entry is the denominator
-    double level_set_gradient_error_numerator   = 0.0;
-    double level_set_gradient_error_denominator = 0.0;
+    number level_set_gradient_error_numerator   = 0.0;
+    number level_set_gradient_error_denominator = 0.0;
 
-    const VectorizedArray<double> eval_distance =
+    const VectorizedArray<number> eval_distance =
       scratch_data.get_min_diameter() *
       level_set_data.level_set_DG_specific_data.gradient_error_evaluation_distance_cell_proportion;
 
-    double dummy;
-    scratch_data.get_matrix_free().template cell_loop<double, VectorType>(
+    number dummy;
+    scratch_data.get_matrix_free().template cell_loop<number, VectorType>(
       [&](const auto &matrix_free, auto &, const auto &src, auto macro_cells) {
-        FECellIntegrator<dim, 1, double> eval(matrix_free, ls_dof_idx, ls_quad_idx);
+        FECellIntegrator<dim, 1, number> eval(matrix_free, ls_dof_idx, ls_quad_idx);
 
-        VectorizedArray<double> unity = 1.0;
+        VectorizedArray<number> unity = 1.0;
 
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
             eval.reinit(cell);
             eval.gather_evaluate(src, EvaluationFlags::gradients | EvaluationFlags::values);
 
-            VectorizedArray<double> error = 0.0;
+            VectorizedArray<number> error = 0.0;
 
             for (unsigned int q_index = 0; q_index < eval.n_q_points; ++q_index)
               {
@@ -581,7 +583,7 @@ namespace MeltPoolDG::LevelSet
            std::sqrt(level_set_gradient_error_denominator);
   }
 
-  template class LevelSetDGOperation<1>;
-  template class LevelSetDGOperation<2>;
-  template class LevelSetDGOperation<3>;
+  template class LevelSetDGOperation<1, double>;
+  template class LevelSetDGOperation<2, double>;
+  template class LevelSetDGOperation<3, double>;
 } // namespace MeltPoolDG::LevelSet

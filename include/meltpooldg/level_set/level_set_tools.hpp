@@ -55,24 +55,23 @@
 
 namespace dealii::GridGenerator
 {
-  template <int dim, typename VectorType>
+  template <int dim, typename number>
   void
-  create_triangulation_with_marching_cube_algorithm(Triangulation<dim - 1, dim> &tria,
-                                                    const Mapping<dim>          &mapping,
-                                                    const DoFHandler<dim> &background_dof_handler,
-                                                    const VectorType      &ls_vector,
-                                                    const double           iso_level,
-                                                    const unsigned int     n_subdivisions = 1,
-                                                    const double           tolerance      = 1e-10)
+  create_triangulation_with_marching_cube_algorithm(
+    Triangulation<dim - 1, dim>                              &tria,
+    const Mapping<dim>                                       &mapping,
+    const DoFHandler<dim>                                    &background_dof_handler,
+    const dealii::LinearAlgebra::distributed::Vector<number> &ls_vector,
+    const number                                              iso_level,
+    const unsigned int                                        n_subdivisions = 1,
+    const number                                              tolerance      = 1e-10)
   {
     std::vector<Point<dim>>        vertices;
     std::vector<CellData<dim - 1>> cells;
     SubCellData                    subcelldata;
 
-    const GridTools::MarchingCubeAlgorithm<dim, VectorType> mc(mapping,
-                                                               background_dof_handler.get_fe(),
-                                                               n_subdivisions,
-                                                               tolerance);
+    const GridTools::MarchingCubeAlgorithm<dim, dealii::LinearAlgebra::distributed::Vector<number>>
+      mc(mapping, background_dof_handler.get_fe(), n_subdivisions, tolerance);
 
     const bool vector_is_ghosted = ls_vector.has_ghost_elements();
 
@@ -162,13 +161,13 @@ namespace MeltPoolDG::LevelSet::Tools
    * boolean operation and returns the resulting vector. The user has to take care on distributing
    * relevant constraints afterwards.
    */
-  template <typename VectorType>
-  VectorType
-  merge_two_indicator_fields(const VectorType &indicator_1,
-                             const VectorType &indicator_2,
-                             BooleanType       type                     = BooleanType::Union,
-                             const double      indicator_value_interior = 1.0,
-                             const double      indicator_value_exterior = -1.0)
+  template <typename number>
+  dealii::LinearAlgebra::distributed::Vector<number>
+  merge_two_indicator_fields(const dealii::LinearAlgebra::distributed::Vector<number> &indicator_1,
+                             const dealii::LinearAlgebra::distributed::Vector<number> &indicator_2,
+                             BooleanType  type                     = BooleanType::Union,
+                             const number indicator_value_interior = 1.0,
+                             const number indicator_value_exterior = -1.0)
   {
     AssertThrow(indicator_1.size() == indicator_2.size(),
                 dealii::ExcMessage(
@@ -189,7 +188,7 @@ namespace MeltPoolDG::LevelSet::Tools
                   "the indicator_value_interior and indicator_value_exterior comply with the "
                   "indicator field."));
 
-    VectorType merge_indicator(indicator_1);
+    dealii::LinearAlgebra::distributed::Vector<number> merge_indicator(indicator_1);
 
     bool is_interior_larger_than_exterior = indicator_value_interior > indicator_value_exterior;
 
@@ -229,17 +228,17 @@ namespace MeltPoolDG::LevelSet::Tools
    * @p evaluate_at_interface_points is called for every active cell and can be used
    * to e.g. fill a DoF vector.
    */
-  template <int dim>
+  template <int dim, typename number>
   void
   evaluate_at_interface(const dealii::DoFHandler<dim>                            &dof_handler,
                         const dealii::Mapping<dim>                               &mapping,
-                        const dealii::LinearAlgebra::distributed::Vector<double> &level_set_vector,
+                        const dealii::LinearAlgebra::distributed::Vector<number> &level_set_vector,
                         const std::function<void(
                           const typename dealii::DoFHandler<dim>::active_cell_iterator & /*cell*/,
                           const std::vector<dealii::Point<dim>> & /*points_real*/,
                           const std::vector<dealii::Point<dim>> & /*points_reference*/,
-                          const std::vector<double> & /*JxW*/)> &evaluate_at_interface_points,
-                        const double                             contour_value  = 0.0,
+                          const std::vector<number> & /*JxW*/)> &evaluate_at_interface_points,
+                        const number                             contour_value  = 0.0,
                         const unsigned int                       n_subdivisions = 1,
                         const bool                               use_mca        = true)
   {
@@ -247,7 +246,7 @@ namespace MeltPoolDG::LevelSet::Tools
     const dealii::QGauss<dim == 1 ? 1 : dim - 1> surface_quad(dof_handler.get_fe().degree + 1);
 
     dealii::GridTools::MarchingCubeAlgorithm<dim,
-                                             dealii::LinearAlgebra::distributed::Vector<double>>
+                                             dealii::LinearAlgebra::distributed::Vector<number>>
       mc(mapping,
          dof_handler.get_fe(), // todo
          n_subdivisions,
@@ -266,13 +265,13 @@ namespace MeltPoolDG::LevelSet::Tools
     const dealii::hp::MappingCollection<dim> nm_mapping_collection(mapping);
     const dealii::hp::FECollection<dim>      nm_fe_collection(dof_handler.get_fe());
 
-    VectorType nm_locally_relevant_level_set_vector;
+    dealii::LinearAlgebra::distributed::Vector<number> nm_locally_relevant_level_set_vector;
 
     std::unique_ptr<dealii::NonMatching::MeshClassifier<dim>> nm_mesh_classifier;
     std::unique_ptr<dealii::NonMatching::FEValues<dim>>       nm_non_matching_fe_values;
 
     // only for dim == 1
-    std::map<double, double> total_nodal_weights; // TODO: also necessary for other dimensions?
+    std::map<number, number> total_nodal_weights; // TODO: also necessary for other dimensions?
 
     if (use_mca == false) // this is an expensive step; execute only if needed
       {
@@ -313,7 +312,7 @@ namespace MeltPoolDG::LevelSet::Tools
             // point location (at the reference cell) and weight
             const auto fu_mca = [&]() -> std::tuple<std::vector<dealii::Point<dim>>,
                                                     std::vector<dealii::Point<dim>>,
-                                                    std::vector<double>> {
+                                                    std::vector<number>> {
               // determine points and cells of aux surface triangulation
               std::vector<dealii::Point<dim>>                       surface_vertices;
               std::vector<dealii::CellData<dim == 1 ? 1 : dim - 1>> surface_cells;
@@ -331,7 +330,7 @@ namespace MeltPoolDG::LevelSet::Tools
 
               std::vector<dealii::Point<dim>> points_real;
               std::vector<dealii::Point<dim>> points;
-              std::vector<double>             weights;
+              std::vector<number>             weights;
 
               if constexpr (dim == 1)
                 {
@@ -396,7 +395,7 @@ namespace MeltPoolDG::LevelSet::Tools
 
             const auto fu_non_matching = [&]() -> std::tuple<std::vector<dealii::Point<dim>>,
                                                              std::vector<dealii::Point<dim>>,
-                                                             std::vector<double>> {
+                                                             std::vector<number>> {
               nm_non_matching_fe_values->reinit(cell);
 
               const std::optional<dealii::NonMatching::FEImmersedSurfaceValues<dim>>
@@ -437,26 +436,26 @@ namespace MeltPoolDG::LevelSet::Tools
       level_set_vector.zero_out_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   std::vector<std::tuple<const typename dealii::Triangulation<dim, dim>::cell_iterator /*cell*/,
                          std::vector<dealii::Point<dim>> /*quad_points*/,
-                         std::vector<double> /*weights*/
+                         std::vector<number> /*weights*/
                          >>
   generate_surface_mesh_info(
     const dealii::DoFHandler<dim>                            &dof_handler,
     const dealii::Mapping<dim>                               &mapping,
-    const dealii::LinearAlgebra::distributed::Vector<double> &level_set_as_heaviside,
-    const double                                              contour_value  = 0.0,
+    const dealii::LinearAlgebra::distributed::Vector<number> &level_set_as_heaviside,
+    const number                                              contour_value  = 0.0,
     const unsigned int                                        n_subdivisions = 1,
     const bool                                                use_mca        = true)
   {
     std::vector<std::tuple<const typename dealii::Triangulation<dim, dim>::cell_iterator /*cell*/,
                            std::vector<dealii::Point<dim>> /*quad_points*/,
-                           std::vector<double> /*weights*/
+                           std::vector<number> /*weights*/
                            >>
       surface_mesh_info;
 
-    evaluate_at_interface<dim>(
+    evaluate_at_interface<dim, number>(
       dof_handler,
       mapping,
       level_set_as_heaviside,
@@ -482,7 +481,7 @@ namespace MeltPoolDG::LevelSet::Tools
    * given at the contour level @p contour_value. Then, for each point at the interface
    * points along the normal are generated.
    */
-  template <int dim>
+  template <int dim, typename number>
   void
   generate_points_along_normal(
     std::vector<dealii::Point<dim>> &global_points_normal_to_interface,
@@ -490,12 +489,12 @@ namespace MeltPoolDG::LevelSet::Tools
     const dealii::DoFHandler<dim>   &dof_handler_ls,
     const dealii::FESystem<dim>     &fe_normal,
     const dealii::Mapping<dim>      &mapping,
-    const dealii::LinearAlgebra::distributed::Vector<double>      &level_set_vector,
-    const dealii::LinearAlgebra::distributed::BlockVector<double> &normal_vector,
-    const double                                                   max_distance_per_side,
+    const dealii::LinearAlgebra::distributed::Vector<number>      &level_set_vector,
+    const dealii::LinearAlgebra::distributed::BlockVector<number> &normal_vector,
+    const number                                                   max_distance_per_side,
     const unsigned int                                             n_inc_per_side,
     const bool                                                     bidirectional      = true,
-    const double                                                   contour_value      = 0.0,
+    const number                                                   contour_value      = 0.0,
     const unsigned int                                             n_subdivisions_MCA = 1)
   {
     const bool level_set_is_ghosted = level_set_vector.has_ghost_elements();
@@ -508,8 +507,8 @@ namespace MeltPoolDG::LevelSet::Tools
 
     dealii::FEPointEvaluation<dim, dim> phi_normal(mapping, fe_normal, dealii::update_values);
 
-    std::vector<double>                          buffer;
-    std::vector<double>                          buffer_dim;
+    std::vector<number>                          buffer;
+    std::vector<number>                          buffer_dim;
     std::vector<dealii::types::global_dof_index> local_dof_indices;
 
     global_points_normal_to_interface.clear();
@@ -547,7 +546,7 @@ namespace MeltPoolDG::LevelSet::Tools
         // normalize
         for (unsigned int c = 0; c < cell->get_fe().n_dofs_per_cell(); ++c)
           {
-            double norm = 0.0;
+            number norm = 0.0;
             for (int i = 0; i < dim; ++i)
               norm += dealii::Utilities::fixed_power<2>(
                 buffer_dim[fe_normal.component_to_system_index(i, c)]);
@@ -621,12 +620,12 @@ namespace MeltPoolDG::LevelSet::Tools
         }
     };
 
-    evaluate_at_interface<dim>(dof_handler_ls,
-                               mapping,
-                               level_set_vector,
-                               collect_points_along_normal,
-                               contour_value, /*contour value*/
-                               n_subdivisions_MCA /*n_subdivisions*/);
+    evaluate_at_interface<dim, number>(dof_handler_ls,
+                                       mapping,
+                                       level_set_vector,
+                                       collect_points_along_normal,
+                                       contour_value, /*contour value*/
+                                       n_subdivisions_MCA /*n_subdivisions*/);
 
     if (not level_set_is_ghosted)
       level_set_vector.zero_out_ghost_values();
@@ -644,26 +643,26 @@ namespace MeltPoolDG::LevelSet::Tools
    * @note This function should only be used, if the isosurface is aligned with
    * the cell faces, because we do not treat real cut-cells special.
    */
-  template <int dim>
+  template <int dim, typename number>
   void
   set_material_id_from_level_set(
-    const ScratchData<dim>                                   &scratch_data,
+    const ScratchData<dim, dim, number>                      &scratch_data,
     const unsigned int                                        ls_dof_idx,
-    const dealii::LinearAlgebra::distributed::Vector<double> &level_set_heaviside,
-    const double                                              lower_threshold = 0.5)
+    const dealii::LinearAlgebra::distributed::Vector<number> &level_set_heaviside,
+    const number                                              lower_threshold = 0.5)
   {
     const bool has_ghost_elements = level_set_heaviside.has_ghost_elements();
 
     if (not has_ghost_elements)
       level_set_heaviside.update_ghost_values();
 
-    dealii::Vector<double> hs_local(scratch_data.get_n_dofs_per_cell(ls_dof_idx));
+    dealii::Vector<number> hs_local(scratch_data.get_n_dofs_per_cell(ls_dof_idx));
     for (const auto &cell : scratch_data.get_dof_handler(ls_dof_idx).active_cell_iterators())
       {
         if (cell->is_locally_owned())
           {
             cell->get_dof_values(level_set_heaviside, hs_local);
-            const double min_ls = *std::min_element(hs_local.begin(), hs_local.end());
+            const number min_ls = *std::min_element(hs_local.begin(), hs_local.end());
             cell->set_material_id(min_ls >= lower_threshold ? 1 : 0);
           }
       }

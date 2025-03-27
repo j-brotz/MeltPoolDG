@@ -10,17 +10,17 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  template <int dim>
-  AdvectionDiffusionOperationAdaflo<dim>::AdvectionDiffusionOperationAdaflo(
-    const ScratchData<dim>               &scratch_data,
-    const TimeIterator<double>           &time_iterator,
+  template <int dim, typename number>
+  AdvectionDiffusionOperationAdaflo<dim, number>::AdvectionDiffusionOperationAdaflo(
+    const ScratchData<dim, dim, number>  &scratch_data,
+    const TimeIterator<number>           &time_iterator,
     const VectorType                     &advection_velocity,
     const int                             advec_diff_zero_dirichlet_dof_idx,
     const int                             advec_diff_dirichlet_dof_idx,
     const int                             advec_diff_quad_idx,
     const int                             velocity_dof_idx,
-    const TimeSteppingData<double>       &time_stepping,
-    const AdvectionDiffusionData<double> &advec_diff_data,
+    const TimeSteppingData<number>       &time_stepping,
+    const AdvectionDiffusionData<number> &advec_diff_data,
     const BoundaryConditionManager<dim>  &bc)
     : scratch_data(scratch_data)
     , time_iterator(time_iterator)
@@ -64,9 +64,9 @@ namespace MeltPoolDG::LevelSet
       preconditioner);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperationAdaflo<dim>::reinit()
+  AdvectionDiffusionOperationAdaflo<dim, number>::reinit()
   {
     /**
      *  initialize the dof vectors
@@ -76,7 +76,7 @@ namespace MeltPoolDG::LevelSet
     /**
      * initialize the preconditioner
      */
-    initialize_mass_matrix_diagonal<dim, double>(scratch_data.get_matrix_free(),
+    initialize_mass_matrix_diagonal<dim, number>(scratch_data.get_matrix_free(),
                                                  scratch_data.get_constraint(
                                                    adaflo_params.dof_index_ls),
                                                  adaflo_params.dof_index_ls,
@@ -84,9 +84,9 @@ namespace MeltPoolDG::LevelSet
                                                  preconditioner);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperationAdaflo<dim>::set_initial_condition(
+  AdvectionDiffusionOperationAdaflo<dim, number>::set_initial_condition(
     const Function<dim> &initial_field_function)
   {
     initialize_vectors();
@@ -100,9 +100,9 @@ namespace MeltPoolDG::LevelSet
     advected_field_old_old = advected_field;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperationAdaflo<dim>::init_time_advance()
+  AdvectionDiffusionOperationAdaflo<dim, number>::init_time_advance()
   {
     advected_field_old_old.reinit(advected_field_old);
     advected_field_old_old.swap(advected_field_old);
@@ -113,9 +113,9 @@ namespace MeltPoolDG::LevelSet
     this->ready_for_time_advance = true;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperationAdaflo<dim>::solve(const bool do_finish_time_step)
+  AdvectionDiffusionOperationAdaflo<dim, number>::solve(const bool do_finish_time_step)
   {
     if (!this->ready_for_time_advance)
       init_time_advance();
@@ -153,84 +153,84 @@ namespace MeltPoolDG::LevelSet
       this->finish_time_advance();
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  AdvectionDiffusionOperationAdaflo<dim>::get_advected_field() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  AdvectionDiffusionOperationAdaflo<dim, number>::get_advected_field() const
   {
     return advected_field;
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  AdvectionDiffusionOperationAdaflo<dim>::get_advected_field()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::Vector<number> &
+  AdvectionDiffusionOperationAdaflo<dim, number>::get_advected_field()
   {
     return advected_field;
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  AdvectionDiffusionOperationAdaflo<dim>::get_user_rhs() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  AdvectionDiffusionOperationAdaflo<dim, number>::get_user_rhs() const
   {
-    static const LinearAlgebra::distributed::Vector<double> no_vector;
+    static const LinearAlgebra::distributed::Vector<number> no_vector;
     AssertThrow(false, ExcNotImplemented());
     return no_vector;
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  AdvectionDiffusionOperationAdaflo<dim>::get_user_rhs()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::Vector<number> &
+  AdvectionDiffusionOperationAdaflo<dim, number>::get_user_rhs()
   {
-    static LinearAlgebra::distributed::Vector<double> no_vector;
+    static LinearAlgebra::distributed::Vector<number> no_vector;
     AssertThrow(false, ExcNotImplemented());
     return no_vector;
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperationAdaflo<dim>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  AdvectionDiffusionOperationAdaflo<dim, number>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     vectors.push_back(&advected_field);
     vectors.push_back(&advected_field_old);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperationAdaflo<dim>::attach_output_vectors(
-    GenericDataOut<dim, double> &data_out) const
+  AdvectionDiffusionOperationAdaflo<dim, number>::attach_output_vectors(
+    GenericDataOut<dim, number> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(adaflo_params.dof_index_ls),
                              advected_field,
                              "advected_field");
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  AdvectionDiffusionOperationAdaflo<dim>::get_advected_field_old() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  AdvectionDiffusionOperationAdaflo<dim, number>::get_advected_field_old() const
   {
     return advected_field_old;
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  AdvectionDiffusionOperationAdaflo<dim>::get_advected_field_old()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::Vector<number> &
+  AdvectionDiffusionOperationAdaflo<dim, number>::get_advected_field_old()
   {
     return advected_field_old;
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  AdvectionDiffusionOperationAdaflo<dim>::get_advected_field_old_old() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  AdvectionDiffusionOperationAdaflo<dim, number>::get_advected_field_old_old() const
   {
     return advected_field_old_old;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperationAdaflo<dim>::set_adaflo_parameters(
-    const TimeSteppingData<double>       &time_stepping,
-    const AdvectionDiffusionData<double> &advec_diff,
+  AdvectionDiffusionOperationAdaflo<dim, number>::set_adaflo_parameters(
+    const TimeSteppingData<number>       &time_stepping,
+    const AdvectionDiffusionData<number> &advec_diff,
     const int                             advec_diff_dof_idx,
     const int                             advec_diff_quad_idx,
     const int                             velocity_dof_idx)
@@ -265,9 +265,9 @@ namespace MeltPoolDG::LevelSet
     adaflo_params.tol_nl_iteration         = 1e-8;  //@ todo
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperationAdaflo<dim>::set_velocity(bool initial_step)
+  AdvectionDiffusionOperationAdaflo<dim, number>::set_velocity(bool initial_step)
   {
     velocity_vec_old_old.zero_out_ghost_values();
     velocity_vec_old.zero_out_ghost_values();
@@ -291,9 +291,9 @@ namespace MeltPoolDG::LevelSet
     velocity_vec.update_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionOperationAdaflo<dim>::initialize_vectors()
+  AdvectionDiffusionOperationAdaflo<dim, number>::initialize_vectors()
   {
     /**
      * initialize advected field dof vectors
@@ -314,9 +314,9 @@ namespace MeltPoolDG::LevelSet
     scratch_data.initialize_dof_vector(velocity_vec_old_old, adaflo_params.dof_index_vel);
   }
 
-  template class AdvectionDiffusionOperationAdaflo<1>;
-  template class AdvectionDiffusionOperationAdaflo<2>;
-  template class AdvectionDiffusionOperationAdaflo<3>;
+  template class AdvectionDiffusionOperationAdaflo<1, double>;
+  template class AdvectionDiffusionOperationAdaflo<2, double>;
+  template class AdvectionDiffusionOperationAdaflo<3, double>;
 } // namespace MeltPoolDG::LevelSet
 
 #endif

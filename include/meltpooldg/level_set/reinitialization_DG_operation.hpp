@@ -1,13 +1,5 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Johannes Resch, TUM, April 2024
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
-
-
-// MeltPoolDG
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/level_set/curvature_DG_operation.hpp>
 #include <meltpooldg/level_set/normal_vector_DG_operation.hpp>
@@ -20,37 +12,38 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  using namespace dealii;
-  using VectorType      = LinearAlgebra::distributed::Vector<double>;
-  using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
-  template <int dim>
-  class ReinitializationDGOperation : public ReinitializationOperationBase<dim>
+
+  template <int dim, typename number>
+  class ReinitializationDGOperation : public ReinitializationOperationBase<dim, number>
   {
   private:
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
+
   public:
-    ReinitializationDGOperation(const ScratchData<dim>             &scratch_data_in,
-                                const ReinitializationData<double> &reinit_data,
-                                const TimeIterator<double>         &time_iterator,
-                                const unsigned int                  reinit_dof_idx_in,
-                                const unsigned int                  reinit_quad_idx_in,
-                                const unsigned int                  ls_dof_idx_in,
-                                const NormalVectorData<double>     &normal_vec_data,
-                                const CurvatureData<double>        &curvature_data);
+    ReinitializationDGOperation(const ScratchData<dim, dim, number> &scratch_data_in,
+                                const ReinitializationData<number>  &reinit_data,
+                                const TimeIterator<number>          &time_iterator,
+                                const unsigned int                   reinit_dof_idx_in,
+                                const unsigned int                   reinit_quad_idx_in,
+                                const unsigned int                   ls_dof_idx_in,
+                                const NormalVectorData<number>      &normal_vec_data,
+                                const CurvatureData<number>         &curvature_data);
     /**
      * For advection reinit coupled problems the normal vector and curvature are computed a level
      * higher on the level set operation level. This is because the computation of the normal vector
      * and curvature is very expensive and should only be done once when needed.
      */
     ReinitializationDGOperation(
-      const ScratchData<dim>                                &scratch_data_in,
-      const ReinitializationData<double>                    &reinit_data,
-      const TimeIterator<double>                            &time_iterator,
-      const unsigned int                                     reinit_dof_idx_in,
-      const unsigned int                                     reinit_quad_idx_in,
-      const unsigned int                                     ls_dof_idx_in,
-      const std::shared_ptr<NormalVectorOperationBase<dim>> &normal_vector_operation_in,
-      const std::shared_ptr<CurvatureDGOperation<dim>>      &curvature_operation_in,
-      const bool                                             is_coupled_in);
+      const ScratchData<dim, dim, number>                           &scratch_data_in,
+      const ReinitializationData<number>                            &reinit_data,
+      const TimeIterator<number>                                    &time_iterator,
+      const unsigned int                                             reinit_dof_idx_in,
+      const unsigned int                                             reinit_quad_idx_in,
+      const unsigned int                                             ls_dof_idx_in,
+      const std::shared_ptr<NormalVectorOperationBase<dim, number>> &normal_vector_operation_in,
+      const std::shared_ptr<CurvatureDGOperation<dim, number>>      &curvature_operation_in,
+      const bool                                                     is_coupled_in);
 
     /**
      * Resizes the vectors to the right size of the underlying DoF handler
@@ -70,7 +63,7 @@ namespace MeltPoolDG::LevelSet
      * element. This reduces oscillations for higher order elements.
      */
     void
-    set_initial_condition(const Function<dim> &initial_field_function) override;
+    set_initial_condition(const dealii::Function<dim> &initial_field_function) override;
 
     void
     update_dof_idx(const unsigned int &reinit_dof_idx_in) override;
@@ -84,7 +77,7 @@ namespace MeltPoolDG::LevelSet
     void
     solve() override;
 
-    double
+    number
     get_max_change_level_set() const final;
 
     const BlockVectorType &
@@ -100,15 +93,16 @@ namespace MeltPoolDG::LevelSet
     get_normal_vector() override;
 
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
+    attach_vectors(
+      std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) override;
 
     void
-    attach_output_vectors(GenericDataOut<dim, double> &data_out) const override;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const override;
 
     /**
      * Computes the timestep size fullfilling the CFL condition
      */
-    double
+    number
     compute_CFL_based_timestep() const override;
 
     void
@@ -121,13 +115,13 @@ namespace MeltPoolDG::LevelSet
     }
 
   private:
-    const ScratchData<dim>            &scratch_data;
-    const ReinitializationData<double> reinit_data;
-    const TimeIterator<double>        &time_iterator;
+    const ScratchData<dim, dim, number> &scratch_data;
+    const ReinitializationData<number>   reinit_data;
+    const TimeIterator<number>          &time_iterator;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
-     *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
-     *  multiple DoFHandlers, quadrature rules, etc.
+     *  ScratchData<dim,dim,number> object is selected. This is important when
+     * ScratchData<dim,dim,number> holds multiple DoFHandlers, quadrature rules, etc.
      */
     mutable unsigned int reinit_dof_idx;
     const unsigned int   reinit_quad_idx;
@@ -135,23 +129,23 @@ namespace MeltPoolDG::LevelSet
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 
-    std::shared_ptr<ReinitilizationDGOperator<dim>> reinit_DG_operator;
+    std::shared_ptr<ReinitilizationDGOperator<dim, number>> reinit_DG_operator;
 
-    std::shared_ptr<TimeIntegratorBase<double>> reinitialization_integration;
+    std::shared_ptr<TimeIntegratorBase<number>> reinitialization_integration;
 
 
     // maximum change of the level set due to the current reinitialization step
-    double max_change_level_set = std::numeric_limits<double>::max();
+    number max_change_level_set = std::numeric_limits<number>::max();
 
     /*
      *   Computation of the normal vectors
      */
-    std::shared_ptr<NormalVectorOperationBase<dim>> normal_vector_operation;
+    std::shared_ptr<NormalVectorOperationBase<dim, number>> normal_vector_operation;
 
     /*
      *   Computation of the curvature
      */
-    std::shared_ptr<CurvatureDGOperation<dim>> curvature_operation;
+    std::shared_ptr<CurvatureDGOperation<dim, number>> curvature_operation;
 
     const bool is_coupled = false;
   };

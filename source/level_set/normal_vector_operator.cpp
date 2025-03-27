@@ -6,14 +6,16 @@
 
 namespace MeltPoolDG::LevelSet
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   NormalVectorOperator<dim, number>::NormalVectorOperator(
-    const ScratchData<dim>         &scratch_data_in,
-    const NormalVectorData<double> &normal_vector_data_in,
-    const unsigned int              normal_dof_idx_in,
-    const unsigned int              normal_quad_idx_in,
-    const unsigned int              ls_dof_idx_in,
-    const VectorType               *solution_level_set_in)
+    const ScratchData<dim, dim, number> &scratch_data_in,
+    const NormalVectorData<number>      &normal_vector_data_in,
+    const unsigned int                   normal_dof_idx_in,
+    const unsigned int                   normal_quad_idx_in,
+    const unsigned int                   ls_dof_idx_in,
+    const VectorType                    *solution_level_set_in)
     : scratch_data(scratch_data_in)
     , normal_vector_data(normal_vector_data_in)
     , normal_dof_idx(normal_dof_idx_in)
@@ -42,8 +44,8 @@ namespace MeltPoolDG::LevelSet
 
     const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(normal_dof_idx);
 
-    FullMatrix<double>                   normal_cell_matrix(dofs_per_cell, dofs_per_cell);
-    std::vector<Vector<double>>          normal_cell_rhs(dim, Vector<double>(dofs_per_cell));
+    FullMatrix<number>                   normal_cell_matrix(dofs_per_cell, dofs_per_cell);
+    std::vector<Vector<number>>          normal_cell_rhs(dim, Vector<number>(dofs_per_cell));
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
     const unsigned int n_q_points = normal_values.get_quadrature().size();
@@ -67,19 +69,19 @@ namespace MeltPoolDG::LevelSet
           ls_values.get_function_gradients(
             level_set_in, normal_at_q); // compute normals from level set solution at tau=0
 
-          const double damping = compute_cell_size_dependent_filter_parameter<dim>(
+          const number damping = compute_cell_size_dependent_filter_parameter<dim, number>(
             scratch_data, normal_dof_idx, cell, normal_vector_data.filter_parameter);
 
           for (const unsigned int q_index : normal_values.quadrature_point_indices())
             {
               for (unsigned int i = 0; i < dofs_per_cell; ++i)
                 {
-                  const double         phi_i      = normal_values.shape_value(i, q_index);
+                  const number         phi_i      = normal_values.shape_value(i, q_index);
                   const Tensor<1, dim> grad_phi_i = normal_values.shape_grad(i, q_index);
 
                   for (unsigned int j = 0; j < dofs_per_cell; ++j)
                     {
-                      const double         phi_j      = normal_values.shape_value(j, q_index);
+                      const number         phi_j      = normal_values.shape_value(j, q_index);
                       const Tensor<1, dim> grad_phi_j = normal_values.shape_grad(j, q_index);
 
                       //clang-format off
@@ -266,7 +268,7 @@ namespace MeltPoolDG::LevelSet
           normal_quad_idx);
 
     // ... and invert it
-    const double linfty_norm = std::max(1.0, diagonal.linfty_norm());
+    const number linfty_norm = std::max(1.0, diagonal.linfty_norm());
 
     for (unsigned int d = 0; d < dim; ++d)
       for (auto &i : diagonal.block(d))
@@ -315,11 +317,11 @@ namespace MeltPoolDG::LevelSet
     const FEValues<dim>         &fe_values,
     const BlockVectorType       &normal_vector_field_in,
     std::vector<Tensor<1, dim>> &unit_normal_at_quadrature,
-    const double                 zero)
+    const number                 zero)
   {
     for (unsigned int d = 0; d < dim; ++d)
       {
-        std::vector<double> temp(unit_normal_at_quadrature.size());
+        std::vector<number> temp(unit_normal_at_quadrature.size());
         fe_values.get_function_values(normal_vector_field_in.block(d),
                                       temp); // compute normals from level set solution at tau=0
         for (const unsigned int q_index : fe_values.quadrature_point_indices())
@@ -327,7 +329,7 @@ namespace MeltPoolDG::LevelSet
       }
     for (auto &n : unit_normal_at_quadrature)
       {
-        const double n_norm = n.norm();
+        const number n_norm = n.norm();
         if (n_norm > zero)
           n /= n_norm; //@todo: add exception if norm is zero
         else
@@ -345,7 +347,7 @@ namespace MeltPoolDG::LevelSet
 
         for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
           {
-            damping[cell] = compute_cell_size_dependent_filter_parameter_mf<dim>(
+            damping[cell] = compute_cell_size_dependent_filter_parameter_mf<dim, number>(
               scratch_data, normal_dof_idx, cell, normal_vector_data.filter_parameter);
           }
       }

@@ -1,36 +1,26 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Peter Munch, Magdalena Schreter, TUM, October 2020
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 #include <deal.II/lac/generic_linear_algebra.h>
 
-namespace MeltPoolDG
+namespace MeltPoolDG::LevelSet
 {
-  namespace LevelSet
+  template <int dim, typename number>
+  class NormalVectorOperationBase
   {
-    using namespace dealii;
+  public:
+    virtual void
+    solve() = 0;
 
-    template <int dim>
-    class NormalVectorOperationBase
-    {
-    public:
-      virtual void
-      solve() = 0;
+    virtual void
+    reinit() = 0;
 
-      virtual void
-      reinit() = 0;
+    virtual const dealii::LinearAlgebra::distributed::BlockVector<number> &
+    get_solution_normal_vector() const = 0;
 
-      virtual const LinearAlgebra::distributed::BlockVector<double> &
-      get_solution_normal_vector() const = 0;
+    virtual dealii::LinearAlgebra::distributed::BlockVector<number> &
+    get_solution_normal_vector() = 0;
 
-      virtual LinearAlgebra::distributed::BlockVector<double> &
-      get_solution_normal_vector() = 0;
+    virtual void
+    attach_vectors(std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) = 0;
+  };
 
-      virtual void
-      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) = 0;
-    };
-
-  } // namespace LevelSet
-} // namespace MeltPoolDG
+} // namespace MeltPoolDG::LevelSet

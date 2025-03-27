@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, TUM, September 2020
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/dofs/dof_handler.h>
@@ -53,12 +48,12 @@ namespace MeltPoolDG
       DoFHandler<dim>                               dof_handler;
       AffineConstraints<double>                     constraints;
 
-      std::shared_ptr<ScratchData<dim>>                   scratch_data;
-      std::unique_ptr<TimeIterator<double>>               time_iterator;
-      std::unique_ptr<ReinitializationOperationBase<dim>> reinit_operation;
-      unsigned int                                        reinit_dof_idx  = -1;
-      unsigned int                                        normal_dof_idx  = -1;
-      unsigned int                                        reinit_quad_idx = -1;
+      std::shared_ptr<ScratchData<dim>>                           scratch_data;
+      std::unique_ptr<TimeIterator<double>>                       time_iterator;
+      std::unique_ptr<ReinitializationOperationBase<dim, double>> reinit_operation;
+      unsigned int                                                reinit_dof_idx  = -1;
+      unsigned int                                                normal_dof_idx  = -1;
+      unsigned int                                                reinit_quad_idx = -1;
 
       std::unique_ptr<Postprocessor<dim, double>> post_processor;
 

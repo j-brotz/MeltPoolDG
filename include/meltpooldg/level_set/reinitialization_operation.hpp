@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, TUM, August 2020
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/base/function.h>
@@ -30,31 +25,31 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  using namespace dealii;
+
 
   /*
    *     Reinitialization model for reobtaining the signed-distance
    *     property of the level set equation
    */
 
-  template <int dim>
-  class ReinitializationOperation : public ReinitializationOperationBase<dim>
+  template <int dim, typename number>
+  class ReinitializationOperation : public ReinitializationOperationBase<dim, number>
   {
   private:
-    using VectorType       = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType  = LinearAlgebra::distributed::BlockVector<double>;
-    using SparseMatrixType = TrilinosWrappers::SparseMatrix;
+    using VectorType       = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType  = dealii::LinearAlgebra::distributed::BlockVector<number>;
+    using SparseMatrixType = dealii::TrilinosWrappers::SparseMatrix;
 
   public:
-    ReinitializationOperation(const ScratchData<dim>             &scratch_data_in,
-                              const ReinitializationData<double> &reinit_data,
-                              const NormalVectorData<double>     &normal_vec_data,
-                              const int                           ls_n_subdivisions_in,
-                              const TimeIterator<double>         &time_iterator,
-                              const unsigned int                  reinit_dof_idx_in,
-                              const unsigned int                  reinit_quad_idx_in,
-                              const unsigned int                  ls_dof_idx_in,
-                              const unsigned int                  normal_dof_idx_in);
+    ReinitializationOperation(const ScratchData<dim, dim, number> &scratch_data_in,
+                              const ReinitializationData<number>  &reinit_data,
+                              const NormalVectorData<number>      &normal_vec_data,
+                              const int                            ls_n_subdivisions_in,
+                              const TimeIterator<number>          &time_iterator,
+                              const unsigned int                   reinit_dof_idx_in,
+                              const unsigned int                   reinit_quad_idx_in,
+                              const unsigned int                   ls_dof_idx_in,
+                              const unsigned int                   normal_dof_idx_in);
 
     void
     reinit() override;
@@ -76,7 +71,7 @@ namespace MeltPoolDG::LevelSet
      * Interpolates the initial conditions from a function to the level set field
      */
     void
-    set_initial_condition(const Function<dim> &initial_field_function) override;
+    set_initial_condition(const dealii::Function<dim> &initial_field_function) override;
 
     void
     update_dof_idx(const unsigned int &reinit_dof_idx_in) override;
@@ -87,7 +82,7 @@ namespace MeltPoolDG::LevelSet
     void
     solve() override;
 
-    double
+    number
     get_max_change_level_set() const final;
 
     const BlockVectorType &
@@ -103,24 +98,25 @@ namespace MeltPoolDG::LevelSet
     get_normal_vector() override;
 
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
+    attach_vectors(
+      std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) override;
 
     void
-    attach_output_vectors(GenericDataOut<dim, double> &data_out) const override;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const override;
 
   private:
     void
     create_operator();
 
   private:
-    const ScratchData<dim>            &scratch_data;
-    const ReinitializationData<double> reinit_data;
-    const int                          ls_n_subdivisions;
-    const TimeIterator<double>        &time_iterator;
+    const ScratchData<dim, dim, number> &scratch_data;
+    const ReinitializationData<number>   reinit_data;
+    const int                            ls_n_subdivisions;
+    const TimeIterator<number>          &time_iterator;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
-     *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
-     *  multiple DoFHandlers, quadrature rules, etc.
+     *  ScratchData<dim,dim,number> object is selected. This is important when
+     * ScratchData<dim,dim,number> holds multiple DoFHandlers, quadrature rules, etc.
      */
     mutable unsigned int reinit_dof_idx;
     const unsigned int   reinit_quad_idx;
@@ -129,15 +125,15 @@ namespace MeltPoolDG::LevelSet
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 
-    std::unique_ptr<Predictor<VectorType, double>> predictor;
+    std::unique_ptr<Predictor<VectorType, number>> predictor;
     /*
      *  This shared pointer will point to your user-defined reinitialization operator.
      */
-    std::unique_ptr<OlssonOperator<dim, double>> reinit_operator;
+    std::unique_ptr<OlssonOperator<dim, number>> reinit_operator;
     /*
      *   Computation of the normal vectors
      */
-    std::shared_ptr<NormalVectorOperationBase<dim>> normal_vector_operation;
+    std::shared_ptr<NormalVectorOperationBase<dim, number>> normal_vector_operation;
     /*
      *    This is the primary solution variable of this module, which will be also publically
      *    accessible for output_results.
@@ -150,6 +146,6 @@ namespace MeltPoolDG::LevelSet
     Preconditioner<dim, VectorType> preconditioner;
 
     // maximum change of the level set due to the current reinitialization step
-    double max_change_level_set = std::numeric_limits<double>::max();
+    number max_change_level_set = std::numeric_limits<number>::max();
   };
 } // namespace MeltPoolDG::LevelSet

@@ -33,8 +33,8 @@ namespace MeltPoolDG::MeltPool
     Material<number> melting_solidification;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
-     *  ScratchData<dim,dim,number> object is selected. This is important when
-     * ScratchData<dim,dim,number> holds multiple DoFHandlers, quadrature rules, etc.
+     *  ScratchData object is selected. This is important when
+     * ScratchData holds multiple DoFHandlers, quadrature rules, etc.
      */
     const unsigned int phase_fraction_dof_idx;
     const unsigned int ls_dof_idx;

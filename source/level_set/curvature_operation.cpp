@@ -8,15 +8,18 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  template <int dim>
-  CurvatureOperation<dim>::CurvatureOperation(const ScratchData<dim>         &scratch_data_in,
-                                              const CurvatureData<double>    &curvature_data,
-                                              const NormalVectorData<double> &normal_vec_data,
-                                              const VectorType               &solution_levelset,
-                                              const unsigned int              curv_dof_idx_in,
-                                              const unsigned int              curv_quad_idx_in,
-                                              const unsigned int              normal_dof_idx_in,
-                                              const unsigned int              ls_dof_idx_in)
+  using namespace dealii;
+
+  template <int dim, typename number>
+  CurvatureOperation<dim, number>::CurvatureOperation(
+    const ScratchData<dim, dim, number> &scratch_data_in,
+    const CurvatureData<number>         &curvature_data,
+    const NormalVectorData<number>      &normal_vec_data,
+    const VectorType                    &solution_levelset,
+    const unsigned int                   curv_dof_idx_in,
+    const unsigned int                   curv_quad_idx_in,
+    const unsigned int                   normal_dof_idx_in,
+    const unsigned int                   ls_dof_idx_in)
     : scratch_data(scratch_data_in)
     , curvature_data(curvature_data)
     , solution_levelset(solution_levelset)
@@ -36,9 +39,9 @@ namespace MeltPoolDG::LevelSet
       create_operator(solution_levelset);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CurvatureOperation<dim>::update_normal_vector()
+  CurvatureOperation<dim, number>::update_normal_vector()
   {
     const ScopedName   sc("curvature::update_normal_vector");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
@@ -46,9 +49,9 @@ namespace MeltPoolDG::LevelSet
     normal_vector_operation.solve();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CurvatureOperation<dim>::solve()
+  CurvatureOperation<dim, number>::solve()
   {
     const ScopedName   sc("curvature::solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
@@ -71,7 +74,7 @@ namespace MeltPoolDG::LevelSet
     // compute predictor
     if (!predictor)
       predictor =
-        std::make_unique<Predictor<VectorType, double>>(curvature_data.predictor, solution_history);
+        std::make_unique<Predictor<VectorType, number>>(curvature_data.predictor, solution_history);
 
     if (curvature_data.linear_solver.do_matrix_free &&
         curvature_data.predictor.type == PredictorType::least_squares_projection)
@@ -127,7 +130,7 @@ namespace MeltPoolDG::LevelSet
 
     Journal::print_formatted_norm(
       pcout,
-      [&]() -> double {
+      [&]() -> number {
         return VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
                                               scratch_data,
                                               curv_dof_idx,
@@ -145,37 +148,37 @@ namespace MeltPoolDG::LevelSet
     IterationMonitor::add_linear_iterations(sc, iter);
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  CurvatureOperation<dim>::get_curvature() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  CurvatureOperation<dim, number>::get_curvature() const
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  CurvatureOperation<dim>::get_curvature()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::Vector<number> &
+  CurvatureOperation<dim, number>::get_curvature()
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::BlockVector<double> &
-  CurvatureOperation<dim>::get_normal_vector() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::BlockVector<number> &
+  CurvatureOperation<dim, number>::get_normal_vector() const
   {
     return normal_vector_operation.get_solution_normal_vector();
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::BlockVector<double> &
-  CurvatureOperation<dim>::get_normal_vector()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::BlockVector<number> &
+  CurvatureOperation<dim, number>::get_normal_vector()
   {
     return normal_vector_operation.get_solution_normal_vector();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CurvatureOperation<dim>::reinit()
+  CurvatureOperation<dim, number>::reinit()
   {
     solution_history.apply(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, curv_dof_idx); });
@@ -204,36 +207,36 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CurvatureOperation<dim>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  CurvatureOperation<dim, number>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     normal_vector_operation.attach_vectors(vectors);
 
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CurvatureOperation<dim>::create_operator(const VectorType &solution_levelset)
+  CurvatureOperation<dim, number>::create_operator(const VectorType &solution_levelset)
   {
-    curvature_operator = std::make_shared<CurvatureOperator<dim>>(scratch_data,
-                                                                  curvature_data,
-                                                                  curv_dof_idx,
-                                                                  curv_quad_idx,
-                                                                  normal_dof_idx,
-                                                                  ls_dof_idx,
-                                                                  &solution_levelset);
+    curvature_operator = std::make_shared<CurvatureOperator<dim, number>>(scratch_data,
+                                                                          curvature_data,
+                                                                          curv_dof_idx,
+                                                                          curv_quad_idx,
+                                                                          normal_dof_idx,
+                                                                          ls_dof_idx,
+                                                                          &solution_levelset);
 
 
-    preconditioner = make_preconditioner<dim, CurvatureOperator<dim>, VectorType>(
+    preconditioner = make_preconditioner<dim, CurvatureOperator<dim, number>, VectorType>(
       curvature_data.linear_solver.preconditioner_type,
       curvature_operator.get(),
       curvature_data.linear_solver.do_matrix_free);
   }
 
-  template class CurvatureOperation<1>;
-  template class CurvatureOperation<2>;
-  template class CurvatureOperation<3>;
+  template class CurvatureOperation<1, double>;
+  template class CurvatureOperation<2, double>;
+  template class CurvatureOperation<3, double>;
 } // namespace MeltPoolDG::LevelSet

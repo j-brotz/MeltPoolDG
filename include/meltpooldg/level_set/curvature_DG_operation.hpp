@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Johannes Resch, TUM, May 2024
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/base/vectorization.h>
@@ -22,53 +17,52 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  using namespace dealii;
-  template <int dim, typename Number = double>
+  template <int dim, typename number>
   class CurvatureDGOperation
   {
   private:
-    using VectorType       = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType  = LinearAlgebra::distributed::BlockVector<double>;
-    using SparseMatrixType = TrilinosWrappers::SparseMatrix;
+    using VectorType       = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType  = dealii::LinearAlgebra::distributed::BlockVector<number>;
+    using SparseMatrixType = dealii::TrilinosWrappers::SparseMatrix;
 
   public:
-    CurvatureDGOperation(const ScratchData<dim>      &scratch_data_in,
-                         const unsigned int           curvature_dof_idx_in,
-                         const unsigned int           curvature_quad_idx_in,
-                         const BlockVectorType       &solution_normal_vector_in,
-                         const CurvatureData<double> &curvature_data);
+    CurvatureDGOperation(const ScratchData<dim, dim, number> &scratch_data_in,
+                         const unsigned int                   curvature_dof_idx_in,
+                         const unsigned int                   curvature_quad_idx_in,
+                         const BlockVectorType               &solution_normal_vector_in,
+                         const CurvatureData<number>         &curvature_data);
 
     void
     solve();
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_curvature() const;
 
-    LinearAlgebra::distributed::Vector<double> &
+    dealii::LinearAlgebra::distributed::Vector<number> &
     get_curvature();
 
     void
     reinit();
 
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
+    attach_vectors(std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors);
 
   private:
-    const ScratchData<dim>     &scratch_data;
-    const BlockVectorType      &solution_normal_vector;
-    const CurvatureData<double> curvature_data;
+    const ScratchData<dim, dim, number> &scratch_data;
+    const BlockVectorType               &solution_normal_vector;
+    const CurvatureData<number>          curvature_data;
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
-     *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
-     *  multiple DoFHandlers, quadrature rules, etc.
+     *  ScratchData<dim,dim,number> object is selected. This is important when
+     * ScratchData<dim,dim,number> holds multiple DoFHandlers, quadrature rules, etc.
      */
     const unsigned int curvature_dof_idx;
     const unsigned int curvature_quad_idx;
 
-    const HelmholtzDGOperator<dim, Number> helmholtz_operator;
+    const HelmholtzDGOperator<dim, number> helmholtz_operator;
 
     /**
      * Applies the domain integral of the right hand side in the form -(w, ∇ o n_i)
@@ -79,7 +73,7 @@ namespace MeltPoolDG::LevelSet
      * @param cell_range
      */
     void
-    right_hand_side_domain(const MatrixFree<dim, Number>               &data,
+    right_hand_side_domain(const dealii::MatrixFree<dim, number>       &data,
                            VectorType                                  &dst,
                            const BlockVectorType                       &src,
                            const std::pair<unsigned int, unsigned int> &cell_range) const;
@@ -97,7 +91,7 @@ namespace MeltPoolDG::LevelSet
     template <uint direction>
     void
     right_hand_side_inner_face(
-      [[maybe_unused]] const MatrixFree<dim, Number>               &data,
+      [[maybe_unused]] const dealii::MatrixFree<dim, number>       &data,
       [[maybe_unused]] VectorType                                  &dst,
       [[maybe_unused]] const BlockVectorType                       &src,
       [[maybe_unused]] const std::pair<unsigned int, unsigned int> &face_range) const
@@ -116,7 +110,7 @@ namespace MeltPoolDG::LevelSet
     template <uint direction>
     void
     right_hand_side_boundary_face(
-      [[maybe_unused]] const MatrixFree<dim, Number>               &data,
+      [[maybe_unused]] const dealii::MatrixFree<dim, number>       &data,
       [[maybe_unused]] VectorType                                  &dst,
       [[maybe_unused]] const BlockVectorType                       &src,
       [[maybe_unused]] const std::pair<unsigned int, unsigned int> &face_range) const

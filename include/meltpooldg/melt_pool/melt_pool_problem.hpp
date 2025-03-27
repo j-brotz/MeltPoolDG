@@ -254,7 +254,7 @@ namespace MeltPoolDG::MeltPool
     std::shared_ptr<ScratchData<dim>>                               scratch_data;
     std::shared_ptr<Material<double>>                               material;
     std::shared_ptr<Flow::FlowBase<dim>>                            flow_operation;
-    std::shared_ptr<LevelSet::LevelSetOperation<dim>>               level_set_operation;
+    std::shared_ptr<LevelSet::LevelSetOperation<dim, double>>       level_set_operation;
     std::shared_ptr<Heat::LaserOperation<dim, double>>              laser_operation;
     std::shared_ptr<MeltFrontPropagation<dim, double>>              melt_front_propagation;
     std::shared_ptr<Evaporation::EvaporationOperation<dim, double>> evaporation_operation = nullptr;

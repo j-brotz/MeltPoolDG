@@ -9,14 +9,16 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  template <int dim>
-  NormalVectorOperation<dim>::NormalVectorOperation(
-    const ScratchData<dim>         &scratch_data_in,
-    const NormalVectorData<double> &normal_vector_data,
-    const VectorType               &solution_level_set,
-    const unsigned int              normal_dof_idx_in,
-    const unsigned int              normal_quad_idx_in,
-    const unsigned int              ls_dof_idx_in)
+  using namespace dealii;
+
+  template <int dim, typename number>
+  NormalVectorOperation<dim, number>::NormalVectorOperation(
+    const ScratchData<dim, dim, number> &scratch_data_in,
+    const NormalVectorData<number>      &normal_vector_data,
+    const VectorType                    &solution_level_set,
+    const unsigned int                   normal_dof_idx_in,
+    const unsigned int                   normal_quad_idx_in,
+    const unsigned int                   ls_dof_idx_in)
     : scratch_data(scratch_data_in)
     , normal_vector_data(normal_vector_data)
     , solution_level_set(solution_level_set)
@@ -29,9 +31,9 @@ namespace MeltPoolDG::LevelSet
       create_operator();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  NormalVectorOperation<dim>::reinit()
+  NormalVectorOperation<dim, number>::reinit()
   {
     solution_history.apply(
       [this](BlockVectorType &v) { scratch_data.initialize_dof_vector(v, normal_dof_idx); });
@@ -56,9 +58,9 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  NormalVectorOperation<dim>::solve()
+  NormalVectorOperation<dim, number>::solve()
   {
     const ScopedName   sc("normal::solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
@@ -69,7 +71,7 @@ namespace MeltPoolDG::LevelSet
 
     // compute predictor
     if (!predictor)
-      predictor = std::make_unique<Predictor<BlockVectorType, double>>(normal_vector_data.predictor,
+      predictor = std::make_unique<Predictor<BlockVectorType, number>>(normal_vector_data.predictor,
                                                                        solution_history);
 
     if (normal_vector_data.linear_solver.do_matrix_free &&
@@ -125,7 +127,7 @@ namespace MeltPoolDG::LevelSet
     for (unsigned int d = 0; d < dim; ++d)
       Journal::print_formatted_norm(
         pcout,
-        [&]() -> double {
+        [&]() -> number {
           return MeltPoolDG::VectorTools::compute_norm<dim>(
             solution_history.get_current_solution().block(d),
             scratch_data,
@@ -147,24 +149,24 @@ namespace MeltPoolDG::LevelSet
     solution_history.get_current_solution().update_ghost_values();
   }
 
-  template <int dim>
-  const typename NormalVectorOperation<dim>::BlockVectorType &
-  NormalVectorOperation<dim>::get_solution_normal_vector() const
+  template <int dim, typename number>
+  const typename NormalVectorOperation<dim, number>::BlockVectorType &
+  NormalVectorOperation<dim, number>::get_solution_normal_vector() const
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim>
-  typename NormalVectorOperation<dim>::BlockVectorType &
-  NormalVectorOperation<dim>::get_solution_normal_vector()
+  template <int dim, typename number>
+  typename NormalVectorOperation<dim, number>::BlockVectorType &
+  NormalVectorOperation<dim, number>::get_solution_normal_vector()
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  NormalVectorOperation<dim>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  NormalVectorOperation<dim, number>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     solution_history.apply([&](BlockVectorType &v) {
       for (unsigned int d = 0; d < dim; ++d)
@@ -172,25 +174,26 @@ namespace MeltPoolDG::LevelSet
     });
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  NormalVectorOperation<dim>::create_operator()
+  NormalVectorOperation<dim, number>::create_operator()
   {
-    normal_vector_operator = std::make_unique<NormalVectorOperator<dim>>(scratch_data,
-                                                                         normal_vector_data,
-                                                                         normal_dof_idx,
-                                                                         normal_quad_idx,
-                                                                         ls_dof_idx,
-                                                                         &solution_level_set);
+    normal_vector_operator =
+      std::make_unique<NormalVectorOperator<dim, number>>(scratch_data,
+                                                          normal_vector_data,
+                                                          normal_dof_idx,
+                                                          normal_quad_idx,
+                                                          ls_dof_idx,
+                                                          &solution_level_set);
 
-    preconditioner = make_preconditioner<dim, NormalVectorOperator<dim>, BlockVectorType>(
+    preconditioner = make_preconditioner<dim, NormalVectorOperator<dim, number>, BlockVectorType>(
       normal_vector_data.linear_solver.preconditioner_type,
       normal_vector_operator.get(),
       normal_vector_data.linear_solver.do_matrix_free);
   }
 
 
-  template class NormalVectorOperation<1>;
-  template class NormalVectorOperation<2>;
-  template class NormalVectorOperation<3>;
+  template class NormalVectorOperation<1, double>;
+  template class NormalVectorOperation<2, double>;
+  template class NormalVectorOperation<3, double>;
 } // namespace MeltPoolDG::LevelSet

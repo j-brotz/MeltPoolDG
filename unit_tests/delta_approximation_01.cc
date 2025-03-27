@@ -32,7 +32,7 @@ test(const DeltaApproximationPhaseWeightedData<Number> data, const unsigned int 
 int
 main()
 {
-  DeltaApproximationPhaseWeightedData data;
+  DeltaApproximationPhaseWeightedData<double> data;
   data.gas_phase_weight     = 0.1;
   data.heavy_phase_weight   = 0.2;
   data.gas_phase_weight_2   = 0.5;

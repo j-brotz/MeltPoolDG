@@ -10,8 +10,7 @@
 
 namespace MeltPoolDG::LevelSet
 {
-
-  template <typename number = double>
+  template <typename number>
   struct CurvatureData
   {
     CurvatureData();

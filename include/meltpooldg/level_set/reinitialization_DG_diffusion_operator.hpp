@@ -13,20 +13,21 @@
  */
 namespace MeltPoolDG::LevelSet
 {
-  template <int dim, typename Number = double>
+  template <int dim, typename number>
   class ReinitializationDGDiffusionOperator
   {
   public:
-    using VectorType      = LinearAlgebra::distributed::Vector<Number>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<Number>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
-    ReinitializationDGDiffusionOperator(const MeltPoolDG::ScratchData<dim> &scratch_datain,
-                                        const ReinitializationData<Number> &reinit_data_in,
-                                        const unsigned int                  reinit_dof_idx_in,
-                                        const unsigned int                  reinit_quad_idx_in,
-                                        const VectorType                   &curvature_in,
-                                        const BlockVectorType              &normal_vector_in,
-                                        const VectorType                   &smooth_signum_in);
+    ReinitializationDGDiffusionOperator(
+      const MeltPoolDG::ScratchData<dim, dim, number> &scratch_datain,
+      const ReinitializationData<number>              &reinit_data_in,
+      const unsigned int                               reinit_dof_idx_in,
+      const unsigned int                               reinit_quad_idx_in,
+      const VectorType                                &curvature_in,
+      const BlockVectorType                           &normal_vector_in,
+      const VectorType                                &smooth_signum_in);
 
     /**
      * Computes the necessary amount of diffusion
@@ -47,7 +48,7 @@ namespace MeltPoolDG::LevelSet
      * @param time
      */
     void
-    set_field_functions([[maybe_unused]] const Number time) const {};
+    set_field_functions([[maybe_unused]] const number time) const {};
 
     /**
      * Applies the DG diffusion operator to the src vector and stores the result in the dst vector.
@@ -57,15 +58,15 @@ namespace MeltPoolDG::LevelSet
      * @param src source vector for the operator
      */
     void
-    apply_operator([[maybe_unused]] const Number                          time,
+    apply_operator([[maybe_unused]] const number                          time,
                    VectorType                                            &dst,
                    const VectorType                                      &src,
                    const std::function<void(unsigned int, unsigned int)> &func = {}) const;
 
     void
-    local_apply_inverse_mass_matrix(const MatrixFree<dim, Number>                    &data,
-                                    LinearAlgebra::distributed::Vector<Number>       &dst,
-                                    const LinearAlgebra::distributed::Vector<Number> &src,
+    local_apply_inverse_mass_matrix(const dealii::MatrixFree<dim, number>                    &data,
+                                    dealii::LinearAlgebra::distributed::Vector<number>       &dst,
+                                    const dealii::LinearAlgebra::distributed::Vector<number> &src,
                                     const std::pair<unsigned int, unsigned int> &cell_range) const;
 
     /**
@@ -75,11 +76,11 @@ namespace MeltPoolDG::LevelSet
      * much sense.
      */
     void
-    apply_dirichlet_boundary_operator([[maybe_unused]] const Number      time,
+    apply_dirichlet_boundary_operator([[maybe_unused]] const number      time,
                                       [[maybe_unused]] VectorType       &dst,
                                       [[maybe_unused]] const VectorType &src) const {};
 
-    double
+    number
     get_max_diffusitivity() const;
 
     /**
@@ -88,14 +89,14 @@ namespace MeltPoolDG::LevelSet
     bool update_field_functions = false;
 
   private:
-    const MeltPoolDG::ScratchData<dim> &scratch_data;
-    const ReinitializationData<Number> &reinit_data;
+    const MeltPoolDG::ScratchData<dim, dim, number> &scratch_data;
+    const ReinitializationData<number>              &reinit_data;
 
     const unsigned int reinit_dof_idx;
     const unsigned int reinit_quad_idx;
 
-    mutable VectorType                             diffusitivity;
-    mutable AlignedVector<VectorizedArray<Number>> array_penalty_parameter;
+    mutable VectorType                                     diffusitivity;
+    mutable AlignedVector<dealii::VectorizedArray<number>> array_penalty_parameter;
 
     const VectorType      &curvature;
     const BlockVectorType &normal_vector;
@@ -109,7 +110,7 @@ namespace MeltPoolDG::LevelSet
      * @param cell_range
      */
     void
-    local_apply_domain(const MatrixFree<dim, Number>               &data,
+    local_apply_domain(const dealii::MatrixFree<dim, number>       &data,
                        VectorType                                  &dst,
                        const VectorType                            &src,
                        const std::pair<unsigned int, unsigned int> &cell_range) const;
@@ -122,7 +123,7 @@ namespace MeltPoolDG::LevelSet
      * @param cell_range
      */
     void
-    local_apply_inner_face(const MatrixFree<dim, Number>               &data,
+    local_apply_inner_face(const dealii::MatrixFree<dim, number>       &data,
                            VectorType                                  &dst,
                            const VectorType                            &src,
                            const std::pair<unsigned int, unsigned int> &cell_range) const;
@@ -135,7 +136,7 @@ namespace MeltPoolDG::LevelSet
      * @param cell_range
      */
     void
-    local_apply_boundary_face(const MatrixFree<dim, Number>               &data,
+    local_apply_boundary_face(const dealii::MatrixFree<dim, number>       &data,
                               VectorType                                  &dst,
                               const VectorType                            &src,
                               const std::pair<unsigned int, unsigned int> &cell_range) const;

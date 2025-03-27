@@ -867,22 +867,21 @@ namespace MeltPoolDG::MeltPool
     pressure_dof_idx = flow_operation->get_dof_handler_idx_pressure();
 
     // initialize the levelset operation class
-    level_set_operation =
-      std::make_shared<LevelSet::LevelSetOperation<dim>>(*scratch_data,
-                                                         *time_iterator,
-                                                         *base_in->get_boundary_condition_manager(
-                                                           "level_set"),
-                                                         param.time_stepping,
-                                                         param.ls,
-                                                         interface_velocity,
-                                                         ls_dof_idx,
-                                                         ls_hanging_nodes_dof_idx,
-                                                         ls_quad_idx,
-                                                         reinit_dof_idx,
-                                                         curv_dof_idx,
-                                                         normal_dof_idx,
-                                                         vel_dof_idx,
-                                                         ls_dof_idx /* todo: ls_zero_bc_idx*/);
+    level_set_operation = std::make_shared<LevelSet::LevelSetOperation<dim, double>>(
+      *scratch_data,
+      *time_iterator,
+      *base_in->get_boundary_condition_manager("level_set"),
+      param.time_stepping,
+      param.ls,
+      interface_velocity,
+      ls_dof_idx,
+      ls_hanging_nodes_dof_idx,
+      ls_quad_idx,
+      reinit_dof_idx,
+      curv_dof_idx,
+      normal_dof_idx,
+      vel_dof_idx,
+      ls_dof_idx /* todo: ls_zero_bc_idx*/);
 
     // initialize laser operation
     if (problem_specific_parameters.do_heat_transfer and param.laser.power > 0.0)

@@ -9,14 +9,17 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  template <int dim>
-  CurvatureOperationAdaflo<dim>::CurvatureOperationAdaflo(const ScratchData<dim> &scratch_data,
-                                                          const int         advec_diff_dof_idx,
-                                                          const int         normal_vec_dof_idx,
-                                                          const int         curv_dof_idx,
-                                                          const int         curv_quad_idx,
-                                                          const VectorType &advected_field,
-                                                          const LevelSetData<double> &data_in)
+  using namespace dealii;
+
+  template <int dim, typename number>
+  CurvatureOperationAdaflo<dim, number>::CurvatureOperationAdaflo(
+    const ScratchData<dim, dim, number> &scratch_data,
+    const int                            advec_diff_dof_idx,
+    const int                            normal_vec_dof_idx,
+    const int                            curv_dof_idx,
+    const int                            curv_quad_idx,
+    const VectorType                    &advected_field,
+    const LevelSetData<number>          &data_in)
     : scratch_data(scratch_data)
     , advected_field(advected_field)
     , normal_vector_data(data_in.normal_vec)
@@ -35,9 +38,9 @@ namespace MeltPoolDG::LevelSet
     ilu_projection_matrix = std::make_shared<BlockILUExtension>();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CurvatureOperationAdaflo<dim>::create_operator()
+  CurvatureOperationAdaflo<dim, number>::create_operator()
   {
     curvature_operation = std::make_shared<LevelSetOKZSolverComputeCurvature<dim>>(
       scratch_data.get_cell_sizes(),
@@ -57,23 +60,23 @@ namespace MeltPoolDG::LevelSet
       ilu_projection_matrix);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CurvatureOperationAdaflo<dim>::create_normal_vector_operator()
+  CurvatureOperationAdaflo<dim, number>::create_normal_vector_operator()
   {
-    normal_vector_operation_adaflo =
-      std::make_shared<NormalVectorOperationAdaflo<dim>>(scratch_data,
-                                                         normal_vector_data,
-                                                         curv_adaflo_params.dof_index_ls,
-                                                         curv_adaflo_params.dof_index_normal,
-                                                         curv_adaflo_params.quad_index,
-                                                         advected_field,
-                                                         curv_adaflo_params.epsilon);
+    normal_vector_operation_adaflo = std::make_shared<NormalVectorOperationAdaflo<dim, number>>(
+      scratch_data,
+      normal_vector_data,
+      curv_adaflo_params.dof_index_ls,
+      curv_adaflo_params.dof_index_normal,
+      curv_adaflo_params.quad_index,
+      advected_field,
+      curv_adaflo_params.epsilon);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CurvatureOperationAdaflo<dim>::reinit()
+  CurvatureOperationAdaflo<dim, number>::reinit()
   {
     /**
      *  initialize the dof vectors
@@ -96,14 +99,14 @@ namespace MeltPoolDG::LevelSet
     /**
      * initialize the preconditioner -->  @todo: currently not used in adaflo
      */
-    initialize_mass_matrix_diagonal<dim, double>(scratch_data.get_matrix_free(),
+    initialize_mass_matrix_diagonal<dim, number>(scratch_data.get_matrix_free(),
                                                  scratch_data.get_constraint(
                                                    curv_adaflo_params.dof_index_curvature),
                                                  curv_adaflo_params.dof_index_curvature,
                                                  curv_adaflo_params.quad_index,
                                                  preconditioner);
 
-    initialize_projection_matrix<dim, double, VectorizedArray<double>>(
+    initialize_projection_matrix<dim, number, VectorizedArray<number>>(
       scratch_data.get_matrix_free(),
       scratch_data.get_constraint(curv_adaflo_params.dof_index_curvature),
       curv_adaflo_params.dof_index_curvature,
@@ -117,18 +120,18 @@ namespace MeltPoolDG::LevelSet
     normal_vector_operation_adaflo->reinit();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CurvatureOperationAdaflo<dim>::update_normal_vector()
+  CurvatureOperationAdaflo<dim, number>::update_normal_vector()
   {
     advected_field.update_ghost_values();
     normal_vector_operation_adaflo->solve();
     advected_field.zero_out_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CurvatureOperationAdaflo<dim>::solve()
+  CurvatureOperationAdaflo<dim, number>::solve()
   {
     advected_field.update_ghost_values();
     normal_vector_operation_adaflo->solve();
@@ -138,7 +141,7 @@ namespace MeltPoolDG::LevelSet
     const int verbosity_l2_norm = dim > 1 ? 1 : 2;
     Journal::print_formatted_norm(
       scratch_data.get_pcout(std::max(normal_vector_data.verbosity_level, verbosity_l2_norm)),
-      [&]() -> double {
+      [&]() -> number {
         return VectorTools::compute_norm<dim>(get_curvature(),
                                               scratch_data,
                                               curv_adaflo_params.dof_index_curvature,
@@ -151,49 +154,50 @@ namespace MeltPoolDG::LevelSet
     advected_field.zero_out_ghost_values();
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  CurvatureOperationAdaflo<dim>::get_curvature() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::Vector<number> &
+  CurvatureOperationAdaflo<dim, number>::get_curvature() const
   {
     return curvature_field;
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  CurvatureOperationAdaflo<dim>::get_curvature()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::Vector<number> &
+  CurvatureOperationAdaflo<dim, number>::get_curvature()
   {
     return curvature_field;
   }
 
-  template <int dim>
-  const LinearAlgebra::distributed::BlockVector<double> &
-  CurvatureOperationAdaflo<dim>::get_normal_vector() const
+  template <int dim, typename number>
+  const LinearAlgebra::distributed::BlockVector<number> &
+  CurvatureOperationAdaflo<dim, number>::get_normal_vector() const
   {
     return normal_vector_operation_adaflo->get_solution_normal_vector();
   }
 
-  template <int dim>
-  LinearAlgebra::distributed::BlockVector<double> &
-  CurvatureOperationAdaflo<dim>::get_normal_vector()
+  template <int dim, typename number>
+  LinearAlgebra::distributed::BlockVector<number> &
+  CurvatureOperationAdaflo<dim, number>::get_normal_vector()
   {
     return normal_vector_operation_adaflo->get_solution_normal_vector();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CurvatureOperationAdaflo<dim>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  CurvatureOperationAdaflo<dim, number>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     normal_vector_operation_adaflo->attach_vectors(vectors);
     vectors.push_back(&curvature_field);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CurvatureOperationAdaflo<dim>::set_adaflo_parameters(const LevelSetData<double> &parameters,
-                                                       const int advec_diff_dof_idx,
-                                                       const int curv_dof_idx,
-                                                       const int curv_quad_idx)
+  CurvatureOperationAdaflo<dim, number>::set_adaflo_parameters(
+    const LevelSetData<number> &parameters,
+    const int                   advec_diff_dof_idx,
+    const int                   curv_dof_idx,
+    const int                   curv_quad_idx)
   {
     curv_adaflo_params.dof_index_ls        = advec_diff_dof_idx;
     curv_adaflo_params.dof_index_curvature = curv_dof_idx; //@ todo
@@ -208,9 +212,9 @@ namespace MeltPoolDG::LevelSet
     // todo
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CurvatureOperationAdaflo<dim>::initialize_vectors()
+  CurvatureOperationAdaflo<dim, number>::initialize_vectors()
   {
     /**
      * initialize advected field dof vectors
@@ -223,8 +227,8 @@ namespace MeltPoolDG::LevelSet
     scratch_data.initialize_dof_vector(rhs, curv_adaflo_params.dof_index_curvature);
   }
 
-  template class CurvatureOperationAdaflo<1>;
-  template class CurvatureOperationAdaflo<2>;
-  template class CurvatureOperationAdaflo<3>;
+  template class CurvatureOperationAdaflo<1, double>;
+  template class CurvatureOperationAdaflo<2, double>;
+  template class CurvatureOperationAdaflo<3, double>;
 } // namespace MeltPoolDG::LevelSet
 #endif

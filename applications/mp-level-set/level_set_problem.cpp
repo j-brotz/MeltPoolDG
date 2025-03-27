@@ -140,26 +140,25 @@ namespace MeltPoolDG::LevelSet
 
     if (simulation_case->parameters.ls.fe.type != FiniteElementType::FE_DGQ)
       {
-        level_set_operation =
-          std::make_unique<LevelSetOperation<dim>>(*scratch_data,
-                                                   *time_iterator,
-                                                   *simulation_case->get_boundary_condition_manager(
-                                                     "level_set"),
-                                                   simulation_case->parameters.time_stepping,
-                                                   simulation_case->parameters.ls,
-                                                   advection_velocity,
-                                                   ls_dof_idx,
-                                                   ls_hanging_nodes_dof_idx,
-                                                   ls_quad_idx,
-                                                   reinit_dof_idx,
-                                                   curv_dof_idx,
-                                                   normal_dof_idx,
-                                                   vel_dof_idx,
-                                                   ls_zero_bc_idx);
+        level_set_operation = std::make_unique<LevelSetOperation<dim, double>>(
+          *scratch_data,
+          *time_iterator,
+          *simulation_case->get_boundary_condition_manager("level_set"),
+          simulation_case->parameters.time_stepping,
+          simulation_case->parameters.ls,
+          advection_velocity,
+          ls_dof_idx,
+          ls_hanging_nodes_dof_idx,
+          ls_quad_idx,
+          reinit_dof_idx,
+          curv_dof_idx,
+          normal_dof_idx,
+          vel_dof_idx,
+          ls_zero_bc_idx);
       }
     else
       {
-        level_set_operation = std::make_unique<LevelSetDGOperation<dim>>(
+        level_set_operation = std::make_unique<LevelSetDGOperation<dim, double>>(
           *scratch_data,
           *time_iterator,
           simulation_case->parameters.ls,

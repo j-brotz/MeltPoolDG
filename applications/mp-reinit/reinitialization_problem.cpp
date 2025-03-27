@@ -107,34 +107,35 @@ namespace MeltPoolDG::LevelSet
       {
         if (param.reinit.fe.type != FiniteElementType::FE_DGQ)
           {
-            reinit_operation =
-              std::make_unique<ReinitializationOperation<dim>>(*scratch_data,
-                                                               param.reinit,
-                                                               param.normal_vec,
-                                                               param.reinit.fe.get_n_subdivisions(),
-                                                               *time_iterator,
-                                                               reinit_dof_idx,
-                                                               reinit_quad_idx,
-                                                               reinit_dof_idx,
-                                                               normal_dof_idx);
+            reinit_operation = std::make_unique<ReinitializationOperation<dim, double>>(
+              *scratch_data,
+              param.reinit,
+              param.normal_vec,
+              param.reinit.fe.get_n_subdivisions(),
+              *time_iterator,
+              reinit_dof_idx,
+              reinit_quad_idx,
+              reinit_dof_idx,
+              normal_dof_idx);
           }
         else
           {
-            reinit_operation = std::make_unique<ReinitializationDGOperation<dim>>(*scratch_data,
-                                                                                  param.reinit,
-                                                                                  *time_iterator,
-                                                                                  reinit_dof_idx,
-                                                                                  reinit_quad_idx,
-                                                                                  reinit_dof_idx,
-                                                                                  param.normal_vec,
-                                                                                  param.curv);
+            reinit_operation =
+              std::make_unique<ReinitializationDGOperation<dim, double>>(*scratch_data,
+                                                                         param.reinit,
+                                                                         *time_iterator,
+                                                                         reinit_dof_idx,
+                                                                         reinit_quad_idx,
+                                                                         reinit_dof_idx,
+                                                                         param.normal_vec,
+                                                                         param.curv);
           }
         reinit_operation->reinit();
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (param.reinit.implementation == "adaflo")
       {
-        reinit_operation = std::make_unique<ReinitializationOperationAdaflo<dim>>(
+        reinit_operation = std::make_unique<ReinitializationOperationAdaflo<dim, double>>(
           *scratch_data,
           *time_iterator,
           reinit_dof_idx,

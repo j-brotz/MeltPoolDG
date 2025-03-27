@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, TUM, September 2020
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/lac/generic_linear_algebra.h>
@@ -20,15 +15,13 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  using namespace dealii;
-
-  template <int dim>
-  class AdvectionDiffusionOperation : public AdvectionDiffusionOperationBase<dim>
+  template <int dim, typename number>
+  class AdvectionDiffusionOperation : public AdvectionDiffusionOperationBase<dim, number>
   {
   private:
-    using VectorType       = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType  = LinearAlgebra::distributed::BlockVector<double>;
-    using SparseMatrixType = TrilinosWrappers::SparseMatrix;
+    using VectorType       = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType  = dealii::LinearAlgebra::distributed::BlockVector<number>;
+    using SparseMatrixType = dealii::TrilinosWrappers::SparseMatrix;
 
   public:
     /*
@@ -36,21 +29,21 @@ namespace MeltPoolDG::LevelSet
      */
 
     AdvectionDiffusionOperation(
-      const ScratchData<dim>                                             &scratch_data_in,
-      const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> &dirichlet_bc_in,
-      const AdvectionDiffusionData<double>                               &advec_diff_data_in,
-      const TimeIterator<double>                                         &time_iterator,
-      const VectorType                                                   &advection_velocity,
-      const unsigned int                                                  advec_diff_dof_idx_in,
-      const unsigned int advec_diff_hanging_nodes_dof_idx_in,
-      const unsigned int advec_diff_quad_idx_in,
-      const unsigned int velocity_dof_idx_in);
+      const ScratchData<dim, dim, number>                                        &scratch_data_in,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> &dirichlet_bc_in,
+      const AdvectionDiffusionData<number> &advec_diff_data_in,
+      const TimeIterator<number>           &time_iterator,
+      const VectorType                     &advection_velocity,
+      const unsigned int                    advec_diff_dof_idx_in,
+      const unsigned int                    advec_diff_hanging_nodes_dof_idx_in,
+      const unsigned int                    advec_diff_quad_idx_in,
+      const unsigned int                    velocity_dof_idx_in);
 
     /**
      * Provide a field function for the initial solution of the advected field
      */
     void
-    set_initial_condition(const Function<dim> &initial_field_function) override;
+    set_initial_condition(const dealii::Function<dim> &initial_field_function) override;
 
     void
     reinit() override;
@@ -64,51 +57,52 @@ namespace MeltPoolDG::LevelSet
     void
     create_inflow_outflow_constraints();
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_advected_field() const override;
 
-    LinearAlgebra::distributed::Vector<double> &
+    dealii::LinearAlgebra::distributed::Vector<number> &
     get_advected_field() override;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_advected_field_old() const override;
 
-    LinearAlgebra::distributed::Vector<double> &
+    dealii::LinearAlgebra::distributed::Vector<number> &
     get_advected_field_old() override;
 
-    LinearAlgebra::distributed::Vector<double> &
+    dealii::LinearAlgebra::distributed::Vector<number> &
     get_user_rhs() override;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_user_rhs() const override;
 
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
+    attach_vectors(
+      std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) override;
 
     void
-    attach_output_vectors(GenericDataOut<dim, double> &data_out) const override;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const override;
 
     void
-    set_inflow_outflow_bc(
-      const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> inflow_outflow_bc_);
+    set_inflow_outflow_bc(const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>>
+                            inflow_outflow_bc_);
 
   private:
     void
     create_operator(const VectorType &advection_velocity);
 
-    const ScratchData<dim>                                             &scratch_data;
-    const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> &dirichlet_bc;
+    const ScratchData<dim, dim, number>                                        &scratch_data;
+    const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> &dirichlet_bc;
     /*
      *  This pointer will point to your user-defined advection_diffusion operator.
      */
-    std::unique_ptr<AdvectionDiffusionOperator<dim, double>> advec_diff_operator;
+    std::unique_ptr<AdvectionDiffusionOperator<dim, number>> advec_diff_operator;
 
-    const TimeIterator<double>                       &time_iterator;
-    const LinearAlgebra::distributed::Vector<double> &advection_velocity;
+    const TimeIterator<number>                               &time_iterator;
+    const dealii::LinearAlgebra::distributed::Vector<number> &advection_velocity;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
-     *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
-     *  multiple DoFHandlers, quadrature rules, etc.
+     *  ScratchData<dim,dim,number> object is selected. This is important when
+     * ScratchData<dim,dim,number> holds multiple DoFHandlers, quadrature rules, etc.
      */
     const unsigned int advec_diff_dof_idx  = 0;
     const unsigned int advec_diff_quad_idx = 0;
@@ -117,7 +111,7 @@ namespace MeltPoolDG::LevelSet
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 
-    std::unique_ptr<Predictor<VectorType, double>> predictor;
+    std::unique_ptr<Predictor<VectorType, number>> predictor;
 
     /*
      *    This is the primary solution variable of this module, which will be also publically
@@ -130,8 +124,8 @@ namespace MeltPoolDG::LevelSet
     VectorType rhs;
     VectorType user_rhs;
 
-    std::map<types::boundary_id, std::shared_ptr<Function<dim>>> inflow_outflow_bc;
+    std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> inflow_outflow_bc;
 
-    std::pair<std::vector<unsigned int>, std::vector<double>> inflow_constraints_indices_and_values;
+    std::pair<std::vector<unsigned int>, std::vector<number>> inflow_constraints_indices_and_values;
   };
 } // namespace MeltPoolDG::LevelSet

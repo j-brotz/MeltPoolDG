@@ -12,7 +12,7 @@ namespace MeltPoolDG::LevelSet
 {
   template <int dim, typename number>
   AdvectionDiffusionOperator<dim, number>::AdvectionDiffusionOperator(
-    const ScratchData<dim>               &scratch_data_in,
+    const ScratchData<dim, dim, number>  &scratch_data_in,
     const VectorType                     &advection_velocity_in,
     const AdvectionDiffusionData<number> &data_in,
     const unsigned int                    dof_idx_in,
@@ -69,12 +69,12 @@ namespace MeltPoolDG::LevelSet
 
     const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(this->dof_idx);
 
-    FullMatrix<double> cell_matrix(dofs_per_cell, dofs_per_cell);
-    Vector<double>     cell_rhs(dofs_per_cell);
+    FullMatrix<number> cell_matrix(dofs_per_cell, dofs_per_cell);
+    Vector<number>     cell_rhs(dofs_per_cell);
 
     const unsigned int n_q_points = advec_diff_values.get_quadrature().size();
 
-    std::vector<double>         phi_at_q(n_q_points);
+    std::vector<number>         phi_at_q(n_q_points);
     std::vector<Tensor<1, dim>> grad_phi_at_q(n_q_points, Tensor<1, dim>());
 
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
@@ -354,7 +354,7 @@ namespace MeltPoolDG::LevelSet
       advec_diff_quad_idx);
 
     // ... and invert it
-    const double linfty_norm = std::max(1.0, diagonal.linfty_norm());
+    const number linfty_norm = std::max(1.0, diagonal.linfty_norm());
     for (auto &i : diagonal)
       i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
 
@@ -512,7 +512,6 @@ namespace MeltPoolDG::LevelSet
         system_matrix.clear_row(global_index, 1.0);
       }
   }
-
 
   template class AdvectionDiffusionOperator<1, double>;
   template class AdvectionDiffusionOperator<2, double>;

@@ -3,18 +3,21 @@
 #include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
+
 namespace MeltPoolDG::LevelSet
 {
-  template <int dim>
-  ReinitializationDGOperation<dim>::ReinitializationDGOperation(
-    const ScratchData<dim>             &scratch_data_in,
-    const ReinitializationData<double> &reinit_data,
-    const TimeIterator<double>         &time_iterator,
-    const unsigned int                  reinit_dof_idx_in,
-    const unsigned int                  reinit_quad_idx_in,
-    const unsigned int                  ls_dof_idx_in,
-    const NormalVectorData<double>     &normal_vec_data,
-    const CurvatureData<double>        &curvature_data)
+  using namespace dealii;
+
+  template <int dim, typename number>
+  ReinitializationDGOperation<dim, number>::ReinitializationDGOperation(
+    const ScratchData<dim, dim, number> &scratch_data_in,
+    const ReinitializationData<number>  &reinit_data,
+    const TimeIterator<number>          &time_iterator,
+    const unsigned int                   reinit_dof_idx_in,
+    const unsigned int                   reinit_quad_idx_in,
+    const unsigned int                   ls_dof_idx_in,
+    const NormalVectorData<number>      &normal_vec_data,
+    const CurvatureData<number>         &curvature_data)
     : scratch_data(scratch_data_in)
     , reinit_data(reinit_data)
     , time_iterator(time_iterator)
@@ -24,21 +27,21 @@ namespace MeltPoolDG::LevelSet
     , solution_history(std::max(reinit_data.predictor.n_old_solution_vectors,
                                 2U /*TODO: include time integration scheme*/))
   {
-    normal_vector_operation =
-      std::make_shared<NormalVectorDGOperation<dim>>(scratch_data_in,
-                                                     reinit_dof_idx,
-                                                     reinit_quad_idx,
-                                                     solution_history.get_current_solution(),
-                                                     normal_vec_data);
+    normal_vector_operation = std::make_shared<NormalVectorDGOperation<dim, number>>(
+      scratch_data_in,
+      reinit_dof_idx,
+      reinit_quad_idx,
+      solution_history.get_current_solution(),
+      normal_vec_data);
 
-    curvature_operation = std::make_shared<CurvatureDGOperation<dim>>(
+    curvature_operation = std::make_shared<CurvatureDGOperation<dim, number>>(
       scratch_data_in,
       reinit_quad_idx,
       reinit_quad_idx,
       normal_vector_operation->get_solution_normal_vector(),
       curvature_data);
 
-    reinit_DG_operator = std::make_shared<ReinitilizationDGOperator<dim>>(
+    reinit_DG_operator = std::make_shared<ReinitilizationDGOperator<dim, number>>(
       scratch_data_in,
       reinit_data,
       reinit_dof_idx_in,
@@ -47,24 +50,24 @@ namespace MeltPoolDG::LevelSet
       normal_vector_operation->get_solution_normal_vector());
 
     reinitialization_integration =
-      std::shared_ptr<TimeIntegratorBase<double>>(time_integrator_factory<double>(
+      std::shared_ptr<TimeIntegratorBase<number>>(time_integrator_factory<number>(
         *reinit_DG_operator,
         reinit_data.reinitilization_DG_specific_data.time_integration_data,
         reinit_data.linear_solver,
         scratch_data_in.get_timer()));
   }
 
-  template <int dim>
-  ReinitializationDGOperation<dim>::ReinitializationDGOperation(
-    const ScratchData<dim>                                &scratch_data_in,
-    const ReinitializationData<double>                    &reinit_data,
-    const TimeIterator<double>                            &time_iterator,
-    const unsigned int                                     reinit_dof_idx_in,
-    const unsigned int                                     reinit_quad_idx_in,
-    const unsigned int                                     ls_dof_idx_in,
-    const std::shared_ptr<NormalVectorOperationBase<dim>> &normal_vector_operation_in,
-    const std::shared_ptr<CurvatureDGOperation<dim>>      &curvature_operation_in,
-    const bool                                             is_coupled_in)
+  template <int dim, typename number>
+  ReinitializationDGOperation<dim, number>::ReinitializationDGOperation(
+    const ScratchData<dim, dim, number>                           &scratch_data_in,
+    const ReinitializationData<number>                            &reinit_data,
+    const TimeIterator<number>                                    &time_iterator,
+    const unsigned int                                             reinit_dof_idx_in,
+    const unsigned int                                             reinit_quad_idx_in,
+    const unsigned int                                             ls_dof_idx_in,
+    const std::shared_ptr<NormalVectorOperationBase<dim, number>> &normal_vector_operation_in,
+    const std::shared_ptr<CurvatureDGOperation<dim, number>>      &curvature_operation_in,
+    const bool                                                     is_coupled_in)
     : scratch_data(scratch_data_in)
     , reinit_data(reinit_data)
     , time_iterator(time_iterator)
@@ -79,7 +82,7 @@ namespace MeltPoolDG::LevelSet
 
     curvature_operation = curvature_operation_in;
 
-    reinit_DG_operator = std::make_shared<ReinitilizationDGOperator<dim>>(
+    reinit_DG_operator = std::make_shared<ReinitilizationDGOperator<dim, number>>(
       scratch_data_in,
       reinit_data,
       reinit_dof_idx_in,
@@ -88,16 +91,16 @@ namespace MeltPoolDG::LevelSet
       normal_vector_operation->get_solution_normal_vector());
 
     reinitialization_integration =
-      std::shared_ptr<TimeIntegratorBase<double>>(time_integrator_factory<double>(
+      std::shared_ptr<TimeIntegratorBase<number>>(time_integrator_factory<number>(
         *reinit_DG_operator,
         reinit_data.reinitilization_DG_specific_data.time_integration_data,
         reinit_data.linear_solver,
         scratch_data_in.get_timer()));
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim>::reinit()
+  ReinitializationDGOperation<dim, number>::reinit()
   {
     solution_history.apply(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, reinit_dof_idx); });
@@ -112,17 +115,17 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim>::set_initial_condition(
+  ReinitializationDGOperation<dim, number>::set_initial_condition(
     const Function<dim> &initial_field_function)
   {
-    FECellIntegrator<dim, 1, double> phi(scratch_data.get_matrix_free(),
+    FECellIntegrator<dim, 1, number> phi(scratch_data.get_matrix_free(),
                                          reinit_dof_idx,
                                          reinit_quad_idx);
 
 
-    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, double> inverse(phi);
+    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, number> inverse(phi);
 
     if (solution_history.get_current_solution().has_ghost_elements())
       solution_history.get_current_solution().zero_out_ghost_values();
@@ -133,8 +136,8 @@ namespace MeltPoolDG::LevelSet
         for (unsigned int q = 0; q < phi.n_q_points; ++q)
           {
             // Workaround for the Vectorized Array
-            dealii::VectorizedArray<double> helper;
-            for (unsigned int i = 0; i < VectorizedArray<double>::size(); i++)
+            dealii::VectorizedArray<number> helper;
+            for (unsigned int i = 0; i < VectorizedArray<number>::size(); i++)
               {
                 if constexpr (dim == 1)
                   {
@@ -177,9 +180,10 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim>::set_initial_condition(const VectorType &solution_level_set_in)
+  ReinitializationDGOperation<dim, number>::set_initial_condition(
+    const VectorType &solution_level_set_in)
   {
     /*
      *    copy the given solution into the member variable
@@ -203,24 +207,24 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim>::update_dof_idx(const unsigned int &reinit_dof_idx_in)
+  ReinitializationDGOperation<dim, number>::update_dof_idx(const unsigned int &reinit_dof_idx_in)
   {
     reinit_dof_idx = reinit_dof_idx_in;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim>::init_time_advance()
+  ReinitializationDGOperation<dim, number>::init_time_advance()
   {
     if (solution_history.get_current_solution().has_ghost_elements())
       solution_history.get_current_solution().zero_out_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim>::solve()
+  ReinitializationDGOperation<dim, number>::solve()
   {
     ScopedName         sc("reinitialization::solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
@@ -249,45 +253,45 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim>
-  double
-  ReinitializationDGOperation<dim>::get_max_change_level_set() const
+  template <int dim, typename number>
+  number
+  ReinitializationDGOperation<dim, number>::get_max_change_level_set() const
   {
     return max_change_level_set;
   }
 
-  template <int dim>
-  const VectorType &
-  ReinitializationDGOperation<dim>::get_level_set() const
+  template <int dim, typename number>
+  const typename ReinitializationDGOperation<dim, number>::VectorType &
+  ReinitializationDGOperation<dim, number>::get_level_set() const
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim>
-  VectorType &
-  ReinitializationDGOperation<dim>::get_level_set()
+  template <int dim, typename number>
+  typename ReinitializationDGOperation<dim, number>::VectorType &
+  ReinitializationDGOperation<dim, number>::get_level_set()
   {
     return solution_history.get_current_solution();
   }
 
-  template <int dim>
-  const BlockVectorType &
-  ReinitializationDGOperation<dim>::get_normal_vector() const
+  template <int dim, typename number>
+  const typename ReinitializationDGOperation<dim, number>::BlockVectorType &
+  ReinitializationDGOperation<dim, number>::get_normal_vector() const
   {
     return normal_vector_operation->get_solution_normal_vector();
   }
 
-  template <int dim>
-  BlockVectorType &
-  ReinitializationDGOperation<dim>::get_normal_vector()
+  template <int dim, typename number>
+  typename ReinitializationDGOperation<dim, number>::BlockVectorType &
+  ReinitializationDGOperation<dim, number>::get_normal_vector()
   {
     return normal_vector_operation->get_solution_normal_vector();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  ReinitializationDGOperation<dim, number>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
     normal_vector_operation->attach_vectors(vectors);
@@ -300,10 +304,10 @@ namespace MeltPoolDG::LevelSet
     vectors.push_back(&reinit_DG_operator->get_sign_indicator_function());
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim>::attach_output_vectors(
-    GenericDataOut<dim, double> &data_out) const
+  ReinitializationDGOperation<dim, number>::attach_output_vectors(
+    GenericDataOut<dim, number> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(reinit_dof_idx),
                              solution_history.get_current_solution(),
@@ -319,12 +323,12 @@ namespace MeltPoolDG::LevelSet
                              "curvature");
   }
 
-  template <int dim>
-  double
-  ReinitializationDGOperation<dim>::compute_CFL_based_timestep() const
+  template <int dim, typename number>
+  number
+  ReinitializationDGOperation<dim, number>::compute_CFL_based_timestep() const
   {
-    const double minimal_vertex_distance = scratch_data.get_min_cell_size();
-    const double fe_degree = ((static_cast<double>(scratch_data.get_degree(reinit_dof_idx))));
+    const number minimal_vertex_distance = scratch_data.get_min_cell_size();
+    const number fe_degree = ((static_cast<number>(scratch_data.get_degree(reinit_dof_idx))));
 
     if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type !=
         TimeIntegratorSchemes::not_initialized)
@@ -342,14 +346,14 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim>::set_artificial_diffusitivity()
+  ReinitializationDGOperation<dim, number>::set_artificial_diffusitivity()
   {
     reinit_DG_operator->set_artificial_diffusitivity();
   }
 
-  template class ReinitializationDGOperation<1>;
-  template class ReinitializationDGOperation<2>;
-  template class ReinitializationDGOperation<3>;
+  template class ReinitializationDGOperation<1, double>;
+  template class ReinitializationDGOperation<2, double>;
+  template class ReinitializationDGOperation<3, double>;
 } // namespace MeltPoolDG::LevelSet

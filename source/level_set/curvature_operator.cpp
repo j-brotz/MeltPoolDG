@@ -5,14 +5,17 @@
 
 namespace MeltPoolDG::LevelSet
 {
+  using namespace dealii;
+
   template <int dim, typename number>
-  CurvatureOperator<dim, number>::CurvatureOperator(const ScratchData<dim>      &scratch_data_in,
-                                                    const CurvatureData<double> &curvature_data_in,
-                                                    const unsigned int           curv_dof_idx_in,
-                                                    const unsigned int           curv_quad_idx_in,
-                                                    const unsigned int           normal_dof_idx_in,
-                                                    const unsigned int           ls_dof_idx_in,
-                                                    const VectorType *solution_level_set_in)
+  CurvatureOperator<dim, number>::CurvatureOperator(
+    const ScratchData<dim, dim, number> &scratch_data_in,
+    const CurvatureData<number>         &curvature_data_in,
+    const unsigned int                   curv_dof_idx_in,
+    const unsigned int                   curv_quad_idx_in,
+    const unsigned int                   normal_dof_idx_in,
+    const unsigned int                   ls_dof_idx_in,
+    const VectorType                    *solution_level_set_in)
     : scratch_data(scratch_data_in)
     , curvature_data(curvature_data_in)
     , curv_dof_idx(curv_dof_idx_in)
@@ -53,8 +56,8 @@ namespace MeltPoolDG::LevelSet
 
     const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(curv_dof_idx);
 
-    FullMatrix<double>                   curvature_cell_matrix(dofs_per_cell, dofs_per_cell);
-    Vector<double>                       curvature_cell_rhs(dofs_per_cell);
+    FullMatrix<number>                   curvature_cell_matrix(dofs_per_cell, dofs_per_cell);
+    Vector<number>                       curvature_cell_rhs(dofs_per_cell);
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
     const unsigned int n_q_points = curv_values.get_quadrature().size();
@@ -71,7 +74,7 @@ namespace MeltPoolDG::LevelSet
           curvature_cell_matrix = 0.0;
           curvature_cell_rhs    = 0.0;
 
-          const double damping = compute_cell_size_dependent_filter_parameter<dim>(
+          const number damping = compute_cell_size_dependent_filter_parameter<dim, number>(
             scratch_data, curv_dof_idx, cell, curvature_data.filter_parameter);
 
           // set unit normal vector at DoFs to compute the RHS of the curvature operator
@@ -79,7 +82,7 @@ namespace MeltPoolDG::LevelSet
           // (N, -∇*n)
           //
           // 1) gather (componentwise)
-          std::vector<Vector<double>> normal_vector_at_cell(dim, Vector<double>(dofs_per_cell));
+          std::vector<Vector<number>> normal_vector_at_cell(dim, Vector<number>(dofs_per_cell));
           for (unsigned int d = 0; d < dim; ++d)
             cell->get_dof_values(solution_normal_vector_in.block(d), normal_vector_at_cell[d]);
 
@@ -91,7 +94,7 @@ namespace MeltPoolDG::LevelSet
           // 2) normalize
           for (unsigned int k = 0; k < dofs_per_cell; ++k)
             {
-              const double n_norm = unit_normal_at_cell[k].norm();
+              const number n_norm = unit_normal_at_cell[k].norm();
               if (n_norm > tolerance_normal_vector)
                 unit_normal_at_cell[k] /= n_norm;
               else
@@ -108,7 +111,7 @@ namespace MeltPoolDG::LevelSet
 
           // 4) evaluate divergence at quadrature points
           normal_values.reinit(cell);
-          std::vector<double> div_n_at_q(n_q_points);
+          std::vector<number> div_n_at_q(n_q_points);
 
           for (unsigned int d = 0; d < dim; ++d)
             {
@@ -122,12 +125,12 @@ namespace MeltPoolDG::LevelSet
             {
               for (unsigned int i = 0; i < dofs_per_cell; ++i)
                 {
-                  const double         phi_i      = curv_values.shape_value(i, q_index);
+                  const number         phi_i      = curv_values.shape_value(i, q_index);
                   const Tensor<1, dim> grad_phi_i = curv_values.shape_grad(i, q_index);
 
                   for (unsigned int j = 0; j < dofs_per_cell; ++j)
                     {
-                      const double         phi_j      = curv_values.shape_value(j, q_index);
+                      const number         phi_j      = curv_values.shape_value(j, q_index);
                       const Tensor<1, dim> grad_phi_j = curv_values.shape_grad(j, q_index);
 
                       curvature_cell_matrix(i, j) +=
@@ -214,14 +217,14 @@ namespace MeltPoolDG::LevelSet
                 // need to be submitted.
                 if constexpr (dim > 1)
                   {
-                    const Tensor<1, dim, VectorizedArray<double>> n_phi =
+                    const Tensor<1, dim, VectorizedArray<number>> n_phi =
                       MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_dof_value(i),
                                                               tolerance_normal_vector);
                     normal_vector.submit_dof_value(n_phi, i);
                   }
                 else
                   {
-                    const VectorizedArray<double> n_phi =
+                    const VectorizedArray<number> n_phi =
                       compare_and_apply_mask<SIMDComparison::greater_than>(
                         normal_vector.get_dof_value(i), tolerance_normal_vector, 1.0, -1.0);
 
@@ -322,7 +325,7 @@ namespace MeltPoolDG::LevelSet
       solution_level_set->zero_out_ghost_values();
 
     // ... and invert it
-    const double linfty_norm = std::max(1.0, diagonal.linfty_norm());
+    const number linfty_norm = std::max(1.0, diagonal.linfty_norm());
     for (auto &i : diagonal)
       i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
   }
@@ -373,7 +376,7 @@ namespace MeltPoolDG::LevelSet
 
         for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
           {
-            damping[cell] = compute_cell_size_dependent_filter_parameter_mf<dim>(
+            damping[cell] = compute_cell_size_dependent_filter_parameter_mf<dim, number>(
               scratch_data, curv_dof_idx, cell, curvature_data.filter_parameter);
           }
       }

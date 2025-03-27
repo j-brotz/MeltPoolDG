@@ -27,7 +27,7 @@ namespace MeltPoolDG::LevelSet
 
   BETTER_ENUM(HyperbolicWeightingFunctionType, char, smoothed_signum, initial_levelset)
 
-  template <typename number = double>
+  template <typename number>
   struct ReinitializationData
   {
     ReinitializationData();
@@ -66,7 +66,7 @@ namespace MeltPoolDG::LevelSet
       bool use_spatially_constant_diffusion    = true;
       bool use_interface_movement_penalization = false;
 
-      double gradient_error_time_derivative_threshold = 1e-16;
+      number gradient_error_time_derivative_threshold = 1e-16;
     } reinitilization_DG_specific_data;
 
 
