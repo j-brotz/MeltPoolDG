@@ -20,10 +20,17 @@
     }
   },
   "compressible navier stokes": {
-    "dynamic viscosity": 0.0,
     "numerical flux type": "lax_friedrichs_modified",
     "time integration": {
       "type": "LSRK_stage_5_order_4"
+    },
+    "material": {
+      "gas": {
+        "dynamic viscosity": "0.0",
+        "equation of state": {
+          "type": "ideal_gas"
+        }
+      }
     },
     "fe": {
       "degree": "2",

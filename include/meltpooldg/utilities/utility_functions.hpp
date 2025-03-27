@@ -653,5 +653,82 @@ namespace MeltPoolDG
       return result;
     }
 
+    /**
+     * Helper function for the computation of a weighted average:
+     * weight_a * term_a + weight_b * term_b
+     */
+    template <typename TypeWeight, typename TypeTerm>
+    TypeTerm
+    calculate_arithmetic_phase_weighted_average(const TypeWeight &weight_a,
+                                                const TypeTerm   &term_a,
+                                                const TypeWeight &weight_b,
+                                                const TypeTerm   &term_b)
+    {
+      return weight_a * term_a + weight_b * term_b;
+    }
+
+    /**
+     * Contracts the given second order tensor with a vector, which results in a vector. Note that
+     * the second order tensor is provided as two nested first order tensors in this function.
+     *
+     * @param tensor Second order tensor of type
+     * 'dealii::Tensor<1, dim_1, dealii::Tensor<1, dim_2, dealii::VectorizedArray<number>>>'
+     * @param vector Vector of type 'dealii::Tensor<1, dim_2, dealii::VectorizedArray<number>>'
+     *
+     * @return Result of the contraction, i.e. result_i = tensor_ij * vector_j. The result has vector
+     * type 'dealii::Tensor<1, dim_1, dealii::VectorizedArray<number>>'.
+     *
+     * @ note The dimensions of the provided tensor and the vector have to match, i.e. the second
+     * basis of the tensor and the vector must have the same dimension @p dim_2.
+     */
+    template <int dim_1, int dim_2, typename number>
+    dealii::Tensor<1, dim_1, dealii::VectorizedArray<number>>
+    contract_tensor_with_vector(
+      const dealii::Tensor<1, dim_1, dealii::Tensor<1, dim_2, dealii::VectorizedArray<number>>>
+                                                                      &tensor,
+      const dealii::Tensor<1, dim_2, dealii::VectorizedArray<number>> &vector)
+    {
+      dealii::Tensor<1, dim_1, dealii::VectorizedArray<number>> result;
+
+      for (unsigned int i = 0; i < dim_1; ++i)
+        result[i] = tensor[i] * vector;
+
+      return result;
+    }
+
+    /**
+     * Contracts the average of two given second order tensors with a vector, which results in a
+     * vector. Note that the second order tensors are provided as two nested first order tensors in
+     * this function.
+     *
+     * @param tensor_1 First second order tensor of type
+     * 'dealii::Tensor<1, dim_1, dealii::Tensor<1, dim_2, dealii::VectorizedArray<number>>>'
+     * @param tensor_2 Second second order tensor of type
+     * 'dealii::Tensor<1, dim_1, dealii::Tensor<1, dim_2, dealii::VectorizedArray<number>>>'
+     * @param vector Vector of type 'dealii::Tensor<1, dim_2, dealii::VectorizedArray<number>>'
+     *
+     * @return Result of the contraction, i.e. result_i = 0.5 * (tensor_1_ij + tensor_2_ij) * vector_j.
+     * The result has vector type 'dealii::Tensor<1, dim_1, dealii::VectorizedArray<number>>'.
+     *
+     * @ note The dimensions of the provided tensors and the vector have to match, i.e. the second
+     * basis of the tensors and the vector must have the same dimension @p dim_2.
+     */
+    template <int dim_1, int dim_2, typename number>
+    dealii::Tensor<1, dim_1, dealii::VectorizedArray<number>>
+    contract_average_tensor_with_vector(
+      const dealii::Tensor<1, dim_1, dealii::Tensor<1, dim_2, dealii::VectorizedArray<number>>>
+        &tensor_1,
+      const dealii::Tensor<1, dim_1, dealii::Tensor<1, dim_2, dealii::VectorizedArray<number>>>
+                                                                      &tensor_2,
+      const dealii::Tensor<1, dim_2, dealii::VectorizedArray<number>> &vector)
+    {
+      dealii::Tensor<1, dim_1, dealii::VectorizedArray<number>> result;
+
+      for (unsigned int i = 0; i < dim_1; ++i)
+        result[i] = (tensor_1[i] + tensor_2[i]) * vector;
+
+      return 0.5 * result;
+    }
+
   } // namespace UtilityFunctions
 } // namespace MeltPoolDG

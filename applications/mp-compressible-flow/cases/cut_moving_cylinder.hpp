@@ -148,7 +148,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const override
     {
       InitialFlowField<dim> reference_values;
-      this->print_relative_norm(generic_data_out, reference_values, "Norm");
+      this->print_relative_norm(generic_data_out, reference_values, "norm");
     }
 
   private:

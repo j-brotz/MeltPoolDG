@@ -11,6 +11,8 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
+#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -50,7 +52,37 @@ namespace MeltPoolDG::Flow
     update_boundary_conditions(number time);
 
     /**
-     * Set a specifc boundary condition and store it internally.
+     * Set the boundary conditions by internally calling the function set_boundary_condition for the
+     * currently implemented boundary types.
+     *
+     * @param simulation_case Pointer to the considered simulation case class.
+     * @param operation_name String for the name of the considered operation.
+     */
+    void
+    set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
+                            const std::string                              &operation_name)
+    {
+      set_boundary_condition(MeltPoolDG::Flow::CompressibleBoundaryConditionType::inflow,
+                             simulation_case->get_boundary_condition("inflow", operation_name));
+
+      set_boundary_condition(
+        MeltPoolDG::Flow::CompressibleBoundaryConditionType::subsonic_outflow_fixed_pressure,
+        simulation_case->get_boundary_condition("outflow_fixed_pressure", operation_name));
+
+      set_boundary_condition(
+        MeltPoolDG::Flow::CompressibleBoundaryConditionType::subsonic_outflow_fixed_energy,
+        simulation_case->get_boundary_condition("outflow_fixed_energy", operation_name));
+
+      set_boundary_condition(MeltPoolDG::Flow::CompressibleBoundaryConditionType::slip_wall,
+                             simulation_case->get_boundary_condition("slip_wall", operation_name));
+
+      set_boundary_condition(MeltPoolDG::Flow::CompressibleBoundaryConditionType::no_slip_wall,
+                             simulation_case->get_boundary_condition("no_slip_wall",
+                                                                     operation_name));
+    }
+
+    /**
+     * Set a specific boundary condition and store it internally.
      *
      * @param boundary_condition Type of the boundary condition.
      * @param boundary_condition_function Map containing the boundary id at which the condition
@@ -131,7 +163,10 @@ namespace MeltPoolDG::Flow
      * @param boundary_id ID of the boundary.
      * @param w_m Conserved variables on the inner face.
      * @param grad_w_m Gradient of the conserved variables on the inner face.
-     * @param gamma Heat capacity ratio of the flow field.
+     * @param flow_data Collection of parameters required by the compressible Navier-Stokes
+     * operator.
+     * @param is_gas_phase Boolean variable to indicate if the gas phase (default for single-phase
+     * case) or the liquid phase is considered.
      *
      * @return Tuple containing the corresponding values on the outer face. The first value being
      * the primary variables, the second the gradient of the primary variables.
@@ -143,7 +178,8 @@ namespace MeltPoolDG::Flow
       dealii::types::boundary_id                                     boundary_id,
       const ConservedVariablesType                                  &w_m,
       const ConservedVariablesGradType                              &grad_w_m,
-      number                                                         gamma) const;
+      const CompressibleFlowData<number>                            &flow_data,
+      bool                                                           is_gas_phase = true) const;
 
     /**
      * This function sets the corresponding values on the fictional outer face if the face is
@@ -151,7 +187,7 @@ namespace MeltPoolDG::Flow
      * as their linearized version required when for example computing the Jacobian in an implicit
      * scheme.
      *
-     * @param q_point Coordinates of the quadratiure point.
+     * @param q_point Coordinates of the quadrature point.
      * @param normal Outer facing normal vector.
      * @param boundary_id ID of the current boundary.
      * @param w_m Primary variables on the inner face.

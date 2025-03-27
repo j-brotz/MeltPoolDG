@@ -20,13 +20,11 @@
     }
   },
   "compressible navier stokes": {
-    "dynamic viscosity": "0.1",
     "numerical flux type": "lax_friedrichs_modified",
     "courant number": "0.2",
     "viscous courant number": "0.05",
     "use cfl criteria": "true",
     "gravity constant": "0.0",
-    "reference density": "0.7",
     "domain representation type": "cut",
     "cut": {
       "two phase": "false",
@@ -46,6 +44,15 @@
         "max iterations": "10000",
         "rel tolerance": "1e-7",
         "abs tolerance": "1e-20"
+      }
+    },
+    "material": {
+      "gas": {
+        "dynamic viscosity": "0.1",
+        "reference density": "0.7",
+        "equation of state": {
+          "type": "ideal_gas"
+        }
       }
     },
     "fe": {

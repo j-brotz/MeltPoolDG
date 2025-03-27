@@ -205,6 +205,12 @@ namespace MeltPoolDG
     const ConditionalOStream
     get_pcout(const unsigned int level = 1) const;
 
+    unsigned int
+    get_cell_range_category(const std::pair<unsigned, unsigned> &cell_range) const;
+
+    std::pair<unsigned int, unsigned int>
+    get_face_range_category(const std::pair<unsigned, unsigned> &face_range) const;
+
     bool
     is_hex_mesh(const unsigned int dof_idx = 0) const;
 

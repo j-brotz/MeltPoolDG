@@ -38,6 +38,7 @@
 #include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <memory>
+#include <variant>
 
 namespace MeltPoolDG::Flow
 {
@@ -47,6 +48,9 @@ namespace MeltPoolDG::Flow
     using VectorType            = dealii::LinearAlgebra::distributed::Vector<number>;
     using MappingInfoType       = CutUtil::MappingInfoType<dim, number>;
     using MappingInfoVectorType = CutUtil::MappingInfoVectorType<dim, number>;
+
+    using CutFlowOperatorVariant = std::variant<CutDGCompressibleFlowOperator<dim, number, true>,
+                                                CutDGCompressibleFlowOperator<dim, number, false>>;
 
   public:
     /**
@@ -63,7 +67,7 @@ namespace MeltPoolDG::Flow
      */
     CutDGCompressibleFlowOperation(
       const ScratchData<dim>                                     &scratch_data_in,
-      const CompressibleFlowData                                 &comp_flow_data_in,
+      const CompressibleFlowData<number>                         &comp_flow_data_in,
       const TimeIterator<number>                                 &time_iterator_in,
       const std::function<void(const dealii::DoFHandler<dim> &)> &reinit_matrix_free_in,
       unsigned int                                                comp_flow_dof_idx_in  = 0,
@@ -141,20 +145,17 @@ namespace MeltPoolDG::Flow
     set_unfitted_object_velocity(std::shared_ptr<Function<dim>> &velocity_function);
 
     /**
-     * Set the (standard compressible flow, i.e. non-cut specific) boundary condition. This funciton
-     * takes to parameters. One defines the tyoe of the boundary condition and the other one on the
-     * one hand defines the boundary (by the boundary id) at whcih the boundary condition is applied
-     * and optionally a corresponding prescribed function for the boundary condition.
+     * Set the (standard compressible flow, i.e. non-cut specific) boundary conditions.
      *
-     * @param boundary_condition Type of the boundary condition.
-     * @param boundary_condition_function A map consisting of the boundary id and the corresponding
-     * boundary codnition function.
+     * @param simulation_case Pointer to the considered simulation case class.
+     * @param operation_name String for the name of the considered operation.
+     *
+     * @note The function simply passes the parameters to the set_boundary_conditions function in the
+     * CompressibleFlowBoundaryConditions object.
      */
     void
-    set_boundary_condition(
-      CompressibleBoundaryConditionType boundary_condition,
-      std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-        boundary_condition_function);
+    set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
+                            const std::string                              &operation_name);
 
     /**
      * Getter functions.
@@ -167,6 +168,26 @@ namespace MeltPoolDG::Flow
 
     const dealii::DoFHandler<dim> &
     get_dof_handler() const;
+
+    typename CutDGCompressibleFlowOperation<dim, number>::
+      CutFlowOperatorVariant static create_cut_flow_operator_variant(
+        bool                                      is_viscous,
+        CompressibleFlowScratchData<dim, number> &flow_scratch_data,
+        const MappingInfoType                    &mapping_info_surface_in,
+        const MappingInfoVectorType              &mapping_info_cells_in,
+        const MappingInfoVectorType              &mapping_info_faces_in)
+    {
+      if (is_viscous)
+        return CutDGCompressibleFlowOperator<dim, number, true>(flow_scratch_data,
+                                                                mapping_info_surface_in,
+                                                                mapping_info_cells_in,
+                                                                mapping_info_faces_in);
+      else
+        return CutDGCompressibleFlowOperator<dim, number, false>(flow_scratch_data,
+                                                                 mapping_info_surface_in,
+                                                                 mapping_info_cells_in,
+                                                                 mapping_info_faces_in);
+    }
 
   private:
     CompressibleFlowScratchData<dim, number> flow_scratch_data;
@@ -191,7 +212,7 @@ namespace MeltPoolDG::Flow
     MappingInfoVectorType mapping_info_cells;
     MappingInfoVectorType mapping_info_faces;
 
-    CutDGCompressibleFlowOperator<dim, number> cut_flow_operator;
+    CutFlowOperatorVariant cut_flow_operator;
 
     /**
      * Adapt the dof layout and solution vector to a new interface position, which is defined by the

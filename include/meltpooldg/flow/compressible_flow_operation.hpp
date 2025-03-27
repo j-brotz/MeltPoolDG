@@ -95,22 +95,18 @@ namespace MeltPoolDG::Flow
     }
 
     /**
-     * Set the boundary condition. This funciton takes to parameters. One defines the tyoe of the
-     * boundary condition and the other one on the one hand defines the boundary (by the boundary
-     * id) at whcih the boundary condition is applied and optionally a corresponding prescribed
-     * function for the boundary condition.
+     * Set the boundary conditions.
      *
-     * @param boundary_condition Type of the boundary condition.
-     * @param boundary_condition_function A map consisting of the boundary id and the corresponding
-     * boundary codnition function.
+     * @param simulation_case Pointer to the considered simulation case class.
+     * @param operation_name String for the name of the considered operation.
+     *
+     * @note The function simply passes the parameters to the corresponding operation function.
      */
     void
-    set_boundary_condition(
-      const CompressibleBoundaryConditionType boundary_condition,
-      std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-        boundary_condition_function)
+    set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
+                            const std::string                              &operation_name)
     {
-      operation_pimpl->set_boundary_condition(boundary_condition, boundary_condition_function);
+      operation_pimpl->set_boundary_conditions(simulation_case, operation_name);
     }
 
     /**
@@ -153,18 +149,46 @@ namespace MeltPoolDG::Flow
     void
     attach_output_vectors(GenericDataOut<dim, double> &data_out) const
     {
-      std::vector<std::string> names;
-      names.emplace_back("density");
-      for (unsigned int d = 0; d < dim; ++d)
-        names.emplace_back("momentum");
+      // check, if single-phase or two-phase case is considered
+      const auto &dof_handler = operation_pimpl->get_dof_handler();
+      const bool  two_phase   = dof_handler.get_fe_collection().n_components() / (dim + 2) == 2;
 
-      names.emplace_back("energy");
+      std::vector<std::string> names;
+
+      if (not two_phase)
+        {
+          names.emplace_back("density");
+          for (unsigned int d = 0; d < dim; ++d)
+            names.emplace_back("momentum");
+          names.emplace_back("energy");
+        }
+      else
+        {
+          names.emplace_back("density_liquid");
+          for (unsigned int d = 0; d < dim; ++d)
+            names.emplace_back("momentum_liquid");
+          names.emplace_back("energy_liquid");
+
+          names.emplace_back("density_gas");
+          for (unsigned int d = 0; d < dim; ++d)
+            names.emplace_back("momentum_gas");
+          names.emplace_back("energy_gas");
+        }
 
       std::vector<DataComponentInterpretation::DataComponentInterpretation> interpretation;
       interpretation.push_back(DataComponentInterpretation::component_is_scalar);
       for (unsigned int d = 0; d < dim; ++d)
         interpretation.push_back(DataComponentInterpretation::component_is_part_of_vector);
       interpretation.push_back(DataComponentInterpretation::component_is_scalar);
+
+      // add entries for two-phase case
+      if (two_phase)
+        {
+          interpretation.push_back(DataComponentInterpretation::component_is_scalar);
+          for (unsigned int d = 0; d < dim; ++d)
+            interpretation.push_back(DataComponentInterpretation::component_is_part_of_vector);
+          interpretation.push_back(DataComponentInterpretation::component_is_scalar);
+        }
 
       data_out.add_data_vector(operation_pimpl->get_dof_handler(),
                                operation_pimpl->get_solution(),
@@ -214,10 +238,8 @@ namespace MeltPoolDG::Flow
       set_initial_condition(const Function<dim> &function) = 0;
 
       virtual void
-      set_boundary_condition(
-        CompressibleBoundaryConditionType boundary_condition,
-        std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-          boundary_condition_function) = 0;
+      set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
+                              const std::string                              &operation_name) = 0;
 
       virtual void
       set_body_force(std::unique_ptr<Function<dim>> body_force_in) = 0;
@@ -271,12 +293,10 @@ namespace MeltPoolDG::Flow
       }
 
       void
-      set_boundary_condition(
-        const CompressibleBoundaryConditionType boundary_condition,
-        std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-          boundary_condition_function) override
+      set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
+                              const std::string &operation_name) override
       {
-        operation->set_boundary_condition(boundary_condition, boundary_condition_function);
+        operation->set_boundary_conditions(simulation_case, operation_name);
       }
 
       void

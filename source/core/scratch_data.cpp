@@ -513,6 +513,22 @@ namespace MeltPoolDG
   }
 
   template <int dim, int spacedim, typename number>
+  unsigned int
+  ScratchData<dim, spacedim, number>::get_cell_range_category(
+    const std::pair<unsigned, unsigned> &cell_range) const
+  {
+    return this->matrix_free.get_cell_range_category(cell_range);
+  }
+
+  template <int dim, int spacedim, typename number>
+  std::pair<unsigned int, unsigned int>
+  ScratchData<dim, spacedim, number>::get_face_range_category(
+    const std::pair<unsigned, unsigned> &face_range) const
+  {
+    return this->matrix_free.get_face_range_category(face_range);
+  }
+
+  template <int dim, int spacedim, typename number>
   bool
   ScratchData<dim, spacedim, number>::is_hex_mesh(const unsigned int dof_idx) const
   {

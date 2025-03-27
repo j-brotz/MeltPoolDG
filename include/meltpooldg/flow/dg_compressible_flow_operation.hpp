@@ -46,10 +46,10 @@ namespace MeltPoolDG::Flow
      * @param flow_dof_idx Index of the used dof handler in @p scratch_data_in.
      * @param flow_quad_idx Index of the used quadrature object in @p scratch_data_in.
      */
-    DGCompressibleFlowOperation(const ScratchData<dim>     &scratch_data,
-                                const CompressibleFlowData &flow_data,
-                                unsigned int                flow_dof_idx  = 0,
-                                unsigned int                flow_quad_idx = 0);
+    DGCompressibleFlowOperation(const ScratchData<dim>             &scratch_data,
+                                const CompressibleFlowData<number> &flow_data,
+                                unsigned int                        flow_dof_idx  = 0,
+                                unsigned int                        flow_quad_idx = 0);
 
     /**
      * Set up the required internal data structures. After a call to this function the solve()
@@ -76,20 +76,17 @@ namespace MeltPoolDG::Flow
     distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const;
 
     /**
-     * Set the boundary condition. This funciton takes to parameters. One defines the tyoe of the
-     * boundary condition and the other one on the one hand defines the boundary (by the boundary
-     * id) at whcih the boundary condition is applied and optionally a corresponding prescribed
-     * function for the boundary condition.
+     * Set the boundary conditions.
      *
-     * @param boundary_condition Type of the boundary condition.
-     * @param boundary_condition_function A map consisting of the boundary id and the corresponding
-     * boundary codnition function.
+     * @param simulation_case Pointer to the considered simulation case class.
+     * @param operation_name String for the name of the considered operation.
+     *
+     * @note The function simply passes the parameters to the set_boundary_conditions function in the
+     * CompressibleFlowBoundaryConditions class.
      */
     void
-    set_boundary_condition(
-      CompressibleBoundaryConditionType boundary_condition,
-      std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-        boundary_condition_function);
+    set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
+                            const std::string                              &operation_name);
 
     /**
      * Set a body force, e.g. gravity, specified by the passed function.

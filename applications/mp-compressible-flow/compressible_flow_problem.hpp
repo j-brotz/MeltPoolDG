@@ -64,7 +64,7 @@ namespace MeltPoolDG::Flow
     void
     compute_level_set();
 
-    std::unique_ptr<CaseType> simulation_case;
+    std::shared_ptr<CaseType> simulation_case;
 
     dealii::DoFHandler<dim>                              dof_handler;
     dealii::DoFHandler<dim>                              dof_handler_level_set;

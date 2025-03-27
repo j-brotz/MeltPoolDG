@@ -6,11 +6,10 @@
 #include <meltpooldg/flow/compressible_flow_convective_kernels.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Flow
 {
-  template <unsigned int dim, typename number = double>
+  template <unsigned int dim, typename number = double, bool is_viscous = true>
   class CutDGCompressibleFlowOperator
   {
     using VectorType            = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -122,12 +121,6 @@ namespace MeltPoolDG::Flow
     void
     vmult(VectorType &dst, const VectorType &src) const;
 
-    /**
-     * Function which sets the inverse time step size.
-     */
-    void
-    compute_inverse_time_step(const number &time_step);
-
   private:
     /**
      * This function sets the corresponding values on the fictional outer face if the face is
@@ -161,7 +154,7 @@ namespace MeltPoolDG::Flow
     dealii::FESystem<dim> fe_point_temp;
     const unsigned int    n_dofs_per_cell;
 
-    number inv_time_step;
+    mutable number inv_time_step = 0.;
 
     // Function, which describes the velocity of the unfitted object
     std::shared_ptr<dealii::Function<dim>> unfitted_object_velocity;

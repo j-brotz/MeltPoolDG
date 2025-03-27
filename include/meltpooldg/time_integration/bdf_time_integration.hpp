@@ -205,7 +205,7 @@ namespace MeltPoolDG
 
       // matrix type wrapper for the jacobian
       std::function<void(VectorType &, const VectorType &)> jacobian_multiplication =
-        MELT_POOL_DG_LAMBDA_WRAPPER(pde_operator.apply_jacobian);
+        MPDG_LAMBDA_WRAPPER(pde_operator.apply_jacobian);
       MatrixTypeObject<VectorType> jacobian(jacobian_multiplication);
 
       nonlinear_solver.norm_of_solution_vector =
