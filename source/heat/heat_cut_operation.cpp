@@ -420,7 +420,8 @@ namespace MeltPoolDG::Heat
       distance,
       normal_vector,
       scratch_data.get_remote_point_evaluation(heat_cut_no_bc_dof_idx),
-      nearest_point_data);
+      nearest_point_data
+      /*, TODO timer output */);
     scratch_data.initialize_dof_vector(interface_temperature, heat_cont_no_bc_dof_idx);
   }
 
