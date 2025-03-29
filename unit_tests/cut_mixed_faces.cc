@@ -24,7 +24,6 @@
 //            phi                   |__|__|_|_|__|
 //                                  gas     |   liquid
 
-#include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/function_signed_distance.h>
 
 #include <deal.II/distributed/tria.h>
@@ -90,7 +89,7 @@ public:
   };
 
   void
-  initialize_vector(VectorType &vec, const DoFHandler<dim> &dof_handler)
+  initialize_vector(VectorType &vec)
   {
     data.initialize_dof_vector(vec);
   };
@@ -98,11 +97,11 @@ public:
   void
   vmult(VectorType &vec) const
   {
-    typedef std::function<void(const MatrixFree<dim, Number> &,
-                               LinearAlgebra::distributed::Vector<Number>       &dst,
-                               const LinearAlgebra::distributed::Vector<Number> &src,
-                               const std::pair<unsigned int, unsigned int> &)>
-      local_applier_type;
+    using local_applier_type =
+      std::function<void(const MatrixFree<dim, Number> &,
+                         LinearAlgebra::distributed::Vector<Number> &,
+                         const LinearAlgebra::distributed::Vector<Number> &,
+                         const std::pair<unsigned int, unsigned int> &)>;
 
     local_applier_type cell          = MPDG_LAMBDA_WRAPPER(local_apply_cell);
     local_applier_type face          = MPDG_LAMBDA_WRAPPER(local_apply_face);
@@ -119,15 +118,15 @@ public:
 
   void
   local_apply_cell(const dealii::MatrixFree<dim, Number> &,
-                   VectorType                          &dst,
-                   const VectorType                    &src,
-                   const std::pair<unsigned, unsigned> &cell_range) const
+                   VectorType &,
+                   const VectorType &,
+                   const std::pair<unsigned, unsigned> &) const
   {}
 
   void
   local_apply_face(const dealii::MatrixFree<dim, Number> &,
-                   VectorType                          &dst,
-                   const VectorType                    &src,
+                   VectorType &,
+                   const VectorType &,
                    const std::pair<unsigned, unsigned> &face_range) const
   {
     const auto              face_category = data.get_face_range_category(face_range);
@@ -164,9 +163,9 @@ public:
 
   void
   local_apply_boundary_face(const dealii::MatrixFree<dim, Number> &,
-                            VectorType                          &dst,
-                            const VectorType                    &src,
-                            const std::pair<unsigned, unsigned> &boundary_face_range) const
+                            VectorType &,
+                            const VectorType &,
+                            const std::pair<unsigned, unsigned> &) const
   {}
 
   // counters
@@ -194,10 +193,9 @@ template <int dim, bool is_dg, int fe_degree, bool liquid_phase_is_left>
 void
 test()
 {
-  ConditionalOStream pcout(std::cout, (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0));
-  pcout << std::endl;
-  pcout << "Test case with liquid_phase_is_left=" << liquid_phase_is_left << ", Dim=" << dim << ":"
-        << std::endl;
+  std::cout << std::endl;
+  std::cout << "Test case with liquid_phase_is_left=" << liquid_phase_is_left << ", Dim=" << dim
+            << ":" << std::endl;
 
   // create mesh with 4 elements
   Triangulation<dim> tria;
@@ -230,9 +228,9 @@ test()
   DoFHandler<dim> dof_handler(tria);
   CutUtil::set_fe_index<dim>(dof_handler, mesh_classifier, false);
 
-  FE_Nothing<dim>                                                fe_n;
-  hp::FECollection<dim>                                          fe_collection;
-  typename std::conditional<is_dg, FE_DGQ<dim>, FE_Q<dim>>::type fe_q(fe_degree);
+  FE_Nothing<dim>                                   fe_n;
+  hp::FECollection<dim>                             fe_collection;
+  std::conditional_t<is_dg, FE_DGQ<dim>, FE_Q<dim>> fe_q(fe_degree);
 
   fe_collection.push_back(FESystem<dim>(fe_q, 1, fe_n, 1)); // liquid
   fe_collection.push_back(FESystem<dim>(fe_q, 1, fe_q, 1)); // intersected
@@ -247,7 +245,7 @@ test()
 
   // initialize solution vector
   VectorType solution;
-  test_operator.initialize_vector(solution, dof_handler);
+  test_operator.initialize_vector(solution);
   solution = 1.;
 
   // Check mixed face categories
@@ -285,7 +283,7 @@ test()
 }
 
 int
-main(int argc, char *argv[])
+main()
 {
   ///////// 1D /////////
 
