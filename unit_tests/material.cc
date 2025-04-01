@@ -12,7 +12,7 @@ using namespace dealii;
 const auto setw = std::setw(8);
 
 void
-print_material_parameter_values(const MaterialParameterValues<double> &values)
+print_material_parameter_values(const MaterialParameterValues<double, double> &values)
 {
   std::cout << setw << values.thermal_conductivity << "|" << setw << values.specific_heat_capacity
             << "|" << setw << values.density << "|" << setw << values.dynamic_viscosity << "|"
@@ -23,7 +23,8 @@ print_material_parameter_values(const MaterialParameterValues<double> &values)
 }
 
 void
-print_material_parameter_values(const MaterialParameterValues<VectorizedArray<double>> &values)
+print_material_parameter_values(
+  const MaterialParameterValues<VectorizedArray<double>, double> &values)
 {
   std::cout << setw << values.thermal_conductivity[0] << "|" << setw
             << values.specific_heat_capacity[0] << "|" << setw << values.density[0] << "|" << setw

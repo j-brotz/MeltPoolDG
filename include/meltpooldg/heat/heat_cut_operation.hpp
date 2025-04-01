@@ -56,8 +56,8 @@ namespace MeltPoolDG::Heat
     // ScratchData's Quadrature index
     const unsigned int heat_quad_idx;
 
-    TimeIntegration::SolutionHistory<VectorType> solution_history;
-    VectorType                                   interface_temperature;
+    TimeIntegration::SolutionHistory<VectorType, number> solution_history;
+    VectorType                                           interface_temperature;
     // TODO: note that this is not jet implemented in the operator
     VectorType volumetric_heat_source;
 

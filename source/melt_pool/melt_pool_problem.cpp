@@ -1471,13 +1471,13 @@ namespace MeltPoolDG::MeltPool
     scratch_data->create_partitioning();
 
     // make constraints
-    Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
+    Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim, double>(
       *scratch_data,
       base_in->get_boundary_condition("dirichlet", "level_set"),
       base_in->get_periodic_bc(),
       ls_dof_idx,
       ls_hanging_nodes_dof_idx);
-    Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
+    Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim, double>(
       *scratch_data,
       base_in->get_boundary_condition("dirichlet", "level_set"),
       base_in->get_periodic_bc(),
@@ -1521,10 +1521,10 @@ namespace MeltPoolDG::MeltPool
       {
         {
           ScopedName sc("mp::cells");
-          CellMonitor::add_info(sc,
-                                scratch_data->get_triangulation().n_global_active_cells(),
-                                scratch_data->get_min_cell_size(),
-                                scratch_data->get_max_cell_size());
+          CellMonitor<double>::add_info(sc,
+                                        scratch_data->get_triangulation().n_global_active_cells(),
+                                        scratch_data->get_min_cell_size(),
+                                        scratch_data->get_max_cell_size());
         }
 
         level_set_operation->reinit();
@@ -1564,10 +1564,10 @@ namespace MeltPoolDG::MeltPool
     // print mesh information
     {
       ScopedName sc("mp::cells");
-      CellMonitor::add_info(sc,
-                            scratch_data->get_triangulation().n_global_active_cells(),
-                            scratch_data->get_min_cell_size(),
-                            scratch_data->get_max_cell_size());
+      CellMonitor<double>::add_info(sc,
+                                    scratch_data->get_triangulation().n_global_active_cells(),
+                                    scratch_data->get_min_cell_size(),
+                                    scratch_data->get_max_cell_size());
     }
   }
 

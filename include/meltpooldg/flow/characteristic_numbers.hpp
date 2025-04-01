@@ -12,10 +12,10 @@ namespace MeltPoolDG::Flow
   class CharacteristicNumbers
   {
   private:
-    const MaterialParameterValues<number> &material;
+    const MaterialParameterValues<number, number> &material;
 
   public:
-    CharacteristicNumbers(const MaterialParameterValues<number> &material_phase);
+    CharacteristicNumbers(const MaterialParameterValues<number, number> &material_phase);
 
     /**
      * Compute the Mach number Ma

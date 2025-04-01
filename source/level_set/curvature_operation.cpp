@@ -128,13 +128,13 @@ namespace MeltPoolDG::LevelSet
       scratch_data.get_pcout(std::max(curvature_data.verbosity_level, verbosity_l2_norm));
 
 
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<number>(
       pcout,
       [&]() -> number {
-        return VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
-                                              scratch_data,
-                                              curv_dof_idx,
-                                              curv_quad_idx);
+        return VectorTools::compute_norm<dim, number>(solution_history.get_current_solution(),
+                                                      scratch_data,
+                                                      curv_dof_idx,
+                                                      curv_quad_idx);
       },
       "curvature",
       "curvature",
@@ -145,7 +145,7 @@ namespace MeltPoolDG::LevelSet
                         "     * CG: i = " + std::to_string(iter),
                         "curvature");
 
-    IterationMonitor::add_linear_iterations(sc, iter);
+    IterationMonitor<number>::add_linear_iterations(sc, iter);
   }
 
   template <int dim, typename number>

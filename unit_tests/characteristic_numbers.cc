@@ -8,7 +8,7 @@ using namespace MeltPoolDG;
 int
 main()
 {
-  MaterialParameterValues<double> material_data;
+  MaterialParameterValues<double, double> material_data;
 
   // parameter values taken from Meier et al. (2020)
   material_data.thermal_conductivity   = 2.4e-6;

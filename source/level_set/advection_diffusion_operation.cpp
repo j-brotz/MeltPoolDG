@@ -103,7 +103,7 @@ namespace MeltPoolDG::LevelSet
 
     if (this->advec_diff_data.enable_time_dependent_bc)
       {
-        MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
+        MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim, number>(
           const_cast<ScratchData<dim, dim, number> &>(scratch_data),
           dirichlet_bc,
           advec_diff_dof_idx,
@@ -182,13 +182,13 @@ namespace MeltPoolDG::LevelSet
     if (solution_update_ghosts)
       solution_history.get_recent_old_solution().update_ghost_values();
 
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(2),
       [&]() -> number {
-        return VectorTools::compute_norm<dim>(advection_velocity,
-                                              scratch_data,
-                                              velocity_dof_idx,
-                                              advec_diff_quad_idx);
+        return VectorTools::compute_norm<dim, number>(advection_velocity,
+                                                      scratch_data,
+                                                      velocity_dof_idx,
+                                                      advec_diff_quad_idx);
       },
       "velocity",
       "advection_diffusion");
@@ -257,7 +257,7 @@ namespace MeltPoolDG::LevelSet
       .distribute(solution_history.get_current_solution());
 
 
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(3),
       [&]() -> number { return advec_diff_operator->get_system_matrix().frobenius_norm(); },
       "matrix",
@@ -265,14 +265,14 @@ namespace MeltPoolDG::LevelSet
       6 /*precision*/,
       "F");
 
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(3),
       [&]() -> number { return rhs.l2_norm(); },
       "rhs",
       "advection_diffusion",
       6 /*precision*/,
       "l2");
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(3),
       [&]() -> number { return solution_history.get_current_solution().l2_norm(); },
       "src",
@@ -280,13 +280,14 @@ namespace MeltPoolDG::LevelSet
       6 /*precision*/,
       "l2");
 
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(1),
       [&]() -> number {
-        return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
-                                                          scratch_data,
-                                                          advec_diff_dof_idx,
-                                                          advec_diff_quad_idx);
+        return MeltPoolDG::VectorTools::compute_norm<dim, number>(
+          solution_history.get_current_solution(),
+          scratch_data,
+          advec_diff_dof_idx,
+          advec_diff_quad_idx);
       },
       "advected field",
       "advection_diffusion",
@@ -308,7 +309,7 @@ namespace MeltPoolDG::LevelSet
         this->finish_time_advance();
       }
 
-    IterationMonitor::add_linear_iterations(sc, iter);
+    IterationMonitor<number>::add_linear_iterations(sc, iter);
 
     // update ghost values of solution
     solution_history.get_current_solution().update_ghost_values();

@@ -12,7 +12,7 @@ namespace MeltPoolDG
   /*
    *  This class provides a simple time stepping routine.
    */
-  template <typename number = double>
+  template <typename number>
   class TimeIterator
   {
   public:

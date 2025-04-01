@@ -107,10 +107,8 @@ namespace MeltPoolDG::Heat
     };
 
     newton.norm_of_solution_vector = [this]() -> number {
-      return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
-                                                        scratch_data,
-                                                        heat_dof_idx,
-                                                        heat_quad_idx);
+      return MeltPoolDG::VectorTools::compute_norm<dim, number>(
+        solution_history.get_current_solution(), scratch_data, heat_dof_idx, heat_quad_idx);
     };
   }
 
@@ -152,7 +150,7 @@ namespace MeltPoolDG::Heat
   HeatDiffuseOperation<dim, number>::setup_constraints(
     ScratchData<dim, dim, number> &mutable_scratch_data) const
   {
-    Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
+    Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim, number>(
       mutable_scratch_data, dirichlet_bc, periodic_bc, heat_dof_idx, heat_no_bc_dof_idx);
   }
 
@@ -168,7 +166,7 @@ namespace MeltPoolDG::Heat
                                      solution_history.get_current_solution());
 
     if (heat_data.enable_time_dependent_bc)
-      MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
+      MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim, number>(
         const_cast<ScratchData<dim> &>(scratch_data),
         dirichlet_bc,
         heat_dof_idx,
@@ -184,7 +182,7 @@ namespace MeltPoolDG::Heat
   {
     {
       ScopedName sc("heat::n_dofs");
-      DoFMonitor::add_n_dofs(sc, scratch_data.get_dof_handler(heat_dof_idx).n_dofs());
+      DoFMonitor<number>::add_n_dofs(sc, scratch_data.get_dof_handler(heat_dof_idx).n_dofs());
     }
     scratch_data.initialize_dof_vector(solution_history.get_current_solution(), heat_dof_idx);
     solution_history.apply_old(
@@ -209,11 +207,11 @@ namespace MeltPoolDG::Heat
 
     if (heat_data.enable_time_dependent_bc)
       {
-        Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(const_cast<ScratchData<dim> &>(
-                                                                    scratch_data),
-                                                                  dirichlet_bc,
-                                                                  heat_dof_idx,
-                                                                  heat_no_bc_dof_idx);
+        Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim, number>(
+          const_cast<ScratchData<dim> &>(scratch_data),
+          dirichlet_bc,
+          heat_dof_idx,
+          heat_no_bc_dof_idx);
       }
 
     if (not predictor)

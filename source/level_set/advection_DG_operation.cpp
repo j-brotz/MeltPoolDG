@@ -187,13 +187,14 @@ namespace MeltPoolDG::LevelSet
 
     solution_history.commit_old_solutions();
 
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(1),
       [&]() -> number {
-        return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
-                                                          scratch_data,
-                                                          advec_diff_dof_idx,
-                                                          advec_diff_quad_idx);
+        return MeltPoolDG::VectorTools::compute_norm<dim, number>(
+          solution_history.get_current_solution(),
+          scratch_data,
+          advec_diff_dof_idx,
+          advec_diff_quad_idx);
       },
       "advected field",
       "advection_diffusion",

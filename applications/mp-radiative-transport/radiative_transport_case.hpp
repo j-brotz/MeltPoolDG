@@ -50,7 +50,7 @@ namespace MeltPoolDG::RadiativeTransport
   public:
     BaseData                         base;
     TimeSteppingData<number>         time_stepping;
-    AdaptiveMeshingData              amr;
+    AdaptiveMeshingData<number>      amr;
     RadiativeTransportData<number>   rad_trans;
     Heat::LaserData<number>          laser;
     OutputData<number>               output;

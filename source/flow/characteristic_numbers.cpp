@@ -8,7 +8,7 @@ namespace MeltPoolDG::Flow
 {
   template <typename number>
   CharacteristicNumbers<number>::CharacteristicNumbers(
-    const MaterialParameterValues<number> &material_in)
+    const MaterialParameterValues<number, number> &material_in)
     : material(material_in)
   {}
 

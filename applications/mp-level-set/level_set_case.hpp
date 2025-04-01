@@ -57,7 +57,7 @@ namespace MeltPoolDG::LevelSet
   public:
     BaseData                             base;
     TimeSteppingData<number>             time_stepping;
-    AdaptiveMeshingData                  amr;
+    AdaptiveMeshingData<number>          amr;
     LevelSetData<number>                 ls;
     OutputData<number>                   output;
     Profiling::ProfilingData<number>     profiling;

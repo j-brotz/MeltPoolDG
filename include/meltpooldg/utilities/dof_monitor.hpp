@@ -4,6 +4,7 @@
 
 namespace MeltPoolDG
 {
+  template <typename number>
   class DoFMonitor
   {
   private:
@@ -52,7 +53,7 @@ namespace MeltPoolDG
           table.add_value("label", entry.first);
           table.add_value("n_calls", entry.second.n_calls);
           table.add_value("dofs_avg",
-                          static_cast<double>(entry.second.dofs_accumulated) /
+                          static_cast<number>(entry.second.dofs_accumulated) /
                             entry.second.n_calls);
           table.add_value("dofs_min", entry.second.dofs_min);
           table.add_value("dofs_max", entry.second.dofs_max);

@@ -4,6 +4,7 @@
 
 namespace MeltPoolDG
 {
+  template <typename number>
   class IterationMonitor
   {
   private:
@@ -52,7 +53,7 @@ namespace MeltPoolDG
           table.add_value("label", entry.first);
           table.add_value("n_calls", entry.second.n_calls);
           table.add_value("iterations_avg",
-                          static_cast<double>(entry.second.iterations_accumulated) /
+                          static_cast<number>(entry.second.iterations_accumulated) /
                             entry.second.n_calls);
           table.add_value("iterations_min", entry.second.iterations_min);
           table.add_value("iterations_max", entry.second.iterations_max);

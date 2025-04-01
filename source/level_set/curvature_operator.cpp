@@ -21,9 +21,9 @@ namespace MeltPoolDG::LevelSet
     , curv_dof_idx(curv_dof_idx_in)
     , curv_quad_idx(curv_quad_idx_in)
     , normal_dof_idx(normal_dof_idx_in)
-    , tolerance_normal_vector(
-        UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
-                                                              scratch_data.get_mapping()))
+    , tolerance_normal_vector(UtilityFunctions::compute_numerical_zero_of_norm<dim, number>(
+        scratch_data.get_triangulation(),
+        scratch_data.get_mapping()))
     , ls_dof_idx(ls_dof_idx_in)
     , solution_level_set(solution_level_set_in)
 

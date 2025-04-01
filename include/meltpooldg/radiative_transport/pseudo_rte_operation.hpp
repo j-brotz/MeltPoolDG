@@ -39,7 +39,7 @@ namespace MeltPoolDG::RadiativeTransport
 
     std::unique_ptr<PseudoRTEOperator<dim, number>> pseudo_rte_operator;
 
-    TimeIntegration::SolutionHistory<VectorType> solution_history;
+    TimeIntegration::SolutionHistory<VectorType, number> solution_history;
 
     TimeIterator<number> pseudo_time_iterator;
 

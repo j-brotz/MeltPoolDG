@@ -14,13 +14,11 @@
 
 namespace TimeIntegration
 {
-  using namespace dealii;
-
-  using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
-
-  template <typename VectorType>
+  template <typename VectorType, typename number>
   class SolutionHistory
   {
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
+
   public:
     SolutionHistory() = default;
 
@@ -45,7 +43,7 @@ namespace TimeIntegration
     void
     apply_old(std::function<void(VectorType &)> f)
     {
-      Assert(solutions.size() > 1, ExcInternalError());
+      Assert(solutions.size() > 1, dealii::ExcInternalError());
 
       for (unsigned int i = 1; i < solutions.size(); ++i)
         f(solutions[i]);
@@ -81,7 +79,7 @@ namespace TimeIntegration
     void
     set_recent_old_solution(const VectorType &src)
     {
-      Assert(solutions.size() > 1, ExcInternalError());
+      Assert(solutions.size() > 1, dealii::ExcInternalError());
 
       solutions[1] = src;
     }
@@ -89,14 +87,14 @@ namespace TimeIntegration
     const VectorType &
     get_recent_old_solution() const
     {
-      Assert(solutions.size() >= 1, ExcInternalError());
+      Assert(solutions.size() >= 1, dealii::ExcInternalError());
       return solutions[1];
     }
 
     VectorType &
     get_recent_old_solution()
     {
-      Assert(solutions.size() >= 1, ExcInternalError());
+      Assert(solutions.size() >= 1, dealii::ExcInternalError());
       return solutions[1];
     }
 

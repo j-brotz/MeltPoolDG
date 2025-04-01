@@ -109,7 +109,7 @@ namespace MeltPoolDG::LevelSet
     const unsigned int advec_diff_hanging_nodes_dof_idx;
     const unsigned int velocity_dof_idx = 0;
 
-    TimeIntegration::SolutionHistory<VectorType> solution_history;
+    TimeIntegration::SolutionHistory<VectorType, number> solution_history;
 
     std::unique_ptr<Predictor<VectorType, number>> predictor;
 

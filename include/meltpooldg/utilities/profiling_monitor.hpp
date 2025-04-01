@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, TUM, November 2023
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/timer.h>
@@ -18,7 +13,7 @@
 
 namespace MeltPoolDG::Profiling
 {
-  template <typename number = double>
+  template <typename number>
   class ProfilingMonitor
   {
   public:
@@ -28,9 +23,9 @@ namespace MeltPoolDG::Profiling
     now() const;
 
     void
-    print(const ConditionalOStream &pcout,
-          const TimerOutput        &timer,
-          const MPI_Comm           &mpi_communicator) const;
+    print(const ConditionalOStream  &pcout,
+          const dealii::TimerOutput &timer,
+          const MPI_Comm            &mpi_communicator) const;
 
   private:
     const ProfilingData<number>                       &data;

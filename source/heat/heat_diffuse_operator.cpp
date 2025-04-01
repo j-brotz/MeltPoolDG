@@ -106,10 +106,11 @@ namespace MeltPoolDG::Heat
     do_level_set_temperature_gradient_interpolation = scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx);
 
     if (do_level_set_temperature_gradient_interpolation)
-      ls_to_heat_grad_interpolation_matrix = UtilityFunctions::create_dof_interpolation_matrix<dim>(
-        scratch_data.get_dof_handler(heat_dof_idx),
-        scratch_data.get_dof_handler(ls_dof_idx),
-        true /* do_matrix_free */);
+      ls_to_heat_grad_interpolation_matrix =
+        UtilityFunctions::create_dof_interpolation_matrix<dim, number>(
+          scratch_data.get_dof_handler(heat_dof_idx),
+          scratch_data.get_dof_handler(ls_dof_idx),
+          true /* do_matrix_free */);
 
     evaporative_mass_flux = evaporative_mass_flux_in;
     mass_flux_dof_idx     = mass_flux_dof_idx_in;
@@ -882,13 +883,13 @@ namespace MeltPoolDG::Heat
                     });
               }
 
-            Journal::print_formatted_norm(
+            Journal::print_formatted_norm<number>(
               scratch_data.get_pcout(3),
               [&]() -> number {
-                return VectorTools::compute_norm<dim>(evapor_heat_source_projected,
-                                                      scratch_data,
-                                                      heat_no_bc_dof_idx,
-                                                      heat_quad_idx);
+                return VectorTools::compute_norm<dim, number>(evapor_heat_source_projected,
+                                                              scratch_data,
+                                                              heat_no_bc_dof_idx,
+                                                              heat_quad_idx);
               },
               "int(mDot*hV)",
               "heat_transfer_operator",

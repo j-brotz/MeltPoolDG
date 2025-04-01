@@ -127,7 +127,7 @@ namespace MeltPoolDG::LevelSet
     const unsigned int   reinit_quad_idx;
     const unsigned int   ls_dof_idx;
 
-    TimeIntegration::SolutionHistory<VectorType> solution_history;
+    TimeIntegration::SolutionHistory<VectorType, number> solution_history;
 
     std::shared_ptr<ReinitilizationDGOperator<dim, number>> reinit_DG_operator;
 

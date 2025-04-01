@@ -56,7 +56,7 @@ namespace MeltPoolDG::LevelSet
   ReinitilizationDGOperator<dim, number>::apply_diffusion_implicit(
     const number                                  time,
     const number                                  time_step,
-    TimeIntegration::SolutionHistory<VectorType> &solution_history) const
+    TimeIntegration::SolutionHistory<VectorType, number> &solution_history) const
   {
     IMEX_integration->perform_time_step(time, time_step, solution_history);
   }

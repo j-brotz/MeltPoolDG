@@ -99,7 +99,7 @@ namespace MeltPoolDG::Evaporation
                               "setup_internal_mass_flux_operator = true."));
 
     VectorizedArray<number> rv;
-    for (unsigned int i = 0; i < ::VectorizedArray<number>::size(); ++i)
+    for (unsigned int i = 0; i < dealii::VectorizedArray<number>::size(); ++i)
       rv[i] = compute_evaporative_cooling(temperature[i]);
     return rv;
   }
@@ -159,7 +159,7 @@ namespace MeltPoolDG::Evaporation
                               "setup_internal_mass_flux_operator = true."));
 
     VectorizedArray<number> rv;
-    for (unsigned int i = 0; i < ::VectorizedArray<number>::size(); ++i)
+    for (unsigned int i = 0; i < dealii::VectorizedArray<number>::size(); ++i)
       rv[i] =
         compute_evaporative_cooling_derivative_with_temperature_dependent_mass_flux(temperature[i]);
     return rv;

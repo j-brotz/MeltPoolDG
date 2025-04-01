@@ -57,9 +57,9 @@ namespace MeltPoolDG::LevelSet::Tools
     , narrow_band_threshold(additional_data.narrow_band_threshold > 0 ?
                               additional_data.narrow_band_threshold :
                               signed_distance.linfty_norm() * 0.9999)
-    , tolerance_normal_vector(
-        UtilityFunctions::compute_numerical_zero_of_norm<dim>(dof_handler_ls.get_triangulation(),
-                                                              mapping))
+    , tolerance_normal_vector(UtilityFunctions::compute_numerical_zero_of_norm<dim, number>(
+        dof_handler_ls.get_triangulation(),
+        mapping))
     , mpi_comm(dof_handler_ls.get_communicator())
     , pcout(std::cout,
             dealii::Utilities::MPI::this_mpi_process(

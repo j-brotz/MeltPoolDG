@@ -22,9 +22,9 @@ namespace MeltPoolDG::LevelSet
     , reinit_quad_idx(reinit_quad_idx_in)
     , normal_dof_idx(normal_dof_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
-    , tolerance_normal_vector(
-        UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
-                                                              scratch_data.get_mapping()))
+    , tolerance_normal_vector(UtilityFunctions::compute_numerical_zero_of_norm<dim, number>(
+        scratch_data.get_triangulation(),
+        scratch_data.get_mapping()))
   {
     this->reset_dof_index(reinit_dof_idx_in);
   }

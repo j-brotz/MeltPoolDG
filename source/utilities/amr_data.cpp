@@ -2,8 +2,9 @@
 
 namespace MeltPoolDG
 {
+  template <typename number>
   void
-  AdaptiveMeshingData::add_parameters(dealii::ParameterHandler &prm)
+  AdaptiveMeshingData<number>::add_parameters(dealii::ParameterHandler &prm)
   {
     prm.enter_subsection("adaptive meshing");
     {
@@ -37,8 +38,10 @@ namespace MeltPoolDG
     prm.leave_subsection();
   }
 
+  template <typename number>
   void
-  AdaptiveMeshingData::post(const unsigned int global_refinements, const bool load_restart_data)
+  AdaptiveMeshingData<number>::post(const unsigned int global_refinements,
+                                    const bool         load_restart_data)
   {
     // set the min grid refinement level if not user-specified
     if (min_grid_refinement_level == 1)
@@ -48,4 +51,5 @@ namespace MeltPoolDG
       n_initial_refinement_cycles = 0;
   }
 
+  template struct AdaptiveMeshingData<double>;
 } // namespace MeltPoolDG

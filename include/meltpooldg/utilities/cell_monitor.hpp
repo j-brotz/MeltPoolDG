@@ -9,14 +9,15 @@
 
 namespace MeltPoolDG
 {
+  template <typename number>
   class CellMonitor
   {
   private:
     struct CellStatistics
     {
       CellStatistics(const unsigned int n_cells       = 0,
-                     const double       cell_size_min = 0,
-                     const double       cell_size_max = 0)
+                     const number       cell_size_min = 0,
+                     const number       cell_size_max = 0)
         : n_calls(1)
         , cells_accumulated(n_cells)
         , cells_min(n_cells)
@@ -30,16 +31,16 @@ namespace MeltPoolDG
       unsigned int cells_min;
       unsigned int cells_max;
 
-      double cell_size_min;
-      double cell_size_max;
+      number cell_size_min;
+      number cell_size_max;
     };
 
   public:
     static void
     add_info(const std::string  label,
              const unsigned int n_cells,
-             const double       min_cell_size,
-             const double       max_cell_size)
+             const number       min_cell_size,
+             const number       max_cell_size)
     {
       const auto ptr = stat_cells.find(label);
 
@@ -70,7 +71,7 @@ namespace MeltPoolDG
             table.add_value("label", entry.first);
             table.add_value("n_calls", entry.second.n_calls);
             table.add_value("n_cells_avg",
-                            static_cast<double>(entry.second.cells_accumulated) /
+                            static_cast<number>(entry.second.cells_accumulated) /
                               entry.second.n_calls);
             table.add_value("n_cells_min", entry.second.cells_min);
             table.add_value("n_cells_max", entry.second.cells_max);

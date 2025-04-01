@@ -56,7 +56,7 @@ namespace MeltPoolDG::Evaporation
     if (evapor_data.do_level_set_pressure_gradient_interpolation &&
         ls_to_pressure_grad_interpolation_matrix.m() == 0) // do only once
       ls_to_pressure_grad_interpolation_matrix =
-        UtilityFunctions::create_dof_interpolation_matrix<dim>(
+        UtilityFunctions::create_dof_interpolation_matrix<dim, number>(
           scratch_data.get_dof_handler(pressure_dof_idx),
           scratch_data.get_dof_handler(ls_dof_idx),
           true /*do sort lexicographic (matrix-free)*/);
@@ -238,13 +238,13 @@ namespace MeltPoolDG::Evaporation
 
     scratch_data.get_constraint(evapor_vel_dof_idx).distribute(evaporation_velocity);
 
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(2),
       [&]() -> number {
-        return VectorTools::compute_norm<dim>(evaporation_velocity,
-                                              scratch_data,
-                                              evapor_vel_dof_idx,
-                                              ls_quad_idx);
+        return VectorTools::compute_norm<dim, number>(evaporation_velocity,
+                                                      scratch_data,
+                                                      evapor_vel_dof_idx,
+                                                      ls_quad_idx);
       },
       "evaporative_velocity",
       "evaporation_operation",
@@ -263,7 +263,7 @@ namespace MeltPoolDG::Evaporation
     if (evapor_data.do_level_set_pressure_gradient_interpolation &&
         ls_to_pressure_grad_interpolation_matrix.m() == 0) // do only once
       ls_to_pressure_grad_interpolation_matrix =
-        UtilityFunctions::create_dof_interpolation_matrix<dim>(
+        UtilityFunctions::create_dof_interpolation_matrix<dim, number>(
           scratch_data.get_dof_handler(pressure_dof_idx),
           scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
           true /*do sort lexicographic (matrix-free)*/);

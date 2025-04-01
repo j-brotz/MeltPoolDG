@@ -108,10 +108,10 @@ namespace MeltPoolDG::Flow
     // print mesh information
     {
       const ScopedName sc("compFlow::cells");
-      CellMonitor::add_info(sc,
-                            scratch_data->get_triangulation().n_global_active_cells(),
-                            scratch_data->get_min_cell_size(),
-                            scratch_data->get_max_cell_size());
+      CellMonitor<double>::add_info(sc,
+                                    scratch_data->get_triangulation().n_global_active_cells(),
+                                    scratch_data->get_min_cell_size(),
+                                    scratch_data->get_max_cell_size());
     }
   }
 

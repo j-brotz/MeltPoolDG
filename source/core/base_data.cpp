@@ -44,19 +44,20 @@ namespace MeltPoolDG
   BaseData::check_input_parameters(const unsigned int ls_n_subdivisions) const
   {
     AssertThrow(problem_name != "not_initialized",
-                ExcMessage("The problem name must be specified!"));
-    AssertThrow(case_name != "not_initialized", ExcMessage("The case name must be specified!"));
+                dealii::ExcMessage("The problem name must be specified!"));
+    AssertThrow(case_name != "not_initialized",
+                dealii::ExcMessage("The case name must be specified!"));
 
     // TODO: move to specific data
     AssertThrow(
       ls_n_subdivisions == 1 ||
         (problem_name != "reinitialization" && problem_name != "heat_transfer"),
-      ExcMessage(
+      dealii::ExcMessage(
         "n_subdivisions for the level set is not supported for your requested problem_type."));
 
     AssertThrow(
       (fe.type != FiniteElementType::FE_DGQ),
-      ExcMessage(
+      dealii::ExcMessage(
         "Discontinous Galerkin finite elements are only supported specifically for the levelset advection and reinitilization"));
   }
 } // namespace MeltPoolDG

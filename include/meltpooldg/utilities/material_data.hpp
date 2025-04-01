@@ -32,7 +32,7 @@ namespace MeltPoolDG
                                           // consistent with the evaporation formulation
   )
 
-  template <typename number = double>
+  template <typename number>
   struct MaterialPhaseData
   {
     number thermal_conductivity   = 0.0;
@@ -51,7 +51,7 @@ namespace MeltPoolDG
    * <material template>) but also modify individual properties, you need to
    * specify it in the first place in the <material> section.
    */
-  template <typename number = double>
+  template <typename number>
   struct MaterialData
   {
   private:
@@ -79,7 +79,7 @@ namespace MeltPoolDG
     number latent_heat_of_evaporation = 0.0;
     number molar_mass                 = 0.0;
 
-    number specific_enthalpy_reference_temperature = numbers::invalid_double;
+    number specific_enthalpy_reference_temperature = dealii::numbers::invalid_double;
 
     SolidLiquidPropertiesTransitionType solid_liquid_properties_transition_type =
       SolidLiquidPropertiesTransitionType::mushy_zone;

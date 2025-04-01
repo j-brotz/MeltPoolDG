@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Nils Much, Peter Munch, TUM, September 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <meltpooldg/utilities/material.hpp>
@@ -66,7 +61,7 @@ namespace MeltPoolDG
 
   template <typename number>
   template <typename value_type>
-  inline MaterialParameterValues<value_type>
+  inline MaterialParameterValues<value_type, number>
   Material<number>::compute_parameters(const MaterialUpdateFlags::MaterialUpdateFlags &flags) const
   {
     Assert(
@@ -81,7 +76,7 @@ namespace MeltPoolDG
 
   template <typename number>
   template <typename value_type>
-  inline MaterialParameterValues<value_type>
+  inline MaterialParameterValues<value_type, number>
   Material<number>::compute_parameters(const value_type                               &v,
                                        const MaterialUpdateFlags::MaterialUpdateFlags &flags) const
   {
@@ -98,7 +93,7 @@ namespace MeltPoolDG
 
   template <typename number>
   template <typename value_type>
-  inline MaterialParameterValues<value_type>
+  inline MaterialParameterValues<value_type, number>
   Material<number>::compute_parameters(const value_type &level_set_heaviside,
                                        const value_type &temperature,
                                        const MaterialUpdateFlags::MaterialUpdateFlags &flags) const
@@ -110,7 +105,7 @@ namespace MeltPoolDG
 
   template <typename number>
   template <typename value_type, int dim>
-  inline MaterialParameterValues<value_type>
+  inline MaterialParameterValues<value_type, number>
   Material<number>::compute_parameters(
     const FECellIntegrator<dim, 1, number>         &level_set_heaviside_val,
     const FECellIntegrator<dim, 1, number>         &temperature_val,
@@ -138,7 +133,7 @@ namespace MeltPoolDG
           return compute_parameters_internal(value_type(0.0), value_type(0.0), flags);
         default:
           Assert(false, dealii::ExcNotImplemented());
-          return MaterialParameterValues<VectorizedArray<number>>();
+          return MaterialParameterValues<dealii::VectorizedArray<number>, number>();
       }
   }
 
@@ -146,7 +141,7 @@ namespace MeltPoolDG
 
   template <typename number>
   template <typename value_type, int dim>
-  inline MaterialParameterValues<value_type>
+  inline MaterialParameterValues<value_type, number>
   Material<number>::compute_parameters(
     const FECellIntegrator<dim, 1, number>              &level_set_heaviside_val,
     const std::vector<FECellIntegrator<dim, 1, number>> &temperature_val,
@@ -196,7 +191,7 @@ namespace MeltPoolDG
           return compute_parameters_internal(value_type(0.0), value_type(0.0), flags);
         default:
           Assert(false, dealii::ExcNotImplemented());
-          return MaterialParameterValues<VectorizedArray<number>>();
+          return MaterialParameterValues<dealii::VectorizedArray<number>, number>();
       }
   }
 
@@ -229,13 +224,13 @@ namespace MeltPoolDG
 
   template <typename number>
   template <typename value_type>
-  inline MaterialParameterValues<value_type>
+  inline MaterialParameterValues<value_type, number>
   Material<number>::compute_parameters_internal(
     const value_type                               &v1,
     const value_type                               &v2,
     const MaterialUpdateFlags::MaterialUpdateFlags &flags) const
   {
-    MaterialParameterValues<value_type> t;
+    MaterialParameterValues<value_type, number> t;
     switch (material_type)
       {
           case MaterialTypes::gas: {
@@ -246,8 +241,8 @@ namespace MeltPoolDG
           }
         case MaterialTypes::gas_liquid:
           case MaterialTypes::gas_liquid_consistent_with_evaporation: {
-            const MaterialParameterValues<value_type> &g = gas;
-            const MaterialParameterValues<value_type> &l = liquid;
+            const MaterialParameterValues<value_type, number> &g = gas;
+            const MaterialParameterValues<value_type, number> &l = liquid;
 
             const auto &level_set_heaviside = v1;
 
@@ -293,8 +288,8 @@ namespace MeltPoolDG
             break;
           }
           case MaterialTypes::liquid_solid: {
-            const MaterialParameterValues<value_type> &l = liquid;
-            const MaterialParameterValues<value_type> &s = solid;
+            const MaterialParameterValues<value_type, number> &l = liquid;
+            const MaterialParameterValues<value_type, number> &s = solid;
 
             const auto &temperature = v1;
             const auto  temperature_dependent_solid_fraction =
@@ -357,9 +352,9 @@ namespace MeltPoolDG
           }
         case MaterialTypes::gas_liquid_solid:
           case MaterialTypes::gas_liquid_solid_consistent_with_evaporation: {
-            const MaterialParameterValues<value_type> &g = gas;
-            const MaterialParameterValues<value_type> &l = liquid;
-            const MaterialParameterValues<value_type> &s = solid;
+            const MaterialParameterValues<value_type, number> &g = gas;
+            const MaterialParameterValues<value_type, number> &l = liquid;
+            const MaterialParameterValues<value_type, number> &s = solid;
 
             const auto &level_set_heaviside = v1;
             const auto &temperature         = v2;
@@ -646,9 +641,9 @@ namespace MeltPoolDG
 
 
   template <typename number>
-  inline VectorizedArray<number>
+  inline dealii::VectorizedArray<number>
   Material<number>::compute_temperature_dependent_solid_fraction(
-    const VectorizedArray<number> &temperature) const
+    const dealii::VectorizedArray<number> &temperature) const
   {
     if (data.solid_liquid_properties_transition_type ==
         SolidLiquidPropertiesTransitionType::mushy_zone)
@@ -661,14 +656,14 @@ namespace MeltPoolDG
                                                                1.0,
                                                                0.0);
     Assert(false, dealii::ExcNotImplemented());
-    return VectorizedArray<number>(0.0);
+    return dealii::VectorizedArray<number>(0.0);
   }
 
 
 
   template <typename number>
   constexpr Material<number>::MaterialParameterValuesContainer::
-  operator const MaterialParameterValues<number> &() const
+  operator const MaterialParameterValues<number, number> &() const
   {
     return scalar_parameters;
   }
@@ -677,7 +672,7 @@ namespace MeltPoolDG
 
   template <typename number>
   constexpr Material<number>::MaterialParameterValuesContainer::
-  operator const MaterialParameterValues<VectorizedArray<number>> &() const
+  operator const MaterialParameterValues<dealii::VectorizedArray<number>, number> &() const
   {
     return vectorized_parameters;
   }

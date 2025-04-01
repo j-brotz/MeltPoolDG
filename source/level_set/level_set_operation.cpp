@@ -226,7 +226,7 @@ namespace MeltPoolDG::LevelSet
   {
     {
       ScopedName sc("ls::n_dofs");
-      DoFMonitor::add_n_dofs(sc, scratch_data.get_dof_handler(ls_dof_idx).n_dofs());
+      DoFMonitor<number>::add_n_dofs(sc, scratch_data.get_dof_handler(ls_dof_idx).n_dofs());
     }
 
     advec_diff_operation->reinit();

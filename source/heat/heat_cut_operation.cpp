@@ -32,7 +32,7 @@ namespace MeltPoolDG::Heat
 {
   using namespace dealii;
 
-  template <int dim>
+  template <int dim, typename number>
   std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
   construct_dirichlet_bc_map(
     const bool                                                          two_phase,
@@ -45,7 +45,7 @@ namespace MeltPoolDG::Heat
         std::map<types::boundary_id, std::shared_ptr<Function<dim>>> heat_bc;
         for (const auto &bc : dirichlet_bc)
           heat_bc[bc.first] =
-            std::make_shared<dealii::Functions::TwoComponentFunction<dim>>(*bc.second);
+            std::make_shared<dealii::Functions::TwoComponentFunction<dim, number>>(*bc.second);
         return heat_bc;
       }
     else
@@ -71,8 +71,9 @@ namespace MeltPoolDG::Heat
     const unsigned int                                         vel_dof_idx_in,
     const VectorType                                          *velocity_in)
     : scratch_data(scratch_data_in)
-    , dirichlet_bc(construct_dirichlet_bc_map<dim>(heat_data_in.cut.two_phase,
-                                                   heat_bc_manager->get_bc_of_type("dirichlet")))
+    , dirichlet_bc(
+        construct_dirichlet_bc_map<dim, number>(heat_data_in.cut.two_phase,
+                                                heat_bc_manager->get_bc_of_type("dirichlet")))
     , periodic_bc(periodic_bc_in)
     , heat_data(heat_data_in)
     , time_iterator(time_iterator_in)
@@ -268,7 +269,7 @@ namespace MeltPoolDG::Heat
   HeatCutOperation<dim, number>::setup_constraints(
     ScratchData<dim, dim, number> &mutable_scratch_data) const
   {
-    Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
+    Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim, number>(
       mutable_scratch_data, dirichlet_bc, periodic_bc, heat_cut_dof_idx, heat_cut_no_bc_dof_idx);
     Constraints::make_HNC_plus_PBC<dim>(mutable_scratch_data, periodic_bc, heat_cont_no_bc_dof_idx);
   }
@@ -279,7 +280,7 @@ namespace MeltPoolDG::Heat
   {
     {
       ScopedName sc("heat::n_dofs");
-      DoFMonitor::add_n_dofs(sc, scratch_data.get_dof_handler(heat_cut_dof_idx).n_dofs());
+      DoFMonitor<number>::add_n_dofs(sc, scratch_data.get_dof_handler(heat_cut_dof_idx).n_dofs());
     }
     solution_history.apply(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, heat_cut_no_bc_dof_idx); });
@@ -307,7 +308,7 @@ namespace MeltPoolDG::Heat
       // because the FESystem for cut is set up with 2 to handle both phases.
       dealii::VectorTools::interpolate(scratch_data.get_mapping(),
                                        scratch_data.get_dof_handler(heat_cut_dof_idx),
-                                       dealii::Functions::TwoComponentFunction<dim>(
+                                       dealii::Functions::TwoComponentFunction<dim, number>(
                                          initial_temperature),
                                        solution_history.get_current_solution());
     else

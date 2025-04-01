@@ -90,14 +90,15 @@ namespace MeltPoolDG::LevelSet
     if (simulation_case->parameters.advec_diff.fe.type != FiniteElementType::FE_DGQ)
       { // In a DG simulation no hanging node constraints are present and the boundray condtions are
         // enforced in weak form by changing the fluxes at the boundary
-        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
+        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
+                                                                                           double>(
           *scratch_data,
           simulation_case->get_boundary_condition("dirichlet", "advection_diffusion"),
           simulation_case->get_periodic_bc(),
           advec_diff_dof_idx,
           advec_diff_hanging_nodes_dof_idx);
         if (simulation_case->parameters.advec_diff.implementation == "adaflo")
-          MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
+          MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim, double>(
             *scratch_data,
             simulation_case->get_boundary_condition("dirichlet", "advection_diffusion"),
             advec_diff_adaflo_dof_idx,
@@ -127,10 +128,10 @@ namespace MeltPoolDG::LevelSet
      */
     {
       ScopedName sc("advecDiff::cells");
-      CellMonitor::add_info(sc,
-                            scratch_data->get_triangulation().n_global_active_cells(),
-                            scratch_data->get_min_cell_size(),
-                            scratch_data->get_max_cell_size());
+      CellMonitor<double>::add_info(sc,
+                                    scratch_data->get_triangulation().n_global_active_cells(),
+                                    scratch_data->get_min_cell_size(),
+                                    scratch_data->get_max_cell_size());
     }
   }
 

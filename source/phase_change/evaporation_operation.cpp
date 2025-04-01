@@ -45,9 +45,9 @@ namespace MeltPoolDG::Evaporation
     , evapor_mass_flux_dof_idx(evapor_mass_flux_dof_idx_in)
     , ls_hanging_nodes_dof_idx(ls_hanging_nodes_dof_idx_in)
     , ls_quad_idx(ls_quad_idx_in)
-    , tolerance_normal_vector(
-        UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
-                                                              scratch_data.get_mapping()))
+    , tolerance_normal_vector(UtilityFunctions::compute_numerical_zero_of_norm<dim, number>(
+        scratch_data.get_triangulation(),
+        scratch_data.get_mapping()))
   {
     AssertThrow(material_data.gas.density > 0.0 && material_data.liquid.density > 0.0,
                 ExcMessage("The materials' densities must be greater than zero! Abort..."));
@@ -186,13 +186,13 @@ namespace MeltPoolDG::Evaporation
                                                                  *temperature);
       }
 
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(2),
       [&]() -> number {
-        return MeltPoolDG::VectorTools::compute_norm(evaporative_mass_flux,
-                                                     scratch_data,
-                                                     evapor_mass_flux_dof_idx,
-                                                     ls_quad_idx);
+        return MeltPoolDG::VectorTools::compute_norm<dim, number>(evaporative_mass_flux,
+                                                                  scratch_data,
+                                                                  evapor_mass_flux_dof_idx,
+                                                                  ls_quad_idx);
       },
       "evaporative_mass_flux",
       "evaporation_operation",

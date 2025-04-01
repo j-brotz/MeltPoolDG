@@ -68,7 +68,7 @@ namespace MeltPoolDG
      * As above, sets up the necessary internal data structures.
      */
     virtual void
-    reinit(const ::TimeIntegration::SolutionHistory<VectorType> &solution_history)
+    reinit(const ::TimeIntegration::SolutionHistory<VectorType, number> &solution_history)
     {
       reinit(solution_history.get_current_solution());
     }
@@ -89,7 +89,7 @@ namespace MeltPoolDG
     perform_time_step(
       number                                                               current_time,
       number                                                               time_step,
-      ::TimeIntegration::SolutionHistory<VectorType>                      &solution_history,
+      ::TimeIntegration::SolutionHistory<VectorType, number>              &solution_history,
       const std::function<void(number, VectorType &, const VectorType &)> &pre_processing = {},
       const std::function<void(number, VectorType &, const VectorType &)> &post_processing =
         {}) = 0;

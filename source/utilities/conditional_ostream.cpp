@@ -23,7 +23,7 @@ namespace MeltPoolDG
     , output_stream(stream)
     , f(stream.flags())
     , any_is_active(
-        static_cast<bool>(Utilities::MPI::max(static_cast<int>(active), MPI_COMM_WORLD)))
+        static_cast<bool>(dealii::Utilities::MPI::max(static_cast<int>(active), MPI_COMM_WORLD)))
   {}
 
   ConditionalOStream::~ConditionalOStream()

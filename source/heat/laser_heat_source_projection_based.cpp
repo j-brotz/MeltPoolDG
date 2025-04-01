@@ -101,8 +101,8 @@ namespace MeltPoolDG::Heat
       }
 
     const number tolerance_normal_vector =
-      UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
-                                                            scratch_data.get_mapping());
+      UtilityFunctions::compute_numerical_zero_of_norm<dim, number>(
+        scratch_data.get_triangulation(), scratch_data.get_mapping());
 
     FEValues<dim> heat_source_eval(
       scratch_data.get_mapping(),
@@ -146,7 +146,7 @@ namespace MeltPoolDG::Heat
     if (scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx))
       {
         const auto ls_to_temperature_grad_interpolation_matrix =
-          UtilityFunctions::create_dof_interpolation_matrix<dim>(
+          UtilityFunctions::create_dof_interpolation_matrix<dim, number>(
             scratch_data.get_dof_handler(heat_dof_idx),
             scratch_data.get_dof_handler(ls_dof_idx),
             false);
