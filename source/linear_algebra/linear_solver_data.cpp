@@ -4,7 +4,7 @@ namespace MeltPoolDG
 {
   template <typename number>
   void
-  LinearSolverData<number>::add_parameters(ParameterHandler &prm)
+  LinearSolverData<number>::add_parameters(dealii::ParameterHandler &prm)
   {
     prm.enter_subsection("linear solver");
     {

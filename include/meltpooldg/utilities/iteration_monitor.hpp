@@ -46,7 +46,7 @@ namespace MeltPoolDG
     static void
     print(StreamType &ss)
     {
-      ConvergenceTable table;
+      dealii::ConvergenceTable table;
 
       for (const auto &entry : stat_linear)
         {
@@ -60,7 +60,7 @@ namespace MeltPoolDG
         }
 
       if (ss.is_active())
-        table.write_text(ss.get_stream(), TableHandler::TextOutputFormat::org_mode_table);
+        table.write_text(ss.get_stream(), dealii::TableHandler::TextOutputFormat::org_mode_table);
     }
 
 

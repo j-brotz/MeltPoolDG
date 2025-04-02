@@ -47,7 +47,7 @@ namespace MeltPoolDG
     LinearSolverMonitorType monitor_type = LinearSolverMonitorType::none;
 
     void
-    add_parameters(ParameterHandler &prm);
+    add_parameters(dealii::ParameterHandler &prm);
   };
 
 } // namespace MeltPoolDG

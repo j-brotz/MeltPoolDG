@@ -104,7 +104,7 @@ namespace MeltPoolDG::LevelSet
           case InterfaceThicknessParameterType::number_of_cells_across_interface:
             return interface_thickness_parameter.value * cell_size / 6.;
           default:
-            AssertThrow(false, ExcNotImplemented());
+            AssertThrow(false, dealii::ExcNotImplemented());
             return 0.0;
         }
     }

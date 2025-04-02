@@ -110,8 +110,6 @@ namespace dealii
 
 namespace MeltPoolDG::VectorTools
 {
-  using namespace dealii;
-
   template <int dim, typename number>
   VectorizedArray<number>
   compute_mask_narrow_band(const VectorizedArray<number> &val, const number narrow_band_threshold)

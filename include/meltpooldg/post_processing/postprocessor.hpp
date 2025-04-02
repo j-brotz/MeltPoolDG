@@ -25,7 +25,7 @@ namespace MeltPoolDG
   class Postprocessor
   {
   private:
-    using VectorType = LinearAlgebra::distributed::Vector<number>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
     const MPI_Comm                       mpi_communicator;
     const OutputData<number>            &output_data;

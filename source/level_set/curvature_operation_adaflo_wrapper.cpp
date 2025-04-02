@@ -139,13 +139,13 @@ namespace MeltPoolDG::LevelSet
       false); // @todo: adaflo does not use the boolean function argument
 
     const int verbosity_l2_norm = dim > 1 ? 1 : 2;
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(std::max(normal_vector_data.verbosity_level, verbosity_l2_norm)),
       [&]() -> number {
-        return VectorTools::compute_norm<dim>(get_curvature(),
-                                              scratch_data,
-                                              curv_adaflo_params.dof_index_curvature,
-                                              curv_adaflo_params.quad_index);
+        return VectorTools::compute_norm<dim, number>(get_curvature(),
+                                                      scratch_data,
+                                                      curv_adaflo_params.dof_index_curvature,
+                                                      curv_adaflo_params.quad_index);
       },
       "curvature",
       "curvature_adaflo",

@@ -13,9 +13,6 @@
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
-
   /*----------------- Inline and template methods -----------------*/
 
 

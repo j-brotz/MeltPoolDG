@@ -154,20 +154,20 @@ namespace MeltPoolDG::LevelSet
   ReinitializationData<number>::check_input_parameters(const bool normal_vec_do_matrix_free) const
   {
     AssertThrow(linear_solver.do_matrix_free || implementation == "meltpooldg",
-                ExcNotImplemented());
+                dealii::ExcNotImplemented());
     AssertThrow(normal_vec_do_matrix_free == linear_solver.do_matrix_free,
-                ExcMessage("For the reinitialization problem both the "
-                           "normal vector and the reinitialization operation have to be "
-                           "computed either matrix-based or matrix-free."));
+                dealii::ExcMessage("For the reinitialization problem both the "
+                                   "normal vector and the reinitialization operation have to be "
+                                   "computed either matrix-based or matrix-free."));
     AssertThrow(interface_thickness_parameter.type ==
                     InterfaceThicknessParameterType::proportional_to_cell_size ||
                   implementation == "meltpooldg",
-                ExcMessage("For the adaflo implementation, a variable thickness parameter epsilon "
-                           "is mandatory."));
+                dealii::ExcMessage("For the adaflo implementation, a variable thickness "
+                                   "parameter epsilon is mandatory."));
 
     // Cross check for DG since for DG only matrix free is supported
     AssertThrow(fe.type != FiniteElementType::FE_DGQ || linear_solver.do_matrix_free,
-                ExcMessage("For the DG element only matrix free is implemented."));
+                dealii::ExcMessage("For the DG element only matrix free is implemented."));
   }
 
   template struct ReinitializationData<double>;

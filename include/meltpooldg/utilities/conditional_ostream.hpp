@@ -3,8 +3,6 @@
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
   class ConditionalOStream : public dealii::ConditionalOStream
   {
   public:

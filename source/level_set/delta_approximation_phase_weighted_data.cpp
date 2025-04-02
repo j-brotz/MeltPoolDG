@@ -6,7 +6,7 @@ namespace MeltPoolDG::LevelSet
 {
   template <typename number>
   void
-  DeltaApproximationPhaseWeightedData<number>::add_parameters(ParameterHandler &prm)
+  DeltaApproximationPhaseWeightedData<number>::add_parameters(dealii::ParameterHandler &prm)
   {
     prm.enter_subsection("dirac delta function approximation");
     {
@@ -67,7 +67,7 @@ namespace MeltPoolDG::LevelSet
             break;
           }
         default:
-          AssertThrow(false, ExcNotImplemented());
+          AssertThrow(false, dealii::ExcNotImplemented());
       }
   }
 

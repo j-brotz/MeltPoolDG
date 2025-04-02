@@ -6,7 +6,7 @@ namespace MeltPoolDG
   template <typename number>
   TimeIterator<number>::TimeIterator(const TimeSteppingData<number> &data_in)
     : time_data(data_in)
-    , time_step_size_function(FunctionParser<1>(data_in.time_step_size_function))
+    , time_step_size_function(dealii::FunctionParser<1>(data_in.time_step_size_function))
   {
     reset();
   }

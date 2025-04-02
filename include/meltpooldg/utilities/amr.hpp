@@ -8,8 +8,6 @@
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
   template <typename number>
   inline bool
   now(const AdaptiveMeshingData<number> &amr, const int n_time_step)

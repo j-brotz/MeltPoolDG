@@ -24,7 +24,7 @@ namespace MeltPoolDG::Evaporation
       prm.add_parameter("pressure coefficient",
                         pressure_coefficient,
                         "Pressure coefficient for the recoil pressure model.",
-                        Patterns::Double(0.0, 1.0));
+                        dealii::Patterns::Double(0.0, 1.0));
       prm.add_parameter("temperature constant",
                         temperature_constant,
                         "Temperature constant for the recoil pressure model. "
@@ -34,7 +34,7 @@ namespace MeltPoolDG::Evaporation
       prm.add_parameter("sticking constant",
                         sticking_constant,
                         "Sticking constant.",
-                        Patterns::Double(0.0, 1.0));
+                        dealii::Patterns::Double(0.0, 1.0));
       prm.add_parameter("interface distributed flux type",
                         interface_distributed_flux_type,
                         "Type that determines how the recoil pressure force is computed in the "

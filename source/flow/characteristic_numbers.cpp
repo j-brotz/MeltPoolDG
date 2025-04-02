@@ -18,7 +18,7 @@ namespace MeltPoolDG::Flow
                                           const number &characteristic_length) const
   {
     AssertThrow(material.dynamic_viscosity >= std::numeric_limits<number>::epsilon(),
-                ExcMessage("The dynamic viscosity must be >0. Abort ..."));
+                dealii::ExcMessage("The dynamic viscosity must be >0. Abort ..."));
     return material.density * characteristic_length * characteristic_velocity /
            material.dynamic_viscosity;
   }
@@ -29,7 +29,7 @@ namespace MeltPoolDG::Flow
                                       const number &characteristic_length) const
   {
     AssertThrow(material.thermal_conductivity >= std::numeric_limits<number>::epsilon(),
-                ExcMessage("The conductivity must be >0. Abort ..."));
+                dealii::ExcMessage("The conductivity must be >0. Abort ..."));
     return material.density * material.specific_heat_capacity * characteristic_length *
            characteristic_velocity / material.thermal_conductivity;
   }
@@ -40,7 +40,7 @@ namespace MeltPoolDG::Flow
                                            const number &surface_tension_coefficient) const
   {
     AssertThrow(surface_tension_coefficient >= std::numeric_limits<number>::epsilon(),
-                ExcMessage("The surface tension coefficient must be >0. Abort ..."));
+                dealii::ExcMessage("The surface tension coefficient must be >0. Abort ..."));
     return material.dynamic_viscosity * characteristic_velocity / surface_tension_coefficient;
   }
 

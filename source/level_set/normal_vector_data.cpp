@@ -27,7 +27,7 @@ namespace MeltPoolDG::LevelSet
       prm.add_parameter("implementation",
                         implementation,
                         "Choose the corresponding implementation of the normal vector operation.",
-                        Patterns::Selection("meltpooldg|adaflo"));
+                        dealii::Patterns::Selection("meltpooldg|adaflo"));
       prm.add_parameter(
         "verbosity level",
         verbosity_level,
@@ -76,19 +76,19 @@ namespace MeltPoolDG::LevelSet
     const InterfaceThicknessParameterType &type) const
   {
     AssertThrow(!narrow_band.enable || narrow_band.level_set_threshold > 0.0,
-                ExcMessage(
+                dealii::ExcMessage(
                   "The level set threshold for narrow band width must be positive! Abort..."));
     AssertThrow(linear_solver.do_matrix_free || implementation == "meltpooldg",
-                ExcNotImplemented());
+                dealii::ExcNotImplemented());
 
     AssertThrow(
       !narrow_band.enable || linear_solver.do_matrix_free,
-      ExcMessage(
+      dealii::ExcMessage(
         "The computation of the normal vector in a narrow band is only implemented matrix-free."));
     AssertThrow(type == InterfaceThicknessParameterType::proportional_to_cell_size ||
                   implementation == "meltpooldg",
-                ExcMessage("For the adaflo implementation, a variable thickness parameter epsilon "
-                           "is mandatory."));
+                dealii::ExcMessage("For the adaflo implementation, a variable thickness "
+                                   "parameter epsilon is mandatory."));
   }
 
   template struct NormalVectorData<double>;
