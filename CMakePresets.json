@@ -1,0 +1,40 @@
+{
+  "version": 10,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 19,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "meltpooldg-release",
+      "description": "Configure MeltPoolDG with Adaflo support.",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build_release",
+      "cacheVariables": {
+        "ADAFLO_LIB": "../external_libs/adaflo/build_release",
+        "ADAFLO_INCLUDE": "../external_libs/adaflo/include",
+        "DEAL_II_DIR": "../external_libs/dealii-build",
+        "BUILD_SHARED_LIBS": "ON",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_COMPILER": "mpicxx",
+	"CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "meltpooldg-debug",
+      "description": "Configure MeltPoolDG with Adaflo support.",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build_debug",
+      "cacheVariables": {
+        "ADAFLO_LIB": "../external_libs/adaflo/build_release",
+        "ADAFLO_INCLUDE": "../external_libs/adaflo/include",
+        "DEAL_II_DIR": "../external_libs/dealii-build",
+        "BUILD_SHARED_LIBS": "ON",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "mpicxx",
+	"CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    }
+  ]
+}
