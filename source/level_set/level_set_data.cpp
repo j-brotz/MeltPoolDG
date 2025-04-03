@@ -53,7 +53,7 @@ namespace MeltPoolDG::LevelSet
 
     if (base_fe_data.type == FiniteElementType::FE_SimplexP)
       AssertThrow(get_n_subdivisions() == 1,
-                  ExcMessage(
+                  dealii::ExcMessage(
                     "If you use a simplex mesh, n_subdivisions for the level set must be 1."));
 
     advec_diff.check_input_parameters();

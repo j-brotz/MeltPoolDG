@@ -85,7 +85,7 @@ namespace MeltPoolDG::LevelSet
     const unsigned int normal_quad_idx;
     const unsigned int ls_dof_idx;
 
-    TimeIntegration::SolutionHistory<BlockVectorType> solution_history;
+    TimeIntegration::SolutionHistory<BlockVectorType, number> solution_history;
 
     std::unique_ptr<Predictor<BlockVectorType, number>> predictor;
     /*

@@ -39,22 +39,22 @@ namespace MeltPoolDG
   FiniteElementData::check_input_parameters(const MeltPoolDG::FiniteElementData &base_fe_data) const
   {
     AssertThrow(type != FiniteElementType::not_initialized,
-                ExcMessage("Something went wrong setting up the finite element type! "
-                           "Probably you forgot to call fe.post(base.fe) on this object."));
+                dealii::ExcMessage("Something went wrong setting up the finite element type! "
+                                   "Probably you forgot to call fe.post(base.fe) on this object."));
     AssertThrow(degree != -1,
-                ExcMessage("Something went wrong setting up the degree! "
-                           "Probably you forgot to call fe.post(base.fe) on this object."));
+                dealii::ExcMessage("Something went wrong setting up the degree! "
+                                   "Probably you forgot to call fe.post(base.fe) on this object."));
 
     if (base_fe_data.type == FiniteElementType::FE_SimplexP)
       AssertThrow(
         type == FiniteElementType::FE_SimplexP,
-        ExcMessage(
+        dealii::ExcMessage(
           "If the base finite element type is simplex, all finite element types must be simplex because the generated mesh is tetrahedral."));
 
     if (type == FiniteElementType::FE_Q_iso_Q1)
       AssertThrow(
         degree > 1,
-        ExcMessage(
+        dealii::ExcMessage(
           "When using FE_Q_iso_Q1 use at least 2 subdivisions via setting the \"degree\" parameter."));
   }
 

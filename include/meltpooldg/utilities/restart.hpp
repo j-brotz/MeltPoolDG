@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Peter Munch, Magdalena Schreter, TUM, November 2022
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/dofs/dof_handler.h>
@@ -21,7 +16,7 @@ namespace MeltPoolDG::Restart
 {
   namespace fs = std::filesystem;
 
-  template <typename number = double>
+  template <typename number>
   class RestartMonitor
   {
   public:
@@ -63,7 +58,7 @@ namespace MeltPoolDG::Restart
   void
   serialize_internal(
     const std::function<
-      void(std::vector<std::pair<const DoFHandler<dim> *,
+      void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
                                  std::function<void(std::vector<VectorType *> &)>>> &data)>
                       &attach_vectors,
     const std::string &prefix);
@@ -72,7 +67,7 @@ namespace MeltPoolDG::Restart
   void
   deserialize_internal(
     const std::function<
-      void(std::vector<std::pair<const DoFHandler<dim> *,
+      void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
                                  std::function<void(std::vector<VectorType *> &)>>> &data)>
                                 &attach_vectors,
     const std::function<void()> &post,

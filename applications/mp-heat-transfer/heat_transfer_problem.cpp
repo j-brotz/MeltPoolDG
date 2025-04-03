@@ -98,14 +98,15 @@ namespace MeltPoolDG::Heat
                   }
               }
 
-            Journal::print_formatted_norm(
+            Journal::print_formatted_norm<double>(
               scratch_data->get_pcout(2),
               [&]() -> double {
-                return VectorTools::compute_norm(heat_operation->get_heat_source(),
-                                                 *scratch_data,
-                                                 heat_continuous_no_bc_dof_idx,
-                                                 heat_quad_idx,
-                                                 dealii::VectorTools::NormType::L1_norm);
+                return VectorTools::compute_norm<dim, double>(
+                  heat_operation->get_heat_source(),
+                  *scratch_data,
+                  heat_continuous_no_bc_dof_idx,
+                  heat_quad_idx,
+                  dealii::VectorTools::NormType::L1_norm);
               },
               "heat-source",
               "laser",

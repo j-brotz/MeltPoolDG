@@ -10,14 +10,14 @@ namespace MeltPoolDG::Restart
 {
   BETTER_ENUM(TimeType, char, real, simulation)
 
-  template <typename number = double>
+  template <typename number>
   struct RestartData
   {
     int         load                 = -1;
     int         save                 = -1;
     std::string directory            = "";
     std::string prefix               = "restart";
-    double      write_time_step_size = 0.0;
+    number      write_time_step_size = 0.0;
     TimeType    time_type            = TimeType::real;
 
     void

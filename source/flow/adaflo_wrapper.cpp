@@ -231,11 +231,11 @@ namespace MeltPoolDG::Flow
 
     {
       ScopedName sc("ns::n_dofs_u");
-      DoFMonitor::add_n_dofs(sc, get_dof_handler_velocity().n_dofs());
+      DoFMonitor<double>::add_n_dofs(sc, get_dof_handler_velocity().n_dofs());
     }
     {
       ScopedName sc2("ns::n_dofs_p");
-      DoFMonitor::add_n_dofs(sc2, get_dof_handler_pressure().n_dofs());
+      DoFMonitor<double>::add_n_dofs(sc2, get_dof_handler_pressure().n_dofs());
     }
   }
 
@@ -311,36 +311,36 @@ namespace MeltPoolDG::Flow
 
     {
       ScopedName sc("nonlinear_solve");
-      IterationMonitor::add_linear_iterations(sc, iter.first);
+      IterationMonitor<double>::add_linear_iterations(sc, iter.first);
     }
 
     {
       ScopedName sc("linear_solve");
-      IterationMonitor::add_linear_iterations(sc, iter.second);
+      IterationMonitor<double>::add_linear_iterations(sc, iter.second);
     }
 
     distribute_constraints();
 
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<double>(
       scratch_data.get_pcout(1),
       [&]() -> double {
-        return VectorTools::compute_norm<dim>(get_velocity(),
-                                              scratch_data,
-                                              get_dof_handler_idx_velocity(),
-                                              get_quad_idx_velocity());
+        return VectorTools::compute_norm<dim, double>(get_velocity(),
+                                                      scratch_data,
+                                                      get_dof_handler_idx_velocity(),
+                                                      get_quad_idx_velocity());
       },
       "velocity",
       "navier_stokes_adaflo",
       15 /*precision*/
     );
 
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<double>(
       scratch_data.get_pcout(1),
       [&]() -> double {
-        return VectorTools::compute_norm<dim>(get_pressure(),
-                                              scratch_data,
-                                              get_dof_handler_idx_pressure(),
-                                              get_quad_idx_pressure());
+        return VectorTools::compute_norm<dim, double>(get_pressure(),
+                                                      scratch_data,
+                                                      get_dof_handler_idx_pressure(),
+                                                      get_quad_idx_pressure());
       },
       "pressure",
       "navier_stokes_adaflo",

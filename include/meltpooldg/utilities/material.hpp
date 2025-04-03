@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Nils Much, Peter Munch, TUM, September 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/base/vectorization.h>
@@ -14,23 +9,21 @@
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
-  template <typename value_type>
+  template <typename value_type, typename number>
   struct MaterialParameterValues
   {
-    MaterialParameterValues(const double thermal_conductivity_in                = 0.0,
-                            const double specific_heat_capacity_in              = 0.0,
-                            const double density_in                             = 0.0,
-                            const double dynamic_viscosity_in                   = 0.0,
-                            const double volume_specific_heat_capacity_in       = 0.0,
-                            const double d_thermal_conductivity_d_T_in          = 0.0,
-                            const double d_specific_heat_capacity_d_T_in        = 0.0,
-                            const double d_density_d_T_in                       = 0.0,
-                            const double d_volume_specific_heat_capacity_d_T_in = 0.0,
-                            const double gas_fraction_in                        = 0.0,
-                            const double liquid_fraction_in                     = 0.0,
-                            const double solid_fraction_in                      = 0.0);
+    MaterialParameterValues(const number thermal_conductivity_in                = 0.0,
+                            const number specific_heat_capacity_in              = 0.0,
+                            const number density_in                             = 0.0,
+                            const number dynamic_viscosity_in                   = 0.0,
+                            const number volume_specific_heat_capacity_in       = 0.0,
+                            const number d_thermal_conductivity_d_T_in          = 0.0,
+                            const number d_specific_heat_capacity_d_T_in        = 0.0,
+                            const number d_density_d_T_in                       = 0.0,
+                            const number d_volume_specific_heat_capacity_d_T_in = 0.0,
+                            const number gas_fraction_in                        = 0.0,
+                            const number liquid_fraction_in                     = 0.0,
+                            const number solid_fraction_in                      = 0.0);
 
     template <typename material_phase_data_struct>
     MaterialParameterValues(const material_phase_data_struct &data);
@@ -124,7 +117,7 @@ namespace MeltPoolDG
      * simulations.
      */
     template <typename value_type>
-    inline MaterialParameterValues<value_type>
+    inline MaterialParameterValues<value_type, number>
     compute_parameters(const MaterialUpdateFlags::MaterialUpdateFlags &flags) const;
 
     /**
@@ -135,7 +128,7 @@ namespace MeltPoolDG
      * level set, if the material_type is MaterialTypes::liquid_solid, @p v is the temperature.
      */
     template <typename value_type>
-    inline MaterialParameterValues<value_type>
+    inline MaterialParameterValues<value_type, number>
     compute_parameters(const value_type                               &v,
                        const MaterialUpdateFlags::MaterialUpdateFlags &flags) const;
 
@@ -144,7 +137,7 @@ namespace MeltPoolDG
      * simulations (gas-liquid-solid).
      */
     template <typename value_type>
-    inline MaterialParameterValues<value_type>
+    inline MaterialParameterValues<value_type, number>
     compute_parameters(const value_type                               &level_set_heaviside,
                        const value_type                               &temperature,
                        const MaterialUpdateFlags::MaterialUpdateFlags &flags) const;
@@ -171,9 +164,9 @@ namespace MeltPoolDG
      * FEEvaluationBase::submit_value(). The values are evaluated at the quadrature point number @p q_index.
      */
     template <typename value_type, int dim>
-    inline MaterialParameterValues<value_type>
-    compute_parameters(const FECellIntegrator<dim, 1, number>         &level_set_heaviside_val,
-                       const FECellIntegrator<dim, 1, number>         &temperature_val,
+    inline MaterialParameterValues<value_type, number>
+    compute_parameters(const dealii::FECellIntegrator<dim, 1, number> &level_set_heaviside_val,
+                       const dealii::FECellIntegrator<dim, 1, number> &temperature_val,
                        const MaterialUpdateFlags::MaterialUpdateFlags &flags,
                        const unsigned int                              q_index) const;
 
@@ -186,11 +179,11 @@ namespace MeltPoolDG
      * select the correct temperature value for each quadrature point.
      */
     template <typename value_type, int dim>
-    inline MaterialParameterValues<value_type>
-    compute_parameters(const FECellIntegrator<dim, 1, number>              &level_set_heaviside_val,
-                       const std::vector<FECellIntegrator<dim, 1, number>> &temperature_val,
-                       const MaterialUpdateFlags::MaterialUpdateFlags      &flags,
-                       const unsigned int                                   q_index) const;
+    inline MaterialParameterValues<value_type, number>
+    compute_parameters(const dealii::FECellIntegrator<dim, 1, number> &level_set_heaviside_val,
+                       const std::vector<dealii::FECellIntegrator<dim, 1, number>> &temperature_val,
+                       const MaterialUpdateFlags::MaterialUpdateFlags              &flags,
+                       const unsigned int                                           q_index) const;
 
     /**
      * Check whether the material type depends on a certain field variable.
@@ -205,7 +198,7 @@ namespace MeltPoolDG
      * Get arbitrary parameters, specified by @p flags, for the currently active material_type.
      */
     template <typename value_type>
-    inline MaterialParameterValues<value_type>
+    inline MaterialParameterValues<value_type, number>
     compute_parameters_internal(const value_type                               &v1,
                                 const value_type                               &v2,
                                 const MaterialUpdateFlags::MaterialUpdateFlags &flags) const;
@@ -214,7 +207,7 @@ namespace MeltPoolDG
      * Determine a material parameter for two phase flow. If level_set_heaviside = 0, the
      * parameter results in the @p gas_value and if @p ls_heaviside_val = 1 it results
      * in the @p liquid_solid_value. Across the interface, the parameter jumps if
-     * TwoPhaseFluidPropertiesTransitionType is "sharp". Otherwise the parameter x is
+     * TwoPhaseFluidPropertiesTransitionType is "sharp". Otherwise, the parameter x is
      * distributed according to the level set function
      *
      * x = (1-ls) * x_g + ls * x_l
@@ -441,20 +434,22 @@ namespace MeltPoolDG
     inline number
     compute_temperature_dependent_solid_fraction(const number temperature) const;
 
-    inline VectorizedArray<number>
-    compute_temperature_dependent_solid_fraction(const VectorizedArray<number> &temperature) const;
+    inline dealii::VectorizedArray<number>
+    compute_temperature_dependent_solid_fraction(
+      const dealii::VectorizedArray<number> &temperature) const;
 
     struct MaterialParameterValuesContainer
     {
       template <typename material_phase_data_struct>
       MaterialParameterValuesContainer(const material_phase_data_struct data);
 
-      const MaterialParameterValues<number>                          scalar_parameters;
-      const MaterialParameterValues<dealii::VectorizedArray<number>> vectorized_parameters;
+      const MaterialParameterValues<number, number>                          scalar_parameters;
+      const MaterialParameterValues<dealii::VectorizedArray<number>, number> vectorized_parameters;
 
-      constexpr operator const MaterialParameterValues<number> &() const;
+      constexpr operator const MaterialParameterValues<number, number> &() const;
 
-      constexpr operator const MaterialParameterValues<VectorizedArray<number>> &() const;
+      constexpr
+      operator const MaterialParameterValues<dealii::VectorizedArray<number>, number> &() const;
     };
 
     const MaterialData<number> &data;
@@ -472,20 +467,20 @@ namespace MeltPoolDG
   /*----------------- Template constructors -----------------*/
 
 
-  template <typename value_type>
-  MaterialParameterValues<value_type>::MaterialParameterValues(
-    const double thermal_conductivity_in,
-    const double specific_heat_capacity_in,
-    const double density_in,
-    const double dynamic_viscosity_in,
-    const double volume_specific_heat_capacity_in,
-    const double d_thermal_conductivity_d_T_in,
-    const double d_specific_heat_capacity_d_T_in,
-    const double d_density_d_T_in,
-    const double d_volume_specific_heat_capacity_d_T_in,
-    const double gas_fraction_in,
-    const double liquid_fraction_in,
-    const double solid_fraction_in)
+  template <typename value_type, typename number>
+  MaterialParameterValues<value_type, number>::MaterialParameterValues(
+    const number thermal_conductivity_in,
+    const number specific_heat_capacity_in,
+    const number density_in,
+    const number dynamic_viscosity_in,
+    const number volume_specific_heat_capacity_in,
+    const number d_thermal_conductivity_d_T_in,
+    const number d_specific_heat_capacity_d_T_in,
+    const number d_density_d_T_in,
+    const number d_volume_specific_heat_capacity_d_T_in,
+    const number gas_fraction_in,
+    const number liquid_fraction_in,
+    const number solid_fraction_in)
     : thermal_conductivity(thermal_conductivity_in)
     , specific_heat_capacity(specific_heat_capacity_in)
     , density(density_in)
@@ -502,9 +497,9 @@ namespace MeltPoolDG
 
 
 
-  template <typename value_type>
+  template <typename value_type, typename number>
   template <typename material_phase_data_struct>
-  MaterialParameterValues<value_type>::MaterialParameterValues(
+  MaterialParameterValues<value_type, number>::MaterialParameterValues(
     const material_phase_data_struct &data)
     : thermal_conductivity(data.thermal_conductivity)
     , specific_heat_capacity(data.specific_heat_capacity)

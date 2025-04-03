@@ -125,10 +125,10 @@ namespace MeltPoolDG::LevelSet
       scratch_data.get_pcout(std::max(normal_vector_data.verbosity_level, verbosity_l2_norm));
 
     for (unsigned int d = 0; d < dim; ++d)
-      Journal::print_formatted_norm(
+      Journal::print_formatted_norm<number>(
         pcout,
         [&]() -> number {
-          return MeltPoolDG::VectorTools::compute_norm<dim>(
+          return MeltPoolDG::VectorTools::compute_norm<dim, number>(
             solution_history.get_current_solution().block(d),
             scratch_data,
             normal_dof_idx,
@@ -143,7 +143,7 @@ namespace MeltPoolDG::LevelSet
                         "     * CG: i = " + std::to_string(iter),
                         "normal_vector");
 
-    IterationMonitor::add_linear_iterations(sc, iter);
+    IterationMonitor<number>::add_linear_iterations(sc, iter);
 
     // update ghost_values of solution
     solution_history.get_current_solution().update_ghost_values();

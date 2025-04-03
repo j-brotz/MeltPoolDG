@@ -46,7 +46,7 @@ namespace MeltPoolDG::LevelSet
   public:
     BaseData                         base;
     TimeSteppingData<number>         time_stepping;
-    AdaptiveMeshingData              amr;
+    AdaptiveMeshingData<number>      amr;
     ReinitializationData<number>     reinit;
     NormalVectorData<number>         normal_vec;
     CurvatureData<number>            curv;

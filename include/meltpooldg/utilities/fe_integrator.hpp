@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Peter Munch, Magdalena Schreter, TUM, September 2020
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/base/config.h>
@@ -13,16 +8,16 @@ DEAL_II_NAMESPACE_OPEN
 
 template <int dim,
           int n_components,
-          typename Number,
-          typename VectorizedArrayType = VectorizedArray<Number>>
-using FECellIntegrator = FEEvaluation<dim, -1, 0, n_components, Number, VectorizedArrayType>;
+          typename number,
+          typename VectorizedArrayType = dealii::VectorizedArray<number>>
+using FECellIntegrator = FEEvaluation<dim, -1, 0, n_components, number, VectorizedArrayType>;
 
 
 template <int dim,
           int n_components,
-          typename Number,
-          typename VectorizedArrayType = VectorizedArray<Number>>
-using FEFaceIntegrator = FEFaceEvaluation<dim, -1, 0, n_components, Number, VectorizedArrayType>;
+          typename number,
+          typename VectorizedArrayType = dealii::VectorizedArray<number>>
+using FEFaceIntegrator = FEFaceEvaluation<dim, -1, 0, n_components, number, VectorizedArrayType>;
 
 
 DEAL_II_NAMESPACE_CLOSE

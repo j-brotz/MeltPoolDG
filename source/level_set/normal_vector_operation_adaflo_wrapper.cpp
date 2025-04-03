@@ -117,13 +117,13 @@ namespace MeltPoolDG::LevelSet
     const int verbosity_l2_norm = dim > 1 ? 1 : 2;
 
     for (unsigned int d = 0; d < dim; ++d)
-      Journal::print_formatted_norm(
+      Journal::print_formatted_norm<number>(
         scratch_data.get_pcout(std::max(normal_vec_data.verbosity_level, verbosity_l2_norm)),
         [&]() -> number {
-          return VectorTools::compute_norm<dim>(get_solution_normal_vector().block(d),
-                                                scratch_data,
-                                                normal_vec_adaflo_params.dof_index_normal,
-                                                normal_vec_adaflo_params.quad_index);
+          return VectorTools::compute_norm<dim, number>(get_solution_normal_vector().block(d),
+                                                        scratch_data,
+                                                        normal_vec_adaflo_params.dof_index_normal,
+                                                        normal_vec_adaflo_params.quad_index);
         },
         "normal_" + std::to_string(d),
         "normal_vector_adaflo",

@@ -83,7 +83,7 @@ namespace MeltPoolDG::RadiativeTransport
           (solution_history.get_current_solution().l2_norm() - recent_l2_norm) / recent_l2_norm);
 
         if (rte_data.verbosity_level >= 4)
-          Journal::print_formatted_norm(
+          Journal::print_formatted_norm<number>(
             scratch_data.get_pcout(1),
             [&]() -> number { return pseudo_time_iterator.get_current_time(); },
             "pseudo-time-out",
@@ -92,13 +92,13 @@ namespace MeltPoolDG::RadiativeTransport
             "s");
         // print final pseudo-time stepping solution
         if (rte_data.verbosity_level >= 3)
-          Journal::print_formatted_norm(
+          Journal::print_formatted_norm<number>(
             scratch_data.get_pcout(1),
             [&]() -> number {
-              return VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
-                                                    scratch_data,
-                                                    rte_dof_idx,
-                                                    rte_quad_idx);
+              return VectorTools::compute_norm<dim, number>(solution_history.get_current_solution(),
+                                                            scratch_data,
+                                                            rte_dof_idx,
+                                                            rte_quad_idx);
             },
             "pseudo-time-solution",
             "RTE::pseudo-time-stepping",
@@ -106,7 +106,7 @@ namespace MeltPoolDG::RadiativeTransport
       }
 
     if (rte_data.verbosity_level >= 3)
-      Journal::print_formatted_norm(
+      Journal::print_formatted_norm<number>(
         scratch_data.get_pcout(1),
         [&]() -> number { return pseudo_time_iterator.get_current_time_step_number(); },
         "n_steps",
@@ -114,13 +114,13 @@ namespace MeltPoolDG::RadiativeTransport
         1 /*precision*/,
         "pseudo-time steps");
     if (rte_data.verbosity_level >= 2)
-      Journal::print_formatted_norm(
+      Journal::print_formatted_norm<number>(
         scratch_data.get_pcout(1),
         [&]() -> number {
-          return VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
-                                                scratch_data,
-                                                rte_dof_idx,
-                                                rte_quad_idx);
+          return VectorTools::compute_norm<dim, number>(solution_history.get_current_solution(),
+                                                        scratch_data,
+                                                        rte_dof_idx,
+                                                        rte_quad_idx);
         },
         "intensity",
         "RTE::pseudo-predictor",

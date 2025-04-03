@@ -20,9 +20,10 @@ namespace MeltPoolDG::Journal
           << str.str() << std::endl;
   }
 
+  template <typename number>
   void
   print_formatted_norm(const ConditionalOStream &pcout,
-                       const double              norm_value,
+                       const number              norm_value,
                        const std::string        &norm_id,
                        const std::string        &operation_name,
                        const unsigned int        precision,
@@ -36,9 +37,10 @@ namespace MeltPoolDG::Journal
     print_line(pcout, str.str(), operation_name, extra_size);
   }
 
+  template <typename number>
   void
   print_formatted_norm(const ConditionalOStream      &pcout,
-                       const std::function<double()> &compute_norm,
+                       const std::function<number()> &compute_norm,
                        const std::string             &norm_id,
                        const std::string             &operation_name,
                        const unsigned int             precision,
@@ -53,4 +55,23 @@ namespace MeltPoolDG::Journal
           pcout, compute_norm(), norm_id, operation_name, precision, norm_suffix, extra_size);
       }
   }
+
+  template void
+  print_formatted_norm<double>(const ConditionalOStream &pcout,
+                               const double              norm_value,
+                               const std::string        &norm_id,
+                               const std::string        &operation_name,
+                               const unsigned int        precision,
+                               const std::string        &norm_suffix,
+                               const unsigned int        extra_size);
+
+  template void
+  print_formatted_norm<double>(const ConditionalOStream &pcout,
+                               const std::function<double()> &,
+                               const std::string &norm_id,
+                               const std::string &operation_name,
+                               const unsigned int precision,
+                               const std::string &norm_suffix,
+                               const unsigned int extra_size);
+
 } // namespace MeltPoolDG::Journal

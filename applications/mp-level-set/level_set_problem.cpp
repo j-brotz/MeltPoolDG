@@ -272,14 +272,15 @@ namespace MeltPoolDG::LevelSet
     // continuous Galerkin finite elements
     if (simulation_case->parameters.ls.fe.type != FiniteElementType::FE_DGQ)
       {
-        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
+        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
+                                                                                           double>(
           *scratch_data,
           simulation_case->get_boundary_condition("dirichlet", "level_set"),
           simulation_case->get_periodic_bc(),
           ls_dof_idx,
           ls_hanging_nodes_dof_idx);
 
-        MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
+        MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim, double>(
           *scratch_data,
           simulation_case->get_boundary_condition("dirichlet", "level_set"),
           ls_zero_bc_idx,

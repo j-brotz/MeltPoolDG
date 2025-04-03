@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, UIBK/TUM, June 2022
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 #include <deal.II/numerics/vector_tools.h>
 
@@ -137,7 +132,7 @@ namespace MeltPoolDG::Constraints
    * Merge the constraints of the AffineConstraints corresponding to a given @param dof_hanging_nodes_idx
    * into the AffineConstraints corresponding to a given @param dof_idx.
    */
-  template <int dim>
+  template <int dim, typename number>
   void
   merge_HNC_into_DBC(ScratchData<dim>  &scratch_data,
                      const unsigned int dof_idx,
@@ -145,7 +140,7 @@ namespace MeltPoolDG::Constraints
   {
     scratch_data.get_constraint(dof_idx).merge(
       scratch_data.get_constraint(dof_hanging_nodes_idx),
-      AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
+      AffineConstraints<number>::MergeConflictBehavior::right_object_wins);
   }
 
   /**
@@ -164,7 +159,7 @@ namespace MeltPoolDG::Constraints
    * The AffineConstraints objects are closed after filling them.
    * In Debug, the constraints are also checked with check_constraints().
    */
-  template <int dim>
+  template <int dim, typename number>
   void
   make_DBC_and_HNC_and_merge_HNC_into_DBC(
     ScratchData<dim>                                                           &scratch_data,
@@ -176,7 +171,7 @@ namespace MeltPoolDG::Constraints
     make_DBC(scratch_data, bc_data, dof_idx, set_inhomogeneities, true /* close */);
     make_HNC(scratch_data, dof_hanging_nodes_idx, true /* close */);
 
-    merge_HNC_into_DBC(scratch_data, dof_idx, dof_hanging_nodes_idx);
+    merge_HNC_into_DBC<dim, number>(scratch_data, dof_idx, dof_hanging_nodes_idx);
 
     check_constraints(scratch_data.get_dof_handler(dof_idx), scratch_data.get_constraint(dof_idx));
   }
@@ -249,7 +244,7 @@ namespace MeltPoolDG::Constraints
    * The AffineConstraints objects are closed after filling them.
    * In Debug, the constraints are also checked with check_constraints().
    */
-  template <int dim>
+  template <int dim, typename number>
   void
   make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC(
     ScratchData<dim>                                                           &scratch_data,
@@ -261,7 +256,7 @@ namespace MeltPoolDG::Constraints
   {
     make_HNC_plus_PBC(scratch_data, pbc, dof_hanging_nodes_idx);
     make_DBC(scratch_data, bc_data, dof_idx, set_inhomogeneities, true /* close */);
-    merge_HNC_into_DBC(scratch_data, dof_idx, dof_hanging_nodes_idx);
+    merge_HNC_into_DBC<dim, number>(scratch_data, dof_idx, dof_hanging_nodes_idx);
 
     check_constraints(scratch_data.get_dof_handler(dof_idx), scratch_data.get_constraint(dof_idx));
   }

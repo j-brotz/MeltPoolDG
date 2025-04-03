@@ -88,7 +88,7 @@ namespace MeltPoolDG::LevelSet
 
     LevelSet::NormalVectorOperation<dim, number> normal_vector_operation;
 
-    TimeIntegration::SolutionHistory<VectorType> solution_history;
+    TimeIntegration::SolutionHistory<VectorType, number> solution_history;
 
     std::unique_ptr<Predictor<VectorType, number>> predictor;
 

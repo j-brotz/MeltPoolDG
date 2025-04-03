@@ -18,12 +18,12 @@
 namespace MeltPoolDG
 {
   template <int dim, typename number>
-  Postprocessor<dim, number>::Postprocessor(const MPI_Comm                  mpi_communicator_in,
-                                            const OutputData<number>       &output_data_in,
-                                            const TimeSteppingData<number> &time_data,
-                                            const Mapping<dim>             &mapping_in,
-                                            const Triangulation<dim>       &triangulation_in,
-                                            const ConditionalOStream       &pcout_in)
+  Postprocessor<dim, number>::Postprocessor(const MPI_Comm                    mpi_communicator_in,
+                                            const OutputData<number>         &output_data_in,
+                                            const TimeSteppingData<number>   &time_data,
+                                            const dealii::Mapping<dim>       &mapping_in,
+                                            const dealii::Triangulation<dim> &triangulation_in,
+                                            const ConditionalOStream         &pcout_in)
     : mpi_communicator(mpi_communicator_in)
     , output_data(output_data_in)
     , mapping(mapping_in)
@@ -140,7 +140,7 @@ namespace MeltPoolDG
         for (const auto &cell : tria.active_cell_iterators())
           material_id[cell->active_cell_index()] = cell->material_id();
 
-        data_out.add_data_vector(material_id, "material_id", DataOut<dim>::type_cell_data);
+        data_out.add_data_vector(material_id, "material_id", dealii::DataOut<dim>::type_cell_data);
       }
 
     dealii::DataOutBase::VtkFlags flags;
@@ -161,7 +161,8 @@ namespace MeltPoolDG
       {
         pvtu_filename = fs::path(
           output_data.paraview.filename + "_" +
-          Utilities::int_to_string(n_time_step, output_data.paraview.n_digits_timestep) + ".vtu");
+          dealii::Utilities::int_to_string(n_time_step, output_data.paraview.n_digits_timestep) +
+          ".vtu");
 
         data_out.write_vtu_in_parallel(fs::path(output_data.directory) / pvtu_filename,
                                        mpi_communicator);

@@ -6,7 +6,7 @@ namespace MeltPoolDG
   template <typename number>
   TimeIterator<number>::TimeIterator(const TimeSteppingData<number> &data_in)
     : time_data(data_in)
-    , time_step_size_function(FunctionParser<1>(data_in.time_step_size_function))
+    , time_step_size_function(dealii::FunctionParser<1>(data_in.time_step_size_function))
   {
     reset();
   }
@@ -22,7 +22,7 @@ namespace MeltPoolDG
     if (current_time > time_data.end_time)
       return true;
     // current_time and end_time are (almost) equal
-    else if (std::abs(current_time - time_data.end_time) <= std::numeric_limits<double>::epsilon())
+    else if (std::abs(current_time - time_data.end_time) <= std::numeric_limits<number>::epsilon())
       return true;
     // current_time is smaller than end_time and number of maximum steps is not reached
     else
@@ -37,9 +37,9 @@ namespace MeltPoolDG
 
     // adapt time step size in case of a prescribed time step size function
     time_step_size_function.set_time(current_time);
-    if (time_step_size_function.value(Point<1>() /*dummy value*/) >
-        std::numeric_limits<double>::min())
-      current_time_increment = time_step_size_function.value(Point<1>());
+    if (time_step_size_function.value(dealii::Point<1>() /*dummy value*/) >
+        std::numeric_limits<number>::min())
+      current_time_increment = time_step_size_function.value(dealii::Point<1>());
 
     // correct time increment if it would overshoot the end time
     if (current_time + current_time_increment > time_data.end_time)
@@ -81,7 +81,7 @@ namespace MeltPoolDG
     else if (old_time_increment >= value)
       current_time_increment = std::max(old_time_increment / max_allowed_change_factor, value);
     else
-      AssertThrow(false, ExcNotImplemented());
+      AssertThrow(false, dealii::ExcNotImplemented());
   }
 
   template <typename number>
@@ -159,5 +159,5 @@ namespace MeltPoolDG
     return current_time_increment <= time_step_limit;
   }
 
-  template class TimeIterator<>;
+  template class TimeIterator<double>;
 } // namespace MeltPoolDG

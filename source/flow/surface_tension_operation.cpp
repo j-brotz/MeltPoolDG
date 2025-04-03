@@ -52,7 +52,7 @@ namespace MeltPoolDG::Flow
     if (do_level_set_pressure_gradient_interpolation)
       {
         ls_to_pressure_grad_interpolation_matrix =
-          UtilityFunctions::create_dof_interpolation_matrix<dim>(
+          UtilityFunctions::create_dof_interpolation_matrix<dim, double>(
             scratch_data.get_dof_handler(flow_pressure_hanging_nodes_dof_idx),
             scratch_data.get_dof_handler(ls_dof_idx),
             true);
@@ -129,8 +129,8 @@ namespace MeltPoolDG::Flow
       }
 
     const double tolerance_normal_vector =
-      UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
-                                                            scratch_data.get_mapping());
+      UtilityFunctions::compute_numerical_zero_of_norm<dim, double>(
+        scratch_data.get_triangulation(), scratch_data.get_mapping());
 
     const auto cut_type = std::invoke([&]() -> CutUtil::CutPhaseType {
       if (temperature)

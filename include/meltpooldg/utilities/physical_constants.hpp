@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, UIBK/TUM, April 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 namespace MeltPoolDG::PhysicalConstants
 {

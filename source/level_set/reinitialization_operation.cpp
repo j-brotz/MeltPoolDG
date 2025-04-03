@@ -209,7 +209,7 @@ namespace MeltPoolDG::LevelSet
                                                preconditioner,
                                                "reinitialization_operation");
 
-        Journal::print_formatted_norm(
+        Journal::print_formatted_norm<number>(
           scratch_data.get_pcout(1),
           [&]() -> number { return reinit_operator->get_system_matrix().frobenius_norm(); },
           "matrix",
@@ -234,45 +234,45 @@ namespace MeltPoolDG::LevelSet
     solution_level_set.update_ghost_values();
     max_change_level_set = solution_history.get_current_solution().linfty_norm();
 
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(2),
       [&]() -> number {
-        return MeltPoolDG::VectorTools::compute_norm<dim>(rhs,
-                                                          scratch_data,
-                                                          reinit_dof_idx,
-                                                          reinit_quad_idx);
+        return MeltPoolDG::VectorTools::compute_norm<dim, number>(rhs,
+                                                                  scratch_data,
+                                                                  reinit_dof_idx,
+                                                                  reinit_quad_idx);
       },
       "RHS",
       "reinitialization",
       15 /*precision*/
     );
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(1),
       [&]() -> number {
-        return VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
-                                              scratch_data,
-                                              reinit_dof_idx,
-                                              reinit_quad_idx);
+        return VectorTools::compute_norm<dim, number>(solution_history.get_current_solution(),
+                                                      scratch_data,
+                                                      reinit_dof_idx,
+                                                      reinit_quad_idx);
       },
       "delta phi",
       "reinitialization",
       15 /*precision*/
     );
 
-    Journal::print_formatted_norm(scratch_data.get_pcout(2),
-                                  max_change_level_set,
-                                  "delta phi",
-                                  "reinitialization",
-                                  15 /*precision*/,
-                                  "∞ ",
-                                  2);
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<number>(scratch_data.get_pcout(2),
+                                          max_change_level_set,
+                                          "delta phi",
+                                          "reinitialization",
+                                          15 /*precision*/,
+                                          "∞ ",
+                                          2);
+    Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(2),
       [&]() -> number {
-        return VectorTools::compute_norm<dim>(solution_level_set,
-                                              scratch_data,
-                                              reinit_dof_idx,
-                                              reinit_quad_idx);
+        return VectorTools::compute_norm<dim, number>(solution_level_set,
+                                                      scratch_data,
+                                                      reinit_dof_idx,
+                                                      reinit_quad_idx);
       },
       "phi",
       "reinitialization",
@@ -283,7 +283,7 @@ namespace MeltPoolDG::LevelSet
                         "     * CG: i = " + std::to_string(iter),
                         "reinitialization");
 
-    IterationMonitor::add_linear_iterations(sc, iter);
+    IterationMonitor<number>::add_linear_iterations(sc, iter);
   }
 
   template <int dim, typename number>

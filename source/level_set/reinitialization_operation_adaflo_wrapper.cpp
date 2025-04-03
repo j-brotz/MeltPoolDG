@@ -130,20 +130,20 @@ namespace MeltPoolDG::LevelSet
 
     max_change_level_set = increment.linfty_norm();
 
-    Journal::print_formatted_norm(scratch_data.get_pcout(2),
-                                  max_change_level_set,
-                                  "delta phi",
-                                  "reinitialization",
-                                  10 /*precision*/,
-                                  "∞ ",
-                                  2);
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<number>(scratch_data.get_pcout(2),
+                                          max_change_level_set,
+                                          "delta phi",
+                                          "reinitialization",
+                                          10 /*precision*/,
+                                          "∞ ",
+                                          2);
+    Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(1),
       [&]() -> number {
-        return VectorTools::compute_norm<dim>(increment,
-                                              scratch_data,
-                                              reinit_params_adaflo.dof_index_ls,
-                                              reinit_params_adaflo.quad_index);
+        return VectorTools::compute_norm<dim, number>(increment,
+                                                      scratch_data,
+                                                      reinit_params_adaflo.dof_index_ls,
+                                                      reinit_params_adaflo.quad_index);
       },
       "delta phi",
       "reinitialization_adaflo",

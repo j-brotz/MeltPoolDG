@@ -14,8 +14,8 @@ int
 main()
 {
   {
-    MaterialData<double> material_data;
-    ParameterHandler     prm;
+    MaterialData<double>     material_data;
+    dealii::ParameterHandler prm;
 
     material_data.add_parameters(prm);
 
@@ -29,8 +29,8 @@ main()
     std::cout << "OK!" << std::endl;
   }
   {
-    MaterialData<double> material_data;
-    ParameterHandler     prm;
+    MaterialData<double>     material_data;
+    dealii::ParameterHandler prm;
 
     material_data.add_parameters(prm);
 
@@ -45,8 +45,8 @@ main()
     std::cout << "OK!" << std::endl;
   }
   {
-    MaterialData<double> material_data;
-    ParameterHandler     prm;
+    MaterialData<double>     material_data;
+    dealii::ParameterHandler prm;
 
     material_data.add_parameters(prm);
 

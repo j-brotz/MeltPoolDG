@@ -15,7 +15,7 @@ namespace MeltPoolDG
 
     ~ScopedName()
     {
-      AssertThrow(path.back() == name, ExcInternalError());
+      AssertThrow(path.back() == name, dealii::ExcInternalError());
       path.pop_back();
     }
 

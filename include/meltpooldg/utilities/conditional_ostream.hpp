@@ -1,16 +1,8 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Peter Munch, TUM, March 2021
- *
- * ---------------------------------------------------------------------*/
-
 #pragma once
 #include <deal.II/base/conditional_ostream.h>
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
   class ConditionalOStream : public dealii::ConditionalOStream
   {
   public:

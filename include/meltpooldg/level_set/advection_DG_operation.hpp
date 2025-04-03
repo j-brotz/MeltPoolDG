@@ -110,7 +110,7 @@ namespace MeltPoolDG::LevelSet
     const unsigned int advec_diff_quad_idx = 0;
     const unsigned int velocity_dof_idx    = 0;
 
-    TimeIntegration::SolutionHistory<VectorType> solution_history;
+    TimeIntegration::SolutionHistory<VectorType, number> solution_history;
 
     VectorType rhs;
     VectorType user_rhs;

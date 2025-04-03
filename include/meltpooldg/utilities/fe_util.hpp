@@ -12,17 +12,15 @@
 
 namespace MeltPoolDG::FiniteElementUtils
 {
-  using namespace dealii;
-
   template <int dim, unsigned int n_components = 1>
   void
-  distribute_dofs(const FiniteElementData &fe_data, DoFHandler<dim> &dof_handler);
+  distribute_dofs(const FiniteElementData &fe_data, dealii::DoFHandler<dim> &dof_handler);
 
   template <int dim>
-  std::shared_ptr<Mapping<dim>>
+  std::shared_ptr<dealii::Mapping<dim>>
   create_mapping(const FiniteElementData &fe_data);
 
   template <int dim>
-  Quadrature<dim>
+  dealii::Quadrature<dim>
   create_quadrature(const FiniteElementData &fe_data);
 } // namespace MeltPoolDG::FiniteElementUtils

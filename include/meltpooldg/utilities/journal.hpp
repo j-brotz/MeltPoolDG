@@ -77,9 +77,10 @@ namespace MeltPoolDG::Journal
    * @param[in,opt] norm_suffix Suffix of the norm, put after ||norm_id||.
    * @param[in,opt] extra_size Shift to avoid ugly output for special characters.
    */
+  template <typename number>
   void
   print_formatted_norm(const ConditionalOStream &pcout,
-                       const double              norm_value,
+                       const number              norm_value,
                        const std::string        &norm_id,
                        const std::string        &operation_name,
                        const unsigned int        precision   = 6,
@@ -92,16 +93,17 @@ namespace MeltPoolDG::Journal
    * @p pcout is configured to produce output.
    *
    * @param[in] pcout ConditionalOStream to print the text.
-   * @param[in] norm_value Numerical value of the norm.
+   * @param[in] compute_norm Given function for norm computation.
    * @param[in] norm_id Name of the norm, put into ||norm_id||.
    * @param[in] operation_name Identifier (right aligned) of the text.
    * @param[in,opt] precision Precision of the numerical value.
    * @param[in,opt] norm_suffix Suffix of the norm, put after ||norm_id||.
    * @param[in,opt] extra_size Shift to avoid ugly output for special characters.
    */
+  template <typename number>
   void
   print_formatted_norm(const ConditionalOStream      &pcout,
-                       const std::function<double()> &compute_norm,
+                       const std::function<number()> &compute_norm,
                        const std::string             &norm_id,
                        const std::string             &operation_name,
                        const unsigned int             precision   = 6,

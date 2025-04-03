@@ -123,7 +123,7 @@ namespace MeltPoolDG::LevelSet
     const unsigned int   ls_dof_idx;
     const unsigned int   normal_dof_idx;
 
-    TimeIntegration::SolutionHistory<VectorType> solution_history;
+    TimeIntegration::SolutionHistory<VectorType, number> solution_history;
 
     std::unique_ptr<Predictor<VectorType, number>> predictor;
     /*

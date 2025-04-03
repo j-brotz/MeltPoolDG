@@ -84,7 +84,7 @@ namespace MeltPoolDG::Evaporation
                           "transported by the vapor mass flux in the heat equation. "
                           "This is only recommended if the vapor mass flux is not "
                           "considered in the Navier-Stokes equations.",
-                          Patterns::Selection("default|true|false"));
+                          dealii::Patterns::Selection("default|true|false"));
         prm.add_parameter(
           "activation temperature",
           evaporative_cooling.activation_temperature,
@@ -151,7 +151,7 @@ namespace MeltPoolDG::Evaporation
     AssertThrow((ls_n_subdivisions == 1 ||
                  interface_temperature_evaluation_type !=
                    EvaporativeMassFluxTemperatureEvaluationType::thickness_integral),
-                ExcMessage(
+                dealii::ExcMessage(
                   "If you use the formulation of the evaporative mass flux over the interface "
                   "using the value at the interface or a line integral, n_subdivisions for the "
                   "level set must be 1."));
@@ -159,13 +159,13 @@ namespace MeltPoolDG::Evaporation
     AssertThrow(!recoil.enable ||
                   (evaporative_dilation_rate.enable ||
                    recoil.type == Evaporation::RecoilPressureModelType::phenomenological),
-                ExcMessage("For the phenomenological recoil pressure model, no velocity jump "
-                           "is allowed."));
+                dealii::ExcMessage("For the phenomenological recoil pressure model, no velocity "
+                                   "jump is allowed."));
 
     AssertThrow(!evaporative_cooling.enable || material.latent_heat_of_evaporation > 0.0,
-                ExcMessage("To consider the evaporative heat flux the value for "
-                           ">>> latent heat of evaporation <<< "
-                           "must be larger than zero."));
+                dealii::ExcMessage("To consider the evaporative heat flux the value for "
+                                   ">>> latent heat of evaporation <<< "
+                                   "must be larger than zero."));
   }
 
   template struct EvaporationData<double>;

@@ -33,17 +33,17 @@ namespace MeltPoolDG::Profiling
 
   template <typename number>
   void
-  ProfilingMonitor<number>::print(const ConditionalOStream &pcout,
-                                  const TimerOutput        &timer,
-                                  const MPI_Comm           &mpi_communicator) const
+  ProfilingMonitor<number>::print(const ConditionalOStream  &pcout,
+                                  const dealii::TimerOutput &timer,
+                                  const MPI_Comm            &mpi_communicator) const
   {
     timer.print_wall_time_statistics(mpi_communicator);
     pcout << std::endl;
-    IterationMonitor::print(pcout);
+    IterationMonitor<number>::print(pcout);
     pcout << std::endl;
-    DoFMonitor::print(pcout);
+    DoFMonitor<number>::print(pcout);
     pcout << std::endl;
-    CellMonitor::print(pcout);
+    CellMonitor<number>::print(pcout);
   }
 
   template <typename number>

@@ -46,12 +46,12 @@ namespace MeltPoolDG
 
             {
               const ScopedName sc("nonlinear_solve");
-              IterationMonitor::add_linear_iterations(sc, i);
+              IterationMonitor<double>::add_linear_iterations(sc, i);
             }
 
             {
               const ScopedName sc("linear_solve_acc");
-              IterationMonitor::add_linear_iterations(sc, linear_iter_acc);
+              IterationMonitor<double>::add_linear_iterations(sc, linear_iter_acc);
             }
 
             return;
@@ -143,7 +143,7 @@ namespace MeltPoolDG
     const int iter = solve_with_jacobian(rhs, solution_update);
     {
       const ScopedName sc("linear_solve");
-      IterationMonitor::add_linear_iterations(sc, iter);
+      IterationMonitor<double>::add_linear_iterations(sc, iter);
     }
     linear_iter_acc += iter;
 

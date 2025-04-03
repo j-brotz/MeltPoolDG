@@ -49,7 +49,7 @@ namespace MeltPoolDG::Restart
   void
   RestartMonitor<number>::prepare_save()
   {
-    if (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0)
+    if (dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0)
       {
         for (int i = data.save - 2; i >= 0; --i)
           {
@@ -65,7 +65,8 @@ namespace MeltPoolDG::Restart
               }
             catch (...)
               {
-                AssertThrow(false, ExcMessage("You ran into an assert with std::filesystem."));
+                AssertThrow(false,
+                            dealii::ExcMessage("You ran into an assert with std::filesystem."));
 
                 // TODO
                 //// copy parameter file (workaround since overwrite_existing complains with

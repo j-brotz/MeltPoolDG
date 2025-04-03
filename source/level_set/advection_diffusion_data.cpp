@@ -37,7 +37,7 @@ namespace MeltPoolDG::LevelSet
         "implementation",
         implementation,
         "Choose the corresponding implementation of the advection diffusion operation.",
-        Patterns::Selection("meltpooldg|adaflo"));
+        dealii::Patterns::Selection("meltpooldg|adaflo"));
       prm.add_parameter("enable time dependent bc",
                         enable_time_dependent_bc,
                         "Set this parameter to true to enable time-dependent bc.");
@@ -61,26 +61,29 @@ namespace MeltPoolDG::LevelSet
   AdvectionDiffusionData<number>::check_input_parameters() const
   {
     AssertThrow(linear_solver.do_matrix_free || implementation == "meltpooldg",
-                ExcNotImplemented());
+                dealii::ExcNotImplemented());
 
-    AssertThrow(!enable_time_dependent_bc || implementation == "meltpooldg", ExcNotImplemented());
+    AssertThrow(!enable_time_dependent_bc || implementation == "meltpooldg",
+                dealii::ExcNotImplemented());
 
     AssertThrow((conv_stab.type == ConvectionStabilizationType::SUPG &&
                  linear_solver.do_matrix_free && implementation == "meltpooldg") ||
                   conv_stab.type == ConvectionStabilizationType::none,
-                ExcNotImplemented());
+                dealii::ExcNotImplemented());
     AssertThrow(
       predictor.type != PredictorType::least_squares_projection || linear_solver.do_matrix_free,
-      ExcMessage(
+      dealii::ExcMessage(
         "For matrix-based advection-diffusion solver least squares projection is not supported."));
 
     AssertThrow(diffusivity >= 0.0,
-                ExcMessage("Advection diffusion operator: diffusivity is smaller than zero!"));
+                dealii::ExcMessage(
+                  "Advection diffusion operator: diffusivity is smaller than zero!"));
 
     // Cross check for DG since for DG only matrix free is supported
     if ((fe.type == FiniteElementType::FE_DGQ) && (!linear_solver.do_matrix_free))
       {
-        AssertThrow(false, ExcMessage("For the DG element only matrix free is implemented."));
+        AssertThrow(false,
+                    dealii::ExcMessage("For the DG element only matrix free is implemented."));
       }
   }
 

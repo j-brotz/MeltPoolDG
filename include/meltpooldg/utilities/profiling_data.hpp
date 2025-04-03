@@ -8,11 +8,11 @@ namespace MeltPoolDG::Profiling
 {
   BETTER_ENUM(TimeType, char, real, simulation)
 
-  template <typename number = double>
+  template <typename number>
   struct ProfilingData
   {
     bool     enable               = false;
-    double   write_time_step_size = 10.0;
+    number   write_time_step_size = 10.0;
     TimeType time_type            = TimeType::real;
 
     void

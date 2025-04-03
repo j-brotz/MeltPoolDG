@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Peter Munch, Magdalena Schreter, TUM, December 2020
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/distributed/solution_transfer.h>
@@ -13,26 +8,25 @@
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
+  template <typename number>
   inline bool
-  now(const AdaptiveMeshingData &amr, const int n_time_step)
+  now(const AdaptiveMeshingData<number> &amr, const int n_time_step)
   {
     return ((n_time_step == 0) || !(n_time_step % amr.every_n_step));
   }
 
-  template <int dim, typename VectorType>
+  template <int dim, typename VectorType, typename number>
   void
   refine_grid(const std::function<bool(Triangulation<dim> &)> &mark_cells_for_refinement,
               const std::function<void(
                 std::vector<std::pair<const DoFHandler<dim> *,
                                       std::function<void(std::vector<VectorType *> &)>>> &data)>
-                                          &attach_vectors,
-              const std::function<void()> &post,
-              const std::function<void()> &setup_dof_system,
-              const AdaptiveMeshingData   &amr,
-              Triangulation<dim>          &tria,
-              const int                    n_time_step)
+                                                &attach_vectors,
+              const std::function<void()>       &post,
+              const std::function<void()>       &setup_dof_system,
+              const AdaptiveMeshingData<number> &amr,
+              Triangulation<dim>                &tria,
+              const int                          n_time_step)
   {
     if (!now(amr, n_time_step))
       return;
@@ -137,13 +131,13 @@ namespace MeltPoolDG
   }
 
 
-  template <int dim, typename VectorType>
+  template <int dim, typename VectorType, typename number>
   void
   refine_grid(const std::function<bool(Triangulation<dim> &)>        &mark_cells_for_refinement,
               const std::function<void(std::vector<VectorType *> &)> &attach_vectors,
               const std::function<void()>                            &post,
               const std::function<void()>                            &setup_dof_system,
-              const AdaptiveMeshingData                              &amr,
+              const AdaptiveMeshingData<number>                      &amr,
               DoFHandler<dim>                                        &dof_handler,
               const int                                               n_time_step)
   {

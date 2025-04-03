@@ -3,12 +3,13 @@
 #include <deal.II/base/parameter_handler.h>
 namespace MeltPoolDG
 {
+  template <typename number>
   struct AdaptiveMeshingData
   {
     bool         do_amr                       = false;
     bool         do_not_modify_boundary_cells = false;
-    double       upper_perc_to_refine         = 0.0;
-    double       lower_perc_to_coarsen        = 0.0;
+    number       upper_perc_to_refine         = 0.0;
+    number       lower_perc_to_coarsen        = 0.0;
     int          n_initial_refinement_cycles  = 0;
     int          every_n_step                 = 1;
     unsigned int max_grid_refinement_level    = 12;

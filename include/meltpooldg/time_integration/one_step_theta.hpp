@@ -97,7 +97,7 @@ namespace MeltPoolDG
     perform_time_step(
       const number                                                         current_time,
       const number                                                         time_step,
-      ::TimeIntegration::SolutionHistory<VectorType>                      &solution_history,
+      ::TimeIntegration::SolutionHistory<VectorType, number>              &solution_history,
       const std::function<void(number, VectorType &, const VectorType &)> &pre_processing,
       const std::function<void(number, VectorType &, const VectorType &)> &post_processing) override
     {
@@ -176,7 +176,7 @@ namespace MeltPoolDG
      * reinit(solution_history.get_current_solution()).
      */
     void
-    reinit(const ::TimeIntegration::SolutionHistory<VectorType> &solution_history) override
+    reinit(const ::TimeIntegration::SolutionHistory<VectorType, number> &solution_history) override
     {
       reinit(solution_history.get_current_solution());
     }

@@ -97,7 +97,7 @@ namespace MeltPoolDG::Evaporation
     if (do_level_set_pressure_gradient_interpolation)
       {
         ls_to_pressure_grad_interpolation_matrix =
-          UtilityFunctions::create_dof_interpolation_matrix<dim>(
+          UtilityFunctions::create_dof_interpolation_matrix<dim, number>(
             scratch_data.get_dof_handler(flow_pressure_dof_idx),
             scratch_data.get_dof_handler(ls_dof_idx),
             true /*do_matrix_free*/);

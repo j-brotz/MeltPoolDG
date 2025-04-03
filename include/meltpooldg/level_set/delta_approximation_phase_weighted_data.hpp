@@ -38,7 +38,7 @@ namespace MeltPoolDG::LevelSet
     bool   auto_weights         = false;
 
     void
-    add_parameters(ParameterHandler &prm);
+    add_parameters(dealii::ParameterHandler &prm);
 
     void
     set_parameters(const MaterialData<number>             &material,

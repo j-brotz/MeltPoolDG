@@ -60,11 +60,11 @@ namespace MeltPoolDG::Heat
 
     // These are the primary solution variables of this module, which will be also publicly
     // accessible for output_results.
-    TimeIntegration::SolutionHistory<VectorType> solution_history;
-    VectorType                                   predictor_buffer;
-    VectorType                                   heat_source;
-    VectorType                                   user_rhs;
-    VectorType                                   interface_temperature;
+    TimeIntegration::SolutionHistory<VectorType, number> solution_history;
+    VectorType                                           predictor_buffer;
+    VectorType                                           heat_source;
+    VectorType                                           user_rhs;
+    VectorType                                           interface_temperature;
 
     // for output only
     mutable VectorType user_rhs_projected;

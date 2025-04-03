@@ -62,7 +62,7 @@ namespace MeltPoolDG::Restart
     if (write_time_step_size > 0.0)
       {
         AssertThrow(time_type == TimeType::real || write_time_step_size >= time_step_size,
-                    ExcMessage(
+                    dealii::ExcMessage(
                       "The time step size for restart must be equal or larger than the simulation "
                       "time step size."));
       }

@@ -72,7 +72,7 @@ namespace MeltPoolDG::RadiativeTransport
   {
     {
       ScopedName sc("rte::n_dofs");
-      DoFMonitor::add_n_dofs(sc, scratch_data.get_dof_handler(rte_dof_idx).n_dofs());
+      DoFMonitor<number>::add_n_dofs(sc, scratch_data.get_dof_handler(rte_dof_idx).n_dofs());
     }
 
     scratch_data.initialize_dof_vector(intensity, rte_dof_idx);
@@ -98,7 +98,7 @@ namespace MeltPoolDG::RadiativeTransport
     const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> &bc_data,
     const PeriodicBoundaryConditions<dim>                                      &pbc)
   {
-    Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC(
+    Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim, number>(
       scratch_data_in, bc_data, pbc, rte_dof_idx, rte_hanging_nodes_dof_idx, true);
   }
 
@@ -145,10 +145,13 @@ namespace MeltPoolDG::RadiativeTransport
     if (rte_data.predictor_type == RTEPredictorType::pseudo_time_stepping)
       pseudo_rte_operation->set_intensity(intensity);
 
-    Journal::print_formatted_norm(
+    Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(1),
       [&]() -> number {
-        return VectorTools::compute_norm<dim>(intensity, scratch_data, rte_dof_idx, rte_quad_idx);
+        return VectorTools::compute_norm<dim, number>(intensity,
+                                                      scratch_data,
+                                                      rte_dof_idx,
+                                                      rte_quad_idx);
       },
       "intensity",
       "RTE",
@@ -157,7 +160,7 @@ namespace MeltPoolDG::RadiativeTransport
 
     intensity.update_ghost_values();
 
-    IterationMonitor::add_linear_iterations(sc, iter);
+    IterationMonitor<number>::add_linear_iterations(sc, iter);
   }
 
   template <int dim, typename number>

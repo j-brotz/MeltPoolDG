@@ -4,6 +4,7 @@
 
 namespace MeltPoolDG
 {
+  template <typename number>
   class DoFMonitor
   {
   private:
@@ -45,21 +46,21 @@ namespace MeltPoolDG
     static void
     print(StreamType &ss)
     {
-      ConvergenceTable table;
+      dealii::ConvergenceTable table;
 
       for (const auto &entry : stat_dofs)
         {
           table.add_value("label", entry.first);
           table.add_value("n_calls", entry.second.n_calls);
           table.add_value("dofs_avg",
-                          static_cast<double>(entry.second.dofs_accumulated) /
+                          static_cast<number>(entry.second.dofs_accumulated) /
                             entry.second.n_calls);
           table.add_value("dofs_min", entry.second.dofs_min);
           table.add_value("dofs_max", entry.second.dofs_max);
         }
 
       if (ss.is_active())
-        table.write_text(ss.get_stream(), TableHandler::TextOutputFormat::org_mode_table);
+        table.write_text(ss.get_stream(), dealii::TableHandler::TextOutputFormat::org_mode_table);
     }
 
 
