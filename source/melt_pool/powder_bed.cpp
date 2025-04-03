@@ -1,6 +1,9 @@
+#include <deal.II/base/data_out_base.h>
 #include <deal.II/base/exceptions.h>
 
 #include <meltpooldg/melt_pool/powder_bed.hpp>
+
+#include <boost/geometry/geometries/concepts/point_concept.hpp>
 
 #include <algorithm>
 #include <filesystem>
@@ -9,10 +12,9 @@
 
 namespace MeltPoolDG::MeltPool
 {
-  using namespace dealii;
-
+  template <typename number>
   void
-  PowderBedData::add_parameters(dealii::ParameterHandler &prm)
+  PowderBedData<number>::add_parameters(dealii::ParameterHandler &prm)
   {
     prm.enter_subsection("powder bed");
     {
@@ -31,28 +33,29 @@ namespace MeltPoolDG::MeltPool
     prm.leave_subsection();
   }
 
-  template <int dim>
-  PowderBedLevelSet<dim>::PowderBedLevelSet(const PowderBedData &powder_bed_data,
-                                            const LevelSetType   level_set_type,
-                                            const double         eps)
-    : Function<dim>()
+  template <int dim, typename number>
+  PowderBedLevelSet<dim, number>::PowderBedLevelSet(const PowderBedData<number> &powder_bed_data,
+                                                    const LevelSetType           level_set_type,
+                                                    const number                 eps)
+    : dealii::Function<dim, number>()
     , data(powder_bed_data)
     , particles(read_particles_from_file(data.particle_list_file))
     , level_set_type(level_set_type)
     , eps(eps)
   {
-    AssertThrow(!particles.empty(),
-                ExcMessage("The powder bed contains no powder particles! "
-                           "Please check input files."));
+    AssertThrow(not particles.empty(),
+                dealii::ExcMessage("The powder bed contains no powder particles! "
+                                   "Please check input files."));
   }
 
-  template <int dim>
-  double
-  PowderBedLevelSet<dim>::value(const Point<dim> &p, const unsigned int /* component */) const
+  template <int dim, typename number>
+  number
+  PowderBedLevelSet<dim, number>::value(const dealii::Point<dim> &p,
+                                        const unsigned int /* component */) const
   {
     // compute the signed distance in particle space, which is always 3D
 
-    Point<3> point;
+    dealii::Point<3> point;
     if constexpr (dim == 3)
       point = p;
     else if (dim == 2)
@@ -66,15 +69,15 @@ namespace MeltPoolDG::MeltPool
         point[2] = p[1];
       }
     else
-      AssertThrow(false, ExcNotImplemented());
+      AssertThrow(false, dealii::ExcNotImplemented());
 
-    double signed_distance = std::numeric_limits<double>::lowest();
+    number signed_distance = std::numeric_limits<number>::lowest();
     for (const auto &particle : particles)
       signed_distance = std::max(signed_distance,
                                  /* signed distance to particle */ particle.second -
                                    point.distance(particle.first));
 
-    if (data.substrate_level != std::numeric_limits<double>::lowest())
+    if (data.substrate_level != std::numeric_limits<number>::lowest())
       signed_distance =
         std::max(signed_distance,
                  /* signed distance to substrate */ data.substrate_level - point[2]);
@@ -89,15 +92,15 @@ namespace MeltPoolDG::MeltPool
         case LevelSetType::signed_distance:
           return signed_distance;
         default:
-          AssertThrow(false, ExcNotImplemented());
+          AssertThrow(false, dealii::ExcNotImplemented());
       }
     // unreachable dummy return
     return 0.0;
   }
 
-  template <int dim>
-  std::vector<typename PowderBedLevelSet<dim>::Particle>
-  PowderBedLevelSet<dim>::read_particles_from_file(const std::string &input_file) const
+  template <int dim, typename number>
+  std::vector<typename PowderBedLevelSet<dim, number>::Particle>
+  PowderBedLevelSet<dim, number>::read_particles_from_file(const std::string &input_file) const
   {
     auto particle_list_file_stream = open_file(input_file);
 
@@ -108,9 +111,9 @@ namespace MeltPoolDG::MeltPool
     return temp;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   std::ifstream
-  PowderBedLevelSet<dim>::open_file(const std::string &input_file) const
+  PowderBedLevelSet<dim, number>::open_file(const std::string &input_file) const
   {
     std::filesystem::path input_file_path(input_file);
 
@@ -122,24 +125,25 @@ namespace MeltPoolDG::MeltPool
           input_file_path = relative_to_source;
         else
           AssertThrow(false,
-                      ExcMessage("Input file <" + input_file +
-                                 "> not found. Please make sure the file exists!"));
+                      dealii::ExcMessage("Input file <" + input_file +
+                                         "> not found. Please make sure the file exists!"));
       }
 
     std::ifstream input_file_stream(input_file_path);
-    if (!input_file_stream)
+    if (not input_file_stream)
       {
         input_file_stream.close();
         AssertThrow(false,
-                    ExcMessage("Input file <" + input_file +
-                               "> not found. Please make sure the file exists!"));
+                    dealii::ExcMessage("Input file <" + input_file +
+                                       "> not found. Please make sure the file exists!"));
       }
     return input_file_stream;
   }
 
-  template <int dim>
-  std::vector<typename PowderBedLevelSet<dim>::Particle>
-  PowderBedLevelSet<dim>::read_particles_from_csv_output(std::ifstream &csv_file_stream) const
+  template <int dim, typename number>
+  std::vector<typename PowderBedLevelSet<dim, number>::Particle>
+  PowderBedLevelSet<dim, number>::read_particles_from_csv_output(
+    std::ifstream &csv_file_stream) const
   {
     std::vector<Particle> particle_vector;
 
@@ -147,7 +151,7 @@ namespace MeltPoolDG::MeltPool
     const auto n_lines = std::count(std::istreambuf_iterator<char>(csv_file_stream),
                                     std::istreambuf_iterator<char>(),
                                     '\n');
-    AssertThrow(n_lines > 0, ExcMessage("The particle list file has no entries!"));
+    AssertThrow(n_lines > 0, dealii::ExcMessage("The particle list file has no entries!"));
     // ... go back to beginning of the file stream
     csv_file_stream.clear();
     csv_file_stream.seekg(0);
@@ -155,12 +159,12 @@ namespace MeltPoolDG::MeltPool
     particle_vector.reserve(n_lines - 1);
 
     // convert to meter
-    const double unit_conversion_factor = 1e-3;
+    const number unit_conversion_factor = 1e-3;
 
     // buffers
-    Point<3>    coordinates;
-    double      radius;
-    std::string line, cell;
+    dealii::Point<3> coordinates;
+    number           radius;
+    std::string      line, cell;
 
     // skip header
     std::getline(csv_file_stream, line);
@@ -168,7 +172,7 @@ namespace MeltPoolDG::MeltPool
     while (std::getline(csv_file_stream, line))
       {
         AssertThrow(std::count(line.begin(), line.end(), ',') == 5,
-                    ExcMessage("Invalid csv file, the number of columns must be 6!"));
+                    dealii::ExcMessage("Invalid csv file, the number of columns must be 6!"));
 
         try
           {
@@ -190,7 +194,7 @@ namespace MeltPoolDG::MeltPool
           {
             AssertThrow(
               false,
-              ExcMessage(
+              dealii::ExcMessage(
                 "Invalid csv file! Besides a header line the csv file must only consist of "
                 "numbers in 6 columns separated by commas."));
           }
@@ -201,7 +205,9 @@ namespace MeltPoolDG::MeltPool
     return particle_vector;
   }
 
-  template class PowderBedLevelSet<1>;
-  template class PowderBedLevelSet<2>;
-  template class PowderBedLevelSet<3>;
+  template struct PowderBedData<double>;
+
+  template class PowderBedLevelSet<1, double>;
+  template class PowderBedLevelSet<2, double>;
+  template class PowderBedLevelSet<3, double>;
 } // namespace MeltPoolDG::MeltPool

@@ -174,7 +174,7 @@ namespace MeltPoolDG::Simulation::PowderBed
         reinit_data.interface_thickness_parameter.value = 1.5;
 
         // attach prescribed heaviside
-        this->attach_initial_condition(std::make_shared<MeltPool::PowderBedLevelSet<dim>>(
+        this->attach_initial_condition(std::make_shared<MeltPool::PowderBedLevelSet<dim, double>>(
                                          powder_bed_data,
                                          MeltPool::LevelSetType::heaviside,
                                          reinit_data.compute_interface_thickness_parameter_epsilon(

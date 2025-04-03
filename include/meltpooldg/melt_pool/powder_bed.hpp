@@ -15,13 +15,12 @@
 
 namespace MeltPoolDG::MeltPool
 {
-  using namespace dealii;
-
+  template <typename number>
   struct PowderBedData
   {
     std::string particle_list_file;
-    double      substrate_level = std::numeric_limits<double>::lowest();
-    double      slice_location  = 0.0;
+    number      substrate_level = std::numeric_limits<number>::lowest();
+    number      slice_location  = 0.0;
 
     void
     add_parameters(dealii::ParameterHandler &prm);
@@ -29,19 +28,19 @@ namespace MeltPoolDG::MeltPool
 
   BETTER_ENUM(LevelSetType, char, level_set, heaviside, signed_distance)
 
-  template <int dim>
-  class PowderBedLevelSet : public Function<dim>
+  template <int dim, typename number>
+  class PowderBedLevelSet : public dealii::Function<dim, number>
   {
     // pair of center and radius
-    using Particle = std::pair<Point<3>, double>;
+    using Particle = std::pair<dealii::Point<3>, number>;
 
   public:
-    PowderBedLevelSet(const PowderBedData &powder_bed_data,
-                      const LevelSetType   level_set_type = LevelSetType::level_set,
-                      const double         eps            = 0.0);
+    PowderBedLevelSet(const PowderBedData<number> &powder_bed_data,
+                      const LevelSetType           level_set_type = LevelSetType::level_set,
+                      const number                 eps            = 0.0);
 
-    double
-    value(const Point<dim> &p, const unsigned int /* component */) const override;
+    number
+    value(const dealii::Point<dim> &p, const unsigned int /* component */) const override;
 
   private:
     std::vector<Particle>
@@ -64,9 +63,9 @@ namespace MeltPoolDG::MeltPool
     std::vector<Particle>
     read_particles_from_csv_output(std::ifstream &csv_file_stream) const;
 
-    const PowderBedData         data;
+    const PowderBedData<number> data;
     const std::vector<Particle> particles;
     const LevelSetType          level_set_type;
-    const double                eps;
+    const number                eps;
   };
 } // namespace MeltPoolDG::MeltPool
