@@ -6,7 +6,8 @@
 #include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/affine_constraints.h>
-#include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/problem_base.hpp>
@@ -37,20 +38,18 @@
 
 namespace MeltPoolDG::MeltPool
 {
-  using namespace dealii;
-
   BETTER_ENUM(AMRStrategy, char, generic, adaflo, KellyErrorEstimator)
   BETTER_ENUM(AutomaticGridRefinementType, char, fixed_fraction, fixed_number)
   BETTER_ENUM(OutputNotConvergedOperation, char, none, navier_stokes, heat_transfer)
 
 
-  template <int dim>
+  template <int dim, typename number>
   class MeltPoolProblem : public ProblemBase<dim>
   {
   private:
     using SimulationType  = MeltPoolCase<dim>;
-    using VectorType      = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
   public:
     MeltPoolProblem() = default;
@@ -84,7 +83,7 @@ namespace MeltPoolDG::MeltPool
         // number of iterations to balance nonlinearity in advection diffusion equation with
         // evaporation
         int    n_max_iter = 1;
-        double tol        = 1e-10;
+        number tol        = 1e-10;
       } level_set_evapor_coupling;
 
       struct
@@ -92,7 +91,7 @@ namespace MeltPoolDG::MeltPool
         // number of iterations to balance nonlinearity in heat equation with
         // evaporation
         int    n_max_iter = 1;
-        double tol        = 1e-10;
+        number tol        = 1e-10;
       } heat_evapor_coupling;
 
       struct
@@ -102,15 +101,15 @@ namespace MeltPoolDG::MeltPool
           AutomaticGridRefinementType::fixed_number;
         bool   do_auto_detect_frequency                   = false;
         bool   do_refine_all_interface_cells              = false;
-        double fraction_of_melting_point_refined_in_solid = 1.0;
+        number fraction_of_melting_point_refined_in_solid = 1.0;
         bool   refine_gas_domain                          = false;
       } amr;
 
       struct
       {
-        double time_step_size                   = -1;
-        double max_temperature                  = -1;
-        double max_change_factor_time_step_size = 1.5;
+        number time_step_size                   = -1;
+        number max_temperature                  = -1;
+        number max_change_factor_time_step_size = 1.5;
       } mp_heat_up;
 
     } problem_specific_parameters;
@@ -144,7 +143,7 @@ namespace MeltPoolDG::MeltPool
      * Update material parameter of the phases.
      */
     void
-    set_phase_dependent_parameters_flow(const Parameters<double> &parameters);
+    set_phase_dependent_parameters_flow(const Parameters<number> &parameters);
 
     /**
      * Compute gravity force.
@@ -152,15 +151,15 @@ namespace MeltPoolDG::MeltPool
      * @todo Move to own class.
      */
     void
-    compute_gravity_force(VectorType &vec, const double gravity, const bool zero_out = true) const;
+    compute_gravity_force(VectorType &vec, const number gravity, const bool zero_out = true) const;
 
     void
-    compute_interface_velocity(const LevelSet::LevelSetData<double>       &ls_data,
-                               const Evaporation::EvaporationData<double> &evapor_data);
+    compute_interface_velocity(const LevelSet::LevelSetData<number>       &ls_data,
+                               const Evaporation::EvaporationData<number> &evapor_data);
 
     void
-    compute_interface_velocity_sharp(const LevelSet::LevelSetData<double>       &ls_data,
-                                     const Evaporation::EvaporationData<double> &evapor_data);
+    compute_interface_velocity_sharp(const LevelSet::LevelSetData<number>       &ls_data,
+                                     const Evaporation::EvaporationData<number> &evapor_data);
 
     /*
      *  perform output of results
@@ -174,7 +173,7 @@ namespace MeltPoolDG::MeltPool
      * collect all relevant output data
      */
     void
-    attach_output_vectors(GenericDataOut<dim, double> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
     /*
      * finalize simulation in the case that an operaion didn't converge
      */
@@ -192,7 +191,7 @@ namespace MeltPoolDG::MeltPool
      *  perform mesh refinement
      */
     void
-    attach_vectors(std::vector<std::pair<const DoFHandler<dim> *,
+    attach_vectors(std::vector<std::pair<const dealii::DoFHandler<dim> *,
                                          std::function<void(std::vector<VectorType *> &)>>> &data);
 
     /*
@@ -202,27 +201,28 @@ namespace MeltPoolDG::MeltPool
     post();
 
     bool
-    mark_cells_for_refinement(std::shared_ptr<SimulationType> base_in, Triangulation<dim> &tria);
+    mark_cells_for_refinement(std::shared_ptr<SimulationType> base_in,
+                              dealii::Triangulation<dim>     &tria);
 
-    std::shared_ptr<TimeIterator<double>> time_iterator;
+    std::shared_ptr<TimeIterator<number>> time_iterator;
 
-    DoFHandler<dim> dof_handler_ls;
+    dealii::DoFHandler<dim> dof_handler_ls;
 
     // optional heat DoFHandler
-    std::unique_ptr<DoFHandler<dim>> dof_handler_heat;
+    std::unique_ptr<dealii::DoFHandler<dim>> dof_handler_heat;
     // optional DoFHandler for the HeatCutOperation's continuous DoFs
-    std::unique_ptr<DoFHandler<dim>> dof_handler_heat_cont;
+    std::unique_ptr<dealii::DoFHandler<dim>> dof_handler_heat_cont;
 
-    AffineConstraints<double> ls_constraints_dirichlet;
-    AffineConstraints<double> ls_hanging_node_constraints;
-    AffineConstraints<double> reinit_constraints_dirichlet;
-    AffineConstraints<double> reinit_no_solid_constraints_dirichlet;
+    dealii::AffineConstraints<number> ls_constraints_dirichlet;
+    dealii::AffineConstraints<number> ls_hanging_node_constraints;
+    dealii::AffineConstraints<number> reinit_constraints_dirichlet;
+    dealii::AffineConstraints<number> reinit_no_solid_constraints_dirichlet;
 
-    std::unique_ptr<AffineConstraints<double>> heat_dirichlet_constraints;
-    std::unique_ptr<AffineConstraints<double>> heat_hanging_node_constraints;
-    std::unique_ptr<AffineConstraints<double>> heat_continuous_hanging_node_constraints;
+    std::unique_ptr<dealii::AffineConstraints<number>> heat_dirichlet_constraints;
+    std::unique_ptr<dealii::AffineConstraints<number>> heat_hanging_node_constraints;
+    std::unique_ptr<dealii::AffineConstraints<number>> heat_continuous_hanging_node_constraints;
 
-    AffineConstraints<double> flow_velocity_constraints_no_solid;
+    dealii::AffineConstraints<number> flow_velocity_constraints_no_solid;
 
     VectorType vel_force_rhs;
     VectorType mass_balance_rhs;
@@ -252,21 +252,21 @@ namespace MeltPoolDG::MeltPool
     const unsigned int &evapor_mass_flux_dof_idx = heat_no_bc_dof_idx;
 
     std::shared_ptr<ScratchData<dim>>                               scratch_data;
-    std::shared_ptr<Material<double>>                               material;
+    std::shared_ptr<Material<number>>                               material;
     std::shared_ptr<Flow::FlowBase<dim>>                            flow_operation;
-    std::shared_ptr<LevelSet::LevelSetOperation<dim, double>>       level_set_operation;
-    std::shared_ptr<Heat::LaserOperation<dim, double>>              laser_operation;
-    std::shared_ptr<MeltFrontPropagation<dim, double>>              melt_front_propagation;
-    std::shared_ptr<Evaporation::EvaporationOperation<dim, double>> evaporation_operation = nullptr;
-    std::shared_ptr<Evaporation::IncompressibleNewtonianFluidEvaporationMaterial<dim, double>>
+    std::shared_ptr<LevelSet::LevelSetOperation<dim, number>>       level_set_operation;
+    std::shared_ptr<Heat::LaserOperation<dim, number>>              laser_operation;
+    std::shared_ptr<MeltFrontPropagation<dim, number>>              melt_front_propagation;
+    std::shared_ptr<Evaporation::EvaporationOperation<dim, number>> evaporation_operation = nullptr;
+    std::shared_ptr<Evaporation::IncompressibleNewtonianFluidEvaporationMaterial<dim, number>>
                                                                        evaporation_fluid_material;
-    std::shared_ptr<Heat::HeatOperationBase<dim, double>>              heat_operation;
+    std::shared_ptr<Heat::HeatOperationBase<dim, number>>              heat_operation;
     std::shared_ptr<Flow::DarcyDampingOperation<dim>>                  darcy_operation;
     std::shared_ptr<Flow::SurfaceTensionOperation<dim>>                surface_tension_operation;
-    std::shared_ptr<Evaporation::RecoilPressureOperation<dim, double>> recoil_pressure_operation;
-    std::shared_ptr<Postprocessor<dim, double>>                        post_processor;
-    std::unique_ptr<Profiling::ProfilingMonitor<double>>               profiling_monitor;
-    std::shared_ptr<Restart::RestartMonitor<double>>                   restart_monitor;
+    std::shared_ptr<Evaporation::RecoilPressureOperation<dim, number>> recoil_pressure_operation;
+    std::shared_ptr<Postprocessor<dim, number>>                        post_processor;
+    std::unique_ptr<Profiling::ProfilingMonitor<number>>               profiling_monitor;
+    std::shared_ptr<Restart::RestartMonitor<number>>                   restart_monitor;
 
     bool output_interface_velocity     = false;
     bool compute_interface_temperature = false;

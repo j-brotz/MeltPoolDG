@@ -10,7 +10,7 @@ namespace MeltPoolDG
   ProblemSelector<dim>::get_problem(const std::string &problem_name)
   {
     if (problem_name == "melt_pool")
-      return std::make_shared<MeltPool::MeltPoolProblem<dim>>();
+      return std::make_shared<MeltPool::MeltPoolProblem<dim, double>>();
     /* add your problem here*/
 
     else

@@ -19,15 +19,15 @@ namespace MeltPoolDG::Simulation::PowderBed
   class SimulationPowderBed : public Heat::HeatTransferCase<dim>
   {
   private:
-    double                    domain_x_min = 0;
-    double                    domain_x_max = 0;
-    double                    domain_y_min = 0;
-    double                    domain_y_max = 0;
-    double                    domain_z_min = 0;
-    double                    domain_z_max = 0;
-    std::vector<unsigned int> cell_repetitions;
-    double                    T_initial = 500;
-    MeltPool::PowderBedData   powder_bed_data;
+    double                          domain_x_min = 0;
+    double                          domain_x_max = 0;
+    double                          domain_y_min = 0;
+    double                          domain_y_max = 0;
+    double                          domain_z_min = 0;
+    double                          domain_z_max = 0;
+    std::vector<unsigned int>       cell_repetitions;
+    double                          T_initial = 500;
+    MeltPool::PowderBedData<double> powder_bed_data;
 
   public:
     SimulationPowderBed(std::string parameter_file, const MPI_Comm mpi_communicator);
