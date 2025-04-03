@@ -21,13 +21,13 @@ namespace dealii::Functions
       return -fu->value(point, component);
     }
 
-    dealii::Tensor<1, dim>
+    dealii::Tensor<1, dim, number>
     gradient(const Point<dim> &point, const unsigned int component) const override
     {
       return -fu->gradient(point, component);
     }
 
-    dealii::SymmetricTensor<2, dim>
+    dealii::SymmetricTensor<2, dim, number>
     hessian(const Point<dim> &point, const unsigned int component) const override
     {
       return -fu->hessian(point, component);
