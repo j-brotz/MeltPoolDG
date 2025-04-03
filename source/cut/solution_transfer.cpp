@@ -42,10 +42,10 @@
 
 namespace MeltPoolDG::CutUtil
 {
-  template <int dim, typename Number>
-  SolutionTransferOperator<dim, Number>::SolutionTransferOperator(const Number gamma_degree_0,
-                                                                  const Number gamma_degree_1,
-                                                                  const Number gamma_degree_2,
+  template <int dim, typename number>
+  SolutionTransferOperator<dim, number>::SolutionTransferOperator(const number gamma_degree_0,
+                                                                  const number gamma_degree_1,
+                                                                  const number gamma_degree_2,
                                                                   const bool   is_two_phase,
                                                                   const int    verbosity)
     : gamma_degree_0(gamma_degree_0)
@@ -58,9 +58,9 @@ namespace MeltPoolDG::CutUtil
 
 
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  SolutionTransferOperator<dim, Number>::reinit(
+  SolutionTransferOperator<dim, number>::reinit(
     dealii::DoFHandler<dim>                                                  &dof_handler,
     dealii::Triangulation<dim>                                               &tria,
     const VectorType                                                         &solution,
@@ -162,9 +162,9 @@ namespace MeltPoolDG::CutUtil
 
 
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  SolutionTransferOperator<dim, Number>::transfer_solution_constant_dofs(
+  SolutionTransferOperator<dim, number>::transfer_solution_constant_dofs(
     dealii::DoFHandler<dim>                                                  &dof_handler,
     dealii::Triangulation<dim>                                               &tria,
     const VectorType                                                         &solution,
@@ -270,9 +270,9 @@ namespace MeltPoolDG::CutUtil
 
 
 
-  template <int dim, typename Number>
-  dealii::LinearAlgebra::distributed::Vector<Number>
-  SolutionTransferOperator<dim, Number>::mark_dofs_for_gp_extrapolation(
+  template <int dim, typename number>
+  dealii::LinearAlgebra::distributed::Vector<number>
+  SolutionTransferOperator<dim, number>::mark_dofs_for_gp_extrapolation(
     const dealii::DoFHandler<dim>                  &dof_handler,
     const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
     const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old) const
@@ -398,9 +398,9 @@ namespace MeltPoolDG::CutUtil
 
 
 
-  template <int dim, typename Number>
-  dealii::AffineConstraints<Number>
-  SolutionTransferOperator<dim, Number>::create_constraints_gp_extrapolation(
+  template <int dim, typename number>
+  dealii::AffineConstraints<number>
+  SolutionTransferOperator<dim, number>::create_constraints_gp_extrapolation(
     const dealii::DoFHandler<dim> &dof_handler,
     const VectorType              &flags_dofs_gp_extrapolation) const
   {
@@ -427,7 +427,7 @@ namespace MeltPoolDG::CutUtil
         new_solution_including_all_ghosts.update_ghost_values();
       }
 
-    dealii::AffineConstraints<Number> constraints_gp;
+    dealii::AffineConstraints<number> constraints_gp;
     constraints_gp.reinit(dealii::DoFTools::extract_locally_relevant_dofs(dof_handler));
 
     std::vector<bool> dof_processed(partitioner_dof.locally_owned_size() +
@@ -442,7 +442,7 @@ namespace MeltPoolDG::CutUtil
         std::vector<dealii::types::global_dof_index> dof_indices(cell->get_fe().n_dofs_per_cell());
         cell->get_dof_indices(dof_indices);
 
-        dealii::Vector<Number> extrapolate_dofs(cell->get_fe().n_dofs_per_cell());
+        dealii::Vector<number> extrapolate_dofs(cell->get_fe().n_dofs_per_cell());
         cell->get_dof_values(flags_dofs_gp_extrapolation, extrapolate_dofs);
 
         for (unsigned int i = 0; i < extrapolate_dofs.size(); ++i)
@@ -482,9 +482,9 @@ namespace MeltPoolDG::CutUtil
 
 
 
-  template <int dim, typename Number>
+  template <int dim, typename number>
   void
-  SolutionTransferOperator<dim, Number>::extrapolate_solution_new_dofs(
+  SolutionTransferOperator<dim, number>::extrapolate_solution_new_dofs(
     const dealii::DoFHandler<dim>                                            &dof_handler,
     const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier,
     const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier_old,
@@ -495,11 +495,11 @@ namespace MeltPoolDG::CutUtil
       mark_dofs_for_gp_extrapolation(dof_handler, mesh_classifier, mesh_classifier_old);
 
     // check if DoFs have to be extrapolated, otherwise no gp-extrapolation is required
-    const Number sum_gp_extrap = flags_dofs_gp_extrapolation.l1_norm();
+    const number sum_gp_extrap = flags_dofs_gp_extrapolation.l1_norm();
 
     // set inhomogeneous Dirichlet constraints for DoFs which do no not require ghost-penalty
     // extrapolation
-    const dealii::AffineConstraints<Number> constraints_gp =
+    const dealii::AffineConstraints<number> constraints_gp =
       create_constraints_gp_extrapolation(dof_handler, flags_dofs_gp_extrapolation);
 
     // set-up sparsity pattern
@@ -545,7 +545,7 @@ namespace MeltPoolDG::CutUtil
           continue;
 
         const auto   cell_location    = mesh_classifier.location_to_level_set(cell);
-        const Number cell_side_length = cell->minimum_vertex_distance();
+        const number cell_side_length = cell->minimum_vertex_distance();
 
         if (cell_location != dealii::NonMatching::LocationToLevelSet::intersected)
           continue;
@@ -578,22 +578,22 @@ namespace MeltPoolDG::CutUtil
 
               // Determine prefactor, for ghost-penalty face term evaluation.
               // Prefactor 0.5 is used for faces, which are visited twice.
-              Number prefactor = 1.;
+              number prefactor = 1.;
               if (CutUtil::is_new_intersected_face(
                     mesh_classifier, mesh_classifier_old, cell, f, inactive_location))
                 prefactor = 0.5;
 
               // initialize local ghost-penalty constraint matrix and local rhs
-              dealii::FullMatrix<Number> local_ghost_penalty_matrix(n_interface_dofs,
+              dealii::FullMatrix<number> local_ghost_penalty_matrix(n_interface_dofs,
                                                                     n_interface_dofs);
-              dealii::Vector<Number>     local_rhs(n_interface_dofs);
+              dealii::Vector<number>     local_rhs(n_interface_dofs);
 
               // compute entries of local ghost-penalty constraint matrix
               for (const auto i : fe_interface_values.dof_indices())
                 for (const auto j : fe_interface_values.dof_indices())
                   for (unsigned int q = 0; q < fe_interface_values.n_quadrature_points; ++q)
                     {
-                      const dealii::Tensor<1, dim> normal = fe_interface_values.normal(q);
+                      const dealii::Tensor<1, dim, number> normal = fe_interface_values.normal(q);
 
                       // contributions from 1. normal derivative jump
                       local_ghost_penalty_matrix(i, j) +=
