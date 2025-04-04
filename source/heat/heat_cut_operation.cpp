@@ -411,13 +411,14 @@ namespace MeltPoolDG::Heat
   number
   HeatCutOperation<dim, number>::compute_L2_norm() const
   {
-    return CutUtil::compute_cut_L2_norm(solution_history.get_current_solution(),
-                                        scratch_data.get_matrix_free(),
-                                        mapping_info_cells,
-                                        heat_data.cut.two_phase,
-                                        dealii::FE_Q<dim>(heat_data.fe.degree),
-                                        heat_cut_dof_idx,
-                                        heat_quad_idx);
+    return CutUtil::compute_cut_norm(solution_history.get_current_solution(),
+                                     scratch_data.get_matrix_free(),
+                                     mapping_info_cells,
+                                     heat_data.cut.two_phase,
+                                     dealii::FE_Q<dim>(heat_data.fe.degree),
+                                     heat_cut_dof_idx,
+                                     heat_quad_idx,
+                                     CutUtil::NormType::L2_norm);
   }
 
   template <int dim, typename number>

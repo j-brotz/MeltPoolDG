@@ -10,14 +10,18 @@
 
 #include <deal.II/non_matching/mapping_info.h>
 
+#include <deal.II/numerics/vector_tools_common.h>
+
 #include <memory>
 #include <vector>
 
 namespace MeltPoolDG::CutUtil
 {
+  using NormType = dealii::VectorTools::NormType;
+
   template <int dim, typename number>
   number
-  compute_cut_L2_norm(
+  compute_cut_norm(
     const dealii::LinearAlgebra::distributed::Vector<number>               &solution,
     const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free,
     const std::vector<
@@ -26,5 +30,6 @@ namespace MeltPoolDG::CutUtil
     const bool               is_two_phase,
     const dealii::FE_Q<dim> &reference_element,
     const unsigned int       dof_idx,
-    const unsigned int       quad_idx);
-}
+    const unsigned int       quad_idx,
+    const NormType           norm_type = NormType::L2_norm);
+} // namespace MeltPoolDG::CutUtil

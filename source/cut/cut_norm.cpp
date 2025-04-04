@@ -1,5 +1,6 @@
 #include <meltpooldg/cut/cut_norm.hpp>
 //
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/utilities.h>
 
@@ -10,12 +11,13 @@
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
 #include <cmath>
+#include <functional>
 
 namespace MeltPoolDG::CutUtil
 {
   template <int dim, typename number>
   number
-  compute_cut_L2_norm(
+  compute_cut_norm(
     const dealii::LinearAlgebra::distributed::Vector<number>               &solution,
     const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free,
     const std::vector<
@@ -24,7 +26,8 @@ namespace MeltPoolDG::CutUtil
     const bool               is_two_phase,
     const dealii::FE_Q<dim> &reference_element,
     const unsigned int       dof_idx,
-    const unsigned int       quad_idx)
+    const unsigned int       quad_idx,
+    const NormType           norm_type)
   {
     static constexpr int n_components = 1;
 
@@ -42,7 +45,37 @@ namespace MeltPoolDG::CutUtil
     if (update_ghosts)
       solution.update_ghost_values();
 
-    number error_L2_squared = 0.;
+    number sum = 0.;
+    std::function<void(const dealii::VectorizedArray<number> &,
+                       const dealii::VectorizedArray<number> &,
+                       const unsigned int)>
+      operation;
+    switch (norm_type)
+      {
+          case NormType::L2_norm: {
+            operation = [&](const dealii::VectorizedArray<number> &values,
+                            const dealii::VectorizedArray<number> &JxW,
+                            const unsigned int                     n_active_lanes) {
+              const auto contrib = dealii::Utilities::fixed_power<2>(values) * JxW;
+              for (unsigned int lane = 0; lane < n_active_lanes; ++lane)
+                sum += contrib[lane];
+            };
+            break;
+          }
+          case NormType::L1_norm: {
+            operation = [&](const dealii::VectorizedArray<number> &values,
+                            const dealii::VectorizedArray<number> &JxW,
+                            const unsigned int                     n_active_lanes) {
+              const auto contrib = values * JxW;
+              for (unsigned int lane = 0; lane < n_active_lanes; ++lane)
+                sum += contrib[lane];
+            };
+            break;
+          }
+        default:
+          DEAL_II_NOT_IMPLEMENTED();
+      }
+
 
     for (unsigned int cell_batch = 0; cell_batch < matrix_free.n_cell_batches(); ++cell_batch)
       {
@@ -61,14 +94,9 @@ namespace MeltPoolDG::CutUtil
             eval_l.evaluate(dealii::EvaluationFlags::values);
 
             for (const unsigned int q : eval_l.quadrature_point_indices())
-              {
-                const auto error_squared =
-                  dealii::Utilities::fixed_power<2>(eval_l.get_value(q)) * eval_l.JxW(q);
-                for (unsigned int lane = 0;
-                     lane < matrix_free.n_active_entries_per_cell_batch(cell_batch);
-                     ++lane)
-                  error_L2_squared += error_squared[lane];
-              }
+              operation(eval_l.get_value(q),
+                        eval_l.JxW(q),
+                        matrix_free.n_active_entries_per_cell_batch(cell_batch));
           }
         else if (cell_category == CellCategory::gas and is_two_phase)
           {
@@ -84,14 +112,9 @@ namespace MeltPoolDG::CutUtil
             eval_g.evaluate(dealii::EvaluationFlags::values);
 
             for (const unsigned int q : eval_g.quadrature_point_indices())
-              {
-                const auto error_squared =
-                  dealii::Utilities::fixed_power<2>(eval_g.get_value(q)) * eval_g.JxW(q);
-                for (unsigned int lane = 0;
-                     lane < matrix_free.n_active_entries_per_cell_batch(cell_batch);
-                     ++lane)
-                  error_L2_squared += error_squared[lane];
-              }
+              operation(eval_g.get_value(q),
+                        eval_g.JxW(q),
+                        matrix_free.n_active_entries_per_cell_batch(cell_batch));
           }
         else if (cell_category == CellCategory::intersected and not is_two_phase)
           {
@@ -121,15 +144,9 @@ namespace MeltPoolDG::CutUtil
                                                          reference_element.n_dofs_per_cell());
 
                 for (const unsigned int q_batch : eval_subdomain_l.quadrature_point_indices())
-                  {
-                    const auto error_squared =
-                      dealii::Utilities::fixed_power<2>(eval_subdomain_l.get_value(q_batch)) *
-                      eval_subdomain_l.JxW(q_batch);
-                    for (unsigned int q_lane = 0;
-                         q_lane < eval_subdomain_l.n_active_entries_per_quadrature_batch(q_batch);
-                         ++q_lane)
-                      error_L2_squared += error_squared[q_lane];
-                  }
+                  operation(eval_subdomain_l.get_value(q_batch),
+                            eval_subdomain_l.JxW(q_batch),
+                            eval_subdomain_l.n_active_entries_per_quadrature_batch(q_batch));
               }
           }
         else if (cell_category == CellCategory::intersected and is_two_phase)
@@ -177,26 +194,14 @@ namespace MeltPoolDG::CutUtil
                                                          reference_element.n_dofs_per_cell());
 
                 for (const unsigned int q_batch : eval_subdomain_l.quadrature_point_indices())
-                  {
-                    const auto error_squared =
-                      dealii::Utilities::fixed_power<2>(eval_subdomain_l.get_value(q_batch)) *
-                      eval_subdomain_l.JxW(q_batch);
-                    for (unsigned int q_lane = 0;
-                         q_lane < eval_subdomain_l.n_active_entries_per_quadrature_batch(q_batch);
-                         ++q_lane)
-                      error_L2_squared += error_squared[q_lane];
-                  }
+                  operation(eval_subdomain_l.get_value(q_batch),
+                            eval_subdomain_l.JxW(q_batch),
+                            eval_subdomain_l.n_active_entries_per_quadrature_batch(q_batch));
 
                 for (const unsigned int q_batch : eval_subdomain_g.quadrature_point_indices())
-                  {
-                    const auto error_squared =
-                      dealii::Utilities::fixed_power<2>(eval_subdomain_g.get_value(q_batch)) *
-                      eval_subdomain_g.JxW(q_batch);
-                    for (unsigned int q_lane = 0;
-                         q_lane < eval_subdomain_g.n_active_entries_per_quadrature_batch(q_batch);
-                         ++q_lane)
-                      error_L2_squared += error_squared[q_lane];
-                  }
+                  operation(eval_subdomain_g.get_value(q_batch),
+                            eval_subdomain_g.JxW(q_batch),
+                            eval_subdomain_g.n_active_entries_per_quadrature_batch(q_batch));
               }
           }
       }
@@ -204,13 +209,21 @@ namespace MeltPoolDG::CutUtil
     if (update_ghosts)
       solution.zero_out_ghost_values();
 
-    return std::sqrt(
-      dealii::Utilities::MPI::sum(error_L2_squared, solution.get_mpi_communicator()));
+    switch (norm_type)
+      {
+        case NormType::L2_norm:
+          return std::sqrt(dealii::Utilities::MPI::sum(sum, solution.get_mpi_communicator()));
+        case NormType::L1_norm:
+          return dealii::Utilities::MPI::sum(sum, solution.get_mpi_communicator());
+        default:
+          DEAL_II_NOT_IMPLEMENTED();
+      }
+    return 0.0;
   }
 
 
   template double
-  compute_cut_L2_norm(
+  compute_cut_norm(
     const dealii::LinearAlgebra::distributed::Vector<double> &,
     const dealii::MatrixFree<1, double, dealii::VectorizedArray<double>> &,
     const std::vector<
@@ -218,9 +231,10 @@ namespace MeltPoolDG::CutUtil
     const bool,
     const dealii::FE_Q<1> &,
     const unsigned int,
-    const unsigned int);
+    const unsigned int,
+    const NormType);
   template double
-  compute_cut_L2_norm(
+  compute_cut_norm(
     const dealii::LinearAlgebra::distributed::Vector<double> &,
     const dealii::MatrixFree<2, double, dealii::VectorizedArray<double>> &,
     const std::vector<
@@ -228,9 +242,10 @@ namespace MeltPoolDG::CutUtil
     const bool,
     const dealii::FE_Q<2> &,
     const unsigned int,
-    const unsigned int);
+    const unsigned int,
+    const NormType);
   template double
-  compute_cut_L2_norm(
+  compute_cut_norm(
     const dealii::LinearAlgebra::distributed::Vector<double> &,
     const dealii::MatrixFree<3, double, dealii::VectorizedArray<double>> &,
     const std::vector<
@@ -238,5 +253,6 @@ namespace MeltPoolDG::CutUtil
     const bool,
     const dealii::FE_Q<3> &,
     const unsigned int,
-    const unsigned int);
+    const unsigned int,
+    const NormType);
 } // namespace MeltPoolDG::CutUtil
