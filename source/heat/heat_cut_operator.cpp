@@ -1033,7 +1033,7 @@ namespace MeltPoolDG::Heat
                           heat_cut_dof_idx /*dof_no*/,
                           heat_quad_idx /*quad_no*/,
                           0 /*selected component*/,
-                          CutUtil::CellCategory::liquid /*active_fe_index*/);
+                          cell_category /*active_fe_index*/);
         std::unique_ptr<DomainEval<>> T_eval_l;
         if (do_solidification)
           T_eval_l = std::make_unique<DomainEval<>>(eval_l);
@@ -1055,7 +1055,7 @@ namespace MeltPoolDG::Heat
                           heat_cut_dof_idx /*dof_no*/,
                           heat_quad_idx /*quad_no*/,
                           1 /*selected component*/,
-                          CutUtil::CellCategory::gas /*active_fe_index*/);
+                          cell_category /*active_fe_index*/);
 
         for (unsigned int cell_batch = cell_batch_range.first; cell_batch < cell_batch_range.second;
              ++cell_batch)
@@ -1075,7 +1075,7 @@ namespace MeltPoolDG::Heat
                                heat_cut_dof_idx /*dof_no*/,
                                heat_quad_idx /*quad_no*/,
                                0 /*selected component*/,
-                               CutUtil::CellCategory::intersected /*active_fe_index*/);
+                               cell_category /*active_fe_index*/);
         std::unique_ptr<DomainEval<>> T_eval_cell_l;
         if (evapor_cooling or do_solidification)
           T_eval_cell_l = std::make_unique<DomainEval<>>(eval_cell_l);
@@ -1124,7 +1124,7 @@ namespace MeltPoolDG::Heat
                                heat_cut_dof_idx /*dof_no*/,
                                heat_quad_idx /*quad_no*/,
                                0 /*selected component*/,
-                               CutUtil::CellCategory::intersected /*active_fe_index*/);
+                               cell_category /*active_fe_index*/);
         std::unique_ptr<DomainEval<>> T_eval_cell_l;
         if (evapor_cooling or do_solidification)
           T_eval_cell_l = std::make_unique<DomainEval<>>(eval_cell_l);
@@ -1147,7 +1147,7 @@ namespace MeltPoolDG::Heat
                                heat_cut_dof_idx /*dof_no*/,
                                heat_quad_idx /*quad_no*/,
                                1 /*selected component*/,
-                               CutUtil::CellCategory::intersected /*active_fe_index*/);
+                               cell_category /*active_fe_index*/);
         std::unique_ptr<DomainEval<>> T_eval_cell_g;
         if (evapor_cooling)
           T_eval_cell_g = std::make_unique<DomainEval<>>(eval_cell_g);
@@ -1327,7 +1327,7 @@ namespace MeltPoolDG::Heat
                                 heat_cut_dof_idx /*dof_no*/,
                                 heat_quad_idx /*quad_no*/,
                                 0 /*selected component*/,
-                                CutUtil::CellCategory::liquid /*active_fe_index*/);
+                                cell_category /*active_fe_index*/);
         DomainEval<> T_old_eval_l(T_new_eval_l);
 
         for (unsigned int cell_batch = cell_batch_range.first; cell_batch < cell_batch_range.second;
@@ -1373,7 +1373,7 @@ namespace MeltPoolDG::Heat
                                 heat_cut_dof_idx /*dof_no*/,
                                 heat_quad_idx /*quad_no*/,
                                 1 /*selected component*/,
-                                CutUtil::CellCategory::gas /*active_fe_index*/);
+                                cell_category /*active_fe_index*/);
         DomainEval<1> T_old_eval_g(T_new_eval_g);
 
         for (unsigned int cell_batch = cell_batch_range.first; cell_batch < cell_batch_range.second;
@@ -1417,7 +1417,7 @@ namespace MeltPoolDG::Heat
                                      heat_cut_dof_idx /*dof_no*/,
                                      heat_quad_idx /*quad_no*/,
                                      0 /*selected component*/,
-                                     CutUtil::CellCategory::intersected /*active_fe_index*/);
+                                     cell_category /*active_fe_index*/);
         DomainEval<1> T_old_eval_cell_l(T_new_eval_cell_l);
         PointEval     T_new_eval_subdomain_l(*mapping_info_cells[0], reference_finite_element_heat);
         PointEval     T_old_eval_subdomain_l(T_new_eval_subdomain_l);
@@ -1545,7 +1545,7 @@ namespace MeltPoolDG::Heat
                                      heat_cut_dof_idx /*dof_no*/,
                                      heat_quad_idx /*quad_no*/,
                                      0 /*selected component*/,
-                                     CutUtil::CellCategory::intersected /*active_fe_index*/);
+                                     cell_category /*active_fe_index*/);
         DomainEval<1> T_old_eval_cell_l(T_new_eval_cell_l);
         PointEval     T_new_eval_subdomain_l(*mapping_info_cells[0], reference_finite_element_heat);
         PointEval     T_old_eval_subdomain_l(T_new_eval_subdomain_l);
@@ -1559,7 +1559,7 @@ namespace MeltPoolDG::Heat
                                      heat_cut_dof_idx /*dof_no*/,
                                      heat_quad_idx /*quad_no*/,
                                      1 /*selected component*/,
-                                     CutUtil::CellCategory::intersected /*active_fe_index*/);
+                                     cell_category /*active_fe_index*/);
         DomainEval<1> T_old_eval_cell_g(T_new_eval_cell_g);
         PointEval     T_new_eval_subdomain_g(*mapping_info_cells[1], reference_finite_element_heat);
         PointEval     T_old_eval_subdomain_g(T_new_eval_subdomain_g);
@@ -1923,14 +1923,23 @@ namespace MeltPoolDG::Heat
     const auto &matrix_free = scratch_data.get_matrix_free();
 
     // use FEEvaluation and FEPointEvaluation in combination for intersected cells
-    std::unique_ptr<DomainEval<>> T_eval_cell_l;
+    std::unique_ptr<DomainEval<>> T_eval_l;
+    std::unique_ptr<DomainEval<>> T_eval_intersected_l;
     if (evapor_cooling or do_solidification)
-      T_eval_cell_l =
-        std::make_unique<DomainEval<>>(matrix_free,
-                                       heat_cut_dof_idx /*dof_no*/,
-                                       heat_quad_idx /*quad_no*/,
-                                       0 /*selected component*/,
-                                       CutUtil::CellCategory::intersected /*active_fe_index*/);
+      {
+        T_eval_l =
+          std::make_unique<DomainEval<>>(matrix_free,
+                                         heat_cut_dof_idx /*dof_no*/,
+                                         heat_quad_idx /*quad_no*/,
+                                         0 /*selected component*/,
+                                         CutUtil::CellCategory::liquid /*active_fe_index*/);
+        T_eval_intersected_l =
+          std::make_unique<DomainEval<>>(matrix_free,
+                                         heat_cut_dof_idx /*dof_no*/,
+                                         heat_quad_idx /*quad_no*/,
+                                         0 /*selected component*/,
+                                         CutUtil::CellCategory::intersected /*active_fe_index*/);
+      }
     std::unique_ptr<DomainEval<dim>> vel_eval;
     if (velocity)
       vel_eval = std::make_unique<DomainEval<dim>>(matrix_free, vel_dof_idx, heat_quad_idx);
@@ -1949,29 +1958,33 @@ namespace MeltPoolDG::Heat
     if (evapor_cooling)
       T_eval_interface_l = std::make_unique<PointEval<>>(eval_interface_l);
 
-    // the following short hand if else is a workaround to avoid a segfault for the one phase case
-    // in which mapping_info_cells only contains a single phase.
-    std::unique_ptr<DomainEval<>> T_eval_cell_g;
-    if (evapor_cooling)
-      T_eval_cell_g =
-        std::make_unique<DomainEval<>>(matrix_free,
-                                       heat_cut_dof_idx /*dof_no*/,
-                                       heat_quad_idx /*quad_no*/,
-                                       heat_data.cut.two_phase ? 1 : 0 /*selected component*/,
-                                       CutUtil::CellCategory::intersected /*active_fe_index*/);
-
-    PointEval eval_subdomain_g(*mapping_info_cells[heat_data.cut.two_phase ? 1 : 0],
-                               reference_finite_element_heat);
+    std::unique_ptr<DomainEval<>>   T_eval_intersected_g;
+    std::unique_ptr<PointEval<>>    eval_subdomain_g;
     std::unique_ptr<PointEval<dim>> vel_eval_subdomain_g;
-    if (vel_eval)
-      vel_eval_subdomain_g =
-        std::make_unique<PointEval<dim>>(*mapping_info_cells[heat_data.cut.two_phase ? 1 : 0],
-                                         reference_finite_element_vel);
+    std::unique_ptr<PointEval<>>    eval_interface_g;
+    std::unique_ptr<PointEval<>>    T_eval_interface_g;
+    if (heat_data.cut.two_phase)
+      {
+        if (evapor_cooling)
+          {
+            T_eval_intersected_g = std::make_unique<DomainEval<>>(
+              matrix_free,
+              heat_cut_dof_idx /*dof_no*/,
+              heat_quad_idx /*quad_no*/,
+              1 /*selected component*/,
+              CutUtil::CellCategory::intersected /*active_fe_index*/);
+            T_eval_interface_g = std::make_unique<PointEval<>>(eval_interface_l);
+          }
 
-    PointEval                    eval_interface_g(eval_interface_l);
-    std::unique_ptr<PointEval<>> T_eval_interface_g;
-    if (evapor_cooling)
-      T_eval_interface_g = std::make_unique<PointEval<>>(eval_interface_l);
+        eval_subdomain_g =
+          std::make_unique<PointEval<>>(*mapping_info_cells[1], reference_finite_element_heat);
+
+        if (vel_eval)
+          vel_eval_subdomain_g =
+            std::make_unique<PointEval<dim>>(*mapping_info_cells[1], reference_finite_element_vel);
+
+        eval_interface_g = std::make_unique<PointEval<>>(eval_interface_l);
+      }
 
     unsigned int old_cell_batch = numbers::invalid_unsigned_int;
 
@@ -2068,7 +2081,7 @@ namespace MeltPoolDG::Heat
           eval_1.evaluate(evaluate_values | evaluate_gradients);
 
           tangent_cell_operation_liquid(
-            cell_batch, eval_1, T_eval_cell_l.get(), vel_eval.get(), cell_batch != old_cell_batch);
+            cell_batch, eval_1, T_eval_l.get(), vel_eval.get(), cell_batch != old_cell_batch);
 
           eval_1.integrate(evaluate_values | evaluate_gradients);
         }
@@ -2089,7 +2102,7 @@ namespace MeltPoolDG::Heat
                                                        eval_1,
                                                        eval_subdomain_l,
                                                        evapor_cooling ? &eval_interface_l : nullptr,
-                                                       T_eval_cell_l.get(),
+                                                       T_eval_intersected_l.get(),
                                                        T_eval_subdomain_l.get(),
                                                        T_eval_interface_l.get(),
                                                        vel_eval.get(),
@@ -2104,11 +2117,11 @@ namespace MeltPoolDG::Heat
                                                        eval_1,
                                                        eval_2,
                                                        eval_subdomain_l,
-                                                       eval_subdomain_g,
+                                                       *eval_subdomain_g,
                                                        eval_interface_l,
-                                                       eval_interface_g,
-                                                       T_eval_cell_l.get(),
-                                                       T_eval_cell_g.get(),
+                                                       *eval_interface_g,
+                                                       T_eval_intersected_l.get(),
+                                                       T_eval_intersected_g.get(),
                                                        T_eval_subdomain_l.get(),
                                                        T_eval_interface_l.get(),
                                                        T_eval_interface_g.get(),
@@ -2276,7 +2289,7 @@ namespace MeltPoolDG::Heat
                               heat_cut_dof_idx /*dof_no*/,
                               heat_quad_idx /*quad_no*/,
                               0 /*selected component*/,
-                              CutUtil::CellCategory::liquid /*active_fe_index*/);
+                              cell_category /*active_fe_index*/);
 
             internal::reinit_and_read_plain(eval_l, solution, cell_batch);
             eval_l.evaluate(evaluate_values);
@@ -2297,7 +2310,7 @@ namespace MeltPoolDG::Heat
                               heat_cut_dof_idx /*dof_no*/,
                               heat_quad_idx /*quad_no*/,
                               1 /*selected component*/,
-                              CutUtil::CellCategory::gas /*active_fe_index*/);
+                              cell_category /*active_fe_index*/);
 
             internal::reinit_and_read_plain(eval_g, solution, cell_batch);
             eval_g.evaluate(evaluate_values);
@@ -2320,7 +2333,7 @@ namespace MeltPoolDG::Heat
                                    heat_cut_dof_idx /*dof_no*/,
                                    heat_quad_idx /*quad_no*/,
                                    0 /*selected component*/,
-                                   CutUtil::CellCategory::intersected /*active_fe_index*/);
+                                   cell_category /*active_fe_index*/);
             PointEval  eval_subdomain_l(*mapping_info_cells[0], reference_finite_element_heat);
 
             internal::reinit_and_read_plain(eval_cell_l, solution, cell_batch);
@@ -2355,13 +2368,13 @@ namespace MeltPoolDG::Heat
                                    heat_cut_dof_idx /*dof_no*/,
                                    heat_quad_idx /*quad_no*/,
                                    0 /*selected component*/,
-                                   CutUtil::CellCategory::intersected /*active_fe_index*/);
+                                   cell_category /*active_fe_index*/);
             PointEval  eval_subdomain_l(*mapping_info_cells[0], reference_finite_element_heat);
             DomainEval eval_cell_g(matrix_free,
                                    heat_cut_dof_idx /*dof_no*/,
                                    heat_quad_idx /*quad_no*/,
                                    1 /*selected component*/,
-                                   CutUtil::CellCategory::intersected /*active_fe_index*/);
+                                   cell_category /*active_fe_index*/);
             PointEval  eval_subdomain_g(*mapping_info_cells[1], reference_finite_element_heat);
 
             internal::reinit_and_read_plain(eval_cell_l, solution, cell_batch);
