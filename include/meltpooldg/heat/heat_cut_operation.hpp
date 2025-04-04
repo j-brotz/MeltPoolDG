@@ -150,6 +150,9 @@ namespace MeltPoolDG::Heat
     void
     solve() override;
 
+    number
+    compute_L2_norm() const;
+
     void
     register_interface_projection_data(
       const VectorType                         &distance,

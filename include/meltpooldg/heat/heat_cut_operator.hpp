@@ -154,12 +154,6 @@ namespace MeltPoolDG::Heat
     void
     create_rhs(VectorType &residual, const VectorType &temperature_old) const final;
 
-    /**
-     * computes the L2 norm of the @param solution on the cut domain.
-     */
-    number
-    compute_cut_L2_norm(const VectorType &solution) const;
-
   private:
     dealii::VectorizedArray<number>
     compute_qVapor(const dealii::VectorizedArray<number> &T) const;
