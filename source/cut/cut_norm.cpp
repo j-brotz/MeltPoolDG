@@ -28,7 +28,18 @@ namespace MeltPoolDG::CutUtil
   {
     static constexpr int n_components = 1;
 
-    if (not solution.has_ghost_elements())
+#ifdef DEBUG
+    auto n_comp = matrix_free.get_dof_handler(dof_idx).get_fe().n_components();
+    // for two phase cut, dof_handler_req.get_fe().n_components() returns double the number
+    // of components
+    if (is_two_phase)
+      n_comp /= 2;
+    Assert(n_components == n_comp,
+           dealii::ExcMessage("For now, this function is only implemened for n_components = 1!"));
+#endif
+
+    const bool update_ghosts = not solution.has_ghost_elements();
+    if (update_ghosts)
       solution.update_ghost_values();
 
     number error_L2_squared = 0.;
@@ -189,6 +200,9 @@ namespace MeltPoolDG::CutUtil
               }
           }
       }
+
+    if (update_ghosts)
+      solution.zero_out_ghost_values();
 
     return std::sqrt(
       dealii::Utilities::MPI::sum(error_L2_squared, solution.get_mpi_communicator()));
