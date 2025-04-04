@@ -27,13 +27,12 @@ namespace MeltPoolDG
    */
   template <typename OperatorType, typename VectorType>
   concept DealiipreconditionerWrapperOperatorType =
-    requires(const OperatorType op, dealii::TrilinosWrappers::SparseMatrix &matrix)
-  {
-    /**
-     * Compute the matrix representation of the system matrix and store it in the given matrix.
-     */
-    op.compute_system_matrix_from_matrixfree(matrix);
-  };
+    requires(const OperatorType op, dealii::TrilinosWrappers::SparseMatrix &matrix) {
+      /**
+       * Compute the matrix representation of the system matrix and store it in the given matrix.
+       */
+      op.compute_system_matrix_from_matrixfree(matrix);
+    };
 
   /**
    * Wrapper class for deal.II matrix-based preconditioners.

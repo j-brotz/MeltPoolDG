@@ -29,8 +29,7 @@ namespace MeltPoolDG
                                             VectorType       &vec,
                                             const VectorType &const_vec,
                                             bool              boolean,
-                                            Number            number)
-  {
+                                            Number            number) {
     /**
      * Given an ODE y'=f(y) this function shall compute the residual y'-f(y) = 0. The function
      * takes six parameters: current time, current y and the destination vector in
@@ -61,8 +60,7 @@ namespace MeltPoolDG
    * additional constraints must be applied to the solution.
    */
   template <typename Operator, typename VectorType>
-  concept SolutionRequiresConstraints = requires(Operator pde_operator, VectorType &vec)
-  {
+  concept SolutionRequiresConstraints = requires(Operator pde_operator, VectorType &vec) {
     /**
      * Distribute additional pde specific constraints to the given vector. The passed vector is the
      * current solution vector.

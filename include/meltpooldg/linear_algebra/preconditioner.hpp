@@ -16,28 +16,26 @@ namespace MeltPoolDG
    * A concept defining the requirements on a specific preconditioner implementation.
    */
   template <typename PreconditionerType, unsigned int dim, typename VectorType, typename number>
-  concept PreconditionerTypeConcept = requires(PreconditionerType preconditioner,
-                                               VectorType        &vec,
-                                               const VectorType  &const_vec)
-  {
-    /**
-     * A function that updates the preconditioner. The usage of the function argument idepends on
-     * the specific preconditioner implementation.
-     */
-    preconditioner.update(std::declval<std::any>());
+  concept PreconditionerTypeConcept =
+    requires(PreconditionerType preconditioner, VectorType &vec, const VectorType &const_vec) {
+      /**
+       * A function that updates the preconditioner. The usage of the function argument idepends on
+       * the specific preconditioner implementation.
+       */
+      preconditioner.update(std::declval<std::any>());
 
-    /**
-     * Apply the preconditioner to the second function argument and return the result in the first
-     * function argument.
-     */
-    preconditioner.vmult(vec, const_vec);
+      /**
+       * Apply the preconditioner to the second function argument and return the result in the first
+       * function argument.
+       */
+      preconditioner.vmult(vec, const_vec);
 
-    /**
-     * Initilaize the preconditioner.
-     */
-    preconditioner.reinit(std::declval<ScratchData<dim, dim, number>>(),
-                          std::declval<unsigned int>());
-  };
+      /**
+       * Initilaize the preconditioner.
+       */
+      preconditioner.reinit(std::declval<ScratchData<dim, dim, number>>(),
+                            std::declval<unsigned int>());
+    };
 
 
   template <unsigned int dim, typename VectorType, typename number>

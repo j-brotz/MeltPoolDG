@@ -14,8 +14,7 @@ namespace MeltPoolDG
    * A concept for matrix free operators that are compatible with the Jacobi preconditioner.
    */
   template <typename OperatorType, typename VectorType>
-  concept JacobiPreconditionerOperatorType = requires(const OperatorType op, VectorType &diag)
-  {
+  concept JacobiPreconditionerOperatorType = requires(const OperatorType op, VectorType &diag) {
     /**
      * Compute the inverse of the diagonal of the system matrix and store it in the given vector.
      */
