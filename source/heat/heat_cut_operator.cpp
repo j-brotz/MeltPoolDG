@@ -2320,7 +2320,7 @@ namespace MeltPoolDG::Heat
                                    heat_cut_dof_idx /*dof_no*/,
                                    heat_quad_idx /*quad_no*/,
                                    0 /*selected component*/,
-                                   CutUtil::CellCategory::liquid /*active_fe_index*/);
+                                   CutUtil::CellCategory::intersected /*active_fe_index*/);
             PointEval  eval_subdomain_l(*mapping_info_cells[0], reference_finite_element_heat);
 
             internal::reinit_and_read_plain(eval_cell_l, solution, cell_batch);
@@ -2355,13 +2355,13 @@ namespace MeltPoolDG::Heat
                                    heat_cut_dof_idx /*dof_no*/,
                                    heat_quad_idx /*quad_no*/,
                                    0 /*selected component*/,
-                                   CutUtil::CellCategory::liquid /*active_fe_index*/);
+                                   CutUtil::CellCategory::intersected /*active_fe_index*/);
             PointEval  eval_subdomain_l(*mapping_info_cells[0], reference_finite_element_heat);
             DomainEval eval_cell_g(matrix_free,
                                    heat_cut_dof_idx /*dof_no*/,
                                    heat_quad_idx /*quad_no*/,
                                    1 /*selected component*/,
-                                   CutUtil::CellCategory::gas /*active_fe_index*/);
+                                   CutUtil::CellCategory::intersected /*active_fe_index*/);
             PointEval  eval_subdomain_g(*mapping_info_cells[1], reference_finite_element_heat);
 
             internal::reinit_and_read_plain(eval_cell_l, solution, cell_batch);
