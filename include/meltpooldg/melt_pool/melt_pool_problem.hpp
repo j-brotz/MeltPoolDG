@@ -44,10 +44,10 @@ namespace MeltPoolDG::MeltPool
 
 
   template <int dim, typename number>
-  class MeltPoolProblem : public ProblemBase<dim>
+  class MeltPoolProblem : public ProblemBase<dim, number>
   {
   private:
-    using SimulationType  = MeltPoolCase<dim>;
+    using SimulationType  = MeltPoolCase<dim, number>;
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
@@ -251,7 +251,7 @@ namespace MeltPoolDG::MeltPool
     const unsigned int &evapor_vel_dof_idx       = vel_dof_idx;
     const unsigned int &evapor_mass_flux_dof_idx = heat_no_bc_dof_idx;
 
-    std::shared_ptr<ScratchData<dim>>                               scratch_data;
+    std::shared_ptr<ScratchData<dim, dim, number>>                  scratch_data;
     std::shared_ptr<Material<number>>                               material;
     std::shared_ptr<Flow::FlowBase<dim>>                            flow_operation;
     std::shared_ptr<LevelSet::LevelSetOperation<dim, number>>       level_set_operation;
@@ -261,8 +261,8 @@ namespace MeltPoolDG::MeltPool
     std::shared_ptr<Evaporation::IncompressibleNewtonianFluidEvaporationMaterial<dim, number>>
                                                                        evaporation_fluid_material;
     std::shared_ptr<Heat::HeatOperationBase<dim, number>>              heat_operation;
-    std::shared_ptr<Flow::DarcyDampingOperation<dim>>                  darcy_operation;
-    std::shared_ptr<Flow::SurfaceTensionOperation<dim>>                surface_tension_operation;
+    std::shared_ptr<Flow::DarcyDampingOperation<dim, number>>          darcy_operation;
+    std::shared_ptr<Flow::SurfaceTensionOperation<dim, number>>        surface_tension_operation;
     std::shared_ptr<Evaporation::RecoilPressureOperation<dim, number>> recoil_pressure_operation;
     std::shared_ptr<Postprocessor<dim, number>>                        post_processor;
     std::unique_ptr<Profiling::ProfilingMonitor<number>>               profiling_monitor;

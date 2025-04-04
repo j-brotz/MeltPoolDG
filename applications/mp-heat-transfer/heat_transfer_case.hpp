@@ -23,7 +23,7 @@ namespace MeltPoolDG::Heat
 {
   BETTER_ENUM(AMRStrategy, char, KellyErrorEstimator, generic)
 
-  template <typename number = double>
+  template <typename number>
   struct HeatTransferCaseParameters : public ParametersBase
   {
   protected:
@@ -95,14 +95,14 @@ namespace MeltPoolDG::Heat
   };
 
 
-  template <int dim>
-  class HeatTransferCase : public SimulationCaseBase<dim>
+  template <int dim, typename number>
+  class HeatTransferCase : public SimulationCaseBase<dim, number>
   {
   public:
-    HeatTransferCaseParameters<double> parameters;
+    HeatTransferCaseParameters<number> parameters;
 
     HeatTransferCase(const std::string &parameter_file_in, MPI_Comm mpi_communicator_in)
-      : SimulationCaseBase<dim>(parameter_file_in, mpi_communicator_in)
+      : SimulationCaseBase<dim, number>(parameter_file_in, mpi_communicator_in)
     {
       dealii::ParameterHandler prm;
       parameters.process_parameters_file(prm, parameter_file_in);

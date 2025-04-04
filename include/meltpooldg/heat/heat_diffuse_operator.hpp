@@ -176,21 +176,21 @@ namespace MeltPoolDG::Heat
 
   public:
     HeatDiffuseMultiPhaseOperator(
-      const ScratchData<dim, dim, number>                       &scratch_data_in,
-      const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
-      const HeatData<number>                                    &data_in,
-      const Material<number>                                    &material,
-      const unsigned int                                         heat_dof_idx_in,
-      const unsigned int                                         heat_quad_idx_in,
-      const unsigned int                                         heat_no_bc_dof_idx,
-      const VectorType                                          &temperature_in,
-      const VectorType                                          &temperature_old_in,
-      const VectorType                                          &heat_source_in,
-      const unsigned int                                         vel_dof_idx_in = 0,
-      const VectorType                                          *velocity_in    = nullptr,
-      const unsigned int                                         ls_dof_idx_in  = 0,
-      const VectorType *level_set_as_heaviside_in                               = nullptr,
-      const bool        do_solidifiaction_in                                    = false);
+      const ScratchData<dim, dim, number>                               &scratch_data_in,
+      const std::shared_ptr<const BoundaryConditionManager<dim, number>> heat_bc_manager,
+      const HeatData<number>                                            &data_in,
+      const Material<number>                                            &material,
+      const unsigned int                                                 heat_dof_idx_in,
+      const unsigned int                                                 heat_quad_idx_in,
+      const unsigned int                                                 heat_no_bc_dof_idx,
+      const VectorType                                                  &temperature_in,
+      const VectorType                                                  &temperature_old_in,
+      const VectorType                                                  &heat_source_in,
+      const unsigned int                                                 vel_dof_idx_in = 0,
+      const VectorType                                                  *velocity_in    = nullptr,
+      const unsigned int                                                 ls_dof_idx_in  = 0,
+      const VectorType *level_set_as_heaviside_in                                       = nullptr,
+      const bool        do_solidifiaction_in                                            = false);
 
     void
     register_evaporative_mass_flux(VectorType        *evaporative_mass_flux_in,

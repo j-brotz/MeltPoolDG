@@ -26,14 +26,14 @@
 
 namespace MeltPoolDG::Simulation::CompressibleMultiphase
 {
-  template <int dim>
-  class InitialField : public dealii::Function<dim>
+  template <int dim, typename number>
+  class InitialField : public dealii::Function<dim, number>
   {
   public:
     explicit InitialField(std::string ic_gas_phase,
                           std::string ic_liquid_phase,
                           const bool  gas_phase_is_first = true)
-      : dealii::Function<dim>(2 * (dim + 2))
+      : dealii::Function<dim, number>(2 * (dim + 2))
       , gas_phase_is_first(gas_phase_is_first)
     {
       parsing_function_gas->initialize(dim == 3 ?
@@ -53,8 +53,8 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       Assert(dim == 1, dealii::ExcNotImplemented());
     }
 
-    double
-    value(const dealii::Point<dim> &p, const unsigned int component) const final
+    number
+    value(const dealii::Point<dim, number> &p, const unsigned int component) const final
     {
       unsigned int gas_components[dim + 2];
       unsigned int liquid_components[dim + 2];
@@ -94,19 +94,19 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
 
   private:
     bool                                         gas_phase_is_first;
-    std::map<std::string, double>                constants;
+    std::map<std::string, number>                constants;
     std::unique_ptr<dealii::FunctionParser<dim>> parsing_function_gas =
       std::make_unique<dealii::FunctionParser<dim>>(dim + 2);
     std::unique_ptr<dealii::FunctionParser<dim>> parsing_function_liquid =
       std::make_unique<dealii::FunctionParser<dim>>(dim + 2);
   };
 
-  template <int dim>
-  class SimulationStaticTwoPhase final : public Multiphase::CompressibleMultiphaseCase<dim>
+  template <int dim, typename number>
+  class SimulationStaticTwoPhase final : public Multiphase::CompressibleMultiphaseCase<dim, number>
   {
   public:
     SimulationStaticTwoPhase(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : Multiphase::CompressibleMultiphaseCase<dim>(parameter_file, mpi_communicator)
+      : Multiphase::CompressibleMultiphaseCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -116,12 +116,12 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       this->triangulation =
         std::make_shared<parallel::shared::Triangulation<dim>>(this->mpi_communicator);
 
-      dealii::Point<dim> lower_left;
+      dealii::Point<dim, number> lower_left;
       lower_left[0] = -5.;
       for (unsigned int d = 1; d < dim; ++d)
         lower_left[d] = 0.;
 
-      dealii::Point<dim> upper_right;
+      dealii::Point<dim, number> upper_right;
       upper_right[0] = 5.;
       for (unsigned int d = 1; d < dim; ++d)
         upper_right[d] = 0.;
@@ -141,8 +141,9 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     set_boundary_conditions() override
     {
       auto inflow_outflow_solution =
-        std::make_shared<InitialField<dim>>(ic_gas_phase, ic_liquid_phase);
-      auto dummy_solution = std::make_shared<InitialField<dim>>(ic_gas_phase, ic_liquid_phase);
+        std::make_shared<InitialField<dim, number>>(ic_gas_phase, ic_liquid_phase);
+      auto dummy_solution =
+        std::make_shared<InitialField<dim, number>>(ic_gas_phase, ic_liquid_phase);
 
       // face numbering according to the deal.II colorize flag
       const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
@@ -161,13 +162,14 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     {
       // The solution vector is ordered, such that the liquid phase is the first phase and the gas
       // phase is the second phase.
-      auto initial_condition = std::make_shared<InitialField<dim>>(ic_gas_phase,
-                                                                   ic_liquid_phase,
-                                                                   false /*gas_phase_is_first*/);
+      auto initial_condition =
+        std::make_shared<InitialField<dim, number>>(ic_gas_phase,
+                                                    ic_liquid_phase,
+                                                    false /*gas_phase_is_first*/);
       this->attach_initial_condition(initial_condition, "compressible_multiphase_flow");
 
       // set level-set function
-      dealii::Point<dim> p;
+      dealii::Point<dim, number> p;
       // avoid phase interface colliding with element face (bug in dealii has to be fixed)
       p[0] = 0.13;
 
@@ -180,9 +182,9 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const override
+    do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const override
     {
-      InitialField<dim> reference_values(ic_gas_phase, ic_liquid_phase);
+      InitialField<dim, number> reference_values(ic_gas_phase, ic_liquid_phase);
       this->print_relative_norm(generic_data_out, reference_values, "norm");
     }
 

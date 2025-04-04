@@ -560,7 +560,7 @@ namespace MeltPoolDG::LevelSet::Tools
               }
           }
 
-        phi_normal.evaluate(make_array_view(buffer_dim), dealii::EvaluationFlags::values);
+        phi_normal.evaluate(dealii::make_array_view(buffer_dim), dealii::EvaluationFlags::values);
       }
 
       /*

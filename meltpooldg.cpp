@@ -69,26 +69,29 @@ namespace MeltPoolDG
         {
           if (dim == 1)
             {
-              auto sim =
-                SimulationSelector<1>::get_simulation(case_name, parameter_file, mpi_communicator);
+              auto sim = SimulationSelector<1, number>::get_simulation(case_name,
+                                                                       parameter_file,
+                                                                       mpi_communicator);
               sim->create();
-              auto problem = ProblemSelector<1>::get_problem(problem_type);
+              auto problem = ProblemSelector<1, number>::get_problem(problem_type);
               problem->run(sim);
             }
           else if (dim == 2)
             {
-              auto sim =
-                SimulationSelector<2>::get_simulation(case_name, parameter_file, mpi_communicator);
+              auto sim = SimulationSelector<2, number>::get_simulation(case_name,
+                                                                       parameter_file,
+                                                                       mpi_communicator);
               sim->create();
-              auto problem = ProblemSelector<2>::get_problem(problem_type);
+              auto problem = ProblemSelector<2, number>::get_problem(problem_type);
               problem->run(sim);
             }
           else if (dim == 3)
             {
-              auto sim =
-                SimulationSelector<3>::get_simulation(case_name, parameter_file, mpi_communicator);
+              auto sim = SimulationSelector<3, number>::get_simulation(case_name,
+                                                                       parameter_file,
+                                                                       mpi_communicator);
               sim->create();
-              auto problem = ProblemSelector<3>::get_problem(problem_type);
+              auto problem = ProblemSelector<3, number>::get_problem(problem_type);
               problem->run(sim);
             }
           else

@@ -12,13 +12,14 @@
 #include <utility>
 #include <vector>
 
-#define MELTPOOLDG_REGISTER_MULTI_APP_CASE(CaseClass, ConcreteCaseClass, case_name, dim)   \
-  static bool case_name_is_registered_##dim =                                              \
-    SimulationCaseFactory<CaseClass<dim>>::register_simulation(                            \
-      case_name, [](const std::string parameter_file, const MPI_Comm mpi_communicator) {   \
-        return std::make_unique<ConcreteCaseClass<dim, CaseClass<dim>>>(parameter_file,    \
-                                                                        mpi_communicator); \
+#define MELTPOOLDG_REGISTER_MULTI_APP_CASE(CaseClass, ConcreteCaseClass, case_name, dim, number) \
+  static bool case_name_is_registered_##dim =                                                    \
+    SimulationCaseFactory<CaseClass<dim, number>>::register_simulation(                          \
+      case_name, [](const std::string parameter_file, const MPI_Comm mpi_communicator) {         \
+        return std::make_unique<ConcreteCaseClass<dim, number, CaseClass<dim, number>>>(         \
+          parameter_file, mpi_communicator);                                                     \
       });
+
 /**
  * This simulation is mainly meant to test the functionality of RTE
  */
@@ -28,7 +29,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
 
   using namespace MeltPoolDG::Simulation;
 
-  template <int dim, typename Problem>
+  template <int dim, typename number, typename Problem>
   class SimulationRadTrans : public Problem
   {
   public:
@@ -47,22 +48,22 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     set_field_conditions() final;
 
   private:
-    double                    domain_x_min = -1.;
-    double                    domain_x_max = 1.;
-    double                    domain_y_min = -1.;
-    double                    domain_y_max = 1.;
-    std::vector<unsigned int> cell_repetitions;
-    std::pair<double, double> interface_case_info;
-    double                    power_in = 0.1;
-    dealii::Point<dim>        center_in;
-    double                    radius_in = domain_x_max / 5.;
+    number                     domain_x_min = -1.;
+    number                     domain_x_max = 1.;
+    number                     domain_y_min = -1.;
+    number                     domain_y_max = 1.;
+    std::vector<unsigned int>  cell_repetitions;
+    std::pair<number, number>  interface_case_info;
+    number                     power_in = 0.1;
+    dealii::Point<dim, number> center_in;
+    number                     radius_in = domain_x_max / 5.;
 
     InterfaceCase interface_case = InterfaceCase::straight;
 
-    double speed    = domain_x_max / 2;
-    double end_time = 10.0;
+    number speed    = domain_x_max / 2;
+    number end_time = 10.0;
 
-    double powder_particle_offset = domain_x_max / 4.;
-    double powder_particle_radius = domain_x_max / 6.;
+    number powder_particle_offset = domain_x_max / 4.;
+    number powder_particle_radius = domain_x_max / 6.;
   };
 } // namespace MeltPoolDG::Simulation::RadiativeTransport

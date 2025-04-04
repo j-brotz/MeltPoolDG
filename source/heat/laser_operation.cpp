@@ -176,7 +176,7 @@ namespace MeltPoolDG::Heat
   {
     if (laser_data.model == LaserModelType::RTE)
       {
-        auto mutable_scratch_data = const_cast<ScratchData<dim> &>(scratch_data);
+        auto mutable_scratch_data = const_cast<ScratchData<dim, dim, number> &>(scratch_data);
         rte_operation->setup_constraints(mutable_scratch_data,
                                          rte_dirichlet_boundary_condition,
                                          periodic_bc);

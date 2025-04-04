@@ -36,10 +36,11 @@ namespace MeltPoolDG::Evaporation
     const number       density_vapor;
     const number       density_liquid;
 
-    const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
-                                 std::vector<Point<dim>> /*quad_points*/,
-                                 std::vector<number> /*weights*/
-                                 >> *surface_mesh_info = nullptr;
+    const std::vector<
+      std::tuple<const typename dealii::Triangulation<dim, dim>::cell_iterator /*cell*/,
+                 std::vector<dealii::Point<dim>> /*quad_points*/,
+                 std::vector<number> /*weights*/
+                 >> *surface_mesh_info = nullptr;
 
   public:
     EvaporationSourceTermsSharp(const ScratchData<dim, dim, number> &scratch_data,
@@ -76,9 +77,10 @@ namespace MeltPoolDG::Evaporation
 
     void
     register_surface_mesh(
-      const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
-                                   std::vector<Point<dim>> /*quad_points*/,
-                                   std::vector<number> /*weights*/
-                                   >> &surface_mesh_info);
+      const std::vector<
+        std::tuple<const typename dealii::Triangulation<dim, dim>::cell_iterator /*cell*/,
+                   std::vector<dealii::Point<dim>> /*quad_points*/,
+                   std::vector<number> /*weights*/
+                   >> &surface_mesh_info);
   };
 } // namespace MeltPoolDG::Evaporation

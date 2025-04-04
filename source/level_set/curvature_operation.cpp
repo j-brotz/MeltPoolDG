@@ -230,7 +230,7 @@ namespace MeltPoolDG::LevelSet
                                                                           &solution_levelset);
 
 
-    preconditioner = make_preconditioner<dim, CurvatureOperator<dim, number>, VectorType>(
+    preconditioner = make_preconditioner<dim, number, CurvatureOperator<dim, number>, VectorType>(
       curvature_data.linear_solver.preconditioner_type,
       curvature_operator.get(),
       curvature_data.linear_solver.do_matrix_free);

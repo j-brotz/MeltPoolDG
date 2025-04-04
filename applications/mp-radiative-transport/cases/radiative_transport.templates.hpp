@@ -24,21 +24,21 @@
 
 namespace MeltPoolDG::Simulation::RadiativeTransport
 {
-  template <int dim>
-  class LevelSetHeaviside : public dealii::Function<dim>
+  template <int dim, typename number>
+  class LevelSetHeaviside : public dealii::Function<dim, number>
   {
   public:
     LevelSetHeaviside(const InterfaceCase              interface_case_in,
-                      const std::pair<double, double> &interface_case_info_in,
-                      const double                     epsilon_cell_in)
-      : dealii::Function<dim>(1)
+                      const std::pair<number, number> &interface_case_info_in,
+                      const number                     epsilon_cell_in)
+      : dealii::Function<dim, number>(1)
       , eps(epsilon_cell_in)
       , interface_case(interface_case_in)
       , interface_case_info(interface_case_info_in)
     {}
 
-    double
-    value(const dealii::Point<dim> &p, const unsigned int) const override
+    number
+    value(const dealii::Point<dim, number> &p, const unsigned int) const override
     {
       if (interface_case == InterfaceCase::straight)
         {
@@ -58,17 +58,17 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
           // say we inherit from a straight interface case
           const auto y = p[dim - 1];
 
-          double straight_value = UtilityFunctions::CharacteristicFunctions::heaviside(
+          number straight_value = UtilityFunctions::CharacteristicFunctions::heaviside(
             level - y,
             eps); // 0 side of H() stands for gas, 1 side of H() stands for liquid
 
-          dealii::Point<dim> sphere_center;
+          dealii::Point<dim, number> sphere_center;
           sphere_center[dim - 1] = interface_case_info.first;
 
           // now add a powder particle with gradient:
           const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere(
             sphere_center, interface_case_info.second);
-          double powder_particle_value =
+          number powder_particle_value =
             UtilityFunctions::CharacteristicFunctions::heaviside(-distance_sphere.value(p), eps);
           return std::max(straight_value, powder_particle_value);
         }
@@ -81,24 +81,24 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     }
 
   private:
-    const double              eps                 = 0.1;
-    const double              level               = 0.0;
+    const number              eps                 = 0.1;
+    const number              level               = 0.0;
     InterfaceCase             interface_case      = InterfaceCase::straight;
-    std::pair<double, double> interface_case_info = std::pair<double, double>(0., 0.);
+    std::pair<number, number> interface_case_info = std::pair<number, number>(0., 0.);
   };
 
 
-  template <int dim, typename Problem>
-  SimulationRadTrans<dim, Problem>::SimulationRadTrans(std::string    parameter_file,
-                                                       const MPI_Comm mpi_communicator)
+  template <int dim, typename number, typename Problem>
+  SimulationRadTrans<dim, number, Problem>::SimulationRadTrans(std::string    parameter_file,
+                                                               const MPI_Comm mpi_communicator)
     : Problem(parameter_file, mpi_communicator)
     , cell_repetitions(dim, 1)
   {}
 
 
-  template <int dim, typename Problem>
+  template <int dim, typename number, typename Problem>
   bool
-  SimulationRadTrans<dim, Problem>::add_simulation_specific_parameters(
+  SimulationRadTrans<dim, number, Problem>::add_simulation_specific_parameters(
     dealii::ParameterHandler &prm)
   {
     prm.enter_subsection("simulation specific parameters");
@@ -145,9 +145,9 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
   }
 
 
-  template <int dim, typename Problem>
+  template <int dim, typename number, typename Problem>
   void
-  SimulationRadTrans<dim, Problem>::create_spatial_discretization()
+  SimulationRadTrans<dim, number, Problem>::create_spatial_discretization()
   {
     if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP || dim == 1)
       {
@@ -171,14 +171,14 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
           this->mpi_communicator);
       }
 
-    const dealii::Point<dim> bottom_left =
-      dim == 1 ? dealii::Point<dim>(domain_y_min) :
-      dim == 2 ? dealii::Point<dim>(domain_x_min, domain_y_min) :
-                 dealii::Point<dim>(domain_x_min, domain_x_min, domain_y_min);
-    const dealii::Point<dim> top_right =
-      dim == 1 ? dealii::Point<dim>(domain_y_max) :
-      dim == 2 ? dealii::Point<dim>(domain_x_max, domain_y_max) :
-                 dealii::Point<dim>(domain_x_max, domain_x_max, domain_y_max);
+    const dealii::Point<dim, number> bottom_left =
+      dim == 1 ? dealii::Point<dim, number>(domain_y_min) :
+      dim == 2 ? dealii::Point<dim, number>(domain_x_min, domain_y_min) :
+                 dealii::Point<dim, number>(domain_x_min, domain_x_min, domain_y_min);
+    const dealii::Point<dim, number> top_right =
+      dim == 1 ? dealii::Point<dim, number>(domain_y_max) :
+      dim == 2 ? dealii::Point<dim, number>(domain_x_max, domain_y_max) :
+                 dealii::Point<dim, number>(domain_x_max, domain_x_max, domain_y_max);
     if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
       {
         std::vector<unsigned int> subdivisions(
@@ -198,9 +198,9 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
   }
 
 
-  template <int dim, typename Problem>
+  template <int dim, typename number, typename Problem>
   void
-  SimulationRadTrans<dim, Problem>::set_boundary_conditions()
+  SimulationRadTrans<dim, number, Problem>::set_boundary_conditions()
   {
     // face numbering according to the deal.II colorize flag
     [[maybe_unused]] const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
@@ -209,8 +209,8 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     if (this->parameters.base.problem_name == "radiative_transport")
       this->attach_boundary_condition(
         {upper_bc,
-         std::make_shared<Heat::GaussProjectionIntensityProfile<dim, double>>(
-           power_in, radius_in, center_in, -dealii::Point<dim>::unit_vector(dim - 1))},
+         std::make_shared<Heat::GaussProjectionIntensityProfile<dim, number>>(
+           power_in, radius_in, center_in, -dealii::Point<dim, number>::unit_vector(dim - 1))},
         "dirichlet",
         "intensity");
     else
@@ -221,27 +221,26 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
   }
 
 
-  template <int dim, typename Problem>
+  template <int dim, typename number, typename Problem>
   void
-  SimulationRadTrans<dim, Problem>::set_field_conditions()
+  SimulationRadTrans<dim, number, Problem>::set_field_conditions()
   {
     // pass simulation-specific parameters to the simulation class.
     // Done after json parsing, is relevant for heaviside
     if (interface_case == InterfaceCase::straight)
-      interface_case_info = std::pair<double, double>(speed, end_time);
+      interface_case_info = std::pair<number, number>(speed, end_time);
     else if (interface_case == InterfaceCase::single_powder_particle)
       interface_case_info =
-        std::pair<double, double>(powder_particle_offset, powder_particle_radius);
+        std::pair<number, number>(powder_particle_offset, powder_particle_radius);
 
     // determine the interface epsilon parameter from minimum mesh size
-    double       thickness_scale_factor = 2.5;
-    const double epsilon_cell = dealii::GridTools::minimal_cell_diameter(*this->triangulation) /
+    number       thickness_scale_factor = 2.5;
+    const number epsilon_cell = dealii::GridTools::minimal_cell_diameter(*this->triangulation) /
                                 std::sqrt(dim) * thickness_scale_factor;
 
     // attach the prescribed heaviside function field
-    this->attach_initial_condition(std::make_shared<LevelSetHeaviside<dim>>(interface_case,
-                                                                            interface_case_info,
-                                                                            epsilon_cell),
+    this->attach_initial_condition(std::make_shared<LevelSetHeaviside<dim, number>>(
+                                     interface_case, interface_case_info, epsilon_cell),
                                    "prescribed_heaviside");
 
     if (this->parameters.base.problem_name == "radiative_transport")

@@ -83,7 +83,7 @@ namespace MeltPoolDG::Heat
 
     std::unique_ptr<HeatDiffuseMultiPhaseOperator<dim, number>> heat_operator;
 
-    Preconditioner<dim, VectorType> preconditioner;
+    Preconditioner<dim, VectorType, number> preconditioner;
 
     // determine whether solution vectors are prepared for time advance
     bool ready_for_time_advance = false;
@@ -91,20 +91,21 @@ namespace MeltPoolDG::Heat
     std::unique_ptr<LevelSet::Tools::NearestPoint<dim, double>> nearest_point_search;
 
   public:
-    HeatDiffuseOperation(const ScratchData<dim, dim, number>                       &scratch_data_in,
-                         const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
-                         const PeriodicBoundaryConditions<dim>                     &periodic_bc_in,
-                         const HeatData<number>                                    &heat_data_in,
-                         const Material<number>                                    &material,
-                         const TimeIterator<number>                                &time_iterator,
-                         unsigned int                                               heat_dof_idx_in,
-                         unsigned int      heat_no_bc_dof_idx_in,
-                         unsigned int      heat_quad_idx_in,
-                         unsigned int      vel_dof_idx_in            = 0,
-                         const VectorType *velocity_in               = nullptr,
-                         unsigned int      ls_dof_idx_in             = 0,
-                         const VectorType *level_set_as_heaviside_in = nullptr,
-                         const bool        do_solidifiaction         = false);
+    HeatDiffuseOperation(
+      const ScratchData<dim, dim, number>                               &scratch_data_in,
+      const std::shared_ptr<const BoundaryConditionManager<dim, number>> heat_bc_manager,
+      const PeriodicBoundaryConditions<dim>                             &periodic_bc_in,
+      const HeatData<number>                                            &heat_data_in,
+      const Material<number>                                            &material,
+      const TimeIterator<number>                                        &time_iterator,
+      unsigned int                                                       heat_dof_idx_in,
+      unsigned int                                                       heat_no_bc_dof_idx_in,
+      unsigned int                                                       heat_quad_idx_in,
+      unsigned int                                                       vel_dof_idx_in = 0,
+      const VectorType                                                  *velocity_in    = nullptr,
+      unsigned int                                                       ls_dof_idx_in  = 0,
+      const VectorType *level_set_as_heaviside_in                                       = nullptr,
+      const bool        do_solidifiaction                                               = false);
 
     void
     register_evaporative_mass_flux(VectorType        *evaporative_mass_flux_in,

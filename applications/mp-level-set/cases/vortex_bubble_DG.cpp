@@ -4,7 +4,19 @@
 
 namespace MeltPoolDG::Simulation::VortexBubbleDG
 {
-  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationVortexBubbleDG, "vortex_bubble_DG", 1);
-  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationVortexBubbleDG, "vortex_bubble_DG", 2);
-  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationVortexBubbleDG, "vortex_bubble_DG", 3);
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase,
+                           SimulationVortexBubbleDG,
+                           "vortex_bubble_DG",
+                           1,
+                           double);
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase,
+                           SimulationVortexBubbleDG,
+                           "vortex_bubble_DG",
+                           2,
+                           double);
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase,
+                           SimulationVortexBubbleDG,
+                           "vortex_bubble_DG",
+                           3,
+                           double);
 } // namespace MeltPoolDG::Simulation::VortexBubbleDG

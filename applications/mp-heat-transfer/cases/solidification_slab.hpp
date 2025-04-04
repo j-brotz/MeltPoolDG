@@ -28,12 +28,11 @@
 
 namespace MeltPoolDG::Simulation::SolidificationSlab
 {
-  using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
 
-  template <int dim>
-  class SimulationSolidificationSlab : public Heat::HeatTransferCase<dim>
+  template <int dim, typename number>
+  class SimulationSolidificationSlab : public Heat::HeatTransferCase<dim, number>
   {
   public:
     SimulationSolidificationSlab(std::string parameter_file, const MPI_Comm mpi_communicator);

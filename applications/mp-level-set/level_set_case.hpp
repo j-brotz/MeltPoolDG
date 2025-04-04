@@ -8,9 +8,7 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  using namespace dealii;
-
-  template <typename number = double>
+  template <typename number>
   struct LevelSetCaseParameters : public ParametersBase
   {
   protected:
@@ -66,14 +64,14 @@ namespace MeltPoolDG::LevelSet
     MaterialData<number>                 material;
   };
 
-  template <int dim>
-  class LevelSetCase : public SimulationCaseBase<dim>
+  template <int dim, typename number>
+  class LevelSetCase : public SimulationCaseBase<dim, number>
   {
   public:
-    LevelSetCaseParameters<double> parameters;
+    LevelSetCaseParameters<number> parameters;
 
     LevelSetCase(const std::string &parameter_file_in, MPI_Comm mpi_communicator_in)
-      : SimulationCaseBase<dim>(parameter_file_in, mpi_communicator_in)
+      : SimulationCaseBase<dim, number>(parameter_file_in, mpi_communicator_in)
     {
       dealii::ParameterHandler prm;
       parameters.process_parameters_file(prm, parameter_file_in);

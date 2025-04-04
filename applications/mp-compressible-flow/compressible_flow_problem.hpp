@@ -10,14 +10,12 @@
 
 namespace MeltPoolDG::Flow
 {
-  using namespace dealii;
-
-  template <int dim>
+  template <int dim, typename number>
   class CompressibleFlowProblem
   {
   private:
-    using CaseType   = CompressibleFlowCase<dim>;
-    using VectorType = dealii::LinearAlgebra::distributed::Vector<double>;
+    using CaseType   = CompressibleFlowCase<dim, number>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
   public:
     explicit CompressibleFlowProblem(std::unique_ptr<CaseType> simulation_case)
@@ -55,7 +53,7 @@ namespace MeltPoolDG::Flow
      *  @param current_time Current time at t^n.
      */
     void
-    output_results(unsigned int time_step, double current_time);
+    output_results(unsigned int time_step, number current_time);
 
     /**
      * Interpolates the values of a (currently) analytically given level-set function to the
@@ -68,18 +66,18 @@ namespace MeltPoolDG::Flow
 
     dealii::DoFHandler<dim>                              dof_handler;
     dealii::DoFHandler<dim>                              dof_handler_level_set;
-    dealii::AffineConstraints<double>                    constraints;
-    dealii::AffineConstraints<double>                    constraints_level_set;
-    std::shared_ptr<ScratchData<dim>>                    scratch_data;
-    std::shared_ptr<TimeIterator<double>>                time_iterator;
-    CompressibleFlowOperation<dim, double>               comp_flow_operation;
-    std::unique_ptr<Profiling::ProfilingMonitor<double>> profiling_monitor;
+    dealii::AffineConstraints<number>                    constraints;
+    dealii::AffineConstraints<number>                    constraints_level_set;
+    std::shared_ptr<ScratchData<dim, dim, number>>       scratch_data;
+    std::shared_ptr<TimeIterator<number>>                time_iterator;
+    CompressibleFlowOperation<dim, number>               comp_flow_operation;
+    std::unique_ptr<Profiling::ProfilingMonitor<number>> profiling_monitor;
 
     unsigned int comp_flow_dof_idx{};
     unsigned int level_set_dof_idx{};
     unsigned int comp_flow_quad_idx{};
 
-    std::unique_ptr<Postprocessor<dim, double>> post_processor;
+    std::unique_ptr<Postprocessor<dim, number>> post_processor;
 
     std::shared_ptr<dealii::Function<dim>> level_set_field_function;
     VectorType                             level_set;

@@ -18,6 +18,7 @@
 namespace MeltPoolDG
 {
   // Base class for both MatrixFree and MatrixBased operators
+  template <typename number>
   class OperatorBase
   {
   public:
@@ -38,7 +39,7 @@ namespace MeltPoolDG
      * @param dt Time increment value.
      */
     inline void
-    reset_time_increment(const double dt)
+    reset_time_increment(const number dt)
     {
       time_increment     = dt;
       time_increment_inv = 1. / time_increment;
@@ -76,10 +77,10 @@ namespace MeltPoolDG
     unsigned int dof_idx = dealii::numbers::invalid_unsigned_int;
 
     // time increment value
-    double time_increment = dealii::numbers::invalid_double;
+    number time_increment = dealii::numbers::invalid_double;
 
     // inverse of time increment
-    double time_increment_inv = dealii::numbers::invalid_double;
+    number time_increment_inv = dealii::numbers::invalid_double;
   };
 
   /**
@@ -89,7 +90,7 @@ namespace MeltPoolDG
    * system matrices and right-hand side vectors.
    */
   template <int dim, typename number>
-  class OperatorMatrixBased : public virtual OperatorBase
+  class OperatorMatrixBased : public virtual OperatorBase<number>
   {
   public:
     using SparseMatrixType    = dealii::TrilinosWrappers::SparseMatrix;
@@ -137,7 +138,7 @@ namespace MeltPoolDG
      * @param scratch_data Reference to the ScratchData object.
      */
     virtual void
-    reinit_sparsity_pattern(const ScratchData<dim> &scratch_data)
+    reinit_sparsity_pattern(const ScratchData<dim, dim, number> &scratch_data)
     {
       AssertThrow(this->dof_idx < dealii::numbers::invalid_unsigned_int,
                   dealii::ExcMessage("reset_dof_index() must be called."));
@@ -185,7 +186,7 @@ namespace MeltPoolDG
    * without explicit assembly of matrices.
    */
   template <int dim, typename number>
-  class OperatorMatrixFree : public virtual OperatorBase
+  class OperatorMatrixFree : public virtual OperatorBase<number>
   {
   public:
     using VectorType       = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -254,7 +255,7 @@ namespace MeltPoolDG
      * @param matrix Sparse matrix to compute.
      */
     virtual void
-    compute_system_matrix_from_matrixfree(TrilinosWrappers::SparseMatrix & /*matrix*/) const
+    compute_system_matrix_from_matrixfree(dealii::TrilinosWrappers::SparseMatrix & /*matrix*/) const
     {
       DEAL_II_NOT_IMPLEMENTED();
     }

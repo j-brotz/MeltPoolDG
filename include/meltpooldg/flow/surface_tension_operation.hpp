@@ -42,7 +42,7 @@ namespace MeltPoolDG::Flow
    *          \                           α_0   /
    *
    */
-  template <int dim>
+  template <int dim, typename number>
   class SurfaceTensionOperation
   {
   private:
@@ -51,7 +51,7 @@ namespace MeltPoolDG::Flow
 
     const SurfaceTensionData<double> &data;
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim, dim, number> &scratch_data;
 
     const VectorType &level_set_as_heaviside;
     const VectorType &solution_curvature;
@@ -69,23 +69,23 @@ namespace MeltPoolDG::Flow
     unsigned int           normal_dof_idx;
     unsigned int           solid_dof_idx;
 
-    const bool         do_level_set_pressure_gradient_interpolation;
-    FullMatrix<double> ls_to_pressure_grad_interpolation_matrix;
+    const bool                 do_level_set_pressure_gradient_interpolation;
+    dealii::FullMatrix<double> ls_to_pressure_grad_interpolation_matrix;
 
     std::unique_ptr<const LevelSet::DeltaApproximationBase<double>> delta_phase_weighted;
 
     const double alpha_residual;
 
   public:
-    SurfaceTensionOperation(const SurfaceTensionData<double> &data_in,
-                            const ScratchData<dim>           &scratch_data,
-                            const VectorType                 &level_set_as_heaviside,
-                            const VectorType                 &solution_curvature,
-                            const unsigned int                ls_dof_idx,
-                            const unsigned int                curv_dof_idx,
-                            const unsigned int                flow_vel_hanging_nodes_dof_idx,
-                            const unsigned int                flow_pressure_hanging_nodes_dof_idx,
-                            const unsigned int                flow_quad_idx);
+    SurfaceTensionOperation(const SurfaceTensionData<number>    &data_in,
+                            const ScratchData<dim, dim, number> &scratch_data,
+                            const VectorType                    &level_set_as_heaviside,
+                            const VectorType                    &solution_curvature,
+                            const unsigned int                   ls_dof_idx,
+                            const unsigned int                   curv_dof_idx,
+                            const unsigned int                   flow_vel_hanging_nodes_dof_idx,
+                            const unsigned int flow_pressure_hanging_nodes_dof_idx,
+                            const unsigned int flow_quad_idx);
 
     /**
      * Registers the DoF vectors of the @p temperature and normal vector (@p solution_normal_vector),
@@ -143,8 +143,9 @@ namespace MeltPoolDG::Flow
      *
      * @note If α'_0 is positive, α decreases with increasing temperature.
      */
-    template <typename number>
-    number
-    local_compute_temperature_dependent_surface_tension_coefficient(const number &T);
+    template <typename number_surface_tension_coeff>
+    number_surface_tension_coeff
+    local_compute_temperature_dependent_surface_tension_coefficient(
+      const number_surface_tension_coeff &T);
   };
 } // namespace MeltPoolDG::Flow

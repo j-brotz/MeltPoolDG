@@ -12,16 +12,16 @@ namespace MeltPoolDG::LevelSet
 {
   template <int dim, typename number>
   AdvectionDiffusionOperationAdaflo<dim, number>::AdvectionDiffusionOperationAdaflo(
-    const ScratchData<dim, dim, number>  &scratch_data,
-    const TimeIterator<number>           &time_iterator,
-    const VectorType                     &advection_velocity,
-    const int                             advec_diff_zero_dirichlet_dof_idx,
-    const int                             advec_diff_dirichlet_dof_idx,
-    const int                             advec_diff_quad_idx,
-    const int                             velocity_dof_idx,
-    const TimeSteppingData<number>       &time_stepping,
-    const AdvectionDiffusionData<number> &advec_diff_data,
-    const BoundaryConditionManager<dim>  &bc)
+    const ScratchData<dim, dim, number>         &scratch_data,
+    const TimeIterator<number>                  &time_iterator,
+    const VectorType                            &advection_velocity,
+    const int                                    advec_diff_zero_dirichlet_dof_idx,
+    const int                                    advec_diff_dirichlet_dof_idx,
+    const int                                    advec_diff_quad_idx,
+    const int                                    velocity_dof_idx,
+    const TimeSteppingData<number>              &time_stepping,
+    const AdvectionDiffusionData<number>        &advec_diff_data,
+    const BoundaryConditionManager<dim, number> &bc)
     : scratch_data(scratch_data)
     , time_iterator(time_iterator)
     , advection_velocity(advection_velocity)

@@ -68,7 +68,7 @@ namespace MeltPoolDG::Multiphase
      * @param level_set_in level-set dof vector.
      */
     CompressibleMultiphaseOperation(
-      const ScratchData<dim>                                     &scratch_data_in,
+      const ScratchData<dim, dim, number>                        &scratch_data_in,
       const MeltPoolDG::Flow::CompressibleFlowData<number>       &comp_flow_data_in,
       const TimeIterator<number>                                 &time_iterator_in,
       const std::function<void(const dealii::DoFHandler<dim> &)> &reinit_matrix_free_in,
@@ -149,8 +149,8 @@ namespace MeltPoolDG::Multiphase
      * CompressibleFlowBoundaryConditions class.
      */
     void
-    set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
-                            const std::string                              &operation_name);
+    set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim, number>> &simulation_case,
+                            const std::string                                      &operation_name);
 
     /**
      * Getter functions.

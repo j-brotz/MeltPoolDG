@@ -24,17 +24,18 @@
 
 namespace MeltPoolDG::Simulation::PowderBed
 {
-  template <int dim>
-  SimulationPowderBed<dim>::SimulationPowderBed(std::string    parameter_file,
-                                                const MPI_Comm mpi_communicator)
-    : Heat::HeatTransferCase<dim>(parameter_file, mpi_communicator)
+  template <int dim, typename number>
+  SimulationPowderBed<dim, number>::SimulationPowderBed(std::string    parameter_file,
+                                                        const MPI_Comm mpi_communicator)
+    : Heat::HeatTransferCase<dim, number>(parameter_file, mpi_communicator)
     , cell_repetitions(dim, 1)
   {}
 
 
-  template <int dim>
+  template <int dim, typename number>
   bool
-  SimulationPowderBed<dim>::add_simulation_specific_parameters(dealii::ParameterHandler &prm)
+  SimulationPowderBed<dim, number>::add_simulation_specific_parameters(
+    dealii::ParameterHandler &prm)
   {
     prm.enter_subsection("simulation specific parameters");
     {
@@ -56,9 +57,9 @@ namespace MeltPoolDG::Simulation::PowderBed
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  SimulationPowderBed<dim>::create_spatial_discretization()
+  SimulationPowderBed<dim, number>::create_spatial_discretization()
   {
     if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP || dim == 1)
       {
@@ -81,12 +82,14 @@ namespace MeltPoolDG::Simulation::PowderBed
           std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
       }
 
-    const Point<dim> bottom_left = dim == 1 ? Point<dim>(domain_x_min) :
-                                   dim == 2 ? Point<dim>(domain_x_min, domain_y_min) :
-                                              Point<dim>(domain_x_min, domain_y_min, domain_z_min);
-    const Point<dim> top_right   = dim == 1 ? Point<dim>(domain_x_max) :
-                                   dim == 2 ? Point<dim>(domain_x_max, domain_y_max) :
-                                              Point<dim>(domain_x_max, domain_y_max, domain_z_max);
+    const Point<dim, number> bottom_left =
+      dim == 1 ? Point<dim, number>(domain_x_min) :
+      dim == 2 ? Point<dim, number>(domain_x_min, domain_y_min) :
+                 Point<dim, number>(domain_x_min, domain_y_min, domain_z_min);
+    const Point<dim, number> top_right =
+      dim == 1 ? Point<dim, number>(domain_x_max) :
+      dim == 2 ? Point<dim, number>(domain_x_max, domain_y_max) :
+                 Point<dim, number>(domain_x_max, domain_y_max, domain_z_max);
 
     if (this->parameters.base.fe.type != FiniteElementType::FE_SimplexP)
       {
@@ -113,9 +116,9 @@ namespace MeltPoolDG::Simulation::PowderBed
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  SimulationPowderBed<dim>::set_boundary_conditions()
+  SimulationPowderBed<dim, number>::set_boundary_conditions()
   {
     // face numbering according to the deal.II colorize flag
     const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
@@ -142,7 +145,7 @@ namespace MeltPoolDG::Simulation::PowderBed
     if (this->parameters.base.problem_name == "radiative_transport")
       this->attach_boundary_condition(
         {upper_bc,
-         std::make_shared<Heat::GaussProjectionIntensityProfile<dim, double>>(
+         std::make_shared<Heat::GaussProjectionIntensityProfile<dim, number>>(
            this->parameters.laser.power,
            this->parameters.laser.radius,
            this->parameters.laser.template get_starting_position<dim>(),
@@ -154,9 +157,9 @@ namespace MeltPoolDG::Simulation::PowderBed
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  SimulationPowderBed<dim>::set_field_conditions()
+  SimulationPowderBed<dim, number>::set_field_conditions()
   {
     if (this->parameters.laser.model == Heat::LaserModelType::RTE)
       this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(), "intensity");
@@ -168,7 +171,7 @@ namespace MeltPoolDG::Simulation::PowderBed
 
         // create a temporary reinit data instance since reinit data is not available for the heat
         // problem
-        LevelSet::ReinitializationData<double> reinit_data;
+        LevelSet::ReinitializationData<number> reinit_data;
         reinit_data.interface_thickness_parameter.type =
           LevelSet::InterfaceThicknessParameterType::proportional_to_cell_size;
         reinit_data.interface_thickness_parameter.value = 1.5;
@@ -184,7 +187,7 @@ namespace MeltPoolDG::Simulation::PowderBed
       }
   }
 
-  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase, SimulationPowderBed, "powder_bed", 1);
-  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase, SimulationPowderBed, "powder_bed", 2);
-  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase, SimulationPowderBed, "powder_bed", 3);
+  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase, SimulationPowderBed, "powder_bed", 1, double);
+  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase, SimulationPowderBed, "powder_bed", 2, double);
+  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase, SimulationPowderBed, "powder_bed", 3, double);
 } // namespace MeltPoolDG::Simulation::PowderBed

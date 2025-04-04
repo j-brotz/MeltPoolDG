@@ -362,7 +362,7 @@ namespace MeltPoolDG::LevelSet
           ls_dof_idx,
           normal_dof_idx);
 
-        preconditioner = make_preconditioner<dim, OlssonOperator<dim, number>, VectorType>(
+        preconditioner = make_preconditioner<dim, number, OlssonOperator<dim, number>, VectorType>(
           reinit_data.linear_solver.preconditioner_type,
           reinit_operator.get(),
           reinit_data.linear_solver.do_matrix_free);

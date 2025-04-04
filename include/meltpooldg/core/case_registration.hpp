@@ -15,16 +15,17 @@
  * @tparam ConcreteCaseClass The concrete implementation of the simulation case.
  * @param case_name A unique name for the simulation case.
  * @param dim The dimensionality of the simulation case.
+ * @param number The used floating point number format.
  *
- * The macro invokes `SimulationCaseFactory<CaseClass<dim>>::register_simulation`,
- * registering a lambda function that creates an instance of `ConcreteCaseClass<dim>`
+ * The macro invokes `SimulationCaseFactory<CaseClass<dim, number>>::register_simulation`,
+ * registering a lambda function that creates an instance of `ConcreteCaseClass<dim, number>`
  * when given a parameter file and an MPI communicator.
  */
-#define MELTPOOLDG_REGISTER_CASE(CaseClass, ConcreteCaseClass, case_name, dim)             \
-  static bool case_name_is_registered_##dim =                                              \
-    SimulationCaseFactory<CaseClass<dim>>::register_simulation(                            \
-      case_name, [](const std::string parameter_file, const MPI_Comm mpi_communicator) {   \
-        return std::make_unique<ConcreteCaseClass<dim>>(parameter_file, mpi_communicator); \
+#define MELTPOOLDG_REGISTER_CASE(CaseClass, ConcreteCaseClass, case_name, dim, number)             \
+  static bool case_name_is_registered_##dim =                                                      \
+    SimulationCaseFactory<CaseClass<dim, number>>::register_simulation(                            \
+      case_name, [](const std::string parameter_file, const MPI_Comm mpi_communicator) {           \
+        return std::make_unique<ConcreteCaseClass<dim, number>>(parameter_file, mpi_communicator); \
       });
 
 
@@ -35,10 +36,10 @@
  * This additional parameter enables the instantiation of the same simulation case
  * across multiple applications, allowing for more flexible use of the base case class.
  */
-#define MELTPOOLDG_REGISTER_MULTI_APP_CASE(CaseClass, ConcreteCaseClass, case_name, dim)   \
-  static bool case_name_is_registered_##dim =                                              \
-    SimulationCaseFactory<CaseClass<dim>>::register_simulation(                            \
-      case_name, [](const std::string parameter_file, const MPI_Comm mpi_communicator) {   \
-        return std::make_unique<ConcreteCaseClass<dim, CaseClass<dim>>>(parameter_file,    \
-                                                                        mpi_communicator); \
+#define MELTPOOLDG_REGISTER_MULTI_APP_CASE(CaseClass, ConcreteCaseClass, case_name, dim, number) \
+  static bool case_name_is_registered_##dim =                                                    \
+    SimulationCaseFactory<CaseClass<dim, number>>::register_simulation(                          \
+      case_name, [](const std::string parameter_file, const MPI_Comm mpi_communicator) {         \
+        return std::make_unique<ConcreteCaseClass<dim, number, CaseClass<dim, number>>>(         \
+          parameter_file, mpi_communicator);                                                     \
       });

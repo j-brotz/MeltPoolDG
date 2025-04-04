@@ -10,13 +10,11 @@
 
 namespace MeltPoolDG::Multiphase
 {
-  template <int dim>
+  template <int dim, typename number>
   class CompressibleMultiphaseProblem
   {
-    using number = double;
-
   private:
-    using CaseType   = CompressibleMultiphaseCase<dim>;
+    using CaseType   = CompressibleMultiphaseCase<dim, number>;
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
   public:
@@ -76,7 +74,7 @@ namespace MeltPoolDG::Multiphase
     DoFHandler<dim>                                          dof_handler_level_set;
     AffineConstraints<number>                                constraints;
     AffineConstraints<number>                                constraints_level_set;
-    std::shared_ptr<ScratchData<dim>>                        scratch_data;
+    std::shared_ptr<ScratchData<dim, dim, number>>           scratch_data;
     std::shared_ptr<TimeIterator<number>>                    time_iterator;
     MeltPoolDG::Flow::CompressibleFlowOperation<dim, number> comp_multiphase_operation;
     std::unique_ptr<Profiling::ProfilingMonitor<number>>     profiling_monitor;

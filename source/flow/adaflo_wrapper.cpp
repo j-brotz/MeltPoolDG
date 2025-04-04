@@ -29,11 +29,11 @@
 
 namespace MeltPoolDG::Flow
 {
-  template <int dim>
-  AdafloWrapper<dim>::AdafloWrapper(ScratchData<dim, dim, double>     &scratch_data,
-                                    std::shared_ptr<MeltPoolCase<dim>> base_in,
-                                    const TimeIterator<double>        &time_iterator,
-                                    const bool                         do_evaporative_mass_flux)
+  template <int dim, typename number>
+  AdafloWrapper<dim, number>::AdafloWrapper(ScratchData<dim, dim, number>             &scratch_data,
+                                            std::shared_ptr<MeltPoolCase<dim, number>> base_in,
+                                            const TimeIterator<double> &time_iterator,
+                                            const bool                  do_evaporative_mass_flux)
     : scratch_data(scratch_data)
     , timer(std::cout, TimerOutput::never, TimerOutput::wall_times)
     , adaflo_params(base_in->parameters.adaflo_params.get_parameters())
@@ -106,10 +106,10 @@ namespace MeltPoolDG::Flow
     scratch_data.attach_constraint_matrix(constraints_parameters);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::create_parameters(Parameters<double> &parameters,
-                                        const std::string   parameter_file)
+  AdafloWrapper<dim, number>::create_parameters(Parameters<double> &parameters,
+                                                const std::string   parameter_file)
   {
     parameters.adaflo_params.parse_parameters(parameter_file);
 
@@ -181,9 +181,10 @@ namespace MeltPoolDG::Flow
       parameters.base.fe.type == FiniteElementType::FE_SimplexP;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::set_initial_condition(const Function<dim> &initial_field_function_velocity)
+  AdafloWrapper<dim, number>::set_initial_condition(
+    const Function<dim> &initial_field_function_velocity)
   {
     navier_stokes->solution.zero_out_ghost_values();
     navier_stokes->solution_old.zero_out_ghost_values();
@@ -202,9 +203,9 @@ namespace MeltPoolDG::Flow
     navier_stokes->solution_old_old.update_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::reinit_1()
+  AdafloWrapper<dim, number>::reinit_1()
   {
     // clear constraints and setup hanging node constraints
     navier_stokes->distribute_dofs();
@@ -239,17 +240,17 @@ namespace MeltPoolDG::Flow
     }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::reinit_2()
+  AdafloWrapper<dim, number>::reinit_2()
   {
     navier_stokes->initialize_matrix_free(
       &scratch_data.get_matrix_free(), dof_index_u, dof_index_p, quad_index_u, quad_index_p);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::reinit_3()
+  AdafloWrapper<dim, number>::reinit_3()
   {
     VectorType vel_temp, vel_temp_old, vel_temp_old_old, pressure_temp, pressure_temp_old,
       pressure_temp_old_old;
@@ -282,9 +283,9 @@ namespace MeltPoolDG::Flow
     navier_stokes->solution_old_old.block(1).copy_locally_owned_data_from(pressure_temp_old_old);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::init_time_advance()
+  AdafloWrapper<dim, number>::init_time_advance()
   {
     navier_stokes->time_stepping.set_time_step(time_iterator.get_current_time_increment());
 
@@ -296,9 +297,9 @@ namespace MeltPoolDG::Flow
            ExcMessage("Adaflo and MeltPoolDG time steppers are not aligned."));
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::solve()
+  AdafloWrapper<dim, number>::solve()
   {
     if (!ready_for_time_advance)
       init_time_advance();
@@ -352,9 +353,9 @@ namespace MeltPoolDG::Flow
 
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::set_face_average_density_augmented_taylor_hood(
+  AdafloWrapper<dim, number>::set_face_average_density_augmented_taylor_hood(
     const Material<double> &material,
     const VectorType       &ls_as_heaviside,
     const unsigned int      ls_dof_idx,
@@ -428,170 +429,171 @@ namespace MeltPoolDG::Flow
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const LinearAlgebra::distributed::Vector<double> &
-  AdafloWrapper<dim>::get_velocity() const
+  AdafloWrapper<dim, number>::get_velocity() const
   {
     return navier_stokes->solution.block(0);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   LinearAlgebra::distributed::Vector<double> &
-  AdafloWrapper<dim>::get_velocity()
+  AdafloWrapper<dim, number>::get_velocity()
   {
     return navier_stokes->solution.block(0);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const LinearAlgebra::distributed::Vector<double> &
-  AdafloWrapper<dim>::get_velocity_old() const
+  AdafloWrapper<dim, number>::get_velocity_old() const
   {
     return navier_stokes->solution_old.block(0);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const LinearAlgebra::distributed::Vector<double> &
-  AdafloWrapper<dim>::get_velocity_old_old() const
+  AdafloWrapper<dim, number>::get_velocity_old_old() const
   {
     return navier_stokes->solution_old_old.block(0);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const DoFHandler<dim> &
-  AdafloWrapper<dim>::get_dof_handler_velocity() const
+  AdafloWrapper<dim, number>::get_dof_handler_velocity() const
   {
     return navier_stokes->get_dof_handler_u();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const unsigned int &
-  AdafloWrapper<dim>::get_dof_handler_idx_velocity() const
+  AdafloWrapper<dim, number>::get_dof_handler_idx_velocity() const
   {
     return dof_index_u;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const unsigned int &
-  AdafloWrapper<dim>::get_dof_handler_idx_hanging_nodes_velocity() const
+  AdafloWrapper<dim, number>::get_dof_handler_idx_hanging_nodes_velocity() const
   {
     return dof_index_hanging_nodes_u;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const unsigned int &
-  AdafloWrapper<dim>::get_quad_idx_velocity() const
+  AdafloWrapper<dim, number>::get_quad_idx_velocity() const
   {
     return quad_index_u;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const unsigned int &
-  AdafloWrapper<dim>::get_quad_idx_pressure() const
+  AdafloWrapper<dim, number>::get_quad_idx_pressure() const
   {
     return quad_index_p;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const AffineConstraints<double> &
-  AdafloWrapper<dim>::get_constraints_velocity() const
+  AdafloWrapper<dim, number>::get_constraints_velocity() const
   {
     return navier_stokes->get_constraints_u();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   AffineConstraints<double> &
-  AdafloWrapper<dim>::get_constraints_velocity()
+  AdafloWrapper<dim, number>::get_constraints_velocity()
   {
     return navier_stokes->modify_constraints_u();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const AffineConstraints<double> &
-  AdafloWrapper<dim>::get_hanging_node_constraints_velocity() const
+  AdafloWrapper<dim, number>::get_hanging_node_constraints_velocity() const
   {
     return navier_stokes->get_hanging_node_constraints_u();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const LinearAlgebra::distributed::Vector<double> &
-  AdafloWrapper<dim>::get_pressure() const
+  AdafloWrapper<dim, number>::get_pressure() const
   {
     return navier_stokes->solution.block(1);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   LinearAlgebra::distributed::Vector<double> &
-  AdafloWrapper<dim>::get_pressure()
+  AdafloWrapper<dim, number>::get_pressure()
   {
     return navier_stokes->solution.block(1);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const LinearAlgebra::distributed::Vector<double> &
-  AdafloWrapper<dim>::get_pressure_old() const
+  AdafloWrapper<dim, number>::get_pressure_old() const
   {
     return navier_stokes->solution_old.block(1);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const LinearAlgebra::distributed::Vector<double> &
-  AdafloWrapper<dim>::get_pressure_old_old() const
+  AdafloWrapper<dim, number>::get_pressure_old_old() const
   {
     return navier_stokes->solution_old_old.block(1);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const DoFHandler<dim> &
-  AdafloWrapper<dim>::get_dof_handler_pressure() const
+  AdafloWrapper<dim, number>::get_dof_handler_pressure() const
   {
     return navier_stokes->get_dof_handler_p();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const unsigned int &
-  AdafloWrapper<dim>::get_dof_handler_idx_pressure() const
+  AdafloWrapper<dim, number>::get_dof_handler_idx_pressure() const
   {
     return dof_index_p;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const AffineConstraints<double> &
-  AdafloWrapper<dim>::get_constraints_pressure() const
+  AdafloWrapper<dim, number>::get_constraints_pressure() const
   {
     return navier_stokes->get_constraints_p();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   AffineConstraints<double> &
-  AdafloWrapper<dim>::get_constraints_pressure()
+  AdafloWrapper<dim, number>::get_constraints_pressure()
   {
     return navier_stokes->modify_constraints_p();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const AffineConstraints<double> &
-  AdafloWrapper<dim>::get_hanging_node_constraints_pressure() const
+  AdafloWrapper<dim, number>::get_hanging_node_constraints_pressure() const
   {
     return navier_stokes->get_hanging_node_constraints_p();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::set_force_rhs(const LinearAlgebra::distributed::Vector<double> &vec)
+  AdafloWrapper<dim, number>::set_force_rhs(const LinearAlgebra::distributed::Vector<double> &vec)
   {
     navier_stokes->user_rhs.block(0) = vec;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::set_mass_balance_rhs(const LinearAlgebra::distributed::Vector<double> &vec)
+  AdafloWrapper<dim, number>::set_mass_balance_rhs(
+    const LinearAlgebra::distributed::Vector<double> &vec)
   {
     navier_stokes->user_rhs.block(1) = vec;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::set_user_defined_material(
+  AdafloWrapper<dim, number>::set_user_defined_material(
     std::function<
       Tensor<2, dim, VectorizedArray<double>>(const Tensor<2, dim, VectorizedArray<double>> &,
                                               const unsigned int,
@@ -601,52 +603,52 @@ namespace MeltPoolDG::Flow
     navier_stokes->set_user_defined_material(my_user_defined_material);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   VectorizedArray<double> &
-  AdafloWrapper<dim>::get_density(const unsigned int cell, const unsigned int q)
+  AdafloWrapper<dim, number>::get_density(const unsigned int cell, const unsigned int q)
   {
     return navier_stokes->get_matrix().begin_densities(cell)[q];
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const VectorizedArray<double> &
-  AdafloWrapper<dim>::get_density(const unsigned int cell, const unsigned int q) const
+  AdafloWrapper<dim, number>::get_density(const unsigned int cell, const unsigned int q) const
   {
     return navier_stokes->get_matrix().begin_densities(cell)[q];
   }
 
-  template <int dim>
+  template <int dim, typename number>
   VectorizedArray<double> &
-  AdafloWrapper<dim>::get_viscosity(const unsigned int cell, const unsigned int q)
+  AdafloWrapper<dim, number>::get_viscosity(const unsigned int cell, const unsigned int q)
   {
     return navier_stokes->get_matrix().begin_viscosities(cell)[q];
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const VectorizedArray<double> &
-  AdafloWrapper<dim>::get_viscosity(const unsigned int cell, const unsigned int q) const
+  AdafloWrapper<dim, number>::get_viscosity(const unsigned int cell, const unsigned int q) const
   {
     return navier_stokes->get_matrix().begin_viscosities(cell)[q];
   }
 
-  template <int dim>
+  template <int dim, typename number>
   VectorizedArray<double> &
-  AdafloWrapper<dim>::get_damping(const unsigned int cell, const unsigned int q)
+  AdafloWrapper<dim, number>::get_damping(const unsigned int cell, const unsigned int q)
   {
     return navier_stokes->get_matrix().begin_damping_coeff(cell)[q];
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const VectorizedArray<double> &
-  AdafloWrapper<dim>::get_damping(const unsigned int cell, const unsigned int q) const
+  AdafloWrapper<dim, number>::get_damping(const unsigned int cell, const unsigned int q) const
   {
     return navier_stokes->get_matrix().begin_damping_coeff(cell)[q];
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::attach_vectors_u(
+  AdafloWrapper<dim, number>::attach_vectors_u(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
     vectors.push_back(&navier_stokes->solution.block(0));
@@ -654,9 +656,9 @@ namespace MeltPoolDG::Flow
     vectors.push_back(&navier_stokes->solution_old_old.block(0));
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::attach_vectors_p(
+  AdafloWrapper<dim, number>::attach_vectors_p(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
     vectors.push_back(&navier_stokes->solution.block(1));
@@ -664,9 +666,9 @@ namespace MeltPoolDG::Flow
     vectors.push_back(&navier_stokes->solution_old_old.block(1));
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::distribute_constraints()
+  AdafloWrapper<dim, number>::distribute_constraints()
   {
     navier_stokes->get_hanging_node_constraints_u().distribute(navier_stokes->solution.block(0));
     navier_stokes->get_hanging_node_constraints_u().distribute(
@@ -684,9 +686,9 @@ namespace MeltPoolDG::Flow
     navier_stokes->get_constraints_p().distribute(navier_stokes->user_rhs.block(1));
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::attach_output_vectors(GenericDataOut<dim, double> &data_out) const
+  AdafloWrapper<dim, number>::attach_output_vectors(GenericDataOut<dim, double> &data_out) const
   {
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
       vector_component_interpretation(dim,
@@ -801,9 +803,10 @@ namespace MeltPoolDG::Flow
 
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::attach_output_vectors_failed_step(GenericDataOut<dim, double> &data_out) const
+  AdafloWrapper<dim, number>::attach_output_vectors_failed_step(
+    GenericDataOut<dim, double> &data_out) const
   {
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
       vector_component_interpretation(dim,
@@ -828,9 +831,9 @@ namespace MeltPoolDG::Flow
                              true /* force output */);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdafloWrapper<dim>::set_face_average_density(
+  AdafloWrapper<dim, number>::set_face_average_density(
     const typename Triangulation<dim>::cell_iterator &cell,
     const unsigned int                                face,
     const double                                      density)
@@ -838,9 +841,9 @@ namespace MeltPoolDG::Flow
     navier_stokes->set_face_average_density(cell, face, density);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const Quadrature<dim> &
-  AdafloWrapper<dim>::get_face_center_quad()
+  AdafloWrapper<dim, number>::get_face_center_quad()
   {
     if (!face_center_quad)
       {
@@ -857,9 +860,9 @@ namespace MeltPoolDG::Flow
     return *face_center_quad;
   }
 
-  template <int dim>
+  template <int dim, typename number>
   bool
-  AdafloWrapper<dim>::time_stepping_synchronized()
+  AdafloWrapper<dim, number>::time_stepping_synchronized()
   {
     return std::abs(navier_stokes->time_stepping.step_size() -
                     time_iterator.get_current_time_increment()) < 1e-16 &&
@@ -871,8 +874,8 @@ namespace MeltPoolDG::Flow
            std::abs(navier_stokes->time_stepping.previous() - time_iterator.get_old_time()) < 1e-16;
   }
 
-  template class AdafloWrapper<1>;
-  template class AdafloWrapper<2>;
-  template class AdafloWrapper<3>;
+  template class AdafloWrapper<1, double>;
+  template class AdafloWrapper<2, double>;
+  template class AdafloWrapper<3, double>;
 } // namespace MeltPoolDG::Flow
 #endif

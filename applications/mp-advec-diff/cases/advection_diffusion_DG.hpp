@@ -29,24 +29,22 @@
 
 namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
 {
-  using namespace dealii;
-
   static bool inflow_outflow_bc = false;
 
 
-  template <int dim>
-  class ExactSolution : public Function<dim>
+  template <int dim, typename number>
+  class ExactSolution : public Function<dim, number>
   {
   public:
     ExactSolution()
-      : Function<dim>()
+      : Function<dim, number>()
 
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
-      const double t = this->get_time();
+      const number t = this->get_time();
       return std::sin(4.0 * numbers::PI * (p[0] - 1.1 * t));
     }
 
@@ -56,20 +54,20 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
   /*
    * this function specifies the initial field of the level set equation
    */
-  template <int dim>
-  class InitializePhi : public Function<dim>
+  template <int dim, typename number>
+  class InitializePhi : public Function<dim, number>
   {
   public:
     InitializePhi()
-      : Function<dim>()
-      , distance_sphere(dim == 1   ? Point<dim>(0.0) :
-                        (dim == 2) ? Point<dim>(0.0, 0.5) :
-                                     Point<dim>(0, 0, 0.5),
+      : Function<dim, number>()
+      , distance_sphere(dim == 1   ? Point<dim, number>(0.0) :
+                        (dim == 2) ? Point<dim, number>(0.0, 0.5) :
+                                     Point<dim, number>(0, 0, 0.5),
                         0.25)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       return std::sin(4.0 * numbers::PI * p[0]);
     }
@@ -78,16 +76,16 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
     const Functions::SignedDistance::Sphere<dim> distance_sphere;
   };
 
-  template <int dim>
-  class AdvectionField : public Function<dim>
+  template <int dim, typename number>
+  class AdvectionField : public Function<dim, number>
   {
   public:
     AdvectionField()
-      : Function<dim>(dim)
+      : Function<dim, number>(dim)
     {}
 
-    double
-    value([[maybe_unused]] const Point<dim> &p, const unsigned int component) const override
+    number
+    value([[maybe_unused]] const Point<dim, number> &p, const unsigned int component) const override
     {
       if (component == 0)
         return 1.1;
@@ -96,19 +94,19 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
     }
   };
 
-  template <int dim>
-  class DirichletConditions : public Function<dim>
+  template <int dim, typename number>
+  class DirichletConditions : public Function<dim, number>
   {
   public:
     DirichletConditions()
-      : Function<dim>(dim)
+      : Function<dim, number>(dim)
     {}
 
-    double
-    value([[maybe_unused]] const Point<dim>  &p,
-          [[maybe_unused]] const unsigned int component) const override
+    number
+    value([[maybe_unused]] const Point<dim, number> &p,
+          [[maybe_unused]] const unsigned int        component) const override
     {
-      const double t = this->get_time();
+      const number t = this->get_time();
       return std::sin(4.0 * numbers::PI * (p[0] - 1.1 * t));
     }
   };
@@ -117,12 +115,12 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
    *      This class collects all relevant input data for the level set simulation
    */
 
-  template <int dim>
-  class SimulationAdvecDG : public LevelSet::AdvectionDiffusionCase<dim>
+  template <int dim, typename number>
+  class SimulationAdvecDG : public LevelSet::AdvectionDiffusionCase<dim, number>
   {
   public:
     SimulationAdvecDG(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : LevelSet::AdvectionDiffusionCase<dim>(parameter_file, mpi_communicator)
+      : LevelSet::AdvectionDiffusionCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -163,7 +161,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
       constexpr types::boundary_id inflow_bc  = 42;
       constexpr types::boundary_id do_nothing = 0;
 
-      auto dirichlet = std::make_shared<DirichletConditions<dim>>();
+      auto dirichlet = std::make_shared<DirichletConditions<dim, number>>();
 
       if (inflow_outflow_bc)
         {
@@ -203,8 +201,9 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
     void
     set_field_conditions() final
     {
-      this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "advection_diffusion");
-      this->attach_field_function(std::make_shared<AdvectionField<dim>>(),
+      this->attach_initial_condition(std::make_shared<InitializePhi<dim, number>>(),
+                                     "advection_diffusion");
+      this->attach_field_function(std::make_shared<AdvectionField<dim, number>>(),
                                   "prescribed_velocity",
                                   "advection_diffusion");
     }
@@ -224,7 +223,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const final
+    do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const final
     {
       dealii::ConditionalOStream pcout(std::cout,
                                        Utilities::MPI::this_mpi_process(this->mpi_communicator) ==
@@ -245,7 +244,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
           }
 
       /*Error Calculation*/
-      ExactSolution<dim> exact_solution;
+      ExactSolution<dim, number> exact_solution;
       exact_solution.set_time(generic_data_out.get_time());
 
       const auto n_q_points = 50; // Number is high to get accurate error even on a coarse mesh
@@ -256,14 +255,14 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
                               quadrature,
                               update_values | update_JxW_values | update_quadrature_points);
 
-      std::vector<double> phi_at_q(QGauss<dim>(n_q_points).size());
+      std::vector<number> phi_at_q(QGauss<dim>(n_q_points).size());
 
 
 
       generic_data_out.get_vector("advected_field").update_ghost_values();
 
-      double error      = 0.0;
-      double norm_exact = 0.0;
+      number error      = 0.0;
+      number norm_exact = 0.0;
 
       for (const auto &cell :
            generic_data_out.get_dof_handler("advected_field").active_cell_iterators())
@@ -294,8 +293,8 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
     }
 
   private:
-    const double left_domain  = -0.5;
-    const double right_domain = 0.5;
+    const number left_domain  = -0.5;
+    const number right_domain = 0.5;
   };
 
 } // namespace MeltPoolDG::Simulation::AdvectionDiffusionDG

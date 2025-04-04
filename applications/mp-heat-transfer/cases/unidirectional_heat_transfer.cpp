@@ -24,38 +24,38 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   static constexpr double x_min = 0.0;
   static constexpr double x_max = 0.1;
 
-  template <int dim>
-  class LinearTemp : public Function<dim>
+  template <int dim, typename number>
+  class LinearTemp : public Function<dim, number>
   {
   public:
-    LinearTemp(const double left_temperature = 0.0, const double right_temperature = 0.1)
-      : Function<dim>(1, 0)
+    LinearTemp(const number left_temperature = 0.0, const number right_temperature = 0.1)
+      : Function<dim, number>(1, 0)
       , left_temp(left_temperature)
       , right_temp(right_temperature)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       return left_temp + (right_temp - left_temp) * (p[0] - x_min) / (x_max - x_min);
     }
 
   private:
-    const double left_temp;
-    const double right_temp;
+    const number left_temp;
+    const number right_temp;
   };
 
-  template <int dim>
-  class UnidirectionalVelocityField : public Function<dim>
+  template <int dim, typename number>
+  class UnidirectionalVelocityField : public Function<dim, number>
   {
   public:
-    UnidirectionalVelocityField(double velocity)
-      : Function<dim>(dim)
+    UnidirectionalVelocityField(number velocity)
+      : Function<dim, number>(dim)
       , vel(velocity)
     {}
 
-    double
-    value(const Point<dim> &, const unsigned int component) const override
+    number
+    value(const Point<dim, number> &, const unsigned int component) const override
     {
       if (component == 0)
         return -vel;
@@ -64,20 +64,20 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
     }
 
   private:
-    const double vel;
+    const number vel;
   };
 
-  template <int dim>
-  class HorizontalLevelSet : public Function<dim>
+  template <int dim, typename number>
+  class HorizontalLevelSet : public Function<dim, number>
   {
   public:
     HorizontalLevelSet(const bool do_heaviside)
-      : Function<dim>(1)
+      : Function<dim, number>(1)
       , heaviside(do_heaviside)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int) const override
     {
       const auto signed_distance = level - p[1];
       if (heaviside)
@@ -88,22 +88,22 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
 
   private:
     const bool   heaviside;
-    const double eps   = 0.01;
-    const double level = x_max / 2;
+    const number eps   = 0.01;
+    const number level = x_max / 2;
   };
 
-  template <int dim>
-  class CovectedVerticalLevelSetHeaviside : public Function<dim>
+  template <int dim, typename number>
+  class CovectedVerticalLevelSetHeaviside : public Function<dim, number>
   {
   public:
-    CovectedVerticalLevelSetHeaviside(const double velocity, const bool do_heaviside)
-      : Function<dim>(1)
+    CovectedVerticalLevelSetHeaviside(const number velocity, const bool do_heaviside)
+      : Function<dim, number>(1)
       , velocity(velocity)
       , heaviside(do_heaviside)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int) const override
     {
       const auto signed_distance = level - p[0] - velocity * this->get_time();
 
@@ -114,23 +114,23 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
     }
 
   private:
-    const double eps   = 0.01;
-    const double level = x_max * 2. / 3.;
-    const double velocity;
+    const number eps   = 0.01;
+    const number level = x_max * 2. / 3.;
+    const number velocity;
     const bool   heaviside;
   };
 
 
-  template <int dim>
-  SimulationUnidirectionalHeatTransfer<dim>::SimulationUnidirectionalHeatTransfer(
+  template <int dim, typename number>
+  SimulationUnidirectionalHeatTransfer<dim, number>::SimulationUnidirectionalHeatTransfer(
     std::string    parameter_file,
     const MPI_Comm mpi_communicator)
-    : Heat::HeatTransferCase<dim>(parameter_file, mpi_communicator)
+    : Heat::HeatTransferCase<dim, number>(parameter_file, mpi_communicator)
   {}
 
-  template <int dim>
+  template <int dim, typename number>
   bool
-  SimulationUnidirectionalHeatTransfer<dim>::add_simulation_specific_parameters(
+  SimulationUnidirectionalHeatTransfer<dim, number>::add_simulation_specific_parameters(
     dealii::ParameterHandler &prm)
   {
     prm.enter_subsection("simulation specific");
@@ -150,9 +150,9 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  SimulationUnidirectionalHeatTransfer<dim>::create_spatial_discretization()
+  SimulationUnidirectionalHeatTransfer<dim, number>::create_spatial_discretization()
   {
     if constexpr (dim == 1)
       {
@@ -193,9 +193,9 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  SimulationUnidirectionalHeatTransfer<dim>::set_boundary_conditions()
+  SimulationUnidirectionalHeatTransfer<dim, number>::set_boundary_conditions()
   {
     // face numbering according to the deal.II colorize flag
     [[maybe_unused]] const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
@@ -211,25 +211,26 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  SimulationUnidirectionalHeatTransfer<dim>::set_field_conditions()
+  SimulationUnidirectionalHeatTransfer<dim, number>::set_field_conditions()
   {
     if (do_solidification)
-      this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(1960.0, 1980.0),
+      this->attach_initial_condition(std::make_shared<LinearTemp<dim, number>>(1960.0, 1980.0),
                                      "heat_transfer");
     else if (this->parameters.heat.radiation.emissivity > 0.0 ||
              this->parameters.heat.convection.convection_coefficient > 0.0)
-      this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(1000),
-                                     "heat_transfer");
+      this->attach_initial_condition(
+        std::make_shared<Functions::ConstantFunction<dim, number>>(1000), "heat_transfer");
     else if (this->parameters.evapor.evaporative_cooling.enable)
-      this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(1960.0, 2040.0),
+      this->attach_initial_condition(std::make_shared<LinearTemp<dim, number>>(1960.0, 2040.0),
                                      "heat_transfer");
     else
-      this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(), "heat_transfer");
+      this->attach_initial_condition(std::make_shared<LinearTemp<dim, number>>(), "heat_transfer");
 
     if (velocity != 0.0)
-      this->attach_field_function(std::make_shared<UnidirectionalVelocityField<dim>>(velocity),
+      this->attach_field_function(std::make_shared<UnidirectionalVelocityField<dim, number>>(
+                                    velocity),
                                   "prescribed_velocity",
                                   "heat_transfer");
 
@@ -238,25 +239,25 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
         if (this->parameters.heat.operator_type == Heat::TwoPhaseOperatorType::diffuse)
           {
             if (!do_solidification)
-              this->attach_initial_condition(std::make_shared<HorizontalLevelSet<dim>>(
+              this->attach_initial_condition(std::make_shared<HorizontalLevelSet<dim, number>>(
                                                true /* do_heaviside */),
                                              "prescribed_heaviside");
             else
               this->attach_initial_condition(
-                std::make_shared<CovectedVerticalLevelSetHeaviside<dim>>(velocity,
-                                                                         true /* do_heaviside */),
+                std::make_shared<CovectedVerticalLevelSetHeaviside<dim, number>>(
+                  velocity, true /* do_heaviside */),
                 "prescribed_heaviside");
           }
         else if (this->parameters.heat.operator_type == Heat::TwoPhaseOperatorType::cut)
           {
             if (velocity == 0.0)
-              this->attach_initial_condition(std::make_shared<HorizontalLevelSet<dim>>(
+              this->attach_initial_condition(std::make_shared<HorizontalLevelSet<dim, number>>(
                                                false /* do_heaviside */),
                                              "prescribed_signed_distance");
             else
               this->attach_initial_condition(
-                std::make_shared<CovectedVerticalLevelSetHeaviside<dim>>(velocity,
-                                                                         false /* do_heaviside */),
+                std::make_shared<CovectedVerticalLevelSetHeaviside<dim, number>>(
+                  velocity, false /* do_heaviside */),
                 "prescribed_signed_distance");
           }
       }
@@ -265,13 +266,16 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
                            SimulationUnidirectionalHeatTransfer,
                            "unidirectional_heat_transfer",
-                           1);
+                           1,
+                           double);
   MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
                            SimulationUnidirectionalHeatTransfer,
                            "unidirectional_heat_transfer",
-                           2);
+                           2,
+                           double);
   MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
                            SimulationUnidirectionalHeatTransfer,
                            "unidirectional_heat_transfer",
-                           3);
+                           3,
+                           double);
 } // namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer

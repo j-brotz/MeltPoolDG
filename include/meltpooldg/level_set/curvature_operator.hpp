@@ -58,7 +58,7 @@ namespace MeltPoolDG::LevelSet
     // optional parameters for narrow band
     const VectorType *solution_level_set;
 
-    AlignedVector<dealii::VectorizedArray<number>> damping;
+    dealii::AlignedVector<dealii::VectorizedArray<number>> damping;
 
   public:
     CurvatureOperator(const ScratchData<dim, dim, number> &scratch_data_in,
@@ -95,8 +95,8 @@ namespace MeltPoolDG::LevelSet
 
   private:
     void
-    tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &curv_vals,
-                                 FECellIntegrator<dim, 1, number> &level_set_vals,
-                                 const bool                        do_reinit_cells) const;
+    tangent_local_cell_operation(dealii::FECellIntegrator<dim, 1, number> &curv_vals,
+                                 dealii::FECellIntegrator<dim, 1, number> &level_set_vals,
+                                 const bool                                do_reinit_cells) const;
   };
 } // namespace MeltPoolDG::LevelSet

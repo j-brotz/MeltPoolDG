@@ -16,6 +16,7 @@
         "dimension": "2",
         "do print parameters": "true",
         "global refinements": "1",
+        "number": "double",
         "problem name": "not_initialized",
         "verbosity level": "1",
         "fe":

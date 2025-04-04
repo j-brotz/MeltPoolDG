@@ -28,21 +28,21 @@ namespace MeltPoolDG::Simulation::ZalesakDisk
   static constexpr double notch_width  = 0.1;
   static constexpr double notch_height = 0.4;
 
-  template <int dim>
-  class AdvectionField : public Function<dim>
+  template <int dim, typename number>
+  class AdvectionField : public Function<dim, number>
   {
   public:
     AdvectionField()
-      : Function<dim>(dim)
+      : Function<dim, number>(dim)
     {}
 
     void
-    vector_value(const Point<dim> &p, Vector<double> &values) const override
+    vector_value(const Point<dim, number> &p, Vector<number> &values) const override
     {
       if constexpr (dim == 2)
         {
-          const double x = p[0];
-          const double y = p[1];
+          const number x = p[0];
+          const number y = p[1];
 
           values[0] = 4 * y;
           values[1] = -4 * x;
@@ -55,12 +55,12 @@ namespace MeltPoolDG::Simulation::ZalesakDisk
   /*
    *      This class collects all relevant input data for the level set simulation
    */
-  template <int dim>
-  class SimulationZalesakDisk : public LevelSet::LevelSetCase<dim>
+  template <int dim, typename number>
+  class SimulationZalesakDisk : public LevelSet::LevelSetCase<dim, number>
   {
   public:
     SimulationZalesakDisk(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : LevelSet::LevelSetCase<dim>(parameter_file, mpi_communicator)
+      : LevelSet::LevelSetCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -113,7 +113,7 @@ namespace MeltPoolDG::Simulation::ZalesakDisk
             for (const auto &face : cell->face_iterators())
               if ((face->at_boundary()))
                 {
-                  const double half_line = (right_domain + left_domain) / 2;
+                  const number half_line = (right_domain + left_domain) / 2;
 
                   if (face->center()[0] == left_domain && face->center()[1] > half_line)
                     face->set_boundary_id(inflow_bc);
@@ -136,20 +136,20 @@ namespace MeltPoolDG::Simulation::ZalesakDisk
     void
     set_field_conditions() override
     {
-      Point<dim> center = (dim == 1) ? Point<dim>(0.0) :
-                          (dim == 2) ? Point<dim>(0.0, 0.5) :
-                                       Point<dim>(0, 0, 0.5);
+      Point<dim, number> center = (dim == 1) ? Point<dim, number>(0.0) :
+                                  (dim == 2) ? Point<dim, number>(0.0, 0.5) :
+                                               Point<dim, number>(0, 0, 0.5);
       this->attach_initial_condition(
         std::make_shared<Functions::SignedDistance::ZalesakDisk<dim>>(
           center, 0.3 /*radius*/, 0.1 /*notch_width*/, 0.5 /*notch_height*/),
         "signed_distance");
-      this->attach_field_function(std::make_shared<AdvectionField<dim>>(),
+      this->attach_field_function(std::make_shared<AdvectionField<dim, number>>(),
                                   "prescribed_velocity",
                                   "level_set");
     }
 
   private:
-    double left_domain  = -1.0;
-    double right_domain = 1.0;
+    number left_domain  = -1.0;
+    number right_domain = 1.0;
   };
 } // namespace MeltPoolDG::Simulation::ZalesakDisk

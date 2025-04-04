@@ -21,15 +21,14 @@
 
 namespace MeltPoolDG::Simulation::StefansProblem
 {
-  using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
-  template <int dim>
-  class SimulationStefansProblem : public LevelSet::LevelSetCase<dim>
+  template <int dim, typename number>
+  class SimulationStefansProblem : public LevelSet::LevelSetCase<dim, number>
   {
   public:
     SimulationStefansProblem(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : LevelSet::LevelSetCase<dim>(parameter_file, mpi_communicator)
+      : LevelSet::LevelSetCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -57,12 +56,12 @@ namespace MeltPoolDG::Simulation::StefansProblem
             std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
         }
       // create mesh
-      const Point<dim> bottom_left = dim == 1   ? Point<dim>(y_min) :
-                                     (dim == 2) ? Point<dim>(x_min, y_min) :
-                                                  Point<dim>(x_min, x_min, y_min);
-      const Point<dim> top_right   = dim == 1   ? Point<dim>(y_max) :
-                                     (dim == 2) ? Point<dim>(x_max, y_max) :
-                                                  Point<dim>(x_max, x_max, y_max);
+      const Point<dim, number> bottom_left = dim == 1   ? Point<dim, number>(y_min) :
+                                             (dim == 2) ? Point<dim, number>(x_min, y_min) :
+                                                          Point<dim, number>(x_min, x_min, y_min);
+      const Point<dim, number> top_right   = dim == 1   ? Point<dim, number>(y_max) :
+                                             (dim == 2) ? Point<dim, number>(x_max, y_max) :
+                                                          Point<dim, number>(x_max, x_max, y_max);
 
 
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
@@ -98,8 +97,8 @@ namespace MeltPoolDG::Simulation::StefansProblem
     set_field_conditions() final
     {
       this->attach_initial_condition(std::make_shared<Functions::SignedDistance::Plane<dim>>(
-                                       Point<dim>::unit_vector(dim - 1) * y_interface,
-                                       -Point<dim>::unit_vector(dim - 1)),
+                                       Point<dim, number>::unit_vector(dim - 1) * y_interface,
+                                       -Point<dim, number>::unit_vector(dim - 1)),
                                      "signed_distance");
       this->attach_field_function(std::make_shared<Functions::ZeroFunction<dim>>(dim),
                                   "prescribed_velocity",
@@ -107,10 +106,10 @@ namespace MeltPoolDG::Simulation::StefansProblem
     }
 
   private:
-    const double x_min       = 0.0;
-    const double x_max       = 1.0;
-    const double y_min       = 0.0;
-    const double y_max       = 1.0;
-    const double y_interface = 0.5;
+    const number x_min       = 0.0;
+    const number x_max       = 1.0;
+    const number y_min       = 0.0;
+    const number y_max       = 1.0;
+    const number y_interface = 0.5;
   };
 } // namespace MeltPoolDG::Simulation::StefansProblem

@@ -37,17 +37,17 @@ namespace MeltPoolDG
      * @param scratch_data_in Scratch data object used in the pde operator.
      * @param dof_idx_in Relevant dof index of the passed operator in the scratch data object.
      */
-    ImplicitExplicitIntegrator(const PDEOperator        &pde_operator,
-                               const TimeIntegratorData &time_integrator_data,
-                               const ScratchData<dim>   &scratch_data_in,
-                               const unsigned int        dof_idx_in)
+    ImplicitExplicitIntegrator(const PDEOperator                   &pde_operator,
+                               const TimeIntegratorData            &time_integrator_data,
+                               const ScratchData<dim, dim, number> &scratch_data_in,
+                               const unsigned int                   dof_idx_in)
       : TimeIntegratorBase<number>(time_integrator_data)
       , pde_operator(pde_operator)
       , nonlinear_solver(this->time_integrator_data.nlsolver_data)
       , scratch_data(scratch_data_in)
       , dof_idx(dof_idx_in)
     {
-      preconditioner = make_preconditioner<dim, PDEOperator, VectorType>(
+      preconditioner = make_preconditioner<dim, number, PDEOperator, VectorType>(
         time_integrator_data.linear_solver_data.preconditioner_type, &pde_operator);
     }
 
@@ -164,14 +164,14 @@ namespace MeltPoolDG
     const PDEOperator &pde_operator;
 
     //! Preconditioner for the linear solver
-    Preconditioner<dim, VectorType> preconditioner;
+    Preconditioner<dim, VectorType, number> preconditioner;
 
     //! Nonlinear solver
     NewtonRaphsonSolver<VectorType> nonlinear_solver;
 
     VectorType intermediate_explicit_solution;
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim, dim, number> &scratch_data;
 
     const unsigned int dof_idx;
   };

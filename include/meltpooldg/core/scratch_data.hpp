@@ -40,15 +40,14 @@ namespace MeltPoolDG
    * Container containing mapping-, finite-element-, and quadrature-related
    * objects to be used either in matrix-based or in matrix-free context.
    */
-  using namespace dealii;
 
-  template <int dim, int spacedim = dim, typename number = double>
+  template <int dim, int spacedim, typename number>
   class ScratchData
   {
   private:
-    using VectorizedArrayType = VectorizedArray<number>;
-    using VectorType          = LinearAlgebra::distributed::Vector<number>;
-    using BlockVectorType     = LinearAlgebra::distributed::BlockVector<number>;
+    using VectorizedArrayType = dealii::VectorizedArray<number>;
+    using VectorType          = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType     = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
   public:
     ScratchData(const MPI_Comm     mpi_communicator,
@@ -59,30 +58,30 @@ namespace MeltPoolDG
      * Setup everything in one go.
      */
     void
-    reinit(const Mapping<dim, spacedim>                         &mapping,
-           const std::vector<const DoFHandler<dim, spacedim> *> &dof_handler,
-           const std::vector<const AffineConstraints<number> *> &constraint,
-           const std::vector<Quadrature<dim>>                   &quad,
-           const bool                                            enable_boundary_face_loops,
-           const bool                                            enable_inner_face_loops,
+    reinit(const dealii::Mapping<dim, spacedim>                         &mapping,
+           const std::vector<const dealii::DoFHandler<dim, spacedim> *> &dof_handler,
+           const std::vector<const dealii::AffineConstraints<number> *> &constraint,
+           const std::vector<dealii::Quadrature<dim>>                   &quad,
+           const bool                                                    enable_boundary_face_loops,
+           const bool                                                    enable_inner_face_loops,
            const bool enable_normal_vector_update = false);
     /**
      * Fill internal data structures step-by-step.
      */
     void
-    set_mapping(const Mapping<dim, spacedim> &mapping);
+    set_mapping(const dealii::Mapping<dim, spacedim> &mapping);
 
     void
-    set_mapping(const std::shared_ptr<Mapping<dim, spacedim>> mapping);
+    set_mapping(const std::shared_ptr<dealii::Mapping<dim, spacedim>> mapping);
 
     unsigned int
-    attach_dof_handler(const DoFHandler<dim, spacedim> &dof_handler);
+    attach_dof_handler(const dealii::DoFHandler<dim, spacedim> &dof_handler);
 
     unsigned int
-    attach_constraint_matrix(const AffineConstraints<number> &constraint);
+    attach_constraint_matrix(const dealii::AffineConstraints<number> &constraint);
 
     unsigned int
-    attach_quadrature(const Quadrature<dim> &quadrature);
+    attach_quadrature(const dealii::Quadrature<dim> &quadrature);
 
     void
     create_partitioning();
@@ -124,46 +123,46 @@ namespace MeltPoolDG
     /**
      * Getter functions.
      */
-    const Mapping<dim, spacedim> &
+    const dealii::Mapping<dim, spacedim> &
     get_mapping() const;
 
-    const FiniteElement<dim, spacedim> &
+    const dealii::FiniteElement<dim, spacedim> &
     get_fe(const unsigned int fe_index) const;
 
-    const AffineConstraints<number> &
+    const dealii::AffineConstraints<number> &
     get_constraint(const unsigned int constraint_index) const;
 
-    AffineConstraints<number> &
+    dealii::AffineConstraints<number> &
     get_constraint(const unsigned int constraint_index);
 
-    const std::vector<const AffineConstraints<number> *> &
+    const std::vector<const dealii::AffineConstraints<number> *> &
     get_constraints() const;
 
-    const Quadrature<dim> &
+    const dealii::Quadrature<dim> &
     get_quadrature(const unsigned int quad_index) const;
 
-    const std::vector<Quadrature<dim>> &
+    const std::vector<dealii::Quadrature<dim>> &
     get_quadratures() const;
 
-    const Quadrature<dim - 1> &
+    const dealii::Quadrature<dim - 1> &
     get_face_quadrature(const unsigned int quad_index) const;
 
-    const std::vector<Quadrature<dim - 1>> &
+    const std::vector<dealii::Quadrature<dim - 1>> &
     get_face_quadratures() const;
 
-    MatrixFree<dim, number, VectorizedArrayType> &
+    dealii::MatrixFree<dim, number, VectorizedArrayType> &
     get_matrix_free();
 
-    const MatrixFree<dim, number, VectorizedArrayType> &
+    const dealii::MatrixFree<dim, number, VectorizedArrayType> &
     get_matrix_free() const;
 
-    const DoFHandler<dim, spacedim> &
+    const dealii::DoFHandler<dim, spacedim> &
     get_dof_handler(const unsigned int dof_idx) const;
 
-    const std::vector<const DoFHandler<dim, spacedim> *> &
+    const std::vector<const dealii::DoFHandler<dim, spacedim> *> &
     get_dof_handlers() const;
 
-    const Triangulation<dim> &
+    const dealii::Triangulation<dim> &
     get_triangulation(const unsigned int dof_idx = 0) const;
 
     unsigned int
@@ -175,31 +174,31 @@ namespace MeltPoolDG
     unsigned int
     get_n_q_points(const unsigned int dof_idx) const;
 
-    const double &
+    const number &
     get_min_cell_size() const;
 
-    double
+    number
     get_min_cell_size(const unsigned int dof_idx) const;
 
-    const double &
+    const number &
     get_max_cell_size() const;
 
-    const double &
+    const number &
     get_min_diameter() const;
 
-    const AlignedVector<VectorizedArray<double>> &
+    const dealii::AlignedVector<dealii::VectorizedArray<number>> &
     get_cell_sizes() const;
 
     MPI_Comm
     get_mpi_comm(const unsigned int dof_idx = 0) const;
 
-    const IndexSet &
+    const dealii::IndexSet &
     get_locally_owned_dofs(const unsigned int dof_idx) const;
 
-    const IndexSet &
+    const dealii::IndexSet &
     get_locally_relevant_dofs(const unsigned int dof_idx) const;
 
-    const std::shared_ptr<Utilities::MPI::Partitioner> &
+    const std::shared_ptr<dealii::Utilities::MPI::Partitioner> &
     get_partitioner(const unsigned int dof_idx) const;
 
     const ConditionalOStream
@@ -223,36 +222,37 @@ namespace MeltPoolDG
     CutUtil::CutPhaseType
     get_cut_type(const unsigned int dof_idx) const;
 
-    TimerOutput &
+    dealii::TimerOutput &
     get_timer() const;
 
-    Utilities::MPI::RemotePointEvaluation<dim, dim> &
+    dealii::Utilities::MPI::RemotePointEvaluation<dim, dim> &
     get_remote_point_evaluation(const unsigned int dof_idx) const;
 
     bool enable_boundary_faces;
     bool enable_inner_faces;
 
   private:
-    bool                                           do_matrix_free;
-    std::vector<dealii::ConditionalOStream>        pcout;
-    std::shared_ptr<Mapping<dim, spacedim>>        mapping;
-    std::vector<const DoFHandler<dim, spacedim> *> dof_handler;
-    std::vector<const AffineConstraints<number> *> constraint;
-    std::vector<Quadrature<dim>>                   quad;
-    std::vector<Quadrature<dim - 1>>               face_quad;
-    double                                         min_cell_size;
-    double                                 max_cell_size; // only computed in case of matrixfree
-    double                                 min_diameter;
-    AlignedVector<VectorizedArray<double>> cell_sizes;
-    std::vector<IndexSet>                  locally_owned_dofs;
-    std::vector<IndexSet>                  locally_relevant_dofs;
-    std::vector<std::shared_ptr<Utilities::MPI::Partitioner>> partitioner;
-    std::map<unsigned int, std::shared_ptr<Utilities::MPI::RemotePointEvaluation<dim, dim>>> rpe;
+    bool                                                   do_matrix_free;
+    std::vector<dealii::ConditionalOStream>                pcout;
+    std::shared_ptr<dealii::Mapping<dim, spacedim>>        mapping;
+    std::vector<const dealii::DoFHandler<dim, spacedim> *> dof_handler;
+    std::vector<const dealii::AffineConstraints<number> *> constraint;
+    std::vector<dealii::Quadrature<dim>>                   quad;
+    std::vector<dealii::Quadrature<dim - 1>>               face_quad;
+    number                                                 min_cell_size;
+    number max_cell_size; // only computed in case of matrixfree
+    number min_diameter;
+    dealii::AlignedVector<dealii::VectorizedArray<number>>            cell_sizes;
+    std::vector<dealii::IndexSet>                                     locally_owned_dofs;
+    std::vector<dealii::IndexSet>                                     locally_relevant_dofs;
+    std::vector<std::shared_ptr<dealii::Utilities::MPI::Partitioner>> partitioner;
+    std::map<unsigned int, std::shared_ptr<dealii::Utilities::MPI::RemotePointEvaluation<dim, dim>>>
+                       rpe;
     const unsigned int verbosity_level;
 
-    mutable std::shared_ptr<TimerOutput> timer;
+    mutable std::shared_ptr<dealii::TimerOutput> timer;
 
-    MatrixFree<dim, number, VectorizedArrayType> matrix_free;
+    dealii::MatrixFree<dim, number, VectorizedArrayType> matrix_free;
 
     /**
      * Helper functions for setting up internal data.

@@ -95,8 +95,8 @@ namespace MeltPoolDG::LevelSet
     const unsigned int reinit_dof_idx;
     const unsigned int reinit_quad_idx;
 
-    mutable VectorType                                     diffusitivity;
-    mutable AlignedVector<dealii::VectorizedArray<number>> array_penalty_parameter;
+    mutable VectorType                                             diffusitivity;
+    mutable dealii::AlignedVector<dealii::VectorizedArray<number>> array_penalty_parameter;
 
     const VectorType      &curvature;
     const BlockVectorType &normal_vector;

@@ -14,7 +14,8 @@ namespace MeltPoolDG
    * A concept for matrix free operators that are compatible with the Jacobi preconditioner.
    */
   template <typename OperatorType, typename VectorType>
-  concept JacobiPreconditionerOperatorType = requires(const OperatorType op, VectorType &diag) {
+  concept JacobiPreconditionerOperatorType = requires(const OperatorType op, VectorType &diag)
+  {
     /**
      * Compute the inverse of the diagonal of the system matrix and store it in the given vector.
      */
@@ -22,7 +23,10 @@ namespace MeltPoolDG
   };
 
 
-  template <int dim, typename VectorType, JacobiPreconditionerOperatorType<VectorType> OperatorType>
+  template <int dim,
+            typename number,
+            typename VectorType,
+            JacobiPreconditionerOperatorType<VectorType> OperatorType>
   class JacobiPreconditioner
   {
   public:
@@ -68,7 +72,7 @@ namespace MeltPoolDG
      * @param dof_idx Relevant dof index in the scratch data object.
      */
     void
-    reinit(const ScratchData<dim> &scratch_data, const unsigned int dof_idx)
+    reinit(const ScratchData<dim, dim, number> &scratch_data, const unsigned int dof_idx)
     {
       scratch_data.initialize_dof_vector(inverse_diag, dof_idx);
     }

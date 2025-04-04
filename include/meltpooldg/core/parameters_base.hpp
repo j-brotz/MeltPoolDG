@@ -10,8 +10,6 @@
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
   /**
    * @brief Adds parameters from a file to a ParameterHandler object.
    *
@@ -24,10 +22,10 @@ namespace MeltPoolDG
    * @param enable_print If true, parameters are printed to the console.
    */
   void
-  add_and_parse_parameters(const std::string                             &parameter_file,
-                           const std::function<void(ParameterHandler &)> &add_parameters,
-                           const bool                                     enable_print  = false,
-                           const bool                                     print_details = false);
+  add_and_parse_parameters(const std::string                                     &parameter_file,
+                           const std::function<void(dealii::ParameterHandler &)> &add_parameters,
+                           const bool enable_print  = false,
+                           const bool print_details = false);
 
   /**
    * @brief Abstract base class for managing parameter files.
@@ -51,7 +49,7 @@ namespace MeltPoolDG
      * @throws ExcMessage If parameters have already been read or the file format is unsupported.
      */
     virtual void
-    process_parameters_file(ParameterHandler &prm, const std::string &parameter_filename);
+    process_parameters_file(dealii::ParameterHandler &prm, const std::string &parameter_filename);
 
     /**
      * @brief Print parameters to an output stream.
@@ -64,7 +62,7 @@ namespace MeltPoolDG
      * @param print_details If `true`, prints parameters in detailed format.
      */
     void
-    print_parameters(ParameterHandler &prm, std::ostream &pcout, const bool print_details);
+    print_parameters(dealii::ParameterHandler &prm, std::ostream &pcout, const bool print_details);
 
   protected:
     /**
@@ -76,7 +74,7 @@ namespace MeltPoolDG
      * @param prm The `ParameterHandler` object where parameters will be added.
      */
     virtual void
-    add_parameters(ParameterHandler &prm) = 0;
+    add_parameters(dealii::ParameterHandler &prm) = 0;
 
     /**
      * @brief Post-processing after reading the parameter file.

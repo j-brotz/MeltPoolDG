@@ -28,10 +28,10 @@ namespace MeltPoolDG::Flow
 {
   template <int dim, typename number>
   DGCompressibleFlowOperation<dim, number>::DGCompressibleFlowOperation(
-    const ScratchData<dim>             &scratch_data,
-    const CompressibleFlowData<number> &flow_data,
-    const unsigned int                  flow_dof_idx,
-    const unsigned int                  flow_quad_idx)
+    const ScratchData<dim, dim, number> &scratch_data,
+    const CompressibleFlowData<number>  &flow_data,
+    const unsigned int                   flow_dof_idx,
+    const unsigned int                   flow_quad_idx)
     : flow_scratch_data(flow_data, scratch_data, flow_dof_idx, flow_quad_idx)
   {
     setup_operator_and_time_integrator();
@@ -74,8 +74,8 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   void
   DGCompressibleFlowOperation<dim, number>::set_boundary_conditions(
-    const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
-    const std::string                              &operation_name)
+    const std::shared_ptr<SimulationCaseBase<dim, number>> &simulation_case,
+    const std::string                                      &operation_name)
   {
     flow_scratch_data.boundary_conditions.set_boundary_conditions(simulation_case, operation_name);
   }

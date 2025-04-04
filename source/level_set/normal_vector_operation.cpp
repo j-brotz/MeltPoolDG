@@ -186,10 +186,11 @@ namespace MeltPoolDG::LevelSet
                                                           ls_dof_idx,
                                                           &solution_level_set);
 
-    preconditioner = make_preconditioner<dim, NormalVectorOperator<dim, number>, BlockVectorType>(
-      normal_vector_data.linear_solver.preconditioner_type,
-      normal_vector_operator.get(),
-      normal_vector_data.linear_solver.do_matrix_free);
+    preconditioner =
+      make_preconditioner<dim, number, NormalVectorOperator<dim, number>, BlockVectorType>(
+        normal_vector_data.linear_solver.preconditioner_type,
+        normal_vector_operator.get(),
+        normal_vector_data.linear_solver.do_matrix_free);
   }
 
 

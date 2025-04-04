@@ -46,7 +46,7 @@ namespace MeltPoolDG::LevelSet
      *  @param src source vector
      */
     void
-    vmult(LinearAlgebra::distributed::Vector<number>               &dst,
+    vmult(dealii::LinearAlgebra::distributed::Vector<number>       &dst,
           const dealii::LinearAlgebra::distributed::Vector<number> &src) const;
 
     void
@@ -58,7 +58,7 @@ namespace MeltPoolDG::LevelSet
       return this->system_matrix;
     }
 
-    const Preconditioner<dim, VectorType> &
+    const Preconditioner<dim, VectorType, number> &
     get_preconditioner() const
     {
       return this->preconditioner;
@@ -78,7 +78,7 @@ namespace MeltPoolDG::LevelSet
 
     mutable SparseMatrixType system_matrix;
 
-    mutable Preconditioner<dim, VectorType> preconditioner;
+    mutable Preconditioner<dim, VectorType, number> preconditioner;
 
     const PreconditionerType preconditioner_type;
 
@@ -131,21 +131,22 @@ namespace MeltPoolDG::LevelSet
      * @param cell_integrator
      */
     void
-    do_cell_integral_local(FECellIntegrator<dim, 1, number> &cell_integrator) const;
+    do_cell_integral_local(dealii::FECellIntegrator<dim, 1, number> &cell_integrator) const;
 
     /**
      * @param face_integrator_minus
      * @param face_integrator_plus
      */
     void
-    do_face_integral_local(FEFaceIntegrator<dim, 1, number> &face_integrator_minus,
-                           FEFaceIntegrator<dim, 1, number> &face_integrator_plus) const;
+    do_face_integral_local(dealii::FEFaceIntegrator<dim, 1, number> &face_integrator_minus,
+                           dealii::FEFaceIntegrator<dim, 1, number> &face_integrator_plus) const;
 
     /**
      * @param face_integrator_minus
      */
     void
-    do_bounary_integral_local(FEFaceIntegrator<dim, 1, number> &face_integrator_minus) const;
+    do_bounary_integral_local(
+      dealii::FEFaceIntegrator<dim, 1, number> &face_integrator_minus) const;
 
     /**
      * Builds the matrix of the operator

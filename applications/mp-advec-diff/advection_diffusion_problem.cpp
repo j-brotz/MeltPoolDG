@@ -21,9 +21,9 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionProblem<dim>::run()
+  AdvectionDiffusionProblem<dim, number>::run()
   {
     initialize();
 
@@ -64,9 +64,9 @@ namespace MeltPoolDG::LevelSet
     Journal::print_end(scratch_data->get_pcout(1));
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionProblem<dim>::setup_dof_system()
+  AdvectionDiffusionProblem<dim, number>::setup_dof_system()
   {
     /*
      *  setup DoFHandler
@@ -91,14 +91,14 @@ namespace MeltPoolDG::LevelSet
       { // In a DG simulation no hanging node constraints are present and the boundray condtions are
         // enforced in weak form by changing the fluxes at the boundary
         MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
-                                                                                           double>(
+                                                                                           number>(
           *scratch_data,
           simulation_case->get_boundary_condition("dirichlet", "advection_diffusion"),
           simulation_case->get_periodic_bc(),
           advec_diff_dof_idx,
           advec_diff_hanging_nodes_dof_idx);
         if (simulation_case->parameters.advec_diff.implementation == "adaflo")
-          MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim, double>(
+          MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim, number>(
             *scratch_data,
             simulation_case->get_boundary_condition("dirichlet", "advection_diffusion"),
             advec_diff_adaflo_dof_idx,
@@ -128,16 +128,16 @@ namespace MeltPoolDG::LevelSet
      */
     {
       ScopedName sc("advecDiff::cells");
-      CellMonitor<double>::add_info(sc,
+      CellMonitor<number>::add_info(sc,
                                     scratch_data->get_triangulation().n_global_active_cells(),
                                     scratch_data->get_min_cell_size(),
                                     scratch_data->get_max_cell_size());
     }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionProblem<dim>::initialize()
+  AdvectionDiffusionProblem<dim, number>::initialize()
   {
     /*
      *  setup DoFHandler
@@ -149,7 +149,7 @@ namespace MeltPoolDG::LevelSet
      *  setup scratch data
      */
     {
-      scratch_data = std::make_shared<ScratchData<dim>>(
+      scratch_data = std::make_shared<ScratchData<dim, dim, number>>(
         simulation_case->mpi_communicator,
         simulation_case->parameters.base.verbosity_level,
         simulation_case->parameters.advec_diff.linear_solver.do_matrix_free);
@@ -181,13 +181,13 @@ namespace MeltPoolDG::LevelSet
      *  initialize the time iterator
      */
     time_iterator =
-      std::make_unique<TimeIterator<double>>(simulation_case->parameters.time_stepping);
+      std::make_unique<TimeIterator<number>>(simulation_case->parameters.time_stepping);
 
     if (simulation_case->parameters.advec_diff.implementation == "meltpooldg")
       {
         if (simulation_case->parameters.advec_diff.fe.type != FiniteElementType::FE_DGQ)
           {
-            advec_diff_operation = std::make_unique<AdvectionDiffusionOperation<dim, double>>(
+            advec_diff_operation = std::make_unique<AdvectionDiffusionOperation<dim, number>>(
               *scratch_data,
               simulation_case->get_boundary_condition("dirichlet", "advection_diffusion"),
               simulation_case->parameters.advec_diff,
@@ -198,13 +198,13 @@ namespace MeltPoolDG::LevelSet
               advec_diff_quad_idx,
               velocity_dof_idx);
 
-            dynamic_cast<AdvectionDiffusionOperation<dim, double> *>(advec_diff_operation.get())
+            dynamic_cast<AdvectionDiffusionOperation<dim, number> *>(advec_diff_operation.get())
               ->set_inflow_outflow_bc(
                 simulation_case->get_boundary_condition("inflow_outflow", "advection_diffusion"));
           }
         else
           {
-            advec_diff_operation = std::make_unique<AdvectionDGOperation<dim, double>>(
+            advec_diff_operation = std::make_unique<AdvectionDGOperation<dim, number>>(
               *scratch_data,
               simulation_case->parameters.advec_diff,
               *time_iterator,
@@ -228,7 +228,7 @@ namespace MeltPoolDG::LevelSet
           ExcMessage(
             "Inflow/outflow boundary condition not supported from the adaflo implementation."));
 
-        advec_diff_operation = std::make_unique<AdvectionDiffusionOperationAdaflo<dim, double>>(
+        advec_diff_operation = std::make_unique<AdvectionDiffusionOperationAdaflo<dim, number>>(
           *scratch_data,
           *time_iterator,
           advection_velocity,
@@ -255,7 +255,7 @@ namespace MeltPoolDG::LevelSet
      *  initialize postprocessor
      */
     post_processor =
-      std::make_unique<Postprocessor<dim, double>>(scratch_data->get_mpi_comm(advec_diff_dof_idx),
+      std::make_unique<Postprocessor<dim, number>>(scratch_data->get_mpi_comm(advec_diff_dof_idx),
                                                    simulation_case->parameters.output,
                                                    simulation_case->parameters.time_stepping,
                                                    scratch_data->get_mapping(),
@@ -267,13 +267,13 @@ namespace MeltPoolDG::LevelSet
      */
     if (simulation_case->parameters.profiling.enable)
       profiling_monitor =
-        std::make_unique<Profiling::ProfilingMonitor<double>>(simulation_case->parameters.profiling,
+        std::make_unique<Profiling::ProfilingMonitor<number>>(simulation_case->parameters.profiling,
                                                               *time_iterator);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionProblem<dim>::compute_advection_velocity(Function<dim> &advec_func)
+  AdvectionDiffusionProblem<dim, number>::compute_advection_velocity(Function<dim> &advec_func)
   {
     scratch_data->initialize_dof_vector(advection_velocity, velocity_dof_idx);
     /*
@@ -289,16 +289,16 @@ namespace MeltPoolDG::LevelSet
                                      advection_velocity);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionProblem<dim>::output_results(const unsigned int time_step,
-                                                 const double       current_time)
+  AdvectionDiffusionProblem<dim, number>::output_results(const unsigned int time_step,
+                                                         const number       current_time)
   {
     if (!post_processor->is_output_timestep(time_step, current_time) &&
         !simulation_case->parameters.output.do_user_defined_postprocessing)
       return;
 
-    const auto attach_output_vectors = [&](GenericDataOut<dim, double> &data_out) {
+    const auto attach_output_vectors = [&](GenericDataOut<dim, number> &data_out) {
       advec_diff_operation->attach_output_vectors(data_out);
 
       std::vector<DataComponentInterpretation::DataComponentInterpretation>
@@ -310,7 +310,7 @@ namespace MeltPoolDG::LevelSet
                                vector_component_interpretation);
     };
 
-    GenericDataOut<dim, double> generic_data_out(
+    GenericDataOut<dim, number> generic_data_out(
       scratch_data->get_mapping(),
       current_time,
       simulation_case->parameters.output.output_variables);
@@ -324,9 +324,9 @@ namespace MeltPoolDG::LevelSet
     post_processor->process(time_step, generic_data_out, current_time);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  AdvectionDiffusionProblem<dim>::refine_mesh()
+  AdvectionDiffusionProblem<dim, number>::refine_mesh()
   {
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       Vector<float> estimated_error_per_cell(simulation_case->triangulation->n_active_cells());
@@ -374,9 +374,9 @@ namespace MeltPoolDG::LevelSet
                                  time_iterator->get_current_time_step_number());
   }
 
-  template class AdvectionDiffusionProblem<1>;
-  template class AdvectionDiffusionProblem<2>;
-  template class AdvectionDiffusionProblem<3>;
+  template class AdvectionDiffusionProblem<1, double>;
+  template class AdvectionDiffusionProblem<2, double>;
+  template class AdvectionDiffusionProblem<3, double>;
 } // namespace MeltPoolDG::LevelSet
 
 int

@@ -22,17 +22,17 @@ namespace MeltPoolDG::Flow
 {
   using namespace dealii;
 
-  template <int dim>
-  SurfaceTensionOperation<dim>::SurfaceTensionOperation(
-    const SurfaceTensionData<double> &data_in,
-    const ScratchData<dim>           &scratch_data,
-    const VectorType                 &level_set_as_heaviside,
-    const VectorType                 &solution_curvature,
-    const unsigned int                ls_dof_idx,
-    const unsigned int                curv_dof_idx,
-    const unsigned int                flow_vel_dof_idx,
-    const unsigned int                flow_pressure_hanging_nodes_dof_idx_in,
-    const unsigned int                flow_vel_quad_idx)
+  template <int dim, typename number>
+  SurfaceTensionOperation<dim, number>::SurfaceTensionOperation(
+    const SurfaceTensionData<number>    &data_in,
+    const ScratchData<dim, dim, number> &scratch_data,
+    const VectorType                    &level_set_as_heaviside,
+    const VectorType                    &solution_curvature,
+    const unsigned int                   ls_dof_idx,
+    const unsigned int                   curv_dof_idx,
+    const unsigned int                   flow_vel_dof_idx,
+    const unsigned int                   flow_pressure_hanging_nodes_dof_idx_in,
+    const unsigned int                   flow_vel_quad_idx)
     : data(data_in)
     , scratch_data(scratch_data)
     , level_set_as_heaviside(level_set_as_heaviside)
@@ -66,9 +66,9 @@ namespace MeltPoolDG::Flow
 
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  SurfaceTensionOperation<dim>::register_temperature_and_normal_vector(
+  SurfaceTensionOperation<dim, number>::register_temperature_and_normal_vector(
     const unsigned int     temp_dof_idx_in,
     const unsigned int     normal_dof_idx_in,
     const VectorType      *temperature_in,
@@ -86,10 +86,10 @@ namespace MeltPoolDG::Flow
 
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  SurfaceTensionOperation<dim>::register_solid_fraction(const unsigned int solid_dof_idx_in,
-                                                        const VectorType  *solid_in)
+  SurfaceTensionOperation<dim, number>::register_solid_fraction(const unsigned int solid_dof_idx_in,
+                                                                const VectorType  *solid_in)
   {
     solid_dof_idx = solid_dof_idx_in;
     solid         = solid_in;
@@ -97,9 +97,10 @@ namespace MeltPoolDG::Flow
 
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  SurfaceTensionOperation<dim>::compute_surface_tension(VectorType &force_rhs, const bool zero_out)
+  SurfaceTensionOperation<dim, number>::compute_surface_tension(VectorType &force_rhs,
+                                                                const bool  zero_out)
   {
     const bool curv_update_ghosts = not solution_curvature.has_ghost_elements();
 
@@ -384,10 +385,10 @@ namespace MeltPoolDG::Flow
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   double
-  SurfaceTensionOperation<dim>::compute_time_step_limit(const double density_1,
-                                                        const double density_2)
+  SurfaceTensionOperation<dim, number>::compute_time_step_limit(const double density_1,
+                                                                const double density_2)
   {
     double alpha = data.surface_tension_coefficient;
 
@@ -418,11 +419,12 @@ namespace MeltPoolDG::Flow
                      (2 * numbers::PI * alpha));
   }
 
-  template <int dim>
-  template <typename number>
-  number
-  SurfaceTensionOperation<dim>::local_compute_temperature_dependent_surface_tension_coefficient(
-    const number &T)
+  template <int dim, typename number>
+  template <typename number_surface_tension_coeff>
+  number_surface_tension_coeff
+  SurfaceTensionOperation<dim, number>::
+    local_compute_temperature_dependent_surface_tension_coefficient(
+      const number_surface_tension_coeff &T)
   {
     const number &alpha0   = data.surface_tension_coefficient;
     const number &d_alpha0 = data.temperature_dependent_surface_tension_coefficient;
@@ -440,7 +442,7 @@ namespace MeltPoolDG::Flow
   }
 
 
-  template class SurfaceTensionOperation<1>;
-  template class SurfaceTensionOperation<2>;
-  template class SurfaceTensionOperation<3>;
+  template class SurfaceTensionOperation<1, double>;
+  template class SurfaceTensionOperation<2, double>;
+  template class SurfaceTensionOperation<3, double>;
 } // namespace MeltPoolDG::Flow

@@ -6,9 +6,7 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  using namespace dealii;
-
-  template <typename number = double>
+  template <typename number>
   struct AdvectionDiffusionCaseParameters : public ParametersBase
   {
   protected:
@@ -44,14 +42,14 @@ namespace MeltPoolDG::LevelSet
     Profiling::ProfilingData<number> profiling;
   };
 
-  template <int dim>
-  class AdvectionDiffusionCase : public SimulationCaseBase<dim>
+  template <int dim, typename number>
+  class AdvectionDiffusionCase : public SimulationCaseBase<dim, number>
   {
   public:
-    AdvectionDiffusionCaseParameters<double> parameters;
+    AdvectionDiffusionCaseParameters<number> parameters;
 
     AdvectionDiffusionCase(const std::string &parameter_file_in, MPI_Comm mpi_communicator_in)
-      : SimulationCaseBase<dim>(parameter_file_in, mpi_communicator_in)
+      : SimulationCaseBase<dim, number>(parameter_file_in, mpi_communicator_in)
     {
       dealii::ParameterHandler prm;
       parameters.process_parameters_file(prm, parameter_file_in);

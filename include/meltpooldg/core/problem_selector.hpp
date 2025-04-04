@@ -3,13 +3,11 @@
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
-  template <int dim>
+  template <int dim, typename number>
   class ProblemSelector
   {
   public:
-    static std::shared_ptr<ProblemBase<dim>>
+    static std::shared_ptr<ProblemBase<dim, number>>
     get_problem(const std::string &problem_name);
   };
 } // namespace MeltPoolDG

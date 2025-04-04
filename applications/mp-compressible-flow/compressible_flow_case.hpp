@@ -26,9 +26,7 @@
 
 namespace MeltPoolDG::Flow
 {
-  using namespace dealii;
-
-  template <typename number = double>
+  template <typename number>
   struct CompressibleFlowCaseParameters final : public ParametersBase
   {
   protected:
@@ -70,14 +68,14 @@ namespace MeltPoolDG::Flow
     Profiling::ProfilingData<number> profiling;
   };
 
-  template <int dim>
-  class CompressibleFlowCase : public SimulationCaseBase<dim>
+  template <int dim, typename number>
+  class CompressibleFlowCase : public SimulationCaseBase<dim, number>
   {
   public:
-    CompressibleFlowCaseParameters<double> parameters;
+    CompressibleFlowCaseParameters<number> parameters;
 
     CompressibleFlowCase(const std::string &parameter_file_in, MPI_Comm mpi_communicator_in)
-      : SimulationCaseBase<dim>(parameter_file_in, mpi_communicator_in)
+      : SimulationCaseBase<dim, number>(parameter_file_in, mpi_communicator_in)
     {
       ParameterHandler prm;
       parameters.process_parameters_file(prm, parameter_file_in);
@@ -99,11 +97,10 @@ namespace MeltPoolDG::Flow
      * @param norm_name Choose between "norm" and "error".
      */
     void
-    print_relative_norm(const GenericDataOut<dim, double> &generic_data_out,
+    print_relative_norm(const GenericDataOut<dim, number> &generic_data_out,
                         dealii::Function<dim>             &reference_function,
                         const std::string                 &norm_name = "norm") const
     {
-      using number = double;
       const dealii::ConditionalOStream pcout(std::cout,
                                              Utilities::MPI::this_mpi_process(
                                                this->mpi_communicator) == 0 and
@@ -114,7 +111,7 @@ namespace MeltPoolDG::Flow
 
       reference_function.set_time(generic_data_out.get_time());
 
-      double errors_squared[3] = {};
+      number errors_squared[3] = {};
 
       bool is_cut = false;
       if (dof_handler.get_fe_collection().size() > 1)
@@ -124,7 +121,7 @@ namespace MeltPoolDG::Flow
         {
           // in the fitted mesh case, we can use the DoF values for error computation
 
-          std::map<types::global_dof_index, Point<dim>> support_points =
+          std::map<types::global_dof_index, Point<dim, number>> support_points =
             DoFTools::map_dofs_to_support_points(generic_data_out.get_mapping(), dof_handler);
           for (const auto &cell : dof_handler.active_cell_iterators())
             {
@@ -139,14 +136,14 @@ namespace MeltPoolDG::Flow
                   switch (unsigned int component = i / nodes_per_cell)
                     {
                         case 0: {
-                          const double error =
+                          const number error =
                             dof_vector[local_dof_indices[i]] -
                             reference_function.value(support_points[local_dof_indices[i]], 0);
                           errors_squared[0] += error * error;
                           break;
                         }
                         case dim + 1: {
-                          const double error =
+                          const number error =
                             dof_vector[local_dof_indices[i]] -
                             reference_function.value(support_points[local_dof_indices[i]], dim + 1);
                           errors_squared[2] += error * error;
@@ -154,7 +151,7 @@ namespace MeltPoolDG::Flow
                         }
                         default: {
                           Assert(component > 0 and component < dim + 1, dealii::ExcInternalError());
-                          const double error =
+                          const number error =
                             dof_vector[local_dof_indices[i]] -
                             reference_function.value(support_points[local_dof_indices[i]],
                                                      component);
@@ -184,7 +181,7 @@ namespace MeltPoolDG::Flow
           mesh_classifier.reclassify();
 
           // compute quadrature
-          NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>> mapping_info_cell(
+          NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>> mapping_info_cell(
             generic_data_out.get_mapping(), update_values | update_JxW_values);
 
           hp::QCollection<1> q_collection((dealii::QGauss<1>(fe_degree + 1)));
@@ -228,7 +225,7 @@ namespace MeltPoolDG::Flow
               if (cell->is_artificial() or cell->is_ghost() or !physical(cell))
                 continue;
 
-              std::vector<double> solution_values_in(cell->get_fe().dofs_per_cell);
+              std::vector<number> solution_values_in(cell->get_fe().dofs_per_cell);
 
               cell->get_dof_values(dof_vector,
                                    solution_values_in.begin(),
@@ -263,7 +260,7 @@ namespace MeltPoolDG::Flow
         }
 
       Utilities::MPI::sum(errors_squared, MPI_COMM_WORLD, errors_squared);
-      std::array<double, 3> errors;
+      std::array<number, 3> errors;
       for (unsigned int d = 0; d < 3; ++d)
         errors[d] = std::sqrt(errors_squared[d]);
 

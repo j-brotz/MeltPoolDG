@@ -25,64 +25,66 @@
 
 namespace MeltPoolDG::Simulation
 {
-  template <int dim>
-  std::shared_ptr<MeltPoolCase<dim>>
-  SimulationSelector<dim>::get_simulation(const std::string case_name,
-                                          const std::string parameter_file,
-                                          const MPI_Comm    mpi_communicator)
+  template <int dim, typename number>
+  std::shared_ptr<MeltPoolCase<dim, number>>
+  SimulationSelector<dim, number>::get_simulation(const std::string case_name,
+                                                  const std::string parameter_file,
+                                                  const MPI_Comm    mpi_communicator)
   {
     if (case_name == "flow_past_cylinder")
-      return std::make_shared<FlowPastCylinder::SimulationFlowPastCylinder<dim>>(parameter_file,
-                                                                                 mpi_communicator);
-    else if (case_name == "spurious_currents")
-      return std::make_shared<SpuriousCurrents::SimulationSpuriousCurrents<dim>>(parameter_file,
-                                                                                 mpi_communicator);
-    else if (case_name == "rising_bubble")
-      return std::make_shared<RisingBubble::SimulationRisingBubble<dim>>(parameter_file,
-                                                                         mpi_communicator);
-    else if (case_name == "recoil_pressure")
-      return std::make_shared<RecoilPressure::SimulationRecoilPressure<dim>>(parameter_file,
-                                                                             mpi_communicator);
-    else if (case_name == "stefans_problem_with_flow")
-      return std::make_shared<StefansProblemWithFlow::SimulationStefansProblemWithFlow<dim>>(
+      return std::make_shared<FlowPastCylinder::SimulationFlowPastCylinder<dim, number>>(
         parameter_file, mpi_communicator);
+    else if (case_name == "spurious_currents")
+      return std::make_shared<SpuriousCurrents::SimulationSpuriousCurrents<dim, number>>(
+        parameter_file, mpi_communicator);
+    else if (case_name == "rising_bubble")
+      return std::make_shared<RisingBubble::SimulationRisingBubble<dim, number>>(parameter_file,
+                                                                                 mpi_communicator);
+    else if (case_name == "recoil_pressure")
+      return std::make_shared<RecoilPressure::SimulationRecoilPressure<dim, number>>(
+        parameter_file, mpi_communicator);
+    else if (case_name == "stefans_problem_with_flow")
+      return std::make_shared<
+        StefansProblemWithFlow::SimulationStefansProblemWithFlow<dim, number>>(parameter_file,
+                                                                               mpi_communicator);
     else if (case_name == "stefans_problem1_with_flow_and_heat")
       return std::make_shared<
-        StefansProblem1WithFlowAndHeat::SimulationStefansProblem1WithFlowAndHeat<dim>>(
+        StefansProblem1WithFlowAndHeat::SimulationStefansProblem1WithFlowAndHeat<dim, number>>(
         parameter_file, mpi_communicator);
     else if (case_name == "stefans_problem2_with_flow_and_heat")
       return std::make_shared<
-        StefansProblem2WithFlowAndHeat::SimulationStefansProblem2WithFlowAndHeat<dim>>(
+        StefansProblem2WithFlowAndHeat::SimulationStefansProblem2WithFlowAndHeat<dim, number>>(
         parameter_file, mpi_communicator);
     else if (case_name == "evaporating_droplet")
-      return std::make_shared<EvaporatingDroplet::SimulationEvaporatingDroplet<dim>>(
+      return std::make_shared<EvaporatingDroplet::SimulationEvaporatingDroplet<dim, number>>(
         parameter_file, mpi_communicator);
     else if (case_name == "evaporating_shell")
-      return std::make_shared<EvaporatingShell::SimulationEvaporatingShell<dim>>(parameter_file,
-                                                                                 mpi_communicator);
+      return std::make_shared<EvaporatingShell::SimulationEvaporatingShell<dim, number>>(
+        parameter_file, mpi_communicator);
     else if (case_name == "evaporating_droplet_with_heat")
       return std::make_shared<
-        EvaporatingDropletWithHeat::SimulationEvaporatingDropletWithHeat<dim>>(parameter_file,
-                                                                               mpi_communicator);
-    else if (case_name == "thermo_capillary_droplet")
-      return std::make_shared<ThermoCapillaryDroplet::SimulationThermoCapillaryDroplet<dim>>(
+        EvaporatingDropletWithHeat::SimulationEvaporatingDropletWithHeat<dim, number>>(
         parameter_file, mpi_communicator);
+    else if (case_name == "thermo_capillary_droplet")
+      return std::make_shared<
+        ThermoCapillaryDroplet::SimulationThermoCapillaryDroplet<dim, number>>(parameter_file,
+                                                                               mpi_communicator);
     else if (case_name == "thermo_capillary_two_droplets")
       return std::make_shared<
-        ThermoCapillaryTwoDroplets::SimulationThermoCapillaryTwoDroplets<dim>>(parameter_file,
-                                                                               mpi_communicator);
+        ThermoCapillaryTwoDroplets::SimulationThermoCapillaryTwoDroplets<dim, number>>(
+        parameter_file, mpi_communicator);
     else if (case_name == "film_boiling")
-      return std::make_shared<FilmBoiling::SimulationFilmBoiling<dim>>(parameter_file,
-                                                                       mpi_communicator);
+      return std::make_shared<FilmBoiling::SimulationFilmBoiling<dim, number>>(parameter_file,
+                                                                               mpi_communicator);
     else if (case_name == "melt_front_propagation")
-      return std::make_shared<MeltFrontPropagation::SimulationMeltFrontPropagation<dim>>(
+      return std::make_shared<MeltFrontPropagation::SimulationMeltFrontPropagation<dim, number>>(
         parameter_file, mpi_communicator);
     else if (case_name == "oscillating_droplet")
-      return std::make_shared<OscillatingDroplet::SimulationOscillatingDroplet<dim>>(
+      return std::make_shared<OscillatingDroplet::SimulationOscillatingDroplet<dim, number>>(
         parameter_file, mpi_communicator);
     else if (case_name == "moving_droplet")
-      return std::make_shared<MovingDroplet::SimulationMovingDroplet<dim>>(parameter_file,
-                                                                           mpi_communicator);
+      return std::make_shared<MovingDroplet::SimulationMovingDroplet<dim, number>>(
+        parameter_file, mpi_communicator);
     /* add your simulation here*/
     else
       {
@@ -92,5 +94,5 @@ namespace MeltPoolDG::Simulation
       }
   }
 
-  template class SimulationSelector<MELT_POOL_DG_DIM>;
+  template class SimulationSelector<MELT_POOL_DG_DIM, double>;
 } // namespace MeltPoolDG::Simulation

@@ -27,17 +27,22 @@ namespace MeltPoolDG
    */
   template <typename OperatorType, typename VectorType>
   concept DealiipreconditionerWrapperOperatorType =
-    requires(const OperatorType op, dealii::TrilinosWrappers::SparseMatrix &matrix) {
-      /**
-       * Compute the matrix representation of the system matrix and store it in the given matrix.
-       */
-      op.compute_system_matrix_from_matrixfree(matrix);
-    };
+    requires(const OperatorType op, dealii::TrilinosWrappers::SparseMatrix &matrix)
+  {
+    /**
+     * Compute the matrix representation of the system matrix and store it in the given matrix.
+     */
+    op.compute_system_matrix_from_matrixfree(matrix);
+  };
 
   /**
    * Wrapper class for deal.II matrix-based preconditioners.
    */
-  template <int dim, typename VectorType, typename DealiiPreconditionerType, typename OperatorType>
+  template <int dim,
+            typename number,
+            typename VectorType,
+            typename DealiiPreconditionerType,
+            typename OperatorType>
   class DealiiPreconditionerWrapper
   {
   public:
@@ -130,7 +135,7 @@ namespace MeltPoolDG
      * @param dof_idx Relevant dof index in the scratch data object.
      */
     void
-    reinit(const ScratchData<dim> &scratch_data, const unsigned int dof_idx)
+    reinit(const ScratchData<dim, dim, number> &scratch_data, const unsigned int dof_idx)
     {
       if (eq_operator != nullptr && do_matrix_free)
         {
@@ -175,7 +180,7 @@ namespace MeltPoolDG
    * Identity preconditoner. The deal.II identity preconditioner is not used here in order to match
    * the MeltPoolDG preconditioner interface.
    */
-  template <int dim, typename VectorType>
+  template <int dim, typename VectorType, typename number>
   class IdentityPreconditioner
   {
   public:
@@ -190,7 +195,7 @@ namespace MeltPoolDG
     {}
 
     void
-    reinit(const ScratchData<dim> &, unsigned int) const
+    reinit(const ScratchData<dim, dim, number> &, unsigned int) const
     {}
   };
 } // namespace MeltPoolDG

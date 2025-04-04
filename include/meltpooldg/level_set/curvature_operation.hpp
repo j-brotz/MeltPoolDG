@@ -105,6 +105,6 @@ namespace MeltPoolDG::LevelSet
     /*
      * Preconditioner for the matrix-free curvature operator
      */
-    Preconditioner<dim, VectorType> preconditioner;
+    Preconditioner<dim, VectorType, number> preconditioner;
   };
 } // namespace MeltPoolDG::LevelSet

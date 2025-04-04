@@ -42,9 +42,9 @@
 
 namespace MeltPoolDG::Heat
 {
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatTransferProblem<dim>::run()
+  HeatTransferProblem<dim, number>::run()
   {
     initialize();
 
@@ -86,7 +86,7 @@ namespace MeltPoolDG::Heat
                 if (simulation_case->parameters.heat.operator_type != TwoPhaseOperatorType::cut)
                   {
                     auto heat_diffuse_operation =
-                      dynamic_cast<HeatDiffuseOperation<dim, double> *>(heat_operation.get());
+                      dynamic_cast<HeatDiffuseOperation<dim, number> *>(heat_operation.get());
                     Assert(heat_diffuse_operation != nullptr, dealii::ExcInternalError());
                     laser_operation->compute_heat_source(heat_diffuse_operation->get_heat_source(),
                                                          heat_diffuse_operation->get_user_rhs(),
@@ -98,10 +98,10 @@ namespace MeltPoolDG::Heat
                   }
               }
 
-            Journal::print_formatted_norm<double>(
+            Journal::print_formatted_norm<number>(
               scratch_data->get_pcout(2),
-              [&]() -> double {
-                return VectorTools::compute_norm<dim, double>(
+              [&]() -> number {
+                return VectorTools::compute_norm<dim, number>(
                   heat_operation->get_heat_source(),
                   *scratch_data,
                   heat_continuous_no_bc_dof_idx,
@@ -135,9 +135,9 @@ namespace MeltPoolDG::Heat
     Journal::print_end(scratch_data->get_pcout(1));
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatTransferProblem<dim>::initialize()
+  HeatTransferProblem<dim, number>::initialize()
   {
     const auto &param = simulation_case->parameters;
     /*
@@ -149,10 +149,10 @@ namespace MeltPoolDG::Heat
     /*
      *  setup scratch data
      */
-    scratch_data =
-      std::make_shared<ScratchData<dim>>(simulation_case->mpi_communicator,
-                                         simulation_case->parameters.base.verbosity_level,
-                                         /*do_matrix_free*/ true);
+    scratch_data = std::make_shared<ScratchData<dim, dim, number>>(
+      simulation_case->mpi_communicator,
+      simulation_case->parameters.base.verbosity_level,
+      /*do_matrix_free*/ true);
 
     /*
      *  setup mapping
@@ -181,14 +181,14 @@ namespace MeltPoolDG::Heat
     /*
      *  initialize the time stepping scheme
      */
-    time_iterator = std::make_shared<TimeIterator<double>>(param.time_stepping);
+    time_iterator = std::make_shared<TimeIterator<number>>(param.time_stepping);
 
     /*
      * laser operation
      */
     if (param.laser.power > 0.0)
       {
-        laser_operation = std::make_shared<LaserOperation<dim, double>>(
+        laser_operation = std::make_shared<LaserOperation<dim, number>>(
           *scratch_data,
           simulation_case->get_periodic_bc(),
           param.laser,
@@ -230,7 +230,7 @@ namespace MeltPoolDG::Heat
               level_set_as_heaviside_ptr = &level_set_as_heaviside;
 
             // initialize (diffuse) material class
-            material = std::make_shared<Material<double>>(
+            material = std::make_shared<Material<number>>(
               param.material,
               determine_material_type(
                 heaviside_field_function != nullptr,
@@ -238,7 +238,7 @@ namespace MeltPoolDG::Heat
                 param.material.two_phase_fluid_properties_transition_type ==
                   TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation));
 
-            heat_operation = std::make_shared<HeatDiffuseOperation<dim, double>>(
+            heat_operation = std::make_shared<HeatDiffuseOperation<dim, number>>(
               *scratch_data,
               simulation_case->get_boundary_condition_manager("heat_transfer"),
               simulation_case->get_periodic_bc(),
@@ -263,7 +263,7 @@ namespace MeltPoolDG::Heat
               simulation_case->get_initial_condition("prescribed_signed_distance",
                                                      false /* is_optional */);
 
-            auto heat_cut_operation = std::make_shared<HeatCutOperation<dim, double>>(
+            auto heat_cut_operation = std::make_shared<HeatCutOperation<dim, number>>(
               *scratch_data,
               simulation_case->get_boundary_condition_manager("heat_transfer"),
               simulation_case->get_periodic_bc(),
@@ -329,7 +329,7 @@ namespace MeltPoolDG::Heat
      *  initialize postprocessor
      */
     post_processor =
-      std::make_shared<Postprocessor<dim, double>>(scratch_data->get_mpi_comm(heat_dof_idx),
+      std::make_shared<Postprocessor<dim, number>>(scratch_data->get_mpi_comm(heat_dof_idx),
                                                    param.output,
                                                    param.time_stepping,
                                                    scratch_data->get_mapping(),
@@ -358,11 +358,11 @@ namespace MeltPoolDG::Heat
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatTransferProblem<dim>::compute_field_vector(VectorType        &vector,
-                                                 const unsigned int dof_idx,
-                                                 Function<dim>     &field_function)
+  HeatTransferProblem<dim, number>::compute_field_vector(VectorType        &vector,
+                                                         const unsigned int dof_idx,
+                                                         Function<dim>     &field_function)
   {
     scratch_data->initialize_dof_vector(vector, dof_idx);
     /*
@@ -379,9 +379,9 @@ namespace MeltPoolDG::Heat
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatTransferProblem<dim>::setup_dof_system()
+  HeatTransferProblem<dim, number>::setup_dof_system()
   {
     FiniteElementUtils::distribute_dofs<dim, 1>(simulation_case->parameters.base.fe,
                                                 dof_handler_level_set);
@@ -449,18 +449,18 @@ namespace MeltPoolDG::Heat
       laser_operation->reinit();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatTransferProblem<dim>::output_results(const bool output_not_converged)
+  HeatTransferProblem<dim, number>::output_results(const bool output_not_converged)
   {
     const unsigned int n_time_step = time_iterator->get_current_time_step_number();
-    const double       time        = time_iterator->get_current_time();
+    const number       time        = time_iterator->get_current_time();
 
     if (not post_processor->is_output_timestep(n_time_step, time) and not output_not_converged and
         not simulation_case->parameters.output.do_user_defined_postprocessing)
       return;
 
-    GenericDataOut<dim, double> generic_data_out(
+    GenericDataOut<dim, number> generic_data_out(
       scratch_data->get_mapping(), time, simulation_case->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
 
@@ -479,9 +479,10 @@ namespace MeltPoolDG::Heat
                             output_not_converged /* force_update_requested_output_variables */);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatTransferProblem<dim>::attach_output_vectors(GenericDataOut<dim, double> &data_out) const
+  HeatTransferProblem<dim, number>::attach_output_vectors(
+    GenericDataOut<dim, number> &data_out) const
   {
     heat_operation->attach_output_vectors(data_out);
 
@@ -515,9 +516,9 @@ namespace MeltPoolDG::Heat
       laser_operation->attach_output_vectors(data_out);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  HeatTransferProblem<dim>::refine_mesh()
+  HeatTransferProblem<dim, number>::refine_mesh()
   {
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       Vector<float> estimated_error_per_cell(simulation_case->triangulation->n_active_cells());
@@ -608,9 +609,9 @@ namespace MeltPoolDG::Heat
                                  time_iterator->get_current_time_step_number());
   }
 
-  template class HeatTransferProblem<1>;
-  template class HeatTransferProblem<2>;
-  template class HeatTransferProblem<3>;
+  template class HeatTransferProblem<1, double>;
+  template class HeatTransferProblem<2, double>;
+  template class HeatTransferProblem<3, double>;
 } // namespace MeltPoolDG::Heat
 
 int

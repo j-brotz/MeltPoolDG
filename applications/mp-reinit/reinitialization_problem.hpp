@@ -23,14 +23,12 @@ namespace MeltPoolDG
 {
   namespace LevelSet
   {
-    using namespace dealii;
-
-    template <int dim>
+    template <int dim, typename number>
     class ReinitializationProblem
     {
     private:
-      using CaseType       = ReinitializationCase<dim>;
-      using VectorType     = LinearAlgebra::distributed::Vector<double>;
+      using CaseType       = ReinitializationCase<dim, number>;
+      using VectorType     = LinearAlgebra::distributed::Vector<number>;
       using DoFHandlerType = DoFHandler<dim>;
 
     public:
@@ -44,18 +42,18 @@ namespace MeltPoolDG
 
     private:
       std::unique_ptr<CaseType>                     simulation_case;
-      const ReinitializationCaseParameters<double> &param;
+      const ReinitializationCaseParameters<number> &param;
       DoFHandler<dim>                               dof_handler;
-      AffineConstraints<double>                     constraints;
+      AffineConstraints<number>                     constraints;
 
-      std::shared_ptr<ScratchData<dim>>                           scratch_data;
-      std::unique_ptr<TimeIterator<double>>                       time_iterator;
-      std::unique_ptr<ReinitializationOperationBase<dim, double>> reinit_operation;
+      std::shared_ptr<ScratchData<dim, dim, number>>              scratch_data;
+      std::unique_ptr<TimeIterator<number>>                       time_iterator;
+      std::unique_ptr<ReinitializationOperationBase<dim, number>> reinit_operation;
       unsigned int                                                reinit_dof_idx  = -1;
       unsigned int                                                normal_dof_idx  = -1;
       unsigned int                                                reinit_quad_idx = -1;
 
-      std::unique_ptr<Postprocessor<dim, double>> post_processor;
+      std::unique_ptr<Postprocessor<dim, number>> post_processor;
 
       void
       initialize();
@@ -67,7 +65,7 @@ namespace MeltPoolDG
       refine_mesh();
 
       void
-      output_results(const unsigned int time_step, const double current_time);
+      output_results(const unsigned int time_step, const number current_time);
     };
   } // namespace LevelSet
 } // namespace MeltPoolDG

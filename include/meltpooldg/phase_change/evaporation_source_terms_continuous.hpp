@@ -43,7 +43,8 @@ namespace MeltPoolDG::Evaporation
     /**
      * evaporation velocity at quadrature points
      */
-    dealii::AlignedVector<Tensor<1, dim, dealii::VectorizedArray<number>>> evaporation_velocities;
+    dealii::AlignedVector<dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>
+      evaporation_velocities;
 
     inline dealii::Tensor<1, dim, dealii::VectorizedArray<number>> *
     begin_evaporation_velocity(const unsigned int macro_cell);

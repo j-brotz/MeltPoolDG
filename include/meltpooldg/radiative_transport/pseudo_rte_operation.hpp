@@ -43,7 +43,7 @@ namespace MeltPoolDG::RadiativeTransport
 
     TimeIterator<number> pseudo_time_iterator;
 
-    Preconditioner<dim, VectorType> preconditioner;
+    Preconditioner<dim, VectorType, number> preconditioner;
 
   public:
     PseudoRTEOperation(const ScratchData<dim, dim, number>  &scratch_data_in,

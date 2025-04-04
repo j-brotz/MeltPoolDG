@@ -22,20 +22,20 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   HeatDiffuseOperation<dim, number>::HeatDiffuseOperation(
-    const ScratchData<dim, dim, number>                       &scratch_data_in,
-    const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
-    const PeriodicBoundaryConditions<dim>                     &periodic_bc_in,
-    const HeatData<number>                                    &heat_data_in,
-    const Material<number>                                    &material,
-    const TimeIterator<number>                                &time_iterator,
-    const unsigned int                                         heat_dof_idx_in,
-    const unsigned int                                         heat_no_bc_dof_idx_in,
-    const unsigned int                                         heat_quad_idx_in,
-    const unsigned int                                         vel_dof_idx_in,
-    const VectorType                                          *velocity_in,
-    const unsigned int                                         ls_dof_idx_in,
-    const VectorType                                          *level_set_as_heaviside_in,
-    const bool                                                 do_solidification)
+    const ScratchData<dim, dim, number>                               &scratch_data_in,
+    const std::shared_ptr<const BoundaryConditionManager<dim, number>> heat_bc_manager,
+    const PeriodicBoundaryConditions<dim>                             &periodic_bc_in,
+    const HeatData<number>                                            &heat_data_in,
+    const Material<number>                                            &material,
+    const TimeIterator<number>                                        &time_iterator,
+    const unsigned int                                                 heat_dof_idx_in,
+    const unsigned int                                                 heat_no_bc_dof_idx_in,
+    const unsigned int                                                 heat_quad_idx_in,
+    const unsigned int                                                 vel_dof_idx_in,
+    const VectorType                                                  *velocity_in,
+    const unsigned int                                                 ls_dof_idx_in,
+    const VectorType                                                  *level_set_as_heaviside_in,
+    const bool                                                         do_solidification)
     : scratch_data(scratch_data_in)
     , dirichlet_bc(heat_bc_manager->get_bc_of_type("dirichlet"))
     , periodic_bc(periodic_bc_in)
@@ -70,7 +70,7 @@ namespace MeltPoolDG::Heat
       do_solidification);
 
     preconditioner =
-      make_preconditioner<dim, HeatDiffuseMultiPhaseOperator<dim, number>, VectorType>(
+      make_preconditioner<dim, number, HeatDiffuseMultiPhaseOperator<dim, number>, VectorType>(
         heat_data.linear_solver.preconditioner_type, heat_operator.get());
 
     setup_newton();
@@ -167,7 +167,7 @@ namespace MeltPoolDG::Heat
 
     if (heat_data.enable_time_dependent_bc)
       MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim, number>(
-        const_cast<ScratchData<dim> &>(scratch_data),
+        const_cast<ScratchData<dim, dim, number> &>(scratch_data),
         dirichlet_bc,
         heat_dof_idx,
         heat_no_bc_dof_idx);
@@ -208,7 +208,7 @@ namespace MeltPoolDG::Heat
     if (heat_data.enable_time_dependent_bc)
       {
         Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim, number>(
-          const_cast<ScratchData<dim> &>(scratch_data),
+          const_cast<ScratchData<dim, dim, number> &>(scratch_data),
           dirichlet_bc,
           heat_dof_idx,
           heat_no_bc_dof_idx);

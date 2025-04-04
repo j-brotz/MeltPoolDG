@@ -5,19 +5,19 @@
 
 namespace MeltPoolDG
 {
-  template <int dim>
-  std::shared_ptr<ProblemBase<dim>>
-  ProblemSelector<dim>::get_problem(const std::string &problem_name)
+  template <int dim, typename number>
+  std::shared_ptr<ProblemBase<dim, number>>
+  ProblemSelector<dim, number>::get_problem(const std::string &problem_name)
   {
     if (problem_name == "melt_pool")
-      return std::make_shared<MeltPool::MeltPoolProblem<dim, double>>();
+      return std::make_shared<MeltPool::MeltPoolProblem<dim, number>>();
     /* add your problem here*/
 
     else
       AssertThrow(false, ExcMessage("The solver for your requested problem type does not exist"));
   }
 
-  template class ProblemSelector<1>;
-  template class ProblemSelector<2>;
-  template class ProblemSelector<3>;
+  template class ProblemSelector<1, double>;
+  template class ProblemSelector<2, double>;
+  template class ProblemSelector<3, double>;
 } // namespace MeltPoolDG

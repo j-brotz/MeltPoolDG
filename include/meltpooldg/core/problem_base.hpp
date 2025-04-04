@@ -7,10 +7,8 @@
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
   // TODO: how can this template type be omited?
-  template <int dim, typename SimulationType = MeltPoolCase<dim>>
+  template <int dim, typename number, typename SimulationType = MeltPoolCase<dim, number>>
   class ProblemBase
   {
   public:

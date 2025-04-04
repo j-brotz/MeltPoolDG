@@ -51,12 +51,12 @@ namespace MeltPoolDG::Simulation::OscillatingDroplet
     const double                                    eps;
   };
 
-  template <int dim>
-  class SimulationOscillatingDroplet : public MeltPoolCase<dim>
+  template <int dim, typename number>
+  class SimulationOscillatingDroplet : public MeltPoolCase<dim, number>
   {
   public:
     SimulationOscillatingDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
     {
       AssertDimension(dim, 2);
     }

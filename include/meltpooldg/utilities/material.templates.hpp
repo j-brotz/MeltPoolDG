@@ -104,8 +104,8 @@ namespace MeltPoolDG
   template <typename value_type, int dim>
   inline MaterialParameterValues<value_type, number>
   Material<number>::compute_parameters(
-    const FECellIntegrator<dim, 1, number>         &level_set_heaviside_val,
-    const FECellIntegrator<dim, 1, number>         &temperature_val,
+    const dealii::FECellIntegrator<dim, 1, number> &level_set_heaviside_val,
+    const dealii::FECellIntegrator<dim, 1, number> &temperature_val,
     const MaterialUpdateFlags::MaterialUpdateFlags &flags,
     const unsigned int                              q_index) const
   {
@@ -140,12 +140,12 @@ namespace MeltPoolDG
   template <typename value_type, int dim>
   inline MaterialParameterValues<value_type, number>
   Material<number>::compute_parameters(
-    const FECellIntegrator<dim, 1, number>              &level_set_heaviside_val,
-    const std::vector<FECellIntegrator<dim, 1, number>> &temperature_val,
-    const MaterialUpdateFlags::MaterialUpdateFlags      &flags,
-    const unsigned int                                   q_index) const
+    const dealii::FECellIntegrator<dim, 1, number>              &level_set_heaviside_val,
+    const std::vector<dealii::FECellIntegrator<dim, 1, number>> &temperature_val,
+    const MaterialUpdateFlags::MaterialUpdateFlags              &flags,
+    const unsigned int                                           q_index) const
   {
-    Assert(temperature_val.size() <= 2, ExcInternalError());
+    Assert(temperature_val.size() <= 2, dealii::ExcInternalError());
 
     const auto get_temperature_value = [&]() {
       if (temperature_val.size() == 1) // default case
@@ -155,7 +155,7 @@ namespace MeltPoolDG
         // of the liquid domain and temperature_val[1] the temperature values of the gas domain that
         // each may be ghost values. We use the level set as heaviside as in indicator to select the
         // non-ghosted values each.
-        return compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+        return dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than_or_equal>(
           level_set_heaviside_val.get_value(q_index),
           0.5,
           temperature_val[0].get_value(q_index),
@@ -648,10 +648,8 @@ namespace MeltPoolDG
         (data.liquidus_temperature - temperature) * inv_mushy_interval, 0.0, 1.0);
     else if (data.solid_liquid_properties_transition_type ==
              SolidLiquidPropertiesTransitionType::sharp)
-      return compare_and_apply_mask<SIMDComparison::less_than>(temperature,
-                                                               data.solidus_temperature,
-                                                               1.0,
-                                                               0.0);
+      return dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+        temperature, data.solidus_temperature, 1.0, 0.0);
     Assert(false, dealii::ExcNotImplemented());
     return dealii::VectorizedArray<number>(0.0);
   }

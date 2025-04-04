@@ -7,5 +7,6 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
   MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
                            SimulationIsentropicVortex,
                            "isentropic_vortex",
-                           2);
+                           2,
+                           double);
 } // namespace MeltPoolDG::Simulation::CompressibleFlow

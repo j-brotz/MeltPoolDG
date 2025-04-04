@@ -16,9 +16,9 @@
 
 namespace MeltPoolDG::Multiphase
 {
-  template <int dim>
+  template <int dim, typename number>
   void
-  CompressibleMultiphaseProblem<dim>::run()
+  CompressibleMultiphaseProblem<dim, number>::run()
   {
     initialize();
 
@@ -64,9 +64,9 @@ namespace MeltPoolDG::Multiphase
     Journal::print_end(scratch_data->get_pcout(1));
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CompressibleMultiphaseProblem<dim>::interpolate_initial_level_set()
+  CompressibleMultiphaseProblem<dim, number>::interpolate_initial_level_set()
   {
     // set the current time to the field function
     level_set_field_function->set_time(time_iterator->get_current_time());
@@ -80,9 +80,9 @@ namespace MeltPoolDG::Multiphase
     level_set.update_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CompressibleMultiphaseProblem<dim>::update_level_set()
+  CompressibleMultiphaseProblem<dim, number>::update_level_set()
   {
     // TODO: introduce dof_handler for level-set advection velocity field, compute projection of
     // interface velocity in normal direction of the interface to reduce the distortion of the
@@ -98,9 +98,9 @@ namespace MeltPoolDG::Multiphase
                   "No level-set update, i.e. advection and reinitialization, is implemented yet."));
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CompressibleMultiphaseProblem<dim>::setup_dof_system()
+  CompressibleMultiphaseProblem<dim, number>::setup_dof_system()
   {
     comp_multiphase_operation.distribute_dofs(dof_handler);
 
@@ -122,16 +122,16 @@ namespace MeltPoolDG::Multiphase
     // print mesh information
     {
       ScopedName sc("compFlow::cells");
-      CellMonitor<double>::add_info(sc,
+      CellMonitor<number>::add_info(sc,
                                     scratch_data->get_triangulation().n_global_active_cells(),
                                     scratch_data->get_min_cell_size(),
                                     scratch_data->get_max_cell_size());
     }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CompressibleMultiphaseProblem<dim>::initialize()
+  CompressibleMultiphaseProblem<dim, number>::initialize()
   {
     // setup DoFHandler
     dof_handler.reinit(*simulation_case->triangulation);
@@ -139,10 +139,8 @@ namespace MeltPoolDG::Multiphase
 
     // setup scratch data
     {
-      scratch_data =
-        std::make_shared<ScratchData<dim>>(simulation_case->mpi_communicator,
-                                           simulation_case->parameters.base.verbosity_level,
-                                           true);
+      scratch_data = std::make_shared<ScratchData<dim, dim, number>>(
+        simulation_case->mpi_communicator, simulation_case->parameters.base.verbosity_level, true);
       // set up mapping
       scratch_data->set_mapping(
         FiniteElementUtils::create_mapping<dim>(simulation_case->parameters.flow.fe));
@@ -242,10 +240,10 @@ namespace MeltPoolDG::Multiphase
                                                               *time_iterator);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  CompressibleMultiphaseProblem<dim>::output_results(const unsigned int time_step,
-                                                     const number       current_time)
+  CompressibleMultiphaseProblem<dim, number>::output_results(const unsigned int time_step,
+                                                             const number       current_time)
   {
     if (not post_processor->is_output_timestep(time_step, current_time) and
         not simulation_case->parameters.output.do_user_defined_postprocessing)
@@ -272,9 +270,9 @@ namespace MeltPoolDG::Multiphase
     post_processor->process(time_step, generic_data_out, current_time);
   }
 
-  template class CompressibleMultiphaseProblem<1>;
-  template class CompressibleMultiphaseProblem<2>;
-  template class CompressibleMultiphaseProblem<3>;
+  template class CompressibleMultiphaseProblem<1, double>;
+  template class CompressibleMultiphaseProblem<2, double>;
+  template class CompressibleMultiphaseProblem<3, double>;
 
 } // namespace MeltPoolDG::Multiphase
 

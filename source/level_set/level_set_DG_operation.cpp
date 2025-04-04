@@ -26,16 +26,16 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   LevelSetDGOperation<dim, number>::LevelSetDGOperation(
-    const ScratchData<dim, dim, number>                 &scratch_data_in,
-    const TimeIterator<number>                          &time_stepping,
-    const LevelSetData<number>                          &ls_data,
-    const std::shared_ptr<BoundaryConditionManager<dim>> boundary_conditions_in,
-    std::shared_ptr<dealii::Function<dim>>               prescribed_velocity_function,
-    VectorType                                          &advection_velocity,
-    const unsigned int                                   ls_dof_idx_in,
-    const unsigned int                                   ls_quad_idx_in,
-    const unsigned int                                   reinit_dof_idx_in,
-    const unsigned int                                   vel_dof_idx)
+    const ScratchData<dim, dim, number>                         &scratch_data_in,
+    const TimeIterator<number>                                  &time_stepping,
+    const LevelSetData<number>                                  &ls_data,
+    const std::shared_ptr<BoundaryConditionManager<dim, number>> boundary_conditions_in,
+    std::shared_ptr<dealii::Function<dim>>                       prescribed_velocity_function,
+    VectorType                                                  &advection_velocity,
+    const unsigned int                                           ls_dof_idx_in,
+    const unsigned int                                           ls_quad_idx_in,
+    const unsigned int                                           reinit_dof_idx_in,
+    const unsigned int                                           vel_dof_idx)
     : scratch_data(scratch_data_in)
     , time_stepping(time_stepping)
     , level_set_data(ls_data)

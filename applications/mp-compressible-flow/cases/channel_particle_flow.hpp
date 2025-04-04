@@ -12,16 +12,16 @@
 
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {
-  template <int dim>
-  class InflowFlowField : public Function<dim>
+  template <int dim, typename number>
+  class InflowFlowField : public Function<dim, number>
   {
   public:
-    explicit InflowFlowField(const double time)
-      : Function<dim>(dim + 2, time)
+    explicit InflowFlowField(const number time)
+      : Function<dim, number>(dim + 2, time)
     {}
 
-    double
-    value(const Point<dim> &, const unsigned int component) const final
+    number
+    value(const Point<dim, number> &, const unsigned int component) const final
     {
       if (component == 0)
         return 1.;
@@ -34,12 +34,12 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
   };
 
-  template <int dim>
-  class SimulationChannelParticleFlow final : public Flow::CompressibleFlowCase<dim>
+  template <int dim, typename number>
+  class SimulationChannelParticleFlow final : public Flow::CompressibleFlowCase<dim, number>
   {
   public:
     SimulationChannelParticleFlow(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : Flow::CompressibleFlowCase<dim>(parameter_file, mpi_communicator)
+      : Flow::CompressibleFlowCase<dim, number>(parameter_file, mpi_communicator)
     {
       AssertThrow(
         dim > 1,
@@ -63,9 +63,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     set_boundary_conditions() override
     {
       auto inflow_outflow_solution =
-        std::make_shared<InflowFlowField<dim>>(this->parameters.time_stepping.start_time);
+        std::make_shared<InflowFlowField<dim, number>>(this->parameters.time_stepping.start_time);
       auto dummy_solution =
-        std::make_shared<InflowFlowField<dim>>(this->parameters.time_stepping.start_time);
+        std::make_shared<InflowFlowField<dim, number>>(this->parameters.time_stepping.start_time);
       this->attach_boundary_condition({0, inflow_outflow_solution}, "inflow", "compressible_flow");
       this->attach_boundary_condition({1, inflow_outflow_solution},
                                       "outflow_fixed_energy",
@@ -80,14 +80,14 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     set_field_conditions() override
     {
       auto initial_condition =
-        std::make_shared<InflowFlowField<dim>>(this->parameters.time_stepping.start_time);
+        std::make_shared<InflowFlowField<dim, number>>(this->parameters.time_stepping.start_time);
       this->attach_initial_condition(initial_condition, "compressible_flow");
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const override
+    do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const override
     {
-      InflowFlowField<dim> reference_values(generic_data_out.get_time());
+      InflowFlowField<dim, number> reference_values(generic_data_out.get_time());
       this->print_relative_norm(generic_data_out, reference_values, "norm");
     }
   };

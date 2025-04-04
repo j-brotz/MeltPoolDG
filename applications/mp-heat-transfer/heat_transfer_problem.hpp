@@ -23,13 +23,13 @@
 
 namespace MeltPoolDG::Heat
 {
-  template <int dim>
+  template <int dim, typename number>
   class HeatTransferProblem
   {
   private:
-    using CaseType        = HeatTransferCase<dim>;
-    using VectorType      = dealii::LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<double>;
+    using CaseType        = HeatTransferCase<dim, number>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
     const std::unique_ptr<CaseType> simulation_case;
 
@@ -37,15 +37,15 @@ namespace MeltPoolDG::Heat
     VectorType level_set_as_heaviside;
     VectorType level_set;
 
-    std::shared_ptr<TimeIterator<double>> time_iterator;
+    std::shared_ptr<TimeIterator<number>> time_iterator;
     dealii::DoFHandler<dim>               dof_handler;
     dealii::DoFHandler<dim>               dof_handler_velocity;
     dealii::DoFHandler<dim>               dof_handler_level_set;
 
-    dealii::AffineConstraints<double> heat_dirichlet_constraints;
-    dealii::AffineConstraints<double> heat_hanging_nodes_constraints;
-    dealii::AffineConstraints<double> velocity_hanging_nodes_constraints;
-    dealii::AffineConstraints<double> level_set_hanging_nodes_constraints;
+    dealii::AffineConstraints<number> heat_dirichlet_constraints;
+    dealii::AffineConstraints<number> heat_hanging_nodes_constraints;
+    dealii::AffineConstraints<number> velocity_hanging_nodes_constraints;
+    dealii::AffineConstraints<number> level_set_hanging_nodes_constraints;
 
     unsigned int heat_dof_idx;
     unsigned int heat_no_bc_dof_idx;
@@ -57,16 +57,16 @@ namespace MeltPoolDG::Heat
     // default value is invalid so we don't accidentally use a different DoFHandler
     unsigned int heat_continuous_no_bc_dof_idx = -1;
 
-    std::shared_ptr<ScratchData<dim>>               scratch_data;
-    std::shared_ptr<HeatOperationBase<dim, double>> heat_operation;
-    std::shared_ptr<Material<double>>               material;
-    std::shared_ptr<Postprocessor<dim, double>>     post_processor;
+    std::shared_ptr<ScratchData<dim, dim, number>>  scratch_data;
+    std::shared_ptr<HeatOperationBase<dim, number>> heat_operation;
+    std::shared_ptr<Material<number>>               material;
+    std::shared_ptr<Postprocessor<dim, number>>     post_processor;
 
     std::shared_ptr<dealii::Function<dim>> velocity_field_function;
     std::shared_ptr<dealii::Function<dim>> heaviside_field_function;
     std::shared_ptr<dealii::Function<dim>> level_set_field_function;
 
-    std::shared_ptr<LaserOperation<dim, double>> laser_operation;
+    std::shared_ptr<LaserOperation<dim, number>> laser_operation;
 
   public:
     HeatTransferProblem(std::unique_ptr<CaseType> simulation_case)
@@ -101,7 +101,7 @@ namespace MeltPoolDG::Heat
      * collect all relevant output data
      */
     void
-    attach_output_vectors(GenericDataOut<dim, double> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
     /*
      *  perform adaptive mesh refinement
      */

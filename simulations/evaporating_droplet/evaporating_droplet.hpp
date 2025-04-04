@@ -52,15 +52,15 @@ namespace MeltPoolDG
         const Functions::SignedDistance::Sphere<dim> distance_sphere;
       };
 
-      template <int dim>
-      class SimulationEvaporatingDroplet : public MeltPoolCase<dim>
+      template <int dim, typename number>
+      class SimulationEvaporatingDroplet : public MeltPoolCase<dim, number>
       {
       private:
         mutable std::shared_ptr<PostProcessingTools::DivergenceCalculator<dim, double>> diver;
 
       public:
         SimulationEvaporatingDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
-          : MeltPoolCase<dim>(parameter_file, mpi_communicator)
+          : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
         {
           AssertThrow(std::abs(droplet_phi) - 1.0 < 1e-10,
                       ExcMessage("'droplet phi' must be either 1 or"

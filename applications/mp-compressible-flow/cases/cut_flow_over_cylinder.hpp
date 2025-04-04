@@ -15,16 +15,16 @@
 
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {
-  template <int dim>
-  class FlowField : public Function<dim>
+  template <int dim, typename number>
+  class FlowField : public Function<dim, number>
   {
   public:
     explicit FlowField()
-      : Function<dim>(dim + 2)
+      : Function<dim, number>(dim + 2)
     {}
 
-    double
-    value(const Point<dim> &, const unsigned int component) const final
+    number
+    value(const Point<dim, number> &, const unsigned int component) const final
     {
       if (component == 0)
         return 1.;
@@ -37,12 +37,12 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
   };
 
-  template <int dim>
-  class SimulationCutFlowOverCylinder final : public Flow::CompressibleFlowCase<dim>
+  template <int dim, typename number>
+  class SimulationCutFlowOverCylinder final : public Flow::CompressibleFlowCase<dim, number>
   {
   public:
     SimulationCutFlowOverCylinder(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : Flow::CompressibleFlowCase<dim>(parameter_file, mpi_communicator)
+      : Flow::CompressibleFlowCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -51,11 +51,11 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       this->triangulation =
         std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
-      Point<dim> lower_left;
+      Point<dim, number> lower_left;
       for (unsigned int d = 1; d < dim; ++d)
         lower_left[d] = 0.;
 
-      Point<dim> upper_right;
+      Point<dim, number> upper_right;
       upper_right[0] = 1.0;
       for (unsigned int d = 1; d < dim; ++d)
         upper_right[d] = 0.4;
@@ -78,8 +78,8 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     void
     set_boundary_conditions() override
     {
-      auto inflow_outflow_solution = std::make_shared<FlowField<dim>>();
-      auto dummy_solution          = std::make_shared<FlowField<dim>>();
+      auto inflow_outflow_solution = std::make_shared<FlowField<dim, number>>();
+      auto dummy_solution          = std::make_shared<FlowField<dim, number>>();
       this->attach_boundary_condition({BoundaryID::inflow, inflow_outflow_solution},
                                       "inflow",
                                       "compressible_flow");
@@ -95,17 +95,17 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     void
     set_field_conditions() override
     {
-      auto initial_condition = std::make_shared<FlowField<dim>>();
+      auto initial_condition = std::make_shared<FlowField<dim, number>>();
       this->attach_initial_condition(initial_condition, "compressible_flow");
 
       // set level-set function
-      Point<dim> center;
+      Point<dim, number> center;
       center[0] = 0.3;
       center[1] = 0.2;
       if constexpr (dim == 3)
         center[2] = 0.2;
 
-      const double radius = 0.1;
+      const number radius = 0.1;
 
       const auto level_set =
         std::make_shared<Functions::SignedDistance::Sphere<dim>>(center, radius);
@@ -113,9 +113,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const override
+    do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const override
     {
-      FlowField<dim> reference_values;
+      FlowField<dim, number> reference_values;
       this->print_relative_norm(generic_data_out, reference_values, "norm");
     }
 

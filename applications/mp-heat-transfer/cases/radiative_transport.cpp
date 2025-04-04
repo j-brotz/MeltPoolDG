@@ -9,13 +9,16 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
   MELTPOOLDG_REGISTER_MULTI_APP_CASE(MeltPoolDG::Heat::HeatTransferCase,
                                      SimulationRadTrans,
                                      "radiative_transport",
-                                     1);
+                                     1,
+                                     double);
   MELTPOOLDG_REGISTER_MULTI_APP_CASE(MeltPoolDG::Heat::HeatTransferCase,
                                      SimulationRadTrans,
                                      "radiative_transport",
-                                     2);
+                                     2,
+                                     double);
   MELTPOOLDG_REGISTER_MULTI_APP_CASE(MeltPoolDG::Heat::HeatTransferCase,
                                      SimulationRadTrans,
                                      "radiative_transport",
-                                     3);
+                                     3,
+                                     double);
 } // namespace MeltPoolDG::Simulation::RadiativeTransport

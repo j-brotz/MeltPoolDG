@@ -7,13 +7,16 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
   MELTPOOLDG_REGISTER_CASE(LevelSet::AdvectionDiffusionCase,
                            SimulationAdvec,
                            "advection_diffusion",
-                           1);
+                           1,
+                           double);
   MELTPOOLDG_REGISTER_CASE(LevelSet::AdvectionDiffusionCase,
                            SimulationAdvec,
                            "advection_diffusion",
-                           2);
+                           2,
+                           double);
   MELTPOOLDG_REGISTER_CASE(LevelSet::AdvectionDiffusionCase,
                            SimulationAdvec,
                            "advection_diffusion",
-                           3);
+                           3,
+                           double);
 } // namespace MeltPoolDG::Simulation::AdvectionDiffusion
