@@ -4,7 +4,7 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
-#include <deal.II/fe/fe_dgq.h>
+#include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_system.h>
 
 #include <deal.II/matrix_free/fe_point_evaluation.h>
@@ -66,10 +66,10 @@ namespace MeltPoolDG::Heat
       std::shared_ptr<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>>
       &mapping_info_cells;
 
-    // use FE_DGQ for FEPointEvaluation (DoF numbering reasons)
-    const dealii::FE_DGQ<dim>   temperature_reference_finite_element;
-    const unsigned int          n_dofs_per_cell;
-    const dealii::FESystem<dim> velocity_reference_finite_element;
+    // use FE_Q for FEPointEvaluation (DoF numbering reasons)
+    const dealii::FE_Q<dim>     reference_finite_element_heat;
+    const unsigned int          n_dofs_per_cell_heat;
+    const dealii::FESystem<dim> reference_finite_element_vel;
     const unsigned int          n_dofs_per_cell_vel;
 
     // coefficients for weighted average operator for two-phase case
@@ -154,12 +154,6 @@ namespace MeltPoolDG::Heat
     void
     create_rhs(VectorType &residual, const VectorType &temperature_old) const final;
 
-    /**
-     * computes the L2 norm of the @param solution on the cut domain.
-     */
-    number
-    compute_cut_L2_norm(const VectorType &solution) const;
-
   private:
     dealii::VectorizedArray<number>
     compute_qVapor(const dealii::VectorizedArray<number> &T) const;
@@ -171,20 +165,20 @@ namespace MeltPoolDG::Heat
      * Local appliers for consistent tangent modulus
      */
     void
-    tangent_cell_operation_liquid(const unsigned int cell_index,
+    tangent_cell_operation_liquid(const unsigned int cell_batch,
                                   DomainEval<>      &eval_l,
                                   DomainEval<>      *T_eval_l,
                                   DomainEval<dim>   *vel_eval,
                                   const bool         do_reinit_cell = true) const;
 
     void
-    tangent_cell_operation_gas(const unsigned int cell_index,
+    tangent_cell_operation_gas(const unsigned int cell_batch,
                                DomainEval<>      &eval_g,
                                DomainEval<dim>   *vel_eval,
                                const bool         do_reinit_cell = true) const;
 
     void
-    tangent_cell_operation_intersected_one_phase(const unsigned int cell_index,
+    tangent_cell_operation_intersected_one_phase(const unsigned int cell_batch,
                                                  DomainEval<>      &eval_cell_l,
                                                  PointEval<>       &eval_subdomain_l,
                                                  PointEval<>       *eval_interface_l,
@@ -196,7 +190,7 @@ namespace MeltPoolDG::Heat
                                                  const bool         do_reinit_cell = true) const;
 
     void
-    tangent_cell_operation_intersected_two_phase(const unsigned int cell_index,
+    tangent_cell_operation_intersected_two_phase(const unsigned int cell_batch,
                                                  DomainEval<>      &eval_cell_l,
                                                  DomainEval<>      &eval_cell_g,
                                                  PointEval<>       &eval_subdomain_l,
@@ -218,21 +212,21 @@ namespace MeltPoolDG::Heat
       const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free_in,
       VectorType                                                             &dst,
       const VectorType                                                       &src,
-      const std::pair<unsigned int, unsigned int>                            &cell_range) const;
+      const std::pair<unsigned int, unsigned int> &cell_batch_range) const;
 
     void
     tangent_inner_face_loop(
       const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free_in,
       VectorType                                                             &dst,
       const VectorType                                                       &src,
-      const std::pair<unsigned int, unsigned int>                            &face_range) const;
+      const std::pair<unsigned int, unsigned int> &face_batch_range) const;
 
     void
     tangent_boundary_face_loop(
       const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free_in,
       VectorType                                                             &dst,
       const VectorType                                                       &src,
-      const std::pair<unsigned int, unsigned int>                            &face_range) const;
+      const std::pair<unsigned int, unsigned int> &face_batch_range) const;
 
     /*
      * Local appliers for residual
@@ -242,21 +236,21 @@ namespace MeltPoolDG::Heat
       const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free,
       VectorType                                                             &residual,
       const VectorType                                                       &temperature_new,
-      const std::pair<unsigned int, unsigned int>                            &cell_range) const;
+      const std::pair<unsigned int, unsigned int> &cell_batch_range) const;
 
     void
     residual_inner_face_loop(
       const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free_in,
       VectorType                                                             &residual,
       const VectorType                                                       &temperature_new,
-      const std::pair<unsigned int, unsigned int>                            &face_range) const;
+      const std::pair<unsigned int, unsigned int> &face_batch_range) const;
 
     void
     residual_boundary_face_loop(
       const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free_in,
       VectorType                                                             &residual,
       const VectorType                                                       &temperature_new,
-      const std::pair<unsigned int, unsigned int>                            &face_range) const;
+      const std::pair<unsigned int, unsigned int> &face_batch_range) const;
 
     /**
      * The setup for dealii::MatrixFreeTools::internal::compute_diagonal and

@@ -1,0 +1,84 @@
+| current laser position: 0 0                                                                laser |
+| current laser intensity: 1                                                                 laser |
+| || normal_0 ||L2 = 1.93170137412e-13                                               normal_vector |
+| || normal_1 ||L2 = 3.91705718484e+00                                               normal_vector |
+| || curvature ||L2 = 6.32344513062e-11                                                  curvature |
+| heat up period: T_max=5.00000e+02                                              melt_pool_problem |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 1      t = 0.0000e+00 to 1.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 6.2582807261e-04                                    advection_diffusion |
++--------------------------------------------------------------------------------------------------+
+|  τ = 2.72727e-05                                                                reinitialization |
+| || normal_0 ||L2 = 5.6009778309e-16                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.6597723136e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 1.2170497817e-07                                     reinitialization_adaflo |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 7.72845611769e-16                                               normal_vector |
+| || normal_1 ||L2 = 3.91725357484e+00                                               normal_vector |
+| || curvature ||L2 = 3.42260552331e-14                                                  curvature |
+| current laser position: 0 0                                                                laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 3.56919e-01                newton_raphson_solver |
+| || velocity ||L2 = 2.620961799930796e-06                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.377302123878592e-01                                    navier_stokes_adaflo |
+| heat up period: T_max=7.32785e+02                                              melt_pool_problem |
+| Heat up period is finished.                                                    melt_pool_problem |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 2      t = 1.0000e-03 to 1.1000e-03 ( dt = 1.0000e-04 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 6.2585844094e-04                                    advection_diffusion |
++--------------------------------------------------------------------------------------------------+
+|  τ = 2.72727e-05                                                                reinitialization |
+| || normal_0 ||L2 = 2.2703363360e-02                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.6599933982e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 1.3367664232e-07                                     reinitialization_adaflo |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 2.86324421024e-02                                               normal_vector |
+| || normal_1 ||L2 = 3.91749397344e+00                                               normal_vector |
+| || curvature ||L2 = 4.25744558146e-02                                                  curvature |
+| current laser position: 0 0                                                                laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 3.57967e-01                newton_raphson_solver |
+| || velocity ||L2 = 5.285858867939233e-06                                    navier_stokes_adaflo |
+| || pressure ||L2 = 3.201013348925153e-01                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 3      t = 1.1000e-03 to 1.2000e-03 ( dt = 1.0000e-04 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 6.2588924269e-04                                    advection_diffusion |
++--------------------------------------------------------------------------------------------------+
+|  τ = 2.72727e-05                                                                reinitialization |
+| || normal_0 ||L2 = 6.8414370349e-02                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.6600693957e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 2.4456068471e-07                                     reinitialization_adaflo |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 8.61300652452e-02                                               normal_vector |
+| || normal_1 ||L2 = 3.91758181290e+00                                               normal_vector |
+| || curvature ||L2 = 1.28807639492e-01                                                  curvature |
+| current laser position: 0 0                                                                laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 3.58975e-01                newton_raphson_solver |
+| || velocity ||L2 = 1.028824239402936e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 6.494766984699968e-01                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 4      t = 1.2000e-03 to 1.3000e-03 ( dt = 1.0000e-04 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 6.2591862823e-04                                    advection_diffusion |
++--------------------------------------------------------------------------------------------------+
+|  τ = 2.72727e-05                                                                reinitialization |
+| || normal_0 ||L2 = 1.5745260174e-01                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.6593592697e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 5.6874858485e-07                                     reinitialization_adaflo |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 1.98382854567e-01                                               normal_vector |
+| || normal_1 ||L2 = 3.91678960906e+00                                               normal_vector |
+| || curvature ||L2 = 2.97257027539e-01                                                  curvature |
+| current laser position: 0 0                                                                laser |
+| current laser intensity: 1                                                                 laser |
+| Number of new DoFs:               5                                        cut solution transfer |
+| Newton Raphson solver converged: ||solution|| = 3.59925e-01                newton_raphson_solver |
+| || velocity ||L2 = 1.152299642705096e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 7.818483021230062e-01                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  end of simulation                                                                               |
++--------------------------------------------------------------------------------------------------+

@@ -17,6 +17,7 @@
 
 #include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/core/finite_element_data.hpp>
+#include <meltpooldg/cut/cut_norm.hpp>
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
@@ -357,9 +358,7 @@ namespace MeltPoolDG::Heat
       scratch_data.get_constraint(heat_cut_dof_idx).distribute(v);
     };
 
-    newton.norm_of_solution_vector = [this]() -> number {
-      return heat_operator->compute_cut_L2_norm(solution_history.get_current_solution());
-    };
+    newton.norm_of_solution_vector = [this]() -> number { return compute_L2_norm(); };
   }
 
   template <int dim, typename number>
@@ -408,6 +407,21 @@ namespace MeltPoolDG::Heat
     ready_for_time_advance = false;
   }
 
+
+  template <int dim, typename number>
+  number
+  HeatCutOperation<dim, number>::compute_L2_norm() const
+  {
+    return CutUtil::compute_cut_norm(solution_history.get_current_solution(),
+                                     scratch_data.get_matrix_free(),
+                                     mapping_info_cells,
+                                     heat_data.cut.two_phase,
+                                     dealii::FE_Q<dim>(heat_data.fe.degree),
+                                     heat_cut_dof_idx,
+                                     heat_quad_idx,
+                                     CutUtil::NormType::L2_norm);
+  }
+
   template <int dim, typename number>
   void
   HeatCutOperation<dim, number>::register_interface_projection_data(
@@ -421,7 +435,8 @@ namespace MeltPoolDG::Heat
       distance,
       normal_vector,
       scratch_data.get_remote_point_evaluation(heat_cut_no_bc_dof_idx),
-      nearest_point_data);
+      nearest_point_data
+      /*, TODO timer output */);
     scratch_data.initialize_dof_vector(interface_temperature, heat_cont_no_bc_dof_idx);
   }
 
