@@ -6,13 +6,13 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   AdvectionDGOperator<dim, number>::AdvectionDGOperator(
-    const MeltPoolDG::ScratchData<dim, dim, number>                 &scratch_data_in,
-    VectorType                                                      &advection_velocity_in,
-    const unsigned int                                               advec_diff_dof_idx_in,
-    const unsigned int                                               advec_diff_quad_idx_in,
-    const unsigned int                                               velocity_dof_idx_in,
-    const std::shared_ptr<MeltPoolDG::BoundaryConditionManager<dim>> boundary_conditions_in,
-    std::shared_ptr<dealii::Function<dim>>                          &advection_field_in,
+    const MeltPoolDG::ScratchData<dim, dim, number>                         &scratch_data_in,
+    VectorType                                                              &advection_velocity_in,
+    const unsigned int                                                       advec_diff_dof_idx_in,
+    const unsigned int                                                       advec_diff_quad_idx_in,
+    const unsigned int                                                       velocity_dof_idx_in,
+    const std::shared_ptr<MeltPoolDG::BoundaryConditionManager<dim, number>> boundary_conditions_in,
+    std::shared_ptr<dealii::Function<dim>>                                  &advection_field_in,
     bool const enable_analytical_velocity_update_in)
     : update_field_functions(true)
     , scratch_data_(scratch_data_in)

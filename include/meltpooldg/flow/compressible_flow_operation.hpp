@@ -103,8 +103,8 @@ namespace MeltPoolDG::Flow
      * @note The function simply passes the parameters to the corresponding operation function.
      */
     void
-    set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
-                            const std::string                              &operation_name)
+    set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim, number>> &simulation_case,
+                            const std::string                                      &operation_name)
     {
       operation_pimpl->set_boundary_conditions(simulation_case, operation_name);
     }
@@ -238,8 +238,9 @@ namespace MeltPoolDG::Flow
       set_initial_condition(const Function<dim> &function) = 0;
 
       virtual void
-      set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
-                              const std::string                              &operation_name) = 0;
+      set_boundary_conditions(
+        const std::shared_ptr<SimulationCaseBase<dim, number>> &simulation_case,
+        const std::string                                      &operation_name) = 0;
 
       virtual void
       set_body_force(std::unique_ptr<Function<dim>> body_force_in) = 0;
@@ -293,8 +294,9 @@ namespace MeltPoolDG::Flow
       }
 
       void
-      set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
-                              const std::string &operation_name) override
+      set_boundary_conditions(
+        const std::shared_ptr<SimulationCaseBase<dim, number>> &simulation_case,
+        const std::string                                      &operation_name) override
       {
         operation->set_boundary_conditions(simulation_case, operation_name);
       }

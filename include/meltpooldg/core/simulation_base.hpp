@@ -40,7 +40,7 @@ namespace MeltPoolDG
    * @tparam P Parameter object type.
    * @tparam spacedim Space dimension.
    */
-  template <int dim, int spacedim = dim>
+  template <int dim, typename number, int spacedim = dim>
   class SimulationCaseBase
   {
   public:
@@ -122,7 +122,7 @@ namespace MeltPoolDG
      *
      * @throws dealii::ExcMessage If no boundary conditions are found for the specified operation.
      */
-    std::shared_ptr<BoundaryConditionManager<dim>>
+    std::shared_ptr<BoundaryConditionManager<dim, number>>
     get_boundary_condition_manager(const std::string &operation_name,
                                    const bool         is_optional = true) const
     {
@@ -134,7 +134,7 @@ namespace MeltPoolDG
                     "attach_boundary_condition({id, function} ,operation_name, function)?"));
 
       if (!boundary_conditions_map.contains(operation_name))
-        return std::make_shared<BoundaryConditionManager<dim>>();
+        return std::make_shared<BoundaryConditionManager<dim, number>>();
       else
         return boundary_conditions_map.at(operation_name);
     }
@@ -170,7 +170,7 @@ namespace MeltPoolDG
      * @param time The current simulation time.
      */
     void
-    set_time_boundary_conditions(const double time)
+    set_time_boundary_conditions(const number time)
     {
       for (const auto &[operation, bc] : boundary_conditions_map)
         bc->set_time(time);
@@ -238,7 +238,7 @@ namespace MeltPoolDG
      * @param generic_data_out The postprocessing data.
      */
     virtual void
-    do_postprocessing([[maybe_unused]] const GenericDataOut<dim, double> &generic_data_out) const
+    do_postprocessing([[maybe_unused]] const GenericDataOut<dim, number> &generic_data_out) const
     {
       // do nothing default
     }
@@ -349,7 +349,8 @@ namespace MeltPoolDG
     {
       // create boundary conditions object for a given operation_name if it has not yet been created
       if (!boundary_conditions_map[operation_name])
-        boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditionManager<dim>>();
+        boundary_conditions_map[operation_name] =
+          std::make_shared<BoundaryConditionManager<dim, number>>();
 
       boundary_conditions_map[operation_name]->attach_boundary_condition(id_and_function, type);
     }
@@ -410,7 +411,8 @@ namespace MeltPoolDG
       field_functions;
 
     // This map organizes boundary conditions hierarchically based on operation names.
-    std::map<std::string, std::shared_ptr<BoundaryConditionManager<dim>>> boundary_conditions_map;
+    std::map<std::string, std::shared_ptr<BoundaryConditionManager<dim, number>>>
+      boundary_conditions_map;
 
     /**
      * @brief Parses simulation-specific parameters.
@@ -429,15 +431,15 @@ namespace MeltPoolDG
   };
 
   // TODO: move somewhere else
-  template <int dim>
-  class MeltPoolCase : public SimulationCaseBase<dim>
+  template <int dim, typename number>
+  class MeltPoolCase : public SimulationCaseBase<dim, number>
   {
     // Simulation parameters object.
   public:
-    Parameters<double> parameters;
+    Parameters<number> parameters;
 
     MeltPoolCase(const std::string &parameter_file_in, MPI_Comm mpi_communicator_in)
-      : SimulationCaseBase<dim>(parameter_file_in, mpi_communicator_in)
+      : SimulationCaseBase<dim, number>(parameter_file_in, mpi_communicator_in)
     {
       dealii::ParameterHandler prm;
       parameters.process_parameters_file(prm, parameter_file_in);
@@ -446,14 +448,15 @@ namespace MeltPoolDG
 
 
   template <typename ParametersType,
-            template <int>
+            template <int, typename>
             class CaseType,
-            template <int>
+            template <int, typename>
             class ProblemType>
   void
   run_simulation(const std::string &parameter_file, const MPI_Comm mpi_communicator)
   {
     unsigned int dim = 0;
+    std::string  number;
     std::string  case_name;
 
     // Read and process parameters
@@ -485,42 +488,55 @@ namespace MeltPoolDG
         parameters.print_parameters(prm, std::cout, false /*print_details*/);
 
       dim       = parameters.base.dimension;
+      number    = parameters.base.number;
       case_name = parameters.base.case_name;
     }
 
     // Try to run the simulation based on the dimension
     try
       {
-        if (dim == 1)
+        if (number == "double")
           {
-            auto sim = SimulationCaseFactory<CaseType<1>>::create_simulation(case_name,
-                                                                             parameter_file,
-                                                                             mpi_communicator);
-            sim->create();
-            auto problem = std::make_unique<ProblemType<1>>(std::move(sim));
-            problem->run();
-          }
-        else if (dim == 2)
-          {
-            auto sim = SimulationCaseFactory<CaseType<2>>::create_simulation(case_name,
-                                                                             parameter_file,
-                                                                             mpi_communicator);
-            sim->create();
-            auto problem = std::make_unique<ProblemType<2>>(std::move(sim));
-            problem->run();
-          }
-        else if (dim == 3)
-          {
-            auto sim = SimulationCaseFactory<CaseType<3>>::create_simulation(case_name,
-                                                                             parameter_file,
-                                                                             mpi_communicator);
-            sim->create();
-            auto problem = std::make_unique<ProblemType<3>>(std::move(sim));
-            problem->run();
+            if (dim == 1)
+              {
+                auto sim =
+                  SimulationCaseFactory<CaseType<1, double>>::create_simulation(case_name,
+                                                                                parameter_file,
+                                                                                mpi_communicator);
+                sim->create();
+                auto problem = std::make_unique<ProblemType<1, double>>(std::move(sim));
+                problem->run();
+              }
+            else if (dim == 2)
+              {
+                auto sim =
+                  SimulationCaseFactory<CaseType<2, double>>::create_simulation(case_name,
+                                                                                parameter_file,
+                                                                                mpi_communicator);
+                sim->create();
+                auto problem = std::make_unique<ProblemType<2, double>>(std::move(sim));
+                problem->run();
+              }
+            else if (dim == 3)
+              {
+                auto sim =
+                  SimulationCaseFactory<CaseType<3, double>>::create_simulation(case_name,
+                                                                                parameter_file,
+                                                                                mpi_communicator);
+                sim->create();
+                auto problem = std::make_unique<ProblemType<3, double>>(std::move(sim));
+                problem->run();
+              }
+            else
+              {
+                AssertThrow(false, ExcMessage("Dimension must be 1, 2, or 3."));
+              }
           }
         else
           {
-            AssertThrow(false, ExcMessage("Dimension must be 1, 2, or 3."));
+            AssertThrow(false,
+                        ExcMessage("Currently, explicit template instantiations are "
+                                   "only done for floating point number format 'double'."));
           }
       }
     catch (std::exception &exc)
@@ -540,7 +556,11 @@ namespace MeltPoolDG
       }
   }
 
-  template <typename Parameters, template <int> class Case, template <int> class Problem>
+  template <typename Parameters,
+            template <int, typename>
+            class Case,
+            template <int, typename>
+            class Problem>
   void
   default_main(int argc, char *argv[], MPI_Comm mpi_comm)
   {

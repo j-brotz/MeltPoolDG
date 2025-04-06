@@ -67,10 +67,8 @@ namespace MeltPoolDG::LevelSet
      * The matrix can be extremly bad condtioned and cause problems for the linear solver.
      * Therefore a preconditioner is needed.
      */
-    preconditioner =
-      make_preconditioner<dim, HelmholtzDGOperator<dim, number>, VectorType>(preconditioner_type,
-                                                                             this,
-                                                                             false);
+    preconditioner = make_preconditioner<dim, number, HelmholtzDGOperator<dim, number>, VectorType>(
+      preconditioner_type, this, false);
     preconditioner.reinit(scratch_data, dof_idx);
     preconditioner.update(&system_matrix);
   }

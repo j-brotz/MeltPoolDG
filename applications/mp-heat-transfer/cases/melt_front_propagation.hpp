@@ -29,20 +29,19 @@
 
 namespace MeltPoolDG::Simulation::MeltFrontPropagation
 {
-  using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
-  template <int dim>
-  class SimulationMeltFrontPropagation : public Heat::HeatTransferCase<dim>
+  template <int dim, typename number>
+  class SimulationMeltFrontPropagation : public Heat::HeatTransferCase<dim, number>
   {
   private:
-    double x_min        = 0.0;
-    double x_max        = 0.0;
-    double y_min        = 0.0;
-    double y_max        = 0.0;
-    double z_min        = 0.0;
-    double z_max        = 0.0;
-    double T_0          = 0.0;
+    number x_min        = 0.0;
+    number x_max        = 0.0;
+    number y_min        = 0.0;
+    number y_max        = 0.0;
+    number z_min        = 0.0;
+    number z_max        = 0.0;
+    number T_0          = 0.0;
     bool   do_two_phase = false;
 
   public:

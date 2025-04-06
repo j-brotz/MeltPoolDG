@@ -10,13 +10,13 @@
 
 namespace MeltPoolDG::Flow
 {
-  template <int dim>
-  DarcyDampingOperation<dim>::DarcyDampingOperation(
-    const DarcyDampingData<double> &data_in,
-    const ScratchData<dim>         &scratch_data,
-    const unsigned int              flow_vel_hanging_nodes_dof_idx,
-    const unsigned int              flow_quad_idx,
-    const unsigned int              solid_dof_idx)
+  template <int dim, typename number>
+  DarcyDampingOperation<dim, number>::DarcyDampingOperation(
+    const DarcyDampingData<number>      &data_in,
+    const ScratchData<dim, dim, number> &scratch_data,
+    const unsigned int                   flow_vel_hanging_nodes_dof_idx,
+    const unsigned int                   flow_quad_idx,
+    const unsigned int                   solid_dof_idx)
     : mushy_zone_morphology(data_in.mushy_zone_morphology)
     , avoid_div_zero_constant(data_in.avoid_div_zero_constant)
     , scratch_data(scratch_data)
@@ -32,12 +32,12 @@ namespace MeltPoolDG::Flow
 
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  DarcyDampingOperation<dim>::compute_darcy_damping(VectorType       &force_rhs,
-                                                    const VectorType &velocity_vec,
-                                                    const VectorType &solid_fraction_vec,
-                                                    const bool        zero_out)
+  DarcyDampingOperation<dim, number>::compute_darcy_damping(VectorType       &force_rhs,
+                                                            const VectorType &velocity_vec,
+                                                            const VectorType &solid_fraction_vec,
+                                                            const bool        zero_out)
   {
     const bool update_ghosts = !velocity_vec.has_ghost_elements();
 
@@ -95,11 +95,11 @@ namespace MeltPoolDG::Flow
       velocity_vec.zero_out_ghost_values();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  DarcyDampingOperation<dim>::compute_darcy_damping(VectorType       &force_rhs,
-                                                    const VectorType &velocity_vec,
-                                                    const bool        zero_out)
+  DarcyDampingOperation<dim, number>::compute_darcy_damping(VectorType       &force_rhs,
+                                                            const VectorType &velocity_vec,
+                                                            const bool        zero_out)
   {
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &force_rhs, const auto &velocity_vec, auto macro_cells) {
@@ -140,13 +140,14 @@ namespace MeltPoolDG::Flow
 
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  DarcyDampingOperation<dim>::set_darcy_damping_at_q(const Material<double> &material,
-                                                     const VectorType       &ls_as_heaviside,
-                                                     const VectorType       &temperature,
-                                                     const unsigned int ls_hanging_nodes_dof_idx,
-                                                     const unsigned int temp_dof_idx)
+  DarcyDampingOperation<dim, number>::set_darcy_damping_at_q(
+    const Material<double> &material,
+    const VectorType       &ls_as_heaviside,
+    const VectorType       &temperature,
+    const unsigned int      ls_hanging_nodes_dof_idx,
+    const unsigned int      temp_dof_idx)
   {
     // check if damping_at_q has its correct size
     AssertDimension(damping_at_q.size(),
@@ -221,9 +222,9 @@ namespace MeltPoolDG::Flow
 
 
 
-  template <int dim>
+  template <int dim, typename number>
   VectorizedArray<double>
-  DarcyDampingOperation<dim>::compute_darcy_damping_coefficient(
+  DarcyDampingOperation<dim, number>::compute_darcy_damping_coefficient(
     const VectorizedArray<double> &solid_fraction) const
   {
     // K = -C * fs² / ( (1-fs)³ + b )
@@ -234,9 +235,10 @@ namespace MeltPoolDG::Flow
            (non_solid * non_solid * non_solid + avoid_div_zero_constant);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  DarcyDampingOperation<dim>::attach_output_vectors(GenericDataOut<dim, double> &data_out) const
+  DarcyDampingOperation<dim, number>::attach_output_vectors(
+    GenericDataOut<dim, double> &data_out) const
   {
     if (data_out.is_requested("Darcy_damping"))
       {
@@ -265,36 +267,37 @@ namespace MeltPoolDG::Flow
                                  "Darcy_damping");
       }
   }
-  template <int dim>
+  template <int dim, typename number>
   void
-  DarcyDampingOperation<dim>::reinit()
+  DarcyDampingOperation<dim, number>::reinit()
   {
     damping_at_q.resize_fast(scratch_data.get_matrix_free().n_cell_batches() *
                              scratch_data.get_n_q_points(flow_quad_idx));
   }
 
-  template <int dim>
+  template <int dim, typename number>
   VectorizedArray<double> &
-  DarcyDampingOperation<dim>::get_damping(const unsigned int cell, const unsigned int q)
+  DarcyDampingOperation<dim, number>::get_damping(const unsigned int cell, const unsigned int q)
   {
     return damping_at_q[cell * scratch_data.get_n_q_points(flow_quad_idx) + q];
   }
 
-  template <int dim>
+  template <int dim, typename number>
   const VectorizedArray<double> &
-  DarcyDampingOperation<dim>::get_damping(const unsigned int cell, const unsigned int q) const
+  DarcyDampingOperation<dim, number>::get_damping(const unsigned int cell,
+                                                  const unsigned int q) const
   {
     return damping_at_q[cell * scratch_data.get_n_q_points(flow_quad_idx) + q];
   }
 
-  template <int dim>
+  template <int dim, typename number>
   AlignedVector<VectorizedArray<double>> &
-  DarcyDampingOperation<dim>::get_damping_at_q()
+  DarcyDampingOperation<dim, number>::get_damping_at_q()
   {
     return damping_at_q;
   }
 
-  template class DarcyDampingOperation<1>;
-  template class DarcyDampingOperation<2>;
-  template class DarcyDampingOperation<3>;
+  template class DarcyDampingOperation<1, double>;
+  template class DarcyDampingOperation<2, double>;
+  template class DarcyDampingOperation<3, double>;
 } // namespace MeltPoolDG::Flow

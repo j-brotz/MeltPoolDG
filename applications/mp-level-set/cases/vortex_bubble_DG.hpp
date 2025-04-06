@@ -30,25 +30,23 @@
 
 namespace MeltPoolDG::Simulation::VortexBubbleDG
 {
-  using namespace dealii;
-
   // period of the vortex flow
   static double Tf = 4.0;
 
   /*
    * this function specifies the initial field of the level set equation
    */
-  template <int dim>
-  class InitializePhi : public Function<dim>
+  template <int dim, typename number>
+  class InitializePhi : public Function<dim, number>
   {
   public:
     InitializePhi()
-      : Function<dim>()
-      , distance_sphere(dim == 1 ? Point<dim>(0.5) : Point<dim>(0.5, 0.75), 0.15)
+      : Function<dim, number>()
+      , distance_sphere(dim == 1 ? Point<dim, number>(0.5) : Point<dim, number>(0.5, 0.75), 0.15)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       return -distance_sphere.value(p);
     }
@@ -57,64 +55,64 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
     const Functions::SignedDistance::Sphere<dim> distance_sphere;
   };
 
-  template <int dim>
-  class PhiExact : public Function<dim>
+  template <int dim, typename number>
+  class PhiExact : public Function<dim, number>
   {
   public:
-    PhiExact(const double eps)
+    PhiExact(const number eps)
       : eps(eps)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       return distance_sphere.value(p, 0) / (2 * eps);
     }
 
   private:
-    const double             eps;
-    const InitializePhi<dim> distance_sphere;
+    const number                     eps;
+    const InitializePhi<dim, number> distance_sphere;
   };
 
-  template <int dim>
-  class SignedDistanceExact : public Function<dim>
+  template <int dim, typename number>
+  class SignedDistanceExact : public Function<dim, number>
   {
   public:
-    SignedDistanceExact(const double eps)
+    SignedDistanceExact(const number eps)
       : eps(eps)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       const auto val = distance_sphere.value(p, 0);
       return val > 0 ? std::min(val, 8 * eps) : std::max(val, -8 * eps);
     }
 
   private:
-    const double             eps;
-    const InitializePhi<dim> distance_sphere;
+    const number                     eps;
+    const InitializePhi<dim, number> distance_sphere;
   };
 
-  template <int dim>
-  class AdvectionField : public Function<dim>
+  template <int dim, typename number>
+  class AdvectionField : public Function<dim, number>
   {
   public:
     AdvectionField()
-      : Function<dim>(dim)
+      : Function<dim, number>(dim)
     {}
 
     void
-    vector_value(const Point<dim> &p, Vector<double> &values) const override
+    vector_value(const Point<dim, number> &p, Vector<number> &values) const override
     {
       if constexpr (dim == 2)
         {
-          const double time = this->get_time();
+          const number time = this->get_time();
 
-          const double x = p[0];
-          const double y = p[1];
+          const number x = p[0];
+          const number y = p[1];
 
-          const double reverseCoefficient = std::cos(numbers::PI * time / Tf);
+          const number reverseCoefficient = std::cos(numbers::PI * time / Tf);
 
           values[0] = reverseCoefficient *
                       (std::sin(2. * numbers::PI * y) * std::pow(std::sin(numbers::PI * x), 2.));
@@ -129,16 +127,16 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
   /* for constant Dirichlet conditions we could also use the ConstantFunction
    * utility from dealii
    */
-  template <int dim>
-  class DirichletCondition : public Function<dim>
+  template <int dim, typename number>
+  class DirichletCondition : public Function<dim, number>
   {
   public:
     DirichletCondition()
-      : Function<dim>()
+      : Function<dim, number>()
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int component = 0) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int component = 0) const override
     {
       (void)p;
       (void)component;
@@ -150,12 +148,12 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
    *      This class collects all relevant input data for the level set simulation
    */
 
-  template <int dim>
-  class SimulationVortexBubbleDG : public LevelSet::LevelSetCase<dim>
+  template <int dim, typename number>
+  class SimulationVortexBubbleDG : public LevelSet::LevelSetCase<dim, number>
   {
   public:
     SimulationVortexBubbleDG(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : LevelSet::LevelSetCase<dim>(parameter_file, mpi_communicator)
+      : LevelSet::LevelSetCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -211,14 +209,15 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
     void
     set_field_conditions() override
     {
-      this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "signed_distance");
-      this->attach_field_function(std::make_shared<AdvectionField<dim>>(),
+      this->attach_initial_condition(std::make_shared<InitializePhi<dim, number>>(),
+                                     "signed_distance");
+      this->attach_field_function(std::make_shared<AdvectionField<dim, number>>(),
                                   "prescribed_velocity",
                                   "level_set");
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const final
+    do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const final
     {
       if constexpr (dim == 2)
         {
@@ -233,12 +232,12 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
                                   quadrature,
                                   update_values | update_JxW_values | update_quadrature_points);
 
-          std::vector<double> phi_at_q(QGauss<dim>(n_q_points).size());
+          std::vector<number> phi_at_q(QGauss<dim>(n_q_points).size());
 
-          std::vector<double> volume_fraction;
-          double              area_droplet = 0;
-          double              area_bulk    = 0;
-          const double        threshhold   = 0.0;
+          std::vector<number> volume_fraction;
+          number              area_droplet = 0;
+          number              area_bulk    = 0;
+          const number        threshhold   = 0.0;
 
           generic_data_out.get_vector("level_set").update_ghost_values();
 
@@ -285,8 +284,8 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
     }
 
   private:
-    double               left_domain  = 0.0;
-    double               right_domain = 1.0;
+    number               left_domain  = 0.0;
+    number               right_domain = 1.0;
     mutable TableHandler table;
   };
 } // namespace MeltPoolDG::Simulation::VortexBubbleDG

@@ -7,9 +7,11 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
   MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
                            SimulationCutUnfittedInflow,
                            "cut_unfitted_inflow",
-                           2);
+                           2,
+                           double);
   MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
                            SimulationCutUnfittedInflow,
                            "cut_unfitted_inflow",
-                           3);
+                           3,
+                           double);
 } // namespace MeltPoolDG::Simulation::CompressibleFlow

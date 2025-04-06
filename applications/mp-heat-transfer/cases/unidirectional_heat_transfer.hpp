@@ -56,16 +56,15 @@
 
 namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
 {
-  using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
-  template <int dim>
-  class SimulationUnidirectionalHeatTransfer : public Heat::HeatTransferCase<dim>
+  template <int dim, typename number>
+  class SimulationUnidirectionalHeatTransfer : public Heat::HeatTransferCase<dim, number>
   {
   private:
     bool   do_solidification = false;
     bool   do_two_phase      = false;
-    double velocity          = 0.0;
+    number velocity          = 0.0;
 
   public:
     SimulationUnidirectionalHeatTransfer(std::string    parameter_file,

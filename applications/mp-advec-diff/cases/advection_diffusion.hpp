@@ -29,8 +29,6 @@
 
 namespace MeltPoolDG::Simulation::AdvectionDiffusion
 {
-  using namespace dealii;
-
   BETTER_ENUM(LevelSetType, char, level_set, smooth_heaviside, heaviside, signed_distance)
 
   static bool inflow_outflow_bc = false;
@@ -38,23 +36,23 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
   /*
    * this function specifies the initial field of the level set equation
    */
-  template <int dim>
-  class InitialLevelSetField : public Function<dim>
+  template <int dim, typename number>
+  class InitialLevelSetField : public Function<dim, number>
   {
   public:
     InitialLevelSetField(const LevelSetType level_set_type = LevelSetType::level_set,
-                         const double       eps            = 0.0)
+                         const number       eps            = 0.0)
       : Function<dim>()
-      , distance_sphere(dim == 1   ? Point<dim>(0.0) :
-                        (dim == 2) ? Point<dim>(0.0, 0.5) :
-                                     Point<dim>(0, 0, 0.5),
+      , distance_sphere(dim == 1   ? Point<dim, number>(0.0) :
+                        (dim == 2) ? Point<dim, number>(0.0, 0.5) :
+                                     Point<dim, number>(0, 0, 0.5),
                         0.25)
       , level_set_type(level_set_type)
       , eps(eps)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       const auto signed_distance = -distance_sphere.value(p);
 
@@ -79,24 +77,24 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
   private:
     const Functions::SignedDistance::Sphere<dim> distance_sphere;
     const LevelSetType                           level_set_type;
-    const double                                 eps;
+    const number                                 eps;
   };
 
-  template <int dim>
-  class PrescribedVelocityField : public Function<dim>
+  template <int dim, typename number>
+  class PrescribedVelocityField : public Function<dim, number>
   {
   public:
     PrescribedVelocityField()
       : Function<dim>(dim)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int component) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int component) const override
     {
       Tensor<1, dim> value_;
 
-      const double x = p[0];
-      const double y = p[dim - 1];
+      const number x = p[0];
+      const number y = p[dim - 1];
 
       value_[0]       = 4 * y;
       value_[dim - 1] = -4 * x;
@@ -109,12 +107,12 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
    *      This class collects all relevant input data for the level set simulation
    */
 
-  template <int dim>
-  class SimulationAdvec : public LevelSet::AdvectionDiffusionCase<dim>
+  template <int dim, typename number>
+  class SimulationAdvec : public LevelSet::AdvectionDiffusionCase<dim, number>
   {
   public:
     SimulationAdvec(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : LevelSet::AdvectionDiffusionCase<dim>(parameter_file, mpi_communicator)
+      : LevelSet::AdvectionDiffusionCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -190,7 +188,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
             for (const auto &face : cell->face_iterators())
               if ((face->at_boundary()))
                 {
-                  const double half_line = (right_domain + left_domain) / 2;
+                  const number half_line = (right_domain + left_domain) / 2;
 
                   if (face->center()[0] == left_domain && face->center()[dim - 1] >= half_line)
                     face->set_boundary_id(inflow_bc);
@@ -216,11 +214,11 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
     set_field_conditions() final
     {
       this->attach_initial_condition(
-        std::make_shared<InitialLevelSetField<dim>>(
+        std::make_shared<InitialLevelSetField<dim, number>>(
           level_set_type,
           0.5 * dealii::GridTools::minimal_cell_diameter(*this->triangulation) / std::sqrt(dim)),
         "advection_diffusion");
-      this->attach_field_function(std::make_shared<PrescribedVelocityField<dim>>(),
+      this->attach_field_function(std::make_shared<PrescribedVelocityField<dim, number>>(),
                                   "prescribed_velocity",
                                   "advection_diffusion");
     }
@@ -248,7 +246,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const final
+    do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const final
     {
       dealii::ConditionalOStream pcout(std::cout,
                                        Utilities::MPI::this_mpi_process(this->mpi_communicator) ==
@@ -273,8 +271,8 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
     }
 
   private:
-    const double left_domain    = -1.0;
-    const double right_domain   = 1.0;
+    const number left_domain    = -1.0;
+    const number right_domain   = 1.0;
     LevelSetType level_set_type = LevelSetType::level_set;
   };
 } // namespace MeltPoolDG::Simulation::AdvectionDiffusion

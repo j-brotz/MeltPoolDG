@@ -17,7 +17,7 @@
 
 namespace MeltPoolDG::RadiativeTransport
 {
-  template <typename number = double>
+  template <typename number>
   struct RadiativeTransportCaseParameters : public ParametersBase
   {
   protected:
@@ -57,14 +57,14 @@ namespace MeltPoolDG::RadiativeTransport
     Profiling::ProfilingData<number> profiling;
   };
 
-  template <int dim>
-  class RadiativeTransportCase : public SimulationCaseBase<dim>
+  template <int dim, typename number>
+  class RadiativeTransportCase : public SimulationCaseBase<dim, number>
   {
   public:
-    RadiativeTransportCaseParameters<double> parameters;
+    RadiativeTransportCaseParameters<number> parameters;
 
     RadiativeTransportCase(const std::string &parameter_file_in, MPI_Comm mpi_communicator_in)
-      : SimulationCaseBase<dim>(parameter_file_in, mpi_communicator_in)
+      : SimulationCaseBase<dim, number>(parameter_file_in, mpi_communicator_in)
     {
       dealii::ParameterHandler prm;
       parameters.process_parameters_file(prm, parameter_file_in);

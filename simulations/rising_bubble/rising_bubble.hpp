@@ -52,12 +52,12 @@ namespace MeltPoolDG
        *      This class collects all relevant input data for the level set simulation
        */
 
-      template <int dim>
-      class SimulationRisingBubble : public MeltPoolCase<dim>
+      template <int dim, typename number>
+      class SimulationRisingBubble : public MeltPoolCase<dim, number>
       {
       public:
         SimulationRisingBubble(std::string parameter_file, const MPI_Comm mpi_communicator)
-          : MeltPoolCase<dim>(parameter_file, mpi_communicator)
+          : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
         {}
 
         void

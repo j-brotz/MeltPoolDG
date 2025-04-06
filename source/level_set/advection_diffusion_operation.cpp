@@ -43,8 +43,9 @@ namespace MeltPoolDG::LevelSet
                                 2U /*TODO: include time integration scheme*/))
   {
     this->advec_diff_data = advec_diff_data_in;
-    preconditioner = make_preconditioner<dim, AdvectionDiffusionOperator<dim, number>, VectorType>(
-      this->advec_diff_data.linear_solver.preconditioner_type, advec_diff_operator.get());
+    preconditioner =
+      make_preconditioner<dim, number, AdvectionDiffusionOperator<dim, number>, VectorType>(
+        this->advec_diff_data.linear_solver.preconditioner_type, advec_diff_operator.get());
   }
 
   template <int dim, typename number>
@@ -513,8 +514,9 @@ namespace MeltPoolDG::LevelSet
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.
      */
     advec_diff_operator->reinit();
-    preconditioner = make_preconditioner<dim, AdvectionDiffusionOperator<dim, number>, VectorType>(
-      this->advec_diff_data.linear_solver.preconditioner_type, advec_diff_operator.get());
+    preconditioner =
+      make_preconditioner<dim, number, AdvectionDiffusionOperator<dim, number>, VectorType>(
+        this->advec_diff_data.linear_solver.preconditioner_type, advec_diff_operator.get());
     preconditioner.reinit(scratch_data, advec_diff_dof_idx);
   }
 

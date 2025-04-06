@@ -157,13 +157,13 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
    *      This class collects all relevant input data for the level set simulation
    */
 
-  template <int dim>
-  class SimulationThermoCapillaryTwoDroplets : public MeltPoolCase<dim>
+  template <int dim, typename number>
+  class SimulationThermoCapillaryTwoDroplets : public MeltPoolCase<dim, number>
   {
   public:
     SimulationThermoCapillaryTwoDroplets(std::string    parameter_file,
                                          const MPI_Comm mpi_communicator)
-      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
     void

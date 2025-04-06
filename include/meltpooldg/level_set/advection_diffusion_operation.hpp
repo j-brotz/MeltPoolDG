@@ -119,7 +119,7 @@ namespace MeltPoolDG::LevelSet
      */
     VectorType solution_advected_field_extrapolated;
 
-    Preconditioner<dim, VectorType> preconditioner;
+    Preconditioner<dim, VectorType, number> preconditioner;
 
     VectorType rhs;
     VectorType user_rhs;

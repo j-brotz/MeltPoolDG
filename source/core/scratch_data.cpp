@@ -29,19 +29,21 @@ namespace MeltPoolDG
   {
     this->create_pcout(mpi_communicator);
 
-    timer = std::make_shared<TimerOutput>(pcout[0], TimerOutput::never, TimerOutput::wall_times);
+    timer = std::make_shared<dealii::TimerOutput>(pcout[0],
+                                                  dealii::TimerOutput::never,
+                                                  dealii::TimerOutput::wall_times);
   }
 
   template <int dim, int spacedim, typename number>
   void
   ScratchData<dim, spacedim, number>::reinit(
-    const Mapping<dim, spacedim>                         &mapping,
-    const std::vector<const DoFHandler<dim, spacedim> *> &dof_handler,
-    const std::vector<const AffineConstraints<number> *> &constraint,
-    const std::vector<Quadrature<dim>>                   &quad,
-    const bool                                            enable_boundary_face_loops,
-    const bool                                            enable_inner_face_loops,
-    const bool                                            enable_normal_vector_update)
+    const dealii::Mapping<dim, spacedim>                         &mapping,
+    const std::vector<const dealii::DoFHandler<dim, spacedim> *> &dof_handler,
+    const std::vector<const dealii::AffineConstraints<number> *> &constraint,
+    const std::vector<dealii::Quadrature<dim>>                   &quad,
+    const bool                                                    enable_boundary_face_loops,
+    const bool                                                    enable_inner_face_loops,
+    const bool                                                    enable_normal_vector_update)
   {
     enable_inner_faces    = enable_inner_face_loops;
     enable_boundary_faces = enable_boundary_face_loops;
@@ -68,7 +70,7 @@ namespace MeltPoolDG
 
   template <int dim, int spacedim, typename number>
   void
-  ScratchData<dim, spacedim, number>::set_mapping(const Mapping<dim, spacedim> &mapping)
+  ScratchData<dim, spacedim, number>::set_mapping(const dealii::Mapping<dim, spacedim> &mapping)
   {
     this->mapping = mapping.clone();
   }
@@ -76,7 +78,7 @@ namespace MeltPoolDG
   template <int dim, int spacedim, typename number>
   void
   ScratchData<dim, spacedim, number>::set_mapping(
-    const std::shared_ptr<Mapping<dim, spacedim>> mapping)
+    const std::shared_ptr<dealii::Mapping<dim, spacedim>> mapping)
   {
     this->mapping = mapping;
   }
@@ -84,7 +86,7 @@ namespace MeltPoolDG
   template <int dim, int spacedim, typename number>
   unsigned int
   ScratchData<dim, spacedim, number>::attach_dof_handler(
-    const DoFHandler<dim, spacedim> &dof_handler)
+    const dealii::DoFHandler<dim, spacedim> &dof_handler)
   {
     this->dof_handler.emplace_back(&dof_handler);
     return this->dof_handler.size() - 1;
@@ -93,7 +95,7 @@ namespace MeltPoolDG
   template <int dim, int spacedim, typename number>
   unsigned int
   ScratchData<dim, spacedim, number>::attach_constraint_matrix(
-    const AffineConstraints<number> &constraint)
+    const dealii::AffineConstraints<number> &constraint)
   {
     this->constraint.emplace_back(&constraint);
     return this->constraint.size() - 1;
@@ -101,9 +103,9 @@ namespace MeltPoolDG
 
   template <int dim, int spacedim, typename number>
   unsigned int
-  ScratchData<dim, spacedim, number>::attach_quadrature(const Quadrature<dim> &quadrature)
+  ScratchData<dim, spacedim, number>::attach_quadrature(const dealii::Quadrature<dim> &quadrature)
   {
-    this->quad.emplace_back(Quadrature<dim>(quadrature));
+    this->quad.emplace_back(dealii::Quadrature<dim>(quadrature));
 
     // determine face quadrature like it is done in MatrixFree
     // https://github.com/dealii/dealii/blob/2946051880b5c674f141397219349fbfa579a6ac/include/deal.II/matrix_free/mapping_info.templates.h#L382-L439
@@ -120,7 +122,7 @@ namespace MeltPoolDG
     else // simplex element
       {
         const auto unique_face_quadratures =
-          internal::MatrixFreeFunctions::get_unique_face_quadratures(quadrature);
+          dealii::internal::MatrixFreeFunctions::get_unique_face_quadratures(quadrature);
 
         // make sure we have not got wedges or pyramids
         AssertDimension(unique_face_quadratures.second.size(), 0);
@@ -145,13 +147,14 @@ namespace MeltPoolDG
     /*
      *  create diameter of the object
      */
-    this->min_diameter = GridTools::minimal_cell_diameter(get_triangulation());
+    this->min_diameter = dealii::GridTools::minimal_cell_diameter(get_triangulation());
 
     /*
      *  compute minimum cell size; this corresponds to the edge length in case of cubic elements
      */
     this->min_cell_size = this->min_diameter / std::sqrt(dim);
-    this->max_cell_size = GridTools::maximal_cell_diameter(get_triangulation()) / std::sqrt(dim);
+    this->max_cell_size =
+      dealii::GridTools::maximal_cell_diameter(get_triangulation()) / std::sqrt(dim);
 
     int dof_idx = 0;
     for (const auto &dof : dof_handler)
@@ -161,14 +164,14 @@ namespace MeltPoolDG
          */
         this->locally_owned_dofs.push_back(dof->locally_owned_dofs());
 
-        IndexSet locally_relevant_dofs_temp;
-        DoFTools::extract_locally_relevant_dofs(*dof, locally_relevant_dofs_temp);
+        dealii::IndexSet locally_relevant_dofs_temp;
+        dealii::DoFTools::extract_locally_relevant_dofs(*dof, locally_relevant_dofs_temp);
         this->locally_relevant_dofs.push_back(locally_relevant_dofs_temp);
 
-        this->partitioner.push_back(
-          std::make_shared<Utilities::MPI::Partitioner>(this->get_locally_owned_dofs(dof_idx),
-                                                        this->get_locally_relevant_dofs(dof_idx),
-                                                        this->get_mpi_comm(dof_idx)));
+        this->partitioner.push_back(std::make_shared<dealii::Utilities::MPI::Partitioner>(
+          this->get_locally_owned_dofs(dof_idx),
+          this->get_locally_relevant_dofs(dof_idx),
+          this->get_mpi_comm(dof_idx)));
         dof_idx += 1;
       }
   }
@@ -184,7 +187,7 @@ namespace MeltPoolDG
     enable_boundary_faces = enable_boundary_face_loops;
 
     AssertThrow(this->constraint.size() == this->dof_handler.size(),
-                ExcMessage(
+                dealii::ExcMessage(
                   "The number of DoFHandlers and AffineConstraints attached to ScratchData<dim>"
                   " must be equal."));
 
@@ -192,14 +195,16 @@ namespace MeltPoolDG
       {
         this->matrix_free.clear();
 
-        typename MatrixFree<dim, double, VectorizedArrayType>::AdditionalData additional_data;
+        typename dealii::MatrixFree<dim, number, VectorizedArrayType>::AdditionalData
+          additional_data;
 
         additional_data.overlap_communication_computation = false;
 
-        UpdateFlags update_flags =
-          update_values | update_gradients | update_JxW_values | update_quadrature_points;
+        dealii::UpdateFlags update_flags = dealii::update_values | dealii::update_gradients |
+                                           dealii::update_JxW_values |
+                                           dealii::update_quadrature_points;
         if (enable_normal_vector_update)
-          update_flags = update_flags | update_normal_vectors;
+          update_flags = update_flags | dealii::update_normal_vectors;
 
         additional_data.mapping_update_flags = update_flags;
 
@@ -210,7 +215,7 @@ namespace MeltPoolDG
                                 "ScratchData",
                                 0);
             additional_data.mapping_update_flags_inner_faces =
-              enable_inner_face_hessians_update == true ? update_flags | update_hessians :
+              enable_inner_face_hessians_update == true ? update_flags | dealii::update_hessians :
                                                           update_flags;
           }
 
@@ -244,7 +249,7 @@ namespace MeltPoolDG
                   sqrt(dim);
 
                 Assert(cell_size[v] > 0.0,
-                       ExcMessage("The calculated diameter should be larger than zero."));
+                       dealii::ExcMessage("The calculated diameter should be larger than zero."));
               }
             this->cell_sizes[cell] = cell_size;
           }
@@ -318,103 +323,103 @@ namespace MeltPoolDG
   {
     if (not rpe.contains(dof_idx))
       rpe.insert({dof_idx,
-                  std::make_shared<Utilities::MPI::RemotePointEvaluation<dim, dim>>(
+                  std::make_shared<dealii::Utilities::MPI::RemotePointEvaluation<dim, dim>>(
                     1e-6 /*tolerance*/, true /*unique mapping*/, 0, marked_vertices)});
   }
 
   template <int dim, int spacedim, typename number>
-  const Mapping<dim, spacedim> &
+  const dealii::Mapping<dim, spacedim> &
   ScratchData<dim, spacedim, number>::get_mapping() const
   {
     return *this->mapping;
   }
 
   template <int dim, int spacedim, typename number>
-  const FiniteElement<dim, spacedim> &
+  const dealii::FiniteElement<dim, spacedim> &
   ScratchData<dim, spacedim, number>::get_fe(const unsigned int fe_index) const
   {
     return this->dof_handler[fe_index]->get_fe(0);
   }
 
   template <int dim, int spacedim, typename number>
-  const AffineConstraints<number> &
+  const dealii::AffineConstraints<number> &
   ScratchData<dim, spacedim, number>::get_constraint(const unsigned int constraint_index) const
   {
     return *this->constraint[constraint_index];
   }
 
   template <int dim, int spacedim, typename number>
-  AffineConstraints<number> &
+  dealii::AffineConstraints<number> &
   ScratchData<dim, spacedim, number>::get_constraint(const unsigned int constraint_index)
   {
-    return const_cast<AffineConstraints<number> &>(*this->constraint[constraint_index]);
+    return const_cast<dealii::AffineConstraints<number> &>(*this->constraint[constraint_index]);
   }
 
   template <int dim, int spacedim, typename number>
-  const std::vector<const AffineConstraints<number> *> &
+  const std::vector<const dealii::AffineConstraints<number> *> &
   ScratchData<dim, spacedim, number>::get_constraints() const
   {
     return this->constraint;
   }
 
   template <int dim, int spacedim, typename number>
-  const Quadrature<dim> &
+  const dealii::Quadrature<dim> &
   ScratchData<dim, spacedim, number>::get_quadrature(const unsigned int quad_index) const
   {
     return this->quad[quad_index];
   }
 
   template <int dim, int spacedim, typename number>
-  const std::vector<Quadrature<dim>> &
+  const std::vector<dealii::Quadrature<dim>> &
   ScratchData<dim, spacedim, number>::get_quadratures() const
   {
     return this->quad;
   }
 
   template <int dim, int spacedim, typename number>
-  const Quadrature<dim - 1> &
+  const dealii::Quadrature<dim - 1> &
   ScratchData<dim, spacedim, number>::get_face_quadrature(const unsigned int quad_index) const
   {
     return this->face_quad[quad_index];
   }
 
   template <int dim, int spacedim, typename number>
-  const std::vector<Quadrature<dim - 1>> &
+  const std::vector<dealii::Quadrature<dim - 1>> &
   ScratchData<dim, spacedim, number>::get_face_quadratures() const
   {
     return this->face_quad;
   }
 
   template <int dim, int spacedim, typename number>
-  MatrixFree<dim, number, VectorizedArray<number>> &
+  dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &
   ScratchData<dim, spacedim, number>::get_matrix_free()
   {
     return this->matrix_free;
   }
 
   template <int dim, int spacedim, typename number>
-  const MatrixFree<dim, number, VectorizedArray<number>> &
+  const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &
   ScratchData<dim, spacedim, number>::get_matrix_free() const
   {
     return this->matrix_free;
   }
 
   template <int dim, int spacedim, typename number>
-  const DoFHandler<dim, spacedim> &
+  const dealii::DoFHandler<dim, spacedim> &
   ScratchData<dim, spacedim, number>::get_dof_handler(const unsigned int dof_idx) const
   {
     return *this->dof_handler[dof_idx];
   }
 
   template <int dim, int spacedim, typename number>
-  const std::vector<const DoFHandler<dim, spacedim> *> &
+  const std::vector<const dealii::DoFHandler<dim, spacedim> *> &
   ScratchData<dim, spacedim, number>::get_dof_handlers() const
   {
     return this->dof_handler;
   }
 
   template <int dim, int spacedim, typename number>
-  const Triangulation<dim> &
+  const dealii::Triangulation<dim> &
   ScratchData<dim, spacedim, number>::get_triangulation(const unsigned int dof_idx) const
   {
     return this->get_dof_handler(dof_idx).get_triangulation();
@@ -442,35 +447,35 @@ namespace MeltPoolDG
   }
 
   template <int dim, int spacedim, typename number>
-  const double &
+  const number &
   ScratchData<dim, spacedim, number>::get_min_cell_size() const
   {
     return this->min_cell_size;
   }
 
   template <int dim, int spacedim, typename number>
-  double
+  number
   ScratchData<dim, spacedim, number>::get_min_cell_size(const unsigned int dof_idx) const
   {
     return is_FE_Q_iso_Q_1(dof_idx) ? min_cell_size : min_cell_size / get_degree(dof_idx);
   }
 
   template <int dim, int spacedim, typename number>
-  const double &
+  const number &
   ScratchData<dim, spacedim, number>::get_max_cell_size() const
   {
     return this->max_cell_size;
   }
 
   template <int dim, int spacedim, typename number>
-  const double &
+  const number &
   ScratchData<dim, spacedim, number>::get_min_diameter() const
   {
     return this->min_diameter;
   }
 
   template <int dim, int spacedim, typename number>
-  const AlignedVector<VectorizedArray<double>> &
+  const dealii::AlignedVector<dealii::VectorizedArray<number>> &
   ScratchData<dim, spacedim, number>::get_cell_sizes() const
   {
     return this->cell_sizes;
@@ -484,21 +489,21 @@ namespace MeltPoolDG
   }
 
   template <int dim, int spacedim, typename number>
-  const IndexSet &
+  const dealii::IndexSet &
   ScratchData<dim, spacedim, number>::get_locally_owned_dofs(const unsigned int dof_idx) const
   {
     return this->locally_owned_dofs[dof_idx];
   }
 
   template <int dim, int spacedim, typename number>
-  const IndexSet &
+  const dealii::IndexSet &
   ScratchData<dim, spacedim, number>::get_locally_relevant_dofs(const unsigned int dof_idx) const
   {
     return this->locally_relevant_dofs[dof_idx];
   }
 
   template <int dim, int spacedim, typename number>
-  const std::shared_ptr<Utilities::MPI::Partitioner> &
+  const std::shared_ptr<dealii::Utilities::MPI::Partitioner> &
   ScratchData<dim, spacedim, number>::get_partitioner(const unsigned int dof_idx) const
   {
     return this->partitioner[dof_idx];
@@ -563,14 +568,14 @@ namespace MeltPoolDG
   }
 
   template <int dim, int spacedim, typename number>
-  TimerOutput &
+  dealii::TimerOutput &
   ScratchData<dim, spacedim, number>::get_timer() const
   {
     return *timer;
   }
 
   template <int dim, int spacedim, typename number>
-  Utilities::MPI::RemotePointEvaluation<dim, dim> &
+  dealii::Utilities::MPI::RemotePointEvaluation<dim, dim> &
   ScratchData<dim, spacedim, number>::get_remote_point_evaluation(const unsigned int dof_idx) const
   {
     AssertThrow(rpe.contains(dof_idx),
@@ -590,7 +595,8 @@ namespace MeltPoolDG
     for (unsigned int i = 0; i <= 3; ++i)
       this->pcout.push_back(
         dealii::ConditionalOStream(std::cout,
-                                   Utilities::MPI::this_mpi_process(mpi_communicator) == 0 and
+                                   dealii::Utilities::MPI::this_mpi_process(mpi_communicator) ==
+                                       0 and
                                      i <= verbosity_level and verbosity_level > 0));
   }
 

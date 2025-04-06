@@ -46,10 +46,10 @@ namespace MeltPoolDG::Flow
      * @param flow_dof_idx Index of the used dof handler in @p scratch_data_in.
      * @param flow_quad_idx Index of the used quadrature object in @p scratch_data_in.
      */
-    DGCompressibleFlowOperation(const ScratchData<dim>             &scratch_data,
-                                const CompressibleFlowData<number> &flow_data,
-                                unsigned int                        flow_dof_idx  = 0,
-                                unsigned int                        flow_quad_idx = 0);
+    DGCompressibleFlowOperation(const ScratchData<dim, dim, number> &scratch_data,
+                                const CompressibleFlowData<number>  &flow_data,
+                                unsigned int                         flow_dof_idx  = 0,
+                                unsigned int                         flow_quad_idx = 0);
 
     /**
      * Set up the required internal data structures. After a call to this function the solve()
@@ -85,8 +85,8 @@ namespace MeltPoolDG::Flow
      * CompressibleFlowBoundaryConditions class.
      */
     void
-    set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
-                            const std::string                              &operation_name);
+    set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim, number>> &simulation_case,
+                            const std::string                                      &operation_name);
 
     /**
      * Set a body force, e.g. gravity, specified by the passed function.

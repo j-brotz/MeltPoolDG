@@ -66,7 +66,7 @@ namespace MeltPoolDG::Flow
      * @param level_set_in level-set dof vector.
      */
     CutDGCompressibleFlowOperation(
-      const ScratchData<dim>                                     &scratch_data_in,
+      const ScratchData<dim, dim, number>                        &scratch_data_in,
       const CompressibleFlowData<number>                         &comp_flow_data_in,
       const TimeIterator<number>                                 &time_iterator_in,
       const std::function<void(const dealii::DoFHandler<dim> &)> &reinit_matrix_free_in,
@@ -154,8 +154,8 @@ namespace MeltPoolDG::Flow
      * CompressibleFlowBoundaryConditions object.
      */
     void
-    set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
-                            const std::string                              &operation_name);
+    set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim, number>> &simulation_case,
+                            const std::string                                      &operation_name);
 
     /**
      * Getter functions.

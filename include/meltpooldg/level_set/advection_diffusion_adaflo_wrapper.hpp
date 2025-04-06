@@ -34,9 +34,9 @@ namespace MeltPoolDG::LevelSet
                                       const int advec_diff_dirichlet_dof_idx,
                                       const int advec_diff_quad_idx,
                                       const int velocity_dof_idx,
-                                      const TimeSteppingData<number>       &time_stepping,
-                                      const AdvectionDiffusionData<number> &ls,
-                                      const BoundaryConditionManager<dim>  &bc);
+                                      const TimeSteppingData<number>              &time_stepping,
+                                      const AdvectionDiffusionData<number>        &ls,
+                                      const BoundaryConditionManager<dim, number> &bc);
 
     void
     reinit() override;

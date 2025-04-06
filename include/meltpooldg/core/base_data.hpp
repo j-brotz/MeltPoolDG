@@ -12,6 +12,7 @@ namespace MeltPoolDG
     std::string       case_name           = "not_initialized";
     std::string       problem_name        = "not_initialized";
     unsigned int      dimension           = 2;
+    std::string       number              = "double";
     unsigned int      global_refinements  = 1;
     bool              do_print_parameters = true;
     unsigned int      verbosity_level     = 1;

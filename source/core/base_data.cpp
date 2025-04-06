@@ -21,6 +21,11 @@ namespace MeltPoolDG
                         problem_name,
                         "Sets the base name for the problem that should be solved.");
       prm.add_parameter("dimension", dimension, "Defines the dimension of the problem");
+      prm.add_parameter("number",
+                        number,
+                        "Floating point number format. Currently, only 'double' is "
+                        "explicitely instantiated.",
+                        dealii::Patterns::Selection("double"));
       prm.add_parameter("global refinements",
                         global_refinements,
                         "Defines the number of initial global refinements");
@@ -55,9 +60,9 @@ namespace MeltPoolDG
       dealii::ExcMessage(
         "n_subdivisions for the level set is not supported for your requested problem_type."));
 
-    AssertThrow(
-      (fe.type != FiniteElementType::FE_DGQ),
-      dealii::ExcMessage(
-        "Discontinous Galerkin finite elements are only supported specifically for the levelset advection and reinitilization"));
+    AssertThrow((fe.type != FiniteElementType::FE_DGQ),
+                dealii::ExcMessage(
+                  "Discontinous Galerkin finite elements are only supported specifically for the "
+                  "levelset advection and reinitilization"));
   }
 } // namespace MeltPoolDG

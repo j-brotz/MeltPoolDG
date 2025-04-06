@@ -21,9 +21,9 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationProblem<dim>::run()
+  ReinitializationProblem<dim, number>::run()
   {
     initialize();
     bool first_time_step = true;
@@ -34,17 +34,17 @@ namespace MeltPoolDG::LevelSet
         // of the DG case
         if (first_time_step && param.reinit.fe.type == FiniteElementType::FE_DGQ)
           {
-            time_iterator->set_current_time_increment(0.0, std::numeric_limits<double>::max());
+            time_iterator->set_current_time_increment(0.0, std::numeric_limits<number>::max());
             first_time_step = false;
           }
         else
           {
             if (param.reinit.reinitilization_DG_specific_data.do_CFL_based_time_stepping)
               {
-                double const time_step = reinit_operation->compute_CFL_based_timestep();
+                number const time_step = reinit_operation->compute_CFL_based_timestep();
 
                 time_iterator->set_current_time_increment(time_step,
-                                                          std::numeric_limits<double>::max());
+                                                          std::numeric_limits<number>::max());
               }
           }
 
@@ -63,13 +63,14 @@ namespace MeltPoolDG::LevelSet
     Journal::print_end(scratch_data->get_pcout(1));
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationProblem<dim>::initialize()
+  ReinitializationProblem<dim, number>::initialize()
   {
     // setup scratch data
     {
-      scratch_data = std::make_shared<ScratchData<dim>>(simulation_case->mpi_communicator,
+      scratch_data =
+        std::make_shared<ScratchData<dim, dim, number>>(simulation_case->mpi_communicator,
                                                         param.base.verbosity_level,
                                                         param.reinit.linear_solver.do_matrix_free);
 
@@ -92,7 +93,7 @@ namespace MeltPoolDG::LevelSet
 
     // initialize postprocessor
     post_processor =
-      std::make_unique<Postprocessor<dim, double>>(scratch_data->get_mpi_comm(reinit_dof_idx),
+      std::make_unique<Postprocessor<dim, number>>(scratch_data->get_mpi_comm(reinit_dof_idx),
                                                    param.output,
                                                    param.time_stepping,
                                                    scratch_data->get_mapping(),
@@ -100,14 +101,14 @@ namespace MeltPoolDG::LevelSet
                                                    scratch_data->get_pcout(2));
 
     // initialize the time iterator
-    time_iterator = std::make_unique<TimeIterator<double>>(param.time_stepping);
+    time_iterator = std::make_unique<TimeIterator<number>>(param.time_stepping);
 
     // initialize the reinitialization operation class
     if (param.reinit.implementation == "meltpooldg")
       {
         if (param.reinit.fe.type != FiniteElementType::FE_DGQ)
           {
-            reinit_operation = std::make_unique<ReinitializationOperation<dim, double>>(
+            reinit_operation = std::make_unique<ReinitializationOperation<dim, number>>(
               *scratch_data,
               param.reinit,
               param.normal_vec,
@@ -121,7 +122,7 @@ namespace MeltPoolDG::LevelSet
         else
           {
             reinit_operation =
-              std::make_unique<ReinitializationDGOperation<dim, double>>(*scratch_data,
+              std::make_unique<ReinitializationDGOperation<dim, number>>(*scratch_data,
                                                                          param.reinit,
                                                                          *time_iterator,
                                                                          reinit_dof_idx,
@@ -135,7 +136,7 @@ namespace MeltPoolDG::LevelSet
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (param.reinit.implementation == "adaflo")
       {
-        reinit_operation = std::make_unique<ReinitializationOperationAdaflo<dim, double>>(
+        reinit_operation = std::make_unique<ReinitializationOperationAdaflo<dim, number>>(
           *scratch_data,
           *time_iterator,
           reinit_dof_idx,
@@ -162,9 +163,9 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationProblem<dim>::setup_dof_system()
+  ReinitializationProblem<dim, number>::setup_dof_system()
   {
     // setup DoFHandler
     FiniteElementUtils::distribute_dofs<dim, 1>(param.reinit.fe, dof_handler);
@@ -191,9 +192,9 @@ namespace MeltPoolDG::LevelSet
       reinit_operation->reinit();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationProblem<dim>::refine_mesh()
+  ReinitializationProblem<dim, number>::refine_mesh()
   {
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       Vector<float> estimated_error_per_cell(simulation_case->triangulation->n_active_cells());
@@ -246,18 +247,19 @@ namespace MeltPoolDG::LevelSet
     reinit_operation->set_artificial_diffusitivity();
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  ReinitializationProblem<dim>::output_results(const unsigned int time_step, const double time)
+  ReinitializationProblem<dim, number>::output_results(const unsigned int time_step,
+                                                       const number       time)
   {
     if (!post_processor->is_output_timestep(time_step, time) &&
         !param.output.do_user_defined_postprocessing)
       return;
-    const auto attach_output_vectors = [&](GenericDataOut<dim, double> &data_out) {
+    const auto attach_output_vectors = [&](GenericDataOut<dim, number> &data_out) {
       reinit_operation->attach_output_vectors(data_out);
     };
 
-    GenericDataOut<dim, double> generic_data_out(scratch_data->get_mapping(),
+    GenericDataOut<dim, number> generic_data_out(scratch_data->get_mapping(),
                                                  time,
                                                  param.output.output_variables);
     attach_output_vectors(generic_data_out);
@@ -271,9 +273,9 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template class ReinitializationProblem<1>;
-  template class ReinitializationProblem<2>;
-  template class ReinitializationProblem<3>;
+  template class ReinitializationProblem<1, double>;
+  template class ReinitializationProblem<2, double>;
+  template class ReinitializationProblem<3, double>;
 } // namespace MeltPoolDG::LevelSet
 
 int

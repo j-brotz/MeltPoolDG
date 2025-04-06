@@ -140,12 +140,12 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
    *      This class collects all relevant input data for the level set simulation
    */
 
-  template <int dim>
-  class SimulationThermoCapillaryDroplet : public MeltPoolCase<dim>
+  template <int dim, typename number>
+  class SimulationThermoCapillaryDroplet : public MeltPoolCase<dim, number>
   {
   public:
     SimulationThermoCapillaryDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
     {
       if (this->parameters.output.do_user_defined_postprocessing and
           dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0)

@@ -95,6 +95,6 @@ namespace MeltPoolDG::RadiativeTransport
                         const bool         zero_out = true) const;
 
   private:
-    Preconditioner<dim, VectorType> preconditioner;
+    Preconditioner<dim, VectorType, number> preconditioner;
   };
 } // namespace MeltPoolDG::RadiativeTransport

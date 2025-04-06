@@ -96,8 +96,8 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     const double eps;
   };
 
-  template <int dim>
-  class SimulationMeltFrontPropagation : public MeltPoolCase<dim>
+  template <int dim, typename number>
+  class SimulationMeltFrontPropagation : public MeltPoolCase<dim, number>
   {
   private:
     double x_min        = 0.0;
@@ -111,7 +111,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
 
   public:
     SimulationMeltFrontPropagation(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
     bool

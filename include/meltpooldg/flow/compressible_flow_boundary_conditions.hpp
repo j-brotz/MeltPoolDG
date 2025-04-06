@@ -59,8 +59,8 @@ namespace MeltPoolDG::Flow
      * @param operation_name String for the name of the considered operation.
      */
     void
-    set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
-                            const std::string                              &operation_name)
+    set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim, number>> &simulation_case,
+                            const std::string                                      &operation_name)
     {
       set_boundary_condition(MeltPoolDG::Flow::CompressibleBoundaryConditionType::inflow,
                              simulation_case->get_boundary_condition("inflow", operation_name));

@@ -83,12 +83,12 @@ namespace MeltPoolDG::Simulation::MovingDroplet
     const Function<dim> &level_set;
   };
 
-  template <int dim>
-  class SimulationMovingDroplet : public MeltPoolCase<dim>
+  template <int dim, typename number>
+  class SimulationMovingDroplet : public MeltPoolCase<dim, number>
   {
   public:
     SimulationMovingDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
     {
       AssertDimension(dim, 2);
     }

@@ -29,7 +29,7 @@ namespace MeltPoolDG::Heat
     distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const = 0;
 
     virtual void
-    setup_constraints(ScratchData<dim> &scratch_data) const = 0;
+    setup_constraints(ScratchData<dim, dim, number> &scratch_data) const = 0;
 
     virtual void
     set_initial_condition(const dealii::Function<dim> &initial_temperature) = 0;

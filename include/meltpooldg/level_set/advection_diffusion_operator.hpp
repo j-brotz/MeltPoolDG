@@ -101,26 +101,27 @@ namespace MeltPoolDG::LevelSet
     do_post_vmult(VectorType &dst, [[maybe_unused]] const VectorType &src_in) const;
 
     void
-    post_system_matrix_compute(TrilinosWrappers::SparseMatrix &system_matrix) const;
+    post_system_matrix_compute(dealii::TrilinosWrappers::SparseMatrix &system_matrix) const;
 
 
   private:
     void
-    tangent_local_cell_operation(FECellIntegrator<dim, 1, number>   &advected_field,
-                                 FECellIntegrator<dim, dim, number> &velocity_vals,
-                                 const bool                          do_reinit_cells) const;
+    tangent_local_cell_operation(dealii::FECellIntegrator<dim, 1, number>   &advected_field,
+                                 dealii::FECellIntegrator<dim, dim, number> &velocity_vals,
+                                 const bool                                  do_reinit_cells) const;
 
     void
-    compute_stabilization_parameter(const FECellIntegrator<dim, dim, number> &velocity_vals) const;
+    compute_stabilization_parameter(
+      const dealii::FECellIntegrator<dim, dim, number> &velocity_vals) const;
 
-    const ScratchData<dim, dim, number>                   &scratch_data;
-    const VectorType                                      &advection_velocity;
-    const AdvectionDiffusionData<number>                  &data;
-    const unsigned int                                     velocity_dof_idx;
-    const unsigned int                                     advec_diff_quad_idx;
-    number                                                 theta;
-    mutable AlignedVector<dealii::VectorizedArray<number>> stab_param;
-    mutable bool                                           do_update_stab_param = true;
+    const ScratchData<dim, dim, number>                           &scratch_data;
+    const VectorType                                              &advection_velocity;
+    const AdvectionDiffusionData<number>                          &data;
+    const unsigned int                                             velocity_dof_idx;
+    const unsigned int                                             advec_diff_quad_idx;
+    number                                                         theta;
+    mutable dealii::AlignedVector<dealii::VectorizedArray<number>> stab_param;
+    mutable bool                                                   do_update_stab_param = true;
 
     mutable bool do_pre_post = false;
 

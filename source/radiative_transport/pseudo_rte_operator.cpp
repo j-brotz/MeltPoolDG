@@ -9,6 +9,8 @@
 
 namespace MeltPoolDG::RadiativeTransport
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   PseudoRTEOperator<dim, number>::PseudoRTEOperator(
     const ScratchData<dim, dim, number>  &scratch_data_in,

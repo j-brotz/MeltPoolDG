@@ -122,12 +122,12 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
     const Point<dim> center;
   };
 
-  template <int dim>
-  class SimulationEvaporatingShell : public MeltPoolCase<dim>
+  template <int dim, typename number>
+  class SimulationEvaporatingShell : public MeltPoolCase<dim, number>
   {
   public:
     SimulationEvaporatingShell(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
     bool

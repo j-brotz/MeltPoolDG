@@ -101,6 +101,6 @@ namespace MeltPoolDG::LevelSet
     /*
      * Preconditioner for the curvature operator
      */
-    Preconditioner<dim, BlockVectorType> preconditioner;
+    Preconditioner<dim, BlockVectorType, number> preconditioner;
   };
 } // namespace MeltPoolDG::LevelSet

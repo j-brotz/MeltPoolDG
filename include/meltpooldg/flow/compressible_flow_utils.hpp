@@ -108,10 +108,10 @@ namespace MeltPoolDG::Flow
      * @param dof_idx_in Relevant dof index of the flow solver in the scratch data object.
      * @param quad_idx_in Relevant quadrature index of the flow solver in the scratch data object.
      */
-    CompressibleFlowScratchData(const CompressibleFlowData<number> &flow_data_in,
-                                const ScratchData<dim>             &scratch_data_in,
-                                const unsigned int                  dof_idx_in,
-                                const unsigned int                  quad_idx_in)
+    CompressibleFlowScratchData(const CompressibleFlowData<number>  &flow_data_in,
+                                const ScratchData<dim, dim, number> &scratch_data_in,
+                                const unsigned int                   dof_idx_in,
+                                const unsigned int                   quad_idx_in)
       : flow_data(flow_data_in)
       , scratch_data(scratch_data_in)
       , dof_idx(dof_idx_in)
@@ -144,7 +144,7 @@ namespace MeltPoolDG::Flow
 
     const CompressibleFlowData<number> flow_data;
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim, dim, number> &scratch_data;
 
     const unsigned int dof_idx  = 0;
     const unsigned int quad_idx = 0;

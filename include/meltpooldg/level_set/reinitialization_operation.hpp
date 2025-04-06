@@ -143,7 +143,7 @@ namespace MeltPoolDG::LevelSet
     VectorType delta_psi_extrapolated;
     VectorType rhs;
 
-    Preconditioner<dim, VectorType> preconditioner;
+    Preconditioner<dim, VectorType, number> preconditioner;
 
     // maximum change of the level set due to the current reinitialization step
     number max_change_level_set = std::numeric_limits<number>::max();

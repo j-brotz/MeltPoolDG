@@ -8,5 +8,6 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
   MELTPOOLDG_REGISTER_CASE(Multiphase::CompressibleMultiphaseCase,
                            SimulationStaticTwoPhase,
                            "static_two_phase",
-                           1);
+                           1,
+                           double);
 } // namespace MeltPoolDG::Simulation::CompressibleMultiphase

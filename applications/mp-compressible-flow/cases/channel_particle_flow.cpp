@@ -4,13 +4,15 @@
 
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {
-  // Explicit instantiations for the required dimensions
+  // Explicit instantiations for the required dimensions and floating point number type
   MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
                            SimulationChannelParticleFlow,
                            "channel_particle_flow",
-                           2);
+                           2,
+                           double);
   MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
                            SimulationChannelParticleFlow,
                            "channel_particle_flow",
-                           3);
+                           3,
+                           double);
 } // namespace MeltPoolDG::Simulation::CompressibleFlow

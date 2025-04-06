@@ -24,24 +24,25 @@ namespace MeltPoolDG::Simulation::SolidificationSlab
   static constexpr double T_hat = 253.0;
 
 
-  template <int dim>
-  SimulationSolidificationSlab<dim>::SimulationSolidificationSlab(std::string    parameter_file,
-                                                                  const MPI_Comm mpi_communicator)
-    : Heat::HeatTransferCase<dim>(parameter_file, mpi_communicator)
+  template <int dim, typename number>
+  SimulationSolidificationSlab<dim, number>::SimulationSolidificationSlab(
+    std::string    parameter_file,
+    const MPI_Comm mpi_communicator)
+    : Heat::HeatTransferCase<dim, number>(parameter_file, mpi_communicator)
   {}
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  SimulationSolidificationSlab<dim>::create_spatial_discretization()
+  SimulationSolidificationSlab<dim, number>::create_spatial_discretization()
   {
     if constexpr (dim == 1)
       {
         AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
         this->triangulation = std::make_shared<Triangulation<dim>>();
         // create mesh
-        const Point<1> left(0);
-        const Point<1> right(L);
+        const Point<1, number> left(0);
+        const Point<1, number> right(L);
         GridGenerator::hyper_rectangle(*this->triangulation, left, right);
         this->triangulation->refine_global(this->parameters.base.global_refinements);
       }
@@ -53,8 +54,8 @@ namespace MeltPoolDG::Simulation::SolidificationSlab
         std::vector<unsigned int> refinements(dim, 1);
         refinements[0] = num_el;
         // create mesh
-        const Point<2> left(0, 0);
-        const Point<2> right(L, 1. / num_el);
+        const Point<2, number> left(0, 0);
+        const Point<2, number> right(L, 1. / num_el);
         GridGenerator::subdivided_hyper_rectangle(*this->triangulation, refinements, left, right);
       }
     else if constexpr (dim == 3)
@@ -65,8 +66,8 @@ namespace MeltPoolDG::Simulation::SolidificationSlab
         std::vector<unsigned int> refinements(dim, 1);
         refinements[0] = num_el;
         // create mesh
-        const Point<3> left(0, 0, 0);
-        const Point<3> right(L, 1. / num_el, 1. / num_el);
+        const Point<3, number> left(0, 0, 0);
+        const Point<3, number> right(L, 1. / num_el, 1. / num_el);
         GridGenerator::subdivided_hyper_rectangle(*this->triangulation, refinements, left, right);
       }
     else
@@ -74,9 +75,9 @@ namespace MeltPoolDG::Simulation::SolidificationSlab
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  SimulationSolidificationSlab<dim>::set_boundary_conditions()
+  SimulationSolidificationSlab<dim, number>::set_boundary_conditions()
   {
     /*
      *  create a pair of (boundary_id, dirichlet_function)
@@ -99,9 +100,9 @@ namespace MeltPoolDG::Simulation::SolidificationSlab
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  SimulationSolidificationSlab<dim>::set_field_conditions()
+  SimulationSolidificationSlab<dim, number>::set_field_conditions()
   {
     this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(T_0),
                                    "heat_transfer");
@@ -110,13 +111,16 @@ namespace MeltPoolDG::Simulation::SolidificationSlab
   MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
                            SimulationSolidificationSlab,
                            "solidification_slab",
-                           1);
+                           1,
+                           double);
   MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
                            SimulationSolidificationSlab,
                            "solidification_slab",
-                           2);
+                           2,
+                           double);
   MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
                            SimulationSolidificationSlab,
                            "solidification_slab",
-                           3);
+                           3,
+                           double);
 } // namespace MeltPoolDG::Simulation::SolidificationSlab

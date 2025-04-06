@@ -24,12 +24,12 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
   static double radius      = 0.5;
   static double radius_2    = 0.75;
 
-  template <int dim>
-  class SimulationSpuriousCurrents : public MeltPoolCase<dim>
+  template <int dim, typename number>
+  class SimulationSpuriousCurrents : public MeltPoolCase<dim, number>
   {
   public:
     SimulationSpuriousCurrents(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
     bool

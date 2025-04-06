@@ -22,7 +22,7 @@
 
 namespace MeltPoolDG::Multiphase
 {
-  template <typename number = double>
+  template <typename number>
   struct CompressibleMultiphaseCaseParameters final : public ParametersBase
   {
   protected:
@@ -61,14 +61,14 @@ namespace MeltPoolDG::Multiphase
     Profiling::ProfilingData<number>               profiling;
   };
 
-  template <int dim>
-  class CompressibleMultiphaseCase : public SimulationCaseBase<dim>
+  template <int dim, typename number>
+  class CompressibleMultiphaseCase : public SimulationCaseBase<dim, number>
   {
   public:
-    CompressibleMultiphaseCaseParameters<double> parameters;
+    CompressibleMultiphaseCaseParameters<number> parameters;
 
     CompressibleMultiphaseCase(const std::string &parameter_file_in, MPI_Comm mpi_communicator_in)
-      : SimulationCaseBase<dim>(parameter_file_in, mpi_communicator_in)
+      : SimulationCaseBase<dim, number>(parameter_file_in, mpi_communicator_in)
     {
       ParameterHandler prm;
       parameters.process_parameters_file(prm, parameter_file_in);
@@ -90,11 +90,10 @@ namespace MeltPoolDG::Multiphase
      * @param norm_name Choose between "norm" and "error".
      */
     void
-    print_relative_norm(const GenericDataOut<dim, double> &generic_data_out,
+    print_relative_norm(const GenericDataOut<dim, number> &generic_data_out,
                         dealii::Function<dim>             &reference_function,
                         const std::string                 &norm_name = "norm") const
     {
-      using number = double;
       const dealii::ConditionalOStream pcout(std::cout,
                                              Utilities::MPI::this_mpi_process(
                                                this->mpi_communicator) == 0 and

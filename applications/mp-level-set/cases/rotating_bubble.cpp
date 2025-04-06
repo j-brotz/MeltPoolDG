@@ -4,7 +4,19 @@
 
 namespace MeltPoolDG::Simulation::RotatingBubble
 {
-  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationRotatingBubble, "rotating_bubble", 1);
-  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationRotatingBubble, "rotating_bubble", 2);
-  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase, SimulationRotatingBubble, "rotating_bubble", 3);
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase,
+                           SimulationRotatingBubble,
+                           "rotating_bubble",
+                           1,
+                           double);
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase,
+                           SimulationRotatingBubble,
+                           "rotating_bubble",
+                           2,
+                           double);
+  MELTPOOLDG_REGISTER_CASE(LevelSet::LevelSetCase,
+                           SimulationRotatingBubble,
+                           "rotating_bubble",
+                           3,
+                           double);
 } // namespace MeltPoolDG::Simulation::RotatingBubble

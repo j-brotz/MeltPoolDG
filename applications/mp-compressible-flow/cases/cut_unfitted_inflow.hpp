@@ -15,18 +15,18 @@
 
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {
-  template <int dim>
-  class SteadyInflowField : public Function<dim>
+  template <int dim, typename number>
+  class SteadyInflowField : public Function<dim, number>
   {
   public:
     explicit SteadyInflowField()
-      : Function<dim>(dim + 2)
+      : Function<dim, number>(dim + 2)
     {
       Assert(dim == 2 or dim == 3, ExcNotImplemented());
     }
 
-    double
-    value(const Point<dim> &, const unsigned int component) const final
+    number
+    value(const Point<dim, number> &, const unsigned int component) const final
     {
       if (component == 0)
         return 0.001;
@@ -39,12 +39,12 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
   };
 
-  template <int dim>
-  class SimulationCutUnfittedInflow final : public Flow::CompressibleFlowCase<dim>
+  template <int dim, typename number>
+  class SimulationCutUnfittedInflow final : public Flow::CompressibleFlowCase<dim, number>
   {
   public:
     SimulationCutUnfittedInflow(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : Flow::CompressibleFlowCase<dim>(parameter_file, mpi_communicator)
+      : Flow::CompressibleFlowCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -53,11 +53,11 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       this->triangulation =
         std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
-      Point<dim> lower_left;
+      Point<dim, number> lower_left;
       for (unsigned int d = 1; d < dim; ++d)
         lower_left[d] = 0.;
 
-      Point<dim> upper_right;
+      Point<dim, number> upper_right;
       upper_right[0] = 1.0;
       for (unsigned int d = 1; d < dim; ++d)
         upper_right[d] = 0.008;
@@ -81,8 +81,8 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     set_boundary_conditions() override
     {
       // fitted boundaries
-      auto inflow_outflow_solution = std::make_shared<SteadyInflowField<dim>>();
-      auto dummy_solution          = std::make_shared<SteadyInflowField<dim>>();
+      auto inflow_outflow_solution = std::make_shared<SteadyInflowField<dim, number>>();
+      auto dummy_solution          = std::make_shared<SteadyInflowField<dim, number>>();
       this->attach_boundary_condition({BoundaryID::subsonic_outflow_with_fixed_energy,
                                        inflow_outflow_solution},
                                       "outflow_fixed_energy",
@@ -95,11 +95,11 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     void
     set_field_conditions() override
     {
-      auto initial_condition = std::make_shared<SteadyInflowField<dim>>();
+      auto initial_condition = std::make_shared<SteadyInflowField<dim, number>>();
       this->attach_initial_condition(initial_condition, "compressible_flow");
 
       // set level-set function
-      Point<dim> center;
+      Point<dim, number> center;
       center[0] = 0.5;
       for (unsigned int d = 1; d < dim; ++d)
         center[d] = 0.004;
@@ -116,9 +116,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const override
+    do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const override
     {
-      SteadyInflowField<dim> reference_values;
+      SteadyInflowField<dim, number> reference_values;
       this->print_relative_norm(generic_data_out, reference_values, "norm");
     }
 

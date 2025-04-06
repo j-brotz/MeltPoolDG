@@ -50,13 +50,13 @@ namespace MeltPoolDG
      *      This class collects all relevant input data for the level set simulation
      */
 
-    template <int dim>
-    class SimulationEvaporatingDropletWithHeat : public MeltPoolCase<dim>
+    template <int dim, typename number>
+    class SimulationEvaporatingDropletWithHeat : public MeltPoolCase<dim, number>
     {
     public:
       SimulationEvaporatingDropletWithHeat(std::string    parameter_file,
                                            const MPI_Comm mpi_communicator)
-        : MeltPoolCase<dim>(parameter_file, mpi_communicator)
+        : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
         , lambda(2. * numbers::PI *
                  std::sqrt(3. * this->parameters.flow.surface_tension.surface_tension_coefficient /
                            (9.81 * (this->parameters.material.liquid.density -

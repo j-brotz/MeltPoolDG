@@ -84,7 +84,7 @@ namespace MeltPoolDG::Heat
 
     std::unique_ptr<HeatCutOperator<dim, number>> heat_operator;
 
-    Preconditioner<dim, VectorType> preconditioner;
+    Preconditioner<dim, VectorType, number> preconditioner;
 
     std::unique_ptr<LevelSet::Tools::NearestPoint<dim, double>> nearest_point_search;
 
@@ -92,22 +92,23 @@ namespace MeltPoolDG::Heat
     bool ready_for_time_advance = false;
 
   public:
-    HeatCutOperation(const ScratchData<dim, dim, number>                       &scratch_data_in,
-                     const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
-                     const PeriodicBoundaryConditions<dim>                     &periodic_bc_in,
-                     const HeatData<number>                                    &heat_data_in,
-                     const MaterialData<number>                                &material_data_in,
-                     const Evaporation::EvaporationData<number>                &evapor_data_in,
-                     const TimeIterator<number>                                &time_iterator_in,
-                     const unsigned int                                         heat_cut_dof_idx_in,
-                     const unsigned int heat_cut_no_bc_dof_idx_in,
-                     const unsigned int heat_continuous_no_bc_dof_idx_in,
-                     const unsigned int heat_quad_idx_in,
-                     const bool         do_solidification_in,
-                     const unsigned int ls_dof_idx_in,
-                     const VectorType  &level_set_in,
-                     const unsigned int vel_dof_idx_in = 0,
-                     const VectorType  *velocity_in    = nullptr);
+    HeatCutOperation(
+      const ScratchData<dim, dim, number>                               &scratch_data_in,
+      const std::shared_ptr<const BoundaryConditionManager<dim, number>> heat_bc_manager,
+      const PeriodicBoundaryConditions<dim>                             &periodic_bc_in,
+      const HeatData<number>                                            &heat_data_in,
+      const MaterialData<number>                                        &material_data_in,
+      const Evaporation::EvaporationData<number>                        &evapor_data_in,
+      const TimeIterator<number>                                        &time_iterator_in,
+      const unsigned int                                                 heat_cut_dof_idx_in,
+      const unsigned int                                                 heat_cut_no_bc_dof_idx_in,
+      const unsigned int heat_continuous_no_bc_dof_idx_in,
+      const unsigned int heat_quad_idx_in,
+      const bool         do_solidification_in,
+      const unsigned int ls_dof_idx_in,
+      const VectorType  &level_set_in,
+      const unsigned int vel_dof_idx_in = 0,
+      const VectorType  *velocity_in    = nullptr);
 
     void
     register_laser_intensity_function_and_direction(

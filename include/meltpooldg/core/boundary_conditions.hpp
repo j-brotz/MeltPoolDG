@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, UIBK/TUM, October 2020
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
@@ -17,9 +12,7 @@
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
-  template <int dim>
+  template <int dim, typename number>
   class BoundaryConditionManager
   {
   private:
@@ -34,7 +27,9 @@ namespace MeltPoolDG
      *   - `<function>`: A shared pointer to a `Function<dim>` object that defines the
      *     behavior of the boundary condition.
      */
-    std::map<std::string, std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>>> bc;
+    std::map<std::string,
+             std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>>
+      bc;
 
   public:
     /**
@@ -53,9 +48,10 @@ namespace MeltPoolDG
      * type.
      */
     void
-    attach_boundary_condition(std::pair<const dealii::types::boundary_id,
-                                        const std::shared_ptr<Function<dim>>> id_and_function,
-                              const std::string                              &type)
+    attach_boundary_condition(
+      std::pair<const dealii::types::boundary_id, const std::shared_ptr<dealii::Function<dim>>>
+                         id_and_function,
+      const std::string &type)
     {
       AssertThrow(!bc[type].contains(id_and_function.first), ExcBCAlreadyAssigned(type));
 
@@ -71,7 +67,7 @@ namespace MeltPoolDG
      * @param time The current simulation time.
      */
     void
-    set_time(const double time)
+    set_time(const number time)
     {
       for (const auto &[type, outer_map] : bc)
         for (const auto &[id_, function_ptr] : outer_map)
@@ -91,13 +87,13 @@ namespace MeltPoolDG
      *
      * @throws dealii::ExcMessage If the specified type does not exist in the manager.
      */
-    std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>>
+    std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
     get_bc_of_type(const std::string type, const bool is_optional = true) const
     {
       AssertThrow(is_optional || bc.contains(type), dealii::ExcMessage("Type not found: " + type));
 
       if (!bc.contains(type))
-        return std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>>();
+        return std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>();
       else
         return bc.at(type);
     }
@@ -142,7 +138,7 @@ namespace MeltPoolDG
           return type_; // Found boundary ID, return type
 
       // If not found, check the is_optional flag
-      AssertThrow(is_optional, ExcMessage("Boundary ID not found in boundary conditions."));
+      AssertThrow(is_optional, dealii::ExcMessage("Boundary ID not found in boundary conditions."));
 
       // If optional, return an empty string as a fallback
       return "";

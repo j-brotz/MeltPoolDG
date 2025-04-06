@@ -15,19 +15,19 @@
 
 namespace MeltPoolDG::Simulation::PowderBed
 {
-  template <int dim>
-  class SimulationPowderBed : public Heat::HeatTransferCase<dim>
+  template <int dim, typename number>
+  class SimulationPowderBed : public Heat::HeatTransferCase<dim, number>
   {
   private:
-    double                          domain_x_min = 0;
-    double                          domain_x_max = 0;
-    double                          domain_y_min = 0;
-    double                          domain_y_max = 0;
-    double                          domain_z_min = 0;
-    double                          domain_z_max = 0;
+    number                          domain_x_min = 0;
+    number                          domain_x_max = 0;
+    number                          domain_y_min = 0;
+    number                          domain_y_max = 0;
+    number                          domain_z_min = 0;
+    number                          domain_z_max = 0;
     std::vector<unsigned int>       cell_repetitions;
-    double                          T_initial = 500;
-    MeltPool::PowderBedData<double> powder_bed_data;
+    number                          T_initial = 500;
+    MeltPool::PowderBedData<number> powder_bed_data;
 
   public:
     SimulationPowderBed(std::string parameter_file, const MPI_Comm mpi_communicator);

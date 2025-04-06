@@ -25,24 +25,23 @@
 
 namespace MeltPoolDG::Simulation::ReinitCircleDG
 {
-  using namespace dealii;
   /*
    * this function specifies the initial field of the level set equation
    */
 
-  template <int dim>
-  class InitializePhi : public Function<dim>
+  template <int dim, typename number>
+  class InitializePhi : public Function<dim, number>
   {
   public:
     InitializePhi()
-      : Function<dim>()
-      , distance_sphere(dim == 1 ? Point<dim>(0.0) : Point<dim>(0.0, 0.5), 0.25)
+      : Function<dim, number>()
+      , distance_sphere(dim == 1 ? Point<dim, number>(0.0) : Point<dim, number>(0.0, 0.5), 0.25)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
-      double value;
+      number value;
       if (dim != 3)
         {
           value = 2.0 * (std::sqrt(p[0] * p[0] + p[1] * p[1]) - 0.15);
@@ -59,20 +58,20 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
     const Functions::SignedDistance::Sphere<dim> distance_sphere;
   };
 
-  template <int dim>
-  class ExactSolution : public Function<dim>
+  template <int dim, typename number>
+  class ExactSolution : public Function<dim, number>
   {
   public:
-    ExactSolution(const double eps)
-      : Function<dim>()
-      , distance_sphere(Point<dim>(0.0, 0.5), 0.25)
+    ExactSolution(const number eps)
+      : Function<dim, number>()
+      , distance_sphere(Point<dim, number>(0.0, 0.5), 0.25)
       , eps_interface(eps)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
-      double value;
+      number value;
       if (dim != 3)
         {
           value = (std::sqrt(p[0] * p[0] + p[1] * p[1]) - 0.15);
@@ -87,18 +86,18 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
 
   private:
     const Functions::SignedDistance::Sphere<dim> distance_sphere;
-    const double                                 eps_interface;
+    const number                                 eps_interface;
   };
   /*
    *      This class collects all relevant input data for the level set simulation
    */
 
-  template <int dim>
-  class SimulationReinitDG : public LevelSet::ReinitializationCase<dim>
+  template <int dim, typename number>
+  class SimulationReinitDG : public LevelSet::ReinitializationCase<dim, number>
   {
   public:
     SimulationReinitDG(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : LevelSet::ReinitializationCase<dim>(parameter_file, mpi_communicator)
+      : LevelSet::ReinitializationCase<dim, number>(parameter_file, mpi_communicator)
     {
       if (dim == 1)
         AssertThrow(false, ExcMessage("Dimension 1 is not supported for this simulation"));
@@ -144,11 +143,11 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
     void
     set_field_conditions() override
     {
-      this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "level_set");
+      this->attach_initial_condition(std::make_shared<InitializePhi<dim, number>>(), "level_set");
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const final
+    do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const final
     {
       dealii::ConditionalOStream pcout(std::cout,
                                        Utilities::MPI::this_mpi_process(this->mpi_communicator) ==
@@ -169,7 +168,7 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
           }
 
       /*Error Calculation*/
-      ExactSolution<dim> exact_solution(0.1);
+      ExactSolution<dim, number> exact_solution(0.1);
       exact_solution.set_time(generic_data_out.get_time());
 
       const auto  n_q_points = this->parameters.reinit.fe.degree + 20;
@@ -184,22 +183,22 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
       FEValues<dim> fe_values_curvature(
         fe, quadrature, update_values | update_JxW_values | update_quadrature_points);
 
-      std::vector<double>                 phi_at_q(QGauss<dim>(n_q_points).size());
-      std::vector<double>                 curvature_at_q(QGauss<dim>(n_q_points).size());
-      std::vector<Tensor<1, dim, double>> gradient_at_q(QGauss<dim>(n_q_points).size());
+      std::vector<number>                 phi_at_q(QGauss<dim>(n_q_points).size());
+      std::vector<number>                 curvature_at_q(QGauss<dim>(n_q_points).size());
+      std::vector<Tensor<1, dim, number>> gradient_at_q(QGauss<dim>(n_q_points).size());
 
 
 
       generic_data_out.get_vector("reinit_DG_psi").update_ghost_values();
       generic_data_out.get_vector("curvature").update_ghost_values();
 
-      double error                = 0.0;
-      double norm_exact           = 0.0;
-      double mass                 = 0.0;
-      double error_curvature      = 0.0;
-      double norm_curvature_exact = 0.0;
-      double error_gradient       = 0.0;
-      double norm_gradient_exact  = 0.0;
+      number error                = 0.0;
+      number norm_exact           = 0.0;
+      number mass                 = 0.0;
+      number error_curvature      = 0.0;
+      number norm_curvature_exact = 0.0;
+      number error_gradient       = 0.0;
+      number norm_gradient_exact  = 0.0;
       // Initialize mass
       if (init_mass)
         {
@@ -253,7 +252,7 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
 
                 auto curv_difference = std::abs(exact_curvature - curvature_at_q[q_index]);
 
-                double norm_gradient = 0.0;
+                number norm_gradient = 0.0;
 
                 for (unsigned int d = 0; d < dim; d++)
                   {
@@ -315,10 +314,10 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
     }
 
   private:
-    double         left_domain  = -0.5;
-    double         right_domain = 0.5;
+    number         left_domain  = -0.5;
+    number         right_domain = 0.5;
     mutable bool   init_mass    = true;
-    mutable double initial_mass = 0.0;
+    mutable number initial_mass = 0.0;
   };
 
 } // namespace MeltPoolDG::Simulation::ReinitCircleDG

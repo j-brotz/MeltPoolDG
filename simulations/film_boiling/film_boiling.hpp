@@ -141,12 +141,12 @@ namespace MeltPoolDG::Simulation::FilmBoiling
   /**
    *      This class collects all relevant input data for the simulation.
    */
-  template <int dim>
-  class SimulationFilmBoiling : public MeltPoolCase<dim>
+  template <int dim, typename number>
+  class SimulationFilmBoiling : public MeltPoolCase<dim, number>
   {
   public:
     SimulationFilmBoiling(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
       , lambda0(
           2. * numbers::PI *
           std::sqrt(3. * this->parameters.flow.surface_tension.surface_tension_coefficient /

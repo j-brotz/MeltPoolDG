@@ -23,22 +23,20 @@
 
 namespace MeltPoolDG::Simulation::RotatingBubble
 {
-  using namespace dealii;
-
-  template <int dim>
+  template <int dim, typename number>
   class InitializePhi : public Function<dim>
   {
   public:
     InitializePhi()
       : Function<dim>()
-      , distance_sphere(dim == 1 ? Point<dim>(0.0) :
-                        dim == 2 ? Point<dim>(0.0, 0.5) :
-                                   Point<dim>(0.0, 0.5, 0.0),
+      , distance_sphere(dim == 1 ? Point<dim, number>(0.0) :
+                        dim == 2 ? Point<dim, number>(0.0, 0.5) :
+                                   Point<dim, number>(0.0, 0.5, 0.0),
                         0.25 /*radius*/)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       return -distance_sphere.value(p);
     }
@@ -47,21 +45,21 @@ namespace MeltPoolDG::Simulation::RotatingBubble
     const Functions::SignedDistance::Sphere<dim> distance_sphere;
   };
 
-  template <int dim>
-  class AdvectionField : public Function<dim>
+  template <int dim, typename number>
+  class AdvectionField : public Function<dim, number>
   {
   public:
     AdvectionField()
-      : Function<dim>(dim)
+      : Function<dim, number>(dim)
     {}
 
     void
-    vector_value(const Point<dim> &p, Vector<double> &values) const override
+    vector_value(const Point<dim, number> &p, Vector<number> &values) const override
     {
       if constexpr (dim >= 2)
         {
-          const double x = p[0];
-          const double y = p[1];
+          const number x = p[0];
+          const number y = p[1];
 
           values[0] = 4 * y;
           values[1] = -4 * x;
@@ -78,12 +76,12 @@ namespace MeltPoolDG::Simulation::RotatingBubble
    *      This class collects all relevant input data for the level set simulation
    */
 
-  template <int dim>
-  class SimulationRotatingBubble : public LevelSet::LevelSetCase<dim>
+  template <int dim, typename number>
+  class SimulationRotatingBubble : public LevelSet::LevelSetCase<dim, number>
   {
   public:
     SimulationRotatingBubble(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : LevelSet::LevelSetCase<dim>(parameter_file, mpi_communicator)
+      : LevelSet::LevelSetCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -149,7 +147,7 @@ namespace MeltPoolDG::Simulation::RotatingBubble
             for (const auto &face : cell->face_iterators())
               if ((face->at_boundary()))
                 {
-                  const double half_line = (right_domain + left_domain) / 2;
+                  const number half_line = (right_domain + left_domain) / 2;
 
                   if (face->center()[0] == left_domain && face->center()[1] > half_line)
                     face->set_boundary_id(inflow_bc);
@@ -168,14 +166,15 @@ namespace MeltPoolDG::Simulation::RotatingBubble
     void
     set_field_conditions() override
     {
-      this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "signed_distance");
-      this->attach_field_function(std::make_shared<AdvectionField<dim>>(),
+      this->attach_initial_condition(std::make_shared<InitializePhi<dim, number>>(),
+                                     "signed_distance");
+      this->attach_field_function(std::make_shared<AdvectionField<dim, number>>(),
                                   "prescribed_velocity",
                                   "level_set");
     }
 
   private:
-    double left_domain  = -1.0;
-    double right_domain = 1.0;
+    number left_domain  = -1.0;
+    number right_domain = 1.0;
   };
 } // namespace MeltPoolDG::Simulation::RotatingBubble

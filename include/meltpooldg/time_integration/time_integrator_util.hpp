@@ -88,10 +88,10 @@ namespace MeltPoolDG
    */
   template <int dim, typename number, typename PDEOperator>
   TimeIntegratorBase<number> *
-  implicit_time_integrator_factory(const PDEOperator        &pde_operator,
-                                   const TimeIntegratorData &params,
-                                   const ScratchData<dim>   &scratch_data,
-                                   const unsigned int        dof_idx)
+  implicit_time_integrator_factory(const PDEOperator                   &pde_operator,
+                                   const TimeIntegratorData            &params,
+                                   const ScratchData<dim, dim, number> &scratch_data,
+                                   const unsigned int                   dof_idx)
   {
     if constexpr (BDFImplicitPDEOperator<PDEOperator,
                                          number,

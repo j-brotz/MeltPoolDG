@@ -31,7 +31,7 @@ namespace MeltPoolDG::Multiphase
 {
   template <int dim, typename number>
   CompressibleMultiphaseOperation<dim, number>::CompressibleMultiphaseOperation(
-    const ScratchData<dim>                                     &scratch_data_in,
+    const ScratchData<dim, dim, number>                        &scratch_data_in,
     const MeltPoolDG::Flow::CompressibleFlowData<number>       &comp_flow_data_in,
     const TimeIterator<number>                                 &time_iterator_in,
     const std::function<void(const dealii::DoFHandler<dim> &)> &reinit_matrix_free_in,
@@ -113,8 +113,8 @@ namespace MeltPoolDG::Multiphase
   template <int dim, typename number>
   void
   CompressibleMultiphaseOperation<dim, number>::set_boundary_conditions(
-    const std::shared_ptr<SimulationCaseBase<dim>> &simulation_case,
-    const std::string                              &operation_name)
+    const std::shared_ptr<SimulationCaseBase<dim, number>> &simulation_case,
+    const std::string                                      &operation_name)
   {
     flow_scratch_data.boundary_conditions.set_boundary_conditions(simulation_case, operation_name);
   }

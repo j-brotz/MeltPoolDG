@@ -29,7 +29,7 @@ namespace MeltPoolDG::LevelSet
   LevelSetOperation<dim, number>::LevelSetOperation(
     const ScratchData<dim, dim, number>             &scratch_data_in,
     const TimeIterator<number>                      &time_stepping,
-    const BoundaryConditionManager<dim>             &bc_manager,
+    const BoundaryConditionManager<dim, number>     &bc_manager,
     [[maybe_unused]] const TimeSteppingData<number> &time_stepping_data,
     const LevelSetData<number>                      &ls,
     const VectorType                                &advection_velocity,

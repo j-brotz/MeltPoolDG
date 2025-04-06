@@ -22,19 +22,17 @@
 
 namespace MeltPoolDG::Simulation::ReinitCircle
 {
-  using namespace dealii;
-
-  template <int dim>
-  class InitializePhi : public Function<dim>
+  template <int dim, typename number>
+  class InitializePhi : public Function<dim, number>
   {
   public:
     InitializePhi()
-      : Function<dim>()
-      , distance_sphere(dim == 1 ? Point<dim>(0.0) : Point<dim>(0.0, 0.5), 0.25)
+      : Function<dim, number>()
+      , distance_sphere(dim == 1 ? Point<dim, number>(0.0) : Point<dim, number>(0.0, 0.5), 0.25)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       return UtilityFunctions::CharacteristicFunctions::sgn(-distance_sphere.value(p));
     }
@@ -43,18 +41,18 @@ namespace MeltPoolDG::Simulation::ReinitCircle
     const Functions::SignedDistance::Sphere<dim> distance_sphere;
   };
 
-  template <int dim>
-  class ExactSolution : public Function<dim>
+  template <int dim, typename number>
+  class ExactSolution : public Function<dim, number>
   {
   public:
-    ExactSolution(const double eps)
-      : Function<dim>()
-      , distance_sphere(Point<dim>(0.0, 0.5), 0.25)
+    ExactSolution(const number eps)
+      : Function<dim, number>()
+      , distance_sphere(Point<dim, number>(0.0, 0.5), 0.25)
       , eps_interface(eps)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
         -distance_sphere.value(p), eps_interface);
@@ -62,18 +60,18 @@ namespace MeltPoolDG::Simulation::ReinitCircle
 
   private:
     const Functions::SignedDistance::Sphere<dim> distance_sphere;
-    const double                                 eps_interface;
+    const number                                 eps_interface;
   };
   /*
    *      This class collects all relevant input data for the level set simulation
    */
 
-  template <int dim>
-  class SimulationReinit : public LevelSet::ReinitializationCase<dim>
+  template <int dim, typename number>
+  class SimulationReinit : public LevelSet::ReinitializationCase<dim, number>
   {
   public:
     SimulationReinit(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : LevelSet::ReinitializationCase<dim>(parameter_file, mpi_communicator)
+      : LevelSet::ReinitializationCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -112,11 +110,11 @@ namespace MeltPoolDG::Simulation::ReinitCircle
     void
     set_field_conditions() override
     {
-      this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "level_set");
+      this->attach_initial_condition(std::make_shared<InitializePhi<dim, number>>(), "level_set");
     }
 
   private:
-    double left_domain  = -1.0;
-    double right_domain = 1.0;
+    number left_domain  = -1.0;
+    number right_domain = 1.0;
   };
 } // namespace MeltPoolDG::Simulation::ReinitCircle

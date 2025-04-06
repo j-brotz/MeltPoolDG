@@ -36,12 +36,12 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
    *      This class collects all relevant input data for the level set simulation
    */
 
-  template <int dim>
-  class SimulationStefansProblemWithFlow : public MeltPoolCase<dim>
+  template <int dim, typename number>
+  class SimulationStefansProblemWithFlow : public MeltPoolCase<dim, number>
   {
   public:
     SimulationStefansProblemWithFlow(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
     void

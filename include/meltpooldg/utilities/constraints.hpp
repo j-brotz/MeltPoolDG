@@ -44,9 +44,9 @@ namespace MeltPoolDG::Constraints
    * If @param close is true, the AffineConstraints object is closed after filling it.
    * In Debug, the constraints are also checked with check_constraints().
    */
-  template <int dim>
+  template <int dim, typename number>
   void
-  fill_DBC(ScratchData<dim>                                                           &scratch_data,
+  fill_DBC(ScratchData<dim, dim, number>                                              &scratch_data,
            const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> &bc_data,
            const unsigned int                                                          dof_idx,
            const bool set_inhomogeneities = true,
@@ -89,9 +89,9 @@ namespace MeltPoolDG::Constraints
    * If @param close is true, the AffineConstraints object is closed after filling it.
    * In Debug, the constraints are also checked with check_constraints().
    */
-  template <int dim>
+  template <int dim, typename number>
   void
-  make_DBC(ScratchData<dim>                                                           &scratch_data,
+  make_DBC(ScratchData<dim, dim, number>                                              &scratch_data,
            const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> &bc_data,
            const unsigned int                                                          dof_idx,
            const bool set_inhomogeneities = true,
@@ -109,11 +109,11 @@ namespace MeltPoolDG::Constraints
    * If @param close is true, the AffineConstraints object is closed after filling it.
    * In Debug, the constraints are also checked with check_constraints().
    */
-  template <int dim>
+  template <int dim, typename number>
   void
-  make_HNC(ScratchData<dim>  &scratch_data,
-           const unsigned int dof_hanging_nodes_idx,
-           const bool         close = true)
+  make_HNC(ScratchData<dim, dim, number> &scratch_data,
+           const unsigned int             dof_hanging_nodes_idx,
+           const bool                     close = true)
   {
     scratch_data.get_constraint(dof_hanging_nodes_idx)
       .reinit(scratch_data.get_locally_relevant_dofs(dof_hanging_nodes_idx));
@@ -134,9 +134,9 @@ namespace MeltPoolDG::Constraints
    */
   template <int dim, typename number>
   void
-  merge_HNC_into_DBC(ScratchData<dim>  &scratch_data,
-                     const unsigned int dof_idx,
-                     const unsigned int dof_hanging_nodes_idx)
+  merge_HNC_into_DBC(ScratchData<dim, dim, number> &scratch_data,
+                     const unsigned int             dof_idx,
+                     const unsigned int             dof_hanging_nodes_idx)
   {
     scratch_data.get_constraint(dof_idx).merge(
       scratch_data.get_constraint(dof_hanging_nodes_idx),
@@ -162,7 +162,7 @@ namespace MeltPoolDG::Constraints
   template <int dim, typename number>
   void
   make_DBC_and_HNC_and_merge_HNC_into_DBC(
-    ScratchData<dim>                                                           &scratch_data,
+    ScratchData<dim, dim, number>                                              &scratch_data,
     const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> &bc_data,
     const unsigned int                                                          dof_idx,
     const unsigned int dof_hanging_nodes_idx,
@@ -182,9 +182,9 @@ namespace MeltPoolDG::Constraints
    *
    * Note that the AffineConstraints object must not be closed.
    */
-  template <int dim>
+  template <int dim, typename number>
   void
-  insert_PBC(ScratchData<dim>                      &scratch_data,
+  insert_PBC(ScratchData<dim, dim, number>         &scratch_data,
              const PeriodicBoundaryConditions<dim> &pbc,
              const unsigned int                     dof_idx)
   {
@@ -209,9 +209,9 @@ namespace MeltPoolDG::Constraints
    * The AffineConstraints objects are closed after filling them.
    * In Debug, the constraints are also checked with check_constraints().
    */
-  template <int dim>
+  template <int dim, typename number>
   void
-  make_HNC_plus_PBC(ScratchData<dim>                      &scratch_data,
+  make_HNC_plus_PBC(ScratchData<dim, dim, number>         &scratch_data,
                     const PeriodicBoundaryConditions<dim> &pbc,
                     const unsigned int                     dof_hanging_nodes_idx)
   {
@@ -247,7 +247,7 @@ namespace MeltPoolDG::Constraints
   template <int dim, typename number>
   void
   make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC(
-    ScratchData<dim>                                                           &scratch_data,
+    ScratchData<dim, dim, number>                                              &scratch_data,
     const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> &bc_data,
     const PeriodicBoundaryConditions<dim>                                      &pbc,
     const unsigned int                                                          dof_idx,

@@ -14,25 +14,23 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  using namespace dealii;
-
-  template <int dim>
+  template <int dim, typename number>
   class LevelSetProblem
   {
   private:
-    using CaseType        = LevelSetCase<dim>;
-    using VectorType      = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+    using CaseType        = LevelSetCase<dim, number>;
+    using VectorType      = LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = LinearAlgebra::distributed::BlockVector<number>;
 
     const std::unique_ptr<CaseType> simulation_case;
 
     DoFHandler<dim> dof_handler;
     DoFHandler<dim> dof_handler_velocity;
 
-    AffineConstraints<double> constraints_dirichlet;
-    AffineConstraints<double> hanging_node_constraints;
-    AffineConstraints<double> hanging_node_constraints_velocity;
-    AffineConstraints<double> hanging_node_constraints_with_zero_dirichlet;
+    AffineConstraints<number> constraints_dirichlet;
+    AffineConstraints<number> hanging_node_constraints;
+    AffineConstraints<number> hanging_node_constraints_velocity;
+    AffineConstraints<number> hanging_node_constraints_with_zero_dirichlet;
 
     unsigned int        ls_dof_idx;
     unsigned int        ls_quad_idx;
@@ -48,12 +46,12 @@ namespace MeltPoolDG::LevelSet
 
     VectorType advection_velocity;
 
-    std::unique_ptr<LevelSetOperationBase<dim, double>>             level_set_operation;
-    std::unique_ptr<Evaporation::EvaporationOperation<dim, double>> evaporation_operation;
-    std::shared_ptr<ScratchData<dim>>                               scratch_data;
-    std::unique_ptr<TimeIterator<double>>                           time_iterator;
-    std::unique_ptr<Postprocessor<dim, double>>                     post_processor;
-    std::unique_ptr<Profiling::ProfilingMonitor<double>>            profiling_monitor;
+    std::unique_ptr<LevelSetOperationBase<dim, number>>             level_set_operation;
+    std::unique_ptr<Evaporation::EvaporationOperation<dim, number>> evaporation_operation;
+    std::shared_ptr<ScratchData<dim, dim, number>>                  scratch_data;
+    std::unique_ptr<TimeIterator<number>>                           time_iterator;
+    std::unique_ptr<Postprocessor<dim, number>>                     post_processor;
+    std::unique_ptr<Profiling::ProfilingMonitor<number>>            profiling_monitor;
 
     void
     initialize();
@@ -65,7 +63,7 @@ namespace MeltPoolDG::LevelSet
     compute_advection_velocity(Function<dim> &advec_func);
 
     void
-    output_results(const unsigned int time_step, const double current_time);
+    output_results(const unsigned int time_step, const number current_time);
 
     void
     refine_mesh();

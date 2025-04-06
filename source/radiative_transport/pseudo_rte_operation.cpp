@@ -39,7 +39,7 @@ namespace MeltPoolDG::RadiativeTransport
                                                                            rte_dof_idx,
                                                                            rte_quad_idx,
                                                                            hs_dof_idx);
-    preconditioner      = make_preconditioner<dim, PseudoRTEOperator<dim, number>, VectorType>(
+    preconditioner = make_preconditioner<dim, number, PseudoRTEOperator<dim, number>, VectorType>(
       rte_data.linear_solver.preconditioner_type,
       pseudo_rte_operator.get(),
       rte_data.linear_solver.do_matrix_free);

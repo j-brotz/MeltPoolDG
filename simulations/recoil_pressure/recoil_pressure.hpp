@@ -68,8 +68,8 @@ namespace MeltPoolDG::Simulation::RecoilPressure
     const double grad_T;
   };
 
-  template <int dim>
-  class SimulationRecoilPressure : public MeltPoolCase<dim>
+  template <int dim, typename number>
+  class SimulationRecoilPressure : public MeltPoolCase<dim, number>
   {
   private:
     double                    domain_x_min = 0;
@@ -114,7 +114,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
 
   public:
     SimulationRecoilPressure(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : MeltPoolCase<dim>(parameter_file, mpi_communicator)
+      : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
       , cell_repetitions(dim, 1)
       , tria_slice(mpi_communicator)
     {}

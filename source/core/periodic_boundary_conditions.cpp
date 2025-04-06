@@ -6,21 +6,23 @@ namespace MeltPoolDG
 {
   template <int dim>
   void
-  PeriodicBoundaryConditions<dim>::attach_boundary_condition(const types::boundary_id id_in,
-                                                             const types::boundary_id id_out,
-                                                             const int                direction)
+  PeriodicBoundaryConditions<dim>::attach_boundary_condition(
+    const dealii::types::boundary_id id_in,
+    const dealii::types::boundary_id id_out,
+    const int                        direction)
   {
-    AssertThrow(direction < dim, ExcMessage("Coordinate direction must be between 0 and the dim"));
+    AssertThrow(direction < dim,
+                dealii::ExcMessage("Coordinate direction must be between 0 and the dim"));
 
     // check if requested tuple already exists
     for (const auto &bc : periodic_bc)
       {
-        AssertThrow(!(std::get<0>(bc) == id_in && std::get<1>(bc) == id_in &&
-                      std::get<2>(bc) == direction),
-                    ExcMessage("The given periodic boundary condition < " + std::to_string(id_in) +
-                               "," + std::to_string(id_out) + "," + std::to_string(direction) +
-                               "> already exists. Make sure that periodic boundary conditions "
-                               "must be unique."));
+        AssertThrow(
+          !(std::get<0>(bc) == id_in && std::get<1>(bc) == id_in && std::get<2>(bc) == direction),
+          dealii::ExcMessage("The given periodic boundary condition < " + std::to_string(id_in) +
+                             "," + std::to_string(id_out) + "," + std::to_string(direction) +
+                             "> already exists. Make sure that periodic boundary conditions "
+                             "must be unique."));
       }
 
     periodic_bc.emplace_back(id_in, id_out, direction);

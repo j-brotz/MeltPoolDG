@@ -80,7 +80,7 @@ namespace MeltPoolDG::Evaporation
     unsigned int              heat_dof_idx;
 
     // only needed if a time-dependent function is given
-    mutable number time = numbers::invalid_double;
+    mutable number time = dealii::numbers::invalid_double;
     /**
      * evaporative mass flux
      */
@@ -88,7 +88,8 @@ namespace MeltPoolDG::Evaporation
     /**
      * evaporation velocity at quadrature points
      */
-    AlignedVector<dealii::Tensor<1, dim, dealii::VectorizedArray<number>>> evaporation_velocities;
+    dealii::AlignedVector<dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>
+      evaporation_velocities;
     /**
      * evaporation velocity due to evaporation and flow
      */
@@ -145,10 +146,11 @@ namespace MeltPoolDG::Evaporation
 
     void
     register_surface_mesh(
-      const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
-                                   std::vector<Point<dim>> /*quad_points*/,
-                                   std::vector<number> /*weights*/
-                                   >> &surface_mesh_info);
+      const std::vector<
+        std::tuple<const typename dealii::Triangulation<dim, dim>::cell_iterator /*cell*/,
+                   std::vector<dealii::Point<dim>> /*quad_points*/,
+                   std::vector<number> /*weights*/
+                   >> &surface_mesh_info);
     void
     reinit();
 

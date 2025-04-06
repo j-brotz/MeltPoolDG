@@ -15,7 +15,7 @@ namespace MeltPoolDG
   /**
    * A concept defining the requirements on a specific preconditioner implementation.
    */
-  template <typename PreconditionerType, unsigned int dim, typename VectorType>
+  template <typename PreconditionerType, unsigned int dim, typename VectorType, typename number>
   concept PreconditionerTypeConcept =
     requires(PreconditionerType preconditioner, VectorType &vec, const VectorType &const_vec) {
       /**
@@ -33,11 +33,12 @@ namespace MeltPoolDG
       /**
        * Initilaize the preconditioner.
        */
-      preconditioner.reinit(std::declval<ScratchData<dim>>(), std::declval<unsigned int>());
+      preconditioner.reinit(std::declval<ScratchData<dim, dim, number>>(),
+                            std::declval<unsigned int>());
     };
 
 
-  template <unsigned int dim, typename VectorType>
+  template <unsigned int dim, typename VectorType, typename number>
   class Preconditioner
   {
   public:
@@ -82,7 +83,7 @@ namespace MeltPoolDG
      * preconditioner classes.
      */
     void
-    reinit(const ScratchData<dim> &scratch_data, const unsigned int dof_idx)
+    reinit(const ScratchData<dim, dim, number> &scratch_data, const unsigned int dof_idx)
     {
       preconditioner_pimpl->reinit(scratch_data, dof_idx);
     }
@@ -152,10 +153,10 @@ namespace MeltPoolDG
       update(const std::any &external_setup) = 0;
 
       virtual void
-      reinit(const ScratchData<dim> &scratch_data, const unsigned int dof_idx) = 0;
+      reinit(const ScratchData<dim, dim, number> &scratch_data, const unsigned int dof_idx) = 0;
     };
 
-    template <PreconditionerTypeConcept<dim, VectorType> PreconditionerType>
+    template <PreconditionerTypeConcept<dim, VectorType, number> PreconditionerType>
     struct PreconditionerModel final : public PreconditionerConcept
     {
     public:
@@ -176,7 +177,7 @@ namespace MeltPoolDG
       }
 
       void
-      reinit(const ScratchData<dim> &scratch_data, const unsigned int dof_idx) override
+      reinit(const ScratchData<dim, dim, number> &scratch_data, const unsigned int dof_idx) override
       {
         preconditioner.reinit(scratch_data, dof_idx);
       }

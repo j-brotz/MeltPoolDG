@@ -37,18 +37,18 @@
 namespace MeltPoolDG::Simulation::MeltFrontPropagation
 {
 
-  template <int dim>
-  class InitialLevelSet : public Function<dim>
+  template <int dim, typename number>
+  class InitialLevelSet : public Function<dim, number>
   {
   public:
-    InitialLevelSet(const double z_level, const double eps)
-      : Function<dim>()
+    InitialLevelSet(const number z_level, const number eps)
+      : Function<dim, number>()
       , z_level(z_level)
       , eps(eps)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       const auto z = p[dim - 1];
       return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(z_level - z,
@@ -56,44 +56,44 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     }
 
   private:
-    const double z_level;
-    const double eps;
+    const number z_level;
+    const number eps;
   };
 
-  template <int dim>
-  class InitialLevelSetHeaviside : public Function<dim>
+  template <int dim, typename number>
+  class InitialLevelSetHeaviside : public Function<dim, number>
   {
   public:
-    InitialLevelSetHeaviside(const double z_level, const double eps)
-      : Function<dim>()
+    InitialLevelSetHeaviside(const number z_level, const number eps)
+      : Function<dim, number>()
       , z_level(z_level)
       , eps(eps)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       const auto z = p[dim - 1];
       return UtilityFunctions::CharacteristicFunctions::heaviside(z_level - z, eps);
     }
 
   private:
-    const double z_level;
-    const double eps;
+    const number z_level;
+    const number eps;
   };
 
 
-  template <int dim>
-  SimulationMeltFrontPropagation<dim>::SimulationMeltFrontPropagation(
+  template <int dim, typename number>
+  SimulationMeltFrontPropagation<dim, number>::SimulationMeltFrontPropagation(
     std::string    parameter_file,
     const MPI_Comm mpi_communicator)
-    : Heat::HeatTransferCase<dim>(parameter_file, mpi_communicator)
+    : Heat::HeatTransferCase<dim, number>(parameter_file, mpi_communicator)
   {}
 
 
-  template <int dim>
+  template <int dim, typename number>
   bool
-  SimulationMeltFrontPropagation<dim>::add_simulation_specific_parameters(
+  SimulationMeltFrontPropagation<dim, number>::add_simulation_specific_parameters(
     dealii::ParameterHandler &prm)
   {
     prm.enter_subsection("simulation specific parameters");
@@ -117,9 +117,9 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  SimulationMeltFrontPropagation<dim>::create_spatial_discretization()
+  SimulationMeltFrontPropagation<dim, number>::create_spatial_discretization()
   {
     AssertThrow(dim == 1 || x_min < x_max,
                 ExcMessage(
@@ -225,9 +225,9 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  SimulationMeltFrontPropagation<dim>::set_boundary_conditions()
+  SimulationMeltFrontPropagation<dim, number>::set_boundary_conditions()
   {
     if (this->parameters.base.problem_name == "heat_transfer")
       {
@@ -310,21 +310,21 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  SimulationMeltFrontPropagation<dim>::set_field_conditions()
+  SimulationMeltFrontPropagation<dim, number>::set_field_conditions()
   {
     this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(T_0),
                                    "heat_transfer");
     if (this->parameters.base.problem_name == "heat_transfer" and do_two_phase)
-      this->attach_initial_condition(std::make_shared<InitialLevelSetHeaviside<dim>>(0.0,
-                                                                                     z_max / 5),
-                                     "prescribed_heaviside");
+      this->attach_initial_condition(
+        std::make_shared<InitialLevelSetHeaviside<dim, number>>(0.0, z_max / 5),
+        "prescribed_heaviside");
     // In the heat transfer problem, this->parameters.ls does not exist and the code below does not
     // compile. TODO: Find a way to implement this block for the standalone melt pool problem.
     // if (this->parameters.base.problem_name == "melt_pool")
     //   {
-    //     const double eps =
+    //     const number eps =
     //     this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
     //       GridTools::minimal_cell_diameter(*this->triangulation) /
     //       this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
@@ -339,14 +339,17 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
                            SimulationMeltFrontPropagation,
                            "melt_front_propagation",
-                           1);
+                           1,
+                           double);
   MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
                            SimulationMeltFrontPropagation,
                            "melt_front_propagation",
-                           2);
+                           2,
+                           double);
   MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
                            SimulationMeltFrontPropagation,
                            "melt_front_propagation",
-                           3);
+                           3,
+                           double);
 
 } // namespace MeltPoolDG::Simulation::MeltFrontPropagation

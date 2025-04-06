@@ -39,7 +39,7 @@ namespace MeltPoolDG::Evaporation
     const unsigned int heat_hanging_nodes_dof_idx;
     const unsigned int evapor_mass_flux_dof_idx;
 
-    const FESystem<dim> fe_dim;
+    const dealii::FESystem<dim> fe_dim;
 
   public:
     EvaporationMassFluxOperatorThicknessIntegration(

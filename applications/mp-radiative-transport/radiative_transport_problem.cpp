@@ -26,9 +26,9 @@
 
 namespace MeltPoolDG::RadiativeTransport
 {
-  template <int dim>
+  template <int dim, typename number>
   void
-  RadiativeTransportProblem<dim>::run()
+  RadiativeTransportProblem<dim, number>::run()
   {
     initialize();
 
@@ -60,11 +60,11 @@ namespace MeltPoolDG::RadiativeTransport
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  RadiativeTransportProblem<dim>::initialize()
+  RadiativeTransportProblem<dim, number>::initialize()
   {
-    scratch_data = std::make_shared<ScratchData<dim>>(
+    scratch_data = std::make_shared<ScratchData<dim, dim, number>>(
       simulation_case->mpi_communicator,
       simulation_case->parameters.base.verbosity_level,
       simulation_case->parameters.rad_trans.linear_solver.do_matrix_free);
@@ -86,7 +86,7 @@ namespace MeltPoolDG::RadiativeTransport
     rte_quad_idx = scratch_data->attach_quadrature(
       FiniteElementUtils::create_quadrature<dim>(simulation_case->parameters.base.fe));
 
-    rad_trans_operation = std::make_shared<RadiativeTransportOperation<dim, double>>(
+    rad_trans_operation = std::make_shared<RadiativeTransportOperation<dim, number>>(
       *scratch_data,
       simulation_case->parameters.rad_trans,
       simulation_case->parameters.laser.template get_direction<dim>(),
@@ -101,13 +101,13 @@ namespace MeltPoolDG::RadiativeTransport
     rad_trans_operation->reinit();
 
     time_iterator =
-      std::make_shared<TimeIterator<double>>(simulation_case->parameters.time_stepping);
+      std::make_shared<TimeIterator<number>>(simulation_case->parameters.time_stepping);
 
     // set initial conditions of the heaviside field
     compute_heaviside(*simulation_case->get_initial_condition("prescribed_heaviside"));
 
     post_processor =
-      std::make_shared<Postprocessor<dim, double>>(scratch_data->get_mpi_comm(rte_dof_idx),
+      std::make_shared<Postprocessor<dim, number>>(scratch_data->get_mpi_comm(rte_dof_idx),
                                                    simulation_case->parameters.output,
                                                    simulation_case->parameters.time_stepping,
                                                    scratch_data->get_mapping(),
@@ -116,7 +116,7 @@ namespace MeltPoolDG::RadiativeTransport
 
     if (simulation_case->parameters.profiling.enable)
       profiling_monitor =
-        std::make_unique<Profiling::ProfilingMonitor<double>>(simulation_case->parameters.profiling,
+        std::make_unique<Profiling::ProfilingMonitor<number>>(simulation_case->parameters.profiling,
                                                               *time_iterator);
     // Do initial refinement steps if requested
     if (simulation_case->parameters.amr.do_amr and
@@ -133,9 +133,9 @@ namespace MeltPoolDG::RadiativeTransport
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  RadiativeTransportProblem<dim>::setup_dof_system(const bool do_reinit)
+  RadiativeTransportProblem<dim, number>::setup_dof_system(const bool do_reinit)
   {
     FiniteElementUtils::distribute_dofs<dim, 1>(simulation_case->parameters.base.fe, dof_handler);
     FiniteElementUtils::distribute_dofs<dim, 1>(simulation_case->parameters.base.fe,
@@ -159,9 +159,9 @@ namespace MeltPoolDG::RadiativeTransport
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  RadiativeTransportProblem<dim>::compute_heaviside(dealii::Function<dim> &heaviside_func)
+  RadiativeTransportProblem<dim, number>::compute_heaviside(dealii::Function<dim> &heaviside_func)
   {
     scratch_data->initialize_dof_vector(heaviside, hs_dof_idx);
     heaviside_func.set_time(time_iterator->get_current_time());
@@ -172,15 +172,16 @@ namespace MeltPoolDG::RadiativeTransport
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  RadiativeTransportProblem<dim>::output_results(const unsigned int time_step, const double time)
+  RadiativeTransportProblem<dim, number>::output_results(const unsigned int time_step,
+                                                         const number       time)
   {
     if (not post_processor->is_output_timestep(time_step, time) and
         not simulation_case->parameters.output.do_user_defined_postprocessing)
       return;
 
-    const auto attach_output_vectors = [&](GenericDataOut<dim, double> &data_out) {
+    const auto attach_output_vectors = [&](GenericDataOut<dim, number> &data_out) {
       scratch_data->initialize_dof_vector(heat_source, rte_hanging_nodes_dof_idx);
       rad_trans_operation->compute_heat_source(heat_source, rte_hanging_nodes_dof_idx, true);
       rad_trans_operation->attach_output_vectors(data_out);
@@ -188,7 +189,7 @@ namespace MeltPoolDG::RadiativeTransport
       data_out.add_data_vector(dof_handler, heat_source, "heat_source");
     };
 
-    GenericDataOut<dim, double> generic_data_out(
+    GenericDataOut<dim, number> generic_data_out(
       scratch_data->get_mapping(), time, simulation_case->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
 
@@ -201,9 +202,9 @@ namespace MeltPoolDG::RadiativeTransport
   }
 
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  RadiativeTransportProblem<dim>::refine_mesh()
+  RadiativeTransportProblem<dim, number>::refine_mesh()
   {
     const auto mark_cells_for_refinement = [&](dealii::Triangulation<dim> &tria) -> bool {
       dealii::Vector<float> estimated_error_per_cell(
@@ -250,9 +251,9 @@ namespace MeltPoolDG::RadiativeTransport
                                  time_iterator->get_current_time_step_number());
   }
 
-  template class RadiativeTransportProblem<1>;
-  template class RadiativeTransportProblem<2>;
-  template class RadiativeTransportProblem<3>;
+  template class RadiativeTransportProblem<1, double>;
+  template class RadiativeTransportProblem<2, double>;
+  template class RadiativeTransportProblem<3, double>;
 } // namespace MeltPoolDG::RadiativeTransport
 
 int

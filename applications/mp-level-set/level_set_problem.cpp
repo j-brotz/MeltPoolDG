@@ -30,11 +30,9 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  using namespace dealii;
-
-  template <int dim>
+  template <int dim, typename number>
   void
-  LevelSetProblem<dim>::run()
+  LevelSetProblem<dim, number>::run()
   {
     initialize();
     ScopedName         sc("run");
@@ -102,14 +100,14 @@ namespace MeltPoolDG::LevelSet
    *  This function initials the relevant scratch data
    *  for the computation of the level set problem
    */
-  template <int dim>
+  template <int dim, typename number>
   void
-  LevelSetProblem<dim>::initialize()
+  LevelSetProblem<dim, number>::initialize()
   {
-    scratch_data =
-      std::make_shared<ScratchData<dim>>(simulation_case->mpi_communicator,
-                                         simulation_case->parameters.base.verbosity_level,
-                                         /* do_matrix_free */ true);
+    scratch_data = std::make_shared<ScratchData<dim, dim, number>>(
+      simulation_case->mpi_communicator,
+      simulation_case->parameters.base.verbosity_level,
+      /* do_matrix_free */ true);
     ScopedName         sc("initialize");
     TimerOutput::Scope scope(scratch_data->get_timer(), sc);
 
@@ -132,7 +130,7 @@ namespace MeltPoolDG::LevelSet
     ls_quad_idx = scratch_data->attach_quadrature(
       FiniteElementUtils::create_quadrature<dim>(simulation_case->parameters.ls.fe));
     time_iterator =
-      std::make_unique<TimeIterator<double>>(simulation_case->parameters.time_stepping);
+      std::make_unique<TimeIterator<number>>(simulation_case->parameters.time_stepping);
 
     setup_dof_system(false);
 
@@ -140,7 +138,7 @@ namespace MeltPoolDG::LevelSet
 
     if (simulation_case->parameters.ls.fe.type != FiniteElementType::FE_DGQ)
       {
-        level_set_operation = std::make_unique<LevelSetOperation<dim, double>>(
+        level_set_operation = std::make_unique<LevelSetOperation<dim, number>>(
           *scratch_data,
           *time_iterator,
           *simulation_case->get_boundary_condition_manager("level_set"),
@@ -158,7 +156,7 @@ namespace MeltPoolDG::LevelSet
       }
     else
       {
-        level_set_operation = std::make_unique<LevelSetDGOperation<dim, double>>(
+        level_set_operation = std::make_unique<LevelSetDGOperation<dim, number>>(
           *scratch_data,
           *time_iterator,
           simulation_case->parameters.ls,
@@ -177,7 +175,7 @@ namespace MeltPoolDG::LevelSet
 
     if (simulation_case->parameters.evapor.analytical.function != "not_initialized")
       {
-        evaporation_operation = std::make_unique<Evaporation::EvaporationOperation<dim, double>>(
+        evaporation_operation = std::make_unique<Evaporation::EvaporationOperation<dim, number>>(
           *scratch_data,
           level_set_operation->get_level_set_as_heaviside(),
           level_set_operation->get_normal_vector(),
@@ -211,7 +209,7 @@ namespace MeltPoolDG::LevelSet
                    "signed distance field must be provided. Abort ..."));
 
     post_processor =
-      std::make_unique<Postprocessor<dim, double>>(scratch_data->get_mpi_comm(ls_dof_idx),
+      std::make_unique<Postprocessor<dim, number>>(scratch_data->get_mpi_comm(ls_dof_idx),
                                                    simulation_case->parameters.output,
                                                    simulation_case->parameters.time_stepping,
                                                    scratch_data->get_mapping(),
@@ -219,7 +217,7 @@ namespace MeltPoolDG::LevelSet
                                                    scratch_data->get_pcout(2));
     if (simulation_case->parameters.profiling.enable)
       profiling_monitor =
-        std::make_unique<Profiling::ProfilingMonitor<double>>(simulation_case->parameters.profiling,
+        std::make_unique<Profiling::ProfilingMonitor<number>>(simulation_case->parameters.profiling,
                                                               *time_iterator);
     // Do initial refinement steps if requested
     if (simulation_case->parameters.amr.do_amr &&
@@ -258,9 +256,9 @@ namespace MeltPoolDG::LevelSet
     output_results(0, simulation_case->parameters.time_stepping.start_time);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LevelSetProblem<dim>::setup_dof_system(const bool do_reinit)
+  LevelSetProblem<dim, number>::setup_dof_system(const bool do_reinit)
   {
     FiniteElementUtils::distribute_dofs<dim, 1>(simulation_case->parameters.ls.fe, dof_handler);
     FiniteElementUtils::distribute_dofs<dim, dim>(simulation_case->parameters.base.fe,
@@ -273,14 +271,14 @@ namespace MeltPoolDG::LevelSet
     if (simulation_case->parameters.ls.fe.type != FiniteElementType::FE_DGQ)
       {
         MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
-                                                                                           double>(
+                                                                                           number>(
           *scratch_data,
           simulation_case->get_boundary_condition("dirichlet", "level_set"),
           simulation_case->get_periodic_bc(),
           ls_dof_idx,
           ls_hanging_nodes_dof_idx);
 
-        MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim, double>(
+        MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim, number>(
           *scratch_data,
           simulation_case->get_boundary_condition("dirichlet", "level_set"),
           ls_zero_bc_idx,
@@ -308,9 +306,9 @@ namespace MeltPoolDG::LevelSet
       }
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LevelSetProblem<dim>::compute_advection_velocity(Function<dim> &advec_func)
+  LevelSetProblem<dim, number>::compute_advection_velocity(Function<dim> &advec_func)
   {
     advection_velocity = 0;
     // set the current time to the advection field function
@@ -324,16 +322,16 @@ namespace MeltPoolDG::LevelSet
     hanging_node_constraints_velocity.distribute(advection_velocity);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LevelSetProblem<dim>::output_results(const unsigned int time_step, const double time)
+  LevelSetProblem<dim, number>::output_results(const unsigned int time_step, const number time)
   {
     ScopedName         sc("output_results");
     TimerOutput::Scope scope(scratch_data->get_timer(), sc);
     if (!post_processor->is_output_timestep(time_step, time))
       return;
 
-    const auto attach_output_vectors = [&](GenericDataOut<dim, double> &data_out) {
+    const auto attach_output_vectors = [&](GenericDataOut<dim, number> &data_out) {
       level_set_operation->attach_output_vectors(data_out);
       if (evaporation_operation)
         evaporation_operation->attach_output_vectors(data_out);
@@ -349,7 +347,7 @@ namespace MeltPoolDG::LevelSet
                                vector_component_interpretation);
     };
 
-    GenericDataOut<dim, double> generic_data_out(
+    GenericDataOut<dim, number> generic_data_out(
       scratch_data->get_mapping(), time, simulation_case->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
 
@@ -361,9 +359,9 @@ namespace MeltPoolDG::LevelSet
     post_processor->process(time_step, generic_data_out, time);
   }
 
-  template <int dim>
+  template <int dim, typename number>
   void
-  LevelSetProblem<dim>::refine_mesh()
+  LevelSetProblem<dim, number>::refine_mesh()
   {
     ScopedName         sc("AMR");
     TimerOutput::Scope scope(scratch_data->get_timer(), sc);
@@ -415,10 +413,10 @@ namespace MeltPoolDG::LevelSet
                                   Quadrature<dim>(
                                     scratch_data->get_fe(ls_dof_idx).get_unit_support_points()),
                                   update_values);
-          std::vector<double> ls_vals(scratch_data->get_n_dofs_per_cell(ls_dof_idx));
-          std::vector<double> hs_vals(scratch_data->get_n_dofs_per_cell(ls_dof_idx));
+          std::vector<number> ls_vals(scratch_data->get_n_dofs_per_cell(ls_dof_idx));
+          std::vector<number> hs_vals(scratch_data->get_n_dofs_per_cell(ls_dof_idx));
 
-          const double phi_threshold = std::tanh(2.0);
+          const number phi_threshold = std::tanh(2.0);
 
           for (auto &cell : tria.active_cell_iterators())
             {
@@ -435,7 +433,7 @@ namespace MeltPoolDG::LevelSet
                   ls_values.get_function_values(level_set_operation->get_level_set_as_heaviside(),
                                                 hs_vals);
 
-                  double max_ls = 0;
+                  number max_ls = 0;
                   for (const auto &ls : ls_vals)
                     max_ls = std::max(std::abs(ls), max_ls);
 
@@ -488,9 +486,9 @@ namespace MeltPoolDG::LevelSet
                                  time_iterator->get_current_time_step_number());
   }
 
-  template class LevelSetProblem<1>;
-  template class LevelSetProblem<2>;
-  template class LevelSetProblem<3>;
+  template class LevelSetProblem<1, double>;
+  template class LevelSetProblem<2, double>;
+  template class LevelSetProblem<3, double>;
 } // namespace MeltPoolDG::LevelSet
 
 int

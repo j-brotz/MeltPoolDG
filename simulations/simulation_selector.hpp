@@ -13,11 +13,11 @@ namespace MeltPoolDG
 {
   namespace Simulation
   {
-    template <int dim>
+    template <int dim, typename number>
     class SimulationSelector
     {
     public:
-      static std::shared_ptr<MeltPoolCase<dim>>
+      static std::shared_ptr<MeltPoolCase<dim, number>>
       get_simulation(const std::string simulation_name,
                      const std::string parameter_file,
                      const MPI_Comm    mpi_communicator);

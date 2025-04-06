@@ -39,7 +39,7 @@ namespace MeltPoolDG::Flow
    * convection-diffusion mushy region phase-change problems. International Journal of Heat and Mass
    * Transfer, 30(8), 1709–1719. https://doi.org/10.1016/0017-9310(87)90317-6
    */
-  template <int dim>
+  template <int dim, typename number>
   class DarcyDampingOperation
   {
   private:
@@ -47,7 +47,7 @@ namespace MeltPoolDG::Flow
 
     const double                                   mushy_zone_morphology;
     const double                                   avoid_div_zero_constant;
-    const ScratchData<dim>                        &scratch_data;
+    const ScratchData<dim, dim, double>           &scratch_data;
     const unsigned int                             flow_vel_hanging_nodes_dof_idx;
     const unsigned int                             flow_quad_idx;
     const unsigned int                             solid_dof_idx;
@@ -55,11 +55,11 @@ namespace MeltPoolDG::Flow
     mutable AlignedVector<VectorizedArray<double>> damping_at_q;
 
   public:
-    DarcyDampingOperation(const DarcyDampingData<double> &data_in,
-                          const ScratchData<dim>         &scratch_data,
-                          const unsigned int              flow_vel_hanging_nodes_dof_idx,
-                          const unsigned int              flow_quad_idx,
-                          const unsigned int              solid_dof_idx);
+    DarcyDampingOperation(const DarcyDampingData<number>      &data_in,
+                          const ScratchData<dim, dim, number> &scratch_data,
+                          const unsigned int                   flow_vel_hanging_nodes_dof_idx,
+                          const unsigned int                   flow_quad_idx,
+                          const unsigned int                   solid_dof_idx);
 
     /**
      * Compute the contribution of the Darcy damping force into a force vector @param force_rhs.

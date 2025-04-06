@@ -55,22 +55,22 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   HeatCutOperation<dim, number>::HeatCutOperation(
-    const ScratchData<dim, dim, number>                       &scratch_data_in,
-    const std::shared_ptr<const BoundaryConditionManager<dim>> heat_bc_manager,
-    const PeriodicBoundaryConditions<dim>                     &periodic_bc_in,
-    const HeatData<number>                                    &heat_data_in,
-    const MaterialData<number>                                &material_data_in,
-    const Evaporation::EvaporationData<number>                &evapor_data_in,
-    const TimeIterator<number>                                &time_iterator_in,
-    const unsigned int                                         heat_cut_dof_idx_in,
-    const unsigned int                                         heat_cut_no_bc_dof_idx_in,
-    const unsigned int                                         heat_continuous_no_bc_dof_idx_in,
-    const unsigned int                                         heat_quad_idx_in,
-    const bool                                                 do_solidification_in,
-    const unsigned int                                         ls_dof_idx_in,
-    const VectorType                                          &level_set_in,
-    const unsigned int                                         vel_dof_idx_in,
-    const VectorType                                          *velocity_in)
+    const ScratchData<dim, dim, number>                               &scratch_data_in,
+    const std::shared_ptr<const BoundaryConditionManager<dim, number>> heat_bc_manager,
+    const PeriodicBoundaryConditions<dim>                             &periodic_bc_in,
+    const HeatData<number>                                            &heat_data_in,
+    const MaterialData<number>                                        &material_data_in,
+    const Evaporation::EvaporationData<number>                        &evapor_data_in,
+    const TimeIterator<number>                                        &time_iterator_in,
+    const unsigned int                                                 heat_cut_dof_idx_in,
+    const unsigned int                                                 heat_cut_no_bc_dof_idx_in,
+    const unsigned int heat_continuous_no_bc_dof_idx_in,
+    const unsigned int heat_quad_idx_in,
+    const bool         do_solidification_in,
+    const unsigned int ls_dof_idx_in,
+    const VectorType  &level_set_in,
+    const unsigned int vel_dof_idx_in,
+    const VectorType  *velocity_in)
     : scratch_data(scratch_data_in)
     , dirichlet_bc(
         construct_dirichlet_bc_map<dim, number>(heat_data_in.cut.two_phase,
@@ -128,7 +128,7 @@ namespace MeltPoolDG::Heat
                                                      vel_dof_idx_in,
                                                      velocity_in);
 
-    preconditioner = make_preconditioner<dim, HeatCutOperator<dim, number>, VectorType>(
+    preconditioner = make_preconditioner<dim, number, HeatCutOperator<dim, number>, VectorType>(
       heat_data.linear_solver.preconditioner_type, heat_operator.get());
 
     mesh_classifier = std::make_shared<dealii::NonMatching::MeshClassifier<dim>>(

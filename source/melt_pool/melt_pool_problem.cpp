@@ -78,11 +78,9 @@
 
 namespace MeltPoolDG::MeltPool
 {
-  using namespace dealii;
-
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::run(std::shared_ptr<MeltPoolCase<dim>> base_in)
+  MeltPoolProblem<dim, number>::run(std::shared_ptr<MeltPoolCase<dim, number>> base_in)
   {
     initialize(base_in); // no timing needed, since the function does itself
 
@@ -419,7 +417,8 @@ namespace MeltPoolDG::MeltPool
                       {
                         // TODO documentation - what is reinit_3()?
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-                        dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
+                        dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())
+                          ->reinit_3();
 #else
                         AssertThrow(false, ExcNotImplemented());
 #endif
@@ -788,9 +787,9 @@ namespace MeltPoolDG::MeltPool
 
     dof_handler_ls.reinit(*base_in->triangulation);
 
-    scratch_data = std::make_shared<ScratchData<dim>>(base_in->mpi_communicator,
-                                                      param.base.verbosity_level,
-                                                      /*do_matrix_free*/ true);
+    scratch_data = std::make_shared<ScratchData<dim, dim, number>>(base_in->mpi_communicator,
+                                                                   param.base.verbosity_level,
+                                                                   /*do_matrix_free*/ true);
 
     scratch_data->set_mapping(FiniteElementUtils::create_mapping<dim>(param.base.fe));
 
@@ -853,7 +852,7 @@ namespace MeltPoolDG::MeltPool
     material = std::make_shared<Material<number>>(param.material, material_type);
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    auto adaflo_flow_operation = std::make_shared<Flow::AdafloWrapper<dim>>(
+    auto adaflo_flow_operation = std::make_shared<Flow::AdafloWrapper<dim, number>>(
       *scratch_data, base_in, *time_iterator, param.evapor.evaporative_cooling.enable);
     flow_operation = adaflo_flow_operation;
 
@@ -1047,7 +1046,7 @@ namespace MeltPoolDG::MeltPool
       evaporation_operation->reinit();
 
     // initialize the surface tension operation class
-    surface_tension_operation = std::make_shared<Flow::SurfaceTensionOperation<dim>>(
+    surface_tension_operation = std::make_shared<Flow::SurfaceTensionOperation<dim, number>>(
       param.flow.surface_tension,
       *scratch_data,
       level_set_operation->get_level_set_as_heaviside(),
@@ -1209,7 +1208,7 @@ namespace MeltPoolDG::MeltPool
             AssertThrow(heat_operation,
                         ExcMessage("Heat operation needs to be set up "
                                    "for solidification via Darcy damping."));
-            darcy_operation = std::make_shared<Flow::DarcyDampingOperation<dim>>(
+            darcy_operation = std::make_shared<Flow::DarcyDampingOperation<dim, number>>(
               param.flow.darcy_damping,
               *scratch_data,
               flow_operation->get_dof_handler_idx_velocity(),
@@ -1351,7 +1350,7 @@ namespace MeltPoolDG::MeltPool
   MeltPoolProblem<dim, number>::set_initial_condition_flow(std::shared_ptr<SimulationType> base_in)
   {
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())
+    dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())
       ->set_initial_condition(*base_in->get_initial_condition("navier_stokes_u"));
 #else
     AssertThrow(false, ExcNotImplemented());
@@ -1365,7 +1364,7 @@ namespace MeltPoolDG::MeltPool
         if (base_in->parameters.mp.solid.set_velocity_to_zero or
             base_in->parameters.mp.solid.do_not_reinitialize)
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-          dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
+          dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())->reinit_3();
 #else
           AssertThrow(false, ExcNotImplemented());
 #endif
@@ -1465,7 +1464,7 @@ namespace MeltPoolDG::MeltPool
 
       // initialize the flow operation class
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->reinit_1();
+    dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())->reinit_1();
     flow_velocity_constraints_no_solid.copy_from(flow_operation->get_constraints_velocity());
 #else
     AssertThrow(false, ExcNotImplemented());
@@ -1546,7 +1545,7 @@ namespace MeltPoolDG::MeltPool
 
       // TODO documentation - what is reinit_2()?
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->reinit_2();
+    dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())->reinit_2();
 #else
     AssertThrow(false, ExcNotImplemented());
 #endif
@@ -1674,7 +1673,7 @@ namespace MeltPoolDG::MeltPool
       level_set_operation->get_level_set_as_heaviside());
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())
+    dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())
       ->set_face_average_density_augmented_taylor_hood(
         *material,
         level_set_operation->get_level_set_as_heaviside(),

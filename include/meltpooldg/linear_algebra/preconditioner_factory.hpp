@@ -16,7 +16,7 @@
 namespace MeltPoolDG
 {
   /**
-   * A preconditoner factory function. This function creates a preconditioner based on the passed
+   * A preconditioner factory function. This function creates a preconditioner based on the passed
    * preconditioner type and the flag indicating whether the preconditioner is applied in a
    * matrix-free or a matrix-based context.
    *
@@ -29,8 +29,8 @@ namespace MeltPoolDG
    * @return Preconditioner object using the passed preconditioner type.
    * @throws Exception if the preconditioner type is not supported.
    */
-  template <int dim, typename OperatorType, typename VectorType>
-  Preconditioner<dim, VectorType>
+  template <int dim, typename number, typename OperatorType, typename VectorType>
+  Preconditioner<dim, VectorType, number>
   make_preconditioner(const PreconditionerType &preconditioner_type,
                       const OperatorType       *operator_in,
                       const bool                do_matrix_free = true)
@@ -38,18 +38,21 @@ namespace MeltPoolDG
     switch (preconditioner_type)
       {
           case PreconditionerType::Identity: {
-            return Preconditioner<dim, VectorType>(IdentityPreconditioner<dim, VectorType>());
+            return Preconditioner<dim, VectorType, number>(
+              IdentityPreconditioner<dim, VectorType, number>());
           }
           case PreconditionerType::AMG: {
-            return Preconditioner<dim, VectorType>(
+            return Preconditioner<dim, VectorType, number>(
               DealiiPreconditionerWrapper<dim,
+                                          number,
                                           VectorType,
                                           dealii::TrilinosWrappers::PreconditionAMG,
                                           OperatorType>(operator_in, do_matrix_free));
           }
           case PreconditionerType::ILU: {
-            return Preconditioner<dim, VectorType>(
+            return Preconditioner<dim, VectorType, number>(
               DealiiPreconditionerWrapper<dim,
+                                          number,
                                           VectorType,
                                           dealii::TrilinosWrappers::PreconditionILU,
                                           OperatorType>(operator_in, do_matrix_free));
@@ -59,12 +62,13 @@ namespace MeltPoolDG
               {
                 if (do_matrix_free)
                   {
-                    return Preconditioner<dim, VectorType>(
-                      JacobiPreconditioner<dim, VectorType, OperatorType>(*operator_in));
+                    return Preconditioner<dim, VectorType, number>(
+                      JacobiPreconditioner<dim, number, VectorType, OperatorType>(*operator_in));
                   }
               }
-            return Preconditioner<dim, VectorType>(
+            return Preconditioner<dim, VectorType, number>(
               DealiiPreconditionerWrapper<dim,
+                                          number,
                                           VectorType,
                                           dealii::TrilinosWrappers::PreconditionJacobi,
                                           OperatorType>(operator_in, false));

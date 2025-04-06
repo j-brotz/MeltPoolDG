@@ -15,18 +15,18 @@
 
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {
-  template <int dim>
-  class InitialFlowField : public Function<dim>
+  template <int dim, typename number>
+  class InitialFlowField : public Function<dim, number>
   {
   public:
     explicit InitialFlowField()
-      : Function<dim>(dim + 2)
+      : Function<dim, number>(dim + 2)
     {
       Assert(dim == 2 or dim == 3, ExcNotImplemented());
     }
 
-    double
-    value(const Point<dim> &, const unsigned int component) const final
+    number
+    value(const Point<dim, number> &, const unsigned int component) const final
     {
       if (component == 0)
         return 1.;
@@ -37,16 +37,16 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
   };
 
-  template <int dim>
-  class UnfittedObjectVelocity : public Function<dim>
+  template <int dim, typename number>
+  class UnfittedObjectVelocity : public Function<dim, number>
   {
   public:
     explicit UnfittedObjectVelocity()
-      : Function<dim>(dim)
+      : Function<dim, number>(dim)
     {}
 
-    double
-    value(const Point<dim> &, const unsigned int component) const final
+    number
+    value(const Point<dim, number> &, const unsigned int component) const final
     {
       if (component == 0)
         return 0.1;
@@ -55,19 +55,19 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
   };
 
-  template <int dim>
-  class MovingLevelSet : public Function<dim>
+  template <int dim, typename number>
+  class MovingLevelSet : public Function<dim, number>
   {
   public:
-    explicit MovingLevelSet(const double time)
-      : Function<dim>(1, time)
+    explicit MovingLevelSet(const number time)
+      : Function<dim, number>(1, time)
     {}
 
-    double
-    value(const Point<dim> &p, const unsigned int /* component */) const override
+    number
+    value(const Point<dim, number> &p, const unsigned int /* component */) const override
     {
-      const double t = this->get_time();
-      Point<dim>   center;
+      const number       t = this->get_time();
+      Point<dim, number> center;
       center[0] = 0.20048 + 0.1 * t;
       for (unsigned int d = 1; d < dim; ++d)
         center[d] = 0.24;
@@ -78,15 +78,15 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
 
   private:
-    const double radius = 0.1;
+    const number radius = 0.1;
   };
 
-  template <int dim>
-  class SimulationCutMovingCylinder final : public Flow::CompressibleFlowCase<dim>
+  template <int dim, typename number>
+  class SimulationCutMovingCylinder final : public Flow::CompressibleFlowCase<dim, number>
   {
   public:
     SimulationCutMovingCylinder(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : Flow::CompressibleFlowCase<dim>(parameter_file, mpi_communicator)
+      : Flow::CompressibleFlowCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
     void
@@ -95,11 +95,11 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       this->triangulation =
         std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
-      Point<dim> lower_left;
+      Point<dim, number> lower_left;
       for (unsigned int d = 1; d < dim; ++d)
         lower_left[d] = 0.;
 
-      Point<dim> upper_right;
+      Point<dim, number> upper_right;
       upper_right[0] = 1.0;
       for (unsigned int d = 1; d < dim; ++d)
         upper_right[d] = 0.4;
@@ -123,31 +123,31 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     set_boundary_conditions() override
     {
       // fitted boundaries
-      auto dummy_solution = std::make_shared<InitialFlowField<dim>>();
+      auto dummy_solution = std::make_shared<InitialFlowField<dim, number>>();
       this->attach_boundary_condition({0, dummy_solution}, "no_slip_wall", "compressible_flow");
     }
 
     void
     set_field_conditions() override
     {
-      auto initial_condition = std::make_shared<InitialFlowField<dim>>();
+      auto initial_condition = std::make_shared<InitialFlowField<dim, number>>();
       this->attach_initial_condition(initial_condition, "compressible_flow");
 
       const auto level_set =
-        std::make_shared<MovingLevelSet<dim>>(this->parameters.time_stepping.start_time);
+        std::make_shared<MovingLevelSet<dim, number>>(this->parameters.time_stepping.start_time);
       this->attach_field_function(level_set, "level_set", "compressible_flow");
 
       // set velocity function of immersed object
-      const auto unfitted_object_velocity = std::make_shared<UnfittedObjectVelocity<dim>>();
+      const auto unfitted_object_velocity = std::make_shared<UnfittedObjectVelocity<dim, number>>();
       this->attach_field_function(unfitted_object_velocity,
                                   "unfitted_object_velocity",
                                   "compressible_flow");
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const override
+    do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const override
     {
-      InitialFlowField<dim> reference_values;
+      InitialFlowField<dim, number> reference_values;
       this->print_relative_norm(generic_data_out, reference_values, "norm");
     }
 

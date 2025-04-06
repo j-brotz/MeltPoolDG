@@ -107,8 +107,9 @@ namespace MeltPoolDG::LevelSet
       , correction_factor(2. / (w_g + w_h))
     {
       AssertThrow(w_g + w_h != 0.0,
-                  ExcMessage("When using a phase weighted Dirac delta function approximation"
-                             "use weights that don't sum up to zero! Abort..."));
+                  dealii::ExcMessage("When using a phase weighted Dirac delta function "
+                                     "approximation use weights that don't sum up to zero! "
+                                     "Abort..."));
     }
 
     inline number
@@ -192,8 +193,9 @@ namespace MeltPoolDG::LevelSet
     {
       AssertThrow(std::abs(2. * w_1g * w_2g + w_1g * w_2h + w_1h * w_2g + 2. * w_1h * w_2h) >
                     std::numeric_limits<number>::epsilon(),
-                  ExcMessage("When using a phase quadratic weighted Dirac delta function"
-                             "approximation use weights that fulfill this condition! Abort..."));
+                  dealii::ExcMessage("When using a phase quadratic weighted Dirac delta "
+                                     "function approximation use weights that fulfill this "
+                                     "condition! Abort..."));
     }
 
     inline number
@@ -282,14 +284,17 @@ namespace MeltPoolDG::LevelSet
       , correction_factor((w_g - w_h) / (w_g * w_h * std::log(w_g / w_h)))
     {
       AssertThrow(w_g > 0.0,
-                  ExcMessage("When using the Dirac delta function approximation weighted"
-                             "consistent with evaporation use positive weights! Abort..."));
+                  dealii::ExcMessage("When using the Dirac delta function approximation "
+                                     "weighted consistent with evaporation use positive weights! "
+                                     "Abort..."));
       AssertThrow(w_h > 0.0,
-                  ExcMessage("When using the Dirac delta function approximation weighted"
-                             "consistent with evaporation use positive weights! Abort..."));
+                  dealii::ExcMessage("When using the Dirac delta function approximation "
+                                     "weighted consistent with evaporation use positive weights! "
+                                     "Abort..."));
       AssertThrow(std::abs(w_g - w_h) > std::numeric_limits<number>::epsilon(),
-                  ExcMessage("When using the Dirac delta function approximation weighted consistent"
-                             "with evaporation the phase weights must differ! Abort..."));
+                  dealii::ExcMessage("When using the Dirac delta function approximation "
+                                     "weighted consistent with evaporation the phase weights must "
+                                     "differ! Abort..."));
     }
 
     inline number
@@ -396,29 +401,29 @@ namespace MeltPoolDG::LevelSet
               / (w_1g - w_1h)
             +
               (w_2h - w_2g) * (1. / w_1g * (std::log(w_1h / w_1g) - 1.) + 1. / w_1h)
-              / Utilities::fixed_power<2>(1. / w_1h - 1. / w_1g)
+              / dealii::Utilities::fixed_power<2>(1. / w_1h - 1. / w_1g)
           )
           // clang-format on
         )
     {
       AssertThrow(w_1g > 0.0,
-                  ExcMessage(
+                  dealii::ExcMessage(
                     "When using the Dirac delta function approximation that is phase weighted"
                     "reciprocal times heaviside use positive weights! Abort..."));
       AssertThrow(w_1h > 0.0,
-                  ExcMessage(
+                  dealii::ExcMessage(
                     "When using the Dirac delta function approximation that is phase weighted"
                     "reciprocal times heaviside use positive weights! Abort..."));
       AssertThrow(std::abs(w_1g - w_1h) > std::numeric_limits<number>::epsilon(),
-                  ExcMessage(
+                  dealii::ExcMessage(
                     "When using the Dirac delta function approximation that is phase weighted"
                     "reciprocal times heaviside the phase weights must differ! Abort..."));
       AssertThrow(w_2g > 0.0,
-                  ExcMessage(
+                  dealii::ExcMessage(
                     "When using the Dirac delta function approximation that is phase weighted"
                     "reciprocal times heaviside use positive weights! Abort..."));
       AssertThrow(std::abs(w_2g - w_2h) > std::numeric_limits<number>::epsilon(),
-                  ExcMessage(
+                  dealii::ExcMessage(
                     "When using the Dirac delta function approximation that is phase weighted"
                     "reciprocal times heaviside the phase weights must differ! Abort..."));
     }
@@ -494,7 +499,7 @@ namespace MeltPoolDG::LevelSet
           return std::make_unique<DeltaApproximationReciprocalTimesHeavisidePhaseWeighted<number>>(
             data);
         default:
-          Assert(false, ExcNotImplemented());
+          Assert(false, dealii::ExcNotImplemented());
       }
     return nullptr;
   }

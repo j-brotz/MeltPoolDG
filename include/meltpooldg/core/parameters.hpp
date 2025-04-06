@@ -34,9 +34,7 @@
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
-  template <typename number = double>
+  template <typename number>
   struct MeltPoolData
   {
     struct
@@ -56,7 +54,7 @@ namespace MeltPoolDG
    * entries subsequently. Please don't sort your input files and if you do be
    * aware that you might change the behavior!
    */
-  template <typename number = double>
+  template <typename number>
   struct Parameters : public ParametersBase
   {
   protected:
