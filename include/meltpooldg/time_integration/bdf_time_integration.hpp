@@ -328,7 +328,7 @@ namespace MeltPoolDG
     Preconditioner<dim, VectorType, number> preconditioner;
 
     //! Nonlinear solver
-    NewtonRaphsonSolver<VectorType> nonlinear_solver;
+    NewtonRaphsonSolver<number, VectorType> nonlinear_solver;
 
     //! BDF prefactor for the right-hand side
     number rhs_prefactor;

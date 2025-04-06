@@ -36,6 +36,7 @@ namespace MeltPoolDG::Flow
      * is an explicit scheme.
      */
     virtual std::unique_ptr<TimeIntegratorBase<number>>
-    make_problem_specific_time_integrator(const TimeIntegratorData<number> &time_integrator_data) = 0;
+    make_problem_specific_time_integrator(
+      const TimeIntegratorData<number> &time_integrator_data) = 0;
   };
 } // namespace MeltPoolDG::Flow

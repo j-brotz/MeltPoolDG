@@ -167,7 +167,7 @@ namespace MeltPoolDG
     Preconditioner<dim, VectorType, number> preconditioner;
 
     //! Nonlinear solver
-    NewtonRaphsonSolver<VectorType> nonlinear_solver;
+    NewtonRaphsonSolver<number, VectorType> nonlinear_solver;
 
     VectorType intermediate_explicit_solution;
 
