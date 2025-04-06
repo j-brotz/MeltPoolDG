@@ -12,8 +12,6 @@
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
   /**
    * Requirements for a pde operator in order to use it with the explicit time integrator.
    */
@@ -38,10 +36,10 @@ namespace MeltPoolDG
   template <typename number>
   class TimeIntegratorBase
   {
-    using VectorType = LinearAlgebra::distributed::Vector<number>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
   public:
-    explicit TimeIntegratorBase(const TimeIntegratorData &time_integrator_data_in)
+    explicit TimeIntegratorBase(const TimeIntegratorData<number> &time_integrator_data_in)
       : time_integrator_data(time_integrator_data_in)
     {}
 
@@ -125,7 +123,7 @@ namespace MeltPoolDG
     }
 
   protected:
-    const TimeIntegratorData time_integrator_data;
-    VectorType              *monitoring_vector = nullptr;
+    const TimeIntegratorData<number> time_integrator_data;
+    VectorType                      *monitoring_vector = nullptr;
   };
 } // namespace MeltPoolDG

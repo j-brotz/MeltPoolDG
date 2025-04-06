@@ -34,7 +34,7 @@ namespace MeltPoolDG::Flow
     FiniteElementData fe;
 
     // time integration data
-    TimeIntegratorData time_integrator;
+    TimeIntegratorData<number> time_integrator;
 
     struct Material
     {

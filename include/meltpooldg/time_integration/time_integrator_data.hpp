@@ -32,6 +32,7 @@ namespace MeltPoolDG
   /**
    * Collection of all integrator parameters.
    */
+  template <typename number = double>
   struct TimeIntegratorData
   {
     /**
@@ -56,8 +57,8 @@ namespace MeltPoolDG
      * Number of time steps after which thre preconditioner gets updated.
      */
     unsigned int                preconditioner_update_frequency = 100;
-    NonlinearSolverData<double> nlsolver_data;
-    LinearSolverData<double>    linear_solver_data;
+    NonlinearSolverData<number> nlsolver_data;
+    LinearSolverData<number>    linear_solver_data;
 
     void
     add_parameters(dealii::ParameterHandler &prm)

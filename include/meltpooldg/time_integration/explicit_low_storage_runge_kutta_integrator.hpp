@@ -19,13 +19,10 @@
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 
 #include <string>
-#include <variant>
 #include <vector>
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
   /**
    * The time integrator schemes supported by the low storage explicit Runge-Kutta time integrator.
    */
@@ -36,8 +33,9 @@ namespace MeltPoolDG
     TimeIntegratorSchemes::LSRK_stage_9_order_5,
   }};
 
-  template <typename number,
-            ExplicitPDEOperator<number, LinearAlgebra::distributed::Vector<number>> PDEOperator>
+  template <
+    typename number,
+    ExplicitPDEOperator<number, dealii::LinearAlgebra::distributed::Vector<number>> PDEOperator>
   class LowStorageExplicitRungeKuttaIntegrator final : public TimeIntegratorBase<number>
   {
   public:
@@ -51,9 +49,9 @@ namespace MeltPoolDG
      * @param time_integrator_data Time integrator data struct setting the scheme of the integrator.
      * @param timer Timer used for computation time tracking.
      */
-    LowStorageExplicitRungeKuttaIntegrator(const PDEOperator        &pde_operator,
-                                           const TimeIntegratorData &time_integrator_data,
-                                           dealii::TimerOutput      &timer)
+    LowStorageExplicitRungeKuttaIntegrator(const PDEOperator                &pde_operator,
+                                           const TimeIntegratorData<number> &time_integrator_data,
+                                           dealii::TimerOutput              &timer)
       : TimeIntegratorBase<number>(time_integrator_data)
       , pde_operator(pde_operator)
       , timer(timer)
@@ -275,11 +273,11 @@ namespace MeltPoolDG
     unsigned int n_stages;
 
     // register for time integrator
-    LinearAlgebra::distributed::Vector<number> rk_register_ri;
-    LinearAlgebra::distributed::Vector<number> rk_register_ki;
+    dealii::LinearAlgebra::distributed::Vector<number> rk_register_ri;
+    dealii::LinearAlgebra::distributed::Vector<number> rk_register_ki;
 
     const PDEOperator &pde_operator;
 
-    TimerOutput &timer;
+    dealii::TimerOutput &timer;
   };
 } // namespace MeltPoolDG

@@ -58,9 +58,9 @@ namespace MeltPoolDG
    */
   template <typename number, typename PDEOperator>
   TimeIntegratorBase<number> *
-  explicit_time_integrator_factory(const PDEOperator        &pde_operator,
-                                   const TimeIntegratorData &params,
-                                   dealii::TimerOutput      &timer)
+  explicit_time_integrator_factory(const PDEOperator                &pde_operator,
+                                   const TimeIntegratorData<number> &params,
+                                   dealii::TimerOutput              &timer)
   {
     if constexpr (ExplicitPDEOperator<PDEOperator,
                                       number,
@@ -89,7 +89,7 @@ namespace MeltPoolDG
   template <int dim, typename number, typename PDEOperator>
   TimeIntegratorBase<number> *
   implicit_time_integrator_factory(const PDEOperator                   &pde_operator,
-                                   const TimeIntegratorData            &params,
+                                   const TimeIntegratorData<number>    &params,
                                    const ScratchData<dim, dim, number> &scratch_data,
                                    const unsigned int                   dof_idx)
   {
@@ -125,10 +125,10 @@ namespace MeltPoolDG
             typename PDEOperator,
             typename VectorType = dealii::LinearAlgebra::distributed::Vector<number>>
   TimeIntegratorBase<number> *
-  time_integrator_factory(const PDEOperator              &pde_operator,
-                          const TimeIntegratorData       &params,
-                          const LinearSolverData<number> &linear_solver_data,
-                          dealii::TimerOutput            &timer)
+  time_integrator_factory(const PDEOperator                &pde_operator,
+                          const TimeIntegratorData<number> &params,
+                          const LinearSolverData<number>   &linear_solver_data,
+                          dealii::TimerOutput              &timer)
   {
     if constexpr (ExplicitPDEOperator<PDEOperator, number, VectorType>)
       {

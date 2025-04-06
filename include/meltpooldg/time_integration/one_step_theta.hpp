@@ -17,8 +17,6 @@
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
   inline static constexpr std::array<TimeIntegratorSchemes, 3> one_step_theta_supported_schemes{
     {TimeIntegratorSchemes::explicit_euler,
      TimeIntegratorSchemes::implicit_euler,
@@ -28,12 +26,12 @@ namespace MeltPoolDG
   class OneStepTheta final : public TimeIntegratorBase<number>
   {
   public:
-    using VectorType      = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+    using VectorType      = LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = LinearAlgebra::distributed::BlockVector<number>;
 
-    OneStepTheta(const PDEOperator              &pde_operator,
-                 const TimeIntegratorData       &time_integrator_data_in,
-                 const LinearSolverData<number> &linear_solver_data_in)
+    OneStepTheta(const PDEOperator                &pde_operator,
+                 const TimeIntegratorData<number> &time_integrator_data_in,
+                 const LinearSolverData<number>   &linear_solver_data_in)
       : TimeIntegratorBase<number>(time_integrator_data_in)
       , pde_operator(pde_operator)
       , linear_solver_data(linear_solver_data_in)
@@ -57,7 +55,7 @@ namespace MeltPoolDG
             default: {
               AssertThrow(
                 false,
-                ExcMessage(
+                dealii::ExcMessage(
                   "The chosen time integration scheme is not supported by the OneStepTheta class."));
             }
         }
@@ -183,7 +181,7 @@ namespace MeltPoolDG
 
 
   private:
-    double Theta_;
+    number Theta_;
 
     mutable number dt_;
     mutable number old_time_;

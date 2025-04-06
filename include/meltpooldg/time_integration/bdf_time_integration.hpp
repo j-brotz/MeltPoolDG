@@ -79,9 +79,10 @@ namespace MeltPoolDG
      TimeIntegratorSchemes::bdf_5,
      TimeIntegratorSchemes::bdf_6}};
 
-  template <int dim,
-            typename number,
-            BDFImplicitPDEOperator<number, LinearAlgebra::distributed::Vector<number>> PDEOperator>
+  template <
+    int dim,
+    typename number,
+    BDFImplicitPDEOperator<number, dealii::LinearAlgebra::distributed::Vector<number>> PDEOperator>
   class BDFIntegrator final : public TimeIntegratorBase<number>
   {
   public:
@@ -97,7 +98,7 @@ namespace MeltPoolDG
      * @param dof_idx_in Relevant dof index of the passed operator in the scratch data object.
      */
     BDFIntegrator(const PDEOperator                   &pde_operator,
-                  const TimeIntegratorData            &time_integrator_data,
+                  const TimeIntegratorData<number>    &time_integrator_data,
                   const ScratchData<dim, dim, number> &scratch_data_in,
                   const unsigned int                   dof_idx_in)
       : TimeIntegratorBase<number>(time_integrator_data)
@@ -209,7 +210,7 @@ namespace MeltPoolDG
       MatrixTypeObject<VectorType> jacobian(jacobian_multiplication);
 
       nonlinear_solver.norm_of_solution_vector =
-        [&solution = solution_history.get_current_solution()]() -> double {
+        [&solution = solution_history.get_current_solution()]() -> number {
         return solution.l2_norm();
       };
 
