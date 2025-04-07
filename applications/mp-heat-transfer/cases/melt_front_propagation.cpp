@@ -36,6 +36,7 @@
 
 namespace MeltPoolDG::Simulation::MeltFrontPropagation
 {
+  using namespace dealii;
 
   template <int dim, typename number>
   class InitialLevelSet : public Function<dim, number>

@@ -76,7 +76,7 @@ namespace MeltPoolDG::MeltPool
      * attach functions
      */
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors);
+    attach_vectors(std::vector<VectorType *> &vectors);
 
     void
     attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
@@ -143,7 +143,7 @@ namespace MeltPoolDG::MeltPool
     set_flow_field_in_solid_regions_to_zero(
       const dealii::DoFHandler<dim>           &flow_dof_handler,
       const dealii::AffineConstraints<number> &flow_constraints_no_solid,
-      AffineConstraints<number>               &flow_constraints);
+      dealii::AffineConstraints<number>       &flow_constraints);
 
     /**
      *  The reinitialization constraints are modified such that they are zero in solid

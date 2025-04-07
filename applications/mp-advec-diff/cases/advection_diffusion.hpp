@@ -37,22 +37,22 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
    * this function specifies the initial field of the level set equation
    */
   template <int dim, typename number>
-  class InitialLevelSetField : public Function<dim, number>
+  class InitialLevelSetField : public dealii::Function<dim, number>
   {
   public:
     InitialLevelSetField(const LevelSetType level_set_type = LevelSetType::level_set,
                          const number       eps            = 0.0)
-      : Function<dim>()
-      , distance_sphere(dim == 1   ? Point<dim, number>(0.0) :
-                        (dim == 2) ? Point<dim, number>(0.0, 0.5) :
-                                     Point<dim, number>(0, 0, 0.5),
+      : dealii::Function<dim>()
+      , distance_sphere(dim == 1   ? dealii::Point<dim, number>(0.0) :
+                        (dim == 2) ? dealii::Point<dim, number>(0.0, 0.5) :
+                                     dealii::Point<dim, number>(0, 0, 0.5),
                         0.25)
       , level_set_type(level_set_type)
       , eps(eps)
     {}
 
     number
-    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       const auto signed_distance = -distance_sphere.value(p);
 
@@ -75,23 +75,23 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
     }
 
   private:
-    const Functions::SignedDistance::Sphere<dim> distance_sphere;
-    const LevelSetType                           level_set_type;
-    const number                                 eps;
+    const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere;
+    const LevelSetType                                   level_set_type;
+    const number                                         eps;
   };
 
   template <int dim, typename number>
-  class PrescribedVelocityField : public Function<dim, number>
+  class PrescribedVelocityField : public dealii::Function<dim, number>
   {
   public:
     PrescribedVelocityField()
-      : Function<dim>(dim)
+      : dealii::Function<dim>(dim)
     {}
 
     number
-    value(const Point<dim, number> &p, const unsigned int component) const override
+    value(const dealii::Point<dim, number> &p, const unsigned int component) const override
     {
-      Tensor<1, dim> value_;
+      dealii::Tensor<1, dim, number> value_;
 
       const number x = p[0];
       const number y = p[dim - 1];
@@ -118,10 +118,11 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
     void
     create_spatial_discretization() override
     {
+      using namespace dealii;
       if (dim == 1 || this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
-          this->triangulation = std::make_shared<Triangulation<dim>>();
+          this->triangulation = std::make_shared<dealii::Triangulation<dim>>();
         }
       else
         {
@@ -131,7 +132,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
 
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
-          GridGenerator::subdivided_hyper_cube_with_simplices(
+          dealii::GridGenerator::subdivided_hyper_cube_with_simplices(
             *this->triangulation,
             Utilities::pow(2, this->parameters.base.global_refinements),
             left_domain,
@@ -139,7 +140,10 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
         }
       else
         {
-          GridGenerator::subdivided_hyper_cube(*this->triangulation, 2, left_domain, right_domain);
+          dealii::GridGenerator::subdivided_hyper_cube(*this->triangulation,
+                                                       2,
+                                                       left_domain,
+                                                       right_domain);
           this->triangulation->refine_global(this->parameters.base.global_refinements - 1);
         }
     }
@@ -150,10 +154,10 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
       /*
        *  create a pair of (boundary_id, dirichlet_function)
        */
-      constexpr types::boundary_id inflow_bc  = 42;
-      constexpr types::boundary_id do_nothing = 0;
+      constexpr dealii::types::boundary_id inflow_bc  = 42;
+      constexpr dealii::types::boundary_id do_nothing = 0;
 
-      auto dirichlet = std::make_shared<Functions::ConstantFunction<dim>>(-1);
+      auto dirichlet = std::make_shared<dealii::Functions::ConstantFunction<dim>>(-1);
 
       if (inflow_outflow_bc)
         {
@@ -248,6 +252,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
     void
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const final
     {
+      using namespace dealii;
       dealii::ConditionalOStream pcout(std::cout,
                                        Utilities::MPI::this_mpi_process(this->mpi_communicator) ==
                                          0);

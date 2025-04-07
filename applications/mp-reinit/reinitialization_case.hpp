@@ -13,7 +13,7 @@ namespace MeltPoolDG::LevelSet
   {
   protected:
     void
-    add_parameters(ParameterHandler &prm) final
+    add_parameters(dealii::ParameterHandler &prm) final
     {
       base.add_parameters(prm);
       time_stepping.add_parameters(prm);

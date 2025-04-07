@@ -90,15 +90,15 @@ namespace MeltPoolDG::Evaporation
 
 
   template <typename number>
-  VectorizedArray<number>
+  dealii::VectorizedArray<number>
   EvaporativeCooling<number>::compute_evaporative_cooling(
-    const VectorizedArray<number> &temperature) const
+    const dealii::VectorizedArray<number> &temperature) const
   {
     Assert(mass_flux_operator,
            dealii::ExcMessage("To use this function, the class must be constructed with "
                               "setup_internal_mass_flux_operator = true."));
 
-    VectorizedArray<number> rv;
+    dealii::VectorizedArray<number> rv;
     for (unsigned int i = 0; i < dealii::VectorizedArray<number>::size(); ++i)
       rv[i] = compute_evaporative_cooling(temperature[i]);
     return rv;
@@ -149,16 +149,16 @@ namespace MeltPoolDG::Evaporation
 
 
   template <typename number>
-  VectorizedArray<number>
+  dealii::VectorizedArray<number>
   EvaporativeCooling<number>::
     compute_evaporative_cooling_derivative_with_temperature_dependent_mass_flux(
-      const VectorizedArray<number> &temperature) const
+      const dealii::VectorizedArray<number> &temperature) const
   {
     Assert(mass_flux_operator,
            dealii::ExcMessage("To use this function, the class must be constructed with "
                               "setup_internal_mass_flux_operator = true."));
 
-    VectorizedArray<number> rv;
+    dealii::VectorizedArray<number> rv;
     for (unsigned int i = 0; i < dealii::VectorizedArray<number>::size(); ++i)
       rv[i] =
         compute_evaporative_cooling_derivative_with_temperature_dependent_mass_flux(temperature[i]);

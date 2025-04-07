@@ -24,37 +24,37 @@
 namespace MeltPoolDG::Simulation::RotatingBubble
 {
   template <int dim, typename number>
-  class InitializePhi : public Function<dim>
+  class InitializePhi : public dealii::Function<dim>
   {
   public:
     InitializePhi()
-      : Function<dim>()
-      , distance_sphere(dim == 1 ? Point<dim, number>(0.0) :
-                        dim == 2 ? Point<dim, number>(0.0, 0.5) :
-                                   Point<dim, number>(0.0, 0.5, 0.0),
+      : dealii::Function<dim>()
+      , distance_sphere(dim == 1 ? dealii::Point<dim, number>(0.0) :
+                        dim == 2 ? dealii::Point<dim, number>(0.0, 0.5) :
+                                   dealii::Point<dim, number>(0.0, 0.5, 0.0),
                         0.25 /*radius*/)
     {}
 
     number
-    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       return -distance_sphere.value(p);
     }
 
   private:
-    const Functions::SignedDistance::Sphere<dim> distance_sphere;
+    const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere;
   };
 
   template <int dim, typename number>
-  class AdvectionField : public Function<dim, number>
+  class AdvectionField : public dealii::Function<dim, number>
   {
   public:
     AdvectionField()
-      : Function<dim, number>(dim)
+      : dealii::Function<dim, number>(dim)
     {}
 
     void
-    vector_value(const Point<dim, number> &p, Vector<number> &values) const override
+    vector_value(const dealii::Point<dim, number> &p, dealii::Vector<number> &values) const override
     {
       if constexpr (dim >= 2)
         {
@@ -65,7 +65,7 @@ namespace MeltPoolDG::Simulation::RotatingBubble
           values[1] = -4 * x;
         }
       else
-        AssertThrow(false, ExcMessage("Advection field for dim!=2 not implemented"));
+        AssertThrow(false, dealii::ExcMessage("Advection field for dim!=2 not implemented"));
 
       if constexpr (dim == 3)
         values[2] = 0;
@@ -87,6 +87,7 @@ namespace MeltPoolDG::Simulation::RotatingBubble
     void
     create_spatial_discretization() override
     {
+      using namespace dealii;
       if (dim == 1 || this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
@@ -119,13 +120,13 @@ namespace MeltPoolDG::Simulation::RotatingBubble
       /*
        *  create a pair of (boundary_id, dirichlet_function)
        */
-      constexpr types::boundary_id inflow_bc  = 42;
-      constexpr types::boundary_id do_nothing = 0;
+      constexpr dealii::types::boundary_id inflow_bc  = 42;
+      constexpr dealii::types::boundary_id do_nothing = 0;
 
-      this->attach_boundary_condition({inflow_bc,
-                                       std::make_shared<Functions::ConstantFunction<dim>>(-1.0)},
-                                      "dirichlet",
-                                      "level_set");
+      this->attach_boundary_condition(
+        {inflow_bc, std::make_shared<dealii::Functions::ConstantFunction<dim>>(-1.0)},
+        "dirichlet",
+        "level_set");
       /*
        *  mark inflow edges with boundary label (no boundary on outflow edges must be prescribed
        *  due to the hyperbolic nature of the analyzed problem

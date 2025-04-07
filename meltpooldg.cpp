@@ -19,6 +19,7 @@ namespace MeltPoolDG
     void
     run_simulation(const std::string parameter_file, const MPI_Comm mpi_communicator)
     {
+      using namespace dealii;
       unsigned int dim          = 0;
       std::string  problem_type = "not_initialized";
       std::string  case_name    = "not_initialized";

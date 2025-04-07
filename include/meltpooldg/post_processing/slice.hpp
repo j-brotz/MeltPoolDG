@@ -35,10 +35,10 @@ namespace MeltPoolDG::PostProcessingTools
   class SliceCreator : public PostProcessorBase<dim, number>
   {
   private:
-    const GenericDataOut<dim, number> *generic_data_out = nullptr;
-    const Triangulation<dim - 1, dim> &tria_slice;
-    const std::vector<std::string>     request_variables;
-    const OutputData<number>          &output_data;
+    const GenericDataOut<dim, number>         *generic_data_out = nullptr;
+    const dealii::Triangulation<dim - 1, dim> &tria_slice;
+    const std::vector<std::string>             request_variables;
+    const OutputData<number>                  &output_data;
 
     // Collect file name and corresponding time step for the pvd-file
     std::vector<std::pair<number, std::string>> times_and_names;
@@ -48,10 +48,10 @@ namespace MeltPoolDG::PostProcessingTools
     /**
      * Constructor.
      */
-    SliceCreator(const GenericDataOut<dim, number> &generic_data_out,
-                 const Triangulation<dim - 1, dim> &tria_slice,
-                 const std::vector<std::string>     request_variables,
-                 const OutputData<number>          &output_data_in)
+    SliceCreator(const GenericDataOut<dim, number>         &generic_data_out,
+                 const dealii::Triangulation<dim - 1, dim> &tria_slice,
+                 const std::vector<std::string>             request_variables,
+                 const OutputData<number>                  &output_data_in)
       : generic_data_out(&generic_data_out)
       , tria_slice(tria_slice)
       , request_variables(request_variables)
@@ -78,6 +78,7 @@ namespace MeltPoolDG::PostProcessingTools
     void
     process(const unsigned int n_time_step) override
     {
+      using namespace dealii;
       AssertThrow(generic_data_out != nullptr, ExcMessage("GenericDataOut is null."));
       AssertThrow(dim > 1, ExcMessage("SliceCreator supports only dim>1."));
 

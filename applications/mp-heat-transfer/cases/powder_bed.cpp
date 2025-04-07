@@ -24,6 +24,8 @@
 
 namespace MeltPoolDG::Simulation::PowderBed
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   SimulationPowderBed<dim, number>::SimulationPowderBed(std::string    parameter_file,
                                                         const MPI_Comm mpi_communicator)

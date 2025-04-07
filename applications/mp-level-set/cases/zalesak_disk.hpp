@@ -29,15 +29,15 @@ namespace MeltPoolDG::Simulation::ZalesakDisk
   static constexpr double notch_height = 0.4;
 
   template <int dim, typename number>
-  class AdvectionField : public Function<dim, number>
+  class AdvectionField : public dealii::Function<dim, number>
   {
   public:
     AdvectionField()
-      : Function<dim, number>(dim)
+      : dealii::Function<dim, number>(dim)
     {}
 
     void
-    vector_value(const Point<dim, number> &p, Vector<number> &values) const override
+    vector_value(const dealii::Point<dim, number> &p, dealii::Vector<number> &values) const override
     {
       if constexpr (dim == 2)
         {
@@ -48,7 +48,7 @@ namespace MeltPoolDG::Simulation::ZalesakDisk
           values[1] = -4 * x;
         }
       else
-        AssertThrow(false, ExcMessage("Advection field for dim!=2 not implemented"));
+        AssertThrow(false, dealii::ExcMessage("Advection field for dim!=2 not implemented"));
     }
   };
 
@@ -66,6 +66,7 @@ namespace MeltPoolDG::Simulation::ZalesakDisk
     void
     create_spatial_discretization() override
     {
+      using namespace dealii;
       if (dim == 1)
         {
           AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
@@ -85,13 +86,13 @@ namespace MeltPoolDG::Simulation::ZalesakDisk
       /*
        *  create a pair of (boundary_id, dirichlet_function)
        */
-      constexpr types::boundary_id inflow_bc  = 42;
-      constexpr types::boundary_id do_nothing = 0;
+      constexpr dealii::types::boundary_id inflow_bc  = 42;
+      constexpr dealii::types::boundary_id do_nothing = 0;
 
-      this->attach_boundary_condition({inflow_bc,
-                                       std::make_shared<Functions::ConstantFunction<dim>>(1)},
-                                      "dirichlet",
-                                      "level_set");
+      this->attach_boundary_condition(
+        {inflow_bc, std::make_shared<dealii::Functions::ConstantFunction<dim>>(1)},
+        "dirichlet",
+        "level_set");
       /*
        *  mark inflow edges with boundary label (no boundary on outflow edges must be prescribed
        *  due to the hyperbolic nature of the analyzed problem
@@ -136,11 +137,11 @@ namespace MeltPoolDG::Simulation::ZalesakDisk
     void
     set_field_conditions() override
     {
-      Point<dim, number> center = (dim == 1) ? Point<dim, number>(0.0) :
-                                  (dim == 2) ? Point<dim, number>(0.0, 0.5) :
-                                               Point<dim, number>(0, 0, 0.5);
+      dealii::Point<dim, number> center = (dim == 1) ? dealii::Point<dim, number>(0.0) :
+                                          (dim == 2) ? dealii::Point<dim, number>(0.0, 0.5) :
+                                                       dealii::Point<dim, number>(0, 0, 0.5);
       this->attach_initial_condition(
-        std::make_shared<Functions::SignedDistance::ZalesakDisk<dim>>(
+        std::make_shared<dealii::Functions::SignedDistance::ZalesakDisk<dim>>(
           center, 0.3 /*radius*/, 0.1 /*notch_width*/, 0.5 /*notch_height*/),
         "signed_distance");
       this->attach_field_function(std::make_shared<AdvectionField<dim, number>>(),

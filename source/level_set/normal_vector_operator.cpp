@@ -50,7 +50,7 @@ namespace MeltPoolDG::LevelSet
 
     const unsigned int n_q_points = normal_values.get_quadrature().size();
 
-    std::vector<Tensor<1, dim>> normal_at_q(n_q_points, Tensor<1, dim>());
+    std::vector<Tensor<1, dim, number>> normal_at_q(n_q_points, Tensor<1, dim, number>());
 
     this->system_matrix = 0.0;
     rhs                 = 0.0;
@@ -76,13 +76,14 @@ namespace MeltPoolDG::LevelSet
             {
               for (unsigned int i = 0; i < dofs_per_cell; ++i)
                 {
-                  const number         phi_i      = normal_values.shape_value(i, q_index);
-                  const Tensor<1, dim> grad_phi_i = normal_values.shape_grad(i, q_index);
+                  const number                 phi_i      = normal_values.shape_value(i, q_index);
+                  const Tensor<1, dim, number> grad_phi_i = normal_values.shape_grad(i, q_index);
 
                   for (unsigned int j = 0; j < dofs_per_cell; ++j)
                     {
-                      const number         phi_j      = normal_values.shape_value(j, q_index);
-                      const Tensor<1, dim> grad_phi_j = normal_values.shape_grad(j, q_index);
+                      const number                 phi_j = normal_values.shape_value(j, q_index);
+                      const Tensor<1, dim, number> grad_phi_j =
+                        normal_values.shape_grad(j, q_index);
 
                       //clang-format off
                       normal_cell_matrix(i, j) +=
@@ -314,10 +315,10 @@ namespace MeltPoolDG::LevelSet
   template <int dim, typename number>
   void
   NormalVectorOperator<dim, number>::get_unit_normals_at_quadrature(
-    const FEValues<dim>         &fe_values,
-    const BlockVectorType       &normal_vector_field_in,
-    std::vector<Tensor<1, dim>> &unit_normal_at_quadrature,
-    const number                 zero)
+    const FEValues<dim>                 &fe_values,
+    const BlockVectorType               &normal_vector_field_in,
+    std::vector<Tensor<1, dim, number>> &unit_normal_at_quadrature,
+    const number                         zero)
   {
     for (unsigned int d = 0; d < dim; ++d)
       {

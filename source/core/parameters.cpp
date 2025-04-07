@@ -9,7 +9,7 @@ namespace MeltPoolDG
 
   template <typename number>
   void
-  Parameters<number>::add_parameters(ParameterHandler &prm)
+  Parameters<number>::add_parameters(dealii::ParameterHandler &prm)
   {
     base.add_parameters(prm);
     time_stepping.add_parameters(prm);
@@ -37,7 +37,7 @@ namespace MeltPoolDG
         "Lower limit of the solid fraction for where the flow velocity / level set is "
         "set to zero if \"mp set velocity to zero in solid\" or \"mp set level set to zero in solid\" "
         "are enabled.",
-        Patterns::Double(0.0, 1.0));
+        dealii::Patterns::Double(0.0, 1.0));
     }
     prm.leave_subsection();
 

@@ -33,19 +33,19 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
 
 
   template <int dim, typename number>
-  class ExactSolution : public Function<dim, number>
+  class ExactSolution : public dealii::Function<dim, number>
   {
   public:
     ExactSolution()
-      : Function<dim, number>()
+      : dealii::Function<dim, number>()
 
     {}
 
     number
-    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       const number t = this->get_time();
-      return std::sin(4.0 * numbers::PI * (p[0] - 1.1 * t));
+      return std::sin(4.0 * dealii::numbers::PI * (p[0] - 1.1 * t));
     }
 
   private:
@@ -55,37 +55,38 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
    * this function specifies the initial field of the level set equation
    */
   template <int dim, typename number>
-  class InitializePhi : public Function<dim, number>
+  class InitializePhi : public dealii::Function<dim, number>
   {
   public:
     InitializePhi()
-      : Function<dim, number>()
-      , distance_sphere(dim == 1   ? Point<dim, number>(0.0) :
-                        (dim == 2) ? Point<dim, number>(0.0, 0.5) :
-                                     Point<dim, number>(0, 0, 0.5),
+      : dealii::Function<dim, number>()
+      , distance_sphere(dim == 1   ? dealii::Point<dim, number>(0.0) :
+                        (dim == 2) ? dealii::Point<dim, number>(0.0, 0.5) :
+                                     dealii::Point<dim, number>(0, 0, 0.5),
                         0.25)
     {}
 
     number
-    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim, number> &p, const unsigned int /*component*/) const override
     {
-      return std::sin(4.0 * numbers::PI * p[0]);
+      return std::sin(4.0 * dealii::numbers::PI * p[0]);
     }
 
   private:
-    const Functions::SignedDistance::Sphere<dim> distance_sphere;
+    const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere;
   };
 
   template <int dim, typename number>
-  class AdvectionField : public Function<dim, number>
+  class AdvectionField : public dealii::Function<dim, number>
   {
   public:
     AdvectionField()
-      : Function<dim, number>(dim)
+      : dealii::Function<dim, number>(dim)
     {}
 
     number
-    value([[maybe_unused]] const Point<dim, number> &p, const unsigned int component) const override
+    value([[maybe_unused]] const dealii::Point<dim, number> &p,
+          const unsigned int                                 component) const override
     {
       if (component == 0)
         return 1.1;
@@ -95,19 +96,19 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
   };
 
   template <int dim, typename number>
-  class DirichletConditions : public Function<dim, number>
+  class DirichletConditions : public dealii::Function<dim, number>
   {
   public:
     DirichletConditions()
-      : Function<dim, number>(dim)
+      : dealii::Function<dim, number>(dim)
     {}
 
     number
-    value([[maybe_unused]] const Point<dim, number> &p,
-          [[maybe_unused]] const unsigned int        component) const override
+    value([[maybe_unused]] const dealii::Point<dim, number> &p,
+          [[maybe_unused]] const unsigned int                component) const override
     {
       const number t = this->get_time();
-      return std::sin(4.0 * numbers::PI * (p[0] - 1.1 * t));
+      return std::sin(4.0 * dealii::numbers::PI * (p[0] - 1.1 * t));
     }
   };
 
@@ -126,6 +127,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
     void
     create_spatial_discretization() override
     {
+      using namespace dealii;
       if (dim == 1 || this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
@@ -158,8 +160,8 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
       /*
        *  create a pair of (boundary_id, dirichlet_function)
        */
-      constexpr types::boundary_id inflow_bc  = 42;
-      constexpr types::boundary_id do_nothing = 0;
+      constexpr dealii::types::boundary_id inflow_bc  = 42;
+      constexpr dealii::types::boundary_id do_nothing = 0;
 
       auto dirichlet = std::make_shared<DirichletConditions<dim, number>>();
 
@@ -225,6 +227,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
     void
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const final
     {
+      using namespace dealii;
       dealii::ConditionalOStream pcout(std::cout,
                                        Utilities::MPI::this_mpi_process(this->mpi_communicator) ==
                                          0);

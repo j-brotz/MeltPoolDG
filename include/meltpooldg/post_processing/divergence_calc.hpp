@@ -45,6 +45,7 @@ namespace MeltPoolDG::PostProcessingTools
     void
     process(const unsigned int /*n_time_step*/) override
     {
+      using namespace dealii;
       const bool update_ghosts =
         !generic_data_out->get_vector(request_variable).has_ghost_elements();
 

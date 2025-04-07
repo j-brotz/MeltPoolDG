@@ -35,26 +35,28 @@ namespace MeltPoolDG::Simulation::VortexBubble
    * this function specifies the initial field of the level set equation
    */
   template <int dim, typename number>
-  class InitializePhi : public Function<dim, number>
+  class InitializePhi : public dealii::Function<dim, number>
   {
   public:
     InitializePhi()
-      : Function<dim, number>()
-      , distance_sphere(dim == 1 ? Point<dim, number>(0.5) : Point<dim, number>(0.5, 0.75), 0.15)
+      : dealii::Function<dim, number>()
+      , distance_sphere(dim == 1 ? dealii::Point<dim, number>(0.5) :
+                                   dealii::Point<dim, number>(0.5, 0.75),
+                        0.15)
     {}
 
     number
-    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       return -distance_sphere.value(p);
     }
 
   private:
-    const Functions::SignedDistance::Sphere<dim> distance_sphere;
+    const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere;
   };
 
   template <int dim, typename number>
-  class PhiExact : public Function<dim, number>
+  class PhiExact : public dealii::Function<dim, number>
   {
   public:
     PhiExact(const number eps)
@@ -62,7 +64,7 @@ namespace MeltPoolDG::Simulation::VortexBubble
     {}
 
     number
-    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       return std::tanh(distance_sphere.value(p, 0) / (2 * eps));
     }
@@ -73,7 +75,7 @@ namespace MeltPoolDG::Simulation::VortexBubble
   };
 
   template <int dim, typename number>
-  class SignedDistanceExact : public Function<dim, number>
+  class SignedDistanceExact : public dealii::Function<dim, number>
   {
   public:
     SignedDistanceExact(const number eps)
@@ -81,7 +83,7 @@ namespace MeltPoolDG::Simulation::VortexBubble
     {}
 
     number
-    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       const auto val = distance_sphere.value(p, 0);
       return val > 0 ? std::min(val, 8 * eps) : std::max(val, -8 * eps);
@@ -93,15 +95,15 @@ namespace MeltPoolDG::Simulation::VortexBubble
   };
 
   template <int dim, typename number>
-  class AdvectionField : public Function<dim, number>
+  class AdvectionField : public dealii::Function<dim, number>
   {
   public:
     AdvectionField()
-      : Function<dim, number>(dim)
+      : dealii::Function<dim, number>(dim)
     {}
 
     void
-    vector_value(const Point<dim, number> &p, Vector<number> &values) const override
+    vector_value(const dealii::Point<dim, number> &p, dealii::Vector<number> &values) const override
     {
       if constexpr (dim == 2)
         {
@@ -110,15 +112,15 @@ namespace MeltPoolDG::Simulation::VortexBubble
           const number x = p[0];
           const number y = p[1];
 
-          const number reverseCoefficient = std::cos(numbers::PI * time / Tf);
+          const number reverseCoefficient = std::cos(dealii::numbers::PI * time / Tf);
 
-          values[0] = reverseCoefficient *
-                      (std::sin(2. * numbers::PI * y) * std::pow(std::sin(numbers::PI * x), 2.));
-          values[1] = reverseCoefficient *
-                      (-std::sin(2. * numbers::PI * x) * std::pow(std::sin(numbers::PI * y), 2.));
+          values[0] = reverseCoefficient * (std::sin(2. * dealii::numbers::PI * y) *
+                                            std::pow(std::sin(dealii::numbers::PI * x), 2.));
+          values[1] = reverseCoefficient * (-std::sin(2. * dealii::numbers::PI * x) *
+                                            std::pow(std::sin(dealii::numbers::PI * y), 2.));
         }
       else
-        AssertThrow(false, ExcMessage("Advection field for dim!=2 not implemented"));
+        AssertThrow(false, dealii::ExcMessage("Advection field for dim!=2 not implemented"));
     }
   };
 
@@ -126,15 +128,15 @@ namespace MeltPoolDG::Simulation::VortexBubble
    * utility from dealii
    */
   template <int dim, typename number>
-  class DirichletCondition : public Function<dim, number>
+  class DirichletCondition : public dealii::Function<dim, number>
   {
   public:
     DirichletCondition()
-      : Function<dim, number>()
+      : dealii::Function<dim, number>()
     {}
 
     number
-    value(const Point<dim, number> &p, const unsigned int component = 0) const override
+    value(const dealii::Point<dim, number> &p, const unsigned int component = 0) const override
     {
       (void)p;
       (void)component;
@@ -157,6 +159,7 @@ namespace MeltPoolDG::Simulation::VortexBubble
     void
     create_spatial_discretization() override
     {
+      using namespace dealii;
       if (dim == 1 || this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
@@ -202,6 +205,8 @@ namespace MeltPoolDG::Simulation::VortexBubble
     void
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const final
     {
+      using namespace dealii;
+
       if constexpr (dim == 2)
         {
           dealii::ConditionalOStream pcout(
@@ -272,7 +277,8 @@ namespace MeltPoolDG::Simulation::VortexBubble
           AssertThrow(area_droplet_boundary >= 1e-16, ExcMessage("Area of droplet is zero."));
 
           // 2) compute circularity
-          number circularity = 2. * std::sqrt(numbers::PI * area_droplet) / (area_droplet_boundary);
+          number circularity =
+            2. * std::sqrt(dealii::numbers::PI * area_droplet) / (area_droplet_boundary);
           pcout << "circularity " << circularity << std::endl;
 
           table.add_value("time", generic_data_out.get_time());
@@ -416,8 +422,8 @@ namespace MeltPoolDG::Simulation::VortexBubble
     }
 
   private:
-    number               left_domain  = 0.0;
-    number               right_domain = 1.0;
-    mutable TableHandler table;
+    number                       left_domain  = 0.0;
+    number                       right_domain = 1.0;
+    mutable dealii::TableHandler table;
   };
 } // namespace MeltPoolDG::Simulation::VortexBubble

@@ -17,17 +17,19 @@ namespace MeltPoolDG
 
   template <int dim, typename VectorType, typename number>
   void
-  refine_grid(const std::function<bool(Triangulation<dim> &)> &mark_cells_for_refinement,
+  refine_grid(const std::function<bool(dealii::Triangulation<dim> &)> &mark_cells_for_refinement,
               const std::function<void(
-                std::vector<std::pair<const DoFHandler<dim> *,
+                std::vector<std::pair<const dealii::DoFHandler<dim> *,
                                       std::function<void(std::vector<VectorType *> &)>>> &data)>
                                                 &attach_vectors,
               const std::function<void()>       &post,
               const std::function<void()>       &setup_dof_system,
               const AdaptiveMeshingData<number> &amr,
-              Triangulation<dim>                &tria,
+              dealii::Triangulation<dim>        &tria,
               const int                          n_time_step)
   {
+    using namespace dealii;
+
     if (!now(amr, n_time_step))
       return;
 
@@ -133,24 +135,24 @@ namespace MeltPoolDG
 
   template <int dim, typename VectorType, typename number>
   void
-  refine_grid(const std::function<bool(Triangulation<dim> &)>        &mark_cells_for_refinement,
-              const std::function<void(std::vector<VectorType *> &)> &attach_vectors,
-              const std::function<void()>                            &post,
-              const std::function<void()>                            &setup_dof_system,
-              const AdaptiveMeshingData<number>                      &amr,
-              DoFHandler<dim>                                        &dof_handler,
-              const int                                               n_time_step)
+  refine_grid(const std::function<bool(dealii::Triangulation<dim> &)> &mark_cells_for_refinement,
+              const std::function<void(std::vector<VectorType *> &)>  &attach_vectors,
+              const std::function<void()>                             &post,
+              const std::function<void()>                             &setup_dof_system,
+              const AdaptiveMeshingData<number>                       &amr,
+              dealii::DoFHandler<dim>                                 &dof_handler,
+              const int                                                n_time_step)
   {
     refine_grid<dim, VectorType>(
       mark_cells_for_refinement,
-      [&](std::vector<std::pair<const DoFHandler<dim> *,
+      [&](std::vector<std::pair<const dealii::DoFHandler<dim> *,
                                 std::function<void(std::vector<VectorType *> &)>>> &data) {
         data.emplace_back(&dof_handler, attach_vectors);
       },
       post,
       setup_dof_system,
       amr,
-      const_cast<Triangulation<dim> &>(dof_handler.get_triangulation()),
+      const_cast<dealii::Triangulation<dim> &>(dof_handler.get_triangulation()),
       n_time_step);
   }
 

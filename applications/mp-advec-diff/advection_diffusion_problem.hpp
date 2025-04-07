@@ -19,8 +19,8 @@ namespace MeltPoolDG::LevelSet
   {
   private:
     using CaseType        = AdvectionDiffusionCase<dim, number>;
-    using VectorType      = LinearAlgebra::distributed::Vector<number>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<number>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
   public:
     AdvectionDiffusionProblem(std::unique_ptr<CaseType> simulation_case)
@@ -33,12 +33,12 @@ namespace MeltPoolDG::LevelSet
   private:
     std::unique_ptr<CaseType> simulation_case;
 
-    DoFHandler<dim>                                dof_handler;
-    AffineConstraints<number>                      constraints;
-    AffineConstraints<number>                      hanging_node_constraints;
-    AffineConstraints<number>                      hanging_node_constraints_with_zero_dirichlet;
-    DoFHandler<dim>                                dof_handler_velocity;
-    AffineConstraints<number>                      hanging_node_constraints_velocity;
+    dealii::DoFHandler<dim>                        dof_handler;
+    dealii::AffineConstraints<number>              constraints;
+    dealii::AffineConstraints<number>              hanging_node_constraints;
+    dealii::AffineConstraints<number>              hanging_node_constraints_with_zero_dirichlet;
+    dealii::DoFHandler<dim>                        dof_handler_velocity;
+    dealii::AffineConstraints<number>              hanging_node_constraints_velocity;
     std::shared_ptr<ScratchData<dim, dim, number>> scratch_data;
     VectorType                                     advection_velocity;
     std::unique_ptr<TimeIterator<number>>          time_iterator;
@@ -62,7 +62,7 @@ namespace MeltPoolDG::LevelSet
     initialize();
 
     void
-    compute_advection_velocity(Function<dim> &advec_func);
+    compute_advection_velocity(dealii::Function<dim, number> &advec_func);
 
     void
     output_results(unsigned int time_step, number current_time);

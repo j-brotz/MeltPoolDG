@@ -50,7 +50,8 @@ namespace MeltPoolDG::LevelSet
     compute_CFL_based_timestep() const
     {
       AssertThrow(false,
-                  ExcMessage("CFL based time stepping is not implemented for continous elements!"));
+                  dealii::ExcMessage(
+                    "CFL based time stepping is not implemented for continous elements!"));
     };
 
     virtual void

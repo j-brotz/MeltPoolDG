@@ -273,7 +273,8 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  AdvectionDiffusionProblem<dim, number>::compute_advection_velocity(Function<dim> &advec_func)
+  AdvectionDiffusionProblem<dim, number>::compute_advection_velocity(
+    Function<dim, number> &advec_func)
   {
     scratch_data->initialize_dof_vector(advection_velocity, velocity_dof_idx);
     /*
