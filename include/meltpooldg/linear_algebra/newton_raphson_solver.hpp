@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, TUM, March 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 #include <deal.II/lac/generic_linear_algebra.h>
 
@@ -12,9 +7,8 @@
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
-  template <typename VectorType = LinearAlgebra::distributed::Vector<double>>
+  template <typename number,
+            typename VectorType = dealii::LinearAlgebra::distributed::Vector<number>>
   class NewtonRaphsonSolver
   {
   public:
@@ -24,16 +18,16 @@ namespace MeltPoolDG
     std::function<void(VectorType &v)>                         distribute_constraints      = {};
 
     // TODO: remove and replace by standard l2_norm() (?)
-    std::function<double()> norm_of_solution_vector = {};
+    std::function<number()> norm_of_solution_vector = {};
 
   private:
-    const NonlinearSolverData<double> nlsolve_data;
+    const NonlinearSolverData<number> nlsolve_data;
 
     dealii::ConditionalOStream pcout;
 
     const int max_number_of_iterations;
-    double    residual_tolerance;
-    double    field_correction_tolerance;
+    number    residual_tolerance;
+    number    field_correction_tolerance;
 
     VectorType rhs;
     VectorType solution_update;
@@ -43,7 +37,7 @@ namespace MeltPoolDG
     std::ostringstream str_;
 
   public:
-    NewtonRaphsonSolver(const NonlinearSolverData<double> &nlsolve_data);
+    explicit NewtonRaphsonSolver(const NonlinearSolverData<number> &nlsolve_data);
 
     void
     solve(VectorType &solution);
@@ -64,7 +58,7 @@ namespace MeltPoolDG
     void
     solve_increment(const VectorType &current_solution);
 
-    double
+    number
     suggest_new_time_increment();
 
     void

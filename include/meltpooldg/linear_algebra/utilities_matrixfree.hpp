@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, UIBK/TUM, December 2020
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/lac/generic_linear_algebra.h>
@@ -46,7 +41,7 @@ namespace MeltPoolDG::Utilities::MatrixFree
     const unsigned int                   dof_idx,
     const unsigned int                   dof_no_bc_idx,
     const bool                           zero_out,
-    const std::optional<std::pair<std::vector<unsigned int>, std::vector<double>>>
+    const std::optional<std::pair<std::vector<unsigned int>, std::vector<number>>>
       &additional_inhomogeneous_constraints = std::nullopt)
   {
     // The dof index that is used for the DoF Vector from the matrix-vector

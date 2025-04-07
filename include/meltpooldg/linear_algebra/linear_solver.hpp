@@ -14,7 +14,6 @@
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-using namespace dealii;
 
 namespace MeltPoolDG
 {
@@ -23,12 +22,13 @@ namespace MeltPoolDG
   public:
     template <typename VectorType,
               typename OperatorType       = dealii::TrilinosWrappers::SparseMatrix,
-              typename PreconditionerType = dealii::PreconditionIdentity>
+              typename PreconditionerType = dealii::PreconditionIdentity,
+              typename number             = double>
     static int
     solve(const OperatorType             &system_matrix,
           VectorType                     &solution,
           const VectorType               &rhs,
-          const LinearSolverData<double> &data,
+          const LinearSolverData<number> &data,
           const PreconditionerType       &preconditioner = dealii::PreconditionIdentity(),
           const std::string               identifier     = "")
     {
@@ -66,7 +66,7 @@ namespace MeltPoolDG
             }
             Journal::print_decoration_line(*pcout);
 
-            const auto print_value = [&](const unsigned int iteration, const double value) {
+            const auto print_value = [&](const unsigned int iteration, const number value) {
               std::ostringstream str;
               str << std::setw(5) << iteration << std::setw(20) << std::scientific
                   << std::setprecision(5) << value;
@@ -103,16 +103,16 @@ namespace MeltPoolDG
           switch (data.solver_type)
             {
                 case (LinearSolverType::CG): {
-                  SolverCG<VectorType> solver(solver_control);
+                  dealii::SolverCG<VectorType> solver(solver_control);
 
                   solver.solve(system_matrix, solution, rhs, preconditioner);
                   break;
                 }
                 case (LinearSolverType::GMRES): {
-                  typename SolverGMRES<VectorType>::AdditionalData additional_data;
+                  typename dealii::SolverGMRES<VectorType>::AdditionalData additional_data;
                   additional_data.right_preconditioning = true;
 
-                  SolverGMRES<VectorType> solver(solver_control, additional_data);
+                  dealii::SolverGMRES<VectorType> solver(solver_control, additional_data);
                   solver.solve(system_matrix, solution, rhs, preconditioner);
                   break;
                 }

@@ -45,9 +45,9 @@ namespace MeltPoolDG::LevelSet
       number IP_diffusion       = 100.0;
       bool   use_const_gradient_in_RI   = false;
       bool   do_CFL_based_time_stepping = false;
-      TimeIntegratorData time_integration_data =
+      TimeIntegratorData<number> time_integration_data =
         TimeIntegratorData(TimeIntegratorSchemes::LSRK_stage_5_order_4);
-      TimeIntegratorData IMEX_integration_data =
+      TimeIntegratorData<number> IMEX_integration_data =
         TimeIntegratorData(TimeIntegratorSchemes::not_initialized);
 
       number CFL                                 = 1.0;

@@ -1,9 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Martin Kronbichler, Peter Munch, Magdalena Schreter, UA/TUM
- *         October 2022
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
@@ -11,18 +5,18 @@
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
-  template <typename VectorType>
+  template <typename VectorType, typename number = double>
   class LeastSquaresProjection
   {
   public:
-    LeastSquaresProjection(const std::vector<VectorType> &solution_history,
-                           const unsigned int n_old_solutions = numbers::invalid_unsigned_int)
-      : old_solution(n_old_solutions == numbers::invalid_unsigned_int ? solution_history.size() :
-                                                                        n_old_solutions)
+    explicit LeastSquaresProjection(
+      const std::vector<VectorType> &solution_history,
+      const unsigned int             n_old_solutions = dealii::numbers::invalid_unsigned_int)
+      : old_solution(n_old_solutions == dealii::numbers::invalid_unsigned_int ?
+                       solution_history.size() :
+                       n_old_solutions)
     {
-      Assert(n_old_solutions <= solution_history.size(), ExcInternalError());
+      Assert(n_old_solutions <= solution_history.size(), dealii::ExcInternalError());
 
       for (unsigned int i = 0; i < old_solution.size(); ++i)
         old_solution[i] = &solution_history[i];
@@ -34,8 +28,8 @@ namespace MeltPoolDG
     {
       const unsigned int n_old_solutions = old_solution.size();
       internal_vectors.resize(n_old_solutions);
-      FullMatrix<double> projection_matrix(n_old_solutions, n_old_solutions);
-      unsigned int       step = 0;
+      dealii::FullMatrix<number> projection_matrix(n_old_solutions, n_old_solutions);
+      unsigned int               step = 0;
       for (; step < n_old_solutions; ++step)
         {
           internal_vectors[step].reinit(rhs, true);
@@ -56,13 +50,13 @@ namespace MeltPoolDG
         }
 
       // Solve least-squares system
-      std::vector<double> project_sol(step);
+      std::vector<number> project_sol(step);
       for (unsigned int s = 0; s < step; ++s)
         project_sol[s] = internal_vectors[s] * rhs;
 
       for (int s = step - 1; s >= 0; --s)
         {
-          double sum = project_sol[s];
+          number sum = project_sol[s];
           for (unsigned int j = s + 1; j < step; ++j)
             sum -= project_sol[j] * projection_matrix(s, j);
           project_sol[s] = sum / projection_matrix(s, s); // TODO check for division by zero?
@@ -101,14 +95,14 @@ namespace MeltPoolDG
       , time_iterator(time_iterator)
       , lsp(solution_history_in.get_all_solutions(), data.n_old_solution_vectors)
     {
-      Assert(solution_history.size() >= 1, ExcInternalError());
+      Assert(solution_history.size() >= 1, dealii::ExcInternalError());
       Assert(solution_history.size() >= 2 || data.type != PredictorType::linear_extrapolation,
-             ExcInternalError());
+             dealii::ExcInternalError());
 
       // TODO: extend for BlockVectors
       AssertThrow(!internal::is_block_vector<VectorType> ||
                     data.type != PredictorType::least_squares_projection,
-                  ExcNotImplemented());
+                  dealii::ExcNotImplemented());
     }
 
     template <typename MatrixType>
@@ -139,13 +133,12 @@ namespace MeltPoolDG
             solution.swap(solution_history.get_current_solution());
         }
       else
-        AssertThrow(false, ExcNotImplemented());
+        AssertThrow(false, dealii::ExcNotImplemented());
 
       solution_history.commit_old_solutions();
       solution_history.get_current_solution().swap(solution);
 
       n_calls += 1;
-      return;
     }
   };
 } // namespace MeltPoolDG

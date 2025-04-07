@@ -79,7 +79,7 @@ namespace MeltPoolDG::Heat
     const unsigned int ls_dof_idx;
     const VectorType  *level_set_as_heaviside;
 
-    NewtonRaphsonSolver<VectorType> newton;
+    NewtonRaphsonSolver<number, VectorType> newton;
 
     std::unique_ptr<HeatDiffuseMultiPhaseOperator<dim, number>> heat_operator;
 

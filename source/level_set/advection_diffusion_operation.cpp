@@ -131,7 +131,7 @@ namespace MeltPoolDG::LevelSet
         rhs = user_rhs;
 
         // apply dirichlet boundary values
-        Utilities::MatrixFree::create_rhs_and_apply_dirichlet_matrixfree(
+        Utilities::MatrixFree::create_rhs_and_apply_dirichlet_matrixfree<dim, number>(
           *advec_diff_operator,
           rhs,
           solution_history.get_current_solution(), //= old_solution for current time step,
@@ -203,7 +203,7 @@ namespace MeltPoolDG::LevelSet
         rhs = user_rhs;
 
         // apply dirichlet boundary values
-        Utilities::MatrixFree::create_rhs_and_apply_dirichlet_matrixfree(
+        Utilities::MatrixFree::create_rhs_and_apply_dirichlet_matrixfree<dim, number>(
           *advec_diff_operator,
           rhs,
           solution_history.get_recent_old_solution(),

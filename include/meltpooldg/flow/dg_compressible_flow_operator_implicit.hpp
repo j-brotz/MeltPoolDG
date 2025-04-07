@@ -64,7 +64,8 @@ namespace MeltPoolDG::Flow
      * integrator.
      */
     std::unique_ptr<TimeIntegratorBase<number>>
-    make_problem_specific_time_integrator(const TimeIntegratorData &time_integrator_data) override;
+    make_problem_specific_time_integrator(
+      const TimeIntegratorData<number> &time_integrator_data) override;
 
     /**
      * This function sets class member variables which are constant within a single time stage (e.g.
