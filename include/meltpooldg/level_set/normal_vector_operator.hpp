@@ -57,18 +57,19 @@ namespace MeltPoolDG::LevelSet
     compute_inverse_diagonal_from_matrixfree(BlockVectorType &diagonal) const final;
 
     static void
-    get_unit_normals_at_quadrature(const FEValues<dim>         &fe_values,
-                                   const BlockVectorType       &normal_vector_field_in,
-                                   std::vector<Tensor<1, dim>> &unit_normal_at_quadrature,
-                                   const number                 zero = 1e-16);
+    get_unit_normals_at_quadrature(
+      const dealii::FEValues<dim>                 &fe_values,
+      const BlockVectorType                       &normal_vector_field_in,
+      std::vector<dealii::Tensor<1, dim, number>> &unit_normal_at_quadrature,
+      const number                                 zero = 1e-16);
     void
     reinit() final;
 
   private:
     void
-    tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &normal_vals,
-                                 FECellIntegrator<dim, 1, number> &level_set_vals,
-                                 const bool                        do_reinit_cells) const;
+    tangent_local_cell_operation(dealii::FECellIntegrator<dim, 1, number> &normal_vals,
+                                 dealii::FECellIntegrator<dim, 1, number> &level_set_vals,
+                                 const bool                                do_reinit_cells) const;
 
   private:
     const ScratchData<dim, dim, number> &scratch_data;
@@ -81,7 +82,7 @@ namespace MeltPoolDG::LevelSet
     // optional parameters for narrow band
     const VectorType *solution_level_set;
 
-    AlignedVector<dealii::VectorizedArray<number>> damping;
+    dealii::AlignedVector<dealii::VectorizedArray<number>> damping;
   };
 
   /**
@@ -104,8 +105,8 @@ namespace MeltPoolDG::LevelSet
   {
     const number n_subdivisions =
       scratch_data.is_FE_Q_iso_Q_1(dof_idx) ? scratch_data.get_degree(dof_idx) : 1;
-    return Utilities::fixed_power<2>(
-             std::max(VectorizedArray<number>(scratch_data.get_min_cell_size()),
+    return dealii::Utilities::fixed_power<2>(
+             std::max(dealii::VectorizedArray<number>(scratch_data.get_min_cell_size()),
                       scratch_data.get_cell_sizes()[cell_idx] / (number)n_subdivisions)) *
            scale_factor;
   }
@@ -129,7 +130,7 @@ namespace MeltPoolDG::LevelSet
     const number n_subdivisions =
       scratch_data.is_FE_Q_iso_Q_1(dof_idx) ? scratch_data.get_degree(dof_idx) : 1;
 
-    return Utilities::fixed_power<2>(
+    return dealii::Utilities::fixed_power<2>(
              std::max(scratch_data.get_min_cell_size(),
                       cell->diameter() / (std::sqrt(dim) * n_subdivisions))) *
            scale_factor;

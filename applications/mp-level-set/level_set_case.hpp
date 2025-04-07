@@ -13,7 +13,7 @@ namespace MeltPoolDG::LevelSet
   {
   protected:
     void
-    add_parameters(ParameterHandler &prm) final
+    add_parameters(dealii::ParameterHandler &prm) final
     {
       base.add_parameters(prm);
       time_stepping.add_parameters(prm);
@@ -28,7 +28,7 @@ namespace MeltPoolDG::LevelSet
         prm.add_parameter("strategy",
                           amr_strategy,
                           "Select the AMR strategy.",
-                          Patterns::Selection("generic|refine_all_interface_cells"));
+                          dealii::Patterns::Selection("generic|refine_all_interface_cells"));
       }
       prm.leave_subsection();
     }
@@ -48,8 +48,9 @@ namespace MeltPoolDG::LevelSet
 
       AssertThrow(evapor.evaporative_mass_flux_model ==
                     Evaporation::EvaporationModelType::analytical,
-                  ExcMessage("For the level set case we only support to provide an analytical "
-                             "function for the evaporation rate."));
+                  dealii::ExcMessage(
+                    "For the level set case we only support to provide an analytical "
+                    "function for the evaporation rate."));
     }
 
   public:

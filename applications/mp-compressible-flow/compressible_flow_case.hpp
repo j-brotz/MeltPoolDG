@@ -31,7 +31,7 @@ namespace MeltPoolDG::Flow
   {
   protected:
     void
-    add_parameters(ParameterHandler &prm) override
+    add_parameters(dealii::ParameterHandler &prm) override
     {
       base.add_parameters(prm);
       flow.add_parameters(prm);

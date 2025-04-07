@@ -6,6 +6,8 @@
 
 namespace MeltPoolDG::LevelSet
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   OlssonOperator<dim, number>::OlssonOperator(const ScratchData<dim, dim, number> &scratch_data_in,
                                               const ReinitializationData<number>  &reinit_data_in,
@@ -48,9 +50,9 @@ namespace MeltPoolDG::LevelSet
 
     const unsigned int n_q_points = fe_values.get_quadrature().size();
 
-    std::vector<number>         psi_at_q(n_q_points);
-    std::vector<Tensor<1, dim>> grad_psi_at_q(n_q_points, Tensor<1, dim>());
-    std::vector<Tensor<1, dim>> normal_at_q(n_q_points, Tensor<1, dim>());
+    std::vector<number>                 psi_at_q(n_q_points);
+    std::vector<Tensor<1, dim, number>> grad_psi_at_q(n_q_points, Tensor<1, dim, number>());
+    std::vector<Tensor<1, dim, number>> normal_at_q(n_q_points, Tensor<1, dim, number>());
 
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 

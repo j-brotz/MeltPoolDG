@@ -96,7 +96,7 @@ namespace MeltPoolDG
      *
      * @throws dealii::ExcMessage If no boundary conditions are found for the specified operation.
      */
-    std::map<dealii::types::boundary_id, std::shared_ptr<dealii ::Function<dim>>>
+    std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
     get_boundary_condition(const std::string &type,
                            const std::string &operation_name,
                            const bool         is_optional = true) const
@@ -109,7 +109,7 @@ namespace MeltPoolDG
                     "attach_boundary_condition({id, function} ,operation_name, function)?"));
 
       if (!boundary_conditions_map.contains(operation_name))
-        return std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>>();
+        return std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>();
       else
         return boundary_conditions_map.at(operation_name)->get_bc_of_type(type, is_optional);
     }
@@ -311,9 +311,9 @@ namespace MeltPoolDG
      *                       this field function is applicable (e.g., "level_set").
      */
     void
-    attach_field_function(std::shared_ptr<dealii ::Function<dim>> function,
-                          const std::string                      &type,
-                          const std::string                      &operation_name)
+    attach_field_function(std::shared_ptr<dealii::Function<dim>> function,
+                          const std::string                     &type,
+                          const std::string                     &operation_name)
     {
       field_functions[operation_name][type] = function;
     }
@@ -323,8 +323,8 @@ namespace MeltPoolDG
      * attach_field_function.
      */
     void
-    attach_initial_condition(std::shared_ptr<dealii ::Function<dim>> initial_function,
-                             const std::string                      &operation_name)
+    attach_initial_condition(std::shared_ptr<dealii::Function<dim>> initial_function,
+                             const std::string                     &operation_name)
     {
       attach_field_function(initial_function, "initial_condition", operation_name);
     }
@@ -342,7 +342,7 @@ namespace MeltPoolDG
      */
     void
     attach_boundary_condition(
-      std::pair<const dealii::types::boundary_id, const std::shared_ptr<dealii ::Function<dim>>>
+      std::pair<const dealii::types::boundary_id, const std::shared_ptr<dealii::Function<dim>>>
                          id_and_function,
       const std::string &type,
       const std::string &operation_name)
@@ -385,8 +385,8 @@ namespace MeltPoolDG
                                        const int                        direction)
     {
       AssertThrow(this->triangulation,
-                  ExcMessage("You try to pass periodic faces but the triangulation "
-                             "is still empty."));
+                  dealii::ExcMessage("You try to pass periodic faces but the triangulation "
+                                     "is still empty."));
 
       periodic_boundary_conditions.attach_boundary_condition(id_in, id_out, direction);
 
@@ -407,7 +407,7 @@ namespace MeltPoolDG
     // nested dictionary for storing field functions as
     // field_functions[<operation_name>][<type>] = <function>.
     // The <operation_name> and <type> are specified in the respective problems.
-    std::map<std::string, std::map<std::string, std::shared_ptr<dealii ::Function<dim>>>>
+    std::map<std::string, std::map<std::string, std::shared_ptr<dealii::Function<dim>>>>
       field_functions;
 
     // This map organizes boundary conditions hierarchically based on operation names.
@@ -423,7 +423,7 @@ namespace MeltPoolDG
       bool enable_print = false;
       add_and_parse_parameters(
         parameter_file,
-        [this, &enable_print](ParameterHandler &prm) {
+        [this, &enable_print](dealii::ParameterHandler &prm) {
           enable_print = add_simulation_specific_parameters(prm);
         },
         enable_print && (dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0));
@@ -461,19 +461,20 @@ namespace MeltPoolDG
 
     // Read and process parameters
     {
-      ParameterHandler prm;
-      ParametersType   parameters;
+      dealii::ParameterHandler prm;
+      ParametersType           parameters;
       parameters.process_parameters_file(prm, parameter_file);
 
       // Print number of processes and GIT hashes if verbosity level >= 3
       if (parameters.base.verbosity_level >= 3)
         {
-          dealii::ConditionalOStream pcout(std::cout,
-                                           Utilities::MPI::this_mpi_process(mpi_communicator) == 0);
+          dealii::ConditionalOStream pcout(
+            std::cout, dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0);
           Journal::print_decoration_line(pcout);
           Journal::print_line(pcout,
                               "Running simulation on " +
-                                std::to_string(Utilities::MPI::n_mpi_processes(mpi_communicator)) +
+                                std::to_string(
+                                  dealii::Utilities::MPI::n_mpi_processes(mpi_communicator)) +
                                 " ranks.");
           Journal::print_decoration_line(pcout);
           pcout << "  - deal.II:" << std::endl
@@ -483,7 +484,7 @@ namespace MeltPoolDG
           Journal::print_decoration_line(pcout);
         }
 
-      if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
+      if (dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
           parameters.base.do_print_parameters)
         parameters.print_parameters(prm, std::cout, false /*print_details*/);
 
@@ -529,14 +530,14 @@ namespace MeltPoolDG
               }
             else
               {
-                AssertThrow(false, ExcMessage("Dimension must be 1, 2, or 3."));
+                AssertThrow(false, dealii::ExcMessage("Dimension must be 1, 2, or 3."));
               }
           }
         else
           {
             AssertThrow(false,
-                        ExcMessage("Currently, explicit template instantiations are "
-                                   "only done for floating point number format 'double'."));
+                        dealii::ExcMessage("Currently, explicit template instantiations are "
+                                           "only done for floating point number format 'double'."));
           }
       }
     catch (std::exception &exc)

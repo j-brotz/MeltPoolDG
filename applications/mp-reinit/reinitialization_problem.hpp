@@ -28,8 +28,8 @@ namespace MeltPoolDG
     {
     private:
       using CaseType       = ReinitializationCase<dim, number>;
-      using VectorType     = LinearAlgebra::distributed::Vector<number>;
-      using DoFHandlerType = DoFHandler<dim>;
+      using VectorType     = dealii::LinearAlgebra::distributed::Vector<number>;
+      using DoFHandlerType = dealii::DoFHandler<dim>;
 
     public:
       ReinitializationProblem(std::unique_ptr<CaseType> simulation_case_)
@@ -43,8 +43,8 @@ namespace MeltPoolDG
     private:
       std::unique_ptr<CaseType>                     simulation_case;
       const ReinitializationCaseParameters<number> &param;
-      DoFHandler<dim>                               dof_handler;
-      AffineConstraints<number>                     constraints;
+      DoFHandlerType                                dof_handler;
+      dealii::AffineConstraints<number>             constraints;
 
       std::shared_ptr<ScratchData<dim, dim, number>>              scratch_data;
       std::unique_ptr<TimeIterator<number>>                       time_iterator;

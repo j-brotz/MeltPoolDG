@@ -59,7 +59,7 @@ namespace MeltPoolDG
   {
   protected:
     void
-    add_parameters(ParameterHandler &prm) final;
+    add_parameters(dealii::ParameterHandler &prm) final;
 
     void
     post(const std::string &parameter_filename) final;

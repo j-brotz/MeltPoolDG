@@ -21,6 +21,8 @@
 
 namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
 {
+  using namespace dealii;
+
   static constexpr double x_min = 0.0;
   static constexpr double x_max = 0.1;
 

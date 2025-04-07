@@ -23,44 +23,46 @@
 namespace MeltPoolDG::Simulation::ReinitCircle
 {
   template <int dim, typename number>
-  class InitializePhi : public Function<dim, number>
+  class InitializePhi : public dealii::Function<dim, number>
   {
   public:
     InitializePhi()
-      : Function<dim, number>()
-      , distance_sphere(dim == 1 ? Point<dim, number>(0.0) : Point<dim, number>(0.0, 0.5), 0.25)
+      : dealii::Function<dim, number>()
+      , distance_sphere(dim == 1 ? dealii::Point<dim, number>(0.0) :
+                                   dealii::Point<dim, number>(0.0, 0.5),
+                        0.25)
     {}
 
     number
-    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       return UtilityFunctions::CharacteristicFunctions::sgn(-distance_sphere.value(p));
     }
 
   private:
-    const Functions::SignedDistance::Sphere<dim> distance_sphere;
+    const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere;
   };
 
   template <int dim, typename number>
-  class ExactSolution : public Function<dim, number>
+  class ExactSolution : public dealii::Function<dim, number>
   {
   public:
     ExactSolution(const number eps)
-      : Function<dim, number>()
-      , distance_sphere(Point<dim, number>(0.0, 0.5), 0.25)
+      : dealii::Function<dim, number>()
+      , distance_sphere(dealii::Point<dim, number>(0.0, 0.5), 0.25)
       , eps_interface(eps)
     {}
 
     number
-    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
         -distance_sphere.value(p), eps_interface);
     }
 
   private:
-    const Functions::SignedDistance::Sphere<dim> distance_sphere;
-    const number                                 eps_interface;
+    const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere;
+    const number                                         eps_interface;
   };
   /*
    *      This class collects all relevant input data for the level set simulation
@@ -77,6 +79,7 @@ namespace MeltPoolDG::Simulation::ReinitCircle
     void
     create_spatial_discretization() override
     {
+      using namespace dealii;
       if (dim == 1 || this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);

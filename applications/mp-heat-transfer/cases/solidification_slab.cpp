@@ -19,10 +19,11 @@
 
 namespace MeltPoolDG::Simulation::SolidificationSlab
 {
+  using namespace dealii;
+
   static constexpr double L     = 1.0;
   static constexpr double T_0   = 283.0;
   static constexpr double T_hat = 253.0;
-
 
   template <int dim, typename number>
   SimulationSolidificationSlab<dim, number>::SimulationSolidificationSlab(

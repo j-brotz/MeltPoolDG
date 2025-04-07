@@ -52,11 +52,11 @@ namespace MeltPoolDG::Evaporation
                           const number                           T_ac,
                           const number                           T_v)
     {
-      return compare_and_apply_mask<SIMDComparison::less_than>(
+      return compare_and_apply_mask<dealii::SIMDComparison::less_than>(
         T,
         T_ac,
         0.0,
-        compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+        compare_and_apply_mask<dealii::SIMDComparison::greater_than_or_equal>(
           T, T_v, 1., (T - T_ac) / (T_v - T_ac)));
     }
 
@@ -76,7 +76,7 @@ namespace MeltPoolDG::Evaporation
     const number delta_coefficient) const
   {
     return recoil_phenomenological.compute_recoil_pressure_coefficient(T) -
-           Utilities::fixed_power<2>(m_dot) * density_coeff * delta_coefficient;
+           dealii::Utilities::fixed_power<2>(m_dot) * density_coeff * delta_coefficient;
   }
 
   template <typename number>
@@ -87,7 +87,7 @@ namespace MeltPoolDG::Evaporation
     const dealii::VectorizedArray<number> &delta_coefficient) const
   {
     return recoil_phenomenological.compute_recoil_pressure_coefficient(T) -
-           Utilities::fixed_power<2>(m_dot) * density_coeff * delta_coefficient;
+           dealii::Utilities::fixed_power<2>(m_dot) * density_coeff * delta_coefficient;
   }
 
   template <typename number>

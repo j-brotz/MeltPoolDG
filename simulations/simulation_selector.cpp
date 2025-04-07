@@ -89,7 +89,8 @@ namespace MeltPoolDG::Simulation
     else
       {
         AssertThrow(false,
-                    ExcMessage("The input-file for your requested case does not exist. Abort ..."));
+                    dealii::ExcMessage(
+                      "The input-file for your requested case does not exist. Abort ..."));
         return nullptr;
       }
   }

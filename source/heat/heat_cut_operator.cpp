@@ -1986,7 +1986,7 @@ namespace MeltPoolDG::Heat
         eval_interface_g = std::make_unique<PointEval<>>(eval_interface_l);
       }
 
-    unsigned int old_cell_batch = numbers::invalid_unsigned_int;
+    unsigned int old_cell_batch = dealii::numbers::invalid_unsigned_int;
 
     dealii::MatrixFreeTools::internal::
       ComputeMatrixScratchData<dim, dealii::VectorizedArray<number>, false /*is_face_*/>
@@ -2136,7 +2136,9 @@ namespace MeltPoolDG::Heat
 
 
     data_face.op_create = [&](const std::pair<unsigned int, unsigned int> &face_range) {
-      std::vector<std::unique_ptr<FEEvaluationData<dim, VectorizedArray<number>, true>>> eval_data;
+      std::vector<
+        std::unique_ptr<dealii::FEEvaluationData<dim, dealii::VectorizedArray<number>, true>>>
+        eval_data;
 
       const auto emplace_face_eval = [&](const unsigned int index) {
         bool       is_interior_face;

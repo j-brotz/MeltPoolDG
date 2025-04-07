@@ -24,7 +24,7 @@ namespace MeltPoolDG
     add_problem_specific_parameters(const std::string &parameter_file)
     {
       add_and_parse_parameters(
-        parameter_file, [this](ParameterHandler &prm) { add_parameters(prm); }, false);
+        parameter_file, [this](dealii::ParameterHandler &prm) { add_parameters(prm); }, false);
     }
 
     /**
@@ -38,7 +38,7 @@ namespace MeltPoolDG
     add_parameters(dealii::ParameterHandler &)
     {
       AssertThrow(false,
-                  ExcMessage(
+                  dealii::ExcMessage(
                     "If problem specific parameters should be added, "
                     "add_parameters() has to be overriden in the derived class. Abort..."));
     }

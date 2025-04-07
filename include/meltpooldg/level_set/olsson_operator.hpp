@@ -73,7 +73,7 @@ namespace MeltPoolDG::LevelSet
 
   private:
     void
-    tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &delta_psi) const;
+    tangent_local_cell_operation(dealii::FECellIntegrator<dim, 1, number> &delta_psi) const;
 
   private:
     const ScratchData<dim, dim, number> &scratch_data;
@@ -86,7 +86,8 @@ namespace MeltPoolDG::LevelSet
 
     const number tolerance_normal_vector;
 
-    AlignedVector<dealii::VectorizedArray<number>>                         diffusion_length;
-    mutable AlignedVector<Tensor<1, dim, dealii::VectorizedArray<number>>> unit_normal;
+    dealii::AlignedVector<dealii::VectorizedArray<number>> diffusion_length;
+    mutable dealii::AlignedVector<dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>
+      unit_normal;
   };
 } // namespace MeltPoolDG::LevelSet

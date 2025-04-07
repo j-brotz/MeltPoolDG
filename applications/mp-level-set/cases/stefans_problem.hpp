@@ -34,6 +34,7 @@ namespace MeltPoolDG::Simulation::StefansProblem
     void
     create_spatial_discretization() override
     {
+      using namespace dealii;
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP || dim == 1)
         {
 #ifdef DEAL_II_WITH_METIS
@@ -45,7 +46,7 @@ namespace MeltPoolDG::Simulation::StefansProblem
 #else
           AssertThrow(
             false,
-            ExcMessage(
+            dealii::ExcMessage(
               "Missing Metis support of the deal.II installation. "
               "Configure deal.II with -D DEAL_II_WITH_METIS='ON' to execute this example."));
 #endif
@@ -56,12 +57,14 @@ namespace MeltPoolDG::Simulation::StefansProblem
             std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
         }
       // create mesh
-      const Point<dim, number> bottom_left = dim == 1   ? Point<dim, number>(y_min) :
-                                             (dim == 2) ? Point<dim, number>(x_min, y_min) :
-                                                          Point<dim, number>(x_min, x_min, y_min);
-      const Point<dim, number> top_right   = dim == 1   ? Point<dim, number>(y_max) :
-                                             (dim == 2) ? Point<dim, number>(x_max, y_max) :
-                                                          Point<dim, number>(x_max, x_max, y_max);
+      const dealii::Point<dim, number> bottom_left =
+        dim == 1   ? dealii::Point<dim, number>(y_min) :
+        (dim == 2) ? dealii::Point<dim, number>(x_min, y_min) :
+                     dealii::Point<dim, number>(x_min, x_min, y_min);
+      const dealii::Point<dim, number> top_right =
+        dim == 1   ? dealii::Point<dim, number>(y_max) :
+        (dim == 2) ? dealii::Point<dim, number>(x_max, y_max) :
+                     dealii::Point<dim, number>(x_max, x_max, y_max);
 
 
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
@@ -85,22 +88,23 @@ namespace MeltPoolDG::Simulation::StefansProblem
     set_boundary_conditions() final
     {
       // faces in dim-1 direction
-      const types::boundary_id upper_bc = 2 * (dim - 1) + 1;
+      const dealii::types::boundary_id upper_bc = 2 * (dim - 1) + 1;
 
-      this->attach_boundary_condition({upper_bc,
-                                       std::make_shared<Functions::ConstantFunction<dim>>(-1.0)},
-                                      "dirichlet",
-                                      "level_set");
+      this->attach_boundary_condition(
+        {upper_bc, std::make_shared<dealii::Functions::ConstantFunction<dim>>(-1.0)},
+        "dirichlet",
+        "level_set");
     }
 
     void
     set_field_conditions() final
     {
-      this->attach_initial_condition(std::make_shared<Functions::SignedDistance::Plane<dim>>(
-                                       Point<dim, number>::unit_vector(dim - 1) * y_interface,
-                                       -Point<dim, number>::unit_vector(dim - 1)),
-                                     "signed_distance");
-      this->attach_field_function(std::make_shared<Functions::ZeroFunction<dim>>(dim),
+      this->attach_initial_condition(
+        std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(
+          dealii::Point<dim, number>::unit_vector(dim - 1) * y_interface,
+          -dealii::Point<dim, number>::unit_vector(dim - 1)),
+        "signed_distance");
+      this->attach_field_function(std::make_shared<dealii::Functions::ZeroFunction<dim>>(dim),
                                   "prescribed_velocity",
                                   "level_set");
     }

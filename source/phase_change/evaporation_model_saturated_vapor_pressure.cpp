@@ -19,7 +19,7 @@ namespace MeltPoolDG::Evaporation
     , sticking_constant(recoil_data.sticking_constant)
     , molar_mass(molar_mass)
     , latent_heat_evaporation(latent_heat_evaporation)
-    , Cm(molar_mass / (2. * numbers::PI * PhysicalConstants::universal_gas_constant))
+    , Cm(molar_mass / (2. * dealii::numbers::PI * PhysicalConstants::universal_gas_constant))
   {}
 
 

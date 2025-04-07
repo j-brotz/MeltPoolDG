@@ -16,7 +16,7 @@ namespace MeltPoolDG::Evaporation
     const number                      latent_heat_evaporation)
     : recoil_model(recoil_data, boiling_temperature, molar_mass, latent_heat_evaporation)
     , sticking_constant(recoil_data.sticking_constant)
-    , Cm(molar_mass / (2. * numbers::PI * PhysicalConstants::universal_gas_constant))
+    , Cm(molar_mass / (2. * dealii::numbers::PI * PhysicalConstants::universal_gas_constant))
     , temperature_constant(recoil_data.temperature_constant)
   {}
 
