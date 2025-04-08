@@ -34,15 +34,15 @@ namespace MeltPoolDG::LevelSet
     /**
      * initialize the projection matrix
      */
-    projection_matrix     = std::make_shared<BlockMatrixExtension>();
-    ilu_projection_matrix = std::make_shared<BlockILUExtension>();
+    projection_matrix     = std::make_shared<adaflo::BlockMatrixExtension>();
+    ilu_projection_matrix = std::make_shared<adaflo::BlockILUExtension>();
   }
 
   template <int dim, typename number>
   void
   CurvatureOperationAdaflo<dim, number>::create_operator()
   {
-    curvature_operation = std::make_shared<LevelSetOKZSolverComputeCurvature<dim>>(
+    curvature_operation = std::make_shared<adaflo::LevelSetOKZSolverComputeCurvature<dim>>(
       scratch_data.get_cell_sizes(),
       normal_vector_operation_adaflo->get_solution_normal_vector(),
       scratch_data.get_constraint(curv_adaflo_params.dof_index_curvature),
@@ -83,11 +83,11 @@ namespace MeltPoolDG::LevelSet
      */
     initialize_vectors();
 
-    compute_cell_diameters<dim>(scratch_data.get_matrix_free(),
-                                curv_adaflo_params.dof_index_ls,
-                                cell_diameters,
-                                cell_diameter_min,
-                                cell_diameter_max);
+    adaflo::compute_cell_diameters<dim>(scratch_data.get_matrix_free(),
+                                        curv_adaflo_params.dof_index_ls,
+                                        cell_diameters,
+                                        cell_diameter_min,
+                                        cell_diameter_max);
 
     epsilon_used = cell_diameter_max * curv_adaflo_params.epsilon;
 

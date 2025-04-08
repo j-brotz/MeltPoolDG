@@ -10,6 +10,8 @@
 
 namespace MeltPoolDG::LevelSet
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   AdvectionDiffusionOperationAdaflo<dim, number>::AdvectionDiffusionOperationAdaflo(
     const ScratchData<dim, dim, number>         &scratch_data,
@@ -46,7 +48,7 @@ namespace MeltPoolDG::LevelSet
     /*
      * initialize adaflo operation
      */
-    advec_diff_operation = std::make_shared<LevelSetOKZSolverAdvanceConcentration<dim>>(
+    advec_diff_operation = std::make_shared<adaflo::LevelSetOKZSolverAdvanceConcentration<dim>>(
       advected_field,
       advected_field_old,
       advected_field_old_old,
@@ -242,15 +244,15 @@ namespace MeltPoolDG::LevelSet
     adaflo_params.time.time_step_size_max   = time_stepping.time_step_size;
 
     if (advec_diff.time_integrator_data.integrator_type == TimeIntegratorSchemes::implicit_euler)
-      adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::implicit_euler;
+      adaflo_params.time.time_step_scheme = adaflo::TimeSteppingParameters::Scheme::implicit_euler;
     else if (advec_diff.time_integrator_data.integrator_type ==
              TimeIntegratorSchemes::explicit_euler)
-      adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::explicit_euler;
+      adaflo_params.time.time_step_scheme = adaflo::TimeSteppingParameters::Scheme::explicit_euler;
     else if (advec_diff.time_integrator_data.integrator_type ==
              TimeIntegratorSchemes::crank_nicolson)
-      adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::crank_nicolson;
+      adaflo_params.time.time_step_scheme = adaflo::TimeSteppingParameters::Scheme::crank_nicolson;
     else if (advec_diff.time_integrator_data.integrator_type == TimeIntegratorSchemes::bdf_2)
-      adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::bdf_2;
+      adaflo_params.time.time_step_scheme = adaflo::TimeSteppingParameters::Scheme::bdf_2;
     else
       AssertThrow(false, ExcMessage("Requested time stepping scheme not supported."));
     adaflo_params.time.time_stepping_cfl   = 0.8;  //@ todo

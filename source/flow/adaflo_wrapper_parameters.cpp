@@ -6,7 +6,7 @@ namespace MeltPoolDG::Flow
   void
   AdafloWrapperParameters::parse_parameters(const std::string &parameter_filename)
   {
-    ParameterHandler prm_adaflo;
+    dealii::ParameterHandler prm_adaflo;
 
     // declare parameters
     {
@@ -27,7 +27,8 @@ namespace MeltPoolDG::Flow
       else if (parameter_filename.substr(parameter_filename.find_last_of(".") + 1) == "prm")
         prm_adaflo.parse_input(parameter_filename);
       else
-        AssertThrow(false, ExcMessage("Parameterhandler cannot handle current file ending"));
+        AssertThrow(false,
+                    dealii::ExcMessage("Parameterhandler cannot handle current file ending"));
     }
 
     // read parsed parameters
@@ -40,7 +41,7 @@ namespace MeltPoolDG::Flow
     }
   }
 
-  const FlowParameters &
+  const adaflo::FlowParameters &
   AdafloWrapperParameters::get_parameters() const
   {
     return this->params;

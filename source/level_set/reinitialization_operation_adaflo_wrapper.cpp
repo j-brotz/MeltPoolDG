@@ -42,7 +42,7 @@ namespace MeltPoolDG::LevelSet
   ReinitializationOperationAdaflo<dim, number>::create_operator()
   {
     // std::cout <<
-    reinit_operation_adaflo = std::make_shared<LevelSetOKZSolverReinitialization<dim>>(
+    reinit_operation_adaflo = std::make_shared<adaflo::LevelSetOKZSolverReinitialization<dim>>(
       normal_vector_operation_adaflo->get_solution_normal_vector(),
       scratch_data.get_cell_sizes(),
       epsilon_used,
@@ -89,11 +89,11 @@ namespace MeltPoolDG::LevelSet
   {
     initialize_vectors();
 
-    compute_cell_diameters<dim>(scratch_data.get_matrix_free(),
-                                reinit_params_adaflo.dof_index_ls,
-                                cell_diameters,
-                                cell_diameter_min,
-                                cell_diameter_max);
+    adaflo::compute_cell_diameters<dim>(scratch_data.get_matrix_free(),
+                                        reinit_params_adaflo.dof_index_ls,
+                                        cell_diameters,
+                                        cell_diameter_min,
+                                        cell_diameter_max);
 
     if (!normal_vector_operation_adaflo)
       create_normal_vector_operator();
@@ -249,7 +249,8 @@ namespace MeltPoolDG::LevelSet
     const int                       reinit_quad_idx,
     const int                       normal_dof_idx)
   {
-    reinit_params_adaflo.time.time_step_scheme     = TimeSteppingParameters::Scheme::implicit_euler;
+    reinit_params_adaflo.time.time_step_scheme =
+      adaflo::TimeSteppingParameters::Scheme::implicit_euler;
     reinit_params_adaflo.time.start_time           = 0.0;
     reinit_params_adaflo.time.end_time             = 1e8;
     reinit_params_adaflo.time.time_step_size_start = time_stepping.time_step_size;

@@ -125,18 +125,18 @@ namespace MeltPoolDG::LevelSet
     /**
      * Adaflo parameters for the level set problem
      */
-    LevelSetOKZSolverReinitializationParameter reinit_params_adaflo;
+    adaflo::LevelSetOKZSolverReinitializationParameter reinit_params_adaflo;
 
     /**
      * Reference to the actual advection diffusion solver from adaflo
      */
-    std::shared_ptr<NormalVectorOperationAdaflo<dim, number>> normal_vector_operation_adaflo;
-    std::shared_ptr<LevelSetOKZSolverReinitialization<dim>>   reinit_operation_adaflo;
+    std::shared_ptr<NormalVectorOperationAdaflo<dim, number>>       normal_vector_operation_adaflo;
+    std::shared_ptr<adaflo::LevelSetOKZSolverReinitialization<dim>> reinit_operation_adaflo;
 
     /**
      *  Diagonal preconditioner
      */
-    DiagonalPreconditioner<number> preconditioner;
+    adaflo::DiagonalPreconditioner<number> preconditioner;
 
     std::pair<number, number>                              last_concentration_range = {-1.0, 1.0};
     dealii::AlignedVector<dealii::VectorizedArray<number>> cell_diameters;

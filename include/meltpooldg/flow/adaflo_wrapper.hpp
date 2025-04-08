@@ -235,10 +235,10 @@ namespace MeltPoolDG::Flow
     /**
      * Reference to the actual Navier-Stokes solver from adaflo
      */
-    std::unique_ptr<NavierStokes<dim>> navier_stokes;
-    std::unique_ptr<Quadrature<dim>>   face_center_quad;
+    std::unique_ptr<adaflo::NavierStokes<dim>> navier_stokes;
+    std::unique_ptr<Quadrature<dim>>           face_center_quad;
 
-    const FlowParameters &adaflo_params;
+    const adaflo::FlowParameters &adaflo_params;
 
     const bool do_evaporative_mass_flux;
 

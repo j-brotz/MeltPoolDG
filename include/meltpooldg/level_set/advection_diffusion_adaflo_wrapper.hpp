@@ -122,16 +122,16 @@ namespace MeltPoolDG::LevelSet
     /**
      * Boundary conditions for the advection diffusion operation
      */
-    LevelSetOKZSolverAdvanceConcentrationBoundaryDescriptor<dim> bcs;
+    adaflo::LevelSetOKZSolverAdvanceConcentrationBoundaryDescriptor<dim> bcs;
     /**
      * Adaflo parameters for the level set problem
      */
-    LevelSetOKZSolverAdvanceConcentrationParameter adaflo_params;
+    adaflo::LevelSetOKZSolverAdvanceConcentrationParameter adaflo_params;
 
     /**
      * Reference to the actual advection diffusion solver from adaflo
      */
-    std::shared_ptr<LevelSetOKZSolverAdvanceConcentration<dim>> advec_diff_operation;
+    std::shared_ptr<adaflo::LevelSetOKZSolverAdvanceConcentration<dim>> advec_diff_operation;
 
     /**
      *  maximum velocity --> set by adaflo
@@ -140,8 +140,8 @@ namespace MeltPoolDG::LevelSet
     /**
      *  Diagonal preconditioner @todo
      */
-    DiagonalPreconditioner<number> preconditioner;
-    const ConditionalOStream       pcout;
+    adaflo::DiagonalPreconditioner<number> preconditioner;
+    const ConditionalOStream               pcout;
     /**
      *  dof idx for constraints with dirichlet values (relevant for dirichlet neq 0)
      */

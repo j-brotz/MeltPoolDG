@@ -592,7 +592,7 @@ namespace MeltPoolDG::MeltPool
         AssertThrow(false, e);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    catch (const ExcNavierStokesNoConvergence &e)
+    catch (const adaflo::ExcNavierStokesNoConvergence &e)
       {
         finalize(base_in, OutputNotConvergedOperation::navier_stokes);
         AssertThrow(false, e);
@@ -1142,7 +1142,7 @@ namespace MeltPoolDG::MeltPool
           // parameter "constitutive type" is set to "user defined" in the Navier-Stokes section.
 #ifdef MELT_POOL_DG_WITH_ADAFLO
         if (param.adaflo_params.params.constitutive_type ==
-            FlowParameters::ConstitutiveType::user_defined)
+            adaflo::FlowParameters::ConstitutiveType::user_defined)
           {
             evaporation_fluid_material = std::make_shared<
               Evaporation::IncompressibleNewtonianFluidEvaporationMaterial<dim, number>>(

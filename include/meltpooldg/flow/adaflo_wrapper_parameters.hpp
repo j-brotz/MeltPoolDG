@@ -1,9 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, Peter Munch, TUM, October 2020
- *
- * ---------------------------------------------------------------------*/
-
 #pragma once
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
@@ -12,23 +6,20 @@
 
 #include <deal.II/base/parameter_handler.h>
 
-namespace MeltPoolDG
+namespace MeltPoolDG::Flow
 {
-  namespace Flow
+  struct AdafloWrapperParameters
   {
-    struct AdafloWrapperParameters
-    {
-      AdafloWrapperParameters() = default;
+    AdafloWrapperParameters() = default;
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-      void
-      parse_parameters(const std::string &parameter_filename);
+    void
+    parse_parameters(const std::string &parameter_filename);
 
-      const FlowParameters &
-      get_parameters() const;
+    const adaflo::FlowParameters &
+    get_parameters() const;
 
-      FlowParameters params;
+    adaflo::FlowParameters params;
 #endif
-    };
-  } // namespace Flow
-} // namespace MeltPoolDG
+  };
+} // namespace MeltPoolDG::Flow
