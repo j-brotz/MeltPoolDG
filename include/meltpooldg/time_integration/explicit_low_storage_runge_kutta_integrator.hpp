@@ -194,6 +194,8 @@ namespace MeltPoolDG
       const std::function<void(number, VectorType &, const VectorType &)> &stage_post_processing)
       override
     {
+      using namespace dealii;
+
       Assert(solution_history.size() >= required_solution_history_size(),
              dealii::ExcMessage(
                "The size of the solution history object does not fit the requirements of the "

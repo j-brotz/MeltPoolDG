@@ -186,7 +186,8 @@ namespace MeltPoolDG
       PreconditionerType preconditioner;
     };
 
-    //! Pointer to the actual preconditioner object to which the function calls are forwarded.
+    //! dealii::Pointer to the actual preconditioner object to which the function calls are
+    //! forwarded.
     std::unique_ptr<PreconditionerConcept> preconditioner_pimpl;
 
     //! Enum indicating whether the preconditioner shall be updated the next time update() is

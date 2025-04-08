@@ -100,7 +100,7 @@ namespace MeltPoolDG
              dealii::ExcInternalError());
 
       // TODO: extend for BlockVectors
-      AssertThrow(!internal::is_block_vector<VectorType> ||
+      AssertThrow(!dealii::internal::is_block_vector<VectorType> ||
                     data.type != PredictorType::least_squares_projection,
                   dealii::ExcNotImplemented());
     }

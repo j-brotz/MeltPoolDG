@@ -78,7 +78,7 @@ namespace MeltPoolDG::Flow
     /**
      * Set the boundary conditions.
      *
-     * @param simulation_case Pointer to the considered simulation case class.
+     * @param simulation_case dealii::Pointer to the considered simulation case class.
      * @param operation_name String for the name of the considered operation.
      *
      * @note The function simply passes the parameters to the set_boundary_conditions function in the
@@ -96,7 +96,7 @@ namespace MeltPoolDG::Flow
      * @note The function simply passes the parameters to the corresponding operator function.
      */
     void
-    set_body_force(std::unique_ptr<Function<dim>> body_force_in);
+    set_body_force(std::unique_ptr<dealii::Function<dim>> body_force_in);
 
     /**
      * Compute the maximum time step size arising from the convective and viscous time step limits
@@ -113,7 +113,7 @@ namespace MeltPoolDG::Flow
      * @param function Initial condition of the flow field.
      */
     void
-    set_initial_condition(const Function<dim> &function);
+    set_initial_condition(const dealii::Function<dim> &function);
 
     /**
      * Attach the solution to the passed data out object. The solution which are added are the
@@ -165,14 +165,14 @@ namespace MeltPoolDG::Flow
 
   //! inlined functions
   template <int dim, typename number>
-  const LinearAlgebra::distributed::Vector<number> &
+  const dealii::LinearAlgebra::distributed::Vector<number> &
   DGCompressibleFlowOperation<dim, number>::get_solution() const
   {
     return flow_scratch_data.solution_history.get_current_solution();
   }
 
   template <int dim, typename number>
-  LinearAlgebra::distributed::Vector<number> &
+  dealii::LinearAlgebra::distributed::Vector<number> &
   DGCompressibleFlowOperation<dim, number>::get_solution()
   {
     return flow_scratch_data.solution_history.get_current_solution();

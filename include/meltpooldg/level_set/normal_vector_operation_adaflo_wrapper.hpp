@@ -103,13 +103,13 @@ namespace MeltPoolDG::LevelSet
     /**
      *  Diagonal preconditioner @todo
      */
-    DiagonalPreconditioner<number>                 preconditioner;
-    std::shared_ptr<BlockMatrixExtension>          projection_matrix;
-    std::shared_ptr<BlockILUExtension>             ilu_projection_matrix;
-    AlignedVector<dealii::VectorizedArray<number>> cell_diameters;
-    number                                         cell_diameter_min;
-    number                                         cell_diameter_max;
-    number                                         epsilon_used;
+    DiagonalPreconditioner<number>                         preconditioner;
+    std::shared_ptr<BlockMatrixExtension>                  projection_matrix;
+    std::shared_ptr<BlockILUExtension>                     ilu_projection_matrix;
+    dealii::AlignedVector<dealii::VectorizedArray<number>> cell_diameters;
+    number                                                 cell_diameter_min;
+    number                                                 cell_diameter_max;
+    number                                                 epsilon_used;
 
     const NormalVectorData<number> &normal_vec_data;
   };

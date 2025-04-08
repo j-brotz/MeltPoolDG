@@ -40,7 +40,7 @@ namespace MeltPoolDG
      *
      * @param id_and_function A pair consisting of:
      *        - `dealii::types::boundary_id`: The unique ID for the boundary.
-     *        - `std::shared_ptr<Function<dim>>`: A shared pointer to the function defining
+     *        - `std::shared_ptr<dealii::Function<dim>>`: A shared pointer to the function defining
      *          the boundary condition.
      * @param type The type of the boundary condition (e.g., "dirichlet", "neumann").
      *

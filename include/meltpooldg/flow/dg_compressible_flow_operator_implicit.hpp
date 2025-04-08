@@ -124,9 +124,9 @@ namespace MeltPoolDG::Flow
      * @param q_index Quadrature point index.
      */
     void
-    local_cell_jacobian_kernel(FECellIntegrator<dim, dim + 2, number>       &delta_phi,
-                               const FECellIntegrator<dim, dim + 2, number> &phi,
-                               unsigned int                                  q_index) const;
+    local_cell_jacobian_kernel(dealii::FECellIntegrator<dim, dim + 2, number>       &delta_phi,
+                               const dealii::FECellIntegrator<dim, dim + 2, number> &phi,
+                               unsigned int                                          q_index) const;
 
     /**
      * Local face operations at the given quadrature point for computing the jacobian.
@@ -140,11 +140,11 @@ namespace MeltPoolDG::Flow
      * @param q_index Quadrature point index.
      */
     void
-    local_face_jacobian_kernel(FEFaceIntegrator<dim, dim + 2, number>       &delta_phi_m,
-                               FEFaceIntegrator<dim, dim + 2, number>       &delta_phi_p,
-                               const FEFaceIntegrator<dim, dim + 2, number> &phi_m,
-                               const FEFaceIntegrator<dim, dim + 2, number> &phi_p,
-                               unsigned int                                  q_index) const;
+    local_face_jacobian_kernel(dealii::FEFaceIntegrator<dim, dim + 2, number>       &delta_phi_m,
+                               dealii::FEFaceIntegrator<dim, dim + 2, number>       &delta_phi_p,
+                               const dealii::FEFaceIntegrator<dim, dim + 2, number> &phi_m,
+                               const dealii::FEFaceIntegrator<dim, dim + 2, number> &phi_p,
+                               unsigned int                                          q_index) const;
 
     /**
      * Local biundary face operations at the given quadrature point for computing the jacobian.
@@ -155,8 +155,8 @@ namespace MeltPoolDG::Flow
      * @param q_index Quadrature point index.
      */
     void
-    local_boundary_face_jacobian_kernel(FEFaceIntegrator<dim, dim + 2, number>       &delta_phi_m,
-                                        const FEFaceIntegrator<dim, dim + 2, number> &phi_m,
+    local_boundary_face_jacobian_kernel(dealii::FEFaceIntegrator<dim, dim + 2, number> &delta_phi_m,
+                                        const dealii::FEFaceIntegrator<dim, dim + 2, number> &phi_m,
                                         unsigned int q_index) const;
 
   private:
@@ -191,10 +191,10 @@ namespace MeltPoolDG::Flow
      * @param cell_range Cell range which is considered in the applier.
      */
     void
-    local_cell_residual(const MatrixFree<dim, number>                    &matrix_free,
-                        LinearAlgebra::distributed::Vector<number>       &dst,
-                        const LinearAlgebra::distributed::Vector<number> &src,
-                        const std::pair<unsigned int, unsigned int>      &cell_range) const;
+    local_cell_residual(const dealii::MatrixFree<dim, number>                    &matrix_free,
+                        dealii::LinearAlgebra::distributed::Vector<number>       &dst,
+                        const dealii::LinearAlgebra::distributed::Vector<number> &src,
+                        const std::pair<unsigned int, unsigned int>              &cell_range) const;
 
     /**
      * The local cell applier computing the residual contribution of the inner faces.
@@ -205,10 +205,10 @@ namespace MeltPoolDG::Flow
      * @param face_range Face range which is considered in the applier.
      */
     void
-    local_face_residual(const MatrixFree<dim, number>                    &matrix_free,
-                        LinearAlgebra::distributed::Vector<number>       &dst,
-                        const LinearAlgebra::distributed::Vector<number> &src,
-                        const std::pair<unsigned int, unsigned int>      &face_range) const;
+    local_face_residual(const dealii::MatrixFree<dim, number>                    &matrix_free,
+                        dealii::LinearAlgebra::distributed::Vector<number>       &dst,
+                        const dealii::LinearAlgebra::distributed::Vector<number> &src,
+                        const std::pair<unsigned int, unsigned int>              &face_range) const;
 
     /**
      * The local cell applier computing the residual contribution of the boundary faces.
@@ -219,9 +219,9 @@ namespace MeltPoolDG::Flow
      * @param face_range Face range which is considered in the applier.
      */
     void
-    local_boundary_face_residual(const MatrixFree<dim, number>                    &matrix_free,
-                                 LinearAlgebra::distributed::Vector<number>       &dst,
-                                 const LinearAlgebra::distributed::Vector<number> &src,
+    local_boundary_face_residual(const dealii::MatrixFree<dim, number>              &matrix_free,
+                                 dealii::LinearAlgebra::distributed::Vector<number> &dst,
+                                 const dealii::LinearAlgebra::distributed::Vector<number> &src,
                                  const std::pair<unsigned int, unsigned int> &face_range) const;
 
     /**
@@ -235,7 +235,7 @@ namespace MeltPoolDG::Flow
      * @param cell_range The range of cells considered by the applier.
      */
     void
-    local_cell_jacobian(const MatrixFree<dim, number>               &matrix_free,
+    local_cell_jacobian(const dealii::MatrixFree<dim, number>       &matrix_free,
                         VectorType                                  &dst,
                         const VectorType                            &src,
                         const std::pair<unsigned int, unsigned int> &cell_range) const;
@@ -251,7 +251,7 @@ namespace MeltPoolDG::Flow
      * @param face_range The range of faces considered by the applier.
      */
     void
-    local_face_jacobian(const MatrixFree<dim, number>               &matrix_free,
+    local_face_jacobian(const dealii::MatrixFree<dim, number>       &matrix_free,
                         VectorType                                  &dst,
                         const VectorType                            &src,
                         const std::pair<unsigned int, unsigned int> &face_range) const;
@@ -268,9 +268,9 @@ namespace MeltPoolDG::Flow
      * @param face_range The range of faces considered by the applier.
      */
     void
-    local_boundary_face_jacobian(const MatrixFree<dim, number>                    &matrix_free,
-                                 LinearAlgebra::distributed::Vector<number>       &dst,
-                                 const LinearAlgebra::distributed::Vector<number> &src,
+    local_boundary_face_jacobian(const dealii::MatrixFree<dim, number>              &matrix_free,
+                                 dealii::LinearAlgebra::distributed::Vector<number> &dst,
+                                 const dealii::LinearAlgebra::distributed::Vector<number> &src,
                                  const std::pair<unsigned int, unsigned int> &face_range) const;
 
     /**

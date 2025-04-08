@@ -29,6 +29,8 @@
 
 namespace MeltPoolDG::Multiphase
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   CompressibleMultiphaseOperation<dim, number>::CompressibleMultiphaseOperation(
     const ScratchData<dim, dim, number>                        &scratch_data_in,

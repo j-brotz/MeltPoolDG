@@ -17,8 +17,9 @@ namespace MeltPoolDG::Flow
     using MappingInfoVectorType = CutUtil::MappingInfoVectorType<dim, number>;
 
   public:
-    using ConservedVariablesType     = Tensor<1, dim + 2, VectorizedArray<number>>;
-    using ConservedVariablesGradType = Tensor<1, dim + 2, Tensor<1, dim, VectorizedArray<number>>>;
+    using ConservedVariablesType = dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>>;
+    using ConservedVariablesGradType =
+      dealii::Tensor<1, dim + 2, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
 
 
     /**
@@ -46,7 +47,7 @@ namespace MeltPoolDG::Flow
      * @param inflow_function Function which describes the inflow field at the unfitted inflow boundary.
      */
     void
-    set_inflow_field_unfitted_boundary(std::shared_ptr<Function<dim>> &inflow_function);
+    set_inflow_field_unfitted_boundary(std::shared_ptr<dealii::Function<dim>> &inflow_function);
 
     /**
      * Set the velocity function in the case of an unfitted (rigid) moving object.
@@ -54,7 +55,7 @@ namespace MeltPoolDG::Flow
      * @param velocity_function Scalar function which describes the velocity of an unfitted (rigid) moving object
      */
     void
-    set_unfitted_object_velocity(std::shared_ptr<Function<dim>> &velocity_function);
+    set_unfitted_object_velocity(std::shared_ptr<dealii::Function<dim>> &velocity_function);
 
     /**
      * Local appliers for right-hand side evaluation.

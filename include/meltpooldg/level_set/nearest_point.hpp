@@ -51,7 +51,7 @@ namespace MeltPoolDG::LevelSet::Tools
     /**
      * Constructor
      *
-     * @param mapping Mapping of the geometry.
+     * @param mapping dealii::Mapping of the geometry.
      * @param dof_handler_signed_distance DoFHandler of the level set/signed distance function.
      * @param signed_distance Vector of the level set/signed distance function.
      * @param remote_point_evaluation Cache for MPI::RemotePointEvaluation.

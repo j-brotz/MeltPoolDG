@@ -269,31 +269,32 @@ namespace MeltPoolDG::Simulation::FilmBoiling
         get_colorized_rectangle_boundary_ids<dim>();
 
       this->attach_boundary_condition(lower_bc, "no_slip", "navier_stokes_u");
-      this->attach_boundary_condition({upper_bc, std::make_shared<Functions::ZeroFunction<dim>>()},
+      this->attach_boundary_condition({upper_bc,
+                                       std::make_shared<dealii::Functions::ZeroFunction<dim>>()},
                                       "open",
                                       "navier_stokes_u");
 
       this->attach_boundary_condition({lower_bc,
-                                       std::make_shared<Functions::ConstantFunction<dim>>(
+                                       std::make_shared<dealii::Functions::ConstantFunction<dim>>(
                                          this->parameters.material.boiling_temperature + delta_T)},
                                       "dirichlet",
                                       "heat_transfer");
       if (bc_temperature_top == "dirichlet")
         this->attach_boundary_condition({upper_bc,
-                                         std::make_shared<Functions::ConstantFunction<dim>>(
+                                         std::make_shared<dealii::Functions::ConstantFunction<dim>>(
                                            this->parameters.material.boiling_temperature)},
                                         "dirichlet",
                                         "heat_transfer");
 
       // @note: this BC is necessary
-      this->attach_boundary_condition({lower_bc,
-                                       std::make_shared<Functions::ConstantFunction<dim>>(-1)},
-                                      "dirichlet",
-                                      "level_set");
-      this->attach_boundary_condition({upper_bc,
-                                       std::make_shared<Functions::ConstantFunction<dim>>(1)},
-                                      "inflow_outflow",
-                                      "level_set");
+      this->attach_boundary_condition(
+        {lower_bc, std::make_shared<dealii::Functions::ConstantFunction<dim>>(-1)},
+        "dirichlet",
+        "level_set");
+      this->attach_boundary_condition(
+        {upper_bc, std::make_shared<dealii::Functions::ConstantFunction<dim>>(1)},
+        "inflow_outflow",
+        "level_set");
 
       if (dim > 1)
         {
@@ -328,7 +329,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
         std::make_shared<InitialSignedDistance<dim>>(lambda0, disturbance_factors),
         "signed_distance");
 
-      this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(dim),
+      this->attach_initial_condition(std::make_shared<dealii::Functions::ZeroFunction<dim>>(dim),
                                      "navier_stokes_u");
 
       // assign initial temperature such that at the interface the boiling temperature is met

@@ -26,6 +26,8 @@
 
 namespace MeltPoolDG::Flow
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   DGCompressibleFlowOperation<dim, number>::DGCompressibleFlowOperation(
     const ScratchData<dim, dim, number> &scratch_data,

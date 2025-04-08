@@ -79,13 +79,13 @@ namespace MeltPoolDG::PostProcessingTools
     process(const unsigned int n_time_step) override
     {
       using namespace dealii;
-      AssertThrow(generic_data_out != nullptr, ExcMessage("GenericDataOut is null."));
-      AssertThrow(dim > 1, ExcMessage("SliceCreator supports only dim>1."));
+      AssertThrow(generic_data_out != nullptr, dealii::ExcMessage("GenericDataOut is null."));
+      AssertThrow(dim > 1, dealii::ExcMessage("SliceCreator supports only dim>1."));
 
       if (dim > 1)
         {
           // create DataOut of the slice
-          MappingQ1<dim - 1, dim>            mapping_slice;
+          dealii::MappingQ1<dim - 1, dim>    mapping_slice;
           DataOutResample<dim, dim - 1, dim> data_out(tria_slice, mapping_slice);
 
           for (const auto &i : idx_req_vars)

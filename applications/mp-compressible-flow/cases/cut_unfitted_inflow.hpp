@@ -16,17 +16,17 @@
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {
   template <int dim, typename number>
-  class SteadyInflowField : public Function<dim, number>
+  class SteadyInflowField : public dealii::Function<dim, number>
   {
   public:
     explicit SteadyInflowField()
-      : Function<dim, number>(dim + 2)
+      : dealii::Function<dim, number>(dim + 2)
     {
-      Assert(dim == 2 or dim == 3, ExcNotImplemented());
+      Assert(dim == 2 or dim == 3, dealii::ExcNotImplemented());
     }
 
     number
-    value(const Point<dim, number> &, const unsigned int component) const final
+    value(const dealii::Point<dim, number> &, const unsigned int component) const final
     {
       if (component == 0)
         return 0.001;
@@ -50,14 +50,16 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     void
     create_spatial_discretization() override
     {
+      using namespace dealii;
+
       this->triangulation =
         std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
-      Point<dim, number> lower_left;
+      dealii::Point<dim, number> lower_left;
       for (unsigned int d = 1; d < dim; ++d)
         lower_left[d] = 0.;
 
-      Point<dim, number> upper_right;
+      dealii::Point<dim, number> upper_right;
       upper_right[0] = 1.0;
       for (unsigned int d = 1; d < dim; ++d)
         upper_right[d] = 0.008;
@@ -99,7 +101,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       this->attach_initial_condition(initial_condition, "compressible_flow");
 
       // set level-set function
-      Point<dim, number> center;
+      dealii::Point<dim, number> center;
       center[0] = 0.5;
       for (unsigned int d = 1; d < dim; ++d)
         center[d] = 0.004;
@@ -108,7 +110,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       normal[0] = 1.;
 
       const auto level_set =
-        std::make_shared<Functions::SignedDistance::Plane<dim>>(center, normal);
+        std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(center, normal);
       this->attach_field_function(level_set, "level_set", "compressible_flow");
 
       // set inflow function at unfitted object

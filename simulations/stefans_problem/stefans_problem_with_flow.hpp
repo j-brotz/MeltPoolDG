@@ -130,12 +130,13 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
     void
     set_field_conditions() final
     {
-      this->attach_initial_condition(std::make_shared<Functions::SignedDistance::Plane<dim>>(
-                                       Point<dim>::unit_vector(dim - 1) * y_interface,
-                                       -Point<dim>::unit_vector(dim - 1)),
-                                     "signed_distance");
       this->attach_initial_condition(
-        std::shared_ptr<Function<dim>>(new Functions::ZeroFunction<dim>(dim)), "navier_stokes_u");
+        std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(
+          Point<dim>::unit_vector(dim - 1) * y_interface, -Point<dim>::unit_vector(dim - 1)),
+        "signed_distance");
+      this->attach_initial_condition(std::shared_ptr<dealii::Function<dim>>(
+                                       new Functions::ZeroFunction<dim>(dim)),
+                                     "navier_stokes_u");
     }
 
     void

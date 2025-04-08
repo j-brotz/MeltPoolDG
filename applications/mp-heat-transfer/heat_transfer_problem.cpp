@@ -42,6 +42,8 @@
 
 namespace MeltPoolDG::Heat
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   void
   HeatTransferProblem<dim, number>::run()

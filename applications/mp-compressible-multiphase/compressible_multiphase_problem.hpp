@@ -70,10 +70,10 @@ namespace MeltPoolDG::Multiphase
 
     std::shared_ptr<CaseType> simulation_case;
 
-    DoFHandler<dim>                                          dof_handler;
-    DoFHandler<dim>                                          dof_handler_level_set;
-    AffineConstraints<number>                                constraints;
-    AffineConstraints<number>                                constraints_level_set;
+    dealii::DoFHandler<dim>                                  dof_handler;
+    dealii::DoFHandler<dim>                                  dof_handler_level_set;
+    dealii::AffineConstraints<number>                        constraints;
+    dealii::AffineConstraints<number>                        constraints_level_set;
     std::shared_ptr<ScratchData<dim, dim, number>>           scratch_data;
     std::shared_ptr<TimeIterator<number>>                    time_iterator;
     MeltPoolDG::Flow::CompressibleFlowOperation<dim, number> comp_multiphase_operation;
@@ -85,8 +85,8 @@ namespace MeltPoolDG::Multiphase
 
     std::unique_ptr<Postprocessor<dim, number>> post_processor;
 
-    std::shared_ptr<Function<dim>> level_set_field_function;
-    VectorType                     level_set;
+    std::shared_ptr<dealii::Function<dim>> level_set_field_function;
+    VectorType                             level_set;
   };
 
 } // namespace MeltPoolDG::Multiphase

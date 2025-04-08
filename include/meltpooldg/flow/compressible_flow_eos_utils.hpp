@@ -53,7 +53,7 @@ namespace MeltPoolDG::Flow::EOS
                    (1. - conserved_variables[0] * material_data.eos_data.b);
           }
         default:
-          AssertThrow(false, ExcNotImplemented("The given EOS is not supported."));
+          AssertThrow(false, dealii::ExcNotImplemented("The given EOS is not supported."));
       }
   }
 
@@ -104,7 +104,7 @@ namespace MeltPoolDG::Flow::EOS
                     material_data.eos_data.p_inf * inv_rho * inv_rho * grad_rho);
           }
         default:
-          AssertThrow(false, ExcNotImplemented("The given EOS is not supported."));
+          AssertThrow(false, dealii::ExcNotImplemented("The given EOS is not supported."));
       }
   }
 
@@ -144,7 +144,7 @@ namespace MeltPoolDG::Flow::EOS
                              (density * (1. - density * material_data.eos_data.b)));
           }
         default:
-          AssertThrow(false, ExcNotImplemented("The given EOS is not supported."));
+          AssertThrow(false, dealii::ExcNotImplemented("The given EOS is not supported."));
       }
   }
 
@@ -185,7 +185,7 @@ namespace MeltPoolDG::Flow::EOS
                    ((material_data.gamma - 1.) * material_data.specific_isobaric_heat);
           }
         default:
-          AssertThrow(false, ExcNotImplemented("The given EOS is not supported."));
+          AssertThrow(false, dealii::ExcNotImplemented("The given EOS is not supported."));
       }
   }
 
@@ -203,7 +203,7 @@ namespace MeltPoolDG::Flow::EOS
    */
   template <int dim, typename number = double, bool is_gas_phase = true>
   inline DEAL_II_ALWAYS_INLINE //
-    dealii::Tensor<2, dim, VectorizedArray<number>>
+    dealii::Tensor<2, dim, dealii::VectorizedArray<number>>
     calculate_stress_tensor(
       const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
       const CompressibleFlowTypes::ConservedVariablesGradType<dim, number>
@@ -218,7 +218,7 @@ namespace MeltPoolDG::Flow::EOS
 
     const auto pressure_tensor =
       calculate_thermodynamic_pressure<dim, number, is_gas_phase>(conserved_variables, flow_data) *
-      dealii::unit_symmetric_tensor<dim, VectorizedArray<number>>();
+      dealii::unit_symmetric_tensor<dim, dealii::VectorizedArray<number>>();
 
     return viscous_stress_tensor - pressure_tensor;
   }
@@ -328,7 +328,7 @@ namespace MeltPoolDG::Flow::EOS
             break;
           }
         default:
-          AssertThrow(false, ExcNotImplemented("The given EOS is not supported."));
+          AssertThrow(false, dealii::ExcNotImplemented("The given EOS is not supported."));
       }
 
     return u_cons;
@@ -345,10 +345,10 @@ namespace MeltPoolDG::Flow::EOS
    */
   template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
-    VectorizedArray<number>
+    dealii::VectorizedArray<number>
     compute_inner_energy_from_pressure(
-      const VectorizedArray<number>                          &pressure,
-      const VectorizedArray<number>                          &density,
+      const dealii::VectorizedArray<number>                  &pressure,
+      const dealii::VectorizedArray<number>                  &density,
       const Flow::CompressibleFluidMaterialPhaseData<number> &material_data)
   {
     switch (material_data.eos_data.type)
@@ -366,7 +366,7 @@ namespace MeltPoolDG::Flow::EOS
                    density * material_data.eos_data.q;
           }
         default:
-          AssertThrow(false, ExcNotImplemented("The given EOS is not supported."));
+          AssertThrow(false, dealii::ExcNotImplemented("The given EOS is not supported."));
       }
   }
 } // namespace MeltPoolDG::Flow::EOS

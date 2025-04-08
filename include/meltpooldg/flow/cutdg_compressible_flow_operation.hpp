@@ -90,7 +90,7 @@ namespace MeltPoolDG::Flow
      * @note The function simply passes the parameters to the corresponding operator function.
      */
     void
-    set_body_force(std::unique_ptr<Function<dim>> body_force_in);
+    set_body_force(std::unique_ptr<dealii::Function<dim>> body_force_in);
 
     /**
      * Compute the maximum time step size arising from the convective and viscous time step limits
@@ -126,7 +126,7 @@ namespace MeltPoolDG::Flow
      * @param function Given function for initial condition.
      */
     void
-    set_initial_condition(const Function<dim> &function);
+    set_initial_condition(const dealii::Function<dim> &function);
 
     /**
      * Set the inflow field function in the case of an unfitted inflow boundary.
@@ -134,7 +134,7 @@ namespace MeltPoolDG::Flow
      * @note The function simply passes the function to the corresponding cut operator function.
      */
     void
-    set_inflow_field_unfitted_boundary(std::shared_ptr<Function<dim>> &inflow_function);
+    set_inflow_field_unfitted_boundary(std::shared_ptr<dealii::Function<dim>> &inflow_function);
 
     /**
      * Set the velocity function in the case of an unfitted (rigid) moving object.
@@ -142,12 +142,12 @@ namespace MeltPoolDG::Flow
      * @note The function simply passes the function to the corresponding cut operator function.
      */
     void
-    set_unfitted_object_velocity(std::shared_ptr<Function<dim>> &velocity_function);
+    set_unfitted_object_velocity(std::shared_ptr<dealii::Function<dim>> &velocity_function);
 
     /**
      * Set the (standard compressible flow, i.e. non-cut specific) boundary conditions.
      *
-     * @param simulation_case Pointer to the considered simulation case class.
+     * @param simulation_case dealii::Pointer to the considered simulation case class.
      * @param operation_name String for the name of the considered operation.
      *
      * @note The function simply passes the parameters to the set_boundary_conditions function in the
@@ -253,14 +253,14 @@ namespace MeltPoolDG::Flow
 
   //! inlined functions
   template <int dim, typename number>
-  const LinearAlgebra::distributed::Vector<number> &
+  const dealii::LinearAlgebra::distributed::Vector<number> &
   CutDGCompressibleFlowOperation<dim, number>::get_solution() const
   {
     return flow_scratch_data.solution_history.get_current_solution();
   }
 
   template <int dim, typename number>
-  LinearAlgebra::distributed::Vector<number> &
+  dealii::LinearAlgebra::distributed::Vector<number> &
   CutDGCompressibleFlowOperation<dim, number>::get_solution()
   {
     return flow_scratch_data.solution_history.get_current_solution();

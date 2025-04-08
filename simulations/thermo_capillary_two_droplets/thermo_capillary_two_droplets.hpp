@@ -285,7 +285,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
       AssertThrow(eps > 0, ExcNotImplemented());
 
       this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(eps), "level_set");
-      this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(dim),
+      this->attach_initial_condition(std::make_shared<dealii::Functions::ZeroFunction<dim>>(dim),
                                      "navier_stokes_u");
       this->attach_initial_condition(std::make_shared<InitialValuesTemperature<dim>>(),
                                      "heat_transfer");

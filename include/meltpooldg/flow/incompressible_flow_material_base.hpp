@@ -36,15 +36,15 @@ namespace MeltPoolDG::Flow
      * the current quadrature point index @p quad_idx are known.
      */
     virtual void
-    reinit(const Tensor<2, dim, VectorizedArray<number>> &velocity_gradient,
-           const unsigned int                             cell_idx,
-           const unsigned int                             quad_idx) = 0;
+    reinit(const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> &velocity_gradient,
+           const unsigned int                                             cell_idx,
+           const unsigned int                                             quad_idx) = 0;
 
     /**
      * Return the deviatoric stress τ for the given velocity gradient ∇u, set by reinit().
      *  τ(∇u)
      */
-    virtual Tensor<2, dim, VectorizedArray<number>>
+    virtual dealii::Tensor<2, dim, dealii::VectorizedArray<number>>
     get_tau() = 0;
 
     /**
@@ -61,7 +61,7 @@ namespace MeltPoolDG::Flow
      * with the shape functions N.
      *
      */
-    virtual Tensor<2, dim, VectorizedArray<number>>
+    virtual dealii::Tensor<2, dim, dealii::VectorizedArray<number>>
     get_vmult_d_tau_d_grad_vel() = 0;
 
     /**

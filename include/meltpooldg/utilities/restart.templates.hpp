@@ -18,13 +18,15 @@ namespace MeltPoolDG::Restart
   void
   serialize_internal(
     const std::function<
-      void(std::vector<std::pair<const DoFHandler<dim> *,
+      void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
                                  std::function<void(std::vector<VectorType *> &)>>> &data)>
                       &attach_vectors,
     const std::string &prefix)
   {
+    using namespace dealii;
+
     std::vector<
-      std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
+      std::pair<const dealii::DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
       data;
     attach_vectors(data);
 
@@ -73,15 +75,17 @@ namespace MeltPoolDG::Restart
   void
   deserialize_internal(
     const std::function<
-      void(std::vector<std::pair<const DoFHandler<dim> *,
+      void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
                                  std::function<void(std::vector<VectorType *> &)>>> &data)>
                                 &attach_vectors,
     const std::function<void()> &post,
     const std::function<void()> &setup_dof_system,
     const std::string           &prefix)
   {
+    using namespace dealii;
+
     std::vector<
-      std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
+      std::pair<const dealii::DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
       data;
     attach_vectors(data);
 

@@ -190,7 +190,7 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
     set_boundary_conditions() override
     {
       // outer boundary
-      this->attach_boundary_condition({1, std::make_shared<Functions::ZeroFunction<dim>>()},
+      this->attach_boundary_condition({1, std::make_shared<dealii::Functions::ZeroFunction<dim>>()},
                                       "open",
                                       "navier_stokes_u");
 
@@ -218,8 +218,8 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
                                          (inner_radius + outer_radius) * 0.5),
                                        "signed_distance");
       else
-        this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(-1),
-                                       "level_set");
+        this->attach_initial_condition(
+          std::make_shared<dealii::Functions::ConstantFunction<dim>>(-1), "level_set");
 
       this->attach_initial_condition(std::make_shared<RadialBoundaryVelocity<dim>>(center),
                                      "navier_stokes_u");

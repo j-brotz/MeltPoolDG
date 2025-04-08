@@ -7,6 +7,8 @@
 
 namespace MeltPoolDG::Flow
 {
+  using namespace dealii;
+
   template <int dim, typename number, bool is_viscous>
   DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>::
     DGCompressibleFlowOperatorImplicitExplicit(

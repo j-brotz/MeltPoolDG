@@ -29,8 +29,9 @@ namespace MeltPoolDG::LevelSet
      */
 
     AdvectionDiffusionOperation(
-      const ScratchData<dim, dim, number>                                        &scratch_data_in,
-      const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> &dirichlet_bc_in,
+      const ScratchData<dim, dim, number> &scratch_data_in,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+                                           &dirichlet_bc_in,
       const AdvectionDiffusionData<number> &advec_diff_data_in,
       const TimeIterator<number>           &time_iterator,
       const VectorType                     &advection_velocity,
@@ -83,15 +84,17 @@ namespace MeltPoolDG::LevelSet
     attach_output_vectors(GenericDataOut<dim, number> &data_out) const override;
 
     void
-    set_inflow_outflow_bc(const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>>
-                            inflow_outflow_bc_);
+    set_inflow_outflow_bc(
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        inflow_outflow_bc_);
 
   private:
     void
     create_operator(const VectorType &advection_velocity);
 
-    const ScratchData<dim, dim, number>                                        &scratch_data;
-    const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> &dirichlet_bc;
+    const ScratchData<dim, dim, number> &scratch_data;
+    const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+      &dirichlet_bc;
     /*
      *  This pointer will point to your user-defined advection_diffusion operator.
      */
@@ -124,7 +127,7 @@ namespace MeltPoolDG::LevelSet
     VectorType rhs;
     VectorType user_rhs;
 
-    std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> inflow_outflow_bc;
+    std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> inflow_outflow_bc;
 
     std::pair<std::vector<unsigned int>, std::vector<number>> inflow_constraints_indices_and_values;
   };

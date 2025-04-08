@@ -15,6 +15,8 @@
 
 namespace MeltPoolDG::Flow
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   void
   CompressibleFlowProblem<dim, number>::run()

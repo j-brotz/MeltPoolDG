@@ -20,6 +20,8 @@
 
 namespace MeltPoolDG::LevelSet
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   AdvectionDiffusionOperation<dim, number>::AdvectionDiffusionOperation(
     const ScratchData<dim, dim, number>                                &scratch_data_in,

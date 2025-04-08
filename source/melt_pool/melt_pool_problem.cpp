@@ -78,6 +78,8 @@
 
 namespace MeltPoolDG::MeltPool
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   void
   MeltPoolProblem<dim, number>::run(std::shared_ptr<MeltPoolCase<dim, number>> base_in)

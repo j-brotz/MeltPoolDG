@@ -114,8 +114,8 @@ namespace MeltPoolDG::Simulation::OscillatingDroplet
       this->attach_initial_condition(std::make_shared<InitialLevelSet<dim>>(radii, eps),
                                      "level_set");
 
-      this->attach_initial_condition(std::shared_ptr<Function<dim>>(
-                                       std::make_shared<Functions::ZeroFunction<dim>>(dim)),
+      this->attach_initial_condition(std::shared_ptr<dealii::Function<dim>>(
+                                       std::make_shared<dealii::Functions::ZeroFunction<dim>>(dim)),
                                      "navier_stokes_u");
     }
 

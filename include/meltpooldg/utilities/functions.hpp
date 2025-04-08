@@ -8,27 +8,27 @@ namespace dealii::Functions
   class ChangedSignFunction : public Function<dim, number>
   {
   public:
-    ChangedSignFunction(const std::shared_ptr<Function<dim, number>> fu_)
+    ChangedSignFunction(const std::shared_ptr<dealii::Function<dim, number>> fu_)
       : Function<dim, number>(fu_->n_components, fu_->get_time())
       , fu(fu_)
     {
-      AssertThrow(fu, ExcMessage("The input function does not exist. Abort ..."));
+      AssertThrow(fu, dealii::ExcMessage("The input function does not exist. Abort ..."));
     }
 
     number
-    value(const Point<dim> &point, const unsigned int component) const override
+    value(const dealii::Point<dim> &point, const unsigned int component) const override
     {
       return -fu->value(point, component);
     }
 
     dealii::Tensor<1, dim, number>
-    gradient(const Point<dim> &point, const unsigned int component) const override
+    gradient(const dealii::Point<dim> &point, const unsigned int component) const override
     {
       return -fu->gradient(point, component);
     }
 
     dealii::SymmetricTensor<2, dim, number>
-    hessian(const Point<dim> &point, const unsigned int component) const override
+    hessian(const dealii::Point<dim> &point, const unsigned int component) const override
     {
       return -fu->hessian(point, component);
     }
@@ -46,7 +46,7 @@ namespace dealii::Functions
     }
 
   private:
-    const std::shared_ptr<Function<dim, number>> fu;
+    const std::shared_ptr<dealii::Function<dim, number>> fu;
   };
 
 

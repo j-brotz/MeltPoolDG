@@ -4,6 +4,8 @@
 
 namespace MeltPoolDG::Flow
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   void
   CompressibleFlowBoundaryConditions<dim, number>::update_boundary_conditions(const number time)
@@ -91,7 +93,7 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   auto
   CompressibleFlowBoundaryConditions<dim, number>::get_boundary_face_value_and_gradient(
-    const Point<dim, dealii::VectorizedArray<number>>             &q_point,
+    const dealii::Point<dim, dealii::VectorizedArray<number>>     &q_point,
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
     const dealii::types::boundary_id                               boundary_id,
     const ConservedVariablesType                                  &w_m,
@@ -99,6 +101,8 @@ namespace MeltPoolDG::Flow
     const CompressibleFlowData<number>                            &flow_data,
     const bool is_gas_phase) const -> std::tuple<ConservedVariablesType, ConservedVariablesGradType>
   {
+    using namespace dealii;
+
     ConservedVariablesType     w_p;
     ConservedVariablesGradType grad_w_p;
     if (const BoundaryType boundary_type = get_boundary_type(boundary_id);
@@ -191,9 +195,9 @@ namespace MeltPoolDG::Flow
         std::cout << "ID: " << boundary_id << std::endl;
         std::cout << "Condition:" << boundary_type << std::endl;
         AssertThrow(false,
-                    ExcMessage("Unknown boundary id, did "
-                               "you set a boundary condition for "
-                               "this part of the domain boundary?"));
+                    dealii::ExcMessage("Unknown boundary id, did "
+                                       "you set a boundary condition for "
+                                       "this part of the domain boundary?"));
       }
 
     return {w_p, grad_w_p};

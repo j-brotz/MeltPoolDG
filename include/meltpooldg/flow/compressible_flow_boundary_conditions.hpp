@@ -55,7 +55,7 @@ namespace MeltPoolDG::Flow
      * Set the boundary conditions by internally calling the function set_boundary_condition for the
      * currently implemented boundary types.
      *
-     * @param simulation_case Pointer to the considered simulation case class.
+     * @param simulation_case dealii::Pointer to the considered simulation case class.
      * @param operation_name String for the name of the considered operation.
      */
     void
@@ -173,7 +173,7 @@ namespace MeltPoolDG::Flow
      */
     std::tuple<ConservedVariablesType, ConservedVariablesGradType>
     get_boundary_face_value_and_gradient(
-      const Point<dim, dealii::VectorizedArray<number>>             &q_point,
+      const dealii::Point<dim, dealii::VectorizedArray<number>>     &q_point,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
       dealii::types::boundary_id                                     boundary_id,
       const ConservedVariablesType                                  &w_m,
@@ -215,10 +215,10 @@ namespace MeltPoolDG::Flow
       number                                                         gamma) const;
 
   private:
-    std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>> inflow_boundaries;
-    std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>>
+    std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> inflow_boundaries;
+    std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
       subsonic_outflow_fixed_pressure;
-    std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>>
+    std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
                                          subsonic_outflow_fixed_energy;
     std::set<dealii::types::boundary_id> slip_wall_boundaries;
     std::set<dealii::types::boundary_id> no_slip_adiabatic_wall_boundaries;

@@ -13,15 +13,15 @@
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {
   template <int dim, typename number>
-  class InflowFlowField : public Function<dim, number>
+  class InflowFlowField : public dealii::Function<dim, number>
   {
   public:
     explicit InflowFlowField(const number time)
-      : Function<dim, number>(dim + 2, time)
+      : dealii::Function<dim, number>(dim + 2, time)
     {}
 
     number
-    value(const Point<dim, number> &, const unsigned int component) const final
+    value(const dealii::Point<dim, number> &, const unsigned int component) const final
     {
       if (component == 0)
         return 1.;
@@ -52,9 +52,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     create_spatial_discretization() override
     {
       this->triangulation =
-        std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+        std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
-      GridGenerator::channel_with_cylinder(*this->triangulation, 0.03, 1, 0, true);
+      dealii::GridGenerator::channel_with_cylinder(*this->triangulation, 0.03, 1, 0, true);
 
       this->triangulation->refine_global(this->parameters.base.global_refinements);
     }

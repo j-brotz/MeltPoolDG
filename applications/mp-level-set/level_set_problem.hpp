@@ -19,18 +19,18 @@ namespace MeltPoolDG::LevelSet
   {
   private:
     using CaseType        = LevelSetCase<dim, number>;
-    using VectorType      = LinearAlgebra::distributed::Vector<number>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<number>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
     const std::unique_ptr<CaseType> simulation_case;
 
-    DoFHandler<dim> dof_handler;
-    DoFHandler<dim> dof_handler_velocity;
+    dealii::DoFHandler<dim> dof_handler;
+    dealii::DoFHandler<dim> dof_handler_velocity;
 
-    AffineConstraints<number> constraints_dirichlet;
-    AffineConstraints<number> hanging_node_constraints;
-    AffineConstraints<number> hanging_node_constraints_velocity;
-    AffineConstraints<number> hanging_node_constraints_with_zero_dirichlet;
+    dealii::AffineConstraints<number> constraints_dirichlet;
+    dealii::AffineConstraints<number> hanging_node_constraints;
+    dealii::AffineConstraints<number> hanging_node_constraints_velocity;
+    dealii::AffineConstraints<number> hanging_node_constraints_with_zero_dirichlet;
 
     unsigned int        ls_dof_idx;
     unsigned int        ls_quad_idx;
@@ -60,7 +60,7 @@ namespace MeltPoolDG::LevelSet
     setup_dof_system(const bool do_reinit = true);
 
     void
-    compute_advection_velocity(Function<dim> &advec_func);
+    compute_advection_velocity(dealii::Function<dim> &advec_func);
 
     void
     output_results(const unsigned int time_step, const number current_time);
