@@ -216,8 +216,9 @@ namespace MeltPoolDG::LevelSet
   LevelSetOperation<dim, number>::set_inflow_outflow_bc(
     const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> inflow_outflow_bc)
   {
-    dynamic_cast<AdvectionDiffusionOperation<dim, number> *>(advec_diff_operation.get())
-      ->set_inflow_outflow_bc(inflow_outflow_bc);
+    if (level_set_data.advec_diff.implementation == "meltpooldg")
+      dynamic_cast<AdvectionDiffusionOperation<dim, number> *>(advec_diff_operation.get())
+        ->set_inflow_outflow_bc(inflow_outflow_bc);
   }
 
   template <int dim, typename number>
