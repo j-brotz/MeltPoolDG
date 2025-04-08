@@ -3,6 +3,7 @@
 
 namespace MeltPoolDG::LevelSet
 {
+  using namespace dealii;
 
   template <int dim, typename number>
   AdvectionDGOperator<dim, number>::AdvectionDGOperator(

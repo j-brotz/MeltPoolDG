@@ -112,11 +112,11 @@ namespace MeltPoolDG::LevelSet
     /**
      *  Geometry info
      */
-    AlignedVector<dealii::VectorizedArray<number>> cell_diameters;
-    number                                         cell_diameter_min;
-    number                                         cell_diameter_max;
-    number                                         epsilon_used;
-    unsigned int                                   verbosity_level;
+    dealii::AlignedVector<dealii::VectorizedArray<number>> cell_diameters;
+    number                                                 cell_diameter_min;
+    number                                                 cell_diameter_max;
+    number                                                 epsilon_used;
+    unsigned int                                           verbosity_level;
 
     const NormalVectorData<number> &normal_vector_data;
   };

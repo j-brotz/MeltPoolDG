@@ -59,16 +59,16 @@ namespace dealii::GridGenerator
   void
   create_triangulation_with_marching_cube_algorithm(
     Triangulation<dim - 1, dim>                              &tria,
-    const Mapping<dim>                                       &mapping,
+    const dealii::Mapping<dim>                               &mapping,
     const DoFHandler<dim>                                    &background_dof_handler,
     const dealii::LinearAlgebra::distributed::Vector<number> &ls_vector,
     const number                                              iso_level,
     const unsigned int                                        n_subdivisions = 1,
     const number                                              tolerance      = 1e-10)
   {
-    std::vector<Point<dim>>        vertices;
-    std::vector<CellData<dim - 1>> cells;
-    SubCellData                    subcelldata;
+    std::vector<dealii::Point<dim>> vertices;
+    std::vector<CellData<dim - 1>>  cells;
+    SubCellData                     subcelldata;
 
     const GridTools::MarchingCubeAlgorithm<dim, dealii::LinearAlgebra::distributed::Vector<number>>
       mc(mapping, background_dof_handler.get_fe(), n_subdivisions, tolerance);

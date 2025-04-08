@@ -1,5 +1,7 @@
 #pragma once
-// for parallelization
+
+#include <deal.II/grid/tria_iterator.h>
+
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/level_set/advection_diffusion_operation.hpp>
@@ -69,8 +71,8 @@ namespace MeltPoolDG::LevelSet
 
     // triangulation info on surface mesh of zero level set contour
     using SurfaceMeshInfo =
-      std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
-                             std::vector<Point<dim>> /*quad_points*/,
+      std::vector<std::tuple<const typename dealii::Triangulation<dim, dim>::cell_iterator /*cell*/,
+                             std::vector<dealii::Point<dim>> /*quad_points*/,
                              std::vector<number> /*weights*/
                              >>;
     SurfaceMeshInfo surface_mesh_info;
@@ -101,8 +103,9 @@ namespace MeltPoolDG::LevelSet
                           const bool is_signed_distance_initial_field_function = false) override;
 
     void
-    set_inflow_outflow_bc(const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>>
-                            inflow_outflow_bc) override;
+    set_inflow_outflow_bc(
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        inflow_outflow_bc) override;
 
     void
     reinit() override;
@@ -217,6 +220,6 @@ namespace MeltPoolDG::LevelSet
     void
     set_level_set_parameters();
 
-    std::vector<Point<dim>> all_marked_vertices;
+    std::vector<dealii::Point<dim>> all_marked_vertices;
   };
 } // namespace MeltPoolDG::LevelSet

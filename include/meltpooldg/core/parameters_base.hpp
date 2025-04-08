@@ -46,7 +46,8 @@ namespace MeltPoolDG
      * @param prm The `ParameterHandler` object to populate with parameters.
      * @param parameter_filename The name of the parameter file to process.
      *
-     * @throws ExcMessage If parameters have already been read or the file format is unsupported.
+     * @throws dealii::ExcMessage If parameters have already been read or the file format is
+     * unsupported.
      */
     virtual void
     process_parameters_file(dealii::ParameterHandler &prm, const std::string &parameter_filename);
@@ -98,7 +99,7 @@ namespace MeltPoolDG
      *
      * @param parameter_filename The name of the file to check.
      *
-     * @throws ExcMessage If the file cannot be found or opened.
+     * @throws dealii::ExcMessage If the file cannot be found or opened.
      */
     void
     check_for_file(const std::string &parameter_filename) const;

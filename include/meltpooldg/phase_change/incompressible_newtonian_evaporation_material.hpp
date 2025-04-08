@@ -72,11 +72,11 @@ namespace MeltPoolDG::Evaporation
         {
           normal_vals.reinit(cell_idx);
           normal_vals.read_dof_values_plain(normal_vector);
-          normal_vals.evaluate(EvaluationFlags::values);
+          normal_vals.evaluate(dealii::EvaluationFlags::values);
 
           ls_vals.reinit(cell_idx);
           ls_vals.read_dof_values_plain(heaviside);
-          ls_vals.evaluate(EvaluationFlags::values);
+          ls_vals.evaluate(dealii::EvaluationFlags::values);
         }
 
       normal = MeltPoolDG::VectorTools::normalize<dim>(normal_vals.get_value(quad_idx), 1e-10);
@@ -99,8 +99,11 @@ namespace MeltPoolDG::Evaporation
     dealii::Tensor<2, dim, dealii::VectorizedArray<number>>
     get_tau() final
     {
-      const auto mask = compare_and_apply_mask<SIMDComparison::less_than>(
-        hs, 1.0, compare_and_apply_mask<SIMDComparison::greater_than>(hs, 0, 1.0, 0.0), 0);
+      const auto mask = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+        hs,
+        1.0,
+        dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than>(hs, 0, 1.0, 0.0),
+        0);
 
       return 2. * viscosity *
              (0.5 * (grad_u + transpose(grad_u)) - mask * div_u * outer_product(normal, normal));
@@ -178,14 +181,14 @@ namespace MeltPoolDG::Evaporation
     const ScratchData<dim, dim, number> &scratch_data;
     const std::function<const dealii::VectorizedArray<number> &(const unsigned int cell,
                                                                 const unsigned int q)>
-                                       get_viscosity;
-    const BlockVectorType             &normal_vector;
-    const VectorType                  &heaviside;
-    const unsigned int                 normal_dof_idx;
-    const unsigned int                 ls_hanging_nodes_dof_idx;
-    const unsigned int                 velocity_quad_idx;
-    FECellIntegrator<dim, dim, number> normal_vals;
-    FECellIntegrator<dim, 1, number>   ls_vals;
+                                               get_viscosity;
+    const BlockVectorType                     &normal_vector;
+    const VectorType                          &heaviside;
+    const unsigned int                         normal_dof_idx;
+    const unsigned int                         ls_hanging_nodes_dof_idx;
+    const unsigned int                         velocity_quad_idx;
+    dealii::FECellIntegrator<dim, dim, number> normal_vals;
+    dealii::FECellIntegrator<dim, 1, number>   ls_vals;
 
     // temporary quadrature point values
     dealii::Tensor<2, dim, dealii::VectorizedArray<number>> grad_u;

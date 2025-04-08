@@ -160,10 +160,10 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
       this->attach_boundary_condition({lower_bc, std::make_shared<InitialValuesTemperature<dim>>()},
                                       "dirichlet",
                                       "heat_transfer");
-      this->attach_boundary_condition({lower_bc,
-                                       std::make_shared<Functions::ConstantFunction<dim>>(1.0)},
-                                      "dirichlet",
-                                      "level_set");
+      this->attach_boundary_condition(
+        {lower_bc, std::make_shared<dealii::Functions::ConstantFunction<dim>>(1.0)},
+        "dirichlet",
+        "level_set");
 
       /*
        *  mark inflow edges with boundary label (no boundary on outflow edges must be prescribed
@@ -226,8 +226,9 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
       this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(lower_left,
                                                                             upper_right),
                                      "level_set");
-      this->attach_initial_condition(
-        std::shared_ptr<Function<dim>>(new Functions::ZeroFunction<dim>(dim)), "navier_stokes_u");
+      this->attach_initial_condition(std::shared_ptr<dealii::Function<dim>>(
+                                       new Functions::ZeroFunction<dim>(dim)),
+                                     "navier_stokes_u");
       this->attach_initial_condition(std::make_shared<InitialValuesTemperature<dim>>(),
                                      "heat_transfer");
     }

@@ -112,6 +112,7 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     void
     create_spatial_discretization() override
     {
+      using namespace dealii;
       // TODO: no distributed triangulation possible for dim=1
       this->triangulation =
         std::make_shared<parallel::shared::Triangulation<dim>>(this->mpi_communicator);
@@ -173,7 +174,7 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       // avoid phase interface colliding with element face (bug in dealii has to be fixed)
       p[0] = 0.13;
 
-      dealii::Tensor<1, dim> normal;
+      dealii::Tensor<1, dim, number> normal;
       normal[0] = -1.;
 
       const auto level_set =

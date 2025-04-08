@@ -11,6 +11,8 @@
 
 namespace MeltPoolDG::Multiphase
 {
+  using namespace dealii;
+
   template <unsigned int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
   CompressibleMultiphaseOperator<dim, number, is_viscous_gas, is_viscous_liquid>::
     CompressibleMultiphaseOperator(

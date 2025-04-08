@@ -14,7 +14,8 @@ namespace MeltPoolDG
     /* add your problem here*/
 
     else
-      AssertThrow(false, ExcMessage("The solver for your requested problem type does not exist"));
+      AssertThrow(false,
+                  dealii::ExcMessage("The solver for your requested problem type does not exist"));
   }
 
   template class ProblemSelector<1, double>;

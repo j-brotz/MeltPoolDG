@@ -121,7 +121,7 @@ namespace MeltPoolDG::Utilities::MatrixFree
                                   const unsigned int                           dof_idx,
                                   const unsigned int                           quad_idx)
   {
-    FECellIntegrator<dim, dim + 2, number> phi(matrix_free, dof_idx, quad_idx);
+    dealii::FECellIntegrator<dim, dim + 2, number> phi(matrix_free, dof_idx, quad_idx);
     dealii::MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, dim + 2, number> inverse(phi);
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)

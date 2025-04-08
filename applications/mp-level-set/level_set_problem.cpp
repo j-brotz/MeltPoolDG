@@ -30,6 +30,8 @@
 
 namespace MeltPoolDG::LevelSet
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   void
   LevelSetProblem<dim, number>::run()

@@ -180,9 +180,9 @@ namespace MeltPoolDG::Flow
             const auto avg_velocity_normal = 0.5 * ((velocity_m + velocity_p) * normal);
             const auto avg_c = std::sqrt(std::abs(0.5 * (sound_speed_m + sound_speed_p)));
             const dealii::VectorizedArray<number> s_pos =
-              std::max(VectorizedArray<number>(), avg_velocity_normal + avg_c);
+              std::max(dealii::VectorizedArray<number>(), avg_velocity_normal + avg_c);
             const dealii::VectorizedArray<number> s_neg =
-              std::min(VectorizedArray<number>(), avg_velocity_normal - avg_c);
+              std::min(dealii::VectorizedArray<number>(), avg_velocity_normal - avg_c);
             const dealii::VectorizedArray<number> inverse_s =
               dealii::VectorizedArray<number>(1.) / (s_pos - s_neg);
 

@@ -16,15 +16,15 @@
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {
   template <int dim, typename number>
-  class FlowField : public Function<dim, number>
+  class FlowField : public dealii::Function<dim, number>
   {
   public:
     explicit FlowField()
-      : Function<dim, number>(dim + 2)
+      : dealii::Function<dim, number>(dim + 2)
     {}
 
     number
-    value(const Point<dim, number> &, const unsigned int component) const final
+    value(const dealii::Point<dim, number> &, const unsigned int component) const final
     {
       if (component == 0)
         return 1.;
@@ -48,14 +48,16 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     void
     create_spatial_discretization() override
     {
+      using namespace dealii;
+
       this->triangulation =
         std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
-      Point<dim, number> lower_left;
+      dealii::Point<dim, number> lower_left;
       for (unsigned int d = 1; d < dim; ++d)
         lower_left[d] = 0.;
 
-      Point<dim, number> upper_right;
+      dealii::Point<dim, number> upper_right;
       upper_right[0] = 1.0;
       for (unsigned int d = 1; d < dim; ++d)
         upper_right[d] = 0.4;
@@ -95,11 +97,13 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     void
     set_field_conditions() override
     {
+      using namespace dealii;
+
       auto initial_condition = std::make_shared<FlowField<dim, number>>();
       this->attach_initial_condition(initial_condition, "compressible_flow");
 
       // set level-set function
-      Point<dim, number> center;
+      dealii::Point<dim, number> center;
       center[0] = 0.3;
       center[1] = 0.2;
       if constexpr (dim == 3)
@@ -108,7 +112,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       const number radius = 0.1;
 
       const auto level_set =
-        std::make_shared<Functions::SignedDistance::Sphere<dim>>(center, radius);
+        std::make_shared<dealii::Functions::SignedDistance::Sphere<dim>>(center, radius);
       this->attach_field_function(level_set, "level_set", "compressible_flow");
     }
 

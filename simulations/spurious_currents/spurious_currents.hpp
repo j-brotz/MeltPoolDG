@@ -72,9 +72,10 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
     void
     set_boundary_conditions() override
     {
-      this->attach_boundary_condition({0, std::make_shared<Functions::ConstantFunction<dim>>(-1)},
-                                      "dirichlet",
-                                      "level_set");
+      this->attach_boundary_condition(
+        {0, std::make_shared<dealii::Functions::ConstantFunction<dim>>(-1)},
+        "dirichlet",
+        "level_set");
       this->attach_boundary_condition(0, "no_slip", "navier_stokes_u");
       this->attach_boundary_condition(0, "fix_pressure_constant", "navier_stokes_p");
     }
@@ -96,8 +97,8 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
       if (droplet_shape == "circle")
         {
           this->attach_initial_condition(
-            std::make_shared<Functions::ChangedSignFunction<dim, double>>(
-              std::make_shared<Functions::SignedDistance::Sphere<dim>>(center, radius)),
+            std::make_shared<dealii::Functions::ChangedSignFunction<dim, double>>(
+              std::make_shared<dealii::Functions::SignedDistance::Sphere<dim>>(center, radius)),
             "signed_distance");
         }
       else if (droplet_shape == "ellipse")
@@ -109,14 +110,14 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
             AssertThrow(false, ExcNotImplemented());
 
           this->attach_initial_condition(
-            std::make_shared<Functions::ChangedSignFunction<dim, double>>(
-              std::make_shared<Functions::SignedDistance::Ellipsoid<dim>>(center, radii)),
+            std::make_shared<dealii::Functions::ChangedSignFunction<dim, double>>(
+              std::make_shared<dealii::Functions::SignedDistance::Ellipsoid<dim>>(center, radii)),
             "signed_distance");
         }
       else
         AssertThrow(false,
                     ExcMessage("Unknown droptlet shape: \"" + droplet_shape + "\"! Abort..."));
-      this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(dim),
+      this->attach_initial_condition(std::make_shared<dealii::Functions::ZeroFunction<dim>>(dim),
                                      "navier_stokes_u");
     }
 

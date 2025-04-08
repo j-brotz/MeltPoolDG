@@ -271,16 +271,16 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
       const types::boundary_id top_bc    = bottom_bc + 1;
 
       // lower part = gas; upper part = liquid
-      this->attach_boundary_condition({bottom_bc,
-                                       std::make_shared<Functions::ConstantFunction<dim>>(-1.0)},
-                                      "dirichlet",
-                                      "level_set");
-      this->attach_boundary_condition({bottom_bc,
-                                       std::make_shared<Functions::ConstantFunction<dim>>(T_wall)},
-                                      "dirichlet",
-                                      "heat_transfer");
+      this->attach_boundary_condition(
+        {bottom_bc, std::make_shared<dealii::Functions::ConstantFunction<dim>>(-1.0)},
+        "dirichlet",
+        "level_set");
+      this->attach_boundary_condition(
+        {bottom_bc, std::make_shared<dealii::Functions::ConstantFunction<dim>>(T_wall)},
+        "dirichlet",
+        "heat_transfer");
       this->attach_boundary_condition({top_bc,
-                                       std::make_shared<Functions::ConstantFunction<dim>>(
+                                       std::make_shared<dealii::Functions::ConstantFunction<dim>>(
                                          this->parameters.material.boiling_temperature)},
                                       "dirichlet",
                                       "heat_transfer");
@@ -306,12 +306,12 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
     void
     set_field_conditions() final
     {
-      this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(dim),
+      this->attach_initial_condition(std::make_shared<dealii::Functions::ZeroFunction<dim>>(dim),
                                      "navier_stokes_u");
-      this->attach_initial_condition(std::make_shared<Functions::SignedDistance::Plane<dim>>(
-                                       Point<dim>::unit_vector(dim - 1) * y_interface,
-                                       Point<dim>::unit_vector(dim - 1)),
-                                     "signed_distance");
+      this->attach_initial_condition(
+        std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(
+          Point<dim>::unit_vector(dim - 1) * y_interface, Point<dim>::unit_vector(dim - 1)),
+        "signed_distance");
 
       this->attach_initial_condition(std::make_shared<InitialValuesTemperature<dim>>(
                                        this->parameters.material.boiling_temperature,

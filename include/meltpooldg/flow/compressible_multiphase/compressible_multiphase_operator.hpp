@@ -145,11 +145,11 @@ namespace MeltPoolDG::Multiphase
      * @param category Category of the considered cell range (liquid/intersected/gas).
      * @param offset Offset for the first selected component in a FESystem.
      */
-    FECellIntegrator<dim, dim + 2, number>
+    dealii::FECellIntegrator<dim, dim + 2, number>
     create_cell_integrator(const CutUtil::CellCategory category,
                            const unsigned int          offset = 0) const
     {
-      return FECellIntegrator<dim, dim + 2, number>(
+      return dealii::FECellIntegrator<dim, dim + 2, number>(
         flow_scratch_data.scratch_data.get_matrix_free(),
         flow_scratch_data.dof_idx,
         flow_scratch_data.quad_idx,
@@ -167,12 +167,12 @@ namespace MeltPoolDG::Multiphase
      * (liquid/intersected/gas).
      * @param offset Offset for the first selected component in a FESystem.
      */
-    FEFaceIntegrator<dim, dim + 2, number>
+    dealii::FEFaceIntegrator<dim, dim + 2, number>
     create_face_integrator(const bool                  is_inner_face,
                            const CutUtil::CellCategory category,
                            const unsigned int          offset = 0) const
     {
-      return FEFaceIntegrator<dim, dim + 2, number>(
+      return dealii::FEFaceIntegrator<dim, dim + 2, number>(
         flow_scratch_data.scratch_data.get_matrix_free(),
         is_inner_face,
         flow_scratch_data.dof_idx,
@@ -193,7 +193,8 @@ namespace MeltPoolDG::Multiphase
      * @return Pair of FEFaceIntegrator objects. The first one corresponds to the "interior" face
      * and the second one to the "exterior" face.
      */
-    std::pair<FEFaceIntegrator<dim, dim + 2, number>, FEFaceIntegrator<dim, dim + 2, number>>
+    std::pair<dealii::FEFaceIntegrator<dim, dim + 2, number>,
+              dealii::FEFaceIntegrator<dim, dim + 2, number>>
     create_face_integrators(const CutUtil::CellCategory category,
                             const unsigned int          offset = 0) const
     {

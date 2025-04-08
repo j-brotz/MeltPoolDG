@@ -138,7 +138,7 @@ namespace MeltPoolDG::Flow
         prm.add_parameter("domain representation type",
                           domain_representation_type,
                           "Domain representation type. Choose between 'fitted' and 'cut'.",
-                          Patterns::Selection("fitted|cut"));
+                          dealii::Patterns::Selection("fitted|cut"));
         prm.add_parameter("verbosity level", verbosity_level, "Verbosity level for output.");
         prm.enter_subsection("initial conditions");
         {
@@ -169,7 +169,7 @@ namespace MeltPoolDG::Flow
     {
       fe.post(base_fe_data);
       AssertThrow(fe.type == FiniteElementType::FE_DGQ,
-                  ExcMessage(
+                  dealii::ExcMessage(
                     "The compressible flow solver only supports elements of type 'FE_DGQ'."));
 
       if (cut.two_phase)
@@ -182,7 +182,7 @@ namespace MeltPoolDG::Flow
             time_integrator.integrator_type = TimeIntegratorSchemes::explicit_euler;
           AssertThrow(
             time_integrator.integrator_type == TimeIntegratorSchemes::explicit_euler,
-            ExcMessage(
+            dealii::ExcMessage(
               "The cut compressible flow solver only supports explicit Euler time integration."));
         }
 
@@ -234,9 +234,9 @@ namespace MeltPoolDG::Flow
 
       // Advanced EOS are currently only allowed for explicit time integration.
       if (material.gas.eos_data.type != EquationOfState::ideal_gas)
-        AssertThrow(!MeltPoolDG::time_integrator_scheme_is_explicit(
-                      time_integrator.integrator_type),
-                    ExcMessage("Only the ideal gas EOS is allowed for implicit time integration."));
+        AssertThrow(
+          !MeltPoolDG::time_integrator_scheme_is_explicit(time_integrator.integrator_type),
+          dealii::ExcMessage("Only the ideal gas EOS is allowed for implicit time integration."));
     }
   };
 } // namespace MeltPoolDG::Flow

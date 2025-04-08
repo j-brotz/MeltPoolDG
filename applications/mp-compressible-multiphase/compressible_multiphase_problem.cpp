@@ -16,6 +16,8 @@
 
 namespace MeltPoolDG::Multiphase
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   void
   CompressibleMultiphaseProblem<dim, number>::run()

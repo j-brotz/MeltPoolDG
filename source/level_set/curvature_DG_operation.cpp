@@ -4,6 +4,8 @@
 
 namespace MeltPoolDG::LevelSet
 {
+  using namespace dealii;
+
   template <int dim, typename number>
   CurvatureDGOperation<dim, number>::CurvatureDGOperation(
     const ScratchData<dim, dim, number> &scratch_data_in,

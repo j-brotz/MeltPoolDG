@@ -89,8 +89,8 @@ namespace MeltPoolDG::LevelSet
 
     // triangulation info on surface mesh of zero level set contour
     using SurfaceMeshInfo =
-      std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
-                             std::vector<Point<dim>> /*quad_points*/,
+      std::vector<std::tuple<const typename dealii::Triangulation<dim, dim>::cell_iterator /*cell*/,
+                             std::vector<dealii::Point<dim>> /*quad_points*/,
                              std::vector<number> /*weights*/
                              >>;
     SurfaceMeshInfo surface_mesh_info;
@@ -117,9 +117,9 @@ namespace MeltPoolDG::LevelSet
                           const bool is_signed_distance_initial_field_function = false) override;
 
     void
-    set_inflow_outflow_bc(
-      [[maybe_unused]] const std::map<dealii::types::boundary_id, std::shared_ptr<Function<dim>>>
-        inflow_outflow_bc) override
+    set_inflow_outflow_bc([[maybe_unused]] const std::map<dealii::types::boundary_id,
+                                                          std::shared_ptr<dealii::Function<dim>>>
+                            inflow_outflow_bc) override
     { // Not needed in the DG case sinde BCs are applied weakly within the operator
       DEAL_II_NOT_IMPLEMENTED();
     }
@@ -148,7 +148,7 @@ namespace MeltPoolDG::LevelSet
     {
       AssertThrow(
         false,
-        ExcMessage(
+        dealii::ExcMessage(
           "The function set_level_set_user_rhs function is not implemented for DG level set."));
     }
 
@@ -157,7 +157,7 @@ namespace MeltPoolDG::LevelSet
     {
       AssertThrow(
         false,
-        ExcMessage(
+        dealii::ExcMessage(
           "The function update_normal_vector function is not implemented for DG level set."));
     }
 

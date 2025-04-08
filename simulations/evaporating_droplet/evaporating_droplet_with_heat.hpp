@@ -118,12 +118,11 @@ namespace MeltPoolDG
       void
       set_boundary_conditions() override
       {
-        auto dirichlet_temp = std::make_shared<Functions::ConstantFunction<dim>>(10);
+        auto dirichlet_temp = std::make_shared<dealii::Functions::ConstantFunction<dim>>(10);
 
         this->attach_boundary_condition({0, dirichlet_temp}, "dirichlet", "heat_transfer");
-        this->attach_boundary_condition({0, std::make_shared<Functions::ZeroFunction<dim>>()},
-                                        "open",
-                                        "navier_stokes_u");
+        this->attach_boundary_condition(
+          {0, std::make_shared<dealii::Functions::ZeroFunction<dim>>()}, "open", "navier_stokes_u");
       }
 
       void
@@ -136,9 +135,10 @@ namespace MeltPoolDG
         AssertThrow(eps > 0, ExcNotImplemented());
 
         this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(eps), "level_set");
-        this->attach_initial_condition(
-          std::shared_ptr<Function<dim>>(new Functions::ZeroFunction<dim>(dim)), "navier_stokes_u");
-        this->attach_initial_condition(std::shared_ptr<Function<dim>>(
+        this->attach_initial_condition(std::shared_ptr<dealii::Function<dim>>(
+                                         new Functions::ZeroFunction<dim>(dim)),
+                                       "navier_stokes_u");
+        this->attach_initial_condition(std::shared_ptr<dealii::Function<dim>>(
                                          new Functions::ConstantFunction<dim>(0.0)),
                                        "heat_transfer");
       }

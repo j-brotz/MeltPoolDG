@@ -45,14 +45,14 @@ namespace MeltPoolDG::Flow
   private:
     using VectorType = LinearAlgebra::distributed::Vector<double>;
 
-    const double                                   mushy_zone_morphology;
-    const double                                   avoid_div_zero_constant;
-    const ScratchData<dim, dim, double>           &scratch_data;
-    const unsigned int                             flow_vel_hanging_nodes_dof_idx;
-    const unsigned int                             flow_quad_idx;
-    const unsigned int                             solid_dof_idx;
-    mutable VectorType                             damping;
-    mutable AlignedVector<VectorizedArray<double>> damping_at_q;
+    const double                                           mushy_zone_morphology;
+    const double                                           avoid_div_zero_constant;
+    const ScratchData<dim, dim, double>                   &scratch_data;
+    const unsigned int                                     flow_vel_hanging_nodes_dof_idx;
+    const unsigned int                                     flow_quad_idx;
+    const unsigned int                                     solid_dof_idx;
+    mutable VectorType                                     damping;
+    mutable dealii::AlignedVector<VectorizedArray<double>> damping_at_q;
 
   public:
     DarcyDampingOperation(const DarcyDampingData<number>      &data_in,
@@ -129,7 +129,7 @@ namespace MeltPoolDG::Flow
      * Getter function for the vector of damping coefficients, holding the values at each cell and
      * at each quadrature point.
      */
-    AlignedVector<VectorizedArray<double>> &
+    dealii::AlignedVector<VectorizedArray<double>> &
     get_damping_at_q();
   };
 } // namespace MeltPoolDG::Flow

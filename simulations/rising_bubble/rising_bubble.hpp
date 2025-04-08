@@ -122,7 +122,7 @@ namespace MeltPoolDG
         void
         set_boundary_conditions() override
         {
-          auto dirichlet = std::make_shared<Functions::ConstantFunction<dim>>(-1.0);
+          auto dirichlet = std::make_shared<dealii::Functions::ConstantFunction<dim>>(-1.0);
 
           // lower, right and left faces
           this->attach_boundary_condition(0, "no_slip", "navier_stokes_u");
@@ -140,7 +140,7 @@ namespace MeltPoolDG
         {
           this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(),
                                          "signed_distance");
-          this->attach_initial_condition(std::shared_ptr<Function<dim>>(
+          this->attach_initial_condition(std::shared_ptr<dealii::Function<dim>>(
                                            new Functions::ZeroFunction<dim>(dim)),
                                          "navier_stokes_u");
         }

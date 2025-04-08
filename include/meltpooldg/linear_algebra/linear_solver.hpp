@@ -32,6 +32,8 @@ namespace MeltPoolDG
           const PreconditionerType       &preconditioner = dealii::PreconditionIdentity(),
           const std::string               identifier     = "")
     {
+      using namespace dealii;
+
       const bool monitor_history = data.monitor_type != LinearSolverMonitorType::none;
 
       ReductionControl solver_control(data.max_iterations, data.abs_tolerance, data.rel_tolerance);

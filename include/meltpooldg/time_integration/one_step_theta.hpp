@@ -26,8 +26,8 @@ namespace MeltPoolDG
   class OneStepTheta final : public TimeIntegratorBase<number>
   {
   public:
-    using VectorType      = LinearAlgebra::distributed::Vector<number>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<number>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
     OneStepTheta(const PDEOperator                &pde_operator,
                  const TimeIntegratorData<number> &time_integrator_data_in,

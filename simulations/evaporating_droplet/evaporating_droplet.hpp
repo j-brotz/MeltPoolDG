@@ -153,7 +153,7 @@ namespace MeltPoolDG
         {
           // prescribe pressure dirichlet BC
           this->attach_boundary_condition(
-            {0, std::make_shared<Functions::ConstantFunction<dim>>(bc_pressure)},
+            {0, std::make_shared<dealii::Functions::ConstantFunction<dim>>(bc_pressure)},
             "open",
             "navier_stokes_u");
         }
@@ -163,7 +163,7 @@ namespace MeltPoolDG
         {
           this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(),
                                          "signed_distance");
-          this->attach_initial_condition(std::shared_ptr<Function<dim>>(
+          this->attach_initial_condition(std::shared_ptr<dealii::Function<dim>>(
                                            new Functions::ZeroFunction<dim>(dim)),
                                          "navier_stokes_u");
         }

@@ -85,7 +85,7 @@ namespace MeltPoolDG
      * representation and store it internally while for the matrix-base case it is required to pass
      * a pointer to the externally stored system matrix which is then used internally.
      *
-     * @param external_preconditioner_matrix Pointer to the externally stored system matrix (only
+     * @param external_preconditioner_matrix dealii::Pointer to the externally stored system matrix (only
      * required when computing matrix-base)
      *
      * @throws Exception if the no pointer is provided AND the operator does not support to

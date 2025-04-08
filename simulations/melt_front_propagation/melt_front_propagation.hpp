@@ -260,10 +260,10 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
                       face->set_boundary_id(left_bc);
                   }
             }
-          this->attach_boundary_condition({left_bc,
-                                           std::make_shared<Functions::ConstantFunction<dim>>(T_0)},
-                                          "dirichlet",
-                                          "heat_transfer");
+          this->attach_boundary_condition(
+            {left_bc, std::make_shared<dealii::Functions::ConstantFunction<dim>>(T_0)},
+            "dirichlet",
+            "heat_transfer");
         }
       else if (this->parameters.base.problem_name == "melt_pool")
         {
@@ -321,18 +321,18 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
               this->attach_boundary_condition(back_bc, "no_slip", "navier_stokes_u");
             }
           this->attach_boundary_condition(lower_bc, "fix_pressure_constant", "navier_stokes_p");
-          this->attach_boundary_condition({lower_bc,
-                                           std::make_shared<Functions::ConstantFunction<dim>>(T_0)},
-                                          "dirichlet",
-                                          "heat_transfer");
+          this->attach_boundary_condition(
+            {lower_bc, std::make_shared<dealii::Functions::ConstantFunction<dim>>(T_0)},
+            "dirichlet",
+            "heat_transfer");
         }
     }
 
     void
     set_field_conditions() final
     {
-      this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(T_0),
-                                     "heat_transfer");
+      this->attach_initial_condition(
+        std::make_shared<dealii::Functions::ConstantFunction<dim>>(T_0), "heat_transfer");
       if (this->parameters.base.problem_name == "heat_transfer" && do_two_phase)
         this->attach_initial_condition(std::make_shared<InitialLevelSetHeaviside<dim>>(0.0,
                                                                                        z_max / 5),
@@ -345,8 +345,9 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
               this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
           this->attach_initial_condition(std::make_shared<InitialLevelSet<dim>>(0.0, eps),
                                          "level_set");
-          this->attach_initial_condition(std::shared_ptr<Function<dim>>(
-                                           std::make_shared<Functions::ZeroFunction<dim>>(dim)),
+          this->attach_initial_condition(std::shared_ptr<dealii::Function<dim>>(
+                                           std::make_shared<dealii::Functions::ZeroFunction<dim>>(
+                                             dim)),
                                          "navier_stokes_u");
         }
     }

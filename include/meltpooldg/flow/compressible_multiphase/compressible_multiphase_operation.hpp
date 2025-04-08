@@ -259,14 +259,14 @@ namespace MeltPoolDG::Multiphase
 
   //! inlined functions
   template <int dim, typename number>
-  const LinearAlgebra::distributed::Vector<number> &
+  const dealii::LinearAlgebra::distributed::Vector<number> &
   CompressibleMultiphaseOperation<dim, number>::get_solution() const
   {
     return flow_scratch_data.solution_history.get_current_solution();
   }
 
   template <int dim, typename number>
-  LinearAlgebra::distributed::Vector<number> &
+  dealii::LinearAlgebra::distributed::Vector<number> &
   CompressibleMultiphaseOperation<dim, number>::get_solution()
   {
     return flow_scratch_data.solution_history.get_current_solution();

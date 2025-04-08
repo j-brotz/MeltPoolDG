@@ -447,7 +447,8 @@ namespace MeltPoolDG::Simulation::RecoilPressure
           if (evaporation_boundary)
             {
               this->attach_boundary_condition(
-                {upper_bc, std::make_shared<Functions::ConstantFunction<dim>>(outlet_pressure)},
+                {upper_bc,
+                 std::make_shared<dealii::Functions::ConstantFunction<dim>>(outlet_pressure)},
                 "open",
                 "navier_stokes_u");
               if (!periodic_boundary)
@@ -497,18 +498,19 @@ namespace MeltPoolDG::Simulation::RecoilPressure
             this->attach_boundary_condition(upper_bc, "convection", "heat_transfer");
           else
             {
-              std::shared_ptr<Function<dim>> T_1;
-              std::shared_ptr<Function<dim>> T_2;
+              std::shared_ptr<dealii::Function<dim>> T_1;
+              std::shared_ptr<dealii::Function<dim>> T_2;
 
               if ((T_bc_top != "") && (T_bc_bottom != ""))
                 {
-                  T_1 = std::make_shared<FunctionParser<dim>>(T_bc_top);
-                  T_2 = std::make_shared<FunctionParser<dim>>(T_bc_bottom);
+                  T_1 = std::make_shared<dealii::FunctionParser<dim>>(T_bc_top);
+                  T_2 = std::make_shared<dealii::FunctionParser<dim>>(T_bc_bottom);
                 }
               else
                 {
-                  T_1 = std::make_shared<Functions::ConstantFunction<dim>>(T_initial_top);
-                  T_2 = std::make_shared<Functions::ConstantFunction<dim>>(T_initial_bottom);
+                  T_1 = std::make_shared<dealii::Functions::ConstantFunction<dim>>(T_initial_top);
+                  T_2 =
+                    std::make_shared<dealii::Functions::ConstantFunction<dim>>(T_initial_bottom);
                 }
 
               this->attach_boundary_condition({upper_bc, T_1}, "dirichlet", "heat_transfer");
@@ -580,12 +582,12 @@ namespace MeltPoolDG::Simulation::RecoilPressure
     set_field_conditions() override
     {
       this->attach_initial_condition(
-        std::make_shared<Functions::SignedDistance::Plane<dim>>(
+        std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(
           Point<dim>::unit_vector(dim - 1) *
             this->parameters.laser.template get_starting_position<dim>()[dim - 1],
           -Point<dim>::unit_vector(dim - 1)),
         "signed_distance");
-      this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(dim),
+      this->attach_initial_condition(std::make_shared<dealii::Functions::ZeroFunction<dim>>(dim),
                                      "navier_stokes_u");
       if (this->parameters.laser.model != Heat::LaserModelType::analytical_temperature)
         this->attach_initial_condition(
@@ -594,7 +596,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
           "heat_transfer");
 
       if (this->parameters.laser.model == Heat::LaserModelType::RTE)
-        this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(),
+        this->attach_initial_condition(std::make_shared<dealii::Functions::ZeroFunction<dim>>(),
                                        "intensity");
     }
 

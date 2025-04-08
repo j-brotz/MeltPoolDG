@@ -86,11 +86,12 @@ namespace MeltPoolDG::Flow
    */
   template <int dim, typename Number>
   void
-  calculate_penalty_parameter(AlignedVector<VectorizedArray<Number>> &array_penalty_parameter,
-                              const MatrixFree<dim, Number>          &matrix_free,
-                              const std::string                      &domain_representation_type,
-                              const unsigned int                      dof_index      = 0,
-                              const double                            scaling_factor = 1.0);
+  calculate_penalty_parameter(
+    dealii::AlignedVector<dealii::VectorizedArray<Number>> &array_penalty_parameter,
+    const dealii::MatrixFree<dim, Number>                  &matrix_free,
+    const std::string                                      &domain_representation_type,
+    const unsigned int                                      dof_index      = 0,
+    const double                                            scaling_factor = 1.0);
 
   /**
    * A struct providing the relevant data required by all compressible flow solvers.
@@ -151,7 +152,7 @@ namespace MeltPoolDG::Flow
 
     CompressibleFlowBoundaryConditions<dim, number> boundary_conditions;
 
-    AlignedVector<VectorizedArray<number>> interior_penalty_parameter;
+    dealii::AlignedVector<dealii::VectorizedArray<number>> interior_penalty_parameter;
 
     ::TimeIntegration::SolutionHistory<VectorType, number> solution_history;
 
@@ -210,18 +211,21 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename Number>
   void
-  calculate_penalty_parameter(AlignedVector<VectorizedArray<Number>> &array_penalty_parameter,
-                              const MatrixFree<dim, Number>          &matrix_free,
-                              const std::string                      &domain_representation_type,
-                              const unsigned int                      dof_index,
-                              const double                            scaling_factor)
+  calculate_penalty_parameter(
+    dealii::AlignedVector<dealii::VectorizedArray<Number>> &array_penalty_parameter,
+    const dealii::MatrixFree<dim, Number>                  &matrix_free,
+    const std::string                                      &domain_representation_type,
+    const unsigned int                                      dof_index,
+    const double                                            scaling_factor)
   {
+    using namespace dealii;
+
     const unsigned int n_cells = matrix_free.n_cell_batches() + matrix_free.n_ghost_cell_batches();
     array_penalty_parameter.resize(n_cells);
 
-    Mapping<dim> const       &mapping = *matrix_free.get_mapping_info().mapping;
-    FiniteElement<dim> const &fe      = matrix_free.get_dof_handler(dof_index).get_fe();
-    unsigned int const        degree  = fe.degree;
+    dealii::Mapping<dim> const       &mapping = *matrix_free.get_mapping_info().mapping;
+    dealii::FiniteElement<dim> const &fe      = matrix_free.get_dof_handler(dof_index).get_fe();
+    unsigned int const                degree  = fe.degree;
 
     // use penalty factor for hypercube elements according to K. Hillewaert, Development of the
     // discontinuous Galerkin method for high-resolution, large scale CFD and acoustics in
@@ -230,7 +234,7 @@ namespace MeltPoolDG::Flow
 
     auto const reference_cells =
       matrix_free.get_dof_handler(dof_index).get_triangulation().get_reference_cells();
-    AssertThrow(reference_cells.size() == 1, ExcMessage("No mixed meshes allowed."));
+    AssertThrow(reference_cells.size() == 1, dealii::ExcMessage("No mixed meshes allowed."));
 
     auto const quadrature = reference_cells[0].template get_gauss_type_quadrature<dim>(degree + 1);
     FEValues<dim> fe_values(mapping, fe, quadrature, update_JxW_values);

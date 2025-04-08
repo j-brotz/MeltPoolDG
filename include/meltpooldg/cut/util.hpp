@@ -40,7 +40,7 @@ namespace MeltPoolDG::CutUtil
   get_cut_type(const dealii::DoFHandler<dim> &dof_handler);
 
   /**
-   * definition of aliases for MappingInfo types
+   * definition of aliases for dealii::MappingInfo types
    */
   template <int dim, typename number>
   using MappingInfoType =

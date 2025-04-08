@@ -88,7 +88,8 @@ namespace MeltPoolDG::LevelSet
     compute_CFL_based_timestep() const override
     {
       AssertThrow(false,
-                  ExcMessage("CFL based time stepping is not implemented for continous elements!"));
+                  dealii::ExcMessage(
+                    "CFL based time stepping is not implemented for continous elements!"));
     }
 
   private:
@@ -137,15 +138,15 @@ namespace MeltPoolDG::LevelSet
      */
     DiagonalPreconditioner<number> preconditioner;
 
-    std::pair<number, number>                      last_concentration_range = {-1.0, 1.0};
-    AlignedVector<dealii::VectorizedArray<number>> cell_diameters;
-    number                                         cell_diameter_min;
-    number                                         cell_diameter_max;
-    number                                         epsilon_used;
-    bool                                           first_reinit_step    = true;
-    bool                                           force_compute_normal = true;
-    std::function<void(bool)>                      compute_normal;
-    const ConditionalOStream                       pcout;
+    std::pair<number, number>                              last_concentration_range = {-1.0, 1.0};
+    dealii::AlignedVector<dealii::VectorizedArray<number>> cell_diameters;
+    number                                                 cell_diameter_min;
+    number                                                 cell_diameter_max;
+    number                                                 epsilon_used;
+    bool                                                   first_reinit_step    = true;
+    bool                                                   force_compute_normal = true;
+    std::function<void(bool)>                              compute_normal;
+    const ConditionalOStream                               pcout;
 
     const NormalVectorData<number> &normal_vector_data;
     const number                    eps_cell_factor;

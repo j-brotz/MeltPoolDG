@@ -55,7 +55,7 @@ namespace MeltPoolDG::Flow
           // and 2. The third derivatives on the element faces are currently not accessible in
           // deal.II.
           AssertThrow(base.fe.degree <= 2,
-                      ExcMessage(
+                      dealii::ExcMessage(
                         "Currently, only polynomial degrees 1 and 2 are implemented for cutDG."));
         }
     }
@@ -77,7 +77,7 @@ namespace MeltPoolDG::Flow
     CompressibleFlowCase(const std::string &parameter_file_in, MPI_Comm mpi_communicator_in)
       : SimulationCaseBase<dim, number>(parameter_file_in, mpi_communicator_in)
     {
-      ParameterHandler prm;
+      dealii::ParameterHandler prm;
       parameters.process_parameters_file(prm, parameter_file_in);
     }
 
@@ -101,6 +101,7 @@ namespace MeltPoolDG::Flow
                         dealii::Function<dim>             &reference_function,
                         const std::string                 &norm_name = "norm") const
     {
+      using namespace dealii;
       const dealii::ConditionalOStream pcout(std::cout,
                                              Utilities::MPI::this_mpi_process(
                                                this->mpi_communicator) == 0 and

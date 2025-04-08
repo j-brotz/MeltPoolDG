@@ -17,26 +17,26 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
 {
 
   template <int dim, typename number>
-  class IsentropicVortexExactSolution : public Function<dim, number>
+  class IsentropicVortexExactSolution : public dealii::Function<dim, number>
   {
   public:
     IsentropicVortexExactSolution(const number time, const number gamma)
-      : Function<dim, number>(dim + 2, time)
+      : dealii::Function<dim, number>(dim + 2, time)
       , gamma(gamma)
     {}
 
     number
-    value(const Point<dim, number> &x, const unsigned int component) const override
+    value(const dealii::Point<dim, number> &x, const unsigned int component) const override
     {
       AssertDimension(dim, 2);
 
-      constexpr number   beta         = 5;
-      const number       current_time = this->get_time();
-      Point<dim, number> x0;
+      constexpr number           beta         = 5;
+      const number               current_time = this->get_time();
+      dealii::Point<dim, number> x0;
       x0[0] = 5.;
       const number radius_sqr =
         (x - x0).norm_square() - 2. * (x[0] - x0[0]) * current_time + current_time * current_time;
-      const number factor = beta / (numbers::PI * 2) * std::exp(1. - radius_sqr);
+      const number factor = beta / (dealii::numbers::PI * 2) * std::exp(1. - radius_sqr);
       const number density_log =
         std::log2(std::abs(1. - (gamma - 1.) / gamma * 0.25 * factor * factor));
       const number density = std::exp2(density_log * (1. / (gamma - 1.)));
@@ -71,14 +71,15 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     void
     create_spatial_discretization() override
     {
+      using namespace dealii;
       this->triangulation =
         std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
-      Point<dim, number> lower_left;
+      dealii::Point<dim, number> lower_left;
       for (unsigned int d = 1; d < dim; ++d)
         lower_left[d] = -5;
 
-      Point<dim, number> upper_right;
+      dealii::Point<dim, number> upper_right;
       upper_right[0] = 10;
       for (unsigned int d = 1; d < dim; ++d)
         upper_right[d] = 5;

@@ -89,7 +89,7 @@ namespace MeltPoolDG::Flow
      * @param function Initial condition of the flow field.
      */
     void
-    set_initial_condition(const Function<dim> &function)
+    set_initial_condition(const dealii::Function<dim> &function)
     {
       operation_pimpl->set_initial_condition(function);
     }
@@ -97,7 +97,7 @@ namespace MeltPoolDG::Flow
     /**
      * Set the boundary conditions.
      *
-     * @param simulation_case Pointer to the considered simulation case class.
+     * @param simulation_case dealii::Pointer to the considered simulation case class.
      * @param operation_name String for the name of the considered operation.
      *
      * @note The function simply passes the parameters to the corresponding operation function.
@@ -117,7 +117,7 @@ namespace MeltPoolDG::Flow
      * @note The function simply passes the parameters to the corresponding operator function.
      */
     void
-    set_body_force(std::unique_ptr<Function<dim>> body_force_in)
+    set_body_force(std::unique_ptr<dealii::Function<dim>> body_force_in)
     {
       operation_pimpl->set_body_force(std::move(body_force_in));
     }
@@ -149,6 +149,8 @@ namespace MeltPoolDG::Flow
     void
     attach_output_vectors(GenericDataOut<dim, double> &data_out) const
     {
+      using namespace dealii;
+
       // check, if single-phase or two-phase case is considered
       const auto &dof_handler = operation_pimpl->get_dof_handler();
       const bool  two_phase   = dof_handler.get_fe_collection().n_components() / (dim + 2) == 2;
@@ -235,7 +237,7 @@ namespace MeltPoolDG::Flow
       compute_time_step_size(bool do_print = false) const = 0;
 
       virtual void
-      set_initial_condition(const Function<dim> &function) = 0;
+      set_initial_condition(const dealii::Function<dim> &function) = 0;
 
       virtual void
       set_boundary_conditions(
@@ -243,7 +245,7 @@ namespace MeltPoolDG::Flow
         const std::string                                      &operation_name) = 0;
 
       virtual void
-      set_body_force(std::unique_ptr<Function<dim>> body_force_in) = 0;
+      set_body_force(std::unique_ptr<dealii::Function<dim>> body_force_in) = 0;
 
       virtual const VectorType &
       get_solution() const = 0;
@@ -288,7 +290,7 @@ namespace MeltPoolDG::Flow
       }
 
       void
-      set_initial_condition(const Function<dim> &function) override
+      set_initial_condition(const dealii::Function<dim> &function) override
       {
         operation->set_initial_condition(function);
       }
@@ -302,7 +304,7 @@ namespace MeltPoolDG::Flow
       }
 
       void
-      set_body_force(std::unique_ptr<Function<dim>> body_force_in) override
+      set_body_force(std::unique_ptr<dealii::Function<dim>> body_force_in) override
       {
         operation->set_body_force(std::move(body_force_in));
       }
@@ -330,8 +332,8 @@ namespace MeltPoolDG::Flow
     };
 
     /**
-     * Pointer to the actual compressible flow operation object to which the function calls are
-     * forwarded.
+     * dealii::Pointer to the actual compressible flow operation object to which the function calls
+     * are forwarded.
      */
     std::unique_ptr<OperationConcept> operation_pimpl;
   };
