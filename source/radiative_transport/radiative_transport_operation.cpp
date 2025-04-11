@@ -71,10 +71,8 @@ namespace MeltPoolDG::RadiativeTransport
   void
   RadiativeTransportOperation<dim, number>::reinit()
   {
-    {
-      ScopedName sc("rte::n_dofs");
-      DoFMonitor<number>::add_n_dofs(sc, scratch_data.get_dof_handler(rte_dof_idx).n_dofs());
-    }
+    DoFMonitor<number>::add_n_dofs("rte::n_dofs",
+                                   scratch_data.get_dof_handler(rte_dof_idx).n_dofs());
 
     scratch_data.initialize_dof_vector(intensity, rte_dof_idx);
     scratch_data.initialize_dof_vector(rhs, rte_dof_idx);
@@ -107,9 +105,9 @@ namespace MeltPoolDG::RadiativeTransport
   void
   RadiativeTransportOperation<dim, number>::solve()
   {
-    ScopedName         sc("rte::solve");
-    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
-    const bool         update_ghosts = !heaviside.has_ghost_elements();
+    const ScopedName         scope_n("rte::solve");
+    const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
+    const bool               update_ghosts = !heaviside.has_ghost_elements();
     if (update_ghosts)
       heaviside.update_ghost_values();
 
@@ -161,7 +159,7 @@ namespace MeltPoolDG::RadiativeTransport
 
     intensity.update_ghost_values();
 
-    IterationMonitor<number>::add_linear_iterations(sc, iter);
+    IterationMonitor<number>::add_linear_iterations(scope_n, iter);
   }
 
   template <int dim, typename number>

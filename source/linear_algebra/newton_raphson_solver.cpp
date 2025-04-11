@@ -44,15 +44,9 @@ namespace MeltPoolDG
                 Journal::print_line(pcout, str_sol.str(), "newton_raphson_solver");
               }
 
-            {
-              const ScopedName sc("nonlinear_solve");
-              IterationMonitor<number>::add_linear_iterations(sc, i);
-            }
-
-            {
-              const ScopedName sc("linear_solve_acc");
-              IterationMonitor<number>::add_linear_iterations(sc, linear_iter_acc);
-            }
+            IterationMonitor<number>::add_linear_iterations(ScopedName("nonlinear_solve"), i);
+            IterationMonitor<number>::add_linear_iterations(ScopedName("linear_solve_acc"),
+                                                            linear_iter_acc);
 
             return;
           }
@@ -141,10 +135,9 @@ namespace MeltPoolDG
     // compute residual
     residual(current_solution, rhs);
     const int iter = solve_with_jacobian(rhs, solution_update);
-    {
-      const ScopedName sc("linear_solve");
-      IterationMonitor<number>::add_linear_iterations(sc, iter);
-    }
+
+    IterationMonitor<number>::add_linear_iterations(ScopedName("linear_solve"), iter);
+
     linear_iter_acc += iter;
 
     str_ << std::string(10, ' ') << std::right << std::setw(15) << std::setprecision(0) << iter;

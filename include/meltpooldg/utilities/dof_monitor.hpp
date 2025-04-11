@@ -51,12 +51,13 @@ namespace MeltPoolDG
       for (const auto &entry : stat_dofs)
         {
           table.add_value("label", entry.first);
-          table.add_value("n_calls", entry.second.n_calls);
-          table.add_value("dofs_avg",
+          table.add_value("no. calls", entry.second.n_calls);
+          table.add_value("n_dof avg",
                           static_cast<number>(entry.second.dofs_accumulated) /
                             entry.second.n_calls);
-          table.add_value("dofs_min", entry.second.dofs_min);
-          table.add_value("dofs_max", entry.second.dofs_max);
+          table.set_precision("n_dof avg", 2);
+          table.add_value("n_dof min", entry.second.dofs_min);
+          table.add_value("n_dof max", entry.second.dofs_max);
         }
 
       if (ss.is_active())

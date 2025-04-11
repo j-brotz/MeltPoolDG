@@ -1,6 +1,12 @@
 #include <meltpooldg/utilities/profiling_monitor.hpp>
+//
+#include <meltpooldg/utilities/cell_monitor.hpp>
+#include <meltpooldg/utilities/dof_monitor.hpp>
+#include <meltpooldg/utilities/iteration_monitor.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 
 #include <iostream>
+
 
 namespace MeltPoolDG::Profiling
 {
@@ -18,7 +24,7 @@ namespace MeltPoolDG::Profiling
   bool
   ProfilingMonitor<number>::now() const
   {
-    if (!data.enable)
+    if (not data.enable)
       return false;
 
     const number current_time = compute_current_time();
@@ -39,10 +45,19 @@ namespace MeltPoolDG::Profiling
   {
     timer.print_wall_time_statistics(mpi_communicator);
     pcout << std::endl;
+
+    Journal::print_decoration_line(pcout);
+    Journal::print_line(pcout, "Iteration statistics", "iteration_monitor");
     IterationMonitor<number>::print(pcout);
     pcout << std::endl;
+
+    Journal::print_decoration_line(pcout);
+    Journal::print_line(pcout, "DoF statistics", "dof_monitor");
     DoFMonitor<number>::print(pcout);
     pcout << std::endl;
+
+    Journal::print_decoration_line(pcout);
+    Journal::print_line(pcout, "Cell statistics", "cell_monitor");
     CellMonitor<number>::print(pcout);
   }
 

@@ -180,10 +180,9 @@ namespace MeltPoolDG::Heat
   void
   HeatDiffuseOperation<dim, number>::reinit()
   {
-    {
-      ScopedName sc("heat::n_dofs");
-      DoFMonitor<number>::add_n_dofs(sc, scratch_data.get_dof_handler(heat_dof_idx).n_dofs());
-    }
+    DoFMonitor<number>::add_n_dofs("heat::n_dofs",
+                                   scratch_data.get_dof_handler(heat_dof_idx).n_dofs());
+
     scratch_data.initialize_dof_vector(solution_history.get_current_solution(), heat_dof_idx);
     solution_history.apply_old(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, heat_no_bc_dof_idx); });
@@ -251,10 +250,13 @@ namespace MeltPoolDG::Heat
   void
   HeatDiffuseOperation<dim, number>::solve(const bool do_finish_time_step)
   {
-    if (!ready_for_time_advance)
+    const ScopedName         scope_n("solve");
+    const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
+
+    if (not ready_for_time_advance)
       init_time_advance();
 
-    if (!heat_data.linear_solver.do_matrix_free)
+    if (not heat_data.linear_solver.do_matrix_free)
       AssertThrow(false, ExcNotImplemented());
 
     // setup preconditioner
@@ -305,6 +307,9 @@ namespace MeltPoolDG::Heat
   void
   HeatDiffuseOperation<dim, number>::compute_interface_temperature()
   {
+    const ScopedName         scope_n("project_interface_temperature");
+    const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
+
     AssertThrow(
       nearest_point_search,
       dealii::ExcMessage(

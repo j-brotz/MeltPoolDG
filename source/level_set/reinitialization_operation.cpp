@@ -171,8 +171,8 @@ namespace MeltPoolDG::LevelSet
   void
   ReinitializationOperation<dim, number>::solve()
   {
-    ScopedName         sc("reinitialization::solve");
-    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
+    const ScopedName         scope_n("solve");
+    const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
 
     const bool normal_update_ghosts = !get_normal_vector().has_ghost_elements();
     if (normal_update_ghosts)
@@ -283,7 +283,7 @@ namespace MeltPoolDG::LevelSet
                         "     * CG: i = " + std::to_string(iter),
                         "reinitialization");
 
-    IterationMonitor<number>::add_linear_iterations(sc, iter);
+    IterationMonitor<number>::add_linear_iterations(scope_n, iter);
   }
 
   template <int dim, typename number>

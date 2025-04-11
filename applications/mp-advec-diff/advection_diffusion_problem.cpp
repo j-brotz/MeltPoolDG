@@ -1,7 +1,6 @@
 #include "advection_diffusion_problem.hpp"
-
+//
 #include <deal.II/base/mpi.h>
-#include <deal.II/base/revision.h>
 
 #include <deal.II/distributed/grid_refinement.h>
 
@@ -11,11 +10,10 @@
 #include <meltpooldg/level_set/advection_diffusion_adaflo_wrapper.hpp>
 #include <meltpooldg/level_set/advection_diffusion_operation.hpp>
 #include <meltpooldg/utilities/amr.hpp>
+#include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/revision.hpp>
-#include <meltpooldg/utilities/scoped_name.hpp>
 
 #include "advection_diffusion_case.hpp"
 
@@ -128,13 +126,10 @@ namespace MeltPoolDG::LevelSet
     /*
      * print mesh information
      */
-    {
-      ScopedName sc("advecDiff::cells");
-      CellMonitor<number>::add_info(sc,
-                                    scratch_data->get_triangulation().n_global_active_cells(),
-                                    scratch_data->get_min_cell_size(),
-                                    scratch_data->get_max_cell_size());
-    }
+    CellMonitor<number>::add_info("advecDiff::cells",
+                                  scratch_data->get_triangulation().n_global_active_cells(),
+                                  scratch_data->get_min_cell_size(),
+                                  scratch_data->get_max_cell_size());
   }
 
   template <int dim, typename number>

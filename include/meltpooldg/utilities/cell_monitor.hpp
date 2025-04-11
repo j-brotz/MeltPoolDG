@@ -63,40 +63,27 @@ namespace MeltPoolDG
     static void
     print(StreamType &ss)
     {
-      {
-        dealii::ConvergenceTable table;
+      dealii::ConvergenceTable table;
 
-        for (const auto &entry : stat_cells)
-          {
-            table.add_value("label", entry.first);
-            table.add_value("n_calls", entry.second.n_calls);
-            table.add_value("n_cells_avg",
-                            static_cast<number>(entry.second.cells_accumulated) /
-                              entry.second.n_calls);
-            table.add_value("n_cells_min", entry.second.cells_min);
-            table.add_value("n_cells_max", entry.second.cells_max);
-          }
+      for (const auto &entry : stat_cells)
+        {
+          table.add_value("label", entry.first);
+          table.add_value("no. calls", entry.second.n_calls);
+          table.add_value("n_cells avg",
+                          static_cast<number>(entry.second.cells_accumulated) /
+                            entry.second.n_calls);
+          table.set_precision("n_cells avg", 2);
+          table.add_value("n_cells min", entry.second.cells_min);
+          table.add_value("n_cells max", entry.second.cells_max);
 
-        if (ss.is_active())
-          table.write_text(ss.get_stream(), dealii::TableHandler::TextOutputFormat::org_mode_table);
-      }
+          table.add_value("cell size min", entry.second.cell_size_min);
+          table.add_value("cell size max", entry.second.cell_size_max);
+          table.set_scientific("cell size min", 4);
+          table.set_scientific("cell size max", 4);
+        }
 
-      {
-        dealii::ConvergenceTable table;
-
-        for (const auto &entry : stat_cells)
-          {
-            table.add_value("label", entry.first);
-            table.add_value("cell_size_min", entry.second.cell_size_min);
-            table.add_value("cell_size_max", entry.second.cell_size_max);
-          }
-
-        table.set_scientific("cell_size_min", 4);
-        table.set_scientific("cell_size_max", 4);
-
-        if (ss.is_active())
-          table.write_text(ss.get_stream(), dealii::TableHandler::TextOutputFormat::org_mode_table);
-      }
+      if (ss.is_active())
+        table.write_text(ss.get_stream(), dealii::TableHandler::TextOutputFormat::org_mode_table);
     }
 
 
