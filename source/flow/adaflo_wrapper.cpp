@@ -32,7 +32,7 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   AdafloWrapper<dim, number>::AdafloWrapper(ScratchData<dim, dim, number>             &scratch_data,
                                             std::shared_ptr<MeltPoolCase<dim, number>> base_in,
-                                            const TimeIterator<double> &time_iterator,
+                                            const TimeIterator<number> &time_iterator,
                                             const bool                  do_evaporative_mass_flux)
     : scratch_data(scratch_data)
     , timer(std::cout, TimerOutput::never, TimerOutput::wall_times)
@@ -108,7 +108,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  AdafloWrapper<dim, number>::create_parameters(Parameters<double> &parameters,
+  AdafloWrapper<dim, number>::create_parameters(Parameters<number> &parameters,
                                                 const std::string   parameter_file)
   {
     parameters.adaflo_params.parse_parameters(parameter_file);
@@ -230,14 +230,8 @@ namespace MeltPoolDG::Flow
     constraints_parameters.close();
     Constraints::check_constraints(dof_handler_parameters, constraints_parameters);
 
-    {
-      ScopedName sc("ns::n_dofs_u");
-      DoFMonitor<double>::add_n_dofs(sc, get_dof_handler_velocity().n_dofs());
-    }
-    {
-      ScopedName sc2("ns::n_dofs_p");
-      DoFMonitor<double>::add_n_dofs(sc2, get_dof_handler_pressure().n_dofs());
-    }
+    DoFMonitor<number>::add_n_dofs("flow::n_dofs_u", get_dof_handler_velocity().n_dofs());
+    DoFMonitor<number>::add_n_dofs("flow::n_dofs_p", get_dof_handler_pressure().n_dofs());
   }
 
   template <int dim, typename number>
@@ -301,7 +295,7 @@ namespace MeltPoolDG::Flow
   void
   AdafloWrapper<dim, number>::solve()
   {
-    if (!ready_for_time_advance)
+    if (not ready_for_time_advance)
       init_time_advance();
 
     navier_stokes->get_constraints_u().set_zero(navier_stokes->user_rhs.block(0));
@@ -311,21 +305,21 @@ namespace MeltPoolDG::Flow
       navier_stokes->solve_nonlinear_system(navier_stokes->compute_initial_residual(true));
 
     {
-      ScopedName sc("nonlinear_solve");
-      IterationMonitor<double>::add_linear_iterations(sc, iter.first);
+      ScopedName scope_n("nonlinear_solve");
+      IterationMonitor<number>::add_linear_iterations(scope_n, iter.first);
     }
 
     {
-      ScopedName sc("linear_solve");
-      IterationMonitor<double>::add_linear_iterations(sc, iter.second);
+      ScopedName scope_n("linear_solve");
+      IterationMonitor<number>::add_linear_iterations(scope_n, iter.second);
     }
 
     distribute_constraints();
 
-    Journal::print_formatted_norm<double>(
+    Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(1),
-      [&]() -> double {
-        return VectorTools::compute_norm<dim, double>(get_velocity(),
+      [&]() -> number {
+        return VectorTools::compute_norm<dim, number>(get_velocity(),
                                                       scratch_data,
                                                       get_dof_handler_idx_velocity(),
                                                       get_quad_idx_velocity());
@@ -335,10 +329,10 @@ namespace MeltPoolDG::Flow
       15 /*precision*/
     );
 
-    Journal::print_formatted_norm<double>(
+    Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(1),
-      [&]() -> double {
-        return VectorTools::compute_norm<dim, double>(get_pressure(),
+      [&]() -> number {
+        return VectorTools::compute_norm<dim, number>(get_pressure(),
                                                       scratch_data,
                                                       get_dof_handler_idx_pressure(),
                                                       get_quad_idx_pressure());
@@ -356,7 +350,7 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   void
   AdafloWrapper<dim, number>::set_face_average_density_augmented_taylor_hood(
-    const Material<double> &material,
+    const Material<number> &material,
     const VectorType       &ls_as_heaviside,
     const unsigned int      ls_dof_idx,
     const VectorType       *temperature,
@@ -371,14 +365,14 @@ namespace MeltPoolDG::Flow
                             update_values);
 
     std::unique_ptr<FEValues<dim>> temp_values;
-    if (temperature and material.has_dependency(Material<double>::FieldType::temperature))
+    if (temperature and material.has_dependency(Material<number>::FieldType::temperature))
       temp_values = std::make_unique<FEValues<dim>>(scratch_data.get_mapping(),
                                                     scratch_data.get_fe(temp_dof_idx),
                                                     get_face_center_quad(),
                                                     update_values);
 
-    std::vector<double> hs(ls_values.n_quadrature_points);
-    std::vector<double> temp(ls_values.n_quadrature_points);
+    std::vector<number> hs(ls_values.n_quadrature_points);
+    std::vector<number> temp(ls_values.n_quadrature_points);
 
     for (const auto &cell : scratch_data.get_triangulation().active_cell_iterators())
       {
@@ -394,7 +388,7 @@ namespace MeltPoolDG::Flow
         ls_values.reinit(ls_dof_cell);
         ls_values.get_function_values(ls_as_heaviside, hs);
 
-        std::vector<double> rho_ls(ls_values.n_quadrature_points);
+        std::vector<number> rho_ls(ls_values.n_quadrature_points);
 
         if (temp_values)
           {
@@ -413,7 +407,7 @@ namespace MeltPoolDG::Flow
             if (temp_values)
               {
                 const auto material_values =
-                  material.template compute_parameters<double>(hs[f],
+                  material.template compute_parameters<number>(hs[f],
                                                                temp[f],
                                                                MaterialUpdateFlags::density);
                 set_face_average_density(cell, f, material_values.density);
@@ -421,7 +415,7 @@ namespace MeltPoolDG::Flow
             else
               {
                 const auto material_values =
-                  material.template compute_parameters<double>(hs[f], MaterialUpdateFlags::density);
+                  material.template compute_parameters<number>(hs[f], MaterialUpdateFlags::density);
 
                 set_face_average_density(cell, f, material_values.density);
               }
@@ -430,28 +424,28 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim, typename number>
-  const LinearAlgebra::distributed::Vector<double> &
+  const LinearAlgebra::distributed::Vector<number> &
   AdafloWrapper<dim, number>::get_velocity() const
   {
     return navier_stokes->solution.block(0);
   }
 
   template <int dim, typename number>
-  LinearAlgebra::distributed::Vector<double> &
+  LinearAlgebra::distributed::Vector<number> &
   AdafloWrapper<dim, number>::get_velocity()
   {
     return navier_stokes->solution.block(0);
   }
 
   template <int dim, typename number>
-  const LinearAlgebra::distributed::Vector<double> &
+  const LinearAlgebra::distributed::Vector<number> &
   AdafloWrapper<dim, number>::get_velocity_old() const
   {
     return navier_stokes->solution_old.block(0);
   }
 
   template <int dim, typename number>
-  const LinearAlgebra::distributed::Vector<double> &
+  const LinearAlgebra::distributed::Vector<number> &
   AdafloWrapper<dim, number>::get_velocity_old_old() const
   {
     return navier_stokes->solution_old_old.block(0);
@@ -493,49 +487,49 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim, typename number>
-  const AffineConstraints<double> &
+  const AffineConstraints<number> &
   AdafloWrapper<dim, number>::get_constraints_velocity() const
   {
     return navier_stokes->get_constraints_u();
   }
 
   template <int dim, typename number>
-  AffineConstraints<double> &
+  AffineConstraints<number> &
   AdafloWrapper<dim, number>::get_constraints_velocity()
   {
     return navier_stokes->modify_constraints_u();
   }
 
   template <int dim, typename number>
-  const AffineConstraints<double> &
+  const AffineConstraints<number> &
   AdafloWrapper<dim, number>::get_hanging_node_constraints_velocity() const
   {
     return navier_stokes->get_hanging_node_constraints_u();
   }
 
   template <int dim, typename number>
-  const LinearAlgebra::distributed::Vector<double> &
+  const LinearAlgebra::distributed::Vector<number> &
   AdafloWrapper<dim, number>::get_pressure() const
   {
     return navier_stokes->solution.block(1);
   }
 
   template <int dim, typename number>
-  LinearAlgebra::distributed::Vector<double> &
+  LinearAlgebra::distributed::Vector<number> &
   AdafloWrapper<dim, number>::get_pressure()
   {
     return navier_stokes->solution.block(1);
   }
 
   template <int dim, typename number>
-  const LinearAlgebra::distributed::Vector<double> &
+  const LinearAlgebra::distributed::Vector<number> &
   AdafloWrapper<dim, number>::get_pressure_old() const
   {
     return navier_stokes->solution_old.block(1);
   }
 
   template <int dim, typename number>
-  const LinearAlgebra::distributed::Vector<double> &
+  const LinearAlgebra::distributed::Vector<number> &
   AdafloWrapper<dim, number>::get_pressure_old_old() const
   {
     return navier_stokes->solution_old_old.block(1);
@@ -556,21 +550,21 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim, typename number>
-  const AffineConstraints<double> &
+  const AffineConstraints<number> &
   AdafloWrapper<dim, number>::get_constraints_pressure() const
   {
     return navier_stokes->get_constraints_p();
   }
 
   template <int dim, typename number>
-  AffineConstraints<double> &
+  AffineConstraints<number> &
   AdafloWrapper<dim, number>::get_constraints_pressure()
   {
     return navier_stokes->modify_constraints_p();
   }
 
   template <int dim, typename number>
-  const AffineConstraints<double> &
+  const AffineConstraints<number> &
   AdafloWrapper<dim, number>::get_hanging_node_constraints_pressure() const
   {
     return navier_stokes->get_hanging_node_constraints_p();
@@ -578,7 +572,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  AdafloWrapper<dim, number>::set_force_rhs(const LinearAlgebra::distributed::Vector<double> &vec)
+  AdafloWrapper<dim, number>::set_force_rhs(const LinearAlgebra::distributed::Vector<number> &vec)
   {
     navier_stokes->user_rhs.block(0) = vec;
   }
@@ -586,7 +580,7 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   void
   AdafloWrapper<dim, number>::set_mass_balance_rhs(
-    const LinearAlgebra::distributed::Vector<double> &vec)
+    const LinearAlgebra::distributed::Vector<number> &vec)
   {
     navier_stokes->user_rhs.block(1) = vec;
   }
@@ -595,7 +589,7 @@ namespace MeltPoolDG::Flow
   void
   AdafloWrapper<dim, number>::set_user_defined_material(
     std::function<
-      Tensor<2, dim, VectorizedArray<double>>(const Tensor<2, dim, VectorizedArray<double>> &,
+      Tensor<2, dim, VectorizedArray<number>>(const Tensor<2, dim, VectorizedArray<number>> &,
                                               const unsigned int,
                                               const unsigned int,
                                               const bool)> my_user_defined_material)
@@ -604,42 +598,42 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim, typename number>
-  VectorizedArray<double> &
+  VectorizedArray<number> &
   AdafloWrapper<dim, number>::get_density(const unsigned int cell, const unsigned int q)
   {
     return navier_stokes->get_matrix().begin_densities(cell)[q];
   }
 
   template <int dim, typename number>
-  const VectorizedArray<double> &
+  const VectorizedArray<number> &
   AdafloWrapper<dim, number>::get_density(const unsigned int cell, const unsigned int q) const
   {
     return navier_stokes->get_matrix().begin_densities(cell)[q];
   }
 
   template <int dim, typename number>
-  VectorizedArray<double> &
+  VectorizedArray<number> &
   AdafloWrapper<dim, number>::get_viscosity(const unsigned int cell, const unsigned int q)
   {
     return navier_stokes->get_matrix().begin_viscosities(cell)[q];
   }
 
   template <int dim, typename number>
-  const VectorizedArray<double> &
+  const VectorizedArray<number> &
   AdafloWrapper<dim, number>::get_viscosity(const unsigned int cell, const unsigned int q) const
   {
     return navier_stokes->get_matrix().begin_viscosities(cell)[q];
   }
 
   template <int dim, typename number>
-  VectorizedArray<double> &
+  VectorizedArray<number> &
   AdafloWrapper<dim, number>::get_damping(const unsigned int cell, const unsigned int q)
   {
     return navier_stokes->get_matrix().begin_damping_coeff(cell)[q];
   }
 
   template <int dim, typename number>
-  const VectorizedArray<double> &
+  const VectorizedArray<number> &
   AdafloWrapper<dim, number>::get_damping(const unsigned int cell, const unsigned int q) const
   {
     return navier_stokes->get_matrix().begin_damping_coeff(cell)[q];
@@ -649,7 +643,7 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   void
   AdafloWrapper<dim, number>::attach_vectors_u(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+    std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     vectors.push_back(&navier_stokes->solution.block(0));
     vectors.push_back(&navier_stokes->solution_old.block(0));
@@ -659,7 +653,7 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   void
   AdafloWrapper<dim, number>::attach_vectors_p(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+    std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     vectors.push_back(&navier_stokes->solution.block(1));
     vectors.push_back(&navier_stokes->solution_old.block(1));
@@ -688,7 +682,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  AdafloWrapper<dim, number>::attach_output_vectors(GenericDataOut<dim, double> &data_out) const
+  AdafloWrapper<dim, number>::attach_output_vectors(GenericDataOut<dim, number> &data_out) const
   {
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
       vector_component_interpretation(dim,
@@ -772,7 +766,7 @@ namespace MeltPoolDG::Flow
               dof_index_parameters,
               quad_index_u,
               [&](const unsigned int cell, const unsigned int quad)
-                -> const VectorizedArray<double> & { return get_density(cell, quad); });
+                -> const VectorizedArray<number> & { return get_density(cell, quad); });
             scratch_data.get_constraint(dof_index_parameters).distribute(density);
           }
 
@@ -793,7 +787,7 @@ namespace MeltPoolDG::Flow
               dof_index_parameters,
               quad_index_u,
               [&](const unsigned int cell, const unsigned int quad)
-                -> const VectorizedArray<double> & { return get_viscosity(cell, quad); });
+                -> const VectorizedArray<number> & { return get_viscosity(cell, quad); });
             scratch_data.get_constraint(dof_index_parameters).distribute(viscosity);
           }
 
@@ -806,7 +800,7 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   void
   AdafloWrapper<dim, number>::attach_output_vectors_failed_step(
-    GenericDataOut<dim, double> &data_out) const
+    GenericDataOut<dim, number> &data_out) const
   {
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
       vector_component_interpretation(dim,
@@ -836,7 +830,7 @@ namespace MeltPoolDG::Flow
   AdafloWrapper<dim, number>::set_face_average_density(
     const typename Triangulation<dim>::cell_iterator &cell,
     const unsigned int                                face,
-    const double                                      density)
+    const number                                      density)
   {
     navier_stokes->set_face_average_density(cell, face, density);
   }

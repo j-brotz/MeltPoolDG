@@ -225,10 +225,8 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim, number>::reinit()
   {
-    {
-      ScopedName sc("ls::n_dofs");
-      DoFMonitor<number>::add_n_dofs(sc, scratch_data.get_dof_handler(ls_dof_idx).n_dofs());
-    }
+    DoFMonitor<number>::add_n_dofs("ls::n_dofs", scratch_data.get_dof_handler(ls_dof_idx).n_dofs());
+
 
     advec_diff_operation->reinit();
     if (reinit_operation)
@@ -275,8 +273,6 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim, number>::init_time_advance()
   {
-    ScopedName         sc("init_time_advance");
-    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
     advec_diff_operation->init_time_advance();
 
     ready_for_time_advance = true;
@@ -286,10 +282,7 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim, number>::solve(const bool do_finish_time_step)
   {
-    ScopedName         sc("solve");
-    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
-
-    if (!ready_for_time_advance)
+    if (not ready_for_time_advance)
       init_time_advance();
     /*
      *  1) solve the advection step of the level set function
@@ -304,9 +297,6 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim, number>::finish_time_advance()
   {
-    ScopedName         sc("finish_time_advance");
-    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
-
     advec_diff_operation->finish_time_advance();
     /*
      *  2) solve the reinitialization problem of the level set equation
@@ -465,8 +455,8 @@ namespace MeltPoolDG::LevelSet
   LevelSetOperation<dim, number>::do_reinitialization(
     const bool update_normal_vector_in_every_cycle)
   {
-    ScopedName         sc("do_reinitialization");
-    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
+    const ScopedName         scope_n("reinitialization");
+    const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
 
     // compute the change in the level set since the last reinit
     VectorType temp;

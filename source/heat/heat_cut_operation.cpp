@@ -185,8 +185,8 @@ namespace MeltPoolDG::Heat
     classify_cells();
 
     {
-      const ScopedName   sc("heat::cut_solution_transfer");
-      TimerOutput::Scope scope(scratch_data.get_timer(), sc);
+      const ScopedName         scope_n("cut_solution_transfer");
+      const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
 
       Assert(reinit_matrix_free != nullptr,
              dealii::ExcMessage("You must register the reinit_matrix_free lambda function first!"));
@@ -214,6 +214,9 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperation<dim, number>::compute_intersected_quadrature()
   {
+    const ScopedName         scope_n("intersected_quadrature");
+    const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
+
     level_set.update_ghost_values();
 
     CutUtil::compute_intersected_quadrature(mapping_info_cells,
@@ -279,10 +282,9 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperation<dim, number>::reinit()
   {
-    {
-      ScopedName sc("heat::n_dofs");
-      DoFMonitor<number>::add_n_dofs(sc, scratch_data.get_dof_handler(heat_cut_dof_idx).n_dofs());
-    }
+    DoFMonitor<number>::add_n_dofs("heat::n_dofs",
+                                   scratch_data.get_dof_handler(heat_cut_dof_idx).n_dofs());
+
     solution_history.apply(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, heat_cut_no_bc_dof_idx); });
 
@@ -392,6 +394,9 @@ namespace MeltPoolDG::Heat
     if (not ready_for_time_advance)
       init_time_advance();
 
+    const ScopedName         scope_n("solve");
+    const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
+
     update_ghost_values();
     preconditioner.update();
 
@@ -444,6 +449,9 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperation<dim, number>::compute_interface_temperature()
   {
+    const ScopedName         scope_n("project_interface_temperature");
+    const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
+
     AssertThrow(
       nearest_point_search,
       dealii::ExcMessage(

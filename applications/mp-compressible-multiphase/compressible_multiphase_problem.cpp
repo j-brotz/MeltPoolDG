@@ -5,9 +5,9 @@
 #include <meltpooldg/flow/compressible_flow_boundary_conditions.hpp>
 #include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
+#include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
-#include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <string>
@@ -122,13 +122,10 @@ namespace MeltPoolDG::Multiphase
         "Only homogeneous Cartesian grids without local grid refinements are supported!"));
 
     // print mesh information
-    {
-      ScopedName sc("compFlow::cells");
-      CellMonitor<number>::add_info(sc,
-                                    scratch_data->get_triangulation().n_global_active_cells(),
-                                    scratch_data->get_min_cell_size(),
-                                    scratch_data->get_max_cell_size());
-    }
+    CellMonitor<number>::add_info("compFlow::cells",
+                                  scratch_data->get_triangulation().n_global_active_cells(),
+                                  scratch_data->get_min_cell_size(),
+                                  scratch_data->get_max_cell_size());
   }
 
   template <int dim, typename number>

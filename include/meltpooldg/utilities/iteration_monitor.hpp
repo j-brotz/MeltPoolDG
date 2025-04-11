@@ -51,12 +51,13 @@ namespace MeltPoolDG
       for (const auto &entry : stat_linear)
         {
           table.add_value("label", entry.first);
-          table.add_value("n_calls", entry.second.n_calls);
-          table.add_value("iterations_avg",
+          table.add_value("no. calls", entry.second.n_calls);
+          table.add_value("iter avg",
                           static_cast<number>(entry.second.iterations_accumulated) /
                             entry.second.n_calls);
-          table.add_value("iterations_min", entry.second.iterations_min);
-          table.add_value("iterations_max", entry.second.iterations_max);
+          table.set_precision("iter avg", 2);
+          table.add_value("iter min", entry.second.iterations_min);
+          table.add_value("iter max", entry.second.iterations_max);
         }
 
       if (ss.is_active())

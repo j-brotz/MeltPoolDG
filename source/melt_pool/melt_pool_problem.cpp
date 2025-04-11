@@ -76,6 +76,7 @@
 #include <set>
 #include <sstream>
 
+
 namespace MeltPoolDG::MeltPool
 {
   using namespace dealii;
@@ -90,8 +91,9 @@ namespace MeltPoolDG::MeltPool
 
     try
       {
-        auto sc    = std::make_unique<ScopedName>("mp::run");
-        auto scope = std::make_unique<TimerOutput::Scope>(scratch_data->get_timer(), *sc);
+        auto scope_n = std::make_unique<const ScopedName>("mp::run");
+        auto scope_t =
+          std::make_unique<const TimerOutput::Scope>(scratch_data->get_timer(), *scope_n);
 
         if (restart_monitor and restart_monitor->do_load())
           {
@@ -177,8 +179,8 @@ namespace MeltPoolDG::MeltPool
              ******************************************************************************************/
             if (problem_specific_parameters.do_advect_level_set)
               {
-                ScopedName         sc("ls");
-                TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+                const ScopedName         scope_n("ls");
+                const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
 
                 TableHandler iter_table;
                 VectorType   iter_res;
@@ -283,8 +285,8 @@ namespace MeltPoolDG::MeltPool
              ******************************************************************************************/
             if (heat_operation)
               {
-                ScopedName         sc("heat");
-                TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+                const ScopedName         scope_n("heat");
+                const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
 
                 if (laser_operation)
                   {
@@ -410,8 +412,9 @@ namespace MeltPoolDG::MeltPool
 
                 if (melt_front_propagation)
                   {
-                    ScopedName         sc("melt_front_propagation");
-                    TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+                    const ScopedName         scope_n("melt_front_propagation");
+                    const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
+
                     melt_front_propagation->compute_melt_front_propagation(
                       level_set_operation->get_level_set_as_heaviside());
 
@@ -432,8 +435,9 @@ namespace MeltPoolDG::MeltPool
             // compute the evaporative mass flux from the temperature field
             if (evaporation_operation)
               {
-                ScopedName         sc("evaporation::mass_flux");
-                TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+                const ScopedName         scope_n("evaporation::mass_flux");
+                const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
+
                 evaporation_operation->compute_evaporative_mass_flux();
               }
 
@@ -441,11 +445,11 @@ namespace MeltPoolDG::MeltPool
              * NAVIER - STOKES
              ******************************************************************************************/
             {
-              ScopedName         sc("ns");
-              TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+              const ScopedName         scope_n("flow");
+              const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
               {
-                ScopedName         sc("compute_fluxes");
-                TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+                const ScopedName         scope_n("compute_fluxes");
+                const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
 
                 // update the phases for the flow solver considering the updated level set and
                 // temperature
@@ -522,8 +526,8 @@ namespace MeltPoolDG::MeltPool
               }
 
               {
-                ScopedName         sc("solve");
-                TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+                const ScopedName         scope_n("solve");
+                const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
 
                 if (evaporation_fluid_material)
                   evaporation_fluid_material->update_ghost_values();
@@ -536,18 +540,14 @@ namespace MeltPoolDG::MeltPool
               }
             }
 
-            {
-              ScopedName         sc("output");
-              TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-
-              // ... and output the results to vtk files.
-              output_results(base_in);
-            }
+            // ... and output the results to vtk files.
+            output_results(base_in);
 
             if (param.amr.do_amr)
               {
-                ScopedName         sc("amr");
-                TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+                const ScopedName         scope_n("amr");
+                const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
+
                 refine_mesh(base_in);
               }
 
@@ -555,10 +555,10 @@ namespace MeltPoolDG::MeltPool
               {
                 // call destructor as a workaround to also print the accumalated
                 // time of mp::run at this stage
-                scope.reset();
-                sc.reset();
-                sc    = std::make_unique<ScopedName>("mp::run");
-                scope = std::make_unique<TimerOutput::Scope>(scratch_data->get_timer(), *sc);
+                scope_n.reset();
+                scope_t.reset();
+                scope_n = std::make_unique<ScopedName>("mp::run");
+                scope_t = std::make_unique<TimerOutput::Scope>(scratch_data->get_timer(), *scope_n);
 
                 profiling_monitor->print(scratch_data->get_pcout(1),
                                          scratch_data->get_timer(),
@@ -575,8 +575,8 @@ namespace MeltPoolDG::MeltPool
 
         Journal::print_end(scratch_data->get_pcout(1));
 
-        scope.reset();
-        sc.reset();
+        scope_n.reset();
+        scope_t.reset();
 
         //... always print timing statistics
         if (profiling_monitor and base_in->parameters.profiling.enable)
@@ -787,11 +787,14 @@ namespace MeltPoolDG::MeltPool
     check_input_parameters();
     const auto &param = base_in->parameters;
 
-    dof_handler_ls.reinit(*base_in->triangulation);
-
     scratch_data = std::make_shared<ScratchData<dim, dim, number>>(base_in->mpi_communicator,
                                                                    param.base.verbosity_level,
                                                                    /*do_matrix_free*/ true);
+
+    const ScopedName         scope_n("mp::init");
+    const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
+
+    dof_handler_ls.reinit(*base_in->triangulation);
 
     scratch_data->set_mapping(FiniteElementUtils::create_mapping<dim>(param.base.fe));
 
@@ -1406,8 +1409,8 @@ namespace MeltPoolDG::MeltPool
   void
   MeltPoolProblem<dim, number>::set_initial_conditions(std::shared_ptr<SimulationType> base_in)
   {
-    ScopedName         sc("mp::set_initial_condition");
-    TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+    const ScopedName         scope_n("set_initial_condition");
+    const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
 
     set_initial_condition_level_set(base_in);
 
@@ -1523,13 +1526,10 @@ namespace MeltPoolDG::MeltPool
 
     if (do_reinit)
       {
-        {
-          ScopedName sc("mp::cells");
-          CellMonitor<number>::add_info(sc,
-                                        scratch_data->get_triangulation().n_global_active_cells(),
-                                        scratch_data->get_min_cell_size(),
-                                        scratch_data->get_max_cell_size());
-        }
+        CellMonitor<number>::add_info("mp::cells",
+                                      scratch_data->get_triangulation().n_global_active_cells(),
+                                      scratch_data->get_min_cell_size(),
+                                      scratch_data->get_max_cell_size());
 
         level_set_operation->reinit();
 
@@ -1566,13 +1566,10 @@ namespace MeltPoolDG::MeltPool
     scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
 
     // print mesh information
-    {
-      ScopedName sc("mp::cells");
-      CellMonitor<number>::add_info(sc,
-                                    scratch_data->get_triangulation().n_global_active_cells(),
-                                    scratch_data->get_min_cell_size(),
-                                    scratch_data->get_max_cell_size());
-    }
+    CellMonitor<number>::add_info("mp::cells",
+                                  scratch_data->get_triangulation().n_global_active_cells(),
+                                  scratch_data->get_min_cell_size(),
+                                  scratch_data->get_max_cell_size());
   }
 
 
@@ -1743,8 +1740,8 @@ namespace MeltPoolDG::MeltPool
 
     if (evaporation_operation and evapor_data.evaporative_dilation_rate.enable)
       {
-        ScopedName         sc("evaporation::level_set_source_term");
-        TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+        const ScopedName         scope_n("evaporation::level_set_source_term");
+        const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
         switch (evapor_data.formulation_source_term_level_set)
           {
             default:
@@ -1855,6 +1852,9 @@ namespace MeltPoolDG::MeltPool
         not base_in->parameters.output.do_user_defined_postprocessing)
       return;
 
+    const ScopedName         scope_n("output_results");
+    const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
+
     GenericDataOut<dim, number> generic_data_out(scratch_data->get_mapping(),
                                                  current_time,
                                                  base_in->parameters.output.output_variables);
@@ -1879,16 +1879,11 @@ namespace MeltPoolDG::MeltPool
       base_in->do_postprocessing(generic_data_out);
 
     // postprocessing
-    {
-      ScopedName         sc("process");
-      TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-
-      post_processor->process(n_time_step,
-                              generic_data_out,
-                              current_time,
-                              force_output,
-                              output_not_converged_operation != OutputNotConvergedOperation::none);
-    }
+    post_processor->process(n_time_step,
+                            generic_data_out,
+                            current_time,
+                            force_output,
+                            output_not_converged_operation != OutputNotConvergedOperation::none);
   }
 
   template <int dim, typename number>

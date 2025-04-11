@@ -1,15 +1,14 @@
 #pragma once
+
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/timer.h>
 
-#include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
-#include <meltpooldg/utilities/dof_monitor.hpp>
-#include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/profiling_data.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <chrono>
+
 
 namespace MeltPoolDG::Profiling
 {

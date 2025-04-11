@@ -170,10 +170,10 @@ namespace MeltPoolDG::LevelSet
   void
   AdvectionDiffusionOperation<dim, number>::solve(const bool do_finish_time_step)
   {
-    ScopedName         sc("advection_diffusion::solve");
-    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
+    const ScopedName         scope_n("advection_diffusion::solve");
+    const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
 
-    if (!this->ready_for_time_advance)
+    if (not this->ready_for_time_advance)
       init_time_advance();
 
     const bool velocity_update_ghosts = !advection_velocity.has_ghost_elements();
@@ -312,7 +312,7 @@ namespace MeltPoolDG::LevelSet
         this->finish_time_advance();
       }
 
-    IterationMonitor<number>::add_linear_iterations(sc, iter);
+    IterationMonitor<number>::add_linear_iterations(scope_n, iter);
 
     // update ghost values of solution
     solution_history.get_current_solution().update_ghost_values();

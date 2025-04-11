@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Peter Munch, Magdalena Schreter, TUM, October 2020
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
@@ -43,7 +38,7 @@ namespace MeltPoolDG::Flow
   class AdafloWrapper : public FlowBase<dim>
   {
   private:
-    using VectorType = LinearAlgebra::distributed::Vector<double>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
   public:
     /**
@@ -51,7 +46,7 @@ namespace MeltPoolDG::Flow
      */
     AdafloWrapper(ScratchData<dim, dim, number>             &scratch_data,
                   std::shared_ptr<MeltPoolCase<dim, number>> base_in,
-                  const TimeIterator<double>                &time_iterator,
+                  const TimeIterator<number>                &time_iterator,
                   const bool                                 do_evaporative_mass_flux);
 
     void
@@ -95,22 +90,22 @@ namespace MeltPoolDG::Flow
      *                     the matrix-free object.
      */
     void
-    set_face_average_density_augmented_taylor_hood(const Material<double> &material,
+    set_face_average_density_augmented_taylor_hood(const Material<number> &material,
                                                    const VectorType       &ls_as_heaviside,
                                                    const unsigned int      ls_dof_idx,
                                                    const VectorType       *temperature  = nullptr,
                                                    unsigned int            temp_dof_idx = -1);
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const LinearAlgebra::distributed::Vector<number> &
     get_velocity() const override;
 
-    LinearAlgebra::distributed::Vector<double> &
+    LinearAlgebra::distributed::Vector<number> &
     get_velocity() override;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const LinearAlgebra::distributed::Vector<number> &
     get_velocity_old() const;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const LinearAlgebra::distributed::Vector<number> &
     get_velocity_old_old() const;
 
     const DoFHandler<dim> &
@@ -128,25 +123,25 @@ namespace MeltPoolDG::Flow
     const unsigned int &
     get_quad_idx_pressure() const override;
 
-    const AffineConstraints<double> &
+    const AffineConstraints<number> &
     get_constraints_velocity() const override;
 
-    AffineConstraints<double> &
+    AffineConstraints<number> &
     get_constraints_velocity() override;
 
-    const AffineConstraints<double> &
+    const AffineConstraints<number> &
     get_hanging_node_constraints_velocity() const override;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const LinearAlgebra::distributed::Vector<number> &
     get_pressure() const override;
 
-    LinearAlgebra::distributed::Vector<double> &
+    LinearAlgebra::distributed::Vector<number> &
     get_pressure() override;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const LinearAlgebra::distributed::Vector<number> &
     get_pressure_old() const;
 
-    const LinearAlgebra::distributed::Vector<double> &
+    const LinearAlgebra::distributed::Vector<number> &
     get_pressure_old_old() const;
 
     const DoFHandler<dim> &
@@ -155,72 +150,72 @@ namespace MeltPoolDG::Flow
     const unsigned int &
     get_dof_handler_idx_pressure() const override;
 
-    const AffineConstraints<double> &
+    const AffineConstraints<number> &
     get_constraints_pressure() const override;
 
-    AffineConstraints<double> &
+    AffineConstraints<number> &
     get_constraints_pressure() override;
 
-    const AffineConstraints<double> &
+    const AffineConstraints<number> &
     get_hanging_node_constraints_pressure() const override;
 
     void
-    set_force_rhs(const LinearAlgebra::distributed::Vector<double> &vec) override;
+    set_force_rhs(const LinearAlgebra::distributed::Vector<number> &vec) override;
 
     void
-    set_mass_balance_rhs(const LinearAlgebra::distributed::Vector<double> &vec) override;
+    set_mass_balance_rhs(const LinearAlgebra::distributed::Vector<number> &vec) override;
 
     void
-    set_user_defined_material(std::function<Tensor<2, dim, VectorizedArray<double>>(
-                                const Tensor<2, dim, VectorizedArray<double>> &,
+    set_user_defined_material(std::function<Tensor<2, dim, VectorizedArray<number>>(
+                                const Tensor<2, dim, VectorizedArray<number>> &,
                                 const unsigned int,
                                 const unsigned int,
                                 const bool)> my_user_defined_material) override;
 
-    VectorizedArray<double> &
+    VectorizedArray<number> &
     get_density(const unsigned int cell, const unsigned int q) override;
 
-    const VectorizedArray<double> &
+    const VectorizedArray<number> &
     get_density(const unsigned int cell, const unsigned int q) const override;
 
-    VectorizedArray<double> &
+    VectorizedArray<number> &
     get_viscosity(const unsigned int cell, const unsigned int q) override;
 
-    const VectorizedArray<double> &
+    const VectorizedArray<number> &
     get_viscosity(const unsigned int cell, const unsigned int q) const override;
 
-    VectorizedArray<double> &
+    VectorizedArray<number> &
     get_damping(const unsigned int cell, const unsigned int q) override;
 
-    const VectorizedArray<double> &
+    const VectorizedArray<number> &
     get_damping(const unsigned int cell, const unsigned int q) const override;
 
     void
-    attach_vectors_u(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
+    attach_vectors_u(std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors) override;
 
     void
-    attach_vectors_p(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
+    attach_vectors_p(std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors) override;
 
     void
     distribute_constraints() override;
 
     void
-    attach_output_vectors(GenericDataOut<dim, double> &data_out) const override;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const override;
 
     void
-    attach_output_vectors_failed_step(GenericDataOut<dim, double> &data_out) const override;
+    attach_output_vectors_failed_step(GenericDataOut<dim, number> &data_out) const override;
 
     void
     set_face_average_density(const typename Triangulation<dim>::cell_iterator &cell,
                              const unsigned int                                face,
-                             const double                                      density);
+                             const number                                      density);
 
     const Quadrature<dim> &
     get_face_center_quad();
 
   private:
     void
-    create_parameters(Parameters<double> &parameters, const std::string parameter_file);
+    create_parameters(Parameters<number> &parameters, const std::string parameter_file);
 
     bool
     time_stepping_synchronized();
@@ -242,7 +237,7 @@ namespace MeltPoolDG::Flow
 
     const bool do_evaporative_mass_flux;
 
-    const TimeIterator<double> &time_iterator;
+    const TimeIterator<number> &time_iterator;
 
     unsigned int dof_index_u;
     unsigned int dof_index_p;
@@ -253,7 +248,7 @@ namespace MeltPoolDG::Flow
     unsigned int quad_index_p;
 
     DoFHandler<dim>           dof_handler_parameters;
-    AffineConstraints<double> constraints_parameters;
+    AffineConstraints<number> constraints_parameters;
 
     // temporal vectors for output
     mutable VectorType force_rhs_velocity_projected;
