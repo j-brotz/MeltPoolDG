@@ -92,23 +92,23 @@ namespace MeltPoolDG::LevelSet
     /**
      * Adaflo parameters for the curvature problem
      */
-    LevelSetOKZSolverComputeCurvatureParameter curv_adaflo_params;
+    adaflo::LevelSetOKZSolverComputeCurvatureParameter curv_adaflo_params;
     /**
      * Reference to the actual curvature solver from adaflo
      */
-    std::shared_ptr<LevelSetOKZSolverComputeCurvature<dim>> curvature_operation;
+    std::shared_ptr<adaflo::LevelSetOKZSolverComputeCurvature<dim>> curvature_operation;
     std::shared_ptr<LevelSet::NormalVectorOperationAdaflo<dim, number>>
       normal_vector_operation_adaflo;
 
     /**
      *  Diagonal preconditioner
      */
-    DiagonalPreconditioner<number> preconditioner;
+    adaflo::DiagonalPreconditioner<number> preconditioner;
     /**
      *  Projection matrices
      */
-    std::shared_ptr<BlockMatrixExtension> projection_matrix;
-    std::shared_ptr<BlockILUExtension>    ilu_projection_matrix;
+    std::shared_ptr<adaflo::BlockMatrixExtension> projection_matrix;
+    std::shared_ptr<adaflo::BlockILUExtension>    ilu_projection_matrix;
     /**
      *  Geometry info
      */

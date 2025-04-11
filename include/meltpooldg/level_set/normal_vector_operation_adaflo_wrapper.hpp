@@ -61,7 +61,7 @@ namespace MeltPoolDG::LevelSet
     dealii::LinearAlgebra::distributed::BlockVector<number> &
     get_solution_normal_vector() override;
 
-    LevelSetOKZSolverComputeNormal<dim> &
+    adaflo::LevelSetOKZSolverComputeNormal<dim> &
     get_adaflo_obj();
 
     void
@@ -94,18 +94,18 @@ namespace MeltPoolDG::LevelSet
     /**
      * Adaflo parameters for the level set problem
      */
-    LevelSetOKZSolverComputeNormalParameter normal_vec_adaflo_params;
+    adaflo::LevelSetOKZSolverComputeNormalParameter normal_vec_adaflo_params;
     /**
      * Reference to the actual advection diffusion solver from adaflo
      */
-    std::shared_ptr<LevelSetOKZSolverComputeNormal<dim>> normal_vec_operation;
+    std::shared_ptr<adaflo::LevelSetOKZSolverComputeNormal<dim>> normal_vec_operation;
 
     /**
      *  Diagonal preconditioner @todo
      */
-    DiagonalPreconditioner<number>                         preconditioner;
-    std::shared_ptr<BlockMatrixExtension>                  projection_matrix;
-    std::shared_ptr<BlockILUExtension>                     ilu_projection_matrix;
+    adaflo::DiagonalPreconditioner<number>                 preconditioner;
+    std::shared_ptr<adaflo::BlockMatrixExtension>          projection_matrix;
+    std::shared_ptr<adaflo::BlockILUExtension>             ilu_projection_matrix;
     dealii::AlignedVector<dealii::VectorizedArray<number>> cell_diameters;
     number                                                 cell_diameter_min;
     number                                                 cell_diameter_max;

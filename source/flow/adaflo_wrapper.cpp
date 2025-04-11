@@ -47,7 +47,7 @@ namespace MeltPoolDG::Flow
     /*
      * setup Navier-Stokes solver
      */
-    navier_stokes = std::make_unique<NavierStokes<dim>>(
+    navier_stokes = std::make_unique<adaflo::NavierStokes<dim>>(
       adaflo_params, *const_cast<Triangulation<dim> *>(&scratch_data.get_triangulation()), &timer);
     /*
      * Boundary conditions for the velocity field

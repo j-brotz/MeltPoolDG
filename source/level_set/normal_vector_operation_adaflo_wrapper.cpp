@@ -41,15 +41,15 @@ namespace MeltPoolDG::LevelSet
     /**
      * initialize the projection matrix
      */
-    projection_matrix     = std::make_shared<BlockMatrixExtension>();
-    ilu_projection_matrix = std::make_shared<BlockILUExtension>();
+    projection_matrix     = std::make_shared<adaflo::BlockMatrixExtension>();
+    ilu_projection_matrix = std::make_shared<adaflo::BlockILUExtension>();
   }
 
   template <int dim, typename number>
   void
   NormalVectorOperationAdaflo<dim, number>::create_operator()
   {
-    normal_vec_operation = std::make_shared<LevelSetOKZSolverComputeNormal<dim>>(
+    normal_vec_operation = std::make_shared<adaflo::LevelSetOKZSolverComputeNormal<dim>>(
       normal_vector_field,
       rhs,
       advected_field,
@@ -73,11 +73,11 @@ namespace MeltPoolDG::LevelSet
      */
     initialize_vectors();
 
-    compute_cell_diameters<dim>(scratch_data.get_matrix_free(),
-                                normal_vec_adaflo_params.dof_index_ls,
-                                cell_diameters,
-                                cell_diameter_min,
-                                cell_diameter_max);
+    adaflo::compute_cell_diameters<dim>(scratch_data.get_matrix_free(),
+                                        normal_vec_adaflo_params.dof_index_ls,
+                                        cell_diameters,
+                                        cell_diameter_min,
+                                        cell_diameter_max);
 
     epsilon_used = cell_diameter_max * normal_vec_adaflo_params.epsilon;
 
@@ -146,7 +146,7 @@ namespace MeltPoolDG::LevelSet
   }
 
   template <int dim, typename number>
-  LevelSetOKZSolverComputeNormal<dim> &
+  adaflo::LevelSetOKZSolverComputeNormal<dim> &
   NormalVectorOperationAdaflo<dim, number>::get_adaflo_obj()
   {
     return *normal_vec_operation;
