@@ -147,10 +147,8 @@ namespace MeltPoolDG::Flow
      * @param data_out Object to which the solution vector is attached.
      */
     void
-    attach_output_vectors(GenericDataOut<dim, double> &data_out) const
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const
     {
-      using namespace dealii;
-
       // check, if single-phase or two-phase case is considered
       const auto &dof_handler = operation_pimpl->get_dof_handler();
       const bool  two_phase   = dof_handler.get_fe_collection().n_components() / (dim + 2) == 2;
@@ -177,19 +175,20 @@ namespace MeltPoolDG::Flow
           names.emplace_back("energy_gas");
         }
 
-      std::vector<DataComponentInterpretation::DataComponentInterpretation> interpretation;
-      interpretation.push_back(DataComponentInterpretation::component_is_scalar);
+      std::vector<dealii::DataComponentInterpretation::DataComponentInterpretation> interpretation;
+      interpretation.push_back(dealii::DataComponentInterpretation::component_is_scalar);
       for (unsigned int d = 0; d < dim; ++d)
-        interpretation.push_back(DataComponentInterpretation::component_is_part_of_vector);
-      interpretation.push_back(DataComponentInterpretation::component_is_scalar);
+        interpretation.push_back(dealii::DataComponentInterpretation::component_is_part_of_vector);
+      interpretation.push_back(dealii::DataComponentInterpretation::component_is_scalar);
 
       // add entries for two-phase case
       if (two_phase)
         {
-          interpretation.push_back(DataComponentInterpretation::component_is_scalar);
+          interpretation.push_back(dealii::DataComponentInterpretation::component_is_scalar);
           for (unsigned int d = 0; d < dim; ++d)
-            interpretation.push_back(DataComponentInterpretation::component_is_part_of_vector);
-          interpretation.push_back(DataComponentInterpretation::component_is_scalar);
+            interpretation.push_back(
+              dealii::DataComponentInterpretation::component_is_part_of_vector);
+          interpretation.push_back(dealii::DataComponentInterpretation::component_is_scalar);
         }
 
       data_out.add_data_vector(operation_pimpl->get_dof_handler(),

@@ -61,7 +61,7 @@ namespace MeltPoolDG::Flow
                                      LinearAlgebra::distributed::Vector<number>       &dst,
                                      const LinearAlgebra::distributed::Vector<number> &src,
                                      const std::pair<unsigned int, unsigned int>       cell_range) {
-        Utilities::MatrixFree::local_apply_inverse_mass_matrix<dim, number>(
+        Utilities::MatrixFree::local_apply_inverse_mass_matrix<dim, number, dim + 2>(
           matrix_free, dst, src, cell_range, dof_idx, quad_idx);
       };
     flow_scratch_data.scratch_data.get_matrix_free().cell_loop(

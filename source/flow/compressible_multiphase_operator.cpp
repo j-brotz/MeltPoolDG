@@ -31,9 +31,9 @@ namespace MeltPoolDG::Multiphase
     , fe_point_temp(FE_DGQ<dim>(flow_scratch_data.flow_data.fe.degree), dim + 2)
     , n_dofs_per_cell(fe_point_temp.dofs_per_cell)
   {
-    const double q_1 = flow_scratch_data.flow_data.material.liquid.dynamic_viscosity;
+    const number q_1 = flow_scratch_data.flow_data.material.liquid.dynamic_viscosity;
 
-    const double q_2 = flow_scratch_data.flow_data.material.gas.dynamic_viscosity;
+    const number q_2 = flow_scratch_data.flow_data.material.gas.dynamic_viscosity;
 
     alpha_1 = q_1 / (q_1 + q_2);
     alpha_2 = 1. - alpha_1;

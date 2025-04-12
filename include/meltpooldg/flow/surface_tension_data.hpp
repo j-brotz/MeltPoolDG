@@ -21,7 +21,7 @@ namespace MeltPoolDG::Flow
               interface_value)
 
 
-  template <typename number = double>
+  template <typename number>
   struct SurfaceTensionData
   {
     number surface_tension_coefficient                       = 0.0;

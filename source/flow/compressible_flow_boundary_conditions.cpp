@@ -303,7 +303,7 @@ namespace MeltPoolDG::Flow
         grad_delta_w_p = -grad_delta_w_m;
 
         // Dirichlet
-        auto p_dyn = dealii::VectorizedArray<double>(0.);
+        auto p_dyn = dealii::VectorizedArray<number>(0.);
         for (unsigned int i = 1; i < dim + 1; ++i)
           p_dyn += w_m[i] * w_m[i];
 

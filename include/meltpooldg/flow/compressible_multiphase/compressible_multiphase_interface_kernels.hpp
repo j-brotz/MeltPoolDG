@@ -64,7 +64,6 @@ namespace MeltPoolDG::Multiphase
       const auto                               &viscous_terms_liquid,
       const auto                               &viscous_terms_gas)
   {
-    using namespace dealii;
     AssertThrow(dim == 1,
                 dealii::ExcNotImplemented(
                   "Currently, only dim=1 is enabled for "
@@ -248,7 +247,6 @@ namespace MeltPoolDG::Multiphase
       const auto                                                    &convective_terms_gas,
       const Flow::CompressibleFlowData<number>                      &flow_data)
   {
-    using namespace dealii;
     // Note: Variables, that are relevant for both the liquid and the gas phase ,are considered as
     // arrays of length 2 in the following. The first element refers to the liquid phase and the
     // second element to the gas phase.
@@ -378,10 +376,10 @@ namespace MeltPoolDG::Multiphase
         temp_vec_y[1] = 1.;
         for (int i = 0; i < 3; ++i)
           {
-            temp_vec[i] = compare_and_apply_mask<SIMDComparison::less_than>(norm_diff,
-                                                                            tolerance,
-                                                                            temp_vec_y[i],
-                                                                            temp_vec[i]);
+            temp_vec[i] = compare_and_apply_mask<dealii::SIMDComparison::less_than>(norm_diff,
+                                                                                    tolerance,
+                                                                                    temp_vec_y[i],
+                                                                                    temp_vec[i]);
           }
         tangent[0] = temp_vec - (temp_vec * normal) * normal;
         tangent[1] = dealii::cross_product_3d(normal, tangent[0]);
@@ -417,11 +415,11 @@ namespace MeltPoolDG::Multiphase
       u_star[liquid][Idx::density] - u_star[gas][Idx::density];
     // avoid division by zero
     dealii::VectorizedArray<number> normal_velocity_interface =
-      compare_and_apply_mask<SIMDComparison::greater_than>(std::abs(denominator_normal_vel),
-                                                           1.e-12,
-                                                           numerator_normal_vel /
-                                                             denominator_normal_vel,
-                                                           0.);
+      compare_and_apply_mask<dealii::SIMDComparison::greater_than>(std::abs(denominator_normal_vel),
+                                                                   1.e-12,
+                                                                   numerator_normal_vel /
+                                                                     denominator_normal_vel,
+                                                                   0.);
 
     // 9) calculate fluxes for the two phases
 
@@ -442,10 +440,12 @@ namespace MeltPoolDG::Multiphase
     const auto zero_vec = dealii::make_vectorized_array(0.);
     const auto one_vec  = dealii::make_vectorized_array(1.);
 
-    flux[liquid] += shock_flux[liquid] * compare_and_apply_mask<SIMDComparison::greater_than>(
-                                           shock_speed[liquid], zero_vec, one_vec, zero_vec);
-    flux[gas] += shock_flux[gas] * compare_and_apply_mask<SIMDComparison::less_than_or_equal>(
-                                     shock_speed[gas], zero_vec, one_vec, zero_vec);
+    flux[liquid] +=
+      shock_flux[liquid] * compare_and_apply_mask<dealii::SIMDComparison::greater_than>(
+                             shock_speed[liquid], zero_vec, one_vec, zero_vec);
+    flux[gas] +=
+      shock_flux[gas] * compare_and_apply_mask<dealii::SIMDComparison::less_than_or_equal>(
+                          shock_speed[gas], zero_vec, one_vec, zero_vec);
 
     return {flux[liquid], flux[gas], normal_velocity_interface};
   }
@@ -474,7 +474,6 @@ namespace MeltPoolDG::Multiphase
       const ConservedVariablesType             &u_gas_cons,
       const Flow::CompressibleFlowData<number> &flow_data)
   {
-    using namespace dealii;
     // enumeration for conserved variables component indices
     using Idx = std::conditional_t<
       dim == 1,
@@ -566,7 +565,6 @@ namespace MeltPoolDG::Multiphase
       const auto                                                    &viscous_terms_gas,
       const Flow::CompressibleFlowData<number>                      &flow_data)
   {
-    using namespace dealii;
     // enumeration for conserved variables component indices
     using Idx = std::conditional_t<
       dim == 1,
@@ -691,7 +689,6 @@ namespace MeltPoolDG::Multiphase
       const auto                                                    &viscous_terms_gas,
       const Flow::CompressibleFlowData<number>                      &flow_data)
   {
-    using namespace dealii;
     const auto J_Dir_cons =
       calculate_Dirichlet_jump_in_conservative_variables<dim, number, ConservedVariablesType>(
         u_liquid, u_gas, flow_data);

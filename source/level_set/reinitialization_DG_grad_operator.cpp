@@ -1,4 +1,5 @@
 #include <meltpooldg/level_set/reinitialization_DG_grad_operator.hpp>
+#include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 
 
 
@@ -32,34 +33,24 @@ namespace MeltPoolDG::LevelSet
       MatrixFree<dim, number>::DataAccessOnFaces::values,
       MatrixFree<dim, number>::DataAccessOnFaces::values);
 
-    scratch_data.get_matrix_free().cell_loop(
-      &RIGradOperator<dim, number>::local_apply_inverse_mass_matrix, this, dst, dst);
+    using local_applier_type =
+      std::function<void(const dealii::MatrixFree<dim, number> &,
+                         dealii::LinearAlgebra::distributed::Vector<number>       &dst,
+                         const dealii::LinearAlgebra::distributed::Vector<number> &src,
+                         const std::pair<unsigned int, unsigned int> &)>;
+
+    local_applier_type inverse =
+      [dof_idx  = reinit_dof_idx,
+       quad_idx = reinit_quad_idx](const MatrixFree<dim, number>                    &matrix_free,
+                                   LinearAlgebra::distributed::Vector<number>       &dst,
+                                   const LinearAlgebra::distributed::Vector<number> &src,
+                                   const std::pair<unsigned int, unsigned int>       cell_range) {
+        Utilities::MatrixFree::local_apply_inverse_mass_matrix<dim, number, 1>(
+          matrix_free, dst, src, cell_range, dof_idx, quad_idx);
+      };
+
+    scratch_data.get_matrix_free().cell_loop(inverse, dst, dst);
   }
-
-  template <int dim, typename number>
-  void
-  RIGradOperator<dim, number>::local_apply_inverse_mass_matrix(
-    const MatrixFree<dim, number>               &data,
-    VectorType                                  &dst,
-    const VectorType                            &src,
-    const std::pair<unsigned int, unsigned int> &cell_range) const
-  {
-    FECellIntegrator<dim, 1, number> eval(data, reinit_dof_idx, reinit_quad_idx);
-
-    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, number> inverse(eval);
-
-    for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
-      {
-        eval.reinit(cell);
-        eval.read_dof_values(src);
-
-        inverse.apply(eval.begin_dof_values(), eval.begin_dof_values());
-
-        eval.set_dof_values(dst);
-      }
-  }
-
-
 
   template <int dim, typename number>
   template <uint component>

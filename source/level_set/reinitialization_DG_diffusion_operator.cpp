@@ -1,4 +1,5 @@
 #include <meltpooldg/level_set/reinitialization_DG_diffusion_operator.hpp>
+#include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 
@@ -305,38 +306,24 @@ namespace MeltPoolDG::LevelSet
       MatrixFree<dim, number>::DataAccessOnFaces::unspecified,
       MatrixFree<dim, number>::DataAccessOnFaces::unspecified);
 
+    using local_applier_type =
+      std::function<void(const dealii::MatrixFree<dim, number> &,
+                         dealii::LinearAlgebra::distributed::Vector<number>       &dst,
+                         const dealii::LinearAlgebra::distributed::Vector<number> &src,
+                         const std::pair<unsigned int, unsigned int> &)>;
 
-    this->scratch_data.get_matrix_free().cell_loop(
-      &ReinitializationDGDiffusionOperator<dim, number>::local_apply_inverse_mass_matrix,
-      this,
-      dst,
-      dst,
-      std::function<void(unsigned int, unsigned int)>(),
-      func);
-  }
+    local_applier_type inverse =
+      [dof_idx  = reinit_dof_idx,
+       quad_idx = reinit_quad_idx](const MatrixFree<dim, number>                    &matrix_free,
+                                   LinearAlgebra::distributed::Vector<number>       &dst,
+                                   const LinearAlgebra::distributed::Vector<number> &src,
+                                   const std::pair<unsigned int, unsigned int>       cell_range) {
+        Utilities::MatrixFree::local_apply_inverse_mass_matrix<dim, number, 1>(
+          matrix_free, dst, src, cell_range, dof_idx, quad_idx);
+      };
 
-
-  template <int dim, typename number>
-  void
-  ReinitializationDGDiffusionOperator<dim, number>::local_apply_inverse_mass_matrix(
-    const MatrixFree<dim, number>                    &data,
-    LinearAlgebra::distributed::Vector<number>       &dst,
-    const LinearAlgebra::distributed::Vector<number> &src,
-    const std::pair<unsigned int, unsigned int>      &cell_range) const
-  {
-    FECellIntegrator<dim, 1, number> eval(data, reinit_dof_idx, reinit_quad_idx);
-
-    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, number> inverse(eval);
-
-    for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
-      {
-        eval.reinit(cell);
-        eval.read_dof_values(src);
-
-        inverse.apply(eval.begin_dof_values(), eval.begin_dof_values());
-
-        eval.set_dof_values(dst);
-      }
+    scratch_data.get_matrix_free().cell_loop(
+      inverse, dst, dst, std::function<void(unsigned int, unsigned int)>(), func);
   }
 
   template class ReinitializationDGDiffusionOperator<1, double>;

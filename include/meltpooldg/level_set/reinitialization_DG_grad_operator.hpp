@@ -83,18 +83,5 @@ namespace MeltPoolDG::LevelSet
                               VectorType                                  &dst,
                               const VectorType                            &src,
                               const std::pair<unsigned int, unsigned int> &face_range) const;
-
-    /**
-     * Applies the local inverse of the mass matrix
-     * @param data the matrix free object
-     * @param dst destination where the result is stored
-     * @param src source vector
-     * @param cell_range
-     */
-    void
-    local_apply_inverse_mass_matrix(const dealii::MatrixFree<dim, number>       &data,
-                                    VectorType                                  &dst,
-                                    const VectorType                            &src,
-                                    const std::pair<unsigned int, unsigned int> &cell_range) const;
   };
 } // namespace MeltPoolDG::LevelSet

@@ -81,12 +81,6 @@ namespace MeltPoolDG::LevelSet
      */
     bool update_field_functions;
 
-    void
-    local_apply_inverse_mass_matrix(const dealii::MatrixFree<dim, number>       &data,
-                                    VectorType                                  &dst,
-                                    const VectorType                            &src,
-                                    const std::pair<unsigned int, unsigned int> &cell_range) const;
-
 
   private:
     const MeltPoolDG::ScratchData<dim, dim, number> &scratch_data_;

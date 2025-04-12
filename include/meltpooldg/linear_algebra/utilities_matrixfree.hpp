@@ -112,7 +112,7 @@ namespace MeltPoolDG::Utilities::MatrixFree
    * @param dof_idx Relevant dof index in the matrix free object.
    * @param quad_idx Relevant quadrature index in the matrix free object.
    */
-  template <int dim, typename number>
+  template <int dim, typename number, int n_components>
   void
   local_apply_inverse_mass_matrix(const dealii::MatrixFree<dim, number>       &matrix_free,
                                   VectorType<number>                          &dst,
@@ -121,8 +121,9 @@ namespace MeltPoolDG::Utilities::MatrixFree
                                   const unsigned int                           dof_idx,
                                   const unsigned int                           quad_idx)
   {
-    dealii::FECellIntegrator<dim, dim + 2, number> phi(matrix_free, dof_idx, quad_idx);
-    dealii::MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, dim + 2, number> inverse(phi);
+    dealii::FECellIntegrator<dim, n_components, number> phi(matrix_free, dof_idx, quad_idx);
+    dealii::MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, n_components, number> inverse(
+      phi);
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {

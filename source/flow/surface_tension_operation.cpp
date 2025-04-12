@@ -52,7 +52,7 @@ namespace MeltPoolDG::Flow
     if (do_level_set_pressure_gradient_interpolation)
       {
         ls_to_pressure_grad_interpolation_matrix =
-          UtilityFunctions::create_dof_interpolation_matrix<dim, double>(
+          UtilityFunctions::create_dof_interpolation_matrix<dim, number>(
             scratch_data.get_dof_handler(flow_pressure_hanging_nodes_dof_idx),
             scratch_data.get_dof_handler(ls_dof_idx),
             true);
@@ -129,8 +129,8 @@ namespace MeltPoolDG::Flow
           solid->update_ghost_values();
       }
 
-    const double tolerance_normal_vector =
-      UtilityFunctions::compute_numerical_zero_of_norm<dim, double>(
+    const number tolerance_normal_vector =
+      UtilityFunctions::compute_numerical_zero_of_norm<dim, number>(
         scratch_data.get_triangulation(), scratch_data.get_mapping());
 
     const auto cut_type = std::invoke([&]() -> CutUtil::CutPhaseType {
@@ -145,18 +145,18 @@ namespace MeltPoolDG::Flow
           auto       &force_rhs,
           const auto &level_set_as_heaviside,
           auto        cell_range) {
-        FECellIntegrator<dim, 1, double> heaviside_eval(matrix_free, ls_dof_idx, flow_vel_quad_idx);
+        FECellIntegrator<dim, 1, number> heaviside_eval(matrix_free, ls_dof_idx, flow_vel_quad_idx);
 
-        FECellIntegrator<dim, 1, double> curvature_eval(matrix_free,
+        FECellIntegrator<dim, 1, number> curvature_eval(matrix_free,
                                                         curv_dof_idx,
                                                         flow_vel_quad_idx);
 
-        FECellIntegrator<dim, 1, double> heaviside_interpolated_to_pressure_space_eval(
+        FECellIntegrator<dim, 1, number> heaviside_interpolated_to_pressure_space_eval(
           matrix_free, flow_pressure_hanging_nodes_dof_idx, flow_vel_quad_idx);
 
-        std::unique_ptr<FECellIntegrator<dim, dim, double>> normal_vec_eval;
-        std::vector<FECellIntegrator<dim, 1, double>>       temperature_eval;
-        std::unique_ptr<FECellIntegrator<dim, 1, double>>   solid_eval;
+        std::unique_ptr<FECellIntegrator<dim, dim, number>> normal_vec_eval;
+        std::vector<FECellIntegrator<dim, 1, number>>       temperature_eval;
+        std::unique_ptr<FECellIntegrator<dim, 1, number>>   solid_eval;
 
         auto &used_heaviside_eval = do_level_set_pressure_gradient_interpolation ?
                                       heaviside_interpolated_to_pressure_space_eval :
@@ -168,7 +168,7 @@ namespace MeltPoolDG::Flow
         if (temperature)
           {
             normal_vec_eval =
-              std::make_unique<FECellIntegrator<dim, dim, double>>(matrix_free,
+              std::make_unique<FECellIntegrator<dim, dim, number>>(matrix_free,
                                                                    normal_dof_idx,
                                                                    flow_vel_quad_idx);
             if (cut_type == CutUtil::CutPhaseType::not_cut)
@@ -193,17 +193,17 @@ namespace MeltPoolDG::Flow
               }
           }
         if (solid)
-          solid_eval = std::make_unique<FECellIntegrator<dim, 1, double>>(matrix_free,
+          solid_eval = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
                                                                           solid_dof_idx,
                                                                           flow_vel_quad_idx);
 
-        FECellIntegrator<dim, dim, double> surface_tension_eval(matrix_free,
+        FECellIntegrator<dim, dim, number> surface_tension_eval(matrix_free,
                                                                 flow_vel_dof_idx,
                                                                 flow_vel_quad_idx);
 
-        auto alpha = VectorizedArray<double>(data.surface_tension_coefficient);
+        auto alpha = VectorizedArray<number>(data.surface_tension_coefficient);
 
-        const double &d_alpha0 = data.temperature_dependent_surface_tension_coefficient;
+        const number &d_alpha0 = data.temperature_dependent_surface_tension_coefficient;
 
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
@@ -253,9 +253,9 @@ namespace MeltPoolDG::Flow
             for (const unsigned int q : surface_tension_eval.quadrature_point_indices())
               {
                 const auto mask =
-                  solid_eval ? 1. - solid_eval->get_value(q) : VectorizedArray<double>(1.0);
+                  solid_eval ? 1. - solid_eval->get_value(q) : VectorizedArray<number>(1.0);
 
-                VectorizedArray<double> weight(1.0);
+                VectorizedArray<number> weight(1.0);
                 if (delta_phase_weighted)
                   weight = delta_phase_weighted->compute_weight(used_heaviside_eval.get_value(q));
 
@@ -263,8 +263,8 @@ namespace MeltPoolDG::Flow
                   {
                     const auto n = VectorTools::normalize<dim>(normal_vec_eval->get_value(q),
                                                                tolerance_normal_vector);
-                    VectorizedArray<double>                                  T;
-                    typename FECellIntegrator<dim, 1, double>::gradient_type grad_T;
+                    VectorizedArray<number>                                  T;
+                    typename FECellIntegrator<dim, 1, number>::gradient_type grad_T;
                     switch (cut_type)
                       {
                           case CutUtil::CutPhaseType::not_cut: {
@@ -348,7 +348,7 @@ namespace MeltPoolDG::Flow
 
                     // compute Marangoni convection
                     const auto delta = used_heaviside_eval.get_gradient(q).norm() * weight;
-                    const Tensor<1, dim, VectorizedArray<double>> temp_surf_ten =
+                    const Tensor<1, dim, VectorizedArray<number>> temp_surf_ten =
                       -d_alpha0 * (grad_T - n * scalar_product(n, grad_T)) * delta;
 
                     surface_tension_eval.submit_value(mask *
@@ -386,11 +386,11 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim, typename number>
-  double
-  SurfaceTensionOperation<dim, number>::compute_time_step_limit(const double density_1,
-                                                                const double density_2)
+  number
+  SurfaceTensionOperation<dim, number>::compute_time_step_limit(const number density_1,
+                                                                const number density_2)
   {
-    double alpha = data.surface_tension_coefficient;
+    number alpha = data.surface_tension_coefficient;
 
     // compute maximum value for alpha
     if (temperature)
@@ -399,7 +399,7 @@ namespace MeltPoolDG::Flow
         // surface tension coefficient arises at the minimum temperature.
         if (data.temperature_dependent_surface_tension_coefficient > 0)
           {
-            const double T_min =
+            const number T_min =
               VectorTools::min_element(*temperature, scratch_data.get_mpi_comm());
             alpha = local_compute_temperature_dependent_surface_tension_coefficient(T_min);
           }
@@ -407,7 +407,7 @@ namespace MeltPoolDG::Flow
         // surface tension coefficient arises at the maximum temperature.
         else
           {
-            const double T_max =
+            const number T_max =
               VectorTools::max_element(*temperature, scratch_data.get_mpi_comm());
             alpha = local_compute_temperature_dependent_surface_tension_coefficient(T_max);
           }

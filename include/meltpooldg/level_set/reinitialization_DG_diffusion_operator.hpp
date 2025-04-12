@@ -63,12 +63,6 @@ namespace MeltPoolDG::LevelSet
                    const VectorType                                      &src,
                    const std::function<void(unsigned int, unsigned int)> &func = {}) const;
 
-    void
-    local_apply_inverse_mass_matrix(const dealii::MatrixFree<dim, number>                    &data,
-                                    dealii::LinearAlgebra::distributed::Vector<number>       &dst,
-                                    const dealii::LinearAlgebra::distributed::Vector<number> &src,
-                                    const std::pair<unsigned int, unsigned int> &cell_range) const;
-
     /**
      * Applies the dirichlet contribution of the DG diffusion operator to the src vector and stores
      * the result in the dst vector. The dst vector is NOT zeroed out before the operation.

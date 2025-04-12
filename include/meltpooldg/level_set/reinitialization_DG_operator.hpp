@@ -75,12 +75,6 @@ namespace MeltPoolDG::LevelSet
     void
     reinit();
 
-    void
-    local_apply_inverse_mass_matrix(const dealii::MatrixFree<dim, number>                    &data,
-                                    dealii::LinearAlgebra::distributed::Vector<number>       &dst,
-                                    const dealii::LinearAlgebra::distributed::Vector<number> &src,
-                                    const std::pair<unsigned int, unsigned int> &cell_range) const;
-
     /**
      * Applies the diffusion term with an implicit time integration in order to keep the time step
      * size of the integration scheme not limited by the diffusion term.
