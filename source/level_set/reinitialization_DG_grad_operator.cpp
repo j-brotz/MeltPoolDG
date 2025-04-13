@@ -45,7 +45,7 @@ namespace MeltPoolDG::LevelSet
                                    LinearAlgebra::distributed::Vector<number>       &dst,
                                    const LinearAlgebra::distributed::Vector<number> &src,
                                    const std::pair<unsigned int, unsigned int>       cell_range) {
-        Utilities::MatrixFree::local_apply_inverse_mass_matrix<dim, number, 1>(
+        Utilities::MatrixFree::local_apply_inverse_mass_matrix<dim, 1, number>(
           matrix_free, dst, src, cell_range, dof_idx, quad_idx);
       };
 
