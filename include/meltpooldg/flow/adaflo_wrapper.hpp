@@ -35,7 +35,7 @@
 namespace MeltPoolDG::Flow
 {
   template <int dim, typename number>
-  class AdafloWrapper : public FlowBase<dim>
+  class AdafloWrapper : public FlowBase<dim, number>
   {
   private:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -50,7 +50,7 @@ namespace MeltPoolDG::Flow
                   const bool                                 do_evaporative_mass_flux);
 
     void
-    set_initial_condition(const Function<dim> &initial_field_function_velocity) override;
+    set_initial_condition(const dealii::Function<dim> &initial_field_function_velocity) override;
 
     void
     reinit_1();
@@ -96,19 +96,19 @@ namespace MeltPoolDG::Flow
                                                    const VectorType       *temperature  = nullptr,
                                                    unsigned int            temp_dof_idx = -1);
 
-    const LinearAlgebra::distributed::Vector<number> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_velocity() const override;
 
-    LinearAlgebra::distributed::Vector<number> &
+    dealii::LinearAlgebra::distributed::Vector<number> &
     get_velocity() override;
 
-    const LinearAlgebra::distributed::Vector<number> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_velocity_old() const;
 
-    const LinearAlgebra::distributed::Vector<number> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_velocity_old_old() const;
 
-    const DoFHandler<dim> &
+    const dealii::DoFHandler<dim> &
     get_dof_handler_velocity() const override;
 
     const unsigned int &
@@ -123,78 +123,80 @@ namespace MeltPoolDG::Flow
     const unsigned int &
     get_quad_idx_pressure() const override;
 
-    const AffineConstraints<number> &
+    const dealii::AffineConstraints<number> &
     get_constraints_velocity() const override;
 
-    AffineConstraints<number> &
+    dealii::AffineConstraints<number> &
     get_constraints_velocity() override;
 
-    const AffineConstraints<number> &
+    const dealii::AffineConstraints<number> &
     get_hanging_node_constraints_velocity() const override;
 
-    const LinearAlgebra::distributed::Vector<number> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_pressure() const override;
 
-    LinearAlgebra::distributed::Vector<number> &
+    dealii::LinearAlgebra::distributed::Vector<number> &
     get_pressure() override;
 
-    const LinearAlgebra::distributed::Vector<number> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_pressure_old() const;
 
-    const LinearAlgebra::distributed::Vector<number> &
+    const dealii::LinearAlgebra::distributed::Vector<number> &
     get_pressure_old_old() const;
 
-    const DoFHandler<dim> &
+    const dealii::DoFHandler<dim> &
     get_dof_handler_pressure() const override;
 
     const unsigned int &
     get_dof_handler_idx_pressure() const override;
 
-    const AffineConstraints<number> &
+    const dealii::AffineConstraints<number> &
     get_constraints_pressure() const override;
 
-    AffineConstraints<number> &
+    dealii::AffineConstraints<number> &
     get_constraints_pressure() override;
 
-    const AffineConstraints<number> &
+    const dealii::AffineConstraints<number> &
     get_hanging_node_constraints_pressure() const override;
 
     void
-    set_force_rhs(const LinearAlgebra::distributed::Vector<number> &vec) override;
+    set_force_rhs(const dealii::LinearAlgebra::distributed::Vector<number> &vec) override;
 
     void
-    set_mass_balance_rhs(const LinearAlgebra::distributed::Vector<number> &vec) override;
+    set_mass_balance_rhs(const dealii::LinearAlgebra::distributed::Vector<number> &vec) override;
 
     void
-    set_user_defined_material(std::function<Tensor<2, dim, VectorizedArray<number>>(
-                                const Tensor<2, dim, VectorizedArray<number>> &,
+    set_user_defined_material(std::function<dealii::Tensor<2, dim, dealii::VectorizedArray<number>>(
+                                const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> &,
                                 const unsigned int,
                                 const unsigned int,
                                 const bool)> my_user_defined_material) override;
 
-    VectorizedArray<number> &
+    dealii::VectorizedArray<number> &
     get_density(const unsigned int cell, const unsigned int q) override;
 
-    const VectorizedArray<number> &
+    const dealii::VectorizedArray<number> &
     get_density(const unsigned int cell, const unsigned int q) const override;
 
-    VectorizedArray<number> &
+    dealii::VectorizedArray<number> &
     get_viscosity(const unsigned int cell, const unsigned int q) override;
 
-    const VectorizedArray<number> &
+    const dealii::VectorizedArray<number> &
     get_viscosity(const unsigned int cell, const unsigned int q) const override;
 
-    VectorizedArray<number> &
+    dealii::VectorizedArray<number> &
     get_damping(const unsigned int cell, const unsigned int q) override;
 
-    const VectorizedArray<number> &
+    const dealii::VectorizedArray<number> &
     get_damping(const unsigned int cell, const unsigned int q) const override;
 
     void
-    attach_vectors_u(std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors) override;
+    attach_vectors_u(
+      std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) override;
 
     void
-    attach_vectors_p(std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors) override;
+    attach_vectors_p(
+      std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) override;
 
     void
     distribute_constraints() override;
@@ -206,11 +208,11 @@ namespace MeltPoolDG::Flow
     attach_output_vectors_failed_step(GenericDataOut<dim, number> &data_out) const override;
 
     void
-    set_face_average_density(const typename Triangulation<dim>::cell_iterator &cell,
-                             const unsigned int                                face,
-                             const number                                      density);
+    set_face_average_density(const typename dealii::Triangulation<dim>::cell_iterator &cell,
+                             const unsigned int                                        face,
+                             const number                                              density);
 
-    const Quadrature<dim> &
+    const dealii::Quadrature<dim> &
     get_face_center_quad();
 
   private:
@@ -225,13 +227,13 @@ namespace MeltPoolDG::Flow
     /**
      * Timer
      */
-    TimerOutput timer;
+    dealii::TimerOutput timer;
 
     /**
      * Reference to the actual Navier-Stokes solver from adaflo
      */
     std::unique_ptr<adaflo::NavierStokes<dim>> navier_stokes;
-    std::unique_ptr<Quadrature<dim>>           face_center_quad;
+    std::unique_ptr<dealii::Quadrature<dim>>   face_center_quad;
 
     const adaflo::FlowParameters &adaflo_params;
 
@@ -247,8 +249,8 @@ namespace MeltPoolDG::Flow
     unsigned int quad_index_u;
     unsigned int quad_index_p;
 
-    DoFHandler<dim>           dof_handler_parameters;
-    AffineConstraints<number> constraints_parameters;
+    dealii::DoFHandler<dim>           dof_handler_parameters;
+    dealii::AffineConstraints<number> constraints_parameters;
 
     // temporal vectors for output
     mutable VectorType force_rhs_velocity_projected;

@@ -12,7 +12,7 @@
 namespace MeltPoolDG::Multiphase
 {
   template <unsigned int dim,
-            typename number        = double,
+            typename number,
             bool is_viscous_gas    = true,
             bool is_viscous_liquid = true>
   class CompressibleMultiphaseOperator

@@ -8,7 +8,7 @@ BETTER_ENUM(DarcyDampingFormulation, char, implicit_formulation, explicit_formul
 
 namespace MeltPoolDG::Flow
 {
-  template <typename number = double>
+  template <typename number>
   struct DarcyDampingData
   {
     number                  mushy_zone_morphology   = 0.0;

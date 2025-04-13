@@ -128,7 +128,7 @@ namespace MeltPoolDG::Flow
                                          flow_scratch_data.quad_idx);
     flow_scratch_data.solution_history.get_current_solution().update_ghost_values();
 
-    double min_density = std::numeric_limits<double>::max();
+    number min_density = std::numeric_limits<number>::max();
 
     for (unsigned int cell = 0;
          cell < flow_scratch_data.scratch_data.get_matrix_free().n_cell_batches();
@@ -229,11 +229,11 @@ namespace MeltPoolDG::Flow
   number
   DGCompressibleFlowOperation<dim, number>::compute_time_step_size(const bool do_print) const
   {
-    const double min_density = compute_minimum_density();
+    const number min_density = compute_minimum_density();
 
     AssertThrow(min_density > 0, ExcMessage("Minimum density must not be zero."));
 
-    const double viscous_time_step_limit =
+    const number viscous_time_step_limit =
       (flow_scratch_data.flow_data.material.gas.dynamic_viscosity > 0) ?
         flow_scratch_data.flow_data.viscous_courant_number /
           std::pow(flow_scratch_data.scratch_data.get_degree(flow_scratch_data.dof_idx), 3) *
@@ -241,8 +241,8 @@ namespace MeltPoolDG::Flow
           flow_scratch_data.flow_data.material.gas.dynamic_viscosity :
         std::numeric_limits<number>::max();
 
-    const double convective_time_step_limit = compute_convective_time_step_limit();
-    const double time_step = std::min(convective_time_step_limit, viscous_time_step_limit);
+    const number convective_time_step_limit = compute_convective_time_step_limit();
+    const number time_step = std::min(convective_time_step_limit, viscous_time_step_limit);
 
     if (do_print)
       {
@@ -261,7 +261,7 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   void
   DGCompressibleFlowOperation<dim, number>::attach_output_vectors(
-    GenericDataOut<dim, double> &data_out) const
+    GenericDataOut<dim, number> &data_out) const
   {
     std::vector<std::string> names;
     names.emplace_back("density");

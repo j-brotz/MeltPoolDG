@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, TUM, November 2021
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 #include <meltpooldg/utilities/material.hpp>
 

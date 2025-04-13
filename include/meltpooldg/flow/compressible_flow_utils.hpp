@@ -91,7 +91,7 @@ namespace MeltPoolDG::Flow
     const dealii::MatrixFree<dim, Number>                  &matrix_free,
     const std::string                                      &domain_representation_type,
     const unsigned int                                      dof_index      = 0,
-    const double                                            scaling_factor = 1.0);
+    const Number                                            scaling_factor = 1.0);
 
   /**
    * A struct providing the relevant data required by all compressible flow solvers.
@@ -216,10 +216,8 @@ namespace MeltPoolDG::Flow
     const dealii::MatrixFree<dim, Number>                  &matrix_free,
     const std::string                                      &domain_representation_type,
     const unsigned int                                      dof_index,
-    const double                                            scaling_factor)
+    const Number                                            scaling_factor)
   {
-    using namespace dealii;
-
     const unsigned int n_cells = matrix_free.n_cell_batches() + matrix_free.n_ghost_cell_batches();
     array_penalty_parameter.resize(n_cells);
 
@@ -230,19 +228,22 @@ namespace MeltPoolDG::Flow
     // use penalty factor for hypercube elements according to K. Hillewaert, Development of the
     // discontinuous Galerkin method for high-resolution, large scale CFD and acoustics in
     // industrial geometries, PhD thesis, Univ. de Louvain, 2013.
-    const double fac = scaling_factor * (degree + 1.0) * (degree + 1.0);
+    const Number fac = scaling_factor * (degree + 1.0) * (degree + 1.0);
 
     auto const reference_cells =
       matrix_free.get_dof_handler(dof_index).get_triangulation().get_reference_cells();
     AssertThrow(reference_cells.size() == 1, dealii::ExcMessage("No mixed meshes allowed."));
 
     auto const quadrature = reference_cells[0].template get_gauss_type_quadrature<dim>(degree + 1);
-    FEValues<dim> fe_values(mapping, fe, quadrature, update_JxW_values);
+    dealii::FEValues<dim> fe_values(mapping, fe, quadrature, dealii::update_JxW_values);
 
     auto const face_quadrature =
       reference_cells[0].face_reference_cell(0).template get_gauss_type_quadrature<dim - 1>(degree +
                                                                                             1);
-    FEFaceValues<dim> fe_face_values(mapping, fe, face_quadrature, update_JxW_values);
+    dealii::FEFaceValues<dim> fe_face_values(mapping,
+                                             fe,
+                                             face_quadrature,
+                                             dealii::update_JxW_values);
 
     if (domain_representation_type == "fitted")
       {
@@ -250,7 +251,7 @@ namespace MeltPoolDG::Flow
           {
             for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(i); ++v)
               {
-                typename DoFHandler<dim>::cell_iterator cell =
+                typename dealii::DoFHandler<dim>::cell_iterator cell =
                   matrix_free.get_cell_iterator(i, v, dof_index);
                 fe_values.reinit(cell);
 
@@ -284,7 +285,7 @@ namespace MeltPoolDG::Flow
           {
             for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(i); ++v)
               {
-                typename DoFHandler<dim>::cell_iterator cell =
+                typename dealii::DoFHandler<dim>::cell_iterator cell =
                   matrix_free.get_cell_iterator(i, v, dof_index);
 
                 // simplified computation for hypercube elements

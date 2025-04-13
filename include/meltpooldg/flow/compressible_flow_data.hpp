@@ -27,7 +27,7 @@ namespace MeltPoolDG::Flow
 
   BETTER_ENUM(JacobianType, char, exact, finite_difference);
 
-  template <typename number = double>
+  template <typename number>
   struct CompressibleFlowData
   {
     // finite element data

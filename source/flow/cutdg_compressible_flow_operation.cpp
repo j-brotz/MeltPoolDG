@@ -118,11 +118,11 @@ namespace MeltPoolDG::Flow
   number
   CutDGCompressibleFlowOperation<dim, number>::compute_time_step_size(const bool do_print) const
   {
-    const double min_density = compute_minimum_density();
+    const number min_density = compute_minimum_density();
 
     AssertThrow(min_density > 0, ExcMessage("Minimum density must not be zero."));
 
-    const double viscous_time_step_limit =
+    const number viscous_time_step_limit =
       (flow_scratch_data.flow_data.material.gas.dynamic_viscosity > 0) ?
         flow_scratch_data.flow_data.viscous_courant_number /
           std::pow(flow_scratch_data.scratch_data.get_degree(flow_scratch_data.dof_idx), 3) *
@@ -130,8 +130,8 @@ namespace MeltPoolDG::Flow
           flow_scratch_data.flow_data.material.gas.dynamic_viscosity :
         std::numeric_limits<number>::max();
 
-    const double convective_time_step_limit = compute_convective_time_step_limit();
-    const double time_step = std::min(convective_time_step_limit, viscous_time_step_limit);
+    const number convective_time_step_limit = compute_convective_time_step_limit();
+    const number time_step = std::min(convective_time_step_limit, viscous_time_step_limit);
 
     if (do_print)
       {

@@ -17,7 +17,7 @@
 
 namespace MeltPoolDG::Flow
 {
-  template <unsigned int dim, typename number = double, bool is_viscous = true>
+  template <unsigned int dim, typename number, bool is_viscous = true>
   class DGCompressibleFlowOperatorExplicit final : public DGCompressibleFlowOperatorBase<number>
   {
     using VectorType             = dealii::LinearAlgebra::distributed::Vector<number>;

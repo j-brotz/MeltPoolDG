@@ -1,4 +1,5 @@
 #include <meltpooldg/level_set/reinitialization_DG_operator.hpp>
+#include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -78,10 +79,23 @@ namespace MeltPoolDG::LevelSet
       num_Hamiltonian,
       true);
 
-    scratch_data.get_matrix_free().cell_loop(
-      &ReinitilizationDGOperator<dim, number>::local_apply_inverse_mass_matrix, this, dst, dst);
+    using local_applier_type =
+      std::function<void(const dealii::MatrixFree<dim, number> &,
+                         dealii::LinearAlgebra::distributed::Vector<number>       &dst,
+                         const dealii::LinearAlgebra::distributed::Vector<number> &src,
+                         const std::pair<unsigned int, unsigned int> &)>;
 
+    local_applier_type inverse =
+      [dof_idx  = reinit_dof_idx,
+       quad_idx = reinit_quad_idx](const MatrixFree<dim, number>                    &matrix_free,
+                                   LinearAlgebra::distributed::Vector<number>       &dst,
+                                   const LinearAlgebra::distributed::Vector<number> &src,
+                                   const std::pair<unsigned int, unsigned int>       cell_range) {
+        Utilities::MatrixFree::local_apply_inverse_mass_matrix<dim, 1, number>(
+          matrix_free, dst, src, cell_range, dof_idx, quad_idx);
+      };
 
+    scratch_data.get_matrix_free().cell_loop(inverse, dst, dst);
 
     if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type ==
         TimeIntegratorSchemes::not_initialized)
@@ -101,40 +115,12 @@ namespace MeltPoolDG::LevelSet
           src,
           true);
 
-        scratch_data.get_matrix_free().cell_loop(
-          &ReinitilizationDGOperator<dim, number>::local_apply_inverse_mass_matrix,
-          this,
-          num_Hamiltonian,
-          num_Hamiltonian);
+        scratch_data.get_matrix_free().cell_loop(inverse, num_Hamiltonian, num_Hamiltonian);
 
         dst.add(1.0, num_Hamiltonian);
       }
     func(0, dst.locally_owned_size());
   }
-
-  template <int dim, typename number>
-  void
-  ReinitilizationDGOperator<dim, number>::local_apply_inverse_mass_matrix(
-    const MatrixFree<dim, number>                    &data,
-    LinearAlgebra::distributed::Vector<number>       &dst,
-    const LinearAlgebra::distributed::Vector<number> &src,
-    const std::pair<unsigned int, unsigned int>      &cell_range) const
-  {
-    FECellIntegrator<dim, 1, number> eval(data, reinit_dof_idx, reinit_quad_idx);
-
-    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, number> inverse(eval);
-
-    for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
-      {
-        eval.reinit(cell);
-        eval.read_dof_values(src);
-
-        inverse.apply(eval.begin_dof_values(), eval.begin_dof_values());
-
-        eval.set_dof_values(dst);
-      }
-  }
-
 
   template <int dim, typename number>
   void

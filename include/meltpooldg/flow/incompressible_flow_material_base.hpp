@@ -1,14 +1,7 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Magdalena Schreter, Peter Munch, TUM, May 2022
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 namespace MeltPoolDG::Flow
 {
-  using namespace dealii;
-
   /**
    * Base class for the shear stress computation of an incompressible fluid material
    *
@@ -26,7 +19,7 @@ namespace MeltPoolDG::Flow
    *   τ(∇u)
    *
    */
-  template <int dim, typename number = double>
+  template <int dim, typename number>
   class IncompressibleMaterialBase
   {
   public:

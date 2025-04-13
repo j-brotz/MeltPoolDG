@@ -32,7 +32,7 @@
 
 namespace MeltPoolDG::Flow
 {
-  template <int dim, typename number = double>
+  template <int dim, typename number>
   class DGCompressibleFlowOperation
   {
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -122,7 +122,7 @@ namespace MeltPoolDG::Flow
      * @param data_out Object to which the solution vector is attached.
      */
     void
-    attach_output_vectors(GenericDataOut<dim, double> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
 
     /**
      * Getter functions.

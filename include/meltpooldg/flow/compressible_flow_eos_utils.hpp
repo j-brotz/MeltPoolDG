@@ -17,7 +17,7 @@ namespace MeltPoolDG::Flow::EOS
    *
    * @return Pressure resulting from the values of the conserved variables.
    */
-  template <int dim, typename number = double, bool is_gas_phase = true>
+  template <int dim, typename number, bool is_gas_phase = true>
   inline DEAL_II_ALWAYS_INLINE //
     dealii::VectorizedArray<number>
     calculate_thermodynamic_pressure(
@@ -67,7 +67,7 @@ namespace MeltPoolDG::Flow::EOS
    *
    * @return Current gradient of the temperature field.
    */
-  template <int dim, typename number = double, bool is_gas_phase = true>
+  template <int dim, typename number, bool is_gas_phase = true>
   inline DEAL_II_ALWAYS_INLINE //
     dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
     calculate_grad_T(
@@ -116,7 +116,7 @@ namespace MeltPoolDG::Flow::EOS
    *
    * @return Speed of sound resulting from the values of the conserved variables.
    */
-  template <int dim, typename number = double, bool is_gas_phase = true>
+  template <int dim, typename number, bool is_gas_phase = true>
   inline DEAL_II_ALWAYS_INLINE //
     dealii::VectorizedArray<number>
     calculate_speed_of_sound(
@@ -156,7 +156,7 @@ namespace MeltPoolDG::Flow::EOS
    *
    * @return Temperature resulting from the values of the conserved variables.
    */
-  template <int dim, typename number = double, bool is_gas_phase = true>
+  template <int dim, typename number, bool is_gas_phase = true>
   inline DEAL_II_ALWAYS_INLINE //
     dealii::VectorizedArray<number>
     calculate_temperature(
@@ -201,7 +201,7 @@ namespace MeltPoolDG::Flow::EOS
    *
    * @return Stress tensor resulting from the values and gradients of the conserved variables.
    */
-  template <int dim, typename number = double, bool is_gas_phase = true>
+  template <int dim, typename number, bool is_gas_phase = true>
   inline DEAL_II_ALWAYS_INLINE //
     dealii::Tensor<2, dim, dealii::VectorizedArray<number>>
     calculate_stress_tensor(

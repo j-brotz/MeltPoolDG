@@ -42,7 +42,7 @@
 
 namespace MeltPoolDG::Flow
 {
-  template <int dim, typename number = double>
+  template <int dim, typename number>
   class CutDGCompressibleFlowOperation
   {
     using VectorType            = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -192,7 +192,7 @@ namespace MeltPoolDG::Flow
   private:
     CompressibleFlowScratchData<dim, number> flow_scratch_data;
 
-    const TimeIterator<double> &time_iterator;
+    const TimeIterator<number> &time_iterator;
 
     const unsigned int level_set_dof_idx;
     const VectorType  &level_set;
@@ -201,7 +201,7 @@ namespace MeltPoolDG::Flow
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier;
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier_old;
 
-    CutUtil::SolutionTransferOperator<dim, double>                     cut_solution_transfer;
+    CutUtil::SolutionTransferOperator<dim, number>                     cut_solution_transfer;
     std::function<void(const dealii::DoFHandler<dim> &)>               reinit_matrix_free;
     std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> reinit_vector;
 

@@ -46,10 +46,10 @@ namespace MeltPoolDG::Flow
   class SurfaceTensionOperation
   {
   private:
-    using VectorType      = dealii::LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<double>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
-    const SurfaceTensionData<double> &data;
+    const SurfaceTensionData<number> &data;
 
     const ScratchData<dim, dim, number> &scratch_data;
 
@@ -70,11 +70,11 @@ namespace MeltPoolDG::Flow
     unsigned int           solid_dof_idx;
 
     const bool                 do_level_set_pressure_gradient_interpolation;
-    dealii::FullMatrix<double> ls_to_pressure_grad_interpolation_matrix;
+    dealii::FullMatrix<number> ls_to_pressure_grad_interpolation_matrix;
 
-    std::unique_ptr<const LevelSet::DeltaApproximationBase<double>> delta_phase_weighted;
+    std::unique_ptr<const LevelSet::DeltaApproximationBase<number>> delta_phase_weighted;
 
-    const double alpha_residual;
+    const number alpha_residual;
 
   public:
     SurfaceTensionOperation(const SurfaceTensionData<number>    &data_in,
@@ -130,8 +130,8 @@ namespace MeltPoolDG::Flow
      * @note As a conservative assumption, we choose α as max (α (T)) in case of
      * temperature-dependent surface tension.
      */
-    double
-    compute_time_step_limit(const double density_1, const double density_2);
+    number
+    compute_time_step_limit(const number density_1, const number density_2);
 
   private:
     /**

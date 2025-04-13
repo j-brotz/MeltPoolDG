@@ -11,7 +11,7 @@ namespace MeltPoolDG::Flow
   // Currently supported equations of state to model compressible or (nearly) incompressible fluids
   BETTER_ENUM(EquationOfState, char, ideal_gas, stiffened_gas, noble_abel_stiffened_gas)
 
-  template <typename number = double>
+  template <typename number>
   struct EOSData
   {
     // type of equation of state
@@ -70,7 +70,7 @@ namespace MeltPoolDG::Flow
     };
   };
 
-  template <typename number = double>
+  template <typename number>
   struct CompressibleFluidMaterialPhaseData
   {
     // specific isobaric heat (SI: J/(kg K))

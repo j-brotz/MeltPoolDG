@@ -13,7 +13,7 @@ namespace MeltPoolDG::Multiphase
 {
   BETTER_ENUM(InterfaceNumericalMethod, char, HLLP0_and_Nitsche, penalty)
 
-  template <typename number = double>
+  template <typename number>
   struct CompressibleMultiphaseData
   {
     // evaporation mass flux

@@ -14,8 +14,6 @@
 
 namespace MeltPoolDG::Flow
 {
-  using namespace dealii;
-
   /**
    * This class computes the Darcy damping force (or Darcy source term).
    *
@@ -43,16 +41,16 @@ namespace MeltPoolDG::Flow
   class DarcyDampingOperation
   {
   private:
-    using VectorType = LinearAlgebra::distributed::Vector<double>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
-    const double                                           mushy_zone_morphology;
-    const double                                           avoid_div_zero_constant;
-    const ScratchData<dim, dim, double>                   &scratch_data;
-    const unsigned int                                     flow_vel_hanging_nodes_dof_idx;
-    const unsigned int                                     flow_quad_idx;
-    const unsigned int                                     solid_dof_idx;
-    mutable VectorType                                     damping;
-    mutable dealii::AlignedVector<VectorizedArray<double>> damping_at_q;
+    const number                                                   mushy_zone_morphology;
+    const number                                                   avoid_div_zero_constant;
+    const ScratchData<dim, dim, number>                           &scratch_data;
+    const unsigned int                                             flow_vel_hanging_nodes_dof_idx;
+    const unsigned int                                             flow_quad_idx;
+    const unsigned int                                             solid_dof_idx;
+    mutable VectorType                                             damping;
+    mutable dealii::AlignedVector<dealii::VectorizedArray<number>> damping_at_q;
 
   public:
     DarcyDampingOperation(const DarcyDampingData<number>      &data_in,
@@ -83,7 +81,7 @@ namespace MeltPoolDG::Flow
      * @param temp_dof_idx DoF index of the temperature field.
      */
     void
-    set_darcy_damping_at_q(const Material<double> &material,
+    set_darcy_damping_at_q(const Material<number> &material,
                            const VectorType       &ls_as_heaviside,
                            const VectorType       &temperature,
                            const unsigned int      ls_hanging_nodes_dof_idx,
@@ -107,29 +105,29 @@ namespace MeltPoolDG::Flow
     /**
      * Compute the Darcy damping coefficient based on a given @param solid_fraction.
      */
-    VectorizedArray<double>
-    compute_darcy_damping_coefficient(const VectorizedArray<double> &solid_fraction) const;
+    dealii::VectorizedArray<number>
+    compute_darcy_damping_coefficient(const dealii::VectorizedArray<number> &solid_fraction) const;
 
     /**
      * Store the damping coefficients in a global DoF vector and attach it to the output data.
      */
     void
-    attach_output_vectors(GenericDataOut<dim, double> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
 
     /**
      * Getter functions for the damping coefficients cellwise at each quadrature point.
      */
-    VectorizedArray<double> &
+    dealii::VectorizedArray<number> &
     get_damping(const unsigned int cell, const unsigned int q);
 
-    const VectorizedArray<double> &
+    const dealii::VectorizedArray<number> &
     get_damping(const unsigned int cell, const unsigned int q) const;
 
     /**
      * Getter function for the vector of damping coefficients, holding the values at each cell and
      * at each quadrature point.
      */
-    dealii::AlignedVector<VectorizedArray<double>> &
+    dealii::AlignedVector<dealii::VectorizedArray<number>> &
     get_damping_at_q();
   };
 } // namespace MeltPoolDG::Flow

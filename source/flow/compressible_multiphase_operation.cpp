@@ -87,7 +87,7 @@ namespace MeltPoolDG::Multiphase
 
     // liquid phase
     mapping_info_cells.push_back(
-      std::make_shared<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>>>(
+      std::make_shared<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>(
         this->flow_scratch_data.scratch_data.get_mapping(),
         dealii::update_values | dealii::update_gradients | dealii::update_JxW_values |
           dealii::update_normal_vectors));
@@ -362,8 +362,8 @@ namespace MeltPoolDG::Multiphase
     flow_scratch_data.solution_history.get_current_solution().update_ghost_values();
 
     constexpr unsigned int n_lanes            = VectorizedArray<number>::size();
-    double                 min_density_liquid = std::numeric_limits<double>::max();
-    double                 min_density_gas    = std::numeric_limits<double>::max();
+    number                 min_density_liquid = std::numeric_limits<number>::max();
+    number                 min_density_gas    = std::numeric_limits<number>::max();
     const auto            &matrix_free        = flow_scratch_data.scratch_data.get_matrix_free();
 
     // lambda function for computing min density using FECellIntegrator
