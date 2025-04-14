@@ -1,10 +1,20 @@
 #pragma once
 
-#include <deal.II/distributed/solution_transfer.h>
+#include <deal.II/base/exceptions.h>
 
-#include <deal.II/grid/grid_refinement.h>
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/grid/tria.h>
 
 #include <deal.II/numerics/solution_transfer.h>
+
+#include <meltpooldg/utilities/amr_data.hpp>
+
+#include <functional>
+#include <memory>
+#include <utility>
+#include <vector>
+
 
 namespace MeltPoolDG
 {
@@ -12,10 +22,10 @@ namespace MeltPoolDG
   inline bool
   now(const AdaptiveMeshingData<number> &amr, const int n_time_step)
   {
-    return ((n_time_step == 0) || !(n_time_step % amr.every_n_step));
+    return not(n_time_step % amr.every_n_step) or n_time_step == 0;
   }
 
-  template <int dim, typename VectorType, typename number>
+  template <int dim, typename VectorType, typename number = VectorType::value_type>
   void
   refine_grid(const std::function<bool(dealii::Triangulation<dim> &)> &mark_cells_for_refinement,
               const std::function<void(
@@ -28,98 +38,84 @@ namespace MeltPoolDG
               dealii::Triangulation<dim>        &tria,
               const int                          n_time_step)
   {
-    using namespace dealii;
-
-    if (!now(amr, n_time_step))
+    if (not now(amr, n_time_step))
       return;
 
     if (mark_cells_for_refinement(tria) == false)
       return;
 
     std::vector<
-      std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
+      std::pair<const dealii::DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
       data;
 
     attach_vectors(data);
 
-    const unsigned int n = data.size();
+    const unsigned int n_dof_handlers = data.size();
 
-    Assert(n > 0, ExcNotImplemented());
+    Assert(n_dof_handlers > 0, dealii::ExcNotImplemented());
 
-    /*
-     *  Limit the maximum and minimum refinement levels of cells of the grid.
-     */
+    // Limit the maximum and minimum refinement levels of cells of the grid.
     if (tria.n_levels() > amr.max_grid_refinement_level)
       for (auto &cell : tria.active_cell_iterators_on_level(amr.max_grid_refinement_level))
         cell->clear_refine_flag();
 
     for (auto &cell : tria.active_cell_iterators())
       {
-        if (cell->is_locally_owned())
-          {
-            if (cell->level() <= amr.min_grid_refinement_level)
-              cell->clear_coarsen_flag();
-            /*
-             *  do not coarsen/refine cells along boundary
-             */
-            if (amr.do_not_modify_boundary_cells)
-              {
-                for (auto &face : cell->face_iterators())
-                  if (face->at_boundary())
-                    {
-                      if (cell->refine_flag_set())
-                        cell->clear_refine_flag();
-                      else
-                        cell->clear_coarsen_flag();
-                    }
-              }
-          }
+        if (not cell->is_locally_owned())
+          continue;
+
+        if (cell->level() <= amr.min_grid_refinement_level)
+          cell->clear_coarsen_flag();
+
+        // do not coarsen/refine cells along boundary
+        if (amr.do_not_modify_boundary_cells)
+          for (auto &face : cell->face_iterators())
+            {
+              if (not face->at_boundary())
+                continue;
+              if (cell->refine_flag_set())
+                cell->clear_refine_flag();
+              else
+                cell->clear_coarsen_flag();
+            }
       }
-    /*
-     *  Initialize the triangulation change from the old grid to the new grid
-     */
+
+    // Initialize the triangulation change from the old grid to the new grid
     tria.prepare_coarsening_and_refinement();
-    /*
-     *  Initialize the solution transfer from the old grid to the new grid
-     */
-    std::vector<std::shared_ptr<parallel::distributed::SolutionTransfer<dim, VectorType>>>
-      solution_transfer(n);
 
-    std::vector<std::vector<VectorType *>>       new_grid_solutions(n);
-    std::vector<std::vector<const VectorType *>> old_grid_solutions(n);
-    std::vector<std::vector<bool>>               update_ghost_elements(n);
+    // Initialize the solution transfer from the old grid to the new grid
+    std::vector<std::shared_ptr<dealii::SolutionTransfer<dim, VectorType>>> solution_transfer(
+      n_dof_handlers);
 
-    for (unsigned int j = 0; j < n; ++j)
+    std::vector<std::vector<VectorType *>>       new_grid_solutions(n_dof_handlers);
+    std::vector<std::vector<const VectorType *>> old_grid_solutions(n_dof_handlers);
+    std::vector<std::vector<bool>>               update_ghost_elements(n_dof_handlers);
+
+    for (unsigned int j = 0; j < n_dof_handlers; ++j)
       {
         data[j].second(new_grid_solutions[j]);
 
         for (unsigned int i = 0; i < new_grid_solutions[j].size(); ++i)
           update_ghost_elements[j].push_back(new_grid_solutions[j][i]->has_ghost_elements());
 
-
         for (const auto &i : new_grid_solutions[j])
           {
             i->update_ghost_values();
             old_grid_solutions[j].push_back(i);
           }
+
         solution_transfer[j] =
-          std::make_shared<parallel::distributed::SolutionTransfer<dim, VectorType>>(
-            *data[j].first);
+          std::make_shared<dealii::SolutionTransfer<dim, VectorType>>(*data[j].first);
         solution_transfer[j]->prepare_for_coarsening_and_refinement(old_grid_solutions[j]);
       }
-    /*
-     *  Execute the grid refinement
-     */
+
     tria.execute_coarsening_and_refinement();
-    /*
-     *  update dof-related scratch data to match the current triangulation
-     */
+
+    // update dof-related scratch data to match the current triangulation
     setup_dof_system();
-    /*
-     *  interpolate the given solution to the new discretization
-     *
-     */
-    for (unsigned int j = 0; j < n; ++j)
+
+    // interpolate the given solution to the new discretization
+    for (unsigned int j = 0; j < n_dof_handlers; ++j)
       {
         for (const auto &i : new_grid_solutions[j])
           i->zero_out_ghost_values();
@@ -129,6 +125,7 @@ namespace MeltPoolDG
           if (update_ghost_elements[j][i])
             new_grid_solutions[j][i]->update_ghost_values();
       }
+
     post();
   }
 
@@ -155,5 +152,4 @@ namespace MeltPoolDG
       const_cast<dealii::Triangulation<dim> &>(dof_handler.get_triangulation()),
       n_time_step);
   }
-
 } // namespace MeltPoolDG
