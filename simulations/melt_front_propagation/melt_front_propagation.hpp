@@ -178,7 +178,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           this->triangulation =
             std::make_shared<parallel::distributed::Triangulation<2>>(this->mpi_communicator);
 
-          if (this->parameters.base.problem_name == "heat_transfer" && !do_two_phase)
+          if (this->parameters.base.application_name == "heat_transfer" && !do_two_phase)
             {
               std::vector<unsigned> refinements(2, 1);
               refinements[0] = 3;
@@ -211,7 +211,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           this->triangulation =
             std::make_shared<parallel::distributed::Triangulation<3>>(this->mpi_communicator);
 
-          if (this->parameters.base.problem_name == "heat_transfer" && !do_two_phase)
+          if (this->parameters.base.application_name == "heat_transfer" && !do_two_phase)
             {
               std::vector<unsigned int> refinements(3, 1);
               refinements[0] = 3;
@@ -248,7 +248,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     void
     set_boundary_conditions() final
     {
-      if (this->parameters.base.problem_name == "heat_transfer")
+      if (this->parameters.base.application_name == "heat_transfer")
         {
           const types::boundary_id left_bc = 10;
           for (const auto &cell : this->triangulation->cell_iterators())
@@ -265,7 +265,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
             "dirichlet",
             "heat_transfer");
         }
-      else if (this->parameters.base.problem_name == "melt_pool")
+      else if (this->parameters.base.application_name == "melt_pool")
         {
           const types::boundary_id                  lower_bc = 1;
           const types::boundary_id                  upper_bc = 2;
@@ -333,11 +333,11 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     {
       this->attach_initial_condition(
         std::make_shared<dealii::Functions::ConstantFunction<dim>>(T_0), "heat_transfer");
-      if (this->parameters.base.problem_name == "heat_transfer" && do_two_phase)
+      if (this->parameters.base.application_name == "heat_transfer" && do_two_phase)
         this->attach_initial_condition(std::make_shared<InitialLevelSetHeaviside<dim>>(0.0,
                                                                                        z_max / 5),
                                        "prescribed_heaviside");
-      if (this->parameters.base.problem_name == "melt_pool")
+      if (this->parameters.base.application_name == "melt_pool")
         {
           const double eps =
             this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(

@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "advection_diffusion",
     "case name": "advection_diffusion",
     "dimension": "2",
     "global refinements": "5",

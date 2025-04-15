@@ -15,7 +15,7 @@
 namespace MeltPoolDG::LevelSet
 {
   template <int dim, typename number>
-  class AdvectionDiffusionProblem
+  class AdvectionDiffusionApplication
   {
   private:
     using CaseType        = AdvectionDiffusionCase<dim, number>;
@@ -23,7 +23,7 @@ namespace MeltPoolDG::LevelSet
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
   public:
-    AdvectionDiffusionProblem(std::unique_ptr<CaseType> simulation_case)
+    AdvectionDiffusionApplication(std::unique_ptr<CaseType> simulation_case)
       : simulation_case(std::move(simulation_case))
     {}
 

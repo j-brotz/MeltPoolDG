@@ -11,14 +11,14 @@
 namespace MeltPoolDG::Flow
 {
   template <int dim, typename number>
-  class CompressibleFlowProblem
+  class CompressibleFlowApplication
   {
   private:
     using CaseType   = CompressibleFlowCase<dim, number>;
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
   public:
-    explicit CompressibleFlowProblem(std::unique_ptr<CaseType> simulation_case)
+    explicit CompressibleFlowApplication(std::unique_ptr<CaseType> simulation_case)
       : simulation_case(std::move(simulation_case))
     {}
 

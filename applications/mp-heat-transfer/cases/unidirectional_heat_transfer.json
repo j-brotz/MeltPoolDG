@@ -10,7 +10,6 @@
     "dimension": "2",
     "do print parameters": "true",
     "global refinements": "5",
-    "problem name": "heat_transfer",
     "fe": {
       "degree": "1"
     }

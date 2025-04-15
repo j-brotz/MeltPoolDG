@@ -1,7 +1,6 @@
 {
   "base": {
     "case name": "moving_droplet",
-    "problem name": "melt_pool",
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "6",
@@ -34,7 +33,7 @@
     "max grid refinement level": "7",
     "n initial refinement cycles": "5"
   },
-  "problem specific": {
+  "application specific": {
     "amr": {
       "strategy": "adaflo",
       "do refine all interface cells": "true",

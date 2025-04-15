@@ -10,7 +10,7 @@ namespace MeltPoolDG
   struct BaseData
   {
     std::string       case_name           = "not_initialized";
-    std::string       problem_name        = "not_initialized";
+    std::string       application_name    = "not_initialized";
     unsigned int      dimension           = 2;
     std::string       number              = "double";
     unsigned int      global_refinements  = 1;
@@ -24,6 +24,6 @@ namespace MeltPoolDG
     add_parameters(dealii::ParameterHandler &prm);
 
     void
-    check_input_parameters(const unsigned int ls_n_subdivisions) const;
+    check_input_parameters() const;
   };
 } // namespace MeltPoolDG

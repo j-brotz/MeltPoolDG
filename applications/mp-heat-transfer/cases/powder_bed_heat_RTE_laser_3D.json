@@ -4,7 +4,6 @@
     "dimension": "3",
     "do print parameters": "false",
     "global refinements": "4",
-    "problem name": "heat_transfer",
     "verbosity level": "1",
     "fe": {
       "degree": "1"
@@ -57,7 +56,7 @@
       "substrate level": "0.0"
     }
   },
-  "problem specific": {
+  "application specific": {
     "amr strategy": "generic"
   },
   "adaptive meshing": {

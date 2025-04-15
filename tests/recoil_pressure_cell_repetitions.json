@@ -4,7 +4,6 @@
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "1",
-    "problem name": "melt_pool",
     "verbosity level": "1",
     "fe": {
       "degree": "1"
@@ -38,7 +37,7 @@
     "domain y max": "0.0002",
     "cell repetitions": "1,2"
   },
-  "problem specific": {
+  "application specific": {
     "do heat transfer": "false",
     "do advect level set": "false",
     "do solidification": "false"

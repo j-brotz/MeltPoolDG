@@ -233,7 +233,7 @@ namespace MeltPoolDG
     /**
      * @brief Perform specific postprocessing (can be overridden by derived classes).
      *
-     * @note This function needs to be called within the specific problem.
+     * @note This function needs to be called within the specific application.
      *
      * @param generic_data_out The postprocessing data.
      */
@@ -406,7 +406,7 @@ namespace MeltPoolDG
 
     // nested dictionary for storing field functions as
     // field_functions[<operation_name>][<type>] = <function>.
-    // The <operation_name> and <type> are specified in the respective problems.
+    // The <operation_name> and <type> are specified in the respective applications.
     std::map<std::string, std::map<std::string, std::shared_ptr<dealii::Function<dim>>>>
       field_functions;
 
@@ -446,12 +446,11 @@ namespace MeltPoolDG
     }
   };
 
-
   template <typename ParametersType,
             template <int, typename>
             class CaseType,
             template <int, typename>
-            class ProblemType>
+            class ApplicationType>
   void
   run_simulation(const std::string &parameter_file, const MPI_Comm mpi_communicator)
   {
@@ -505,8 +504,8 @@ namespace MeltPoolDG
                                                                                 parameter_file,
                                                                                 mpi_communicator);
                 sim->create();
-                auto problem = std::make_unique<ProblemType<1, double>>(std::move(sim));
-                problem->run();
+                auto application = std::make_unique<ApplicationType<1, double>>(std::move(sim));
+                application->run();
               }
             else if (dim == 2)
               {
@@ -515,8 +514,8 @@ namespace MeltPoolDG
                                                                                 parameter_file,
                                                                                 mpi_communicator);
                 sim->create();
-                auto problem = std::make_unique<ProblemType<2, double>>(std::move(sim));
-                problem->run();
+                auto application = std::make_unique<ApplicationType<2, double>>(std::move(sim));
+                application->run();
               }
             else if (dim == 3)
               {
@@ -525,8 +524,8 @@ namespace MeltPoolDG
                                                                                 parameter_file,
                                                                                 mpi_communicator);
                 sim->create();
-                auto problem = std::make_unique<ProblemType<3, double>>(std::move(sim));
-                problem->run();
+                auto application = std::make_unique<ApplicationType<3, double>>(std::move(sim));
+                application->run();
               }
             else
               {
@@ -561,7 +560,7 @@ namespace MeltPoolDG
             template <int, typename>
             class Case,
             template <int, typename>
-            class Problem>
+            class Application>
   void
   default_main(int argc, char *argv[], MPI_Comm mpi_comm)
   {
@@ -591,6 +590,6 @@ namespace MeltPoolDG
                 dealii::ExcMessage(
                   "The provided number of command line parameters is not supported."));
 
-    run_simulation<Parameters, Case, Problem>(input_file, mpi_comm);
+    run_simulation<Parameters, Case, Application>(input_file, mpi_comm);
   }
 } // namespace MeltPoolDG

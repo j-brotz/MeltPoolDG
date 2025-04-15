@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "melt_pool",
     "case name": "stefans_problem1_with_flow_and_heat",
     "dimension": "1",
     "global refinements": "1000",
@@ -64,7 +63,7 @@
       "residual tolerance": "1e-7"
     }
   },
-  "problem specific": {
+  "application specific": {
     "do heat transfer": "true"
   },
   "output": {

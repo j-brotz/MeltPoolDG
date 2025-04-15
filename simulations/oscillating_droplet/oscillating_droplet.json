@@ -1,7 +1,6 @@
 {
   "base": {
     "case name": "oscillating_droplet",
-    "problem name": "melt_pool",
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "8",
@@ -39,7 +38,7 @@
     "max grid refinement level": "8",
     "n initial refinement cycles": "5"
   },
-  "problem specific": {
+  "application specific": {
     "do heat transfer": "false",
     "do solidification": "false"
   },

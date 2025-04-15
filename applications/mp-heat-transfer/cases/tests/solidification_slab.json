@@ -3,7 +3,6 @@
     "case name": "solidification_slab",
     "dimension": "1",
     "global refinements": "7",
-    "problem name": "heat_transfer",
     "do print parameters": "false",
     "fe": {
       "degree": "1"
@@ -24,7 +23,7 @@
       "residual tolerance": "1e-8"
     }
   },
-  "problem specific": {
+  "application specific": {
     "do solidification": "true"
   },
   "material": {

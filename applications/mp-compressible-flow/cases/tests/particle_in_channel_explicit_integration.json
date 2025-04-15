@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "compressible_flow",
     "case name": "channel_particle_flow",
     "dimension": "2",
     "global refinements": "0",

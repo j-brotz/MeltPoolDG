@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "melt_pool",
     "case name": "recoil_pressure",
     "global refinements": "8",
     "dimension": "2",
@@ -77,7 +76,7 @@
     "max grid refinement level": "9",
     "n initial refinement cycles": "2"
   },
-  "problem specific": {
+  "application specific": {
     "do heat transfer": "true",
     "do solidification": "true"
   },

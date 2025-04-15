@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "melt_pool",
     "case name": "evaporating_shell",
     "global refinements": "4",
     "dimension": "2",
@@ -25,7 +24,7 @@
   "simulation specific": {
     "velocity": "1e-3"
   },
-  "problem specific": {
+  "application specific": {
     "do heat transfer": "false"
   },
   "output": {

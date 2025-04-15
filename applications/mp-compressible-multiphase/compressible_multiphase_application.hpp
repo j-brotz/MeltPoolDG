@@ -11,14 +11,14 @@
 namespace MeltPoolDG::Multiphase
 {
   template <int dim, typename number>
-  class CompressibleMultiphaseProblem
+  class CompressibleMultiphaseApplication
   {
   private:
     using CaseType   = CompressibleMultiphaseCase<dim, number>;
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
   public:
-    explicit CompressibleMultiphaseProblem(std::unique_ptr<CaseType> simulation_case)
+    explicit CompressibleMultiphaseApplication(std::unique_ptr<CaseType> simulation_case)
       : simulation_case(std::move(simulation_case))
     {}
 

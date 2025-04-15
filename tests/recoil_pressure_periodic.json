@@ -4,7 +4,6 @@
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "6",
-    "problem name": "melt_pool",
     "fe": {
       "degree": "1"
     }
@@ -51,7 +50,7 @@
     "domain y max": "0.0002",
     "periodic boundary": "true"
   },
-  "problem specific": {
+  "application specific": {
     "do heat transfer": "true",
     "do solidification": "false"
   },

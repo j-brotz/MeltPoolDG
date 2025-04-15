@@ -25,7 +25,7 @@
 namespace MeltPoolDG::RadiativeTransport
 {
   template <int dim, typename number>
-  class RadiativeTransportProblem
+  class RadiativeTransportApplication
   {
   private:
     using CaseType   = RadiativeTransportCase<dim, number>;
@@ -59,7 +59,7 @@ namespace MeltPoolDG::RadiativeTransport
     dealii::Tensor<1, dim, number> laser_direction;
 
   public:
-    RadiativeTransportProblem(std::unique_ptr<CaseType> simulation_case)
+    RadiativeTransportApplication(std::unique_ptr<CaseType> simulation_case)
       : simulation_case(std::move(simulation_case))
     {}
 

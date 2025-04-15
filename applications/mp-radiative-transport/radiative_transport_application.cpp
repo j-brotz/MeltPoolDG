@@ -1,4 +1,4 @@
-#include "radiative_transport_problem.hpp"
+#include "radiative_transport_application.hpp"
 //
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/mpi.h>
@@ -28,7 +28,7 @@ namespace MeltPoolDG::RadiativeTransport
 {
   template <int dim, typename number>
   void
-  RadiativeTransportProblem<dim, number>::run()
+  RadiativeTransportApplication<dim, number>::run()
   {
     initialize();
 
@@ -62,7 +62,7 @@ namespace MeltPoolDG::RadiativeTransport
 
   template <int dim, typename number>
   void
-  RadiativeTransportProblem<dim, number>::initialize()
+  RadiativeTransportApplication<dim, number>::initialize()
   {
     scratch_data = std::make_shared<ScratchData<dim, dim, number>>(
       simulation_case->mpi_communicator,
@@ -135,7 +135,7 @@ namespace MeltPoolDG::RadiativeTransport
 
   template <int dim, typename number>
   void
-  RadiativeTransportProblem<dim, number>::setup_dof_system(const bool do_reinit)
+  RadiativeTransportApplication<dim, number>::setup_dof_system(const bool do_reinit)
   {
     FiniteElementUtils::distribute_dofs<dim, 1>(simulation_case->parameters.base.fe, dof_handler);
     FiniteElementUtils::distribute_dofs<dim, 1>(simulation_case->parameters.base.fe,
@@ -161,7 +161,8 @@ namespace MeltPoolDG::RadiativeTransport
 
   template <int dim, typename number>
   void
-  RadiativeTransportProblem<dim, number>::compute_heaviside(dealii::Function<dim> &heaviside_func)
+  RadiativeTransportApplication<dim, number>::compute_heaviside(
+    dealii::Function<dim> &heaviside_func)
   {
     scratch_data->initialize_dof_vector(heaviside, hs_dof_idx);
     heaviside_func.set_time(time_iterator->get_current_time());
@@ -174,8 +175,8 @@ namespace MeltPoolDG::RadiativeTransport
 
   template <int dim, typename number>
   void
-  RadiativeTransportProblem<dim, number>::output_results(const unsigned int time_step,
-                                                         const number       time)
+  RadiativeTransportApplication<dim, number>::output_results(const unsigned int time_step,
+                                                             const number       time)
   {
     if (not post_processor->is_output_timestep(time_step, time) and
         not simulation_case->parameters.output.do_user_defined_postprocessing)
@@ -204,7 +205,7 @@ namespace MeltPoolDG::RadiativeTransport
 
   template <int dim, typename number>
   void
-  RadiativeTransportProblem<dim, number>::refine_mesh()
+  RadiativeTransportApplication<dim, number>::refine_mesh()
   {
     const auto mark_cells_for_refinement = [&](dealii::Triangulation<dim> &tria) -> bool {
       dealii::Vector<float> estimated_error_per_cell(
@@ -251,9 +252,9 @@ namespace MeltPoolDG::RadiativeTransport
                                       time_iterator->get_current_time_step_number());
   }
 
-  template class RadiativeTransportProblem<1, double>;
-  template class RadiativeTransportProblem<2, double>;
-  template class RadiativeTransportProblem<3, double>;
+  template class RadiativeTransportApplication<1, double>;
+  template class RadiativeTransportApplication<2, double>;
+  template class RadiativeTransportApplication<3, double>;
 } // namespace MeltPoolDG::RadiativeTransport
 
 int
@@ -264,8 +265,8 @@ main(int argc, char *argv[])
   MPI_Comm mpi_comm(MPI_COMM_WORLD);
   MeltPoolDG::default_main<MeltPoolDG::RadiativeTransport::RadiativeTransportCaseParameters<double>,
                            MeltPoolDG::RadiativeTransport::RadiativeTransportCase,
-                           MeltPoolDG::RadiativeTransport::RadiativeTransportProblem>(argc,
-                                                                                      argv,
-                                                                                      mpi_comm);
+                           MeltPoolDG::RadiativeTransport::RadiativeTransportApplication>(argc,
+                                                                                          argv,
+                                                                                          mpi_comm);
   return 0;
 }

@@ -1,4 +1,4 @@
-#include "compressible_multiphase_problem.hpp"
+#include "compressible_multiphase_application.hpp"
 
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
@@ -20,7 +20,7 @@ namespace MeltPoolDG::Multiphase
 
   template <int dim, typename number>
   void
-  CompressibleMultiphaseProblem<dim, number>::run()
+  CompressibleMultiphaseApplication<dim, number>::run()
   {
     initialize();
 
@@ -68,7 +68,7 @@ namespace MeltPoolDG::Multiphase
 
   template <int dim, typename number>
   void
-  CompressibleMultiphaseProblem<dim, number>::interpolate_initial_level_set()
+  CompressibleMultiphaseApplication<dim, number>::interpolate_initial_level_set()
   {
     // set the current time to the field function
     level_set_field_function->set_time(time_iterator->get_current_time());
@@ -84,7 +84,7 @@ namespace MeltPoolDG::Multiphase
 
   template <int dim, typename number>
   void
-  CompressibleMultiphaseProblem<dim, number>::update_level_set()
+  CompressibleMultiphaseApplication<dim, number>::update_level_set()
   {
     // TODO: introduce dof_handler for level-set advection velocity field, compute projection of
     // interface velocity in normal direction of the interface to reduce the distortion of the
@@ -102,7 +102,7 @@ namespace MeltPoolDG::Multiphase
 
   template <int dim, typename number>
   void
-  CompressibleMultiphaseProblem<dim, number>::setup_dof_system()
+  CompressibleMultiphaseApplication<dim, number>::setup_dof_system()
   {
     comp_multiphase_operation.distribute_dofs(dof_handler);
 
@@ -132,7 +132,7 @@ namespace MeltPoolDG::Multiphase
 
   template <int dim, typename number>
   void
-  CompressibleMultiphaseProblem<dim, number>::initialize()
+  CompressibleMultiphaseApplication<dim, number>::initialize()
   {
     // setup DoFHandler
     dof_handler.reinit(*simulation_case->triangulation);
@@ -230,8 +230,8 @@ namespace MeltPoolDG::Multiphase
 
   template <int dim, typename number>
   void
-  CompressibleMultiphaseProblem<dim, number>::output_results(const unsigned int time_step,
-                                                             const number       current_time)
+  CompressibleMultiphaseApplication<dim, number>::output_results(const unsigned int time_step,
+                                                                 const number       current_time)
   {
     if (not post_processor->is_output_timestep(time_step, current_time) and
         not simulation_case->parameters.output.do_user_defined_postprocessing)
@@ -258,9 +258,9 @@ namespace MeltPoolDG::Multiphase
     post_processor->process(time_step, generic_data_out, current_time);
   }
 
-  template class CompressibleMultiphaseProblem<1, double>;
-  template class CompressibleMultiphaseProblem<2, double>;
-  template class CompressibleMultiphaseProblem<3, double>;
+  template class CompressibleMultiphaseApplication<1, double>;
+  template class CompressibleMultiphaseApplication<2, double>;
+  template class CompressibleMultiphaseApplication<3, double>;
 
 } // namespace MeltPoolDG::Multiphase
 
@@ -272,8 +272,8 @@ main(int argc, char *argv[])
   MPI_Comm mpi_comm(MPI_COMM_WORLD);
   MeltPoolDG::default_main<MeltPoolDG::Multiphase::CompressibleMultiphaseCaseParameters<double>,
                            MeltPoolDG::Multiphase::CompressibleMultiphaseCase,
-                           MeltPoolDG::Multiphase::CompressibleMultiphaseProblem>(argc,
-                                                                                  argv,
-                                                                                  mpi_comm);
+                           MeltPoolDG::Multiphase::CompressibleMultiphaseApplication>(argc,
+                                                                                      argv,
+                                                                                      mpi_comm);
   return 0;
 }

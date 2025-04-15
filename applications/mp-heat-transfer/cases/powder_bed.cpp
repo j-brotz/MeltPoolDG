@@ -21,6 +21,7 @@
 
 #include <cmath>
 
+#include "../../mp-radiative-transport/radiative_transport_case.hpp"
 
 namespace MeltPoolDG::Simulation::PowderBed
 {
@@ -144,7 +145,8 @@ namespace MeltPoolDG::Simulation::PowderBed
     /*
      * BC for RTE
      */
-    if (this->parameters.base.problem_name == "radiative_transport")
+    if (auto temp_ptr =
+          dynamic_cast<MeltPoolDG::RadiativeTransport::RadiativeTransportCase<dim, number> *>(this))
       this->attach_boundary_condition(
         {upper_bc,
          std::make_shared<Heat::GaussProjectionIntensityProfile<dim, number>>(
@@ -165,7 +167,7 @@ namespace MeltPoolDG::Simulation::PowderBed
   {
     if (this->parameters.laser.model == Heat::LaserModelType::RTE)
       this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(), "intensity");
-    if (this->parameters.base.problem_name == "heat_transfer")
+    if (auto temp_ptr = dynamic_cast<Heat::HeatTransferCase<dim, number> *>(this))
       {
         // attach initial temperature
         this->attach_initial_condition(

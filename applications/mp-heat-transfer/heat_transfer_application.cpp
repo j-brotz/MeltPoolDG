@@ -1,4 +1,4 @@
-#include "heat_transfer_problem.hpp"
+#include "heat_transfer_application.hpp"
 //
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/mpi.h>
@@ -46,7 +46,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferProblem<dim, number>::run()
+  HeatTransferApplication<dim, number>::run()
   {
     initialize();
 
@@ -139,7 +139,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferProblem<dim, number>::initialize()
+  HeatTransferApplication<dim, number>::initialize()
   {
     const auto &param = simulation_case->parameters;
     /*
@@ -236,7 +236,7 @@ namespace MeltPoolDG::Heat
               param.material,
               determine_material_type(
                 heaviside_field_function != nullptr,
-                param.problem_specific_parameters.do_solidification,
+                param.application_specific_parameters.do_solidification,
                 param.material.two_phase_fluid_properties_transition_type ==
                   TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation));
 
@@ -254,7 +254,7 @@ namespace MeltPoolDG::Heat
               velocity_ptr,
               level_set_dof_idx,
               level_set_as_heaviside_ptr,
-              param.problem_specific_parameters.do_solidification);
+              param.application_specific_parameters.do_solidification);
             break;
           }
           case TwoPhaseOperatorType::cut: {
@@ -277,7 +277,7 @@ namespace MeltPoolDG::Heat
               heat_no_bc_dof_idx,
               heat_continuous_no_bc_dof_idx,
               heat_quad_idx,
-              param.problem_specific_parameters.do_solidification,
+              param.application_specific_parameters.do_solidification,
               level_set_dof_idx,
               level_set,
               velocity_dof_idx,
@@ -372,9 +372,9 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferProblem<dim, number>::compute_field_vector(VectorType        &vector,
-                                                         const unsigned int dof_idx,
-                                                         Function<dim>     &field_function)
+  HeatTransferApplication<dim, number>::compute_field_vector(VectorType        &vector,
+                                                             const unsigned int dof_idx,
+                                                             Function<dim>     &field_function)
   {
     scratch_data->initialize_dof_vector(vector, dof_idx);
     /*
@@ -393,7 +393,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferProblem<dim, number>::setup_dof_system()
+  HeatTransferApplication<dim, number>::setup_dof_system()
   {
     heat_operation->distribute_dofs(*scratch_data);
 
@@ -446,7 +446,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferProblem<dim, number>::output_results(const bool output_not_converged)
+  HeatTransferApplication<dim, number>::output_results(const bool output_not_converged)
   {
     const unsigned int n_time_step = time_iterator->get_current_time_step_number();
     const number       time        = time_iterator->get_current_time();
@@ -476,7 +476,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferProblem<dim, number>::attach_output_vectors(
+  HeatTransferApplication<dim, number>::attach_output_vectors(
     GenericDataOut<dim, number> &data_out) const
   {
     heat_operation->attach_output_vectors(data_out);
@@ -513,12 +513,12 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferProblem<dim, number>::refine_mesh()
+  HeatTransferApplication<dim, number>::refine_mesh()
   {
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       Vector<float> estimated_error_per_cell(simulation_case->triangulation->n_active_cells());
 
-      switch (simulation_case->parameters.problem_specific_parameters.amr_strategy)
+      switch (simulation_case->parameters.application_specific_parameters.amr_strategy)
         {
             case AMRStrategy::KellyErrorEstimator: {
               VectorType locally_relevant_solution;
@@ -604,9 +604,9 @@ namespace MeltPoolDG::Heat
                                       time_iterator->get_current_time_step_number());
   }
 
-  template class HeatTransferProblem<1, double>;
-  template class HeatTransferProblem<2, double>;
-  template class HeatTransferProblem<3, double>;
+  template class HeatTransferApplication<1, double>;
+  template class HeatTransferApplication<2, double>;
+  template class HeatTransferApplication<3, double>;
 } // namespace MeltPoolDG::Heat
 
 int
@@ -617,6 +617,6 @@ main(int argc, char *argv[])
   MPI_Comm mpi_comm(MPI_COMM_WORLD);
   MeltPoolDG::default_main<MeltPoolDG::Heat::HeatTransferCaseParameters<double>,
                            MeltPoolDG::Heat::HeatTransferCase,
-                           MeltPoolDG::Heat::HeatTransferProblem>(argc, argv, mpi_comm);
+                           MeltPoolDG::Heat::HeatTransferApplication>(argc, argv, mpi_comm);
   return 0;
 }

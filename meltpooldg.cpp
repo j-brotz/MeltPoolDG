@@ -2,7 +2,8 @@
 #include <deal.II/base/revision.h>
 
 #include <meltpooldg/core/base_data.hpp>
-#include <meltpooldg/core/problem_selector.hpp>
+#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/melt_pool/melt_pool_application.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/revision.hpp>
 
@@ -11,118 +12,117 @@
 
 #include "simulations/simulation_selector.hpp"
 
-namespace MeltPoolDG
+namespace MeltPoolDG::Simulation
 {
-  namespace Simulation
+  template <typename number = double>
+  void
+  run_simulation(const std::string parameter_file, const MPI_Comm mpi_communicator)
   {
-    template <typename number = double>
-    void
-    run_simulation(const std::string parameter_file, const MPI_Comm mpi_communicator)
+    using namespace dealii;
+    unsigned int dim       = 0;
+    std::string  case_name = "not_initialized";
+
     {
-      using namespace dealii;
-      unsigned int dim          = 0;
-      std::string  problem_type = "not_initialized";
-      std::string  case_name    = "not_initialized";
+      // The parameters will be read here to get information on the selection variables, i.e.,
+      // the dimension, the case_name and the application_name.
+      ParameterHandler   prm;
+      Parameters<number> parameters;
+      parameters.process_parameters_file(prm, parameter_file);
 
-      {
-        // The parameters will be read here to get information on the selection variables, i.e.,
-        // the dimension, the case_name and the problem_name.
-        ParameterHandler   prm;
-        Parameters<number> parameters;
-        parameters.process_parameters_file(prm, parameter_file);
-
-        // print number of processes and GIT hashes if verbosity level >= 3
-        if (parameters.base.verbosity_level >= 3)
-          {
-            dealii::ConditionalOStream pcout(std::cout,
-                                             Utilities::MPI::this_mpi_process(mpi_communicator) ==
-                                               0);
-            Journal::print_decoration_line(pcout);
-            Journal::print_line(
-              pcout,
-              "Running MeltPoolDG on " +
-                std::to_string(Utilities::MPI::n_mpi_processes(mpi_communicator)) + " ranks.");
-
-            Journal::print_decoration_line(pcout);
-            pcout << "  - deal.II:" << std::endl
-                  << "      * branch: " << DEAL_II_GIT_BRANCH << std::endl
-                  << "      * revision: " << DEAL_II_GIT_REVISION << std::endl
-                  << "      * short: " << DEAL_II_GIT_SHORTREV << std::endl;
-            pcout << "  - MeltPoolDG:" << std::endl
-                  << "      * branch: " << LOCAL_GIT_BRANCH << std::endl
-                  << "      * revision: " << LOCAL_GIT_REVISION << std::endl
-                  << "      * short: " << LOCAL_GIT_SHORTREV << std::endl;
-            Journal::print_decoration_line(pcout);
-          }
-
-        if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
-            parameters.base.do_print_parameters)
-          {
-            parameters.print_parameters(prm, std::cout, false /*print_details*/);
-          }
-
-        dim          = parameters.base.dimension;
-        problem_type = parameters.base.problem_name;
-        case_name    = parameters.base.case_name;
-      }
-
-      try
+      // print number of processes and GIT hashes if verbosity level >= 3
+      if (parameters.base.verbosity_level >= 3)
         {
-          if (dim == 1)
-            {
-              auto sim = SimulationSelector<1, number>::get_simulation(case_name,
-                                                                       parameter_file,
-                                                                       mpi_communicator);
-              sim->create();
-              auto problem = ProblemSelector<1, number>::get_problem(problem_type, std::move(sim));
-              problem->run();
-            }
-          else if (dim == 2)
-            {
-              auto sim = SimulationSelector<2, number>::get_simulation(case_name,
-                                                                       parameter_file,
-                                                                       mpi_communicator);
-              sim->create();
-              auto problem = ProblemSelector<2, number>::get_problem(problem_type, std::move(sim));
-              problem->run();
-            }
-          else if (dim == 3)
-            {
-              auto sim = SimulationSelector<3, number>::get_simulation(case_name,
-                                                                       parameter_file,
-                                                                       mpi_communicator);
-              sim->create();
-              auto problem = ProblemSelector<3, number>::get_problem(problem_type, std::move(sim));
-              problem->run();
-            }
-          else
-            {
-              AssertThrow(false, ExcMessage("Dimension must be 1, 2 or 3."));
-            }
+          dealii::ConditionalOStream pcout(std::cout,
+                                           Utilities::MPI::this_mpi_process(mpi_communicator) == 0);
+          Journal::print_decoration_line(pcout);
+          Journal::print_line(pcout,
+                              "Running MeltPoolDG on " +
+                                std::to_string(Utilities::MPI::n_mpi_processes(mpi_communicator)) +
+                                " ranks.");
+
+          Journal::print_decoration_line(pcout);
+          pcout << "  - deal.II:" << std::endl
+                << "      * branch: " << DEAL_II_GIT_BRANCH << std::endl
+                << "      * revision: " << DEAL_II_GIT_REVISION << std::endl
+                << "      * short: " << DEAL_II_GIT_SHORTREV << std::endl;
+          pcout << "  - MeltPoolDG:" << std::endl
+                << "      * branch: " << LOCAL_GIT_BRANCH << std::endl
+                << "      * revision: " << LOCAL_GIT_REVISION << std::endl
+                << "      * short: " << LOCAL_GIT_SHORTREV << std::endl;
+          Journal::print_decoration_line(pcout);
         }
-      catch (std::exception &exc)
+
+      if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
+          parameters.base.do_print_parameters)
         {
-          std::cerr << std::endl
-                    << std::endl
-                    << "----------------------------------------------------" << std::endl;
-          std::cerr << "Exception on processing: " << std::endl
-                    << exc.what() << std::endl
-                    << "Aborting!" << std::endl
-                    << "----------------------------------------------------" << std::endl;
+          parameters.print_parameters(prm, std::cout, false /*print_details*/);
         }
-      catch (...)
-        {
-          std::cerr << std::endl
-                    << std::endl
-                    << "----------------------------------------------------" << std::endl;
-          std::cerr << "Unknown exception!" << std::endl
-                    << "Aborting!" << std::endl
-                    << "----------------------------------------------------" << std::endl;
-        }
+
+      dim       = parameters.base.dimension;
+      case_name = parameters.base.case_name;
     }
 
-  } // namespace Simulation
-} // namespace MeltPoolDG
+    try
+      {
+        if (dim == 1)
+          {
+            auto sim = SimulationSelector<1, number>::get_simulation(case_name,
+                                                                     parameter_file,
+                                                                     mpi_communicator);
+            sim->create();
+            auto application =
+              std::make_unique<MeltPoolDG::MeltPool::MeltPoolApplication<1, double>>(
+                std::move(sim));
+            application->run();
+          }
+        else if (dim == 2)
+          {
+            auto sim = SimulationSelector<2, number>::get_simulation(case_name,
+                                                                     parameter_file,
+                                                                     mpi_communicator);
+            sim->create();
+            auto application =
+              std::make_unique<MeltPoolDG::MeltPool::MeltPoolApplication<2, double>>(
+                std::move(sim));
+            application->run();
+          }
+        else if (dim == 3)
+          {
+            auto sim = SimulationSelector<3, number>::get_simulation(case_name,
+                                                                     parameter_file,
+                                                                     mpi_communicator);
+            sim->create();
+            auto application =
+              std::make_unique<MeltPoolDG::MeltPool::MeltPoolApplication<3, double>>(
+                std::move(sim));
+            application->run();
+          }
+        else
+          {
+            AssertThrow(false, ExcMessage("Dimension must be 1, 2 or 3."));
+          }
+      }
+    catch (std::exception &exc)
+      {
+        std::cerr << std::endl
+                  << std::endl
+                  << "----------------------------------------------------" << std::endl;
+        std::cerr << "Exception on processing: " << std::endl
+                  << exc.what() << std::endl
+                  << "Aborting!" << std::endl
+                  << "----------------------------------------------------" << std::endl;
+      }
+    catch (...)
+      {
+        std::cerr << std::endl
+                  << std::endl
+                  << "----------------------------------------------------" << std::endl;
+        std::cerr << "Unknown exception!" << std::endl
+                  << "Aborting!" << std::endl
+                  << "----------------------------------------------------" << std::endl;
+      }
+  }
+} // namespace MeltPoolDG::Simulation
 
 int
 main(int argc, char *argv[])

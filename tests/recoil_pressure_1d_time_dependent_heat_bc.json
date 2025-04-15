@@ -4,7 +4,6 @@
     "dimension": "1",
     "do print parameters": "false",
     "global refinements": "5",
-    "problem name": "melt_pool",
     "verbosity level": "1",
     "fe": {
       "degree": "1"
@@ -25,7 +24,7 @@
   "material": {
     "material template": "Ti64"
   },
-  "problem specific": {
+  "application specific": {
     "do advect level set": "false",
     "do heat transfer": "true",
     "do solidification": "false"

@@ -4,7 +4,6 @@
     "dimension": "1",
     "do print parameters": "false",
     "global refinements": "6",
-    "problem name": "melt_pool",
     "verbosity level": "1",
     "fe": {
       "degree": "1"
@@ -47,7 +46,7 @@
     },
     "two phase fluid properties transition type": "consistent_with_evaporation"
   },
-  "problem specific": {
+  "application specific": {
     "do advect level set": "true",
     "do heat transfer": "true",
     "do solidification": "true"

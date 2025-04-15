@@ -441,7 +441,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
           this->attach_boundary_condition(bc, "no_slip", "navier_stokes_u");
       };
 
-      if (this->parameters.base.problem_name == "melt_pool")
+      if (this->parameters.base.application_name == "melt_pool")
         {
           add_slip_or_no_slip_boundary(lower_bc);
           if (evaporation_boundary)

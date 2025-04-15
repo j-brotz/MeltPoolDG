@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "melt_pool",
     "case name": "stefans_problem1_with_flow_and_heat",
     "dimension": "2",
     "global refinements": "10",
@@ -64,7 +63,7 @@
       "preconditioner type": "AMG"
     }
   },
-  "problem specific": {
+  "application specific": {
     "do heat transfer": "true"
   },
   "output": {

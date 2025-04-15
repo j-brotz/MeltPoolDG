@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "compressible_flow",
     "case name": "cut_moving_cylinder",
     "dimension": "2",
     "verbosity level": "1",

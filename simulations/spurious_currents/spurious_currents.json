@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "melt_pool",
     "case name": "spurious_currents",
     "dimension": "2",
     "global refinements": "7",

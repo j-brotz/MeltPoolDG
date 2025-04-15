@@ -41,7 +41,7 @@ namespace MeltPoolDG::RadiativeTransport
       laser.post(base.dimension);
       output.post(time_stepping.time_step_size, parameter_filename);
 
-      base.check_input_parameters(1);
+      base.check_input_parameters();
       rad_trans.check_input_parameters(base.fe);
       laser.check_input_parameters();
       profiling.check_input_parameters(time_stepping.time_step_size);

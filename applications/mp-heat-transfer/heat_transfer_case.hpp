@@ -41,14 +41,14 @@ namespace MeltPoolDG::Heat
       output.add_parameters(prm);
       profiling.add_parameters(prm);
 
-      prm.enter_subsection("problem specific");
+      prm.enter_subsection("application specific");
       {
         prm.add_parameter(
           "do solidification",
-          problem_specific_parameters.do_solidification,
+          application_specific_parameters.do_solidification,
           "Set this parameter to true if you want to consider melting/solidification effects.");
         prm.add_parameter("amr strategy",
-                          problem_specific_parameters.amr_strategy,
+                          application_specific_parameters.amr_strategy,
                           "Select the AMR strategy.");
       }
       prm.leave_subsection();
@@ -67,7 +67,7 @@ namespace MeltPoolDG::Heat
                   heat.diffuse.use_volume_specific_thermal_capacity_for_phase_interpolation);
       output.post(time_stepping.time_step_size, parameter_filename);
 
-      base.check_input_parameters(1);
+      base.check_input_parameters();
       heat.check_input_parameters(base.fe);
       laser.check_input_parameters();
       rad_trans.check_input_parameters(base.fe);
@@ -91,7 +91,7 @@ namespace MeltPoolDG::Heat
     {
       bool        do_solidification = false;
       AMRStrategy amr_strategy      = AMRStrategy::KellyErrorEstimator;
-    } problem_specific_parameters;
+    } application_specific_parameters;
   };
 
 

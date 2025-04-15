@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "melt_pool",
     "case name": "evaporating_droplet",
     "global refinements": "5",
     "dimension": "2",
@@ -34,7 +33,7 @@
       "enable": "true"
     }
   },
-  "problem specific": {
+  "application specific": {
     "do heat transfer": "true"
   },
   "output": {

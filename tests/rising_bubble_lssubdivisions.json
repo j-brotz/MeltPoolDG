@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "melt_pool",
     "case name": "rising_bubble",
     "do print parameters": "false",
     "global refinements": "1",

@@ -4,7 +4,6 @@
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "5",
-    "problem name": "melt_pool",
     "verbosity level": "1",
     "fe": {
       "degree": "1"
@@ -57,7 +56,7 @@
       "residual tolerance": "1e-8"
     }
   },
-  "problem specific": {
+  "application specific": {
     "do heat transfer": "true",
     "do solidification": "false"
   },

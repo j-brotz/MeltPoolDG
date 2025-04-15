@@ -6,7 +6,7 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
-#include <meltpooldg/core/problem_base.hpp>
+#include <meltpooldg/core/application_base.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/level_set/reinitialization_operation_base.hpp>
@@ -24,7 +24,7 @@ namespace MeltPoolDG
   namespace LevelSet
   {
     template <int dim, typename number>
-    class ReinitializationProblem
+    class ReinitializationApplication
     {
     private:
       using CaseType       = ReinitializationCase<dim, number>;
@@ -32,7 +32,7 @@ namespace MeltPoolDG
       using DoFHandlerType = dealii::DoFHandler<dim>;
 
     public:
-      ReinitializationProblem(std::unique_ptr<CaseType> simulation_case_)
+      ReinitializationApplication(std::unique_ptr<CaseType> simulation_case_)
         : simulation_case(std::move(simulation_case_))
         , param(simulation_case->parameters)
       {}

@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "compressible_flow",
     "case name": "isentropic_vortex",
     "dimension": "2",
     "verbosity level": "1",
