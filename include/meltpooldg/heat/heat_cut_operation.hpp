@@ -131,7 +131,7 @@ namespace MeltPoolDG::Heat
 
   public:
     void
-    distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const override;
+    distribute_dofs(ScratchData<dim, dim, number> &mutable_scratch_data) const override;
 
     void
     setup_constraints(ScratchData<dim, dim, number> &mutable_scratch_data) const override;

@@ -159,6 +159,9 @@ namespace MeltPoolDG
     const dealii::DoFHandler<dim, spacedim> &
     get_dof_handler(const unsigned int dof_idx) const;
 
+    dealii::DoFHandler<dim, spacedim> &
+    get_dof_handler(const unsigned int dof_idx);
+
     const std::vector<const dealii::DoFHandler<dim, spacedim> *> &
     get_dof_handlers() const;
 
@@ -235,7 +238,7 @@ namespace MeltPoolDG
     bool                                                   do_matrix_free;
     std::vector<dealii::ConditionalOStream>                pcout;
     std::shared_ptr<dealii::Mapping<dim, spacedim>>        mapping;
-    std::vector<const dealii::DoFHandler<dim, spacedim> *> dof_handler;
+    std::vector<const dealii::DoFHandler<dim, spacedim> *>       dof_handler;
     std::vector<const dealii::AffineConstraints<number> *> constraint;
     std::vector<dealii::Quadrature<dim>>                   quad;
     std::vector<dealii::Quadrature<dim - 1>>               face_quad;

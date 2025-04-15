@@ -1035,6 +1035,34 @@ namespace MeltPoolDG::MeltPool
                     op_vectors[i]->copy_locally_owned_data_from(vectors_buffer[i]);
                 });
 
+              // before the CutFEM operation can distribute dofs, the mesh must be classified
+              // according to the level set indicator
+              {
+                FiniteElementUtils::distribute_dofs<dim, 1>(param.ls.fe, dof_handler_ls);
+
+                IndexSet locally_relevant_dofs;
+                DoFTools::extract_locally_relevant_dofs(dof_handler_ls, locally_relevant_dofs);
+                level_set_operation->get_level_set().reinit(dof_handler_ls.locally_owned_dofs(),
+                                                            locally_relevant_dofs,
+                                                            dof_handler_ls.get_communicator());
+
+                std::shared_ptr<dealii::Function<dim>> initial_level_set =
+                  base_in->get_initial_condition("level_set", true /*is optional*/);
+                if (not initial_level_set)
+                  initial_level_set =
+                    base_in->get_initial_condition("signed_distance", true /*is optional*/);
+                AssertThrow(
+                  initial_level_set,
+                  ExcMessage(
+                    "For the level set operation either a function for the initial level set or the "
+                    "signed distance field must be provided. Abort ..."));
+
+                dealii::VectorTools::interpolate(scratch_data->get_mapping(),
+                                                 dof_handler_ls,
+                                                 *initial_level_set,
+                                                 level_set_operation->get_level_set());
+              }
+
               heat_operation = heat_cut_operation;
               break;
             }
@@ -1432,37 +1460,7 @@ namespace MeltPoolDG::MeltPool
     FiniteElementUtils::distribute_dofs<dim, 1>(param.ls.fe, dof_handler_ls);
 
     if (heat_operation)
-      {
-        if (param.heat.operator_type == Heat::TwoPhaseOperatorType::cut)
-          {
-            FiniteElementUtils::distribute_dofs<dim, 1>(param.heat.fe, *dof_handler_heat_cont);
-
-            // before the CutFEM operation can distribute dofs, the mesh must be classified
-            // according to the level set indicator
-            IndexSet locally_relevant_dofs;
-            DoFTools::extract_locally_relevant_dofs(dof_handler_ls, locally_relevant_dofs);
-            level_set_operation->get_level_set().reinit(dof_handler_ls.locally_owned_dofs(),
-                                                        locally_relevant_dofs,
-                                                        dof_handler_ls.get_communicator());
-
-            std::shared_ptr<dealii::Function<dim>> initial_level_set =
-              base_in->get_initial_condition("level_set", true /*is optional*/);
-            if (not initial_level_set)
-              initial_level_set =
-                base_in->get_initial_condition("signed_distance", true /*is optional*/);
-            AssertThrow(
-              initial_level_set,
-              ExcMessage(
-                "For the level set operation either a function for the initial level set or the "
-                "signed distance field must be provided. Abort ..."));
-
-            dealii::VectorTools::interpolate(scratch_data->get_mapping(),
-                                             dof_handler_ls,
-                                             *initial_level_set,
-                                             level_set_operation->get_level_set());
-          }
-        heat_operation->distribute_dofs(*dof_handler_heat);
-      }
+      heat_operation->distribute_dofs(*scratch_data);
 
     if (laser_operation)
       laser_operation->distribute_dofs(param.base.fe);
@@ -1517,7 +1515,7 @@ namespace MeltPoolDG::MeltPool
           param.evapor.evaporative_cooling.model ==
             Evaporation::EvaporCoolingInterfaceFluxType::sharp_conforming));
       const bool enable_normal_vector_update =
-        (heat_operation and param.heat.operator_type == Heat::TwoPhaseOperatorType::cut);
+        heat_operation and param.heat.operator_type == Heat::TwoPhaseOperatorType::cut;
 
       scratch_data->build(enable_boundary_face_loops,
                           enable_inner_face_loops,
@@ -1526,11 +1524,6 @@ namespace MeltPoolDG::MeltPool
 
     if (do_reinit)
       {
-        CellMonitor<number>::add_info("mp::cells",
-                                      scratch_data->get_triangulation().n_global_active_cells(),
-                                      scratch_data->get_min_cell_size(),
-                                      scratch_data->get_max_cell_size());
-
         level_set_operation->reinit();
 
         if (evaporation_operation)

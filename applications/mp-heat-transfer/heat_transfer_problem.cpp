@@ -309,6 +309,24 @@ namespace MeltPoolDG::Heat
                                      *source_field_function);
             });
 
+            // before the CutFEM operation can distribute dofs, the mesh must be classified
+            // according to the level set indicator
+            {
+              Assert(level_set_field_function != nullptr, ExcInternalError());
+              FiniteElementUtils::distribute_dofs<dim, 1>(simulation_case->parameters.base.fe,
+                                                          dof_handler_level_set);
+              IndexSet locally_relevant_dofs;
+              DoFTools::extract_locally_relevant_dofs(dof_handler_level_set, locally_relevant_dofs);
+              level_set.reinit(dof_handler_level_set.locally_owned_dofs(),
+                               locally_relevant_dofs,
+                               dof_handler_level_set.get_communicator());
+              level_set_field_function->set_time(time_iterator->get_current_time());
+              dealii::VectorTools::interpolate(scratch_data->get_mapping(),
+                                               dof_handler_level_set,
+                                               *level_set_field_function,
+                                               level_set);
+            }
+
             heat_operation = heat_cut_operation;
             break;
           }
@@ -385,27 +403,10 @@ namespace MeltPoolDG::Heat
   void
   HeatTransferProblem<dim, number>::setup_dof_system()
   {
+    heat_operation->distribute_dofs(*scratch_data);
+
     FiniteElementUtils::distribute_dofs<dim, 1>(simulation_case->parameters.base.fe,
                                                 dof_handler_level_set);
-
-    if (simulation_case->parameters.heat.operator_type == TwoPhaseOperatorType::cut)
-      {
-        // before the CutFEM operation can distribute dofs, the mesh must be classified according to
-        // the level set indicator
-        Assert(level_set_field_function != nullptr, ExcInternalError());
-        IndexSet locally_relevant_dofs;
-        DoFTools::extract_locally_relevant_dofs(dof_handler_level_set, locally_relevant_dofs);
-        level_set.reinit(dof_handler_level_set.locally_owned_dofs(),
-                         locally_relevant_dofs,
-                         dof_handler_level_set.get_communicator());
-        level_set_field_function->set_time(time_iterator->get_current_time());
-        dealii::VectorTools::interpolate(scratch_data->get_mapping(),
-                                         dof_handler_level_set,
-                                         *level_set_field_function,
-                                         level_set);
-      }
-
-    heat_operation->distribute_dofs(dof_handler);
 
     FiniteElementUtils::distribute_dofs<dim, dim>(simulation_case->parameters.base.fe,
                                                   dof_handler_velocity);

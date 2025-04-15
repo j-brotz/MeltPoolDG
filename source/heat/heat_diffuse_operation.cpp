@@ -139,9 +139,15 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseOperation<dim, number>::distribute_dofs(DoFHandler<dim> &dof_handler) const
+  HeatDiffuseOperation<dim, number>::distribute_dofs(
+    ScratchData<dim, dim, number> &mutable_scratch_data) const
   {
-    FiniteElementUtils::distribute_dofs<dim, 1>(heat_data.fe, dof_handler);
+    Assert(&mutable_scratch_data.get_dof_handler(heat_dof_idx) ==
+             &mutable_scratch_data.get_dof_handler(heat_no_bc_dof_idx),
+           dealii::ExcMessage(
+             "Please make sure to use the same DoFHandler for the two constraint indices!"));
+    FiniteElementUtils::distribute_dofs<dim, 1>(heat_data.fe,
+                                                mutable_scratch_data.get_dof_handler(heat_dof_idx));
   }
 
 

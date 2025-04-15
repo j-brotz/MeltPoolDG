@@ -23,6 +23,7 @@
 #include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
+#include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/functions.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 
@@ -230,18 +231,19 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatCutOperation<dim, number>::distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const
+  HeatCutOperation<dim, number>::distribute_dofs(
+    ScratchData<dim, dim, number> &mutable_scratch_data) const
   {
     AssertThrow(heat_data.fe.type == FiniteElementType::FE_Q,
                 dealii::ExcMessage("For now, only standard FE_Q elements are supported."));
-    Assert(
-      &dof_handler == &scratch_data.get_dof_handler(heat_cut_dof_idx),
-      dealii::ExcMessage(
-        "Please make sure to distribute the dofs of the DoFHandler that is used by this operation!"));
-    Assert(
-      &dof_handler == &scratch_data.get_dof_handler(heat_cut_no_bc_dof_idx),
-      dealii::ExcMessage(
-        "Please make sure to distribute the dofs of the DoFHandler that is used by this operation!"));
+    Assert(&mutable_scratch_data.get_dof_handler(heat_cut_dof_idx) ==
+             &mutable_scratch_data.get_dof_handler(heat_cut_no_bc_dof_idx),
+           dealii::ExcMessage(
+             "Please make sure to use the same DoFHandler for the two constraint indices!"));
+    Assert(&mutable_scratch_data.get_dof_handler(heat_cut_dof_idx) !=
+             &mutable_scratch_data.get_dof_handler(heat_cont_no_bc_dof_idx),
+           dealii::ExcMessage(
+             "Please make sure to use different DoFHandlers for the cut and continuous indices!"));
 
     classify_cells();
 
@@ -263,9 +265,12 @@ namespace MeltPoolDG::Heat
         fe_collection.push_back(fe_n); // gas
       }
 
-    CutUtil::set_fe_index<dim>(dof_handler, *mesh_classifier, false /* set_future */);
+    auto &cut_dof_handler = mutable_scratch_data.get_dof_handler(heat_cut_dof_idx);
+    CutUtil::set_fe_index<dim>(cut_dof_handler, *mesh_classifier, false /* set_future */);
+    cut_dof_handler.distribute_dofs(fe_collection);
 
-    dof_handler.distribute_dofs(fe_collection);
+    FiniteElementUtils::distribute_dofs<dim, 1>(
+      heat_data.fe, mutable_scratch_data.get_dof_handler(heat_cont_no_bc_dof_idx));
   }
 
   template <int dim, typename number>

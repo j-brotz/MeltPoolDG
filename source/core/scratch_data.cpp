@@ -412,6 +412,13 @@ namespace MeltPoolDG
   }
 
   template <int dim, int spacedim, typename number>
+  dealii::DoFHandler<dim, spacedim> &
+  ScratchData<dim, spacedim, number>::get_dof_handler(const unsigned int dof_idx)
+  {
+    return const_cast<dealii::DoFHandler<dim, spacedim> &>(*this->dof_handler[dof_idx]);
+  }
+
+  template <int dim, int spacedim, typename number>
   const std::vector<const dealii::DoFHandler<dim, spacedim> *> &
   ScratchData<dim, spacedim, number>::get_dof_handlers() const
   {

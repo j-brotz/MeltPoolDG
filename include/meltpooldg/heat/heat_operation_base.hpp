@@ -26,7 +26,7 @@ namespace MeltPoolDG::Heat
     reinit() = 0;
 
     virtual void
-    distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const = 0;
+    distribute_dofs(ScratchData<dim, dim, number> &scratch_data) const = 0;
 
     virtual void
     setup_constraints(ScratchData<dim, dim, number> &scratch_data) const = 0;

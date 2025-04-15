@@ -70,7 +70,8 @@ namespace MeltPoolDG::CutUtil
     const std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> &reinit_vector,
     const std::function<void(const dealii::DoFHandler<dim> &)>               &reinit_matrix_free)
   {
-    solution.update_ghost_values();
+    if (not solution.has_ghost_elements())
+      solution.update_ghost_values();
 
     fe_degree = dof_handler.get_fe_collection().max_degree();
 
@@ -205,7 +206,7 @@ namespace MeltPoolDG::CutUtil
 
     // revert averaging process in solution transfer for cg-case
     // (TODO: fix this issue in dealii)
-    if (!is_dg)
+    if (not is_dg)
       {
         VectorType dof_counter;
         reinit_vector(dof_counter, dof_handler);
