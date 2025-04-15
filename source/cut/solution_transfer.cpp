@@ -36,6 +36,7 @@
 #include <meltpooldg/utilities/journal.hpp>
 
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <vector>
 

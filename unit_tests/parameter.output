@@ -6,7 +6,7 @@
         "every n step": "1",
         "lower perc to coarsen": "0",
         "max grid refinement level": "12",
-        "min grid refinement level": "1",
+        "min grid refinement level": "-1",
         "n initial refinement cycles": "0",
         "upper perc to refine": "0"
     },

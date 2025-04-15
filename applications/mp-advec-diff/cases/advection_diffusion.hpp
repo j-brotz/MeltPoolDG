@@ -140,11 +140,8 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
         }
       else
         {
-          dealii::GridGenerator::subdivided_hyper_cube(*this->triangulation,
-                                                       2,
-                                                       left_domain,
-                                                       right_domain);
-          this->triangulation->refine_global(this->parameters.base.global_refinements - 1);
+          dealii::GridGenerator::hyper_cube(*this->triangulation, left_domain, right_domain);
+          this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
     }
 

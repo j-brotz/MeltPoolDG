@@ -181,8 +181,8 @@ namespace MeltPoolDG::Simulation::VortexBubble
         }
       else
         {
-          GridGenerator::subdivided_hyper_cube(*this->triangulation, 2, left_domain, right_domain);
-          this->triangulation->refine_global(this->parameters.base.global_refinements - 1);
+          GridGenerator::hyper_cube(*this->triangulation, left_domain, right_domain);
+          this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
     }
 

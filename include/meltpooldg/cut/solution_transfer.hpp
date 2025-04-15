@@ -12,17 +12,16 @@
 #include <deal.II/non_matching/mesh_classifier.h>
 
 #include <functional>
-#include <iostream>
+
 
 namespace MeltPoolDG::CutUtil
 {
   template <int dim, typename Number>
   class SolutionTransferOperator
   {
-  private:
+  public:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<Number>;
 
-  public:
     SolutionTransferOperator(const Number gamma_degree_0,
                              const Number gamma_degree_1,
                              const Number gamma_degree_2,

@@ -57,18 +57,20 @@ namespace MeltPoolDG
     // Limit the maximum and minimum refinement levels of cells of the grid.
     if (tria.n_levels() > amr.max_grid_refinement_level)
       for (auto &cell : tria.active_cell_iterators_on_level(amr.max_grid_refinement_level))
-        cell->clear_refine_flag();
-
-    for (auto &cell : tria.active_cell_iterators())
-      {
-        if (not cell->is_locally_owned())
-          continue;
-
-        if (cell->level() <= amr.min_grid_refinement_level)
+        if (cell->is_locally_owned())
+          cell->clear_refine_flag();
+    if (amr.min_grid_refinement_level > 0)
+      for (auto &cell : tria.active_cell_iterators_on_level(amr.min_grid_refinement_level))
+        if (cell->is_locally_owned())
           cell->clear_coarsen_flag();
 
-        // do not coarsen/refine cells along boundary
-        if (amr.do_not_modify_boundary_cells)
+    // do not coarsen/refine cells along boundary
+    if (amr.do_not_modify_boundary_cells)
+      for (auto &cell : tria.active_cell_iterators())
+        {
+          if (not cell->is_locally_owned())
+            continue;
+
           for (auto &face : cell->face_iterators())
             {
               if (not face->at_boundary())
@@ -78,35 +80,39 @@ namespace MeltPoolDG
               else
                 cell->clear_coarsen_flag();
             }
-      }
+        }
 
     // Initialize the triangulation change from the old grid to the new grid
     tria.prepare_coarsening_and_refinement();
 
     // Initialize the solution transfer from the old grid to the new grid
-    std::vector<std::shared_ptr<dealii::SolutionTransfer<dim, VectorType>>> solution_transfer(
+    std::vector<std::unique_ptr<dealii::SolutionTransfer<dim, VectorType>>> solution_transfers(
       n_dof_handlers);
 
     std::vector<std::vector<VectorType *>>       new_grid_solutions(n_dof_handlers);
     std::vector<std::vector<const VectorType *>> old_grid_solutions(n_dof_handlers);
-    std::vector<std::vector<bool>>               update_ghost_elements(n_dof_handlers);
+    std::vector<std::vector<bool>>               update_ghost_values(n_dof_handlers);
 
     for (unsigned int j = 0; j < n_dof_handlers; ++j)
       {
+        // collect pointers to the DoF vectors for the current DoFHandler
         data[j].second(new_grid_solutions[j]);
 
+        old_grid_solutions[j].resize(new_grid_solutions[j].size());
+        update_ghost_values[j].resize(new_grid_solutions[j].size(), true);
         for (unsigned int i = 0; i < new_grid_solutions[j].size(); ++i)
-          update_ghost_elements[j].push_back(new_grid_solutions[j][i]->has_ghost_elements());
-
-        for (const auto &i : new_grid_solutions[j])
           {
-            i->update_ghost_values();
-            old_grid_solutions[j].push_back(i);
+            old_grid_solutions[j][i] = new_grid_solutions[j][i];
+            if (not new_grid_solutions[j][i]->has_ghost_elements())
+              {
+                update_ghost_values[j][i] = false;
+                new_grid_solutions[j][i]->update_ghost_values();
+              }
           }
 
-        solution_transfer[j] =
-          std::make_shared<dealii::SolutionTransfer<dim, VectorType>>(*data[j].first);
-        solution_transfer[j]->prepare_for_coarsening_and_refinement(old_grid_solutions[j]);
+        solution_transfers[j] =
+          std::make_unique<dealii::SolutionTransfer<dim, VectorType>>(*data[j].first);
+        solution_transfers[j]->prepare_for_coarsening_and_refinement(old_grid_solutions[j]);
       }
 
     tria.execute_coarsening_and_refinement();
@@ -117,12 +123,13 @@ namespace MeltPoolDG
     // interpolate the given solution to the new discretization
     for (unsigned int j = 0; j < n_dof_handlers; ++j)
       {
-        for (const auto &i : new_grid_solutions[j])
-          i->zero_out_ghost_values();
-        solution_transfer[j]->interpolate(new_grid_solutions[j]);
+        for (const auto &v : new_grid_solutions[j])
+          v->zero_out_ghost_values();
+
+        solution_transfers[j]->interpolate(new_grid_solutions[j]);
 
         for (unsigned int i = 0; i < new_grid_solutions[j].size(); ++i)
-          if (update_ghost_elements[j][i])
+          if (update_ghost_values[j][i])
             new_grid_solutions[j][i]->update_ghost_values();
       }
 
