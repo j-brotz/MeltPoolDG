@@ -360,6 +360,16 @@ namespace MeltPoolDG::CutUtil
 
         const auto cell_location = mesh_classifier.location_to_level_set(cell);
 
+        AssertThrow(
+          not((cell_location == dealii::NonMatching::LocationToLevelSet::inside and
+               mesh_classifier_old.location_to_level_set(cell) ==
+                 dealii::NonMatching::LocationToLevelSet::outside) or
+              (cell_location == dealii::NonMatching::LocationToLevelSet::outside and
+               mesh_classifier_old.location_to_level_set(cell) ==
+                 dealii::NonMatching::LocationToLevelSet::inside)),
+          dealii::ExcMessage(
+            "Invalid solution transfer. Extrapolation for interface movement over more than one cell is not implemented."));
+
         if (cell_location != dealii::NonMatching::LocationToLevelSet::intersected)
           continue;
 
