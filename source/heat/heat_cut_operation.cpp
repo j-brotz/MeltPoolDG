@@ -202,22 +202,34 @@ namespace MeltPoolDG::Heat
       Assert(setup_dof_system != nullptr,
              dealii::ExcMessage("You must register the setup_dof_system lambda function first!"));
 
+      std::vector<const VectorType *> cut_solution_vectors;
+      cut_solution_vectors.reserve(solution_history.size());
+      solution_history.apply(
+        [&cut_solution_vectors](VectorType &vec) { cut_solution_vectors.push_back(&vec); });
+
       // transfer old solution according to the new interface position,
       // the matrix-free object is reinitialized within the reinit function
       cut_solution_transfer.reinit(
         const_cast<dealii::DoFHandler<dim> &>(scratch_data.get_dof_handler(heat_cut_dof_idx)),
         const_cast<dealii::Triangulation<dim> &>(scratch_data.get_triangulation()),
-        solution_history.get_current_solution(),
+        cut_solution_vectors,
         *mesh_classifier_old,
         *mesh_classifier,
         reinit_vector,
         setup_dof_system,
         attach_all_vectors);
     }
-    scratch_data.initialize_dof_vector(solution_history.get_current_solution(), heat_cut_dof_idx);
-    solution_history.get_current_solution().copy_locally_owned_data_from(
-      cut_solution_transfer.get_updated_solution());
-    solution_history.get_current_solution().update_ghost_values();
+
+    {
+      const auto  &updated_solutions = cut_solution_transfer.get_updated_solutions();
+      unsigned int i                 = 0;
+      solution_history.apply([this, &updated_solutions, &i](VectorType &vec) {
+        scratch_data.initialize_dof_vector(vec, heat_cut_dof_idx);
+        vec.copy_locally_owned_data_from(updated_solutions[i]);
+        vec.update_ghost_values();
+        ++i;
+      });
+    }
 
     // generate intersected quadrature for new interface position.
     ready_to_generate_intersected_quadrature = true;

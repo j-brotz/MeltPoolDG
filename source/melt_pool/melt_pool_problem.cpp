@@ -2325,9 +2325,12 @@ namespace MeltPoolDG::MeltPool
                       });
 
     if (melt_front_propagation)
-      data.emplace_back(dof_handler_heat.get(), [this](std::vector<VectorType *> &vectors) {
-        melt_front_propagation->attach_vectors(vectors); // temperature + solid + liquid
-      });
+      // TODO move attaching dof handler ptr to operation
+      data.emplace_back(&scratch_data->get_dof_handler(heat_continuous_no_bc_dof_idx),
+                        [this](std::vector<VectorType *> &vectors) {
+                          melt_front_propagation->attach_vectors(
+                            vectors); // temperature + solid + liquid
+                        });
 
     if (evaporation_operation)
       {

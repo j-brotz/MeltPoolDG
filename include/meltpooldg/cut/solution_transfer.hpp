@@ -48,18 +48,54 @@ namespace MeltPoolDG::CutUtil
              &attach_vectors = {});
 
     /**
+     * Same as above but with multiple cut solution vectors given by @param cut_solutions
+     */
+    void
+    reinit(dealii::DoFHandler<dim>                        &cut_dof_handler,
+           dealii::Triangulation<dim>                     &tria,
+           const std::vector<const VectorType *>          &cut_solutions,
+           const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
+           const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
+           const std::function<void(VectorType &)>        &reinit_cut_vector,
+           const std::function<void()>                    &setup_dof_system,
+           const std::function<
+             void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
+                                        std::function<void(std::vector<VectorType *> &)>>> &)>
+             &attach_vectors = {});
+
+    /**
      * Getter functions for the transferred solution.
      */
+    const std::vector<VectorType> &
+    get_updated_solutions() const
+    {
+      return new_solutions;
+    }
+
+    std::vector<VectorType> &
+    get_updated_solutions()
+    {
+      return new_solutions;
+    }
+
     const VectorType &
     get_updated_solution() const
     {
-      return new_solution;
+      Assert(
+        new_solutions.size() == 1,
+        dealii::ExcMessage(
+          "This function assumes that only one cut solution vector was attached, which is not the case."));
+      return new_solutions[0];
     }
 
     VectorType &
     get_updated_solution()
     {
-      return new_solution;
+      Assert(
+        new_solutions.size() == 1,
+        dealii::ExcMessage(
+          "This function assumes that only one cut solution vector was attached, which is not the case."));
+      return new_solutions[0];
     }
 
   private:
@@ -70,7 +106,7 @@ namespace MeltPoolDG::CutUtil
     transfer_solution_constant_dofs(
       dealii::DoFHandler<dim>                        &cut_dof_handler,
       dealii::Triangulation<dim>                     &tria,
-      const VectorType                               &cut_solution,
+      const std::vector<const VectorType *>          &cut_solutions,
       const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
       const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
       const std::function<void(VectorType &)>        &reinit_cut_vector,
@@ -106,7 +142,7 @@ namespace MeltPoolDG::CutUtil
       const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
       const std::function<void(VectorType &)>        &reinit_vector);
 
-    VectorType new_solution;
+    std::vector<VectorType> new_solutions;
 
     unsigned int fe_degree;
     // components of the solution in one phase

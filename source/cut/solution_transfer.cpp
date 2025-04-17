@@ -64,7 +64,7 @@ namespace MeltPoolDG::CutUtil
   SolutionTransferOperator<dim, number>::reinit(
     dealii::DoFHandler<dim>                        &cut_dof_handler,
     dealii::Triangulation<dim>                     &tria,
-    const VectorType                               &cut_solution,
+    const std::vector<const VectorType *>          &cut_solutions,
     const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
     const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
     const std::function<void(VectorType &)>        &reinit_cut_vector,
@@ -148,13 +148,18 @@ namespace MeltPoolDG::CutUtil
               "The active domain should have the FE index 'outside' for a single domain problem."));
         }
 
-    if (not cut_solution.has_ghost_elements())
-      cut_solution.update_ghost_values();
+    Assert(cut_solutions.size() > 0,
+           dealii::ExcMessage("You must attach at least one cut solution vector!"));
+    new_solutions.resize(cut_solutions.size());
+
+    for (const auto &v : cut_solutions)
+      if (not v->has_ghost_elements())
+        v->update_ghost_values();
 
     // 1) update FE-index and distribute DoFs according to new state with the moved interface
     transfer_solution_constant_dofs(cut_dof_handler,
                                     tria,
-                                    cut_solution,
+                                    cut_solutions,
                                     mesh_classifier_old,
                                     mesh_classifier,
                                     reinit_cut_vector,
@@ -170,13 +175,38 @@ namespace MeltPoolDG::CutUtil
   }
 
 
+  template <int dim, typename number>
+  void
+  SolutionTransferOperator<dim, number>::reinit(
+    dealii::DoFHandler<dim>                        &cut_dof_handler,
+    dealii::Triangulation<dim>                     &tria,
+    const VectorType                               &cut_solution,
+    const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
+    const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
+    const std::function<void(VectorType &)>        &reinit_cut_vector,
+    const std::function<void()>                    &setup_dof_system,
+    const std::function<void(
+      std::vector<std::pair<const dealii::DoFHandler<dim> *,
+                            std::function<void(std::vector<VectorType *> &)>>> &)> &attach_vectors)
+  {
+    reinit(cut_dof_handler,
+           tria,
+           {&cut_solution},
+           mesh_classifier_old,
+           mesh_classifier,
+           reinit_cut_vector,
+           setup_dof_system,
+           attach_vectors);
+  }
+
+
 
   template <int dim, typename number>
   void
   SolutionTransferOperator<dim, number>::transfer_solution_constant_dofs(
     dealii::DoFHandler<dim>                        &cut_dof_handler,
     dealii::Triangulation<dim>                     &tria,
-    const VectorType                               &cut_solution,
+    const std::vector<const VectorType *>          &cut_solutions,
     const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
     const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
     const std::function<void(VectorType &)>        &reinit_cut_vector,
@@ -197,8 +227,10 @@ namespace MeltPoolDG::CutUtil
     if (attach_vectors)
       attach_vectors(data);
     else
-      data.emplace_back(&cut_dof_handler, [&cut_solution](std::vector<VectorType *> &vectors) {
-        vectors.push_back((VectorType *)&cut_solution);
+      data.emplace_back(&cut_dof_handler, [&cut_solutions](std::vector<VectorType *> &vectors) {
+        vectors.reserve(cut_solutions.size());
+        for (const auto &v : cut_solutions)
+          vectors.push_back(const_cast<VectorType *>(v));
       });
 
     const unsigned int n_dof_handlers = data.size();
@@ -215,12 +247,7 @@ namespace MeltPoolDG::CutUtil
 
     for (unsigned int j = 0; j < n_dof_handlers; ++j)
       {
-        // collect pointers to the DoF vectors for the current DoFHandler
-        // for the cut_dof_handler, only pick up the given cut_solution
-        if (data[j].first != &cut_dof_handler)
-          data[j].second(new_grid_solutions[j]);
-        else
-          new_grid_solutions[j].push_back((VectorType *)&cut_solution);
+        data[j].second(new_grid_solutions[j]);
 
         old_grid_solutions[j].resize(new_grid_solutions[j].size());
         update_ghost_values[j].resize(new_grid_solutions[j].size(), true);
@@ -245,9 +272,12 @@ namespace MeltPoolDG::CutUtil
     // reinitialize the matrix-free object (cut_dof_handler has changed)
     setup_dof_system();
 
-    // reinit new cut solution vector
-    reinit_cut_vector(new_solution);
-    new_solution = 0.;
+    // reinit new cut solution vectors
+    for (auto &v : new_solutions)
+      {
+        reinit_cut_vector(v);
+        v = 0.;
+      }
 
     // interpolate the given solution to the new discretization
     for (unsigned int j = 0; j < n_dof_handlers; ++j)
@@ -264,10 +294,11 @@ namespace MeltPoolDG::CutUtil
                 new_grid_solutions[j][i]->update_ghost_values();
           }
         else
-          solution_transfers[j]->interpolate(new_solution);
+          solution_transfers[j]->interpolate(new_solutions);
       }
 
-    new_solution.update_ghost_values();
+    for (const auto &v : new_solutions)
+      v.update_ghost_values();
 
     // revert averaging process in solution transfer for cg-case
     // (TODO: fix this issue in dealii)
@@ -327,11 +358,14 @@ namespace MeltPoolDG::CutUtil
                   }
           }
 
-        for (const auto i : new_solution.locally_owned_elements())
-          if ((dof_counter[i] - dof_counter_fe_nothing[i]) > 0)
-            new_solution[i] *= dof_counter[i] / (dof_counter[i] - dof_counter_fe_nothing[i]);
+        for (auto &new_solution : new_solutions)
+          {
+            for (const auto i : new_solution.locally_owned_elements())
+              if (dof_counter[i] - dof_counter_fe_nothing[i] > 0)
+                new_solution[i] *= dof_counter[i] / (dof_counter[i] - dof_counter_fe_nothing[i]);
 
-        new_solution.update_ghost_values();
+            new_solution.update_ghost_values();
+          }
       }
   }
 
@@ -406,7 +440,7 @@ namespace MeltPoolDG::CutUtil
     // b) For continuous elements, loop over cells belonging to the subdomain and remove DoFs
     //    from extrapolation. Additionally, if both the old and new cell location are intersected,
     //    remove DoFs from extrapolation.
-    if (!is_dg)
+    if (not is_dg)
       {
         for (const auto &cell : cut_dof_handler.active_cell_iterators())
           {
@@ -494,14 +528,14 @@ namespace MeltPoolDG::CutUtil
     // The full set of ghost-values is required for setting the constraints.
     VectorType new_solution_including_all_ghosts;
     const bool is_globally_compatible =
-      partitioner_dof.is_globally_compatible(*new_solution.get_partitioner());
-    if (!is_globally_compatible)
+      partitioner_dof.is_globally_compatible(*new_solutions[0].get_partitioner());
+    if (not is_globally_compatible)
       {
         new_solution_including_all_ghosts.reinit(cut_dof_handler.locally_owned_dofs(),
                                                  dealii::DoFTools::extract_locally_relevant_dofs(
                                                    cut_dof_handler),
                                                  cut_dof_handler.get_communicator());
-        new_solution_including_all_ghosts = new_solution;
+        new_solution_including_all_ghosts = new_solutions[0];
         new_solution_including_all_ghosts.update_ghost_values();
       }
 
@@ -533,13 +567,13 @@ namespace MeltPoolDG::CutUtil
                 // constrain entries when they are not extrapolated
                 if (extrapolate_dofs[i] == 0)
                   {
-                    if (!is_globally_compatible)
+                    if (not is_globally_compatible)
                       constraints_gp.add_constraint(
                         dof_indices[i], {}, new_solution_including_all_ghosts[dof_indices[i]]);
                     else
                       constraints_gp.add_constraint(dof_indices[i],
                                                     {},
-                                                    new_solution[dof_indices[i]]);
+                                                    new_solutions[0][dof_indices[i]]);
                   }
                 dof_processed[local_dof_idx] = true;
               }
@@ -740,7 +774,8 @@ namespace MeltPoolDG::CutUtil
     dealii::ReductionControl solver_control(1000, 1e-10, 1e-10);
 
     dealii::SolverCG<VectorType> solver(solver_control);
-    solver.solve(sparse_matrix, new_solution, rhs, dealii::PreconditionIdentity());
+    for (auto &new_solution : new_solutions)
+      solver.solve(sparse_matrix, new_solution, rhs, dealii::PreconditionIdentity());
 
     if (verbosity >= 2)
       {
@@ -751,7 +786,8 @@ namespace MeltPoolDG::CutUtil
       }
 
     // apply constraints
-    constraints_gp.distribute(new_solution);
+    for (auto &new_solution : new_solutions)
+      constraints_gp.distribute(new_solution);
   }
 
 
