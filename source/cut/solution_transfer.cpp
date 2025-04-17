@@ -62,13 +62,13 @@ namespace MeltPoolDG::CutUtil
   template <int dim, typename number>
   void
   SolutionTransferOperator<dim, number>::reinit(
-    dealii::DoFHandler<dim>                                                  &cut_dof_handler,
-    dealii::Triangulation<dim>                                               &tria,
-    const VectorType                                                         &cut_solution,
-    const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier_old,
-    const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier,
-    const std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> &reinit_cut_vector,
-    const std::function<void(const dealii::DoFHandler<dim> &)>               &setup_dof_system,
+    dealii::DoFHandler<dim>                        &cut_dof_handler,
+    dealii::Triangulation<dim>                     &tria,
+    const VectorType                               &cut_solution,
+    const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
+    const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
+    const std::function<void(VectorType &)>        &reinit_cut_vector,
+    const std::function<void()>                    &setup_dof_system,
     const std::function<void(
       std::vector<std::pair<const dealii::DoFHandler<dim> *,
                             std::function<void(std::vector<VectorType *> &)>>> &)> &attach_vectors)
@@ -174,13 +174,13 @@ namespace MeltPoolDG::CutUtil
   template <int dim, typename number>
   void
   SolutionTransferOperator<dim, number>::transfer_solution_constant_dofs(
-    dealii::DoFHandler<dim>                                                  &cut_dof_handler,
-    dealii::Triangulation<dim>                                               &tria,
-    const VectorType                                                         &cut_solution,
-    const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier_old,
-    const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier,
-    const std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> &reinit_vector,
-    const std::function<void(const dealii::DoFHandler<dim> &)>               &reinit_matrix_free,
+    dealii::DoFHandler<dim>                        &cut_dof_handler,
+    dealii::Triangulation<dim>                     &tria,
+    const VectorType                               &cut_solution,
+    const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
+    const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
+    const std::function<void(VectorType &)>        &reinit_cut_vector,
+    const std::function<void()>                    &setup_dof_system,
     const std::function<void(
       std::vector<std::pair<const dealii::DoFHandler<dim> *,
                             std::function<void(std::vector<VectorType *> &)>>> &)> &attach_vectors)
@@ -243,10 +243,10 @@ namespace MeltPoolDG::CutUtil
     tria.execute_coarsening_and_refinement();
 
     // reinitialize the matrix-free object (cut_dof_handler has changed)
-    reinit_matrix_free(cut_dof_handler);
+    setup_dof_system();
 
-    // reinit new solution vector
-    reinit_vector(new_solution, cut_dof_handler);
+    // reinit new cut solution vector
+    reinit_cut_vector(new_solution);
     new_solution = 0.;
 
     // interpolate the given solution to the new discretization
@@ -274,11 +274,11 @@ namespace MeltPoolDG::CutUtil
     if (not is_dg)
       {
         VectorType dof_counter;
-        reinit_vector(dof_counter, cut_dof_handler);
+        reinit_cut_vector(dof_counter);
         dof_counter = 0.;
 
         VectorType dof_counter_fe_nothing;
-        reinit_vector(dof_counter_fe_nothing, cut_dof_handler);
+        reinit_cut_vector(dof_counter_fe_nothing);
         dof_counter_fe_nothing = 0.;
 
         std::vector<dealii::types::global_dof_index> dof_indices;
@@ -553,10 +553,10 @@ namespace MeltPoolDG::CutUtil
   template <int dim, typename number>
   void
   SolutionTransferOperator<dim, number>::extrapolate_solution_new_dofs(
-    const dealii::DoFHandler<dim>                                            &cut_dof_handler,
-    const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier,
-    const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier_old,
-    const std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> &reinit_vector)
+    const dealii::DoFHandler<dim>                  &cut_dof_handler,
+    const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
+    const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
+    const std::function<void(VectorType &)>        &reinit_cut_vector)
   {
     // identify and mark DoFs, which require ghost-penalty extrapolation
     const VectorType flags_dofs_gp_extrapolation =
@@ -598,7 +598,7 @@ namespace MeltPoolDG::CutUtil
     sparse_matrix.reinit(dsp);
 
     VectorType rhs;
-    reinit_vector(rhs, cut_dof_handler);
+    reinit_cut_vector(rhs);
     rhs = 0.;
 
     dealii::hp::QCollection<dim - 1> face_quadrature;

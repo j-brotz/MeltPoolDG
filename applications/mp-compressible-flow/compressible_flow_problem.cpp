@@ -172,11 +172,7 @@ namespace MeltPoolDG::Flow
             *scratch_data,
             simulation_case->parameters.flow,
             *time_iterator,
-            [&](const dealii::DoFHandler<dim> &dh) {
-              Assert(&dh == &scratch_data->get_dof_handler(comp_flow_dof_idx),
-                     dealii::ExcInternalError());
-              setup_dof_system();
-            },
+            [this]() { this->setup_dof_system(); },
             comp_flow_dof_idx,
             level_set_dof_idx,
             comp_flow_quad_idx,

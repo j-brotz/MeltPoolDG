@@ -139,8 +139,8 @@ namespace MeltPoolDG::Heat
 
     setup_newton();
 
-    reinit_vector = [this](VectorType &vec, const DoFHandler<dim> &dh) {
-      Assert(&dh == &scratch_data.get_dof_handler(heat_cut_dof_idx), dealii::ExcInternalError());
+    reinit_vector = [this](VectorType &vec) {
+      const auto &dh = scratch_data.get_dof_handler(heat_cut_dof_idx);
       vec.reinit(dh.locally_owned_dofs(),
                  scratch_data.get_locally_relevant_dofs(heat_cut_dof_idx),
                  dh.get_communicator());
@@ -160,7 +160,7 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatCutOperation<dim, number>::register_lambdas_for_solution_transfer(
-    const std::function<void(const dealii::DoFHandler<dim> &)> setup_dof_system_in,
+    const std::function<void()> setup_dof_system_in,
     const std::function<
       void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
                                  std::function<void(std::vector<VectorType *> &)>>> &)>

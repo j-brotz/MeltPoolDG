@@ -71,9 +71,9 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier;
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier_old;
 
-    CutUtil::SolutionTransferOperator<dim, number>                     cut_solution_transfer;
-    std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> reinit_vector;
-    std::function<void(const dealii::DoFHandler<dim> &)>               setup_dof_system;
+    CutUtil::SolutionTransferOperator<dim, number> cut_solution_transfer;
+    std::function<void(VectorType &)>              reinit_vector;
+    std::function<void()>                          setup_dof_system;
     std::function<void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
                                              std::function<void(std::vector<VectorType *> &)>>> &)>
       attach_all_vectors;
@@ -130,7 +130,7 @@ namespace MeltPoolDG::Heat
      */
     void
     register_lambdas_for_solution_transfer(
-      const std::function<void(const dealii::DoFHandler<dim> &)> setup_dof_system_in,
+      const std::function<void()> setup_dof_system_in,
       const std::function<
         void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
                                    std::function<void(std::vector<VectorType *> &)>>> &)>

@@ -35,18 +35,17 @@ namespace MeltPoolDG::CutUtil
      * interface position. New DoFs are ghost-penalty extrapolated.
      */
     void
-    reinit(
-      dealii::DoFHandler<dim>                                                  &cut_dof_handler,
-      dealii::Triangulation<dim>                                               &tria,
-      const VectorType                                                         &cut_solution,
-      const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier_old,
-      const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier,
-      const std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> &reinit_cut_vector,
-      const std::function<void(const dealii::DoFHandler<dim> &)>               &setup_dof_system,
-      const std::function<
-        void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                                   std::function<void(std::vector<VectorType *> &)>>> &)>
-        &attach_vectors = {});
+    reinit(dealii::DoFHandler<dim>                        &cut_dof_handler,
+           dealii::Triangulation<dim>                     &tria,
+           const VectorType                               &cut_solution,
+           const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
+           const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
+           const std::function<void(VectorType &)>        &reinit_cut_vector,
+           const std::function<void()>                    &setup_dof_system,
+           const std::function<
+             void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
+                                        std::function<void(std::vector<VectorType *> &)>>> &)>
+             &attach_vectors = {});
 
     /**
      * Getter functions for the transferred solution.
@@ -69,13 +68,13 @@ namespace MeltPoolDG::CutUtil
      */
     void
     transfer_solution_constant_dofs(
-      dealii::DoFHandler<dim>                                                  &cut_dof_handler,
-      dealii::Triangulation<dim>                                               &tria,
-      const VectorType                                                         &cut_solution,
-      const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier_old,
-      const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier,
-      const std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> &reinit_cut_vector,
-      const std::function<void(const dealii::DoFHandler<dim> &)>               &setup_dof_system,
+      dealii::DoFHandler<dim>                        &cut_dof_handler,
+      dealii::Triangulation<dim>                     &tria,
+      const VectorType                               &cut_solution,
+      const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
+      const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
+      const std::function<void(VectorType &)>        &reinit_cut_vector,
+      const std::function<void()>                    &setup_dof_system,
       const std::function<
         void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
                                    std::function<void(std::vector<VectorType *> &)>>> &)>
@@ -102,10 +101,10 @@ namespace MeltPoolDG::CutUtil
      */
     void
     extrapolate_solution_new_dofs(
-      const dealii::DoFHandler<dim>                                            &cut_dof_handler,
-      const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier,
-      const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier_old,
-      const std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> &reinit_vector);
+      const dealii::DoFHandler<dim>                  &cut_dof_handler,
+      const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
+      const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
+      const std::function<void(VectorType &)>        &reinit_vector);
 
     VectorType new_solution;
 

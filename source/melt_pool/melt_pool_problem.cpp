@@ -981,11 +981,7 @@ namespace MeltPoolDG::MeltPool
               // Register lambda function that reinits the dealii::MatrixFree class. It's required
               // to adapt the cut operator for a new interface position.
               heat_cut_operation->register_lambdas_for_solution_transfer(
-                [this](const DoFHandler<dim> &cut_dof_handler) {
-                  Assert(&cut_dof_handler == &scratch_data->get_dof_handler(heat_dof_idx),
-                         ExcInternalError());
-                  this->setup_dof_system(true);
-                },
+                [this]() { this->setup_dof_system(true); },
                 [this](
                   std::vector<std::pair<const DoFHandler<dim> *,
                                         std::function<void(std::vector<VectorType *> &)>>> &data) {
