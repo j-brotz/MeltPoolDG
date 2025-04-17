@@ -4,7 +4,6 @@
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "4",
-    "problem name": "heat_transfer",
     "verbosity level": "1",
     "fe": {
       "degree": "1"
@@ -41,7 +40,7 @@
     "do solidification": "false",
     "do two phase": "true"
   },
-  "problem specific": {
+  "application specific": {
     "do solidification": "false"
   },
   "material": {

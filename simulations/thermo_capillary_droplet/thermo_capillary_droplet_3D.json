@@ -4,7 +4,6 @@
     "dimension": "3",
     "do print parameters": "false",
     "global refinements": "4",
-    "problem name": "melt_pool",
     "fe": {
       "degree": "1"
     }
@@ -46,7 +45,7 @@
     "max grid refinement level": "5",
     "every n step": "1"
   },
-  "problem specific": {
+  "application specific": {
     "do heat transfer": "true"
   },
   "output": {

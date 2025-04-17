@@ -21,6 +21,9 @@
 #include <algorithm>
 #include <cmath>
 
+#include "../../mp-heat-transfer/heat_transfer_case.hpp"
+#include "../radiative_transport_case.hpp"
+
 
 namespace MeltPoolDG::Simulation::RadiativeTransport
 {
@@ -206,7 +209,8 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     [[maybe_unused]] const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
       get_colorized_rectangle_boundary_ids<dim>();
 
-    if (this->parameters.base.problem_name == "radiative_transport")
+    if (auto temp_ptr =
+          dynamic_cast<MeltPoolDG::RadiativeTransport::RadiativeTransportCase<dim, number> *>(this))
       this->attach_boundary_condition(
         {upper_bc,
          std::make_shared<Heat::GaussProjectionIntensityProfile<dim, number>>(
@@ -243,16 +247,15 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
                                      interface_case, interface_case_info, epsilon_cell),
                                    "prescribed_heaviside");
 
-    if (this->parameters.base.problem_name == "radiative_transport")
+    if (auto temp_ptr =
+          dynamic_cast<MeltPoolDG::RadiativeTransport::RadiativeTransportCase<dim, number> *>(this))
       this->attach_initial_condition(std::make_shared<dealii::Functions::ZeroFunction<dim>>(),
                                      "intensity");
 
     // this is only used to TODO generate the comparison solution with the gaussian laser
-    if (this->parameters.base.problem_name == "heat_transfer")
-      {
-        // attach dummy initial conditions for the heat transfer operation
-        this->attach_initial_condition(std::make_shared<dealii::Functions::ZeroFunction<dim>>(),
-                                       "heat_transfer");
-      }
+    if (auto temp_ptr = dynamic_cast<Heat::HeatTransferCase<dim, number> *>(this))
+      // attach dummy initial conditions for the heat transfer operation
+      this->attach_initial_condition(std::make_shared<dealii::Functions::ZeroFunction<dim>>(),
+                                     "heat_transfer");
   }
 } // namespace MeltPoolDG::Simulation::RadiativeTransport

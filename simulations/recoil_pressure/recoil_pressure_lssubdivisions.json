@@ -4,7 +4,6 @@
     "dimension": "2",
     "do print parameters": "true",
     "global refinements": "6",
-    "problem name": "melt_pool",
     "verbosity level": "3",
     "fe": {
       "degree": "1"
@@ -88,7 +87,7 @@
     "start time": "0.0",
     "time step size": "2e-8"
   },
-  "problem specific": {
+  "application specific": {
     "do heat transfer": "true",
     "do solidification": "true"
   },

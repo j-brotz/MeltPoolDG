@@ -10,7 +10,6 @@
     "dimension": "1",
     "do print parameters": "false",
     "global refinements": "10",
-    "problem name": "heat_transfer",
     "verbosity level": "2",
     "fe": {
       "degree": "1"
@@ -25,7 +24,7 @@
       "residual tolerance": "1e-8"
     }
   },
-  "problem specific": {
+  "application specific": {
     "do solidification": "true"
   },
   "material": {

@@ -62,7 +62,7 @@ namespace MeltPoolDG::Flow
      * time integrator.
      */
     std::unique_ptr<TimeIntegratorBase<number>>
-    make_problem_specific_time_integrator(
+    make_application_specific_time_integrator(
       const TimeIntegratorData<number> &time_integrator_data) override;
 
     /**

@@ -1,7 +1,6 @@
 {
   "base": {
     "case name": "radiative_transport",
-    "problem name": "heat_transfer",
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "4",
@@ -50,7 +49,7 @@
     "max grid refinement level": "6",
     "n initial refinement cycles": "2"
   },
-  "problem specific": {
+  "application specific": {
     "amr strategy": "generic"
   },
   "output": {

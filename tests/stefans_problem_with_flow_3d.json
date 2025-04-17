@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "melt_pool",
     "case name": "stefans_problem_with_flow",
     "dimension": "3",
     "global refinements": "4",
@@ -38,7 +37,7 @@
       "enable": "true"
     }
   },
-  "problem specific": {
+  "application specific": {
     "do heat transfer": "true"
   },
   "output": {

@@ -9,10 +9,10 @@ namespace MeltPoolDG
 {
   // TODO: how can this template type be omited?
   template <int dim, typename number, typename SimulationType = MeltPoolCase<dim, number>>
-  class ProblemBase
+  class ApplicationBase
   {
   public:
-    virtual ~ProblemBase()
+    virtual ~ApplicationBase()
     {}
 
     virtual void
@@ -21,7 +21,7 @@ namespace MeltPoolDG
   protected:
     // TODO: Move into free function
     void
-    add_problem_specific_parameters(const std::string &parameter_file)
+    add_application_specific_parameters(const std::string &parameter_file)
     {
       add_and_parse_parameters(
         parameter_file, [this](dealii::ParameterHandler &prm) { add_parameters(prm); }, false);
@@ -31,7 +31,7 @@ namespace MeltPoolDG
      * Add parameters to the parameter handler.
      *
      * This function is intended to be overriden by derived classes.
-     * If so, add_problem_specific_parameters() must be called from
+     * If so, add_application_specific_parameters() must be called from
      * the derived class.
      */
     virtual void
@@ -39,7 +39,7 @@ namespace MeltPoolDG
     {
       AssertThrow(false,
                   dealii::ExcMessage(
-                    "If problem specific parameters should be added, "
+                    "If application specific parameters should be added, "
                     "add_parameters() has to be overriden in the derived class. Abort..."));
     }
   };

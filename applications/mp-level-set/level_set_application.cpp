@@ -1,4 +1,4 @@
-#include "level_set_problem.hpp"
+#include "level_set_application.hpp"
 //
 #include <deal.II/base/data_out_base.h>
 #include <deal.II/base/index_set.h>
@@ -16,7 +16,7 @@
 
 #include <deal.II/numerics/data_out.h>
 
-#include <meltpooldg/core/problem_base.hpp>
+#include <meltpooldg/core/application_base.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
@@ -34,7 +34,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  LevelSetProblem<dim, number>::run()
+  LevelSetApplication<dim, number>::run()
   {
     initialize();
     ScopedName         sc("run");
@@ -104,7 +104,7 @@ namespace MeltPoolDG::LevelSet
    */
   template <int dim, typename number>
   void
-  LevelSetProblem<dim, number>::initialize()
+  LevelSetApplication<dim, number>::initialize()
   {
     scratch_data = std::make_shared<ScratchData<dim, dim, number>>(
       simulation_case->mpi_communicator,
@@ -260,7 +260,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  LevelSetProblem<dim, number>::setup_dof_system(const bool do_reinit)
+  LevelSetApplication<dim, number>::setup_dof_system(const bool do_reinit)
   {
     FiniteElementUtils::distribute_dofs<dim, 1>(simulation_case->parameters.ls.fe, dof_handler);
     FiniteElementUtils::distribute_dofs<dim, dim>(simulation_case->parameters.base.fe,
@@ -310,7 +310,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  LevelSetProblem<dim, number>::compute_advection_velocity(Function<dim> &advec_func)
+  LevelSetApplication<dim, number>::compute_advection_velocity(Function<dim> &advec_func)
   {
     advection_velocity = 0;
     // set the current time to the advection field function
@@ -326,7 +326,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  LevelSetProblem<dim, number>::output_results(const unsigned int time_step, const number time)
+  LevelSetApplication<dim, number>::output_results(const unsigned int time_step, const number time)
   {
     ScopedName         sc("output_results");
     TimerOutput::Scope scope(scratch_data->get_timer(), sc);
@@ -363,7 +363,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  LevelSetProblem<dim, number>::refine_mesh()
+  LevelSetApplication<dim, number>::refine_mesh()
   {
     ScopedName         sc("AMR");
     TimerOutput::Scope scope(scratch_data->get_timer(), sc);
@@ -488,9 +488,9 @@ namespace MeltPoolDG::LevelSet
                                       time_iterator->get_current_time_step_number());
   }
 
-  template class LevelSetProblem<1, double>;
-  template class LevelSetProblem<2, double>;
-  template class LevelSetProblem<3, double>;
+  template class LevelSetApplication<1, double>;
+  template class LevelSetApplication<2, double>;
+  template class LevelSetApplication<3, double>;
 } // namespace MeltPoolDG::LevelSet
 
 int
@@ -501,6 +501,6 @@ main(int argc, char *argv[])
   MPI_Comm mpi_comm(MPI_COMM_WORLD);
   MeltPoolDG::default_main<MeltPoolDG::LevelSet::LevelSetCaseParameters<double>,
                            MeltPoolDG::LevelSet::LevelSetCase,
-                           MeltPoolDG::LevelSet::LevelSetProblem>(argc, argv, mpi_comm);
+                           MeltPoolDG::LevelSet::LevelSetApplication>(argc, argv, mpi_comm);
   return 0;
 }

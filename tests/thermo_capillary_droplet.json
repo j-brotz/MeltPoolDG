@@ -4,7 +4,6 @@
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "6",
-    "problem name": "melt_pool",
     "fe": {
       "degree": "1"
     }
@@ -29,7 +28,7 @@
     "end time": "0.002",
     "time step size": "0.0005"
   },
-  "problem specific": {
+  "application specific": {
     "do heat transfer": "true"
   },
   "output": {

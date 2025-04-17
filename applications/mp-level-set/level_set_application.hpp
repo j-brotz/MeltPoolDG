@@ -15,7 +15,7 @@
 namespace MeltPoolDG::LevelSet
 {
   template <int dim, typename number>
-  class LevelSetProblem
+  class LevelSetApplication
   {
   private:
     using CaseType        = LevelSetCase<dim, number>;
@@ -69,7 +69,7 @@ namespace MeltPoolDG::LevelSet
     refine_mesh();
 
   public:
-    LevelSetProblem(std::unique_ptr<CaseType> simulation_case)
+    LevelSetApplication(std::unique_ptr<CaseType> simulation_case)
       : simulation_case(std::move(simulation_case))
     {}
 

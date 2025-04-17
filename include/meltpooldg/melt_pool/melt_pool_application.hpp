@@ -9,8 +9,8 @@
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <meltpooldg/core/application_base.hpp>
 #include <meltpooldg/core/parameters.hpp>
-#include <meltpooldg/core/problem_base.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
@@ -44,7 +44,7 @@ namespace MeltPoolDG::MeltPool
 
 
   template <int dim, typename number>
-  class MeltPoolProblem : public ProblemBase<dim, number>
+  class MeltPoolApplication : public ApplicationBase<dim, number>
   {
   private:
     using CaseType        = MeltPoolCase<dim, number>;
@@ -54,7 +54,7 @@ namespace MeltPoolDG::MeltPool
     const std::shared_ptr<CaseType> simulation_case;
 
   public:
-    MeltPoolProblem(std::unique_ptr<CaseType> simulation_case)
+    MeltPoolApplication(std::unique_ptr<CaseType> simulation_case)
       : simulation_case(std::move(simulation_case))
     {}
 
@@ -116,7 +116,7 @@ namespace MeltPoolDG::MeltPool
         number max_change_factor_time_step_size = 1.5;
       } mp_heat_up;
 
-    } problem_specific_parameters;
+    } application_specific_parameters;
 
     /*
      *  This function initials the relevant scratch data

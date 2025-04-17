@@ -17,8 +17,8 @@ namespace MeltPoolDG
         "case name",
         case_name,
         "Sets the base name for the application that will be fed to the problem type.");
-      prm.add_parameter("problem name",
-                        problem_name,
+      prm.add_parameter("application name",
+                        application_name,
                         "Sets the base name for the problem that should be solved.");
       prm.add_parameter("dimension", dimension, "Defines the dimension of the problem");
       prm.add_parameter("number",
@@ -46,19 +46,10 @@ namespace MeltPoolDG
   }
 
   void
-  BaseData::check_input_parameters(const unsigned int ls_n_subdivisions) const
+  BaseData::check_input_parameters() const
   {
-    AssertThrow(problem_name != "not_initialized",
-                dealii::ExcMessage("The problem name must be specified!"));
     AssertThrow(case_name != "not_initialized",
                 dealii::ExcMessage("The case name must be specified!"));
-
-    // TODO: move to specific data
-    AssertThrow(
-      ls_n_subdivisions == 1 ||
-        (problem_name != "reinitialization" && problem_name != "heat_transfer"),
-      dealii::ExcMessage(
-        "n_subdivisions for the level set is not supported for your requested problem_type."));
 
     AssertThrow((fe.type != FiniteElementType::FE_DGQ),
                 dealii::ExcMessage(

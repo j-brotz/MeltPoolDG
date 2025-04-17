@@ -2,7 +2,7 @@
 #  define MELT_POOL_DG_DIM 1
 #endif
 
-#include <meltpooldg/melt_pool/melt_pool_problem.hpp>
+#include <meltpooldg/melt_pool/melt_pool_application.hpp>
 //
 
 #include <deal.II/base/exceptions.h>
@@ -83,7 +83,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::run()
+  MeltPoolApplication<dim, number>::run()
   {
     initialize(); // no timing needed, since the function does itself
 
@@ -112,7 +112,7 @@ namespace MeltPoolDG::MeltPool
 
         const auto heat_up_modify_time_step = [&]() {
           // check heat up
-          if (heat_operation and problem_specific_parameters.mp_heat_up.time_step_size > 0 and
+          if (heat_operation and application_specific_parameters.mp_heat_up.time_step_size > 0 and
               not heat_up_finished)
             {
               const number       T_max = heat_operation->get_temperature().linfty_norm();
@@ -121,11 +121,11 @@ namespace MeltPoolDG::MeltPool
               Journal::print_line(scratch_data->get_pcout(1), s.str(), "melt_pool_problem");
 
               // start to decrease time step size if T > T_heat_up
-              if (T_max > problem_specific_parameters.mp_heat_up.max_temperature)
+              if (T_max > application_specific_parameters.mp_heat_up.max_temperature)
                 {
                   time_iterator->set_current_time_increment(
                     param.time_stepping.time_step_size,
-                    problem_specific_parameters.mp_heat_up.max_change_factor_time_step_size);
+                    application_specific_parameters.mp_heat_up.max_change_factor_time_step_size);
 
                   // If time step size has decreased to the standard time stepping parameters, the
                   // heat up phase is finished.
@@ -161,7 +161,7 @@ namespace MeltPoolDG::MeltPool
             time_iterator->print_me(scratch_data->get_pcout(1));
 
             // use extrapolated solution values in the coupling terms
-            if (problem_specific_parameters.do_extrapolate_coupling_terms)
+            if (application_specific_parameters.do_extrapolate_coupling_terms)
               {
                 if (flow_operation)
                   flow_operation->init_time_advance();
@@ -177,7 +177,7 @@ namespace MeltPoolDG::MeltPool
             /******************************************************************************************
              * LEVEL SET
              ******************************************************************************************/
-            if (problem_specific_parameters.do_advect_level_set)
+            if (application_specific_parameters.do_advect_level_set)
               {
                 const ScopedName         scope_n("ls");
                 const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
@@ -186,7 +186,7 @@ namespace MeltPoolDG::MeltPool
                 VectorType   iter_res;
 
                 const bool do_ls_iteration =
-                  problem_specific_parameters.level_set_evapor_coupling.n_max_iter > 1;
+                  application_specific_parameters.level_set_evapor_coupling.n_max_iter > 1;
 
                 if (do_ls_iteration)
                   {
@@ -195,7 +195,7 @@ namespace MeltPoolDG::MeltPool
                   }
 
                 for (int i = 0;
-                     i < problem_specific_parameters.level_set_evapor_coupling.n_max_iter;
+                     i < application_specific_parameters.level_set_evapor_coupling.n_max_iter;
                      ++i)
                   {
                     if (do_ls_iteration)
@@ -213,7 +213,8 @@ namespace MeltPoolDG::MeltPool
 
                         // early return of iteration if l2-norm of the change of the level set field
                         // is already very small
-                        if (res_norm <= problem_specific_parameters.level_set_evapor_coupling.tol)
+                        if (res_norm <=
+                            application_specific_parameters.level_set_evapor_coupling.tol)
                           {
                             Journal::print_decoration_line(scratch_data->get_pcout(1));
                             Journal::print_line(scratch_data->get_pcout(1),
@@ -221,7 +222,7 @@ namespace MeltPoolDG::MeltPool
                                                   std::to_string(i) + " iter at residual " +
                                                   UtilityFunctions::to_string_with_precision(
                                                     res_norm),
-                                                "MeltPoolProblem");
+                                                "MeltPoolApplication");
                             Journal::print_decoration_line(scratch_data->get_pcout(1));
                             break;
                           }
@@ -231,7 +232,7 @@ namespace MeltPoolDG::MeltPool
                         Journal::print_line(scratch_data->get_pcout(2),
                                             "level set - evapor coupling; #iter " +
                                               std::to_string(i),
-                                            "MeltPoolProblem");
+                                            "MeltPoolApplication");
                         Journal::print_decoration_line(scratch_data->get_pcout(2));
                       }
 
@@ -330,11 +331,11 @@ namespace MeltPoolDG::MeltPool
                     // do heat and mass flux iteration - which is only necessary for the diffuse
                     // heat operator
                     if (param.heat.operator_type == Heat::TwoPhaseOperatorType::diffuse and
-                        problem_specific_parameters.heat_evapor_coupling.n_max_iter > 1)
+                        application_specific_parameters.heat_evapor_coupling.n_max_iter > 1)
                       {
                         Assert(heat_diffuse_operation, ExcInternalError());
 
-                        if (problem_specific_parameters.do_extrapolate_coupling_terms)
+                        if (application_specific_parameters.do_extrapolate_coupling_terms)
                           heat_operation->init_time_advance();
 
                         TableHandler iter_table;
@@ -344,7 +345,7 @@ namespace MeltPoolDG::MeltPool
                         iter_res = 1e10; // any large number
 
                         for (int i = 0;
-                             i < problem_specific_parameters.heat_evapor_coupling.n_max_iter;
+                             i < application_specific_parameters.heat_evapor_coupling.n_max_iter;
                              ++i)
                           {
                             iter_res -= heat_operation->get_temperature();
@@ -360,7 +361,8 @@ namespace MeltPoolDG::MeltPool
 
                             // early return of iteration if l2-norm of the change of the level set
                             // field is already very small
-                            if (res_norm <= problem_specific_parameters.heat_evapor_coupling.tol)
+                            if (res_norm <=
+                                application_specific_parameters.heat_evapor_coupling.tol)
                               {
                                 Journal::print_decoration_line(scratch_data->get_pcout(1));
                                 Journal::print_line(scratch_data->get_pcout(1),
@@ -368,7 +370,7 @@ namespace MeltPoolDG::MeltPool
                                                       std::to_string(i) + " iter at residual " +
                                                       UtilityFunctions::to_string_with_precision(
                                                         res_norm),
-                                                    "MeltPoolProblem");
+                                                    "MeltPoolApplication");
                                 Journal::print_decoration_line(scratch_data->get_pcout(1));
                                 break;
                               }
@@ -379,7 +381,7 @@ namespace MeltPoolDG::MeltPool
                             Journal::print_line(scratch_data->get_pcout(2),
                                                 "heat - evapor coupling; #iter " +
                                                   std::to_string(i),
-                                                "MeltPoolProblem");
+                                                "MeltPoolApplication");
                             Journal::print_decoration_line(scratch_data->get_pcout(2));
 
                             heat_diffuse_operation->solve(false);
@@ -612,7 +614,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::save()
+  MeltPoolApplication<dim, number>::save()
   {
     std::ofstream ofs(simulation_case->parameters.restart.prefix + "_0_problem.restart");
     {
@@ -633,7 +635,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::load()
+  MeltPoolApplication<dim, number>::load()
   {
     const std::string load_prefix = simulation_case->parameters.restart.prefix + "_" +
                                     std::to_string(simulation_case->parameters.restart.load);
@@ -670,52 +672,52 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::add_parameters(dealii::ParameterHandler &prm)
+  MeltPoolApplication<dim, number>::add_parameters(dealii::ParameterHandler &prm)
   {
-    prm.enter_subsection("problem specific");
+    prm.enter_subsection("application specific");
     {
       prm.add_parameter(
         "do heat transfer",
-        problem_specific_parameters.do_heat_transfer,
+        application_specific_parameters.do_heat_transfer,
         "Set this parameter to true if you want to consider a coupling with heat transfer.");
       prm.add_parameter(
         "do solidification",
-        problem_specific_parameters.do_solidification,
+        application_specific_parameters.do_solidification,
         "Set this parameter to true if you want to consider melting/solidification effects.");
       prm.add_parameter(
         "do advect level set",
-        problem_specific_parameters.do_advect_level_set,
+        application_specific_parameters.do_advect_level_set,
         "Set this parameter to true if you want to advect the level set with the fluid velocity.");
       prm.add_parameter(
         "do extrapolate coupling terms",
-        problem_specific_parameters.do_extrapolate_coupling_terms,
+        application_specific_parameters.do_extrapolate_coupling_terms,
         "Set this parameter to true if you want to extrapolate the solution vectors for semi-explicit "
         "treatment of coupling terms.");
       prm.enter_subsection("amr");
       {
         prm.add_parameter("strategy",
-                          problem_specific_parameters.amr.strategy,
+                          application_specific_parameters.amr.strategy,
                           "Select the AMR strategy.");
         prm.add_parameter(
           "do auto detect frequency",
-          problem_specific_parameters.amr.do_auto_detect_frequency,
+          application_specific_parameters.amr.do_auto_detect_frequency,
           "Automatically determine the frequency of remeshing. If this parameter is set, the parameter "
           "`amr: every n step` is ignored.");
         prm.add_parameter(
           "automatic grid refinement type",
-          problem_specific_parameters.amr.automatic_grid_refinement_type,
+          application_specific_parameters.amr.automatic_grid_refinement_type,
           "If the cells are refined automatically (strategy generic/KellyErrorEstimator), choose between "
           "refine_and_coarsen_fixed_number and refine_and_coarsen_fixed_fraction.");
         prm.add_parameter(
           "do refine all interface cells",
-          problem_specific_parameters.amr.do_refine_all_interface_cells,
+          application_specific_parameters.amr.do_refine_all_interface_cells,
           "Enforce all cells with level set values between -0.975 and 0.975 to be refined.");
         prm.add_parameter("refine gas domain",
-                          problem_specific_parameters.amr.refine_gas_domain,
+                          application_specific_parameters.amr.refine_gas_domain,
                           "Refine the gas domain.");
         prm.add_parameter(
           "fraction of melting point refined in solid",
-          problem_specific_parameters.amr.fraction_of_melting_point_refined_in_solid,
+          application_specific_parameters.amr.fraction_of_melting_point_refined_in_solid,
           "Define a fraction of the melting point. Cells in the solid with a higher temperature are enforced "
           "to be refined.");
       }
@@ -723,10 +725,10 @@ namespace MeltPoolDG::MeltPool
       prm.enter_subsection("coupling ls evapor");
       {
         prm.add_parameter("n max iter",
-                          problem_specific_parameters.level_set_evapor_coupling.n_max_iter,
+                          application_specific_parameters.level_set_evapor_coupling.n_max_iter,
                           "Maximum number of iterations for nonlinear solution.");
         prm.add_parameter("tol",
-                          problem_specific_parameters.level_set_evapor_coupling.tol,
+                          application_specific_parameters.level_set_evapor_coupling.tol,
                           "If the change of the l2-norm of the level set is smaller than 'tol', "
                           "the iteration is stopped.");
       }
@@ -734,24 +736,24 @@ namespace MeltPoolDG::MeltPool
       prm.enter_subsection("mp heat up");
       {
         prm.add_parameter("time step size",
-                          problem_specific_parameters.mp_heat_up.time_step_size,
+                          application_specific_parameters.mp_heat_up.time_step_size,
                           "Time step size until heat up is finished.");
         prm.add_parameter(
           "max change factor time step size",
-          problem_specific_parameters.mp_heat_up.max_change_factor_time_step_size,
+          application_specific_parameters.mp_heat_up.max_change_factor_time_step_size,
           "Maximum allowed factor of changing the time step size between two time steps.");
         prm.add_parameter("max temperature",
-                          problem_specific_parameters.mp_heat_up.max_temperature,
+                          application_specific_parameters.mp_heat_up.max_temperature,
                           "Temperature at which heat up is finished.");
       }
       prm.leave_subsection();
       prm.enter_subsection("coupling heat evapor");
       {
         prm.add_parameter("n max iter",
-                          problem_specific_parameters.heat_evapor_coupling.n_max_iter,
+                          application_specific_parameters.heat_evapor_coupling.n_max_iter,
                           "Maximum number of iterations for nonlinear solution.");
         prm.add_parameter("tol",
-                          problem_specific_parameters.heat_evapor_coupling.tol,
+                          application_specific_parameters.heat_evapor_coupling.tol,
                           "If the change of the l2-norm of the level set is smaller than 'tol', "
                           "the iteration is stopped.");
       }
@@ -762,28 +764,28 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::check_input_parameters()
+  MeltPoolApplication<dim, number>::check_input_parameters()
   {
-    if (problem_specific_parameters.do_solidification and
-        not problem_specific_parameters.do_heat_transfer)
+    if (application_specific_parameters.do_solidification and
+        not application_specific_parameters.do_heat_transfer)
       AssertThrow(false,
                   ExcMessage("In case of solidification flag >>> do solidification <<< "
                              "and >>> do heat transfer <<< have to be set to true."));
 
-    AssertThrow(problem_specific_parameters.amr.fraction_of_melting_point_refined_in_solid <= 1 and
-                  problem_specific_parameters.amr.fraction_of_melting_point_refined_in_solid >= 0,
-                ExcMessage(
-                  ">>>fraction of melting point refined in solid<<< must be between 0 and 1."));
+    AssertThrow(
+      application_specific_parameters.amr.fraction_of_melting_point_refined_in_solid <= 1 and
+        application_specific_parameters.amr.fraction_of_melting_point_refined_in_solid >= 0,
+      ExcMessage(">>>fraction of melting point refined in solid<<< must be between 0 and 1."));
   }
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::initialize()
+  MeltPoolApplication<dim, number>::initialize()
   {
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     simulation_case->parameters.adaflo_params.parse_parameters(simulation_case->parameter_file);
 #endif
-    this->add_problem_specific_parameters(simulation_case->parameter_file);
+    this->add_application_specific_parameters(simulation_case->parameter_file);
     check_input_parameters();
     const auto &param = simulation_case->parameters;
 
@@ -813,7 +815,7 @@ namespace MeltPoolDG::MeltPool
     ls_quad_idx =
       scratch_data->attach_quadrature(FiniteElementUtils::create_quadrature<dim>(param.ls.fe));
 
-    if (problem_specific_parameters.do_heat_transfer)
+    if (application_specific_parameters.do_heat_transfer)
       {
         dof_handler_heat = std::make_unique<DoFHandler<dim>>(*simulation_case->triangulation);
         scratch_data->attach_dof_handler(*dof_handler_heat); // heat_dirichlet_constraints
@@ -846,14 +848,14 @@ namespace MeltPoolDG::MeltPool
     // initialize the time stepping scheme
     time_iterator = std::make_shared<TimeIterator<number>>(param.time_stepping);
 
-    if (problem_specific_parameters.mp_heat_up.time_step_size > 0)
+    if (application_specific_parameters.mp_heat_up.time_step_size > 0)
       time_iterator->set_current_time_increment(
-        problem_specific_parameters.mp_heat_up.time_step_size);
+        application_specific_parameters.mp_heat_up.time_step_size);
 
     // initialize material
     const auto material_type =
       determine_material_type(true,
-                              problem_specific_parameters.do_solidification,
+                              application_specific_parameters.do_solidification,
                               param.material.two_phase_fluid_properties_transition_type ==
                                 TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation);
     material = std::make_shared<Material<number>>(param.material, material_type);
@@ -892,7 +894,7 @@ namespace MeltPoolDG::MeltPool
       ls_dof_idx /* todo: ls_zero_bc_idx*/);
 
     // initialize laser operation
-    if (problem_specific_parameters.do_heat_transfer and param.laser.power > 0.0)
+    if (application_specific_parameters.do_heat_transfer and param.laser.power > 0.0)
       {
         laser_operation = std::make_shared<Heat::LaserOperation<dim, number>>(
           *scratch_data,
@@ -911,7 +913,7 @@ namespace MeltPoolDG::MeltPool
 
     // initialize the evaporation class
     if (param.evapor.evaporative_dilation_rate.enable or
-        (problem_specific_parameters.do_heat_transfer and
+        (application_specific_parameters.do_heat_transfer and
          param.evapor.evaporative_cooling.enable and
          param.heat.operator_type == Heat::TwoPhaseOperatorType::diffuse))
       evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim, number>>(
@@ -928,7 +930,7 @@ namespace MeltPoolDG::MeltPool
 
     // initialize the heat operation class
     std::shared_ptr<Heat::HeatDiffuseOperation<dim, number>> heat_diffuse_operation;
-    if (problem_specific_parameters.do_heat_transfer)
+    if (application_specific_parameters.do_heat_transfer)
       switch (param.heat.operator_type)
         {
             case Heat::TwoPhaseOperatorType::diffuse: {
@@ -946,7 +948,7 @@ namespace MeltPoolDG::MeltPool
                 &flow_operation->get_velocity(),
                 ls_hanging_nodes_dof_idx,
                 &level_set_operation->get_level_set_as_heaviside(),
-                problem_specific_parameters.do_solidification);
+                application_specific_parameters.do_solidification);
               heat_operation = heat_diffuse_operation;
               break;
             }
@@ -967,7 +969,7 @@ namespace MeltPoolDG::MeltPool
                 heat_no_bc_dof_idx,
                 heat_continuous_no_bc_dof_idx,
                 heat_quad_idx,
-                problem_specific_parameters.do_solidification,
+                application_specific_parameters.do_solidification,
                 ls_hanging_nodes_dof_idx,
                 level_set_operation->get_level_set(),
                 vel_dof_idx,
@@ -1170,7 +1172,7 @@ namespace MeltPoolDG::MeltPool
       }
 
     // initialize the melt pool operation class
-    if (problem_specific_parameters.do_solidification)
+    if (application_specific_parameters.do_solidification)
       {
         melt_front_propagation = std::make_shared<MeltFrontPropagation<dim, number>>(
           *scratch_data,
@@ -1278,7 +1280,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::set_initial_condition_level_set()
+  MeltPoolApplication<dim, number>::set_initial_condition_level_set()
   {
     if (const auto initial_field =
           simulation_case->get_initial_condition("level_set", true /*is optional*/))
@@ -1306,7 +1308,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::set_initial_condition_heat_transfer()
+  MeltPoolApplication<dim, number>::set_initial_condition_heat_transfer()
   {
     if (not heat_operation)
       return;
@@ -1333,7 +1335,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::set_initial_condition_flow()
+  MeltPoolApplication<dim, number>::set_initial_condition_flow()
   {
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())
@@ -1366,7 +1368,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::set_initial_condition_evaporation()
+  MeltPoolApplication<dim, number>::set_initial_condition_evaporation()
   {
     if (not evaporation_operation)
       return;
@@ -1387,7 +1389,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::set_initial_conditions()
+  MeltPoolApplication<dim, number>::set_initial_conditions()
   {
     const ScopedName         scope_n("set_initial_condition");
     const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
@@ -1404,7 +1406,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::setup_dof_system(const bool do_reinit)
+  MeltPoolApplication<dim, number>::setup_dof_system(const bool do_reinit)
   {
     const auto &param = simulation_case->parameters;
 
@@ -1520,7 +1522,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::set_phase_dependent_parameters_flow(
+  MeltPoolApplication<dim, number>::set_phase_dependent_parameters_flow(
     const Parameters<number> &parameters)
   {
     // compute damping coefficients at the quadrature points of the fluid solver
@@ -1631,9 +1633,9 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::compute_gravity_force(VectorType  &vec,
-                                                      const number gravity,
-                                                      const bool   zero_out) const
+  MeltPoolApplication<dim, number>::compute_gravity_force(VectorType  &vec,
+                                                          const number gravity,
+                                                          const bool   zero_out) const
   {
     scratch_data->get_matrix_free().template cell_loop<VectorType, std::nullptr_t>(
       [&](const auto &matrix_free, auto &vec, const auto &, auto macro_cells) {
@@ -1664,7 +1666,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::compute_interface_velocity(
+  MeltPoolApplication<dim, number>::compute_interface_velocity(
     const LevelSet::LevelSetData<number>       &ls_data,
     const Evaporation::EvaporationData<number> &evapor_data)
   {
@@ -1694,7 +1696,7 @@ namespace MeltPoolDG::MeltPool
             case Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy:
               case Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_local: {
                 // Option 1: compute modified advection velocity due to evaporation
-                if (problem_specific_parameters.do_extrapolate_coupling_terms)
+                if (application_specific_parameters.do_extrapolate_coupling_terms)
                   {
                     level_set_operation->update_normal_vector();
                   }
@@ -1730,7 +1732,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::compute_interface_velocity_sharp(
+  MeltPoolApplication<dim, number>::compute_interface_velocity_sharp(
     const LevelSet::LevelSetData<number>       &ls_data,
     const Evaporation::EvaporationData<number> &evapor_data)
   {
@@ -1785,7 +1787,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::output_results(
+  MeltPoolApplication<dim, number>::output_results(
     const bool                        force_output,
     const OutputNotConvergedOperation output_not_converged_operation)
   {
@@ -1833,7 +1835,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::finalize(
+  MeltPoolApplication<dim, number>::finalize(
     const OutputNotConvergedOperation output_no_converged_operation)
   {
     output_results(true /* force_output */, output_no_converged_operation);
@@ -1847,7 +1849,8 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::attach_output_vectors(GenericDataOut<dim, number> &data_out) const
+  MeltPoolApplication<dim, number>::attach_output_vectors(
+    GenericDataOut<dim, number> &data_out) const
   {
     level_set_operation->attach_output_vectors(data_out);
 
@@ -1883,7 +1886,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   bool
-  MeltPoolProblem<dim, number>::mark_cells_for_refinement(Triangulation<dim> &tria)
+  MeltPoolApplication<dim, number>::mark_cells_for_refinement(Triangulation<dim> &tria)
   {
     const auto &amr_data = simulation_case->parameters.amr;
 
@@ -1896,7 +1899,7 @@ namespace MeltPoolDG::MeltPool
     if (normal_update_ghosts)
       level_set_operation->get_normal_vector().update_ghost_values();
 
-    if (problem_specific_parameters.amr.do_auto_detect_frequency)
+    if (application_specific_parameters.amr.do_auto_detect_frequency)
       {
         // Check whether the interface changed that much such that refinement is needed.
         //
@@ -1981,7 +1984,7 @@ namespace MeltPoolDG::MeltPool
      * different refinement strategies
      */
 
-    switch (problem_specific_parameters.amr.strategy)
+    switch (application_specific_parameters.amr.strategy)
       {
           // Compute the error based on (1-level_set^2).
           case AMRStrategy::generic: {
@@ -2009,7 +2012,7 @@ namespace MeltPoolDG::MeltPool
                                                       scratch_data->get_quadrature(ls_quad_idx),
                                                       dealii::VectorTools::L2_norm);
 
-            switch (problem_specific_parameters.amr.automatic_grid_refinement_type)
+            switch (application_specific_parameters.amr.automatic_grid_refinement_type)
               {
                 default: // this is the default case, since it was determined to be robust for CI
                          // testing
@@ -2058,7 +2061,7 @@ namespace MeltPoolDG::MeltPool
               estimated_error_per_cell);
 
             // 3) optional: incorporate interface to solid in error estimator
-            if (problem_specific_parameters.do_solidification)
+            if (application_specific_parameters.do_solidification)
               {
                 // 3a) copy the solution
                 locally_relevant_solution.reinit(scratch_data->get_partitioner(heat_no_bc_dof_idx));
@@ -2084,7 +2087,7 @@ namespace MeltPoolDG::MeltPool
               }
 
             // 4) mark cells for refinement/coarsening
-            switch (problem_specific_parameters.amr.automatic_grid_refinement_type)
+            switch (application_specific_parameters.amr.automatic_grid_refinement_type)
               {
                 default: // this is the default case, since it was determined to be robust for CI
                          // testing
@@ -2255,9 +2258,9 @@ namespace MeltPoolDG::MeltPool
                 }
               // ensure that solid regions at high temperatures are refined
               else if ((solid_vals[i] > 0.0 or
-                        problem_specific_parameters.amr.refine_gas_domain) and
+                        application_specific_parameters.amr.refine_gas_domain) and
                        temperature_vals[i] >=
-                         problem_specific_parameters.amr
+                         application_specific_parameters.amr
                              .fraction_of_melting_point_refined_in_solid *
                            simulation_case->parameters.material.solidus_temperature)
                 {
@@ -2275,7 +2278,7 @@ namespace MeltPoolDG::MeltPool
       }
 
 
-    if (problem_specific_parameters.amr.do_refine_all_interface_cells)
+    if (application_specific_parameters.amr.do_refine_all_interface_cells)
       {
         // make sure that cells close to the interfaces are refined
         Vector<number> ls_vals(scratch_data->get_fe(ls_dof_idx).n_dofs_per_cell());
@@ -2308,7 +2311,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::attach_vectors(
+  MeltPoolApplication<dim, number>::attach_vectors(
     std::vector<
       std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>> &data)
   {
@@ -2354,7 +2357,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::post()
+  MeltPoolApplication<dim, number>::post()
   {
     /**
      * level set
@@ -2389,7 +2392,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::refine_mesh()
+  MeltPoolApplication<dim, number>::refine_mesh()
   {
     const auto mark_cells_for_refinement = [this](Triangulation<dim> &tria) -> bool {
       return this->mark_cells_for_refinement(tria);
@@ -2414,5 +2417,5 @@ namespace MeltPoolDG::MeltPool
                                       time_iterator->get_current_time_step_number());
   }
 
-  template class MeltPoolProblem<MELT_POOL_DG_DIM, double>;
+  template class MeltPoolApplication<MELT_POOL_DG_DIM, double>;
 } // namespace MeltPoolDG::MeltPool

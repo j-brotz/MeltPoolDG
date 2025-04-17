@@ -1,4 +1,4 @@
-#include "reinitialization_problem.hpp"
+#include "reinitialization_application.hpp"
 
 #include <deal.II/base/exceptions.h>
 
@@ -25,7 +25,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationProblem<dim, number>::run()
+  ReinitializationApplication<dim, number>::run()
   {
     initialize();
     bool first_time_step = true;
@@ -67,7 +67,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationProblem<dim, number>::initialize()
+  ReinitializationApplication<dim, number>::initialize()
   {
     // setup scratch data
     {
@@ -167,7 +167,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationProblem<dim, number>::setup_dof_system()
+  ReinitializationApplication<dim, number>::setup_dof_system()
   {
     // setup DoFHandler
     FiniteElementUtils::distribute_dofs<dim, 1>(param.reinit.fe, dof_handler);
@@ -196,7 +196,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationProblem<dim, number>::refine_mesh()
+  ReinitializationApplication<dim, number>::refine_mesh()
   {
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       Vector<float> estimated_error_per_cell(simulation_case->triangulation->n_active_cells());
@@ -251,8 +251,8 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationProblem<dim, number>::output_results(const unsigned int time_step,
-                                                       const number       time)
+  ReinitializationApplication<dim, number>::output_results(const unsigned int time_step,
+                                                           const number       time)
   {
     if (!post_processor->is_output_timestep(time_step, time) &&
         !param.output.do_user_defined_postprocessing)
@@ -275,9 +275,9 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template class ReinitializationProblem<1, double>;
-  template class ReinitializationProblem<2, double>;
-  template class ReinitializationProblem<3, double>;
+  template class ReinitializationApplication<1, double>;
+  template class ReinitializationApplication<2, double>;
+  template class ReinitializationApplication<3, double>;
 } // namespace MeltPoolDG::LevelSet
 
 int
@@ -288,6 +288,6 @@ main(int argc, char *argv[])
   MPI_Comm mpi_comm(MPI_COMM_WORLD);
   MeltPoolDG::default_main<MeltPoolDG::LevelSet::ReinitializationCaseParameters<double>,
                            MeltPoolDG::LevelSet::ReinitializationCase,
-                           MeltPoolDG::LevelSet::ReinitializationProblem>(argc, argv, mpi_comm);
+                           MeltPoolDG::LevelSet::ReinitializationApplication>(argc, argv, mpi_comm);
   return 0;
 }

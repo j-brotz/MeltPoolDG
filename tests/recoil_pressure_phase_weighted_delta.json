@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "melt_pool",
     "case name": "recoil_pressure",
     "global refinements": "6",
     "dimension": "2",
@@ -70,7 +69,7 @@
       "residual tolerance": "1e-7"
     }
   },
-  "problem specific": {
+  "application specific": {
     "do heat transfer": "true",
     "do solidification": "false"
   },

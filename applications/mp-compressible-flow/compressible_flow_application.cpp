@@ -1,4 +1,4 @@
-#include "compressible_flow_problem.hpp"
+#include "compressible_flow_application.hpp"
 
 #include <deal.II/numerics/vector_tools.h>
 
@@ -19,7 +19,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  CompressibleFlowProblem<dim, number>::run()
+  CompressibleFlowApplication<dim, number>::run()
   {
     initialize();
 
@@ -64,7 +64,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  CompressibleFlowProblem<dim, number>::compute_level_set()
+  CompressibleFlowApplication<dim, number>::compute_level_set()
   {
     // set the current time to the field function
     level_set_field_function->set_time(time_iterator->get_current_time());
@@ -80,7 +80,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  CompressibleFlowProblem<dim, number>::setup_dof_system()
+  CompressibleFlowApplication<dim, number>::setup_dof_system()
   {
     // distribute DoFs
     comp_flow_operation.distribute_dofs(dof_handler);
@@ -118,7 +118,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  CompressibleFlowProblem<dim, number>::initialize()
+  CompressibleFlowApplication<dim, number>::initialize()
   {
     // setup DoFHandler
     dof_handler.reinit(*simulation_case->triangulation);
@@ -258,8 +258,8 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  CompressibleFlowProblem<dim, number>::output_results(const unsigned int time_step,
-                                                       const number       current_time)
+  CompressibleFlowApplication<dim, number>::output_results(const unsigned int time_step,
+                                                           const number       current_time)
   {
     if (not post_processor->is_output_timestep(time_step, current_time) and
         not simulation_case->parameters.output.do_user_defined_postprocessing)
@@ -287,9 +287,9 @@ namespace MeltPoolDG::Flow
     post_processor->process(time_step, generic_data_out, current_time);
   }
 
-  template class CompressibleFlowProblem<1, double>;
-  template class CompressibleFlowProblem<2, double>;
-  template class CompressibleFlowProblem<3, double>;
+  template class CompressibleFlowApplication<1, double>;
+  template class CompressibleFlowApplication<2, double>;
+  template class CompressibleFlowApplication<3, double>;
 
 } // namespace MeltPoolDG::Flow
 
@@ -301,6 +301,6 @@ main(int argc, char *argv[])
   MPI_Comm mpi_comm(MPI_COMM_WORLD);
   MeltPoolDG::default_main<MeltPoolDG::Flow::CompressibleFlowCaseParameters<double>,
                            MeltPoolDG::Flow::CompressibleFlowCase,
-                           MeltPoolDG::Flow::CompressibleFlowProblem>(argc, argv, mpi_comm);
+                           MeltPoolDG::Flow::CompressibleFlowApplication>(argc, argv, mpi_comm);
   return 0;
 }

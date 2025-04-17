@@ -158,7 +158,8 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
         this->triangulation =
           std::make_shared<parallel::distributed::Triangulation<2>>(this->mpi_communicator);
 
-        if (this->parameters.base.problem_name == "heat_transfer" and not do_two_phase)
+        auto is_heat_case = dynamic_cast<Heat::HeatTransferCase<dim, number> *>(this);
+        if (is_heat_case and not do_two_phase)
           {
             std::vector<unsigned> refinements(2, 1);
             refinements[0] = 3;
@@ -191,7 +192,8 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
         this->triangulation =
           std::make_shared<parallel::distributed::Triangulation<3>>(this->mpi_communicator);
 
-        if (this->parameters.base.problem_name == "heat_transfer" and not do_two_phase)
+        if (auto temp_ptr =
+              dynamic_cast<Heat::HeatTransferCase<dim, number> *>(this) and not do_two_phase)
           {
             std::vector<unsigned int> refinements(3, 1);
             refinements[0] = 3;
@@ -230,7 +232,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   void
   SimulationMeltFrontPropagation<dim, number>::set_boundary_conditions()
   {
-    if (this->parameters.base.problem_name == "heat_transfer")
+    if (auto temp_ptr = dynamic_cast<Heat::HeatTransferCase<dim, number> *>(this))
       {
         const types::boundary_id left_bc = 10;
         for (const auto &cell : this->triangulation->cell_iterators())
@@ -247,7 +249,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
                                         "dirichlet",
                                         "heat_transfer");
       }
-    else if (this->parameters.base.problem_name == "melt_pool")
+    else if (this->parameters.base.application_name == "melt_pool")
       {
         const types::boundary_id                  lower_bc = 1;
         const types::boundary_id                  upper_bc = 2;
@@ -317,13 +319,14 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   {
     this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(T_0),
                                    "heat_transfer");
-    if (this->parameters.base.problem_name == "heat_transfer" and do_two_phase)
+    auto is_heat_case = dynamic_cast<Heat::HeatTransferCase<dim, number> *>(this);
+    if (is_heat_case and do_two_phase)
       this->attach_initial_condition(
         std::make_shared<InitialLevelSetHeaviside<dim, number>>(0.0, z_max / 5),
         "prescribed_heaviside");
     // In the heat transfer problem, this->parameters.ls does not exist and the code below does not
     // compile. TODO: Find a way to implement this block for the standalone melt pool problem.
-    // if (this->parameters.base.problem_name == "melt_pool")
+    // if (this->parameters.base.application_name == "melt_pool")
     //   {
     //     const number eps =
     //     this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(

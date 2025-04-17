@@ -441,53 +441,47 @@ namespace MeltPoolDG::Simulation::RecoilPressure
           this->attach_boundary_condition(bc, "no_slip", "navier_stokes_u");
       };
 
-      if (this->parameters.base.problem_name == "melt_pool")
+      add_slip_or_no_slip_boundary(lower_bc);
+      if (evaporation_boundary)
         {
-          add_slip_or_no_slip_boundary(lower_bc);
-          if (evaporation_boundary)
+          this->attach_boundary_condition(
+            {upper_bc, std::make_shared<dealii::Functions::ConstantFunction<dim>>(outlet_pressure)},
+            "open",
+            "navier_stokes_u");
+          if (!periodic_boundary)
             {
-              this->attach_boundary_condition(
-                {upper_bc,
-                 std::make_shared<dealii::Functions::ConstantFunction<dim>>(outlet_pressure)},
-                "open",
-                "navier_stokes_u");
-              if (!periodic_boundary)
+              if (dim >= 2)
                 {
-                  if (dim >= 2)
-                    {
-                      this->attach_boundary_condition(left_bc, "symmetry", "navier_stokes_u");
-                      this->attach_boundary_condition(right_bc, "symmetry", "navier_stokes_u");
-                    }
-                  if (dim == 3)
-                    {
-                      this->attach_boundary_condition(front_bc, "symmetry", "navier_stokes_u");
-                      this->attach_boundary_condition(back_bc, "symmetry", "navier_stokes_u");
-                    }
+                  this->attach_boundary_condition(left_bc, "symmetry", "navier_stokes_u");
+                  this->attach_boundary_condition(right_bc, "symmetry", "navier_stokes_u");
                 }
-            }
-          else // no evaporation
-            {
-              // The fix pressure constant condition can be set on any boundary (that is not a
-              // periodic boundary).
-              this->attach_boundary_condition(lower_bc, "fix_pressure_constant", "navier_stokes_p");
-              add_slip_or_no_slip_boundary(upper_bc);
-              if (!periodic_boundary)
+              if (dim == 3)
                 {
-                  if (dim >= 2)
-                    {
-                      add_slip_or_no_slip_boundary(left_bc);
-                      add_slip_or_no_slip_boundary(right_bc);
-                    }
-                  if (dim == 3)
-                    {
-                      add_slip_or_no_slip_boundary(front_bc);
-                      add_slip_or_no_slip_boundary(back_bc);
-                    }
+                  this->attach_boundary_condition(front_bc, "symmetry", "navier_stokes_u");
+                  this->attach_boundary_condition(back_bc, "symmetry", "navier_stokes_u");
                 }
             }
         }
-      else
-        AssertThrow(false, ExcNotImplemented());
+      else // no evaporation
+        {
+          // The fix pressure constant condition can be set on any boundary (that is not a
+          // periodic boundary).
+          this->attach_boundary_condition(lower_bc, "fix_pressure_constant", "navier_stokes_p");
+          add_slip_or_no_slip_boundary(upper_bc);
+          if (!periodic_boundary)
+            {
+              if (dim >= 2)
+                {
+                  add_slip_or_no_slip_boundary(left_bc);
+                  add_slip_or_no_slip_boundary(right_bc);
+                }
+              if (dim == 3)
+                {
+                  add_slip_or_no_slip_boundary(front_bc);
+                  add_slip_or_no_slip_boundary(back_bc);
+                }
+            }
+        }
 
       /*
        * BC for heat transfer

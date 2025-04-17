@@ -1,4 +1,4 @@
-#include "advection_diffusion_problem.hpp"
+#include "advection_diffusion_application.hpp"
 //
 #include <deal.II/base/mpi.h>
 
@@ -23,7 +23,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  AdvectionDiffusionProblem<dim, number>::run()
+  AdvectionDiffusionApplication<dim, number>::run()
   {
     initialize();
 
@@ -66,7 +66,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  AdvectionDiffusionProblem<dim, number>::setup_dof_system()
+  AdvectionDiffusionApplication<dim, number>::setup_dof_system()
   {
     /*
      *  setup DoFHandler
@@ -134,7 +134,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  AdvectionDiffusionProblem<dim, number>::initialize()
+  AdvectionDiffusionApplication<dim, number>::initialize()
   {
     /*
      *  setup DoFHandler
@@ -270,7 +270,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  AdvectionDiffusionProblem<dim, number>::compute_advection_velocity(
+  AdvectionDiffusionApplication<dim, number>::compute_advection_velocity(
     Function<dim, number> &advec_func)
   {
     scratch_data->initialize_dof_vector(advection_velocity, velocity_dof_idx);
@@ -289,8 +289,8 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  AdvectionDiffusionProblem<dim, number>::output_results(const unsigned int time_step,
-                                                         const number       current_time)
+  AdvectionDiffusionApplication<dim, number>::output_results(const unsigned int time_step,
+                                                             const number       current_time)
   {
     if (!post_processor->is_output_timestep(time_step, current_time) &&
         !simulation_case->parameters.output.do_user_defined_postprocessing)
@@ -324,7 +324,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  AdvectionDiffusionProblem<dim, number>::refine_mesh()
+  AdvectionDiffusionApplication<dim, number>::refine_mesh()
   {
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       Vector<float> estimated_error_per_cell(simulation_case->triangulation->n_active_cells());
@@ -372,9 +372,9 @@ namespace MeltPoolDG::LevelSet
                                       time_iterator->get_current_time_step_number());
   }
 
-  template class AdvectionDiffusionProblem<1, double>;
-  template class AdvectionDiffusionProblem<2, double>;
-  template class AdvectionDiffusionProblem<3, double>;
+  template class AdvectionDiffusionApplication<1, double>;
+  template class AdvectionDiffusionApplication<2, double>;
+  template class AdvectionDiffusionApplication<3, double>;
 } // namespace MeltPoolDG::LevelSet
 
 int
@@ -385,6 +385,8 @@ main(int argc, char *argv[])
   MPI_Comm mpi_comm(MPI_COMM_WORLD);
   MeltPoolDG::default_main<MeltPoolDG::LevelSet::AdvectionDiffusionCaseParameters<double>,
                            MeltPoolDG::LevelSet::AdvectionDiffusionCase,
-                           MeltPoolDG::LevelSet::AdvectionDiffusionProblem>(argc, argv, mpi_comm);
+                           MeltPoolDG::LevelSet::AdvectionDiffusionApplication>(argc,
+                                                                                argv,
+                                                                                mpi_comm);
   return 0;
 }

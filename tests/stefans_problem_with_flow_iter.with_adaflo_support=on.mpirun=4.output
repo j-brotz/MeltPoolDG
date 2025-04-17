@@ -24,7 +24,7 @@ POSTPROCESSOR: min pressure: 0 (analytical: 0)
 | || normal_0 ||L2 = 1.81419739366e-15                                               normal_vector |
 | || normal_1 ||L2 = 4.86922429177e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-| level set - evapor coupling; finished after 5 iter at residual 9.241781e-11      MeltPoolProblem |
+| level set - evapor coupling; finished after 5 iter at residual 9.241781e-11  MeltPoolApplication |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 1.81419739366e-15                                               normal_vector |
 | || normal_1 ||L2 = 4.86922429177e+00                                               normal_vector |
@@ -67,7 +67,7 @@ POSTPROCESSOR: min pressure: 1.56e-10 (analytical: 0)
 | || normal_0 ||L2 = 2.40703151381e-12                                               normal_vector |
 | || normal_1 ||L2 = 4.91841274373e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-| level set - evapor coupling; finished after 4 iter at residual 2.825484e-10      MeltPoolProblem |
+| level set - evapor coupling; finished after 4 iter at residual 2.825484e-10  MeltPoolApplication |  
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 2.40703151381e-12                                               normal_vector |
 | || normal_1 ||L2 = 4.91841274373e+00                                               normal_vector |
@@ -110,7 +110,7 @@ POSTPROCESSOR: min pressure: 7.89e-10 (analytical: 0)
 | || normal_0 ||L2 = 8.15415622547e-12                                               normal_vector |
 | || normal_1 ||L2 = 4.93632109684e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-| level set - evapor coupling; finished after 4 iter at residual 3.057438e-10      MeltPoolProblem |
+| level set - evapor coupling; finished after 4 iter at residual 3.057438e-10  MeltPoolApplication |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 8.15415622547e-12                                               normal_vector |
 | || normal_1 ||L2 = 4.93632109684e+00                                               normal_vector |
@@ -153,7 +153,7 @@ POSTPROCESSOR: min pressure: 1.06e-09 (analytical: 0)
 | || normal_0 ||L2 = 5.72647634565e-12                                               normal_vector |
 | || normal_1 ||L2 = 4.93930508005e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-| level set - evapor coupling; finished after 4 iter at residual 3.112879e-10      MeltPoolProblem |
+| level set - evapor coupling; finished after 4 iter at residual 3.112879e-10  MeltPoolApplication |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.72647634565e-12                                               normal_vector |
 | || normal_1 ||L2 = 4.93930508005e+00                                               normal_vector |

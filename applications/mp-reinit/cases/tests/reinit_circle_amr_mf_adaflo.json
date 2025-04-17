@@ -1,7 +1,6 @@
 {
   "base": {
     "case name": "reinit_circle",
-    "problem name": "reinitialization",
     "dimension": "         2",
     "global refinements": "6",
     "do print parameters": "false",

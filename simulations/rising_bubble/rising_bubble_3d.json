@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "melt_pool",
     "case name": "rising_bubble",
     "global refinements": "2",
     "dimension": "3",

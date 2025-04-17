@@ -24,7 +24,7 @@
 namespace MeltPoolDG::Heat
 {
   template <int dim, typename number>
-  class HeatTransferProblem
+  class HeatTransferApplication
   {
   private:
     using CaseType        = HeatTransferCase<dim, number>;
@@ -69,7 +69,7 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<LaserOperation<dim, number>> laser_operation;
 
   public:
-    HeatTransferProblem(std::unique_ptr<CaseType> simulation_case)
+    HeatTransferApplication(std::unique_ptr<CaseType> simulation_case)
       : simulation_case(std::move(simulation_case))
     {}
 

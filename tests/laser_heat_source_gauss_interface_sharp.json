@@ -3,7 +3,6 @@
     "case name": "melt_front_propagation",
     "dimension": "2",
     "global refinements": "4",
-    "problem name": "melt_pool",
     "verbosity level": "1",
     "do print parameters": "false",
     "fe": {
@@ -55,7 +54,7 @@
     },
     "two phase fluid properties transition type": "sharp"
   },
-  "problem specific": {
+  "application specific": {
     "do heat transfer": "true",
     "do solidification": "false"
   },

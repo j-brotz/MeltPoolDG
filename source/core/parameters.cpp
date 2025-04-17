@@ -81,7 +81,7 @@ namespace MeltPoolDG
   void
   Parameters<number>::check_input_parameters() const
   {
-    base.check_input_parameters(ls.get_n_subdivisions());
+    base.check_input_parameters();
     heat.check_input_parameters(base.fe);
     laser.check_input_parameters();
     rte.check_input_parameters(base.fe);

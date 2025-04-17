@@ -304,7 +304,7 @@ namespace MeltPoolDG::Flow
           comp_flow_operator =
             std::make_unique<DGCompressibleFlowOperatorExplicit<dim, number, false>>(
               flow_scratch_data);
-        time_integrator = comp_flow_operator->make_problem_specific_time_integrator(
+        time_integrator = comp_flow_operator->make_application_specific_time_integrator(
           flow_scratch_data.flow_data.time_integrator);
       }
     else if (time_integrator_scheme_is_implicit(
@@ -318,7 +318,7 @@ namespace MeltPoolDG::Flow
           comp_flow_operator =
             std::make_unique<DGCompressibleFlowOperatorImplicit<dim, number, false>>(
               flow_scratch_data);
-        time_integrator = comp_flow_operator->make_problem_specific_time_integrator(
+        time_integrator = comp_flow_operator->make_application_specific_time_integrator(
           flow_scratch_data.flow_data.time_integrator);
       }
     // TODO
@@ -333,7 +333,7 @@ namespace MeltPoolDG::Flow
           comp_flow_operator =
             std::make_unique<DGCompressibleFlowOperatorImplicitExplicit<dim, number, false>>(
               flow_scratch_data);
-        time_integrator = comp_flow_operator->make_problem_specific_time_integrator(
+        time_integrator = comp_flow_operator->make_application_specific_time_integrator(
           flow_scratch_data.flow_data.time_integrator);
       }
     else

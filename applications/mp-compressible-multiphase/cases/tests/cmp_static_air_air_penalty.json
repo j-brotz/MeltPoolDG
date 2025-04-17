@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "compressible_multiphase",
     "case name": "static_two_phase",
     "dimension": "1",
     "verbosity level": "1",

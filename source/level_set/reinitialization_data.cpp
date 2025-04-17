@@ -156,7 +156,7 @@ namespace MeltPoolDG::LevelSet
     AssertThrow(linear_solver.do_matrix_free || implementation == "meltpooldg",
                 dealii::ExcNotImplemented());
     AssertThrow(normal_vec_do_matrix_free == linear_solver.do_matrix_free,
-                dealii::ExcMessage("For the reinitialization problem both the "
+                dealii::ExcMessage("For the reinitialization operation both the "
                                    "normal vector and the reinitialization operation have to be "
                                    "computed either matrix-based or matrix-free."));
     AssertThrow(interface_thickness_parameter.type ==

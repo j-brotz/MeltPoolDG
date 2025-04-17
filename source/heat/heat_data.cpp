@@ -1,5 +1,6 @@
 #include <deal.II/base/exceptions.h>
 
+#include "meltpooldg/core/finite_element_data.hpp"
 #include <meltpooldg/heat/heat_data.hpp>
 
 namespace MeltPoolDG::Heat
@@ -89,6 +90,13 @@ namespace MeltPoolDG::Heat
                          const unsigned int       base_verbosity_level)
   {
     fe.post(base_fe_data);
+
+    // if the finite element parameters are still not set from the user,
+    // use default values
+    if (fe.type == FiniteElementType::not_initialized)
+      fe.type = FiniteElementType::FE_Q;
+    if (fe.degree == -1)
+      fe.degree = 1;
 
     // sync verbosity level with base verbosity if not set
     if (nlsolve.verbosity_level < 0)

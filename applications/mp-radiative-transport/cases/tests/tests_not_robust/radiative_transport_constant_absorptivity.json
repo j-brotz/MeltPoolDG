@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "radiative_transport",
     "case name": "radiative_transport",
     "dimension": "2",
     "global refinements": "5",
@@ -28,7 +27,7 @@
       "preconditioner type": "AMG"
     }
   },
-  "problem specific": {
+  "application specific": {
     "direction": "0.0,-1.0"
   },
   "simulation specific parameters": {
