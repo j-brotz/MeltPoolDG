@@ -36,7 +36,7 @@ namespace MeltPoolDG::Multiphase
     const ScratchData<dim, dim, number>                        &scratch_data_in,
     const MeltPoolDG::Flow::CompressibleFlowData<number>       &comp_flow_data_in,
     const TimeIterator<number>                                 &time_iterator_in,
-    const std::function<void(const dealii::DoFHandler<dim> &)> &reinit_matrix_free_in,
+    const std::function<void(const dealii::DoFHandler<dim> &)> &setup_dof_system_in,
     const unsigned int                                          comp_flow_dof_idx_in,
     const unsigned int                                          level_set_dof_idx_in,
     const unsigned int                                          comp_flow_quad_idx_in,
@@ -53,7 +53,7 @@ namespace MeltPoolDG::Multiphase
                             comp_flow_data_in.cut.stabilization.ghost_penalty.gamma_M_degree_2,
                             true /* is_two_phase*/,
                             comp_flow_data_in.verbosity_level /*verbosity level*/)
-    , reinit_matrix_free(reinit_matrix_free_in)
+    , setup_dof_system(setup_dof_system_in)
     , fe_point_temp(dealii::FE_DGQ<dim>(comp_flow_data_in.fe.degree), dim + 2)
     , n_dofs_per_cell(fe_point_temp.dofs_per_cell)
     , mapping_info_surface(scratch_data_in.get_mapping(),
@@ -327,7 +327,7 @@ namespace MeltPoolDG::Multiphase
     std::swap(mesh_classifier_old, mesh_classifier);
     classify_cells();
 
-    Assert(reinit_matrix_free != nullptr,
+    Assert(setup_dof_system != nullptr,
            dealii::ExcMessage("You must register the reinit_matrix_free lambda function first!"));
 
     // transfer old solution according to the new interface position,
@@ -340,7 +340,7 @@ namespace MeltPoolDG::Multiphase
       *mesh_classifier_old,
       *mesh_classifier,
       reinit_vector,
-      reinit_matrix_free);
+      setup_dof_system);
 
     // reinit solution vector and rhs vector
     flow_scratch_data.scratch_data.initialize_dof_vector(

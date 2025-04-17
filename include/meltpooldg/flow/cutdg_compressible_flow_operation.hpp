@@ -59,7 +59,7 @@ namespace MeltPoolDG::Flow
      * @param scratch_data_in Reference to the used ScratchData object.
      * @param comp_flow_data_in Reference to the compressible flow data struct used.
      * @param time_iterator_in Reference to the used time stepping.
-     * @param reinit_matrix_free_in Reinit_matrix_free function, which is registered.
+     * @param setup_dof_system_in Reinit_matrix_free function, which is registered.
      * @param comp_flow_dof_idx_in Index of the used dof handler for solution in @p scratch_data_in.
      * @param level_set_dof_idx_in Index of the used dof handler for level-set in @p scratch_data_in.
      * @param comp_flow_quad_idx_in Index of the used quadrature object in @p scratch_data_in.
@@ -69,7 +69,7 @@ namespace MeltPoolDG::Flow
       const ScratchData<dim, dim, number>                        &scratch_data_in,
       const CompressibleFlowData<number>                         &comp_flow_data_in,
       const TimeIterator<number>                                 &time_iterator_in,
-      const std::function<void(const dealii::DoFHandler<dim> &)> &reinit_matrix_free_in,
+      const std::function<void(const dealii::DoFHandler<dim> &)> &setup_dof_system_in,
       unsigned int                                                comp_flow_dof_idx_in  = 0,
       unsigned int                                                level_set_dof_idx_in  = 0,
       unsigned int                                                comp_flow_quad_idx_in = 0,
@@ -202,7 +202,7 @@ namespace MeltPoolDG::Flow
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier_old;
 
     CutUtil::SolutionTransferOperator<dim, number>                     cut_solution_transfer;
-    std::function<void(const dealii::DoFHandler<dim> &)>               reinit_matrix_free;
+    std::function<void(const dealii::DoFHandler<dim> &)>               setup_dof_system;
     std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> reinit_vector;
 
     dealii::FESystem<dim> fe_point_temp;

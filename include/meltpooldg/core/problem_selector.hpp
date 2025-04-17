@@ -8,6 +8,6 @@ namespace MeltPoolDG
   {
   public:
     static std::shared_ptr<ProblemBase<dim, number>>
-    get_problem(const std::string &problem_name);
+    get_problem(const std::string &problem_name, std::unique_ptr<MeltPoolCase<dim, number>> sim);
   };
 } // namespace MeltPoolDG

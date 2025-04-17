@@ -25,34 +25,27 @@ namespace MeltPoolDG
     return not(n_time_step % amr.every_n_step) or n_time_step == 0;
   }
 
+  /**
+   * TODO document what needs to be done in each of the lambdas
+   */
   template <int dim, typename VectorType, typename number = VectorType::value_type>
   void
-  refine_grid(const std::function<bool(dealii::Triangulation<dim> &)> &mark_cells_for_refinement,
-              const std::function<void(
-                std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                                      std::function<void(std::vector<VectorType *> &)>>> &data)>
-                                                &attach_vectors,
-              const std::function<void()>       &post,
-              const std::function<void()>       &setup_dof_system,
-              const AdaptiveMeshingData<number> &amr,
-              dealii::Triangulation<dim>        &tria,
-              const int                          n_time_step)
+  refine_grid(
+    const std::function<bool(dealii::Triangulation<dim> &)> &mark_cells_for_refinement,
+    const std::function<void(
+      std::vector<std::pair<const dealii::DoFHandler<dim> *,
+                            std::function<void(std::vector<VectorType *> &)>>> &)> &attach_vectors,
+    const std::function<void()>                                                    &post,
+    const std::function<void()>       &setup_dof_system,
+    const AdaptiveMeshingData<number> &amr,
+    dealii::Triangulation<dim>        &tria,
+    const int                          n_time_step)
   {
     if (not now(amr, n_time_step))
       return;
 
     if (mark_cells_for_refinement(tria) == false)
       return;
-
-    std::vector<
-      std::pair<const dealii::DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
-      data;
-
-    attach_vectors(data);
-
-    const unsigned int n_dof_handlers = data.size();
-
-    Assert(n_dof_handlers > 0, dealii::ExcNotImplemented());
 
     // Limit the maximum and minimum refinement levels of cells of the grid.
     if (tria.n_levels() > amr.max_grid_refinement_level)
@@ -81,6 +74,19 @@ namespace MeltPoolDG
                 cell->clear_coarsen_flag();
             }
         }
+
+    // the following is very similar to the code in
+    // CutUtil::SolutionTransferOperator::transfer_solution_constant_dofs()
+
+    std::vector<
+      std::pair<const dealii::DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
+      data;
+
+    attach_vectors(data);
+
+    const unsigned int n_dof_handlers = data.size();
+
+    Assert(n_dof_handlers > 0, dealii::ExcNotImplemented());
 
     // Initialize the triangulation change from the old grid to the new grid
     tria.prepare_coarsening_and_refinement();

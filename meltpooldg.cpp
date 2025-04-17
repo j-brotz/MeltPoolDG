@@ -74,8 +74,8 @@ namespace MeltPoolDG
                                                                        parameter_file,
                                                                        mpi_communicator);
               sim->create();
-              auto problem = ProblemSelector<1, number>::get_problem(problem_type);
-              problem->run(sim);
+              auto problem = ProblemSelector<1, number>::get_problem(problem_type, std::move(sim));
+              problem->run();
             }
           else if (dim == 2)
             {
@@ -83,8 +83,8 @@ namespace MeltPoolDG
                                                                        parameter_file,
                                                                        mpi_communicator);
               sim->create();
-              auto problem = ProblemSelector<2, number>::get_problem(problem_type);
-              problem->run(sim);
+              auto problem = ProblemSelector<2, number>::get_problem(problem_type, std::move(sim));
+              problem->run();
             }
           else if (dim == 3)
             {
@@ -92,8 +92,8 @@ namespace MeltPoolDG
                                                                        parameter_file,
                                                                        mpi_communicator);
               sim->create();
-              auto problem = ProblemSelector<3, number>::get_problem(problem_type);
-              problem->run(sim);
+              auto problem = ProblemSelector<3, number>::get_problem(problem_type, std::move(sim));
+              problem->run();
             }
           else
             {

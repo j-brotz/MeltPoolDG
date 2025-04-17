@@ -288,26 +288,21 @@ namespace MeltPoolDG::Heat
                 laser_operation->get_intensity_profile(),
                 param.laser.template get_direction<dim>());
 
-            heat_cut_operation->register_reinit_matrix_free([&](const DoFHandler<dim> &dh) {
-              Assert(&dh == &scratch_data->get_dof_handler(heat_dof_idx), ExcInternalError());
+            heat_cut_operation->register_lambdas_for_solution_transfer(
+              [&](const DoFHandler<dim> &dh) {
+                Assert(&dh == &scratch_data->get_dof_handler(heat_dof_idx), ExcInternalError());
 
-              scratch_data->create_partitioning();
+                setup_dof_system();
 
-              heat_operation->setup_constraints(*scratch_data);
-
-              scratch_data->build(true /*enable_boundary_faces*/,
-                                  true /*enable_inner_face_loops*/,
-                                  true /*enable_normal_vector_update*/);
-
-              // recompute heat source
-              scratch_data->initialize_dof_vector(heat_operation->get_heat_source(),
-                                                  heat_continuous_no_bc_dof_idx);
-              if (const auto source_field_function = simulation_case->get_field_function(
-                    "prescribed_heat_source", "heat_transfer", true /*is_optional*/))
-                compute_field_vector(heat_operation->get_heat_source(),
-                                     heat_continuous_no_bc_dof_idx,
-                                     *source_field_function);
-            });
+                // recompute heat source
+                scratch_data->initialize_dof_vector(heat_operation->get_heat_source(),
+                                                    heat_continuous_no_bc_dof_idx);
+                if (const auto source_field_function = simulation_case->get_field_function(
+                      "prescribed_heat_source", "heat_transfer", true /*is_optional*/))
+                  compute_field_vector(heat_operation->get_heat_source(),
+                                       heat_continuous_no_bc_dof_idx,
+                                       *source_field_function);
+              });
 
             // before the CutFEM operation can distribute dofs, the mesh must be classified
             // according to the level set indicator

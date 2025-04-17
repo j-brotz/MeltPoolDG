@@ -118,12 +118,14 @@ public:
   /**
    * Lambda function for matrix-free reinitialization.
    */
-  using reinit_matrix_free = std::function<void(const DoFHandler<dim> &)>;
+  using setup_dof_system = std::function<void(const DoFHandler<dim> &)>;
 
-  reinit_matrix_free
+  setup_dof_system
   get_reinit_matrix_free()
   {
     return [&](const DoFHandler<dim> &dof_handler) {
+      const_cast<DoFHandler<dim> &>(dof_handler).distribute_dofs(dof_handler.get_fe_collection());
+
       Quadrature<1> quadrature = QGauss<1>(fe_degree + 1);
       typename MatrixFree<dim, Number, VectorizedArrayType>::AdditionalData additional_data;
       additional_data.mapping_update_flags =
@@ -185,7 +187,7 @@ template <int dim, int fe_degree, bool is_matrix_free>
 void
 ReinitOperator<dim, fe_degree, is_matrix_free>::reinit(const DoFHandler<dim> &dof_handler)
 {
-  reinit_matrix_free lambda_reinit_matrix_free = get_reinit_matrix_free();
+  setup_dof_system lambda_reinit_matrix_free = get_reinit_matrix_free();
   lambda_reinit_matrix_free(dof_handler);
 }
 
@@ -388,12 +390,16 @@ test()
                                       reinit_operator.get_reinit_vector(),
                                       reinit_operator.get_reinit_matrix_free());
   else
-    solution_transfer_operator.reinit(dof_handler,
-                                      tria,
-                                      solution,
-                                      mesh_classifier_old,
-                                      mesh_classifier,
-                                      reinit_operator.get_reinit_vector());
+    solution_transfer_operator.reinit(
+      dof_handler,
+      tria,
+      solution,
+      mesh_classifier_old,
+      mesh_classifier,
+      reinit_operator.get_reinit_vector(),
+      [](const DoFHandler<dim> &dof_handler) {
+        const_cast<DoFHandler<dim> &>(dof_handler).distribute_dofs(dof_handler.get_fe_collection());
+      });
 
   // reinit transferred solution vector
   VectorType solution_gp_extrapolated;

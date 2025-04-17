@@ -12,6 +12,8 @@
 #include <deal.II/non_matching/mesh_classifier.h>
 
 #include <functional>
+#include <utility>
+#include <vector>
 
 
 namespace MeltPoolDG::CutUtil
@@ -29,17 +31,22 @@ namespace MeltPoolDG::CutUtil
                              const int    verbosity = 0);
 
     /**
-     * Reinit functions for the solution transfer according to the new immersed
+     * Reinit function for the solution transfer according to the new immersed
      * interface position. New DoFs are ghost-penalty extrapolated.
      */
     void
-    reinit(dealii::DoFHandler<dim>                        &dof_handler,
-           dealii::Triangulation<dim>                     &tria,
-           const VectorType                               &solution,
-           const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
-           const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
-           const std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> &reinit_vector,
-           const std::function<void(const dealii::DoFHandler<dim> &)> &reinit_matrix_free = {});
+    reinit(
+      dealii::DoFHandler<dim>                                                  &cut_dof_handler,
+      dealii::Triangulation<dim>                                               &tria,
+      const VectorType                                                         &cut_solution,
+      const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier_old,
+      const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier,
+      const std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> &reinit_cut_vector,
+      const std::function<void(const dealii::DoFHandler<dim> &)>               &setup_dof_system,
+      const std::function<
+        void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
+                                   std::function<void(std::vector<VectorType *> &)>>> &)>
+        &attach_vectors = {});
 
     /**
      * Getter functions for the transferred solution.
@@ -48,13 +55,13 @@ namespace MeltPoolDG::CutUtil
     get_updated_solution() const
     {
       return new_solution;
-    };
+    }
 
     VectorType &
     get_updated_solution()
     {
       return new_solution;
-    };
+    }
 
   private:
     /**
@@ -62,20 +69,24 @@ namespace MeltPoolDG::CutUtil
      */
     void
     transfer_solution_constant_dofs(
-      dealii::DoFHandler<dim>                                                  &dof_handler,
+      dealii::DoFHandler<dim>                                                  &cut_dof_handler,
       dealii::Triangulation<dim>                                               &tria,
-      const VectorType                                                         &solution,
+      const VectorType                                                         &cut_solution,
       const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier_old,
       const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier,
-      const std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> &reinit_vector,
-      const std::function<void(const dealii::DoFHandler<dim> &)>               &reinit_matrix_free);
+      const std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> &reinit_cut_vector,
+      const std::function<void(const dealii::DoFHandler<dim> &)>               &setup_dof_system,
+      const std::function<
+        void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
+                                   std::function<void(std::vector<VectorType *> &)>>> &)>
+        &attach_vectors = {});
 
     /**
      * Mark the unknown DoFs, which need to be ghost-penalty extrapolated.
      */
     VectorType
     mark_dofs_for_gp_extrapolation(
-      const dealii::DoFHandler<dim>                  &dof_handler,
+      const dealii::DoFHandler<dim>                  &cut_dof_handler,
       const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
       const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old) const;
 
@@ -83,7 +94,7 @@ namespace MeltPoolDG::CutUtil
      * Create constraints for the known DoFs, which not need to be ghost-penalty extrapolated.
      */
     dealii::AffineConstraints<Number>
-    create_constraints_gp_extrapolation(const dealii::DoFHandler<dim> &dof_handler,
+    create_constraints_gp_extrapolation(const dealii::DoFHandler<dim> &cut_dof_handler,
                                         const VectorType &flags_dofs_gp_extrapolation) const;
 
     /**
@@ -91,7 +102,7 @@ namespace MeltPoolDG::CutUtil
      */
     void
     extrapolate_solution_new_dofs(
-      const dealii::DoFHandler<dim>                                            &dof_handler,
+      const dealii::DoFHandler<dim>                                            &cut_dof_handler,
       const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier,
       const dealii::NonMatching::MeshClassifier<dim>                           &mesh_classifier_old,
       const std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> &reinit_vector);

@@ -159,10 +159,15 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatCutOperation<dim, number>::register_reinit_matrix_free(
-    const std::function<void(const dealii::DoFHandler<dim> &)> reinit_matrix_free_in)
+  HeatCutOperation<dim, number>::register_lambdas_for_solution_transfer(
+    const std::function<void(const dealii::DoFHandler<dim> &)> setup_dof_system_in,
+    const std::function<
+      void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
+                                 std::function<void(std::vector<VectorType *> &)>>> &)>
+      attach_vectors_in)
   {
-    reinit_matrix_free = reinit_matrix_free_in;
+    setup_dof_system   = setup_dof_system_in;
+    attach_all_vectors = attach_vectors_in;
   }
 
   template <int dim, typename number>
@@ -182,6 +187,11 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperation<dim, number>::adapt_to_new_interface_position()
   {
+    // We must make sure that compute_intersected_quadrature() is not run during the solution
+    // transfer, since it can be part of setup_dof_system. The reason is, that during solution
+    // transfer the level set solution vector is not available.
+    ready_to_generate_intersected_quadrature = false;
+
     std::swap(mesh_classifier_old, mesh_classifier);
     classify_cells();
 
@@ -189,8 +199,8 @@ namespace MeltPoolDG::Heat
       const ScopedName         scope_n("cut_solution_transfer");
       const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
 
-      Assert(reinit_matrix_free != nullptr,
-             dealii::ExcMessage("You must register the reinit_matrix_free lambda function first!"));
+      Assert(setup_dof_system != nullptr,
+             dealii::ExcMessage("You must register the setup_dof_system lambda function first!"));
 
       // transfer old solution according to the new interface position,
       // the matrix-free object is reinitialized within the reinit function
@@ -201,13 +211,16 @@ namespace MeltPoolDG::Heat
         *mesh_classifier_old,
         *mesh_classifier,
         reinit_vector,
-        reinit_matrix_free);
+        setup_dof_system,
+        attach_all_vectors);
     }
     scratch_data.initialize_dof_vector(solution_history.get_current_solution(), heat_cut_dof_idx);
     solution_history.get_current_solution().copy_locally_owned_data_from(
       cut_solution_transfer.get_updated_solution());
     solution_history.get_current_solution().update_ghost_values();
 
+    // generate intersected quadrature for new interface position.
+    ready_to_generate_intersected_quadrature = true;
     compute_intersected_quadrature();
   }
 
@@ -215,6 +228,9 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperation<dim, number>::compute_intersected_quadrature()
   {
+    if (not ready_to_generate_intersected_quadrature)
+      return;
+
     const ScopedName         scope_n("intersected_quadrature");
     const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
 
