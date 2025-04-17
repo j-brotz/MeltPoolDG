@@ -159,6 +159,9 @@ namespace MeltPoolDG
     const dealii::DoFHandler<dim, spacedim> &
     get_dof_handler(const unsigned int dof_idx) const;
 
+    dealii::DoFHandler<dim, spacedim> &
+    get_dof_handler(const unsigned int dof_idx);
+
     const std::vector<const dealii::DoFHandler<dim, spacedim> *> &
     get_dof_handlers() const;
 

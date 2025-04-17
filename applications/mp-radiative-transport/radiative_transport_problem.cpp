@@ -242,13 +242,13 @@ namespace MeltPoolDG::RadiativeTransport
 
     const auto setup_dof_system = [&]() { this->setup_dof_system(true); };
 
-    refine_grid<dim, VectorType>(mark_cells_for_refinement,
-                                 attach_vectors,
-                                 post,
-                                 setup_dof_system,
-                                 simulation_case->parameters.amr,
-                                 dof_handler,
-                                 time_iterator->get_current_time_step_number());
+    AMR::refine_grid<dim, VectorType>(mark_cells_for_refinement,
+                                      attach_vectors,
+                                      post,
+                                      setup_dof_system,
+                                      simulation_case->parameters.amr,
+                                      dof_handler,
+                                      time_iterator->get_current_time_step_number());
   }
 
   template class RadiativeTransportProblem<1, double>;

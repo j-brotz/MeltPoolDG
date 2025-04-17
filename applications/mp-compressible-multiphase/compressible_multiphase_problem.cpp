@@ -126,6 +126,8 @@ namespace MeltPoolDG::Multiphase
                                   scratch_data->get_triangulation().n_global_active_cells(),
                                   scratch_data->get_min_cell_size(),
                                   scratch_data->get_max_cell_size());
+
+    comp_multiphase_operation.reinit();
   }
 
   template <int dim, typename number>
@@ -170,17 +172,7 @@ namespace MeltPoolDG::Multiphase
         *scratch_data,
         simulation_case->parameters.flow,
         *time_iterator,
-        [&](const dealii::DoFHandler<dim> &dh) {
-          Assert(&dh == &scratch_data->get_dof_handler(comp_multiphase_dof_idx),
-                 dealii::ExcInternalError());
-
-          scratch_data->create_partitioning();
-
-          // create the matrix-free object
-          scratch_data->build(true, true, true, simulation_case->parameters.flow.fe.degree == 2);
-
-          comp_multiphase_operation.reinit();
-        },
+        [this]() { this->setup_dof_system(); },
         comp_multiphase_dof_idx,
         level_set_dof_idx,
         comp_multiphase_quad_idx,
@@ -204,9 +196,6 @@ namespace MeltPoolDG::Multiphase
     // set boundary conditions
     const std::string operation_name = "compressible_multiphase_flow";
     comp_multiphase_operation.set_boundary_conditions(simulation_case, operation_name);
-
-    // initialize operation
-    comp_multiphase_operation.reinit();
 
     // set initial condition for the flow field
     comp_multiphase_operation.set_initial_condition(

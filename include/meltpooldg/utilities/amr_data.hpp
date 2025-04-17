@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deal.II/base/parameter_handler.h>
+
 namespace MeltPoolDG
 {
   template <typename number>
@@ -13,7 +14,7 @@ namespace MeltPoolDG
     int          n_initial_refinement_cycles  = 0;
     int          every_n_step                 = 1;
     unsigned int max_grid_refinement_level    = 12;
-    int          min_grid_refinement_level    = 1;
+    int          min_grid_refinement_level    = -1;
 
     void
     add_parameters(dealii::ParameterHandler &prm);

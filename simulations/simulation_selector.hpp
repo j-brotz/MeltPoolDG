@@ -17,7 +17,7 @@ namespace MeltPoolDG
     class SimulationSelector
     {
     public:
-      static std::shared_ptr<MeltPoolCase<dim, number>>
+      static std::unique_ptr<MeltPoolCase<dim, number>>
       get_simulation(const std::string simulation_name,
                      const std::string parameter_file,
                      const MPI_Comm    mpi_communicator);

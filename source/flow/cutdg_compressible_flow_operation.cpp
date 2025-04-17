@@ -30,14 +30,14 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   CutDGCompressibleFlowOperation<dim, number>::CutDGCompressibleFlowOperation(
-    const ScratchData<dim, dim, number>                        &scratch_data_in,
-    const CompressibleFlowData<number>                         &comp_flow_data_in,
-    const TimeIterator<number>                                 &time_iterator_in,
-    const std::function<void(const dealii::DoFHandler<dim> &)> &reinit_matrix_free_in,
-    const unsigned int                                          comp_flow_dof_idx_in,
-    const unsigned int                                          level_set_dof_idx_in,
-    const unsigned int                                          comp_flow_quad_idx_in,
-    const VectorType                                           &level_set_in)
+    const ScratchData<dim, dim, number> &scratch_data_in,
+    const CompressibleFlowData<number>  &comp_flow_data_in,
+    const TimeIterator<number>          &time_iterator_in,
+    const std::function<void()>         &setup_dof_system_in,
+    const unsigned int                   comp_flow_dof_idx_in,
+    const unsigned int                   level_set_dof_idx_in,
+    const unsigned int                   comp_flow_quad_idx_in,
+    const VectorType                    &level_set_in)
     : flow_scratch_data(comp_flow_data_in,
                         scratch_data_in,
                         comp_flow_dof_idx_in,
@@ -50,7 +50,7 @@ namespace MeltPoolDG::Flow
                             comp_flow_data_in.cut.stabilization.ghost_penalty.gamma_M_degree_2,
                             false /* is_two_phase*/,
                             comp_flow_data_in.verbosity_level /*verbosity level*/)
-    , reinit_matrix_free(reinit_matrix_free_in)
+    , setup_dof_system(setup_dof_system_in)
     , fe_point_temp(dealii::FE_DGQ<dim>(comp_flow_data_in.fe.degree), dim + 2)
     , n_dofs_per_cell(fe_point_temp.dofs_per_cell)
     , mapping_info_surface(scratch_data_in.get_mapping(),
@@ -76,7 +76,7 @@ namespace MeltPoolDG::Flow
       flow_scratch_data.scratch_data.get_dof_handler(level_set_dof_idx), level_set);
 
     // lambda function for vector reinitialization with the matrix-free object
-    reinit_vector = [this](VectorType &vec, const dealii::DoFHandler<dim> &) {
+    reinit_vector = [this](VectorType &vec) {
       flow_scratch_data.scratch_data.get_matrix_free().initialize_dof_vector(vec);
     };
 
@@ -280,8 +280,8 @@ namespace MeltPoolDG::Flow
     std::swap(mesh_classifier_old, mesh_classifier);
     classify_cells();
 
-    Assert(reinit_matrix_free != nullptr,
-           dealii::ExcMessage("You must register the reinit_matrix_free lambda function first!"));
+    Assert(setup_dof_system != nullptr,
+           dealii::ExcMessage("You must register the setup_dof_system lambda function first!"));
 
     // transfer old solution according to the new interface position,
     // the matrix-free object is reinitialized within the reinit function
@@ -293,7 +293,7 @@ namespace MeltPoolDG::Flow
       *mesh_classifier_old,
       *mesh_classifier,
       reinit_vector,
-      reinit_matrix_free);
+      setup_dof_system);
 
     // reinit solution vector and rhs vector
     flow_scratch_data.scratch_data.initialize_dof_vector(

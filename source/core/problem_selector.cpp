@@ -7,10 +7,11 @@ namespace MeltPoolDG
 {
   template <int dim, typename number>
   std::shared_ptr<ProblemBase<dim, number>>
-  ProblemSelector<dim, number>::get_problem(const std::string &problem_name)
+  ProblemSelector<dim, number>::get_problem(const std::string                         &problem_name,
+                                            std::unique_ptr<MeltPoolCase<dim, number>> sim)
   {
     if (problem_name == "melt_pool")
-      return std::make_shared<MeltPool::MeltPoolProblem<dim, number>>();
+      return std::make_shared<MeltPool::MeltPoolProblem<dim, number>>(std::move(sim));
     /* add your problem here*/
 
     else

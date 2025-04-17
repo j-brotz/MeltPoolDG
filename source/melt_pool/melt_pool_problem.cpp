@@ -83,11 +83,11 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::run(std::shared_ptr<MeltPoolCase<dim, number>> base_in)
+  MeltPoolProblem<dim, number>::run()
   {
-    initialize(base_in); // no timing needed, since the function does itself
+    initialize(); // no timing needed, since the function does itself
 
-    const auto &param = base_in->parameters;
+    const auto &param = simulation_case->parameters;
 
     try
       {
@@ -98,7 +98,7 @@ namespace MeltPoolDG::MeltPool
         if (restart_monitor and restart_monitor->do_load())
           {
             Journal::print_line(scratch_data->get_pcout(1), "load restart data");
-            load(base_in);
+            load();
           }
         /*
          *  output results of initialization
@@ -106,7 +106,7 @@ namespace MeltPoolDG::MeltPool
          * output and which must not be transferred to the new mesh everytime refine_mesh() is
          * called.
          */
-        output_results(base_in);
+        output_results();
 
         bool heat_up_finished = false;
 
@@ -156,7 +156,7 @@ namespace MeltPoolDG::MeltPool
             heat_up_modify_time_step();
 
             const auto dt = time_iterator->compute_next_time_increment();
-            base_in->set_time_boundary_conditions(time_iterator->get_current_time());
+            simulation_case->set_time_boundary_conditions(time_iterator->get_current_time());
 
             time_iterator->print_me(scratch_data->get_pcout(1));
 
@@ -541,14 +541,14 @@ namespace MeltPoolDG::MeltPool
             }
 
             // ... and output the results to vtk files.
-            output_results(base_in);
+            output_results();
 
             if (param.amr.do_amr)
               {
                 const ScopedName         scope_n("amr");
                 const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
 
-                refine_mesh(base_in);
+                refine_mesh();
               }
 
             if (profiling_monitor and profiling_monitor->now())
@@ -569,7 +569,7 @@ namespace MeltPoolDG::MeltPool
               {
                 Journal::print_line(scratch_data->get_pcout(1), "save restart data");
                 restart_monitor->prepare_save();
-                save(base_in);
+                save();
               }
           }
 
@@ -579,7 +579,7 @@ namespace MeltPoolDG::MeltPool
         scope_t.reset();
 
         //... always print timing statistics
-        if (profiling_monitor and base_in->parameters.profiling.enable)
+        if (profiling_monitor and simulation_case->parameters.profiling.enable)
           {
             profiling_monitor->print(scratch_data->get_pcout(1),
                                      scratch_data->get_timer(),
@@ -588,33 +588,33 @@ namespace MeltPoolDG::MeltPool
       }
     catch (const ExcHeatTransferNoConvergence &e)
       {
-        finalize(base_in, OutputNotConvergedOperation::heat_transfer);
+        finalize(OutputNotConvergedOperation::heat_transfer);
         AssertThrow(false, e);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     catch (const adaflo::ExcNavierStokesNoConvergence &e)
       {
-        finalize(base_in, OutputNotConvergedOperation::navier_stokes);
+        finalize(OutputNotConvergedOperation::navier_stokes);
         AssertThrow(false, e);
       }
 #endif
     catch (const ExcNewtonDidNotConverge &e)
       {
-        finalize(base_in);
+        finalize();
         AssertThrow(false, e);
       }
     catch (const SolverControl::NoConvergence &e)
       {
-        finalize(base_in);
+        finalize();
         AssertThrow(false, e);
       }
   }
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::save(std::shared_ptr<SimulationType> base_in)
+  MeltPoolProblem<dim, number>::save()
   {
-    std::ofstream ofs(base_in->parameters.restart.prefix + "_0_problem.restart");
+    std::ofstream ofs(simulation_case->parameters.restart.prefix + "_0_problem.restart");
     {
       boost::archive::text_oarchive oa(ofs);
       oa << *time_iterator;
@@ -622,21 +622,21 @@ namespace MeltPoolDG::MeltPool
     }
 
     const auto attach_vectors =
-      [&](std::vector<std::pair<const DoFHandler<dim> *,
-                                std::function<void(std::vector<VectorType *> &)>>> &data) {
+      [this](std::vector<std::pair<const DoFHandler<dim> *,
+                                   std::function<void(std::vector<VectorType *> &)>>> &data) {
         this->attach_vectors(data);
       };
 
     Restart::serialize_internal<dim, VectorType>(attach_vectors,
-                                                 base_in->parameters.restart.prefix + "_0");
+                                                 simulation_case->parameters.restart.prefix + "_0");
   }
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::load(std::shared_ptr<SimulationType> base_in)
+  MeltPoolProblem<dim, number>::load()
   {
-    const std::string load_prefix =
-      base_in->parameters.restart.prefix + "_" + std::to_string(base_in->parameters.restart.load);
+    const std::string load_prefix = simulation_case->parameters.restart.prefix + "_" +
+                                    std::to_string(simulation_case->parameters.restart.load);
 
     AssertThrow(std::filesystem::exists(load_prefix + "_problem.restart"),
                 ExcMessage("You tried to load the following "
@@ -653,14 +653,14 @@ namespace MeltPoolDG::MeltPool
     }
 
     const auto attach_vectors =
-      [&](std::vector<std::pair<const DoFHandler<dim> *,
-                                std::function<void(std::vector<VectorType *> &)>>> &data) {
+      [this](std::vector<std::pair<const DoFHandler<dim> *,
+                                   std::function<void(std::vector<VectorType *> &)>>> &data) {
         this->attach_vectors(data);
       };
 
-    const auto post = [&]() { this->post(); };
+    const auto post = [this]() { this->post(); };
 
-    const auto setup_dof_system = [&]() { this->setup_dof_system(base_in); };
+    const auto setup_dof_system = [this]() { this->setup_dof_system(true); };
 
     Restart::deserialize_internal<dim, VectorType>(attach_vectors,
                                                    post,
@@ -778,23 +778,24 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::initialize(std::shared_ptr<SimulationType> base_in)
+  MeltPoolProblem<dim, number>::initialize()
   {
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    base_in->parameters.adaflo_params.parse_parameters(base_in->parameter_file);
+    simulation_case->parameters.adaflo_params.parse_parameters(simulation_case->parameter_file);
 #endif
-    this->add_problem_specific_parameters(base_in->parameter_file);
+    this->add_problem_specific_parameters(simulation_case->parameter_file);
     check_input_parameters();
-    const auto &param = base_in->parameters;
+    const auto &param = simulation_case->parameters;
 
-    scratch_data = std::make_shared<ScratchData<dim, dim, number>>(base_in->mpi_communicator,
-                                                                   param.base.verbosity_level,
-                                                                   /*do_matrix_free*/ true);
+    scratch_data =
+      std::make_shared<ScratchData<dim, dim, number>>(simulation_case->mpi_communicator,
+                                                      param.base.verbosity_level,
+                                                      /*do_matrix_free*/ true);
 
     const ScopedName         scope_n("mp::init");
     const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
 
-    dof_handler_ls.reinit(*base_in->triangulation);
+    dof_handler_ls.reinit(*simulation_case->triangulation);
 
     scratch_data->set_mapping(FiniteElementUtils::create_mapping<dim>(param.base.fe));
 
@@ -814,7 +815,7 @@ namespace MeltPoolDG::MeltPool
 
     if (problem_specific_parameters.do_heat_transfer)
       {
-        dof_handler_heat = std::make_unique<DoFHandler<dim>>(*base_in->triangulation);
+        dof_handler_heat = std::make_unique<DoFHandler<dim>>(*simulation_case->triangulation);
         scratch_data->attach_dof_handler(*dof_handler_heat); // heat_dirichlet_constraints
         scratch_data->attach_dof_handler(*dof_handler_heat); // heat_hanging_node_constraints
 
@@ -825,7 +826,8 @@ namespace MeltPoolDG::MeltPool
 
         if (param.heat.operator_type == Heat::TwoPhaseOperatorType::cut)
           {
-            dof_handler_heat_cont = std::make_unique<DoFHandler<dim>>(*base_in->triangulation);
+            dof_handler_heat_cont =
+              std::make_unique<DoFHandler<dim>>(*simulation_case->triangulation);
             scratch_data->attach_dof_handler(
               *dof_handler_heat_cont); // heat_continuous_hanging_node_constraints
 
@@ -858,7 +860,7 @@ namespace MeltPoolDG::MeltPool
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     auto adaflo_flow_operation = std::make_shared<Flow::AdafloWrapper<dim, number>>(
-      *scratch_data, base_in, *time_iterator, param.evapor.evaporative_cooling.enable);
+      *scratch_data, simulation_case, *time_iterator, param.evapor.evaporative_cooling.enable);
     flow_operation = adaflo_flow_operation;
 
     flow_vel_no_solid_dof_idx =
@@ -876,7 +878,7 @@ namespace MeltPoolDG::MeltPool
     level_set_operation = std::make_shared<LevelSet::LevelSetOperation<dim, number>>(
       *scratch_data,
       *time_iterator,
-      *base_in->get_boundary_condition_manager("level_set"),
+      *simulation_case->get_boundary_condition_manager("level_set"),
       param.time_stepping,
       param.ls,
       interface_velocity,
@@ -894,7 +896,7 @@ namespace MeltPoolDG::MeltPool
       {
         laser_operation = std::make_shared<Heat::LaserOperation<dim, number>>(
           *scratch_data,
-          base_in->get_periodic_bc(),
+          simulation_case->get_periodic_bc(),
           param.laser,
           &level_set_operation->get_level_set_as_heaviside(),
           ls_dof_idx,
@@ -932,8 +934,8 @@ namespace MeltPoolDG::MeltPool
             case Heat::TwoPhaseOperatorType::diffuse: {
               heat_diffuse_operation = std::make_shared<Heat::HeatDiffuseOperation<dim, number>>(
                 *scratch_data,
-                base_in->get_boundary_condition_manager("heat_transfer"),
-                base_in->get_periodic_bc(),
+                simulation_case->get_boundary_condition_manager("heat_transfer"),
+                simulation_case->get_periodic_bc(),
                 param.heat,
                 *material,
                 *time_iterator,
@@ -950,12 +952,13 @@ namespace MeltPoolDG::MeltPool
             }
             case Heat::TwoPhaseOperatorType::cut: {
               AssertThrow(param.amr.do_amr == false, ExcNotImplemented());
-              AssertThrow(base_in->get_periodic_bc().get_data().empty(), ExcNotImplemented());
+              AssertThrow(simulation_case->get_periodic_bc().get_data().empty(),
+                          ExcNotImplemented());
 
               auto heat_cut_operation = std::make_shared<Heat::HeatCutOperation<dim, number>>(
                 *scratch_data,
-                base_in->get_boundary_condition_manager("heat_transfer"),
-                base_in->get_periodic_bc(),
+                simulation_case->get_boundary_condition_manager("heat_transfer"),
+                simulation_case->get_periodic_bc(),
                 param.heat,
                 param.material,
                 param.evapor,
@@ -977,63 +980,41 @@ namespace MeltPoolDG::MeltPool
 
               // Register lambda function that reinits the dealii::MatrixFree class. It's required
               // to adapt the cut operator for a new interface position.
-              heat_cut_operation->register_reinit_matrix_free(
-#ifdef MELT_POOL_DG_WITH_ADAFLO
-                [this, adaflo_flow_operation]
-#else
-                [this]
-#endif
-                (const DoFHandler<dim> &cut_dof_handler) {
-                  Assert(&cut_dof_handler == &scratch_data->get_dof_handler(heat_dof_idx),
-                         ExcInternalError());
-
-                  // 1) copy current solution vector in temporary storage
+              heat_cut_operation->register_lambdas_for_solution_transfer(
+                [this]() { this->setup_dof_system(true); },
+                [this](
                   std::vector<std::pair<const DoFHandler<dim> *,
-                                        std::function<void(std::vector<VectorType *> &)>>>
-                    data;
+                                        std::function<void(std::vector<VectorType *> &)>>> &data) {
                   this->attach_vectors(data);
-                  std::vector<VectorType *> op_vectors;
-                  for (const auto &d : data)
-                    {
-                      if (d.first == &cut_dof_handler) // skip cut DoFHandler
-                        continue;
-                      std::vector<VectorType *> current_op_vectors;
-                      d.second(current_op_vectors);
-                      op_vectors.insert(op_vectors.end(),
-                                        current_op_vectors.begin(),
-                                        current_op_vectors.end());
-                    }
-                  Assert(std::set(op_vectors.begin(), op_vectors.end()).size() == op_vectors.size(),
-                         dealii::ExcMessage(
-                           "There is at least one duplicate vector attached by attach_vectors()!"));
-                  std::vector<VectorType> vectors_buffer(op_vectors.size());
-                  for (unsigned int i = 0; i < op_vectors.size(); ++i)
-                    op_vectors[i]->swap(vectors_buffer[i]);
-
-                  // 2) reinit matrix free
-                  scratch_data->create_partitioning();
-                  heat_operation->setup_constraints(*scratch_data);
-                  scratch_data->build(true /*enable_boundary_faces*/,
-                                      true /*enable_inner_face_loops*/,
-                                      true /*enable_normal_vector_update*/);
-                  // 3) reinit operators
-                  level_set_operation->reinit();
-                  if (laser_operation)
-                    laser_operation->reinit();
-                  if (evaporation_operation)
-                    evaporation_operation->reinit();
-                  if (melt_front_propagation)
-                    melt_front_propagation->reinit();
-                  if (darcy_operation)
-                    darcy_operation->reinit();
-#ifdef MELT_POOL_DG_WITH_ADAFLO
-                  adaflo_flow_operation->reinit_2();
-#endif
-
-                  // 4) copy vectors back
-                  for (unsigned int i = 0; i < op_vectors.size(); ++i)
-                    op_vectors[i]->copy_locally_owned_data_from(vectors_buffer[i]);
                 });
+
+              // before the CutFEM operation can distribute dofs, the mesh must be classified
+              // according to the level set indicator
+              {
+                FiniteElementUtils::distribute_dofs<dim, 1>(param.ls.fe, dof_handler_ls);
+
+                IndexSet locally_relevant_dofs;
+                DoFTools::extract_locally_relevant_dofs(dof_handler_ls, locally_relevant_dofs);
+                level_set_operation->get_level_set().reinit(dof_handler_ls.locally_owned_dofs(),
+                                                            locally_relevant_dofs,
+                                                            dof_handler_ls.get_communicator());
+
+                std::shared_ptr<dealii::Function<dim>> initial_level_set =
+                  simulation_case->get_initial_condition("level_set", true /*is optional*/);
+                if (not initial_level_set)
+                  initial_level_set =
+                    simulation_case->get_initial_condition("signed_distance", true /*is optional*/);
+                AssertThrow(
+                  initial_level_set,
+                  ExcMessage(
+                    "For the level set operation either a function for the initial level set or the "
+                    "signed distance field must be provided. Abort ..."));
+
+                dealii::VectorTools::interpolate(scratch_data->get_mapping(),
+                                                 dof_handler_ls,
+                                                 *initial_level_set,
+                                                 level_set_operation->get_level_set());
+              }
 
               heat_operation = heat_cut_operation;
               break;
@@ -1042,7 +1023,7 @@ namespace MeltPoolDG::MeltPool
             DEAL_II_NOT_IMPLEMENTED();
         }
 
-    setup_dof_system(base_in, false);
+    setup_dof_system(false);
 
     level_set_operation->reinit();
     if (laser_operation)
@@ -1150,8 +1131,8 @@ namespace MeltPoolDG::MeltPool
             evaporation_fluid_material = std::make_shared<
               Evaporation::IncompressibleNewtonianFluidEvaporationMaterial<dim, number>>(
               *scratch_data,
-              [&](const unsigned int cell,
-                  const unsigned int quad) -> const VectorizedArray<number> & {
+              [this](const unsigned int cell,
+                     const unsigned int quad) -> const VectorizedArray<number> & {
                 return flow_operation->get_viscosity(cell, quad);
               },
               level_set_operation->get_normal_vector(),
@@ -1161,10 +1142,10 @@ namespace MeltPoolDG::MeltPool
               flow_operation->get_quad_idx_velocity());
 
             flow_operation->set_user_defined_material(
-              [&](const Tensor<2, dim, VectorizedArray<number>> &velocity_grad,
-                  const unsigned int                             cell,
-                  const unsigned int                             q,
-                  const bool do_tangent) -> Tensor<2, dim, VectorizedArray<number>> {
+              [this](const Tensor<2, dim, VectorizedArray<number>> &velocity_grad,
+                     const unsigned int                             cell,
+                     const unsigned int                             q,
+                     const bool do_tangent) -> Tensor<2, dim, VectorizedArray<number>> {
                 evaporation_fluid_material->reinit(velocity_grad, cell, q);
 
                 return do_tangent ? evaporation_fluid_material->get_vmult_d_tau_d_grad_vel() :
@@ -1223,17 +1204,17 @@ namespace MeltPoolDG::MeltPool
       }
 
     // for the heat cut operation, the level set must be initialized before reinit can be called
-    set_initial_condition_level_set(base_in);
+    set_initial_condition_level_set();
 
     // reinit the heat operation before its initial condition is set
     if (heat_operation)
       heat_operation->reinit();
 
-    set_initial_condition_heat_transfer(base_in);
+    set_initial_condition_heat_transfer();
 
-    set_initial_condition_flow(base_in);
+    set_initial_condition_flow();
 
-    set_initial_condition_evaporation(base_in);
+    set_initial_condition_evaporation();
 
     // setup interface temperature projection if needed
     if (compute_interface_temperature)
@@ -1287,27 +1268,26 @@ namespace MeltPoolDG::MeltPool
             str << " solid.size " << melt_front_propagation->get_solid().size();
 
           Journal::print_line(scratch_data->get_pcout(1), str.str(), "melt_pool_problem");
-          refine_mesh(base_in);
+          refine_mesh();
 
           // set initial conditions after initial AMR
-          set_initial_conditions(base_in);
+          set_initial_conditions();
         }
   }
 
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::set_initial_condition_level_set(
-    std::shared_ptr<SimulationType> base_in)
+  MeltPoolProblem<dim, number>::set_initial_condition_level_set()
   {
     if (const auto initial_field =
-          base_in->get_initial_condition("level_set", true /*is optional*/))
+          simulation_case->get_initial_condition("level_set", true /*is optional*/))
       {
         // ... via a given level set field
         level_set_operation->set_initial_condition(*initial_field);
       }
     else if (const auto initial_field =
-               base_in->get_initial_condition("signed_distance", true /*is optional*/))
+               simulation_case->get_initial_condition("signed_distance", true /*is optional*/))
       {
         // ... or a given signed distance field.
         level_set_operation->set_initial_condition(*initial_field,
@@ -1320,43 +1300,44 @@ namespace MeltPoolDG::MeltPool
                    "signed distance field must be provided. Abort ..."));
 
     level_set_operation->set_inflow_outflow_bc(
-      base_in->get_boundary_condition("inflow_outflow", "level_set"));
+      simulation_case->get_boundary_condition("inflow_outflow", "level_set"));
   }
 
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::set_initial_condition_heat_transfer(
-    [[maybe_unused]] std::shared_ptr<SimulationType> base_in)
+  MeltPoolProblem<dim, number>::set_initial_condition_heat_transfer()
   {
     if (not heat_operation)
       return;
 
     if (laser_operation and
-        base_in->parameters.laser.model == Heat::LaserModelType::analytical_temperature)
+        simulation_case->parameters.laser.model == Heat::LaserModelType::analytical_temperature)
       Heat::LaserAnalyticalTemperatureField<dim, number>::compute_temperature_field(
         *scratch_data,
-        base_in->parameters.material,
-        base_in->parameters.laser,
+        simulation_case->parameters.material,
+        simulation_case->parameters.laser,
         laser_operation->get_laser_power(),
         laser_operation->get_laser_position(),
         heat_operation->get_temperature(),
         level_set_operation->get_level_set_as_heaviside(),
         heat_dof_idx);
-    else if (not(evaporation_operation and base_in->parameters.evapor.evaporative_mass_flux_model ==
-                                             Evaporation::EvaporationModelType::analytical))
+    else if (not(evaporation_operation and
+                 simulation_case->parameters.evapor.evaporative_mass_flux_model ==
+                   Evaporation::EvaporationModelType::analytical))
       // constant evaporative mass flux --> no need to set initial condition
-      heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
+      heat_operation->set_initial_condition(
+        *simulation_case->get_initial_condition("heat_transfer"));
   }
 
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::set_initial_condition_flow(std::shared_ptr<SimulationType> base_in)
+  MeltPoolProblem<dim, number>::set_initial_condition_flow()
   {
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())
-      ->set_initial_condition(*base_in->get_initial_condition("navier_stokes_u"));
+      ->set_initial_condition(*simulation_case->get_initial_condition("navier_stokes_u"));
 #else
     AssertThrow(false, ExcNotImplemented());
 #endif
@@ -1366,8 +1347,8 @@ namespace MeltPoolDG::MeltPool
       {
         melt_front_propagation->set_initial_condition(
           level_set_operation->get_level_set_as_heaviside(), level_set_operation->get_level_set());
-        if (base_in->parameters.mp.solid.set_velocity_to_zero or
-            base_in->parameters.mp.solid.do_not_reinitialize)
+        if (simulation_case->parameters.mp.solid.set_velocity_to_zero or
+            simulation_case->parameters.mp.solid.do_not_reinitialize)
 #ifdef MELT_POOL_DG_WITH_ADAFLO
           dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())->reinit_3();
 #else
@@ -1379,14 +1360,13 @@ namespace MeltPoolDG::MeltPool
     if (darcy_operation)
       darcy_operation->reinit();
 
-    set_phase_dependent_parameters_flow(base_in->parameters);
+    set_phase_dependent_parameters_flow(simulation_case->parameters);
   }
 
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::set_initial_condition_evaporation(
-    [[maybe_unused]] std::shared_ptr<SimulationType> base_in)
+  MeltPoolProblem<dim, number>::set_initial_condition_evaporation()
   {
     if (not evaporation_operation)
       return;
@@ -1397,9 +1377,9 @@ namespace MeltPoolDG::MeltPool
 
     evaporation_operation->compute_evaporative_mass_flux();
 
-    if (base_in->parameters.evapor.evaporative_cooling.model ==
+    if (simulation_case->parameters.evapor.evaporative_cooling.model ==
           Evaporation::EvaporCoolingInterfaceFluxType::sharp or
-        base_in->parameters.evapor.evaporative_dilation_rate.model ==
+        simulation_case->parameters.evapor.evaporative_dilation_rate.model ==
           Evaporation::InterfaceFluxType::sharp)
       level_set_operation->update_surface_mesh();
   }
@@ -1407,62 +1387,31 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::set_initial_conditions(std::shared_ptr<SimulationType> base_in)
+  MeltPoolProblem<dim, number>::set_initial_conditions()
   {
     const ScopedName         scope_n("set_initial_condition");
     const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
 
-    set_initial_condition_level_set(base_in);
+    set_initial_condition_level_set();
 
-    set_initial_condition_heat_transfer(base_in);
+    set_initial_condition_heat_transfer();
 
-    set_initial_condition_flow(base_in);
+    set_initial_condition_flow();
 
-    set_initial_condition_evaporation(base_in);
+    set_initial_condition_evaporation();
   }
 
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::setup_dof_system(std::shared_ptr<SimulationType> base_in,
-                                                 const bool                      do_reinit)
+  MeltPoolProblem<dim, number>::setup_dof_system(const bool do_reinit)
   {
-    const auto &param = base_in->parameters;
+    const auto &param = simulation_case->parameters;
 
     FiniteElementUtils::distribute_dofs<dim, 1>(param.ls.fe, dof_handler_ls);
 
     if (heat_operation)
-      {
-        if (param.heat.operator_type == Heat::TwoPhaseOperatorType::cut)
-          {
-            FiniteElementUtils::distribute_dofs<dim, 1>(param.heat.fe, *dof_handler_heat_cont);
-
-            // before the CutFEM operation can distribute dofs, the mesh must be classified
-            // according to the level set indicator
-            IndexSet locally_relevant_dofs;
-            DoFTools::extract_locally_relevant_dofs(dof_handler_ls, locally_relevant_dofs);
-            level_set_operation->get_level_set().reinit(dof_handler_ls.locally_owned_dofs(),
-                                                        locally_relevant_dofs,
-                                                        dof_handler_ls.get_communicator());
-
-            std::shared_ptr<dealii::Function<dim>> initial_level_set =
-              base_in->get_initial_condition("level_set", true /*is optional*/);
-            if (not initial_level_set)
-              initial_level_set =
-                base_in->get_initial_condition("signed_distance", true /*is optional*/);
-            AssertThrow(
-              initial_level_set,
-              ExcMessage(
-                "For the level set operation either a function for the initial level set or the "
-                "signed distance field must be provided. Abort ..."));
-
-            dealii::VectorTools::interpolate(scratch_data->get_mapping(),
-                                             dof_handler_ls,
-                                             *initial_level_set,
-                                             level_set_operation->get_level_set());
-          }
-        heat_operation->distribute_dofs(*dof_handler_heat);
-      }
+      heat_operation->distribute_dofs(*scratch_data);
 
     if (laser_operation)
       laser_operation->distribute_dofs(param.base.fe);
@@ -1480,22 +1429,23 @@ namespace MeltPoolDG::MeltPool
     // make constraints
     Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim, number>(
       *scratch_data,
-      base_in->get_boundary_condition("dirichlet", "level_set"),
-      base_in->get_periodic_bc(),
+      simulation_case->get_boundary_condition("dirichlet", "level_set"),
+      simulation_case->get_periodic_bc(),
       ls_dof_idx,
       ls_hanging_nodes_dof_idx);
     Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim, number>(
       *scratch_data,
-      base_in->get_boundary_condition("dirichlet", "level_set"),
-      base_in->get_periodic_bc(),
+      simulation_case->get_boundary_condition("dirichlet", "level_set"),
+      simulation_case->get_periodic_bc(),
       reinit_dof_idx,
       ls_hanging_nodes_dof_idx,
       false /*set inhomogeneities to zero*/);
 
     // additional reinitialization dirichlet bc
-    if (base_in->get_boundary_condition_manager("reinitialization"))
+    if (simulation_case->get_boundary_condition_manager("reinitialization"))
       Constraints::fill_DBC<dim>(*scratch_data,
-                                 base_in->get_boundary_condition("dirichlet", "reinitialization"),
+                                 simulation_case->get_boundary_condition("dirichlet",
+                                                                         "reinitialization"),
                                  reinit_dof_idx,
                                  true,
                                  true);
@@ -1517,7 +1467,7 @@ namespace MeltPoolDG::MeltPool
           param.evapor.evaporative_cooling.model ==
             Evaporation::EvaporCoolingInterfaceFluxType::sharp_conforming));
       const bool enable_normal_vector_update =
-        (heat_operation and param.heat.operator_type == Heat::TwoPhaseOperatorType::cut);
+        heat_operation and param.heat.operator_type == Heat::TwoPhaseOperatorType::cut;
 
       scratch_data->build(enable_boundary_face_loops,
                           enable_inner_face_loops,
@@ -1526,11 +1476,6 @@ namespace MeltPoolDG::MeltPool
 
     if (do_reinit)
       {
-        CellMonitor<number>::add_info("mp::cells",
-                                      scratch_data->get_triangulation().n_global_active_cells(),
-                                      scratch_data->get_min_cell_size(),
-                                      scratch_data->get_max_cell_size());
-
         level_set_operation->reinit();
 
         if (evaporation_operation)
@@ -1841,7 +1786,6 @@ namespace MeltPoolDG::MeltPool
   template <int dim, typename number>
   void
   MeltPoolProblem<dim, number>::output_results(
-    std::shared_ptr<SimulationType>   base_in,
     const bool                        force_output,
     const OutputNotConvergedOperation output_not_converged_operation)
   {
@@ -1849,15 +1793,16 @@ namespace MeltPoolDG::MeltPool
     const number       current_time = time_iterator->get_current_time();
 
     if (not post_processor->is_output_timestep(n_time_step, current_time) and not force_output and
-        not base_in->parameters.output.do_user_defined_postprocessing)
+        not simulation_case->parameters.output.do_user_defined_postprocessing)
       return;
 
     const ScopedName         scope_n("output_results");
     const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
 
-    GenericDataOut<dim, number> generic_data_out(scratch_data->get_mapping(),
-                                                 current_time,
-                                                 base_in->parameters.output.output_variables);
+    GenericDataOut<dim, number> generic_data_out(
+      scratch_data->get_mapping(),
+      current_time,
+      simulation_case->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
 
     switch (output_not_converged_operation)
@@ -1875,8 +1820,8 @@ namespace MeltPoolDG::MeltPool
       }
 
     // user-defined postprocessing
-    if (base_in->parameters.output.do_user_defined_postprocessing)
-      base_in->do_postprocessing(generic_data_out);
+    if (simulation_case->parameters.output.do_user_defined_postprocessing)
+      simulation_case->do_postprocessing(generic_data_out);
 
     // postprocessing
     post_processor->process(n_time_step,
@@ -1889,10 +1834,9 @@ namespace MeltPoolDG::MeltPool
   template <int dim, typename number>
   void
   MeltPoolProblem<dim, number>::finalize(
-    std::shared_ptr<SimulationType>   base_in,
     const OutputNotConvergedOperation output_no_converged_operation)
   {
-    output_results(base_in, true /* force_output */, output_no_converged_operation);
+    output_results(true /* force_output */, output_no_converged_operation);
 
     //... always print timing statistics
     if (profiling_monitor)
@@ -1939,10 +1883,9 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   bool
-  MeltPoolProblem<dim, number>::mark_cells_for_refinement(std::shared_ptr<SimulationType> base_in,
-                                                          Triangulation<dim>             &tria)
+  MeltPoolProblem<dim, number>::mark_cells_for_refinement(Triangulation<dim> &tria)
   {
-    const auto &amr_data = base_in->parameters.amr;
+    const auto &amr_data = simulation_case->parameters.amr;
 
     const bool ls_update_ghosts = not level_set_operation->get_level_set().has_ghost_elements();
     if (ls_update_ghosts)
@@ -1984,8 +1927,9 @@ namespace MeltPoolDG::MeltPool
         // solution variables
         std::vector<std::vector<number>> ls_gradients(dim, std::vector<number>(quadrature.size()));
         const number                     diffusion_length =
-          base_in->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
-            scratch_data->get_min_cell_size() / base_in->parameters.ls.get_n_subdivisions());
+          simulation_case->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
+            scratch_data->get_min_cell_size() /
+            simulation_case->parameters.ls.get_n_subdivisions());
 
         std::vector<number> ls_vals(quadrature.size());
 
@@ -2041,7 +1985,8 @@ namespace MeltPoolDG::MeltPool
       {
           // Compute the error based on (1-level_set^2).
           case AMRStrategy::generic: {
-            Vector<float> estimated_error_per_cell(base_in->triangulation->n_active_cells());
+            Vector<float> estimated_error_per_cell(
+              simulation_case->triangulation->n_active_cells());
 
             VectorType locally_relevant_solution;
             locally_relevant_solution.reinit(scratch_data->get_partitioner(ls_dof_idx));
@@ -2089,7 +2034,7 @@ namespace MeltPoolDG::MeltPool
             break;
           }
           case AMRStrategy::KellyErrorEstimator: {
-            AssertThrow(base_in->parameters.ls.get_n_subdivisions() <= 1,
+            AssertThrow(simulation_case->parameters.ls.get_n_subdivisions() <= 1,
                         ExcMessage(
                           "For the KellyErrorEstimator n_subdivisions must not be larger than 1."));
 
@@ -2101,7 +2046,8 @@ namespace MeltPoolDG::MeltPool
             scratch_data->get_constraint(ls_dof_idx).distribute(locally_relevant_solution);
             locally_relevant_solution.update_ghost_values();
 
-            Vector<float> estimated_error_per_cell(base_in->triangulation->n_active_cells());
+            Vector<float> estimated_error_per_cell(
+              simulation_case->triangulation->n_active_cells());
 
             // 2) estimate errors from the level set field
             KellyErrorEstimator<dim>::estimate(
@@ -2124,7 +2070,7 @@ namespace MeltPoolDG::MeltPool
 
                 // 3b) estimate errors from the solid
                 Vector<float> estimated_error_per_cell_solid(
-                  base_in->triangulation->n_active_cells());
+                  simulation_case->triangulation->n_active_cells());
                 KellyErrorEstimator<dim>::estimate(
                   scratch_data->get_dof_handler(heat_no_bc_dof_idx),
                   scratch_data->get_face_quadrature(heat_no_bc_dof_idx),
@@ -2199,8 +2145,9 @@ namespace MeltPoolDG::MeltPool
             std::vector<std::vector<number>> ls_gradients(dim,
                                                           std::vector<number>(quadrature.size()));
             const number                     diffusion_length =
-              base_in->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
-                scratch_data->get_min_cell_size() / base_in->parameters.ls.get_n_subdivisions());
+              simulation_case->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
+                scratch_data->get_min_cell_size() /
+                simulation_case->parameters.ls.get_n_subdivisions());
 
             std::vector<number> ls_vals(quadrature.size());
 
@@ -2309,9 +2256,10 @@ namespace MeltPoolDG::MeltPool
               // ensure that solid regions at high temperatures are refined
               else if ((solid_vals[i] > 0.0 or
                         problem_specific_parameters.amr.refine_gas_domain) and
-                       temperature_vals[i] >= problem_specific_parameters.amr
-                                                  .fraction_of_melting_point_refined_in_solid *
-                                                base_in->parameters.material.solidus_temperature)
+                       temperature_vals[i] >=
+                         problem_specific_parameters.amr
+                             .fraction_of_melting_point_refined_in_solid *
+                           simulation_case->parameters.material.solidus_temperature)
                 {
                   cell->clear_coarsen_flag();
                   cell->set_refine_flag();
@@ -2364,36 +2312,39 @@ namespace MeltPoolDG::MeltPool
     std::vector<
       std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>> &data)
   {
-    data.emplace_back(&dof_handler_ls, [&](std::vector<VectorType *> &vectors) {
+    data.emplace_back(&dof_handler_ls, [this](std::vector<VectorType *> &vectors) {
       level_set_operation->attach_vectors(vectors); // ls + heaviside
     });
     data.emplace_back(&flow_operation->get_dof_handler_velocity(),
-                      [&](std::vector<VectorType *> &vectors) {
+                      [this](std::vector<VectorType *> &vectors) {
                         flow_operation->attach_vectors_u(vectors);
                       });
     data.emplace_back(&flow_operation->get_dof_handler_pressure(),
-                      [&](std::vector<VectorType *> &vectors) {
+                      [this](std::vector<VectorType *> &vectors) {
                         flow_operation->attach_vectors_p(vectors);
                       });
 
     if (melt_front_propagation)
-      data.emplace_back(dof_handler_heat.get(), [&](std::vector<VectorType *> &vectors) {
-        melt_front_propagation->attach_vectors(vectors); // temperature + solid + liquid
-      });
+      // TODO move attaching dof handler ptr to operation
+      data.emplace_back(&scratch_data->get_dof_handler(heat_continuous_no_bc_dof_idx),
+                        [this](std::vector<VectorType *> &vectors) {
+                          melt_front_propagation->attach_vectors(
+                            vectors); // temperature + solid + liquid
+                        });
 
     if (evaporation_operation)
       {
         data.emplace_back(&flow_operation->get_dof_handler_velocity(),
-                          [&](std::vector<VectorType *> &vectors) {
+                          [this](std::vector<VectorType *> &vectors) {
                             evaporation_operation->attach_dim_vectors(vectors);
                           });
-        data.emplace_back(dof_handler_heat.get(), [&](std::vector<VectorType *> &vectors) {
+        data.emplace_back(dof_handler_heat.get(), [this](std::vector<VectorType *> &vectors) {
           evaporation_operation->attach_vectors(vectors);
         });
       }
 
     if (heat_operation)
-      data.emplace_back(dof_handler_heat.get(), [&](std::vector<VectorType *> &vectors) {
+      data.emplace_back(dof_handler_heat.get(), [this](std::vector<VectorType *> &vectors) {
         heat_operation->attach_vectors(vectors);
       });
 
@@ -2438,29 +2389,29 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   void
-  MeltPoolProblem<dim, number>::refine_mesh(std::shared_ptr<SimulationType> base_in)
+  MeltPoolProblem<dim, number>::refine_mesh()
   {
-    const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
-      return this->mark_cells_for_refinement(base_in, tria);
+    const auto mark_cells_for_refinement = [this](Triangulation<dim> &tria) -> bool {
+      return this->mark_cells_for_refinement(tria);
     };
 
     const auto attach_vectors =
-      [&](std::vector<std::pair<const DoFHandler<dim> *,
-                                std::function<void(std::vector<VectorType *> &)>>> &data) {
+      [this](std::vector<std::pair<const DoFHandler<dim> *,
+                                   std::function<void(std::vector<VectorType *> &)>>> &data) {
         this->attach_vectors(data);
       };
 
-    const auto post = [&]() { this->post(); };
+    const auto post = [this]() { this->post(); };
 
-    const auto setup_dof_system = [&]() { this->setup_dof_system(base_in); };
+    const auto setup_dof_system = [this]() { this->setup_dof_system(true); };
 
-    refine_grid<dim, VectorType>(mark_cells_for_refinement,
-                                 attach_vectors,
-                                 post,
-                                 setup_dof_system,
-                                 base_in->parameters.amr,
-                                 *base_in->triangulation,
-                                 time_iterator->get_current_time_step_number());
+    AMR::refine_grid<dim, VectorType>(mark_cells_for_refinement,
+                                      attach_vectors,
+                                      post,
+                                      setup_dof_system,
+                                      simulation_case->parameters.amr,
+                                      *simulation_case->triangulation,
+                                      time_iterator->get_current_time_step_number());
   }
 
   template class MeltPoolProblem<MELT_POOL_DG_DIM, double>;

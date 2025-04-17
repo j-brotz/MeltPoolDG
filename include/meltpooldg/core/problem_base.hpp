@@ -16,7 +16,7 @@ namespace MeltPoolDG
     {}
 
     virtual void
-    run(std::shared_ptr<SimulationType> base_in) = 0;
+    run() = 0;
 
   protected:
     // TODO: Move into free function

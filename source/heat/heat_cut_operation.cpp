@@ -23,6 +23,7 @@
 #include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
+#include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/functions.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 
@@ -138,8 +139,8 @@ namespace MeltPoolDG::Heat
 
     setup_newton();
 
-    reinit_vector = [this](VectorType &vec, const DoFHandler<dim> &dh) {
-      Assert(&dh == &scratch_data.get_dof_handler(heat_cut_dof_idx), dealii::ExcInternalError());
+    reinit_vector = [this](VectorType &vec) {
+      const auto &dh = scratch_data.get_dof_handler(heat_cut_dof_idx);
       vec.reinit(dh.locally_owned_dofs(),
                  scratch_data.get_locally_relevant_dofs(heat_cut_dof_idx),
                  dh.get_communicator());
@@ -158,10 +159,15 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatCutOperation<dim, number>::register_reinit_matrix_free(
-    const std::function<void(const dealii::DoFHandler<dim> &)> reinit_matrix_free_in)
+  HeatCutOperation<dim, number>::register_lambdas_for_solution_transfer(
+    const std::function<void()> setup_dof_system_in,
+    const std::function<
+      void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
+                                 std::function<void(std::vector<VectorType *> &)>>> &)>
+      attach_vectors_in)
   {
-    reinit_matrix_free = reinit_matrix_free_in;
+    setup_dof_system   = setup_dof_system_in;
+    attach_all_vectors = attach_vectors_in;
   }
 
   template <int dim, typename number>
@@ -181,6 +187,11 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperation<dim, number>::adapt_to_new_interface_position()
   {
+    // We must make sure that compute_intersected_quadrature() is not run during the solution
+    // transfer, since it can be part of setup_dof_system. The reason is, that during solution
+    // transfer the level set solution vector is not available.
+    ready_to_generate_intersected_quadrature = false;
+
     std::swap(mesh_classifier_old, mesh_classifier);
     classify_cells();
 
@@ -188,25 +199,40 @@ namespace MeltPoolDG::Heat
       const ScopedName         scope_n("cut_solution_transfer");
       const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
 
-      Assert(reinit_matrix_free != nullptr,
-             dealii::ExcMessage("You must register the reinit_matrix_free lambda function first!"));
+      Assert(setup_dof_system != nullptr,
+             dealii::ExcMessage("You must register the setup_dof_system lambda function first!"));
+
+      std::vector<const VectorType *> cut_solution_vectors;
+      cut_solution_vectors.reserve(solution_history.size());
+      solution_history.apply(
+        [&cut_solution_vectors](VectorType &vec) { cut_solution_vectors.push_back(&vec); });
 
       // transfer old solution according to the new interface position,
       // the matrix-free object is reinitialized within the reinit function
       cut_solution_transfer.reinit(
         const_cast<dealii::DoFHandler<dim> &>(scratch_data.get_dof_handler(heat_cut_dof_idx)),
         const_cast<dealii::Triangulation<dim> &>(scratch_data.get_triangulation()),
-        solution_history.get_current_solution(),
+        cut_solution_vectors,
         *mesh_classifier_old,
         *mesh_classifier,
         reinit_vector,
-        reinit_matrix_free);
+        setup_dof_system,
+        attach_all_vectors);
     }
-    scratch_data.initialize_dof_vector(solution_history.get_current_solution(), heat_cut_dof_idx);
-    solution_history.get_current_solution().copy_locally_owned_data_from(
-      cut_solution_transfer.get_updated_solution());
-    solution_history.get_current_solution().update_ghost_values();
 
+    {
+      const auto  &updated_solutions = cut_solution_transfer.get_updated_solutions();
+      unsigned int i                 = 0;
+      solution_history.apply([this, &updated_solutions, &i](VectorType &vec) {
+        scratch_data.initialize_dof_vector(vec, heat_cut_dof_idx);
+        vec.copy_locally_owned_data_from(updated_solutions[i]);
+        vec.update_ghost_values();
+        ++i;
+      });
+    }
+
+    // generate intersected quadrature for new interface position.
+    ready_to_generate_intersected_quadrature = true;
     compute_intersected_quadrature();
   }
 
@@ -214,6 +240,9 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperation<dim, number>::compute_intersected_quadrature()
   {
+    if (not ready_to_generate_intersected_quadrature)
+      return;
+
     const ScopedName         scope_n("intersected_quadrature");
     const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
 
@@ -230,18 +259,19 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatCutOperation<dim, number>::distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const
+  HeatCutOperation<dim, number>::distribute_dofs(
+    ScratchData<dim, dim, number> &mutable_scratch_data) const
   {
     AssertThrow(heat_data.fe.type == FiniteElementType::FE_Q,
                 dealii::ExcMessage("For now, only standard FE_Q elements are supported."));
-    Assert(
-      &dof_handler == &scratch_data.get_dof_handler(heat_cut_dof_idx),
-      dealii::ExcMessage(
-        "Please make sure to distribute the dofs of the DoFHandler that is used by this operation!"));
-    Assert(
-      &dof_handler == &scratch_data.get_dof_handler(heat_cut_no_bc_dof_idx),
-      dealii::ExcMessage(
-        "Please make sure to distribute the dofs of the DoFHandler that is used by this operation!"));
+    Assert(&mutable_scratch_data.get_dof_handler(heat_cut_dof_idx) ==
+             &mutable_scratch_data.get_dof_handler(heat_cut_no_bc_dof_idx),
+           dealii::ExcMessage(
+             "Please make sure to use the same DoFHandler for the two constraint indices!"));
+    Assert(&mutable_scratch_data.get_dof_handler(heat_cut_dof_idx) !=
+             &mutable_scratch_data.get_dof_handler(heat_cont_no_bc_dof_idx),
+           dealii::ExcMessage(
+             "Please make sure to use different DoFHandlers for the cut and continuous indices!"));
 
     classify_cells();
 
@@ -263,9 +293,12 @@ namespace MeltPoolDG::Heat
         fe_collection.push_back(fe_n); // gas
       }
 
-    CutUtil::set_fe_index<dim>(dof_handler, *mesh_classifier, false /* set_future */);
+    auto &cut_dof_handler = mutable_scratch_data.get_dof_handler(heat_cut_dof_idx);
+    CutUtil::set_fe_index<dim>(cut_dof_handler, *mesh_classifier, false /* set_future */);
+    cut_dof_handler.distribute_dofs(fe_collection);
 
-    dof_handler.distribute_dofs(fe_collection);
+    FiniteElementUtils::distribute_dofs<dim, 1>(
+      heat_data.fe, mutable_scratch_data.get_dof_handler(heat_cont_no_bc_dof_idx));
   }
 
   template <int dim, typename number>

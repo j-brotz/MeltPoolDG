@@ -17,11 +17,11 @@
     "do amr": "true",
     "upper perc to refine": "     0.1",
     "lower perc to coarsen": "    0.00",
-    "max grid refinement level": "8"
+    "max grid refinement level": "9"
   },
   "output": {
     "paraview": {
-      "filename": "solution_rotaitng_bubble",
+      "filename": "solution_rotating_bubble",
       "enable": "false"
     }
   },

@@ -1,4 +1,6 @@
 #include <meltpooldg/utilities/amr_data.hpp>
+//
+#include <deal.II/base/exceptions.h>
 
 namespace MeltPoolDG
 {
@@ -44,8 +46,10 @@ namespace MeltPoolDG
                                     const bool         load_restart_data)
   {
     // set the min grid refinement level if not user-specified
-    if (min_grid_refinement_level == 1)
+    if (min_grid_refinement_level == -1)
       min_grid_refinement_level = global_refinements;
+    AssertThrow(min_grid_refinement_level >= 0,
+                dealii::ExcMessage("min_grid_refinement_level must be >= 0"));
     // do not allow initial refinement cycles in case of restart load
     if (load_restart_data)
       n_initial_refinement_cycles = 0;

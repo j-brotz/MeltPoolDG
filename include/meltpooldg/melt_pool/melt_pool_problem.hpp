@@ -47,15 +47,19 @@ namespace MeltPoolDG::MeltPool
   class MeltPoolProblem : public ProblemBase<dim, number>
   {
   private:
-    using SimulationType  = MeltPoolCase<dim, number>;
+    using CaseType        = MeltPoolCase<dim, number>;
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
+    const std::shared_ptr<CaseType> simulation_case;
+
   public:
-    MeltPoolProblem() = default;
+    MeltPoolProblem(std::unique_ptr<CaseType> simulation_case)
+      : simulation_case(std::move(simulation_case))
+    {}
 
     void
-    run(std::shared_ptr<SimulationType> base_in) final;
+    run() final;
 
   protected:
     void
@@ -66,10 +70,10 @@ namespace MeltPoolDG::MeltPool
 
   private:
     void
-    save(std::shared_ptr<SimulationType> base_in);
+    save();
 
     void
-    load(std::shared_ptr<SimulationType> base_in);
+    load();
 
     struct
     {
@@ -119,25 +123,25 @@ namespace MeltPoolDG::MeltPool
      *  for the computation of the level set problem
      */
     void
-    initialize(std::shared_ptr<SimulationType> base_in);
+    initialize();
 
     void
-    set_initial_conditions(std::shared_ptr<SimulationType> base_in);
+    set_initial_conditions();
 
     void
-    set_initial_condition_level_set(std::shared_ptr<SimulationType> base_in);
+    set_initial_condition_level_set();
 
     void
-    set_initial_condition_heat_transfer(std::shared_ptr<SimulationType> base_in);
+    set_initial_condition_heat_transfer();
 
     void
-    set_initial_condition_flow(std::shared_ptr<SimulationType> base_in);
+    set_initial_condition_flow();
 
     void
-    set_initial_condition_evaporation(std::shared_ptr<SimulationType> base_in);
+    set_initial_condition_evaporation();
 
     void
-    setup_dof_system(std::shared_ptr<SimulationType> base_in, const bool do_reinit = true);
+    setup_dof_system(const bool do_reinit = true);
 
     /**
      * Update material parameter of the phases.
@@ -165,8 +169,7 @@ namespace MeltPoolDG::MeltPool
      *  perform output of results
      */
     void
-    output_results(std::shared_ptr<SimulationType>   base_in,
-                   const bool                        force_output = false,
+    output_results(const bool                        force_output = false,
                    const OutputNotConvergedOperation output_not_converged_operation =
                      OutputNotConvergedOperation::none);
     /*
@@ -178,14 +181,13 @@ namespace MeltPoolDG::MeltPool
      * finalize simulation in the case that an operaion didn't converge
      */
     void
-    finalize(std::shared_ptr<SimulationType>   base_in,
-             const OutputNotConvergedOperation output_no_converged_operation =
+    finalize(const OutputNotConvergedOperation output_no_converged_operation =
                OutputNotConvergedOperation::none);
     /*
      *  perform mesh refinement
      */
     void
-    refine_mesh(std::shared_ptr<SimulationType> base_in);
+    refine_mesh();
 
     /*
      *  perform mesh refinement
@@ -201,8 +203,7 @@ namespace MeltPoolDG::MeltPool
     post();
 
     bool
-    mark_cells_for_refinement(std::shared_ptr<SimulationType> base_in,
-                              dealii::Triangulation<dim>     &tria);
+    mark_cells_for_refinement(dealii::Triangulation<dim> &tria);
 
     std::shared_ptr<TimeIterator<number>> time_iterator;
 

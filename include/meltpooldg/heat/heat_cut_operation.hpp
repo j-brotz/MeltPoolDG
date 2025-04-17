@@ -30,6 +30,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <utility>
 #include <vector>
 
 
@@ -70,9 +71,12 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier;
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier_old;
 
-    CutUtil::SolutionTransferOperator<dim, number>                     cut_solution_transfer;
-    std::function<void(const dealii::DoFHandler<dim> &)>               reinit_matrix_free;
-    std::function<void(VectorType &, const dealii::DoFHandler<dim> &)> reinit_vector;
+    CutUtil::SolutionTransferOperator<dim, number> cut_solution_transfer;
+    std::function<void(VectorType &)>              reinit_vector;
+    std::function<void()>                          setup_dof_system;
+    std::function<void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
+                                             std::function<void(std::vector<VectorType *> &)>>> &)>
+      attach_all_vectors;
 
     dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>
       mapping_info_surface;
@@ -88,8 +92,11 @@ namespace MeltPoolDG::Heat
 
     std::unique_ptr<LevelSet::Tools::NearestPoint<dim, double>> nearest_point_search;
 
-    // determine whether solution vectors are prepared for time advance
+    // bool indicating whether solution vectors are prepared for time advance
     bool ready_for_time_advance = false;
+
+    // bool indicating whether the level set vector is ready to generate intersected quadrature
+    bool ready_to_generate_intersected_quadrature = true;
 
   public:
     HeatCutOperation(
@@ -115,9 +122,19 @@ namespace MeltPoolDG::Heat
       std::shared_ptr<const dealii::Function<dim, number>> laser_intensity_profile_in,
       const dealii::Tensor<1, dim, number>                &laser_direction_in);
 
+    /**
+     * Before this operator can adapt_to_new_interface_position(), attach the following lambdas:
+     * @param setup_dof_system_in same as in AMR::refine_grid()
+     * @param attach_vectors_in same as in AMR::refine_grid(), only necessary if this operation is used
+     *                          with non-cut operations in a partitioned application
+     */
     void
-    register_reinit_matrix_free(
-      const std::function<void(const dealii::DoFHandler<dim> &)> reinit_matrix_free_in);
+    register_lambdas_for_solution_transfer(
+      const std::function<void()> setup_dof_system_in,
+      const std::function<
+        void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
+                                   std::function<void(std::vector<VectorType *> &)>>> &)>
+        attach_vectors_in = {});
 
   private:
     void
@@ -131,7 +148,7 @@ namespace MeltPoolDG::Heat
 
   public:
     void
-    distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const override;
+    distribute_dofs(ScratchData<dim, dim, number> &mutable_scratch_data) const override;
 
     void
     setup_constraints(ScratchData<dim, dim, number> &mutable_scratch_data) const override;

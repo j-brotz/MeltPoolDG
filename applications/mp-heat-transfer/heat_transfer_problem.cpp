@@ -288,16 +288,8 @@ namespace MeltPoolDG::Heat
                 laser_operation->get_intensity_profile(),
                 param.laser.template get_direction<dim>());
 
-            heat_cut_operation->register_reinit_matrix_free([&](const DoFHandler<dim> &dh) {
-              Assert(&dh == &scratch_data->get_dof_handler(heat_dof_idx), ExcInternalError());
-
-              scratch_data->create_partitioning();
-
-              heat_operation->setup_constraints(*scratch_data);
-
-              scratch_data->build(true /*enable_boundary_faces*/,
-                                  true /*enable_inner_face_loops*/,
-                                  true /*enable_normal_vector_update*/);
+            heat_cut_operation->register_lambdas_for_solution_transfer([&]() {
+              setup_dof_system();
 
               // recompute heat source
               scratch_data->initialize_dof_vector(heat_operation->get_heat_source(),
@@ -308,6 +300,24 @@ namespace MeltPoolDG::Heat
                                      heat_continuous_no_bc_dof_idx,
                                      *source_field_function);
             });
+
+            // before the CutFEM operation can distribute dofs, the mesh must be classified
+            // according to the level set indicator
+            {
+              Assert(level_set_field_function != nullptr, ExcInternalError());
+              FiniteElementUtils::distribute_dofs<dim, 1>(simulation_case->parameters.base.fe,
+                                                          dof_handler_level_set);
+              IndexSet locally_relevant_dofs;
+              DoFTools::extract_locally_relevant_dofs(dof_handler_level_set, locally_relevant_dofs);
+              level_set.reinit(dof_handler_level_set.locally_owned_dofs(),
+                               locally_relevant_dofs,
+                               dof_handler_level_set.get_communicator());
+              level_set_field_function->set_time(time_iterator->get_current_time());
+              dealii::VectorTools::interpolate(scratch_data->get_mapping(),
+                                               dof_handler_level_set,
+                                               *level_set_field_function,
+                                               level_set);
+            }
 
             heat_operation = heat_cut_operation;
             break;
@@ -385,27 +395,10 @@ namespace MeltPoolDG::Heat
   void
   HeatTransferProblem<dim, number>::setup_dof_system()
   {
+    heat_operation->distribute_dofs(*scratch_data);
+
     FiniteElementUtils::distribute_dofs<dim, 1>(simulation_case->parameters.base.fe,
                                                 dof_handler_level_set);
-
-    if (simulation_case->parameters.heat.operator_type == TwoPhaseOperatorType::cut)
-      {
-        // before the CutFEM operation can distribute dofs, the mesh must be classified according to
-        // the level set indicator
-        Assert(level_set_field_function != nullptr, ExcInternalError());
-        IndexSet locally_relevant_dofs;
-        DoFTools::extract_locally_relevant_dofs(dof_handler_level_set, locally_relevant_dofs);
-        level_set.reinit(dof_handler_level_set.locally_owned_dofs(),
-                         locally_relevant_dofs,
-                         dof_handler_level_set.get_communicator());
-        level_set_field_function->set_time(time_iterator->get_current_time());
-        dealii::VectorTools::interpolate(scratch_data->get_mapping(),
-                                         dof_handler_level_set,
-                                         *level_set_field_function,
-                                         level_set);
-      }
-
-    heat_operation->distribute_dofs(dof_handler);
 
     FiniteElementUtils::distribute_dofs<dim, dim>(simulation_case->parameters.base.fe,
                                                   dof_handler_velocity);
@@ -602,13 +595,13 @@ namespace MeltPoolDG::Heat
 
     const auto setup_dof_system = [&]() { this->setup_dof_system(); };
 
-    refine_grid<dim, VectorType>(mark_cells_for_refinement,
-                                 attach_vectors,
-                                 post,
-                                 setup_dof_system,
-                                 simulation_case->parameters.amr,
-                                 *simulation_case->triangulation,
-                                 time_iterator->get_current_time_step_number());
+    AMR::refine_grid<dim, VectorType>(mark_cells_for_refinement,
+                                      attach_vectors,
+                                      post,
+                                      setup_dof_system,
+                                      simulation_case->parameters.amr,
+                                      *simulation_case->triangulation,
+                                      time_iterator->get_current_time_step_number());
   }
 
   template class HeatTransferProblem<1, double>;

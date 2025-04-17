@@ -110,20 +110,19 @@ template <int dim, int fe_degree, bool is_matrix_free>
 class ReinitOperator
 {
 public:
-  ReinitOperator();
-
-  void
-  reinit(const DoFHandler<dim> &dof_handler);
+  ReinitOperator(const DoFHandler<dim> &dof_handler);
 
   /**
    * Lambda function for matrix-free reinitialization.
    */
-  using reinit_matrix_free = std::function<void(const DoFHandler<dim> &)>;
+  using setup_dof_system = std::function<void()>;
 
-  reinit_matrix_free
-  get_reinit_matrix_free()
+  setup_dof_system
+  get_setup_dof_system()
   {
-    return [&](const DoFHandler<dim> &dof_handler) {
+    return [&]() {
+      const_cast<DoFHandler<dim> &>(dof_handler).distribute_dofs(dof_handler.get_fe_collection());
+
       Quadrature<1> quadrature = QGauss<1>(fe_degree + 1);
       typename MatrixFree<dim, Number, VectorizedArrayType>::AdditionalData additional_data;
       additional_data.mapping_update_flags =
@@ -149,17 +148,17 @@ public:
   }
 
   void
-  initialize_vector(VectorType &, const DoFHandler<dim> &dof_handler);
+  initialize_vector(VectorType &);
 
   /**
    * Lambda function for vector reinitialization.
    */
-  using reinit_vector = std::function<void(VectorType &, const DoFHandler<dim> &)>;
+  using reinit_vector = std::function<void(VectorType &)>;
 
   reinit_vector
   get_reinit_vector()
   {
-    return [&](VectorType &vec, const DoFHandler<dim> &dof_handler) {
+    return [this](VectorType &vec) {
       if (is_matrix_free)
         data.initialize_dof_vector(vec);
       else
@@ -170,34 +169,28 @@ public:
   }
 
 private:
+  const DoFHandler<dim>                       &dof_handler;
   MatrixFree<dim, Number, VectorizedArrayType> data;
   MappingQ<dim>                                mapping;
 };
 
 
 template <int dim, int fe_degree, bool is_matrix_free>
-ReinitOperator<dim, fe_degree, is_matrix_free>::ReinitOperator()
-  : mapping(fe_degree)
-{}
-
-
-template <int dim, int fe_degree, bool is_matrix_free>
-void
-ReinitOperator<dim, fe_degree, is_matrix_free>::reinit(const DoFHandler<dim> &dof_handler)
+ReinitOperator<dim, fe_degree, is_matrix_free>::ReinitOperator(const DoFHandler<dim> &dof_handler)
+  : dof_handler(dof_handler)
+  , mapping(fe_degree)
 {
-  reinit_matrix_free lambda_reinit_matrix_free = get_reinit_matrix_free();
-  lambda_reinit_matrix_free(dof_handler);
+  setup_dof_system lambda_setup_dof_system = get_setup_dof_system();
+  lambda_setup_dof_system();
 }
 
 
 template <int dim, int fe_degree, bool is_matrix_free>
 void
-ReinitOperator<dim, fe_degree, is_matrix_free>::initialize_vector(
-  VectorType            &vec,
-  const DoFHandler<dim> &dof_handler)
+ReinitOperator<dim, fe_degree, is_matrix_free>::initialize_vector(VectorType &vec)
 {
   reinit_vector lambda_reinit_vector = get_reinit_vector();
-  lambda_reinit_vector(vec, dof_handler);
+  lambda_reinit_vector(vec);
 }
 
 
@@ -304,14 +297,11 @@ test()
   dof_handler.distribute_dofs(fe_collection);
 
   // setup reinit class
-  ReinitOperator<dim, fe_degree, is_matrix_free> reinit_operator;
-
-  // initialize reinit class
-  reinit_operator.reinit(dof_handler);
+  ReinitOperator<dim, fe_degree, is_matrix_free> reinit_operator(dof_handler);
 
   // initialize solution vector
   VectorType solution;
-  reinit_operator.initialize_vector(solution, dof_handler);
+  reinit_operator.initialize_vector(solution);
   solution = 0.;
 
   // interpolate initial solution from function
@@ -386,18 +376,22 @@ test()
                                       mesh_classifier_old,
                                       mesh_classifier,
                                       reinit_operator.get_reinit_vector(),
-                                      reinit_operator.get_reinit_matrix_free());
+                                      reinit_operator.get_setup_dof_system());
   else
-    solution_transfer_operator.reinit(dof_handler,
-                                      tria,
-                                      solution,
-                                      mesh_classifier_old,
-                                      mesh_classifier,
-                                      reinit_operator.get_reinit_vector());
+    solution_transfer_operator.reinit(
+      dof_handler,
+      tria,
+      solution,
+      mesh_classifier_old,
+      mesh_classifier,
+      reinit_operator.get_reinit_vector(),
+      [&dof_handler]() {
+        const_cast<DoFHandler<dim> &>(dof_handler).distribute_dofs(dof_handler.get_fe_collection());
+      });
 
   // reinit transferred solution vector
   VectorType solution_gp_extrapolated;
-  reinit_operator.initialize_vector(solution_gp_extrapolated, dof_handler);
+  reinit_operator.initialize_vector(solution_gp_extrapolated);
   solution_gp_extrapolated = 0.;
 
   solution_gp_extrapolated.swap(solution_transfer_operator.get_updated_solution());
