@@ -3,8 +3,8 @@
     "case name": "melt_front_propagation",
     "dimension": "2",
     "do print parameters": "false",
-    "global refinements": "5",
-    "verbosity level": "1",
+    "global refinements": "3",
+    "verbosity level": "3",
     "fe": {
       "degree": "1"
     }
@@ -24,20 +24,22 @@
     "max n steps": "5"
   },
   "heat": {
+    "operator type": "cut",
     "linear solver": {
       "rel tolerance": "1e-12",
-      "preconditioner type": "ILU"
+      "preconditioner type": "Diagonal"
     },
     "nlsolve": {
       "residual tolerance": "1e-8"
     }
   },
   "application specific": {
-    "do solidification": "true"
+    "do solidification": "true",
+    "amr strategy": "generic"
   },
   "laser": {
     "starting position": "0.0,0.0",
-    "model": "interface_projection_regularized",
+    "model": "interface_projection_sharp",
     "intensity profile": "Gauss",
     "power": "15.",
     "absorptivity gas": "0.5",
@@ -67,9 +69,18 @@
     "two phase fluid properties transition type": "sharp",
     "solid liquid properties transition type": "mushy_zone"
   },
+  "adaptive meshing": {
+    "do amr": "true",
+    "do not modify boundary cells": "false",
+    "upper perc to refine": " 0.1",
+    "lower perc to coarsen": "0.1",
+    "max grid refinement level": "4",
+    "n initial refinement cycles": "1",
+    "every n step": "1"
+  },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": "true"
     }
   }
 }
