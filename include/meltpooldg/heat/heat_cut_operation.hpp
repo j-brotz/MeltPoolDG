@@ -124,8 +124,8 @@ namespace MeltPoolDG::Heat
 
     /**
      * Before this operator can adapt_to_new_interface_position(), attach the following lambdas:
-     * @param setup_dof_system_in same as in refine_grid()
-     * @param attach_vectors_in same as in refine_grid(), only necessary if this operation is used
+     * @param setup_dof_system_in same as in AMR::refine_grid()
+     * @param attach_vectors_in same as in AMR::refine_grid(), only necessary if this operation is used
      *                          with non-cut operations in a partitioned application
      */
     void
