@@ -1,7 +1,3 @@
-[threadripper:3374465] No HIP capabale device found. Disabling component.
-[threadripper:3374466] No HIP capabale device found. Disabling component.
-[threadripper:3374467] No HIP capabale device found. Disabling component.
-[threadripper:3374464] No HIP capabale device found. Disabling component.
 ------------------------------------------------------------------
  START TEST: n_iter=1 type closest_point_normal #comp 1 #refine 6 dim 2
 ------------------------------------------------------------------
