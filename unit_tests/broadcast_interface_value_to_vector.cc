@@ -308,12 +308,17 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
   cpp.reinit(&dof_handler_temp);
 
 #ifdef MPDG_TEST_ENABLE_DEBUG
-  cpp.write_to_file("interface_points");
+  {
+    std::string output = "n_components=" + std::to_string(n_components) +
+                         "_n_iter=" + std::to_string(n_iter) + "_" + type._to_string() +
+                         "_dim=" + std::to_string(dim) + "_output";
+    cpp.write_to_file("interface_points_" + output);
+  }
 #endif
 
-  const auto evaluation_points = cpp.get_points();
+  const auto evaluation_points = cpp.get_projected_points();
 
-  const auto dof_indices = cpp.get_dof_indices();
+  const auto dof_indices = cpp.get_projected_points_dof_indices();
 
   FEValues<dim> req_values(mapping,
                            dof_handler_temp.get_fe(),
@@ -379,8 +384,7 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
           << max_distance / min_cell_size << std::endl;
   }
 
-  cpp.template fill_dof_vector_with_point_values<n_components>(solution_temp_interface,
-                                                               solution_temp);
+  cpp.template extend_interface_values<n_components>(solution_temp_interface, solution_temp, false);
 
 #ifdef MPDG_TEST_ENABLE_DEBUG
   std::ofstream myfile;
@@ -443,9 +447,9 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
 
   pcout << "Elapsed wall time " << timer_total.wall_time() << std::endl;
   data_out.build_patches(mapping);
-  std::string output = "n_components_" + std::to_string(n_components) + "n_iter_" +
-                       std::to_string(n_iter) + "_" + type._to_string() + "_" + dim._to_string() +
-                       "_output.vtu";
+  std::string output = "n_components=" + std::to_string(n_components) +
+                       "_n_iter=" + std::to_string(n_iter) + "_" + type._to_string() +
+                       "_dim=" + std::to_string(dim) + "_output.vtu";
   data_out.write_vtu_in_parallel(output, mpi_comm);
 #endif
 }

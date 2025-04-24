@@ -58,7 +58,7 @@ namespace MeltPoolDG::Evaporation
     scratch_data.initialize_dof_vector(evaporative_mass_flux, evapor_mass_flux_dof_idx);
     evaporative_mass_flux = 0.0;
 
-    nearest_point_search->template fill_dof_vector_with_point_values<1>(
+    nearest_point_search->template extend_interface_values<1>(
       evaporative_mass_flux, temperature, true /*zero out*/, [&](const number x) {
         return evaporation_model.local_compute_evaporative_mass_flux(x);
       });

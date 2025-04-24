@@ -109,33 +109,6 @@ namespace MeltPoolDG::LevelSet::Tools
            const dealii::DoFHandler<dim> *dof_handler_dst_in = nullptr);
 
     /**
-     * @brief Get the computed nearest points corresponding to the nodal locations.
-     *
-     * This function returns the result of the last call to reinit(). Each point corresponds
-     * to a nodal location from the source DoFHandler within a narrow band around
-     * the requested level set isocontour.
-     *
-     * @note Make sure that you have called reinit() before.
-     *
-     * @return A vector of projected points on the interface.
-     */
-    const std::vector<dealii::Point<dim>> &
-    get_points() const;
-
-    /**
-     * @brief Get the global DoF indices associated with each nearest point.
-     *
-     * For each point in the stencil, this function provides the set of DoF indices (per component)
-     * in the source FE space that the projected values correspond to.
-     *
-     * @note You must call reinit() before using this method.
-     *
-     * @return A vector of vectors of global DoF indices.
-     */
-    const std::vector<std::vector<dealii::types::global_dof_index>> &
-    get_dof_indices() const;
-
-    /**
      * @brief Populate a DoF vector with values from the interface.
      *
      * This function takes a DoF vector @p solution_in and interpolates its values at the previously
@@ -153,11 +126,38 @@ namespace MeltPoolDG::LevelSet::Tools
      */
     template <int n_components = 1>
     void
-    fill_dof_vector_with_point_values(
-      VectorType                                &solution_out,
-      const VectorType                          &solution_in,
-      const bool                                 zero_out  = false,
-      const std::function<number(const number)> &operation = {}) const;
+    extend_interface_values(VectorType                                &solution_out,
+                            const VectorType                          &solution_in,
+                            const bool                                 zero_out  = true,
+                            const std::function<number(const number)> &operation = {}) const;
+
+
+    /**
+     * @brief Get the computed nearest points corresponding to the nodal locations.
+     *
+     * This function returns the result of the last call to reinit(). Each point corresponds
+     * to a nodal location from the source DoFHandler within a narrow band around
+     * the requested level set isocontour.
+     *
+     * @note Make sure that you have called reinit() before.
+     *
+     * @return A vector of projected points on the interface.
+     */
+    const std::vector<dealii::Point<dim>> &
+    get_projected_points() const;
+
+    /**
+     * @brief Get the global DoF indices associated with each nearest point.
+     *
+     * For each point in the stencil, this function provides the set of DoF indices (per component)
+     * in the source FE space that the projected values correspond to.
+     *
+     * @note You must call reinit() before using this method.
+     *
+     * @return A vector of vectors of global DoF indices.
+     */
+    const std::vector<std::vector<dealii::types::global_dof_index>> &
+    get_projected_points_dof_indices() const;
 
     /**
      * @brief Write the computed nearest points to a file.
@@ -165,10 +165,10 @@ namespace MeltPoolDG::LevelSet::Tools
      * Dumps the list of nearest points (computed via reinit()) to a plain text table file
      * with the given filename. Each line contains the coordinates of a point.
      *
-     * @param filename Name of the output file (default: "unmatched_points").
+     * @param filename_without_ending The base name of the output file.
      */
     void
-    write_to_file(const std::string filename = "unmatched_points") const;
+    write_to_file(const std::string filename_without_ending) const;
 
     /// List of points where the projection failed or did not converge (for debug purposes).
     mutable std::vector<dealii::Point<dim>> points_not_found;
@@ -268,7 +268,7 @@ namespace MeltPoolDG::LevelSet::Tools
      *
      * This internal function populates a DoF vector `solution_out` by sampling values from
      * `solution_in` at the interface using the fast nearest-point projection approach based on
-     * ArborX. Compared to `fill_dof_vector_with_point_values()`, this method leverages spatial
+     * ArborX. Compared to `extend_interface_values()`, this method leverages spatial
      * acceleration structures for improved performance.
      *
      * @tparam n_components Number of vector components to extract (default is 1).
@@ -279,10 +279,10 @@ namespace MeltPoolDG::LevelSet::Tools
      */
     template <int n_components = 1>
     void
-    fill_dof_vector_nearest_point_fast(
+    extend_interface_values_nearest_point_fast(
       VectorType                                &solution_out,
       const VectorType                          &solution_in,
-      const bool                                 zero_out  = false,
+      const bool                                 zero_out  = true,
       const std::function<number(const number)> &operation = {}) const;
 
     /**

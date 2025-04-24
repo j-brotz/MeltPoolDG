@@ -223,6 +223,143 @@ namespace MeltPoolDG::LevelSet::Tools
   }
 
   /**
+   * @brief Identifies volume cells intersected by a level set and extracts the corresponding
+   *        quadrature points at the intersection (in both real and reference coordinates).
+   *
+   * This function applies a marching cube algorithm to detect where a level set function
+   * intersects the computational mesh. For each locally-owned cell that is cut by the level set
+   * interface (i.e., where the level set function crosses a given contour value), the function
+   * computes the intersection points and maps them to unit (reference) cell coordinates.
+   *
+   * @param[out] surface_cells_and_unit_points
+   *             A list of locally-owned cells that are intersected by the level set surface, each
+   *             paired with its corresponding unit (reference) quadrature points.
+   *
+   * @param[out] surface_points
+   *             A list of all real-space intersection points on the level set surface, collected
+   * from all intersected volume cells.
+   *
+   * @param[in]  dof_handler
+   *             The DoFHandler associated with the finite element field representing the level set.
+   *
+   * @param[in]  mapping
+   *             The Mapping used to transform between real and unit cell coordinates.
+   *
+   * @param[in]  level_set_vector
+   *             The distributed vector storing the level set function values over the mesh.
+   *
+   * @param[in]  contour_value
+   *             The isocontour value that defines the level set interface (default: 0.0).
+   *
+   * @param[in]  n_subdivisions
+   *             The number of subdivisions per cell edge for the marching cubes algorithm
+   *             (used to refine intersection detection; default: 1).
+   *
+   * @param[in]  tolerance
+   *             A small numerical tolerance used to determine zero-crossings in the marching cubes
+   *             interface detection (default: 1e-10).
+   */
+  template <int dim, typename number>
+  void
+  collect_interface_cells_and_intersection_points(
+    std::vector<std::pair<std::pair<unsigned int, unsigned int>, std::vector<dealii::Point<dim>>>>
+                                                             &surface_cells_and_unit_points,
+    std::vector<dealii::Point<dim>>                          &surface_points,
+    const dealii::DoFHandler<dim>                            &dof_handler,
+    const dealii::Mapping<dim>                               &mapping,
+    const dealii::LinearAlgebra::distributed::Vector<number> &level_set_vector,
+    const number                                              contour_value  = 0.0,
+    const unsigned int                                        n_subdivisions = 1,
+    const number                                              tolerance      = 1e-10)
+  {
+    dealii::GridTools::MarchingCubeAlgorithm<dim,
+                                             dealii::LinearAlgebra::distributed::Vector<number>>
+      mc(mapping, dof_handler.get_fe(), n_subdivisions, tolerance);
+
+    const bool is_ghosted = level_set_vector.has_ghost_elements();
+
+    if (not is_ghosted)
+      level_set_vector.update_ghost_values();
+
+    for (const auto &cell : dof_handler.active_cell_iterators_on_level(
+           dof_handler.get_triangulation().n_global_levels() - 1))
+      {
+        if (cell->is_locally_owned())
+          {
+            // determine if cell is cut by the interface and if yes, determine the quadrature
+            // point location (at the reference cell) and weight
+            // determine points and cells of aux surface triangulation
+            std::vector<dealii::Point<dim>>                       surface_vertices;
+            std::vector<dealii::CellData<dim == 1 ? 1 : dim - 1>> surface_cells;
+
+            // run marching cube algorithm
+            if (dim > 1)
+              mc.process_cell(
+                cell, level_set_vector, contour_value, surface_vertices, surface_cells);
+            else
+              mc.process_cell(cell, level_set_vector, contour_value, surface_vertices);
+
+            if (surface_vertices.empty())
+              continue; // cell is not cut by interface -> no quadrature points have the be
+                        // determined
+
+            std::vector<dealii::Point<dim>> real_points;
+            std::vector<dealii::Point<dim>> unit_points;
+
+            if constexpr (dim == 1)
+              {
+                AssertThrow(surface_vertices.size() == 1,
+                            dealii::ExcMessage("The MCA in 1D found too many points."));
+
+                real_points.emplace_back(surface_vertices[0]);
+                unit_points.emplace_back(mapping.transform_real_to_unit_cell(cell, real_points[0]));
+              }
+            else
+              {
+                // Construct auxiliary triangulation
+                dealii::Triangulation<dim == 1 ? 1 : dim - 1, dim> surface_triangulation;
+                surface_triangulation.create_triangulation(surface_vertices, surface_cells, {});
+
+                // FE setup for reference mapping
+                dealii::FE_SimplexP<dim == 1 ? 1 : dim - 1, dim> fe_simplex(
+                  dof_handler.get_fe().tensor_degree());
+                dealii::MappingFE<dim == 1 ? 1 : dim - 1, dim> simplex_mapping(fe_simplex);
+
+                dealii::FE_Nothing<dim == 1 ? 1 : dim - 1, dim> fe;
+                dealii::FEValues<dim == 1 ? 1 : dim - 1, dim>   fe_eval(
+                  simplex_mapping,
+                  fe,
+                  dealii::Quadrature < dim == 1 ? 1 :
+                                                    dim - 1 > (fe_simplex.get_unit_support_points()),
+                  dealii::update_quadrature_points);
+
+                // loop over all cells ...
+                for (const auto &sub_cell : surface_triangulation.active_cell_iterators())
+                  {
+                    fe_eval.reinit(sub_cell);
+
+                    // ... and collect quadrature points and weights
+                    for (const auto &q : fe_eval.quadrature_point_indices())
+                      {
+                        const auto &real_point = fe_eval.quadrature_point(q);
+                        real_points.emplace_back(real_point);
+                        unit_points.emplace_back(
+                          mapping.transform_real_to_unit_cell(cell, real_point));
+                      }
+                  }
+              }
+            surface_cells_and_unit_points.emplace_back(std::make_pair(cell->level(), cell->index()),
+                                                       unit_points);
+            for (const auto &p : real_points)
+              surface_points.emplace_back(p);
+          }
+      }
+
+    if (not is_ghosted)
+      level_set_vector.zero_out_ghost_values();
+  }
+
+  /**
    * @brief Evaluates user-defined quantities at an implicitly defined interface.
    *
    * This utility function enables the evaluation of quantities at interfaces defined
@@ -232,8 +369,8 @@ namespace MeltPoolDG::LevelSet::Tools
    *
    * The interface is reconstructed on each active cell using the Marching Cubes
    * algorithm (or an optional alternative method if @p use_mca is false). The
-   * algorithm identifies interface points within the reference cell and computes
-   * corresponding integration weights (JxW values) for numerical integration.
+   * algorithm identifies quadrature points within the reference cell and computes
+   * corresponding surface integration weights (JxW values) for numerical integration.
    *
    * For each active cell in the provided DoFHandler cut by the interface, the
    * user-supplied lambda function @p evaluate_at_interface_points is called.
@@ -284,8 +421,8 @@ namespace MeltPoolDG::LevelSet::Tools
                         const dealii::LinearAlgebra::distributed::Vector<number> &level_set_vector,
                         const std::function<void(
                           const typename dealii::DoFHandler<dim>::active_cell_iterator & /*cell*/,
-                          const std::vector<dealii::Point<dim>> & /*points_real*/,
-                          const std::vector<dealii::Point<dim>> & /*points_reference*/,
+                          const std::vector<dealii::Point<dim>> & /*quadrature_points_real*/,
+                          const std::vector<dealii::Point<dim>> & /*quadrature_points_reference*/,
                           const std::vector<number> & /*JxW*/)> &evaluate_at_interface_points,
                         const number                             contour_value  = 0.0,
                         const unsigned int                       n_subdivisions = 1,

@@ -729,8 +729,9 @@ namespace MeltPoolDG::LevelSet
     // zero out because it is overwritten
     curvature_operation->get_curvature().zero_out_ghost_values();
 
-    nearest_point_search->template fill_dof_vector_with_point_values<1>(
-      curvature_operation->get_curvature(), curvature_operation->get_curvature(), true);
+    nearest_point_search->template extend_interface_values<1>(curvature_operation->get_curvature(),
+                                                              curvature_operation->get_curvature(),
+                                                              true);
 
     curvature_operation->get_curvature().update_ghost_values();
 

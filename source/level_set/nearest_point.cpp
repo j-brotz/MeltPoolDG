@@ -327,7 +327,7 @@ namespace MeltPoolDG::LevelSet::Tools
 
   template <int dim, typename number>
   const std::vector<dealii::Point<dim>> &
-  NearestPoint<dim, number>::get_points() const
+  NearestPoint<dim, number>::get_projected_points() const
   {
     AssertThrow(is_reinit_called, dealii::ExcMessage("You need to call reinit() first."));
 
@@ -336,7 +336,7 @@ namespace MeltPoolDG::LevelSet::Tools
 
   template <int dim, typename number>
   const std::vector<std::vector<dealii::types::global_dof_index>> &
-  NearestPoint<dim, number>::get_dof_indices() const
+  NearestPoint<dim, number>::get_projected_points_dof_indices() const
   {
     AssertThrow(is_reinit_called, dealii::ExcMessage("You need to call reinit() first."));
 
@@ -346,7 +346,7 @@ namespace MeltPoolDG::LevelSet::Tools
   template <int dim, typename number>
   template <int n_components>
   void
-  NearestPoint<dim, number>::fill_dof_vector_with_point_values(
+  NearestPoint<dim, number>::extend_interface_values(
     VectorType                                &solution_out,
     const VectorType                          &solution_in,
     const bool                                 zero_out,
@@ -354,9 +354,8 @@ namespace MeltPoolDG::LevelSet::Tools
   {
     std::unique_ptr<dealii::TimerOutput::Scope> timer_scope;
     if (timer_output)
-      timer_scope =
-        std::make_unique<dealii::TimerOutput::Scope>(timer_output.value(),
-                                                     ScopedName("nearest_point::fill_dof_vector"));
+      timer_scope = std::make_unique<dealii::TimerOutput::Scope>(
+        timer_output.value(), ScopedName("nearest_point::extend_interface_values"));
 
     if (not input_vector_is_cut)
       AssertThrow(n_components == dof_handler_src->get_fe().n_components(),
@@ -385,10 +384,10 @@ namespace MeltPoolDG::LevelSet::Tools
 
 
     if (nearest_point_data.type == NearestPointType::nearest_point_fast)
-      return fill_dof_vector_nearest_point_fast<n_components>(solution_out,
-                                                              solution_in,
-                                                              zero_out,
-                                                              operation);
+      return extend_interface_values_nearest_point_fast<n_components>(solution_out,
+                                                                      solution_in,
+                                                                      zero_out,
+                                                                      operation);
     const bool update_ghosts = not solution_in.has_ghost_elements();
     if (update_ghosts)
       solution_in.update_ghost_values();
@@ -420,7 +419,7 @@ namespace MeltPoolDG::LevelSet::Tools
   template <int dim, typename number>
   template <int n_components>
   void
-  NearestPoint<dim, number>::fill_dof_vector_nearest_point_fast(
+  NearestPoint<dim, number>::extend_interface_values_nearest_point_fast(
     VectorType                                &solution_out,
     const VectorType                          &solution_in,
     const bool                                 zero_out,
@@ -525,7 +524,7 @@ namespace MeltPoolDG::LevelSet::Tools
     if (dealii::Utilities::MPI::this_mpi_process(mpi_comm) == 0)
       {
         std::ofstream myfile;
-        myfile.open(filename + ".dat");
+        myfile.open(filename + ".txt");
 
         for (const auto &p : global_points_normal_to_interface_all)
           {
@@ -549,7 +548,7 @@ namespace MeltPoolDG::LevelSet::Tools
           all_points_not_found.size() > 0)
         {
           std::ofstream myfile;
-          myfile.open(filename + "_not_found.dat");
+          myfile.open(filename + "_not_found.txt");
 
           for (const auto &p : all_points_not_found)
             {
@@ -600,7 +599,7 @@ namespace MeltPoolDG::LevelSet::Tools
               if (not remote_point_evaluation.point_found(i))
                 points_not_found.emplace_back(unmatched_points[i]);
 
-            write_to_file();
+            write_to_file("unmatched_points");
 
             AssertThrow(false, dealii::ExcMessage("Processed point is outside domain."));
           }
@@ -1168,24 +1167,17 @@ namespace MeltPoolDG::LevelSet::Tools
     // Storage for physical interface points extracted from the level set isocontour
     std::vector<Point<dim>> surface_points;
 
-    // Evaluate the level set at the interface (zero level set or isocontour)
-    // Collect: cell, physical points and corresponding reference (unit cell) points
-    LevelSet::Tools::evaluate_at_interface<dim, number>(
+    LevelSet::Tools::collect_interface_cells_and_intersection_points<dim, number>(
+      surface_cells_and_unit_points,
+      surface_points,
       dof_handler_ls,
       mapping,
       signed_distance,
-      [&](const auto &cell,
-          const auto &points_real,
-          const auto &unit_points,
-          const auto & /*weights*/) {
-        surface_cells_and_unit_points.emplace_back(std::make_pair(cell->level(), cell->index()),
-                                                   unit_points);
-        for (const auto &p : points_real)
-          surface_points.emplace_back(p);
-      },
       nearest_point_data.isocontour,
       nearest_point_data.mca.n_subdivisions,
       nearest_point_data.mca.tolerance);
+
+    AssertDimension(surface_points.size(), surface_cells_and_unit_points.size());
 
     if (timer_scope)
       timer_scope->stop();
@@ -1266,37 +1258,37 @@ namespace MeltPoolDG::LevelSet::Tools
   template class NearestPoint<3, double>;
 
   template void
-  NearestPoint<1, double>::fill_dof_vector_with_point_values<1>(
+  NearestPoint<1, double>::extend_interface_values<1>(
     VectorType &,
     const VectorType &,
     const bool,
     const std::function<double(const double)> &) const;
   template void
-  NearestPoint<2, double>::fill_dof_vector_with_point_values<1>(
+  NearestPoint<2, double>::extend_interface_values<1>(
     VectorType &,
     const VectorType &,
     const bool,
     const std::function<double(const double)> &) const;
   template void
-  NearestPoint<2, double>::fill_dof_vector_with_point_values<2>(
+  NearestPoint<2, double>::extend_interface_values<2>(
     VectorType &,
     const VectorType &,
     const bool,
     const std::function<double(const double)> &) const;
   template void
-  NearestPoint<3, double>::fill_dof_vector_with_point_values<1>(
+  NearestPoint<3, double>::extend_interface_values<1>(
     VectorType &,
     const VectorType &,
     const bool,
     const std::function<double(const double)> &) const;
   template void
-  NearestPoint<3, double>::fill_dof_vector_with_point_values<2>(
+  NearestPoint<3, double>::extend_interface_values<2>(
     VectorType &,
     const VectorType &,
     const bool,
     const std::function<double(const double)> &) const;
   template void
-  NearestPoint<3, double>::fill_dof_vector_with_point_values<3>(
+  NearestPoint<3, double>::extend_interface_values<3>(
     VectorType &,
     const VectorType &,
     const bool,

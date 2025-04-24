@@ -1778,8 +1778,8 @@ namespace MeltPoolDG::MeltPool
 
     nearest_point.reinit(&scratch_data->get_dof_handler(vel_dof_idx));
 
-    nearest_point.template fill_dof_vector_with_point_values<dim>(interface_velocity_interface,
-                                                                  interface_velocity);
+    nearest_point.template extend_interface_values<dim>(interface_velocity_interface,
+                                                        interface_velocity);
     interface_velocity.swap(interface_velocity_interface);
   }
 
