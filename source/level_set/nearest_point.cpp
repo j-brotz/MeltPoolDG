@@ -1177,8 +1177,6 @@ namespace MeltPoolDG::LevelSet::Tools
       nearest_point_data.mca.n_subdivisions,
       nearest_point_data.mca.tolerance);
 
-    AssertDimension(surface_points.size(), surface_cells_and_unit_points.size());
-
     if (timer_scope)
       timer_scope->stop();
 

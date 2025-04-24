@@ -1,155 +1,153 @@
 ------------------------------------------------------------------
  START TEST: n_iter=1 type closest_point_normal #comp 1 #refine 6 dim 2
 ------------------------------------------------------------------
-| narrow band threshold 0.125000    isocontour = 0.000000                            nearest_point |
-| no. stencil points: 6412                                                           nearest_point |
-|      j=0 (normal) 6412 -> 6408 (✗)                                                 nearest_point |
-WARNING: The tolerance of 6408 points is not yet attained. Max distance value: 0.1244986
-| total number of RPE points: 6412                                                   nearest_point |
-max distance to analytical solution (relative): 0.016963
-max distance to numerical distance solution (relative): 0.0077833435
-norm of interface vals: 165.45079
+| narrow band threshold 0.100000    isocontour = 0.000000                            nearest_point |
+| no. stencil points: 5156                                                           nearest_point |
+|      j=0 (normal) 5156 -> 5152 (✗)                                                 nearest_point |
+WARNING: The tolerance of 5152 points is not yet attained. Max distance value: 0.099843147
+| total number of RPE points: 5156                                                   nearest_point |
+max distance to analytical solution (relative): 0.013019075
+max distance to numerical distance solution (relative): 0.0077693848
+norm of interface vals: 148.23203
 ------------------------------------------------------------------
- START TEST: n_iter=1 type nearest_point #comp 1 #refine 6 dim 3
+ START TEST: n_iter=1 type nearest_point #comp 1 #refine 5 dim 3
 ------------------------------------------------------------------
-| narrow band threshold 0.125000    isocontour = 0.000000                            nearest_point |
-| no. stencil points: 445674                                                         nearest_point |
-max distance to analytical solution (relative): 0.50877078
-max distance to numerical distance solution (relative): 5.7983224e-15
-norm of interface vals: 119.57914
+| narrow band threshold 0.100000    isocontour = 0.000000                            nearest_point |
+| no. stencil points: 43250                                                          nearest_point |
+max distance to analytical solution (relative): 0.47324494
+max distance to numerical distance solution (relative): 3.1519602e-15
+norm of interface vals: 104.97951
 ------------------------------------------------------------------
- START TEST: n_iter=1 type nearest_point_fast #comp 1 #refine 6 dim 3
+ START TEST: n_iter=1 type nearest_point_fast #comp 1 #refine 5 dim 3
 ------------------------------------------------------------------
-| narrow band threshold 0.125000    isocontour = 0.000000                            nearest_point |
-| no. stencil points: 445674                                                         nearest_point |
-max distance to analytical solution (relative): 0.50877078
-max distance to numerical distance solution (relative): 5.7983224e-15
-norm of interface vals: 119.57639
+| narrow band threshold 0.100000    isocontour = 0.000000                            nearest_point |
+| no. stencil points: 43250                                                          nearest_point |
+max distance to analytical solution (relative): 0.47324494
+max distance to numerical distance solution (relative): 3.1519602e-15
+norm of interface vals: 104.97574
 ------------------------------------------------------------------
  START TEST: n_iter=16 type closest_point_normal #comp 1 #refine 6 dim 2
 ------------------------------------------------------------------
-| narrow band threshold 0.125000    isocontour = 0.000000                            nearest_point |
-| no. stencil points: 6412                                                           nearest_point |
-|      j=0 (normal) 6412 -> 6408 (✗)                                                 nearest_point |
-|      j=1 (normal) 6408 -> 6288 (✗)                                                 nearest_point |
-|      j=2 (normal) 6288 -> 6288 (✗)                                                 nearest_point |
-|      j=3 (normal) 6288 -> 6096 (✗)                                                 nearest_point |
-|      j=4 (normal) 6096 -> 3852 (✗)                                                 nearest_point |
-|      j=5 (normal) 3852 -> 328 (✗)                                                  nearest_point |
-|      j=6 (normal) 328 -> 0 (✗)                                                     nearest_point |
-| total number of RPE points: 35672                                                  nearest_point |
-max distance to analytical solution (relative): 0.015635164
+| narrow band threshold 0.100000    isocontour = 0.000000                            nearest_point |
+| no. stencil points: 5156                                                           nearest_point |
+|      j=0 (normal) 5156 -> 5152 (✗)                                                 nearest_point |
+|      j=1 (normal) 5152 -> 5056 (✗)                                                 nearest_point |
+|      j=2 (normal) 5056 -> 5056 (✗)                                                 nearest_point |
+|      j=3 (normal) 5056 -> 4896 (✗)                                                 nearest_point |
+|      j=4 (normal) 4896 -> 3076 (✗)                                                 nearest_point |
+|      j=5 (normal) 3076 -> 256 (✗)                                                  nearest_point |
+|      j=6 (normal) 256 -> 0 (✗)                                                     nearest_point |
+| total number of RPE points: 28648                                                  nearest_point |
+max distance to analytical solution (relative): 0.0089895127
 max distance to numerical distance solution (relative): 9.994808e-11
-norm of interface vals: 165.45078
+norm of interface vals: 148.23201
 ------------------------------------------------------------------
  START TEST: n_iter=5 type closest_point_normal #comp 2 #refine 6 dim 2
 ------------------------------------------------------------------
-| narrow band threshold 0.125000    isocontour = 0.000000                            nearest_point |
-| no. stencil points: 6412                                                           nearest_point |
-|      j=0 (normal) 6412 -> 6408 (✗)                                                 nearest_point |
-|      j=1 (normal) 6408 -> 6288 (✗)                                                 nearest_point |
-|      j=2 (normal) 6288 -> 6288 (✗)                                                 nearest_point |
-|      j=3 (normal) 6288 -> 6096 (✗)                                                 nearest_point |
-|      j=4 (normal) 6096 -> 3852 (✗)                                                 nearest_point |
-WARNING: The tolerance of 3852 points is not yet attained. Max distance value: 5.2369329e-10
-| total number of RPE points: 31492                                                  nearest_point |
-max distance to analytical solution (relative): 0.015635164
+| narrow band threshold 0.100000    isocontour = 0.000000                            nearest_point |
+| no. stencil points: 5156                                                           nearest_point |
+|      j=0 (normal) 5156 -> 5152 (✗)                                                 nearest_point |
+|      j=1 (normal) 5152 -> 5056 (✗)                                                 nearest_point |
+|      j=2 (normal) 5056 -> 5056 (✗)                                                 nearest_point |
+|      j=3 (normal) 5056 -> 4896 (✗)                                                 nearest_point |
+|      j=4 (normal) 4896 -> 3076 (✗)                                                 nearest_point |
+WARNING: The tolerance of 3076 points is not yet attained. Max distance value: 5.2369329e-10
+| total number of RPE points: 25316                                                  nearest_point |
+max distance to analytical solution (relative): 0.0089895127
 max distance to numerical distance solution (relative): 1.737843e-10
-norm of interface vals: 233.98275
+norm of interface vals: 209.63173
 ------------------------------------------------------------------
  START TEST: n_iter=5 type closest_point_normal_collinear #comp 2 #refine 6 dim 2
 ------------------------------------------------------------------
-| narrow band threshold 0.125000    isocontour = 0.000000                            nearest_point |
-| no. stencil points: 6412                                                           nearest_point |
-|  k=0 -> 6412                                                                       nearest_point |
-|    j=0 6412 -> 6408 (n ✗) 0 (n ✓ | t ✗) 4 (n ✓ | t ✓)                              nearest_point |
-|    j=1 6408 -> 6288 (n ✗) 0 (n ✓ | t ✗) 120 (n ✓ | t ✓)                            nearest_point |
-|    j=2 6288 -> 6288 (n ✗) 0 (n ✓ | t ✗) 0 (n ✓ | t ✓)                              nearest_point |
-|    j=3 6288 -> 6096 (n ✗) 192 (n ✓ | t ✗) 0 (n ✓ | t ✓)                            nearest_point |
-|    j=4 6096 -> 3852 (n ✗) 2432 (n ✓ | t ✗) 4 (n ✓ | t ✓)                           nearest_point |
-|  k=1 -> 6288                                                                       nearest_point |
-|    j=0 6288 -> 2744 (n ✗) 3440 (n ✓ | t ✗) 104 (n ✓ | t ✓)                         nearest_point |
-|    j=1 2744 -> 2008 (n ✗) 4168 (n ✓ | t ✗) 8 (n ✓ | t ✓)                           nearest_point |
-|    j=2 2008 -> 256 (n ✗) 5920 (n ✓ | t ✗) 0 (n ✓ | t ✓)                            nearest_point |
-|    j=3 256 -> 0 (n ✗) 6176 (n ✓ | t ✗) 0 (n ✓ | t ✓)                               nearest_point |
-|  k=2 -> 6176                                                                       nearest_point |
-|    j=0 6176 -> 6120 (n ✗) 8 (n ✓ | t ✗) 48 (n ✓ | t ✓)                             nearest_point |
-|    j=1 6120 -> 5328 (n ✗) 800 (n ✓ | t ✗) 0 (n ✓ | t ✓)                            nearest_point |
-|    j=2 5328 -> 2800 (n ✗) 3328 (n ✓ | t ✗) 0 (n ✓ | t ✓)                           nearest_point |
-|    j=3 2800 -> 72 (n ✗) 6056 (n ✓ | t ✗) 0 (n ✓ | t ✓)                             nearest_point |
-|    j=4 72 -> 0 (n ✗) 6128 (n ✓ | t ✗) 0 (n ✓ | t ✓)                                nearest_point |
-|  k=3 -> 6128                                                                       nearest_point |
-|    j=0 6128 -> 5992 (n ✗) 72 (n ✓ | t ✗) 64 (n ✓ | t ✓)                            nearest_point |
-|    j=1 5992 -> 4640 (n ✗) 1424 (n ✓ | t ✗) 0 (n ✓ | t ✓)                           nearest_point |
-|    j=2 4640 -> 1760 (n ✗) 4304 (n ✓ | t ✗) 0 (n ✓ | t ✓)                           nearest_point |
-|    j=3 1760 -> 8 (n ✗) 6056 (n ✓ | t ✗) 0 (n ✓ | t ✓)                              nearest_point |
-|    j=4 8 -> 0 (n ✗) 6064 (n ✓ | t ✗) 0 (n ✓ | t ✓)                                 nearest_point |
-|  k=4 -> 6064                                                                       nearest_point |
-|    j=0 6064 -> 5688 (n ✗) 152 (n ✓ | t ✗) 224 (n ✓ | t ✓)                          nearest_point |
-|    j=1 5688 -> 3856 (n ✗) 1984 (n ✓ | t ✗) 0 (n ✓ | t ✓)                           nearest_point |
-|    j=2 3856 -> 976 (n ✗) 4864 (n ✓ | t ✗) 0 (n ✓ | t ✓)                            nearest_point |
-|    j=3 976 -> 0 (n ✗) 5840 (n ✓ | t ✗) 0 (n ✓ | t ✓)                               nearest_point |
-WARNING: The tolerance of the tangential correction of 5840 points is not yet attained. Max tangential distance value: 1.4994429e-05 max tolerance: 1.5625e-12
-| total number of RPE points: 98396                                                  nearest_point |
+| narrow band threshold 0.100000    isocontour = 0.000000                            nearest_point |
+| no. stencil points: 5156                                                           nearest_point |
+|  k=0 -> 5156                                                                       nearest_point |
+|    j=0 5156 -> 5152 (n ✗) 0 (n ✓ | t ✗) 4 (n ✓ | t ✓)                              nearest_point |
+|    j=1 5152 -> 5056 (n ✗) 0 (n ✓ | t ✗) 96 (n ✓ | t ✓)                             nearest_point |
+|    j=2 5056 -> 5056 (n ✗) 0 (n ✓ | t ✗) 0 (n ✓ | t ✓)                              nearest_point |
+|    j=3 5056 -> 4896 (n ✗) 160 (n ✓ | t ✗) 0 (n ✓ | t ✓)                            nearest_point |
+|    j=4 4896 -> 3076 (n ✗) 1976 (n ✓ | t ✗) 4 (n ✓ | t ✓)                           nearest_point |
+|  k=1 -> 5056                                                                       nearest_point |
+|    j=0 5056 -> 2216 (n ✗) 2752 (n ✓ | t ✗) 88 (n ✓ | t ✓)                          nearest_point |
+|    j=1 2216 -> 1608 (n ✗) 3352 (n ✓ | t ✗) 8 (n ✓ | t ✓)                           nearest_point |
+|    j=2 1608 -> 184 (n ✗) 4776 (n ✓ | t ✗) 0 (n ✓ | t ✓)                            nearest_point |
+|    j=3 184 -> 0 (n ✗) 4960 (n ✓ | t ✗) 0 (n ✓ | t ✓)                               nearest_point |
+|  k=2 -> 4960                                                                       nearest_point |
+|    j=0 4960 -> 4904 (n ✗) 8 (n ✓ | t ✗) 48 (n ✓ | t ✓)                             nearest_point |
+|    j=1 4904 -> 4192 (n ✗) 720 (n ✓ | t ✗) 0 (n ✓ | t ✓)                            nearest_point |
+|    j=2 4192 -> 2088 (n ✗) 2824 (n ✓ | t ✗) 0 (n ✓ | t ✓)                           nearest_point |
+|    j=3 2088 -> 40 (n ✗) 4872 (n ✓ | t ✗) 0 (n ✓ | t ✓)                             nearest_point |
+|    j=4 40 -> 0 (n ✗) 4912 (n ✓ | t ✗) 0 (n ✓ | t ✓)                                nearest_point |
+|  k=3 -> 4912                                                                       nearest_point |
+|    j=0 4912 -> 4776 (n ✗) 72 (n ✓ | t ✗) 64 (n ✓ | t ✓)                            nearest_point |
+|    j=1 4776 -> 3544 (n ✗) 1304 (n ✓ | t ✗) 0 (n ✓ | t ✓)                           nearest_point |
+|    j=2 3544 -> 1176 (n ✗) 3672 (n ✓ | t ✗) 0 (n ✓ | t ✓)                           nearest_point |
+|    j=3 1176 -> 0 (n ✗) 4848 (n ✓ | t ✗) 0 (n ✓ | t ✓)                              nearest_point |
+|  k=4 -> 4848                                                                       nearest_point |
+|    j=0 4848 -> 4472 (n ✗) 152 (n ✓ | t ✗) 224 (n ✓ | t ✓)                          nearest_point |
+|    j=1 4472 -> 2816 (n ✗) 1808 (n ✓ | t ✗) 0 (n ✓ | t ✓)                           nearest_point |
+|    j=2 2816 -> 544 (n ✗) 4080 (n ✓ | t ✗) 0 (n ✓ | t ✓)                            nearest_point |
+|    j=3 544 -> 0 (n ✗) 4624 (n ✓ | t ✗) 0 (n ✓ | t ✓)                               nearest_point |
+WARNING: The tolerance of the tangential correction of 4624 points is not yet attained. Max tangential distance value: 5.0099858e-06 max tolerance: 1.5625e-12
+| total number of RPE points: 77652                                                  nearest_point |
 max distance to analytical solution (relative): 0.0078111056
-max distance to numerical distance solution (relative): 1.2139665e-05
-norm of interface vals: 233.98275
+max distance to numerical distance solution (relative): 3.6140994e-06
+norm of interface vals: 209.63173
 ------------------------------------------------------------------
  START TEST: n_iter=1 type nearest_point #comp 2 #refine 6 dim 2
 ------------------------------------------------------------------
-| narrow band threshold 0.125000    isocontour = 0.000000                            nearest_point |
-| no. stencil points: 6412                                                           nearest_point |
+| narrow band threshold 0.100000    isocontour = 0.000000                            nearest_point |
+| no. stencil points: 5156                                                           nearest_point |
 max distance to analytical solution (relative): 0.33349596
 max distance to numerical distance solution (relative): 4.9816097e-15
-norm of interface vals: 233.98549
+norm of interface vals: 209.633
 ------------------------------------------------------------------
  START TEST: n_iter=1 type nearest_point_fast #comp 2 #refine 6 dim 2
 ------------------------------------------------------------------
-| narrow band threshold 0.125000    isocontour = 0.000000                            nearest_point |
-| no. stencil points: 6412                                                           nearest_point |
+| narrow band threshold 0.100000    isocontour = 0.000000                            nearest_point |
+| no. stencil points: 5156                                                           nearest_point |
 max distance to analytical solution (relative): 0.33349596
 max distance to numerical distance solution (relative): 4.9816097e-15
-norm of interface vals: 233.98383
+norm of interface vals: 209.63286
 ------------------------------------------------------------------
  START TEST: n_iter=5 type closest_point_normal_collinear_coquerelle #comp 2 #refine 6 dim 2
 ------------------------------------------------------------------
-| narrow band threshold 0.125000    isocontour = 0.000000                            nearest_point |
-| no. stencil points: 6412                                                           nearest_point |
-|      j=0 (normal) 6412 -> 6408 (✗)                                                 nearest_point |
-|      j=1 (normal) 6408 -> 6288 (✗)                                                 nearest_point |
-|      j=2 (normal) 6288 -> 6288 (✗)                                                 nearest_point |
-|      j=3 (normal) 6288 -> 6096 (✗)                                                 nearest_point |
-|      j=4 (normal) 6096 -> 3852 (✗)                                                 nearest_point |
-WARNING: The tolerance of 3852 points is not yet attained. Max distance value: 5.2369329e-10
-|  i=0 (tangent) 6412 ->                                                             nearest_point |
-|      j=0 (normal) 6412 -> 6184 (✗)                                                 nearest_point |
-|      j=1 (normal) 6184 -> 5744 (✗)                                                 nearest_point |
-|      j=2 (normal) 5744 -> 2968 (✗)                                                 nearest_point |
-|      j=3 (normal) 2968 -> 72 (✗)                                                   nearest_point |
-|      j=4 (normal) 72 -> 0 (✗)                                                      nearest_point |
-|  i=1 (tangent) 6200 ->                                                             nearest_point |
-|      j=0 (normal) 6200 -> 6096 (✗)                                                 nearest_point |
-|      j=1 (normal) 6096 -> 5120 (✗)                                                 nearest_point |
-|      j=2 (normal) 5120 -> 1816 (✗)                                                 nearest_point |
-|      j=3 (normal) 1816 -> 8 (✗)                                                    nearest_point |
-|      j=4 (normal) 8 -> 0 (✗)                                                       nearest_point |
-|  i=2 (tangent) 6176 ->                                                             nearest_point |
-|      j=0 (normal) 6176 -> 5872 (✗)                                                 nearest_point |
-|      j=1 (normal) 5872 -> 4200 (✗)                                                 nearest_point |
-|      j=2 (normal) 4200 -> 992 (✗)                                                  nearest_point |
-|      j=3 (normal) 992 -> 0 (✗)                                                     nearest_point |
-|  i=3 (tangent) 6112 ->                                                             nearest_point |
-|      j=0 (normal) 6112 -> 5504 (✗)                                                 nearest_point |
-|      j=1 (normal) 5504 -> 3376 (✗)                                                 nearest_point |
-|      j=2 (normal) 3376 -> 408 (✗)                                                  nearest_point |
-|      j=3 (normal) 408 -> 0 (✗)                                                     nearest_point |
-|  i=4 (tangent) 5984 ->                                                             nearest_point |
-|      j=0 (normal) 5984 -> 4960 (✗)                                                 nearest_point |
-|      j=1 (normal) 4960 -> 2520 (✗)                                                 nearest_point |
-|      j=2 (normal) 2520 -> 232 (✗)                                                  nearest_point |
-|      j=3 (normal) 232 -> 0 (✗)                                                     nearest_point |
-WARNING: The tolerance of the tangential correction of 5688 points is not yet attained. Max tangential distance value: 0.00012244934 max tolerance: 1.5625e-12
-| total number of RPE points: 149332                                                 nearest_point |
+| narrow band threshold 0.100000    isocontour = 0.000000                            nearest_point |
+| no. stencil points: 5156                                                           nearest_point |
+|      j=0 (normal) 5156 -> 5152 (✗)                                                 nearest_point |
+|      j=1 (normal) 5152 -> 5056 (✗)                                                 nearest_point |
+|      j=2 (normal) 5056 -> 5056 (✗)                                                 nearest_point |
+|      j=3 (normal) 5056 -> 4896 (✗)                                                 nearest_point |
+|      j=4 (normal) 4896 -> 3076 (✗)                                                 nearest_point |
+WARNING: The tolerance of 3076 points is not yet attained. Max distance value: 5.2369329e-10
+|  i=0 (tangent) 5156 ->                                                             nearest_point |
+|      j=0 (normal) 5156 -> 4968 (✗)                                                 nearest_point |
+|      j=1 (normal) 4968 -> 4584 (✗)                                                 nearest_point |
+|      j=2 (normal) 4584 -> 2232 (✗)                                                 nearest_point |
+|      j=3 (normal) 2232 -> 40 (✗)                                                   nearest_point |
+|      j=4 (normal) 40 -> 0 (✗)                                                      nearest_point |
+|  i=1 (tangent) 4984 ->                                                             nearest_point |
+|      j=0 (normal) 4984 -> 4880 (✗)                                                 nearest_point |
+|      j=1 (normal) 4880 -> 3992 (✗)                                                 nearest_point |
+|      j=2 (normal) 3992 -> 1200 (✗)                                                 nearest_point |
+|      j=3 (normal) 1200 -> 0 (✗)                                                    nearest_point |
+|  i=2 (tangent) 4960 ->                                                             nearest_point |
+|      j=0 (normal) 4960 -> 4656 (✗)                                                 nearest_point |
+|      j=1 (normal) 4656 -> 3104 (✗)                                                 nearest_point |
+|      j=2 (normal) 3104 -> 552 (✗)                                                  nearest_point |
+|      j=3 (normal) 552 -> 0 (✗)                                                     nearest_point |
+|  i=3 (tangent) 4896 ->                                                             nearest_point |
+|      j=0 (normal) 4896 -> 4288 (✗)                                                 nearest_point |
+|      j=1 (normal) 4288 -> 2336 (✗)                                                 nearest_point |
+|      j=2 (normal) 2336 -> 144 (✗)                                                  nearest_point |
+|      j=3 (normal) 144 -> 0 (✗)                                                     nearest_point |
+|  i=4 (tangent) 4768 ->                                                             nearest_point |
+|      j=0 (normal) 4768 -> 3744 (✗)                                                 nearest_point |
+|      j=1 (normal) 3744 -> 1536 (✗)                                                 nearest_point |
+|      j=2 (normal) 1536 -> 48 (✗)                                                   nearest_point |
+|      j=3 (normal) 48 -> 0 (✗)                                                      nearest_point |
+WARNING: The tolerance of the tangential correction of 4472 points is not yet attained. Max tangential distance value: 9.4400011e-05 max tolerance: 1.5625e-12
+| total number of RPE points: 117148                                                 nearest_point |
 max distance to analytical solution (relative): 0.0078111076
 max distance to numerical distance solution (relative): 9.8832563e-11
-norm of interface vals: 233.98275
+norm of interface vals: 209.63173

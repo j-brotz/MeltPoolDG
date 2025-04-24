@@ -214,7 +214,7 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
   LevelSet::NearestPointData<double> nearest_point_data;
 
   nearest_point_data.rel_tol               = 1e-10;
-  nearest_point_data.narrow_band_threshold = 0.125;
+  nearest_point_data.narrow_band_threshold = 0.1;
   nearest_point_data.max_iter              = n_iter;
   nearest_point_data.type                  = type;
   nearest_point_data.verbosity_level       = 3;
@@ -470,9 +470,9 @@ main(int argc, char *argv[])
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
   run_test<1, 6, 1>();
-  run_test<1, 6, 1, 3>(LevelSet::NearestPointType::nearest_point);
+  run_test<1, 5, 1, 3>(LevelSet::NearestPointType::nearest_point);
 #ifdef DEAL_II_WITH_ARBORX
-  run_test<1, 6, 1, 3>(LevelSet::NearestPointType::nearest_point_fast);
+  run_test<1, 5, 1, 3>(LevelSet::NearestPointType::nearest_point_fast);
 #endif
   run_test<1, 6, 16>();
   run_test<2, 6, 5>();
