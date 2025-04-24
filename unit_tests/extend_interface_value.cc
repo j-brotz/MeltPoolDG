@@ -34,6 +34,7 @@
 
 #include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -176,10 +177,10 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
         }
     }
   // interpolate distance onto quadrature points
-  VectorTools::interpolate(mapping,
-                           dof_handler,
-                           Functions::SignedDistance::Sphere<dim>(center, radius),
-                           solution_distance);
+  dealii::VectorTools::interpolate(mapping,
+                                   dof_handler,
+                                   Functions::SignedDistance::Sphere<dim>(center, radius),
+                                   solution_distance);
 
   // setup temperature field
   DoFHandler<dim> dof_handler_temp(triangulation);
@@ -201,10 +202,10 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
   solution_temp.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
   solution_temp_interface.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
   // interpolate temperature onto quadrature points
-  VectorTools::interpolate(mapping,
-                           dof_handler_temp,
-                           InitializeTemperature<dim, n_components>(),
-                           solution_temp);
+  dealii::VectorTools::interpolate(mapping,
+                                   dof_handler_temp,
+                                   InitializeTemperature<dim, n_components>(),
+                                   solution_temp);
   // ------------------------------------------------------------------------------------
   // ------------------------------------------------------------------------------------
   //      START OF ACTUAL ALGORITHM
@@ -407,7 +408,16 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
   //      END OF ACTUAL ALGORITHM
   // ------------------------------------------------------------------------------------
   // ------------------------------------------------------------------------------------
-  pcout << "norm of interface vals: " << solution_temp_interface.l2_norm() << std::endl;
+  const auto norm =
+    MeltPoolDG::VectorTools::compute_norm<dim, double>(solution_temp_interface,
+                                                       triangulation,
+                                                       mapping,
+                                                       dof_handler_temp,
+                                                       QGauss<dim>(degree_temp + 1),
+                                                       dealii::VectorTools::L2_norm);
+  pcout << "norm of interface vals: " << norm << std::endl;
+
+
 #ifdef MPDG_TEST_ENABLE_DEBUG
   timer.print_wall_time_statistics(MPI_COMM_WORLD);
   // add output vectors

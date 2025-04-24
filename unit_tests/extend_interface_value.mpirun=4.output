@@ -1,3 +1,7 @@
+[threadripper:3374465] No HIP capabale device found. Disabling component.
+[threadripper:3374466] No HIP capabale device found. Disabling component.
+[threadripper:3374467] No HIP capabale device found. Disabling component.
+[threadripper:3374464] No HIP capabale device found. Disabling component.
 ------------------------------------------------------------------
  START TEST: n_iter=1 type closest_point_normal #comp 1 #refine 6 dim 2
 ------------------------------------------------------------------
@@ -8,7 +12,7 @@ WARNING: The tolerance of 6408 points is not yet attained. Max distance value: 0
 | total number of RPE points: 6412                                                   nearest_point |
 max distance to analytical solution (relative): 0.016963
 max distance to numerical distance solution (relative): 0.0077833435
-norm of interface vals: 21232.504
+norm of interface vals: 165.45079
 ------------------------------------------------------------------
  START TEST: n_iter=1 type nearest_point #comp 1 #refine 6 dim 3
 ------------------------------------------------------------------
@@ -16,7 +20,7 @@ norm of interface vals: 21232.504
 | no. stencil points: 445674                                                         nearest_point |
 max distance to analytical solution (relative): 0.50877078
 max distance to numerical distance solution (relative): 5.7983224e-15
-norm of interface vals: 173705.09
+norm of interface vals: 119.57914
 ------------------------------------------------------------------
  START TEST: n_iter=16 type closest_point_normal #comp 1 #refine 6 dim 2
 ------------------------------------------------------------------
@@ -32,7 +36,7 @@ norm of interface vals: 173705.09
 | total number of RPE points: 35672                                                  nearest_point |
 max distance to analytical solution (relative): 0.015635164
 max distance to numerical distance solution (relative): 9.994808e-11
-norm of interface vals: 21232.322
+norm of interface vals: 165.45078
 ------------------------------------------------------------------
  START TEST: n_iter=5 type closest_point_normal #comp 2 #refine 6 dim 2
 ------------------------------------------------------------------
@@ -47,7 +51,7 @@ WARNING: The tolerance of 3852 points is not yet attained. Max distance value: 5
 | total number of RPE points: 31492                                                  nearest_point |
 max distance to analytical solution (relative): 0.015635164
 max distance to numerical distance solution (relative): 1.737843e-10
-norm of interface vals: 30027.037
+norm of interface vals: 233.98275
 ------------------------------------------------------------------
  START TEST: n_iter=5 type closest_point_normal_collinear #comp 2 #refine 6 dim 2
 ------------------------------------------------------------------
@@ -85,7 +89,7 @@ WARNING: The tolerance of the tangential correction of 5840 points is not yet at
 | total number of RPE points: 98396                                                  nearest_point |
 max distance to analytical solution (relative): 0.0078111056
 max distance to numerical distance solution (relative): 1.2139665e-05
-norm of interface vals: 30027.037
+norm of interface vals: 233.98275
 ------------------------------------------------------------------
  START TEST: n_iter=1 type nearest_point #comp 2 #refine 6 dim 2
 ------------------------------------------------------------------
@@ -93,7 +97,7 @@ norm of interface vals: 30027.037
 | no. stencil points: 6412                                                           nearest_point |
 max distance to analytical solution (relative): 0.33349596
 max distance to numerical distance solution (relative): 4.9816097e-15
-norm of interface vals: 30027.557
+norm of interface vals: 233.98549
 ------------------------------------------------------------------
  START TEST: n_iter=5 type closest_point_normal_collinear_coquerelle #comp 2 #refine 6 dim 2
 ------------------------------------------------------------------
@@ -136,4 +140,4 @@ WARNING: The tolerance of the tangential correction of 5688 points is not yet at
 | total number of RPE points: 149332                                                 nearest_point |
 max distance to analytical solution (relative): 0.0078111076
 max distance to numerical distance solution (relative): 9.8832563e-11
-norm of interface vals: 30027.037
+norm of interface vals: 233.98275
