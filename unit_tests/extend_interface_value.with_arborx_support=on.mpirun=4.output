@@ -10,21 +10,21 @@ max distance to analytical solution (relative): 0.016963
 max distance to numerical distance solution (relative): 0.0077833435
 norm of interface vals: 21232.504
 ------------------------------------------------------------------
- START TEST: n_iter=1 type nearest_point #comp 1 #refine 5 dim 3
+ START TEST: n_iter=1 type nearest_point #comp 1 #refine 6 dim 3
 ------------------------------------------------------------------
 | narrow band threshold 0.125000    isocontour = 0.000000                            nearest_point |
-| no. stencil points: 55638                                                          nearest_point |
-max distance to analytical solution (relative): 0.52281325
-max distance to numerical distance solution (relative): 3.1519602e-15
-norm of interface vals: 61363.343
+| no. stencil points: 445674                                                         nearest_point |
+max distance to analytical solution (relative): 0.50877078
+max distance to numerical distance solution (relative): 5.7983224e-15
+norm of interface vals: 173705.09
 ------------------------------------------------------------------
- START TEST: n_iter=1 type nearest_point_fast #comp 1 #refine 5 dim 3
+ START TEST: n_iter=1 type nearest_point_fast #comp 1 #refine 6 dim 3
 ------------------------------------------------------------------
 | narrow band threshold 0.125000    isocontour = 0.000000                            nearest_point |
-| no. stencil points: 55638                                                          nearest_point |
-max distance to analytical solution (relative): 0.52281325
-max distance to numerical distance solution (relative): 3.1519602e-15
-norm of interface vals: 61364.388
+| no. stencil points: 445674                                                         nearest_point |
+max distance to analytical solution (relative): 0.50877078
+max distance to numerical distance solution (relative): 5.7983224e-15
+norm of interface vals: 173700.18
 ------------------------------------------------------------------
  START TEST: n_iter=16 type closest_point_normal #comp 1 #refine 6 dim 2
 ------------------------------------------------------------------

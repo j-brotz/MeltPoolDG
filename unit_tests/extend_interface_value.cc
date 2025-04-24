@@ -460,9 +460,9 @@ main(int argc, char *argv[])
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
   run_test<1, 6, 1>();
-  run_test<1, 5, 1, 3>(LevelSet::NearestPointType::nearest_point);
+  run_test<1, 6, 1, 3>(LevelSet::NearestPointType::nearest_point);
 #ifdef DEAL_II_WITH_ARBORX
-  run_test<1, 5, 1, 3>(LevelSet::NearestPointType::nearest_point_fast);
+  run_test<1, 6, 1, 3>(LevelSet::NearestPointType::nearest_point_fast);
 #endif
   run_test<1, 6, 16>();
   run_test<2, 6, 5>();
