@@ -234,7 +234,6 @@ namespace MeltPoolDG::LevelSet::Tools
                   continue;
 
                 // early return if point was already collected in stencil
-                // Check if point is already in stencil using unordered_set for O(1) lookup
                 if (point_processed.count(first_dof_index) > 0)
                   continue;
 
