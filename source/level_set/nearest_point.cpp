@@ -2,14 +2,19 @@
 //
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/mpi.templates.h>
+#include <deal.II/base/mpi_noncontiguous_partitioner.templates.h>
 #include <deal.II/base/quadrature.h>
 #include <deal.II/base/tensor.h>
+#ifdef DEAL_II_WITH_ARBORX
+#  include <deal.II/arborx/distributed_tree.h>
+#endif
 
 #include <deal.II/fe/fe_update_flags.h>
 #include <deal.II/fe/fe_values.h>
 
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/grid/grid_tools_geometry.h>
+#include <deal.II/grid/tria_iterator.h>
 
 #include <deal.II/numerics/rtree.h>
 #include <deal.II/numerics/vector_tools_evaluate.h>
@@ -43,19 +48,19 @@ namespace MeltPoolDG::LevelSet::Tools
     const VectorType                                          &signed_distance,
     const BlockVectorType                                     &normal_vector,
     dealii::Utilities::MPI::RemotePointEvaluation<dim, dim>   &remote_point_evaluation,
-    const NearestPointData<number>                            &additional_data,
+    const NearestPointData<number>                            &nearest_point_data,
     std::optional<std::reference_wrapper<dealii::TimerOutput>> timer_output)
     : mapping(mapping)
     , dof_handler_ls(dof_handler_signed_distance)
     , signed_distance(signed_distance)
     , normal_vector(normal_vector)
-    , additional_data(additional_data)
+    , nearest_point_data(nearest_point_data)
     , remote_point_evaluation(remote_point_evaluation)
-    , tol_distance(additional_data.rel_tol *
+    , tol_distance(nearest_point_data.rel_tol *
                    dealii::GridTools::minimal_cell_diameter(dof_handler_ls.get_triangulation()) /
                    std::sqrt(dim))
-    , narrow_band_threshold(additional_data.narrow_band_threshold > 0 ?
-                              additional_data.narrow_band_threshold :
+    , narrow_band_threshold(nearest_point_data.narrow_band_threshold > 0 ?
+                              nearest_point_data.narrow_band_threshold :
                               signed_distance.linfty_norm() * 0.9999)
     , tolerance_normal_vector(UtilityFunctions::compute_numerical_zero_of_norm<dim, number>(
         dof_handler_ls.get_triangulation(),
@@ -66,15 +71,15 @@ namespace MeltPoolDG::LevelSet::Tools
               dof_handler_signed_distance.get_communicator()) == 0)
     , timer_output(timer_output)
   {
-    if (additional_data.verbosity_level > 0)
+    if (nearest_point_data.verbosity_level > 0)
       {
         Journal::print_line(pcout,
                             "narrow band threshold " + std::to_string(narrow_band_threshold) +
-                              "    isocontour = " + std::to_string(additional_data.isocontour),
+                              "    isocontour = " + std::to_string(nearest_point_data.isocontour),
                             "nearest_point");
       }
     AssertThrow(dim <= 2 or
-                  additional_data.type != NearestPointType::closest_point_normal_collinear,
+                  nearest_point_data.type != NearestPointType::closest_point_normal_collinear,
                 dealii::ExcNotImplemented());
 
     AssertThrow(narrow_band_threshold > 0,
@@ -91,64 +96,95 @@ namespace MeltPoolDG::LevelSet::Tools
       timer_scope =
         std::make_unique<dealii::TimerOutput::Scope>(timer_output.value(),
                                                      ScopedName("nearest_point::reinit"));
-    std::unique_ptr<dealii::TimerOutput::Scope> timer_scope_local;
-    if (timer_output)
-      timer_scope_local = std::make_unique<dealii::TimerOutput::Scope>(
-        timer_output.value(), ScopedName("nearest_point::reinit::collect_support_points"));
 
     const bool signed_distance_update_ghosts = not signed_distance.has_ghost_elements();
     if (signed_distance_update_ghosts)
       signed_distance.update_ghost_values();
-    const bool normal_vector_update_ghosts = not normal_vector.has_ghost_elements();
-    if (normal_vector_update_ghosts)
-      normal_vector.update_ghost_values();
 
-    // free caches of stencil points, corresponding nearest points and dof indices
+    clear_cached_data();
+
+    register_dof_handlers(dof_handler_src_in, dof_handler_dst_in);
+
+    collect_narrow_band_support_points();
+
+    run_projection_algorithm();
+
+    if (signed_distance_update_ghosts)
+      signed_distance.zero_out_ghost_values();
+
+    is_reinit_called = true;
+  }
+
+  template <int dim, typename number>
+  void
+  NearestPoint<dim, number>::clear_cached_data()
+  {
+    is_reinit_called    = false;
+    input_vector_is_cut = false;
     stencil.clear();
     dof_indices.clear();
     projected_points_at_interface.clear();
     total_points_rpe = 0;
     points_not_found.clear();
+    locally_owned_surface_indices.clear();
+    ghost_surface_indices.clear();
+    surface_cells_and_unit_points.clear();
+  }
 
-    // register DoFHandler
-    AssertThrow(dof_handler_src_in != nullptr, dealii::ExcInternalError());
-    dof_handler_src = dof_handler_src_in;
+  template <int dim, typename number>
+  void
+  NearestPoint<dim, number>::register_dof_handlers(const dealii::DoFHandler<dim> *src,
+                                                   const dealii::DoFHandler<dim> *dst)
+  {
+    AssertThrow(src != nullptr, dealii::ExcInternalError());
+    dof_handler_src = src;
 
-    // prepare for CutFEM input vector if necessary
-    const CutUtil::CutPhaseType cut_type = CutUtil::get_cut_type(*dof_handler_src);
+    const CutUtil::CutPhaseType cut_type = CutUtil::get_cut_type(*src);
     if (cut_type == CutUtil::CutPhaseType::not_cut)
       {
-        Assert(dof_handler_dst_in == nullptr, dealii::ExcNotImplemented());
+        Assert(dst == nullptr, dealii::ExcNotImplemented());
         dof_handler_dst     = nullptr;
         input_vector_is_cut = false;
       }
     else
       {
         AssertThrow(
-          dof_handler_dst_in != nullptr,
+          dst != nullptr,
           dealii::ExcMessage(
             "If the dof_handler_src is set up for CutFEM you must provide a dof_handler_dst "
             "that is set up for continuous FEM with the identical number of components as "
             "dof_handler_src!"));
-        dof_handler_dst = dof_handler_dst_in;
+        dof_handler_dst = dst;
         AssertThrow(CutUtil::get_cut_type(*dof_handler_dst) == CutUtil::CutPhaseType::not_cut,
                     dealii::ExcMessage("The destination DoFHandler must not be setup for CutFEM!"));
         input_vector_is_cut = true;
       }
+  }
 
-    // compute point cloud
+  template <int dim, typename number>
+  void
+  NearestPoint<dim, number>::collect_narrow_band_support_points()
+  {
+    std::unique_ptr<dealii::TimerOutput::Scope> timer_scope;
+    if (timer_output)
+      timer_scope = std::make_unique<dealii::TimerOutput::Scope>(
+        timer_output.value(),
+        ScopedName("nearest_point::reinit::collect_narrow_band_support_points"));
+
     const auto &used_dst_dof_handler = input_vector_is_cut ? *dof_handler_dst : *dof_handler_src;
-    const unsigned int n_components  = used_dst_dof_handler.get_fe().n_components();
+    const auto  n_components         = used_dst_dof_handler.get_fe().n_components();
+
     if (input_vector_is_cut)
       {
         unsigned int cut_n_comp = dof_handler_src->get_fe().n_components();
-        if (cut_type == CutUtil::CutPhaseType::two_phase_cut)
-          // for two phase cut, dof_handler_req.get_fe().n_components() returns twice the number
-          // of components
+        if (CutUtil::get_cut_type(*dof_handler_src) == CutUtil::CutPhaseType::two_phase_cut)
           cut_n_comp /= 2;
+
         AssertThrow(n_components == cut_n_comp,
-                    dealii::ExcMessage("The DoFHandlers must have the same number of components!"));
+                    dealii::ExcMessage(
+                      "Mismatch in number of components between src/dst DoFHandlers"));
       }
+
     const auto &unit_support_point =
       used_dst_dof_handler.get_fe().base_element(0).get_unit_support_points();
 
@@ -170,6 +206,11 @@ namespace MeltPoolDG::LevelSet::Tools
     typename dealii::DoFHandler<dim>::active_cell_iterator dst_cell =
       used_dst_dof_handler.begin_active();
 
+    std::unordered_set<types::global_dof_index> point_processed{};
+
+    const Utilities::MPI::Partitioner partitioner_support_points(
+      used_dst_dof_handler.locally_owned_dofs(), used_dst_dof_handler.get_mpi_communicator());
+
     for (const auto &cell : dof_handler_ls.active_cell_iterators())
       {
         if (cell->is_locally_owned())
@@ -186,35 +227,23 @@ namespace MeltPoolDG::LevelSet::Tools
                 if (std::abs(signed_distance_values[q]) >= narrow_band_threshold)
                   continue;
 
-                const auto &current_point = dst_eval.quadrature_point(q);
-
-                // copied from dealii::GridTools and modified
-                //
-                // check if the rank of this process is the lowest of all cells
-                // if not, the other process will handle this cell and we don't
-                // have to do here anything in the case of unique mapping
-                unsigned int lowest_rank = numbers::invalid_unsigned_int;
-                const auto   active_cells_around_point =
-                  dealii::GridTools::find_all_active_cells_around_point<dim>(
-                    mapping,
-                    dof_handler_ls.get_triangulation(),
-                    current_point,
-                    1e-6 /*tolerance*/,
-                    {cell, mapping.transform_real_to_unit_cell(cell, current_point)});
-                for (const auto &cell : active_cells_around_point)
-                  lowest_rank = std::min(lowest_rank, cell.first->subdomain_id());
-                if (lowest_rank != dealii::Utilities::MPI::this_mpi_process(mpi_comm))
+                const unsigned int first_dof_index =
+                  local_dof_indices[used_dst_dof_handler.get_fe().component_to_system_index(0, q)];
+                // check only for first component
+                if (not partitioner_support_points.in_local_range(first_dof_index))
                   continue;
-                // end of copy from dealii::GridTools
 
                 // early return if point was already collected in stencil
-                if (std::find(stencil.begin(), stencil.end(), current_point) != stencil.end())
+                if (point_processed.count(first_dof_index) > 0)
                   continue;
 
+                point_processed.insert(first_dof_index);
+
+                const auto &current_point = dst_eval.quadrature_point(q);
                 stencil.emplace_back(current_point);
 
-                std::vector<dealii::types::global_dof_index> temp_local_dof_indices;
                 // create a list of component-wise dof indices
+                std::vector<dealii::types::global_dof_index> temp_local_dof_indices;
                 for (unsigned int c = 0; c < n_components; ++c)
                   temp_local_dof_indices.emplace_back(
                     local_dof_indices[used_dst_dof_handler.get_fe().component_to_system_index(c,
@@ -225,79 +254,79 @@ namespace MeltPoolDG::LevelSet::Tools
         ++dst_cell;
       }
 
-    // set initial guess for closest point projection
-    projected_points_at_interface = stencil;
+    if (nearest_point_data.verbosity_level > 0)
+      Journal::print_line(pcout,
+                          "no. stencil points: " +
+                            std::to_string(dealii::Utilities::MPI::sum(stencil.size(), mpi_comm)),
+                          "nearest_point");
 
     Assert(dealii::Utilities::MPI::sum(stencil.size(), mpi_comm) > 0,
            dealii::ExcMessage("number of points in narrow band equal to zero."));
+  }
 
-    if (timer_scope_local)
-      timer_scope_local->stop();
+  template <int dim, typename number>
+  void
+  NearestPoint<dim, number>::run_projection_algorithm()
+  {
+    // set initial guess for closest point projection
+    projected_points_at_interface = stencil;
 
+    std::unique_ptr<dealii::TimerOutput::Scope> timer_scope;
     if (timer_output)
-      timer_scope_local =
+      timer_scope =
         std::make_unique<dealii::TimerOutput::Scope>(timer_output.value(),
-                                                     ScopedName("nearest_point::reinit::search"));
-
-    switch (additional_data.type)
+                                                     ScopedName("nearest_point::reinit::project"));
+    switch (nearest_point_data.type)
       {
-          case NearestPointType::nearest_point: {
-            local_compute_nearest_point();
-            break;
-          }
-          case NearestPointType::closest_point_normal: {
-            local_compute_normal_correction(projected_points_at_interface);
-            break;
-          }
-          case NearestPointType::closest_point_normal_collinear: {
-            local_compute_normal_and_tangential_correction(projected_points_at_interface);
-            break;
-          }
-          case NearestPointType::closest_point_normal_collinear_coquerelle: {
-            local_compute_normal_and_tangential_correction_coquerelle(
-              projected_points_at_interface);
-            break;
-          }
+        case NearestPointType::nearest_point:
+          local_compute_nearest_point();
+          break;
+        case NearestPointType::nearest_point_fast:
+          local_compute_nearest_point_fast();
+          break;
+        case NearestPointType::closest_point_normal:
+          local_compute_normal_correction(projected_points_at_interface);
+          break;
+        case NearestPointType::closest_point_normal_collinear:
+          local_compute_normal_and_tangential_correction(projected_points_at_interface);
+          break;
+        case NearestPointType::closest_point_normal_collinear_coquerelle:
+          local_compute_normal_and_tangential_correction_coquerelle(projected_points_at_interface);
+          break;
         default:
           DEAL_II_NOT_IMPLEMENTED();
       }
 
-    if (additional_data.verbosity_level > 0 and
-        additional_data.type != NearestPointType::nearest_point)
-      Journal::print_line(pcout,
-                          "total number of RPE points: " +
-                            std::to_string(dealii::Utilities::MPI::sum(total_points_rpe, mpi_comm)),
-                          "nearest_point");
+    if (nearest_point_data.verbosity_level > 0 &&
+        nearest_point_data.type != NearestPointType::nearest_point &&
+        nearest_point_data.type != NearestPointType::nearest_point_fast)
+      {
+        Journal::print_line(pcout,
+                            "total number of RPE points: " +
+                              std::to_string(
+                                dealii::Utilities::MPI::sum(total_points_rpe, mpi_comm)),
+                            "nearest_point");
+      }
 
-    if (signed_distance_update_ghosts)
-      signed_distance.zero_out_ghost_values();
-    if (normal_vector_update_ghosts)
-      normal_vector.zero_out_ghost_values();
+    if (nearest_point_data.type != NearestPointType::nearest_point_fast)
+      {
+        AssertThrow(dof_indices.size() == projected_points_at_interface.size(),
+                    dealii::ExcMessage(
+                      "Mismatched sizes between DOF indices and projected points."));
+        std::unique_ptr<dealii::TimerOutput::Scope> timer_scope_local;
+        if (timer_output)
+          timer_scope_local = std::make_unique<dealii::TimerOutput::Scope>(
+            timer_output.value(), ScopedName("nearest_point::reinit::project::rpe"));
 
-    AssertThrow(dof_indices.size() == projected_points_at_interface.size(),
-                dealii::ExcMessage("The size of vectors does not match."));
-
-    if (timer_scope_local)
-      timer_scope_local->stop();
-
-    if (timer_output)
-      timer_scope_local =
-        std::make_unique<dealii::TimerOutput::Scope>(timer_output.value(),
-                                                     ScopedName("nearest_point::reinit::rpe"));
-    // TODO: where to update remote points (?)
-    remote_point_evaluation.reinit(projected_points_at_interface,
-                                   dof_handler_ls.get_triangulation(),
-                                   mapping);
-
-    is_reinit_called = true;
-
-    if (timer_scope_local)
-      timer_scope_local->stop();
+        remote_point_evaluation.reinit(projected_points_at_interface,
+                                       dof_handler_ls.get_triangulation(),
+                                       mapping);
+      }
   }
 
   template <int dim, typename number>
   const std::vector<dealii::Point<dim>> &
-  NearestPoint<dim, number>::get_points() const
+  NearestPoint<dim, number>::get_projected_points() const
   {
     AssertThrow(is_reinit_called, dealii::ExcMessage("You need to call reinit() first."));
 
@@ -306,7 +335,7 @@ namespace MeltPoolDG::LevelSet::Tools
 
   template <int dim, typename number>
   const std::vector<std::vector<dealii::types::global_dof_index>> &
-  NearestPoint<dim, number>::get_dof_indices() const
+  NearestPoint<dim, number>::get_projected_points_dof_indices() const
   {
     AssertThrow(is_reinit_called, dealii::ExcMessage("You need to call reinit() first."));
 
@@ -316,7 +345,7 @@ namespace MeltPoolDG::LevelSet::Tools
   template <int dim, typename number>
   template <int n_components>
   void
-  NearestPoint<dim, number>::fill_dof_vector_with_point_values(
+  NearestPoint<dim, number>::extend_interface_values(
     VectorType                                &solution_out,
     const VectorType                          &solution_in,
     const bool                                 zero_out,
@@ -324,9 +353,8 @@ namespace MeltPoolDG::LevelSet::Tools
   {
     std::unique_ptr<dealii::TimerOutput::Scope> timer_scope;
     if (timer_output)
-      timer_scope =
-        std::make_unique<dealii::TimerOutput::Scope>(timer_output.value(),
-                                                     ScopedName("nearest_point::fill_dof_vector"));
+      timer_scope = std::make_unique<dealii::TimerOutput::Scope>(
+        timer_output.value(), ScopedName("nearest_point::extend_interface_values"));
 
     if (not input_vector_is_cut)
       AssertThrow(n_components == dof_handler_src->get_fe().n_components(),
@@ -353,18 +381,19 @@ namespace MeltPoolDG::LevelSet::Tools
 
     AssertThrow(is_reinit_called, dealii::ExcMessage("You need to call reinit() first."));
 
-    const bool update_ghosts = not solution_in.has_ghost_elements();
 
+    if (nearest_point_data.type == NearestPointType::nearest_point_fast)
+      return extend_interface_values_nearest_point_fast<n_components>(solution_out,
+                                                                      solution_in,
+                                                                      zero_out,
+                                                                      operation);
+    const bool update_ghosts = not solution_in.has_ghost_elements();
     if (update_ghosts)
       solution_in.update_ghost_values();
 
     const auto vals = dealii::VectorTools::point_values<n_components>(remote_point_evaluation,
                                                                       *dof_handler_src,
                                                                       solution_in);
-
-    if (update_ghosts)
-      solution_in.zero_out_ghost_values();
-
     // store interface values to vector
     if (zero_out)
       solution_out = 0.0;
@@ -381,6 +410,102 @@ namespace MeltPoolDG::LevelSet::Tools
         else if (solution_out.locally_owned_elements().is_element(dof_indices[i][0]))
           solution_out[dof_indices[i][0]] = not operation ? vals[i] : operation(vals[i]);
       }
+
+    if (update_ghosts)
+      solution_in.zero_out_ghost_values();
+  }
+
+  template <int dim, typename number>
+  template <int n_components>
+  void
+  NearestPoint<dim, number>::extend_interface_values_nearest_point_fast(
+    VectorType                                &solution_out,
+    const VectorType                          &solution_in,
+    const bool                                 zero_out,
+    const std::function<number(const number)> &operation) const
+  {
+    // Ensure that the nearest point evaluation type is the expected fast version.
+    Assert(nearest_point_data.type == NearestPointType::nearest_point_fast, ExcNotImplemented());
+
+    // store interface values to vector
+    if (zero_out)
+      solution_out = 0.0;
+
+    const bool update_ghosts = !solution_in.has_ghost_elements();
+    if (update_ghosts)
+      solution_in.update_ghost_values();
+
+    using value_type = typename FEPointEvaluation<n_components, dim>::ScalarNumber;
+
+    // Create a finite element point evaluator with the base (non-active) FE.
+    std::unique_ptr<FEPointEvaluation<n_components, dim>> fep =
+      std::make_unique<FEPointEvaluation<n_components, dim>>(mapping,
+                                                             dof_handler_src->get_fe(),
+                                                             update_values);
+
+    // Reserve space for values extracted from source DoFHandler.
+    std::vector<value_type> values_src;
+    values_src.reserve(locally_owned_surface_indices.size() * n_components);
+
+    // Temporary vector for DoF values per cell.
+    Vector<number> solution_values(dof_handler_src->get_fe().n_dofs_per_cell());
+
+    // Loop over all surface cells and corresponding unit points on them.
+    for (const auto &cell_and_points : surface_cells_and_unit_points)
+      {
+        const auto                                    &cell = cell_and_points.first;
+        TriaIterator<DoFCellAccessor<dim, dim, false>> dealii_cell(
+          &(dof_handler_src->get_triangulation()), cell.first, cell.second, dof_handler_src);
+
+        // If we are using an hpDoFHandler for cut cells, use the correct active FE.
+        if (input_vector_is_cut)
+          {
+            const types::fe_index active_fe_index = *dealii_cell->get_active_fe_indices().begin();
+            fep = std::make_unique<FEPointEvaluation<n_components, dim>>(
+              mapping,
+              dof_handler_src->get_fe(active_fe_index),
+              update_values,
+              0 /*first selected component*/);
+            solution_values.reinit(dof_handler_src->get_fe(active_fe_index).n_dofs_per_cell());
+          }
+
+        dealii_cell->get_dof_values(solution_in, solution_values);
+
+        fep->reinit(dealii_cell, cell_and_points.second);
+        fep->evaluate(solution_values, EvaluationFlags::values);
+
+        for (const auto q : fep->quadrature_point_indices())
+          {
+            const auto val = fep->get_value(q);
+            if constexpr (n_components > 1)
+              for (unsigned int c = 0; c < n_components; ++c)
+                values_src.push_back(val[c]);
+            else
+              values_src.push_back(val);
+          }
+      }
+
+    AssertDimension(locally_owned_surface_indices.size() * n_components, values_src.size());
+    AssertDimension(ghost_surface_indices.size(), dof_indices.size());
+
+    // Prepare buffer for ghost values on destination side.
+    std::vector<value_type> values_dst(ghost_surface_indices.size() * n_components);
+
+    // Export interpolated values from local to ghosted layout.
+    partitioner.export_to_ghosted_array<value_type, n_components>(make_array_view(values_src),
+                                                                  make_array_view(values_dst));
+
+    // Scatter the interpolated values into the output vector.
+    // Optionally apply an operation to the values before assigning.
+    for (unsigned int i = 0; i < ghost_surface_indices.size(); ++i)
+      for (unsigned int d = 0; d < dof_indices[i].size(); ++d)
+        if (solution_out.locally_owned_elements().is_element(dof_indices[i][d]))
+          solution_out[dof_indices[i][d]] = not operation ?
+                                              values_dst[i * n_components + d] :
+                                              operation(values_dst[i * n_components + d]);
+
+    if (update_ghosts)
+      solution_in.zero_out_ghost_values();
   }
 
   template <int dim, typename number>
@@ -398,7 +523,7 @@ namespace MeltPoolDG::LevelSet::Tools
     if (dealii::Utilities::MPI::this_mpi_process(mpi_comm) == 0)
       {
         std::ofstream myfile;
-        myfile.open(filename + ".dat");
+        myfile.open(filename + ".txt");
 
         for (const auto &p : global_points_normal_to_interface_all)
           {
@@ -422,7 +547,7 @@ namespace MeltPoolDG::LevelSet::Tools
           all_points_not_found.size() > 0)
         {
           std::ofstream myfile;
-          myfile.open(filename + "_not_found.dat");
+          myfile.open(filename + "_not_found.txt");
 
           for (const auto &p : all_points_not_found)
             {
@@ -450,7 +575,7 @@ namespace MeltPoolDG::LevelSet::Tools
     // temporary variable for signed distance
     std::vector<number> evaluation_values_distance;
 
-    for (int j = 0; j < additional_data.max_iter; ++j)
+    for (int j = 0; j < nearest_point_data.max_iter; ++j)
       {
         std::vector<dealii::Point<dim>> unmatched_points(unmatched_points_idx.size());
 
@@ -473,7 +598,7 @@ namespace MeltPoolDG::LevelSet::Tools
               if (not remote_point_evaluation.point_found(i))
                 points_not_found.emplace_back(unmatched_points[i]);
 
-            write_to_file();
+            write_to_file("unmatched_points");
 
             AssertThrow(false, dealii::ExcMessage("Processed point is outside domain."));
           }
@@ -484,10 +609,10 @@ namespace MeltPoolDG::LevelSet::Tools
                                                                           signed_distance);
 
         // shift isocontour
-        if (std::abs(additional_data.isocontour >= 0)) // TODO what is the std::abs for?
+        if (std::abs(nearest_point_data.isocontour >= 0)) // TODO what is the std::abs for?
           {
             for (auto &e : evaluation_values_distance)
-              e -= additional_data.isocontour;
+              e -= nearest_point_data.isocontour;
           }
 
         // compute unit normal
@@ -495,6 +620,9 @@ namespace MeltPoolDG::LevelSet::Tools
 
         std::array<std::vector<number>, dim> evaluation_values_normal;
 
+        const bool normal_vector_update_ghosts = not normal_vector.has_ghost_elements();
+        if (normal_vector_update_ghosts)
+          normal_vector.update_ghost_values();
         for (int comp = 0; comp < dim; ++comp)
           {
             evaluation_values_normal[comp] =
@@ -502,6 +630,9 @@ namespace MeltPoolDG::LevelSet::Tools
                                                    dof_handler_ls,
                                                    normal_vector.block(comp));
           }
+
+        if (normal_vector_update_ghosts)
+          normal_vector.zero_out_ghost_values();
 
         for (unsigned int counter = 0; counter < unmatched_points.size(); ++counter)
           {
@@ -540,7 +671,7 @@ namespace MeltPoolDG::LevelSet::Tools
         n_unmatched_points = dealii::Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm);
 
         str << " -> " << n_unmatched_points << " (✗)";
-        if (additional_data.verbosity_level > 1)
+        if (nearest_point_data.verbosity_level > 1)
           Journal::print_line(pcout, str.str(), "nearest_point", 2);
 
         if (n_unmatched_points == 0)
@@ -584,10 +715,13 @@ namespace MeltPoolDG::LevelSet::Tools
     int n_unmatched_points =
       dealii::Utilities::MPI::sum(unmatched_points_idx.size(), MPI_COMM_WORLD);
 
-    number max_tangential_distance = 0.0;
+    number     max_tangential_distance     = 0.0;
+    const bool normal_vector_update_ghosts = not normal_vector.has_ghost_elements();
+    if (normal_vector_update_ghosts)
+      normal_vector.update_ghost_values();
 
     // 1) Perform correction in tangential direction
-    for (int it = 0; it < additional_data.max_iter and n_unmatched_points > 0; ++it)
+    for (int it = 0; it < nearest_point_data.max_iter and n_unmatched_points > 0; ++it)
       {
         std::vector<dealii::Point<dim>> unmatched_points(unmatched_points_idx.size());
         for (unsigned int i = 0; i < unmatched_points_idx.size(); ++i)
@@ -596,7 +730,7 @@ namespace MeltPoolDG::LevelSet::Tools
         std::ostringstream str;
         str << " i=" << it << " (tangent) ";
         str << n_unmatched_points << " -> ";
-        if (additional_data.verbosity_level > 1)
+        if (nearest_point_data.verbosity_level > 1)
           Journal::print_line(pcout, str.str(), "nearest_point");
 
         // update remote point evaluation for unmatched points
@@ -712,6 +846,9 @@ namespace MeltPoolDG::LevelSet::Tools
           break;
       }
 
+    if (normal_vector_update_ghosts)
+      normal_vector.zero_out_ghost_values();
+
     max_tangential_distance = dealii::Utilities::MPI::max(max_tangential_distance, mpi_comm);
 
     if (n_unmatched_points > 0)
@@ -742,7 +879,7 @@ namespace MeltPoolDG::LevelSet::Tools
     std::vector<number>       evaluation_values_distance;
     std::vector<unsigned int> unmatched_points_normal_idx_next;
 
-    for (int k = 0; k < additional_data.max_iter; ++k)
+    for (int k = 0; k < nearest_point_data.max_iter; ++k)
       {
         // correct entire points
         number max_tangential_distance = 0;
@@ -753,12 +890,12 @@ namespace MeltPoolDG::LevelSet::Tools
         {
           std::ostringstream str;
           str << " k=" << k << " -> " << n_unmatched_points;
-          if (additional_data.verbosity_level > 1)
+          if (nearest_point_data.verbosity_level > 1)
             Journal::print_line(pcout, str.str(), "nearest_point");
         }
 
         // correct only unmatched points
-        for (int j = 0; j < additional_data.max_iter; ++j)
+        for (int j = 0; j < nearest_point_data.max_iter; ++j)
           {
             std::vector<dealii::Point<dim>> unmatched_points(unmatched_points_idx.size());
             for (unsigned int i = 0; i < unmatched_points_idx.size(); ++i)
@@ -783,10 +920,10 @@ namespace MeltPoolDG::LevelSet::Tools
                                                    dof_handler_ls,
                                                    signed_distance);
 
-            if (std::abs(additional_data.isocontour >= 0))
+            if (std::abs(nearest_point_data.isocontour >= 0))
               {
                 for (auto &e : evaluation_values_distance)
-                  e -= additional_data.isocontour;
+                  e -= nearest_point_data.isocontour;
               }
 
             // compute unit normal and tangent
@@ -795,6 +932,10 @@ namespace MeltPoolDG::LevelSet::Tools
 
             std::array<std::vector<number>, dim> evaluation_values_normal;
 
+
+            const bool normal_vector_update_ghosts = not normal_vector.has_ghost_elements();
+            if (normal_vector_update_ghosts)
+              normal_vector.update_ghost_values();
             for (int comp = 0; comp < dim; ++comp)
               {
                 evaluation_values_normal[comp] =
@@ -802,6 +943,10 @@ namespace MeltPoolDG::LevelSet::Tools
                                                        dof_handler_ls,
                                                        normal_vector.block(comp));
               }
+
+            if (normal_vector_update_ghosts)
+              normal_vector.zero_out_ghost_values();
+
 
             for (unsigned int counter = 0; counter < unmatched_points.size(); ++counter)
               {
@@ -902,7 +1047,7 @@ namespace MeltPoolDG::LevelSet::Tools
                 << dealii::Utilities::MPI::sum(
                      unmatched_points_normal_and_tangential_idx_next.size(), mpi_comm)
                 << " (n ✓ | t ✗) " << n_complete << " (n ✓ | t ✓) ";
-            if (additional_data.verbosity_level > 1)
+            if (nearest_point_data.verbosity_level > 1)
               Journal::print_line(pcout, str.str(), "nearest_point", 10 /*special characters*/);
 
             if (n_unmatched_points == 0)
@@ -930,7 +1075,7 @@ namespace MeltPoolDG::LevelSet::Tools
 
         max_distance = dealii::Utilities::MPI::max(max_distance, mpi_comm);
 
-        if (n_unmatched_points > 0 and k == additional_data.max_iter - 1)
+        if (n_unmatched_points > 0 and k == nearest_point_data.max_iter - 1)
           {
             pcout << "WARNING: The tolerance of " << n_unmatched_points
                   << " points is not yet attained. Max distance value: " << max_distance
@@ -940,7 +1085,7 @@ namespace MeltPoolDG::LevelSet::Tools
 
         max_tangential_distance = dealii::Utilities::MPI::max(max_tangential_distance, mpi_comm);
 
-        if (max_tangential_distance > tol_distance and k == additional_data.max_iter - 1)
+        if (max_tangential_distance > tol_distance and k == nearest_point_data.max_iter - 1)
           {
             pcout << "WARNING: The tolerance of the tangential correction of "
                   << dealii::Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm)
@@ -960,16 +1105,16 @@ namespace MeltPoolDG::LevelSet::Tools
     std::unique_ptr<dealii::TimerOutput::Scope> timer_scope;
     if (timer_output)
       timer_scope = std::make_unique<dealii::TimerOutput::Scope>(
-        timer_output.value(), ScopedName("nearest_point::reinit::local::mca"));
+        timer_output.value(), ScopedName("nearest_point::reinit::project::mca"));
     // create a point cloud of the surface
     dealii::GridTools::MarchingCubeAlgorithm<dim, VectorType> mc(
       mapping,
-      dof_handler_ls.get_fe(), // todo
-      3 /*n subdivisions TODO: add parameter*/,
-      1e-10 /*tolerance TODO: add parameter*/);
+      dof_handler_ls.get_fe(),
+      nearest_point_data.mca.n_subdivisions, /*n subdivisions*/
+      nearest_point_data.mca.tolerance /*tolerance*/);
 
     std::vector<dealii::Point<dim>> surface_points;
-    mc.process(dof_handler_ls, signed_distance, additional_data.isocontour, surface_points);
+    mc.process(dof_handler_ls, signed_distance, nearest_point_data.isocontour, surface_points);
 
     // all gather surface points
     const auto surface_points_global = dealii::Utilities::MPI::all_gather(mpi_comm, surface_points);
@@ -985,7 +1130,7 @@ namespace MeltPoolDG::LevelSet::Tools
 
     if (timer_output)
       timer_scope = std::make_unique<dealii::TimerOutput::Scope>(
-        timer_output.value(), ScopedName("nearest_point::reinit::local::search"));
+        timer_output.value(), ScopedName("nearest_point::reinit::project::search"));
 
     const auto used_vertices_rtree = pack_rtree(surface_points);
 
@@ -1008,42 +1153,139 @@ namespace MeltPoolDG::LevelSet::Tools
       timer_scope->stop();
   }
 
+  template <int dim, typename number>
+  void
+  NearestPoint<dim, number>::local_compute_nearest_point_fast()
+  {
+    std::unique_ptr<TimerOutput::Scope> timer_scope;
+    if (timer_output)
+      timer_scope =
+        std::make_unique<TimerOutput::Scope>(timer_output.value(),
+                                             ScopedName("nearest_point::reinit::project::mca"));
+
+    // Storage for physical interface points extracted from the level set isocontour
+    std::vector<Point<dim>> surface_points;
+
+    LevelSet::Tools::collect_interface_cells_and_intersection_points<dim, number>(
+      surface_cells_and_unit_points,
+      surface_points,
+      dof_handler_ls,
+      mapping,
+      signed_distance,
+      nearest_point_data.isocontour,
+      nearest_point_data.mca.n_subdivisions,
+      nearest_point_data.mca.tolerance);
+
+    if (timer_scope)
+      timer_scope->stop();
+
+    if (timer_output)
+      timer_scope =
+        std::make_unique<TimerOutput::Scope>(timer_output.value(),
+                                             ScopedName("nearest_point::reinit::project::search"));
+
+#ifdef DEAL_II_WITH_ARBORX
+    // Build ArborX distributed search tree using collected surface points
+    dealii::ArborXWrappers::DistributedTree distributed_tree(mpi_comm, surface_points);
+
+    // Construct a nearest-neighbor search for each stencil point, looking for 1 nearest point
+    dealii::ArborXWrappers::PointNearestPredicate bb_near(stencil, 1);
+    // Perform nearest neighbor search; returns matching local indices of surface points and owning
+    // ranks
+    const auto &[indices_and_ranks, offsets_stencil] = distributed_tree.query(bb_near);
+
+    // Sanity check: ArborX gives 1 match per stencil point
+    for (unsigned int i = 1; i < offsets_stencil.size(); ++i)
+      Assert(offsets_stencil[i] - offsets_stencil[i - 1] == 1,
+             ExcMessage("The offset needs to be one"));
+
+    const auto [offset, n_global_surface_points] =
+      Utilities::MPI::partial_and_total_sum(surface_points.size(), mpi_comm);
+    const auto offsets = Utilities::MPI::all_gather(mpi_comm, offset);
+
+    // Locally owned indices (global) of surface points owned by this process
+    locally_owned_surface_indices.clear();
+    for (auto i = offset; i < offset + surface_points.size(); ++i)
+      locally_owned_surface_indices.push_back(i);
+
+    // Ghost indices (global) corresponding to matched surface points for each locally owned stencil
+    // point
+    ghost_surface_indices.clear();
+    for (const auto &[index, rank] : indices_and_ranks)
+      ghost_surface_indices.push_back(offsets[rank] + index);
+
+    // Set up communication pattern between local and ghost surface point data
+    partitioner.reinit(locally_owned_surface_indices, ghost_surface_indices, mpi_comm);
+
+    // Prepare data to export surface point coordinates to ghost processes
+    // and fill projected_points_at_interface
+
+    // Break surface_points into separate x/y/z (or dim-wise) components
+    std::vector<std::vector<double>> components(dim, std::vector<double>(surface_points.size()));
+    for (unsigned int d = 0; d < dim; ++d)
+      for (unsigned int i = 0; i < surface_points.size(); ++i)
+        components[d][i] = surface_points[i][d];
+
+    // Communicate each component array using the partitioner
+    std::vector<std::vector<double>> ghosted_components(
+      dim, std::vector<double>(ghost_surface_indices.size()));
+    for (unsigned int d = 0; d < dim; ++d)
+      partitioner.export_to_ghosted_array<double>(make_array_view(components[d]),
+                                                  make_array_view(ghosted_components[d]));
+
+    // Reconstruct Point<dim> structures from ghosted components
+    std::vector<Point<dim>> points_dst(ghost_surface_indices.size());
+    for (unsigned int i = 0; i < ghost_surface_indices.size(); ++i)
+      for (unsigned int d = 0; d < dim; ++d)
+        points_dst[i][d] = ghosted_components[d][i];
+
+    // Store the projected interface points in the class member variable
+    for (unsigned int i = 0; i < ghost_surface_indices.size(); ++i)
+      projected_points_at_interface[i] = points_dst[i];
+#else
+    AssertThrow(false, ExcNotImplemented());
+#endif
+
+    if (timer_scope)
+      timer_scope->stop();
+  }
+
   template class NearestPoint<1, double>;
   template class NearestPoint<2, double>;
   template class NearestPoint<3, double>;
 
   template void
-  NearestPoint<1, double>::fill_dof_vector_with_point_values<1>(
+  NearestPoint<1, double>::extend_interface_values<1>(
     VectorType &,
     const VectorType &,
     const bool,
     const std::function<double(const double)> &) const;
   template void
-  NearestPoint<2, double>::fill_dof_vector_with_point_values<1>(
+  NearestPoint<2, double>::extend_interface_values<1>(
     VectorType &,
     const VectorType &,
     const bool,
     const std::function<double(const double)> &) const;
   template void
-  NearestPoint<2, double>::fill_dof_vector_with_point_values<2>(
+  NearestPoint<2, double>::extend_interface_values<2>(
     VectorType &,
     const VectorType &,
     const bool,
     const std::function<double(const double)> &) const;
   template void
-  NearestPoint<3, double>::fill_dof_vector_with_point_values<1>(
+  NearestPoint<3, double>::extend_interface_values<1>(
     VectorType &,
     const VectorType &,
     const bool,
     const std::function<double(const double)> &) const;
   template void
-  NearestPoint<3, double>::fill_dof_vector_with_point_values<2>(
+  NearestPoint<3, double>::extend_interface_values<2>(
     VectorType &,
     const VectorType &,
     const bool,
     const std::function<double(const double)> &) const;
   template void
-  NearestPoint<3, double>::fill_dof_vector_with_point_values<3>(
+  NearestPoint<3, double>::extend_interface_values<3>(
     VectorType &,
     const VectorType &,
     const bool,

@@ -494,8 +494,7 @@ namespace MeltPoolDG::Heat
     nearest_point_search->reinit(&scratch_data.get_dof_handler(heat_cut_dof_idx),
                                  &scratch_data.get_dof_handler(heat_cont_no_bc_dof_idx));
 
-    nearest_point_search->fill_dof_vector_with_point_values(interface_temperature,
-                                                            get_temperature());
+    nearest_point_search->extend_interface_values(interface_temperature, get_temperature());
 
     scratch_data.get_constraint(heat_cut_no_bc_dof_idx).distribute(interface_temperature);
   }

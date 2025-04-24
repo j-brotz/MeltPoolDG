@@ -2,6 +2,7 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/level_set/marching_cube_data.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 
 namespace MeltPoolDG::LevelSet
@@ -20,7 +21,10 @@ namespace MeltPoolDG::LevelSet
               // (2) subsequent iterative correction in normal direction
               closest_point_normal_collinear_coquerelle,
               // nearest point in the point cloud
-              nearest_point)
+              nearest_point,
+              // fast algorithm to identify nearest point in the point cloud using distributed
+              // search algorithms of ArborX
+              nearest_point_fast)
 
   template <typename number>
   struct NearestPointData
@@ -31,6 +35,8 @@ namespace MeltPoolDG::LevelSet
     number           narrow_band_threshold = -1;
     number           isocontour            = 0.0;
     unsigned int     verbosity_level       = 0;
+
+    MarchingCubeData<number> mca;
 
     void
     add_parameters(dealii::ParameterHandler &prm);

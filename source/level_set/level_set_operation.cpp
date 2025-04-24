@@ -729,8 +729,9 @@ namespace MeltPoolDG::LevelSet
     // zero out because it is overwritten
     curvature_operation->get_curvature().zero_out_ghost_values();
 
-    nearest_point_search->template fill_dof_vector_with_point_values(
-      curvature_operation->get_curvature(), curvature_operation->get_curvature(), true);
+    nearest_point_search->template extend_interface_values<1>(curvature_operation->get_curvature(),
+                                                              curvature_operation->get_curvature(),
+                                                              true);
 
     curvature_operation->get_curvature().update_ghost_values();
 
@@ -752,12 +753,12 @@ namespace MeltPoolDG::LevelSet
   LevelSetOperation<dim, number>::update_surface_mesh()
   {
     surface_mesh_info.clear();
-    surface_mesh_info = Tools::generate_surface_mesh_info(scratch_data.get_dof_handler(ls_dof_idx),
-                                                          scratch_data.get_mapping(),
-                                                          level_set_as_heaviside,
-                                                          /*contour of surface*/ 0.5,
-                                                          /*n_subdivisions*/ 1,
-                                                          /*use_mca*/ true);
+    surface_mesh_info =
+      Tools::generate_surface_mesh_info<dim, number>(scratch_data.get_dof_handler(ls_dof_idx),
+                                                     scratch_data.get_mapping(),
+                                                     level_set_as_heaviside,
+                                                     /*contour of surface*/ 0.5,
+                                                     /*n_subdivisions*/ 1);
 
     std::ostringstream str;
     str << "Surface mesh generated, "
