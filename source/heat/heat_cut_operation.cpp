@@ -47,7 +47,7 @@ namespace MeltPoolDG::Heat
         std::map<types::boundary_id, std::shared_ptr<Function<dim>>> heat_bc;
         for (const auto &bc : dirichlet_bc)
           heat_bc[bc.first] =
-            std::make_shared<dealii::Functions::TwoComponentFunction<dim, number>>(*bc.second);
+            std::make_shared<Functions::TwoComponentFunction<dim, number>>(*bc.second);
         return heat_bc;
       }
     else
@@ -344,7 +344,7 @@ namespace MeltPoolDG::Heat
       // because the FESystem for cut is set up with 2 to handle both phases.
       dealii::VectorTools::interpolate(scratch_data.get_mapping(),
                                        scratch_data.get_dof_handler(heat_cut_dof_idx),
-                                       dealii::Functions::TwoComponentFunction<dim, number>(
+                                       Functions::TwoComponentFunction<dim, number>(
                                          initial_temperature),
                                        solution_history.get_current_solution());
     else

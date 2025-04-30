@@ -97,7 +97,7 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
       if (droplet_shape == "circle")
         {
           this->attach_initial_condition(
-            std::make_shared<dealii::Functions::ChangedSignFunction<dim, double>>(
+            std::make_shared<Functions::ChangedSignFunction<dim, double>>(
               std::make_shared<dealii::Functions::SignedDistance::Sphere<dim>>(center, radius)),
             "signed_distance");
         }
@@ -110,7 +110,7 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
             AssertThrow(false, ExcNotImplemented());
 
           this->attach_initial_condition(
-            std::make_shared<dealii::Functions::ChangedSignFunction<dim, double>>(
+            std::make_shared<Functions::ChangedSignFunction<dim, double>>(
               std::make_shared<dealii::Functions::SignedDistance::Ellipsoid<dim>>(center, radii)),
             "signed_distance");
         }

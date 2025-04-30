@@ -1,15 +1,22 @@
 #pragma once
+
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/symmetric_tensor.h>
+#include <deal.II/base/tensor.h>
 
-namespace dealii::Functions
+#include <memory>
+
+
+namespace MeltPoolDG::Functions
 {
   template <int dim, typename number>
-  class ChangedSignFunction : public Function<dim, number>
+  class ChangedSignFunction : public dealii::Function<dim, number>
   {
   public:
     ChangedSignFunction(const std::shared_ptr<dealii::Function<dim, number>> fu_)
-      : Function<dim, number>(fu_->n_components, fu_->get_time())
+      : dealii::Function<dim, number>(fu_->n_components, fu_->get_time())
       , fu(fu_)
     {
       AssertThrow(fu, dealii::ExcMessage("The input function does not exist. Abort ..."));
@@ -70,4 +77,4 @@ namespace dealii::Functions
   private:
     const dealii::Function<dim> &function;
   };
-} // namespace dealii::Functions
+} // namespace MeltPoolDG::Functions
