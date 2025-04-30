@@ -172,7 +172,7 @@ namespace MeltPoolDG::VectorTools
                                   const unsigned int                                  dof_idx  = 0,
                                   const unsigned int                                  quad_idx = 0)
   {
-    dealii::FECellIntegrator<dim, n_components, number> phi(matrix_free, dof_idx, quad_idx);
+    FECellIntegrator<dim, n_components, number> phi(matrix_free, dof_idx, quad_idx);
     dealii::MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, n_components, number> inverse(
       phi);
     out.zero_out_ghost_values();
@@ -432,7 +432,7 @@ namespace MeltPoolDG::VectorTools
     unsigned int                                                            quad_idx,
     const T                                                                &cell_operation)
   {
-    dealii::FECellIntegrator<dim, n_components, number> fe_eval(matrix_free, dof_idx, quad_idx);
+    FECellIntegrator<dim, n_components, number> fe_eval(matrix_free, dof_idx, quad_idx);
 
     dealii::MatrixFreeOperators::
       CellwiseInverseMassMatrix<dim, -1, n_components, number, dealii::VectorizedArray<number>>

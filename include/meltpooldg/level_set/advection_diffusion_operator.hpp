@@ -106,13 +106,12 @@ namespace MeltPoolDG::LevelSet
 
   private:
     void
-    tangent_local_cell_operation(dealii::FECellIntegrator<dim, 1, number>   &advected_field,
-                                 dealii::FECellIntegrator<dim, dim, number> &velocity_vals,
-                                 const bool                                  do_reinit_cells) const;
+    tangent_local_cell_operation(FECellIntegrator<dim, 1, number>   &advected_field,
+                                 FECellIntegrator<dim, dim, number> &velocity_vals,
+                                 const bool                          do_reinit_cells) const;
 
     void
-    compute_stabilization_parameter(
-      const dealii::FECellIntegrator<dim, dim, number> &velocity_vals) const;
+    compute_stabilization_parameter(const FECellIntegrator<dim, dim, number> &velocity_vals) const;
 
     const ScratchData<dim, dim, number>                           &scratch_data;
     const VectorType                                              &advection_velocity;

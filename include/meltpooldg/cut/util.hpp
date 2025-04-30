@@ -155,7 +155,7 @@ namespace MeltPoolDG::CutUtil
   inline void
   evaluate_intersected_domain(
     dealii::FEPointEvaluation<n_components, dim, dim, dealii::VectorizedArray<number>> &point_eval,
-    const dealii::FECellIntegrator<dim, n_components, number>                          &cell_eval,
+    const FECellIntegrator<dim, n_components, number>                                  &cell_eval,
     const dealii::EvaluationFlags::EvaluationFlags evaluation_flags,
     const unsigned int                             cell_batch,
     const unsigned int                             cell_lane,

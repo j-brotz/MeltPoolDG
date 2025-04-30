@@ -38,11 +38,11 @@ namespace MeltPoolDG::Heat
     using OperatorMatrixFree<dim, number>::compute_inverse_diagonal_from_matrixfree;
 
     template <int n_components = 1>
-    using DomainEval = dealii::FECellIntegrator<dim, n_components, number>;
+    using DomainEval = FECellIntegrator<dim, n_components, number>;
     template <int n_components = 1>
     using PointEval =
       dealii::FEPointEvaluation<n_components, dim, dim, dealii::VectorizedArray<number>>;
-    using FaceEval = dealii::FEFaceIntegrator<dim, 1, number>;
+    using FaceEval = FEFaceIntegrator<dim, 1, number>;
 
     using VectorType       = typename OperatorMatrixFree<dim, number>::VectorType;
     using SparseMatrixType = typename OperatorMatrixFree<dim, number>::SparseMatrixType;

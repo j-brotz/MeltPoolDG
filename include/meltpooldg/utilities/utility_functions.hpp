@@ -502,9 +502,9 @@ namespace MeltPoolDG
     template <int dim, typename number>
     void
     compute_gradient_at_interpolated_dof_values(
-      dealii::FECellIntegrator<dim, 1, number> &values,
-      dealii::FECellIntegrator<dim, 1, number> &interpolated_values,
-      const dealii::FullMatrix<number>         &interpolation_matrix)
+      FECellIntegrator<dim, 1, number> &values,
+      FECellIntegrator<dim, 1, number> &interpolated_values,
+      const dealii::FullMatrix<number> &interpolation_matrix)
     {
       // Evaluate the field Φ at the support points of its space j
       values.evaluate(dealii::EvaluationFlags::values);

@@ -131,22 +131,21 @@ namespace MeltPoolDG::LevelSet
      * @param cell_integrator
      */
     void
-    do_cell_integral_local(dealii::FECellIntegrator<dim, 1, number> &cell_integrator) const;
+    do_cell_integral_local(FECellIntegrator<dim, 1, number> &cell_integrator) const;
 
     /**
      * @param face_integrator_minus
      * @param face_integrator_plus
      */
     void
-    do_face_integral_local(dealii::FEFaceIntegrator<dim, 1, number> &face_integrator_minus,
-                           dealii::FEFaceIntegrator<dim, 1, number> &face_integrator_plus) const;
+    do_face_integral_local(FEFaceIntegrator<dim, 1, number> &face_integrator_minus,
+                           FEFaceIntegrator<dim, 1, number> &face_integrator_plus) const;
 
     /**
      * @param face_integrator_minus
      */
     void
-    do_bounary_integral_local(
-      dealii::FEFaceIntegrator<dim, 1, number> &face_integrator_minus) const;
+    do_bounary_integral_local(FEFaceIntegrator<dim, 1, number> &face_integrator_minus) const;
 
     /**
      * Builds the matrix of the operator

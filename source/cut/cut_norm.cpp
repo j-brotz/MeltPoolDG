@@ -82,12 +82,11 @@ namespace MeltPoolDG::CutUtil
         const auto cell_category = matrix_free.get_cell_category(cell_batch);
         if (cell_category == CellCategory::liquid)
           {
-            dealii::FECellIntegrator<dim, n_components, number> eval_l(
-              matrix_free,
-              dof_idx /*dof_no*/,
-              quad_idx /*quad_no*/,
-              0 /*selected component*/,
-              cell_category /*active_fe_index*/);
+            FECellIntegrator<dim, n_components, number> eval_l(matrix_free,
+                                                               dof_idx /*dof_no*/,
+                                                               quad_idx /*quad_no*/,
+                                                               0 /*selected component*/,
+                                                               cell_category /*active_fe_index*/);
 
             eval_l.reinit(cell_batch);
             eval_l.read_dof_values_plain(solution);
@@ -100,12 +99,11 @@ namespace MeltPoolDG::CutUtil
           }
         else if (cell_category == CellCategory::gas and is_two_phase)
           {
-            dealii::FECellIntegrator<dim, n_components, number> eval_g(
-              matrix_free,
-              dof_idx /*dof_no*/,
-              quad_idx /*quad_no*/,
-              1 /*selected component*/,
-              cell_category /*active_fe_index*/);
+            FECellIntegrator<dim, n_components, number> eval_g(matrix_free,
+                                                               dof_idx /*dof_no*/,
+                                                               quad_idx /*quad_no*/,
+                                                               1 /*selected component*/,
+                                                               cell_category /*active_fe_index*/);
 
             eval_g.reinit(cell_batch);
             eval_g.read_dof_values_plain(solution);
@@ -120,7 +118,7 @@ namespace MeltPoolDG::CutUtil
           {
             // use FEEvaluation and FEdealii::FEPointEvaluation<n_components, dim, dim,
             // dealii::VectorizedArray<number>>uation in combination for intersected cells
-            dealii::FECellIntegrator<dim, n_components, number> eval_cell_l(
+            FECellIntegrator<dim, n_components, number> eval_cell_l(
               matrix_free,
               dof_idx /*dof_no*/,
               quad_idx /*quad_no*/,
@@ -153,7 +151,7 @@ namespace MeltPoolDG::CutUtil
           {
             // use FEEvaluation and FEdealii::FEPointEvaluation<n_components, dim, dim,
             // dealii::VectorizedArray<number>>uation in combination for intersected cells
-            dealii::FECellIntegrator<dim, n_components, number> eval_cell_l(
+            FECellIntegrator<dim, n_components, number> eval_cell_l(
               matrix_free,
               dof_idx /*dof_no*/,
               quad_idx /*quad_no*/,
@@ -161,7 +159,7 @@ namespace MeltPoolDG::CutUtil
               cell_category /*active_fe_index*/);
             dealii::FEPointEvaluation<n_components, dim, dim, dealii::VectorizedArray<number>>
               eval_subdomain_l(*mapping_info_cells[0], reference_element);
-            dealii::FECellIntegrator<dim, n_components, number> eval_cell_g(
+            FECellIntegrator<dim, n_components, number> eval_cell_g(
               matrix_free,
               dof_idx /*dof_no*/,
               quad_idx /*quad_no*/,

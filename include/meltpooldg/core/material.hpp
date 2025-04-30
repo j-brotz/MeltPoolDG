@@ -165,8 +165,8 @@ namespace MeltPoolDG
      */
     template <typename value_type, int dim>
     inline MaterialParameterValues<value_type, number>
-    compute_parameters(const dealii::FECellIntegrator<dim, 1, number> &level_set_heaviside_val,
-                       const dealii::FECellIntegrator<dim, 1, number> &temperature_val,
+    compute_parameters(const FECellIntegrator<dim, 1, number>         &level_set_heaviside_val,
+                       const FECellIntegrator<dim, 1, number>         &temperature_val,
                        const MaterialUpdateFlags::MaterialUpdateFlags &flags,
                        const unsigned int                              q_index) const;
 
@@ -180,10 +180,10 @@ namespace MeltPoolDG
      */
     template <typename value_type, int dim>
     inline MaterialParameterValues<value_type, number>
-    compute_parameters(const dealii::FECellIntegrator<dim, 1, number> &level_set_heaviside_val,
-                       const std::vector<dealii::FECellIntegrator<dim, 1, number>> &temperature_val,
-                       const MaterialUpdateFlags::MaterialUpdateFlags              &flags,
-                       const unsigned int                                           q_index) const;
+    compute_parameters(const FECellIntegrator<dim, 1, number>              &level_set_heaviside_val,
+                       const std::vector<FECellIntegrator<dim, 1, number>> &temperature_val,
+                       const MaterialUpdateFlags::MaterialUpdateFlags      &flags,
+                       const unsigned int                                   q_index) const;
 
     /**
      * Check whether the material type depends on a certain field variable.

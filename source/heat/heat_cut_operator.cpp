@@ -30,10 +30,9 @@ namespace MeltPoolDG::Heat
   // this alias helps derive the correct type from the Evaluator, which needs to inherit from
   // dealii::FEEvaluationBase
   template <typename Evaluation>
-  using VelocityType =
-    typename dealii::FECellIntegrator<Evaluation::dimension,
-                                      Evaluation::dimension,
-                                      typename Evaluation::ScalarNumber>::value_type;
+  using VelocityType = typename FECellIntegrator<Evaluation::dimension,
+                                                 Evaluation::dimension,
+                                                 typename Evaluation::ScalarNumber>::value_type;
 
   static constexpr dealii::EvaluationFlags::EvaluationFlags evaluate_values =
     dealii::EvaluationFlags::values;

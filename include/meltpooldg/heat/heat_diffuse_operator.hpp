@@ -290,14 +290,14 @@ namespace MeltPoolDG::Heat
      */
     void
     tangent_local_cell_operation(
-      dealii::FECellIntegrator<dim, 1, number>                        &eval,
-      dealii::FECellIntegrator<dim, 1, number>                        &T_new_eval,
-      dealii::FECellIntegrator<dim, 1, number>                        &T_old_eval,
-      dealii::FECellIntegrator<dim, dim, number>                      &vel_eval,
-      dealii::FECellIntegrator<dim, 1, number>                        &heaviside_eval,
-      dealii::FECellIntegrator<dim, 1, number>                        &heaviside_interpolated_eval,
-      const std::unique_ptr<dealii::FECellIntegrator<dim, 1, number>> &mass_flux_eval,
-      bool                                                             do_reinit_cells) const;
+      FECellIntegrator<dim, 1, number>                        &eval,
+      FECellIntegrator<dim, 1, number>                        &T_new_eval,
+      FECellIntegrator<dim, 1, number>                        &T_old_eval,
+      FECellIntegrator<dim, dim, number>                      &vel_eval,
+      FECellIntegrator<dim, 1, number>                        &heaviside_eval,
+      FECellIntegrator<dim, 1, number>                        &heaviside_interpolated_eval,
+      const std::unique_ptr<FECellIntegrator<dim, 1, number>> &mass_flux_eval,
+      bool                                                     do_reinit_cells) const;
 
     /**
      * This function executes the local boundary operation for computing the tangent.
@@ -308,9 +308,9 @@ namespace MeltPoolDG::Heat
      *   face_eval.distribute_local_to_global(dst).
      */
     void
-    tangent_local_boundary_operation(dealii::FEFaceIntegrator<dim, 1, number> &face_eval,
-                                     dealii::FEFaceIntegrator<dim, 1, number> &T_face_eval,
-                                     bool do_reinit_face) const;
+    tangent_local_boundary_operation(FEFaceIntegrator<dim, 1, number> &face_eval,
+                                     FEFaceIntegrator<dim, 1, number> &T_face_eval,
+                                     bool                              do_reinit_face) const;
     /**
      * The setup for dealii::MatrixFreeTools::internal::compute_diagonal and
      * dealii::MatrixFreeTools::internal::compute_matrix is identical. To avoid duplicate code this
@@ -331,9 +331,9 @@ namespace MeltPoolDG::Heat
      * two-phase flow and no solidification this function does nothing.
      */
     std::tuple<dealii::VectorizedArray<number>, dealii::VectorizedArray<number>>
-    get_material_parameters(const dealii::FECellIntegrator<dim, 1, number> &T_eval,
-                            const dealii::FECellIntegrator<dim, 1, number> &heaviside_eval,
-                            unsigned int                                    q) const;
+    get_material_parameters(const FECellIntegrator<dim, 1, number> &T_eval,
+                            const FECellIntegrator<dim, 1, number> &heaviside_eval,
+                            unsigned int                            q) const;
 
     /**
      * Determine the material parameters and their temperature derivatives. This function takes
@@ -351,10 +351,9 @@ namespace MeltPoolDG::Heat
                dealii::VectorizedArray<number>,
                dealii::VectorizedArray<number>,
                dealii::VectorizedArray<number>>
-    get_material_parameters_and_derivatives(
-      const dealii::FECellIntegrator<dim, 1, number> &T_eval,
-      const dealii::FECellIntegrator<dim, 1, number> &heaviside_eval,
-      unsigned int                                    q) const;
+    get_material_parameters_and_derivatives(const FECellIntegrator<dim, 1, number> &T_eval,
+                                            const FECellIntegrator<dim, 1, number> &heaviside_eval,
+                                            unsigned int                            q) const;
 
     const std::vector<
       std::tuple<const typename dealii::Triangulation<dim, dim>::cell_iterator /*cell*/,

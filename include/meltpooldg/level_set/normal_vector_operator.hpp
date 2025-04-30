@@ -67,9 +67,9 @@ namespace MeltPoolDG::LevelSet
 
   private:
     void
-    tangent_local_cell_operation(dealii::FECellIntegrator<dim, 1, number> &normal_vals,
-                                 dealii::FECellIntegrator<dim, 1, number> &level_set_vals,
-                                 const bool                                do_reinit_cells) const;
+    tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &normal_vals,
+                                 FECellIntegrator<dim, 1, number> &level_set_vals,
+                                 const bool                        do_reinit_cells) const;
 
   private:
     const ScratchData<dim, dim, number> &scratch_data;

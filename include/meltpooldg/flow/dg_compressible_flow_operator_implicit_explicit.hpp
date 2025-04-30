@@ -74,9 +74,9 @@ namespace MeltPoolDG::Flow
      * @param q_index Quadrature point index.
      */
     void
-    local_cell_jacobian_kernel(dealii::FECellIntegrator<dim, dim + 2, number>       &delta_phi,
-                               const dealii::FECellIntegrator<dim, dim + 2, number> &phi,
-                               unsigned int                                          q_index) const;
+    local_cell_jacobian_kernel(FECellIntegrator<dim, dim + 2, number>       &delta_phi,
+                               const FECellIntegrator<dim, dim + 2, number> &phi,
+                               unsigned int                                  q_index) const;
 
 
     /**
@@ -91,11 +91,11 @@ namespace MeltPoolDG::Flow
      * @param q_index Quadrature point index.
      */
     void
-    local_face_jacobian_kernel(dealii::FEFaceIntegrator<dim, dim + 2, number>       &delta_phi_m,
-                               dealii::FEFaceIntegrator<dim, dim + 2, number>       &delta_phi_p,
-                               const dealii::FEFaceIntegrator<dim, dim + 2, number> &phi_m,
-                               const dealii::FEFaceIntegrator<dim, dim + 2, number> &phi_p,
-                               unsigned                                              q_index) const;
+    local_face_jacobian_kernel(FEFaceIntegrator<dim, dim + 2, number>       &delta_phi_m,
+                               FEFaceIntegrator<dim, dim + 2, number>       &delta_phi_p,
+                               const FEFaceIntegrator<dim, dim + 2, number> &phi_m,
+                               const FEFaceIntegrator<dim, dim + 2, number> &phi_p,
+                               unsigned                                      q_index) const;
 
     /**
      * Local biundary face operations at the given quadrature point for computing the jacobian.
@@ -106,8 +106,8 @@ namespace MeltPoolDG::Flow
      * @param q_index Quadrature point index.
      */
     void
-    local_boundary_face_jacobian_kernel(dealii::FEFaceIntegrator<dim, dim + 2, number> &delta_phi_m,
-                                        const dealii::FEFaceIntegrator<dim, dim + 2, number> &phi_m,
+    local_boundary_face_jacobian_kernel(FEFaceIntegrator<dim, dim + 2, number>       &delta_phi_m,
+                                        const FEFaceIntegrator<dim, dim + 2, number> &phi_m,
                                         unsigned q_index) const;
 
     /**

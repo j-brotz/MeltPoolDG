@@ -181,14 +181,14 @@ namespace MeltPoolDG::Evaporation
     const ScratchData<dim, dim, number> &scratch_data;
     const std::function<const dealii::VectorizedArray<number> &(const unsigned int cell,
                                                                 const unsigned int q)>
-                                               get_viscosity;
-    const BlockVectorType                     &normal_vector;
-    const VectorType                          &heaviside;
-    const unsigned int                         normal_dof_idx;
-    const unsigned int                         ls_hanging_nodes_dof_idx;
-    const unsigned int                         velocity_quad_idx;
-    dealii::FECellIntegrator<dim, dim, number> normal_vals;
-    dealii::FECellIntegrator<dim, 1, number>   ls_vals;
+                                       get_viscosity;
+    const BlockVectorType             &normal_vector;
+    const VectorType                  &heaviside;
+    const unsigned int                 normal_dof_idx;
+    const unsigned int                 ls_hanging_nodes_dof_idx;
+    const unsigned int                 velocity_quad_idx;
+    FECellIntegrator<dim, dim, number> normal_vals;
+    FECellIntegrator<dim, 1, number>   ls_vals;
 
     // temporary quadrature point values
     dealii::Tensor<2, dim, dealii::VectorizedArray<number>> grad_u;
