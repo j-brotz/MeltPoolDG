@@ -117,7 +117,7 @@ namespace MeltPoolDG::Heat
             // ... and output the results to vtk files.
             output_results(false /* output_not_converged */);
 
-            if (simulation_case->parameters.amr.do_amr)
+            if (simulation_case->parameters.amr.do_amr and not time_iterator->is_finished())
               refine_mesh();
           }
       }
