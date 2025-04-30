@@ -10,6 +10,7 @@
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/application_base.hpp>
+#include <meltpooldg/core/material.hpp>
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
@@ -25,7 +26,6 @@
 #include <meltpooldg/phase_change/recoil_pressure_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/enum.hpp>
-#include <meltpooldg/utilities/material.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
 #include <meltpooldg/utilities/restart.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>

@@ -16,9 +16,9 @@
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/vector_operation.h>
 
+#include <meltpooldg/core/material.templates.hpp>
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
-#include <meltpooldg/utilities/material.templates.hpp>
 
 
 namespace MeltPoolDG::MeltPool

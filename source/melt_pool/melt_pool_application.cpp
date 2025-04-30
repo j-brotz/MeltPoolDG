@@ -37,6 +37,8 @@
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
 #include <meltpooldg/core/exceptions.hpp>
+#include <meltpooldg/core/material.templates.hpp>
+#include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
 #include <meltpooldg/heat/heat_cut_operation.hpp>
@@ -55,8 +57,6 @@
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/material.templates.hpp>
-#include <meltpooldg/utilities/material_data.hpp>
 #include <meltpooldg/utilities/restart.templates.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>

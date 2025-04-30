@@ -15,10 +15,10 @@
 #include <deal.II/matrix_free/tools.h>
 
 #include <meltpooldg/core/exceptions.hpp>
+#include <meltpooldg/core/material.templates.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/phase_change/evaporative_cooling.templates.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/material.templates.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>

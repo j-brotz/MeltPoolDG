@@ -13,6 +13,7 @@
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/core/boundary_conditions.hpp>
+#include <meltpooldg/core/material.hpp>
 #include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
@@ -21,7 +22,6 @@
 #include <meltpooldg/phase_change/evaporative_cooling.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
-#include <meltpooldg/utilities/material.hpp>
 
 #include <map>
 #include <memory>

@@ -1,4 +1,4 @@
-#include <meltpooldg/utilities/material.hpp>
+#include <meltpooldg/core/material.hpp>
 
 
 namespace MeltPoolDG

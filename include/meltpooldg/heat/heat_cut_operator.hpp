@@ -12,14 +12,14 @@
 
 #include <deal.II/non_matching/mapping_info.h>
 
+#include <meltpooldg/core/material.hpp>
+#include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/phase_change/evaporative_cooling.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
-#include <meltpooldg/utilities/material.hpp>
-#include <meltpooldg/utilities/material_data.hpp>
 
 #include <memory>
 #include <utility>

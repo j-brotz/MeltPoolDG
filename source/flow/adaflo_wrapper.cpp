@@ -18,12 +18,12 @@
 #  include <deal.II/numerics/data_component_interpretation.h>
 #  include <deal.II/numerics/vector_tools_interpolate.h>
 
+#  include <meltpooldg/core/material.templates.hpp>
 #  include <meltpooldg/flow/adaflo_wrapper.hpp>
 #  include <meltpooldg/utilities/constraints.hpp>
 #  include <meltpooldg/utilities/dof_monitor.hpp>
 #  include <meltpooldg/utilities/iteration_monitor.hpp>
 #  include <meltpooldg/utilities/journal.hpp>
-#  include <meltpooldg/utilities/material.templates.hpp>
 #  include <meltpooldg/utilities/scoped_name.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
 

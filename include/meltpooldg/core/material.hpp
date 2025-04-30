@@ -2,8 +2,8 @@
 
 #include <deal.II/base/vectorization.h>
 
+#include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
-#include <meltpooldg/utilities/material_data.hpp>
 
 #include <vector>
 

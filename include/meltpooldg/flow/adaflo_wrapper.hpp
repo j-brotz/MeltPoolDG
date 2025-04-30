@@ -16,12 +16,12 @@
 #  include <deal.II/lac/generic_linear_algebra.h>
 #  include <deal.II/lac/la_parallel_vector.h>
 
+#  include <meltpooldg/core/material.hpp>
 #  include <meltpooldg/core/parameters.hpp>
 #  include <meltpooldg/core/scratch_data.hpp>
 #  include <meltpooldg/core/simulation_base.hpp>
 #  include <meltpooldg/flow/flow_base.hpp>
 #  include <meltpooldg/post_processing/generic_data_out.hpp>
-#  include <meltpooldg/utilities/material.hpp>
 #  include <meltpooldg/utilities/time_iterator.hpp>
 
 #  include <adaflo/navier_stokes.h>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <meltpooldg/utilities/material.hpp>
+#include <meltpooldg/core/material.hpp>
 //
 #include <deal.II/base/exceptions.h>
 

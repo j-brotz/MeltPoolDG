@@ -1,4 +1,4 @@
-#include <meltpooldg/utilities/material_data.hpp>
+#include <meltpooldg/core/material_data.hpp>
 //
 #include <deal.II/base/exceptions.h>
 

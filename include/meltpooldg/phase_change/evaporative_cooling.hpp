@@ -2,9 +2,9 @@
 
 #include <deal.II/base/vectorization.h>
 
+#include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/phase_change/evaporation_model_recoil_pressure.hpp>
-#include <meltpooldg/utilities/material_data.hpp>
 
 #include <memory>
 

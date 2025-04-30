@@ -1,8 +1,8 @@
 #pragma once
 
+#include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/phase_change/evaporation_model_base.hpp>
-#include <meltpooldg/utilities/material_data.hpp>
 
 namespace MeltPoolDG::Evaporation
 {

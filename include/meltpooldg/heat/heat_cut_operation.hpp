@@ -11,6 +11,7 @@
 #include <deal.II/non_matching/mesh_classifier.h>
 
 #include <meltpooldg/core/boundary_conditions.hpp>
+#include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/core/periodic_boundary_conditions.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/cut/solution_transfer.hpp>
@@ -23,7 +24,6 @@
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
-#include <meltpooldg/utilities/material_data.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 

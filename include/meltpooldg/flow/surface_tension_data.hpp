@@ -2,9 +2,9 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
 #include <meltpooldg/utilities/enum.hpp>
-#include <meltpooldg/utilities/material_data.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
 #include <meltpooldg/utilities/time_stepping_data.hpp>
 

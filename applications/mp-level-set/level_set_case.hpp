@@ -1,10 +1,10 @@
 #pragma once
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
-#include <meltpooldg/utilities/material_data.hpp>
 
 namespace MeltPoolDG::LevelSet
 {

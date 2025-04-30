@@ -20,6 +20,7 @@
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
 #include <meltpooldg/core/exceptions.hpp>
+#include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/heat/heat_cut_operation.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
@@ -29,7 +30,6 @@
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/material_data.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <functional>
