@@ -1,0 +1,36 @@
+| current laser position: 0 0                                                                laser |
+| current laser intensity: 1                                                                 laser |
+|  #dofs T: 250                                                                      heat_transfer |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 1      t = 0.0000e+00 to 1.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| current laser position: 1.2e-06 0                                                          laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 3.52443e-01                newton_raphson_solver |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 2      t = 1.0000e-05 to 2.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| current laser position: 2.4e-06 0                                                          laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 3.54140e-01                newton_raphson_solver |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 3      t = 2.0000e-05 to 3.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| current laser position: 3.6e-06 0                                                          laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 3.55986e-01                newton_raphson_solver |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 4      t = 3.0000e-05 to 4.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| current laser position: 4.8e-06 0                                                          laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 3.57848e-01                newton_raphson_solver |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 5      t = 4.0000e-05 to 5.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| current laser position: 6e-06 0                                                            laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 3.60040e-01                newton_raphson_solver |
++--------------------------------------------------------------------------------------------------+
+|  end of simulation                                                                               |
++--------------------------------------------------------------------------------------------------+

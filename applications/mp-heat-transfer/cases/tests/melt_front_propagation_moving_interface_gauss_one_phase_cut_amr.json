@@ -26,7 +26,7 @@
   "heat": {
     "operator type": "cut",
     "cut": {
-      "two phase": "true",
+      "two phase": "false",
       "theta": "1",
       "stabilization": {
         "nitsche parameter": "500",
