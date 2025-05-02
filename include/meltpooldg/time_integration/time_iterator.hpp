@@ -2,8 +2,8 @@
 
 #include <deal.II/base/function_parser.h>
 
+#include <meltpooldg/time_integration/time_stepping_data.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
-#include <meltpooldg/utilities/time_stepping_data.hpp>
 
 namespace MeltPoolDG::TimeIntegration
 {

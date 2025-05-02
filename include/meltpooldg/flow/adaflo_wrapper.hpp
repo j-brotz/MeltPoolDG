@@ -22,7 +22,7 @@
 #  include <meltpooldg/core/simulation_base.hpp>
 #  include <meltpooldg/flow/flow_base.hpp>
 #  include <meltpooldg/post_processing/generic_data_out.hpp>
-#  include <meltpooldg/utilities/time_iterator.hpp>
+#  include <meltpooldg/time_integration/time_iterator.hpp>
 
 #  include <adaflo/navier_stokes.h>
 #  include <adaflo/parameters.h>

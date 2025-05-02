@@ -11,7 +11,7 @@
 #include <meltpooldg/level_set/helmholtz_DG_operator.hpp>
 #include <meltpooldg/level_set/normal_vector_data.hpp>
 #include <meltpooldg/level_set/normal_vector_operation_base.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 

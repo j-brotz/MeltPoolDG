@@ -14,7 +14,7 @@
 #include <meltpooldg/heat/laser_operation.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 
 #include <memory>
 

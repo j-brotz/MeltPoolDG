@@ -2,8 +2,8 @@
 
 #include <deal.II/dofs/dof_handler.h>
 
+#include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/restart_data.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <chrono>
 #include <filesystem>

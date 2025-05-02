@@ -25,10 +25,10 @@
 #include <meltpooldg/phase_change/melt_front_propagation.hpp>
 #include <meltpooldg/phase_change/recoil_pressure_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
 #include <meltpooldg/utilities/restart.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <functional>
 #include <memory>

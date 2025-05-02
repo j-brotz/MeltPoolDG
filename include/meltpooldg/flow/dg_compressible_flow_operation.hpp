@@ -25,8 +25,8 @@
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_base.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
 #include <meltpooldg/time_integration/time_integrator_base.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
 
 #include <memory>
 

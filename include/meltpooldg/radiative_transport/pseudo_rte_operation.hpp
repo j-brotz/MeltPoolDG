@@ -8,8 +8,8 @@
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/radiative_transport/pseudo_rte_operator.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 
 #include <memory>
 

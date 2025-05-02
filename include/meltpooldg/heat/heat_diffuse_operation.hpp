@@ -25,8 +25,8 @@
 #include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 
 #include <map>
 #include <memory>

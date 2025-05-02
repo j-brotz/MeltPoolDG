@@ -3,7 +3,7 @@
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
-#include <meltpooldg/utilities/time_stepping_data.hpp>
+#include <meltpooldg/time_integration/time_stepping_data.hpp>
 
 namespace MeltPoolDG::RadiativeTransport
 {

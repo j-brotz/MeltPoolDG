@@ -7,7 +7,7 @@
 #include <meltpooldg/level_set/normal_vector_operation.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
 
 namespace MeltPoolDG::LevelSet
 {

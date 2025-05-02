@@ -8,10 +8,10 @@
 #include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
 #include <meltpooldg/time_integration/time_integrator_base.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
 
 #include <meltpooldg/utilities/matrix_type_wrapper.h>
 

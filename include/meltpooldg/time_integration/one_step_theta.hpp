@@ -6,9 +6,9 @@
 
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
 #include <meltpooldg/time_integration/time_integrator_base.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
 
 #include <meltpooldg/utilities/matrix_type_wrapper.h>
 

@@ -5,8 +5,8 @@
 #include <meltpooldg/level_set/normal_vector_DG_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_DG_operator.hpp>
 #include <meltpooldg/level_set/reinitialization_operation_base.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 
 
 

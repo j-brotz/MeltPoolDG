@@ -5,8 +5,8 @@
 #pragma once
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <meltpooldg/time_integration/solution_history.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
 
 #include <functional>
 

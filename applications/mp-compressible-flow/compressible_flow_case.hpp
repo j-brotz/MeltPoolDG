@@ -19,7 +19,7 @@
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
-#include <meltpooldg/utilities/time_stepping_data.hpp>
+#include <meltpooldg/time_integration/time_stepping_data.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <string>

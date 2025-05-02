@@ -9,7 +9,7 @@
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 

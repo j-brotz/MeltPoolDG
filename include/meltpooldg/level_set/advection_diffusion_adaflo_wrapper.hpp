@@ -8,7 +8,7 @@
 #  include <meltpooldg/core/simulation_base.hpp>
 #  include <meltpooldg/level_set/advection_diffusion_operation_base.hpp>
 #  include <meltpooldg/post_processing/generic_data_out.hpp>
-#  include <meltpooldg/utilities/time_iterator.hpp>
+#  include <meltpooldg/time_integration/time_iterator.hpp>
 
 #  include <adaflo/diagonal_preconditioner.h>
 #  include <adaflo/level_set_okz_advance_concentration.h>

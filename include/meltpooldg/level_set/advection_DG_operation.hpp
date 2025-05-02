@@ -10,11 +10,11 @@
 #include <meltpooldg/level_set/advection_diffusion_operator.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
 #include <meltpooldg/time_integration/time_integrator_base.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 
 
 namespace MeltPoolDG::LevelSet

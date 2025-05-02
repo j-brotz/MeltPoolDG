@@ -2,9 +2,9 @@
 
 #include <meltpooldg/level_set/reinitialization_DG_diffusion_operator.hpp>
 #include <meltpooldg/level_set/reinitialization_DG_grad_operator.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
 #include <meltpooldg/time_integration/time_integrator_base.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
 
 /**
  * For implementation details see

@@ -1,6 +1,6 @@
 #pragma once
-#include <meltpooldg/utilities/solution_history.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG

@@ -3,9 +3,9 @@
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/timer.h>
 
+#include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/profiling_data.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <chrono>
 

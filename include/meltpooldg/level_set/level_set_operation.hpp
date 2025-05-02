@@ -12,7 +12,7 @@
 #include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/level_set/reinitialization_operation_base.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 
 
 namespace MeltPoolDG::LevelSet

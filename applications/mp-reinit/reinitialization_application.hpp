@@ -11,7 +11,7 @@
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/level_set/reinitialization_operation_base.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 
 #include <memory>
 #include <string>
