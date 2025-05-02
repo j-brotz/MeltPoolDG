@@ -1,5 +1,22 @@
 #pragma once
 
+#include <deal.II/base/function.h>
+#include <deal.II/base/point.h>
+#include <deal.II/base/types.h>
+
+#include <deal.II/grid/tria.h>
+
+#include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
+
+#include <meltpooldg/post_processing/generic_data_out.hpp>
+
+#include <map>
+#include <memory>
+#include <tuple>
+#include <vector>
+
+
 namespace MeltPoolDG::LevelSet
 {
   template <int dim, typename number>
@@ -39,7 +56,8 @@ namespace MeltPoolDG::LevelSet
     finish_time_advance() = 0;
 
     virtual void
-    set_level_set_user_rhs(const VectorType &level_set_user_rhs) = 0;
+    set_level_set_user_rhs(
+      const dealii::LinearAlgebra::distributed::Vector<number> &level_set_user_rhs) = 0;
 
     virtual void
     update_normal_vector() = 0;

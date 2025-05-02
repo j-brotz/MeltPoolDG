@@ -17,9 +17,7 @@
 #include <deal.II/grid/grid_tools_geometry.h>
 #include <deal.II/grid/tria.h>
 
-#include <deal.II/lac/block_vector_base.h>
 #include <deal.II/lac/full_matrix.h>
-#include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <deal.II/matrix_free/evaluation_flags.h>
@@ -31,78 +29,8 @@
 #include <ios>
 #include <sstream>
 #include <string>
-#include <type_traits>
 #include <unordered_set>
 #include <vector>
-
-namespace dealii
-{
-  // note: the content of this namespace will be part of deal.II
-  namespace internal
-  {
-    template <typename VectorType,
-              std::enable_if_t<!IsBlockVector<VectorType>::value, VectorType> * = nullptr>
-    unsigned int
-    n_blocks(const VectorType &)
-    {
-      return 1;
-    }
-
-
-
-    template <typename VectorType,
-              std::enable_if_t<IsBlockVector<VectorType>::value, VectorType> * = nullptr>
-    unsigned int
-    n_blocks(const VectorType &vector)
-    {
-      return vector.n_blocks();
-    }
-
-
-
-    template <typename VectorType,
-              std::enable_if_t<!IsBlockVector<VectorType>::value, VectorType> * = nullptr>
-    VectorType &
-    block(VectorType &vector, const unsigned int b)
-    {
-      AssertDimension(b, 0);
-      (void)b;
-      return vector;
-    }
-
-
-
-    template <typename VectorType,
-              std::enable_if_t<IsBlockVector<VectorType>::value, VectorType> * = nullptr>
-    typename VectorType::BlockType &
-    block(VectorType &vector, const unsigned int b)
-    {
-      return vector.block(b);
-    }
-
-
-
-    template <typename VectorType,
-              std::enable_if_t<!IsBlockVector<VectorType>::value, VectorType> * = nullptr>
-    const VectorType &
-    block(const VectorType &vector, const unsigned int b)
-    {
-      AssertDimension(b, 0);
-      (void)b;
-      return vector;
-    }
-
-
-
-    template <typename VectorType,
-              std::enable_if_t<IsBlockVector<VectorType>::value, VectorType> * = nullptr>
-    const typename VectorType::BlockType &
-    block(const VectorType &vector, const unsigned int b)
-    {
-      return vector.block(b);
-    }
-  } // namespace internal
-} // namespace dealii
 
 namespace MeltPoolDG
 {
@@ -331,45 +259,6 @@ namespace MeltPoolDG
                                           1. / dim))) *
                                  1e-3,
                                1e-12));
-    }
-
-    /*
-     * Compute a linearly extrapolated initial guess value (predictor) for the
-     * Newton-Raphson solver at time "t_n+1" from the old solution @param old_vec
-     * computed at time "t_n" and the old old solution @param old_old_vec computed
-     * at time "t_n-1". In addition the @param current_time_increment
-     * dt_n+1 = t_n+1 - t_n and the @param old_time_incrementdt_n = t_n-t_n-1 have
-     * to be provided.
-     *
-     * The predictor is computed as follows
-     *
-     *                    dt_n+1
-     *  q_n+1^(0) = q_n + ------ * (q_n-q_n-1)
-     *                    dt_n
-     *
-     */
-    template <typename VectorType, typename number>
-    void
-    compute_linear_predictor(const VectorType &old_vec,
-                             const VectorType &old_old_vec,
-                             VectorType       &predictor,
-                             const number      current_time_increment,
-                             const number      old_time_increment)
-    {
-      if (std::abs(old_time_increment) < 1e-12)
-        {
-          predictor = old_vec;
-          return;
-        }
-
-      const number fraction = current_time_increment / old_time_increment;
-
-      for (unsigned int c = 0; c < dealii::internal::n_blocks(predictor); ++c)
-        DEAL_II_OPENMP_SIMD_PRAGMA
-      for (unsigned int i = 0; i < dealii::internal::block(predictor, c).locally_owned_size(); ++i)
-        dealii::internal::block(predictor, c).local_element(i) =
-          (fraction + 1.0) * dealii::internal::block(old_vec, c).local_element(i) -
-          fraction * dealii::internal::block(old_old_vec, c).local_element(i);
     }
 
     /**

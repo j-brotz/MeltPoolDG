@@ -1,7 +1,17 @@
 #pragma once
+
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/numbers.h>
+
+#include <deal.II/lac/full_matrix.h>
+
+#include <meltpooldg/linear_algebra/predictor_data.hpp>
+#include <meltpooldg/linear_algebra/predictor_linear.hpp>
 #include <meltpooldg/time_integration/solution_history.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+
+#include <vector>
+
 
 namespace MeltPoolDG
 {
@@ -115,12 +125,12 @@ namespace MeltPoolDG
         }
       else if (data.type == PredictorType::linear_extrapolation)
         {
-          UtilityFunctions::compute_linear_predictor(
-            solution_history.get_current_solution(),
-            solution_history.get_recent_old_solution(),
-            solution,
-            time_iterator ? time_iterator->get_current_time_increment() : 1.0,
-            time_iterator ? time_iterator->get_old_time_increment() : 1.0);
+          compute_linear_predictor(solution_history.get_current_solution(),
+                                   solution_history.get_recent_old_solution(),
+                                   solution,
+                                   time_iterator ? time_iterator->get_current_time_increment() :
+                                                   1.0,
+                                   time_iterator ? time_iterator->get_old_time_increment() : 1.0);
           solution.update_ghost_values();
         }
       else if (data.type == PredictorType::least_squares_projection)
