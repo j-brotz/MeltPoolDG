@@ -47,17 +47,19 @@ namespace MeltPoolDG::DoFTools
                 do_sort_lexicographically ? lexicographic_ls[i] : i, p);
           }
       }
-    else if (const dealii::FE_Q_DG0<dim> *fe_1 =
+    else if (const dealii::FE_Q_DG0<dim> *fe_1_dq0 =
                dynamic_cast<const dealii::FE_Q_DG0<dim> *>(&dof_handler_1.get_fe().base_element(0)))
       {
-        const std::vector<unsigned int> lexicographic_p = fe_1->get_poly_space_numbering_inverse();
+        const std::vector<unsigned int> lexicographic_p =
+          fe_1_dq0->get_poly_space_numbering_inverse();
 
         // Loop over all support points except the one for the discontinuous
         // shape function in the middle of the cell (dofs_per_cell - 1).
-        for (unsigned int j = 0; j < fe_1->dofs_per_cell - 1; ++j)
+        for (unsigned int j = 0; j < fe_1_dq0->dofs_per_cell - 1; ++j)
           {
             const dealii::Point<dim> p =
-              fe_1->get_unit_support_points()[do_sort_lexicographically ? lexicographic_p[j] : j];
+              fe_1_dq0
+                ->get_unit_support_points()[do_sort_lexicographically ? lexicographic_p[j] : j];
             for (unsigned int i = 0; i < fe_2->dofs_per_cell; ++i)
               dof_interpolation_matrix(j, i) = dof_handler_2.get_fe().shape_value(
                 do_sort_lexicographically ? lexicographic_ls[i] : i, p);

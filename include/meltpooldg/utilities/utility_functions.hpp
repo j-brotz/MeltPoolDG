@@ -31,7 +31,7 @@ namespace MeltPoolDG::UtilityFunctions
 
     while (it_a != a.end())
       {
-        if (seen.find(*it_a) != seen.end())
+        if (seen.contains(*it_a))
           {
             // If element is duplicate, remove it from both vectors
             it_a = a.erase(it_a);

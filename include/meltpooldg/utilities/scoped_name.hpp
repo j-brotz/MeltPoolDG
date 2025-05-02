@@ -13,7 +13,7 @@ namespace MeltPoolDG
   class ScopedName
   {
   public:
-    ScopedName(const std::string name)
+    ScopedName(const std::string &name)
       : name(name)
     {
       path.push_back(name);

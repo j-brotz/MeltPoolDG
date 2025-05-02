@@ -23,7 +23,7 @@ namespace MeltPoolDG::AMR
   /**
    * TODO document what needs to be done in each of the lambdas
    */
-  template <int dim, typename VectorType, typename number = VectorType::value_type>
+  template <int dim, typename VectorType, typename number = typename VectorType::value_type>
   void
   refine_grid(
     const std::function<bool(dealii::Triangulation<dim> &)> &mark_cells_for_refinement,
