@@ -42,6 +42,7 @@
 #include <deal.II/non_matching/mesh_classifier.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/utilities/triangulation_type.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <algorithm>
@@ -905,8 +906,7 @@ namespace MeltPoolDG::LevelSet::Tools
       level_set_heaviside.zero_out_ghost_values();
 
     // communicate local data to ghost cells
-    if (get_triangulation_type(scratch_data.get_triangulation()) !=
-        dealii::TriangulationType::serial)
+    if (get_triangulation_type(scratch_data.get_triangulation()) != TriangulationType::serial)
       {
         using active_cell_iterator = typename dealii::Triangulation<dim>::active_cell_iterator;
         auto pack                  = [](const active_cell_iterator &cell) -> unsigned int {
