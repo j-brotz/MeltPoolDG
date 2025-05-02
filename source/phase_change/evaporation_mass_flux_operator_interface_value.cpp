@@ -5,6 +5,7 @@
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/phase_change/evaporation_mass_flux_operator_interface_value.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::Evaporation
 {

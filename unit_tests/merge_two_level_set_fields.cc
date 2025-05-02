@@ -179,21 +179,21 @@ main(int argc, char *argv[])
     auto merged_level_set_union =
       LevelSet::Tools::merge_two_indicator_fields(level_set_1,
                                                   level_set_2,
-                                                  BooleanType::Union,
+                                                  LevelSet::Tools::BooleanType::Union,
                                                   level_set_interior_value,
                                                   level_set_exterior_value);
 
     auto merged_level_set_intersect =
       LevelSet::Tools::merge_two_indicator_fields(level_set_1,
                                                   level_set_2,
-                                                  BooleanType::Intersection,
+                                                  LevelSet::Tools::BooleanType::Intersection,
                                                   level_set_interior_value,
                                                   level_set_exterior_value);
 
     auto merged_level_set_subtract =
       LevelSet::Tools::merge_two_indicator_fields(level_set_1,
                                                   level_set_2,
-                                                  BooleanType::Subtraction,
+                                                  LevelSet::Tools::BooleanType::Subtraction,
                                                   level_set_interior_value,
                                                   level_set_exterior_value);
 

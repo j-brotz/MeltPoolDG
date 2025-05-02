@@ -42,8 +42,8 @@
 #include <deal.II/non_matching/mesh_classifier.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/utilities/generate_points_along_vector.hpp>
 #include <meltpooldg/utilities/triangulation_type.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -100,6 +100,13 @@ namespace dealii::GridGenerator
 
 namespace MeltPoolDG::LevelSet::Tools
 {
+  enum BooleanType
+  {
+    Union,
+    Intersection,
+    Subtraction
+  };
+
   /**
    * Interpolate between @p val1 and @p val2 with the following function
    *
@@ -820,12 +827,12 @@ namespace MeltPoolDG::LevelSet::Tools
 
           const auto unit_normal = phi_normal.get_value(p_index);
 
-          UtilityFunctions::generate_points_along_vector<dim>(points_normal_to_interface,
-                                                              real_points[p_index],
-                                                              unit_normal,
-                                                              max_distance_per_side,
-                                                              n_inc_per_side,
-                                                              bidirectional);
+          Utility::generate_points_along_vector<dim>(points_normal_to_interface,
+                                                     real_points[p_index],
+                                                     unit_normal,
+                                                     max_distance_per_side,
+                                                     n_inc_per_side,
+                                                     bidirectional);
 
           // check if point is outside domain and if so then project it back to
           // the domain
