@@ -10,6 +10,8 @@
 
 #include <deal.II/distributed/tria.h>
 
+#include <deal.II/fe/fe_q.h>
+
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/tria.h>
 
@@ -18,7 +20,6 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
 #include <iostream>
@@ -251,12 +252,12 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
       exact_solution.set_time(generic_data_out.get_time());
 
       const auto n_q_points = 50; // Number is high to get accurate error even on a coarse mesh
-      FE_Q<dim>  fe(this->parameters.advec_diff.fe.degree);
+      dealii::FE_Q<dim> fe(this->parameters.advec_diff.fe.degree);
 
-      QGauss<dim>   quadrature(n_q_points);
-      FEValues<dim> fe_values(fe,
-                              quadrature,
-                              update_values | update_JxW_values | update_quadrature_points);
+      dealii::QGauss<dim>   quadrature(n_q_points);
+      dealii::FEValues<dim> fe_values(fe,
+                                      quadrature,
+                                      update_values | update_JxW_values | update_quadrature_points);
 
       std::vector<number> phi_at_q(QGauss<dim>(n_q_points).size());
 
