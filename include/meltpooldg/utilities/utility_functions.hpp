@@ -34,8 +34,6 @@
 
 namespace MeltPoolDG
 {
-  using VectorType = dealii::LinearAlgebra::distributed::Vector<double>;
-
   enum BooleanType
   {
     Union,

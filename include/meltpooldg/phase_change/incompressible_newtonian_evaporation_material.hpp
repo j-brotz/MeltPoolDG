@@ -2,6 +2,8 @@
 
 #include <deal.II/base/tensor_accessors.h>
 
+#include <deal.II/lac/la_parallel_vector.h>
+
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/flow/incompressible_flow_material_base.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -37,7 +39,7 @@ namespace MeltPoolDG::Evaporation
       const std::function<const dealii::VectorizedArray<number>
                             &(const unsigned int cell, const unsigned int q)> get_viscosity,
       const BlockVectorType                                                  &normal_vector,
-      const VectorType                                                       &heaviside,
+      const dealii::LinearAlgebra::distributed::Vector<number>               &heaviside,
       const unsigned int                                                      normal_dof_idx,
       const unsigned int ls_hanging_nodes_dof_idx,
       const unsigned int velocity_quad_idx)
@@ -181,14 +183,14 @@ namespace MeltPoolDG::Evaporation
     const ScratchData<dim, dim, number> &scratch_data;
     const std::function<const dealii::VectorizedArray<number> &(const unsigned int cell,
                                                                 const unsigned int q)>
-                                       get_viscosity;
-    const BlockVectorType             &normal_vector;
-    const VectorType                  &heaviside;
-    const unsigned int                 normal_dof_idx;
-    const unsigned int                 ls_hanging_nodes_dof_idx;
-    const unsigned int                 velocity_quad_idx;
-    FECellIntegrator<dim, dim, number> normal_vals;
-    FECellIntegrator<dim, 1, number>   ls_vals;
+                                                              get_viscosity;
+    const BlockVectorType                                    &normal_vector;
+    const dealii::LinearAlgebra::distributed::Vector<number> &heaviside;
+    const unsigned int                                        normal_dof_idx;
+    const unsigned int                                        ls_hanging_nodes_dof_idx;
+    const unsigned int                                        velocity_quad_idx;
+    FECellIntegrator<dim, dim, number>                        normal_vals;
+    FECellIntegrator<dim, 1, number>                          ls_vals;
 
     // temporary quadrature point values
     dealii::Tensor<2, dim, dealii::VectorizedArray<number>> grad_u;
