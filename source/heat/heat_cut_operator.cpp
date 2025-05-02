@@ -16,8 +16,8 @@
 #include <meltpooldg/core/material.templates.hpp>
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/phase_change/evaporative_cooling.templates.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <algorithm>
 #include <functional>

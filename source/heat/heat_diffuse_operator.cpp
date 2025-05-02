@@ -18,6 +18,7 @@
 #include <meltpooldg/core/material.templates.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/phase_change/evaporative_cooling.templates.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/dof_tools.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
@@ -491,7 +492,8 @@ namespace MeltPoolDG::Heat
             auto val_grad = conductivity * T_new_eval.get_gradient(q);
 
             if (velocity)
-              val += rho_cp * scalar_product(T_new_eval.get_gradient(q), vel_eval.get_value(q));
+              val +=
+                rho_cp * dealii::scalar_product(T_new_eval.get_gradient(q), vel_eval.get_value(q));
 
             if (mass_flux_eval)
               {
