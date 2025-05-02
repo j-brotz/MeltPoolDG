@@ -12,7 +12,7 @@
 #include <deal.II/grid/tria.h>
 
 #include <meltpooldg/core/case_registration.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 
 #include <cmath>
 #include <vector>
@@ -52,8 +52,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       const auto z = p[dim - 1];
-      return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(z_level - z,
-                                                                                     eps);
+      return CharacteristicFunctions::tanh_characteristic_function(z_level - z, eps);
     }
 
   private:
@@ -75,7 +74,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       const auto z = p[dim - 1];
-      return UtilityFunctions::CharacteristicFunctions::heaviside(z_level - z, eps);
+      return CharacteristicFunctions::heaviside(z_level - z, eps);
     }
 
   private:

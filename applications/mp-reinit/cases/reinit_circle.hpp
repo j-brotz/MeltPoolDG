@@ -14,7 +14,7 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/core/parameters.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 
 #include <cmath>
 
@@ -36,7 +36,7 @@ namespace MeltPoolDG::Simulation::ReinitCircle
     number
     value(const dealii::Point<dim, number> &p, const unsigned int /*component*/) const override
     {
-      return UtilityFunctions::CharacteristicFunctions::sgn(-distance_sphere.value(p));
+      return CharacteristicFunctions::sgn(-distance_sphere.value(p));
     }
 
   private:
@@ -56,8 +56,8 @@ namespace MeltPoolDG::Simulation::ReinitCircle
     number
     value(const dealii::Point<dim, number> &p, const unsigned int /*component*/) const override
     {
-      return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-        -distance_sphere.value(p), eps_interface);
+      return CharacteristicFunctions::tanh_characteristic_function(-distance_sphere.value(p),
+                                                                   eps_interface);
     }
 
   private:

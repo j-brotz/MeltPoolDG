@@ -18,8 +18,8 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 #include <meltpooldg/utilities/enum.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
 #include <memory>
@@ -59,12 +59,11 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
       switch (level_set_type)
         {
           case LevelSetType::level_set:
-            return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-              signed_distance, eps);
+            return CharacteristicFunctions::tanh_characteristic_function(signed_distance, eps);
           case LevelSetType::smooth_heaviside:
-            return UtilityFunctions::CharacteristicFunctions::heaviside(signed_distance, eps);
+            return CharacteristicFunctions::heaviside(signed_distance, eps);
           case LevelSetType::heaviside:
-            return UtilityFunctions::CharacteristicFunctions::sgn(signed_distance);
+            return CharacteristicFunctions::sgn(signed_distance);
           case LevelSetType::signed_distance:
             return signed_distance;
           default:

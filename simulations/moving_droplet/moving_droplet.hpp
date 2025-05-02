@@ -6,7 +6,7 @@
 
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 
 #include <cmath>
 #include <iostream>
@@ -48,8 +48,7 @@ namespace MeltPoolDG::Simulation::MovingDroplet
     double
     value(const Point<dim> &p, const unsigned int /* component */) const override
     {
-      return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-        -distance.value(p), eps);
+      return CharacteristicFunctions::tanh_characteristic_function(-distance.value(p), eps);
     }
 
   private:

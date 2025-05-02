@@ -17,7 +17,7 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/level_set/level_set_tools.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 
 #include <iostream>
 
@@ -40,7 +40,7 @@ public:
   {
     (void)component;
 
-    return UtilityFunctions::CharacteristicFunctions::sgn(-sphere.value(p));
+    return CharacteristicFunctions::sgn(-sphere.value(p));
   }
 
   const Functions::SignedDistance::Sphere<dim> sphere;
@@ -60,7 +60,7 @@ public:
   {
     (void)component;
 
-    return UtilityFunctions::CharacteristicFunctions::sgn(sphere.value(p));
+    return CharacteristicFunctions::sgn(sphere.value(p));
   }
 
   Point<dim>                                   center;
@@ -82,8 +82,7 @@ public:
   {
     (void)component;
 
-    return UtilityFunctions::CharacteristicFunctions::heaviside(
-      UtilityFunctions::CharacteristicFunctions::sgn(-sphere.value(p)), 0);
+    return CharacteristicFunctions::heaviside(CharacteristicFunctions::sgn(-sphere.value(p)), 0);
   }
 
   const Functions::SignedDistance::Sphere<dim> sphere;
@@ -103,8 +102,7 @@ public:
   {
     (void)component;
 
-    return UtilityFunctions::CharacteristicFunctions::heaviside(
-      -UtilityFunctions::CharacteristicFunctions::sgn(-sphere.value(p)), 0);
+    return CharacteristicFunctions::heaviside(-CharacteristicFunctions::sgn(-sphere.value(p)), 0);
   }
 
   const Functions::SignedDistance::Sphere<dim> sphere;
@@ -124,7 +122,7 @@ public:
   {
     (void)component;
 
-    return 5 * UtilityFunctions::CharacteristicFunctions::sgn(-sphere.value(p)) + 1.0;
+    return 5 * CharacteristicFunctions::sgn(-sphere.value(p)) + 1.0;
   }
 
   Point<dim>                                   center;

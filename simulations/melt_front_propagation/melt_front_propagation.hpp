@@ -28,6 +28,7 @@
 // MeltPoolDG
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 
 
 /**
@@ -65,8 +66,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       const auto z = p[dim - 1];
-      return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(z_level - z,
-                                                                                     eps);
+      return CharacteristicFunctions::tanh_characteristic_function(z_level - z, eps);
     }
 
   private:
@@ -88,7 +88,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       const auto z = p[dim - 1];
-      return UtilityFunctions::CharacteristicFunctions::heaviside(z_level - z, eps);
+      return CharacteristicFunctions::heaviside(z_level - z, eps);
     }
 
   private:

@@ -17,9 +17,11 @@
 #include <meltpooldg/level_set/reinitialization_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/level_set/utilities.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
+
 
 namespace MeltPoolDG::LevelSet
 {
@@ -575,8 +577,8 @@ namespace MeltPoolDG::LevelSet
               {
                 multiplicity_local[q] = 1;
                 level_set_local[q] =
-                  UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-                    distance_at_q[q], epsilon_cell);
+                  CharacteristicFunctions::tanh_characteristic_function(distance_at_q[q],
+                                                                        epsilon_cell);
               }
             scratch_data.get_constraint(ls_dof_idx)
               .distribute_local_to_global(level_set_local, local_dof_indices, get_level_set());

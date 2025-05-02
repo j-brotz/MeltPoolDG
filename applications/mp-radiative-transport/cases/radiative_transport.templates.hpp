@@ -16,7 +16,7 @@
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/heat/laser_intensity_profiles.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -47,7 +47,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
         {
           const auto y            = p[dim - 1];
           const auto current_time = this->get_time();
-          return UtilityFunctions::CharacteristicFunctions::heaviside(
+          return CharacteristicFunctions::heaviside(
             level +
               interface_case_info.first *
                 (current_time < interface_case_info.second ? current_time :
@@ -61,7 +61,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
           // say we inherit from a straight interface case
           const auto y = p[dim - 1];
 
-          number straight_value = UtilityFunctions::CharacteristicFunctions::heaviside(
+          number straight_value = CharacteristicFunctions::heaviside(
             level - y,
             eps); // 0 side of H() stands for gas, 1 side of H() stands for liquid
 
@@ -72,7 +72,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
           const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere(
             sphere_center, interface_case_info.second);
           number powder_particle_value =
-            UtilityFunctions::CharacteristicFunctions::heaviside(-distance_sphere.value(p), eps);
+            CharacteristicFunctions::heaviside(-distance_sphere.value(p), eps);
           return std::max(straight_value, powder_particle_value);
         }
       else

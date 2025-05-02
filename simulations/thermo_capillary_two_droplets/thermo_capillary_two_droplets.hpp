@@ -17,7 +17,7 @@
 
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 
 #include <cmath>
 #include <memory>
@@ -131,11 +131,9 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
     value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
       if ((p - center1).norm() < (p - center2).norm()) // closer to first droplet center
-        return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          -sphere1.value(p), eps);
+        return CharacteristicFunctions::tanh_characteristic_function(-sphere1.value(p), eps);
       else // closer to second droplet center
-        return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          -sphere2.value(p), eps);
+        return CharacteristicFunctions::tanh_characteristic_function(-sphere2.value(p), eps);
     }
 
     const double                                         eps;

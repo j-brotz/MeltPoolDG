@@ -33,7 +33,7 @@
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/characteristic_numbers.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 
 #include <cmath>
 #include <fstream>
@@ -111,8 +111,9 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     double
     value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
-      return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-        factor * distance_sphere.value(p), eps);
+      return CharacteristicFunctions::tanh_characteristic_function(factor *
+                                                                     distance_sphere.value(p),
+                                                                   eps);
     }
 
   private:

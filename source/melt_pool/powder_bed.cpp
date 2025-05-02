@@ -2,13 +2,13 @@
 #include <deal.II/base/exceptions.h>
 
 #include <meltpooldg/melt_pool/powder_bed.hpp>
-
-#include <boost/geometry/geometries/concepts/point_concept.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 
 #include <algorithm>
 #include <filesystem>
 #include <iterator>
 #include <sstream>
+
 
 namespace MeltPoolDG::MeltPool
 {
@@ -85,10 +85,9 @@ namespace MeltPoolDG::MeltPool
     switch (level_set_type)
       {
         case LevelSetType::level_set:
-          return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-            signed_distance, eps);
+          return CharacteristicFunctions::tanh_characteristic_function(signed_distance, eps);
         case LevelSetType::heaviside:
-          return UtilityFunctions::CharacteristicFunctions::heaviside(signed_distance, eps);
+          return CharacteristicFunctions::heaviside(signed_distance, eps);
         case LevelSetType::signed_distance:
           return signed_distance;
         default:

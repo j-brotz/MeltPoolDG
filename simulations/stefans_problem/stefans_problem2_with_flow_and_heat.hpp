@@ -15,7 +15,7 @@
 
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 
 #include <memory>
 #include <string>
@@ -47,7 +47,7 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
     double
     value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
-      return UtilityFunctions::CharacteristicFunctions::sgn(-signed_distance.value(p));
+      return CharacteristicFunctions::sgn(-signed_distance.value(p));
     }
 
     dealii::Functions::SignedDistance::Rectangle<dim> signed_distance;
