@@ -388,8 +388,10 @@ namespace MeltPoolDG::Heat
           data.emplace_back(&dof_handler, [&](std::vector<VectorType *> &vectors) {
             heat_operation->attach_vectors(vectors);
           });
-          data.emplace_back(&dof_handler_level_set, [&](std::vector<VectorType *> &vectors) {
-            vectors.push_back(&level_set);
+          data.emplace_back(&dof_handler_level_set, [&](std::vector<VectorType *> &) {
+            // We must attach the level set dof handler for CutUtil::refine_grid() but we don't
+            // attach any vectors since after AMR, they are interpolated from the field function
+            // anyway.
           });
           if (laser_operation)
             laser_operation->attach_vectors(data);
@@ -574,7 +576,7 @@ namespace MeltPoolDG::Heat
         mark_cells_for_refinement,
         attach_vectors,
         post,
-        [this]() { this->setup_dof_system(); },
+        [this] { this->setup_dof_system(); },
         simulation_case->parameters.amr,
         *simulation_case->triangulation,
         time_iterator->get_current_time_step_number());
