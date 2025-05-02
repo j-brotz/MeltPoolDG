@@ -103,7 +103,7 @@ namespace MeltPoolDG::LevelSet
                                                    scratch_data->get_pcout(2));
 
     // initialize the time iterator
-    time_iterator = std::make_unique<TimeIterator<number>>(param.time_stepping);
+    time_iterator = std::make_unique<TimeIntegration::TimeIterator<number>>(param.time_stepping);
 
     // initialize the reinitialization operation class
     if (param.reinit.implementation == "meltpooldg")

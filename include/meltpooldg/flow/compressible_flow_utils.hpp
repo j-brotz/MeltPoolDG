@@ -154,7 +154,7 @@ namespace MeltPoolDG::Flow
 
     dealii::AlignedVector<dealii::VectorizedArray<number>> interior_penalty_parameter;
 
-    ::TimeIntegration::SolutionHistory<VectorType, number> solution_history;
+    TimeIntegration::SolutionHistory<VectorType> solution_history;
 
     std::unique_ptr<dealii::Function<dim>> body_force;
   };

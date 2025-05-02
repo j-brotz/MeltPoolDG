@@ -846,7 +846,7 @@ namespace MeltPoolDG::MeltPool
       }
 
     // initialize the time stepping scheme
-    time_iterator = std::make_shared<TimeIterator<number>>(param.time_stepping);
+    time_iterator = std::make_shared<TimeIntegration::TimeIterator<number>>(param.time_stepping);
 
     if (application_specific_parameters.mp_heat_up.time_step_size > 0)
       time_iterator->set_current_time_increment(

@@ -267,7 +267,7 @@ namespace MeltPoolDG::LevelSet
     const auto                      &matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, 1, number> level_set_vals(matrix_free, ls_dof_idx, curv_quad_idx);
 
-    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+    unsigned int old_cell_index = dealii::numbers::invalid_unsigned_int;
 
     // compute matrix (only cell contributions)
     MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
@@ -300,7 +300,7 @@ namespace MeltPoolDG::LevelSet
     const auto                      &matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, 1, number> level_set_vals(matrix_free, ls_dof_idx, curv_quad_idx);
 
-    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+    unsigned int old_cell_index = dealii::numbers::invalid_unsigned_int;
 
     if (solution_level_set)
       solution_level_set->update_ghost_values();

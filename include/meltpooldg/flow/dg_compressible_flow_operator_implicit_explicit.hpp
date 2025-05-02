@@ -61,9 +61,9 @@ namespace MeltPoolDG::Flow
      * @throws If the time integrator type in the time integrator data is not an implicit-explicit
      * time integrator.
      */
-    std::unique_ptr<TimeIntegratorBase<number>>
+    std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>
     make_application_specific_time_integrator(
-      const TimeIntegratorData<number> &time_integrator_data) override;
+      const TimeIntegration::TimeIntegratorData<number> &time_integrator_data) override;
 
     /**
      * Local cell operations at the given quadrature point for computing the jacobian.

@@ -30,10 +30,11 @@
 namespace MeltPoolDG::Flow
 {
   template <int dim, typename number>
-  AdafloWrapper<dim, number>::AdafloWrapper(ScratchData<dim, dim, number>             &scratch_data,
-                                            std::shared_ptr<MeltPoolCase<dim, number>> base_in,
-                                            const TimeIterator<number> &time_iterator,
-                                            const bool                  do_evaporative_mass_flux)
+  AdafloWrapper<dim, number>::AdafloWrapper(
+    ScratchData<dim, dim, number>               &scratch_data,
+    std::shared_ptr<MeltPoolCase<dim, number>>   base_in,
+    const TimeIntegration::TimeIterator<number> &time_iterator,
+    const bool                                   do_evaporative_mass_flux)
     : scratch_data(scratch_data)
     , timer(std::cout, dealii::TimerOutput::never, dealii::TimerOutput::wall_times)
     , adaflo_params(base_in->parameters.adaflo_params.get_parameters())

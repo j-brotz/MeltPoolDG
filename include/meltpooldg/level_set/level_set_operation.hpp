@@ -31,7 +31,7 @@ namespace MeltPoolDG::LevelSet
     const ScratchData<dim, dim, number> &scratch_data;
 
     // Time stepping of the overall problem
-    const TimeIterator<number> &time_stepping;
+    const TimeIntegration::TimeIterator<number> &time_stepping;
     /*
      *  The following objects are the operations, which are performed for solving the
      *  level set equation.
@@ -56,7 +56,7 @@ namespace MeltPoolDG::LevelSet
      *  equation, which is solved up to quasi-steady state. Thus a time iterator is
      *  needed.
      */
-    TimeIterator<number> reinit_time_iterator;
+    TimeIntegration::TimeIterator<number> reinit_time_iterator;
 
     bool ready_for_time_advance = false;
     /*
@@ -80,20 +80,21 @@ namespace MeltPoolDG::LevelSet
     std::unique_ptr<Tools::NearestPoint<dim, number>> nearest_point_search;
 
   public:
-    LevelSetOperation(const ScratchData<dim, dim, number>             &scratch_data_in,
-                      const TimeIterator<number>                      &time_stepping,
-                      const BoundaryConditionManager<dim, number>     &bc_manager,
-                      [[maybe_unused]] const TimeSteppingData<number> &time_stepping_data,
-                      const LevelSetData<number>                      &ls,
-                      const VectorType                                &advection_velocity,
-                      const unsigned int                               ls_dof_idx_in,
-                      const unsigned int                               ls_hanging_nodes_dof_idx_in,
-                      const unsigned int                               ls_quad_idx_in,
-                      const unsigned int                               reinit_dof_idx_in,
-                      const unsigned int                               curv_dof_idx_in,
-                      const unsigned int                               normal_dof_idx_in,
-                      const unsigned int                               vel_dof_idx,
-                      const unsigned int                               ls_zero_bc_idx);
+    LevelSetOperation(
+      const ScratchData<dim, dim, number>                              &scratch_data_in,
+      const TimeIntegration::TimeIterator<number>                      &time_stepping,
+      const BoundaryConditionManager<dim, number>                      &bc_manager,
+      [[maybe_unused]] const TimeIntegration::TimeSteppingData<number> &time_stepping_data,
+      const LevelSetData<number>                                       &ls,
+      const VectorType                                                 &advection_velocity,
+      const unsigned int                                                ls_dof_idx_in,
+      const unsigned int                                                ls_hanging_nodes_dof_idx_in,
+      const unsigned int                                                ls_quad_idx_in,
+      const unsigned int                                                reinit_dof_idx_in,
+      const unsigned int                                                curv_dof_idx_in,
+      const unsigned int                                                normal_dof_idx_in,
+      const unsigned int                                                vel_dof_idx,
+      const unsigned int                                                ls_zero_bc_idx);
 
     /**
      * set initial condition

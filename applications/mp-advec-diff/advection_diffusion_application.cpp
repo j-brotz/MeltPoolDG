@@ -177,8 +177,8 @@ namespace MeltPoolDG::LevelSet
     /*
      *  initialize the time iterator
      */
-    time_iterator =
-      std::make_unique<TimeIterator<number>>(simulation_case->parameters.time_stepping);
+    time_iterator = std::make_unique<TimeIntegration::TimeIterator<number>>(
+      simulation_case->parameters.time_stepping);
 
     if (simulation_case->parameters.advec_diff.implementation == "meltpooldg")
       {

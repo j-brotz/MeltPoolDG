@@ -23,7 +23,7 @@ namespace MeltPoolDG::LevelSet
   AdvectionDGOperation<dim, number>::AdvectionDGOperation(
     const ScratchData<dim, dim, number>                           &scratch_data_in,
     const AdvectionDiffusionData<number>                          &advec_diff_data_in,
-    const TimeIterator<number>                                    &time_iterator,
+    const TimeIntegration::TimeIterator<number>                   &time_iterator,
     VectorType                                                    &advection_velocity,
     const unsigned int                                             advec_diff_dof_idx_in,
     const unsigned int                                             advec_diff_quad_idx_in,
@@ -51,7 +51,7 @@ namespace MeltPoolDG::LevelSet
   {
     this->advec_diff_data = advec_diff_data_in;
 
-    advection_integration = std::shared_ptr<TimeIntegratorBase<number>>(
+    advection_integration = std::shared_ptr<TimeIntegration::TimeIntegratorBase<number>>(
       time_integrator_factory<number>(advection_DG_operator,
                                       advec_diff_data_in.time_integrator_data,
                                       advec_diff_data_in.linear_solver,

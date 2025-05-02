@@ -84,10 +84,10 @@ namespace MeltPoolDG::LevelSet
      * @param solution_history keeps different time instances of the level set field
      */
     void
-    apply_diffusion_implicit(number const time,
-                             number const time_step,
-                             [[maybe_unused]] TimeIntegration::SolutionHistory<VectorType, number>
-                               &solution_history) const;
+    apply_diffusion_implicit(
+      number const                                                   time,
+      number const                                                   time_step,
+      [[maybe_unused]] TimeIntegration::SolutionHistory<VectorType> &solution_history) const;
 
     /**
      * flag for the time integration scheme if field functions should be updated in every step.
@@ -150,7 +150,7 @@ namespace MeltPoolDG::LevelSet
     /**
      * Time integration scheme for the IMEX integration of the diffusive term.
      */
-    std::shared_ptr<TimeIntegratorBase<number>> IMEX_integration;
+    std::shared_ptr<TimeIntegration::TimeIntegratorBase<number>> IMEX_integration;
 
 
     /**

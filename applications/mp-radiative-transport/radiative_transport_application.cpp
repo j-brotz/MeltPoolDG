@@ -100,8 +100,8 @@ namespace MeltPoolDG::RadiativeTransport
 
     rad_trans_operation->reinit();
 
-    time_iterator =
-      std::make_shared<TimeIterator<number>>(simulation_case->parameters.time_stepping);
+    time_iterator = std::make_shared<TimeIntegration::TimeIterator<number>>(
+      simulation_case->parameters.time_stepping);
 
     // set initial conditions of the heaviside field
     compute_heaviside(*simulation_case->get_initial_condition("prescribed_heaviside"));

@@ -14,13 +14,12 @@
 
 namespace MeltPoolDG::Restart
 {
-  namespace fs = std::filesystem;
-
   template <typename number>
   class RestartMonitor
   {
   public:
-    RestartMonitor(const RestartData<number> &data, const TimeIterator<number> &time);
+    RestartMonitor(const RestartData<number>                   &data,
+                   const TimeIntegration::TimeIterator<number> &time);
 
     bool
     do_load() const;
@@ -36,9 +35,9 @@ namespace MeltPoolDG::Restart
 
   private:
     const RestartData<number>                         &data;
-    fs::path                                           dir;
-    fs::path                                           prefix;
-    const TimeIterator<number>                        &time;
+    std::filesystem::path                              dir;
+    std::filesystem::path                              prefix;
+    const TimeIntegration::TimeIterator<number>       &time;
     mutable number                                     last_written_time = 0.0;
     std::chrono::time_point<std::chrono::system_clock> real_time_start;
     std::vector<std::string>                           suffices = {"_tria",

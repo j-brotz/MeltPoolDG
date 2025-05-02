@@ -79,17 +79,17 @@ namespace MeltPoolDG
   class Predictor
   {
   private:
-    const PredictorData<number>                           data;
-    TimeIntegration::SolutionHistory<VectorType, number> &solution_history;
-    const TimeIterator<number>                           *time_iterator;
-    const LeastSquaresProjection<VectorType>              lsp;
+    const PredictorData<number>                   data;
+    TimeIntegration::SolutionHistory<VectorType> &solution_history;
+    const TimeIntegration::TimeIterator<number>  *time_iterator;
+    const LeastSquaresProjection<VectorType>      lsp;
 
     mutable unsigned int n_calls = 0;
 
   public:
-    Predictor(const PredictorData<number>                           data,
-              TimeIntegration::SolutionHistory<VectorType, number> &solution_history_in,
-              const TimeIterator<number>                           *time_iterator = nullptr)
+    Predictor(const PredictorData<number>                   data,
+              TimeIntegration::SolutionHistory<VectorType> &solution_history_in,
+              const TimeIntegration::TimeIterator<number>  *time_iterator = nullptr)
       : data(data)
       , solution_history(solution_history_in)
       , time_iterator(time_iterator)

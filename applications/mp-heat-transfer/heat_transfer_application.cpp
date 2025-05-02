@@ -183,7 +183,7 @@ namespace MeltPoolDG::Heat
     /*
      *  initialize the time stepping scheme
      */
-    time_iterator = std::make_shared<TimeIterator<number>>(param.time_stepping);
+    time_iterator = std::make_shared<TimeIntegration::TimeIterator<number>>(param.time_stepping);
 
     /*
      * laser operation

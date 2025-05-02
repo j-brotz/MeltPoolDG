@@ -205,7 +205,7 @@ namespace MeltPoolDG::MeltPool
     bool
     mark_cells_for_refinement(dealii::Triangulation<dim> &tria);
 
-    std::shared_ptr<TimeIterator<number>> time_iterator;
+    std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
 
     dealii::DoFHandler<dim> dof_handler_ls;
 

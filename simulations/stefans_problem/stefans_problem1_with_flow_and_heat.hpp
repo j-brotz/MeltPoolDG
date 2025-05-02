@@ -85,7 +85,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
         return beta * std::exp(beta * beta) * erf(beta) -
                parameters.material.gas.specific_heat_capacity *
                  (T_wall - parameters.material.boiling_temperature) /
-                 (parameters.material.latent_heat_of_evaporation * std::sqrt(numbers::PI));
+                 (parameters.material.latent_heat_of_evaporation * std::sqrt(dealii::numbers::PI));
       };
 
       std::pair<double, double> result =

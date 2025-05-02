@@ -54,15 +54,15 @@ namespace MeltPoolDG::LevelSet
     }
 
   public:
-    BaseData                             base;
-    TimeSteppingData<number>             time_stepping;
-    AdaptiveMeshingData<number>          amr;
-    LevelSetData<number>                 ls;
-    OutputData<number>                   output;
-    Profiling::ProfilingData<number>     profiling;
-    std::string                          amr_strategy = "generic";
-    Evaporation::EvaporationData<number> evapor;
-    MaterialData<number>                 material;
+    BaseData                                  base;
+    TimeIntegration::TimeSteppingData<number> time_stepping;
+    AdaptiveMeshingData<number>               amr;
+    LevelSetData<number>                      ls;
+    OutputData<number>                        output;
+    Profiling::ProfilingData<number>          profiling;
+    std::string                               amr_strategy = "generic";
+    Evaporation::EvaporationData<number>      evapor;
+    MaterialData<number>                      material;
   };
 
   template <int dim, typename number>

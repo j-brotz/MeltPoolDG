@@ -93,12 +93,12 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim, typename number, bool is_viscous>
-  std::unique_ptr<TimeIntegratorBase<number>>
+  std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>
   DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>::
     make_application_specific_time_integrator(
-      const TimeIntegratorData<number> &time_integrator_data)
+      const TimeIntegration::TimeIntegratorData<number> &time_integrator_data)
   {
-    return std::make_unique<ImplicitExplicitIntegrator<
+    return std::make_unique<TimeIntegration::ImplicitExplicitIntegrator<
       dim,
       number,
       DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>>>(

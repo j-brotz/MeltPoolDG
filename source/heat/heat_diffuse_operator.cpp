@@ -319,7 +319,7 @@ namespace MeltPoolDG::Heat
                                                  heat_dof_idx,
                                                  heat_quad_idx);
 
-    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+    unsigned int old_cell_index = dealii::numbers::invalid_unsigned_int;
 
     if (do_diagonal)
       {

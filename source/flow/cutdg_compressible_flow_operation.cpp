@@ -30,14 +30,14 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   CutDGCompressibleFlowOperation<dim, number>::CutDGCompressibleFlowOperation(
-    const ScratchData<dim, dim, number> &scratch_data_in,
-    const CompressibleFlowData<number>  &comp_flow_data_in,
-    const TimeIterator<number>          &time_iterator_in,
-    const std::function<void()>         &setup_dof_system_in,
-    const unsigned int                   comp_flow_dof_idx_in,
-    const unsigned int                   level_set_dof_idx_in,
-    const unsigned int                   comp_flow_quad_idx_in,
-    const VectorType                    &level_set_in)
+    const ScratchData<dim, dim, number>         &scratch_data_in,
+    const CompressibleFlowData<number>          &comp_flow_data_in,
+    const TimeIntegration::TimeIterator<number> &time_iterator_in,
+    const std::function<void()>                 &setup_dof_system_in,
+    const unsigned int                           comp_flow_dof_idx_in,
+    const unsigned int                           level_set_dof_idx_in,
+    const unsigned int                           comp_flow_quad_idx_in,
+    const VectorType                            &level_set_in)
     : flow_scratch_data(comp_flow_data_in,
                         scratch_data_in,
                         comp_flow_dof_idx_in,

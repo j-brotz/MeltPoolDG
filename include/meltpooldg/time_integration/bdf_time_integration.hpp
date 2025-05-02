@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-namespace MeltPoolDG
+namespace MeltPoolDG::TimeIntegration
 {
   /**
    * Requirements for a pde operator in order to use it with the bdf time integrator.
@@ -152,7 +152,7 @@ namespace MeltPoolDG
      * reinit(solution_history.get_current_solution()).
      */
     void
-    reinit(const ::TimeIntegration::SolutionHistory<VectorType, number> &solution_history) override
+    reinit(const SolutionHistory<VectorType> &solution_history) override
     {
       reinit(solution_history.get_current_solution());
     }
@@ -173,7 +173,7 @@ namespace MeltPoolDG
     perform_time_step(
       const number                                                         current_time,
       const number                                                         time_step,
-      ::TimeIntegration::SolutionHistory<VectorType, number>              &solution_history,
+      SolutionHistory<VectorType>                                         &solution_history,
       const std::function<void(number, VectorType &, const VectorType &)> &stage_pre_processing,
       const std::function<void(number, VectorType &, const VectorType &)> &stage_post_processing)
       override
@@ -343,4 +343,4 @@ namespace MeltPoolDG
 
     const unsigned int dof_idx;
   };
-} // namespace MeltPoolDG
+} // namespace MeltPoolDG::TimeIntegration

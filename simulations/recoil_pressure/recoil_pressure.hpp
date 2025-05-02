@@ -297,7 +297,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
                                                         Point<2>(domain_x_min, domain_y_min),
                                                         Point<2>(domain_x_max, domain_y_max));
               // rotate plane by 90° around x-axis
-              GridTools::rotate(Point<3>::unit_vector(0), 0.5 * numbers::PI, tria_slice);
+              GridTools::rotate(Point<3>::unit_vector(0), 0.5 * dealii::numbers::PI, tria_slice);
               // shift plane along y-axis
               GridTools::shift(Point<3>::unit_vector(1) * slice_data.coord, tria_slice);
 

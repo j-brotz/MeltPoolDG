@@ -72,7 +72,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
                                                std::sqrt(p[0] * p[0] + p[1] * p[1]);
 
     return lambda0 *
-           (factor_z0 + factor_dz * std::cos(2 * numbers::PI * projected_radius /
+           (factor_z0 + factor_dz * std::cos(2 * dealii::numbers::PI * projected_radius /
                                              lambda0)); // according to Hardt & Wondra (2007)
   }
 
@@ -148,7 +148,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     SimulationFilmBoiling(std::string parameter_file, const MPI_Comm mpi_communicator)
       : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
       , lambda0(
-          2. * numbers::PI *
+          2. * dealii::numbers::PI *
           std::sqrt(3. * this->parameters.flow.surface_tension.surface_tension_coefficient /
                     (this->parameters.flow.gravity * (this->parameters.material.liquid.density -
                                                       this->parameters.material.gas.density))))
@@ -255,7 +255,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
                                                     Point<2>(x_min, y_min),
                                                     Point<2>(x_max, y_max));
 
-          GridTools::rotate(Point<3>::unit_vector(0), 0.5 * numbers::PI, tria_slice);
+          GridTools::rotate(Point<3>::unit_vector(0), 0.5 * dealii::numbers::PI, tria_slice);
 
           tria_slice.refine_global(4);
         }

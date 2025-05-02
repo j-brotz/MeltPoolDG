@@ -47,7 +47,7 @@ namespace MeltPoolDG
       dealii::AffineConstraints<number>             constraints;
 
       std::shared_ptr<ScratchData<dim, dim, number>>              scratch_data;
-      std::unique_ptr<TimeIterator<number>>                       time_iterator;
+      std::unique_ptr<TimeIntegration::TimeIterator<number>>      time_iterator;
       std::unique_ptr<ReinitializationOperationBase<dim, number>> reinit_operation;
       unsigned int                                                reinit_dof_idx  = -1;
       unsigned int                                                normal_dof_idx  = -1;

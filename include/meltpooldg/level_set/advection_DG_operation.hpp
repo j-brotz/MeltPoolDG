@@ -31,7 +31,7 @@ namespace MeltPoolDG::LevelSet
     AdvectionDGOperation(
       const ScratchData<dim, dim, number>                           &scratch_data_in,
       const AdvectionDiffusionData<number>                          &advec_diff_data_in,
-      const TimeIterator<number>                                    &time_iterator,
+      const TimeIntegration::TimeIterator<number>                   &time_iterator,
       VectorType                                                    &advection_velocity,
       const unsigned int                                             advec_diff_dof_idx_in,
       const unsigned int                                             advec_diff_quad_idx_in,
@@ -99,8 +99,8 @@ namespace MeltPoolDG::LevelSet
   private:
     const ScratchData<dim, dim, number> &scratch_data;
 
-    const TimeIterator<number> &time_iterator;
-    const VectorType           &advection_velocity;
+    const TimeIntegration::TimeIterator<number> &time_iterator;
+    const VectorType                            &advection_velocity;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
      *  ScratchData<dim,dim,number> object is selected. This is important when
@@ -110,13 +110,13 @@ namespace MeltPoolDG::LevelSet
     const unsigned int advec_diff_quad_idx = 0;
     const unsigned int velocity_dof_idx    = 0;
 
-    TimeIntegration::SolutionHistory<VectorType, number> solution_history;
+    TimeIntegration::SolutionHistory<VectorType> solution_history;
 
     VectorType rhs;
     VectorType user_rhs;
 
     AdvectionDGOperator<dim, number> advection_DG_operator;
 
-    std::shared_ptr<TimeIntegratorBase<number>> advection_integration;
+    std::shared_ptr<TimeIntegration::TimeIntegratorBase<number>> advection_integration;
   };
 } // namespace MeltPoolDG::LevelSet

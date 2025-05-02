@@ -48,13 +48,13 @@ namespace MeltPoolDG::RadiativeTransport
     }
 
   public:
-    BaseData                         base;
-    TimeSteppingData<number>         time_stepping;
-    AdaptiveMeshingData<number>      amr;
-    RadiativeTransportData<number>   rad_trans;
-    Heat::LaserData<number>          laser;
-    OutputData<number>               output;
-    Profiling::ProfilingData<number> profiling;
+    BaseData                                  base;
+    TimeIntegration::TimeSteppingData<number> time_stepping;
+    AdaptiveMeshingData<number>               amr;
+    RadiativeTransportData<number>            rad_trans;
+    Heat::LaserData<number>                   laser;
+    OutputData<number>                        output;
+    Profiling::ProfilingData<number>          profiling;
   };
 
   template <int dim, typename number>

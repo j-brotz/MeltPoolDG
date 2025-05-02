@@ -9,7 +9,7 @@
 
 #include <string>
 
-namespace MeltPoolDG
+namespace MeltPoolDG::TimeIntegration
 {
   BETTER_ENUM(TimeIntegratorSchemes,
               int,
@@ -76,4 +76,4 @@ namespace MeltPoolDG
     }
   };
 
-} // namespace MeltPoolDG
+} // namespace MeltPoolDG::TimeIntegration

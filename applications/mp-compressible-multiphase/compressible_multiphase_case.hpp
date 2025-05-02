@@ -54,11 +54,11 @@ namespace MeltPoolDG::Multiphase
     }
 
   public:
-    BaseData                                       base;
-    MeltPoolDG::Flow::CompressibleFlowData<number> flow;
-    TimeSteppingData<number>                       time_stepping;
-    OutputData<number>                             output;
-    Profiling::ProfilingData<number>               profiling;
+    BaseData                                  base;
+    Flow::CompressibleFlowData<number>        flow;
+    TimeIntegration::TimeSteppingData<number> time_stepping;
+    OutputData<number>                        output;
+    Profiling::ProfilingData<number>          profiling;
   };
 
   template <int dim, typename number>

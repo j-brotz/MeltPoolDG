@@ -41,15 +41,15 @@ namespace MeltPoolDG::LevelSet
     using SparseMatrixType = dealii::TrilinosWrappers::SparseMatrix;
 
   public:
-    ReinitializationOperation(const ScratchData<dim, dim, number> &scratch_data_in,
-                              const ReinitializationData<number>  &reinit_data,
-                              const NormalVectorData<number>      &normal_vec_data,
-                              const int                            ls_n_subdivisions_in,
-                              const TimeIterator<number>          &time_iterator,
-                              const unsigned int                   reinit_dof_idx_in,
-                              const unsigned int                   reinit_quad_idx_in,
-                              const unsigned int                   ls_dof_idx_in,
-                              const unsigned int                   normal_dof_idx_in);
+    ReinitializationOperation(const ScratchData<dim, dim, number>         &scratch_data_in,
+                              const ReinitializationData<number>          &reinit_data,
+                              const NormalVectorData<number>              &normal_vec_data,
+                              const int                                    ls_n_subdivisions_in,
+                              const TimeIntegration::TimeIterator<number> &time_iterator,
+                              const unsigned int                           reinit_dof_idx_in,
+                              const unsigned int                           reinit_quad_idx_in,
+                              const unsigned int                           ls_dof_idx_in,
+                              const unsigned int                           normal_dof_idx_in);
 
     void
     reinit() override;
@@ -109,10 +109,10 @@ namespace MeltPoolDG::LevelSet
     create_operator();
 
   private:
-    const ScratchData<dim, dim, number> &scratch_data;
-    const ReinitializationData<number>   reinit_data;
-    const int                            ls_n_subdivisions;
-    const TimeIterator<number>          &time_iterator;
+    const ScratchData<dim, dim, number>         &scratch_data;
+    const ReinitializationData<number>           reinit_data;
+    const int                                    ls_n_subdivisions;
+    const TimeIntegration::TimeIterator<number> &time_iterator;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
      *  ScratchData<dim,dim,number> object is selected. This is important when
@@ -123,7 +123,7 @@ namespace MeltPoolDG::LevelSet
     const unsigned int   ls_dof_idx;
     const unsigned int   normal_dof_idx;
 
-    TimeIntegration::SolutionHistory<VectorType, number> solution_history;
+    TimeIntegration::SolutionHistory<VectorType> solution_history;
 
     std::unique_ptr<Predictor<VectorType, number>> predictor;
     /*

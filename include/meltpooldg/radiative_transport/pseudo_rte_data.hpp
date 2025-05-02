@@ -12,12 +12,12 @@ namespace MeltPoolDG::RadiativeTransport
   {
     PseudoTimeSteppingData();
 
-    LinearSolverData<number> linear_solver;
-    TimeSteppingData<number> time_stepping_data;
-    number                   diffusion_term_scaling = 1.;
-    number                   advection_term_scaling = 1.;
-    number                   pseudo_time_scaling    = 0.01;
-    number                   rel_tolerance          = 1e-3;
+    LinearSolverData<number>                  linear_solver;
+    TimeIntegration::TimeSteppingData<number> time_stepping_data;
+    number                                    diffusion_term_scaling = 1.;
+    number                                    advection_term_scaling = 1.;
+    number                                    pseudo_time_scaling    = 0.01;
+    number                                    rel_tolerance          = 1e-3;
 
     void
     add_parameters(dealii::ParameterHandler &prm);

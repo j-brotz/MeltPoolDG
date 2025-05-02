@@ -118,7 +118,7 @@ namespace MeltPoolDG::Heat
     if (R == 0.0)
       R = 1e-16;
 
-    number T = P * absorptivity / (4 * numbers::PI * R * conductivity) *
+    number T = P * absorptivity / (4 * dealii::numbers::PI * R * conductivity) *
                  std::exp(-v * R / (2. * thermal_diffusivity)) +
                T0;
 

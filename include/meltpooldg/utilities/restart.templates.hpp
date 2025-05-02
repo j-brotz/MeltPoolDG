@@ -13,7 +13,6 @@
 
 namespace MeltPoolDG::Restart
 {
-
   template <int dim, typename VectorType>
   void
   serialize_internal(

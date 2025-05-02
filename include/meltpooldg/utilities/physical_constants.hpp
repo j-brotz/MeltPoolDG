@@ -1,4 +1,5 @@
 #pragma once
+
 namespace MeltPoolDG::PhysicalConstants
 {
   constexpr double universal_gas_constant    = 8.31446261815324; // J/(mol K)

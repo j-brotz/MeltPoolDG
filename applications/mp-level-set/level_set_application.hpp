@@ -49,7 +49,7 @@ namespace MeltPoolDG::LevelSet
     std::unique_ptr<LevelSetOperationBase<dim, number>>             level_set_operation;
     std::unique_ptr<Evaporation::EvaporationOperation<dim, number>> evaporation_operation;
     std::shared_ptr<ScratchData<dim, dim, number>>                  scratch_data;
-    std::unique_ptr<TimeIterator<number>>                           time_iterator;
+    std::unique_ptr<TimeIntegration::TimeIterator<number>>          time_iterator;
     std::unique_ptr<Postprocessor<dim, number>>                     post_processor;
     std::unique_ptr<Profiling::ProfilingMonitor<number>>            profiling_monitor;
 

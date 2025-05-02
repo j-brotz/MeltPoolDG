@@ -65,14 +65,14 @@ namespace MeltPoolDG::Flow
      * @param comp_flow_quad_idx_in Index of the used quadrature object in @p scratch_data_in.
      * @param level_set_in level-set dof vector.
      */
-    CutDGCompressibleFlowOperation(const ScratchData<dim, dim, number> &scratch_data_in,
-                                   const CompressibleFlowData<number>  &comp_flow_data_in,
-                                   const TimeIterator<number>          &time_iterator_in,
-                                   const std::function<void()>         &setup_dof_system_in,
-                                   unsigned int                         comp_flow_dof_idx_in  = 0,
-                                   unsigned int                         level_set_dof_idx_in  = 0,
-                                   unsigned int                         comp_flow_quad_idx_in = 0,
-                                   const VectorType                    &level_set_in          = 0);
+    CutDGCompressibleFlowOperation(const ScratchData<dim, dim, number>         &scratch_data_in,
+                                   const CompressibleFlowData<number>          &comp_flow_data_in,
+                                   const TimeIntegration::TimeIterator<number> &time_iterator_in,
+                                   const std::function<void()>                 &setup_dof_system_in,
+                                   unsigned int      comp_flow_dof_idx_in  = 0,
+                                   unsigned int      level_set_dof_idx_in  = 0,
+                                   unsigned int      comp_flow_quad_idx_in = 0,
+                                   const VectorType &level_set_in          = 0);
 
     /**
      * Set up the required internal data structures. After a call to this function the solve()
@@ -191,7 +191,7 @@ namespace MeltPoolDG::Flow
   private:
     CompressibleFlowScratchData<dim, number> flow_scratch_data;
 
-    const TimeIterator<number> &time_iterator;
+    const TimeIntegration::TimeIterator<number> &time_iterator;
 
     const unsigned int level_set_dof_idx;
     const VectorType  &level_set;

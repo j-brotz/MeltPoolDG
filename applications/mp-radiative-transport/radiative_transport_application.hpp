@@ -48,8 +48,8 @@ namespace MeltPoolDG::RadiativeTransport
     unsigned int rte_quad_idx;
     unsigned int hs_dof_idx;
 
-    std::shared_ptr<ScratchData<dim, dim, number>> scratch_data;
-    std::shared_ptr<TimeIterator<number>>          time_iterator;
+    std::shared_ptr<ScratchData<dim, dim, number>>         scratch_data;
+    std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
 
     std::shared_ptr<RadiativeTransportOperation<dim, number>> rad_trans_operation;
 

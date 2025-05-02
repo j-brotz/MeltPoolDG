@@ -57,7 +57,7 @@ namespace MeltPoolDG
       SimulationEvaporatingDropletWithHeat(std::string    parameter_file,
                                            const MPI_Comm mpi_communicator)
         : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
-        , lambda(2. * numbers::PI *
+        , lambda(2. * dealii::numbers::PI *
                  std::sqrt(3. * this->parameters.flow.surface_tension.surface_tension_coefficient /
                            (9.81 * (this->parameters.material.liquid.density -
                                     this->parameters.material.gas.density))))

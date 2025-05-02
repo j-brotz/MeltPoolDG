@@ -62,7 +62,7 @@ namespace MeltPoolDG::Heat
     const HeatData<number>                                            &heat_data_in,
     const MaterialData<number>                                        &material_data_in,
     const Evaporation::EvaporationData<number>                        &evapor_data_in,
-    const TimeIterator<number>                                        &time_iterator_in,
+    const TimeIntegration::TimeIterator<number>                       &time_iterator_in,
     const unsigned int                                                 heat_cut_dof_idx_in,
     const unsigned int                                                 heat_cut_no_bc_dof_idx_in,
     const unsigned int heat_continuous_no_bc_dof_idx_in,

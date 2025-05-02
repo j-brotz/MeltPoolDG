@@ -25,7 +25,7 @@ namespace MeltPoolDG::Evaporation
     number
     local_compute_evaporative_mass_flux(const number time /*here used as time*/) const final
     {
-      AssertThrow(!dealii::numbers::is_invalid(time),
+      AssertThrow(not numbers::is_invalid(time),
                   dealii::ExcMessage("Time must be set to compute the evaporative mass flux."));
       m_dot.set_time(time);
       return m_dot.value(dealii::Point<1>() /* dummy value*/);

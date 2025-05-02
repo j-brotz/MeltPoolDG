@@ -24,15 +24,15 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   ReinitializationOperation<dim, number>::ReinitializationOperation(
-    const ScratchData<dim, dim, number> &scratch_data_in,
-    const ReinitializationData<number>  &reinit_data,
-    const NormalVectorData<number>      &normal_vec_data,
-    const int                            ls_n_subdivisions_in,
-    const TimeIterator<number>          &time_iterator,
-    const unsigned int                   reinit_dof_idx_in,
-    const unsigned int                   reinit_quad_idx_in,
-    const unsigned int                   ls_dof_idx_in,
-    const unsigned int                   normal_dof_idx_in)
+    const ScratchData<dim, dim, number>         &scratch_data_in,
+    const ReinitializationData<number>          &reinit_data,
+    const NormalVectorData<number>              &normal_vec_data,
+    const int                                    ls_n_subdivisions_in,
+    const TimeIntegration::TimeIterator<number> &time_iterator,
+    const unsigned int                           reinit_dof_idx_in,
+    const unsigned int                           reinit_quad_idx_in,
+    const unsigned int                           ls_dof_idx_in,
+    const unsigned int                           normal_dof_idx_in)
     : scratch_data(scratch_data_in)
     , reinit_data(reinit_data)
     , ls_n_subdivisions(ls_n_subdivisions_in)

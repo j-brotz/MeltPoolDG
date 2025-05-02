@@ -64,14 +64,14 @@ namespace MeltPoolDG::Flow
 
     std::shared_ptr<CaseType> simulation_case;
 
-    dealii::DoFHandler<dim>                              dof_handler;
-    dealii::DoFHandler<dim>                              dof_handler_level_set;
-    dealii::AffineConstraints<number>                    constraints;
-    dealii::AffineConstraints<number>                    constraints_level_set;
-    std::shared_ptr<ScratchData<dim, dim, number>>       scratch_data;
-    std::shared_ptr<TimeIterator<number>>                time_iterator;
-    CompressibleFlowOperation<dim, number>               comp_flow_operation;
-    std::unique_ptr<Profiling::ProfilingMonitor<number>> profiling_monitor;
+    dealii::DoFHandler<dim>                                dof_handler;
+    dealii::DoFHandler<dim>                                dof_handler_level_set;
+    dealii::AffineConstraints<number>                      constraints;
+    dealii::AffineConstraints<number>                      constraints_level_set;
+    std::shared_ptr<ScratchData<dim, dim, number>>         scratch_data;
+    std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
+    CompressibleFlowOperation<dim, number>                 comp_flow_operation;
+    std::unique_ptr<Profiling::ProfilingMonitor<number>>   profiling_monitor;
 
     unsigned int comp_flow_dof_idx{};
     unsigned int level_set_dof_idx{};

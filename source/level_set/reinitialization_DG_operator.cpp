@@ -31,9 +31,9 @@ namespace MeltPoolDG::LevelSet
     , RI_grad_operator(scratch_data_in, reinit_dof_idx_in, reinit_quad_idx_in)
   {
     if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type !=
-        TimeIntegratorSchemes::not_initialized)
-      IMEX_integration =
-        std::shared_ptr<TimeIntegratorBase<number>>(time_integrator_factory<number>(
+        TimeIntegration::TimeIntegratorSchemes::not_initialized)
+      IMEX_integration = std::shared_ptr<TimeIntegration::TimeIntegratorBase<number>>(
+        time_integrator_factory<number>(
           RI_DG_diffusion_operator,
           reinit_data_in.reinitilization_DG_specific_data.IMEX_integration_data,
           reinit_data_in.linear_solver,
@@ -55,9 +55,9 @@ namespace MeltPoolDG::LevelSet
   template <int dim, typename number>
   void
   ReinitilizationDGOperator<dim, number>::apply_diffusion_implicit(
-    const number                                          time,
-    const number                                          time_step,
-    TimeIntegration::SolutionHistory<VectorType, number> &solution_history) const
+    const number                                  time,
+    const number                                  time_step,
+    TimeIntegration::SolutionHistory<VectorType> &solution_history) const
   {
     IMEX_integration->perform_time_step(time, time_step, solution_history);
   }
@@ -98,7 +98,7 @@ namespace MeltPoolDG::LevelSet
     scratch_data.get_matrix_free().cell_loop(inverse, dst, dst);
 
     if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type ==
-        TimeIntegratorSchemes::not_initialized)
+        TimeIntegration::TimeIntegratorSchemes::not_initialized)
       {
         RI_DG_diffusion_operator.apply_operator(time, num_Hamiltonian, src);
         RI_DG_diffusion_operator.apply_dirichlet_boundary_operator(time, num_Hamiltonian, src);
@@ -141,7 +141,7 @@ namespace MeltPoolDG::LevelSet
         scratch_data.initialize_dof_vector(grad_z_r, reinit_dof_idx);
       }
     if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type !=
-        TimeIntegratorSchemes::not_initialized)
+        TimeIntegration::TimeIntegratorSchemes::not_initialized)
       IMEX_integration->reinit(grad_x_l); // TODO: Pass scratch data to initialize vectors
 
     RI_DG_diffusion_operator.compute_diffusitivity_value();
@@ -345,7 +345,7 @@ namespace MeltPoolDG::LevelSet
                 {
                   // calculate argument of tanh: (pi*phi)/(2*grad(phi)*max_cell_size/fe_degree)
                   const auto arg =
-                    numbers::PI * source.get_dof_value(q) /
+                    dealii::numbers::PI * source.get_dof_value(q) /
                     (eta_vector * std::abs(God_grad_p.get_dof_value(q)) +
                      reinit_data.reinitilization_DG_specific_data
                        .avoid_zero_division_smoothed_signum); // In case Godunov gradient is zero

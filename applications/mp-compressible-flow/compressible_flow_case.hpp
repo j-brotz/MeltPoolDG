@@ -61,11 +61,11 @@ namespace MeltPoolDG::Flow
     }
 
   public:
-    BaseData                         base;
-    CompressibleFlowData<number>     flow;
-    TimeSteppingData<number>         time_stepping;
-    OutputData<number>               output;
-    Profiling::ProfilingData<number> profiling;
+    BaseData                                  base;
+    CompressibleFlowData<number>              flow;
+    TimeIntegration::TimeSteppingData<number> time_stepping;
+    OutputData<number>                        output;
+    Profiling::ProfilingData<number>          profiling;
   };
 
   template <int dim, typename number>

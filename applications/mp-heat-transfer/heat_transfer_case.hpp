@@ -77,7 +77,7 @@ namespace MeltPoolDG::Heat
 
   public:
     BaseData                                           base;
-    TimeSteppingData<number>                           time_stepping;
+    TimeIntegration::TimeSteppingData<number>          time_stepping;
     AdaptiveMeshingData<number>                        amr;
     HeatData<number>                                   heat;
     MaterialData<number>                               material;

@@ -1,9 +1,10 @@
 #pragma once
+
 #include <deal.II/base/parameter_handler.h>
 
 #include <string>
 
-namespace MeltPoolDG
+namespace MeltPoolDG::TimeIntegration
 {
   template <typename number>
   struct TimeSteppingData
@@ -27,4 +28,4 @@ namespace MeltPoolDG
     void
     add_parameters(dealii::ParameterHandler &prm);
   };
-} // namespace MeltPoolDG
+} // namespace MeltPoolDG::TimeIntegration

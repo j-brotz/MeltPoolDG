@@ -8,17 +8,17 @@
  * Authors: Peter Munch, Vladimir Ivannikov
  */
 
-#include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/base/exceptions.h>
 
 #include <functional>
+#include <memory>
+#include <vector>
 
-namespace TimeIntegration
+namespace MeltPoolDG::TimeIntegration
 {
-  template <typename VectorType, typename number>
+  template <typename VectorType>
   class SolutionHistory
   {
-    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
-
   public:
     SolutionHistory() = default;
 
@@ -143,10 +143,12 @@ namespace TimeIntegration
   private:
     std::vector<VectorType> solutions;
   };
-} // namespace TimeIntegration
+} // namespace MeltPoolDG::TimeIntegration
 
 ///////////////////////////////////////////////7
 // KEPT AS TEMPLATES
+//
+//  using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 //
 // TODO
 // SolutionHistory(std::vector<std::shared_ptr<VectorType>> solutions)

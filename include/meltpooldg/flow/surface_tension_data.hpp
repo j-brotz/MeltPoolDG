@@ -26,14 +26,14 @@ namespace MeltPoolDG::Flow
   {
     number surface_tension_coefficient                       = 0.0;
     number temperature_dependent_surface_tension_coefficient = 0.0;
-    number reference_temperature                             = dealii::numbers::invalid_double;
+    number reference_temperature                             = numbers::invalid_double;
     RegularizedSurfaceTensionTemperatureEvaluationType interface_temperature_evaluation_type =
       RegularizedSurfaceTensionTemperatureEvaluationType::local_value;
     number coefficient_residual_fraction = 0.0;
     bool   zero_surface_tension_in_solid = false;
 
     LevelSet::DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
-    TimeStepLimitData<number>                             time_step_limit;
+    TimeIntegration::TimeStepLimitData<number>            time_step_limit;
 
     void
     add_parameters(dealii::ParameterHandler &prm);

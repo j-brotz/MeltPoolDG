@@ -53,9 +53,9 @@ namespace MeltPoolDG::Flow
      * @throws If the time integrator type in the time integrator data is not an explicit time
      * integrator.
      */
-    std::unique_ptr<TimeIntegratorBase<number>>
+    std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>
     make_application_specific_time_integrator(
-      const TimeIntegratorData<number> &time_integrator_data) override;
+      const TimeIntegration::TimeIntegratorData<number> &time_integrator_data) override;
 
     /**
      * Computes the value of the function f(y) for the compressible Navier-Stokes equations of the

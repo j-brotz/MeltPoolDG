@@ -10,7 +10,7 @@
 
 #include <functional>
 
-namespace MeltPoolDG
+namespace MeltPoolDG::TimeIntegration
 {
   /**
    * Requirements for a pde operator in order to use it with the explicit time integrator.
@@ -66,7 +66,7 @@ namespace MeltPoolDG
      * As above, sets up the necessary internal data structures.
      */
     virtual void
-    reinit(const ::TimeIntegration::SolutionHistory<VectorType, number> &solution_history)
+    reinit(const SolutionHistory<VectorType> &solution_history)
     {
       reinit(solution_history.get_current_solution());
     }
@@ -87,7 +87,7 @@ namespace MeltPoolDG
     perform_time_step(
       number                                                               current_time,
       number                                                               time_step,
-      ::TimeIntegration::SolutionHistory<VectorType, number>              &solution_history,
+      SolutionHistory<VectorType>                                         &solution_history,
       const std::function<void(number, VectorType &, const VectorType &)> &pre_processing = {},
       const std::function<void(number, VectorType &, const VectorType &)> &post_processing =
         {}) = 0;
@@ -126,4 +126,4 @@ namespace MeltPoolDG
     const TimeIntegratorData<number> time_integrator_data;
     VectorType                      *monitoring_vector = nullptr;
   };
-} // namespace MeltPoolDG
+} // namespace MeltPoolDG::TimeIntegration

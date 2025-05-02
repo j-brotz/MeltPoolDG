@@ -65,7 +65,7 @@ namespace MeltPoolDG::LevelSet
     const VectorType                    &solution_level_set;
     const NormalVectorData<number>       normal_vector_data;
 
-    TimeIntegration::SolutionHistory<BlockVectorType, number> solution_history;
+    TimeIntegration::SolutionHistory<BlockVectorType> solution_history;
 
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from

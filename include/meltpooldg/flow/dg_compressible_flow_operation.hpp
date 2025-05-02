@@ -141,7 +141,7 @@ namespace MeltPoolDG::Flow
 
     std::unique_ptr<DGCompressibleFlowOperatorBase<number>> comp_flow_operator;
 
-    std::unique_ptr<TimeIntegratorBase<number>> time_integrator;
+    std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>> time_integrator;
 
     /**
      * Compute the convective time step limit for the current mesh and flow field.

@@ -34,12 +34,12 @@ namespace MeltPoolDG::LevelSet
     }
 
   public:
-    BaseData                         base;
-    TimeSteppingData<number>         time_stepping;
-    AdaptiveMeshingData<number>      amr;
-    AdvectionDiffusionData<number>   advec_diff;
-    OutputData<number>               output;
-    Profiling::ProfilingData<number> profiling;
+    BaseData                                  base;
+    TimeIntegration::TimeSteppingData<number> time_stepping;
+    AdaptiveMeshingData<number>               amr;
+    AdvectionDiffusionData<number>            advec_diff;
+    OutputData<number>                        output;
+    Profiling::ProfilingData<number>          profiling;
   };
 
   template <int dim, typename number>

@@ -27,14 +27,14 @@ namespace MeltPoolDG
   private:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
-    const MPI_Comm                       mpi_communicator;
-    const OutputData<number>            &output_data;
-    const dealii::Mapping<dim>          &mapping;
-    const dealii::Triangulation<dim>    &triangulation;
-    const MeltPoolDG::ConditionalOStream pcout;
-    const bool                           do_simplex;
-    const number                         end_time;
-    number                               time_at_last_output = 0.0;
+    const MPI_Comm                    mpi_communicator;
+    const OutputData<number>         &output_data;
+    const dealii::Mapping<dim>       &mapping;
+    const dealii::Triangulation<dim> &triangulation;
+    const ConditionalOStream          pcout;
+    const bool                        do_simplex;
+    const number                      end_time;
+    number                            time_at_last_output = 0.0;
 
     // list of indices for the requested variables
     std::vector<unsigned int> idx_req_vars;
@@ -43,12 +43,12 @@ namespace MeltPoolDG
     std::vector<std::pair<number, std::string>> times_and_names;
 
   public:
-    Postprocessor(const MPI_Comm                        mpi_communicator_in,
-                  const OutputData<number>             &output_data_in,
-                  const TimeSteppingData<number>       &time_data,
-                  const dealii::Mapping<dim>           &mapping_in,
-                  const dealii::Triangulation<dim>     &triangulation_in,
-                  const MeltPoolDG::ConditionalOStream &pcout_in);
+    Postprocessor(const MPI_Comm                                   mpi_communicator_in,
+                  const OutputData<number>                        &output_data_in,
+                  const TimeIntegration::TimeSteppingData<number> &time_data,
+                  const dealii::Mapping<dim>                      &mapping_in,
+                  const dealii::Triangulation<dim>                &triangulation_in,
+                  const ConditionalOStream                        &pcout_in);
 
     /**
      *  This function collects and performs all relevant postprocessing steps.

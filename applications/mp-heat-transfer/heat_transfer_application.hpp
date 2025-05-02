@@ -37,10 +37,10 @@ namespace MeltPoolDG::Heat
     VectorType level_set_as_heaviside;
     VectorType level_set;
 
-    std::shared_ptr<TimeIterator<number>> time_iterator;
-    dealii::DoFHandler<dim>               dof_handler;
-    dealii::DoFHandler<dim>               dof_handler_velocity;
-    dealii::DoFHandler<dim>               dof_handler_level_set;
+    std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
+    dealii::DoFHandler<dim>                                dof_handler;
+    dealii::DoFHandler<dim>                                dof_handler_velocity;
+    dealii::DoFHandler<dim>                                dof_handler_level_set;
 
     dealii::AffineConstraints<number> heat_dirichlet_constraints;
     dealii::AffineConstraints<number> heat_hanging_nodes_constraints;

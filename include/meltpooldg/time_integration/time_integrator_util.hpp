@@ -10,7 +10,7 @@
 
 #include <meltpooldg/utilities/cpp23_functions.h>
 
-namespace MeltPoolDG
+namespace MeltPoolDG::TimeIntegration
 {
   /**
    * Checks if the given @p scheme is explicit and supported by one of the available
@@ -149,4 +149,4 @@ namespace MeltPoolDG
       return new OneStepTheta<number, PDEOperator>(pde_operator, params, linear_solver_data);
     DEAL_II_NOT_IMPLEMENTED();
   }
-} // namespace MeltPoolDG
+} // namespace MeltPoolDG::TimeIntegration

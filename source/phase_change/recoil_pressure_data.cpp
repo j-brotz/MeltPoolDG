@@ -60,7 +60,7 @@ namespace MeltPoolDG::Evaporation
   {
     // recoil pressure: set default value of activation temperature equal to the boiling
     // temperature
-    if (dealii::numbers::is_invalid(activation_temperature))
+    if (numbers::is_invalid(activation_temperature))
       activation_temperature = material.boiling_temperature;
 
     // set automatic weights of asymmetric delta functions, if requested

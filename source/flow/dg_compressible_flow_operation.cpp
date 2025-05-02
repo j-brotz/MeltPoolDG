@@ -323,7 +323,7 @@ namespace MeltPoolDG::Flow
       }
     // TODO
     else if (flow_scratch_data.flow_data.time_integrator.integrator_type ==
-             TimeIntegratorSchemes::imex)
+             TimeIntegration::TimeIntegratorSchemes::imex)
       {
         if (is_viscous)
           comp_flow_operator =

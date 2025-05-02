@@ -1,6 +1,12 @@
 #pragma once
 
+#include <deal.II/base/exceptions.h>
+
 #include <boost/algorithm/string/join.hpp>
+
+#include <string>
+#include <vector>
+
 
 namespace MeltPoolDG
 {

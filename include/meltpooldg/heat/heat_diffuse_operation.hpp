@@ -49,8 +49,8 @@ namespace MeltPoolDG::Heat
     /**
      * parameters
      */
-    const HeatData<number>     &heat_data;
-    const TimeIterator<number> &time_iterator;
+    const HeatData<number>                      &heat_data;
+    const TimeIntegration::TimeIterator<number> &time_iterator;
     /**
      * select the relevant DoFHandlers and quadrature rules
      */
@@ -60,11 +60,11 @@ namespace MeltPoolDG::Heat
 
     // These are the primary solution variables of this module, which will be also publicly
     // accessible for output_results.
-    TimeIntegration::SolutionHistory<VectorType, number> solution_history;
-    VectorType                                           predictor_buffer;
-    VectorType                                           heat_source;
-    VectorType                                           user_rhs;
-    VectorType                                           interface_temperature;
+    TimeIntegration::SolutionHistory<VectorType> solution_history;
+    VectorType                                   predictor_buffer;
+    VectorType                                   heat_source;
+    VectorType                                   user_rhs;
+    VectorType                                   interface_temperature;
 
     // for output only
     mutable VectorType user_rhs_projected;
@@ -97,7 +97,7 @@ namespace MeltPoolDG::Heat
       const PeriodicBoundaryConditions<dim>                             &periodic_bc_in,
       const HeatData<number>                                            &heat_data_in,
       const Material<number>                                            &material,
-      const TimeIterator<number>                                        &time_iterator,
+      const TimeIntegration::TimeIterator<number>                       &time_iterator,
       unsigned int                                                       heat_dof_idx_in,
       unsigned int                                                       heat_no_bc_dof_idx_in,
       unsigned int                                                       heat_quad_idx_in,

@@ -1,8 +1,6 @@
 #pragma once
-#include <cmath>
-#include <limits>
 
-namespace dealii::numbers
+namespace MeltPoolDG::numbers
 {
   // @note We did not use std::numeric_limits<double>::lowest() on purpose.
   // @p invalid_double should serve as a default value for an optional parameter.
@@ -20,4 +18,4 @@ namespace dealii::numbers
     return number <= invalid_double;
   }
 
-} // namespace dealii::numbers
+} // namespace MeltPoolDG::numbers

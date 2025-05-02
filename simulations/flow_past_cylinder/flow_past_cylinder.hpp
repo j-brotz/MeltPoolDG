@@ -66,7 +66,7 @@ namespace MeltPoolDG
           if (dim == 3)
             values(0) *= p[2] * (H - p[2]);
           if (fluctuating)
-            values(0) *= std::sin(this->get_time() * numbers::PI / 8.);
+            values(0) *= std::sin(this->get_time() * dealii::numbers::PI / 8.);
           for (unsigned int d = 1; d < dim; ++d)
             values(d) = 0;
         }

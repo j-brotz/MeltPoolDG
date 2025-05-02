@@ -55,8 +55,7 @@ namespace MeltPoolDG::Evaporation
 
     // activation temperature of the recoil pressure; must be smaller than or equal to the boiling
     // temperature; this parameter enables a smooth activation of the recoil pressure
-    number activation_temperature =
-      dealii::numbers::invalid_double; //@todo: introduce invalid_double
+    number activation_temperature = numbers::invalid_double;
 
     // Choose how the recoil pressure flux across the interface should be computed:
     // * local_value: use the local temperature value

@@ -80,7 +80,7 @@ namespace MeltPoolDG::Evaporation
     unsigned int              heat_dof_idx;
 
     // only needed if a time-dependent function is given
-    mutable number time = dealii::numbers::invalid_double;
+    mutable number time = numbers::invalid_double;
     /**
      * evaporative mass flux
      */

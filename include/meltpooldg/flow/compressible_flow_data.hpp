@@ -34,7 +34,7 @@ namespace MeltPoolDG::Flow
     FiniteElementData fe;
 
     // time integration data
-    TimeIntegratorData<number> time_integrator;
+    TimeIntegration::TimeIntegratorData<number> time_integrator;
 
     struct Material
     {
@@ -178,10 +178,13 @@ namespace MeltPoolDG::Flow
       // set default time integration scheme for cut
       if (domain_representation_type == "cut")
         {
-          if (time_integrator.integrator_type == TimeIntegratorSchemes::not_initialized)
-            time_integrator.integrator_type = TimeIntegratorSchemes::explicit_euler;
+          if (time_integrator.integrator_type ==
+              TimeIntegration::TimeIntegratorSchemes::not_initialized)
+            time_integrator.integrator_type =
+              TimeIntegration::TimeIntegratorSchemes::explicit_euler;
           AssertThrow(
-            time_integrator.integrator_type == TimeIntegratorSchemes::explicit_euler,
+            time_integrator.integrator_type ==
+              TimeIntegration::TimeIntegratorSchemes::explicit_euler,
             dealii::ExcMessage(
               "The cut compressible flow solver only supports explicit Euler time integration."));
         }
@@ -234,9 +237,10 @@ namespace MeltPoolDG::Flow
 
       // Advanced EOS are currently only allowed for explicit time integration.
       if (material.gas.eos_data.type != EquationOfState::ideal_gas)
-        AssertThrow(
-          !MeltPoolDG::time_integrator_scheme_is_explicit(time_integrator.integrator_type),
-          dealii::ExcMessage("Only the ideal gas EOS is allowed for implicit time integration."));
+        AssertThrow(!MeltPoolDG::TimeIntegration::time_integrator_scheme_is_explicit(
+                      time_integrator.integrator_type),
+                    dealii::ExcMessage(
+                      "Only the ideal gas EOS is allowed for implicit time integration."));
     }
   };
 } // namespace MeltPoolDG::Flow

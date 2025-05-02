@@ -35,8 +35,8 @@ namespace MeltPoolDG::Flow
      * operator type, e.g. if the operator type is implicit but the required time integration scheme
      * is an explicit scheme.
      */
-    virtual std::unique_ptr<TimeIntegratorBase<number>>
+    virtual std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>
     make_application_specific_time_integrator(
-      const TimeIntegratorData<number> &time_integrator_data) = 0;
+      const TimeIntegration::TimeIntegratorData<number> &time_integrator_data) = 0;
   };
 } // namespace MeltPoolDG::Flow
