@@ -51,7 +51,7 @@ main(int argc, char *argv[])
   VectorType rhs(dof_handler.n_dofs());
   VectorType rhs_projected(dof_handler.n_dofs());
 
-  // create righ-hand-side vector
+  // create right-hand-side vector
   dealii::VectorTools::create_right_hand_side(
     mapping, dof_handler, quad, Functions::SignedDistance::Sphere<dim>(), rhs);
 

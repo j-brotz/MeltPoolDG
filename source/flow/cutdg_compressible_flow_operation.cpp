@@ -15,7 +15,7 @@
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <algorithm>
 #include <cmath>

@@ -15,7 +15,7 @@
 #include <deal.II/numerics/data_out.h>
 
 #include <meltpooldg/utilities/fe_integrator.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <iostream>
 

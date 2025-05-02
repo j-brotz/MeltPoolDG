@@ -1,4 +1,5 @@
 #pragma once
+
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/parameter_handler.h>
 
@@ -20,7 +21,7 @@
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/time_integration/time_stepping_data.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <string>
 

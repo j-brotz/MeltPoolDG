@@ -26,6 +26,7 @@
 #  include <meltpooldg/utilities/journal.hpp>
 #  include <meltpooldg/utilities/scoped_name.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
+#  include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 namespace MeltPoolDG::Flow
 {

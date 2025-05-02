@@ -1,5 +1,7 @@
 #include <deal.II/base/exceptions.h>
 
+#include <deal.II/matrix_free/tools.h>
+
 #include <meltpooldg/radiative_transport/pseudo_rte_operator.hpp>
 #include <meltpooldg/radiative_transport/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>

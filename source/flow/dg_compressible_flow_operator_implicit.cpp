@@ -3,6 +3,7 @@
 #include <meltpooldg/flow/compressible_flow_matrix_generator.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_implicit.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 namespace MeltPoolDG::Flow
 {

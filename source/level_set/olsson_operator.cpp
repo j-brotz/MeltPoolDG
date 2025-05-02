@@ -1,8 +1,12 @@
+#include <deal.II/matrix_free/tools.h>
+
 #include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/level_set/olsson_operator.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <cmath>
+
 
 namespace MeltPoolDG::LevelSet
 {

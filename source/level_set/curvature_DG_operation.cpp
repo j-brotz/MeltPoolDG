@@ -1,5 +1,6 @@
 #include <meltpooldg/level_set/curvature_DG_operation.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 
 namespace MeltPoolDG::LevelSet

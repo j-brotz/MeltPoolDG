@@ -1,3 +1,5 @@
+#include <deal.II/matrix_free/tools.h>
+
 #include <meltpooldg/level_set/helmholtz_DG_operator.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_factory.hpp>

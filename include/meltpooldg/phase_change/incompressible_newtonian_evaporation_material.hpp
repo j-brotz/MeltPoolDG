@@ -6,7 +6,7 @@
 
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/flow/incompressible_flow_material_base.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 namespace MeltPoolDG::Evaporation
 {

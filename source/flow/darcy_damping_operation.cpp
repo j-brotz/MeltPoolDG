@@ -4,7 +4,7 @@
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <memory>
 

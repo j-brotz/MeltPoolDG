@@ -36,6 +36,7 @@
 #include <meltpooldg/flow/cutdg_compressible_flow_operator.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <memory>
 #include <variant>

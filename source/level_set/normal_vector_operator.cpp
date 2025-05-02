@@ -1,7 +1,7 @@
 #include <deal.II/matrix_free/tools.h>
 
 #include <meltpooldg/level_set/normal_vector_operator.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 
 namespace MeltPoolDG::LevelSet
@@ -175,8 +175,8 @@ namespace MeltPoolDG::LevelSet
             for (unsigned int q_index = 0; q_index < normal_vector.n_q_points; ++q_index)
               {
                 const VectorizedArray<number> narrow_band_mask =
-                  (normal_vector_data.narrow_band.enable) ?
-                    VectorTools::compute_mask_narrow_band<dim>(
+                  normal_vector_data.narrow_band.enable ?
+                    VectorTools::compute_mask_narrow_band<number>(
                       level_set.get_value(q_index),
                       normal_vector_data.narrow_band.level_set_threshold) :
                     1.0;
@@ -299,7 +299,7 @@ namespace MeltPoolDG::LevelSet
 
         const VectorizedArray<number> narrow_band_mask =
           normal_vector_data.narrow_band.enable ?
-            VectorTools::compute_mask_narrow_band<dim>(
+            VectorTools::compute_mask_narrow_band<number>(
               level_set_vals.get_value(q_index),
               normal_vector_data.narrow_band.level_set_threshold) :
             1.0;

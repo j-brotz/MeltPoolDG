@@ -4,6 +4,7 @@
 #include <meltpooldg/flow/dg_compressible_flow_operator_implicit_explicit.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/time_integration/implicit_explicit_integrator.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 namespace MeltPoolDG::Flow
 {

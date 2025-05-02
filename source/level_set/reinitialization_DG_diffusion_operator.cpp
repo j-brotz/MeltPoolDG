@@ -1,7 +1,7 @@
 #include <meltpooldg/level_set/reinitialization_DG_diffusion_operator.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
-
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 
 namespace MeltPoolDG::LevelSet

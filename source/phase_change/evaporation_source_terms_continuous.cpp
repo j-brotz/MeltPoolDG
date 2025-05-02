@@ -5,6 +5,7 @@
 #include <meltpooldg/utilities/dof_tools.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 namespace MeltPoolDG::Evaporation
 {

@@ -1,63 +1,38 @@
 #pragma once
 
-#include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature.h>
 #include <deal.II/base/tensor.h>
-#include <deal.II/base/types.h>
 #include <deal.II/base/vectorization.h>
 
-#include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_handler.h>
 
-#include <deal.II/fe/fe_update_flags.h>
 #include <deal.II/fe/mapping.h>
 
 #include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/affine_constraints.h>
-#include <deal.II/lac/diagonal_matrix.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
-#include <deal.II/lac/solver_cg.h>
-#include <deal.II/lac/solver_control.h>
-#include <deal.II/lac/vector.h>
-#include <deal.II/lac/vector_operation.h>
 
 #include <deal.II/matrix_free/matrix_free.h>
-#include <deal.II/matrix_free/operators.h>
 
 #include <deal.II/numerics/vector_tools_common.h>
-#include <deal.II/numerics/vector_tools_integrate_difference.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/utilities/fe_integrator.hpp>
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <limits>
-#include <memory>
-#include <type_traits>
-#include <vector>
 
 
 namespace MeltPoolDG::VectorTools
 {
-  template <int dim, typename number>
+  template <typename number>
   dealii::VectorizedArray<number>
   compute_mask_narrow_band(const dealii::VectorizedArray<number> &val,
-                           const number                           narrow_band_threshold)
-  {
-    dealii::VectorizedArray<number> indicator = 1.0;
-    for (unsigned int v = 0; v < dealii::VectorizedArray<number>::size(); ++v)
-      if (std::abs(val[v]) >= narrow_band_threshold)
-        indicator[v] = 0.0;
-
-    return indicator;
-  }
+                           const number                           narrow_band_threshold);
 
   template <int dim, int spacedim, typename number>
   void
@@ -65,40 +40,7 @@ namespace MeltPoolDG::VectorTools
     const dealii::LinearAlgebra::distributed::Vector<number> &in,
     const dealii::DoFHandler<dim, spacedim>                  &dof_handler_fe_system,
     dealii::LinearAlgebra::distributed::BlockVector<number>  &out,
-    const dealii::DoFHandler<dim, spacedim>                  &dof_handler)
-  {
-    const bool update_ghosts = !in.has_ghost_elements();
-    if (update_ghosts)
-      in.update_ghost_values();
-
-    for (const auto &cell_fe_system : dof_handler_fe_system.active_cell_iterators())
-      if (cell_fe_system->is_locally_owned())
-        {
-          dealii::Vector<number> local(dof_handler_fe_system.get_fe().n_dofs_per_cell());
-          cell_fe_system->get_dof_values(in, local);
-
-
-          auto cell = DoFCellAccessor<dim, dim, false>(&dof_handler.get_triangulation(),
-                                                       cell_fe_system->level(),
-                                                       cell_fe_system->index(),
-                                                       &dof_handler);
-
-          for (unsigned int d = 0; d < dim; ++d)
-            {
-              const unsigned int     n_dofs_per_component = dof_handler.get_fe().n_dofs_per_cell();
-              dealii::Vector<number> local_component(n_dofs_per_component);
-
-              for (unsigned int c = 0; c < n_dofs_per_component; ++c)
-                local_component[c] =
-                  local[dof_handler_fe_system.get_fe().component_to_system_index(d, c)];
-
-              cell.set_dof_values(local_component, out.block(d));
-            }
-        }
-
-    if (update_ghosts)
-      in.zero_out_ghost_values();
-  }
+    const dealii::DoFHandler<dim, spacedim>                  &dof_handler);
 
   template <int dim, int n_components, typename number>
   void
@@ -106,25 +48,7 @@ namespace MeltPoolDG::VectorTools
                                   const dealii::Function<dim>                        &function,
                                   const dealii::MatrixFree<dim, number>              &matrix_free,
                                   const unsigned int                                  dof_idx  = 0,
-                                  const unsigned int                                  quad_idx = 0)
-  {
-    FECellIntegrator<dim, n_components, number> phi(matrix_free, dof_idx, quad_idx);
-    dealii::MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, n_components, number> inverse(
-      phi);
-    out.zero_out_ghost_values();
-    for (unsigned int cell = 0; cell < matrix_free.n_cell_batches(); ++cell)
-      {
-        phi.reinit(cell);
-        for (const unsigned int q : phi.quadrature_point_indices())
-          phi.submit_dof_value(evaluate_function_at_vectorized_points<dim, number, n_components>(
-                                 function, phi.quadrature_point(q)),
-                               q);
-        inverse.transform_from_q_points_to_basis(n_components,
-                                                 phi.begin_dof_values(),
-                                                 phi.begin_dof_values());
-        phi.set_dof_values(out);
-      }
-  }
+                                  const unsigned int                                  quad_idx = 0);
 
   template <int dim, int spacedim, typename number>
   void
@@ -132,39 +56,7 @@ namespace MeltPoolDG::VectorTools
     const dealii::LinearAlgebra::distributed::BlockVector<number> &in,
     const dealii::DoFHandler<dim, spacedim>                       &dof_handler,
     dealii::LinearAlgebra::distributed::Vector<number>            &out,
-    const dealii::DoFHandler<dim, spacedim>                       &dof_handler_fe_system)
-  {
-    const bool update_ghosts = !in.has_ghost_elements();
-    if (update_ghosts)
-      in.update_ghost_values();
-
-    for (const auto &cell_fe_system : dof_handler_fe_system.active_cell_iterators())
-      if (cell_fe_system->is_locally_owned())
-        {
-          auto cell = DoFCellAccessor<dim, dim, false>(&dof_handler_fe_system.get_triangulation(),
-                                                       cell_fe_system->level(),
-                                                       cell_fe_system->index(),
-                                                       &dof_handler);
-
-          dealii::Vector<number> local(dof_handler_fe_system.get_fe().n_dofs_per_cell());
-
-          for (unsigned int d = 0; d < dim; ++d)
-            {
-              const unsigned int     n_dofs_per_component = dof_handler.get_fe().n_dofs_per_cell();
-              dealii::Vector<number> local_component(n_dofs_per_component);
-
-              cell.get_dof_values(in.block(d), local_component);
-
-              for (unsigned int c = 0; c < n_dofs_per_component; ++c)
-                local[dof_handler_fe_system.get_fe().component_to_system_index(d, c)] =
-                  local_component[c];
-            }
-          cell_fe_system->set_dof_values(local, out);
-        }
-
-    if (update_ghosts)
-      in.zero_out_ghost_values();
-  }
+    const dealii::DoFHandler<dim, spacedim>                       &dof_handler_fe_system);
 
   template <typename... T>
   void
@@ -201,76 +93,25 @@ namespace MeltPoolDG::VectorTools
 
   template <int dim, typename number>
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
-  normalize(const dealii::VectorizedArray<number> &in, const number zero = 1e-16)
-  {
-    dealii::Tensor<1, dim, dealii::VectorizedArray<number>> vec;
-
-    for (unsigned int v = 0; v < dealii::VectorizedArray<number>::size(); ++v)
-      vec[0][v] = in[v] >= zero ? 1.0 : -1.0;
-
-    return vec;
-  }
+  normalize(const dealii::VectorizedArray<number> &in, const number zero = 1e-16);
 
   template <int dim, typename number>
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
   normalize(const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &in,
-            const number                                                   zero = 1e-16)
-  {
-    dealii::Tensor<1, dim, dealii::VectorizedArray<number>> vec;
-
-    const auto n_norm = in.norm();
-
-    for (unsigned int v = 0; v < dealii::VectorizedArray<number>::size(); ++v)
-      if (n_norm[v] > zero)
-        for (unsigned int d = 0; d < dim; ++d)
-          vec[d][v] = in[d][v] / n_norm[v];
-      else
-        for (unsigned int d = 0; d < dim; ++d)
-          vec[d][v] = 0.0;
-
-    return vec;
-  }
+            const number                                                   zero = 1e-16);
 
   template <int dim, typename number, int n_components = dim>
   dealii::Tensor<1, n_components, dealii::VectorizedArray<number>>
   evaluate_function_at_vectorized_points(
     const dealii::Function<dim>                               &func,
-    const dealii::Point<dim, dealii::VectorizedArray<number>> &points)
-  {
-    AssertDimension(func.n_components, n_components);
-
-    dealii::Tensor<1, n_components, dealii::VectorizedArray<number>> vec;
-
-    for (unsigned int v = 0; v < dealii::VectorizedArray<number>::size(); ++v)
-      {
-        dealii::Point<dim> point_v;
-
-        for (unsigned int d = 0; d < dim; ++d)
-          point_v[d] = points[d][v];
-
-        for (unsigned int d = 0; d < n_components; ++d)
-          vec[d][v] = func.value(point_v, d);
-      }
-    return vec;
-  }
+    const dealii::Point<dim, dealii::VectorizedArray<number>> &points);
 
   template <int dim, typename number>
   dealii::VectorizedArray<number>
   evaluate_function_at_vectorized_points(
     const dealii::Function<dim>                               &function,
     const dealii::Point<dim, dealii::VectorizedArray<number>> &p_vectorized,
-    const unsigned int                                         component)
-  {
-    dealii::VectorizedArray<number> result;
-    for (unsigned int v = 0; v < dealii::VectorizedArray<number>::size(); ++v)
-      {
-        dealii::Point<dim> p;
-        for (unsigned int d = 0; d < dim; ++d)
-          p[d] = p_vectorized[d][v];
-        result[v] = function.value(p, component);
-      }
-    return result;
-  }
+    const unsigned int                                         component);
 
   template <int dim, typename number, typename VectorType>
   number
@@ -279,29 +120,7 @@ namespace MeltPoolDG::VectorTools
                const dealii::Mapping<dim>         &mapping,
                const dealii::DoFHandler<dim>      &dof_handler,
                const dealii::Quadrature<dim>      &quadrature,
-               const dealii::VectorTools::NormType norm_type)
-  {
-    const bool is_ghosted = solution.has_ghost_elements();
-
-    if (not is_ghosted)
-      solution.update_ghost_values();
-
-    dealii::Vector<float> difference_per_cell(triangulation.n_active_cells());
-
-    dealii::VectorTools::integrate_difference(mapping,
-                                              dof_handler,
-                                              solution,
-                                              dealii::Functions::ZeroFunction<dim>(
-                                                dof_handler.get_fe().n_components()),
-                                              difference_per_cell,
-                                              quadrature,
-                                              norm_type);
-
-    if (not is_ghosted)
-      solution.zero_out_ghost_values();
-
-    return dealii::VectorTools::compute_global_error(triangulation, difference_per_cell, norm_type);
-  }
+               const dealii::VectorTools::NormType norm_type);
 
   template <int dim, typename number, typename VectorType>
   number
@@ -309,16 +128,7 @@ namespace MeltPoolDG::VectorTools
                const ScratchData<dim, dim, number> &scratch_data,
                const unsigned int                   dof_idx,
                const unsigned int                   quad_idx,
-               const dealii::VectorTools::NormType  norm_type = dealii::VectorTools::L2_norm)
-  {
-    return compute_norm<dim, number, VectorType>(solution,
-                                                 scratch_data.get_triangulation(dof_idx),
-                                                 scratch_data.get_mapping(),
-                                                 scratch_data.get_dof_handler(dof_idx),
-                                                 scratch_data.get_quadrature(quad_idx),
-                                                 norm_type);
-  }
-
+               const dealii::VectorTools::NormType  norm_type = dealii::VectorTools::L2_norm);
 
   template <int n_components, int dim, typename VectorType>
   void
@@ -327,32 +137,7 @@ namespace MeltPoolDG::VectorTools
                  const dealii::AffineConstraints<typename VectorType::value_type> &constraints,
                  const dealii::Quadrature<dim>                                    &quadrature,
                  const VectorType                                                 &vec_in,
-                 VectorType                                                       &vec_out)
-  {
-    using number = typename VectorType::value_type;
-
-    typename dealii::MatrixFree<dim, number>::AdditionalData additional_data;
-    additional_data.tasks_parallel_scheme =
-      dealii::MatrixFree<dim, number>::AdditionalData::partition_color;
-    additional_data.mapping_update_flags = (dealii::update_values | dealii::update_JxW_values);
-
-    const auto matrix_free = std::make_shared<dealii::MatrixFree<dim, number>>();
-    matrix_free->reinit(mapping, dof, constraints, quadrature, additional_data);
-
-    using MatrixType =
-      dealii::MatrixFreeOperators::MassOperator<dim, -1, 0, n_components, VectorType>;
-    MatrixType mass_matrix;
-    mass_matrix.initialize(matrix_free);
-
-    mass_matrix.compute_diagonal();
-
-    dealii::ReductionControl                  control(6 * vec_in.size(), 0., 1e-12, false, false);
-    dealii::SolverCG<VectorType>              cg(control);
-    const dealii::DiagonalMatrix<VectorType> &preconditioner =
-      *mass_matrix.get_matrix_diagonal_inverse();
-
-    cg.solve(mass_matrix, vec_out, vec_in, preconditioner);
-  }
+                 VectorType                                                       &vec_out);
 
   /**
    * For a given @p matrix_free object, execute scalar- or vector-valued @p cell_operation
@@ -366,82 +151,7 @@ namespace MeltPoolDG::VectorTools
     const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free,
     unsigned int                                                            dof_idx,
     unsigned int                                                            quad_idx,
-    const T                                                                &cell_operation)
-  {
-    FECellIntegrator<dim, n_components, number> fe_eval(matrix_free, dof_idx, quad_idx);
-
-    dealii::MatrixFreeOperators::
-      CellwiseInverseMassMatrix<dim, -1, n_components, number, dealii::VectorizedArray<number>>
-        inverse_mass_matrix(fe_eval);
-
-    const auto &lexicographic_numbering =
-      matrix_free.get_shape_info(dof_idx, quad_idx).lexicographic_numbering;
-
-    VectorType weights;
-    weights.reinit(vec);
-    std::vector<number> ones(fe_eval.dofs_per_cell, 1.0);
-
-    std::vector<dealii::types::global_dof_index> dof_indices(fe_eval.dofs_per_cell);
-    std::vector<dealii::types::global_dof_index> dof_indices_mf(fe_eval.dofs_per_cell);
-    std::vector<number>                          dof_values(fe_eval.dofs_per_cell);
-
-    dealii::AffineConstraints<number> dummy;
-
-    vec = 0.0;
-
-    for (unsigned int cell = 0; cell < matrix_free.n_cell_batches(); ++cell)
-      {
-        fe_eval.reinit(cell);
-
-        for (unsigned int q = 0; q < fe_eval.n_q_points; ++q)
-          {
-            const auto temp = cell_operation(cell, q);
-            for (int c = 0; c < n_components; ++c)
-              if constexpr (std::is_same<typename std::remove_const<decltype(temp)>::type,
-                                         dealii::VectorizedArray<number>>::value)
-                {
-                  static_assert(n_components == 1,
-                                "The path should be only accessed for a single component.");
-                  fe_eval.begin_values()[q] = temp;
-                }
-              else if constexpr (
-                std::is_same<
-                  typename std::remove_const<decltype(temp)>::type,
-                  dealii::Tensor<1, n_components, dealii::VectorizedArray<number>>>::value)
-                {
-                  fe_eval.begin_values()[c * fe_eval.n_q_points + q] = temp[c];
-                }
-              else
-                {
-                  Assert(false, dealii::ExcNotImplemented());
-                }
-          }
-        inverse_mass_matrix.transform_from_q_points_to_basis(n_components,
-                                                             fe_eval.begin_values(),
-                                                             fe_eval.begin_dof_values());
-
-        for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(cell); ++v)
-          {
-            matrix_free.get_cell_iterator(cell, v, dof_idx)->get_dof_indices(dof_indices);
-
-            for (unsigned int j = 0; j < dof_indices.size(); ++j)
-              {
-                dof_indices_mf[j] = dof_indices[lexicographic_numbering[j]];
-                dof_values[j]     = fe_eval.begin_dof_values()[j][v];
-              }
-
-            dummy.distribute_local_to_global(dof_values, dof_indices_mf, vec);
-            dummy.distribute_local_to_global(ones, dof_indices_mf, weights);
-          }
-      }
-
-    vec.compress(dealii::VectorOperation::add);
-    weights.compress(dealii::VectorOperation::add);
-
-    for (unsigned int i = 0; i < vec.locally_owned_size(); ++i)
-      if (weights.local_element(i) != 0.0)
-        vec.local_element(i) /= weights.local_element(i);
-  }
+    const T                                                                &cell_operation);
 
   /**
    * Calculate the overall maximum element of a distributed vector @p vec.
@@ -449,14 +159,7 @@ namespace MeltPoolDG::VectorTools
   template <typename number>
   number
   max_element(const dealii::LinearAlgebra::distributed::Vector<number> &vec,
-              const MPI_Comm                                           &mpi_comm)
-  {
-    number max = std::numeric_limits<number>::lowest();
-    for (unsigned int i = 0; i < vec.locally_owned_size(); ++i)
-      max = std::max(max, vec.local_element(i));
-
-    return dealii::Utilities::MPI::max(max, mpi_comm);
-  }
+              const MPI_Comm                                           &mpi_comm);
 
   /**
    * Calculate the overall minimum element of a distributed vector @p vec.
@@ -464,20 +167,13 @@ namespace MeltPoolDG::VectorTools
   template <typename number>
   number
   min_element(const dealii::LinearAlgebra::distributed::Vector<number> &vec,
-              const MPI_Comm                                           &mpi_comm)
-  {
-    number min = std::numeric_limits<number>::max();
-    for (unsigned int i = 0; i < vec.locally_owned_size(); ++i)
-      min = std::min(min, vec.local_element(i));
-
-    return dealii::Utilities::MPI::min(min, mpi_comm);
-  }
+              const MPI_Comm                                           &mpi_comm);
 
   /**
    * Calculate the tanh for a vectorized arry @p arg.
    */
   template <int dim, typename number>
-  dealii::VectorizedArray<number>
+  inline dealii::VectorizedArray<number>
   tanh(dealii::VectorizedArray<number> const &arg)
   {
     return (std::exp(arg) - std::exp(-arg)) / (std::exp(arg) + std::exp(-arg));
@@ -490,15 +186,7 @@ namespace MeltPoolDG::VectorTools
    */
   template <typename number, std::size_t width>
   dealii::VectorizedArray<number>
-  tanh(const ::dealii::VectorizedArray<number, width> &x)
-  {
-    number values[::dealii::VectorizedArray<number, width>::size()];
-    for (unsigned int i = 0; i < dealii::VectorizedArray<number, width>::size(); ++i)
-      values[i] = std::tanh(x[i]);
-    ::dealii::VectorizedArray<number, width> out;
-    out.load(&values[0]);
-    return out;
-  }
+  tanh(const ::dealii::VectorizedArray<number, width> &x);
 
   // TODO: Check performance when the functions below are inlined.
   /**
@@ -507,18 +195,7 @@ namespace MeltPoolDG::VectorTools
    */
   template <int T1_dim, int T2_dim, typename number>
   dealii::Tensor<1, T1_dim, dealii::Tensor<1, T2_dim, number>>
-  dyadic_product(const number *a_start, const number *b_start)
-  {
-    dealii::Tensor<1, T1_dim, dealii::Tensor<1, T2_dim, number>> c;
-    for (unsigned int i = 0; i < T1_dim; ++i)
-      {
-        for (unsigned int j = 0; j < T2_dim; ++j)
-          {
-            c[i][j] = *(a_start + i) * *(b_start + j);
-          }
-      }
-    return c;
-  }
+  dyadic_product(const number *a_start, const number *b_start);
 
   /**
    * Compute the dyadic product of two rank-1 tensors
@@ -526,60 +203,32 @@ namespace MeltPoolDG::VectorTools
   template <int T1_dim, int T2_dim, typename number>
   dealii::Tensor<1, T1_dim, dealii::Tensor<1, T2_dim, number>>
   dyadic_product(const dealii::Tensor<1, T1_dim, number> &a,
-                 const dealii::Tensor<1, T2_dim, number> &b)
-  {
-    return dyadic_product<T1_dim, T2_dim, number>(&a[0], &b[0]);
-  }
+                 const dealii::Tensor<1, T2_dim, number> &b);
 
   /**
    * Return the transpose of a dealii::Tensor<dealii::Tensor>
    */
   template <int T1_dim, int T2_dim, typename number>
   dealii::Tensor<1, T2_dim, dealii::Tensor<1, T1_dim, number>>
-  transpose(const dealii::Tensor<1, T1_dim, dealii::Tensor<1, T2_dim, number>> &in)
-  {
-    dealii::Tensor<1, T2_dim, dealii::Tensor<1, T1_dim, number>> out;
-    for (unsigned int i = 0; i < T1_dim; ++i)
-      for (unsigned int j = 0; j < T2_dim; ++j)
-        out[j][i] = in[i][j];
-    return out;
-  }
+  transpose(const dealii::Tensor<1, T1_dim, dealii::Tensor<1, T2_dim, number>> &in);
 
   /**
    * Return the trace of a dealii::Tensor<dealii::Tensor>
    */
   template <int dim, typename number>
   number
-  trace(const dealii::Tensor<1, dim, dealii::Tensor<1, dim, number>> &in)
-  {
-    number tr(0.0);
-    for (unsigned int i = 0; i < dim; ++i)
-      tr += in[i][i];
-    return tr;
-  }
+  trace(const dealii::Tensor<1, dim, dealii::Tensor<1, dim, number>> &in);
 
   template <int dim, typename number>
   number
-  trace(const dealii::Tensor<2, dim, number> &in)
-  {
-    number tr(0.0);
-    for (unsigned int i = 0; i < dim; ++i)
-      tr += in[i][i];
-    return tr;
-  }
+  trace(const dealii::Tensor<2, dim, number> &in);
 
   /**
    * Return identity matrix
    */
   template <int dim, typename number>
   dealii::Tensor<1, dim, dealii::Tensor<1, dim, number>>
-  identity()
-  {
-    dealii::Tensor<1, dim, dealii::Tensor<1, dim, number>> out;
-    for (unsigned int i = 0; i < dim; ++i)
-      out[i][i] = number(1.0);
-    return out;
-  }
+  identity();
 
   /**
    * Helper functions for matrix-vector and matrix-matrix computations when both matrix and vector
@@ -589,25 +238,10 @@ namespace MeltPoolDG::VectorTools
   dealii::Tensor<1, n_rows, number>
   matrix_vector_product(
     const dealii::Tensor<1, n_rows, dealii::Tensor<1, n_columns, number>> &matrix,
-    const dealii::Tensor<1, n_columns, number>                            &vector)
-  {
-    dealii::Tensor<1, n_rows, number> result;
-    for (unsigned int i = 0; i < n_rows; ++i)
-      for (unsigned int j = 0; j < n_columns; ++j)
-        result[i] += matrix[i][j] * vector[j];
-    return result;
-  }
+    const dealii::Tensor<1, n_columns, number>                            &vector);
 
   template <int a, int b, int c, typename number>
   dealii::Tensor<1, a, dealii::Tensor<1, c, number>>
   matrix_matrix_product(const dealii::Tensor<1, a, dealii::Tensor<1, b, number>> &matrix1,
-                        const dealii::Tensor<1, b, dealii::Tensor<1, c, number>> &matrix2)
-  {
-    dealii::Tensor<1, a, dealii::Tensor<1, c, number>> result;
-    for (unsigned int i = 0; i < a; ++i)
-      for (unsigned int j = 0; j < c; ++j)
-        for (unsigned int k = 0; k < b; ++k)
-          result[i][j] += matrix1[i][k] * matrix2[k][j];
-    return result;
-  }
+                        const dealii::Tensor<1, b, dealii::Tensor<1, c, number>> &matrix2);
 } // namespace MeltPoolDG::VectorTools
