@@ -9,6 +9,8 @@ message("_______________________________________________________________________
 cmake_minimum_required(VERSION 3.12)
 set(CMAKE_CXX_STANDARD 20)
 
+include(FetchContent)
+
 project(MeltPoolDG)
 
 # avoid in-source compilation
@@ -135,6 +137,26 @@ if (MPDG_ENABLE_TESTING)
     add_subdirectory(unit_tests)
 else ()
     message(STATUS "Tests: disabled")
+endif ()
+
+# ##############################################################################
+# benchmarks
+# ##############################################################################
+option(MPDG_EANBLE_BENCHMARKING "Configure benchmarks" ON)
+if (MPDG_EANBLE_BENCHMARKING)
+    message(STATUS "Benchmarks: enabled")
+    # Deactivate internal google benchmark tests
+    set(BENCHMARK_ENABLE_TESTING OFF)
+    # Ensure that google benchmark debug assertions are disabled
+    string(APPEND CMAKE_CXX_FLAGS_RELEASE " -DNDEBUG")
+    FetchContent_Declare(
+            google_benchmark
+            GIT_REPOSITORY https://github.com/google/benchmark.git
+            GIT_TAG v1.9.0)
+    FetchContent_MakeAvailable(google_benchmark)
+    add_subdirectory(benchmarks)
+else ()
+    message(STATUS "Benchmarks: disabled")
 endif ()
 
 # ##############################################################################

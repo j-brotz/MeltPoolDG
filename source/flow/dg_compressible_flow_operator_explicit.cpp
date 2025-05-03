@@ -134,11 +134,11 @@ namespace MeltPoolDG::Flow
     const std::pair<unsigned int, unsigned int>      &face_range) const
   {
     FEFaceIntegrator<dim, dim + 2, number> phi_m(flow_scratch_data.scratch_data.get_matrix_free(),
-                                                 true /*is_interior_face*/,
+                                                 true,
                                                  flow_scratch_data.dof_idx,
                                                  flow_scratch_data.quad_idx);
     FEFaceIntegrator<dim, dim + 2, number> phi_p(flow_scratch_data.scratch_data.get_matrix_free(),
-                                                 false /*is_interior_face*/,
+                                                 false,
                                                  flow_scratch_data.dof_idx,
                                                  flow_scratch_data.quad_idx);
 
