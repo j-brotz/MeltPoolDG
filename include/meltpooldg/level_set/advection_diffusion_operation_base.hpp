@@ -1,7 +1,7 @@
 #pragma once
 #include <deal.II/lac/la_parallel_block_vector.h>
 
-#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/level_set/advection_diffusion_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 
 namespace MeltPoolDG::LevelSet

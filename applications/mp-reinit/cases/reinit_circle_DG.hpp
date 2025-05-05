@@ -14,7 +14,6 @@
 #include <deal.II/numerics/error_estimator.h>
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 

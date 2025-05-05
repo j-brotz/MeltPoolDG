@@ -32,18 +32,28 @@ namespace MeltPoolDG::Flow
 {
   template <int dim, typename number>
   AdafloWrapper<dim, number>::AdafloWrapper(
-    ScratchData<dim, dim, number>               &scratch_data,
-    std::shared_ptr<MeltPoolCase<dim, number>>   base_in,
-    const TimeIntegration::TimeIterator<number> &time_iterator,
-    const bool                                   do_evaporative_mass_flux)
+    ScratchData<dim, dim, number>                   &scratch_data,
+    std::shared_ptr<SimulationCaseBase<dim, number>> simulation_case,
+    AdafloWrapperParameters                         &adaflo_wrapper_params,
+    const Evaporation::EvaporationData<number>      &evapor,
+    const MaterialData<number>                      &material,
+    const BaseData                                  &base,
+    const TimeIntegration::TimeSteppingData<number> &time_stepping,
+    const TimeIntegration::TimeIterator<number>     &time_iterator,
+    const bool                                       do_evaporative_mass_flux)
     : scratch_data(scratch_data)
     , timer(std::cout, dealii::TimerOutput::never, dealii::TimerOutput::wall_times)
-    , adaflo_params(base_in->parameters.adaflo_params.get_parameters())
+    , adaflo_params(adaflo_wrapper_params.get_parameters())
     , do_evaporative_mass_flux(do_evaporative_mass_flux)
     , time_iterator(time_iterator)
   {
     // create input parameters for adaflo
-    create_parameters(base_in->parameters, base_in->parameter_file);
+    create_parameters(adaflo_wrapper_params,
+                      evapor,
+                      material,
+                      base,
+                      time_stepping,
+                      simulation_case->parameter_file);
 
     // setup Navier-Stokes solver
     navier_stokes =
@@ -54,25 +64,27 @@ namespace MeltPoolDG::Flow
 
     // Boundary conditions for the velocity field
     for (const auto &[symmetry_id, dummy] :
-         base_in->get_boundary_condition("symmetry", "navier_stokes_u"))
+         simulation_case->get_boundary_condition("symmetry", "navier_stokes_u"))
       navier_stokes->set_symmetry_boundary(symmetry_id);
     for (const auto &[no_slip_id, dummy] :
-         base_in->get_boundary_condition("no_slip", "navier_stokes_u"))
+         simulation_case->get_boundary_condition("no_slip", "navier_stokes_u"))
       navier_stokes->set_no_slip_boundary(no_slip_id);
-    for (const auto &dirichlet_bc : base_in->get_boundary_condition("dirichlet", "navier_stokes_u"))
+    for (const auto &dirichlet_bc :
+         simulation_case->get_boundary_condition("dirichlet", "navier_stokes_u"))
       navier_stokes->set_velocity_dirichlet_boundary(dirichlet_bc.first, dirichlet_bc.second);
-    for (const auto &open_bc : base_in->get_boundary_condition("open", "navier_stokes_u"))
+    for (const auto &open_bc : simulation_case->get_boundary_condition("open", "navier_stokes_u"))
       navier_stokes->set_open_boundary(open_bc.first, open_bc.second);
 
     // Boundary conditions for the pressure field
-    for (const auto &neumann_bc : base_in->get_boundary_condition("neumann", "navier_stokes_p"))
+    for (const auto &neumann_bc :
+         simulation_case->get_boundary_condition("neumann", "navier_stokes_p"))
       navier_stokes->set_open_boundary_with_normal_flux(neumann_bc.first, neumann_bc.second);
     for (const auto &[fix_pressure_constant_id, dummy] :
-         base_in->get_boundary_condition("fix_pressure_constant", "navier_stokes_p"))
+         simulation_case->get_boundary_condition("fix_pressure_constant", "navier_stokes_p"))
       navier_stokes->fix_pressure_constant(fix_pressure_constant_id);
 
     // Periodic boundary conditions
-    for (const auto &periodic_bc : base_in->get_periodic_bc().get_data())
+    for (const auto &periodic_bc : simulation_case->get_periodic_bc().get_data())
       {
         const auto [id_in, id_out, direction] = periodic_bc;
         navier_stokes->set_periodic_direction(direction, id_in, id_out);
@@ -100,26 +112,30 @@ namespace MeltPoolDG::Flow
 
     // dof handler for output of densities and viscosities
     // @todo: introduce only if do output == true
-    dof_handler_parameters.reinit(*base_in->triangulation);
+    dof_handler_parameters.reinit(*simulation_case->triangulation);
     dof_index_parameters = scratch_data.attach_dof_handler(dof_handler_parameters);
     scratch_data.attach_constraint_matrix(constraints_parameters);
   }
 
   template <int dim, typename number>
   void
-  AdafloWrapper<dim, number>::create_parameters(Parameters<number> &parameters,
-                                                const std::string   parameter_file)
+  AdafloWrapper<dim, number>::create_parameters(
+    MeltPoolDG::Flow::AdafloWrapperParameters       &adaflo_wrapper_params,
+    const Evaporation::EvaporationData<number>      &evapor,
+    const MaterialData<number>                      &material,
+    const BaseData                                  &base,
+    const TimeIntegration::TimeSteppingData<number> &time_stepping,
+    const std::string                                parameter_file)
   {
-    parameters.adaflo_params.parse_parameters(parameter_file);
+    adaflo_wrapper_params.parse_parameters(parameter_file);
 
-    AssertThrow(parameters.adaflo_params.params.density ==
-                  1.0, // 1.0 is the default value from adaflo
+    AssertThrow(adaflo_wrapper_params.params.density == 1.0, // 1.0 is the default value from adaflo
                 dealii::ExcMessage(
                   "It seems that you specified the density parameter "
                   "within the adaflo section, which is ignored by MeltPoolDG. "
                   "Please use the >material: material first density:< section instead. "));
 
-    AssertThrow(parameters.adaflo_params.params.viscosity ==
+    AssertThrow(adaflo_wrapper_params.params.viscosity ==
                   1.0, // 1.0 is the default value from adaflo
                 dealii::ExcMessage(
                   "It seems that you specified the viscosity parameter "
@@ -129,10 +145,10 @@ namespace MeltPoolDG::Flow
     // TODO: move to check in evaporation data
     if (do_evaporative_mass_flux)
       {
-        if (parameters.evapor.evaporative_dilation_rate.enable)
+        if (evapor.evaporative_dilation_rate.enable)
           {
             AssertThrow(
-              parameters.adaflo_params.params.beta_convective_term_momentum_balance == 0,
+              adaflo_wrapper_params.params.beta_convective_term_momentum_balance == 0,
               dealii::ExcMessage(
                 "For the consideration of phase change, the convective "
                 "formulation of the momentum balance in the Navier-Stokes equations "
@@ -157,29 +173,28 @@ namespace MeltPoolDG::Flow
     //   NavierStokesMatrix::begin_viscosity(). However, we do not actually
     //   use these values, since we fill the density and viscosity
     //   differently.
-    parameters.adaflo_params.params.density_diff   = 1.0;
-    parameters.adaflo_params.params.viscosity_diff = 1.0;
+    adaflo_wrapper_params.params.density_diff   = 1.0;
+    adaflo_wrapper_params.params.viscosity_diff = 1.0;
 
-    if (parameters.material.gas.density > 0.0)
+    if (material.gas.density > 0.0)
       {
         // adaflo assumes the parameter density to be the one of heaviside == 0
-        parameters.adaflo_params.params.density = parameters.material.gas.density;
+        adaflo_wrapper_params.params.density = material.gas.density;
       }
-    if (parameters.material.gas.dynamic_viscosity > 0.0)
+    if (material.gas.dynamic_viscosity > 0.0)
       {
         // adaflo assumes the parameter viscosity to be the one of heaviside == 0
-        parameters.adaflo_params.params.viscosity = parameters.material.gas.dynamic_viscosity;
+        adaflo_wrapper_params.params.viscosity = material.gas.dynamic_viscosity;
       }
 
     /// synchronize time stepping schemes
-    parameters.adaflo_params.params.start_time           = parameters.time_stepping.start_time;
-    parameters.adaflo_params.params.end_time             = parameters.time_stepping.end_time;
-    parameters.adaflo_params.params.time_step_size_start = parameters.time_stepping.time_step_size;
-    parameters.adaflo_params.params.time_step_size_min   = 1e-16;
-    parameters.adaflo_params.params.time_step_size_max   = 1e10;
+    adaflo_wrapper_params.params.start_time           = time_stepping.start_time;
+    adaflo_wrapper_params.params.end_time             = time_stepping.end_time;
+    adaflo_wrapper_params.params.time_step_size_start = time_stepping.time_step_size;
+    adaflo_wrapper_params.params.time_step_size_min   = 1e-16;
+    adaflo_wrapper_params.params.time_step_size_max   = 1e10;
 
-    parameters.adaflo_params.params.use_simplex_mesh =
-      parameters.base.fe.type == FiniteElementType::FE_SimplexP;
+    adaflo_wrapper_params.params.use_simplex_mesh = base.fe.type == FiniteElementType::FE_SimplexP;
   }
 
   template <int dim, typename number>

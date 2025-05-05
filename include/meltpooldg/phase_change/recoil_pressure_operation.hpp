@@ -8,7 +8,6 @@
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/material_data.hpp>
-#include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
 #include <meltpooldg/phase_change/recoil_pressure_data.hpp>
@@ -198,7 +197,8 @@ namespace MeltPoolDG::Evaporation
 
   public:
     RecoilPressureOperation(const ScratchData<dim, dim, number> &scratch_data_in,
-                            const Parameters<number>            &data_in,
+                            const RecoilPressureData<number>    &recoil,
+                            const MaterialData<number>          &material,
                             const unsigned int                   flow_vel_dof_idx_in,
                             const unsigned int                   flow_vel_quad_idx_in,
                             const unsigned int                   flow_pressure_dof_idx_in,

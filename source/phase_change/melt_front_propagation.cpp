@@ -21,25 +21,26 @@
 #include <meltpooldg/utilities/constraints.hpp>
 
 
-namespace MeltPoolDG::MeltPool
+namespace MeltPoolDG
 {
   using namespace dealii;
 
   template <int dim, typename number>
   MeltFrontPropagation<dim, number>::MeltFrontPropagation(
-    const ScratchData<dim, dim, number> &scratch_data_in,
-    const Parameters<number>            &data_in,
-    const unsigned int                   phase_fraction_dof_idx_in,
-    const unsigned int                   ls_dof_idx_in,
-    const VectorType                    &temperature_in,
-    const unsigned int                   reinit_dof_idx_in,
-    const unsigned int                   reinit_no_solid_dof_idx_in,
-    const unsigned int                   flow_vel_dof_idx_in,
-    const unsigned int                   flow_vel_no_solid_dof_idx_in,
-    const unsigned int                   heat_hanging_nodes_dof_idx_in)
+    const ScratchData<dim, dim, number>    &scratch_data_in,
+    const MeltFrontPropagationData<number> &mp_data,
+    const MaterialData<number>             &material_data,
+    const unsigned int                      phase_fraction_dof_idx_in,
+    const unsigned int                      ls_dof_idx_in,
+    const VectorType                       &temperature_in,
+    const unsigned int                      reinit_dof_idx_in,
+    const unsigned int                      reinit_no_solid_dof_idx_in,
+    const unsigned int                      flow_vel_dof_idx_in,
+    const unsigned int                      flow_vel_no_solid_dof_idx_in,
+    const unsigned int                      heat_hanging_nodes_dof_idx_in)
     : scratch_data(scratch_data_in)
-    , mp_data(data_in.mp)
-    , melting_solidification(data_in.material, MaterialTypes::liquid_solid)
+    , mp_data(mp_data)
+    , melting_solidification(material_data, MaterialTypes::liquid_solid)
     , phase_fraction_dof_idx(phase_fraction_dof_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
@@ -68,7 +69,7 @@ namespace MeltPoolDG::MeltPool
     /*
      * distribute the constraints for the level set in the solid region
      */
-    if (mp_data.solid.do_not_reinitialize)
+    if (mp_data.do_not_reinitialize)
       scratch_data.get_constraint(ls_dof_idx).distribute(level_set);
   }
 
@@ -153,7 +154,7 @@ namespace MeltPoolDG::MeltPool
     /*
      *  Do not reinitialize the level set field in the solid domain
      */
-    if (mp_data.solid.do_not_reinitialize)
+    if (mp_data.do_not_reinitialize)
       ignore_reinitialization_in_solid_regions(scratch_data.get_dof_handler(reinit_dof_idx),
                                                scratch_data.get_constraint(reinit_no_solid_dof_idx),
                                                const_cast<AffineConstraints<number> &>(
@@ -162,7 +163,7 @@ namespace MeltPoolDG::MeltPool
     /*
      *  Set the flow velocity to zero in the solid domain
      */
-    if (mp_data.solid.set_velocity_to_zero)
+    if (mp_data.set_velocity_to_zero)
       set_flow_field_in_solid_regions_to_zero(
         scratch_data.get_dof_handler(flow_vel_dof_idx),
         scratch_data.get_constraint(flow_vel_no_solid_dof_idx),
@@ -175,7 +176,7 @@ namespace MeltPoolDG::MeltPool
     // will be updated accordingly. In this case, also the
     // constrained indices in matrix-free have to be updated
     // which is done in the following by rebuilding matrix-free.
-    if (mp_data.solid.set_velocity_to_zero || mp_data.solid.do_not_reinitialize)
+    if (mp_data.set_velocity_to_zero || mp_data.do_not_reinitialize)
       const_cast<ScratchData<dim, dim, number> &>(scratch_data)
         .build(scratch_data.enable_boundary_faces, scratch_data.enable_inner_faces);
   }
@@ -314,7 +315,7 @@ namespace MeltPoolDG::MeltPool
             solid_eval.get_function_values(solid, solid_at_q);
 
             for (const auto q : flow_eval.quadrature_point_indices())
-              if (solid_at_q[q] >= mp_data.solid.solid_fraction_lower_limit)
+              if (solid_at_q[q] >= mp_data.solid_fraction_lower_limit)
                 solid_constraints.add_line(local_dof_indices[q]);
           }
         ++solid_cell;
@@ -387,7 +388,7 @@ namespace MeltPoolDG::MeltPool
             solid_eval.get_function_values(solid, solid_at_q);
 
             for (const auto q : ls_eval.quadrature_point_indices())
-              if (solid_at_q[q] >= mp_data.solid.solid_fraction_lower_limit)
+              if (solid_at_q[q] >= mp_data.solid_fraction_lower_limit)
                 solid_constraints.add_line(local_dof_indices[q]);
           }
         ++solid_cell;
@@ -432,4 +433,4 @@ namespace MeltPoolDG::MeltPool
   template class MeltFrontPropagation<1, double>;
   template class MeltFrontPropagation<2, double>;
   template class MeltFrontPropagation<3, double>;
-} // namespace MeltPoolDG::MeltPool
+} // namespace MeltPoolDG

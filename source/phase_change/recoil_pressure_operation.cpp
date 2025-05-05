@@ -57,7 +57,8 @@ namespace MeltPoolDG::Evaporation
   template <int dim, typename number>
   RecoilPressureOperation<dim, number>::RecoilPressureOperation(
     const ScratchData<dim, dim, number> &scratch_data_in,
-    const Parameters<number>            &data_in,
+    const RecoilPressureData<number>    &recoil,
+    const MaterialData<number>          &material,
     const unsigned int                   flow_vel_dof_idx_in,
     const unsigned int                   flow_vel_quad_idx_in,
     const unsigned int                   flow_pressure_dof_idx_in,
@@ -70,27 +71,26 @@ namespace MeltPoolDG::Evaporation
     , ls_dof_idx(ls_dof_idx_in)
     , heat_dof_idx(heat_dof_idx_in)
     , do_level_set_pressure_gradient_interpolation(scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx_in))
-    , model_type(data_in.evapor.recoil.type)
-    , delta_phase_weighted(create_phase_weighted_delta_approximation(
-        data_in.evapor.recoil.delta_approximation_phase_weighted))
-    , dummy_temperature(std::nextafter(data_in.evapor.recoil.activation_temperature,
-                                       -std::numeric_limits<number>::infinity()))
+    , model_type(recoil.type)
+    , delta_phase_weighted(
+        create_phase_weighted_delta_approximation(recoil.delta_approximation_phase_weighted))
+    , dummy_temperature(
+        std::nextafter(recoil.activation_temperature, -std::numeric_limits<number>::infinity()))
   {
-    switch (data_in.evapor.recoil.type)
+    switch (recoil.type)
       {
         default:
         case RecoilPressureModelType::phenomenological:
           recoil_pressure_model =
             std::make_unique<const RecoilPressurePhenomenologicalModel<number>>(
-              data_in.evapor.recoil,
-              data_in.material.boiling_temperature,
-              data_in.material.molar_mass,
-              data_in.material.latent_heat_of_evaporation);
+              recoil,
+              material.boiling_temperature,
+              material.molar_mass,
+              material.latent_heat_of_evaporation);
           break;
         case RecoilPressureModelType::hybrid:
           recoil_pressure_model =
-            std::make_unique<const RecoilPressureHybridModel<number>>(data_in.evapor.recoil,
-                                                                      data_in.material);
+            std::make_unique<const RecoilPressureHybridModel<number>>(recoil, material);
           break;
       }
 

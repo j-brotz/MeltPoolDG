@@ -13,7 +13,6 @@
 #include <deal.II/numerics/error_estimator.h>
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/utilities/characteristic_functions.hpp>
 
 #include <cmath>

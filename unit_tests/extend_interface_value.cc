@@ -45,7 +45,7 @@
 #include <vector>
 
 // uncomment to activate debug output
-// #define MPDG_TEST_ENABLE_DEBUG
+#define MPDG_TEST_ENABLE_DEBUG
 
 using namespace dealii;
 using namespace MeltPoolDG;
@@ -217,7 +217,7 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
   nearest_point_data.narrow_band_threshold = 0.1;
   nearest_point_data.max_iter              = n_iter;
   nearest_point_data.type                  = type;
-  nearest_point_data.verbosity_level       = 3;
+  nearest_point_data.verbosity_level       = 0;
 
   TimerOutput timer(pcout, TimerOutput::never, TimerOutput::wall_times);
 
@@ -481,7 +481,7 @@ main(int argc, char *argv[])
 #ifdef DEAL_II_WITH_ARBORX
   run_test<2, 6, 1>(LevelSet::NearestPointType::nearest_point_fast);
 #endif
-  run_test<2, 6, 5>(LevelSet::NearestPointType::closest_point_normal_collinear_coquerelle);
+  run_test<2, 6, 20>(LevelSet::NearestPointType::closest_point_normal_collinear_coquerelle);
 
   return 0;
 }

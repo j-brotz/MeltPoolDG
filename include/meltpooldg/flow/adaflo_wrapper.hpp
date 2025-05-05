@@ -16,13 +16,16 @@
 #  include <deal.II/lac/generic_linear_algebra.h>
 #  include <deal.II/lac/la_parallel_vector.h>
 
+#  include <meltpooldg/core/base_data.hpp>
 #  include <meltpooldg/core/material.hpp>
-#  include <meltpooldg/core/parameters.hpp>
 #  include <meltpooldg/core/scratch_data.hpp>
 #  include <meltpooldg/core/simulation_base.hpp>
+#  include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
 #  include <meltpooldg/flow/flow_base.hpp>
+#  include <meltpooldg/phase_change/evaporation_data.hpp>
 #  include <meltpooldg/post_processing/generic_data_out.hpp>
 #  include <meltpooldg/time_integration/time_iterator.hpp>
+#  include <meltpooldg/time_integration/time_stepping_data.hpp>
 
 #  include <adaflo/navier_stokes.h>
 #  include <adaflo/parameters.h>
@@ -44,10 +47,15 @@ namespace MeltPoolDG::Flow
     /**
      * Constructor.
      */
-    AdafloWrapper(ScratchData<dim, dim, number>               &scratch_data,
-                  std::shared_ptr<MeltPoolCase<dim, number>>   base_in,
-                  const TimeIntegration::TimeIterator<number> &time_iterator,
-                  const bool                                   do_evaporative_mass_flux);
+    AdafloWrapper(ScratchData<dim, dim, number>                   &scratch_data,
+                  std::shared_ptr<SimulationCaseBase<dim, number>> simulation_case,
+                  AdafloWrapperParameters                         &adaflo_params,
+                  const Evaporation::EvaporationData<number>      &evapor,
+                  const MaterialData<number>                      &material,
+                  const BaseData                                  &base,
+                  const TimeIntegration::TimeSteppingData<number> &time_stepping,
+                  const TimeIntegration::TimeIterator<number>     &time_iterator,
+                  const bool                                       do_evaporative_mass_flux);
 
     void
     set_initial_condition(const dealii::Function<dim> &initial_field_function_velocity) override;
@@ -217,7 +225,12 @@ namespace MeltPoolDG::Flow
 
   private:
     void
-    create_parameters(Parameters<number> &parameters, const std::string parameter_file);
+    create_parameters(MeltPoolDG::Flow::AdafloWrapperParameters       &adaflo_wrapper_params,
+                      const Evaporation::EvaporationData<number>      &evapor,
+                      const MaterialData<number>                      &material,
+                      const BaseData                                  &base,
+                      const TimeIntegration::TimeSteppingData<number> &time_stepping,
+                      const std::string                                parameter_file);
 
     bool
     time_stepping_synchronized();

@@ -30,6 +30,18 @@ function(setup_application)
         # Add an executable target with the current source file, all cases, and headers
         add_executable(${exec} ${source_file} ${CASES} ${CASES_HEADERS})
 
+        ## Set output directory to one level above the binary dir
+        #get_filename_component(PARENT_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} DIRECTORY)
+        #message("-- Building executable: ${PARENT_DIR}")
+
+        ### Set the output directory to one level up (not just '.'!)
+        ##set_target_properties(${exec} PROPERTIES
+            ##RUNTIME_OUTPUT_DIRECTORY ${PARENT_BINARY_DIR}
+        ##)
+        #set_target_properties(${exec} PROPERTIES
+            #RUNTIME_OUTPUT_DIRECTORY ${PARENT_BINARY_DIR}
+        #)
+
         deal_ii_setup_target(${exec})
 
         # Link additional libraries (libName is assumed to be defined elsewhere)

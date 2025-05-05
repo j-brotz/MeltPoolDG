@@ -8,7 +8,7 @@
 #include <deal.II/matrix_free/matrix_free.h>
 // MeltPoolDG
 #include <meltpooldg/core/operator_base.hpp>
-#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/level_set/normal_vector_data.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
 namespace MeltPoolDG::LevelSet
