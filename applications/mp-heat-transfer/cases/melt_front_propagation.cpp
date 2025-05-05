@@ -62,7 +62,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           case LevelSetType::level_set:
             return CharacteristicFunctions::tanh_characteristic_function(signed_distance, eps);
           case LevelSetType::heaviside:
-            return CharacteristicFunctions::heaviside(signed_distance, eps);
+            return CharacteristicFunctions::smoothed_heaviside(signed_distance, eps);
           case LevelSetType::signed_distance:
             return signed_distance;
           default:

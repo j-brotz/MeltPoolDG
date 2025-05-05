@@ -88,7 +88,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       const auto z = p[dim - 1];
-      return CharacteristicFunctions::heaviside(z_level - z, eps);
+      return CharacteristicFunctions::smoothed_heaviside(z_level - z, eps);
     }
 
   private:

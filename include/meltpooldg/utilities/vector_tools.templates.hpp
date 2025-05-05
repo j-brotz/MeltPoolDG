@@ -138,16 +138,4 @@ namespace MeltPoolDG::VectorTools
       if (weights.local_element(i) != 0.0)
         vec.local_element(i) /= weights.local_element(i);
   }
-
-  template <typename number, std::size_t width>
-  dealii::VectorizedArray<number>
-  tanh(const ::dealii::VectorizedArray<number, width> &x)
-  {
-    number values[::dealii::VectorizedArray<number, width>::size()];
-    for (unsigned int i = 0; i < dealii::VectorizedArray<number, width>::size(); ++i)
-      values[i] = std::tanh(x[i]);
-    ::dealii::VectorizedArray<number, width> out;
-    out.load(&values[0]);
-    return out;
-  }
 } // namespace MeltPoolDG::VectorTools

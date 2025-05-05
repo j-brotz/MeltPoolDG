@@ -83,7 +83,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
     {
       const auto signed_distance = level - p[1];
       if (heaviside)
-        return CharacteristicFunctions::heaviside(signed_distance, eps);
+        return CharacteristicFunctions::smoothed_heaviside(signed_distance, eps);
       else
         return signed_distance;
     }
@@ -110,7 +110,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
       const auto signed_distance = level - p[0] - velocity * this->get_time();
 
       if (heaviside)
-        return CharacteristicFunctions::heaviside(signed_distance, eps);
+        return CharacteristicFunctions::smoothed_heaviside(signed_distance, eps);
       else
         return signed_distance;
     }

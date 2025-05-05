@@ -23,9 +23,6 @@
 
 #include <meltpooldg/core/scratch_data.hpp>
 
-#include <cmath>
-#include <cstddef>
-
 
 namespace MeltPoolDG::VectorTools
 {
@@ -154,22 +151,4 @@ namespace MeltPoolDG::VectorTools
   min_element(const dealii::LinearAlgebra::distributed::Vector<number> &vec,
               const MPI_Comm                                           &mpi_comm);
 
-  /**
-   * Calculate the tanh for a vectorized arry @p arg.
-   */
-  template <int dim, typename number>
-  inline dealii::VectorizedArray<number>
-  tanh(dealii::VectorizedArray<number> const &arg)
-  {
-    return (std::exp(arg) - std::exp(-arg)) / (std::exp(arg) + std::exp(-arg));
-  }
-
-  /**
-   * Compute the hyperbolic tangent of a vectorized data field. The result is returned
-   * as vectorized array in the form <tt>{tanh(x[0]), tanh(x[1]), ...,
-   * tanh(x[size()-1])}</tt>.
-   */
-  template <typename number, std::size_t width>
-  dealii::VectorizedArray<number>
-  tanh(const ::dealii::VectorizedArray<number, width> &x);
 } // namespace MeltPoolDG::VectorTools

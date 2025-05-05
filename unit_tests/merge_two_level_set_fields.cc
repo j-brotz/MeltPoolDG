@@ -82,7 +82,8 @@ public:
   {
     (void)component;
 
-    return CharacteristicFunctions::heaviside(CharacteristicFunctions::sgn(-sphere.value(p)), 0);
+    return CharacteristicFunctions::smoothed_heaviside(
+      CharacteristicFunctions::sgn(-sphere.value(p)), 0);
   }
 
   const Functions::SignedDistance::Sphere<dim> sphere;
@@ -102,7 +103,8 @@ public:
   {
     (void)component;
 
-    return CharacteristicFunctions::heaviside(-CharacteristicFunctions::sgn(-sphere.value(p)), 0);
+    return CharacteristicFunctions::smoothed_heaviside(
+      -CharacteristicFunctions::sgn(-sphere.value(p)), 0);
   }
 
   const Functions::SignedDistance::Sphere<dim> sphere;

@@ -15,8 +15,8 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 #include <meltpooldg/utilities/create_triangulation_with_marching_cube_algorithm.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <cmath>
@@ -369,8 +369,8 @@ namespace MeltPoolDG::Simulation::VortexBubble
                         {
                           norm_interface_kreiss +=
                             Utilities::fixed_power<2>(
-                              UtilityFunctions::heaviside(phi_at_q[q]) -
-                              UtilityFunctions::heaviside(
+                              CharacteristicFunctions::heaviside(phi_at_q[q]) -
+                              CharacteristicFunctions::heaviside(
                                 sd_circle.value(fe.quadrature_point(q), 0))) *
                             fe.JxW(q);
                           if (std::abs(phi_at_q[q]) < 0.02)

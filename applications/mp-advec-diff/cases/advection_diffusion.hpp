@@ -61,7 +61,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
           case LevelSetType::level_set:
             return CharacteristicFunctions::tanh_characteristic_function(signed_distance, eps);
           case LevelSetType::smooth_heaviside:
-            return CharacteristicFunctions::heaviside(signed_distance, eps);
+            return CharacteristicFunctions::smoothed_heaviside(signed_distance, eps);
           case LevelSetType::heaviside:
             return CharacteristicFunctions::sgn(signed_distance);
           case LevelSetType::signed_distance:

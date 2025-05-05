@@ -47,7 +47,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
         {
           const auto y            = p[dim - 1];
           const auto current_time = this->get_time();
-          return CharacteristicFunctions::heaviside(
+          return CharacteristicFunctions::smoothed_heaviside(
             level +
               interface_case_info.first *
                 (current_time < interface_case_info.second ? current_time :
@@ -61,7 +61,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
           // say we inherit from a straight interface case
           const auto y = p[dim - 1];
 
-          number straight_value = CharacteristicFunctions::heaviside(
+          number straight_value = CharacteristicFunctions::smoothed_heaviside(
             level - y,
             eps); // 0 side of H() stands for gas, 1 side of H() stands for liquid
 
@@ -72,7 +72,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
           const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere(
             sphere_center, interface_case_info.second);
           number powder_particle_value =
-            CharacteristicFunctions::heaviside(-distance_sphere.value(p), eps);
+            CharacteristicFunctions::smoothed_heaviside(-distance_sphere.value(p), eps);
           return std::max(straight_value, powder_particle_value);
         }
       else
