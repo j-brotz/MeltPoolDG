@@ -1,0 +1,173 @@
+{
+    "base":
+    {
+        "application name": "not_initialized",
+        "case name": "not_initialized",
+        "dimension": "2",
+        "do print parameters": "true",
+        "global refinements": "1",
+        "number": "double",
+        "verbosity level": "1",
+        "fe":
+        {
+            "degree": "1",
+            "type": "FE_Q"
+        }
+    },
+    "compressible navier stokes":
+    {
+        "courant number": "0.15",
+        "domain representation type": "fitted",
+        "gravity constant": "0",
+        "jacobian type": "exact",
+        "linearization jump convective flux": "complete_fd",
+        "numerical flux type": "lax_friedrichs_modified",
+        "use cfl criteria": "false",
+        "verbosity level": "-1",
+        "viscous courant number": "1",
+        "cut":
+        {
+            "two phase": "false",
+            "unfitted flow boundary condition": "no_slip_wall",
+            "stabilization":
+            {
+                "nitsche parameter": "1",
+                "ghost-penalty":
+                {
+                    "gamma A degree 0": "1",
+                    "gamma A degree 1": "1",
+                    "gamma A degree 2": "1",
+                    "gamma M degree 0": "1",
+                    "gamma M degree 1": "1",
+                    "gamma M degree 2": "1"
+                }
+            }
+        },
+        "fe":
+        {
+            "degree": "-1",
+            "type": "not_initialized"
+        },
+        "initial conditions":
+        {
+            "gas": "",
+            "liquid": ""
+        },
+        "interface jump conditions":
+        {
+            "evaporation mass flux": "0",
+            "type": "penalty",
+            "HLLP0 and Nitsche":
+            {
+                "interior penalty parameter interface": "1"
+            },
+            "penalty":
+            {
+                "coefficients":
+                {
+                    "density": "1.79769e+308",
+                    "temperature": "1.79769e+308"
+                },
+                "target values":
+                {
+                    "density gas phase": "0",
+                    "temperature gas phase": "0"
+                }
+            }
+        },
+        "material":
+        {
+            "gas":
+            {
+                "dynamic viscosity": "0.000625",
+                "gamma": "1.4",
+                "reference density": "1",
+                "specific gas constant": "287.1",
+                "specific isobaric heat": "1000",
+                "thermal conductivity": "1.79769e+308",
+                "equation of state":
+                {
+                    "b": "1.79769e+308",
+                    "p inf": "1.79769e+308",
+                    "q": "2.22507e-308",
+                    "type": "ideal_gas"
+                }
+            },
+            "liquid":
+            {
+                "dynamic viscosity": "0.000625",
+                "gamma": "1.4",
+                "reference density": "1",
+                "specific gas constant": "287.1",
+                "specific isobaric heat": "1000",
+                "thermal conductivity": "1.79769e+308",
+                "equation of state":
+                {
+                    "b": "1.79769e+308",
+                    "p inf": "1.79769e+308",
+                    "q": "2.22507e-308",
+                    "type": "ideal_gas"
+                }
+            }
+        },
+        "time integration":
+        {
+            "preconditioner update frequency": "100",
+            "type": "not_initialized",
+            "linear solver":
+            {
+                "abs tolerance": "1e-20",
+                "do matrix free": "true",
+                "max iterations": "10000",
+                "monitor type": "none",
+                "preconditioner type": "Identity",
+                "rel tolerance": "1e-12",
+                "solver type": "GMRES"
+            },
+            "nlsolve":
+            {
+                "field correction tolerance": "1e-10",
+                "field correction tolerance alt": "1e-09",
+                "max nonlinear iterations": "10",
+                "max nonlinear iterations alt": "0",
+                "residual tolerance": "1e-09",
+                "residual tolerance alt": "1e-08",
+                "verbosity level": "-1"
+            }
+        }
+    },
+    "output":
+    {
+        "directory": ".\/",
+        "do user defined postprocessing": "false",
+        "output variables": "all",
+        "write frequency": "1",
+        "write time step size": "1.79769e+308",
+        "paraview":
+        {
+            "enable": "false",
+            "filename": "solution",
+            "n digits timestep": "4",
+            "n groups": "1",
+            "n patches": "0",
+            "output material id": "false",
+            "output subdomains": "false",
+            "print boundary id": "false",
+            "write higher order cells": "true"
+        }
+    },
+    "profiling":
+    {
+        "enable": "false",
+        "time type": "real",
+        "write time step size": "10"
+    },
+    "time stepping":
+    {
+        "end time": "1",
+        "max n steps": "10000000",
+        "start time": "0",
+        "time step size": "0.01",
+        "time step size function": "0.0*t"
+    }
+}
