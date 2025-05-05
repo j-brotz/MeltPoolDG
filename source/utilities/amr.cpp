@@ -12,16 +12,13 @@ namespace MeltPoolDG::AMR
 {
   template <int dim, typename VectorType, typename number>
   void
-  refine_grid(
-    const std::function<bool(dealii::Triangulation<dim> &)> &mark_cells_for_refinement,
-    const std::function<void(
-      std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                            std::function<void(std::vector<VectorType *> &)>>> &)> &attach_vectors,
-    const std::function<void()>                                                    &post,
-    const std::function<void()>       &setup_dof_system,
-    const AdaptiveMeshingData<number> &amr,
-    dealii::Triangulation<dim>        &tria,
-    const int                          n_time_step)
+  refine_grid(const MarkCellsForRefinementType<dim>                 &mark_cells_for_refinement,
+              const AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors,
+              const std::function<void()>                           &post,
+              const std::function<void()>                           &setup_dof_system,
+              const AdaptiveMeshingData<number>                     &amr,
+              dealii::Triangulation<dim>                            &tria,
+              const int                                              n_time_step)
   {
     if (not now(amr, n_time_step))
       return;
@@ -29,40 +26,22 @@ namespace MeltPoolDG::AMR
     if (mark_cells_for_refinement(tria) == false)
       return;
 
-    // Limit the maximum and minimum refinement levels of cells of the grid.
-    if (tria.n_levels() > amr.max_grid_refinement_level)
-      for (auto &cell : tria.active_cell_iterators_on_level(amr.max_grid_refinement_level))
-        if (cell->is_locally_owned())
-          cell->clear_refine_flag();
-    if (amr.min_grid_refinement_level > 0)
-      for (auto &cell : tria.active_cell_iterators_on_level(amr.min_grid_refinement_level))
-        if (cell->is_locally_owned())
-          cell->clear_coarsen_flag();
-
-    // do not coarsen/refine cells along boundary
-    if (amr.do_not_modify_boundary_cells)
-      for (auto &cell : tria.active_cell_iterators())
-        {
-          if (not cell->is_locally_owned())
-            continue;
-
-          for (auto &face : cell->face_iterators())
-            {
-              if (not face->at_boundary())
-                continue;
-              if (cell->refine_flag_set())
-                cell->clear_refine_flag();
-              else
-                cell->clear_coarsen_flag();
-            }
-        }
+    internal::limit_amr(tria, amr);
 
     // the following is very similar to the code in
     // CutUtil::SolutionTransferOperator::transfer_solution_constant_dofs()
 
-    std::vector<
-      std::pair<const dealii::DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
-      data;
+    if (not attach_vectors)
+      {
+        // short circuit this function
+        tria.prepare_coarsening_and_refinement();
+        tria.execute_coarsening_and_refinement();
+        setup_dof_system();
+        post();
+        return;
+      }
+
+    DoFHandlerAndVectorDataType<dim, VectorType> data;
 
     attach_vectors(data);
 
@@ -127,13 +106,13 @@ namespace MeltPoolDG::AMR
 
   template <int dim, typename VectorType, typename number>
   void
-  refine_grid(const std::function<bool(dealii::Triangulation<dim> &)> &mark_cells_for_refinement,
-              const std::function<void(std::vector<VectorType *> &)>  &attach_vectors,
-              const std::function<void()>                             &post,
-              const std::function<void()>                             &setup_dof_system,
-              const AdaptiveMeshingData<number>                       &amr,
-              dealii::DoFHandler<dim>                                 &dof_handler,
-              const int                                                n_time_step)
+  refine_grid(const MarkCellsForRefinementType<dim>                  &mark_cells_for_refinement,
+              const std::function<void(std::vector<VectorType *> &)> &attach_vectors,
+              const std::function<void()>                            &post,
+              const std::function<void()>                            &setup_dof_system,
+              const AdaptiveMeshingData<number>                      &amr,
+              dealii::DoFHandler<dim>                                &dof_handler,
+              const int                                               n_time_step)
   {
     refine_grid<dim, VectorType>(
       mark_cells_for_refinement,
@@ -150,12 +129,8 @@ namespace MeltPoolDG::AMR
 
   template void
   refine_grid(
-    const std::function<bool(dealii::Triangulation<1> &)> &,
-    const std::function<void(
-      std::vector<std::pair<
-        const dealii::DoFHandler<1> *,
-        std::function<void(std::vector<dealii::LinearAlgebra::distributed::Vector<double> *> &)>>>
-        &)> &,
+    const MarkCellsForRefinementType<1> &,
+    const AttachDoFHandlerAndVectorsType<1, dealii::LinearAlgebra::distributed::Vector<double>> &,
     const std::function<void()> &,
     const std::function<void()> &,
     const AdaptiveMeshingData<double> &,
@@ -163,12 +138,8 @@ namespace MeltPoolDG::AMR
     const int);
   template void
   refine_grid(
-    const std::function<bool(dealii::Triangulation<2> &)> &,
-    const std::function<void(
-      std::vector<std::pair<
-        const dealii::DoFHandler<2> *,
-        std::function<void(std::vector<dealii::LinearAlgebra::distributed::Vector<double> *> &)>>>
-        &)> &,
+    const MarkCellsForRefinementType<2> &,
+    const AttachDoFHandlerAndVectorsType<2, dealii::LinearAlgebra::distributed::Vector<double>> &,
     const std::function<void()> &,
     const std::function<void()> &,
     const AdaptiveMeshingData<double> &,
@@ -176,12 +147,8 @@ namespace MeltPoolDG::AMR
     const int);
   template void
   refine_grid(
-    const std::function<bool(dealii::Triangulation<3> &)> &,
-    const std::function<void(
-      std::vector<std::pair<
-        const dealii::DoFHandler<3> *,
-        std::function<void(std::vector<dealii::LinearAlgebra::distributed::Vector<double> *> &)>>>
-        &)> &,
+    const MarkCellsForRefinementType<3> &,
+    const AttachDoFHandlerAndVectorsType<3, dealii::LinearAlgebra::distributed::Vector<double>> &,
     const std::function<void()> &,
     const std::function<void()> &,
     const AdaptiveMeshingData<double> &,
@@ -192,7 +159,7 @@ namespace MeltPoolDG::AMR
 
   template void
   refine_grid(
-    const std::function<bool(dealii::Triangulation<1> &)> &,
+    const MarkCellsForRefinementType<1> &,
     const std::function<void(std::vector<dealii::LinearAlgebra::distributed::Vector<double> *> &)>
       &,
     const std::function<void()> &,
@@ -202,7 +169,7 @@ namespace MeltPoolDG::AMR
     const int);
   template void
   refine_grid(
-    const std::function<bool(dealii::Triangulation<2> &)> &,
+    const MarkCellsForRefinementType<2> &,
     const std::function<void(std::vector<dealii::LinearAlgebra::distributed::Vector<double> *> &)>
       &,
     const std::function<void()> &,
@@ -212,7 +179,7 @@ namespace MeltPoolDG::AMR
     const int);
   template void
   refine_grid(
-    const std::function<bool(dealii::Triangulation<3> &)> &,
+    const MarkCellsForRefinementType<3> &,
     const std::function<void(std::vector<dealii::LinearAlgebra::distributed::Vector<double> *> &)>
       &,
     const std::function<void()> &,
@@ -220,4 +187,49 @@ namespace MeltPoolDG::AMR
     const AdaptiveMeshingData<double> &,
     dealii::DoFHandler<3> &,
     const int);
+
+
+
+  namespace internal
+  {
+    template <int dim, typename number>
+    void
+    limit_amr(dealii::Triangulation<dim> &tria, const AdaptiveMeshingData<number> &amr_data)
+    {
+      // Limit the maximum and minimum refinement levels of cells of the grid.
+      if (tria.n_levels() > amr_data.max_grid_refinement_level)
+        for (auto &cell : tria.active_cell_iterators_on_level(amr_data.max_grid_refinement_level))
+          if (cell->is_locally_owned())
+            cell->clear_refine_flag();
+      if (amr_data.min_grid_refinement_level > 0)
+        for (auto &cell : tria.active_cell_iterators_on_level(amr_data.min_grid_refinement_level))
+          if (cell->is_locally_owned())
+            cell->clear_coarsen_flag();
+
+      // do not coarsen/refine cells along boundary
+      if (amr_data.do_not_modify_boundary_cells)
+        for (auto &cell : tria.active_cell_iterators())
+          {
+            if (not cell->is_locally_owned())
+              continue;
+
+            for (auto &face : cell->face_iterators())
+              {
+                if (not face->at_boundary())
+                  continue;
+                if (cell->refine_flag_set())
+                  cell->clear_refine_flag();
+                else
+                  cell->clear_coarsen_flag();
+              }
+          }
+    }
+
+    template void
+    limit_amr(dealii::Triangulation<1> &, const AdaptiveMeshingData<double> &);
+    template void
+    limit_amr(dealii::Triangulation<2> &, const AdaptiveMeshingData<double> &);
+    template void
+    limit_amr(dealii::Triangulation<3> &, const AdaptiveMeshingData<double> &);
+  } // namespace internal
 } // namespace MeltPoolDG::AMR

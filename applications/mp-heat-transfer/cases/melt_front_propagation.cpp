@@ -13,6 +13,7 @@
 
 #include <meltpooldg/core/case_registration.hpp>
 #include <meltpooldg/utilities/characteristic_functions.hpp>
+#include <meltpooldg/utilities/enum.hpp>
 
 #include <cmath>
 #include <vector>
@@ -38,48 +39,43 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
 {
   using namespace dealii;
 
+  BETTER_ENUM(LevelSetType, char, level_set, heaviside, signed_distance)
+
   template <int dim, typename number>
   class InitialLevelSet : public Function<dim, number>
   {
   public:
-    InitialLevelSet(const number z_level, const number eps)
+    InitialLevelSet(const number z_level, const LevelSetType level_set_type, const number eps)
       : Function<dim, number>()
       , z_level(z_level)
+      , level_set_type(level_set_type)
       , eps(eps)
     {}
 
     number
     value(const Point<dim, number> &p, const unsigned int /*component*/) const override
     {
-      const auto z = p[dim - 1];
-      return CharacteristicFunctions::tanh_characteristic_function(z_level - z, eps);
+      const auto signed_distance = z_level - p[dim - 1];
+
+      switch (level_set_type)
+        {
+          case LevelSetType::level_set:
+            return CharacteristicFunctions::tanh_characteristic_function(signed_distance, eps);
+          case LevelSetType::heaviside:
+            return CharacteristicFunctions::heaviside(signed_distance, eps);
+          case LevelSetType::signed_distance:
+            return signed_distance;
+          default:
+            DEAL_II_NOT_IMPLEMENTED();
+        }
+      // unreachable dummy return
+      return 0.0;
     }
 
   private:
-    const number z_level;
-    const number eps;
-  };
-
-  template <int dim, typename number>
-  class InitialLevelSetHeaviside : public Function<dim, number>
-  {
-  public:
-    InitialLevelSetHeaviside(const number z_level, const number eps)
-      : Function<dim, number>()
-      , z_level(z_level)
-      , eps(eps)
-    {}
-
-    number
-    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
-    {
-      const auto z = p[dim - 1];
-      return CharacteristicFunctions::heaviside(z_level - z, eps);
-    }
-
-  private:
-    const number z_level;
-    const number eps;
+    const number       z_level;
+    const LevelSetType level_set_type;
+    const number       eps;
   };
 
 
@@ -233,17 +229,17 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   {
     if (auto temp_ptr = dynamic_cast<Heat::HeatTransferCase<dim, number> *>(this))
       {
-        const types::boundary_id left_bc = 10;
+        const types::boundary_id right_bc = 10;
         for (const auto &cell : this->triangulation->cell_iterators())
           {
             for (auto &face : cell->face_iterators())
               if (face->at_boundary())
                 {
                   if (face->center()[0] == x_max)
-                    face->set_boundary_id(left_bc);
+                    face->set_boundary_id(right_bc);
                 }
           }
-        this->attach_boundary_condition({left_bc,
+        this->attach_boundary_condition({right_bc,
                                          std::make_shared<Functions::ConstantFunction<dim>>(T_0)},
                                         "dirichlet",
                                         "heat_transfer");
@@ -318,11 +314,29 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   {
     this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(T_0),
                                    "heat_transfer");
-    auto is_heat_case = dynamic_cast<Heat::HeatTransferCase<dim, number> *>(this);
+    const auto is_heat_case = dynamic_cast<Heat::HeatTransferCase<dim, number> *>(this);
     if (is_heat_case and do_two_phase)
-      this->attach_initial_condition(
-        std::make_shared<InitialLevelSetHeaviside<dim, number>>(0.0, z_max / 5),
-        "prescribed_heaviside");
+      {
+        if (this->parameters.heat.operator_type != Heat::TwoPhaseOperatorType::cut)
+          {
+            this->attach_initial_condition(std::make_shared<InitialLevelSet<dim, number>>(
+                                             0.0, LevelSetType::heaviside, z_max / 5),
+                                           "prescribed_heaviside");
+          }
+        else
+          {
+            const number offset = 6e-6;
+            this->attach_initial_condition(std::make_shared<InitialLevelSet<dim, number>>(
+                                             offset, LevelSetType::signed_distance, 0.0),
+                                           "prescribed_signed_distance");
+            if (this->parameters.amr.do_amr and
+                this->parameters.application_specific_parameters.amr_strategy ==
+                  Heat::AMRStrategy::generic)
+              this->attach_initial_condition(std::make_shared<InitialLevelSet<dim, number>>(
+                                               offset, LevelSetType::heaviside, z_max / 4),
+                                             "prescribed_heaviside");
+          }
+      }
     // In the heat transfer problem, this->parameters.ls does not exist and the code below does not
     // compile. TODO: Find a way to implement this block for the standalone melt pool problem.
     // if (this->parameters.base.application_name == "melt_pool")

@@ -1795,10 +1795,10 @@ namespace MeltPoolDG::Heat
         for (unsigned int face_batch = face_batch_range.first; face_batch < face_batch_range.second;
              face_batch++)
           {
-            T_new_eval_minus_l.reinit(face_batch);
-            T_new_eval_plus_l.reinit(face_batch);
-            T_new_eval_minus_l.gather_evaluate(temperature, evaluate_gradients);
-            T_new_eval_plus_l.gather_evaluate(temperature, evaluate_gradients);
+            internal::reinit_and_read_plain(T_new_eval_minus_l, temperature, face_batch);
+            internal::reinit_and_read_plain(T_new_eval_plus_l, temperature, face_batch);
+            T_new_eval_minus_l.evaluate(evaluate_gradients);
+            T_new_eval_plus_l.evaluate(evaluate_gradients);
 
             for (const unsigned int q : T_new_eval_minus_l.quadrature_point_indices())
               {
@@ -1822,33 +1822,33 @@ namespace MeltPoolDG::Heat
          face_type == CutUtil::FaceType::mixed_face_intersected_gas) and
         heat_data.cut.two_phase)
       {
-        FaceEval eval_minus_g(matrix_free,
-                              true /*is_interior_face*/,
-                              heat_cut_dof_idx /*dof_no*/,
-                              heat_quad_idx /*quad_no*/,
-                              1 /*selected component*/,
-                              CutUtil::CellCategory::gas /*active_fe_index*/);
+        FaceEval T_new_eval_minus_g(matrix_free,
+                                    true /*is_interior_face*/,
+                                    heat_cut_dof_idx /*dof_no*/,
+                                    heat_quad_idx /*quad_no*/,
+                                    1 /*selected component*/,
+                                    CutUtil::CellCategory::gas /*active_fe_index*/);
 
-        FaceEval eval_plus_g(matrix_free,
-                             false /*is_interior_face*/,
-                             heat_cut_dof_idx /*dof_no*/,
-                             heat_quad_idx /*quad_no*/,
-                             1 /*selected component*/,
-                             CutUtil::CellCategory::gas /*active_fe_index*/);
+        FaceEval T_new_eval_plus_g(matrix_free,
+                                   false /*is_interior_face*/,
+                                   heat_cut_dof_idx /*dof_no*/,
+                                   heat_quad_idx /*quad_no*/,
+                                   1 /*selected component*/,
+                                   CutUtil::CellCategory::gas /*active_fe_index*/);
 
         for (unsigned int face_batch = face_batch_range.first; face_batch < face_batch_range.second;
              face_batch++)
           {
-            eval_minus_g.reinit(face_batch);
-            eval_plus_g.reinit(face_batch);
-            eval_minus_g.gather_evaluate(temperature, evaluate_gradients);
-            eval_plus_g.gather_evaluate(temperature, evaluate_gradients);
+            internal::reinit_and_read_plain(T_new_eval_minus_g, temperature, face_batch);
+            internal::reinit_and_read_plain(T_new_eval_plus_g, temperature, face_batch);
+            T_new_eval_minus_g.evaluate(evaluate_gradients);
+            T_new_eval_plus_g.evaluate(evaluate_gradients);
 
-            for (const unsigned int q : eval_minus_g.quadrature_point_indices())
+            for (const unsigned int q : T_new_eval_minus_g.quadrature_point_indices())
               {
                 internal::do_ghost_penalty_terms(
-                  eval_minus_g,
-                  eval_plus_g,
+                  T_new_eval_minus_g,
+                  T_new_eval_plus_g,
                   material.get_data().gas.thermal_conductivity,
                   ost_factor_implicit,
                   cell_side_length,
@@ -1857,8 +1857,8 @@ namespace MeltPoolDG::Heat
                   q,
                   -1.0);
               }
-            eval_minus_g.integrate_scatter(evaluate_gradients, residual);
-            eval_plus_g.integrate_scatter(evaluate_gradients, residual);
+            T_new_eval_minus_g.integrate_scatter(evaluate_gradients, residual);
+            T_new_eval_plus_g.integrate_scatter(evaluate_gradients, residual);
           }
       }
   }

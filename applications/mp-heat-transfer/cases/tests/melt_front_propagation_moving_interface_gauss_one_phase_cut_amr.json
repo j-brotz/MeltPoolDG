@@ -3,7 +3,7 @@
     "case name": "melt_front_propagation",
     "dimension": "2",
     "do print parameters": "false",
-    "global refinements": "5",
+    "global refinements": "3",
     "verbosity level": "1",
     "fe": {
       "degree": "1"
@@ -24,27 +24,43 @@
     "max n steps": "5"
   },
   "heat": {
+    "operator type": "cut",
+    "cut": {
+      "two phase": "false",
+      "theta": "1",
+      "stabilization": {
+        "nitsche parameter": "500",
+        "ghost-penalty": {
+          "gamma A degree 1": "5.0",
+          "gamma M degree 1": "2.5"
+        }
+      }
+    },
     "linear solver": {
-      "rel tolerance": "1e-12",
-      "preconditioner type": "ILU"
+      "abs tolerance": "1e-20",
+      "rel tolerance": "1e-8",
+      "preconditioner type": "Diagonal"
     },
     "nlsolve": {
-      "residual tolerance": "1e-8"
+      "residual tolerance": "1e-10",
+      "field correction tolerance": "1e-5",
+      "max nonlinear iterations": "15"
     }
   },
   "application specific": {
-    "do solidification": "true"
+    "do solidification": "true",
+    "amr strategy": "generic"
   },
   "laser": {
     "starting position": "0.0,0.0",
-    "model": "interface_projection_regularized",
+    "model": "interface_projection_sharp",
     "intensity profile": "Gauss",
     "power": "15.",
     "absorptivity gas": "0.5",
     "absorptivity liquid": "0.5",
     "do move": "true",
     "scan speed": "0.12",
-    "radius": "0.06e-3"
+    "radius": "60e-6"
   },
   "material": {
     "gas": {
@@ -62,10 +78,19 @@
       "specific heat capacity": "700.0",
       "density": "7850.0"
     },
-    "solidus temperature": "1966.0",
+    "solidus temperature": "1100.0",
     "liquidus temperature": "1974.0",
     "two phase fluid properties transition type": "sharp",
     "solid liquid properties transition type": "mushy_zone"
+  },
+  "adaptive meshing": {
+    "do amr": "true",
+    "do not modify boundary cells": "false",
+    "upper perc to refine": " 0.2",
+    "lower perc to coarsen": "0.2",
+    "max grid refinement level": "4",
+    "n initial refinement cycles": "1",
+    "every n step": "10"
   },
   "output": {
     "paraview": {

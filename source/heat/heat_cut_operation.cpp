@@ -370,19 +370,15 @@ namespace MeltPoolDG::Heat
     newton.residual = [&](const VectorType & /*solution_update*/, VectorType &rhs) {
       update_ghost_values();
       heat_operator->create_rhs(rhs, solution_history.get_recent_old_solution());
-      scratch_data.get_constraint(heat_cut_no_bc_dof_idx).distribute(rhs);
     };
 
     newton.solve_with_jacobian = [&](const VectorType &rhs, VectorType &solution_update) -> int {
-      const int iter = LinearSolver::solve<VectorType>(*heat_operator,
-                                                       solution_update,
-                                                       rhs,
-                                                       heat_data.linear_solver,
-                                                       preconditioner,
-                                                       "heat_operation");
-
-      scratch_data.get_constraint(heat_cut_no_bc_dof_idx).distribute(solution_update);
-      return iter;
+      return LinearSolver::solve<VectorType>(*heat_operator,
+                                             solution_update,
+                                             rhs,
+                                             heat_data.linear_solver,
+                                             preconditioner,
+                                             "heat_operation");
     };
 
     newton.reinit_vector = [&](VectorType &v) {

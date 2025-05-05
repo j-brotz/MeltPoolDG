@@ -62,16 +62,14 @@ namespace MeltPoolDG::CutUtil
   template <int dim, typename number>
   void
   SolutionTransferOperator<dim, number>::reinit(
-    dealii::DoFHandler<dim>                        &cut_dof_handler,
-    dealii::Triangulation<dim>                     &tria,
-    const std::vector<const VectorType *>          &cut_solutions,
-    const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
-    const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
-    const std::function<void(VectorType &)>        &reinit_cut_vector,
-    const std::function<void()>                    &setup_dof_system,
-    const std::function<void(
-      std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                            std::function<void(std::vector<VectorType *> &)>>> &)> &attach_vectors)
+    dealii::DoFHandler<dim>                                    &cut_dof_handler,
+    dealii::Triangulation<dim>                                 &tria,
+    const std::vector<const VectorType *>                      &cut_solutions,
+    const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier_old,
+    const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier,
+    const std::function<void(VectorType &)>                    &reinit_cut_vector,
+    const std::function<void()>                                &setup_dof_system,
+    const AMR::AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors)
   {
     fe_degree = cut_dof_handler.get_fe_collection().max_degree();
 
@@ -178,16 +176,14 @@ namespace MeltPoolDG::CutUtil
   template <int dim, typename number>
   void
   SolutionTransferOperator<dim, number>::reinit(
-    dealii::DoFHandler<dim>                        &cut_dof_handler,
-    dealii::Triangulation<dim>                     &tria,
-    const VectorType                               &cut_solution,
-    const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
-    const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
-    const std::function<void(VectorType &)>        &reinit_cut_vector,
-    const std::function<void()>                    &setup_dof_system,
-    const std::function<void(
-      std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                            std::function<void(std::vector<VectorType *> &)>>> &)> &attach_vectors)
+    dealii::DoFHandler<dim>                                    &cut_dof_handler,
+    dealii::Triangulation<dim>                                 &tria,
+    const VectorType                                           &cut_solution,
+    const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier_old,
+    const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier,
+    const std::function<void(VectorType &)>                    &reinit_cut_vector,
+    const std::function<void()>                                &setup_dof_system,
+    const AMR::AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors)
   {
     reinit(cut_dof_handler,
            tria,
@@ -204,25 +200,21 @@ namespace MeltPoolDG::CutUtil
   template <int dim, typename number>
   void
   SolutionTransferOperator<dim, number>::transfer_solution_constant_dofs(
-    dealii::DoFHandler<dim>                        &cut_dof_handler,
-    dealii::Triangulation<dim>                     &tria,
-    const std::vector<const VectorType *>          &cut_solutions,
-    const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
-    const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
-    const std::function<void(VectorType &)>        &reinit_cut_vector,
-    const std::function<void()>                    &setup_dof_system,
-    const std::function<void(
-      std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                            std::function<void(std::vector<VectorType *> &)>>> &)> &attach_vectors)
+    dealii::DoFHandler<dim>                                    &cut_dof_handler,
+    dealii::Triangulation<dim>                                 &tria,
+    const std::vector<const VectorType *>                      &cut_solutions,
+    const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier_old,
+    const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier,
+    const std::function<void(VectorType &)>                    &reinit_cut_vector,
+    const std::function<void()>                                &setup_dof_system,
+    const AMR::AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors)
   {
     // update the future FE-index according to the new interface position
     CutUtil::set_fe_index<dim>(cut_dof_handler, mesh_classifier, true /* set_future */);
 
     // the following is very similar to the code in refine_grid()
 
-    std::vector<
-      std::pair<const dealii::DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
-      data;
+    AMR::DoFHandlerAndVectorDataType<dim, VectorType> data;
 
     if (attach_vectors)
       attach_vectors(data);
