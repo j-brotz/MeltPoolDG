@@ -170,7 +170,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           // create mesh
           const Point<1> left(z_min);
           const Point<1> right(z_max);
-          GridGenerator::hyper_rectangle(*this->triangulation, left, right);
+          dealii::GridGenerator::hyper_rectangle(*this->triangulation, left, right);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
       else if constexpr (dim == 2)
@@ -185,7 +185,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           //// create mesh
           // const Point<2> left(0, -z_max);
           // const Point<2> right(x_max, 0);
-          // GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+          // dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
           // refinements,
           // left,
           // right);
@@ -199,7 +199,10 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           // create mesh
           const Point<2> left(0, -z_max);
           const Point<2> right(x_max, z_max);
-          GridGenerator::subdivided_hyper_rectangle(*this->triangulation, refinements, left, right);
+          dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                            refinements,
+                                                            left,
+                                                            right);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
           //}
         }
@@ -216,7 +219,10 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           // create mesh
           const Point<3> left(0, -y_max, -z_max);
           const Point<3> right(x_max, y_max, z_max);
-          GridGenerator::subdivided_hyper_rectangle(*this->triangulation, refinements, left, right);
+          dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                            refinements,
+                                                            left,
+                                                            right);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
           //}
           // else

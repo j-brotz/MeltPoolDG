@@ -60,7 +60,9 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
 
       if constexpr (dim == 2)
         {
-          GridGenerator::hyper_cube(*this->triangulation, -side_length / 2., side_length / 2);
+          dealii::GridGenerator::hyper_cube(*this->triangulation,
+                                            -side_length / 2.,
+                                            side_length / 2);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
       else

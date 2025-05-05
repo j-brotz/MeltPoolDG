@@ -278,12 +278,12 @@ namespace MeltPoolDG::Simulation::RecoilPressure
           for (int d = 0; d < dim; d++)
             subdivisions[d] *= cell_repetitions[d];
 
-          GridGenerator::subdivided_hyper_rectangle_with_simplices(
+          dealii::GridGenerator::subdivided_hyper_rectangle_with_simplices(
             *this->triangulation, subdivisions, bottom_left, top_right, true /*colorize*/);
         }
       else
         {
-          GridGenerator::subdivided_hyper_rectangle(
+          dealii::GridGenerator::subdivided_hyper_rectangle(
             *this->triangulation, cell_repetitions, bottom_left, top_right, true /*colorize*/);
         }
 
@@ -292,10 +292,11 @@ namespace MeltPoolDG::Simulation::RecoilPressure
         {
           if (slice_data.enable)
             {
-              GridGenerator::subdivided_hyper_rectangle(tria_slice,
-                                                        {1, 1} /*subdivisions*/,
-                                                        Point<2>(domain_x_min, domain_y_min),
-                                                        Point<2>(domain_x_max, domain_y_max));
+              dealii::GridGenerator::subdivided_hyper_rectangle(
+                tria_slice,
+                {1, 1} /*subdivisions*/,
+                Point<2>(domain_x_min, domain_y_min),
+                Point<2>(domain_x_max, domain_y_max));
               // rotate plane by 90° around x-axis
               GridTools::rotate(Point<3>::unit_vector(0), 0.5 * dealii::numbers::PI, tria_slice);
               // shift plane along y-axis

@@ -240,12 +240,12 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
             dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
           subdivisions[dim - 1] *= 2;
 
-          GridGenerator::subdivided_hyper_rectangle_with_simplices(
+          dealii::GridGenerator::subdivided_hyper_rectangle_with_simplices(
             *this->triangulation, subdivisions, bottom_left, top_right, true /*colorize*/);
         }
       else
         {
-          GridGenerator::subdivided_hyper_rectangle(
+          dealii::GridGenerator::subdivided_hyper_rectangle(
             *this->triangulation, refinements, bottom_left, top_right, true /*colorize*/);
         }
 

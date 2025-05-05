@@ -89,17 +89,15 @@ namespace MeltPoolDG
 
               if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
                 {
-                  GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
-                                                                           subdivisions,
-                                                                           bottom_left,
-                                                                           top_right);
+                  dealii::GridGenerator::subdivided_hyper_rectangle_with_simplices(
+                    *this->triangulation, subdivisions, bottom_left, top_right);
                 }
               else
                 {
-                  GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                            subdivisions,
-                                                            bottom_left,
-                                                            top_right);
+                  dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                                    subdivisions,
+                                                                    bottom_left,
+                                                                    top_right);
                 }
 
               // set boundary indicator to 2 on left and right face -> symmetry boundary

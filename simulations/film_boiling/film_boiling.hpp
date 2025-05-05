@@ -21,9 +21,9 @@
 
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/post_processing/slice.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
+#include <meltpooldg/utilities/create_triangulation_with_marching_cube_algorithm.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
@@ -241,19 +241,19 @@ namespace MeltPoolDG::Simulation::FilmBoiling
         subdivisions[dim - 1] *= 2;
 
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
-        GridGenerator::subdivided_hyper_rectangle_with_simplices(
+        dealii::GridGenerator::subdivided_hyper_rectangle_with_simplices(
           *this->triangulation, subdivisions, bottom_left, top_right, true /*colorize*/);
       else
-        GridGenerator::subdivided_hyper_rectangle(
+        dealii::GridGenerator::subdivided_hyper_rectangle(
           *this->triangulation, subdivisions, bottom_left, top_right, true /*colorize*/);
 
       // create slice for postprocessing
       if constexpr (dim == 3)
         {
-          GridGenerator::subdivided_hyper_rectangle(tria_slice,
-                                                    {1, 3} /*subdivisions*/,
-                                                    Point<2>(x_min, y_min),
-                                                    Point<2>(x_max, y_max));
+          dealii::GridGenerator::subdivided_hyper_rectangle(tria_slice,
+                                                            {1, 3} /*subdivisions*/,
+                                                            Point<2>(x_min, y_min),
+                                                            Point<2>(x_max, y_max));
 
           GridTools::rotate(Point<3>::unit_vector(0), 0.5 * dealii::numbers::PI, tria_slice);
 

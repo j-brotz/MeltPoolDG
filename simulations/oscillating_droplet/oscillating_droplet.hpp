@@ -83,7 +83,7 @@ namespace MeltPoolDG::Simulation::OscillatingDroplet
       this->triangulation =
         std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
-      GridGenerator::hyper_cube(*this->triangulation, -side_length / 2, side_length / 2);
+      dealii::GridGenerator::hyper_cube(*this->triangulation, -side_length / 2, side_length / 2);
 
       this->triangulation->refine_global(this->parameters.base.global_refinements);
     }

@@ -111,10 +111,10 @@ namespace MeltPoolDG::Simulation::MovingDroplet
       this->triangulation =
         std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
-      GridGenerator::hyper_cube(*this->triangulation,
-                                -side_length / 2,
-                                side_length / 2,
-                                true /*colorize*/);
+      dealii::GridGenerator::hyper_cube(*this->triangulation,
+                                        -side_length / 2,
+                                        side_length / 2,
+                                        true /*colorize*/);
     }
 
     void

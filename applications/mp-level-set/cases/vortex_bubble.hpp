@@ -15,7 +15,7 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/level_set/level_set_tools.hpp>
+#include <meltpooldg/utilities/create_triangulation_with_marching_cube_algorithm.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -173,7 +173,7 @@ namespace MeltPoolDG::Simulation::VortexBubble
 
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
-          GridGenerator::subdivided_hyper_cube_with_simplices(
+          dealii::GridGenerator::subdivided_hyper_cube_with_simplices(
             *this->triangulation,
             Utilities::pow(2, this->parameters.base.global_refinements),
             left_domain,
@@ -181,7 +181,7 @@ namespace MeltPoolDG::Simulation::VortexBubble
         }
       else
         {
-          GridGenerator::hyper_cube(*this->triangulation, left_domain, right_domain);
+          dealii::GridGenerator::hyper_cube(*this->triangulation, left_domain, right_domain);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
     }
