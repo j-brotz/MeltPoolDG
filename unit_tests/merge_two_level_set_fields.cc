@@ -17,7 +17,7 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/level_set/level_set_tools.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 
 #include <iostream>
 
@@ -40,7 +40,7 @@ public:
   {
     (void)component;
 
-    return UtilityFunctions::CharacteristicFunctions::sgn(-sphere.value(p));
+    return CharacteristicFunctions::sgn(-sphere.value(p));
   }
 
   const Functions::SignedDistance::Sphere<dim> sphere;
@@ -60,7 +60,7 @@ public:
   {
     (void)component;
 
-    return UtilityFunctions::CharacteristicFunctions::sgn(sphere.value(p));
+    return CharacteristicFunctions::sgn(sphere.value(p));
   }
 
   Point<dim>                                   center;
@@ -82,8 +82,8 @@ public:
   {
     (void)component;
 
-    return UtilityFunctions::CharacteristicFunctions::heaviside(
-      UtilityFunctions::CharacteristicFunctions::sgn(-sphere.value(p)), 0);
+    return CharacteristicFunctions::smoothed_heaviside(
+      CharacteristicFunctions::sgn(-sphere.value(p)), 0);
   }
 
   const Functions::SignedDistance::Sphere<dim> sphere;
@@ -103,8 +103,8 @@ public:
   {
     (void)component;
 
-    return UtilityFunctions::CharacteristicFunctions::heaviside(
-      -UtilityFunctions::CharacteristicFunctions::sgn(-sphere.value(p)), 0);
+    return CharacteristicFunctions::smoothed_heaviside(
+      -CharacteristicFunctions::sgn(-sphere.value(p)), 0);
   }
 
   const Functions::SignedDistance::Sphere<dim> sphere;
@@ -124,7 +124,7 @@ public:
   {
     (void)component;
 
-    return 5 * UtilityFunctions::CharacteristicFunctions::sgn(-sphere.value(p)) + 1.0;
+    return 5 * CharacteristicFunctions::sgn(-sphere.value(p)) + 1.0;
   }
 
   Point<dim>                                   center;
@@ -181,21 +181,21 @@ main(int argc, char *argv[])
     auto merged_level_set_union =
       LevelSet::Tools::merge_two_indicator_fields(level_set_1,
                                                   level_set_2,
-                                                  BooleanType::Union,
+                                                  LevelSet::Tools::BooleanType::Union,
                                                   level_set_interior_value,
                                                   level_set_exterior_value);
 
     auto merged_level_set_intersect =
       LevelSet::Tools::merge_two_indicator_fields(level_set_1,
                                                   level_set_2,
-                                                  BooleanType::Intersection,
+                                                  LevelSet::Tools::BooleanType::Intersection,
                                                   level_set_interior_value,
                                                   level_set_exterior_value);
 
     auto merged_level_set_subtract =
       LevelSet::Tools::merge_two_indicator_fields(level_set_1,
                                                   level_set_2,
-                                                  BooleanType::Subtraction,
+                                                  LevelSet::Tools::BooleanType::Subtraction,
                                                   level_set_interior_value,
                                                   level_set_exterior_value);
 

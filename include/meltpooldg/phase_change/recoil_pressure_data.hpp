@@ -1,7 +1,7 @@
 #pragma once
+#include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
 #include <meltpooldg/utilities/enum.hpp>
-#include <meltpooldg/utilities/material_data.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
 
 namespace MeltPoolDG::Evaporation
@@ -55,8 +55,7 @@ namespace MeltPoolDG::Evaporation
 
     // activation temperature of the recoil pressure; must be smaller than or equal to the boiling
     // temperature; this parameter enables a smooth activation of the recoil pressure
-    number activation_temperature =
-      dealii::numbers::invalid_double; //@todo: introduce invalid_double
+    number activation_temperature = numbers::invalid_double;
 
     // Choose how the recoil pressure flux across the interface should be computed:
     // * local_value: use the local temperature value

@@ -34,7 +34,7 @@ namespace MeltPoolDG::AMR
   /**
    * TODO document what needs to be done in each of the lambdas
    */
-  template <int dim, typename VectorType, typename number = VectorType::value_type>
+  template <int dim, typename VectorType, typename number = typename VectorType::value_type>
   void
   refine_grid(const MarkCellsForRefinementType<dim>                 &mark_cells_for_refinement,
               const AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors,

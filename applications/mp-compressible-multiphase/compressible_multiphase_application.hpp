@@ -3,8 +3,8 @@
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/compressible_flow_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
 
 #include "compressible_multiphase_case.hpp"
 
@@ -70,14 +70,14 @@ namespace MeltPoolDG::Multiphase
 
     std::shared_ptr<CaseType> simulation_case;
 
-    dealii::DoFHandler<dim>                                  dof_handler;
-    dealii::DoFHandler<dim>                                  dof_handler_level_set;
-    dealii::AffineConstraints<number>                        constraints;
-    dealii::AffineConstraints<number>                        constraints_level_set;
-    std::shared_ptr<ScratchData<dim, dim, number>>           scratch_data;
-    std::shared_ptr<TimeIterator<number>>                    time_iterator;
-    MeltPoolDG::Flow::CompressibleFlowOperation<dim, number> comp_multiphase_operation;
-    std::unique_ptr<Profiling::ProfilingMonitor<number>>     profiling_monitor;
+    dealii::DoFHandler<dim>                                dof_handler;
+    dealii::DoFHandler<dim>                                dof_handler_level_set;
+    dealii::AffineConstraints<number>                      constraints;
+    dealii::AffineConstraints<number>                      constraints_level_set;
+    std::shared_ptr<ScratchData<dim, dim, number>>         scratch_data;
+    std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
+    Flow::CompressibleFlowOperation<dim, number>           comp_multiphase_operation;
+    std::unique_ptr<Profiling::ProfilingMonitor<number>>   profiling_monitor;
 
     unsigned int comp_multiphase_dof_idx{};
     unsigned int level_set_dof_idx{};

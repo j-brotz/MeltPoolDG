@@ -22,6 +22,7 @@
 #include <meltpooldg/heat/laser_heat_source_projection_based.hpp>
 #include <meltpooldg/heat/laser_intensity_profiles.hpp>
 #include <meltpooldg/level_set/normal_vector_operator.hpp>
+#include <meltpooldg/utilities/dof_tools.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -146,7 +147,7 @@ namespace MeltPoolDG::Heat
     if (scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx))
       {
         const auto ls_to_temperature_grad_interpolation_matrix =
-          UtilityFunctions::create_dof_interpolation_matrix<dim, number>(
+          DoFTools::create_dof_interpolation_matrix<dim, number>(
             scratch_data.get_dof_handler(heat_dof_idx),
             scratch_data.get_dof_handler(ls_dof_idx),
             false);

@@ -12,8 +12,8 @@
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_operation.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <memory>
 #include <utility>
@@ -48,8 +48,8 @@ namespace MeltPoolDG::RadiativeTransport
     unsigned int rte_quad_idx;
     unsigned int hs_dof_idx;
 
-    std::shared_ptr<ScratchData<dim, dim, number>> scratch_data;
-    std::shared_ptr<TimeIterator<number>>          time_iterator;
+    std::shared_ptr<ScratchData<dim, dim, number>>         scratch_data;
+    std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
 
     std::shared_ptr<RadiativeTransportOperation<dim, number>> rad_trans_operation;
 

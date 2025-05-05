@@ -1,21 +1,31 @@
 #pragma once
+
+#include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
+#include <deal.II/base/mpi.h>
+#include <deal.II/base/mpi_remote_point_evaluation.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/types.h>
+#include <deal.II/base/utilities.h>
+
+#include <deal.II/distributed/shared_tria.h>
+#include <deal.II/distributed/tria.h>
 
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/tria.h>
 
-#include <deal.II/lac/vector.h>
+#include <deal.II/numerics/vector_tools_evaluate.h>
 
-#include <deal.II/numerics/vector_tools.h>
-
-#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/phase_change/evaporation_model_constant.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
 #include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
 
 /**
  * This example is derived from
@@ -29,7 +39,6 @@
 
 namespace MeltPoolDG::Simulation::StefansProblemWithFlow
 {
-  using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
   /*
@@ -50,11 +59,11 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP || dim == 1)
         {
 #ifdef DEAL_II_WITH_METIS
-          this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
+          this->triangulation = std::make_shared<dealii::parallel::shared::Triangulation<dim>>(
             this->mpi_communicator,
-            (Triangulation<dim>::none),
+            dealii::Triangulation<dim>::none,
             false,
-            parallel::shared::Triangulation<dim>::Settings::partition_metis);
+            dealii::parallel::shared::Triangulation<dim>::Settings::partition_metis);
 #else
           AssertThrow(
             false,
@@ -65,42 +74,42 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
         }
       else
         {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+          this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+            this->mpi_communicator);
         }
 
       // create mesh
-      const Point<dim> bottom_left = dim == 1   ? Point<dim>(y_min) :
-                                     (dim == 2) ? Point<dim>(x_min, y_min) :
-                                                  Point<dim>(x_min, x_min, y_min);
-      const Point<dim> top_right   = dim == 1   ? Point<dim>(y_max) :
-                                     (dim == 2) ? Point<dim>(x_max, y_max) :
-                                                  Point<dim>(x_max, x_max, y_max);
+      const dealii::Point<dim> bottom_left = dim == 1 ? dealii::Point<dim>(y_min) :
+                                             dim == 2 ? dealii::Point<dim>(x_min, y_min) :
+                                                        dealii::Point<dim>(x_min, x_min, y_min);
+      const dealii::Point<dim> top_right   = dim == 1 ? dealii::Point<dim>(y_max) :
+                                             dim == 2 ? dealii::Point<dim>(x_max, y_max) :
+                                                        dealii::Point<dim>(x_max, x_max, y_max);
 
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           std::vector<unsigned int> subdivisions(
-            dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
+            dim, 5 * dealii::Utilities::pow(2, this->parameters.base.global_refinements));
           subdivisions[dim - 1] *= 2;
 
-          GridGenerator::subdivided_hyper_rectangle_with_simplices(
+          dealii::GridGenerator::subdivided_hyper_rectangle_with_simplices(
             *this->triangulation, subdivisions, bottom_left, top_right, true /*colorize*/);
         }
       else
         {
-          GridGenerator::hyper_rectangle(*this->triangulation,
-                                         bottom_left,
-                                         top_right,
-                                         true /*colorize*/);
+          dealii::GridGenerator::hyper_rectangle(*this->triangulation,
+                                                 bottom_left,
+                                                 top_right,
+                                                 true /*colorize*/);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
 
       // get vertices along the vertical axis on rank 0
-      if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
+      if (dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
         {
           for (unsigned int i = 0; i <= 100.; ++i)
             {
-              auto p     = Point<dim>();
+              auto p     = dealii::Point<dim>();
               p[dim - 1] = y_min + (y_max - y_min) / 100. * i;
               vertices_along_vertical_axis.emplace_back(p);
             }
@@ -111,14 +120,14 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
     set_boundary_conditions() final
     {
       // faces in dim-1 direction
-      const types::boundary_id lower_bc = 2 * (dim - 1);
-      const types::boundary_id upper_bc = 2 * (dim - 1) + 1;
+      const dealii::types::boundary_id lower_bc = 2 * (dim - 1);
+      const dealii::types::boundary_id upper_bc = 2 * (dim - 1) + 1;
 
       this->attach_boundary_condition(lower_bc, "no_slip", "navier_stokes_u");
       this->attach_boundary_condition(upper_bc, "open", "navier_stokes_u");
 
       // collect boundary ids of side walls
-      std::vector<types::boundary_id> side_walls;
+      std::vector<dealii::types::boundary_id> side_walls;
 
       for (unsigned int i = 0; i < 2 * (dim - 1); ++i)
         side_walls.push_back(i);
@@ -132,10 +141,10 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
     {
       this->attach_initial_condition(
         std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(
-          Point<dim>::unit_vector(dim - 1) * y_interface, -Point<dim>::unit_vector(dim - 1)),
+          dealii::Point<dim>::unit_vector(dim - 1) * y_interface,
+          -dealii::Point<dim>::unit_vector(dim - 1)),
         "signed_distance");
-      this->attach_initial_condition(std::shared_ptr<dealii::Function<dim>>(
-                                       new Functions::ZeroFunction<dim>(dim)),
+      this->attach_initial_condition(std::make_shared<dealii::Functions::ZeroFunction<dim>>(dim),
                                      "navier_stokes_u");
     }
 
@@ -143,10 +152,10 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
     do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const final
     {
       dealii::ConditionalOStream pcout(std::cout,
-                                       Utilities::MPI::this_mpi_process(this->mpi_communicator) ==
-                                           0 and
+                                       dealii::Utilities::MPI::this_mpi_process(
+                                         this->mpi_communicator) == 0 and
                                          this->parameters.base.verbosity_level >= 1);
-      if (!(n_time_step % this->parameters.output.write_frequency) ||
+      if (not(n_time_step % this->parameters.output.write_frequency) or
           generic_data_out.get_time() == this->parameters.time_stepping.end_time)
         {
           std::cout.precision(3);
@@ -157,7 +166,7 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
           /*
            * evaluate pressure profile
            */
-          if (!remote_point_is_initialized)
+          if (not remote_point_is_initialized)
             {
               remote_point_evaluation.reinit(vertices_along_vertical_axis,
                                              *this->triangulation,
@@ -200,7 +209,7 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
           };
 
           // write values to file
-          if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
+          if (dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
             {
               if (this->parameters.output.do_user_defined_postprocessing)
                 {
@@ -281,11 +290,11 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
     const double y_interface = 0.5;
 
     // Postprocessor
-    mutable std::ofstream                                   file_velocity_profile;
-    mutable std::ofstream                                   file_pressure_profile;
-    mutable int                                             n_time_step = 0.0;
-    mutable std::vector<Point<dim>>                         vertices_along_vertical_axis;
-    mutable bool                                            remote_point_is_initialized = false;
-    mutable Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation;
+    mutable std::ofstream                   file_velocity_profile;
+    mutable std::ofstream                   file_pressure_profile;
+    mutable int                             n_time_step = 0.0;
+    mutable std::vector<dealii::Point<dim>> vertices_along_vertical_axis;
+    mutable bool                            remote_point_is_initialized = false;
+    mutable dealii::Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation;
   };
 } // namespace MeltPoolDG::Simulation::StefansProblemWithFlow

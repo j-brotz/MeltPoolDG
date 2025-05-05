@@ -1,10 +1,20 @@
 #pragma once
 
-#include <deal.II/base/tensor_accessors.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/vectorization.h>
+
+#include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
+
+#include <deal.II/matrix_free/evaluation_flags.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/flow/incompressible_flow_material_base.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
+#include <meltpooldg/utilities/fe_integrator.hpp>
+
+#include <functional>
+
 
 namespace MeltPoolDG::Evaporation
 {
@@ -37,7 +47,7 @@ namespace MeltPoolDG::Evaporation
       const std::function<const dealii::VectorizedArray<number>
                             &(const unsigned int cell, const unsigned int q)> get_viscosity,
       const BlockVectorType                                                  &normal_vector,
-      const VectorType                                                       &heaviside,
+      const dealii::LinearAlgebra::distributed::Vector<number>               &heaviside,
       const unsigned int                                                      normal_dof_idx,
       const unsigned int ls_hanging_nodes_dof_idx,
       const unsigned int velocity_quad_idx)
@@ -63,7 +73,7 @@ namespace MeltPoolDG::Evaporation
            const unsigned int                                             quad_idx) final
     {
       grad_u = velocity_gradient;
-      div_u  = trace(velocity_gradient);
+      div_u  = dealii::trace(velocity_gradient);
 
       viscosity = get_viscosity(cell_idx, quad_idx);
 
@@ -79,7 +89,7 @@ namespace MeltPoolDG::Evaporation
           ls_vals.evaluate(dealii::EvaluationFlags::values);
         }
 
-      normal = MeltPoolDG::VectorTools::normalize<dim>(normal_vals.get_value(quad_idx), 1e-10);
+      normal = normalize<dim>(normal_vals.get_value(quad_idx), 1e-10);
       hs     = ls_vals.get_value(quad_idx);
 
       cell = cell_idx;
@@ -181,14 +191,14 @@ namespace MeltPoolDG::Evaporation
     const ScratchData<dim, dim, number> &scratch_data;
     const std::function<const dealii::VectorizedArray<number> &(const unsigned int cell,
                                                                 const unsigned int q)>
-                                               get_viscosity;
-    const BlockVectorType                     &normal_vector;
-    const VectorType                          &heaviside;
-    const unsigned int                         normal_dof_idx;
-    const unsigned int                         ls_hanging_nodes_dof_idx;
-    const unsigned int                         velocity_quad_idx;
-    dealii::FECellIntegrator<dim, dim, number> normal_vals;
-    dealii::FECellIntegrator<dim, 1, number>   ls_vals;
+                                                              get_viscosity;
+    const BlockVectorType                                    &normal_vector;
+    const dealii::LinearAlgebra::distributed::Vector<number> &heaviside;
+    const unsigned int                                        normal_dof_idx;
+    const unsigned int                                        ls_hanging_nodes_dof_idx;
+    const unsigned int                                        velocity_quad_idx;
+    FECellIntegrator<dim, dim, number>                        normal_vals;
+    FECellIntegrator<dim, 1, number>                          ls_vals;
 
     // temporary quadrature point values
     dealii::Tensor<2, dim, dealii::VectorizedArray<number>> grad_u;

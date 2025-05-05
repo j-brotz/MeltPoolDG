@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-namespace MeltPoolDG
+namespace MeltPoolDG::TimeIntegration
 {
   /**
    * The time integrator schemes supported by the low storage explicit Runge-Kutta time integrator.
@@ -164,7 +164,7 @@ namespace MeltPoolDG
      * reinit(solution_history.get_current_solution()).
      */
     void
-    reinit(const ::TimeIntegration::SolutionHistory<VectorType, number> &solution_history) override
+    reinit(const SolutionHistory<VectorType> &solution_history) override
     {
       reinit(solution_history.get_current_solution());
     }
@@ -189,18 +189,16 @@ namespace MeltPoolDG
     perform_time_step(
       const number                                                         current_time,
       const number                                                         time_step,
-      ::TimeIntegration::SolutionHistory<VectorType, number>              &solution_history,
+      SolutionHistory<VectorType>                                         &solution_history,
       const std::function<void(number, VectorType &, const VectorType &)> &stage_pre_processing,
       const std::function<void(number, VectorType &, const VectorType &)> &stage_post_processing)
       override
     {
-      using namespace dealii;
-
       Assert(solution_history.size() >= required_solution_history_size(),
              dealii::ExcMessage(
                "The size of the solution history object does not fit the requirements of the "
                "chosen time integration scheme."));
-      TimerOutput::Scope timer_section(timer, "Explicit Runge-Kutta time integration");
+      dealii::TimerOutput::Scope timer_section(timer, "Explicit Runge-Kutta time integration");
       rk_register_ri = 0.;
       if (stage_pre_processing)
         stage_pre_processing(current_time, rk_register_ri, solution_history.get_current_solution());
@@ -282,4 +280,4 @@ namespace MeltPoolDG
 
     dealii::TimerOutput &timer;
   };
-} // namespace MeltPoolDG
+} // namespace MeltPoolDG::TimeIntegration

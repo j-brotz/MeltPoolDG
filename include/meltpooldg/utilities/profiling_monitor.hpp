@@ -3,9 +3,9 @@
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/timer.h>
 
+#include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/profiling_data.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <chrono>
 
@@ -16,7 +16,8 @@ namespace MeltPoolDG::Profiling
   class ProfilingMonitor
   {
   public:
-    ProfilingMonitor(const ProfilingData<number> &data, const TimeIterator<number> &time);
+    ProfilingMonitor(const ProfilingData<number>                 &data,
+                     const TimeIntegration::TimeIterator<number> &time);
 
     bool
     now() const;
@@ -28,7 +29,7 @@ namespace MeltPoolDG::Profiling
 
   private:
     const ProfilingData<number>                       &data;
-    const TimeIterator<number>                        &time;
+    const TimeIntegration::TimeIterator<number>       &time;
     mutable number                                     last_written_time = 0.0;
     std::chrono::time_point<std::chrono::system_clock> real_time_start;
 

@@ -12,15 +12,15 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   ReinitializationOperationAdaflo<dim, number>::ReinitializationOperationAdaflo(
-    const ScratchData<dim, dim, number> &scratch_data,
-    const TimeIterator<number>          &time_iterator,
-    const int                            reinit_dof_idx,
-    const int                            reinit_quad_idx,
-    const int                            normal_dof_idx,
-    const TimeSteppingData<number>      &time_stepping,
-    const NormalVectorData<number>      &normal_vec_data,
-    const number                         interface_thickness_parameter_value,
-    const unsigned int                   n_subdivisions)
+    const ScratchData<dim, dim, number>             &scratch_data,
+    const TimeIntegration::TimeIterator<number>     &time_iterator,
+    const int                                        reinit_dof_idx,
+    const int                                        reinit_quad_idx,
+    const int                                        normal_dof_idx,
+    const TimeIntegration::TimeSteppingData<number> &time_stepping,
+    const NormalVectorData<number>                  &normal_vec_data,
+    const number                                     interface_thickness_parameter_value,
+    const unsigned int                               n_subdivisions)
     : scratch_data(scratch_data)
     , time_iterator(time_iterator)
     , pcout(scratch_data.get_pcout(2))
@@ -244,10 +244,10 @@ namespace MeltPoolDG::LevelSet
   template <int dim, typename number>
   void
   ReinitializationOperationAdaflo<dim, number>::set_adaflo_parameters(
-    const TimeSteppingData<number> &time_stepping,
-    const int                       reinit_dof_idx,
-    const int                       reinit_quad_idx,
-    const int                       normal_dof_idx)
+    const TimeIntegration::TimeSteppingData<number> &time_stepping,
+    const int                                        reinit_dof_idx,
+    const int                                        reinit_quad_idx,
+    const int                                        normal_dof_idx)
   {
     reinit_params_adaflo.time.time_step_scheme =
       adaflo::TimeSteppingParameters::Scheme::implicit_euler;

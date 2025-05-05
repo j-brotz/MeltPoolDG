@@ -18,8 +18,6 @@
 
 namespace MeltPoolDG::Simulation::SpuriousCurrents
 {
-  using namespace dealii;
-
   static double side_length = 5.0;
   static double radius      = 0.5;
   static double radius_2    = 0.75;
@@ -40,7 +38,7 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
         prm.add_parameter("droplet shape",
                           droplet_shape,
                           "Shape of the droplet: circle or ellipse",
-                          Patterns::Selection("circle|ellipse"));
+                          dealii::Patterns::Selection("circle|ellipse"));
         prm.add_parameter("side length", side_length, "Side length of the quadratic domain.");
         prm.add_parameter("radius",
                           radius,
@@ -56,16 +54,18 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
     create_spatial_discretization() override
     {
       this->triangulation =
-        std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+        std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
       if constexpr (dim == 2)
         {
-          GridGenerator::hyper_cube(*this->triangulation, -side_length / 2., side_length / 2);
+          dealii::GridGenerator::hyper_cube(*this->triangulation,
+                                            -side_length / 2.,
+                                            side_length / 2);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
       else
         {
-          AssertThrow(false, ExcNotImplemented());
+          AssertThrow(false, dealii::ExcNotImplemented());
         }
     }
 
@@ -84,20 +84,20 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
     set_field_conditions() override
     {
       const double eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
-        GridTools::minimal_cell_diameter(*this->triangulation) /
+        dealii::GridTools::minimal_cell_diameter(*this->triangulation) /
         this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
 
-      AssertThrow(eps > 0, ExcNotImplemented());
+      AssertThrow(eps > 0, dealii::ExcNotImplemented());
 
       // introduce slightly non-symmetric geometry
-      Point<dim> center;
+      dealii::Point<dim> center;
       for (unsigned int d = 0; d < dim; ++d)
         center[d] = 0.02 + 0.01 * d;
 
       if (droplet_shape == "circle")
         {
           this->attach_initial_condition(
-            std::make_shared<dealii::Functions::ChangedSignFunction<dim, double>>(
+            std::make_shared<Functions::ChangedSignFunction<dim, double>>(
               std::make_shared<dealii::Functions::SignedDistance::Sphere<dim>>(center, radius)),
             "signed_distance");
         }
@@ -107,16 +107,17 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
           if constexpr (dim == 2)
             radii = {{radius_2, radius}};
           else
-            AssertThrow(false, ExcNotImplemented());
+            AssertThrow(false, dealii::ExcNotImplemented());
 
           this->attach_initial_condition(
-            std::make_shared<dealii::Functions::ChangedSignFunction<dim, double>>(
+            std::make_shared<Functions::ChangedSignFunction<dim, double>>(
               std::make_shared<dealii::Functions::SignedDistance::Ellipsoid<dim>>(center, radii)),
             "signed_distance");
         }
       else
         AssertThrow(false,
-                    ExcMessage("Unknown droptlet shape: \"" + droplet_shape + "\"! Abort..."));
+                    dealii::ExcMessage("Unknown droptlet shape: \"" + droplet_shape +
+                                       "\"! Abort..."));
       this->attach_initial_condition(std::make_shared<dealii::Functions::ZeroFunction<dim>>(dim),
                                      "navier_stokes_u");
     }

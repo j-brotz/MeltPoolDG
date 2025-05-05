@@ -6,10 +6,10 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <meltpooldg/core/material.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/flow/darcy_damping_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
-#include <meltpooldg/utilities/material.hpp>
 
 
 namespace MeltPoolDG::Flow

@@ -77,10 +77,10 @@ namespace MeltPoolDG
     unsigned int dof_idx = dealii::numbers::invalid_unsigned_int;
 
     // time increment value
-    number time_increment = dealii::numbers::invalid_double;
+    number time_increment = numbers::invalid_double;
 
     // inverse of time increment
-    number time_increment_inv = dealii::numbers::invalid_double;
+    number time_increment_inv = numbers::invalid_double;
   };
 
   /**

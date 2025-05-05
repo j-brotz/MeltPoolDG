@@ -17,9 +17,11 @@
 #include <meltpooldg/level_set/reinitialization_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/level_set/utilities.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
+
 
 namespace MeltPoolDG::LevelSet
 {
@@ -27,20 +29,20 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   LevelSetOperation<dim, number>::LevelSetOperation(
-    const ScratchData<dim, dim, number>             &scratch_data_in,
-    const TimeIterator<number>                      &time_stepping,
-    const BoundaryConditionManager<dim, number>     &bc_manager,
-    [[maybe_unused]] const TimeSteppingData<number> &time_stepping_data,
-    const LevelSetData<number>                      &ls,
-    const VectorType                                &advection_velocity,
-    const unsigned int                               ls_dof_idx_in,
-    const unsigned int                               ls_hanging_nodes_dof_idx_in,
-    const unsigned int                               ls_quad_idx_in,
-    const unsigned int                               reinit_dof_idx_in,
-    const unsigned int                               curv_dof_idx_in,
-    const unsigned int                               normal_dof_idx_in,
-    const unsigned int                               vel_dof_idx,
-    const unsigned int                               ls_zero_bc_idx)
+    const ScratchData<dim, dim, number>                              &scratch_data_in,
+    const TimeIntegration::TimeIterator<number>                      &time_stepping,
+    const BoundaryConditionManager<dim, number>                      &bc_manager,
+    [[maybe_unused]] const TimeIntegration::TimeSteppingData<number> &time_stepping_data,
+    const LevelSetData<number>                                       &ls,
+    const VectorType                                                 &advection_velocity,
+    const unsigned int                                                ls_dof_idx_in,
+    const unsigned int                                                ls_hanging_nodes_dof_idx_in,
+    const unsigned int                                                ls_quad_idx_in,
+    const unsigned int                                                reinit_dof_idx_in,
+    const unsigned int                                                curv_dof_idx_in,
+    const unsigned int                                                normal_dof_idx_in,
+    const unsigned int                                                vel_dof_idx,
+    const unsigned int                                                ls_zero_bc_idx)
     : scratch_data(scratch_data_in)
     , time_stepping(time_stepping)
     , level_set_data(ls)
@@ -49,11 +51,11 @@ namespace MeltPoolDG::LevelSet
     , ls_quad_idx(ls_quad_idx_in)
     , curv_dof_idx(curv_dof_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
-    , reinit_time_iterator(
-        TimeSteppingData<number>{0.0 /*start_time*/,
-                                 std::numeric_limits<number>::max() /*end_time*/,
-                                 -1.0 /*time step size --> will be set before each cycle*/,
-                                 level_set_data.reinit.max_n_steps})
+    , reinit_time_iterator(TimeIntegration::TimeSteppingData<number>{
+        0.0 /*start_time*/,
+        std::numeric_limits<number>::max() /*end_time*/,
+        -1.0 /*time step size --> will be set before each cycle*/,
+        level_set_data.reinit.max_n_steps})
   {
     /*
      *    initialize the advection diffusion operation
@@ -575,8 +577,8 @@ namespace MeltPoolDG::LevelSet
               {
                 multiplicity_local[q] = 1;
                 level_set_local[q] =
-                  UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-                    distance_at_q[q], epsilon_cell);
+                  CharacteristicFunctions::tanh_characteristic_function(distance_at_q[q],
+                                                                        epsilon_cell);
               }
             scratch_data.get_constraint(ls_dof_idx)
               .distribute_local_to_global(level_set_local, local_dof_indices, get_level_set());

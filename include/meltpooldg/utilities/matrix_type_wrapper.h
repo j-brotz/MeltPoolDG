@@ -9,34 +9,36 @@
 #include <functional>
 #include <utility>
 
-
-template <typename VectorType>
-struct MatrixTypeObject
+namespace MeltPoolDG
 {
-  /**
-   * Constructor, setting the function computing the actual matrix vector product in the member
-   * function @f vmult().
-   *
-   * @param alias_function Fucntion to be called in @f vmult().
-   */
-  explicit
-  MatrixTypeObject(const std::function<void(VectorType &, const VectorType &)> &alias_function)
-    : alias_function(std::move(alias_function))
-  {}
-
-  /**
-   * Apply the function passed to the constructor of this object. The exact functionality of this
-   * function therefore depends on the user.
-   *
-   * @param dst Destination, in which the result is stored.
-   * @param src Additional vector used during the calculation.
-   */
-  void
-  vmult(VectorType &dst, const VectorType &src) const
+  template <typename VectorType>
+  struct MatrixTypeObject
   {
-    alias_function(dst, src);
-  };
+    /**
+     * Constructor, setting the function computing the actual matrix vector product in the member
+     * function @f vmult().
+     *
+     * @param alias_function Fucntion to be called in @f vmult().
+     */
+    explicit MatrixTypeObject(
+      const std::function<void(VectorType &, const VectorType &)> &alias_function)
+      : alias_function(std::move(alias_function))
+    {}
 
-private:
-  const std::function<void(VectorType &, const VectorType &)> alias_function;
-};
+    /**
+     * Apply the function passed to the constructor of this object. The exact functionality of this
+     * function therefore depends on the user.
+     *
+     * @param dst Destination, in which the result is stored.
+     * @param src Additional vector used during the calculation.
+     */
+    void
+    vmult(VectorType &dst, const VectorType &src) const
+    {
+      alias_function(dst, src);
+    };
+
+  private:
+    const std::function<void(VectorType &, const VectorType &)> alias_function;
+  };
+} // namespace MeltPoolDG

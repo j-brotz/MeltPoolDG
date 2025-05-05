@@ -12,7 +12,7 @@
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/flow/compressible_flow_boundary_conditions.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
 
 namespace MeltPoolDG::Flow
 {
@@ -154,7 +154,7 @@ namespace MeltPoolDG::Flow
 
     dealii::AlignedVector<dealii::VectorizedArray<number>> interior_penalty_parameter;
 
-    ::TimeIntegration::SolutionHistory<VectorType, number> solution_history;
+    TimeIntegration::SolutionHistory<VectorType> solution_history;
 
     std::unique_ptr<dealii::Function<dim>> body_force;
   };

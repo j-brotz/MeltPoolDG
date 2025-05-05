@@ -7,11 +7,11 @@
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
 #include <meltpooldg/phase_change/recoil_pressure_data.hpp>
-#include <meltpooldg/utilities/material_data.hpp>
 
 #include <memory>
 

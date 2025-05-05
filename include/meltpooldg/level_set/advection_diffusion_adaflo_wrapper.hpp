@@ -8,7 +8,7 @@
 #  include <meltpooldg/core/simulation_base.hpp>
 #  include <meltpooldg/level_set/advection_diffusion_operation_base.hpp>
 #  include <meltpooldg/post_processing/generic_data_out.hpp>
-#  include <meltpooldg/utilities/time_iterator.hpp>
+#  include <meltpooldg/time_integration/time_iterator.hpp>
 
 #  include <adaflo/diagonal_preconditioner.h>
 #  include <adaflo/level_set_okz_advance_concentration.h>
@@ -27,16 +27,17 @@ namespace MeltPoolDG::LevelSet
     /**
      * Constructor.
      */
-    AdvectionDiffusionOperationAdaflo(const ScratchData<dim, dim, number> &scratch_data,
-                                      const TimeIterator<number>          &time_iterator,
-                                      const VectorType                    &advection_velocity,
-                                      const int advec_diff_zero_dirichlet_dof_idx,
-                                      const int advec_diff_dirichlet_dof_idx,
-                                      const int advec_diff_quad_idx,
-                                      const int velocity_dof_idx,
-                                      const TimeSteppingData<number>              &time_stepping,
-                                      const AdvectionDiffusionData<number>        &ls,
-                                      const BoundaryConditionManager<dim, number> &bc);
+    AdvectionDiffusionOperationAdaflo(
+      const ScratchData<dim, dim, number>             &scratch_data,
+      const TimeIntegration::TimeIterator<number>     &time_iterator,
+      const VectorType                                &advection_velocity,
+      const int                                        advec_diff_zero_dirichlet_dof_idx,
+      const int                                        advec_diff_dirichlet_dof_idx,
+      const int                                        advec_diff_quad_idx,
+      const int                                        velocity_dof_idx,
+      const TimeIntegration::TimeSteppingData<number> &time_stepping,
+      const AdvectionDiffusionData<number>            &ls,
+      const BoundaryConditionManager<dim, number>     &bc);
 
     void
     reinit() override;
@@ -86,11 +87,11 @@ namespace MeltPoolDG::LevelSet
 
   private:
     void
-    set_adaflo_parameters(const TimeSteppingData<number>       &time_stepping,
-                          const AdvectionDiffusionData<number> &ls,
-                          int                                   advec_diff_dof_idx,
-                          int                                   advec_diff_quad_idx,
-                          int                                   velocity_dof_idx);
+    set_adaflo_parameters(const TimeIntegration::TimeSteppingData<number> &time_stepping,
+                          const AdvectionDiffusionData<number>            &ls,
+                          int                                              advec_diff_dof_idx,
+                          int                                              advec_diff_quad_idx,
+                          int                                              velocity_dof_idx);
 
     void
     set_velocity(bool initial_step = false);
@@ -99,7 +100,7 @@ namespace MeltPoolDG::LevelSet
     initialize_vectors();
 
     const ScratchData<dim, dim, number>                      &scratch_data;
-    const TimeIterator<number>                               &time_iterator;
+    const TimeIntegration::TimeIterator<number>              &time_iterator;
     const dealii::LinearAlgebra::distributed::Vector<number> &advection_velocity;
     /**
      *  advected field

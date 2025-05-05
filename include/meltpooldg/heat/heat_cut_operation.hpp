@@ -11,6 +11,7 @@
 #include <deal.II/non_matching/mesh_classifier.h>
 
 #include <meltpooldg/core/boundary_conditions.hpp>
+#include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/core/periodic_boundary_conditions.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/cut/solution_transfer.hpp>
@@ -23,9 +24,8 @@
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
-#include <meltpooldg/utilities/material_data.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 
 #include <functional>
 #include <map>
@@ -48,7 +48,7 @@ namespace MeltPoolDG::Heat
     const PeriodicBoundaryConditions<dim>                                             &periodic_bc;
     const HeatData<number>                                                            &heat_data;
 
-    const TimeIterator<number> &time_iterator;
+    const TimeIntegration::TimeIterator<number> &time_iterator;
 
     // ScratchData's DoFHandler indices for ..
     const unsigned int heat_cut_dof_idx;        // .. CutFEM DoFs with Dirichlet BCs
@@ -57,8 +57,8 @@ namespace MeltPoolDG::Heat
     // ScratchData's Quadrature index
     const unsigned int heat_quad_idx;
 
-    TimeIntegration::SolutionHistory<VectorType, number> solution_history;
-    VectorType                                           interface_temperature;
+    TimeIntegration::SolutionHistory<VectorType> solution_history;
+    VectorType                                   interface_temperature;
     // TODO: note that this is not jet implemented in the operator
     VectorType volumetric_heat_source;
 
@@ -106,7 +106,7 @@ namespace MeltPoolDG::Heat
       const HeatData<number>                                            &heat_data_in,
       const MaterialData<number>                                        &material_data_in,
       const Evaporation::EvaporationData<number>                        &evapor_data_in,
-      const TimeIterator<number>                                        &time_iterator_in,
+      const TimeIntegration::TimeIterator<number>                       &time_iterator_in,
       const unsigned int                                                 heat_cut_dof_idx_in,
       const unsigned int                                                 heat_cut_no_bc_dof_idx_in,
       const unsigned int heat_continuous_no_bc_dof_idx_in,

@@ -31,21 +31,19 @@
 
 namespace MeltPoolDG::Simulation::RecoilPressure
 {
-  using namespace dealii;
-
   static std::string T_bc_top    = "";
   static std::string T_bc_bottom = "";
 
 
   template <int dim>
-  class InitialConditionTemperature : public Function<dim>
+  class InitialConditionTemperature : public dealii::Function<dim>
   {
   public:
     InitialConditionTemperature(const double T_initial_bottom,
                                 const double T_initial_top,
                                 const double y_min,
                                 const double y_max)
-      : Function<dim>()
+      : dealii::Function<dim>()
       , T_initial_bottom(T_initial_bottom)
       , T_initial_top(T_initial_top)
       , y_min(y_min)
@@ -53,7 +51,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
       if (T_initial_top == T_initial_bottom)
         return T_initial_top;
@@ -86,13 +84,13 @@ namespace MeltPoolDG::Simulation::RecoilPressure
     double       T_initial_top        = 500;
     double       T_initial_bottom     = T_initial_top;
 
-    Point<dim> local_refinement_1_bottom_left;
-    Point<dim> local_refinement_1_top_right;
-    Point<dim> local_refinement_2_bottom_left;
-    Point<dim> local_refinement_2_top_right;
+    dealii::Point<dim> local_refinement_1_bottom_left;
+    dealii::Point<dim> local_refinement_1_top_right;
+    dealii::Point<dim> local_refinement_2_bottom_left;
+    dealii::Point<dim> local_refinement_2_top_right;
 
     // triangulation of a slice for reduced output in 3D
-    parallel::distributed::Triangulation<2, 3>                            tria_slice;
+    dealii::parallel::distributed::Triangulation<2, 3>                    tria_slice;
     mutable std::shared_ptr<PostProcessingTools::SliceCreator<3, double>> slice;
     mutable unsigned int n_written_time_step_slice = 0;
 
@@ -105,9 +103,9 @@ namespace MeltPoolDG::Simulation::RecoilPressure
 
       struct RefinedRegion
       {
-        unsigned int n_local_refinement = 0;
-        Point<3>     bottom_left;
-        Point<3>     top_right;
+        unsigned int     n_local_refinement = 0;
+        dealii::Point<3> bottom_left;
+        dealii::Point<3> top_right;
       } refined_region;
 
     } slice_data;
@@ -237,11 +235,11 @@ namespace MeltPoolDG::Simulation::RecoilPressure
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP || dim == 1)
         {
 #ifdef DEAL_II_WITH_METIS
-          this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
+          this->triangulation = std::make_shared<dealii::parallel::shared::Triangulation<dim>>(
             this->mpi_communicator,
-            (Triangulation<dim>::MeshSmoothing::none),
+            dealii::Triangulation<dim>::MeshSmoothing::none,
             true,
-            parallel::shared::Triangulation<dim>::Settings::partition_metis);
+            dealii::parallel::shared::Triangulation<dim>::Settings::partition_metis);
 #else
           AssertThrow(
             false,
@@ -252,8 +250,8 @@ namespace MeltPoolDG::Simulation::RecoilPressure
         }
       else
         {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+          this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+            this->mpi_communicator);
         }
 
       const double &x_min = domain_x_min;
@@ -263,27 +261,27 @@ namespace MeltPoolDG::Simulation::RecoilPressure
       // create mesh
       //
       // Note: For 1d we consider the coordinates along the y-axis.
-      const Point<dim> bottom_left = (dim == 1) ? Point<dim>(y_min) :
-                                     (dim == 2) ? Point<dim>(x_min, y_min) :
-                                                  Point<dim>(x_min, x_min, y_min);
-      const Point<dim> top_right   = (dim == 1) ? Point<dim>(y_max) :
-                                     (dim == 2) ? Point<dim>(x_max, y_max) :
-                                                  Point<dim>(x_max, x_max, y_max);
+      const dealii::Point<dim> bottom_left = dim == 1 ? dealii::Point<dim>(y_min) :
+                                             dim == 2 ? dealii::Point<dim>(x_min, y_min) :
+                                                        dealii::Point<dim>(x_min, x_min, y_min);
+      const dealii::Point<dim> top_right   = dim == 1 ? dealii::Point<dim>(y_max) :
+                                             dim == 2 ? dealii::Point<dim>(x_max, y_max) :
+                                                        dealii::Point<dim>(x_max, x_max, y_max);
 
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           std::vector<unsigned int> subdivisions(
-            dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
+            dim, 5 * dealii::Utilities::pow(2, this->parameters.base.global_refinements));
           subdivisions[dim - 1] *= 2;
           for (int d = 0; d < dim; d++)
             subdivisions[d] *= cell_repetitions[d];
 
-          GridGenerator::subdivided_hyper_rectangle_with_simplices(
+          dealii::GridGenerator::subdivided_hyper_rectangle_with_simplices(
             *this->triangulation, subdivisions, bottom_left, top_right, true /*colorize*/);
         }
       else
         {
-          GridGenerator::subdivided_hyper_rectangle(
+          dealii::GridGenerator::subdivided_hyper_rectangle(
             *this->triangulation, cell_repetitions, bottom_left, top_right, true /*colorize*/);
         }
 
@@ -292,14 +290,18 @@ namespace MeltPoolDG::Simulation::RecoilPressure
         {
           if (slice_data.enable)
             {
-              GridGenerator::subdivided_hyper_rectangle(tria_slice,
-                                                        {1, 1} /*subdivisions*/,
-                                                        Point<2>(domain_x_min, domain_y_min),
-                                                        Point<2>(domain_x_max, domain_y_max));
+              dealii::GridGenerator::subdivided_hyper_rectangle(
+                tria_slice,
+                {1, 1} /*subdivisions*/,
+                dealii::Point<2>(domain_x_min, domain_y_min),
+                dealii::Point<2>(domain_x_max, domain_y_max));
               // rotate plane by 90° around x-axis
-              GridTools::rotate(Point<3>::unit_vector(0), 0.5 * numbers::PI, tria_slice);
+              dealii::GridTools::rotate(dealii::Point<3>::unit_vector(0),
+                                        0.5 * dealii::numbers::PI,
+                                        tria_slice);
               // shift plane along y-axis
-              GridTools::shift(Point<3>::unit_vector(1) * slice_data.coord, tria_slice);
+              dealii::GridTools::shift(dealii::Point<3>::unit_vector(1) * slice_data.coord,
+                                       tria_slice);
 
               // refine globally
               tria_slice.refine_global(slice_data.n_global_refinement);
@@ -307,7 +309,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
               // refine local region if requested
               if (slice_data.refined_region.n_local_refinement > 0)
                 {
-                  const auto slice_refined = BoundingBox<3>(
+                  const auto slice_refined = dealii::BoundingBox<3>(
                     {slice_data.refined_region.bottom_left, slice_data.refined_region.top_right});
 
                   for (unsigned int j = 0; j < slice_data.refined_region.n_local_refinement; ++j)
@@ -434,7 +436,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
       /*
        * BC for two-phase flow
        */
-      const auto add_slip_or_no_slip_boundary = [&](const types::boundary_id bc) {
+      const auto add_slip_or_no_slip_boundary = [&](const dealii::types::boundary_id bc) {
         if (slip_boundary)
           this->attach_boundary_condition(bc, "symmetry", "navier_stokes_u");
         else
@@ -542,12 +544,12 @@ namespace MeltPoolDG::Simulation::RecoilPressure
           if constexpr (dim == 2)
             {
               // 1. region
-              const auto refinement_region =
-                BoundingBox<dim>({local_refinement_1_bottom_left, local_refinement_1_top_right});
+              const auto refinement_region = dealii::BoundingBox<dim>(
+                {local_refinement_1_bottom_left, local_refinement_1_top_right});
 
               // 2. region
-              const auto refinement_region_2 =
-                BoundingBox<dim>({local_refinement_2_bottom_left, local_refinement_2_top_right});
+              const auto refinement_region_2 = dealii::BoundingBox<dim>(
+                {local_refinement_2_bottom_left, local_refinement_2_top_right});
 
               for (unsigned int j = 0; j < n_local_refinement; ++j)
                 {
@@ -568,7 +570,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
                 }
             }
           else
-            AssertThrow(false, ExcNotImplemented());
+            AssertThrow(false, dealii::ExcNotImplemented());
         }
     }
 
@@ -577,9 +579,9 @@ namespace MeltPoolDG::Simulation::RecoilPressure
     {
       this->attach_initial_condition(
         std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(
-          Point<dim>::unit_vector(dim - 1) *
+          dealii::Point<dim>::unit_vector(dim - 1) *
             this->parameters.laser.template get_starting_position<dim>()[dim - 1],
-          -Point<dim>::unit_vector(dim - 1)),
+          -dealii::Point<dim>::unit_vector(dim - 1)),
         "signed_distance");
       this->attach_initial_condition(std::make_shared<dealii::Functions::ZeroFunction<dim>>(dim),
                                      "navier_stokes_u");

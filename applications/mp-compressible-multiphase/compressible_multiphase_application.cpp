@@ -163,8 +163,8 @@ namespace MeltPoolDG::Multiphase
                                                                    false /* is_optional */);
 
     // initialize the time iterator
-    time_iterator =
-      std::make_shared<TimeIterator<number>>(simulation_case->parameters.time_stepping);
+    time_iterator = std::make_shared<TimeIntegration::TimeIterator<number>>(
+      simulation_case->parameters.time_stepping);
 
     // initialize compressible multiphase operation
     std::unique_ptr<CompressibleMultiphaseOperation<dim, number>> operation =

@@ -1,7 +1,10 @@
+#include <deal.II/matrix_free/tools.h>
+
 #include <meltpooldg/level_set/curvature_operator.hpp>
+#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/normal_vector_operator.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::LevelSet
 {
@@ -218,8 +221,7 @@ namespace MeltPoolDG::LevelSet
                 if constexpr (dim > 1)
                   {
                     const Tensor<1, dim, VectorizedArray<number>> n_phi =
-                      MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_dof_value(i),
-                                                              tolerance_normal_vector);
+                      normalize<dim>(normal_vector.get_dof_value(i), tolerance_normal_vector);
                     normal_vector.submit_dof_value(n_phi, i);
                   }
                 else
@@ -237,8 +239,8 @@ namespace MeltPoolDG::LevelSet
             for (unsigned int q_index = 0; q_index < curvature.n_q_points; ++q_index)
               {
                 const VectorizedArray<number> narrow_band_mask =
-                  (curvature_data.narrow_band.enable) ?
-                    VectorTools::compute_mask_narrow_band<dim>(
+                  curvature_data.narrow_band.enable ?
+                    Tools::compute_mask_narrow_band<number>(
                       level_set.get_value(q_index),
                       curvature_data.narrow_band.level_set_threshold) :
                     1.0;
@@ -267,7 +269,7 @@ namespace MeltPoolDG::LevelSet
     const auto                      &matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, 1, number> level_set_vals(matrix_free, ls_dof_idx, curv_quad_idx);
 
-    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+    unsigned int old_cell_index = dealii::numbers::invalid_unsigned_int;
 
     // compute matrix (only cell contributions)
     MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
@@ -300,7 +302,7 @@ namespace MeltPoolDG::LevelSet
     const auto                      &matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, 1, number> level_set_vals(matrix_free, ls_dof_idx, curv_quad_idx);
 
-    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+    unsigned int old_cell_index = dealii::numbers::invalid_unsigned_int;
 
     if (solution_level_set)
       solution_level_set->update_ghost_values();
@@ -352,8 +354,8 @@ namespace MeltPoolDG::LevelSet
     for (unsigned int q_index = 0; q_index < curv_vals.n_q_points; ++q_index)
       {
         const VectorizedArray<number> narrow_band_mask =
-          (curvature_data.narrow_band.enable) ?
-            VectorTools::compute_mask_narrow_band<dim>(
+          curvature_data.narrow_band.enable ?
+            Tools::compute_mask_narrow_band<number>(
               level_set_vals.get_value(q_index), curvature_data.narrow_band.level_set_threshold) :
             1.0;
 

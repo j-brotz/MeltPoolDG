@@ -1,10 +1,10 @@
 #include <deal.II/base/exceptions.h>
 
+#include <meltpooldg/core/material.templates.hpp>
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
-#include <meltpooldg/utilities/material.templates.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <memory>
 
@@ -49,14 +49,15 @@ namespace MeltPoolDG::Flow
           auto       &force_rhs,
           const auto &solid_fraction_vec,
           auto        macro_cells) {
-        dealii::FECellIntegrator<dim, 1, number> solid(matrix_free, solid_dof_idx, flow_quad_idx);
+        FECellIntegrator<dim, 1, number> solid(matrix_free, solid_dof_idx, flow_quad_idx);
 
-        dealii::FECellIntegrator<dim, dim, number> velocity(matrix_free,
-                                                            flow_vel_hanging_nodes_dof_idx,
-                                                            flow_quad_idx);
+        FECellIntegrator<dim, dim, number> velocity(matrix_free,
+                                                    flow_vel_hanging_nodes_dof_idx,
+                                                    flow_quad_idx);
 
-        dealii::FECellIntegrator<dim, dim, number> darcy_damping_force(
-          matrix_free, flow_vel_hanging_nodes_dof_idx, flow_quad_idx);
+        FECellIntegrator<dim, dim, number> darcy_damping_force(matrix_free,
+                                                               flow_vel_hanging_nodes_dof_idx,
+                                                               flow_quad_idx);
 
         damping_at_q.resize_fast(scratch_data.get_matrix_free().n_cell_batches() *
                                  darcy_damping_force.n_q_points);
@@ -102,12 +103,13 @@ namespace MeltPoolDG::Flow
   {
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &force_rhs, const auto &velocity_vec, auto macro_cells) {
-        dealii::FECellIntegrator<dim, dim, number> velocity(matrix_free,
-                                                            flow_vel_hanging_nodes_dof_idx,
-                                                            flow_quad_idx);
+        FECellIntegrator<dim, dim, number> velocity(matrix_free,
+                                                    flow_vel_hanging_nodes_dof_idx,
+                                                    flow_quad_idx);
 
-        dealii::FECellIntegrator<dim, dim, number> darcy_damping_force(
-          matrix_free, flow_vel_hanging_nodes_dof_idx, flow_quad_idx);
+        FECellIntegrator<dim, dim, number> darcy_damping_force(matrix_free,
+                                                               flow_vel_hanging_nodes_dof_idx,
+                                                               flow_quad_idx);
 
         // check if damping_at_q has its correct size
         AssertDimension(damping_at_q.size(),
@@ -157,15 +159,15 @@ namespace MeltPoolDG::Flow
     number dummy;
     scratch_data.get_matrix_free().template cell_loop<number, VectorType>(
       [&](const auto &matrix_free, auto &, const auto &ls_as_heaviside, auto cell_range) {
-        dealii::FECellIntegrator<dim, 1, number> ls_values(matrix_free,
-                                                           ls_hanging_nodes_dof_idx,
-                                                           flow_quad_idx);
+        FECellIntegrator<dim, 1, number> ls_values(matrix_free,
+                                                   ls_hanging_nodes_dof_idx,
+                                                   flow_quad_idx);
 
         const unsigned int cell_category = cut_type == CutUtil::CutPhaseType::not_cut ?
                                              0 :
                                              matrix_free.get_cell_range_category(cell_range);
 
-        std::vector<dealii::FECellIntegrator<dim, 1, number>> temperature_eval;
+        std::vector<FECellIntegrator<dim, 1, number>> temperature_eval;
         if (material.has_dependency(Material<number>::FieldType::temperature))
           {
             if (cut_type == CutUtil::CutPhaseType::not_cut)

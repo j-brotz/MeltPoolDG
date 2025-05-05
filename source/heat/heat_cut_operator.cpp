@@ -13,11 +13,11 @@
 
 #include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/core/finite_element_data.hpp>
+#include <meltpooldg/core/material.templates.hpp>
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/phase_change/evaporative_cooling.templates.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
-#include <meltpooldg/utilities/material.templates.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <algorithm>
 #include <functional>
@@ -30,10 +30,9 @@ namespace MeltPoolDG::Heat
   // this alias helps derive the correct type from the Evaluator, which needs to inherit from
   // dealii::FEEvaluationBase
   template <typename Evaluation>
-  using VelocityType =
-    typename dealii::FECellIntegrator<Evaluation::dimension,
-                                      Evaluation::dimension,
-                                      typename Evaluation::ScalarNumber>::value_type;
+  using VelocityType = typename FECellIntegrator<Evaluation::dimension,
+                                                 Evaluation::dimension,
+                                                 typename Evaluation::ScalarNumber>::value_type;
 
   static constexpr dealii::EvaluationFlags::EvaluationFlags evaluate_values =
     dealii::EvaluationFlags::values;
@@ -176,7 +175,7 @@ namespace MeltPoolDG::Heat
       auto val = cv * evaluator.get_value(q);
 
       // convective heat flux
-      val += cv * dealii::scalar_product(velocity, flux_1);
+      val += cv * scalar_product(velocity, flux_1);
 
       // conductive heat flux
       auto grad = conductivity * flux_1;
@@ -187,7 +186,7 @@ namespace MeltPoolDG::Heat
 
           // temperature-dependent material parameters terms
           val += d_cv_d_T * T_eval->get_value(q) * evaluator.get_value(q);
-          val += d_cv_d_T * dealii::scalar_product(velocity, flux_2);
+          val += d_cv_d_T * scalar_product(velocity, flux_2);
           grad += d_conductivity_d_T * flux_2;
         }
 
@@ -221,7 +220,7 @@ namespace MeltPoolDG::Heat
       evaluator.submit_gradient((conductivity_new * flux_1 + conductivity_old * flux_2) * -1., q);
 
       // convective heat flux
-      val += dealii::scalar_product(velocity, cv_new * flux_1 + cv_old * flux_2);
+      val += scalar_product(velocity, cv_new * flux_1 + cv_old * flux_2);
 
       evaluator.submit_value(val * -1., q);
     }

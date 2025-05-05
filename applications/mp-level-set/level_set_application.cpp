@@ -131,8 +131,8 @@ namespace MeltPoolDG::LevelSet
 
     ls_quad_idx = scratch_data->attach_quadrature(
       FiniteElementUtils::create_quadrature<dim>(simulation_case->parameters.ls.fe));
-    time_iterator =
-      std::make_unique<TimeIterator<number>>(simulation_case->parameters.time_stepping);
+    time_iterator = std::make_unique<TimeIntegration::TimeIterator<number>>(
+      simulation_case->parameters.time_stepping);
 
     setup_dof_system(false);
 

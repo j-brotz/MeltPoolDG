@@ -3,6 +3,7 @@
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/core/base_data.hpp>
+#include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
 #include <meltpooldg/flow/flow_data.hpp>
@@ -17,14 +18,13 @@
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
+#include <meltpooldg/time_integration/time_stepping_data.hpp>
 #include <meltpooldg/utilities/amr_data.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/enum.hpp>
-#include <meltpooldg/utilities/material_data.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
 #include <meltpooldg/utilities/profiling_data.hpp>
 #include <meltpooldg/utilities/restart_data.hpp>
-#include <meltpooldg/utilities/time_stepping_data.hpp>
 
 #include <iostream>
 #include <string>
@@ -71,7 +71,7 @@ namespace MeltPoolDG
 
   public:
     BaseData                                           base;
-    TimeSteppingData<number>                           time_stepping;
+    TimeIntegration::TimeSteppingData<number>          time_stepping;
     AdaptiveMeshingData<number>                        amr;
     LevelSet::LevelSetData<number>                     ls;
     Heat::HeatData<number>                             heat;

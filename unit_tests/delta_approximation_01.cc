@@ -1,7 +1,7 @@
 // Test delta-approximation classes.
 
+#include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
-#include <meltpooldg/utilities/material_data.hpp>
 
 #include <iostream>
 

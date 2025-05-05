@@ -1,9 +1,12 @@
 #pragma once
-// deal-specific libraries
+
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_function.h>
+
+#include <deal.II/distributed/shared_tria.h>
+#include <deal.II/distributed/tria.h>
 
 #include <deal.II/grid/grid_generator.h>
 
@@ -12,10 +15,10 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
 #include <iostream>
+#include <string>
 
 #include "../level_set_case.hpp"
 
@@ -34,15 +37,14 @@ namespace MeltPoolDG::Simulation::StefansProblem
     void
     create_spatial_discretization() override
     {
-      using namespace dealii;
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP || dim == 1)
         {
 #ifdef DEAL_II_WITH_METIS
-          this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
+          this->triangulation = std::make_shared<dealii::parallel::shared::Triangulation<dim>>(
             this->mpi_communicator,
-            (Triangulation<dim>::none),
+            dealii::Triangulation<dim>::none,
             false,
-            parallel::shared::Triangulation<dim>::Settings::partition_metis);
+            dealii::parallel::shared::Triangulation<dim>::Settings::partition_metis);
 #else
           AssertThrow(
             false,
@@ -53,33 +55,36 @@ namespace MeltPoolDG::Simulation::StefansProblem
         }
       else
         {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+          this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+            this->mpi_communicator);
         }
       // create mesh
       const dealii::Point<dim, number> bottom_left =
-        dim == 1   ? dealii::Point<dim, number>(y_min) :
-        (dim == 2) ? dealii::Point<dim, number>(x_min, y_min) :
-                     dealii::Point<dim, number>(x_min, x_min, y_min);
+        dim == 1 ? dealii::Point<dim, number>(y_min) :
+        dim == 2 ? dealii::Point<dim, number>(x_min, y_min) :
+                   dealii::Point<dim, number>(x_min, x_min, y_min);
       const dealii::Point<dim, number> top_right =
-        dim == 1   ? dealii::Point<dim, number>(y_max) :
-        (dim == 2) ? dealii::Point<dim, number>(x_max, y_max) :
-                     dealii::Point<dim, number>(x_max, x_max, y_max);
+        dim == 1 ? dealii::Point<dim, number>(y_max) :
+        dim == 2 ? dealii::Point<dim, number>(x_max, y_max) :
+                   dealii::Point<dim, number>(x_max, x_max, y_max);
 
 
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           // create mesh
           std::vector<unsigned int> subdivisions(
-            dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
+            dim, 5 * dealii::Utilities::pow(2, this->parameters.base.global_refinements));
           subdivisions[dim - 1] *= 2;
 
-          GridGenerator::subdivided_hyper_rectangle_with_simplices(
+          dealii::GridGenerator::subdivided_hyper_rectangle_with_simplices(
             *this->triangulation, subdivisions, bottom_left, top_right, true);
         }
       else
         {
-          GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right, true);
+          dealii::GridGenerator::hyper_rectangle(*this->triangulation,
+                                                 bottom_left,
+                                                 top_right,
+                                                 true);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
     }

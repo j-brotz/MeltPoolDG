@@ -14,16 +14,16 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   AdvectionDiffusionOperationAdaflo<dim, number>::AdvectionDiffusionOperationAdaflo(
-    const ScratchData<dim, dim, number>         &scratch_data,
-    const TimeIterator<number>                  &time_iterator,
-    const VectorType                            &advection_velocity,
-    const int                                    advec_diff_zero_dirichlet_dof_idx,
-    const int                                    advec_diff_dirichlet_dof_idx,
-    const int                                    advec_diff_quad_idx,
-    const int                                    velocity_dof_idx,
-    const TimeSteppingData<number>              &time_stepping,
-    const AdvectionDiffusionData<number>        &advec_diff_data,
-    const BoundaryConditionManager<dim, number> &bc)
+    const ScratchData<dim, dim, number>             &scratch_data,
+    const TimeIntegration::TimeIterator<number>     &time_iterator,
+    const VectorType                                &advection_velocity,
+    const int                                        advec_diff_zero_dirichlet_dof_idx,
+    const int                                        advec_diff_dirichlet_dof_idx,
+    const int                                        advec_diff_quad_idx,
+    const int                                        velocity_dof_idx,
+    const TimeIntegration::TimeSteppingData<number> &time_stepping,
+    const AdvectionDiffusionData<number>            &advec_diff_data,
+    const BoundaryConditionManager<dim, number>     &bc)
     : scratch_data(scratch_data)
     , time_iterator(time_iterator)
     , advection_velocity(advection_velocity)
@@ -231,11 +231,11 @@ namespace MeltPoolDG::LevelSet
   template <int dim, typename number>
   void
   AdvectionDiffusionOperationAdaflo<dim, number>::set_adaflo_parameters(
-    const TimeSteppingData<number>       &time_stepping,
-    const AdvectionDiffusionData<number> &advec_diff,
-    const int                             advec_diff_dof_idx,
-    const int                             advec_diff_quad_idx,
-    const int                             velocity_dof_idx)
+    const TimeIntegration::TimeSteppingData<number> &time_stepping,
+    const AdvectionDiffusionData<number>            &advec_diff,
+    const int                                        advec_diff_dof_idx,
+    const int                                        advec_diff_quad_idx,
+    const int                                        velocity_dof_idx)
   {
     adaflo_params.time.start_time           = time_stepping.start_time;
     adaflo_params.time.end_time             = time_stepping.end_time;
@@ -243,15 +243,17 @@ namespace MeltPoolDG::LevelSet
     adaflo_params.time.time_step_size_min   = time_stepping.time_step_size;
     adaflo_params.time.time_step_size_max   = time_stepping.time_step_size;
 
-    if (advec_diff.time_integrator_data.integrator_type == TimeIntegratorSchemes::implicit_euler)
+    if (advec_diff.time_integrator_data.integrator_type ==
+        TimeIntegration::TimeIntegratorSchemes::implicit_euler)
       adaflo_params.time.time_step_scheme = adaflo::TimeSteppingParameters::Scheme::implicit_euler;
     else if (advec_diff.time_integrator_data.integrator_type ==
-             TimeIntegratorSchemes::explicit_euler)
+             TimeIntegration::TimeIntegratorSchemes::explicit_euler)
       adaflo_params.time.time_step_scheme = adaflo::TimeSteppingParameters::Scheme::explicit_euler;
     else if (advec_diff.time_integrator_data.integrator_type ==
-             TimeIntegratorSchemes::crank_nicolson)
+             TimeIntegration::TimeIntegratorSchemes::crank_nicolson)
       adaflo_params.time.time_step_scheme = adaflo::TimeSteppingParameters::Scheme::crank_nicolson;
-    else if (advec_diff.time_integrator_data.integrator_type == TimeIntegratorSchemes::bdf_2)
+    else if (advec_diff.time_integrator_data.integrator_type ==
+             TimeIntegration::TimeIntegratorSchemes::bdf_2)
       adaflo_params.time.time_step_scheme = adaflo::TimeSteppingParameters::Scheme::bdf_2;
     else
       AssertThrow(false, ExcMessage("Requested time stepping scheme not supported."));

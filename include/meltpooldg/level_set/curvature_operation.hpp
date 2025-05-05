@@ -7,7 +7,7 @@
 #include <meltpooldg/level_set/normal_vector_operation.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
 
 namespace MeltPoolDG::LevelSet
 {
@@ -88,7 +88,7 @@ namespace MeltPoolDG::LevelSet
 
     LevelSet::NormalVectorOperation<dim, number> normal_vector_operation;
 
-    TimeIntegration::SolutionHistory<VectorType, number> solution_history;
+    TimeIntegration::SolutionHistory<VectorType> solution_history;
 
     std::unique_ptr<Predictor<VectorType, number>> predictor;
 

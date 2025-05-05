@@ -1,10 +1,11 @@
-#include <deal.II/lac/la_parallel_vector.h>
-
-#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/phase_change/evaporation_source_terms_continuous.hpp>
+//
+#include <meltpooldg/level_set/level_set_tools.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
+#include <meltpooldg/utilities/dof_tools.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 namespace MeltPoolDG::Evaporation
 {
@@ -56,7 +57,7 @@ namespace MeltPoolDG::Evaporation
     if (evapor_data.do_level_set_pressure_gradient_interpolation &&
         ls_to_pressure_grad_interpolation_matrix.m() == 0) // do only once
       ls_to_pressure_grad_interpolation_matrix =
-        UtilityFunctions::create_dof_interpolation_matrix<dim, number>(
+        DoFTools::create_dof_interpolation_matrix<dim, number>(
           scratch_data.get_dof_handler(pressure_dof_idx),
           scratch_data.get_dof_handler(ls_dof_idx),
           true /*do sort lexicographic (matrix-free)*/);
@@ -99,7 +100,7 @@ namespace MeltPoolDG::Evaporation
               {
                 interpolated_level_set_to_pressure_space.reinit(cell);
 
-                UtilityFunctions::compute_gradient_at_interpolated_dof_values<dim>(
+                DoFTools::compute_gradient_at_interpolated_dof_values<dim>(
                   ls,
                   interpolated_level_set_to_pressure_space,
                   ls_to_pressure_grad_interpolation_matrix);
@@ -189,8 +190,7 @@ namespace MeltPoolDG::Evaporation
         for (unsigned int q_index = 0; q_index < ls.n_q_points; ++q_index)
           {
             const auto n_phi =
-              MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index),
-                                                      tolerance_normal_vector);
+              normalize<dim>(normal_vec.get_value(q_index), tolerance_normal_vector);
 
             //              ρ
             // evaluate  ------
@@ -226,7 +226,7 @@ namespace MeltPoolDG::Evaporation
      * write interface velocity to dof vector
      */
     if (scratch_data.is_hex_mesh())
-      MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, dim>(
+      VectorTools::fill_dof_vector_from_cell_operation<dim, dim>(
         evaporation_velocity,
         scratch_data.get_matrix_free(),
         evapor_vel_dof_idx,
@@ -263,7 +263,7 @@ namespace MeltPoolDG::Evaporation
     if (evapor_data.do_level_set_pressure_gradient_interpolation &&
         ls_to_pressure_grad_interpolation_matrix.m() == 0) // do only once
       ls_to_pressure_grad_interpolation_matrix =
-        UtilityFunctions::create_dof_interpolation_matrix<dim, number>(
+        DoFTools::create_dof_interpolation_matrix<dim, number>(
           scratch_data.get_dof_handler(pressure_dof_idx),
           scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
           true /*do sort lexicographic (matrix-free)*/);
@@ -307,7 +307,7 @@ namespace MeltPoolDG::Evaporation
               {
                 interpolated_level_set_to_pressure_space.reinit(cell);
 
-                UtilityFunctions::compute_gradient_at_interpolated_dof_values<dim>(
+                DoFTools::compute_gradient_at_interpolated_dof_values<dim>(
                   heaviside,
                   interpolated_level_set_to_pressure_space,
                   ls_to_pressure_grad_interpolation_matrix);

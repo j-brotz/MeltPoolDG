@@ -1,22 +1,25 @@
 #pragma once
-// deal-specific libraries
+
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_signed_distance.h>
+#include <deal.II/base/mpi.h>
 #include <deal.II/base/point.h>
-#include <deal.II/base/tensor_function.h>
+#include <deal.II/base/types.h>
+#include <deal.II/base/utilities.h>
+
+#include <deal.II/distributed/shared_tria.h>
+#include <deal.II/distributed/tria.h>
 
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/tria.h>
 
-#include <deal.II/lac/vector.h>
-
-#include <deal.II/numerics/vector_tools.h>
-
-// c++
-#include <cmath>
-#include <iostream>
-// MeltPoolDG
-#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
+
+#include <memory>
+#include <string>
+#include <vector>
 
 /**
  * This example is derived from
@@ -29,38 +32,37 @@
 
 namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
 {
-  using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
 
   template <int dim>
-  class InitialValuesLS : public Function<dim>
+  class InitialValuesLS : public dealii::Function<dim>
   {
   public:
-    InitialValuesLS(const Point<dim> &lower_left, const Point<dim> &upper_right)
-      : Function<dim>()
+    InitialValuesLS(const dealii::Point<dim> &lower_left, const dealii::Point<dim> &upper_right)
+      : dealii::Function<dim>()
       , signed_distance(lower_left, upper_right)
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
-      return UtilityFunctions::CharacteristicFunctions::sgn(-signed_distance.value(p));
+      return CharacteristicFunctions::sgn(-signed_distance.value(p));
     }
 
     dealii::Functions::SignedDistance::Rectangle<dim> signed_distance;
   };
 
   template <int dim>
-  class InitialValuesTemperature : public Function<dim>
+  class InitialValuesTemperature : public dealii::Function<dim>
   {
   public:
     InitialValuesTemperature()
-      : Function<dim>()
+      : dealii::Function<dim>()
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
       const double T_bottom = 573.15;
       const double T_sat    = 373.15;
@@ -86,51 +88,51 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
     void
     create_spatial_discretization() override
     {
-      if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP || dim == 1)
+      if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP or dim == 1)
         {
 #ifdef DEAL_II_WITH_METIS
-          this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
+          this->triangulation = std::make_shared<dealii::parallel::shared::Triangulation<dim>>(
             this->mpi_communicator,
-            (Triangulation<dim>::none),
+            dealii::Triangulation<dim>::none,
             false,
-            parallel::shared::Triangulation<dim>::Settings::partition_metis);
+            dealii::parallel::shared::Triangulation<dim>::Settings::partition_metis);
 #else
           AssertThrow(
             false,
-            ExcMessage(
+            dealii::ExcMessage(
               "Missing Metis support of the deal.II installation. "
               "Configure deal.II with -D DEAL_II_WITH_METIS='ON' to execute this example."));
 #endif
         }
       else
         {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+          this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+            this->mpi_communicator);
         }
 
       // create mesh
-      const Point<dim> bottom_left = dim == 1   ? Point<dim>(y_min) :
-                                     (dim == 2) ? Point<dim>(x_min, y_min) :
-                                                  Point<dim>(x_min, x_min, y_min);
-      const Point<dim> top_right   = dim == 1   ? Point<dim>(y_max) :
-                                     (dim == 2) ? Point<dim>(x_max, y_max) :
-                                                  Point<dim>(x_max, x_max, y_max);
+      const dealii::Point<dim> bottom_left = dim == 1 ? dealii::Point<dim>(y_min) :
+                                             dim == 2 ? dealii::Point<dim>(x_min, y_min) :
+                                                        dealii::Point<dim>(x_min, x_min, y_min);
+      const dealii::Point<dim> top_right   = dim == 1 ? dealii::Point<dim>(y_max) :
+                                             dim == 2 ? dealii::Point<dim>(x_max, y_max) :
+                                                        dealii::Point<dim>(x_max, x_max, y_max);
 
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           // create mesh
           std::vector<unsigned int> subdivisions(
-            dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
+            dim, 5 * dealii::Utilities::pow(2, this->parameters.base.global_refinements));
           subdivisions[dim - 1] *= 2;
 
-          GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
-                                                                   subdivisions,
-                                                                   bottom_left,
-                                                                   top_right);
+          dealii::GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
+                                                                           subdivisions,
+                                                                           bottom_left,
+                                                                           top_right);
         }
       else
         {
-          GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
+          dealii::GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
     }
@@ -142,10 +144,10 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
        *  create a pair of (boundary_id, dirichlet_function)
        */
 
-      const types::boundary_id lower_bc = 1;
-      const types::boundary_id upper_bc = 2;
-      const types::boundary_id left_bc  = 3;
-      const types::boundary_id right_bc = 4;
+      const dealii::types::boundary_id lower_bc = 1;
+      const dealii::types::boundary_id upper_bc = 2;
+      const dealii::types::boundary_id left_bc  = 3;
+      const dealii::types::boundary_id right_bc = 4;
 
       // lower part = liquid; upper part = gas
       this->attach_boundary_condition(lower_bc, "no_slip", "navier_stokes_u");
@@ -184,7 +186,7 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
         {
           for (auto &cell : this->triangulation->cell_iterators())
             for (auto &face : cell->face_iterators())
-              if ((face->at_boundary()))
+              if (face->at_boundary())
                 {
                   if (face->center()[0] == y_min)
                     face->set_boundary_id(lower_bc);
@@ -196,7 +198,7 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
         {
           for (const auto &cell : this->triangulation->cell_iterators())
             for (const auto &face : cell->face_iterators())
-              if ((face->at_boundary()))
+              if (face->at_boundary())
                 {
                   if (face->center()[1] == y_min)
                     face->set_boundary_id(lower_bc);
@@ -210,24 +212,24 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
         }
       else
         {
-          AssertThrow(false, ExcNotImplemented());
+          AssertThrow(false, dealii::ExcNotImplemented());
         }
     }
 
     void
     set_field_conditions() final
     {
-      const Point<dim> lower_left((dim == 1) ? Point<dim>(y_min) :
-                                  (dim == 2) ? Point<dim>(x_min, y_min) :
-                                               Point<dim>(x_min, x_min, y_min));
-      const Point<dim> upper_right((dim == 1) ? Point<dim>(y_interface) :
-                                   (dim == 2) ? Point<dim>(x_max, y_interface) :
-                                                Point<dim>(x_max, x_max, y_interface));
+      const dealii::Point<dim> lower_left(dim == 1 ? dealii::Point<dim>(y_min) :
+                                          dim == 2 ? dealii::Point<dim>(x_min, y_min) :
+                                                     dealii::Point<dim>(x_min, x_min, y_min));
+      const dealii::Point<dim> upper_right(
+        dim == 1 ? dealii::Point<dim>(y_interface) :
+        dim == 2 ? dealii::Point<dim>(x_max, y_interface) :
+                   dealii::Point<dim>(x_max, x_max, y_interface));
       this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(lower_left,
                                                                             upper_right),
                                      "level_set");
-      this->attach_initial_condition(std::shared_ptr<dealii::Function<dim>>(
-                                       new Functions::ZeroFunction<dim>(dim)),
+      this->attach_initial_condition(std::make_shared<dealii::Functions::ZeroFunction<dim>>(dim),
                                      "navier_stokes_u");
       this->attach_initial_condition(std::make_shared<InitialValuesTemperature<dim>>(),
                                      "heat_transfer");

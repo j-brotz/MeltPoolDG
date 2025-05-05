@@ -34,7 +34,7 @@
 #include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operation.hpp>
 #include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operator.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 
 #include <memory>
 #include <variant>
@@ -67,15 +67,14 @@ namespace MeltPoolDG::Multiphase
      * @param comp_flow_quad_idx_in Index of the used quadrature object in @p scratch_data_in.
      * @param level_set_in level-set dof vector.
      */
-    CompressibleMultiphaseOperation(
-      const ScratchData<dim, dim, number>                  &scratch_data_in,
-      const MeltPoolDG::Flow::CompressibleFlowData<number> &comp_flow_data_in,
-      const TimeIterator<number>                           &time_iterator_in,
-      const std::function<void()>                          &setup_dof_system_in,
-      unsigned int                                          comp_flow_dof_idx_in  = 0,
-      unsigned int                                          level_set_dof_idx_in  = 0,
-      unsigned int                                          comp_flow_quad_idx_in = 0,
-      const VectorType                                     &level_set_in          = 0);
+    CompressibleMultiphaseOperation(const ScratchData<dim, dim, number>         &scratch_data_in,
+                                    const Flow::CompressibleFlowData<number>    &comp_flow_data_in,
+                                    const TimeIntegration::TimeIterator<number> &time_iterator_in,
+                                    const std::function<void()> &setup_dof_system_in,
+                                    unsigned int                 comp_flow_dof_idx_in  = 0,
+                                    unsigned int                 level_set_dof_idx_in  = 0,
+                                    unsigned int                 comp_flow_quad_idx_in = 0,
+                                    const VectorType            &level_set_in          = 0);
 
     /**
      * Set up the required internal data structures. After a call to this function the solve()
@@ -196,9 +195,9 @@ namespace MeltPoolDG::Multiphase
     }
 
   private:
-    MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number> flow_scratch_data;
+    Flow::CompressibleFlowScratchData<dim, number> flow_scratch_data;
 
-    const TimeIterator<number> &time_iterator;
+    const TimeIntegration::TimeIterator<number> &time_iterator;
 
     const unsigned int level_set_dof_idx;
     const VectorType  &level_set;

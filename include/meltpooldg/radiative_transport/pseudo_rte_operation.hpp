@@ -8,8 +8,8 @@
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/radiative_transport/pseudo_rte_operator.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 
 #include <memory>
 
@@ -39,9 +39,9 @@ namespace MeltPoolDG::RadiativeTransport
 
     std::unique_ptr<PseudoRTEOperator<dim, number>> pseudo_rte_operator;
 
-    TimeIntegration::SolutionHistory<VectorType, number> solution_history;
+    TimeIntegration::SolutionHistory<VectorType> solution_history;
 
-    TimeIterator<number> pseudo_time_iterator;
+    TimeIntegration::TimeIterator<number> pseudo_time_iterator;
 
     Preconditioner<dim, VectorType, number> preconditioner;
 

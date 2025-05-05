@@ -126,7 +126,7 @@ namespace MeltPoolDG::Heat
               scratch_data_in.attach_constraint_matrix(*rte_hanging_node_constraints);
 
             AssertThrow(
-              laser_data.rte_boundary_id != numbers::invalid_boundary_id,
+              laser_data.rte_boundary_id != dealii::numbers::invalid_boundary_id,
               ExcMessage(
                 "The RTE laser model requires the RTE boundary id to be set by the simulation!"));
             if (print_boundary_ids)

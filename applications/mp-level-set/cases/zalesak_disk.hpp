@@ -66,17 +66,16 @@ namespace MeltPoolDG::Simulation::ZalesakDisk
     void
     create_spatial_discretization() override
     {
-      using namespace dealii;
       if (dim == 1)
         {
-          AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
-          this->triangulation = std::make_shared<Triangulation<dim>>();
+          AssertDimension(dealii::Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
+          this->triangulation = std::make_shared<dealii::Triangulation<dim>>();
         }
       else
-        this->triangulation =
-          std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+        this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+          this->mpi_communicator);
 
-      GridGenerator::hyper_cube(*this->triangulation, left_domain, right_domain);
+      dealii::GridGenerator::hyper_cube(*this->triangulation, left_domain, right_domain);
       this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 

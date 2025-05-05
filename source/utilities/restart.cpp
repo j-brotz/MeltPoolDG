@@ -8,8 +8,8 @@ namespace MeltPoolDG::Restart
   namespace fs = std::filesystem;
 
   template <typename number>
-  RestartMonitor<number>::RestartMonitor(const RestartData<number>  &data,
-                                         const TimeIterator<number> &time)
+  RestartMonitor<number>::RestartMonitor(const RestartData<number>                   &data,
+                                         const TimeIntegration::TimeIterator<number> &time)
     : data(data)
     , dir(fs::path(data.prefix).parent_path())
     , prefix(fs::path(data.prefix).filename())

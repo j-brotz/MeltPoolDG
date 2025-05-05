@@ -9,8 +9,8 @@
 #  include <meltpooldg/level_set/normal_vector_operation_adaflo_wrapper.hpp>
 #  include <meltpooldg/level_set/reinitialization_operation_base.hpp>
 #  include <meltpooldg/post_processing/generic_data_out.hpp>
+#  include <meltpooldg/time_integration/time_iterator.hpp>
 #  include <meltpooldg/utilities/conditional_ostream.hpp>
-#  include <meltpooldg/utilities/time_iterator.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
 
 #  include <adaflo/diagonal_preconditioner.h>
@@ -31,13 +31,13 @@ namespace MeltPoolDG::LevelSet
     /**
      * Constructor.
      */
-    ReinitializationOperationAdaflo(const ScratchData<dim, dim, number> &scratch_data,
-                                    const TimeIterator<number>          &time_iterator,
-                                    const int                            reinit_dof_idx,
-                                    const int                            reinit_quad_idx,
-                                    const int                            normal_dof_idx,
-                                    const TimeSteppingData<number>      &time_stepping,
-                                    const NormalVectorData<number>      &normal_vec_data,
+    ReinitializationOperationAdaflo(const ScratchData<dim, dim, number>         &scratch_data,
+                                    const TimeIntegration::TimeIterator<number> &time_iterator,
+                                    const int                                    reinit_dof_idx,
+                                    const int                                    reinit_quad_idx,
+                                    const int                                    normal_dof_idx,
+                                    const TimeIntegration::TimeSteppingData<number> &time_stepping,
+                                    const NormalVectorData<number> &normal_vec_data,
                                     const number       interface_thickness_parameter_value,
                                     const unsigned int n_subdivisions);
 
@@ -94,10 +94,10 @@ namespace MeltPoolDG::LevelSet
 
   private:
     void
-    set_adaflo_parameters(const TimeSteppingData<number> &time_stepping,
-                          const int                       reinit_dof_idx,
-                          const int                       reinit_quad_idx,
-                          const int                       normal_dof_idx);
+    set_adaflo_parameters(const TimeIntegration::TimeSteppingData<number> &time_stepping,
+                          const int                                        reinit_dof_idx,
+                          const int                                        reinit_quad_idx,
+                          const int                                        normal_dof_idx);
 
     void
     initialize_vectors();
@@ -111,7 +111,7 @@ namespace MeltPoolDG::LevelSet
 
     const ScratchData<dim, dim, number> &scratch_data;
 
-    const TimeIterator<number> &time_iterator;
+    const TimeIntegration::TimeIterator<number> &time_iterator;
     /**
      *  advected field
      */

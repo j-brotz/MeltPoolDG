@@ -18,22 +18,24 @@
 #  include <deal.II/numerics/data_component_interpretation.h>
 #  include <deal.II/numerics/vector_tools_interpolate.h>
 
+#  include <meltpooldg/core/material.templates.hpp>
 #  include <meltpooldg/flow/adaflo_wrapper.hpp>
 #  include <meltpooldg/utilities/constraints.hpp>
 #  include <meltpooldg/utilities/dof_monitor.hpp>
 #  include <meltpooldg/utilities/iteration_monitor.hpp>
 #  include <meltpooldg/utilities/journal.hpp>
-#  include <meltpooldg/utilities/material.templates.hpp>
 #  include <meltpooldg/utilities/scoped_name.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
+#  include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 namespace MeltPoolDG::Flow
 {
   template <int dim, typename number>
-  AdafloWrapper<dim, number>::AdafloWrapper(ScratchData<dim, dim, number>             &scratch_data,
-                                            std::shared_ptr<MeltPoolCase<dim, number>> base_in,
-                                            const TimeIterator<number> &time_iterator,
-                                            const bool                  do_evaporative_mass_flux)
+  AdafloWrapper<dim, number>::AdafloWrapper(
+    ScratchData<dim, dim, number>               &scratch_data,
+    std::shared_ptr<MeltPoolCase<dim, number>>   base_in,
+    const TimeIntegration::TimeIterator<number> &time_iterator,
+    const bool                                   do_evaporative_mass_flux)
     : scratch_data(scratch_data)
     , timer(std::cout, dealii::TimerOutput::never, dealii::TimerOutput::wall_times)
     , adaflo_params(base_in->parameters.adaflo_params.get_parameters())

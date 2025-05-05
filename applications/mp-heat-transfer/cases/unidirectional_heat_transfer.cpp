@@ -14,7 +14,7 @@
 #include <meltpooldg/core/case_registration.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 
 #include <vector>
 
@@ -83,7 +83,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
     {
       const auto signed_distance = level - p[1];
       if (heaviside)
-        return UtilityFunctions::CharacteristicFunctions::heaviside(signed_distance, eps);
+        return CharacteristicFunctions::smoothed_heaviside(signed_distance, eps);
       else
         return signed_distance;
     }
@@ -110,7 +110,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
       const auto signed_distance = level - p[0] - velocity * this->get_time();
 
       if (heaviside)
-        return UtilityFunctions::CharacteristicFunctions::heaviside(signed_distance, eps);
+        return CharacteristicFunctions::smoothed_heaviside(signed_distance, eps);
       else
         return signed_distance;
     }

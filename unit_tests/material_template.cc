@@ -1,7 +1,7 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/parameter_handler.h>
 
-#include <meltpooldg/utilities/material_data.hpp>
+#include <meltpooldg/core/material_data.hpp>
 
 #include <iostream>
 #include <sstream>

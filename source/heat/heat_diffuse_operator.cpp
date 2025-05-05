@@ -15,13 +15,15 @@
 #include <deal.II/matrix_free/tools.h>
 
 #include <meltpooldg/core/exceptions.hpp>
+#include <meltpooldg/core/material.templates.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/phase_change/evaporative_cooling.templates.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
+#include <meltpooldg/utilities/dof_tools.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/material.templates.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <algorithm>
 #include <bitset>
@@ -106,11 +108,10 @@ namespace MeltPoolDG::Heat
     do_level_set_temperature_gradient_interpolation = scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx);
 
     if (do_level_set_temperature_gradient_interpolation)
-      ls_to_heat_grad_interpolation_matrix =
-        UtilityFunctions::create_dof_interpolation_matrix<dim, number>(
-          scratch_data.get_dof_handler(heat_dof_idx),
-          scratch_data.get_dof_handler(ls_dof_idx),
-          true /* do_matrix_free */);
+      ls_to_heat_grad_interpolation_matrix = DoFTools::create_dof_interpolation_matrix<dim, number>(
+        scratch_data.get_dof_handler(heat_dof_idx),
+        scratch_data.get_dof_handler(ls_dof_idx),
+        true /* do_matrix_free */);
 
     evaporative_mass_flux = evaporative_mass_flux_in;
     mass_flux_dof_idx     = mass_flux_dof_idx_in;
@@ -319,7 +320,7 @@ namespace MeltPoolDG::Heat
                                                  heat_dof_idx,
                                                  heat_quad_idx);
 
-    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+    unsigned int old_cell_index = dealii::numbers::invalid_unsigned_int;
 
     if (do_diagonal)
       {
@@ -457,7 +458,7 @@ namespace MeltPoolDG::Heat
                   {
                     heaviside_interpolated_eval.reinit(cell);
 
-                    UtilityFunctions::compute_gradient_at_interpolated_dof_values<dim>(
+                    DoFTools::compute_gradient_at_interpolated_dof_values<dim>(
                       heaviside_eval,
                       heaviside_interpolated_eval,
                       ls_to_heat_grad_interpolation_matrix);
@@ -944,7 +945,7 @@ namespace MeltPoolDG::Heat
                   {
                     heaviside_interpolated_eval.reinit(eval.get_current_cell_index());
 
-                    UtilityFunctions::compute_gradient_at_interpolated_dof_values<dim>(
+                    DoFTools::compute_gradient_at_interpolated_dof_values<dim>(
                       heaviside_eval,
                       heaviside_interpolated_eval,
                       ls_to_heat_grad_interpolation_matrix);

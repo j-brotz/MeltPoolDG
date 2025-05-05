@@ -18,12 +18,13 @@
 namespace MeltPoolDG
 {
   template <int dim, typename number>
-  Postprocessor<dim, number>::Postprocessor(const MPI_Comm                    mpi_communicator_in,
-                                            const OutputData<number>         &output_data_in,
-                                            const TimeSteppingData<number>   &time_data,
-                                            const dealii::Mapping<dim>       &mapping_in,
-                                            const dealii::Triangulation<dim> &triangulation_in,
-                                            const ConditionalOStream         &pcout_in)
+  Postprocessor<dim, number>::Postprocessor(
+    const MPI_Comm                                   mpi_communicator_in,
+    const OutputData<number>                        &output_data_in,
+    const TimeIntegration::TimeSteppingData<number> &time_data,
+    const dealii::Mapping<dim>                      &mapping_in,
+    const dealii::Triangulation<dim>                &triangulation_in,
+    const ConditionalOStream                        &pcout_in)
     : mpi_communicator(mpi_communicator_in)
     , output_data(output_data_in)
     , mapping(mapping_in)

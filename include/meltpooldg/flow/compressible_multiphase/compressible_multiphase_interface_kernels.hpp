@@ -18,6 +18,7 @@
 #include <meltpooldg/flow/compressible_flow_convective_kernels.hpp>
 #include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <tuple>
@@ -433,8 +434,7 @@ namespace MeltPoolDG::Multiphase
     for (unsigned int i : {0, 1})
       {
         shock_flux[i] = shock_speed[i] * (u_star[i] - u[i]);
-        flux[i] =
-          UtilityFunctions::contract_tensor_with_vector<dim + 2, dim, number>(conv_flux[i], normal);
+        flux[i]       = contract_tensor_with_vector<dim + 2, dim, number>(conv_flux[i], normal);
       }
 
     const auto zero_vec = dealii::make_vectorized_array(0.);
@@ -614,13 +614,13 @@ namespace MeltPoolDG::Multiphase
     const ConservedVariablesGradType viscous_flux_gas =
       viscous_terms_gas.calculate_viscous_flux(u_gas, grad_u_gas);
 
-    ConservedVariablesGradType total_flux_liquid = UtilityFunctions::dyadic_product(J_Rob, normal);
+    ConservedVariablesGradType total_flux_liquid = dyadic_product(J_Rob, normal);
     total_flux_liquid += viscous_flux_gas;
     total_flux_liquid *= alpha_1;
     total_flux_liquid += alpha_2 * viscous_flux_liquid;
 
     ConservedVariablesGradType total_flux_gas =
-      UtilityFunctions::dyadic_product(J_Rob, -normal); // opposite normal direction for phase 2
+      dyadic_product(J_Rob, -normal); // opposite normal direction for phase 2
     total_flux_gas += viscous_flux_liquid;
     total_flux_gas *= alpha_2;
     total_flux_gas += alpha_1 * viscous_flux_gas;
@@ -638,21 +638,19 @@ namespace MeltPoolDG::Multiphase
 
     ConservedVariablesGradType penalty_flux_liquid;
     const auto                 tmp_m = u_liquid - (u_gas_star + J_Dir_cons);
-    penalty_flux_liquid              = UtilityFunctions::dyadic_product(tmp_m, normal);
+    penalty_flux_liquid              = dyadic_product(tmp_m, normal);
     penalty_flux_liquid *= tau;
 
     ConservedVariablesGradType penalty_flux_gas;
     const auto                 tmp_p = u_gas - (u_liquid_star - J_Dir_cons);
-    penalty_flux_gas                 = UtilityFunctions::dyadic_product(tmp_p, -normal);
+    penalty_flux_gas                 = dyadic_product(tmp_p, -normal);
     penalty_flux_gas *= tau;
 
     total_flux_liquid -= penalty_flux_liquid;
     total_flux_gas -= penalty_flux_gas;
 
-    return {UtilityFunctions::contract_tensor_with_vector<dim + 2, dim, number>(total_flux_liquid,
-                                                                                normal),
-            UtilityFunctions::contract_tensor_with_vector<dim + 2, dim, number>(total_flux_gas,
-                                                                                normal)};
+    return {contract_tensor_with_vector<dim + 2, dim, number>(total_flux_liquid, normal),
+            contract_tensor_with_vector<dim + 2, dim, number>(total_flux_gas, normal)};
   }
 
   /**
@@ -701,8 +699,8 @@ namespace MeltPoolDG::Multiphase
     auto tmp_liquid = u_liquid_star - u_liquid;
     auto tmp_gas    = u_gas_star - u_gas;
 
-    ConservedVariablesGradType arg_liquid = UtilityFunctions::dyadic_product(tmp_liquid, normal);
-    ConservedVariablesGradType arg_gas    = UtilityFunctions::dyadic_product(tmp_gas, -normal);
+    ConservedVariablesGradType arg_liquid = dyadic_product(tmp_liquid, normal);
+    ConservedVariablesGradType arg_gas    = dyadic_product(tmp_gas, -normal);
 
     const ConservedVariablesGradType flux_grad_liquid =
       viscous_terms_liquid.calculate_viscous_flux(u_liquid, arg_liquid);

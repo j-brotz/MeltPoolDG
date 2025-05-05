@@ -1,7 +1,7 @@
-#include <meltpooldg/utilities/time_stepping_data.hpp>
+#include <meltpooldg/time_integration/time_stepping_data.hpp>
 
 
-namespace MeltPoolDG
+namespace MeltPoolDG::TimeIntegration
 {
   template <typename number>
   void
@@ -48,4 +48,4 @@ namespace MeltPoolDG
 
   template struct TimeSteppingData<double>;
   template struct TimeStepLimitData<double>;
-} // namespace MeltPoolDG
+} // namespace MeltPoolDG::TimeIntegration

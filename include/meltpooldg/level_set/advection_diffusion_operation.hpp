@@ -10,8 +10,8 @@
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 
 namespace MeltPoolDG::LevelSet
 {
@@ -31,14 +31,14 @@ namespace MeltPoolDG::LevelSet
     AdvectionDiffusionOperation(
       const ScratchData<dim, dim, number> &scratch_data_in,
       const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-                                           &dirichlet_bc_in,
-      const AdvectionDiffusionData<number> &advec_diff_data_in,
-      const TimeIterator<number>           &time_iterator,
-      const VectorType                     &advection_velocity,
-      const unsigned int                    advec_diff_dof_idx_in,
-      const unsigned int                    advec_diff_hanging_nodes_dof_idx_in,
-      const unsigned int                    advec_diff_quad_idx_in,
-      const unsigned int                    velocity_dof_idx_in);
+                                                  &dirichlet_bc_in,
+      const AdvectionDiffusionData<number>        &advec_diff_data_in,
+      const TimeIntegration::TimeIterator<number> &time_iterator,
+      const VectorType                            &advection_velocity,
+      const unsigned int                           advec_diff_dof_idx_in,
+      const unsigned int                           advec_diff_hanging_nodes_dof_idx_in,
+      const unsigned int                           advec_diff_quad_idx_in,
+      const unsigned int                           velocity_dof_idx_in);
 
     /**
      * Provide a field function for the initial solution of the advected field
@@ -100,7 +100,7 @@ namespace MeltPoolDG::LevelSet
      */
     std::unique_ptr<AdvectionDiffusionOperator<dim, number>> advec_diff_operator;
 
-    const TimeIterator<number>                               &time_iterator;
+    const TimeIntegration::TimeIterator<number>              &time_iterator;
     const dealii::LinearAlgebra::distributed::Vector<number> &advection_velocity;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
@@ -112,7 +112,7 @@ namespace MeltPoolDG::LevelSet
     const unsigned int advec_diff_hanging_nodes_dof_idx;
     const unsigned int velocity_dof_idx = 0;
 
-    TimeIntegration::SolutionHistory<VectorType, number> solution_history;
+    TimeIntegration::SolutionHistory<VectorType> solution_history;
 
     std::unique_ptr<Predictor<VectorType, number>> predictor;
 

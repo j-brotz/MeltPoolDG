@@ -17,7 +17,7 @@
 #include <meltpooldg/level_set/reinitialization_DG_operation.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 
 #include <limits>
 #include <map>
@@ -41,7 +41,7 @@ namespace MeltPoolDG::LevelSet
     const ScratchData<dim, dim, number> &scratch_data;
 
     // Time stepping of the overall problem
-    const TimeIterator<number> &time_stepping;
+    const TimeIntegration::TimeIterator<number> &time_stepping;
     /*
      *  The following objects are the operations, which are performed for solving the
      *  level set equation.
@@ -75,7 +75,7 @@ namespace MeltPoolDG::LevelSet
      *  equation, which is solved up to quasi-steady state. Thus a time iterator is
      *  needed.
      */
-    TimeIterator<number> reinit_time_iterator;
+    TimeIntegration::TimeIterator<number> reinit_time_iterator;
 
     bool ready_for_time_advance = false;
     /*
@@ -100,7 +100,7 @@ namespace MeltPoolDG::LevelSet
   public:
     LevelSetDGOperation(
       const ScratchData<dim, dim, number>                         &scratch_data_in,
-      const TimeIterator<number>                                  &time_stepping,
+      const TimeIntegration::TimeIterator<number>                 &time_stepping,
       const LevelSetData<number>                                  &ls_data,
       const std::shared_ptr<BoundaryConditionManager<dim, number>> boundary_conditions_in,
       std::shared_ptr<dealii::Function<dim>>                       prescribed_velocity_function,

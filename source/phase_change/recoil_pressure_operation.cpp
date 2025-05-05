@@ -3,8 +3,8 @@
 #include <deal.II/matrix_free/evaluation_flags.h>
 
 #include <meltpooldg/cut/util.hpp>
+#include <meltpooldg/utilities/dof_tools.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
 #include <limits>
@@ -97,7 +97,7 @@ namespace MeltPoolDG::Evaporation
     if (do_level_set_pressure_gradient_interpolation)
       {
         ls_to_pressure_grad_interpolation_matrix =
-          UtilityFunctions::create_dof_interpolation_matrix<dim, number>(
+          DoFTools::create_dof_interpolation_matrix<dim, number>(
             scratch_data.get_dof_handler(flow_pressure_dof_idx),
             scratch_data.get_dof_handler(ls_dof_idx),
             true /*do_matrix_free*/);
@@ -182,7 +182,7 @@ namespace MeltPoolDG::Evaporation
               {
                 heaviside_interpolated_to_pressure_space_eval.reinit(cell);
 
-                UtilityFunctions::compute_gradient_at_interpolated_dof_values<dim>(
+                DoFTools::compute_gradient_at_interpolated_dof_values<dim>(
                   heaviside_eval,
                   heaviside_interpolated_to_pressure_space_eval,
                   ls_to_pressure_grad_interpolation_matrix);

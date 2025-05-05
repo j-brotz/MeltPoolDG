@@ -1,5 +1,7 @@
 #include <deal.II/base/exceptions.h>
 
+#include <deal.II/matrix_free/tools.h>
+
 #include <meltpooldg/radiative_transport/pseudo_rte_operator.hpp>
 #include <meltpooldg/radiative_transport/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -145,7 +147,7 @@ namespace MeltPoolDG::RadiativeTransport
     // note: not thread safe!!!
     const auto &matrix_free = scratch_data.get_matrix_free();
 
-    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+    unsigned int old_cell_index = dealii::numbers::invalid_unsigned_int;
 
     // compute diagonal ...
     MatrixFreeTools::template compute_diagonal<dim, -1, 0, 1, number, VectorizedArray<number>>(

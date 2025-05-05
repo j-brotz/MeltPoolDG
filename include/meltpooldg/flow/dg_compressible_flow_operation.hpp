@@ -25,8 +25,8 @@
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_base.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
 #include <meltpooldg/time_integration/time_integrator_base.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
 
 #include <memory>
 
@@ -141,7 +141,7 @@ namespace MeltPoolDG::Flow
 
     std::unique_ptr<DGCompressibleFlowOperatorBase<number>> comp_flow_operator;
 
-    std::unique_ptr<TimeIntegratorBase<number>> time_integrator;
+    std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>> time_integrator;
 
     /**
      * Compute the convective time step limit for the current mesh and flow field.

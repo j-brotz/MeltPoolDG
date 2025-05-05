@@ -1,8 +1,12 @@
+#include <deal.II/matrix_free/tools.h>
+
 #include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/level_set/olsson_operator.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
+
 
 namespace MeltPoolDG::LevelSet
 {
@@ -187,8 +191,7 @@ namespace MeltPoolDG::LevelSet
               {
                 const scalar                                  val = psi_old.get_value(q_index);
                 const Tensor<1, dim, VectorizedArray<number>> n_phi =
-                  MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
-                                                          tolerance_normal_vector);
+                  normalize<dim>(normal_vector.get_value(q_index), tolerance_normal_vector);
                 unit_normal[cell * rhs.n_q_points + q_index] = n_phi;
 
                 rhs.submit_gradient(this->time_increment * compressive_flux(val) * n_phi -
@@ -216,7 +219,7 @@ namespace MeltPoolDG::LevelSet
     // note: not thread safe!!!
     const auto &matrix_free = scratch_data.get_matrix_free();
 
-    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+    unsigned int old_cell_index = dealii::numbers::invalid_unsigned_int;
 
     // compute matrix (only cell contributions)
     MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
@@ -243,7 +246,7 @@ namespace MeltPoolDG::LevelSet
     // note: not thread safe!!!
     const auto &matrix_free = scratch_data.get_matrix_free();
 
-    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+    unsigned int old_cell_index = dealii::numbers::invalid_unsigned_int;
 
     // compute diagonal ...
     MatrixFreeTools::template compute_diagonal<dim, -1, 0, 1, number, VectorizedArray<number>>(

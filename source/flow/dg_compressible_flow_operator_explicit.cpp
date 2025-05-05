@@ -3,6 +3,8 @@
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
+
 
 namespace MeltPoolDG::Flow
 {
@@ -23,12 +25,12 @@ namespace MeltPoolDG::Flow
   }
 
   template <unsigned int dim, typename number, bool is_viscous>
-  std::unique_ptr<TimeIntegratorBase<number>>
+  std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::
     make_application_specific_time_integrator(
-      const TimeIntegratorData<number> &time_integrator_data)
+      const TimeIntegration::TimeIntegratorData<number> &time_integrator_data)
   {
-    return std::unique_ptr<TimeIntegratorBase<number>>(
+    return std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>(
       explicit_time_integrator_factory<number,
                                        DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>>(
         *this, time_integrator_data, flow_scratch_data.scratch_data.get_timer()));

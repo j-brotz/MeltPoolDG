@@ -27,7 +27,7 @@ namespace MeltPoolDG::LevelSet
   template <int dim, typename number>
   LevelSetDGOperation<dim, number>::LevelSetDGOperation(
     const ScratchData<dim, dim, number>                         &scratch_data_in,
-    const TimeIterator<number>                                  &time_stepping,
+    const TimeIntegration::TimeIterator<number>                 &time_stepping,
     const LevelSetData<number>                                  &ls_data,
     const std::shared_ptr<BoundaryConditionManager<dim, number>> boundary_conditions_in,
     std::shared_ptr<dealii::Function<dim>>                       prescribed_velocity_function,
@@ -42,11 +42,11 @@ namespace MeltPoolDG::LevelSet
     , ls_dof_idx(ls_dof_idx_in)
     , ls_quad_idx(ls_quad_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
-    , reinit_time_iterator(
-        TimeSteppingData<number>{0.0 /*start_time*/,
-                                 std::numeric_limits<number>::max() /*end_time*/,
-                                 -1.0 /*time step size --> will be set before each cycle*/,
-                                 level_set_data.reinit.max_n_steps})
+    , reinit_time_iterator(TimeIntegration::TimeSteppingData<number>{
+        0.0 /*start_time*/,
+        std::numeric_limits<number>::max() /*end_time*/,
+        -1.0 /*time step size --> will be set before each cycle*/,
+        level_set_data.reinit.max_n_steps})
   {
     /*
      *    initialize the advection diffusion operation

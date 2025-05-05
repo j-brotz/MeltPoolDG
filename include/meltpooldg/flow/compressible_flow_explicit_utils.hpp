@@ -13,7 +13,7 @@
 #include <meltpooldg/flow/compressible_flow_convective_kernels.hpp>
 #include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <tuple>
 #include <type_traits>
@@ -27,7 +27,7 @@ namespace MeltPoolDG::Flow
             typename number,
             typename VectorizedArrayType>
   concept CellEvaluatorType =
-    std::is_base_of_v<dealii::FECellIntegrator<dim, n_components, number, VectorizedArrayType>,
+    std::is_base_of_v<FECellIntegrator<dim, n_components, number, VectorizedArrayType>,
                       evaluator_type> or
     std::is_base_of_v<dealii::FEPointEvaluation<n_components, dim, dim, VectorizedArrayType>,
                       evaluator_type>;
@@ -38,7 +38,7 @@ namespace MeltPoolDG::Flow
             typename number,
             typename VectorizedArrayType>
   concept FaceEvaluatorType =
-    std::is_base_of_v<dealii::FEFaceIntegrator<dim, n_components, number, VectorizedArrayType>,
+    std::is_base_of_v<FEFaceIntegrator<dim, n_components, number, VectorizedArrayType>,
                       evaluator_type> or
     std::is_base_of_v<dealii::FEFacePointEvaluation<n_components, dim, dim, VectorizedArrayType>,
                       evaluator_type>;

@@ -1,13 +1,19 @@
 #pragma once
 
+#include <deal.II/base/exceptions.h>
+
 #include <boost/algorithm/string/join.hpp>
+
+#include <string>
+#include <vector>
+
 
 namespace MeltPoolDG
 {
   class ScopedName
   {
   public:
-    ScopedName(const std::string name)
+    ScopedName(const std::string &name)
       : name(name)
     {
       path.push_back(name);

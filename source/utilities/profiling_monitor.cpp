@@ -11,8 +11,8 @@
 namespace MeltPoolDG::Profiling
 {
   template <typename number>
-  ProfilingMonitor<number>::ProfilingMonitor(const ProfilingData<number> &data,
-                                             const TimeIterator<number>  &time)
+  ProfilingMonitor<number>::ProfilingMonitor(const ProfilingData<number>                 &data,
+                                             const TimeIntegration::TimeIterator<number> &time)
     : data(data)
     , time(time)
     , real_time_start(std::chrono::system_clock::now())

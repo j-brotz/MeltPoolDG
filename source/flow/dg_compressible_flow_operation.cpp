@@ -14,7 +14,7 @@
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -323,7 +323,7 @@ namespace MeltPoolDG::Flow
       }
     // TODO
     else if (flow_scratch_data.flow_data.time_integrator.integrator_type ==
-             TimeIntegratorSchemes::imex)
+             TimeIntegration::TimeIntegratorSchemes::imex)
       {
         if (is_viscous)
           comp_flow_operator =

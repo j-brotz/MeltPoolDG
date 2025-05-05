@@ -23,9 +23,9 @@ namespace MeltPoolDG::LevelSet
   {
     AdvectionDiffusionData();
 
-    number                     diffusivity = 0.0;
-    TimeIntegratorData<number> time_integrator_data =
-      TimeIntegratorData(TimeIntegratorSchemes::crank_nicolson);
+    number                                      diffusivity = 0.0;
+    TimeIntegration::TimeIntegratorData<number> time_integrator_data =
+      TimeIntegration::TimeIntegratorData(TimeIntegration::TimeIntegratorSchemes::crank_nicolson);
     std::string       implementation = "meltpooldg";
     FiniteElementData fe;
 

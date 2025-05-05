@@ -1,10 +1,11 @@
 #pragma once
 
-#include <meltpooldg/utilities/material.hpp>
+#include <meltpooldg/core/material.hpp>
 //
 #include <deal.II/base/exceptions.h>
 
 #include <meltpooldg/level_set/level_set_tools.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
@@ -104,8 +105,8 @@ namespace MeltPoolDG
   template <typename value_type, int dim>
   inline MaterialParameterValues<value_type, number>
   Material<number>::compute_parameters(
-    const dealii::FECellIntegrator<dim, 1, number> &level_set_heaviside_val,
-    const dealii::FECellIntegrator<dim, 1, number> &temperature_val,
+    const FECellIntegrator<dim, 1, number>         &level_set_heaviside_val,
+    const FECellIntegrator<dim, 1, number>         &temperature_val,
     const MaterialUpdateFlags::MaterialUpdateFlags &flags,
     const unsigned int                              q_index) const
   {
@@ -140,10 +141,10 @@ namespace MeltPoolDG
   template <typename value_type, int dim>
   inline MaterialParameterValues<value_type, number>
   Material<number>::compute_parameters(
-    const dealii::FECellIntegrator<dim, 1, number>              &level_set_heaviside_val,
-    const std::vector<dealii::FECellIntegrator<dim, 1, number>> &temperature_val,
-    const MaterialUpdateFlags::MaterialUpdateFlags              &flags,
-    const unsigned int                                           q_index) const
+    const FECellIntegrator<dim, 1, number>              &level_set_heaviside_val,
+    const std::vector<FECellIntegrator<dim, 1, number>> &temperature_val,
+    const MaterialUpdateFlags::MaterialUpdateFlags      &flags,
+    const unsigned int                                   q_index) const
   {
     Assert(temperature_val.size() <= 2, dealii::ExcInternalError());
 
@@ -473,10 +474,10 @@ namespace MeltPoolDG
                                                      const value_type &gas_value,
                                                      const value_type &liquid_solid_value) const
   {
-    const value_type weight = (data.two_phase_fluid_properties_transition_type !=
-                               TwoPhaseFluidPropertiesTransitionType::sharp) ?
+    const value_type weight = data.two_phase_fluid_properties_transition_type !=
+                                  TwoPhaseFluidPropertiesTransitionType::sharp ?
                                 level_set_heaviside :
-                                UtilityFunctions::heaviside(level_set_heaviside, 0.5);
+                                CharacteristicFunctions::heaviside(level_set_heaviside, 0.5);
     return LevelSet::Tools::interpolate(weight, gas_value, liquid_solid_value);
   }
 
@@ -586,10 +587,10 @@ namespace MeltPoolDG
   {
     const auto temp = compute_temperature_derivative_of_solid_liquid_phases_property(
       temperature_dependent_solid_fraction, liquid_value, solid_value);
-    const auto weight = (data.two_phase_fluid_properties_transition_type !=
-                         TwoPhaseFluidPropertiesTransitionType::sharp) ?
+    const auto weight = data.two_phase_fluid_properties_transition_type !=
+                            TwoPhaseFluidPropertiesTransitionType::sharp ?
                           level_set_heaviside :
-                          UtilityFunctions::heaviside(level_set_heaviside, 0.5);
+                          CharacteristicFunctions::heaviside(level_set_heaviside, 0.5);
     return temp * weight;
   }
 

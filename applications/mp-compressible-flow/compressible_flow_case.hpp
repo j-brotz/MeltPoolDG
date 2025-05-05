@@ -1,4 +1,5 @@
 #pragma once
+
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/parameter_handler.h>
 
@@ -19,8 +20,8 @@
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
-#include <meltpooldg/utilities/time_stepping_data.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/time_integration/time_stepping_data.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <string>
 
@@ -61,11 +62,11 @@ namespace MeltPoolDG::Flow
     }
 
   public:
-    BaseData                         base;
-    CompressibleFlowData<number>     flow;
-    TimeSteppingData<number>         time_stepping;
-    OutputData<number>               output;
-    Profiling::ProfilingData<number> profiling;
+    BaseData                                  base;
+    CompressibleFlowData<number>              flow;
+    TimeIntegration::TimeSteppingData<number> time_stepping;
+    OutputData<number>                        output;
+    Profiling::ProfilingData<number>          profiling;
   };
 
   template <int dim, typename number>
@@ -101,9 +102,8 @@ namespace MeltPoolDG::Flow
                         dealii::Function<dim>             &reference_function,
                         const std::string                 &norm_name = "norm") const
     {
-      using namespace dealii;
       const dealii::ConditionalOStream pcout(std::cout,
-                                             Utilities::MPI::this_mpi_process(
+                                             dealii::Utilities::MPI::this_mpi_process(
                                                this->mpi_communicator) == 0 and
                                                parameters.base.verbosity_level >= 1);
 
@@ -122,14 +122,16 @@ namespace MeltPoolDG::Flow
         {
           // in the fitted mesh case, we can use the DoF values for error computation
 
-          std::map<types::global_dof_index, Point<dim, number>> support_points =
-            DoFTools::map_dofs_to_support_points(generic_data_out.get_mapping(), dof_handler);
+          std::map<dealii::types::global_dof_index, dealii::Point<dim, number>> support_points =
+            dealii::DoFTools::map_dofs_to_support_points(generic_data_out.get_mapping(),
+                                                         dof_handler);
           for (const auto &cell : dof_handler.active_cell_iterators())
             {
               if (cell->is_artificial() or cell->is_ghost())
                 continue;
               const unsigned int nodes_per_cell = cell->get_fe().dofs_per_cell / (dim + 2);
-              std::vector<types::global_dof_index> local_dof_indices(cell->get_fe().dofs_per_cell);
+              std::vector<dealii::types::global_dof_index> local_dof_indices(
+                cell->get_fe().dofs_per_cell);
               cell->get_dof_indices(local_dof_indices);
 
               for (unsigned int i = 0; i < local_dof_indices.size(); ++i)
@@ -173,35 +175,36 @@ namespace MeltPoolDG::Flow
           const auto &level_set_dof_handler = generic_data_out.get_dof_handler("level_set");
 
           // generate FESystem
-          const unsigned int fe_degree = dof_handler.get_fe_collection().max_degree();
-          FE_DGQ<dim>        fe_q(fe_degree);
-          FESystem<dim>      fe_point_temp(fe_q, dim + 2);
+          const unsigned int    fe_degree = dof_handler.get_fe_collection().max_degree();
+          dealii::FE_DGQ<dim>   fe_q(fe_degree);
+          dealii::FESystem<dim> fe_point_temp(fe_q, dim + 2);
 
           // classify cells
-          NonMatching::MeshClassifier<dim> mesh_classifier(level_set_dof_handler, level_set);
+          dealii::NonMatching::MeshClassifier<dim> mesh_classifier(level_set_dof_handler,
+                                                                   level_set);
           mesh_classifier.reclassify();
 
           // compute quadrature
-          NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>> mapping_info_cell(
-            generic_data_out.get_mapping(), update_values | update_JxW_values);
+          dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>
+            mapping_info_cell(generic_data_out.get_mapping(),
+                              dealii::update_values | dealii::update_JxW_values);
 
-          hp::QCollection<1> q_collection((dealii::QGauss<1>(fe_degree + 1)));
-          NonMatching::DiscreteQuadratureGenerator<dim> quadrature_generator(q_collection,
-                                                                             level_set_dof_handler,
-                                                                             level_set);
+          dealii::hp::QCollection<1> q_collection((dealii::QGauss<1>(fe_degree + 1)));
+          dealii::NonMatching::DiscreteQuadratureGenerator<dim> quadrature_generator(
+            q_collection, level_set_dof_handler, level_set);
 
-          auto physical = [&](const typename DoFHandler<dim>::active_cell_iterator &i) {
+          auto physical = [&](const typename dealii::DoFHandler<dim>::active_cell_iterator &i) {
             return (mesh_classifier.location_to_level_set(i) ==
-                    NonMatching::LocationToLevelSet::intersected) or
+                    dealii::NonMatching::LocationToLevelSet::intersected) or
                    (mesh_classifier.location_to_level_set(i) ==
-                    NonMatching::LocationToLevelSet::
+                    dealii::NonMatching::LocationToLevelSet::
                       outside /*active phase has positive level-set*/);
           };
 
           const auto physical_active_cell_iterators =
             dof_handler.active_cell_iterators() | physical;
 
-          std::vector<Quadrature<dim>> quad_vec_cell;
+          std::vector<dealii::Quadrature<dim>> quad_vec_cell;
 
           unsigned int n_active_cells = std::distance(dof_handler.active_cell_iterators().begin(),
                                                       dof_handler.active_cell_iterators().end());
@@ -218,8 +221,8 @@ namespace MeltPoolDG::Flow
                                          n_active_cells);
 
           // cell-loop for error-norm computation
-          FEPointEvaluation<dim + 2, dim, dim, VectorizedArray<number>> fe_point_eval(
-            mapping_info_cell, fe_point_temp);
+          dealii::FEPointEvaluation<dim + 2, dim, dim, dealii::VectorizedArray<number>>
+            fe_point_eval(mapping_info_cell, fe_point_temp);
 
           for (const auto &cell : dof_handler.active_cell_iterators())
             {
@@ -233,9 +236,9 @@ namespace MeltPoolDG::Flow
                                    solution_values_in.end());
 
               fe_point_eval.reinit(cell->active_cell_index());
-              fe_point_eval.evaluate(solution_values_in, EvaluationFlags::values);
+              fe_point_eval.evaluate(solution_values_in, dealii::EvaluationFlags::values);
 
-              VectorizedArray<number> local_errors_squared[3] = {};
+              dealii::VectorizedArray<number> local_errors_squared[3] = {};
 
               for (const unsigned int q : fe_point_eval.quadrature_point_indices())
                 {
@@ -260,7 +263,7 @@ namespace MeltPoolDG::Flow
             }
         }
 
-      Utilities::MPI::sum(errors_squared, MPI_COMM_WORLD, errors_squared);
+      dealii::Utilities::MPI::sum(errors_squared, MPI_COMM_WORLD, errors_squared);
       std::array<number, 3> errors;
       for (unsigned int d = 0; d < 3; ++d)
         errors[d] = std::sqrt(errors_squared[d]);

@@ -12,8 +12,8 @@
 #include <deal.II/grid/tria.h>
 
 #include <meltpooldg/core/case_registration.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 #include <meltpooldg/utilities/enum.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
 #include <vector>
@@ -60,10 +60,9 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
       switch (level_set_type)
         {
           case LevelSetType::level_set:
-            return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-              signed_distance, eps);
+            return CharacteristicFunctions::tanh_characteristic_function(signed_distance, eps);
           case LevelSetType::heaviside:
-            return UtilityFunctions::CharacteristicFunctions::heaviside(signed_distance, eps);
+            return CharacteristicFunctions::smoothed_heaviside(signed_distance, eps);
           case LevelSetType::signed_distance:
             return signed_distance;
           default:

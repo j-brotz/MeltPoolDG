@@ -32,9 +32,6 @@
 
 namespace MeltPoolDG::Simulation::EvaporatingShell
 {
-  using namespace dealii;
-
-
   BETTER_ENUM(ShellType, char, full, half, quarter)
 
   // velocity prescribed at the interior edge
@@ -49,35 +46,35 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
   static bool two_phase = false;
 
   template <int dim>
-  class SignedDistanceSphereFlipped : public Function<dim>
+  class SignedDistanceSphereFlipped : public dealii::Function<dim>
   {
   public:
     SignedDistanceSphereFlipped(const double radius)
-      : Function<dim>()
-      , distance_sphere(Point<dim>(), radius)
+      : dealii::Function<dim>()
+      , distance_sphere(dealii::Point<dim>(), radius)
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
       return -distance_sphere.value(p);
     }
 
   private:
-    const Functions::SignedDistance::Sphere<dim> distance_sphere;
+    const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere;
   };
 
   template <int dim>
-  class RadialBoundaryVelocity : public Function<dim>
+  class RadialBoundaryVelocity : public dealii::Function<dim>
   {
   public:
-    RadialBoundaryVelocity(const Point<dim> &center)
-      : Function<dim>(dim)
+    RadialBoundaryVelocity(const dealii::Point<dim> &center)
+      : dealii::Function<dim>(dim)
       , center(center)
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int comp) const override
+    value(const dealii::Point<dim> &p, const unsigned int comp) const override
     {
       const double v = velocity;
 
@@ -113,13 +110,13 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
         }
       else
         {
-          AssertThrow(false, ExcNotImplemented());
+          AssertThrow(false, dealii::ExcNotImplemented());
           return 0;
         }
     }
 
   private:
-    const Point<dim> center;
+    const dealii::Point<dim> center;
   };
 
   template <int dim, typename number>
@@ -156,31 +153,31 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           this->triangulation =
-            std::make_shared<parallel::shared::Triangulation<dim>>(this->mpi_communicator);
+            std::make_shared<dealii::parallel::shared::Triangulation<dim>>(this->mpi_communicator);
         }
       else
         {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+          this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+            this->mpi_communicator);
         }
 
       if (shell_type == ShellType::full)
         {
-          GridGenerator::hyper_shell(
+          dealii::GridGenerator::hyper_shell(
             *this->triangulation, center, inner_radius, outer_radius, 0, true /*colorize*/);
         }
       else if (shell_type == ShellType::half)
         {
-          GridGenerator::half_hyper_shell(
+          dealii::GridGenerator::half_hyper_shell(
             *this->triangulation, center, inner_radius, outer_radius, 0, true /*colorize*/);
         }
       else if (shell_type == ShellType::quarter)
         {
-          GridGenerator::quarter_hyper_shell(
+          dealii::GridGenerator::quarter_hyper_shell(
             *this->triangulation, center, inner_radius, outer_radius, 0, true /*colorize*/);
         }
       else
-        AssertThrow(false, ExcNotImplemented());
+        AssertThrow(false, dealii::ExcNotImplemented());
 
       if (this->parameters.base.fe.type != FiniteElementType::FE_SimplexP)
         this->triangulation->refine_global(this->parameters.base.global_refinements);
@@ -251,9 +248,9 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
           };
 
           // generate number of request points and calculate analytical solution
-          std::vector<Point<dim>> req_points;
-          TableHandler            table;
-          if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
+          std::vector<dealii::Point<dim>> req_points;
+          dealii::TableHandler            table;
+          if (dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
             {
               const std::vector<double> req_radii = {inner_radius,
                                                      (inner_radius + outer_radius) * 0.5,
@@ -261,7 +258,7 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
 
               for (const auto r : req_radii)
                 {
-                  auto p = Point<dim>();
+                  auto p = dealii::Point<dim>();
                   p[0]   = r;
                   req_points.emplace_back(p);
                   table.add_value("analytical pressure", analytical_pressure(r));
@@ -270,7 +267,7 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
             }
 
           // read numerical results at request points
-          Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation;
+          dealii::Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation;
           remote_point_evaluation.reinit(req_points,
                                          *this->triangulation,
                                          generic_data_out.get_mapping());
@@ -284,7 +281,7 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
             dealii::VectorTools::point_values<dim>(remote_point_evaluation,
                                                    generic_data_out.get_dof_handler("velocity"),
                                                    generic_data_out.get_vector("velocity"));
-          if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
+          if (dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
             {
               for (unsigned int i = 0; i < vel_vals.size(); ++i)
                 {
@@ -310,7 +307,7 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
       n_time_step += 1;
     }
 
-    const Point<dim> center;
+    const dealii::Point<dim> center;
 
     // needed for postprocessing
     mutable unsigned int n_time_step = 0.0;

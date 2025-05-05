@@ -1,13 +1,11 @@
 #pragma once
+
 #include <deal.II/base/function_parser.h>
 
+#include <meltpooldg/time_integration/time_stepping_data.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
-#include <meltpooldg/utilities/time_stepping_data.hpp>
 
-#include <iomanip>
-#include <iostream>
-
-namespace MeltPoolDG
+namespace MeltPoolDG::TimeIntegration
 {
   /*
    *  This class provides a simple time stepping routine.
@@ -83,4 +81,4 @@ namespace MeltPoolDG
     dealii::FunctionParser<1> time_step_size_function;
   };
 
-} // namespace MeltPoolDG
+} // namespace MeltPoolDG::TimeIntegration

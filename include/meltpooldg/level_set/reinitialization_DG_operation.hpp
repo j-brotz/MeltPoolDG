@@ -5,8 +5,8 @@
 #include <meltpooldg/level_set/normal_vector_DG_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_DG_operator.hpp>
 #include <meltpooldg/level_set/reinitialization_operation_base.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 
 
 
@@ -21,14 +21,14 @@ namespace MeltPoolDG::LevelSet
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
   public:
-    ReinitializationDGOperation(const ScratchData<dim, dim, number> &scratch_data_in,
-                                const ReinitializationData<number>  &reinit_data,
-                                const TimeIterator<number>          &time_iterator,
-                                const unsigned int                   reinit_dof_idx_in,
-                                const unsigned int                   reinit_quad_idx_in,
-                                const unsigned int                   ls_dof_idx_in,
-                                const NormalVectorData<number>      &normal_vec_data,
-                                const CurvatureData<number>         &curvature_data);
+    ReinitializationDGOperation(const ScratchData<dim, dim, number>         &scratch_data_in,
+                                const ReinitializationData<number>          &reinit_data,
+                                const TimeIntegration::TimeIterator<number> &time_iterator,
+                                const unsigned int                           reinit_dof_idx_in,
+                                const unsigned int                           reinit_quad_idx_in,
+                                const unsigned int                           ls_dof_idx_in,
+                                const NormalVectorData<number>              &normal_vec_data,
+                                const CurvatureData<number>                 &curvature_data);
     /**
      * For advection reinit coupled problems the normal vector and curvature are computed a level
      * higher on the level set operation level. This is because the computation of the normal vector
@@ -37,7 +37,7 @@ namespace MeltPoolDG::LevelSet
     ReinitializationDGOperation(
       const ScratchData<dim, dim, number>                           &scratch_data_in,
       const ReinitializationData<number>                            &reinit_data,
-      const TimeIterator<number>                                    &time_iterator,
+      const TimeIntegration::TimeIterator<number>                   &time_iterator,
       const unsigned int                                             reinit_dof_idx_in,
       const unsigned int                                             reinit_quad_idx_in,
       const unsigned int                                             ls_dof_idx_in,
@@ -115,9 +115,9 @@ namespace MeltPoolDG::LevelSet
     }
 
   private:
-    const ScratchData<dim, dim, number> &scratch_data;
-    const ReinitializationData<number>   reinit_data;
-    const TimeIterator<number>          &time_iterator;
+    const ScratchData<dim, dim, number>         &scratch_data;
+    const ReinitializationData<number>           reinit_data;
+    const TimeIntegration::TimeIterator<number> &time_iterator;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
      *  ScratchData<dim,dim,number> object is selected. This is important when
@@ -127,11 +127,11 @@ namespace MeltPoolDG::LevelSet
     const unsigned int   reinit_quad_idx;
     const unsigned int   ls_dof_idx;
 
-    TimeIntegration::SolutionHistory<VectorType, number> solution_history;
+    TimeIntegration::SolutionHistory<VectorType> solution_history;
 
     std::shared_ptr<ReinitilizationDGOperator<dim, number>> reinit_DG_operator;
 
-    std::shared_ptr<TimeIntegratorBase<number>> reinitialization_integration;
+    std::shared_ptr<TimeIntegration::TimeIntegratorBase<number>> reinitialization_integration;
 
 
     // maximum change of the level set due to the current reinitialization step

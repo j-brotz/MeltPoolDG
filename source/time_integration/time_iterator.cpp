@@ -1,7 +1,17 @@
-#include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
+//
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/point.h>
 
-namespace MeltPoolDG
+#include <meltpooldg/utilities/journal.hpp>
+
+#include <algorithm>
+#include <iomanip>
+#include <iostream>
+#include <limits>
+#include <sstream>
+
+namespace MeltPoolDG::TimeIntegration
 {
   template <typename number>
   TimeIterator<number>::TimeIterator(const TimeSteppingData<number> &data_in)
@@ -160,4 +170,4 @@ namespace MeltPoolDG
   }
 
   template class TimeIterator<double>;
-} // namespace MeltPoolDG
+} // namespace MeltPoolDG::TimeIntegration

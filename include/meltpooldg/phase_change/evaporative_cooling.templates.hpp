@@ -21,7 +21,7 @@ namespace MeltPoolDG::Evaporation
     , boiling_temperature(material_data.boiling_temperature)
   {
     if (do_phenomenological_recoil_pressure)
-      AssertThrow(!dealii::numbers::is_invalid(specific_enthalpy_reference_temperature),
+      AssertThrow(not numbers::is_invalid(specific_enthalpy_reference_temperature),
                   dealii::ExcMessage(
                     "For the phenomenological recoil pressure model, the reference temperature "
                     "for computing the specific enthalpy must be specified. Abort..."));
@@ -38,7 +38,7 @@ namespace MeltPoolDG::Evaporation
           material_data.molar_mass,
           material_data.latent_heat_of_evaporation);
 
-        if (dealii::numbers::is_invalid(evapor_data.evaporative_cooling.activation_temperature))
+        if (numbers::is_invalid(evapor_data.evaporative_cooling.activation_temperature))
           {
             // Set the activation temperature so that the transition from the linear activation ramp
             // is kink-free.

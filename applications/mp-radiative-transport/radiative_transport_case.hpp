@@ -8,9 +8,9 @@
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
+#include <meltpooldg/time_integration/time_stepping_data.hpp>
 #include <meltpooldg/utilities/amr_data.hpp>
 #include <meltpooldg/utilities/profiling_data.hpp>
-#include <meltpooldg/utilities/time_stepping_data.hpp>
 
 #include <string>
 
@@ -48,13 +48,13 @@ namespace MeltPoolDG::RadiativeTransport
     }
 
   public:
-    BaseData                         base;
-    TimeSteppingData<number>         time_stepping;
-    AdaptiveMeshingData<number>      amr;
-    RadiativeTransportData<number>   rad_trans;
-    Heat::LaserData<number>          laser;
-    OutputData<number>               output;
-    Profiling::ProfilingData<number> profiling;
+    BaseData                                  base;
+    TimeIntegration::TimeSteppingData<number> time_stepping;
+    AdaptiveMeshingData<number>               amr;
+    RadiativeTransportData<number>            rad_trans;
+    Heat::LaserData<number>                   laser;
+    OutputData<number>                        output;
+    Profiling::ProfilingData<number>          profiling;
   };
 
   template <int dim, typename number>

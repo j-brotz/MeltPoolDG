@@ -32,11 +32,11 @@ namespace MeltPoolDG
           const PreconditionerType       &preconditioner = dealii::PreconditionIdentity(),
           const std::string               identifier     = "")
     {
-      using namespace dealii;
-
       const bool monitor_history = data.monitor_type != LinearSolverMonitorType::none;
 
-      ReductionControl solver_control(data.max_iterations, data.abs_tolerance, data.rel_tolerance);
+      dealii::ReductionControl solver_control(data.max_iterations,
+                                              data.abs_tolerance,
+                                              data.rel_tolerance);
 
       if (monitor_history)
         solver_control.enable_history_data();
@@ -44,7 +44,7 @@ namespace MeltPoolDG
       const auto finalize = [&](const bool failed_step = false) {
         // TODO: introduce get_mpi_communicator() in BlockVector in deal.II
         std::unique_ptr<dealii::ConditionalOStream> pcout;
-        if constexpr (internal::is_block_vector<VectorType>)
+        if constexpr (dealii::internal::is_block_vector<VectorType>)
           pcout = std::make_unique<dealii::ConditionalOStream>(
             std::cout,
             dealii::Utilities::MPI::this_mpi_process(solution.block(0).get_mpi_communicator()) ==
@@ -88,7 +88,7 @@ namespace MeltPoolDG
               }
             else
               {
-                AssertThrow(false, ExcNotImplemented());
+                AssertThrow(false, dealii::ExcNotImplemented());
               }
             Journal::print_decoration_line(*pcout);
           }
@@ -119,10 +119,10 @@ namespace MeltPoolDG
                   break;
                 }
               default:
-                AssertThrow(false, ExcNotImplemented());
+                AssertThrow(false, dealii::ExcNotImplemented());
             }
         }
-      catch (const SolverControl::NoConvergence &e)
+      catch (const dealii::SolverControl::NoConvergence &e)
         {
           finalize(true /*failed_step*/);
 

@@ -87,11 +87,11 @@ namespace MeltPoolDG::Flow
     const unsigned int                                        dof_idx,
     const unsigned int                                        quad_idx)
   {
-    dealii::FECellIntegrator<dim, n_components, number> phi(matrix_free, dof_idx, quad_idx);
+    FECellIntegrator<dim, n_components, number> phi(matrix_free, dof_idx, quad_idx);
 
     // ## Cell ## //
-    std::function<void(dealii::FECellIntegrator<dim, n_components, number> &)> cell_operation =
-      [&](dealii::FECellIntegrator<dim, n_components, number> &delta_phi) -> void {
+    std::function<void(FECellIntegrator<dim, n_components, number> &)> cell_operation =
+      [&](FECellIntegrator<dim, n_components, number> &delta_phi) -> void {
       phi.reinit(delta_phi.get_cell_or_face_batch_id());
       phi.gather_evaluate(current_solution,
                           dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients);
@@ -106,19 +106,18 @@ namespace MeltPoolDG::Flow
     };
 
     // ## Face ##//
-    dealii::FEFaceIntegrator<dim, n_components, number> phi_m(matrix_free,
-                                                              true /*is_interior_face*/,
-                                                              dof_idx,
-                                                              quad_idx);
-    dealii::FEFaceIntegrator<dim, n_components, number> phi_p(matrix_free,
-                                                              false /*is_interior_face*/,
-                                                              dof_idx,
-                                                              quad_idx);
-    std::function<void(dealii::FEFaceIntegrator<dim, n_components, number> &,
-                       dealii::FEFaceIntegrator<dim, n_components, number> &)>
-      face_operation =
-        [&](dealii::FEFaceIntegrator<dim, n_components, number> &delta_phi_m,
-            dealii::FEFaceIntegrator<dim, n_components, number> &delta_phi_p) -> void {
+    FEFaceIntegrator<dim, n_components, number> phi_m(matrix_free,
+                                                      true /*is_interior_face*/,
+                                                      dof_idx,
+                                                      quad_idx);
+    FEFaceIntegrator<dim, n_components, number> phi_p(matrix_free,
+                                                      false /*is_interior_face*/,
+                                                      dof_idx,
+                                                      quad_idx);
+    std::function<void(FEFaceIntegrator<dim, n_components, number> &,
+                       FEFaceIntegrator<dim, n_components, number> &)>
+      face_operation = [&](FEFaceIntegrator<dim, n_components, number> &delta_phi_m,
+                           FEFaceIntegrator<dim, n_components, number> &delta_phi_p) -> void {
       phi_m.reinit(delta_phi_m.get_cell_or_face_batch_id());
       phi_p.reinit(delta_phi_p.get_cell_or_face_batch_id());
       phi_m.gather_evaluate(current_solution,
@@ -140,12 +139,12 @@ namespace MeltPoolDG::Flow
     };
 
     // ## Boundary face ##//
-    dealii::FEFaceIntegrator<dim, n_components, number> phi_boundary(matrix_free,
-                                                                     true /*is_interior_face*/,
-                                                                     dof_idx,
-                                                                     quad_idx);
-    std::function<void(dealii::FEFaceIntegrator<dim, n_components, number> &)> boundary_operation =
-      [&](dealii::FEFaceIntegrator<dim, n_components, number> &delta_phi_boundary) -> void {
+    FEFaceIntegrator<dim, n_components, number>                        phi_boundary(matrix_free,
+                                                             true /*is_interior_face*/,
+                                                             dof_idx,
+                                                             quad_idx);
+    std::function<void(FEFaceIntegrator<dim, n_components, number> &)> boundary_operation =
+      [&](FEFaceIntegrator<dim, n_components, number> &delta_phi_boundary) -> void {
       phi_boundary.reinit(delta_phi_boundary.get_cell_or_face_batch_id());
       phi_boundary.gather_evaluate(current_solution,
                                    dealii::EvaluationFlags::values |

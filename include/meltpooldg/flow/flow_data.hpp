@@ -2,9 +2,9 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/flow/darcy_damping_data.hpp>
 #include <meltpooldg/flow/surface_tension_data.hpp>
-#include <meltpooldg/utilities/material_data.hpp>
 
 namespace MeltPoolDG::Flow
 {

@@ -8,14 +8,14 @@
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <meltpooldg/core/material.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/heat/heat_operation_base.hpp>
 #include <meltpooldg/heat/laser_operation.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/amr.hpp>
-#include <meltpooldg/utilities/material.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <functional>
 #include <memory>
@@ -39,10 +39,10 @@ namespace MeltPoolDG::Heat
     VectorType level_set_as_heaviside;
     VectorType level_set;
 
-    std::shared_ptr<TimeIterator<number>> time_iterator;
-    dealii::DoFHandler<dim>               dof_handler;
-    dealii::DoFHandler<dim>               dof_handler_velocity;
-    dealii::DoFHandler<dim>               dof_handler_level_set;
+    std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
+    dealii::DoFHandler<dim>                                dof_handler;
+    dealii::DoFHandler<dim>                                dof_handler_velocity;
+    dealii::DoFHandler<dim>                                dof_handler_level_set;
 
     dealii::AffineConstraints<number> heat_dirichlet_constraints;
     dealii::AffineConstraints<number> heat_hanging_nodes_constraints;

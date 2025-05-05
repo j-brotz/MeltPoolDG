@@ -27,7 +27,7 @@ namespace MeltPoolDG::LevelSet
     const ScratchData<dim, dim, number>                                &scratch_data_in,
     const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> &dirichlet_bc_in,
     const AdvectionDiffusionData<number>                               &advec_diff_data_in,
-    const TimeIterator<number>                                         &time_iterator,
+    const TimeIntegration::TimeIterator<number>                        &time_iterator,
     const VectorType                                                   &advection_velocity,
     const unsigned int                                                  advec_diff_dof_idx_in,
     const unsigned int advec_diff_hanging_nodes_dof_idx_in,

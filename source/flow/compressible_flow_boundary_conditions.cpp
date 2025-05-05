@@ -1,6 +1,8 @@
 
 #include <meltpooldg/flow/compressible_flow_boundary_conditions.hpp>
 #include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 namespace MeltPoolDG::Flow
 {
@@ -252,11 +254,9 @@ namespace MeltPoolDG::Flow
             delta_momentum[i - 1] = delta_w_m[i];
           }
         const auto matrix =
-          -2.0 *
-          VectorTools::dyadic_product<dim, dim, dealii::VectorizedArray<number>>(normal, normal);
+          -2.0 * dyadic_product<dim, dim, dealii::VectorizedArray<number>>(normal, normal);
         const auto helper =
-          VectorTools::matrix_vector_product<dim, dim, dealii::VectorizedArray<number>>(
-            matrix, delta_momentum);
+          matrix_vector_product<dim, dim, dealii::VectorizedArray<number>>(matrix, delta_momentum);
         for (unsigned int i = 1; i < dim + 1; ++i)
           {
             delta_w_p[i] = helper[i - 1] + delta_w_m[i];

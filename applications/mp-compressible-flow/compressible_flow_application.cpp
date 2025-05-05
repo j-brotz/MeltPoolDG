@@ -153,8 +153,8 @@ namespace MeltPoolDG::Flow
                                                                      false /* is_optional */);
 
     // initialize the time iterator
-    time_iterator =
-      std::make_shared<TimeIterator<number>>(simulation_case->parameters.time_stepping);
+    time_iterator = std::make_shared<TimeIntegration::TimeIterator<number>>(
+      simulation_case->parameters.time_stepping);
 
     // initialize compressible flow operation. Choose between domain representation type "fitted"
     // and "cut".

@@ -10,14 +10,14 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   ReinitializationDGOperation<dim, number>::ReinitializationDGOperation(
-    const ScratchData<dim, dim, number> &scratch_data_in,
-    const ReinitializationData<number>  &reinit_data,
-    const TimeIterator<number>          &time_iterator,
-    const unsigned int                   reinit_dof_idx_in,
-    const unsigned int                   reinit_quad_idx_in,
-    const unsigned int                   ls_dof_idx_in,
-    const NormalVectorData<number>      &normal_vec_data,
-    const CurvatureData<number>         &curvature_data)
+    const ScratchData<dim, dim, number>         &scratch_data_in,
+    const ReinitializationData<number>          &reinit_data,
+    const TimeIntegration::TimeIterator<number> &time_iterator,
+    const unsigned int                           reinit_dof_idx_in,
+    const unsigned int                           reinit_quad_idx_in,
+    const unsigned int                           ls_dof_idx_in,
+    const NormalVectorData<number>              &normal_vec_data,
+    const CurvatureData<number>                 &curvature_data)
     : scratch_data(scratch_data_in)
     , reinit_data(reinit_data)
     , time_iterator(time_iterator)
@@ -50,7 +50,7 @@ namespace MeltPoolDG::LevelSet
       normal_vector_operation->get_solution_normal_vector());
 
     reinitialization_integration =
-      std::shared_ptr<TimeIntegratorBase<number>>(time_integrator_factory<number>(
+      std::shared_ptr<TimeIntegration::TimeIntegratorBase<number>>(time_integrator_factory<number>(
         *reinit_DG_operator,
         reinit_data.reinitilization_DG_specific_data.time_integration_data,
         reinit_data.linear_solver,
@@ -61,7 +61,7 @@ namespace MeltPoolDG::LevelSet
   ReinitializationDGOperation<dim, number>::ReinitializationDGOperation(
     const ScratchData<dim, dim, number>                           &scratch_data_in,
     const ReinitializationData<number>                            &reinit_data,
-    const TimeIterator<number>                                    &time_iterator,
+    const TimeIntegration::TimeIterator<number>                   &time_iterator,
     const unsigned int                                             reinit_dof_idx_in,
     const unsigned int                                             reinit_quad_idx_in,
     const unsigned int                                             ls_dof_idx_in,
@@ -91,7 +91,7 @@ namespace MeltPoolDG::LevelSet
       normal_vector_operation->get_solution_normal_vector());
 
     reinitialization_integration =
-      std::shared_ptr<TimeIntegratorBase<number>>(time_integrator_factory<number>(
+      std::shared_ptr<TimeIntegration::TimeIntegratorBase<number>>(time_integrator_factory<number>(
         *reinit_DG_operator,
         reinit_data.reinitilization_DG_specific_data.time_integration_data,
         reinit_data.linear_solver,
@@ -234,7 +234,7 @@ namespace MeltPoolDG::LevelSet
     if (reinit_data.linear_solver.do_matrix_free)
       {
         if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type !=
-            TimeIntegratorSchemes::not_initialized)
+            TimeIntegration::TimeIntegratorSchemes::not_initialized)
           {
             reinit_DG_operator->apply_diffusion_implicit(time_iterator.get_old_time(),
                                                          time_iterator.get_current_time_increment(),
@@ -328,13 +328,13 @@ namespace MeltPoolDG::LevelSet
   ReinitializationDGOperation<dim, number>::compute_CFL_based_timestep() const
   {
     const number minimal_vertex_distance = scratch_data.get_min_cell_size();
-    const number fe_degree = ((static_cast<number>(scratch_data.get_degree(reinit_dof_idx))));
+    const number fe_degree = static_cast<number>(scratch_data.get_degree(reinit_dof_idx));
 
     if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type !=
-        TimeIntegratorSchemes::not_initialized)
+        TimeIntegration::TimeIntegratorSchemes::not_initialized)
       {
         return reinit_data.reinitilization_DG_specific_data.CFL * minimal_vertex_distance /
-               ((fe_degree * fe_degree) * reinit_DG_operator->get_signum_smoothed().linfty_norm());
+               (fe_degree * fe_degree * reinit_DG_operator->get_signum_smoothed().linfty_norm());
       }
     else
       {

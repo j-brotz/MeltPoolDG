@@ -9,10 +9,12 @@
 #include <deal.II/matrix_free/evaluation_flags.h>
 
 #include <meltpooldg/cut/util.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
+#include <meltpooldg/utilities/dof_tools.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <cmath>
 #include <functional>
@@ -52,7 +54,7 @@ namespace MeltPoolDG::Flow
     if (do_level_set_pressure_gradient_interpolation)
       {
         ls_to_pressure_grad_interpolation_matrix =
-          UtilityFunctions::create_dof_interpolation_matrix<dim, number>(
+          DoFTools::create_dof_interpolation_matrix<dim, number>(
             scratch_data.get_dof_handler(flow_pressure_hanging_nodes_dof_idx),
             scratch_data.get_dof_handler(ls_dof_idx),
             true);
@@ -214,7 +216,7 @@ namespace MeltPoolDG::Flow
               {
                 heaviside_interpolated_to_pressure_space_eval.reinit(cell);
 
-                UtilityFunctions::compute_gradient_at_interpolated_dof_values<dim>(
+                DoFTools::compute_gradient_at_interpolated_dof_values<dim>(
                   heaviside_eval,
                   heaviside_interpolated_to_pressure_space_eval,
                   ls_to_pressure_grad_interpolation_matrix);
@@ -261,8 +263,8 @@ namespace MeltPoolDG::Flow
 
                 if (not temperature_eval.empty())
                   {
-                    const auto n = VectorTools::normalize<dim>(normal_vec_eval->get_value(q),
-                                                               tolerance_normal_vector);
+                    const auto n =
+                      normalize<dim>(normal_vec_eval->get_value(q), tolerance_normal_vector);
                     VectorizedArray<number>                                  T;
                     typename FECellIntegrator<dim, 1, number>::gradient_type grad_T;
                     switch (cut_type)
@@ -416,7 +418,7 @@ namespace MeltPoolDG::Flow
     return data.time_step_limit.scale_factor *
            std::sqrt((density_1 + density_2) *
                      Utilities::fixed_power<3>(scratch_data.get_min_cell_size()) /
-                     (2 * numbers::PI * alpha));
+                     (2 * dealii::numbers::PI * alpha));
   }
 
   template <int dim, typename number>

@@ -106,6 +106,6 @@ namespace MeltPoolDG::RadiativeTransport
 
   private:
     void
-    tangent_local_cell_operation(dealii::FECellIntegrator<dim, 1, number> &intensity_vals) const;
+    tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &intensity_vals) const;
   };
 } // namespace MeltPoolDG::RadiativeTransport

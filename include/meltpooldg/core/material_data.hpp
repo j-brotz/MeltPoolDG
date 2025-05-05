@@ -79,7 +79,7 @@ namespace MeltPoolDG
     number latent_heat_of_evaporation = 0.0;
     number molar_mass                 = 0.0;
 
-    number specific_enthalpy_reference_temperature = dealii::numbers::invalid_double;
+    number specific_enthalpy_reference_temperature = numbers::invalid_double;
 
     SolidLiquidPropertiesTransitionType solid_liquid_properties_transition_type =
       SolidLiquidPropertiesTransitionType::mushy_zone;

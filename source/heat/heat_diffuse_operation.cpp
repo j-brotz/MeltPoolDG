@@ -27,7 +27,7 @@ namespace MeltPoolDG::Heat
     const PeriodicBoundaryConditions<dim>                             &periodic_bc_in,
     const HeatData<number>                                            &heat_data_in,
     const Material<number>                                            &material,
-    const TimeIterator<number>                                        &time_iterator,
+    const TimeIntegration::TimeIterator<number>                       &time_iterator,
     const unsigned int                                                 heat_dof_idx_in,
     const unsigned int                                                 heat_no_bc_dof_idx_in,
     const unsigned int                                                 heat_quad_idx_in,

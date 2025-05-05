@@ -1,10 +1,16 @@
 #include <meltpooldg/heat/laser_analytical_temperature_field.hpp>
+//
+#include <deal.II/base/numbers.h>
+#include <deal.II/base/types.h>
+
+#include <deal.II/dofs/dof_tools.h>
+
+#include <deal.II/lac/vector_operation.h>
+
 #include <meltpooldg/level_set/level_set_tools.hpp>
 
 namespace MeltPoolDG::Heat
 {
-  using namespace dealii;
-
   template <int dim, typename number>
   void
   LaserAnalyticalTemperatureField<dim, number>::compute_temperature_field(
@@ -12,7 +18,7 @@ namespace MeltPoolDG::Heat
     const MaterialData<number>          &material,
     const LaserData<number>             &laser_data,
     const number                         laser_power,
-    const Point<dim>                    &laser_position,
+    const dealii::Point<dim>            &laser_position,
     VectorType                          &temperature,
     const VectorType                    &level_set_as_heaviside,
     const unsigned int                   heat_dof_idx)
@@ -28,12 +34,12 @@ namespace MeltPoolDG::Heat
 
     const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(heat_dof_idx);
 
-    std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+    std::vector<dealii::types::global_dof_index> local_dof_indices(dofs_per_cell);
 
-    std::map<types::global_dof_index, Point<dim>> support_points;
-    DoFTools::map_dofs_to_support_points(scratch_data.get_mapping(),
-                                         scratch_data.get_dof_handler(heat_dof_idx),
-                                         support_points);
+    std::map<dealii::types::global_dof_index, dealii::Point<dim>> support_points;
+    dealii::DoFTools::map_dofs_to_support_points(scratch_data.get_mapping(),
+                                                 scratch_data.get_dof_handler(heat_dof_idx),
+                                                 support_points);
 
     for (const auto &cell : scratch_data.get_dof_handler(heat_dof_idx).active_cell_iterators())
       if (cell->is_locally_owned())
@@ -55,7 +61,7 @@ namespace MeltPoolDG::Heat
             }
         }
 
-    temperature.compress(VectorOperation::insert);
+    temperature.compress(dealii::VectorOperation::insert);
     scratch_data.get_constraint(heat_dof_idx).distribute(temperature);
 
     // update ghost values of solution
@@ -70,20 +76,21 @@ namespace MeltPoolDG::Heat
   LaserAnalyticalTemperatureField<dim, number>::local_compute_temperature_field(
     const MaterialData<number> &material,
     const LaserData<number>    &laser_data,
-    const Point<dim>           &point,
+    const dealii::Point<dim>   &point,
     const number                heaviside,
     const number                scan_speed,
     const number                laser_power,
-    const Point<dim>           &laser_position)
+    const dealii::Point<dim>   &laser_position)
   {
     const number P  = laser_power;
     const number v  = scan_speed;
     const number T0 = laser_data.analytical.ambient_temperature;
 
-    const number weight = (material.two_phase_fluid_properties_transition_type !=
-                           TwoPhaseFluidPropertiesTransitionType::sharp) ?
+    const number weight = material.two_phase_fluid_properties_transition_type !=
+                              TwoPhaseFluidPropertiesTransitionType::sharp ?
                             heaviside :
-                            ((heaviside > 0.5) ? 1.0 : 0.0);
+                          heaviside > 0.5 ? 1.0 :
+                                            0.0;
 
     const number absorptivity = LevelSet::Tools::interpolate(weight,
                                                              laser_data.absorptivity_gas,
@@ -107,7 +114,7 @@ namespace MeltPoolDG::Heat
     const number thermal_diffusivity = conductivity / (density * capacity);
 
     // modify temperature profile to be anisotropic
-    Point<dim> point_scaled = point;
+    dealii::Point<dim> point_scaled = point;
 
     if (std::abs(laser_data.analytical.temperature_x_to_y_ratio - 1.0) > 1e-10)
       for (int d = 0; d < dim - 1; d++)
@@ -118,7 +125,7 @@ namespace MeltPoolDG::Heat
     if (R == 0.0)
       R = 1e-16;
 
-    number T = P * absorptivity / (4 * numbers::PI * R * conductivity) *
+    number T = P * absorptivity / (4 * dealii::numbers::PI * R * conductivity) *
                  std::exp(-v * R / (2. * thermal_diffusivity)) +
                T0;
 

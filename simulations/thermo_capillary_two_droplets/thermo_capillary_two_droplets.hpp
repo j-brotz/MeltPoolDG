@@ -1,20 +1,28 @@
 #pragma once
-// deal-specific libraries
+
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
+#include <deal.II/base/mpi.h>
+#include <deal.II/base/point.h>
+#include <deal.II/base/types.h>
+#include <deal.II/base/utilities.h>
+
+#include <deal.II/distributed/shared_tria.h>
+#include <deal.II/distributed/tria.h>
 
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/grid_tools_geometry.h>
 #include <deal.II/grid/tria.h>
 
-// MeltPoolDG
+#include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
-
-// c++
-#include <meltpooldg/core/parameters.hpp>
+#include <meltpooldg/utilities/characteristic_functions.hpp>
 
 #include <cmath>
-#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
 
 /**
  * This example is derived from
@@ -95,7 +103,6 @@
 
 namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
 {
-  using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
   static constexpr double radius                = 0.048;
@@ -105,50 +112,48 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
   static constexpr double temperature_gradient  = 10.;
 
   template <int dim>
-  class InitialValuesLS : public Function<dim>
+  class InitialValuesLS : public dealii::Function<dim>
   {
   public:
     InitialValuesLS(const double eps)
-      : Function<dim>()
+      : dealii::Function<dim>()
       , eps(eps)
-      , center1(dim == 2 ? Point<dim>(2.9 * radius, 4.0 * radius) :
-                           Point<dim>(2.9 * radius, 0, 4.0 * radius))
+      , center1(dim == 2 ? dealii::Point<dim>(2.9 * radius, 4.0 * radius) :
+                           dealii::Point<dim>(2.9 * radius, 0, 4.0 * radius))
 
-      , center2(dim == 2 ? Point<dim>(5.1 * radius, 5.8 * radius) :
-                           Point<dim>(5.1 * radius, 0, 5.8 * radius))
+      , center2(dim == 2 ? dealii::Point<dim>(5.1 * radius, 5.8 * radius) :
+                           dealii::Point<dim>(5.1 * radius, 0, 5.8 * radius))
       , sphere1(center1, radius)
       , sphere2(center2, radius)
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
       if ((p - center1).norm() < (p - center2).norm()) // closer to first droplet center
-        return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          -sphere1.value(p), eps);
+        return CharacteristicFunctions::tanh_characteristic_function(-sphere1.value(p), eps);
       else // closer to second droplet center
-        return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          -sphere2.value(p), eps);
+        return CharacteristicFunctions::tanh_characteristic_function(-sphere2.value(p), eps);
     }
 
-    const double                                 eps;
-    const Point<dim>                             center1;
-    const Point<dim>                             center2;
-    const Functions::SignedDistance::Sphere<dim> sphere1;
-    const Functions::SignedDistance::Sphere<dim> sphere2;
+    const double                                         eps;
+    const dealii::Point<dim>                             center1;
+    const dealii::Point<dim>                             center2;
+    const dealii::Functions::SignedDistance::Sphere<dim> sphere1;
+    const dealii::Functions::SignedDistance::Sphere<dim> sphere2;
   };
 
 
   template <int dim>
-  class InitialValuesTemperature : public Function<dim>
+  class InitialValuesTemperature : public dealii::Function<dim>
   {
   public:
     InitialValuesTemperature()
-      : Function<dim>()
+      : dealii::Function<dim>()
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
       return reference_temperature + p[dim - 1] * temperature_gradient;
     }
@@ -172,56 +177,57 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
 #ifdef DEAL_II_WITH_METIS
-          this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
+          this->triangulation = std::make_shared<dealii::parallel::shared::Triangulation<dim>>(
             this->mpi_communicator,
-            (Triangulation<dim>::none),
+            dealii::Triangulation<dim>::none,
             false,
-            parallel::shared::Triangulation<dim>::Settings::partition_metis);
+            dealii::parallel::shared::Triangulation<dim>::Settings::partition_metis);
 #else
           AssertThrow(
             false,
-            ExcMessage(
+            dealii::ExcMessage(
               "Missing Metis support of the deal.II installation. "
               "Configure deal.II with -D DEAL_II_WITH_METIS='ON' to execute this example."));
 #endif
         }
       else
         {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+          this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+            this->mpi_communicator);
         }
 
-      if constexpr ((dim == 2) || (dim == 3))
+      if constexpr (dim == 2 or dim == 3)
         {
           // create mesh
-          const Point<dim> bottom_left = (dim == 2) ? Point<dim>(0, 0) : Point<dim>(0, 0, 0);
-          const Point<dim> top_right =
-            (dim == 2) ? Point<dim>(x_outer, z_outer) : Point<dim>(x_outer, 0, z_outer);
+          const dealii::Point<dim> bottom_left =
+            dim == 2 ? dealii::Point<dim>(0, 0) : dealii::Point<dim>(0, 0, 0);
+          const dealii::Point<dim> top_right = dim == 2 ? dealii::Point<dim>(x_outer, z_outer) :
+                                                          dealii::Point<dim>(x_outer, 0, z_outer);
 
           // create mesh
           if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
             {
               std::vector<unsigned int> subdivisions(
-                dim, 4 * Utilities::pow(2, this->parameters.base.global_refinements));
+                dim, 4 * dealii::Utilities::pow(2, this->parameters.base.global_refinements));
               subdivisions[dim - 1] *= 2;
-              GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
-                                                                       subdivisions,
-                                                                       bottom_left,
-                                                                       top_right);
+              dealii::GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
+                                                                               subdivisions,
+                                                                               bottom_left,
+                                                                               top_right);
             }
           else
             {
               std::vector<unsigned int> subdivisions(dim, 4);
               subdivisions[dim - 1] *= 2;
-              GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                        subdivisions,
-                                                        bottom_left,
-                                                        top_right);
+              dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                                subdivisions,
+                                                                bottom_left,
+                                                                top_right);
             }
         }
       else
         {
-          AssertThrow(false, ExcNotImplemented());
+          AssertThrow(false, dealii::ExcNotImplemented());
         }
     }
 
@@ -232,16 +238,16 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
        *  create a pair of (boundary_id, dirichlet_function)
        */
 
-      const types::boundary_id lower_bc = 1;
-      const types::boundary_id upper_bc = 2;
-      const types::boundary_id left_bc  = 3;
-      const types::boundary_id right_bc = 4;
+      const dealii::types::boundary_id lower_bc = 1;
+      const dealii::types::boundary_id upper_bc = 2;
+      const dealii::types::boundary_id left_bc  = 3;
+      const dealii::types::boundary_id right_bc = 4;
 
       if constexpr (dim == 2)
         {
           for (const auto &cell : this->triangulation->cell_iterators())
             for (const auto &face : cell->face_iterators())
-              if ((face->at_boundary()))
+              if (face->at_boundary())
                 {
                   if (face->center()[1] == 0.0)
                     face->set_boundary_id(lower_bc);
@@ -255,7 +261,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
         }
       else
         {
-          AssertThrow(false, ExcNotImplemented());
+          AssertThrow(false, dealii::ExcNotImplemented());
         }
 
       this->attach_boundary_condition(lower_bc, "fix_pressure_constant", "navier_stokes_p");
@@ -279,10 +285,10 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
     set_field_conditions() final
     {
       const double eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
-        GridTools::minimal_cell_diameter(*this->triangulation) /
+        dealii::GridTools::minimal_cell_diameter(*this->triangulation) /
         this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
 
-      AssertThrow(eps > 0, ExcNotImplemented());
+      AssertThrow(eps > 0, dealii::ExcNotImplemented());
 
       this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(eps), "level_set");
       this->attach_initial_condition(std::make_shared<dealii::Functions::ZeroFunction<dim>>(dim),

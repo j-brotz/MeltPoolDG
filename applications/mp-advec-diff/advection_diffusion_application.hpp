@@ -7,8 +7,8 @@
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/level_set/advection_diffusion_operation_base.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
 
 #include "advection_diffusion_case.hpp"
 
@@ -41,7 +41,7 @@ namespace MeltPoolDG::LevelSet
     dealii::AffineConstraints<number>              hanging_node_constraints_velocity;
     std::shared_ptr<ScratchData<dim, dim, number>> scratch_data;
     VectorType                                     advection_velocity;
-    std::unique_ptr<TimeIterator<number>>          time_iterator;
+    std::unique_ptr<TimeIntegration::TimeIterator<number>>        time_iterator;
     std::unique_ptr<AdvectionDiffusionOperationBase<dim, number>> advec_diff_operation;
     std::unique_ptr<Profiling::ProfilingMonitor<number>>          profiling_monitor;
 

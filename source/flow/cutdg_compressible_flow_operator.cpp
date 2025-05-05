@@ -9,7 +9,7 @@
 #include <meltpooldg/flow/cutdg_compressible_flow_operator.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 namespace MeltPoolDG::Flow
 {

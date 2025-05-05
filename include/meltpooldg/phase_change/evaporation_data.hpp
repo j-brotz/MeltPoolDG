@@ -97,7 +97,7 @@ namespace MeltPoolDG::Evaporation
 
       std::string consider_enthalpy_transport_vapor_mass_flux = "default";
 
-      number activation_temperature = dealii::numbers::invalid_double;
+      number activation_temperature = numbers::invalid_double;
 
       // only for the diffuse operator
       EvaporCoolingInterfaceFluxType model = EvaporCoolingInterfaceFluxType::regularized;
