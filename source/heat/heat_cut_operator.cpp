@@ -1080,22 +1080,39 @@ namespace MeltPoolDG::Heat
         if (evapor_cooling or do_solidification)
           T_eval_cell_l = std::make_unique<DomainEval<>>(eval_cell_l);
 
-        PointEval eval_subdomain_l(*mapping_info_cells[0], reference_finite_element_heat);
+        PointEval                    eval_subdomain_l(*mapping_info_cells[0],
+                                   reference_finite_element_heat,
+                                   0 /*selected component*/,
+                                   true /*force_lexicographic_numbering*/);
         std::unique_ptr<PointEval<>> T_eval_subdomain_l;
         if (do_solidification)
-          T_eval_subdomain_l = std::make_unique<PointEval<>>(eval_subdomain_l);
+          T_eval_subdomain_l =
+            std::make_unique<PointEval<>>(*mapping_info_cells[0],
+                                          reference_finite_element_heat,
+                                          0 /*selected component*/,
+                                          true /*force_lexicographic_numbering*/);
         std::unique_ptr<PointEval<dim>> vel_eval_subdomain_l;
         if (vel_eval)
           vel_eval_subdomain_l =
-            std::make_unique<PointEval<dim>>(*mapping_info_cells[0], reference_finite_element_vel);
+            std::make_unique<PointEval<dim>>(*mapping_info_cells[0],
+                                             reference_finite_element_vel,
+                                             0 /*selected component*/,
+                                             true /*force_lexicographic_numbering*/);
 
         std::unique_ptr<PointEval<>> eval_interface_l;
         std::unique_ptr<PointEval<>> T_eval_interface_l;
         if (evapor_cooling)
           {
             eval_interface_l =
-              std::make_unique<PointEval<>>(mapping_info_surface, reference_finite_element_heat);
-            T_eval_interface_l = std::make_unique<PointEval<>>(*eval_interface_l);
+              std::make_unique<PointEval<>>(mapping_info_surface,
+                                            reference_finite_element_heat,
+                                            0 /*selected component*/,
+                                            true /*force_lexicographic_numbering*/);
+            T_eval_interface_l =
+              std::make_unique<PointEval<>>(mapping_info_surface,
+                                            reference_finite_element_heat,
+                                            0 /*selected component*/,
+                                            true /*force_lexicographic_numbering*/);
           }
 
         for (unsigned int cell_batch = cell_batch_range.first; cell_batch < cell_batch_range.second;
@@ -1129,19 +1146,36 @@ namespace MeltPoolDG::Heat
         if (evapor_cooling or do_solidification)
           T_eval_cell_l = std::make_unique<DomainEval<>>(eval_cell_l);
 
-        PointEval eval_subdomain_l(*mapping_info_cells[0], reference_finite_element_heat);
+        PointEval                    eval_subdomain_l(*mapping_info_cells[0],
+                                   reference_finite_element_heat,
+                                   0 /*selected component*/,
+                                   true /*force_lexicographic_numbering*/);
         std::unique_ptr<PointEval<>> T_eval_subdomain_l;
         if (do_solidification)
-          T_eval_subdomain_l = std::make_unique<PointEval<>>(eval_subdomain_l);
+          T_eval_subdomain_l =
+            std::make_unique<PointEval<>>(*mapping_info_cells[0],
+                                          reference_finite_element_heat,
+                                          0 /*selected component*/,
+                                          true /*force_lexicographic_numbering*/);
         std::unique_ptr<PointEval<dim>> vel_eval_subdomain_l;
         if (vel_eval)
           vel_eval_subdomain_l =
-            std::make_unique<PointEval<dim>>(*mapping_info_cells[0], reference_finite_element_vel);
+            std::make_unique<PointEval<dim>>(*mapping_info_cells[0],
+                                             reference_finite_element_vel,
+                                             0 /*selected component*/,
+                                             true /*force_lexicographic_numbering*/);
 
-        PointEval eval_interface_l(mapping_info_surface, reference_finite_element_heat);
+        PointEval                    eval_interface_l(mapping_info_surface,
+                                   reference_finite_element_heat,
+                                   0 /*selected component*/,
+                                   true /*force_lexicographic_numbering*/);
         std::unique_ptr<PointEval<>> T_eval_interface_l;
         if (evapor_cooling)
-          T_eval_interface_l = std::make_unique<PointEval<>>(eval_interface_l);
+          T_eval_interface_l =
+            std::make_unique<PointEval<>>(mapping_info_surface,
+                                          reference_finite_element_heat,
+                                          0 /*selected component*/,
+                                          true /*force_lexicographic_numbering*/);
 
         DomainEval                    eval_cell_g(matrix_free,
                                heat_cut_dof_idx /*dof_no*/,
@@ -1152,16 +1186,29 @@ namespace MeltPoolDG::Heat
         if (evapor_cooling)
           T_eval_cell_g = std::make_unique<DomainEval<>>(eval_cell_g);
 
-        PointEval eval_subdomain_g(*mapping_info_cells[1], reference_finite_element_heat);
+        PointEval                       eval_subdomain_g(*mapping_info_cells[1],
+                                   reference_finite_element_heat,
+                                   0 /*selected component*/,
+                                   true /*force_lexicographic_numbering*/);
         std::unique_ptr<PointEval<dim>> vel_eval_subdomain_g;
         if (vel_eval)
           vel_eval_subdomain_g =
-            std::make_unique<PointEval<dim>>(*mapping_info_cells[1], reference_finite_element_vel);
+            std::make_unique<PointEval<dim>>(*mapping_info_cells[1],
+                                             reference_finite_element_vel,
+                                             0 /*selected component*/,
+                                             true /*force_lexicographic_numbering*/);
 
-        PointEval                    eval_interface_g(eval_interface_l);
+        PointEval                    eval_interface_g(mapping_info_surface,
+                                   reference_finite_element_heat,
+                                   0 /*selected component*/,
+                                   true /*force_lexicographic_numbering*/);
         std::unique_ptr<PointEval<>> T_eval_interface_g;
         if (evapor_cooling)
-          T_eval_interface_g = std::make_unique<PointEval<>>(eval_interface_l);
+          T_eval_interface_g =
+            std::make_unique<PointEval<>>(mapping_info_surface,
+                                          reference_finite_element_heat,
+                                          0 /*selected component*/,
+                                          true /*force_lexicographic_numbering*/);
 
         for (unsigned int cell_batch = cell_batch_range.first; cell_batch < cell_batch_range.second;
              ++cell_batch)
@@ -1413,22 +1460,38 @@ namespace MeltPoolDG::Heat
     else if (cell_category == CutUtil::CellCategory::intersected and not heat_data.cut.two_phase)
       {
         // use FEEvaluation and FEPointEvaluation in combination for intersected cells
-        DomainEval    T_new_eval_cell_l(matrix_free,
+        DomainEval                      T_new_eval_cell_l(matrix_free,
                                      heat_cut_dof_idx /*dof_no*/,
                                      heat_quad_idx /*quad_no*/,
                                      0 /*selected component*/,
                                      cell_category /*active_fe_index*/);
-        DomainEval<1> T_old_eval_cell_l(T_new_eval_cell_l);
-        PointEval     T_new_eval_subdomain_l(*mapping_info_cells[0], reference_finite_element_heat);
-        PointEval     T_old_eval_subdomain_l(T_new_eval_subdomain_l);
+        DomainEval<1>                   T_old_eval_cell_l(T_new_eval_cell_l);
+        PointEval                       T_new_eval_subdomain_l(*mapping_info_cells[0],
+                                         reference_finite_element_heat,
+                                         0 /*selected component*/,
+                                         true /*force_lexicographic_numbering*/);
+        PointEval                       T_old_eval_subdomain_l(*mapping_info_cells[0],
+                                         reference_finite_element_heat,
+                                         0 /*selected component*/,
+                                         true /*force_lexicographic_numbering*/);
         std::unique_ptr<PointEval<dim>> vel_eval_subdomain_l;
         if (vel_eval)
           vel_eval_subdomain_l =
-            std::make_unique<PointEval<dim>>(*mapping_info_cells[0], reference_finite_element_vel);
-        PointEval T_new_eval_interface_l(mapping_info_surface, reference_finite_element_heat);
+            std::make_unique<PointEval<dim>>(*mapping_info_cells[0],
+                                             reference_finite_element_vel,
+                                             0 /*selected component*/,
+                                             true /*force_lexicographic_numbering*/);
+        PointEval                    T_new_eval_interface_l(mapping_info_surface,
+                                         reference_finite_element_heat,
+                                         0 /*selected component*/,
+                                         true /*force_lexicographic_numbering*/);
         std::unique_ptr<PointEval<>> T_old_eval_interface_l;
         if (evapor_cooling)
-          T_old_eval_interface_l = std::make_unique<PointEval<>>(T_new_eval_interface_l);
+          T_old_eval_interface_l =
+            std::make_unique<PointEval<>>(mapping_info_surface,
+                                          reference_finite_element_heat,
+                                          0 /*selected component*/,
+                                          true /*force_lexicographic_numbering*/);
 
         for (unsigned int cell_batch = cell_batch_range.first; cell_batch < cell_batch_range.second;
              ++cell_batch)
@@ -1541,34 +1604,64 @@ namespace MeltPoolDG::Heat
     else if (cell_category == CutUtil::CellCategory::intersected and heat_data.cut.two_phase)
       {
         // use FEEvaluation and FEPointEvaluation in combination for intersected cells
-        DomainEval    T_new_eval_cell_l(matrix_free,
+        DomainEval                      T_new_eval_cell_l(matrix_free,
                                      heat_cut_dof_idx /*dof_no*/,
                                      heat_quad_idx /*quad_no*/,
                                      0 /*selected component*/,
                                      cell_category /*active_fe_index*/);
-        DomainEval<1> T_old_eval_cell_l(T_new_eval_cell_l);
-        PointEval     T_new_eval_subdomain_l(*mapping_info_cells[0], reference_finite_element_heat);
-        PointEval     T_old_eval_subdomain_l(T_new_eval_subdomain_l);
+        DomainEval<1>                   T_old_eval_cell_l(T_new_eval_cell_l);
+        PointEval                       T_new_eval_subdomain_l(*mapping_info_cells[0],
+                                         reference_finite_element_heat,
+                                         0 /*selected component*/,
+                                         true /*force_lexicographic_numbering*/);
+        PointEval                       T_old_eval_subdomain_l(*mapping_info_cells[0],
+                                         reference_finite_element_heat,
+                                         0 /*selected component*/,
+                                         true /*force_lexicographic_numbering*/);
         std::unique_ptr<PointEval<dim>> vel_eval_subdomain_l;
         if (vel_eval)
           vel_eval_subdomain_l =
-            std::make_unique<PointEval<dim>>(*mapping_info_cells[0], reference_finite_element_vel);
-        PointEval     T_new_eval_interface_l(mapping_info_surface, reference_finite_element_heat);
-        PointEval     T_old_eval_interface_l(T_new_eval_interface_l);
-        DomainEval    T_new_eval_cell_g(matrix_free,
+            std::make_unique<PointEval<dim>>(*mapping_info_cells[0],
+                                             reference_finite_element_vel,
+                                             0 /*selected component*/,
+                                             true /*force_lexicographic_numbering*/);
+        PointEval                       T_new_eval_interface_l(mapping_info_surface,
+                                         reference_finite_element_heat,
+                                         0 /*selected component*/,
+                                         true /*force_lexicographic_numbering*/);
+        PointEval                       T_old_eval_interface_l(mapping_info_surface,
+                                         reference_finite_element_heat,
+                                         0 /*selected component*/,
+                                         true /*force_lexicographic_numbering*/);
+        DomainEval                      T_new_eval_cell_g(matrix_free,
                                      heat_cut_dof_idx /*dof_no*/,
                                      heat_quad_idx /*quad_no*/,
                                      1 /*selected component*/,
                                      cell_category /*active_fe_index*/);
-        DomainEval<1> T_old_eval_cell_g(T_new_eval_cell_g);
-        PointEval     T_new_eval_subdomain_g(*mapping_info_cells[1], reference_finite_element_heat);
-        PointEval     T_old_eval_subdomain_g(T_new_eval_subdomain_g);
+        DomainEval<1>                   T_old_eval_cell_g(T_new_eval_cell_g);
+        PointEval                       T_new_eval_subdomain_g(*mapping_info_cells[1],
+                                         reference_finite_element_heat,
+                                         0 /*selected component*/,
+                                         true /*force_lexicographic_numbering*/);
+        PointEval                       T_old_eval_subdomain_g(*mapping_info_cells[1],
+                                         reference_finite_element_heat,
+                                         0 /*selected component*/,
+                                         true /*force_lexicographic_numbering*/);
         std::unique_ptr<PointEval<dim>> vel_eval_subdomain_g;
         if (vel_eval)
           vel_eval_subdomain_g =
-            std::make_unique<PointEval<dim>>(*mapping_info_cells[1], reference_finite_element_vel);
-        PointEval T_new_eval_interface_g(T_new_eval_interface_l);
-        PointEval T_old_eval_interface_g(T_new_eval_interface_l);
+            std::make_unique<PointEval<dim>>(*mapping_info_cells[1],
+                                             reference_finite_element_vel,
+                                             0 /*selected component*/,
+                                             true /*force_lexicographic_numbering*/);
+        PointEval T_new_eval_interface_g(mapping_info_surface,
+                                         reference_finite_element_heat,
+                                         0 /*selected component*/,
+                                         true /*force_lexicographic_numbering*/);
+        PointEval T_old_eval_interface_g(mapping_info_surface,
+                                         reference_finite_element_heat,
+                                         0 /*selected component*/,
+                                         true /*force_lexicographic_numbering*/);
 
         for (unsigned int cell_batch = cell_batch_range.first; cell_batch < cell_batch_range.second;
              ++cell_batch)
@@ -1944,19 +2037,34 @@ namespace MeltPoolDG::Heat
     if (velocity)
       vel_eval = std::make_unique<DomainEval<dim>>(matrix_free, vel_dof_idx, heat_quad_idx);
 
-    PointEval eval_subdomain_l(*mapping_info_cells[0], reference_finite_element_heat);
+    PointEval                    eval_subdomain_l(*mapping_info_cells[0],
+                               reference_finite_element_heat,
+                               0 /*selected component*/,
+                               true /*force_lexicographic_numbering*/);
     std::unique_ptr<PointEval<>> T_eval_subdomain_l;
     if (do_solidification)
-      T_eval_subdomain_l = std::make_unique<PointEval<>>(eval_subdomain_l);
+      T_eval_subdomain_l = std::make_unique<PointEval<>>(*mapping_info_cells[0],
+                                                         reference_finite_element_heat,
+                                                         0 /*selected component*/,
+                                                         true /*force_lexicographic_numbering*/);
     std::unique_ptr<PointEval<dim>> vel_eval_subdomain_l;
     if (vel_eval)
       vel_eval_subdomain_l =
-        std::make_unique<PointEval<dim>>(*mapping_info_cells[0], reference_finite_element_vel);
+        std::make_unique<PointEval<dim>>(*mapping_info_cells[0],
+                                         reference_finite_element_vel,
+                                         0 /*selected component*/,
+                                         true /*force_lexicographic_numbering*/);
 
-    PointEval eval_interface_l(mapping_info_surface, reference_finite_element_heat);
+    PointEval                    eval_interface_l(mapping_info_surface,
+                               reference_finite_element_heat,
+                               0 /*selected component*/,
+                               true /*force_lexicographic_numbering*/);
     std::unique_ptr<PointEval<>> T_eval_interface_l;
     if (evapor_cooling)
-      T_eval_interface_l = std::make_unique<PointEval<>>(eval_interface_l);
+      T_eval_interface_l = std::make_unique<PointEval<>>(mapping_info_surface,
+                                                         reference_finite_element_heat,
+                                                         0 /*selected component*/,
+                                                         true /*force_lexicographic_numbering*/);
 
     std::unique_ptr<DomainEval<>>   T_eval_intersected_g;
     std::unique_ptr<PointEval<>>    eval_subdomain_g;
@@ -1973,17 +2081,29 @@ namespace MeltPoolDG::Heat
               heat_quad_idx /*quad_no*/,
               1 /*selected component*/,
               CutUtil::CellCategory::intersected /*active_fe_index*/);
-            T_eval_interface_g = std::make_unique<PointEval<>>(eval_interface_l);
+            T_eval_interface_g =
+              std::make_unique<PointEval<>>(mapping_info_surface,
+                                            reference_finite_element_heat,
+                                            0 /*selected component*/,
+                                            true /*force_lexicographic_numbering*/);
           }
 
-        eval_subdomain_g =
-          std::make_unique<PointEval<>>(*mapping_info_cells[1], reference_finite_element_heat);
+        eval_subdomain_g = std::make_unique<PointEval<>>(*mapping_info_cells[1],
+                                                         reference_finite_element_heat,
+                                                         0 /*selected component*/,
+                                                         true /*force_lexicographic_numbering*/);
 
         if (vel_eval)
           vel_eval_subdomain_g =
-            std::make_unique<PointEval<dim>>(*mapping_info_cells[1], reference_finite_element_vel);
+            std::make_unique<PointEval<dim>>(*mapping_info_cells[1],
+                                             reference_finite_element_vel,
+                                             0 /*selected component*/,
+                                             true /*force_lexicographic_numbering*/);
 
-        eval_interface_g = std::make_unique<PointEval<>>(eval_interface_l);
+        eval_interface_g = std::make_unique<PointEval<>>(mapping_info_surface,
+                                                         reference_finite_element_heat,
+                                                         0 /*selected component*/,
+                                                         true /*force_lexicographic_numbering*/);
       }
 
     unsigned int old_cell_batch = dealii::numbers::invalid_unsigned_int;
