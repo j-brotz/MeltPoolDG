@@ -13,9 +13,11 @@
 #include <meltpooldg/heat/laser_operation.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
+#include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/material.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
+#include <functional>
 #include <memory>
 
 #include "heat_transfer_case.hpp"
@@ -68,6 +70,11 @@ namespace MeltPoolDG::Heat
 
     std::shared_ptr<LaserOperation<dim, number>> laser_operation;
 
+    // AMR
+    AMR::MarkCellsForRefinementType<dim>                 mark_cells_for_refinement = {};
+    AMR::AttachDoFHandlerAndVectorsType<dim, VectorType> attach_vectors_for_amr    = {};
+    std::function<void()>                                amr_post                  = {};
+
   public:
     HeatTransferApplication(std::unique_ptr<CaseType> simulation_case)
       : simulation_case(std::move(simulation_case))
@@ -106,6 +113,6 @@ namespace MeltPoolDG::Heat
      *  perform adaptive mesh refinement
      */
     void
-    refine_mesh();
+    refine_mesh(const bool is_initial_solution = false);
   };
 } // namespace MeltPoolDG::Heat

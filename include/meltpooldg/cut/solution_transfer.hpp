@@ -11,6 +11,8 @@
 
 #include <deal.II/non_matching/mesh_classifier.h>
 
+#include <meltpooldg/utilities/amr.hpp>
+
 #include <functional>
 #include <utility>
 #include <vector>
@@ -35,33 +37,27 @@ namespace MeltPoolDG::CutUtil
      * interface position. New DoFs are ghost-penalty extrapolated.
      */
     void
-    reinit(dealii::DoFHandler<dim>                        &cut_dof_handler,
-           dealii::Triangulation<dim>                     &tria,
-           const VectorType                               &cut_solution,
-           const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
-           const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
-           const std::function<void(VectorType &)>        &reinit_cut_vector,
-           const std::function<void()>                    &setup_dof_system,
-           const std::function<
-             void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                                        std::function<void(std::vector<VectorType *> &)>>> &)>
-             &attach_vectors = {});
+    reinit(dealii::DoFHandler<dim>                                    &cut_dof_handler,
+           dealii::Triangulation<dim>                                 &tria,
+           const VectorType                                           &cut_solution,
+           const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier_old,
+           const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier,
+           const std::function<void(VectorType &)>                    &reinit_cut_vector,
+           const std::function<void()>                                &setup_dof_system,
+           const AMR::AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors = {});
 
     /**
      * Same as above but with multiple cut solution vectors given by @param cut_solutions
      */
     void
-    reinit(dealii::DoFHandler<dim>                        &cut_dof_handler,
-           dealii::Triangulation<dim>                     &tria,
-           const std::vector<const VectorType *>          &cut_solutions,
-           const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
-           const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
-           const std::function<void(VectorType &)>        &reinit_cut_vector,
-           const std::function<void()>                    &setup_dof_system,
-           const std::function<
-             void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                                        std::function<void(std::vector<VectorType *> &)>>> &)>
-             &attach_vectors = {});
+    reinit(dealii::DoFHandler<dim>                                    &cut_dof_handler,
+           dealii::Triangulation<dim>                                 &tria,
+           const std::vector<const VectorType *>                      &cut_solutions,
+           const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier_old,
+           const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier,
+           const std::function<void(VectorType &)>                    &reinit_cut_vector,
+           const std::function<void()>                                &setup_dof_system,
+           const AMR::AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors = {});
 
     /**
      * Getter functions for the transferred solution.
@@ -104,17 +100,14 @@ namespace MeltPoolDG::CutUtil
      */
     void
     transfer_solution_constant_dofs(
-      dealii::DoFHandler<dim>                        &cut_dof_handler,
-      dealii::Triangulation<dim>                     &tria,
-      const std::vector<const VectorType *>          &cut_solutions,
-      const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier_old,
-      const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
-      const std::function<void(VectorType &)>        &reinit_cut_vector,
-      const std::function<void()>                    &setup_dof_system,
-      const std::function<
-        void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                                   std::function<void(std::vector<VectorType *> &)>>> &)>
-        &attach_vectors = {});
+      dealii::DoFHandler<dim>                                    &cut_dof_handler,
+      dealii::Triangulation<dim>                                 &tria,
+      const std::vector<const VectorType *>                      &cut_solutions,
+      const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier_old,
+      const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier,
+      const std::function<void(VectorType &)>                    &reinit_cut_vector,
+      const std::function<void()>                                &setup_dof_system,
+      const AMR::AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors = {});
 
     /**
      * Mark the unknown DoFs, which need to be ghost-penalty extrapolated.

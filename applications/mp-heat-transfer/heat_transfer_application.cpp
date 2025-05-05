@@ -21,18 +21,17 @@
 
 #include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/cut/amr.hpp>
 #include <meltpooldg/heat/heat_cut_operation.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/heat_diffuse_operation.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
-#include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/material_data.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
-#include <functional>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -42,8 +41,6 @@
 
 namespace MeltPoolDG::Heat
 {
-  using namespace dealii;
-
   template <int dim, typename number>
   void
   HeatTransferApplication<dim, number>::run()
@@ -120,7 +117,7 @@ namespace MeltPoolDG::Heat
             // ... and output the results to vtk files.
             output_results(false /* output_not_converged */);
 
-            if (simulation_case->parameters.amr.do_amr)
+            if (simulation_case->parameters.amr.do_amr and not time_iterator->is_finished())
               refine_mesh();
           }
       }
@@ -131,7 +128,7 @@ namespace MeltPoolDG::Heat
       }
     catch (const dealii::SolverControl::NoConvergence &e)
       {
-        output_results(false /* output_not_converged */);
+        output_results(true /* output_not_converged */);
         AssertThrow(false, e);
       }
     Journal::print_end(scratch_data->get_pcout(1));
@@ -142,23 +139,16 @@ namespace MeltPoolDG::Heat
   HeatTransferApplication<dim, number>::initialize()
   {
     const auto &param = simulation_case->parameters;
-    /*
-     *  setup DoFHandler
-     */
+
     dof_handler.reinit(*simulation_case->triangulation);
     dof_handler_velocity.reinit(*simulation_case->triangulation);
     dof_handler_level_set.reinit(*simulation_case->triangulation);
-    /*
-     *  setup scratch data
-     */
+
     scratch_data = std::make_shared<ScratchData<dim, dim, number>>(
       simulation_case->mpi_communicator,
       simulation_case->parameters.base.verbosity_level,
       /*do_matrix_free*/ true);
 
-    /*
-     *  setup mapping
-     */
     scratch_data->set_mapping(FiniteElementUtils::create_mapping<dim>(param.heat.fe));
 
     scratch_data->attach_dof_handler(dof_handler); // heat_dirichlet_constraints
@@ -166,28 +156,16 @@ namespace MeltPoolDG::Heat
     scratch_data->attach_dof_handler(dof_handler_velocity);
     scratch_data->attach_dof_handler(dof_handler_level_set);
 
-    /*
-     * attach constraints
-     */
     heat_dof_idx       = scratch_data->attach_constraint_matrix(heat_dirichlet_constraints);
     heat_no_bc_dof_idx = scratch_data->attach_constraint_matrix(heat_hanging_nodes_constraints);
     velocity_dof_idx   = scratch_data->attach_constraint_matrix(velocity_hanging_nodes_constraints);
     level_set_dof_idx = scratch_data->attach_constraint_matrix(level_set_hanging_nodes_constraints);
 
-    /*
-     *  create quadrature rule
-     */
     heat_quad_idx =
       scratch_data->attach_quadrature(FiniteElementUtils::create_quadrature<dim>(param.heat.fe));
 
-    /*
-     *  initialize the time stepping scheme
-     */
     time_iterator = std::make_shared<TimeIterator<number>>(param.time_stepping);
 
-    /*
-     * laser operation
-     */
     if (param.laser.power > 0.0)
       {
         laser_operation = std::make_shared<LaserOperation<dim, number>>(
@@ -205,9 +183,7 @@ namespace MeltPoolDG::Heat
         laser_operation->reset(param.time_stepping.start_time);
       }
 
-    /*
-     *    set velocity field
-     */
+    // set velocity field
     VectorType *velocity_ptr = nullptr;
     velocity_field_function  = simulation_case->get_field_function("prescribed_velocity",
                                                                   "heat_transfer",
@@ -215,21 +191,21 @@ namespace MeltPoolDG::Heat
     if (velocity_field_function)
       velocity_ptr = &velocity;
 
-    /*
-     *    initialize the heat operation class
-     */
+    // set level-set as heaviside field
+    VectorType *level_set_as_heaviside_ptr = nullptr;
+    heaviside_field_function               = simulation_case->get_initial_condition(
+      "prescribed_heaviside",
+      param.laser.model != LaserModelType::RTE /*is_optional if laser is not RTE*/ or
+        not(param.amr.do_amr and
+            param.application_specific_parameters.amr_strategy == AMRStrategy::generic));
+    if (heaviside_field_function)
+      level_set_as_heaviside_ptr = &level_set_as_heaviside;
+
+    // initialize the heat operation class
     switch (param.heat.operator_type)
       {
           case TwoPhaseOperatorType::diffuse: {
             heat_continuous_no_bc_dof_idx = heat_no_bc_dof_idx;
-
-            // set level-set as heaviside field
-            VectorType *level_set_as_heaviside_ptr = nullptr;
-            heaviside_field_function               = simulation_case->get_initial_condition(
-              "prescribed_heaviside",
-              param.laser.model != LaserModelType::RTE /*is_optional if laser is not RTE*/);
-            if (heaviside_field_function)
-              level_set_as_heaviside_ptr = &level_set_as_heaviside;
 
             // initialize (diffuse) material class
             material = std::make_shared<Material<number>>(
@@ -304,11 +280,12 @@ namespace MeltPoolDG::Heat
             // before the CutFEM operation can distribute dofs, the mesh must be classified
             // according to the level set indicator
             {
-              Assert(level_set_field_function != nullptr, ExcInternalError());
+              Assert(level_set_field_function != nullptr, dealii::ExcInternalError());
               FiniteElementUtils::distribute_dofs<dim, 1>(simulation_case->parameters.base.fe,
                                                           dof_handler_level_set);
-              IndexSet locally_relevant_dofs;
-              DoFTools::extract_locally_relevant_dofs(dof_handler_level_set, locally_relevant_dofs);
+              dealii::IndexSet locally_relevant_dofs;
+              dealii::DoFTools::extract_locally_relevant_dofs(dof_handler_level_set,
+                                                              locally_relevant_dofs);
               level_set.reinit(dof_handler_level_set.locally_owned_dofs(),
                                locally_relevant_dofs,
                                dof_handler_level_set.get_communicator());
@@ -337,9 +314,6 @@ namespace MeltPoolDG::Heat
 
     heat_operation->set_initial_condition(*simulation_case->get_initial_condition("heat_transfer"));
 
-    /*
-     *  initialize postprocessor
-     */
     post_processor =
       std::make_shared<Postprocessor<dim, number>>(scratch_data->get_mpi_comm(heat_dof_idx),
                                                    param.output,
@@ -347,43 +321,120 @@ namespace MeltPoolDG::Heat
                                                    scratch_data->get_mapping(),
                                                    scratch_data->get_triangulation(heat_dof_idx),
                                                    scratch_data->get_pcout(2));
-    /*
-     *    Do initial refinement steps if requested
-     */
+
+    // setup AMR specific functions
+    if (param.amr.do_amr)
+      {
+        mark_cells_for_refinement = [this](dealii::Triangulation<dim> &tria) -> bool {
+          dealii::Vector<float> estimated_error_per_cell(
+            simulation_case->triangulation->n_active_cells());
+
+          switch (simulation_case->parameters.application_specific_parameters.amr_strategy)
+            {
+                case AMRStrategy::KellyErrorEstimator: {
+                  VectorType locally_relevant_solution;
+                  locally_relevant_solution.reinit(scratch_data->get_partitioner(heat_dof_idx));
+                  locally_relevant_solution.copy_locally_owned_data_from(
+                    heat_operation->get_temperature());
+                  scratch_data->get_constraint(heat_dof_idx).distribute(locally_relevant_solution);
+                  locally_relevant_solution.update_ghost_values();
+
+                  dealii::KellyErrorEstimator<dim>::estimate(
+                    scratch_data->get_mapping(),
+                    scratch_data->get_dof_handler(heat_dof_idx),
+                    scratch_data->get_face_quadrature(heat_quad_idx),
+                    {}, // neumann bc
+                    locally_relevant_solution,
+                    estimated_error_per_cell);
+                  break;
+                }
+                case AMRStrategy::generic: {
+                  VectorType locally_relevant_solution;
+                  locally_relevant_solution.reinit(
+                    scratch_data->get_partitioner(level_set_dof_idx));
+
+                  locally_relevant_solution.copy_locally_owned_data_from(level_set_as_heaviside);
+
+                  for (unsigned int i = 0; i < locally_relevant_solution.locally_owned_size(); ++i)
+                    locally_relevant_solution.local_element(i) =
+                      1.0 - dealii::Utilities::fixed_power<2>(
+                              2.0 * locally_relevant_solution.local_element(i) - 1.0);
+
+                  locally_relevant_solution.update_ghost_values();
+
+                  dealii::VectorTools::integrate_difference(dof_handler_level_set,
+                                                            locally_relevant_solution,
+                                                            dealii::Functions::ZeroFunction<dim>(),
+                                                            estimated_error_per_cell,
+                                                            scratch_data->get_quadrature(
+                                                              heat_dof_idx),
+                                                            dealii::VectorTools::L2_norm);
+                  break;
+                }
+              default:
+                AssertThrow(false, dealii::ExcNotImplemented());
+            }
+
+          dealii::parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
+            tria,
+            estimated_error_per_cell,
+            simulation_case->parameters.amr.upper_perc_to_refine,
+            simulation_case->parameters.amr.lower_perc_to_coarsen);
+
+          return true;
+        };
+
+        attach_vectors_for_amr = [this](AMR::DoFHandlerAndVectorDataType<dim, VectorType> &data) {
+          data.emplace_back(&dof_handler, [&](std::vector<VectorType *> &vectors) {
+            heat_operation->attach_vectors(vectors);
+          });
+          data.emplace_back(&dof_handler_level_set, [&](std::vector<VectorType *> &) {
+            // We must attach the level set dof handler for CutUtil::refine_grid() but we don't
+            // attach any vectors since after AMR, they are interpolated from the field function
+            // anyway.
+          });
+          if (laser_operation)
+            laser_operation->attach_vectors(data);
+        };
+
+        amr_post = [this] {
+          heat_operation->distribute_constraints();
+
+          if (velocity_field_function)
+            compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
+          if (heaviside_field_function)
+            compute_field_vector(level_set_as_heaviside,
+                                 level_set_dof_idx,
+                                 *heaviside_field_function);
+          if (level_set_field_function)
+            compute_field_vector(level_set, level_set_dof_idx, *level_set_field_function);
+          if (laser_operation)
+            laser_operation->distribute_constraints();
+        };
+      }
+
+    // Do initial refinement steps if requested
     if (param.amr.do_amr and param.amr.n_initial_refinement_cycles > 0)
       for (int i = 0; i < param.amr.n_initial_refinement_cycles; ++i)
         {
           std::ostringstream str;
           str << " #dofs T: " << heat_operation->get_temperature().size();
           Journal::print_line(scratch_data->get_pcout(1), str.str(), "heat_transfer");
-          refine_mesh();
-          /*
-           *  set initial conditions after initial AMR
-           */
-          heat_operation->set_initial_condition(
-            *simulation_case->get_initial_condition("heat_transfer"));
+          refine_mesh(true /* is_inital_solution */);
         }
-    /*
-     *  output results of initialization
-     */
+
     output_results(false /* output_not_converged */);
   }
 
 
   template <int dim, typename number>
   void
-  HeatTransferApplication<dim, number>::compute_field_vector(VectorType        &vector,
-                                                             const unsigned int dof_idx,
-                                                             Function<dim>     &field_function)
+  HeatTransferApplication<dim, number>::compute_field_vector(VectorType            &vector,
+                                                             const unsigned int     dof_idx,
+                                                             dealii::Function<dim> &field_function)
   {
     scratch_data->initialize_dof_vector(vector, dof_idx);
-    /*
-     *  set the current time to the advection field function
-     */
     field_function.set_time(time_iterator->get_current_time());
-    /*
-     *  interpolate the values of the advection velocity
-     */
     dealii::VectorTools::interpolate(scratch_data->get_mapping(),
                                      scratch_data->get_dof_handler(dof_idx),
                                      field_function,
@@ -405,13 +456,8 @@ namespace MeltPoolDG::Heat
     if (laser_operation)
       laser_operation->distribute_dofs(simulation_case->parameters.heat.fe);
 
-    /*
-     *  create partitioning
-     */
     scratch_data->create_partitioning();
-    /*
-     *  create AffineConstraints
-     */
+
     Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
                                         simulation_case->get_periodic_bc(),
                                         velocity_dof_idx);
@@ -426,7 +472,7 @@ namespace MeltPoolDG::Heat
 
     {
       const bool enable_inner_face_loops =
-        (simulation_case->parameters.heat.operator_type == TwoPhaseOperatorType::cut) or
+        simulation_case->parameters.heat.operator_type == TwoPhaseOperatorType::cut or
         (laser_operation and
          (simulation_case->parameters.laser.model ==
             LaserModelType::interface_projection_sharp_conforming or
@@ -466,7 +512,6 @@ namespace MeltPoolDG::Heat
     if (simulation_case->parameters.output.do_user_defined_postprocessing)
       simulation_case->do_postprocessing(generic_data_out);
 
-    // postprocessing
     post_processor->process(n_time_step,
                             generic_data_out,
                             time,
@@ -481,31 +526,24 @@ namespace MeltPoolDG::Heat
   {
     heat_operation->attach_output_vectors(data_out);
 
-    /**
-     *  prescribed velocity
-     */
+    // prescribed velocity
     if (velocity_field_function)
       {
-        std::vector<DataComponentInterpretation::DataComponentInterpretation>
-          vector_component_interpretation(dim,
-                                          DataComponentInterpretation::component_is_part_of_vector);
+        std::vector<dealii::DataComponentInterpretation::DataComponentInterpretation>
+          vector_component_interpretation(
+            dim, dealii::DataComponentInterpretation::component_is_part_of_vector);
 
         data_out.add_data_vector(dof_handler_velocity,
                                  velocity,
                                  std::vector<std::string>(dim, "velocity"),
                                  vector_component_interpretation);
       }
-    /**
-     *  prescribed heaviside
-     */
+    // prescribed heaviside
     if (heaviside_field_function)
       data_out.add_data_vector(dof_handler_level_set, level_set_as_heaviside, "heaviside");
-    /**
-     *  prescribed level set
-     */
+    // prescribed level set
     if (level_set_field_function)
       data_out.add_data_vector(dof_handler_level_set, level_set, "level_set");
-
 
     if (laser_operation)
       laser_operation->attach_output_vectors(data_out);
@@ -513,95 +551,57 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferApplication<dim, number>::refine_mesh()
+  HeatTransferApplication<dim, number>::refine_mesh(const bool is_inital_solution)
   {
-    const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
-      Vector<float> estimated_error_per_cell(simulation_case->triangulation->n_active_cells());
+    AMR::AttachDoFHandlerAndVectorsType<dim, VectorType> attach_vectors;
+    std::function<void()>                                post;
+    if (is_inital_solution)
+      {
+        attach_vectors = {};
+        post           = [this] {
+          this->amr_post();
+          // set initial conditions after initial AMR
+          heat_operation->set_initial_condition(
+            *simulation_case->get_initial_condition("heat_transfer"));
+        };
+      }
+    else
+      {
+        attach_vectors = attach_vectors_for_amr;
+        post           = [this] { this->amr_post(); };
+      }
 
-      switch (simulation_case->parameters.application_specific_parameters.amr_strategy)
-        {
-            case AMRStrategy::KellyErrorEstimator: {
-              VectorType locally_relevant_solution;
-              locally_relevant_solution.reinit(scratch_data->get_partitioner(heat_dof_idx));
-              locally_relevant_solution.copy_locally_owned_data_from(
-                heat_operation->get_temperature());
-              scratch_data->get_constraint(heat_dof_idx).distribute(locally_relevant_solution);
-              locally_relevant_solution.update_ghost_values();
-
-              KellyErrorEstimator<dim>::estimate(scratch_data->get_mapping(),
-                                                 scratch_data->get_dof_handler(heat_dof_idx),
-                                                 scratch_data->get_face_quadrature(heat_quad_idx),
-                                                 {}, // neumann bc
-                                                 locally_relevant_solution,
-                                                 estimated_error_per_cell);
-              break;
-            }
-            case AMRStrategy::generic: {
-              VectorType locally_relevant_solution;
-              locally_relevant_solution.reinit(scratch_data->get_partitioner(level_set_dof_idx));
-
-              locally_relevant_solution.copy_locally_owned_data_from(level_set_as_heaviside);
-
-              for (unsigned int i = 0; i < locally_relevant_solution.locally_owned_size(); ++i)
-                locally_relevant_solution.local_element(i) =
-                  (1.0 - Utilities::fixed_power<2>(
-                           2.0 * locally_relevant_solution.local_element(i) - 1.0));
-
-              locally_relevant_solution.update_ghost_values();
-
-              dealii::VectorTools::integrate_difference(dof_handler_level_set,
-                                                        locally_relevant_solution,
-                                                        Functions::ZeroFunction<dim>(),
-                                                        estimated_error_per_cell,
-                                                        scratch_data->get_quadrature(heat_dof_idx),
-                                                        dealii::VectorTools::L2_norm);
-              break;
-            }
-          default:
-            AssertThrow(false, ExcNotImplemented());
-        }
-
-      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
-        tria,
-        estimated_error_per_cell,
-        simulation_case->parameters.amr.upper_perc_to_refine,
-        simulation_case->parameters.amr.lower_perc_to_coarsen);
-
-      return true;
-    };
-
-    const auto attach_vectors =
-      [&](std::vector<std::pair<const DoFHandler<dim> *,
-                                std::function<void(std::vector<VectorType *> &)>>> &data) {
-        data.emplace_back(&dof_handler, [&](std::vector<VectorType *> &vectors) {
-          heat_operation->attach_vectors(vectors);
-        });
-        if (laser_operation)
-          laser_operation->attach_vectors(data);
-      };
-
-    const auto post = [&]() {
-      heat_operation->distribute_constraints();
-
-      if (velocity_field_function)
-        compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
-      if (heaviside_field_function)
-        compute_field_vector(level_set_as_heaviside, level_set_dof_idx, *heaviside_field_function);
-      if (level_set_field_function)
-        compute_field_vector(level_set, level_set_dof_idx, *level_set_field_function);
-      if (laser_operation)
-        laser_operation->distribute_constraints();
-    };
-
-    const auto setup_dof_system = [&]() { this->setup_dof_system(); };
-
-    AMR::refine_grid<dim, VectorType>(mark_cells_for_refinement,
-                                      attach_vectors,
-                                      post,
-                                      setup_dof_system,
-                                      simulation_case->parameters.amr,
-                                      *simulation_case->triangulation,
-                                      time_iterator->get_current_time_step_number());
+    if (simulation_case->parameters.heat.operator_type != TwoPhaseOperatorType::cut)
+      AMR::refine_grid<dim, VectorType>(
+        mark_cells_for_refinement,
+        attach_vectors,
+        post,
+        [this] { this->setup_dof_system(); },
+        simulation_case->parameters.amr,
+        *simulation_case->triangulation,
+        time_iterator->get_current_time_step_number());
+    else
+      CutUtil::refine_grid<dim, VectorType>(
+        mark_cells_for_refinement,
+        attach_vectors,
+        post,
+        [this, is_inital_solution] {
+          FiniteElementUtils::distribute_dofs<dim, 1>(simulation_case->parameters.base.fe,
+                                                      dof_handler_level_set);
+          level_set.reinit(dof_handler_level_set.locally_owned_dofs(),
+                           dealii::DoFTools::extract_locally_relevant_dofs(dof_handler_level_set),
+                           dof_handler_level_set.get_communicator());
+          if (is_inital_solution)
+            dealii::VectorTools::interpolate(scratch_data->get_mapping(),
+                                             dof_handler_level_set,
+                                             *level_set_field_function,
+                                             level_set);
+        },
+        &dof_handler_level_set,
+        [this] { this->setup_dof_system(); },
+        simulation_case->parameters.amr,
+        *simulation_case->triangulation,
+        time_iterator->get_current_time_step_number());
   }
 
   template class HeatTransferApplication<1, double>;

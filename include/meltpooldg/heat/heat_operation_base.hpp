@@ -2,8 +2,6 @@
 
 #include <deal.II/base/function.h>
 
-#include <deal.II/dofs/dof_handler.h>
-
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
