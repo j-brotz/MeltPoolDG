@@ -2,6 +2,7 @@
 
 #include <meltpooldg/level_set/curvature_operator.hpp>
 #include <meltpooldg/level_set/normal_vector_operator.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
@@ -220,8 +221,7 @@ namespace MeltPoolDG::LevelSet
                 if constexpr (dim > 1)
                   {
                     const Tensor<1, dim, VectorizedArray<number>> n_phi =
-                      MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_dof_value(i),
-                                                              tolerance_normal_vector);
+                      normalize<dim>(normal_vector.get_dof_value(i), tolerance_normal_vector);
                     normal_vector.submit_dof_value(n_phi, i);
                   }
                 else

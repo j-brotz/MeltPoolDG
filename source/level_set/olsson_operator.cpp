@@ -2,8 +2,8 @@
 
 #include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/level_set/olsson_operator.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
-#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <cmath>
 
@@ -191,8 +191,7 @@ namespace MeltPoolDG::LevelSet
               {
                 const scalar                                  val = psi_old.get_value(q_index);
                 const Tensor<1, dim, VectorizedArray<number>> n_phi =
-                  MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
-                                                          tolerance_normal_vector);
+                  normalize<dim>(normal_vector.get_value(q_index), tolerance_normal_vector);
                 unit_normal[cell * rhs.n_q_points + q_index] = n_phi;
 
                 rhs.submit_gradient(this->time_increment * compressive_flux(val) * n_phi -

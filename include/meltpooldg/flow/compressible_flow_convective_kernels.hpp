@@ -4,10 +4,21 @@
 
 #pragma once
 
+#include <deal.II/base/config.h>
+
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/vectorization.h>
+
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
+
+#include <algorithm>
+#include <cmath>
+#include <utility>
+
 
 namespace MeltPoolDG::Flow
 {
@@ -164,16 +175,18 @@ namespace MeltPoolDG::Flow
               0.5 * std::sqrt(std::max(velocity_p.norm_square() + sound_speed_p2,
                                        velocity_m.norm_square() + sound_speed_m2));
 
-            return UtilityFunctions::contract_average_tensor_with_vector<dim + 2, dim, number>(
-                     flux_m, flux_p, normal) +
+            return contract_average_tensor_with_vector<dim + 2, dim, number>(flux_m,
+                                                                             flux_p,
+                                                                             normal) +
                    0.5 * lambda * (u_m - u_p);
           }
           case NumericalFluxType::lax_friedrichs_exact: {
             const auto lambda = std::max(std::abs(velocity_p * normal) + sound_speed_p,
                                          std::abs(velocity_m * normal) + sound_speed_m);
 
-            return UtilityFunctions::contract_average_tensor_with_vector<dim + 2, dim, number>(
-                     flux_m, flux_p, normal) +
+            return contract_average_tensor_with_vector<dim + 2, dim, number>(flux_m,
+                                                                             flux_p,
+                                                                             normal) +
                    0.5 * lambda * (u_m - u_p);
           }
           case NumericalFluxType::harten_lax_vanleer: {
@@ -187,11 +200,8 @@ namespace MeltPoolDG::Flow
               dealii::VectorizedArray<number>(1.) / (s_pos - s_neg);
 
             return inverse_s *
-                   ((s_pos *
-                       UtilityFunctions::contract_tensor_with_vector<dim + 2, dim, number>(flux_m,
-                                                                                           normal) -
-                     s_neg * UtilityFunctions::contract_tensor_with_vector<dim + 2, dim, number>(
-                               flux_p, normal)) -
+                   (s_pos * contract_tensor_with_vector<dim + 2, dim, number>(flux_m, normal) -
+                    s_neg * contract_tensor_with_vector<dim + 2, dim, number>(flux_p, normal) -
                     s_pos * s_neg * (u_m - u_p));
           }
           default: {
@@ -264,22 +274,22 @@ namespace MeltPoolDG::Flow
     //** change in momentum flux **//
     dealii::Tensor<1, dim, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>> helper;
     // density direction
-    helper -=
-      rho_inv * rho_inv * delta_w_q[0] *
-      VectorTools::dyadic_product<dim, dim, dealii::VectorizedArray<number>>(w_q.begin_raw() + 1,
-                                                                             w_q.begin_raw() + 1);
+    helper -= rho_inv * rho_inv * delta_w_q[0] *
+              dyadic_product<dim, dim, dealii::VectorizedArray<number>>(w_q.begin_raw() + 1,
+                                                                        w_q.begin_raw() + 1);
     helper += rho_inv * rho_inv * rs_div_c * momentum_norm_squared * delta_w_q[0] * 0.5 *
-              VectorTools::identity<dim, dealii::VectorizedArray<number>>();
+              identity<dim, dealii::VectorizedArray<number>>();
     // momentum direction
-    helper += rho_inv * VectorTools::dyadic_product<dim, dim, dealii::VectorizedArray<number>>(
-                          delta_w_q.begin_raw() + 1, w_q.begin_raw() + 1);
-    helper += rho_inv * VectorTools::dyadic_product<dim, dim, dealii::VectorizedArray<number>>(
-                          w_q.begin_raw() + 1, delta_w_q.begin_raw() + 1);
-    helper -= rs_div_c * rho_inv * momentum_times_delta_momentum_squared *
-              VectorTools::identity<dim, dealii::VectorizedArray<number>>();
-    // energy direction
     helper +=
-      rs_div_c * delta_w_q[dim + 1] * VectorTools::identity<dim, dealii::VectorizedArray<number>>();
+      rho_inv * dyadic_product<dim, dim, dealii::VectorizedArray<number>>(delta_w_q.begin_raw() + 1,
+                                                                          w_q.begin_raw() + 1);
+    helper += rho_inv *
+              dyadic_product<dim, dim, dealii::VectorizedArray<number>>(w_q.begin_raw() + 1,
+                                                                        delta_w_q.begin_raw() + 1);
+    helper -= rs_div_c * rho_inv * momentum_times_delta_momentum_squared *
+              identity<dim, dealii::VectorizedArray<number>>();
+    // energy direction
+    helper += rs_div_c * delta_w_q[dim + 1] * identity<dim, dealii::VectorizedArray<number>>();
 
     for (unsigned int i = 0; i < dim; ++i)
       {
@@ -394,30 +404,30 @@ namespace MeltPoolDG::Flow
     switch (flow_data.linearization_jump_convective_flux)
       {
           case LinearizedConvectiveFluxJumpType::complete_fd: {
-            flux -= VectorTools::dyadic_product(
-              0.5 * epsilon_inv * compute_lambda_times_jump(w_p, w_m, w_p, w_m, normal), normal);
-            flux +=
-              VectorTools::dyadic_product(0.5 * epsilon_inv *
-                                            compute_lambda_times_jump(w_p + epsilon * delta_w_p,
-                                                                      w_m + epsilon * delta_w_m,
-                                                                      w_p + epsilon * delta_w_p,
-                                                                      w_m + epsilon * delta_w_m,
-                                                                      normal),
-                                          normal);
+            flux -= dyadic_product(0.5 * epsilon_inv *
+                                     compute_lambda_times_jump(w_p, w_m, w_p, w_m, normal),
+                                   normal);
+            flux += dyadic_product(0.5 * epsilon_inv *
+                                     compute_lambda_times_jump(w_p + epsilon * delta_w_p,
+                                                               w_m + epsilon * delta_w_m,
+                                                               w_p + epsilon * delta_w_p,
+                                                               w_m + epsilon * delta_w_m,
+                                                               normal),
+                                   normal);
             break;
           }
           case LinearizedConvectiveFluxJumpType::lambda_fd: {
-            flux += VectorTools::dyadic_product(
+            flux += dyadic_product(
               0.5 * compute_lambda_times_jump(w_p, w_m, delta_w_p, delta_w_m, normal), normal);
 
             auto helper = compute_lambda_times_jump(
               w_p + epsilon * delta_w_p, w_m + epsilon * delta_w_m, w_p, w_m, normal);
             helper -= compute_lambda_times_jump(w_p, w_m, w_p, w_m, normal);
-            flux += VectorTools::dyadic_product(0.5 / epsilon * helper, normal);
+            flux += dyadic_product(0.5 / epsilon * helper, normal);
             break;
           }
           case LinearizedConvectiveFluxJumpType::analytic: {
-            flux += VectorTools::dyadic_product(
+            flux += dyadic_product(
               0.5 * compute_lambda_times_jump(w_p, w_m, delta_w_p, delta_w_m, normal), normal);
 
             const auto linearize_speed_of_sound =

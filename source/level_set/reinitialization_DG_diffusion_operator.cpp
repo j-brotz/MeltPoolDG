@@ -1,7 +1,7 @@
 #include <meltpooldg/level_set/reinitialization_DG_diffusion_operator.hpp>
+//
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
-#include <meltpooldg/utilities/vector_tools.templates.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
 
 
 namespace MeltPoolDG::LevelSet
@@ -149,7 +149,7 @@ namespace MeltPoolDG::LevelSet
             if (reinit_data.reinitilization_DG_specific_data.use_directed_diffusion_stabilization)
               {
                 const Tensor<1, dim, VectorizedArray<number>> n_phi =
-                  MeltPoolDG::VectorTools::normalize<dim>(eval_normal.get_value(q), 1.0e-16);
+                  normalize<dim>(eval_normal.get_value(q), 1.0e-16);
                 auto const directed_diffusion_flux =
                   (diffusitivity_gradient * n_phi -
                    eval_curvature.get_value(q) * diffusitivity_value) *

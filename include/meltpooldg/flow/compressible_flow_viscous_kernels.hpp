@@ -4,8 +4,18 @@
 
 #pragma once
 
+#include <deal.II/base/config.h>
+
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/vectorization.h>
+
 #include <meltpooldg/flow/compressible_flow_data.hpp>
+#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
+
+#include <utility>
+
 
 namespace MeltPoolDG::Flow
 {
@@ -165,7 +175,7 @@ namespace MeltPoolDG::Flow
     const number dynamic_viscosity = is_gas_phase ? flow_data.material.gas.dynamic_viscosity :
                                                     flow_data.material.liquid.dynamic_viscosity;
 
-    const dealii::VectorizedArray<number> div_u = (2. / 3.) * trace(grad_u);
+    const dealii::VectorizedArray<number> div_u = 2. / 3. * dealii::trace(grad_u);
 
     dealii::Tensor<2, dim, dealii::VectorizedArray<number>> out;
     for (unsigned int d = 0; d < dim; ++d)
@@ -242,9 +252,7 @@ namespace MeltPoolDG::Flow
     const number reference_density = is_gas_phase ? flow_data.material.gas.reference_density :
                                                     flow_data.material.liquid.reference_density;
 
-    return UtilityFunctions::contract_average_tensor_with_vector<dim + 2, dim, number>(flux_m,
-                                                                                       flux_p,
-                                                                                       normal) -
+    return contract_average_tensor_with_vector<dim + 2, dim, number>(flux_m, flux_p, normal) -
            penalty_parameter * dynamic_viscosity / reference_density * (u_m - u_p);
   }
 
@@ -342,25 +350,23 @@ namespace MeltPoolDG::Flow
 
     dealii::Tensor<1, dim, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>> param_a =
       rho_inv * (-delta_w_q[0] * grad_v_q);
-    param_a += rho_inv * rho_inv * delta_w_q[0] * VectorTools::dyadic_product(v_q, grad_w_q[0]);
-    param_a -= rho_inv * VectorTools::dyadic_product(v_q, grad_delta_w_q[0]);
+    param_a += rho_inv * rho_inv * delta_w_q[0] * dyadic_product(v_q, grad_w_q[0]);
+    param_a -= rho_inv * dyadic_product(v_q, grad_delta_w_q[0]);
 
     dealii::Tensor<1, dim, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>> param_c =
       param_a;
-    param_c += VectorTools::transpose(param_a);
-    param_c -= 2. / 3. * VectorTools::trace(param_a) *
-               VectorTools::identity<dim, dealii::VectorizedArray<number>>();
+    param_c += transpose(param_a);
+    param_c -= 2. / 3. * trace(param_a) * identity<dim, dealii::VectorizedArray<number>>();
     param_c *= flow_data.material.gas.dynamic_viscosity;
 
     dealii::Tensor<1, dim, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>> param_b =
       rho_inv * grad_delta_m_q;
-    param_b -= rho_inv * rho_inv * VectorTools::dyadic_product(delta_m_q, grad_w_q[0]);
+    param_b -= rho_inv * rho_inv * dyadic_product(delta_m_q, grad_w_q[0]);
 
     dealii::Tensor<1, dim, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>> param_d =
       param_b;
-    param_d += VectorTools::transpose(param_b);
-    param_d -= 2. / 3. * VectorTools::trace(param_b) *
-               VectorTools::identity<dim, dealii::VectorizedArray<number>>();
+    param_d += transpose(param_b);
+    param_d -= 2. / 3. * trace(param_b) * identity<dim, dealii::VectorizedArray<number>>();
     param_d *= flow_data.material.gas.dynamic_viscosity;
 
 
@@ -378,42 +384,36 @@ namespace MeltPoolDG::Flow
         tau[i][j] = tau_temp[i][j];
     // density part
     dealii::Tensor<1, dim, dealii::VectorizedArray<number>> rho_energy_density;
-    rho_energy_density += VectorTools::matrix_vector_product(param_c, m_q) * rho_inv;
-    rho_energy_density -=
-      rho_inv * rho_inv * VectorTools::matrix_vector_product(tau, m_q) * delta_w_q[0];
+    rho_energy_density += matrix_vector_product(param_c, m_q) * rho_inv;
+    rho_energy_density -= rho_inv * rho_inv * matrix_vector_product(tau, m_q) * delta_w_q[0];
 
 
     rho_energy_density +=
-      lambda_div_c *
-      (-rho_inv * rho_inv * grad_w_q[dim + 1] * delta_w_q[0] +
-       rho_inv * rho_inv * rho_inv * w_q[dim + 1] * delta_w_q[0] * grad_w_q[0] +
-       grad_w_q[0] * w_q[dim + 1] * rho_inv * rho_inv * rho_inv * delta_w_q[0] -
-       w_q[dim + 1] * rho_inv * rho_inv * grad_delta_w_q[0] +
-       VectorTools::matrix_vector_product(grad_v_q, m_q) * rho_inv * rho_inv * delta_w_q[0]);
+      lambda_div_c * (-rho_inv * rho_inv * grad_w_q[dim + 1] * delta_w_q[0] +
+                      rho_inv * rho_inv * rho_inv * w_q[dim + 1] * delta_w_q[0] * grad_w_q[0] +
+                      grad_w_q[0] * w_q[dim + 1] * rho_inv * rho_inv * rho_inv * delta_w_q[0] -
+                      w_q[dim + 1] * rho_inv * rho_inv * grad_delta_w_q[0] +
+                      matrix_vector_product(grad_v_q, m_q) * rho_inv * rho_inv * delta_w_q[0]);
 
     rho_energy_density -=
       lambda_div_c * rho_inv * rho_inv *
-      (rho_inv * delta_w_q[0] *
-         VectorTools::matrix_vector_product(VectorTools::dyadic_product(v_q, grad_w_q[0]), m_q) -
-       VectorTools::matrix_vector_product(VectorTools::dyadic_product(v_q, grad_delta_w_q[0]),
-                                          m_q));
+      (rho_inv * delta_w_q[0] * matrix_vector_product(dyadic_product(v_q, grad_w_q[0]), m_q) -
+       matrix_vector_product(dyadic_product(v_q, grad_delta_w_q[0]), m_q));
 
 
-    rho_energy_density += lambda_div_c * rho_inv * rho_inv * delta_w_q[0] *
-                          VectorTools::matrix_vector_product(grad_v_q, m_q);
+    rho_energy_density +=
+      lambda_div_c * rho_inv * rho_inv * delta_w_q[0] * matrix_vector_product(grad_v_q, m_q);
 
 
     // momentum part
     dealii::Tensor<1, dim, dealii::VectorizedArray<number>> momentum_energy_density;
-    momentum_energy_density += rho_inv * VectorTools::matrix_vector_product(param_d, m_q);
-    momentum_energy_density += rho_inv * VectorTools::matrix_vector_product(tau, delta_m_q);
+    momentum_energy_density += rho_inv * matrix_vector_product(param_d, m_q);
+    momentum_energy_density += rho_inv * matrix_vector_product(tau, delta_m_q);
+    momentum_energy_density -= lambda_div_c * rho_inv * matrix_vector_product(grad_v_q, delta_m_q);
     momentum_energy_density -=
-      lambda_div_c * rho_inv * VectorTools::matrix_vector_product(grad_v_q, delta_m_q);
-    momentum_energy_density -=
-      lambda_div_c * rho_inv * rho_inv * VectorTools::matrix_vector_product(grad_delta_m_q, m_q);
-    momentum_energy_density +=
-      lambda_div_c * rho_inv * rho_inv * rho_inv *
-      VectorTools::matrix_vector_product(VectorTools::dyadic_product(delta_m_q, grad_w_q[0]), m_q);
+      lambda_div_c * rho_inv * rho_inv * matrix_vector_product(grad_delta_m_q, m_q);
+    momentum_energy_density += lambda_div_c * rho_inv * rho_inv * rho_inv *
+                               matrix_vector_product(dyadic_product(delta_m_q, grad_w_q[0]), m_q);
 
 
     // energy density part
@@ -437,10 +437,9 @@ namespace MeltPoolDG::Flow
         const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>   &normal,
         dealii::VectorizedArray<number> penalty_parameter) const -> ConservedVariablesGradType
   {
-    return VectorTools::matrix_matrix_product(
-      penalty_parameter * flow_data.material.gas.dynamic_viscosity /
-        flow_data.material.gas.reference_density *
-        VectorTools::identity<dim + 2, dealii::VectorizedArray<number>>(),
-      VectorTools::dyadic_product(delta_w_q.first - delta_w_q.second, normal));
+    return matrix_matrix_product(penalty_parameter * flow_data.material.gas.dynamic_viscosity /
+                                   flow_data.material.gas.reference_density *
+                                   identity<dim + 2, dealii::VectorizedArray<number>>(),
+                                 dyadic_product(delta_w_q.first - delta_w_q.second, normal));
   }
 } // namespace MeltPoolDG::Flow

@@ -3,6 +3,7 @@
 #include <meltpooldg/flow/compressible_flow_matrix_generator.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_implicit.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 namespace MeltPoolDG::Flow
@@ -591,12 +592,11 @@ namespace MeltPoolDG::Flow
     if (is_viscous)
       {
         const ConservedVariablesGradType jump =
-          VectorTools::dyadic_product(phi_m.get_value(q_index) - phi_p.get_value(q_index),
-                                      phi_m.normal_vector(q_index));
+          dyadic_product(phi_m.get_value(q_index) - phi_p.get_value(q_index),
+                         phi_m.normal_vector(q_index));
         const ConservedVariablesGradType delta_jump =
-          VectorTools::dyadic_product(delta_phi_m.get_value(q_index) -
-                                        delta_phi_p.get_value(q_index),
-                                      phi_m.normal_vector(q_index));
+          dyadic_product(delta_phi_m.get_value(q_index) - delta_phi_p.get_value(q_index),
+                         phi_m.normal_vector(q_index));
         const ConservedVariablesGradType grad_flux_m =
           viscous_terms.calculate_jacobian_viscous_flux(phi_m.get_value(q_index),
                                                         jump,
@@ -660,9 +660,9 @@ namespace MeltPoolDG::Flow
     if (is_viscous)
       {
         const ConservedVariablesGradType jump =
-          VectorTools::dyadic_product(w_m - w_p, phi_m.normal_vector(q_index));
+          dyadic_product(w_m - w_p, phi_m.normal_vector(q_index));
         const ConservedVariablesGradType delta_jump =
-          VectorTools::dyadic_product(delta_w_m - delta_w_p, phi_m.normal_vector(q_index));
+          dyadic_product(delta_w_m - delta_w_p, phi_m.normal_vector(q_index));
         const ConservedVariablesGradType grad_flux_m =
           viscous_terms.calculate_jacobian_viscous_flux(w_m, jump, delta_w_m, delta_jump);
         delta_phi_m.submit_gradient(-0.5 * residual_rhs_scaling_factor * grad_flux_m, q_index);

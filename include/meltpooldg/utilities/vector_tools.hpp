@@ -90,16 +90,6 @@ namespace MeltPoolDG::VectorTools
     return vec;
   }
 
-
-  template <int dim, typename number>
-  dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
-  normalize(const dealii::VectorizedArray<number> &in, const number zero = 1e-16);
-
-  template <int dim, typename number>
-  dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
-  normalize(const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &in,
-            const number                                                   zero = 1e-16);
-
   template <int dim, typename number, int n_components = dim>
   dealii::Tensor<1, n_components, dealii::VectorizedArray<number>>
   evaluate_function_at_vectorized_points(
@@ -187,61 +177,4 @@ namespace MeltPoolDG::VectorTools
   template <typename number, std::size_t width>
   dealii::VectorizedArray<number>
   tanh(const ::dealii::VectorizedArray<number, width> &x);
-
-  // TODO: Check performance when the functions below are inlined.
-  /**
-   * Compute the dyadic product of two rank-1 tensors passing a pointer to the start of the values
-   * of the two tensors.
-   */
-  template <int T1_dim, int T2_dim, typename number>
-  dealii::Tensor<1, T1_dim, dealii::Tensor<1, T2_dim, number>>
-  dyadic_product(const number *a_start, const number *b_start);
-
-  /**
-   * Compute the dyadic product of two rank-1 tensors
-   */
-  template <int T1_dim, int T2_dim, typename number>
-  dealii::Tensor<1, T1_dim, dealii::Tensor<1, T2_dim, number>>
-  dyadic_product(const dealii::Tensor<1, T1_dim, number> &a,
-                 const dealii::Tensor<1, T2_dim, number> &b);
-
-  /**
-   * Return the transpose of a dealii::Tensor<dealii::Tensor>
-   */
-  template <int T1_dim, int T2_dim, typename number>
-  dealii::Tensor<1, T2_dim, dealii::Tensor<1, T1_dim, number>>
-  transpose(const dealii::Tensor<1, T1_dim, dealii::Tensor<1, T2_dim, number>> &in);
-
-  /**
-   * Return the trace of a dealii::Tensor<dealii::Tensor>
-   */
-  template <int dim, typename number>
-  number
-  trace(const dealii::Tensor<1, dim, dealii::Tensor<1, dim, number>> &in);
-
-  template <int dim, typename number>
-  number
-  trace(const dealii::Tensor<2, dim, number> &in);
-
-  /**
-   * Return identity matrix
-   */
-  template <int dim, typename number>
-  dealii::Tensor<1, dim, dealii::Tensor<1, dim, number>>
-  identity();
-
-  /**
-   * Helper functions for matrix-vector and matrix-matrix computations when both matrix and vector
-   * are implemented as dealii::Tensor.
-   */
-  template <int n_rows, int n_columns, typename number>
-  dealii::Tensor<1, n_rows, number>
-  matrix_vector_product(
-    const dealii::Tensor<1, n_rows, dealii::Tensor<1, n_columns, number>> &matrix,
-    const dealii::Tensor<1, n_columns, number>                            &vector);
-
-  template <int a, int b, int c, typename number>
-  dealii::Tensor<1, a, dealii::Tensor<1, c, number>>
-  matrix_matrix_product(const dealii::Tensor<1, a, dealii::Tensor<1, b, number>> &matrix1,
-                        const dealii::Tensor<1, b, dealii::Tensor<1, c, number>> &matrix2);
 } // namespace MeltPoolDG::VectorTools

@@ -1,6 +1,6 @@
 #include <meltpooldg/level_set/curvature_DG_operation.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
-#include <meltpooldg/utilities/vector_tools.templates.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
 
 
 namespace MeltPoolDG::LevelSet
@@ -95,7 +95,7 @@ namespace MeltPoolDG::LevelSet
             if constexpr (dim > 1)
               {
                 const Tensor<1, dim, VectorizedArray<number>> n_phi =
-                  MeltPoolDG::VectorTools::normalize<dim>(eval_normal.get_dof_value(i), 1.0e-16
+                  normalize<dim>(eval_normal.get_dof_value(i), 1.0e-16
 
                   );
                 eval_normal.submit_dof_value(n_phi, i);

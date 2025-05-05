@@ -9,6 +9,7 @@
 #include <deal.II/matrix_free/evaluation_flags.h>
 
 #include <meltpooldg/cut/util.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/dof_tools.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
@@ -262,8 +263,8 @@ namespace MeltPoolDG::Flow
 
                 if (not temperature_eval.empty())
                   {
-                    const auto n = VectorTools::normalize<dim>(normal_vec_eval->get_value(q),
-                                                               tolerance_normal_vector);
+                    const auto n =
+                      normalize<dim>(normal_vec_eval->get_value(q), tolerance_normal_vector);
                     VectorizedArray<number>                                  T;
                     typename FECellIntegrator<dim, 1, number>::gradient_type grad_T;
                     switch (cut_type)

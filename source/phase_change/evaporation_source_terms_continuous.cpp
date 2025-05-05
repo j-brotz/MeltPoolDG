@@ -1,7 +1,7 @@
-#include <deal.II/lac/la_parallel_vector.h>
-
-#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/phase_change/evaporation_source_terms_continuous.hpp>
+//
+#include <meltpooldg/level_set/level_set_tools.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/dof_tools.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -190,8 +190,7 @@ namespace MeltPoolDG::Evaporation
         for (unsigned int q_index = 0; q_index < ls.n_q_points; ++q_index)
           {
             const auto n_phi =
-              MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index),
-                                                      tolerance_normal_vector);
+              normalize<dim>(normal_vec.get_value(q_index), tolerance_normal_vector);
 
             //              ρ
             // evaluate  ------
@@ -227,7 +226,7 @@ namespace MeltPoolDG::Evaporation
      * write interface velocity to dof vector
      */
     if (scratch_data.is_hex_mesh())
-      MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, dim>(
+      VectorTools::fill_dof_vector_from_cell_operation<dim, dim>(
         evaporation_velocity,
         scratch_data.get_matrix_free(),
         evapor_vel_dof_idx,

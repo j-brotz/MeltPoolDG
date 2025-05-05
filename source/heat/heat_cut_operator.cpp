@@ -175,7 +175,7 @@ namespace MeltPoolDG::Heat
       auto val = cv * evaluator.get_value(q);
 
       // convective heat flux
-      val += cv * dealii::scalar_product(velocity, flux_1);
+      val += cv * scalar_product(velocity, flux_1);
 
       // conductive heat flux
       auto grad = conductivity * flux_1;
@@ -186,7 +186,7 @@ namespace MeltPoolDG::Heat
 
           // temperature-dependent material parameters terms
           val += d_cv_d_T * T_eval->get_value(q) * evaluator.get_value(q);
-          val += d_cv_d_T * dealii::scalar_product(velocity, flux_2);
+          val += d_cv_d_T * scalar_product(velocity, flux_2);
           grad += d_conductivity_d_T * flux_2;
         }
 
@@ -220,7 +220,7 @@ namespace MeltPoolDG::Heat
       evaluator.submit_gradient((conductivity_new * flux_1 + conductivity_old * flux_2) * -1., q);
 
       // convective heat flux
-      val += dealii::scalar_product(velocity, cv_new * flux_1 + cv_old * flux_2);
+      val += scalar_product(velocity, cv_new * flux_1 + cv_old * flux_2);
 
       evaluator.submit_value(val * -1., q);
     }
