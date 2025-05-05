@@ -43,7 +43,7 @@ jobs:
           echo "Labels found: $LABELS"
 
           TEST_FILTER=""
-          for LABEL in mp-compressible-flow mp-advec-diff mp-heat-transfer mp-radiative-transport mp-reinit mp-level-set unit_tests; do
+          for LABEL in mp-compressible-flow mp-advec-diff mp-heat-transfer mp-radiative-transport mp-reinit mp-level-set mp-melt-pool unit_tests; do
             if echo "$LABELS" | grep -q "$LABEL"; then
               TEST_FILTER="${TEST_FILTER}${LABEL}|"
             fi
