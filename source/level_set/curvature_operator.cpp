@@ -1,10 +1,10 @@
 #include <deal.II/matrix_free/tools.h>
 
 #include <meltpooldg/level_set/curvature_operator.hpp>
+#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/normal_vector_operator.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
-#include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 namespace MeltPoolDG::LevelSet
 {
@@ -240,7 +240,7 @@ namespace MeltPoolDG::LevelSet
               {
                 const VectorizedArray<number> narrow_band_mask =
                   curvature_data.narrow_band.enable ?
-                    VectorTools::compute_mask_narrow_band<number>(
+                    Tools::compute_mask_narrow_band<number>(
                       level_set.get_value(q_index),
                       curvature_data.narrow_band.level_set_threshold) :
                     1.0;
@@ -354,8 +354,8 @@ namespace MeltPoolDG::LevelSet
     for (unsigned int q_index = 0; q_index < curv_vals.n_q_points; ++q_index)
       {
         const VectorizedArray<number> narrow_band_mask =
-          (curvature_data.narrow_band.enable) ?
-            VectorTools::compute_mask_narrow_band<number>(
+          curvature_data.narrow_band.enable ?
+            Tools::compute_mask_narrow_band<number>(
               level_set_vals.get_value(q_index), curvature_data.narrow_band.level_set_threshold) :
             1.0;
 

@@ -14,19 +14,6 @@
 
 namespace MeltPoolDG::VectorTools
 {
-  template <typename number>
-  dealii::VectorizedArray<number>
-  compute_mask_narrow_band(const dealii::VectorizedArray<number> &val,
-                           const number                           narrow_band_threshold)
-  {
-    dealii::VectorizedArray<number> indicator = 1.0;
-    for (unsigned int v = 0; v < dealii::VectorizedArray<number>::size(); ++v)
-      if (std::abs(val[v]) >= narrow_band_threshold)
-        indicator[v] = 0.0;
-
-    return indicator;
-  }
-
   template <int dim, typename number>
   dealii::VectorizedArray<number>
   evaluate_function_at_vectorized_points(

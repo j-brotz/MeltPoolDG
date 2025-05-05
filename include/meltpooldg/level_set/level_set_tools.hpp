@@ -6,6 +6,7 @@
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/types.h>
 #include <deal.II/base/utilities.h>
+#include <deal.II/base/vectorization.h>
 
 #include <deal.II/distributed/shared_tria.h>
 
@@ -936,5 +937,18 @@ namespace MeltPoolDG::LevelSet::Tools
         dealii::GridTools::exchange_cell_data_to_ghosts<unsigned int, dealii::Triangulation<dim>>(
           scratch_data.get_triangulation(), pack, unpack);
       }
+  }
+
+  template <typename number>
+  dealii::VectorizedArray<number>
+  compute_mask_narrow_band(const dealii::VectorizedArray<number> &val,
+                           const number                           narrow_band_threshold)
+  {
+    dealii::VectorizedArray<number> indicator = 1.0;
+    for (unsigned int v = 0; v < dealii::VectorizedArray<number>::size(); ++v)
+      if (std::abs(val[v]) >= narrow_band_threshold)
+        indicator[v] = 0.0;
+
+    return indicator;
   }
 } // namespace MeltPoolDG::LevelSet::Tools

@@ -29,11 +29,6 @@
 
 namespace MeltPoolDG::VectorTools
 {
-  template <typename number>
-  dealii::VectorizedArray<number>
-  compute_mask_narrow_band(const dealii::VectorizedArray<number> &val,
-                           const number                           narrow_band_threshold);
-
   template <int dim, int spacedim, typename number>
   void
   convert_fe_system_vector_to_block_vector(
