@@ -48,10 +48,8 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     void
     create_spatial_discretization() override
     {
-      using namespace dealii;
-
       this->triangulation =
-        std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+        std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
       dealii::Point<dim, number> lower_left;
       for (unsigned int d = 1; d < dim; ++d)
@@ -67,10 +65,10 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       for (unsigned int d = 1; d < dim; ++d)
         subdivisions[d] = 4;
 
-      GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                subdivisions,
-                                                lower_left,
-                                                upper_right);
+      dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                        subdivisions,
+                                                        lower_left,
+                                                        upper_right);
 
       set_fitted_boundary_id(*this->triangulation);
 
@@ -97,8 +95,6 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     void
     set_field_conditions() override
     {
-      using namespace dealii;
-
       auto initial_condition = std::make_shared<FlowField<dim, number>>();
       this->attach_initial_condition(initial_condition, "compressible_flow");
 

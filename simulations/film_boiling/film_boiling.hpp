@@ -44,7 +44,6 @@
 
 namespace MeltPoolDG::Simulation::FilmBoiling
 {
-  using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
   // simulation specific parameters
@@ -62,10 +61,10 @@ namespace MeltPoolDG::Simulation::FilmBoiling
    */
   template <int dim>
   double
-  compute_disturbed_interface(const double      lambda0,
-                              const Point<dim> &p,
-                              const double      factor_z0,
-                              const double      factor_dz)
+  compute_disturbed_interface(const double              lambda0,
+                              const dealii::Point<dim> &p,
+                              const double              factor_z0,
+                              const double              factor_dz)
   {
     const double projected_radius = dim == 1 ? 0 :
                                     dim == 2 ? p[0] :
@@ -81,24 +80,25 @@ namespace MeltPoolDG::Simulation::FilmBoiling
    *  level set field.
    */
   template <int dim>
-  class InitialSignedDistance : public Function<dim>
+  class InitialSignedDistance : public dealii::Function<dim>
   {
   public:
     InitialSignedDistance(const double lambda0, const std::pair<double, double> factors)
-      : Function<dim>()
+      : dealii::Function<dim>()
       , lambda0(lambda0)
       , factors(factors)
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
-      Point<dim> at_interface;
+      dealii::Point<dim> at_interface;
       at_interface[dim - 1] =
         compute_disturbed_interface(lambda0, p, factors.first, factors.second);
 
       const auto plane =
-        Functions::SignedDistance::Plane<dim>(at_interface, Point<dim>::unit_vector(dim - 1));
+        dealii::Functions::SignedDistance::Plane<dim>(at_interface,
+                                                      dealii::Point<dim>::unit_vector(dim - 1));
 
       return plane.value(p);
     }
@@ -109,7 +109,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
    *  Initial temperature field
    */
   template <int dim>
-  class InitialValuesTemperature : public Function<dim>
+  class InitialValuesTemperature : public dealii::Function<dim>
   {
   public:
     InitialValuesTemperature(const double                    T_max,
@@ -117,7 +117,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
                              const double                    lambda0,
                              const std::pair<double, double> factors)
 
-      : Function<dim>()
+      : dealii::Function<dim>()
       , T_max(T_max)
       , T_min(T_min)
       , lambda0(lambda0)
@@ -125,7 +125,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
       const double y_interface_disturbed =
         compute_disturbed_interface(lambda0, p, factors.first, factors.second);
@@ -175,11 +175,11 @@ namespace MeltPoolDG::Simulation::FilmBoiling
         prm.add_parameter("bc vertical faces",
                           bc_vertical_faces,
                           "Set the boundary condition along vertical faces.",
-                          Patterns::Selection("symmetry|periodic"));
+                          dealii::Patterns::Selection("symmetry|periodic"));
         prm.add_parameter("bc temperature top",
                           bc_temperature_top,
                           "Set the boundary condition at the top.",
-                          Patterns::Selection("adiabatic|dirichlet"));
+                          dealii::Patterns::Selection("adiabatic|dirichlet"));
         prm.add_parameter("disturbance factors",
                           disturbance_factors,
                           "Set the factors controlling the initial interface function"
@@ -199,11 +199,11 @@ namespace MeltPoolDG::Simulation::FilmBoiling
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP || dim == 1)
         {
 #ifdef DEAL_II_WITH_METIS
-          this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
+          this->triangulation = std::make_shared<dealii::parallel::shared::Triangulation<dim>>(
             this->mpi_communicator,
-            (Triangulation<dim>::none),
+            dealii::Triangulation<dim>::none,
             false,
-            parallel::shared::Triangulation<dim>::Settings::partition_metis);
+            dealii::parallel::shared::Triangulation<dim>::Settings::partition_metis);
 #else
           AssertThrow(
             false,
@@ -214,23 +214,23 @@ namespace MeltPoolDG::Simulation::FilmBoiling
         }
       else
         {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+          this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+            this->mpi_communicator);
         }
 
       // create mesh
-      const Point<dim> bottom_left = dim == 1   ? Point<dim>(y_min) :
-                                     (dim == 2) ? Point<dim>(x_min, y_min) :
-                                                  Point<dim>(x_min, x_min, y_min);
-      const Point<dim> top_right   = dim == 1   ? Point<dim>(y_max) :
-                                     (dim == 2) ? Point<dim>(x_max, y_max) :
-                                                  Point<dim>(x_max, x_max, y_max);
+      const dealii::Point<dim> bottom_left = dim == 1 ? dealii::Point<dim>(y_min) :
+                                             dim == 2 ? dealii::Point<dim>(x_min, y_min) :
+                                                        dealii::Point<dim>(x_min, x_min, y_min);
+      const dealii::Point<dim> top_right   = dim == 1 ? dealii::Point<dim>(y_max) :
+                                             dim == 2 ? dealii::Point<dim>(x_max, y_max) :
+                                                        dealii::Point<dim>(x_max, x_max, y_max);
 
       // create mesh
       std::vector<unsigned int> subdivisions(
         dim,
         5 * (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP ?
-               Utilities::pow(2, this->parameters.base.global_refinements) :
+               dealii::Utilities::pow(2, this->parameters.base.global_refinements) :
                1));
 
       // Create elements with a width to height ratio of 3. This leads to a higher resolution
@@ -252,10 +252,12 @@ namespace MeltPoolDG::Simulation::FilmBoiling
         {
           dealii::GridGenerator::subdivided_hyper_rectangle(tria_slice,
                                                             {1, 3} /*subdivisions*/,
-                                                            Point<2>(x_min, y_min),
-                                                            Point<2>(x_max, y_max));
+                                                            dealii::Point<2>(x_min, y_min),
+                                                            dealii::Point<2>(x_max, y_max));
 
-          GridTools::rotate(Point<3>::unit_vector(0), 0.5 * dealii::numbers::PI, tria_slice);
+          dealii::GridTools::rotate(dealii::Point<3>::unit_vector(0),
+                                    0.5 * dealii::numbers::PI,
+                                    tria_slice);
 
           tria_slice.refine_global(4);
         }
@@ -369,7 +371,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
       // create iso-surface
       if constexpr (dim >= 2)
         {
-          Triangulation<dim - 1, dim> tria;
+          dealii::Triangulation<dim - 1, dim> tria;
 
           GridGenerator::create_triangulation_with_marching_cube_algorithm<dim, double>(
             tria,
@@ -380,7 +382,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
             1 /*n_subdivisions*/);
 
 
-          DataOut<dim - 1, dim> data_out;
+          dealii::DataOut<dim - 1, dim> data_out;
           data_out.attach_triangulation(tria);
           if (tria.n_cells() > 0)
             data_out.build_patches();
@@ -390,13 +392,13 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     }
 
   private:
-    const double                               lambda0 = 0.0;
-    const double                               x_max;
-    double                                     y_max;
-    const double                               x_min;
-    const double                               y_min               = 0.0;
-    mutable unsigned int                       n_written_time_step = 0;
-    parallel::distributed::Triangulation<2, 3> tria_slice;
+    const double                                       lambda0 = 0.0;
+    const double                                       x_max;
+    double                                             y_max;
+    const double                                       x_min;
+    const double                                       y_min               = 0.0;
+    mutable unsigned int                               n_written_time_step = 0;
+    dealii::parallel::distributed::Triangulation<2, 3> tria_slice;
 
     mutable std::shared_ptr<PostProcessingTools::SliceCreator<3, double>> slice;
   };

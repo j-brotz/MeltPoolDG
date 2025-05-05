@@ -22,8 +22,6 @@ namespace MeltPoolDG::Restart
                       &attach_vectors,
     const std::string &prefix)
   {
-    using namespace dealii;
-
     std::vector<
       std::pair<const dealii::DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
       data;
@@ -31,17 +29,20 @@ namespace MeltPoolDG::Restart
 
     const unsigned int n = data.size();
 
-    Assert(n > 0, ExcNotImplemented());
+    Assert(n > 0, dealii::ExcNotImplemented());
 
-    auto triangulation = const_cast<Triangulation<dim> *>(&data[0].first->get_triangulation());
+    auto triangulation =
+      const_cast<dealii::Triangulation<dim> *>(&data[0].first->get_triangulation());
 
-    Assert(triangulation, ExcNotImplemented());
+    Assert(triangulation, dealii::ExcNotImplemented());
 
-    if (dynamic_cast<parallel::distributed::Triangulation<dim> *>(triangulation))
+    if (dynamic_cast<dealii::parallel::distributed::Triangulation<dim> *>(triangulation))
       {
-        auto tria = dynamic_cast<parallel::distributed::Triangulation<dim> *>(triangulation);
+        auto tria =
+          dynamic_cast<dealii::parallel::distributed::Triangulation<dim> *>(triangulation);
 
-        std::vector<std::shared_ptr<parallel::distributed::SolutionTransfer<dim, VectorType>>>
+        std::vector<
+          std::shared_ptr<dealii::parallel::distributed::SolutionTransfer<dim, VectorType>>>
           solution_transfer(n);
 
         std::vector<std::vector<VectorType *>>       new_grid_solutions(n);
@@ -57,7 +58,7 @@ namespace MeltPoolDG::Restart
                 old_grid_solutions[j].push_back(i);
               }
             solution_transfer[j] =
-              std::make_shared<parallel::distributed::SolutionTransfer<dim, VectorType>>(
+              std::make_shared<dealii::parallel::distributed::SolutionTransfer<dim, VectorType>>(
                 *data[j].first);
             solution_transfer[j]->prepare_for_serialization(old_grid_solutions[j]);
           }
@@ -66,7 +67,7 @@ namespace MeltPoolDG::Restart
       }
     else
       {
-        AssertThrow(false, ExcNotImplemented());
+        AssertThrow(false, dealii::ExcNotImplemented());
       }
   }
 
@@ -81,8 +82,6 @@ namespace MeltPoolDG::Restart
     const std::function<void()> &setup_dof_system,
     const std::string           &prefix)
   {
-    using namespace dealii;
-
     std::vector<
       std::pair<const dealii::DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
       data;
@@ -90,21 +89,24 @@ namespace MeltPoolDG::Restart
 
     const unsigned int n = data.size();
 
-    Assert(n > 0, ExcNotImplemented());
+    Assert(n > 0, dealii::ExcNotImplemented());
 
-    auto triangulation = const_cast<Triangulation<dim> *>(&data[0].first->get_triangulation());
+    auto triangulation =
+      const_cast<dealii::Triangulation<dim> *>(&data[0].first->get_triangulation());
 
-    Assert(triangulation, ExcNotImplemented());
+    Assert(triangulation, dealii::ExcNotImplemented());
 
-    if (dynamic_cast<parallel::distributed::Triangulation<dim> *>(triangulation))
+    if (dynamic_cast<dealii::parallel::distributed::Triangulation<dim> *>(triangulation))
       {
-        auto tria = dynamic_cast<parallel::distributed::Triangulation<dim> *>(triangulation);
+        auto tria =
+          dynamic_cast<dealii::parallel::distributed::Triangulation<dim> *>(triangulation);
 
         tria->load(prefix + "_tria");
 
         setup_dof_system();
 
-        std::vector<std::shared_ptr<parallel::distributed::SolutionTransfer<dim, VectorType>>>
+        std::vector<
+          std::shared_ptr<dealii::parallel::distributed::SolutionTransfer<dim, VectorType>>>
           solution_transfer(n);
 
         std::vector<std::vector<VectorType *>> new_grid_solutions(n);
@@ -114,7 +116,7 @@ namespace MeltPoolDG::Restart
             data[j].second(new_grid_solutions[j]);
 
             solution_transfer[j] =
-              std::make_shared<parallel::distributed::SolutionTransfer<dim, VectorType>>(
+              std::make_shared<dealii::parallel::distributed::SolutionTransfer<dim, VectorType>>(
                 *data[j].first);
             solution_transfer[j]->deserialize(new_grid_solutions[j]);
           }
@@ -123,7 +125,7 @@ namespace MeltPoolDG::Restart
       }
     else
       {
-        AssertThrow(false, ExcNotImplemented());
+        AssertThrow(false, dealii::ExcNotImplemented());
       }
   }
 } // namespace MeltPoolDG::Restart

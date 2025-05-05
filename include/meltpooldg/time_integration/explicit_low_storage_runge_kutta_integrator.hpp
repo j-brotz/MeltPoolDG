@@ -194,13 +194,11 @@ namespace MeltPoolDG::TimeIntegration
       const std::function<void(number, VectorType &, const VectorType &)> &stage_post_processing)
       override
     {
-      using namespace dealii;
-
       Assert(solution_history.size() >= required_solution_history_size(),
              dealii::ExcMessage(
                "The size of the solution history object does not fit the requirements of the "
                "chosen time integration scheme."));
-      TimerOutput::Scope timer_section(timer, "Explicit Runge-Kutta time integration");
+      dealii::TimerOutput::Scope timer_section(timer, "Explicit Runge-Kutta time integration");
       rk_register_ri = 0.;
       if (stage_pre_processing)
         stage_pre_processing(current_time, rk_register_ri, solution_history.get_current_solution());

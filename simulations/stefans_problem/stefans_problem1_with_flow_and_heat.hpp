@@ -66,7 +66,6 @@
 
 namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
 {
-  using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
   static constexpr double x_min = 0.0;
@@ -138,11 +137,11 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
   } // namespace AnalyticalSolution
 
   template <int dim>
-  class InitialValuesTemperature : public Function<dim>
+  class InitialValuesTemperature : public dealii::Function<dim>
   {
   public:
     InitialValuesTemperature(const double T_sat, const double T_wall, const double y_interface)
-      : Function<dim>()
+      : dealii::Function<dim>()
       , T_sat(T_sat)
       , T_wall(T_wall)
       , y_interface(y_interface)
@@ -150,7 +149,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const final
+    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const final
     {
       return std::max(T_wall - (T_wall - T_sat) * p[dim - 1] / y_interface, T_sat);
     }
@@ -172,7 +171,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
       , remote_point_evaluation(1e-6, true)
     {
       AssertThrow(y_interface >= y_min && y_interface <= y_max,
-                  ExcMessage(
+                  dealii::ExcMessage(
                     "The location of the initial interface must be between y_min and y_max."));
 
       file_name_level_set_contour = this->parameters.output.directory + "/" +
@@ -199,11 +198,11 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP || dim == 1)
         {
 #ifdef DEAL_II_WITH_METIS
-          this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
+          this->triangulation = std::make_shared<dealii::parallel::shared::Triangulation<dim>>(
             this->mpi_communicator,
-            (Triangulation<dim>::none),
+            dealii::Triangulation<dim>::none,
             false,
-            parallel::shared::Triangulation<dim>::Settings::partition_metis);
+            dealii::parallel::shared::Triangulation<dim>::Settings::partition_metis);
 #else
           AssertThrow(
             false,
@@ -214,8 +213,8 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
         }
       else
         {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+          this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+            this->mpi_communicator);
         }
 
       const unsigned int n_elements_per_edge =
@@ -226,18 +225,18 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
       refinements[dim - 1] = n_elements_per_edge;
 
       // create mesh
-      const Point<dim> bottom_left = dim == 1   ? Point<dim>(y_min) :
-                                     (dim == 2) ? Point<dim>(x_min, y_min) :
-                                                  Point<dim>(x_min, x_min, y_min);
-      const Point<dim> top_right   = dim == 1   ? Point<dim>(y_max) :
-                                     (dim == 2) ? Point<dim>(x_max, y_max) :
-                                                  Point<dim>(x_max, x_max, y_max);
+      const dealii::Point<dim> bottom_left = dim == 1 ? dealii::Point<dim>(y_min) :
+                                             dim == 2 ? dealii::Point<dim>(x_min, y_min) :
+                                                        dealii::Point<dim>(x_min, x_min, y_min);
+      const dealii::Point<dim> top_right   = dim == 1 ? dealii::Point<dim>(y_max) :
+                                             dim == 2 ? dealii::Point<dim>(x_max, y_max) :
+                                                        dealii::Point<dim>(x_max, x_max, y_max);
 
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           // create mesh
           std::vector<unsigned int> subdivisions(
-            dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
+            dim, 5 * dealii::Utilities::pow(2, this->parameters.base.global_refinements));
           subdivisions[dim - 1] *= 2;
 
           dealii::GridGenerator::subdivided_hyper_rectangle_with_simplices(
@@ -251,12 +250,12 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
 
 
       // get vertices along the vertical axis on rank 0
-      if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
+      if (dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
         {
           const unsigned int n_elements = std::min<double>(200, n_elements_per_edge);
           for (unsigned int i = 0; i <= n_elements; ++i)
             {
-              auto p     = Point<dim>();
+              auto p     = dealii::Point<dim>();
               p[dim - 1] = y_min + (y_max - y_min) / n_elements * i;
               vertices_along_vertical_axis.emplace_back(p);
             }
@@ -267,8 +266,8 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
     set_boundary_conditions() final
     {
       // faces in dim-1 direction
-      const types::boundary_id bottom_bc = 2 * (dim - 1);
-      const types::boundary_id top_bc    = bottom_bc + 1;
+      const dealii::types::boundary_id bottom_bc = 2 * (dim - 1);
+      const dealii::types::boundary_id top_bc    = bottom_bc + 1;
 
       // lower part = gas; upper part = liquid
       this->attach_boundary_condition(
@@ -290,7 +289,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
       this->attach_boundary_condition(top_bc, "fix_pressure_constant", "navier_stokes_p");
 
       // collect boundary ids of side walls
-      std::vector<types::boundary_id> side_walls;
+      std::vector<dealii::types::boundary_id> side_walls;
 
       if (dim > 1)
         for (unsigned int i = 0; i < 2 * (dim - 1); ++i)
@@ -310,7 +309,8 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
                                      "navier_stokes_u");
       this->attach_initial_condition(
         std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(
-          Point<dim>::unit_vector(dim - 1) * y_interface, Point<dim>::unit_vector(dim - 1)),
+          dealii::Point<dim>::unit_vector(dim - 1) * y_interface,
+          dealii::Point<dim>::unit_vector(dim - 1)),
         "signed_distance");
 
       this->attach_initial_condition(std::make_shared<InitialValuesTemperature<dim>>(
@@ -327,7 +327,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
       if (beta == -1.0)
         {
           beta = AnalyticalSolution::compute_beta(this->parameters, T_wall);
-          if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
+          if (dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
             {
               file_level_set_contour.open(file_name_level_set_contour);
               file_level_set_contour
@@ -362,7 +362,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
                                                  generic_data_out.get_vector("temperature"));
 
           // write values to file
-          if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
+          if (dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
             {
               const auto file_name = this->parameters.output.directory + "/" +
                                      this->parameters.output.paraview.filename +
@@ -392,15 +392,15 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
           /*
            * evaluate location of and temperature at level set == 0
            */
-          FEPointEvaluation<1, dim> temperature_eval(
+          dealii::FEPointEvaluation<1, dim> temperature_eval(
             generic_data_out.get_mapping(),
             generic_data_out.get_dof_handler("temperature").get_fe(),
-            update_values);
+            dealii::update_values);
 
-          std::vector<std::pair<Point<dim>, double>> vertices_and_temperatures;
+          std::vector<std::pair<dealii::Point<dim>, double>> vertices_and_temperatures;
 
-          std::vector<double>                  buffer;
-          std::vector<types::global_dof_index> local_dof_indices;
+          std::vector<double>                          buffer;
+          std::vector<dealii::types::global_dof_index> local_dof_indices;
 
           LevelSet::Tools::evaluate_at_interface<dim, double>(
             generic_data_out.get_dof_handler("level_set"),
@@ -416,7 +416,8 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
 
               const unsigned int n_points = points.size();
 
-              const ArrayView<const Point<dim>> unit_points(points.data(), n_points);
+              const dealii::ArrayView<const dealii::Point<dim>> unit_points(points.data(),
+                                                                            n_points);
               temperature_eval.reinit(cell, unit_points);
 
               cell->get_dof_values(generic_data_out.get_vector("temperature"),
@@ -424,7 +425,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
                                    buffer.end());
 
               // evaluate temperature and level set points
-              temperature_eval.evaluate(buffer, EvaluationFlags::values);
+              temperature_eval.evaluate(buffer, dealii::EvaluationFlags::values);
               for (unsigned int q = 0; q < n_points; ++q)
                 {
                   vertices_and_temperatures.emplace_back(points_real[q],
@@ -436,7 +437,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
 
           // collect result on rank 0 to write them to file
           const auto vertices_and_temperatures_all =
-            Utilities::MPI::reduce<std::vector<std::pair<Point<dim>, double>>>(
+            dealii::Utilities::MPI::reduce<std::vector<std::pair<dealii::Point<dim>, double>>>(
               vertices_and_temperatures, this->mpi_communicator, [](const auto &a, const auto &b) {
                 auto result = a;
                 result.insert(result.end(), b.begin(), b.end());
@@ -447,7 +448,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
           const double interface_analytical = AnalyticalSolution::analytical_interface_location(
             this->parameters, T_wall, generic_data_out.get_time(), beta);
           // write values to file
-          if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
+          if (dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
             {
               file_level_set_contour.open(file_name_level_set_contour, std::fstream::app);
               file_level_set_contour
@@ -459,7 +460,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
             }
 
           dealii::ConditionalOStream pcout(
-            std::cout, Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0);
+            std::cout, dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0);
           pcout << "interface_numerical " << vertices_and_temperatures_all[0].first[dim - 1]
                 << " interface_analytical " << interface_analytical << " absolute error: "
                 << std::abs(interface_analytical - vertices_and_temperatures_all[0].first[dim - 1])
@@ -477,13 +478,13 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
     double       T_wall      = 383.15;
 
     // post-processing
-    std::vector<Point<dim>>                                 vertices_along_vertical_axis;
-    mutable std::ofstream                                   file_level_set_contour;
-    std::string                                             file_name_level_set_contour;
-    mutable std::ofstream                                   file_temperature_profile;
-    mutable int                                             n_time_step = 0.0;
-    mutable double                                          beta        = -1.0;
-    mutable Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation;
-    mutable bool                                            remote_point_is_initialized = false;
+    std::vector<dealii::Point<dim>>                                 vertices_along_vertical_axis;
+    mutable std::ofstream                                           file_level_set_contour;
+    std::string                                                     file_name_level_set_contour;
+    mutable std::ofstream                                           file_temperature_profile;
+    mutable int                                                     n_time_step = 0.0;
+    mutable double                                                  beta        = -1.0;
+    mutable dealii::Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation;
+    mutable bool remote_point_is_initialized = false;
   };
 } // namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat

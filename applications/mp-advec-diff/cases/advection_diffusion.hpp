@@ -117,23 +117,22 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
     void
     create_spatial_discretization() override
     {
-      using namespace dealii;
       if (dim == 1 || this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
-          AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
+          AssertDimension(dealii::Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
           this->triangulation = std::make_shared<dealii::Triangulation<dim>>();
         }
       else
         {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+          this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+            this->mpi_communicator);
         }
 
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           dealii::GridGenerator::subdivided_hyper_cube_with_simplices(
             *this->triangulation,
-            Utilities::pow(2, this->parameters.base.global_refinements),
+            dealii::Utilities::pow(2, this->parameters.base.global_refinements),
             left_domain,
             right_domain);
         }
@@ -248,10 +247,8 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
     void
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const final
     {
-      using namespace dealii;
-      dealii::ConditionalOStream pcout(std::cout,
-                                       Utilities::MPI::this_mpi_process(this->mpi_communicator) ==
-                                         0);
+      dealii::ConditionalOStream pcout(
+        std::cout, dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0);
 
       pcout << "---------------------------------------------" << std::endl;
       pcout << "    Starting user defined postprocessing" << std::endl;

@@ -1,9 +1,5 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Peter Munch, Magdalena Schreter, TUM, September 2022
- *
- * ---------------------------------------------------------------------*/
 #pragma once
+
 #include <deal.II/base/data_out_base.h>
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/mpi.h>
@@ -78,15 +74,14 @@ namespace MeltPoolDG::PostProcessingTools
     void
     process(const unsigned int n_time_step) override
     {
-      using namespace dealii;
       AssertThrow(generic_data_out != nullptr, dealii::ExcMessage("GenericDataOut is null."));
       AssertThrow(dim > 1, dealii::ExcMessage("SliceCreator supports only dim>1."));
 
       if (dim > 1)
         {
           // create DataOut of the slice
-          dealii::MappingQ1<dim - 1, dim>    mapping_slice;
-          DataOutResample<dim, dim - 1, dim> data_out(tria_slice, mapping_slice);
+          dealii::MappingQ1<dim - 1, dim>            mapping_slice;
+          dealii::DataOutResample<dim, dim - 1, dim> data_out(tria_slice, mapping_slice);
 
           for (const auto &i : idx_req_vars)
             {
@@ -112,12 +107,12 @@ namespace MeltPoolDG::PostProcessingTools
                                                 output_data.paraview.n_groups);
 
           // write a pvd file relating the pvtu-file with a simulation time
-          if (Utilities::MPI::this_mpi_process(tria_slice.get_communicator()) == 0)
+          if (dealii::Utilities::MPI::this_mpi_process(tria_slice.get_communicator()) == 0)
             {
               times_and_names.emplace_back(generic_data_out->get_time(), pvtu_filename);
               std::ofstream pvd_output(output_data.directory + "/" + output_data.paraview.filename +
                                        "_slice.pvd");
-              DataOutBase::write_pvd_record(pvd_output, times_and_names);
+              dealii::DataOutBase::write_pvd_record(pvd_output, times_and_names);
             }
         }
     }

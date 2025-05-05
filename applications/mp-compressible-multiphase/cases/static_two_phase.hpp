@@ -112,10 +112,9 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     void
     create_spatial_discretization() override
     {
-      using namespace dealii;
       // TODO: no distributed triangulation possible for dim=1
       this->triangulation =
-        std::make_shared<parallel::shared::Triangulation<dim>>(this->mpi_communicator);
+        std::make_shared<dealii::parallel::shared::Triangulation<dim>>(this->mpi_communicator);
 
       dealii::Point<dim, number> lower_left;
       lower_left[0] = -5.;
@@ -132,7 +131,7 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       for (unsigned int d = 1; d < dim; ++d)
         subdivisions[d] = 1;
 
-      GridGenerator::subdivided_hyper_rectangle(
+      dealii::GridGenerator::subdivided_hyper_rectangle(
         *this->triangulation, subdivisions, lower_left, upper_right, true);
 
       this->triangulation->refine_global(this->parameters.base.global_refinements);

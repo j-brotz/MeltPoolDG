@@ -27,28 +27,27 @@
 
 namespace MeltPoolDG::Simulation::OscillatingDroplet
 {
-  using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
   template <int dim>
-  class InitialLevelSet : public Function<dim>
+  class InitialLevelSet : public dealii::Function<dim>
   {
   public:
     InitialLevelSet(const std::array<double, dim> &radii, const double eps)
-      : Function<dim>()
-      , distance_ellipse(Point<dim>(), radii)
+      : dealii::Function<dim>()
+      , distance_ellipse(dealii::Point<dim>(), radii)
       , eps(eps)
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
       return CharacteristicFunctions::tanh_characteristic_function(-distance_ellipse.value(p), eps);
     }
 
   private:
-    const Functions::SignedDistance::Ellipsoid<dim> distance_ellipse;
-    const double                                    eps;
+    const dealii::Functions::SignedDistance::Ellipsoid<dim> distance_ellipse;
+    const double                                            eps;
   };
 
   template <int dim, typename number>
@@ -81,7 +80,7 @@ namespace MeltPoolDG::Simulation::OscillatingDroplet
     create_spatial_discretization() override
     {
       this->triangulation =
-        std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+        std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
       dealii::GridGenerator::hyper_cube(*this->triangulation, -side_length / 2, side_length / 2);
 
@@ -99,17 +98,17 @@ namespace MeltPoolDG::Simulation::OscillatingDroplet
     set_field_conditions() final
     {
       const double eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
-        GridTools::minimal_cell_diameter(*this->triangulation) /
+        dealii::GridTools::minimal_cell_diameter(*this->triangulation) /
         this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
 
-      AssertThrow(eps > 0, ExcNotImplemented());
+      AssertThrow(eps > 0, dealii::ExcNotImplemented());
 
       std::array<double, dim> radii;
       if constexpr (dim == 2)
         radii = {
           {reference_radius * elliptical_deviation, reference_radius / elliptical_deviation}};
       else
-        AssertThrow(false, ExcNotImplemented());
+        AssertThrow(false, dealii::ExcNotImplemented());
 
       this->attach_initial_condition(std::make_shared<InitialLevelSet<dim>>(radii, eps),
                                      "level_set");

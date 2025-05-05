@@ -30,43 +30,43 @@
 
 namespace MeltPoolDG::Simulation::MovingDroplet
 {
-  using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
   static double velocity = 1.0;
 
   template <int dim>
-  class InitialLevelSet : public Function<dim>
+  class InitialLevelSet : public dealii::Function<dim>
   {
   public:
     InitialLevelSet(const double radius, const double eps)
-      : Function<dim>()
-      , distance(Point<dim>(), radius)
+      : dealii::Function<dim>()
+      , distance(dealii::Point<dim>(), radius)
       , eps(eps)
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /* component */) const override
+    value(const dealii::Point<dim> &p, const unsigned int /* component */) const override
     {
       return CharacteristicFunctions::tanh_characteristic_function(-distance.value(p), eps);
     }
 
   private:
-    const Functions::SignedDistance::Sphere<dim> distance;
-    const double                                 eps;
+    const dealii::Functions::SignedDistance::Sphere<dim> distance;
+    const double                                         eps;
   };
 
   template <int dim>
-  class InitialVelocityField : public Function<dim>
+  class InitialVelocityField : public dealii::Function<dim>
   {
   public:
-    InitialVelocityField(const Function<dim> &level_set)
-      : Function<dim>(dim)
+    InitialVelocityField(const dealii::Function<dim> &level_set)
+      : dealii::Function<dim>(dim)
       , level_set(level_set)
     {}
 
     void
-    vector_value(const Point<dim> &p, [[maybe_unused]] Vector<double> &values) const override
+    vector_value(const dealii::Point<dim>                &p,
+                 [[maybe_unused]] dealii::Vector<double> &values) const override
     {
       const auto hs = (level_set.value(p) + 1.) * 0.5;
 
@@ -76,10 +76,10 @@ namespace MeltPoolDG::Simulation::MovingDroplet
           values[1] = hs * velocity;
         }
       else
-        AssertThrow(false, ExcMessage("Advection field for dim!=2 not implemented."));
+        AssertThrow(false, dealii::ExcMessage("Advection field for dim!=2 not implemented."));
     }
 
-    const Function<dim> &level_set;
+    const dealii::Function<dim> &level_set;
   };
 
   template <int dim, typename number>
@@ -109,7 +109,7 @@ namespace MeltPoolDG::Simulation::MovingDroplet
     create_spatial_discretization() override
     {
       this->triangulation =
-        std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+        std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
       dealii::GridGenerator::hyper_cube(*this->triangulation,
                                         -side_length / 2,
@@ -135,10 +135,10 @@ namespace MeltPoolDG::Simulation::MovingDroplet
       // Here, the initial velocity field depends on the level set function. Thus, the diffuse
       // level set is given in the initial state on purpose.
       const double eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
-        GridTools::minimal_cell_diameter(*this->triangulation) /
+        dealii::GridTools::minimal_cell_diameter(*this->triangulation) /
         this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
 
-      AssertThrow(eps > 0, ExcNotImplemented());
+      AssertThrow(eps > 0, dealii::ExcNotImplemented());
 
       const auto ls = std::make_shared<InitialLevelSet<dim>>(radius, eps);
       this->attach_initial_condition(ls, "level_set");

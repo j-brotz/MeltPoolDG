@@ -108,29 +108,28 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
     void
     create_spatial_discretization() override
     {
-      using namespace dealii;
       if (dim == 1 || this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
-          AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
-          this->triangulation = std::make_shared<Triangulation<dim>>();
+          AssertDimension(dealii::Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
+          this->triangulation = std::make_shared<dealii::Triangulation<dim>>();
         }
       else
         {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+          this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+            this->mpi_communicator);
         }
 
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
-          GridGenerator::subdivided_hyper_cube_with_simplices(
+          dealii::GridGenerator::subdivided_hyper_cube_with_simplices(
             *this->triangulation,
-            Utilities::pow(2, this->parameters.base.global_refinements),
+            dealii::Utilities::pow(2, this->parameters.base.global_refinements),
             left_domain,
             right_domain);
         }
       else
         {
-          GridGenerator::hyper_cube(*this->triangulation, left_domain, right_domain);
+          dealii::GridGenerator::hyper_cube(*this->triangulation, left_domain, right_domain);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
     }
@@ -152,10 +151,8 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
     void
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const final
     {
-      using namespace dealii;
-      dealii::ConditionalOStream pcout(std::cout,
-                                       Utilities::MPI::this_mpi_process(this->mpi_communicator) ==
-                                         0);
+      dealii::ConditionalOStream pcout(
+        std::cout, dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0);
 
       pcout << "---------------------------------------------" << std::endl;
       pcout << "    Starting user defined postprocessing" << std::endl;
@@ -175,21 +172,25 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
       ExactSolution<dim, number> exact_solution(0.1);
       exact_solution.set_time(generic_data_out.get_time());
 
-      const auto  n_q_points = this->parameters.reinit.fe.degree + 20;
-      FE_DGQ<dim> fe(this->parameters.reinit.fe.degree);
+      const auto          n_q_points = this->parameters.reinit.fe.degree + 20;
+      dealii::FE_DGQ<dim> fe(this->parameters.reinit.fe.degree);
 
-      QGauss<dim>   quadrature(n_q_points);
-      FEValues<dim> fe_values(fe,
-                              quadrature,
-                              update_values | update_JxW_values | update_quadrature_points |
-                                update_gradients);
+      dealii::QGauss<dim>   quadrature(n_q_points);
+      dealii::FEValues<dim> fe_values(fe,
+                                      quadrature,
+                                      dealii::update_values | dealii::update_JxW_values |
+                                        dealii::update_quadrature_points |
+                                        dealii::update_gradients);
 
-      FEValues<dim> fe_values_curvature(
-        fe, quadrature, update_values | update_JxW_values | update_quadrature_points);
+      dealii::FEValues<dim> fe_values_curvature(fe,
+                                                quadrature,
+                                                dealii::update_values | dealii::update_JxW_values |
+                                                  dealii::update_quadrature_points);
 
-      std::vector<number>                 phi_at_q(QGauss<dim>(n_q_points).size());
-      std::vector<number>                 curvature_at_q(QGauss<dim>(n_q_points).size());
-      std::vector<Tensor<1, dim, number>> gradient_at_q(QGauss<dim>(n_q_points).size());
+      std::vector<number> phi_at_q(dealii::QGauss<dim>(n_q_points).size());
+      std::vector<number> curvature_at_q(dealii::QGauss<dim>(n_q_points).size());
+      std::vector<dealii::Tensor<1, dim, number>> gradient_at_q(
+        dealii::QGauss<dim>(n_q_points).size());
 
 
 

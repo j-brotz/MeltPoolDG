@@ -45,22 +45,21 @@ namespace MeltPoolDG::PostProcessingTools
     void
     process(const unsigned int /*n_time_step*/) override
     {
-      using namespace dealii;
       const bool update_ghosts =
         !generic_data_out->get_vector(request_variable).has_ghost_elements();
 
       if (update_ghosts)
         generic_data_out->get_vector(request_variable).update_ghost_values();
 
-      QGauss<dim> quad(
+      dealii::QGauss<dim> quad(
         generic_data_out->get_dof_handler(request_variable).get_fe().tensor_degree() + 1);
 
-      FEValues<dim> vel_values(generic_data_out->get_mapping(),
-                               generic_data_out->get_dof_handler(request_variable).get_fe(),
-                               quad,
-                               update_gradients | update_JxW_values);
+      dealii::FEValues<dim> vel_values(generic_data_out->get_mapping(),
+                                       generic_data_out->get_dof_handler(request_variable).get_fe(),
+                                       quad,
+                                       dealii::update_gradients | dealii::update_JxW_values);
 
-      const FEValuesExtractors::Vector velocities(0);
+      const dealii::FEValuesExtractors::Vector velocities(0);
 
       std::vector<number> div(vel_values.get_quadrature().size());
 
@@ -79,9 +78,8 @@ namespace MeltPoolDG::PostProcessingTools
             }
         }
 
-      diver =
-        Utilities::MPI::sum(diver_local,
-                            generic_data_out->get_vector(request_variable).get_mpi_communicator());
+      diver = dealii::Utilities::MPI::sum(
+        diver_local, generic_data_out->get_vector(request_variable).get_mpi_communicator());
       if (update_ghosts)
         generic_data_out->get_vector(request_variable).zero_out_ghost_values();
     }

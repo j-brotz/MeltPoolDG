@@ -159,23 +159,22 @@ namespace MeltPoolDG::Simulation::VortexBubble
     void
     create_spatial_discretization() override
     {
-      using namespace dealii;
       if (dim == 1 || this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
-          AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
-          this->triangulation = std::make_shared<Triangulation<dim>>();
+          AssertDimension(dealii::Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
+          this->triangulation = std::make_shared<dealii::Triangulation<dim>>();
         }
       else
         {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+          this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+            this->mpi_communicator);
         }
 
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           dealii::GridGenerator::subdivided_hyper_cube_with_simplices(
             *this->triangulation,
-            Utilities::pow(2, this->parameters.base.global_refinements),
+            dealii::Utilities::pow(2, this->parameters.base.global_refinements),
             left_domain,
             right_domain);
         }
@@ -205,22 +204,21 @@ namespace MeltPoolDG::Simulation::VortexBubble
     void
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const final
     {
-      using namespace dealii;
-
       if constexpr (dim == 2)
         {
           dealii::ConditionalOStream pcout(
-            std::cout, Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0);
+            std::cout, dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0);
           // compute area
-          const auto n_q_points = this->parameters.base.fe.degree + 3;
-          FE_Q<dim>  fe(this->parameters.base.fe.degree);
+          const auto        n_q_points = this->parameters.base.fe.degree + 3;
+          dealii::FE_Q<dim> fe(this->parameters.base.fe.degree);
 
-          QGauss<dim>   quadrature(n_q_points);
-          FEValues<dim> fe_values(fe,
-                                  quadrature,
-                                  update_values | update_JxW_values | update_quadrature_points);
+          dealii::QGauss<dim>   quadrature(n_q_points);
+          dealii::FEValues<dim> fe_values(fe,
+                                          quadrature,
+                                          dealii::update_values | dealii::update_JxW_values |
+                                            dealii::update_quadrature_points);
 
-          std::vector<number> phi_at_q(QGauss<dim>(n_q_points).size());
+          std::vector<number> phi_at_q(dealii::QGauss<dim>(n_q_points).size());
 
           std::vector<number> volume_fraction;
           number              area_droplet = 0;
@@ -247,19 +245,19 @@ namespace MeltPoolDG::Simulation::VortexBubble
               }
           generic_data_out.get_vector("level_set").zero_out_ghost_values();
 
-          area_droplet = Utilities::MPI::sum(area_droplet, this->mpi_communicator);
-          area_bulk    = Utilities::MPI::sum(area_bulk, this->mpi_communicator);
+          area_droplet = dealii::Utilities::MPI::sum(area_droplet, this->mpi_communicator);
+          area_bulk    = dealii::Utilities::MPI::sum(area_bulk, this->mpi_communicator);
 
           pcout << "area (phi>0) " << area_droplet << std::endl;
           pcout << "area (phi<0) " << area_bulk << std::endl;
 
           // compute circularity
           // 1) compute the surface of the droplet
-          Triangulation<std::max(1, dim - 1), dim> tria_droplet_surface;
+          dealii::Triangulation<std::max(1, dim - 1), dim> tria_droplet_surface;
 
           GridGenerator::create_triangulation_with_marching_cube_algorithm<dim>(
             tria_droplet_surface,
-            MappingQ<dim>(3),
+            dealii::MappingQ<dim>(3),
             generic_data_out.get_dof_handler("level_set"),
             generic_data_out.get_vector("level_set"),
             0. /*iso level*/,
@@ -270,11 +268,13 @@ namespace MeltPoolDG::Simulation::VortexBubble
           // check if partitioned domains contain surface elements in case of parallel execution
           if (tria_droplet_surface.n_cells() > 0)
             area_droplet_boundary =
-              GridTools::volume<std::max(1, dim - 1), dim>(tria_droplet_surface);
+              dealii::GridTools::volume<std::max(1, dim - 1), dim>(tria_droplet_surface);
 
-          area_droplet_boundary = Utilities::MPI::sum(area_droplet_boundary, MPI_COMM_WORLD);
+          area_droplet_boundary =
+            dealii::Utilities::MPI::sum(area_droplet_boundary, MPI_COMM_WORLD);
 
-          AssertThrow(area_droplet_boundary >= 1e-16, ExcMessage("Area of droplet is zero."));
+          AssertThrow(area_droplet_boundary >= 1e-16,
+                      dealii::ExcMessage("Area of droplet is zero."));
 
           // 2) compute circularity
           number circularity =
@@ -285,7 +285,7 @@ namespace MeltPoolDG::Simulation::VortexBubble
           table.add_value("circularity", circularity);
           table.add_value("area_droplet", area_droplet);
 
-          if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
+          if (dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
             {
               namespace fs = std::filesystem;
               std::ofstream output(fs::path(this->parameters.output.directory) /
@@ -309,11 +309,11 @@ namespace MeltPoolDG::Simulation::VortexBubble
 
               const number eps =
                 this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
-                  GridTools::minimal_cell_diameter(*this->triangulation) /
+                  dealii::GridTools::minimal_cell_diameter(*this->triangulation) /
                   this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
 
               // compute L2Norm of level_set
-              Vector<float> difference_per_cell(this->triangulation->n_active_cells());
+              dealii::Vector<float> difference_per_cell(this->triangulation->n_active_cells());
               dealii::VectorTools::integrate_difference(generic_data_out.get_mapping(),
                                                         generic_data_out.get_dof_handler(
                                                           "level_set"),
@@ -345,10 +345,11 @@ namespace MeltPoolDG::Simulation::VortexBubble
 
               // compute relative L2 norm in a finite interval around the interface
               SignedDistanceExact<dim, number> sd_circle(eps);
-              FEValues<dim>                    fe(generic_data_out.get_mapping(),
-                               generic_data_out.get_dof_handler("level_set").get_fe(),
-                               quadrature,
-                               update_values | update_JxW_values | update_quadrature_points);
+              dealii::FEValues<dim>            fe(generic_data_out.get_mapping(),
+                                       generic_data_out.get_dof_handler("level_set").get_fe(),
+                                       quadrature,
+                                       dealii::update_values | dealii::update_JxW_values |
+                                         dealii::update_quadrature_points);
 
               const unsigned int  n_q_points = fe.get_quadrature().size();
               std::vector<number> phi_at_q(n_q_points);
@@ -368,7 +369,7 @@ namespace MeltPoolDG::Simulation::VortexBubble
                       for (const auto &q : fe.quadrature_point_indices())
                         {
                           norm_interface_kreiss +=
-                            Utilities::fixed_power<2>(
+                            dealii::Utilities::fixed_power<2>(
                               CharacteristicFunctions::heaviside(phi_at_q[q]) -
                               CharacteristicFunctions::heaviside(
                                 sd_circle.value(fe.quadrature_point(q), 0))) *
@@ -376,11 +377,11 @@ namespace MeltPoolDG::Simulation::VortexBubble
                           if (std::abs(phi_at_q[q]) < 0.02)
                             {
                               norm_interface_region +=
-                                Utilities::fixed_power<2>(
+                                dealii::Utilities::fixed_power<2>(
                                   sd_circle.value(fe.quadrature_point(q), 0) - phi_at_q[q]) *
                                 fe.JxW(q);
                               norm_interface_region_exact +=
-                                Utilities::fixed_power<2>(
+                                dealii::Utilities::fixed_power<2>(
                                   sd_circle.value(fe.quadrature_point(q), 0)) *
                                 fe.JxW(q);
                             }
@@ -389,16 +390,16 @@ namespace MeltPoolDG::Simulation::VortexBubble
                 }
 
               norm_interface_region_exact =
-                std::sqrt(Utilities::MPI::sum(norm_interface_region_exact, MPI_COMM_WORLD));
+                std::sqrt(dealii::Utilities::MPI::sum(norm_interface_region_exact, MPI_COMM_WORLD));
               norm_interface_region =
-                std::sqrt(Utilities::MPI::sum(norm_interface_region, MPI_COMM_WORLD));
+                std::sqrt(dealii::Utilities::MPI::sum(norm_interface_region, MPI_COMM_WORLD));
               norm_interface_kreiss =
-                std::sqrt(Utilities::MPI::sum(norm_interface_kreiss, MPI_COMM_WORLD));
+                std::sqrt(dealii::Utilities::MPI::sum(norm_interface_kreiss, MPI_COMM_WORLD));
 
               generic_data_out.get_vector("level_set").zero_out_ghost_values();
               generic_data_out.get_vector("distance").zero_out_ghost_values();
 
-              if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
+              if (dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
                 output
                   << "n_dofs L2_norm(phi-phiExact) L2_norm(signed_distance-exact) relL2_normGamma(signed_distance-exact) L2_normGamma(sd_exact) L2(Kreiss)"
                   << std::endl
