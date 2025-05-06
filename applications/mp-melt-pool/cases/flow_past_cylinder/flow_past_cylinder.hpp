@@ -20,46 +20,44 @@
 
 namespace MeltPoolDG::Simulation::FlowPastCylinder
 {
-  using namespace dealii;
-
   template <int dim>
-  class InitializePhi : public Function<dim>
+  class InitializePhi : public dealii::Function<dim>
   {
   public:
     InitializePhi()
-      : Function<dim>()
-      , distance_sphere(dim == 1 ? Point<dim>(0.0) : Point<dim>(1.3, 0.2), 0.1)
+      : dealii::Function<dim>()
+      , distance_sphere(dim == 1 ? dealii::Point<dim>(0.0) : dealii::Point<dim>(1.3, 0.2), 0.1)
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
       return CharacteristicFunctions::sgn(-distance_sphere.value(p));
     }
 
   private:
-    const Functions::SignedDistance::Sphere<dim> distance_sphere;
+    const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere;
   };
 
   template <int dim>
-  class InflowVelocity : public Function<dim>
+  class InflowVelocity : public dealii::Function<dim>
   {
   public:
     InflowVelocity(const double time, const bool fluctuating)
-      : Function<dim>(dim, time)
+      : dealii::Function<dim>(dim, time)
       , fluctuating(fluctuating)
     {}
 
     void
-    vector_value(const Point<dim> &p, Vector<double> &values) const override
+    vector_value(const dealii::Point<dim> &p, dealii::Vector<double> &values) const override
     {
       AssertDimension(values.size(), dim);
 
       // inflow velocity according to Schaefer & Turek
-      const double Um = (dim == 2 ? 1.5 : 2.25);
-      const double H  = 0.41;
-      double       coefficient =
-        Utilities::fixed_power<dim - 1>(4.) * Um / Utilities::fixed_power<2 * dim - 2>(H);
+      const double Um          = (dim == 2 ? 1.5 : 2.25);
+      const double H           = 0.41;
+      double       coefficient = dealii::Utilities::fixed_power<dim - 1>(4.) * Um /
+                           dealii::Utilities::fixed_power<2 * dim - 2>(H);
       values(0) = coefficient * p[1] * (H - p[1]);
       if (dim == 3)
         values(0) *= p[2] * (H - p[2]);
@@ -77,15 +75,15 @@ namespace MeltPoolDG::Simulation::FlowPastCylinder
    * utility from dealii
    */
   template <int dim>
-  class DirichletCondition : public Function<dim>
+  class DirichletCondition : public dealii::Function<dim>
   {
   public:
     DirichletCondition()
-      : Function<dim>()
+      : dealii::Function<dim>()
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int component = 0) const override
+    value(const dealii::Point<dim> &p, const unsigned int component = 0) const override
     {
       (void)p;
       (void)component;
@@ -109,38 +107,39 @@ namespace MeltPoolDG::Simulation::FlowPastCylinder
     create_spatial_discretization() override
     {
       this->triangulation =
-        std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+        std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
       if constexpr (dim == 2)
         {
-          Point<2>                  p1(0, 0);
-          Point<2>                  p2(2.5, 0.4);
+          dealii::Point<2>          p1(0, 0);
+          dealii::Point<2>          p2(2.5, 0.4);
           std::vector<unsigned int> refinements({50, 8});
-          Triangulation<2>          tmp;
-          GridGenerator::subdivided_hyper_rectangle(tmp, refinements, p1, p2);
-          std::set<Triangulation<2>::active_cell_iterator> cells_in_void;
-          for (Triangulation<2>::active_cell_iterator cell = tmp.begin(); cell != tmp.end(); ++cell)
+          dealii::Triangulation<2>  tmp;
+          dealii::GridGenerator::subdivided_hyper_rectangle(tmp, refinements, p1, p2);
+          std::set<dealii::Triangulation<2>::active_cell_iterator> cells_in_void;
+          for (dealii::Triangulation<2>::active_cell_iterator cell = tmp.begin(); cell != tmp.end();
+               ++cell)
             if (cell->center()[0] > 0.45 && cell->center()[0] < 0.55 && cell->center()[1] > 0.15 &&
                 cell->center()[1] < 0.25)
               cells_in_void.insert(cell);
-          GridGenerator::create_triangulation_with_removed_cells(tmp,
-                                                                 cells_in_void,
-                                                                 *this->triangulation);
+          dealii::GridGenerator::create_triangulation_with_removed_cells(tmp,
+                                                                         cells_in_void,
+                                                                         *this->triangulation);
 
           // shift cells at the upper end of the domain from 0.40 to 0.41. It
           // corresponds to faces with id 3
-          for (Triangulation<2>::cell_iterator cell = this->triangulation->begin();
+          for (dealii::Triangulation<2>::cell_iterator cell = this->triangulation->begin();
                cell != this->triangulation->end();
                ++cell)
             if (cell->at_boundary(3) && cell->face(3)->center()[1] > 0.39999999999)
-              for (unsigned int v = 0; v < GeometryInfo<2>::vertices_per_face; ++v)
+              for (unsigned int v = 0; v < dealii::GeometryInfo<2>::vertices_per_face; ++v)
                 cell->face(3)->vertex(v)[1] = 0.41;
 
           // Set the left boundary (inflow) to 1, the right to 2, the rest to 0.
-          for (Triangulation<2>::active_cell_iterator cell = this->triangulation->begin();
+          for (dealii::Triangulation<2>::active_cell_iterator cell = this->triangulation->begin();
                cell != this->triangulation->end();
                ++cell)
-            for (unsigned int f = 0; f < GeometryInfo<2>::faces_per_cell; ++f)
+            for (unsigned int f = 0; f < dealii::GeometryInfo<2>::faces_per_cell; ++f)
               if (cell->face(f)->at_boundary())
                 {
                   if (std::abs(cell->face(f)->center()[0]) < 1e-12)
@@ -153,7 +152,7 @@ namespace MeltPoolDG::Simulation::FlowPastCylinder
         }
       else
         {
-          AssertThrow(false, ExcNotImplemented());
+          AssertThrow(false, dealii::ExcNotImplemented());
         }
     }
 
@@ -173,7 +172,7 @@ namespace MeltPoolDG::Simulation::FlowPastCylinder
         "navier_stokes_u");
 
       this->attach_boundary_condition(
-        {2, std::shared_ptr<dealii::Function<dim>>(new Functions::ZeroFunction<dim>(1))},
+        {2, std::shared_ptr<dealii::Function<dim>>(new dealii::Functions::ZeroFunction<dim>(1))},
         "neumann",
         "navier_stokes_p");
     }

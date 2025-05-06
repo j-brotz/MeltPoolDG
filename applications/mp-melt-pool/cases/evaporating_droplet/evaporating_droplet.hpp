@@ -19,8 +19,6 @@
 
 namespace MeltPoolDG::Simulation::EvaporatingDroplet
 {
-  using namespace dealii;
-
   static double droplet_radius = 0.5;
   static double domain_length  = 4;
   static double bc_pressure    = 0.0;
@@ -31,22 +29,22 @@ namespace MeltPoolDG::Simulation::EvaporatingDroplet
   static DomainType domain_type = DomainType::rectangle;
 
   template <int dim>
-  class InitialValuesLS : public Function<dim>
+  class InitialValuesLS : public dealii::Function<dim>
   {
   public:
     InitialValuesLS()
-      : Function<dim>()
-      , distance_sphere(Point<dim>(), droplet_radius)
+      : dealii::Function<dim>()
+      , distance_sphere(dealii::Point<dim>(), droplet_radius)
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
       return -droplet_phi * distance_sphere.value(p);
     }
 
   private:
-    const Functions::SignedDistance::Sphere<dim> distance_sphere;
+    const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere;
   };
 
   template <int dim, typename number>
@@ -60,8 +58,8 @@ namespace MeltPoolDG::Simulation::EvaporatingDroplet
       : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
     {
       AssertThrow(std::abs(droplet_phi) - 1.0 < 1e-10,
-                  ExcMessage("'droplet phi' must be either 1 or"
-                             "-1."));
+                  dealii::ExcMessage("'droplet phi' must be either 1 or"
+                                     "-1."));
     }
 
     bool
@@ -92,53 +90,54 @@ namespace MeltPoolDG::Simulation::EvaporatingDroplet
       // create triangulation
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP || dim == 1)
         this->triangulation =
-          std::make_shared<parallel::shared::Triangulation<dim>>(this->mpi_communicator);
+          std::make_shared<dealii::parallel::shared::Triangulation<dim>>(this->mpi_communicator);
       else
-        this->triangulation =
-          std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+        this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+          this->mpi_communicator);
 
       const double half_length = domain_length / 2.;
 
       AssertThrow(droplet_radius < half_length,
-                  ExcMessage("The droplet radius exceeds the domain size. "
-                             "You might adjust either the domain length or the droplet radius."));
+                  dealii::ExcMessage(
+                    "The droplet radius exceeds the domain size. "
+                    "You might adjust either the domain length or the droplet radius."));
 
       if (domain_type == DomainType::rectangle)
         {
           std::vector<unsigned int> subdivisions(
             dim,
             5 * (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP ?
-                   Utilities::pow(2, this->parameters.base.global_refinements) :
+                   dealii::Utilities::pow(2, this->parameters.base.global_refinements) :
                    1));
 
-          const Point<dim> bottom_left =
-            (dim == 1 ? Point<dim>(-half_length) :
-             dim == 2 ? Point<dim>(-half_length, -half_length) :
-                        Point<dim>(-half_length, -half_length, -half_length));
-          const Point<dim> top_right =
-            (dim == 1 ? Point<dim>(half_length) :
-             dim == 2 ? Point<dim>(half_length, half_length) :
-                        Point<dim>(half_length, half_length, half_length));
+          const dealii::Point<dim> bottom_left =
+            (dim == 1 ? dealii::Point<dim>(-half_length) :
+             dim == 2 ? dealii::Point<dim>(-half_length, -half_length) :
+                        dealii::Point<dim>(-half_length, -half_length, -half_length));
+          const dealii::Point<dim> top_right =
+            (dim == 1 ? dealii::Point<dim>(half_length) :
+             dim == 2 ? dealii::Point<dim>(half_length, half_length) :
+                        dealii::Point<dim>(half_length, half_length, half_length));
 
           if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
-            GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
-                                                                     subdivisions,
-                                                                     bottom_left,
-                                                                     top_right);
+            dealii::GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
+                                                                             subdivisions,
+                                                                             bottom_left,
+                                                                             top_right);
           else
-            GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                      subdivisions,
-                                                      bottom_left,
-                                                      top_right);
+            dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                              subdivisions,
+                                                              bottom_left,
+                                                              top_right);
         }
       else if (domain_type == DomainType::ball)
         {
           // create circular domain
-          const Point<dim> center;
-          GridGenerator::hyper_ball(*this->triangulation, center, half_length /*radius*/);
+          const dealii::Point<dim> center;
+          dealii::GridGenerator::hyper_ball(*this->triangulation, center, half_length /*radius*/);
         }
       else
-        AssertThrow(false, ExcNotImplemented());
+        AssertThrow(false, dealii::ExcNotImplemented());
 
       if (this->parameters.base.fe.type != FiniteElementType::FE_SimplexP)
         this->triangulation->refine_global(this->parameters.base.global_refinements);
@@ -159,16 +158,15 @@ namespace MeltPoolDG::Simulation::EvaporatingDroplet
     {
       this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(), "signed_distance");
       this->attach_initial_condition(std::shared_ptr<dealii::Function<dim>>(
-                                       new Functions::ZeroFunction<dim>(dim)),
+                                       new dealii::Functions::ZeroFunction<dim>(dim)),
                                      "navier_stokes_u");
     }
 
     void
     do_postprocessing(const GenericDataOut<dim, double> &generic_data_out) const final
     {
-      dealii::ConditionalOStream pcout(std::cout,
-                                       Utilities::MPI::this_mpi_process(this->mpi_communicator) ==
-                                         0);
+      dealii::ConditionalOStream pcout(
+        std::cout, dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0);
       if (!diver)
         diver = std::make_shared<PostProcessingTools::DivergenceCalculator<dim, double>>(
           generic_data_out, "interface_velocity");

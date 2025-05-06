@@ -19,28 +19,27 @@
 
 namespace MeltPoolDG::Simulation::RisingBubble
 {
-  using namespace dealii;
 
   template <int dim>
-  class InitialValuesLS : public Function<dim>
+  class InitialValuesLS : public dealii::Function<dim>
   {
   public:
     InitialValuesLS()
-      : Function<dim>()
-      , distance_sphere(dim == 1 ? Point<dim>(0.5) :
-                        dim == 2 ? Point<dim>(0.5, 0.5) :
-                                   Point<dim>(0.5, 0.5, 0.5),
+      : dealii::Function<dim>()
+      , distance_sphere(dim == 1 ? dealii::Point<dim>(0.5) :
+                        dim == 2 ? dealii::Point<dim>(0.5, 0.5) :
+                                   dealii::Point<dim>(0.5, 0.5, 0.5),
                         0.25)
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
       return -distance_sphere.value(p);
     }
 
   private:
-    const Functions::SignedDistance::Sphere<dim> distance_sphere;
+    const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere;
   };
 
   /*
@@ -61,12 +60,12 @@ namespace MeltPoolDG::Simulation::RisingBubble
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           this->triangulation =
-            std::make_shared<parallel::shared::Triangulation<dim>>(this->mpi_communicator);
+            std::make_shared<dealii::parallel::shared::Triangulation<dim>>(this->mpi_communicator);
         }
       else
         {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+          this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+            this->mpi_communicator);
         }
 
       if constexpr ((dim == 2) || (dim == 3))
@@ -75,26 +74,27 @@ namespace MeltPoolDG::Simulation::RisingBubble
           std::vector<unsigned int> subdivisions(
             dim,
             5 * (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP ?
-                   Utilities::pow(2, this->parameters.base.global_refinements) :
+                   dealii::Utilities::pow(2, this->parameters.base.global_refinements) :
                    1));
           subdivisions[dim - 1] *= 2;
 
-          const Point<dim> bottom_left;
-          const Point<dim> top_right = (dim == 2 ? Point<dim>(1, 2) : Point<dim>(1, 1, 2));
+          const dealii::Point<dim> bottom_left;
+          const dealii::Point<dim> top_right =
+            (dim == 2 ? dealii::Point<dim>(1, 2) : dealii::Point<dim>(1, 1, 2));
 
           if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
             {
-              GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
-                                                                       subdivisions,
-                                                                       bottom_left,
-                                                                       top_right);
+              dealii::GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
+                                                                               subdivisions,
+                                                                               bottom_left,
+                                                                               top_right);
             }
           else
             {
-              GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                        subdivisions,
-                                                        bottom_left,
-                                                        top_right);
+              dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                                subdivisions,
+                                                                bottom_left,
+                                                                top_right);
             }
 
           // set boundary indicator to 2 on left and right face -> symmetry boundary
@@ -110,7 +110,7 @@ namespace MeltPoolDG::Simulation::RisingBubble
         }
       else
         {
-          AssertThrow(false, ExcNotImplemented());
+          AssertThrow(false, dealii::ExcNotImplemented());
         }
     }
 
@@ -135,9 +135,8 @@ namespace MeltPoolDG::Simulation::RisingBubble
     {
       this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(), "signed_distance");
       this->attach_initial_condition(std::shared_ptr<dealii::Function<dim>>(
-                                       new Functions::ZeroFunction<dim>(dim)),
+                                       new dealii::Functions::ZeroFunction<dim>(dim)),
                                      "navier_stokes_u");
     }
   };
-
 } // namespace MeltPoolDG::Simulation::RisingBubble

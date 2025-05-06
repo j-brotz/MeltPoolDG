@@ -19,29 +19,27 @@
 
 #include "../../melt_pool_case.hpp"
 
-namespace MeltPoolDG ::Simulation::EvaporatingDropletWithHeat
+namespace MeltPoolDG::Simulation::EvaporatingDropletWithHeat
 {
-  using namespace dealii;
-
   template <int dim>
-  class InitialValuesLS : public Function<dim>
+  class InitialValuesLS : public dealii::Function<dim>
   {
   public:
     InitialValuesLS(const double eps)
-      : Function<dim>()
-      , distance_sphere(dim == 2 ? Point<dim>(0, 0) : Point<dim>(0, 0, 0), 0.02)
+      : dealii::Function<dim>()
+      , distance_sphere(dim == 2 ? dealii::Point<dim>(0, 0) : dealii::Point<dim>(0, 0, 0), 0.02)
       , eps(eps)
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override
     {
       return CharacteristicFunctions::tanh_characteristic_function(-distance_sphere.value(p), eps);
     }
 
   private:
-    const Functions::SignedDistance::Sphere<dim> distance_sphere;
-    const double                                 eps;
+    const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere;
+    const double                                         eps;
   };
 
   /*
@@ -67,12 +65,12 @@ namespace MeltPoolDG ::Simulation::EvaporatingDropletWithHeat
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           this->triangulation =
-            std::make_shared<parallel::shared::Triangulation<dim>>(this->mpi_communicator);
+            std::make_shared<dealii::parallel::shared::Triangulation<dim>>(this->mpi_communicator);
         }
       else
         {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+          this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+            this->mpi_communicator);
         }
 
       if constexpr ((dim == 2) || (dim == 3))
@@ -81,35 +79,35 @@ namespace MeltPoolDG ::Simulation::EvaporatingDropletWithHeat
           std::vector<unsigned int> subdivisions(
             dim,
             5 * (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP ?
-                   Utilities::pow(2, this->parameters.base.global_refinements) :
+                   dealii::Utilities::pow(2, this->parameters.base.global_refinements) :
                    1));
 
-          const Point<dim> top_right   = (dim == 2) ?
-                                           Point<dim>(lambda / 2., lambda / 2.) :
-                                           Point<dim>(lambda / 2., lambda / 2., lambda / 2.);
-          const Point<dim> bottom_left = (dim == 2) ?
-                                           Point<dim>(-lambda / 2., -lambda / 2.) :
-                                           Point<dim>(-lambda / 2., -lambda / 2., -lambda / 2.);
+          const dealii::Point<dim> top_right =
+            (dim == 2) ? dealii::Point<dim>(lambda / 2., lambda / 2.) :
+                         dealii::Point<dim>(lambda / 2., lambda / 2., lambda / 2.);
+          const dealii::Point<dim> bottom_left =
+            (dim == 2) ? dealii::Point<dim>(-lambda / 2., -lambda / 2.) :
+                         dealii::Point<dim>(-lambda / 2., -lambda / 2., -lambda / 2.);
 
           if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
             {
-              GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
-                                                                       subdivisions,
-                                                                       bottom_left,
-                                                                       top_right);
+              dealii::GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
+                                                                               subdivisions,
+                                                                               bottom_left,
+                                                                               top_right);
             }
           else
             {
-              GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                        subdivisions,
-                                                        bottom_left,
-                                                        top_right);
+              dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                                subdivisions,
+                                                                bottom_left,
+                                                                top_right);
               this->triangulation->refine_global(this->parameters.base.global_refinements);
             }
         }
       else
         {
-          AssertThrow(false, ExcNotImplemented());
+          AssertThrow(false, dealii::ExcNotImplemented());
         }
     }
 
@@ -128,21 +126,20 @@ namespace MeltPoolDG ::Simulation::EvaporatingDropletWithHeat
     set_field_conditions() override
     {
       const double eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
-        GridTools::minimal_cell_diameter(*this->triangulation) /
+        dealii::GridTools::minimal_cell_diameter(*this->triangulation) /
         this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
 
-      AssertThrow(eps > 0, ExcNotImplemented());
+      AssertThrow(eps > 0, dealii::ExcNotImplemented());
 
       this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(eps), "level_set");
       this->attach_initial_condition(std::shared_ptr<dealii::Function<dim>>(
-                                       new Functions::ZeroFunction<dim>(dim)),
+                                       new dealii::Functions::ZeroFunction<dim>(dim)),
                                      "navier_stokes_u");
       this->attach_initial_condition(std::shared_ptr<dealii::Function<dim>>(
-                                       new Functions::ConstantFunction<dim>(0.0)),
+                                       new dealii::Functions::ConstantFunction<dim>(0.0)),
                                      "heat_transfer");
     }
 
     const double lambda;
   };
-
 } // namespace MeltPoolDG::Simulation::EvaporatingDropletWithHeat

@@ -1,5 +1,5 @@
 #!/bin/bash
 
-for i in $(find applications/ tests/ unit_tests/ -type f \( -name "*.json" \) ); do
+for i in $(find applications/ doc/ unit_tests/ -type f \( -name "*.json" \) ); do
     sed -i $1
 done

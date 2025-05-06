@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # format json-files
-for i in $(find . -type f \( -name "*.json" \) -not -path "./build*" ); do
+for i in $(find applications/ doc/ unit_tests/ -type f \( -name "*.json" \) ); do
   python3 scripts/formatting/format_json.py $i $i &
 done
 
