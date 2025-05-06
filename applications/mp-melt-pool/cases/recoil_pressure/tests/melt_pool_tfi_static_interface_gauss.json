@@ -32,8 +32,8 @@
     "domain z max": "0.2e-3",
     "initial temperature": "1000.0"
   },
-  "melt pool": {
-    "mp set velocity to zero in solid": "false"
+  "melt front propagation": {
+    "set velocity to zero in solid": "false"
   },
   "material": {
     "gas": {

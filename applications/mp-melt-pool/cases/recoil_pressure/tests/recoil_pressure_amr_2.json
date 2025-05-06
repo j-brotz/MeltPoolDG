@@ -51,7 +51,7 @@
     "do move": "false",
     "scan speed": "0.003"
   },
-  "melt pool": {
+  "melt front propagation": {
     "mp liquid melting point": "1700"
   },
   "simulation specific domain": {

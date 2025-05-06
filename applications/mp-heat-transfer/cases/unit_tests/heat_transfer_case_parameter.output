@@ -17,7 +17,6 @@
     },
     "base":
     {
-        "application name": "not_initialized",
         "case name": "not_initialized",
         "dimension": "2",
         "do print parameters": "true",

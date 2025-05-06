@@ -55,9 +55,9 @@
     "do move": "false",
     "scan speed": "0.003"
   },
-  "melt pool": {
-    "mp do not reinitialize in solid": "false",
-    "mp set velocity to zero in solid": "true"
+  "melt front propagation": {
+    "do not reinitialize in solid": "false",
+    "set velocity to zero in solid": "true"
   },
   "simulation specific domain": {
     "domain x max": "0.000100",
