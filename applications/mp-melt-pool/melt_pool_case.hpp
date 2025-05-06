@@ -6,6 +6,7 @@
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
+#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
 #include <meltpooldg/flow/flow_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>

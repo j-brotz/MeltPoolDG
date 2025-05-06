@@ -49,7 +49,7 @@
   "melt front propagation": {
     "do not reinitialize in solid": "false",
     "set velocity to zero in solid": "true",
-    "mp solid fraction lower limit": "0.77"
+    "solid fraction lower limit": "0.77"
   },
   "simulation specific domain": {
     "domain x max": "0.000100",
