@@ -60,13 +60,13 @@ namespace MeltPoolDG
       heat.add_parameters(prm);
       laser.add_parameters(prm);
       rte.add_parameters(prm);
-
       flow.add_parameters(prm);
       evapor.add_parameters(prm);
       material.add_parameters(prm);
       output.add_parameters(prm);
       profiling.add_parameters(prm);
       restart.add_parameters(prm);
+      melt_front.add_parameters(prm);
 
       prm.enter_subsection("application specific");
       {

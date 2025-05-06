@@ -1,4 +1,4 @@
-#include <deal.II/base/parameter_handler.hpp>
+#include <deal.II/base/parameter_handler.h>
 
 #include <iostream>
 
