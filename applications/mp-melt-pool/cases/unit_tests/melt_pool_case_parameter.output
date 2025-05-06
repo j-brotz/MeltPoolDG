@@ -10,6 +10,38 @@
         "n initial refinement cycles": "0",
         "upper perc to refine": "0"
     },
+    "application specific":
+    {
+        "do advect level set": "true",
+        "do extrapolate coupling terms": "false",
+        "do heat transfer": "false",
+        "do solidification": "false",
+        "amr":
+        {
+            "automatic grid refinement type": "fixed_number",
+            "do auto detect frequency": "false",
+            "do refine all interface cells": "false",
+            "fraction of melting point refined in solid": "1",
+            "refine gas domain": "false",
+            "strategy": "generic"
+        },
+        "coupling heat evapor":
+        {
+            "n max iter": "1",
+            "tol": "1e-10"
+        },
+        "coupling ls evapor":
+        {
+            "n max iter": "1",
+            "tol": "1e-10"
+        },
+        "mp heat up":
+        {
+            "max change factor time step size": "1.5",
+            "max temperature": "-1",
+            "time step size": "-1"
+        }
+    },
     "base":
     {
         "case name": "not_initialized",
@@ -449,11 +481,11 @@
             "thermal conductivity": "0"
         }
     },
-    "melt pool":
+    "melt front propagation":
     {
-        "mp do not reinitialize in solid": "false",
-        "mp set velocity to zero in solid": "false",
-        "mp solid fraction lower limit": "1"
+        "do not reinitialize in solid": "false",
+        "set velocity to zero in solid": "false",
+        "solid fraction lower limit": "1"
     },
     "output":
     {
