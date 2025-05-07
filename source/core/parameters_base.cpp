@@ -61,7 +61,7 @@ namespace MeltPoolDG
       }
 
     // Post-processing
-    post(parameter_filename, prm);
+    post(parameter_filename);
 
     parameters_read = true;
   }

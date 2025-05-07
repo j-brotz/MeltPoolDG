@@ -158,7 +158,7 @@ namespace MeltPoolDG
       prm.leave_subsection();
     }
     void
-    post(const std::string &parameter_filename, dealii::ParameterHandler &prm) final
+    post(const std::string &parameter_filename) final
     {
       /************************************************************************************
        * set input-file-dependent default parameters
@@ -175,7 +175,7 @@ namespace MeltPoolDG
       flow.post(material);
       output.post(time_stepping.time_step_size, parameter_filename);
       restart.post(output.directory);
-      adaflo_params.post(prm, material, base.fe.type, time_stepping);
+      adaflo_params.post(material, base.fe.type, time_stepping);
       /************************************************************************************
        * check input parameters for validity
        ************************************************************************************/

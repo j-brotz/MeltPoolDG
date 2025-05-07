@@ -10,7 +10,7 @@ namespace MeltPoolDG::Flow
     // declare parameters
     prm.enter_subsection("flow");
     prm.enter_subsection("adaflo");
-    params.declare_parameters(prm);
+    params.add_parameters(prm);
     prm.leave_subsection();
     prm.leave_subsection();
   }
@@ -18,16 +18,11 @@ namespace MeltPoolDG::Flow
   template <typename number>
   void
   AdafloWrapperParameters<number>::post(
-    dealii::ParameterHandler                        &prm,
     const MaterialData<number>                       material,
     const FiniteElementType                         &fe_type,
     const TimeIntegration::TimeSteppingData<number> &time_stepping)
   {
-    prm.enter_subsection("flow");
-    prm.enter_subsection("adaflo");
-    params.parse_parameters(prm);
-    prm.leave_subsection();
-    prm.leave_subsection();
+    params.post();
 
     // WARNING: by setting the differences to a non-zero value we force
     //   adaflo to assume that we are running a simulation with variable

@@ -55,7 +55,7 @@ namespace MeltPoolDG::Heat
     }
 
     void
-    post(const std::string &parameter_filename, dealii::ParameterHandler &prm) final
+    post(const std::string &parameter_filename) final
     {
       amr.post(base.global_refinements, false /*restart not supported*/);
       heat.post(base.fe, base.verbosity_level);

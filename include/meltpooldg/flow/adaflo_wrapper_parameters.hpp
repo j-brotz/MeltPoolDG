@@ -22,8 +22,7 @@ namespace MeltPoolDG::Flow
     add_parameters(dealii::ParameterHandler &prm);
 
     void
-    post(dealii::ParameterHandler                        &prm,
-         const MaterialData<number>                       material,
+    post(const MaterialData<number>                       material,
          const FiniteElementType                         &fe_type,
          const TimeIntegration::TimeSteppingData<number> &time_stepping);
 
