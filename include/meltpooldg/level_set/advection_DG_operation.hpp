@@ -3,7 +3,6 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/core/operator_base.hpp>
-#include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/level_set/advection_DG_operator.hpp>
 #include <meltpooldg/level_set/advection_diffusion_operation_base.hpp>

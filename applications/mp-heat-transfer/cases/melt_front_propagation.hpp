@@ -31,8 +31,8 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
 {
   using namespace MeltPoolDG::Simulation;
 
-  template <int dim, typename number>
-  class SimulationMeltFrontPropagation : public Heat::HeatTransferCase<dim, number>
+  template <int dim, typename number, typename CaseClass>
+  class SimulationMeltFrontPropagation : public CaseClass
   {
   private:
     number x_min        = 0.0;

@@ -2,8 +2,16 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/level_set/curvature_data.hpp>
+#include <meltpooldg/level_set/normal_vector_data.hpp>
+#include <meltpooldg/level_set/reinitialization_data.hpp>
+#include <meltpooldg/post_processing/output_data.hpp>
+#include <meltpooldg/time_integration/time_stepping_data.hpp>
+#include <meltpooldg/utilities/amr_data.hpp>
+#include <meltpooldg/utilities/profiling_data.hpp>
 
 
 namespace MeltPoolDG::LevelSet

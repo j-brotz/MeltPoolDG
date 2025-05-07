@@ -2,7 +2,6 @@
 
 namespace MeltPoolDG::Flow
 {
-
   template <typename number>
   void
   FlowData<number>::add_parameters(dealii::ParameterHandler &prm)

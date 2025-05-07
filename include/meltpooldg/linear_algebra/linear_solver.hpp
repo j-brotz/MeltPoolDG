@@ -11,7 +11,6 @@
 #include <deal.II/base/index_set.h>
 #include <deal.II/base/mpi.h>
 
-#include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 

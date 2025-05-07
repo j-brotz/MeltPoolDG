@@ -17,9 +17,6 @@ namespace MeltPoolDG
         "case name",
         case_name,
         "Sets the base name for the application that will be fed to the problem type.");
-      prm.add_parameter("application name",
-                        application_name,
-                        "Sets the base name for the problem that should be solved.");
       prm.add_parameter("dimension", dimension, "Defines the dimension of the problem");
       prm.add_parameter("number",
                         number,

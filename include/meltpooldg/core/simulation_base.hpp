@@ -11,7 +11,6 @@
 
 #include <meltpooldg/core/boundary_conditions.hpp>
 #include <meltpooldg/core/case_factory.hpp>
-#include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/periodic_boundary_conditions.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/journal.hpp>
@@ -427,22 +426,6 @@ namespace MeltPoolDG
           enable_print = add_simulation_specific_parameters(prm);
         },
         enable_print && (dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0));
-    }
-  };
-
-  // TODO: move somewhere else
-  template <int dim, typename number>
-  class MeltPoolCase : public SimulationCaseBase<dim, number>
-  {
-    // Simulation parameters object.
-  public:
-    Parameters<number> parameters;
-
-    MeltPoolCase(const std::string &parameter_file_in, MPI_Comm mpi_communicator_in)
-      : SimulationCaseBase<dim, number>(parameter_file_in, mpi_communicator_in)
-    {
-      dealii::ParameterHandler prm;
-      parameters.process_parameters_file(prm, parameter_file_in);
     }
   };
 

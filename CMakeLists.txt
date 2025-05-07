@@ -69,10 +69,24 @@ if (NOT DEAL_II_WITH_TRILINOS)
 endif ()
 deal_ii_initialize_cached_variables()
 
+
+# ##############################################################################
+# find adaflo
+# ##############################################################################
+find_library(ADAFLO adaflo HINTS ${ADAFLO_LIB})
+if (ADAFLO)
+    add_compile_definitions(ADAFLO_SUPPORT)
+    set(DEAL_II_WITH_ADAFLO_SUPPORT ON)
+    set(MELT_POOL_DG_WITH_ADAFLO TRUE)
+    message(STATUS "Adaflo found: ${ADAFLO}")
+else ()
+  set(MELT_POOL_DG_WITH_ADAFLO FALSE)
+    message(STATUS "Adaflo not found. Setting up project without adaflo support.")
+endif ()
+
 # ##############################################################################
 # build meltpooldg library
 # ##############################################################################
-set(libName "meltpooldg")
 
 # query git information
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
@@ -88,7 +102,16 @@ file(GLOB_RECURSE sources
         "${CMAKE_SOURCE_DIR}/source/**/*.cpp"
         "${CMAKE_SOURCE_DIR}/simulations/*.cpp")
 
+
+set(libName "meltpooldg")
+
 add_library(${libName} ${sources})
+
+if (ADAFLO)
+  target_compile_definitions(${libName} PUBLIC MELT_POOL_DG_WITH_ADAFLO)
+  target_include_directories(${libName} PUBLIC ${ADAFLO_INCLUDE})
+  target_link_libraries(${libName} ${ADAFLO})
+endif ()
 
 TARGET_COMPILE_DEFINITIONS(${libName} PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
@@ -100,52 +123,7 @@ if (${DEAL_II_VERSION_MAJOR} GREATER_EQUAL 10)
 endif ()
 
 # ##############################################################################
-# create executable
-# ##############################################################################
-
-set(projectName "meltpooldg-temp")
-
-message("-- building executable: meltpooldg")
-add_executable(${projectName} meltpooldg.cpp)
-deal_ii_setup_target(${projectName})
-
-target_link_libraries(${projectName} ${libName})
-# rename executable to meltpooldg
-set_target_properties(${projectName} PROPERTIES OUTPUT_NAME ${libName})
-
-# ##############################################################################
-# link to adaflo (optional)
-# ##############################################################################
-
-find_library(ADAFLO adaflo HINTS ${ADAFLO_LIB})
-if (ADAFLO)
-    message("-- Adaflo found: ${ADAFLO}")
-    target_compile_definitions(${projectName} PUBLIC MELT_POOL_DG_WITH_ADAFLO)
-    target_include_directories(${projectName} PUBLIC ${ADAFLO_INCLUDE})
-    target_link_libraries(${projectName} ${ADAFLO})
-    target_compile_definitions(${libName} PUBLIC MELT_POOL_DG_WITH_ADAFLO)
-    target_include_directories(${libName} PUBLIC ${ADAFLO_INCLUDE})
-    target_link_libraries(${libName} ${ADAFLO})
-    set(DEAL_II_WITH_ADAFLO_SUPPORT ON)
-endif ()
-
-# Define custom targets to easily switch the build type:
-add_custom_target(
-        debug
-        COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
-        COMMENT
-        "Switch CMAKE_BUILD_TYPE to Debug\nPlease call 'make' to build the debug project"
-)
-
-add_custom_target(
-        release
-        COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
-        COMMENT
-        "Switch CMAKE_BUILD_TYPE to Release\nPlease call 'make' to build the release project"
-)
-
-# ##############################################################################
-# tests
+# unit tests of the library
 # ##############################################################################
 option(MPDG_ENABLE_TESTING "Configure tests" ON)
 
@@ -154,7 +132,6 @@ if (MPDG_ENABLE_TESTING)
     set(DEAL_II_HAVE_TESTS_DIRECTORY ON)
     set(_n_tests "0")
     enable_testing()
-    add_subdirectory(tests)
     add_subdirectory(unit_tests)
 else ()
     message(STATUS "Tests: disabled")
@@ -175,6 +152,7 @@ option(MPDG_ENABLE_HEAT "Build heat-transfer executables" ON)
 option(MPDG_ENABLE_RTE "Build radiative-transport executables" ON)
 option(MPDG_ENABLE_REINIT "Build reinitialization executables" ON)
 option(MPDG_ENABLE_LS "Build level-set executables" ON)
+option(MPDG_ENABLE_MP "Build melt-pool executables" ON)
 
 if (MPDG_ENABLE_ADVEC_DIFF)
     message(STATUS "Application: advection-diffusion enabled")
@@ -223,4 +201,11 @@ if (MPDG_ENABLE_LS)
     add_subdirectory(applications/mp-level-set)
 else ()
     message(STATUS "Application: level-set disabled")
+endif ()
+
+if (MPDG_ENABLE_MP)
+    message(STATUS "Application: melt-pool enabled")
+    add_subdirectory(applications/mp-melt-pool)
+else ()
+    message(STATUS "Application: melt-pool disabled")
 endif ()

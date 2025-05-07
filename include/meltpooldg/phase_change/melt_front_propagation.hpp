@@ -8,14 +8,13 @@
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/material.hpp>
-#include <meltpooldg/core/parameters.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/phase_change/melt_front_propagation_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 
 #include <vector>
 
-
-namespace MeltPoolDG::MeltPool
+namespace MeltPoolDG
 {
   template <int dim, typename number>
   class MeltFrontPropagation
@@ -24,13 +23,12 @@ namespace MeltPoolDG::MeltPool
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
     const ScratchData<dim, dim, number> &scratch_data;
-    /**
-     *  Parameters
-     */
-    const MeltPoolData<number> &mp_data;
+
+    const MeltFrontPropagationData<number> &mp_data;
 
     // melting/solidification
     Material<number> melting_solidification;
+
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
      *  ScratchData object is selected. This is important when
@@ -52,16 +50,17 @@ namespace MeltPoolDG::MeltPool
     VectorType liquid;
 
   public:
-    MeltFrontPropagation(const ScratchData<dim, dim, number> &scratch_data_in,
-                         const Parameters<number>            &data_in,
-                         const unsigned int                   phase_fraction_dof_idx_in,
-                         const unsigned int                   ls_dof_idx_in,
-                         const VectorType                    &temperature_in,
-                         const unsigned int                   reinit_dof_idx_in,
-                         const unsigned int                   reinit_no_solid_dof_idx_in,
-                         const unsigned int                   flow_vel_dof_idx_in,
-                         const unsigned int                   flow_vel_no_solid_dof_idx_in,
-                         const unsigned int                   heat_hanging_nodes_dof_idx_in);
+    MeltFrontPropagation(const ScratchData<dim, dim, number>    &scratch_data_in,
+                         const MeltFrontPropagationData<number> &mp_data,
+                         const MaterialData<number>             &material_data,
+                         const unsigned int                      phase_fraction_dof_idx_in,
+                         const unsigned int                      ls_dof_idx_in,
+                         const VectorType                       &temperature_in,
+                         const unsigned int                      reinit_dof_idx_in,
+                         const unsigned int                      reinit_no_solid_dof_idx_in,
+                         const unsigned int                      flow_vel_dof_idx_in,
+                         const unsigned int                      flow_vel_no_solid_dof_idx_in,
+                         const unsigned int                      heat_hanging_nodes_dof_idx_in);
 
     void
     set_initial_condition(const VectorType &level_set_as_heaviside, VectorType &level_set);
@@ -156,4 +155,4 @@ namespace MeltPoolDG::MeltPool
       const dealii::AffineConstraints<number> &reinit_dirichlet_constraints_no_solid,
       dealii::AffineConstraints<number>       &reinit_dirichlet_constraints);
   };
-} // namespace MeltPoolDG::MeltPool
+} // namespace MeltPoolDG

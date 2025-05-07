@@ -10,7 +10,6 @@ namespace MeltPoolDG
   struct BaseData
   {
     std::string       case_name           = "not_initialized";
-    std::string       application_name    = "not_initialized";
     unsigned int      dimension           = 2;
     std::string       number              = "double";
     unsigned int      global_refinements  = 1;

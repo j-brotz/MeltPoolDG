@@ -1,1 +1,5 @@
-sed -i $1 simulations/**/*.json applications/**/**/*.json tests/*.json tests/**/*.json scripts/config/singularity/*.json
+#!/bin/bash
+
+for i in $(find applications/ doc/ unit_tests/ -type f \( -name "*.json" \) ); do
+    sed -i $1
+done
