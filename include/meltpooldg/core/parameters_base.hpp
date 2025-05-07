@@ -87,7 +87,7 @@ namespace MeltPoolDG
      * @param parameter_filename The name of the parameter file that was processed.
      */
     virtual void
-    post(const std::string &parameter_filename) = 0;
+    post(const std::string &parameter_filename, dealii::ParameterHandler &prm) = 0;
 
     bool parameters_read = false; /**< Tracks whether parameters have been read. */
 

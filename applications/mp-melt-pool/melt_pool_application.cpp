@@ -672,9 +672,6 @@ namespace MeltPoolDG
   void
   MeltPoolApplication<dim, number>::initialize()
   {
-#ifdef MELT_POOL_DG_WITH_ADAFLO
-    simulation_case->parameters.adaflo_params.parse_parameters(simulation_case->parameter_file);
-#endif
     const auto &param = simulation_case->parameters;
 
     scratch_data =
@@ -749,16 +746,12 @@ namespace MeltPoolDG
     material = std::make_shared<Material<number>>(param.material, material_type);
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    auto adaflo_flow_operation = std::make_shared<Flow::AdafloWrapper<dim, number>>(
-      *scratch_data,
-      simulation_case,
-      const_cast<Flow::AdafloWrapperParameters &>(param.adaflo_params),
-      param.evapor,
-      param.material,
-      param.base,
-      param.time_stepping,
-      *time_iterator,
-      param.evapor.evaporative_cooling.enable);
+    auto adaflo_flow_operation =
+      std::make_shared<Flow::AdafloWrapper<dim, number>>(*scratch_data,
+                                                         simulation_case,
+                                                         param.adaflo_params,
+                                                         *time_iterator,
+                                                         param.evapor.evaporative_cooling.enable);
     flow_operation = adaflo_flow_operation;
 
     flow_vel_no_solid_dof_idx =

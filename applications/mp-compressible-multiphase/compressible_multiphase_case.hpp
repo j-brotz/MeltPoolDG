@@ -40,7 +40,7 @@ namespace MeltPoolDG::Multiphase
     }
 
     void
-    post(const std::string &parameter_filename) override
+    post(const std::string &parameter_filename, dealii::ParameterHandler &prm) final
     {
       output.post(time_stepping.time_step_size, parameter_filename);
       flow.post(base.fe, base.verbosity_level);

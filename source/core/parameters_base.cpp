@@ -47,7 +47,7 @@ namespace MeltPoolDG
     std::ifstream file(parameter_filename);
     if (parameter_filename.substr(parameter_filename.find_last_of(".") + 1) == "json")
       {
-        prm.parse_input_from_json(file, true);
+        prm.parse_input_from_json(file, false /*skip_undefined*/);
       }
     else if (parameter_filename.substr(parameter_filename.find_last_of(".") + 1) == "prm")
       {
@@ -61,7 +61,7 @@ namespace MeltPoolDG
       }
 
     // Post-processing
-    post(parameter_filename);
+    post(parameter_filename, prm);
 
     parameters_read = true;
   }
