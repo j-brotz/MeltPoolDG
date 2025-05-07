@@ -23,7 +23,7 @@ namespace MeltPoolDG::Flow
       file.open(parameter_filename);
 
       if (parameter_filename.substr(parameter_filename.find_last_of(".") + 1) == "json")
-        prm_adaflo.parse_input_from_json(file, true);
+        prm_adaflo.parse_input_from_json(file, false /*skip_undefined*/);
       else if (parameter_filename.substr(parameter_filename.find_last_of(".") + 1) == "prm")
         prm_adaflo.parse_input(parameter_filename);
       else

@@ -16,7 +16,7 @@ namespace MeltPoolDG
     file.open(parameter_file);
 
     if (parameter_file.substr(parameter_file.find_last_of(".") + 1) == "json")
-      prm.parse_input_from_json(file, true);
+      prm.parse_input_from_json(file, false /*skip_undefined*/);
     else if (parameter_file.substr(parameter_file.find_last_of(".") + 1) == "prm")
       prm.parse_input(parameter_file);
     else
