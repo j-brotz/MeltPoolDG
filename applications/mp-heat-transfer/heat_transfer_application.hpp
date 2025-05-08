@@ -16,6 +16,7 @@
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/amr.hpp>
+#include <meltpooldg/utilities/attach_vectors.hpp>
 
 #include <functional>
 #include <memory>
@@ -71,9 +72,9 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<LaserOperation<dim, number>> laser_operation;
 
     // AMR
-    AMR::MarkCellsForRefinementType<dim>                 mark_cells_for_refinement = {};
-    AMR::AttachDoFHandlerAndVectorsType<dim, VectorType> attach_vectors_for_amr    = {};
-    std::function<void()>                                amr_post                  = {};
+    AMR::MarkCellsForRefinementType<dim>            mark_cells_for_refinement = {};
+    AttachDoFHandlerAndVectorsType<dim, VectorType> attach_vectors_for_amr    = {};
+    std::function<void()>                           amr_post                  = {};
 
   public:
     HeatTransferApplication(std::unique_ptr<CaseType> simulation_case)

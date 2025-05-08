@@ -7,6 +7,7 @@
 #include <deal.II/numerics/solution_transfer.h>
 
 #include <memory>
+#include <utility>
 
 namespace MeltPoolDG::AMR
 {
@@ -28,9 +29,6 @@ namespace MeltPoolDG::AMR
 
     internal::limit_amr(tria, amr);
 
-    // the following is very similar to the code in
-    // CutUtil::SolutionTransferOperator::transfer_solution_constant_dofs()
-
     if (not attach_vectors)
       {
         // short circuit this function
@@ -41,9 +39,13 @@ namespace MeltPoolDG::AMR
         return;
       }
 
+    // the following is very similar to the code in
+    // CutUtil::SolutionTransferOperator::transfer_solution_constant_dofs()
+
     DoFHandlerAndVectorDataType<dim, VectorType> data;
 
     attach_vectors(data);
+    data.shrink_to_fit();
 
     const unsigned int n_dof_handlers = data.size();
 

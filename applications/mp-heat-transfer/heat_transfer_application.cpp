@@ -384,14 +384,9 @@ namespace MeltPoolDG::Heat
           return true;
         };
 
-        attach_vectors_for_amr = [this](AMR::DoFHandlerAndVectorDataType<dim, VectorType> &data) {
+        attach_vectors_for_amr = [this](DoFHandlerAndVectorDataType<dim, VectorType> &data) {
           data.emplace_back(&dof_handler, [&](std::vector<VectorType *> &vectors) {
             heat_operation->attach_vectors(vectors);
-          });
-          data.emplace_back(&dof_handler_level_set, [&](std::vector<VectorType *> &) {
-            // We must attach the level set dof handler for CutUtil::refine_grid() but we don't
-            // attach any vectors since after AMR, they are interpolated from the field function
-            // anyway.
           });
           if (laser_operation)
             laser_operation->attach_vectors(data);
@@ -553,8 +548,8 @@ namespace MeltPoolDG::Heat
   void
   HeatTransferApplication<dim, number>::refine_mesh(const bool is_inital_solution)
   {
-    AMR::AttachDoFHandlerAndVectorsType<dim, VectorType> attach_vectors;
-    std::function<void()>                                post;
+    AttachDoFHandlerAndVectorsType<dim, VectorType> attach_vectors;
+    std::function<void()>                           post;
     if (is_inital_solution)
       {
         attach_vectors = {};
@@ -597,7 +592,8 @@ namespace MeltPoolDG::Heat
                                              *level_set_field_function,
                                              level_set);
         },
-        &dof_handler_level_set,
+        dof_handler_level_set,
+        level_set,
         [this] { this->setup_dof_system(); },
         simulation_case->parameters.amr,
         *simulation_case->triangulation,

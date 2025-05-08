@@ -5,25 +5,24 @@
 #include <deal.II/grid/tria.h>
 
 #include <meltpooldg/utilities/amr_data.hpp>
+#include <meltpooldg/utilities/attach_vectors.hpp>
 
 #include <functional>
-#include <utility>
 #include <vector>
 
 
 namespace MeltPoolDG::AMR
 {
+  /**
+   * Type alias definition for the lambda function that determines how the mesh is to be refined.
+   * If this function determines that the mesh does not change, it return false, true otherwise.
+   */
   template <int dim>
   using MarkCellsForRefinementType = std::function<bool(dealii::Triangulation<dim> &)>;
 
-  template <int dim, typename VectorType>
-  using DoFHandlerAndVectorDataType = std::vector<
-    std::pair<const dealii::DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>;
-
-  template <int dim, typename VectorType>
-  using AttachDoFHandlerAndVectorsType =
-    std::function<void(DoFHandlerAndVectorDataType<dim, VectorType> &)>;
-
+  /**
+   * determine whether the current @param n_time_step is chosen to execute AMR
+   */
   template <typename number>
   inline bool
   now(const AdaptiveMeshingData<number> &amr, const int n_time_step)
@@ -32,7 +31,20 @@ namespace MeltPoolDG::AMR
   }
 
   /**
-   * TODO document what needs to be done in each of the lambdas
+   * Refine the mesh in @param tria if the @param n_time_step is chosen to be refined by now().
+   *
+   * @param mark_cells_for_refinement lambda function of type MarkCellsForRefinementType, see its
+   *                                  documentation for info
+   * @param attach_vectors  lambda function of type AttachDoFHandlerAndVectorsType, that attaches
+   *                        all DoFHandlers and their respective DoFVectors that ought to be
+   *                        transferred to the new mesh
+   * @param post this lambda function is run after AMR was executed
+   * @param setup_dof_system setup the dof system, this includes:
+   *                         - distribute DoFs on the new mesh
+   *                         - create pratitioning for the new mesh
+   *                         - setup constraints on the new mesh
+   *                         - reinit the MatrixFree object for the new DoFs (ScratchData::build())
+   *                         - initialize all DoF vectors for the new DoF
    */
   template <int dim, typename VectorType, typename number = typename VectorType::value_type>
   void
@@ -61,6 +73,7 @@ namespace MeltPoolDG::AMR
   {
     // Limit the maximum and minimum refinement levels of cells of the grid and do not
     // coarsen/refine cells along boundary
+    // TODO use this function within mark_cells_for_refinement
     template <int dim, typename number>
     void
     limit_amr(dealii::Triangulation<dim> &tria, const AdaptiveMeshingData<number> &amr_data);

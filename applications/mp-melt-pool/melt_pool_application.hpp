@@ -24,15 +24,13 @@
 #include <meltpooldg/phase_change/recoil_pressure_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
+#include <meltpooldg/utilities/attach_vectors.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
 #include <meltpooldg/utilities/restart.hpp>
 
 #include <functional>
 #include <memory>
-#include <string>
-#include <utility>
-#include <vector>
 
 #include "melt_pool_case.hpp"
 
@@ -59,7 +57,7 @@ namespace MeltPoolDG
   private:
     const std::shared_ptr<CaseType> simulation_case;
 
-    /*
+    /**
      *  This function initials the relevant scratch data
      *  for the computation of the level set problem
      */
@@ -106,45 +104,50 @@ namespace MeltPoolDG
     compute_interface_velocity_sharp(const LevelSet::LevelSetData<number>       &ls_data,
                                      const Evaporation::EvaporationData<number> &evapor_data);
 
-    /*
+    /**
      *  perform output of results
      */
     void
     output_results(const bool                        force_output = false,
                    const OutputNotConvergedOperation output_not_converged_operation =
                      OutputNotConvergedOperation::none);
-    /*
+
+    /**
      * collect all relevant output data
      */
     void
     attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
-    /*
+
+    /**
      * finalize simulation in the case that an operaion didn't converge
      */
     void
     finalize(const OutputNotConvergedOperation output_no_converged_operation =
                OutputNotConvergedOperation::none);
-    /*
-     *  perform mesh refinement
-     */
-    void
-    refine_mesh();
 
-    /*
+    /**
      *  perform mesh refinement
      */
-    void
-    attach_vectors(std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                                         std::function<void(std::vector<VectorType *> &)>>> &data);
+    bool
+    mark_cells_for_refinement(dealii::Triangulation<dim> &tria);
 
-    /*
-     *  perform mesh refinement
-     */
+    void
+    refine_mesh(const bool is_initial_solution = false);
+
+    void
+    attach_vectors(DoFHandlerAndVectorDataType<dim, VectorType> &data);
+
     void
     post();
 
-    bool
-    mark_cells_for_refinement(dealii::Triangulation<dim> &tria);
+    /**
+     * restart
+     */
+    void
+    save();
+
+    void
+    load();
 
     std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
 
@@ -212,11 +215,5 @@ namespace MeltPoolDG
 
     bool output_interface_velocity     = false;
     bool compute_interface_temperature = false;
-
-    void
-    save();
-
-    void
-    load();
   };
 } // namespace MeltPoolDG

@@ -15,16 +15,10 @@ namespace MeltPoolDG::Restart
 {
   template <int dim, typename VectorType>
   void
-  serialize_internal(
-    const std::function<
-      void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                                 std::function<void(std::vector<VectorType *> &)>>> &data)>
-                      &attach_vectors,
-    const std::string &prefix)
+  serialize_internal(const AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors,
+                     const std::string                                     &prefix)
   {
-    std::vector<
-      std::pair<const dealii::DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
-      data;
+    DoFHandlerAndVectorDataType<dim, VectorType> data;
     attach_vectors(data);
 
     const unsigned int n = data.size();
@@ -73,18 +67,12 @@ namespace MeltPoolDG::Restart
 
   template <int dim, typename VectorType>
   void
-  deserialize_internal(
-    const std::function<
-      void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                                 std::function<void(std::vector<VectorType *> &)>>> &data)>
-                                &attach_vectors,
-    const std::function<void()> &post,
-    const std::function<void()> &setup_dof_system,
-    const std::string           &prefix)
+  deserialize_internal(const AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors,
+                       const std::function<void()>                           &post,
+                       const std::function<void()>                           &setup_dof_system,
+                       const std::string                                     &prefix)
   {
-    std::vector<
-      std::pair<const dealii::DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
-      data;
+    DoFHandlerAndVectorDataType<dim, VectorType> data;
     attach_vectors(data);
 
     const unsigned int n = data.size();

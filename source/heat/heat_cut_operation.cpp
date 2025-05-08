@@ -29,6 +29,7 @@
 
 #include <algorithm>
 #include <string>
+#include <utility>
 
 namespace MeltPoolDG::Heat
 {
@@ -153,14 +154,14 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<const dealii::Function<dim, number>> laser_intensity_profile_in,
     const dealii::Tensor<1, dim, number>                &laser_direction_in)
   {
-    heat_operator->register_laser_intensity_function_and_direction(laser_intensity_profile_in,
-                                                                   laser_direction_in);
+    heat_operator->register_laser_intensity_function_and_direction(
+      std::move(laser_intensity_profile_in), laser_direction_in);
   }
 
   template <int dim, typename number>
   void
   HeatCutOperation<dim, number>::register_lambdas_for_solution_transfer(
-    const std::function<void()> setup_dof_system_in,
+    const std::function<void()> &setup_dof_system_in,
     const std::function<
       void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
                                  std::function<void(std::vector<VectorType *> &)>>> &)>
@@ -372,7 +373,7 @@ namespace MeltPoolDG::Heat
       heat_operator->create_rhs(rhs, solution_history.get_recent_old_solution());
     };
 
-    newton.solve_with_jacobian = [&](const VectorType &rhs, VectorType &solution_update) -> int {
+    newton.solve_with_jacobian = [this](const VectorType &rhs, VectorType &solution_update) -> int {
       return LinearSolver::solve<VectorType>(*heat_operator,
                                              solution_update,
                                              rhs,
@@ -389,7 +390,7 @@ namespace MeltPoolDG::Heat
       scratch_data.get_constraint(heat_cut_dof_idx).distribute(v);
     };
 
-    newton.norm_of_solution_vector = [this]() -> number { return compute_L2_norm(); };
+    newton.norm_of_solution_vector = [this]() -> number { return this->compute_L2_norm(); };
   }
 
   template <int dim, typename number>
@@ -492,7 +493,7 @@ namespace MeltPoolDG::Heat
 
     nearest_point_search->extend_interface_values(interface_temperature, get_temperature());
 
-    scratch_data.get_constraint(heat_cut_no_bc_dof_idx).distribute(interface_temperature);
+    scratch_data.get_constraint(heat_cont_no_bc_dof_idx).distribute(interface_temperature);
   }
 
 
@@ -514,6 +515,7 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperation<dim, number>::attach_vectors(std::vector<VectorType *> &vectors)
   {
+    vectors.reserve(solution_history.size());
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
   }
 

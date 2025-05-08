@@ -277,6 +277,7 @@ namespace MeltPoolDG::RadiativeTransport
   RadiativeTransportOperation<dim, number>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
+    vectors.reserve(1);
     vectors.push_back(&intensity);
   }
 

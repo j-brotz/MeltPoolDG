@@ -219,12 +219,12 @@ namespace MeltPoolDG::LevelSet
         preconditioner.update();
 
         solution_history.get_current_solution().zero_out_ghost_values();
-        LinearSolver::solve<VectorType>(*advec_diff_operator,
-                                        solution_history.get_current_solution(),
-                                        rhs,
-                                        this->advec_diff_data.linear_solver,
-                                        preconditioner,
-                                        "advection_diffusion_operation");
+        iter = LinearSolver::solve<VectorType>(*advec_diff_operator,
+                                               solution_history.get_current_solution(),
+                                               rhs,
+                                               this->advec_diff_data.linear_solver,
+                                               preconditioner,
+                                               "advection_diffusion_operation");
 
         advec_diff_operator->disable_pre_post();
       }

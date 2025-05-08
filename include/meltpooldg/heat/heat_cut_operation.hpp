@@ -130,7 +130,7 @@ namespace MeltPoolDG::Heat
      */
     void
     register_lambdas_for_solution_transfer(
-      const std::function<void()> setup_dof_system_in,
+      const std::function<void()> &setup_dof_system_in,
       const std::function<
         void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
                                    std::function<void(std::vector<VectorType *> &)>>> &)>

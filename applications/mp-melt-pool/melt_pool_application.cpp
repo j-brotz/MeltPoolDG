@@ -34,6 +34,7 @@
 #include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/core/material.templates.hpp>
 #include <meltpooldg/core/material_data.hpp>
+#include <meltpooldg/cut/amr.hpp>
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
 #include <meltpooldg/heat/heat_cut_operation.hpp>
@@ -70,6 +71,8 @@
 #include <map>
 #include <set>
 #include <sstream>
+#include <string>
+#include <vector>
 
 namespace MeltPoolDG
 {
@@ -102,36 +105,33 @@ namespace MeltPoolDG
          */
         output_results();
 
-        bool heat_up_finished = false;
-
-        const auto heat_up_modify_time_step = [&]() {
+        bool       heat_up_finished         = false;
+        const auto heat_up_modify_time_step = [&] {
           // check heat up
-          if (heat_operation and
-              param.application_specific_parameters.mp_heat_up.time_step_size > 0 and
-              not heat_up_finished)
+          if (param.application_specific_parameters.mp_heat_up.time_step_size <= 0 or
+              heat_up_finished or not heat_operation)
+            return;
+
+          const number       T_max = heat_operation->get_temperature().linfty_norm();
+          std::ostringstream s;
+          s << "heat up period: T_max=" << std::setprecision(5) << std::scientific << T_max;
+          Journal::print_line(scratch_data->get_pcout(1), s.str(), "melt_pool_problem");
+
+          // start to decrease time step size if T > T_heat_up
+          if (T_max > param.application_specific_parameters.mp_heat_up.max_temperature)
             {
-              const number       T_max = heat_operation->get_temperature().linfty_norm();
-              std::ostringstream s;
-              s << "heat up period: T_max=" << std::setprecision(5) << std::scientific << T_max;
-              Journal::print_line(scratch_data->get_pcout(1), s.str(), "melt_pool_problem");
+              time_iterator->set_current_time_increment(
+                param.time_stepping.time_step_size,
+                param.application_specific_parameters.mp_heat_up.max_change_factor_time_step_size);
 
-              // start to decrease time step size if T > T_heat_up
-              if (T_max > param.application_specific_parameters.mp_heat_up.max_temperature)
-                {
-                  time_iterator->set_current_time_increment(
-                    param.time_stepping.time_step_size,
-                    param.application_specific_parameters.mp_heat_up
-                      .max_change_factor_time_step_size);
-
-                  // If time step size has decreased to the standard time stepping parameters, the
-                  // heat up phase is finished.
-                  heat_up_finished = std::abs(time_iterator->get_current_time_increment() -
-                                              param.time_stepping.time_step_size) < 1e-16;
-                  if (heat_up_finished)
-                    Journal::print_line(scratch_data->get_pcout(1),
-                                        "Heat up period is finished.",
-                                        "melt_pool_problem");
-                }
+              // If time step size has decreased to the standard time stepping parameters, the
+              // heat up phase is finished.
+              heat_up_finished = std::abs(time_iterator->get_current_time_increment() -
+                                          param.time_stepping.time_step_size) < 1e-16;
+              if (heat_up_finished)
+                Journal::print_line(scratch_data->get_pcout(1),
+                                    "Heat up period is finished.",
+                                    "melt_pool_problem");
             }
         };
 
@@ -152,9 +152,9 @@ namespace MeltPoolDG
             heat_up_modify_time_step();
 
             const auto dt = time_iterator->compute_next_time_increment();
-            simulation_case->set_time_boundary_conditions(time_iterator->get_current_time());
-
             time_iterator->print_me(scratch_data->get_pcout(1));
+
+            simulation_case->set_time_boundary_conditions(time_iterator->get_current_time());
 
             // use extrapolated solution values in the coupling terms
             if (param.application_specific_parameters.do_extrapolate_coupling_terms)
@@ -543,13 +543,8 @@ namespace MeltPoolDG
             // ... and output the results to vtk files.
             output_results();
 
-            if (param.amr.do_amr)
-              {
-                const ScopedName         scope_n("amr");
-                const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
-
-                refine_mesh();
-              }
+            if (param.amr.do_amr and not time_iterator->is_finished())
+              refine_mesh();
 
             if (profiling_monitor and profiling_monitor->now())
               {
@@ -579,12 +574,10 @@ namespace MeltPoolDG
         scope_t.reset();
 
         //... always print timing statistics
-        if (profiling_monitor and simulation_case->parameters.profiling.enable)
-          {
-            profiling_monitor->print(scratch_data->get_pcout(1),
-                                     scratch_data->get_timer(),
-                                     scratch_data->get_mpi_comm());
-          }
+        if (profiling_monitor)
+          profiling_monitor->print(scratch_data->get_pcout(1),
+                                   scratch_data->get_timer(),
+                                   scratch_data->get_mpi_comm());
       }
     catch (const ExcHeatTransferNoConvergence &e)
       {
@@ -621,14 +614,9 @@ namespace MeltPoolDG
       oa << *post_processor;
     }
 
-    const auto attach_vectors =
-      [this](std::vector<std::pair<const DoFHandler<dim> *,
-                                   std::function<void(std::vector<VectorType *> &)>>> &data) {
-        this->attach_vectors(data);
-      };
-
-    Restart::serialize_internal<dim, VectorType>(attach_vectors,
-                                                 simulation_case->parameters.restart.prefix + "_0");
+    Restart::serialize_internal<dim, VectorType>(
+      [this](DoFHandlerAndVectorDataType<dim, VectorType> &data) { this->attach_vectors(data); },
+      simulation_case->parameters.restart.prefix + "_0");
   }
 
   template <int dim, typename number>
@@ -651,21 +639,11 @@ namespace MeltPoolDG
       ia >> *time_iterator;
       ia >> *post_processor;
     }
-
-    const auto attach_vectors =
-      [this](std::vector<std::pair<const DoFHandler<dim> *,
-                                   std::function<void(std::vector<VectorType *> &)>>> &data) {
-        this->attach_vectors(data);
-      };
-
-    const auto post = [this]() { this->post(); };
-
-    const auto setup_dof_system = [this]() { this->setup_dof_system(true); };
-
-    Restart::deserialize_internal<dim, VectorType>(attach_vectors,
-                                                   post,
-                                                   setup_dof_system,
-                                                   load_prefix);
+    Restart::deserialize_internal<dim, VectorType>(
+      [this](DoFHandlerAndVectorDataType<dim, VectorType> &data) { this->attach_vectors(data); },
+      [this] { this->post(); },
+      [this] { this->setup_dof_system(true); },
+      load_prefix);
   }
 
   template <int dim, typename number>
@@ -849,7 +827,6 @@ namespace MeltPoolDG
               break;
             }
             case Heat::TwoPhaseOperatorType::cut: {
-              AssertThrow(param.amr.do_amr == false, ExcNotImplemented());
               AssertThrow(simulation_case->get_periodic_bc().get_data().empty(),
                           ExcNotImplemented());
 
@@ -879,10 +856,8 @@ namespace MeltPoolDG
               // Register lambda function that reinits the dealii::MatrixFree class. It's required
               // to adapt the cut operator for a new interface position.
               heat_cut_operation->register_lambdas_for_solution_transfer(
-                [this]() { this->setup_dof_system(true); },
-                [this](
-                  std::vector<std::pair<const DoFHandler<dim> *,
-                                        std::function<void(std::vector<VectorType *> &)>>> &data) {
+                [this] { this->setup_dof_system(true); },
+                [this](DoFHandlerAndVectorDataType<dim, VectorType> &data) {
                   this->attach_vectors(data);
                 });
 
@@ -891,11 +866,10 @@ namespace MeltPoolDG
               {
                 FiniteElementUtils::distribute_dofs<dim, 1>(param.ls.fe, dof_handler_ls);
 
-                IndexSet locally_relevant_dofs;
-                DoFTools::extract_locally_relevant_dofs(dof_handler_ls, locally_relevant_dofs);
-                level_set_operation->get_level_set().reinit(dof_handler_ls.locally_owned_dofs(),
-                                                            locally_relevant_dofs,
-                                                            dof_handler_ls.get_communicator());
+                level_set_operation->get_level_set().reinit(
+                  dof_handler_ls.locally_owned_dofs(),
+                  dealii::DoFTools::extract_locally_relevant_dofs(dof_handler_ls),
+                  dof_handler_ls.get_communicator());
 
                 std::shared_ptr<dealii::Function<dim>> initial_level_set =
                   simulation_case->get_initial_condition("level_set", true /*is optional*/);
@@ -1168,10 +1142,7 @@ namespace MeltPoolDG
             str << " solid.size " << melt_front_propagation->get_solid().size();
 
           Journal::print_line(scratch_data->get_pcout(1), str.str(), "melt_pool_problem");
-          refine_mesh();
-
-          // set initial conditions after initial AMR
-          set_initial_conditions();
+          refine_mesh(true /*is_inital_solution*/);
         }
   }
 
@@ -1182,17 +1153,13 @@ namespace MeltPoolDG
   {
     if (const auto initial_field =
           simulation_case->get_initial_condition("level_set", true /*is optional*/))
-      {
-        // ... via a given level set field
-        level_set_operation->set_initial_condition(*initial_field);
-      }
+      // ... via a given level set field
+      level_set_operation->set_initial_condition(*initial_field);
     else if (const auto initial_field =
                simulation_case->get_initial_condition("signed_distance", true /*is optional*/))
-      {
-        // ... or a given signed distance field.
-        level_set_operation->set_initial_condition(*initial_field,
-                                                   true /*is signed distance function*/);
-      }
+      // ... or a given signed distance field.
+      level_set_operation->set_initial_condition(*initial_field,
+                                                 true /*is signed distance function*/);
     else
       AssertThrow(
         false,
@@ -1376,14 +1343,15 @@ namespace MeltPoolDG
 
     if (do_reinit)
       {
+        if (heat_operation)
+          heat_operation->reinit();
+
         level_set_operation->reinit();
 
         if (evaporation_operation)
           evaporation_operation->reinit();
         if (melt_front_propagation)
           melt_front_propagation->reinit();
-        if (heat_operation)
-          heat_operation->reinit();
         if (laser_operation)
           laser_operation->reinit();
         if (darcy_operation)
@@ -2213,8 +2181,7 @@ namespace MeltPoolDG
   template <int dim, typename number>
   void
   MeltPoolApplication<dim, number>::attach_vectors(
-    std::vector<
-      std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>> &data)
+    DoFHandlerAndVectorDataType<dim, VectorType> &data)
   {
     data.emplace_back(&dof_handler_ls, [this](std::vector<VectorType *> &vectors) {
       level_set_operation->attach_vectors(vectors); // ls + heaviside
@@ -2260,30 +2227,17 @@ namespace MeltPoolDG
   void
   MeltPoolApplication<dim, number>::post()
   {
-    /**
-     * level set
-     */
     ls_constraints_dirichlet.distribute(level_set_operation->get_level_set());
     ls_hanging_node_constraints.distribute(level_set_operation->get_level_set_as_heaviside());
 
-    /**
-     * flow
-     */
     flow_operation->distribute_constraints();
 
-    /**
-     * melt pool
-     */
     if (melt_front_propagation)
       melt_front_propagation->distribute_constraints();
-    /**
-     * evaporation
-     */
+
     if (evaporation_operation)
       evaporation_operation->distribute_constraints();
-    /**
-     * heat
-     */
+
     if (heat_operation)
       heat_operation->distribute_constraints();
 
@@ -2293,29 +2247,83 @@ namespace MeltPoolDG
 
   template <int dim, typename number>
   void
-  MeltPoolApplication<dim, number>::refine_mesh()
+  MeltPoolApplication<dim, number>::refine_mesh(const bool is_inital_solution)
   {
-    const auto mark_cells_for_refinement = [this](Triangulation<dim> &tria) -> bool {
-      return this->mark_cells_for_refinement(tria);
-    };
+    const ScopedName         scope_n("amr");
+    const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
 
-    const auto attach_vectors =
-      [this](std::vector<std::pair<const DoFHandler<dim> *,
-                                   std::function<void(std::vector<VectorType *> &)>>> &data) {
-        this->attach_vectors(data);
-      };
+    const AMR::MarkCellsForRefinementType<dim> mark_cells_for_refinement =
+      [this](Triangulation<dim> &tria) { return this->mark_cells_for_refinement(tria); };
 
-    const auto post = [this]() { this->post(); };
+    AttachDoFHandlerAndVectorsType<dim, VectorType> attach_vectors;
+    std::function<void()>                           post;
 
-    const auto setup_dof_system = [this]() { this->setup_dof_system(true); };
+    if (is_inital_solution)
+      {
+        attach_vectors = {};
+        post           = [this] {
+          this->post();
+          // set initial conditions after initial AMR
+          this->set_initial_conditions();
+        };
+      }
+    else
+      {
+        attach_vectors = [this](DoFHandlerAndVectorDataType<dim, VectorType> &data) {
+          this->attach_vectors(data);
+        };
+        post = [this] { this->post(); };
+      }
 
-    AMR::refine_grid<dim, VectorType>(mark_cells_for_refinement,
-                                      attach_vectors,
-                                      post,
-                                      setup_dof_system,
-                                      simulation_case->parameters.amr,
-                                      *simulation_case->triangulation,
-                                      time_iterator->get_current_time_step_number());
+    const auto &param = simulation_case->parameters;
+
+    if (param.heat.operator_type != Heat::TwoPhaseOperatorType::cut)
+      AMR::refine_grid<dim, VectorType>(
+        mark_cells_for_refinement,
+        attach_vectors,
+        post,
+        [this] { this->setup_dof_system(true); },
+        param.amr,
+        *simulation_case->triangulation,
+        time_iterator->get_current_time_step_number());
+    else
+      CutUtil::refine_grid<dim, VectorType>(
+        mark_cells_for_refinement,
+        attach_vectors,
+        post,
+        [this, is_inital_solution, &param] {
+          FiniteElementUtils::distribute_dofs<dim, 1>(param.ls.fe, dof_handler_ls);
+
+          level_set_operation->get_level_set().reinit(
+            dof_handler_ls.locally_owned_dofs(),
+            dealii::DoFTools::extract_locally_relevant_dofs(dof_handler_ls),
+            dof_handler_ls.get_communicator());
+
+          if (is_inital_solution)
+            {
+              std::shared_ptr<dealii::Function<dim>> initial_level_set =
+                simulation_case->get_initial_condition("level_set", true /*is optional*/);
+              if (not initial_level_set)
+                initial_level_set =
+                  simulation_case->get_initial_condition("signed_distance", true /*is optional*/);
+              AssertThrow(
+                initial_level_set,
+                ExcMessage(
+                  "For the level set operation either a function for the initial level set or the "
+                  "signed distance field must be provided. Abort ..."));
+
+              dealii::VectorTools::interpolate(scratch_data->get_mapping(),
+                                               dof_handler_ls,
+                                               *initial_level_set,
+                                               level_set_operation->get_level_set());
+            }
+        },
+        dof_handler_ls,
+        level_set_operation->get_level_set(),
+        [this] { this->setup_dof_system(); },
+        simulation_case->parameters.amr,
+        *simulation_case->triangulation,
+        time_iterator->get_current_time_step_number());
   }
 
   template class MeltPoolApplication<1, double>;

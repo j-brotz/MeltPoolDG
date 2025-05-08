@@ -15,15 +15,16 @@ namespace MeltPoolDG::CutUtil
 {
   template <int dim, typename VectorType, typename number>
   void
-  refine_grid(const AMR::MarkCellsForRefinementType<dim>                 &mark_cells_for_refinement,
-              const AMR::AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors,
-              const std::function<void()>                                &post,
-              const std::function<void()>                                &distribute_level_set_dofs,
-              const dealii::DoFHandler<dim> *const                        level_set_dof_handler,
-              const std::function<void()>       &setup_remaining_dof_system,
-              const AdaptiveMeshingData<number> &amr,
-              dealii::Triangulation<dim>        &tria,
-              const int                          n_time_step)
+  refine_grid(const AMR::MarkCellsForRefinementType<dim>            &mark_cells_for_refinement,
+              const AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors,
+              const std::function<void()>                           &post,
+              const std::function<void()>                           &distribute_level_set_dofs,
+              const dealii::DoFHandler<dim>                         &level_set_dof_handler,
+              VectorType                                            &level_set_dof_vector,
+              const std::function<void()>                           &setup_dof_system,
+              const AdaptiveMeshingData<number>                     &amr,
+              dealii::Triangulation<dim>                            &tria,
+              const int                                              n_time_step)
   {
     if (not AMR::now(amr, n_time_step))
       return;
@@ -33,23 +34,24 @@ namespace MeltPoolDG::CutUtil
 
     AMR::internal::limit_amr(tria, amr);
 
-    // the following is very similar to the code in AMR::refine_grid() and
-    // CutUtil::SolutionTransferOperator::transfer_solution_constant_dofs()
-
     if (not attach_vectors)
       {
         // short circuit this function
         tria.prepare_coarsening_and_refinement();
         tria.execute_coarsening_and_refinement();
-        distribute_level_set_dofs();
-        setup_remaining_dof_system();
+        distribute_level_set_dofs(); // here, this lambda must interpolate the level_set_dof_vector
+        setup_dof_system();
         post();
         return;
       }
 
-    AMR::DoFHandlerAndVectorDataType<dim, VectorType> data;
+    // the following is very similar to the code in AMR::refine_grid() and
+    // CutUtil::SolutionTransferOperator::transfer_solution_constant_dofs()
+
+    DoFHandlerAndVectorDataType<dim, VectorType> data;
 
     attach_vectors(data);
+    data.shrink_to_fit();
 
     const unsigned int n_dof_handlers = data.size();
 
@@ -66,13 +68,8 @@ namespace MeltPoolDG::CutUtil
     std::vector<std::vector<const VectorType *>> old_grid_solutions(n_dof_handlers);
     std::vector<std::vector<bool>>               update_ghost_values(n_dof_handlers);
 
-    unsigned int ls_idx = dealii::numbers::invalid_unsigned_int;
-
     for (unsigned int j = 0; j < n_dof_handlers; ++j)
       {
-        if (data[j].first == level_set_dof_handler)
-          ls_idx = j;
-
         // collect pointers to the DoF vectors for the current DoFHandler
         data[j].second(new_grid_solutions[j]);
 
@@ -92,33 +89,24 @@ namespace MeltPoolDG::CutUtil
           std::make_unique<dealii::SolutionTransfer<dim, VectorType>>(*data[j].first);
         solution_transfers[j]->prepare_for_coarsening_and_refinement(old_grid_solutions[j]);
       }
-    AssertThrow(ls_idx != dealii::numbers::invalid_unsigned_int,
-                dealii::ExcMessage("The level set DoFHandler must be attached by attach_vectors!"));
+
+    // setup a separate solution transfer for the level set
+    dealii::SolutionTransfer<dim, VectorType> ls_solution_transfer(level_set_dof_handler);
+    ls_solution_transfer.prepare_for_coarsening_and_refinement(level_set_dof_vector);
 
     tria.execute_coarsening_and_refinement();
 
     distribute_level_set_dofs();
 
-    {
-      for (const auto &v : new_grid_solutions[ls_idx])
-        v->zero_out_ghost_values();
-
-      solution_transfers[ls_idx]->interpolate(new_grid_solutions[ls_idx]);
-
-      for (unsigned int i = 0; i < new_grid_solutions[ls_idx].size(); ++i)
-        if (update_ghost_values[ls_idx][i])
-          new_grid_solutions[ls_idx][i]->update_ghost_values();
-    }
+    // interpolate level set first, so the cut operation can classify the cells according to it
+    ls_solution_transfer.interpolate(level_set_dof_vector);
 
     // update dof-related scratch data to match the current triangulation
-    setup_remaining_dof_system();
+    setup_dof_system();
 
     // interpolate the given solution to the new discretization
     for (unsigned int j = 0; j < n_dof_handlers; ++j)
       {
-        if (j == ls_idx)
-          continue;
-
         for (const auto &v : new_grid_solutions[j])
           v->zero_out_ghost_values();
 
@@ -135,11 +123,11 @@ namespace MeltPoolDG::CutUtil
   template void
   refine_grid(
     const AMR::MarkCellsForRefinementType<1> &,
-    const AMR::AttachDoFHandlerAndVectorsType<1, dealii::LinearAlgebra::distributed::Vector<double>>
-      &,
+    const AttachDoFHandlerAndVectorsType<1, dealii::LinearAlgebra::distributed::Vector<double>> &,
     const std::function<void()> &,
     const std::function<void()> &,
-    const dealii::DoFHandler<1> *,
+    const dealii::DoFHandler<1> &,
+    dealii::LinearAlgebra::distributed::Vector<double> &,
     const std::function<void()> &,
     const AdaptiveMeshingData<double> &,
     dealii::Triangulation<1> &,
@@ -147,11 +135,11 @@ namespace MeltPoolDG::CutUtil
   template void
   refine_grid(
     const AMR::MarkCellsForRefinementType<2> &,
-    const AMR::AttachDoFHandlerAndVectorsType<2, dealii::LinearAlgebra::distributed::Vector<double>>
-      &,
+    const AttachDoFHandlerAndVectorsType<2, dealii::LinearAlgebra::distributed::Vector<double>> &,
     const std::function<void()> &,
     const std::function<void()> &,
-    const dealii::DoFHandler<2> *,
+    const dealii::DoFHandler<2> &,
+    dealii::LinearAlgebra::distributed::Vector<double> &,
     const std::function<void()> &,
     const AdaptiveMeshingData<double> &,
     dealii::Triangulation<2> &,
@@ -159,11 +147,11 @@ namespace MeltPoolDG::CutUtil
   template void
   refine_grid(
     const AMR::MarkCellsForRefinementType<3> &,
-    const AMR::AttachDoFHandlerAndVectorsType<3, dealii::LinearAlgebra::distributed::Vector<double>>
-      &,
+    const AttachDoFHandlerAndVectorsType<3, dealii::LinearAlgebra::distributed::Vector<double>> &,
     const std::function<void()> &,
     const std::function<void()> &,
-    const dealii::DoFHandler<3> *,
+    const dealii::DoFHandler<3> &,
+    dealii::LinearAlgebra::distributed::Vector<double> &,
     const std::function<void()> &,
     const AdaptiveMeshingData<double> &,
     dealii::Triangulation<3> &,
