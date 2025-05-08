@@ -22,6 +22,7 @@
 #include <benchmark_util.hpp>
 
 #include <memory>
+#include <type_traits>
 
 /**
  * Function used for boundary and initial conditions.
@@ -48,9 +49,12 @@ public:
   }
 };
 
-template <int dim, typename number, bool is_viscous>
+template <typename dim_int, typename number, typename is_viscous_bool>
 class KernelFixture : public benchmark::Fixture
 {
+  static const int  dim        = dim_int::value;
+  static const bool is_viscous = is_viscous_bool::value;
+
 public:
   KernelFixture()
   {}
@@ -68,7 +72,7 @@ public:
       std::make_unique<MeltPoolDG::ScratchData<dim, dim, number>>(MPI_COMM_WORLD, 0, true);
 
     tria = std::make_unique<dealii::parallel::distributed::Triangulation<dim>>(MPI_COMM_WORLD);
-    dealii::GridGenerator::subdivided_hyper_cube(*tria, 5);
+    dealii::GridGenerator::subdivided_hyper_cube(*tria, cells_per_direction);
     dof_handler.reinit(*tria);
 
     MeltPoolDG::FiniteElementUtils::distribute_dofs<dim, dim + 2>(fe, dof_handler);
@@ -95,6 +99,8 @@ public:
 
     flow_scratch_data->reinit(1);
 
+    n_dofs = dof_handler.n_dofs();
+
     set_boundary_conditions();
 
     set_initial_condition();
@@ -117,6 +123,14 @@ public:
   std::unique_ptr<MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number>> flow_scratch_data;
   std::unique_ptr<MeltPoolDG::Flow::DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>>
     dg_operator;
+
+  void
+  set_number_of_cells_per_direction(const unsigned int repetitions)
+  {
+    cells_per_direction = repetitions;
+  }
+
+  unsigned int n_dofs{};
 
 private:
   void
@@ -183,54 +197,59 @@ private:
   dealii::DoFHandler<dim>                                    dof_handler;
   MeltPoolDG::FiniteElementData                              fe;
   dealii::AffineConstraints<number>                          dummy_constraints;
+
+  unsigned int cells_per_direction{10};
 };
 
-BENCHMARK_TEMPLATE_F(KernelFixture, ExplicitOperatorViscousDim2, 2, double, true)(
-  benchmark::State &st)
+BENCHMARK_TEMPLATE_METHOD_F(KernelFixture, ExplicitOperator)(benchmark::State &st)
 {
+  this->set_number_of_cells_per_direction(st.range(0));
   for (auto _ : st)
     {
-      dg_operator->apply_operator(0.,
-                                  flow_scratch_data->solution_history.get_current_solution(),
-                                  flow_scratch_data->solution_history.get_current_solution(),
-                                  std::function<void(unsigned int, unsigned int)>());
+      this->dg_operator->apply_operator(
+        0.,
+        this->flow_scratch_data->solution_history.get_current_solution(),
+        this->flow_scratch_data->solution_history.get_current_solution(),
+        std::function<void(unsigned int, unsigned int)>());
     }
+  st.counters["DoFs"] = this->n_dofs;
 }
 
-BENCHMARK_TEMPLATE_F(KernelFixture, ExplicitOperatorViscousDim3, 3, double, true)(
-  benchmark::State &st)
-{
-  for (auto _ : st)
-    {
-      dg_operator->apply_operator(0.,
-                                  flow_scratch_data->solution_history.get_current_solution(),
-                                  flow_scratch_data->solution_history.get_current_solution(),
-                                  std::function<void(unsigned int, unsigned int)>());
-    }
-}
+BENCHMARK_TEMPLATE_INSTANTIATE_F(KernelFixture,
+                                 ExplicitOperator,
+                                 std::integral_constant<int, 2>,
+                                 double,
+                                 std::integral_constant<bool, true>)
+  ->Arg(5)
+  ->Arg(10)
+  ->Name("2D; viscid");
 
-BENCHMARK_TEMPLATE_F(KernelFixture, ExplicitOperatorEulerDim2, 2, double, false)(
-  benchmark::State &st)
-{
-  for (auto _ : st)
-    {
-      dg_operator->apply_operator(0.,
-                                  flow_scratch_data->solution_history.get_current_solution(),
-                                  flow_scratch_data->solution_history.get_current_solution(),
-                                  std::function<void(unsigned int, unsigned int)>());
-    }
-}
+BENCHMARK_TEMPLATE_INSTANTIATE_F(KernelFixture,
+                                 ExplicitOperator,
+                                 std::integral_constant<int, 2>,
+                                 double,
+                                 std::integral_constant<bool, false>)
+  ->Arg(5)
+  ->Arg(10)
+  ->Name("2D; in-viscid");
 
-BENCHMARK_TEMPLATE_F(KernelFixture, ExplicitOperatorEulerDim3, 3, double, false)(
-  benchmark::State &st)
-{
-  for (auto _ : st)
-    {
-      dg_operator->apply_operator(0.,
-                                  flow_scratch_data->solution_history.get_current_solution(),
-                                  flow_scratch_data->solution_history.get_current_solution(),
-                                  std::function<void(unsigned int, unsigned int)>());
-    }
-}
+BENCHMARK_TEMPLATE_INSTANTIATE_F(KernelFixture,
+                                 ExplicitOperator,
+                                 std::integral_constant<int, 3>,
+                                 double,
+                                 std::integral_constant<bool, true>)
+  ->Arg(5)
+  ->Arg(10)
+  ->Name("3D; viscid");
+
+BENCHMARK_TEMPLATE_INSTANTIATE_F(KernelFixture,
+                                 ExplicitOperator,
+                                 std::integral_constant<int, 3>,
+                                 double,
+                                 std::integral_constant<bool, false>)
+  ->Arg(5)
+  ->Arg(10)
+  ->Name("3D; in-viscid");
+
 
 MPDG_BENCHMARK_MPI_MAIN
