@@ -8,27 +8,31 @@
 
 #include <benchmark/benchmark.h>
 
-/**
- * Benchmark reporter which does nothing. This can be used to disable specific benchmark outputs.
- * (taken from MacroAM)
- */
-class NullReporter final : public benchmark::BenchmarkReporter
+namespace MeltPoolDG
 {
-public:
-  bool
-  ReportContext(const Context &) override
+  /**
+   * Benchmark reporter which does nothing. This can be used to disable specific benchmark outputs.
+   * (taken from MacroAM)
+   */
+  class NullReporter final : public benchmark::BenchmarkReporter
   {
-    return true;
-  }
+  public:
+    bool
+    ReportContext(const Context &) override
+    {
+      return true;
+    }
 
-  void
-  ReportRuns(const std::vector<Run> &) override
-  {}
+    void
+    ReportRuns(const std::vector<Run> &) override
+    {}
 
-  void
-  Finalize() override
-  {}
-};
+    void
+    Finalize() override
+    {}
+  };
+
+#define MPDG_SET_BANCHMARK_DEFAULT_FLAGS
 
 
 #define MPDG_BENCHMARK_MPI_MAIN                                             \
@@ -41,9 +45,10 @@ public:
       benchmark::RunSpecifiedBenchmarks();                                  \
     else                                                                    \
       {                                                                     \
-        NullReporter null_reporter;                                         \
+        MeltPoolDG::NullReporter null_reporter;                             \
         benchmark::RunSpecifiedBenchmarks(&null_reporter);                  \
       }                                                                     \
     benchmark::Shutdown();                                                  \
     return 0;                                                               \
   }
+} // namespace MeltPoolDG
