@@ -15,6 +15,7 @@
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_explicit.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_implicit.hpp>
+#include <meltpooldg/flow/dg_compressible_flow_operator_implicit_explicit.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 
 #include <benchmark/benchmark.h>
@@ -27,6 +28,13 @@ namespace
 {
   constexpr int dim = 3;
   using number      = double;
+
+  enum OperatorType
+  {
+    Explicit,
+    Implicit,
+    ImEx
+  };
 
   /**
    * Function used for boundary and initial conditions.
@@ -51,7 +59,7 @@ namespace
       else
         return 0.;
     }
-  };
+  }; // namespace
 
   template <typename is_viscous_bool>
   class ExplicitOperatorFixture : public benchmark::Fixture
@@ -75,7 +83,7 @@ namespace
 
         set_initial_and_boundary_conditions();
 
-        flow_operator = std::make_unique<
+        explicit_flow_operator = std::make_unique<
           MeltPoolDG::Flow::DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>>(
           *flow_scratch_data);
       }
@@ -88,8 +96,14 @@ namespace
       MeltPoolDG::ScratchData<dim, dim, number>         scratch_data;
 
       std::unique_ptr<MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number>> flow_scratch_data;
+
       std::unique_ptr<MeltPoolDG::Flow::DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>>
-        flow_operator;
+        explicit_flow_operator;
+      std::unique_ptr<MeltPoolDG::Flow::DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>>
+        implicit_flow_operator;
+      std::unique_ptr<
+        MeltPoolDG::Flow::DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>>
+        imex_flow_operator;
 
     private:
       void
@@ -173,6 +187,35 @@ namespace
       }
     };
 
+    void
+    setup_operator(const OperatorType type)
+    {
+      switch (type)
+        {
+            case OperatorType::Explicit: {
+              data->explicit_flow_operator = std::make_unique<
+                MeltPoolDG::Flow::DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>>(
+                *data->flow_scratch_data);
+              break;
+            }
+            case OperatorType::Implicit: {
+              data->implicit_flow_operator = std::make_unique<
+                MeltPoolDG::Flow::DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>>(
+                *data->flow_scratch_data);
+              break;
+            }
+            case OperatorType::ImEx: {
+              data->imex_flow_operator = std::make_unique<
+                MeltPoolDG::Flow::
+                  DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>>(
+                *data->flow_scratch_data);
+              break;
+            }
+          default:
+            AssertThrow(false, dealii::ExcMessage("The chosen operator type is not supported!"));
+        }
+    }
+
     // prevent compiler hiding warning (-Woverloaded-virtual)
     using benchmark::Fixture::SetUp;
     using benchmark::Fixture::TearDown;
@@ -194,9 +237,10 @@ namespace
 
   BENCHMARK_TEMPLATE_METHOD_F(ExplicitOperatorFixture, ExplicitOperator)(benchmark::State &state)
   {
+    this->setup_operator(OperatorType::Explicit);
     for (auto _ : state)
       {
-        this->data->flow_operator->apply_operator(
+        this->data->explicit_flow_operator->apply_operator(
           0.,
           this->data->flow_scratch_data->solution_history.get_current_solution(),
           this->data->flow_scratch_data->solution_history.get_current_solution(),
@@ -208,16 +252,14 @@ namespace
   BENCHMARK_TEMPLATE_INSTANTIATE_F(ExplicitOperatorFixture,
                                    ExplicitOperator,
                                    std::integral_constant<bool, true>)
-    ->Arg(5)
-    ->Arg(10)
-    ->Name("viscid");
+    ->DenseRange(5, 10, 5)
+    ->Name("explicit operator, viscid");
 
   BENCHMARK_TEMPLATE_INSTANTIATE_F(ExplicitOperatorFixture,
                                    ExplicitOperator,
                                    std::integral_constant<bool, false>)
-    ->Arg(5)
-    ->Arg(10)
-    ->Name("in-viscid");
+    ->DenseRange(5, 10, 5)
+    ->Name("explicit operator, in-viscid");
 } // namespace
 
 MPDG_BENCHMARK_MPI_MAIN;

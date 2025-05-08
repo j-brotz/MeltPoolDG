@@ -164,7 +164,7 @@ namespace MeltPoolDG::Flow
      * Compute the result of J*x, where J is the jacobian computed analytically.
      *
      * @param src Source vector x with which the jacobian gets mulitplied.
-     * @param dst Loation at which the result of J*x is stored.
+     * @param dst Location at which the result of J*x is stored.
      *
      * @throws Exception if the layout of the two given vectors @p src and @p dst are not identical.
      */
