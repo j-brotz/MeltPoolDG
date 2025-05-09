@@ -118,8 +118,7 @@ namespace MeltPoolDG::AMR
   {
     refine_grid<dim, VectorType>(
       mark_cells_for_refinement,
-      [&](std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                                std::function<void(std::vector<VectorType *> &)>>> &data) {
+      [&](DoFHandlerAndVectorDataType<dim, VectorType> &data) {
         data.emplace_back(&dof_handler, attach_vectors);
       },
       post,

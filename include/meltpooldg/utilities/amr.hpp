@@ -22,6 +22,9 @@ namespace MeltPoolDG::AMR
 
   /**
    * determine whether the current @param n_time_step is chosen to execute AMR
+   *
+   * @param amr AMR parameters
+   * @param n_time_step current time step number
    */
   template <typename number>
   inline bool

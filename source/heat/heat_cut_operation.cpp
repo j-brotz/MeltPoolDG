@@ -29,23 +29,21 @@
 
 #include <algorithm>
 #include <string>
-#include <utility>
+
 
 namespace MeltPoolDG::Heat
 {
-  using namespace dealii;
-
   template <int dim, typename number>
-  std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
-  construct_dirichlet_bc_map(
-    const bool                                                          two_phase,
-    const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> &dirichlet_bc)
+  std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+  construct_dirichlet_bc_map(const bool                                              two_phase,
+                             const std::map<dealii::types::boundary_id,
+                                            std::shared_ptr<dealii::Function<dim>>> &dirichlet_bc)
   {
     if (two_phase)
       // For the two-phase case, the initial temperature function must be set up with 2 components
       // because the FESystem for cut is set up with 2 to handle both phases.
       {
-        std::map<types::boundary_id, std::shared_ptr<Function<dim>>> heat_bc;
+        std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> heat_bc;
         for (const auto &bc : dirichlet_bc)
           heat_bc[bc.first] =
             std::make_shared<Functions::TwoComponentFunction<dim, number>>(*bc.second);
@@ -161,11 +159,8 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatCutOperation<dim, number>::register_lambdas_for_solution_transfer(
-    const std::function<void()> &setup_dof_system_in,
-    const std::function<
-      void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                                 std::function<void(std::vector<VectorType *> &)>>> &)>
-      attach_vectors_in)
+    const std::function<void()>                          &setup_dof_system_in,
+    const AttachDoFHandlerAndVectorsType<dim, VectorType> attach_vectors_in)
   {
     setup_dof_system   = setup_dof_system_in;
     attach_all_vectors = attach_vectors_in;
@@ -175,6 +170,9 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperation<dim, number>::classify_cells() const
   {
+    if (skip_classify_cells)
+      return;
+
     const auto &ls_dof_handler = scratch_data.get_dof_handler(ls_dof_idx);
     mc_level_set.reinit(ls_dof_handler.locally_owned_dofs(),
                         dealii::DoFTools::extract_locally_relevant_dofs(ls_dof_handler),
@@ -196,9 +194,13 @@ namespace MeltPoolDG::Heat
     std::swap(mesh_classifier_old, mesh_classifier);
     classify_cells();
 
+    // During cut solution transfer, the new dof system is set up, which usually includes
+    // classify_cells(). Since we just classified the cells above, we can skip that operation.
+    skip_classify_cells = true;
+
     {
-      const ScopedName         scope_n("cut_solution_transfer");
-      const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
+      const ScopedName                 scope_n("cut_solution_transfer");
+      const dealii::TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
 
       Assert(setup_dof_system != nullptr,
              dealii::ExcMessage("You must register the setup_dof_system lambda function first!"));
@@ -235,6 +237,9 @@ namespace MeltPoolDG::Heat
     // generate intersected quadrature for new interface position.
     ready_to_generate_intersected_quadrature = true;
     compute_intersected_quadrature();
+
+    // re-enable classifying cells for future operations
+    skip_classify_cells = false;
   }
 
   template <int dim, typename number>
@@ -244,8 +249,8 @@ namespace MeltPoolDG::Heat
     if (not ready_to_generate_intersected_quadrature)
       return;
 
-    const ScopedName         scope_n("intersected_quadrature");
-    const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
+    const ScopedName                 scope_n("intersected_quadrature");
+    const dealii::TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
 
     level_set.update_ghost_values();
 
@@ -424,8 +429,8 @@ namespace MeltPoolDG::Heat
     if (not ready_for_time_advance)
       init_time_advance();
 
-    const ScopedName         scope_n("solve");
-    const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
+    const ScopedName                 scope_n("solve");
+    const dealii::TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
 
     update_ghost_values();
     preconditioner.update();
@@ -479,8 +484,8 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperation<dim, number>::compute_interface_temperature()
   {
-    const ScopedName         scope_n("project_interface_temperature");
-    const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
+    const ScopedName                 scope_n("project_interface_temperature");
+    const dealii::TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
 
     AssertThrow(
       nearest_point_search,

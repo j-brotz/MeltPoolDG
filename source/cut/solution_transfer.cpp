@@ -264,11 +264,16 @@ namespace MeltPoolDG::CutUtil
         solution_transfers[j]->prepare_for_coarsening_and_refinement(old_grid_solutions[j]);
       }
 
+    // Note: In contrast to CutUtil::refine_grid(), here, we do not need to transfer the level set
+    // solution first. But as a requirement, the lambda function setup_dof_system() cannot include
+    // classifying the mesh, and cannot include generating the quadrature of intersected cells,
+    // because the level set is not yet known for the new DoF system. The mesh must be classifyed
+    // before calling CutUtil::SolutionTransferOperator::reinit(), which leads to this point, and
+    // the intersected quadrature must be generated afterward. For an example, see
+    // Heat::HeatCutOperation::adapt_to_new_interface_position().
+
     // needed to trigger hp refinement --> call call-back function created by solution transfer
     tria.execute_coarsening_and_refinement();
-
-    // TODO do we need to interpolate level set dofs first?
-    // like it is done in CutUtil::refine_mesh()
 
     // reinitialize the matrix-free object (cut_dof_handler has changed)
     setup_dof_system();
