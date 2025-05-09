@@ -101,7 +101,7 @@
       "type": "olsson2007"
     },
     "nearest point": {
-      "type": "nearest_point_fast"
+      "type": "nearest_point"
     }
   },
   "material": {

@@ -39,8 +39,6 @@
 
 namespace MeltPoolDG::LevelSet::Tools
 {
-  using namespace dealii;
-
   template <int dim, typename number>
   NearestPoint<dim, number>::NearestPoint(
     const dealii::Mapping<dim>                                &mapping,
@@ -206,9 +204,9 @@ namespace MeltPoolDG::LevelSet::Tools
     typename dealii::DoFHandler<dim>::active_cell_iterator dst_cell =
       used_dst_dof_handler.begin_active();
 
-    std::unordered_set<types::global_dof_index> point_processed{};
+    std::unordered_set<dealii::types::global_dof_index> point_processed{};
 
-    const Utilities::MPI::Partitioner partitioner_support_points(
+    const dealii::Utilities::MPI::Partitioner partitioner_support_points(
       used_dst_dof_handler.locally_owned_dofs(), used_dst_dof_handler.get_mpi_communicator());
 
     for (const auto &cell : dof_handler_ls.active_cell_iterators())
@@ -425,7 +423,8 @@ namespace MeltPoolDG::LevelSet::Tools
     const std::function<number(const number)> &operation) const
   {
     // Ensure that the nearest point evaluation type is the expected fast version.
-    Assert(nearest_point_data.type == NearestPointType::nearest_point_fast, ExcNotImplemented());
+    Assert(nearest_point_data.type == NearestPointType::nearest_point_fast,
+           dealii::ExcNotImplemented());
 
     // store interface values to vector
     if (zero_out)
@@ -435,36 +434,37 @@ namespace MeltPoolDG::LevelSet::Tools
     if (update_ghosts)
       solution_in.update_ghost_values();
 
-    using value_type = typename FEPointEvaluation<n_components, dim>::ScalarNumber;
+    using value_type = typename dealii::FEPointEvaluation<n_components, dim>::ScalarNumber;
 
     // Create a finite element point evaluator with the base (non-active) FE.
-    std::unique_ptr<FEPointEvaluation<n_components, dim>> fep =
-      std::make_unique<FEPointEvaluation<n_components, dim>>(mapping,
-                                                             dof_handler_src->get_fe(),
-                                                             update_values);
+    std::unique_ptr<dealii::FEPointEvaluation<n_components, dim>> fep =
+      std::make_unique<dealii::FEPointEvaluation<n_components, dim>>(mapping,
+                                                                     dof_handler_src->get_fe(),
+                                                                     dealii::update_values);
 
     // Reserve space for values extracted from source DoFHandler.
     std::vector<value_type> values_src;
     values_src.reserve(locally_owned_surface_indices.size() * n_components);
 
     // Temporary vector for DoF values per cell.
-    Vector<number> solution_values(dof_handler_src->get_fe().n_dofs_per_cell());
+    dealii::Vector<number> solution_values(dof_handler_src->get_fe().n_dofs_per_cell());
 
     // Loop over all surface cells and corresponding unit points on them.
     for (const auto &cell_and_points : surface_cells_and_unit_points)
       {
-        const auto                                    &cell = cell_and_points.first;
-        TriaIterator<DoFCellAccessor<dim, dim, false>> dealii_cell(
-          &(dof_handler_src->get_triangulation()), cell.first, cell.second, dof_handler_src);
+        const auto                                                    &cell = cell_and_points.first;
+        dealii::TriaIterator<dealii::DoFCellAccessor<dim, dim, false>> dealii_cell(
+          &dof_handler_src->get_triangulation(), cell.first, cell.second, dof_handler_src);
 
         // If we are using an hpDoFHandler for cut cells, use the correct active FE.
         if (input_vector_is_cut)
           {
-            const types::fe_index active_fe_index = *dealii_cell->get_active_fe_indices().begin();
-            fep = std::make_unique<FEPointEvaluation<n_components, dim>>(
+            const dealii::types::fe_index active_fe_index =
+              *dealii_cell->get_active_fe_indices().begin();
+            fep = std::make_unique<dealii::FEPointEvaluation<n_components, dim>>(
               mapping,
               dof_handler_src->get_fe(active_fe_index),
-              update_values,
+              dealii::update_values,
               0 /*first selected component*/);
             solution_values.reinit(dof_handler_src->get_fe(active_fe_index).n_dofs_per_cell());
           }
@@ -472,7 +472,7 @@ namespace MeltPoolDG::LevelSet::Tools
         dealii_cell->get_dof_values(solution_in, solution_values);
 
         fep->reinit(dealii_cell, cell_and_points.second);
-        fep->evaluate(solution_values, EvaluationFlags::values);
+        fep->evaluate(solution_values, dealii::EvaluationFlags::values);
 
         for (const auto q : fep->quadrature_point_indices())
           {
@@ -492,8 +492,8 @@ namespace MeltPoolDG::LevelSet::Tools
     std::vector<value_type> values_dst(ghost_surface_indices.size() * n_components);
 
     // Export interpolated values from local to ghosted layout.
-    partitioner.export_to_ghosted_array<value_type, n_components>(make_array_view(values_src),
-                                                                  make_array_view(values_dst));
+    partitioner.export_to_ghosted_array<value_type, n_components>(
+      dealii::make_array_view(values_src), dealii::make_array_view(values_dst));
 
     // Scatter the interpolated values into the output vector.
     // Optionally apply an operation to the values before assigning.
@@ -1157,16 +1157,16 @@ namespace MeltPoolDG::LevelSet::Tools
   void
   NearestPoint<dim, number>::local_compute_nearest_point_fast()
   {
-    std::unique_ptr<TimerOutput::Scope> timer_scope;
+#ifdef DEAL_II_WITH_ARBORX
+    std::unique_ptr<dealii::TimerOutput::Scope> timer_scope;
     if (timer_output)
-      timer_scope =
-        std::make_unique<TimerOutput::Scope>(timer_output.value(),
-                                             ScopedName("nearest_point::reinit::project::mca"));
+      timer_scope = std::make_unique<dealii::TimerOutput::Scope>(
+        timer_output.value(), ScopedName("nearest_point::reinit::project::mca"));
 
     // Storage for physical interface points extracted from the level set isocontour
-    std::vector<Point<dim>> surface_points;
+    std::vector<dealii::Point<dim>> surface_points;
 
-    LevelSet::Tools::collect_interface_cells_and_intersection_points<dim, number>(
+    collect_interface_cells_and_intersection_points<dim, number>(
       surface_cells_and_unit_points,
       surface_points,
       dof_handler_ls,
@@ -1180,11 +1180,9 @@ namespace MeltPoolDG::LevelSet::Tools
       timer_scope->stop();
 
     if (timer_output)
-      timer_scope =
-        std::make_unique<TimerOutput::Scope>(timer_output.value(),
-                                             ScopedName("nearest_point::reinit::project::search"));
+      timer_scope = std::make_unique<dealii::TimerOutput::Scope>(
+        timer_output.value(), ScopedName("nearest_point::reinit::project::search"));
 
-#ifdef DEAL_II_WITH_ARBORX
     // Build ArborX distributed search tree using collected surface points
     dealii::ArborXWrappers::DistributedTree distributed_tree(mpi_comm, surface_points);
 
@@ -1197,11 +1195,11 @@ namespace MeltPoolDG::LevelSet::Tools
     // Sanity check: ArborX gives 1 match per stencil point
     for (unsigned int i = 1; i < offsets_stencil.size(); ++i)
       Assert(offsets_stencil[i] - offsets_stencil[i - 1] == 1,
-             ExcMessage("The offset needs to be one"));
+             dealii::ExcMessage("The offset needs to be one"));
 
     const auto [offset, n_global_surface_points] =
-      Utilities::MPI::partial_and_total_sum(surface_points.size(), mpi_comm);
-    const auto offsets = Utilities::MPI::all_gather(mpi_comm, offset);
+      dealii::Utilities::MPI::partial_and_total_sum(surface_points.size(), mpi_comm);
+    const auto offsets = dealii::Utilities::MPI::all_gather(mpi_comm, offset);
 
     // Locally owned indices (global) of surface points owned by this process
     locally_owned_surface_indices.clear();
@@ -1230,11 +1228,11 @@ namespace MeltPoolDG::LevelSet::Tools
     std::vector<std::vector<double>> ghosted_components(
       dim, std::vector<double>(ghost_surface_indices.size()));
     for (unsigned int d = 0; d < dim; ++d)
-      partitioner.export_to_ghosted_array<double>(make_array_view(components[d]),
-                                                  make_array_view(ghosted_components[d]));
+      partitioner.export_to_ghosted_array<double>(dealii::make_array_view(components[d]),
+                                                  dealii::make_array_view(ghosted_components[d]));
 
     // Reconstruct Point<dim> structures from ghosted components
-    std::vector<Point<dim>> points_dst(ghost_surface_indices.size());
+    std::vector<dealii::Point<dim>> points_dst(ghost_surface_indices.size());
     for (unsigned int i = 0; i < ghost_surface_indices.size(); ++i)
       for (unsigned int d = 0; d < dim; ++d)
         points_dst[i][d] = ghosted_components[d][i];
@@ -1242,12 +1240,15 @@ namespace MeltPoolDG::LevelSet::Tools
     // Store the projected interface points in the class member variable
     for (unsigned int i = 0; i < ghost_surface_indices.size(); ++i)
       projected_points_at_interface[i] = points_dst[i];
-#else
-    AssertThrow(false, ExcNotImplemented());
-#endif
 
     if (timer_scope)
       timer_scope->stop();
+#else
+    AssertThrow(
+      false,
+      dealii::ExcMessage(
+        "deal.II is not set up with Arborx, which is a prerequisite for using the \"nearest_point_fast\" algorithm!"));
+#endif
   }
 
   template class NearestPoint<1, double>;
