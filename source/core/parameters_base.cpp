@@ -7,7 +7,8 @@ namespace MeltPoolDG
   add_and_parse_parameters(const std::string                                     &parameter_file,
                            const std::function<void(dealii::ParameterHandler &)> &add_parameters,
                            const bool                                             enable_print,
-                           const bool                                             print_details)
+                           const bool                                             print_details,
+                           const bool                                             skip_undefined)
   {
     dealii::ParameterHandler prm;
     add_parameters(prm);
@@ -16,9 +17,9 @@ namespace MeltPoolDG
     file.open(parameter_file);
 
     if (parameter_file.substr(parameter_file.find_last_of(".") + 1) == "json")
-      prm.parse_input_from_json(file, false /*skip_undefined*/);
+      prm.parse_input_from_json(file, skip_undefined /*skip_undefined*/);
     else if (parameter_file.substr(parameter_file.find_last_of(".") + 1) == "prm")
-      prm.parse_input(parameter_file);
+      prm.parse_input(parameter_file, "", skip_undefined);
     else
       AssertThrow(false, dealii::ExcMessage("ParameterHandler cannot handle current file ending"));
 
@@ -47,11 +48,11 @@ namespace MeltPoolDG
     std::ifstream file(parameter_filename);
     if (parameter_filename.substr(parameter_filename.find_last_of(".") + 1) == "json")
       {
-        prm.parse_input_from_json(file, false /*skip_undefined*/);
+        prm.parse_input_from_json(file, true /*skip_undefined*/);
       }
     else if (parameter_filename.substr(parameter_filename.find_last_of(".") + 1) == "prm")
       {
-        prm.parse_input(parameter_filename);
+        prm.parse_input(parameter_filename, "", true /*skip_undefined*/);
       }
     else
       {
