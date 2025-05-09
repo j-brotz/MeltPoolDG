@@ -62,7 +62,7 @@ namespace
   }; // namespace
 
   template <typename is_viscous_bool>
-  class ExplicitOperatorFixture : public benchmark::Fixture
+  class CompressibleFlowOperatorFixture : public benchmark::Fixture
   {
     static const bool is_viscous = is_viscous_bool::value;
 
@@ -82,10 +82,6 @@ namespace
         setup_scratch_data();
 
         set_initial_and_boundary_conditions();
-
-        explicit_flow_operator = std::make_unique<
-          MeltPoolDG::Flow::DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>>(
-          *flow_scratch_data);
       }
 
       dealii::parallel::distributed::Triangulation<dim> triangulation;
@@ -117,9 +113,7 @@ namespace
         unsigned int dof_index = scratch_data.attach_dof_handler(dof_handler);
 
         scratch_data.attach_constraint_matrix(affine_constraints);
-
         scratch_data.create_partitioning();
-
         scratch_data.build(true, true, false, false);
 
         flow_scratch_data =
@@ -127,7 +121,7 @@ namespace
                                                                                        scratch_data,
                                                                                        dof_index,
                                                                                        quad_index);
-        flow_scratch_data->reinit(1);
+        flow_scratch_data->reinit(2);
       }
 
       void
@@ -235,7 +229,8 @@ namespace
     std::unique_ptr<Data> data;
   };
 
-  BENCHMARK_TEMPLATE_METHOD_F(ExplicitOperatorFixture, ExplicitOperator)(benchmark::State &state)
+  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture,
+                              ExplicitOperator)(benchmark::State &state)
   {
     this->setup_operator(OperatorType::Explicit);
     for (auto _ : state)
@@ -249,17 +244,161 @@ namespace
     state.counters["DoFs"] = this->data->dof_handler.n_dofs();
   }
 
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(ExplicitOperatorFixture,
+  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
                                    ExplicitOperator,
                                    std::integral_constant<bool, true>)
     ->DenseRange(5, 10, 5)
     ->Name("explicit operator, viscid");
 
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(ExplicitOperatorFixture,
+  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
                                    ExplicitOperator,
                                    std::integral_constant<bool, false>)
     ->DenseRange(5, 10, 5)
     ->Name("explicit operator, in-viscid");
+
+
+  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture,
+                              ImplicitOperatorResidual)(benchmark::State &state)
+  {
+    constexpr number current_time = 0.1;
+    constexpr number time_step    = 1e-4;
+    this->setup_operator(OperatorType::Implicit);
+    this->data->flow_scratch_data->solution_history.commit_old_solutions();
+    this->data->implicit_flow_operator->set_stage_constants(
+      current_time,
+      time_step,
+      this->data->flow_scratch_data->solution_history.get_recent_old_solution());
+    for (auto _ : state)
+      {
+        this->data->implicit_flow_operator->compute_residual(
+          0.1,
+          this->data->flow_scratch_data->solution_history.get_solution(1),
+          this->data->flow_scratch_data->solution_history.get_current_solution());
+      }
+    state.counters["DoFs"] = this->data->dof_handler.n_dofs();
+  }
+
+  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
+                                   ImplicitOperatorResidual,
+                                   std::integral_constant<bool, true>)
+    ->DenseRange(5, 10, 5)
+    ->Name("implicit operator, viscid: residual");
+
+  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
+                                   ImplicitOperatorResidual,
+                                   std::integral_constant<bool, false>)
+    ->DenseRange(5, 10, 5)
+    ->Name("implicit operator, in-viscid: residual");
+
+  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture,
+                              ImplicitOperatorJacobian)(benchmark::State &state)
+  {
+    constexpr number current_time = 0.1;
+    constexpr number time_step    = 1e-4;
+    this->setup_operator(OperatorType::Implicit);
+    this->data->flow_scratch_data->solution_history.commit_old_solutions();
+    this->data->implicit_flow_operator->set_stage_constants(
+      current_time,
+      time_step,
+      this->data->flow_scratch_data->solution_history.get_recent_old_solution());
+    for (auto _ : state)
+      {
+        this->data->implicit_flow_operator->apply_jacobian(
+          this->data->flow_scratch_data->solution_history.get_current_solution(),
+          this->data->flow_scratch_data->solution_history.get_recent_old_solution());
+      }
+    state.counters["DoFs"] = this->data->dof_handler.n_dofs();
+  }
+
+  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
+                                   ImplicitOperatorJacobian,
+                                   std::integral_constant<bool, true>)
+    ->DenseRange(5, 10, 5)
+    ->Name("implicit operator, viscid: jacobian");
+
+  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
+                                   ImplicitOperatorJacobian,
+                                   std::integral_constant<bool, false>)
+    ->DenseRange(5, 10, 5)
+    ->Name("implicit operator, in-viscid: jacobian");
+
+  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture,
+                              ImExOperatorResidual)(benchmark::State &state)
+  {
+    constexpr number current_time = 0.1;
+    constexpr number time_step    = 1e-4;
+    this->setup_operator(OperatorType::ImEx);
+    this->data->flow_scratch_data->solution_history.commit_old_solutions();
+    this->data->imex_flow_operator->set_stage_constants(
+      current_time,
+      time_step,
+      this->data->flow_scratch_data->solution_history.get_recent_old_solution());
+    for (auto _ : state)
+      {
+        this->data->imex_flow_operator->compute_residual(
+          0.1,
+          this->data->flow_scratch_data->solution_history.get_solution(1),
+          this->data->flow_scratch_data->solution_history.get_current_solution());
+      }
+    state.counters["DoFs"] = this->data->dof_handler.n_dofs();
+  }
+
+  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
+                                   ImExOperatorResidual,
+                                   std::integral_constant<bool, true>)
+    ->DenseRange(5, 10, 5)
+    ->Name("imex operator, viscid: residual");
+
+
+  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture,
+                              ImExOperatorJacobian)(benchmark::State &state)
+  {
+    constexpr number current_time = 0.1;
+    constexpr number time_step    = 1e-4;
+    this->setup_operator(OperatorType::ImEx);
+    this->data->flow_scratch_data->solution_history.commit_old_solutions();
+    this->data->imex_flow_operator->set_stage_constants(
+      current_time,
+      time_step,
+      this->data->flow_scratch_data->solution_history.get_recent_old_solution());
+    for (auto _ : state)
+      {
+        this->data->imex_flow_operator->apply_jacobian(
+          this->data->flow_scratch_data->solution_history.get_current_solution(),
+          this->data->flow_scratch_data->solution_history.get_recent_old_solution());
+      }
+    state.counters["DoFs"] = this->data->dof_handler.n_dofs();
+  }
+
+  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
+                                   ImExOperatorJacobian,
+                                   std::integral_constant<bool, true>)
+    ->DenseRange(5, 10, 5)
+    ->Name("imex operator, viscid: jacobian");
+
+  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture,
+                              ImExOperatorExplicitStage)(benchmark::State &state)
+  {
+    constexpr number current_time = 0.1;
+    constexpr number time_step    = 1e-4;
+    this->setup_operator(OperatorType::ImEx);
+    this->data->flow_scratch_data->solution_history.commit_old_solutions();
+    for (auto _ : state)
+      {
+        this->data->imex_flow_operator->perform_explicit_stage(
+          current_time,
+          time_step,
+          this->data->flow_scratch_data->solution_history.get_current_solution(),
+          this->data->flow_scratch_data->solution_history.get_recent_old_solution());
+      }
+    state.counters["DoFs"] = this->data->dof_handler.n_dofs();
+  }
+
+  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
+                                   ImExOperatorExplicitStage,
+                                   std::integral_constant<bool, true>)
+    ->DenseRange(5, 10, 5)
+    ->Name("imex operator, viscid: explicit stage");
 } // namespace
 
 MPDG_BENCHMARK_MPI_MAIN;

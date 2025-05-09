@@ -18,10 +18,11 @@ namespace MeltPoolDG::Flow
     , convective_terms(flow_scratch_data.flow_data)
     , viscous_terms(flow_scratch_data.flow_data)
   {
-    AssertThrow(is_viscous,
-                dealii::ExcMessage(
-                  "Using the imex scheme for viscous compressible flows is inefficient. Please use "
-                  "either the full explicit or implicit schemes."));
+    AssertThrow(
+      is_viscous,
+      dealii::ExcMessage(
+        "Using the imex scheme for in-viscid compressible flows is inefficient. Please use "
+        "either the full explicit or implicit schemes."));
   }
 
   template <int dim, typename number, bool is_viscous>
