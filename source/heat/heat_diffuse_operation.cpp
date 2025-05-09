@@ -334,6 +334,8 @@ namespace MeltPoolDG::Heat
   void
   HeatDiffuseOperation<dim, number>::attach_vectors(std::vector<VectorType *> &vectors)
   {
+    vectors.reserve(solution_history.size() + (nearest_point_search ? 1 : 0));
+
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
 
     if (nearest_point_search)

@@ -3,14 +3,15 @@
 #include <deal.II/dofs/dof_handler.h>
 
 #include <meltpooldg/time_integration/time_iterator.hpp>
+#include <meltpooldg/utilities/attach_vectors.hpp>
 #include <meltpooldg/utilities/restart_data.hpp>
 
 #include <chrono>
 #include <filesystem>
 #include <functional>
 #include <string>
-#include <utility>
 #include <vector>
+
 
 namespace MeltPoolDG::Restart
 {
@@ -55,22 +56,14 @@ namespace MeltPoolDG::Restart
 
   template <int dim, typename VectorType>
   void
-  serialize_internal(
-    const std::function<
-      void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                                 std::function<void(std::vector<VectorType *> &)>>> &data)>
-                      &attach_vectors,
-    const std::string &prefix);
+  serialize_internal(const AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors,
+                     const std::string                                     &prefix);
 
   template <int dim, typename VectorType>
   void
-  deserialize_internal(
-    const std::function<
-      void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                                 std::function<void(std::vector<VectorType *> &)>>> &data)>
-                                &attach_vectors,
-    const std::function<void()> &post,
-    const std::function<void()> &setup_dof_system,
-    const std::string           &prefix);
+  deserialize_internal(const AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors,
+                       const std::function<void()>                           &post,
+                       const std::function<void()>                           &setup_dof_system,
+                       const std::string                                     &prefix);
 
 } // namespace MeltPoolDG::Restart

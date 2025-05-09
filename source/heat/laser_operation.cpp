@@ -205,9 +205,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  LaserOperation<dim, number>::attach_vectors(
-    std::vector<
-      std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>> &data)
+  LaserOperation<dim, number>::attach_vectors(DoFHandlerAndVectorDataType<dim, VectorType> &data)
   {
     if (laser_data.model == LaserModelType::RTE)
       {

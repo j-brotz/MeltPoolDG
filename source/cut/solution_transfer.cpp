@@ -62,14 +62,14 @@ namespace MeltPoolDG::CutUtil
   template <int dim, typename number>
   void
   SolutionTransferOperator<dim, number>::reinit(
-    dealii::DoFHandler<dim>                                    &cut_dof_handler,
-    dealii::Triangulation<dim>                                 &tria,
-    const std::vector<const VectorType *>                      &cut_solutions,
-    const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier_old,
-    const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier,
-    const std::function<void(VectorType &)>                    &reinit_cut_vector,
-    const std::function<void()>                                &setup_dof_system,
-    const AMR::AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors)
+    dealii::DoFHandler<dim>                               &cut_dof_handler,
+    dealii::Triangulation<dim>                            &tria,
+    const std::vector<const VectorType *>                 &cut_solutions,
+    const dealii::NonMatching::MeshClassifier<dim>        &mesh_classifier_old,
+    const dealii::NonMatching::MeshClassifier<dim>        &mesh_classifier,
+    const std::function<void(VectorType &)>               &reinit_cut_vector,
+    const std::function<void()>                           &setup_dof_system,
+    const AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors)
   {
     fe_degree = cut_dof_handler.get_fe_collection().max_degree();
 
@@ -176,14 +176,14 @@ namespace MeltPoolDG::CutUtil
   template <int dim, typename number>
   void
   SolutionTransferOperator<dim, number>::reinit(
-    dealii::DoFHandler<dim>                                    &cut_dof_handler,
-    dealii::Triangulation<dim>                                 &tria,
-    const VectorType                                           &cut_solution,
-    const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier_old,
-    const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier,
-    const std::function<void(VectorType &)>                    &reinit_cut_vector,
-    const std::function<void()>                                &setup_dof_system,
-    const AMR::AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors)
+    dealii::DoFHandler<dim>                               &cut_dof_handler,
+    dealii::Triangulation<dim>                            &tria,
+    const VectorType                                      &cut_solution,
+    const dealii::NonMatching::MeshClassifier<dim>        &mesh_classifier_old,
+    const dealii::NonMatching::MeshClassifier<dim>        &mesh_classifier,
+    const std::function<void(VectorType &)>               &reinit_cut_vector,
+    const std::function<void()>                           &setup_dof_system,
+    const AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors)
   {
     reinit(cut_dof_handler,
            tria,
@@ -200,30 +200,36 @@ namespace MeltPoolDG::CutUtil
   template <int dim, typename number>
   void
   SolutionTransferOperator<dim, number>::transfer_solution_constant_dofs(
-    dealii::DoFHandler<dim>                                    &cut_dof_handler,
-    dealii::Triangulation<dim>                                 &tria,
-    const std::vector<const VectorType *>                      &cut_solutions,
-    const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier_old,
-    const dealii::NonMatching::MeshClassifier<dim>             &mesh_classifier,
-    const std::function<void(VectorType &)>                    &reinit_cut_vector,
-    const std::function<void()>                                &setup_dof_system,
-    const AMR::AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors)
+    dealii::DoFHandler<dim>                               &cut_dof_handler,
+    dealii::Triangulation<dim>                            &tria,
+    const std::vector<const VectorType *>                 &cut_solutions,
+    const dealii::NonMatching::MeshClassifier<dim>        &mesh_classifier_old,
+    const dealii::NonMatching::MeshClassifier<dim>        &mesh_classifier,
+    const std::function<void(VectorType &)>               &reinit_cut_vector,
+    const std::function<void()>                           &setup_dof_system,
+    const AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors)
   {
     // update the future FE-index according to the new interface position
-    CutUtil::set_fe_index<dim>(cut_dof_handler, mesh_classifier, true /* set_future */);
+    set_fe_index<dim>(cut_dof_handler, mesh_classifier, true /* set_future */);
 
     // the following is very similar to the code in refine_grid()
 
-    AMR::DoFHandlerAndVectorDataType<dim, VectorType> data;
+    DoFHandlerAndVectorDataType<dim, VectorType> data;
 
     if (attach_vectors)
-      attach_vectors(data);
+      {
+        attach_vectors(data);
+        data.shrink_to_fit();
+      }
     else
-      data.emplace_back(&cut_dof_handler, [&cut_solutions](std::vector<VectorType *> &vectors) {
-        vectors.reserve(cut_solutions.size());
-        for (const auto &v : cut_solutions)
-          vectors.push_back(const_cast<VectorType *>(v));
-      });
+      {
+        data.reserve(1);
+        data.emplace_back(&cut_dof_handler, [&cut_solutions](std::vector<VectorType *> &vectors) {
+          vectors.reserve(cut_solutions.size());
+          for (const auto &v : cut_solutions)
+            vectors.push_back(const_cast<VectorType *>(v));
+        });
+      }
 
     const unsigned int n_dof_handlers = data.size();
 
@@ -257,6 +263,14 @@ namespace MeltPoolDG::CutUtil
           *data[j].first, data[j].first == &cut_dof_handler /* average_values for cut solution */);
         solution_transfers[j]->prepare_for_coarsening_and_refinement(old_grid_solutions[j]);
       }
+
+    // Note: In contrast to CutUtil::refine_grid(), here, we do not need to transfer the level set
+    // solution first. But as a requirement, the lambda function setup_dof_system() cannot include
+    // classifying the mesh, and cannot include generating the quadrature of intersected cells,
+    // because the level set is not yet known for the new DoF system. The mesh must be classifyed
+    // before calling CutUtil::SolutionTransferOperator::reinit(), which leads to this point, and
+    // the intersected quadrature must be generated afterward. For an example, see
+    // Heat::HeatCutOperation::adapt_to_new_interface_position().
 
     // needed to trigger hp refinement --> call call-back function created by solution transfer
     tria.execute_coarsening_and_refinement();
@@ -338,7 +352,7 @@ namespace MeltPoolDG::CutUtil
                     if (dof_counter_fe_nothing.in_local_range(dof_index))
                       dof_counter_fe_nothing[dof_index] += 1;
                   }
-            else if ((cell_location_old == dealii::NonMatching::LocationToLevelSet::outside) &&
+            else if ((cell_location_old == dealii::NonMatching::LocationToLevelSet::outside) and
                      (is_two_phase == true))
               for (unsigned int i = n_components_per_phase; i < 2 * n_components_per_phase; ++i)
                 for (unsigned int q = 0; q < fe.get_sub_fe(i, 1).n_dofs_per_cell(); ++q)
@@ -415,7 +429,7 @@ namespace MeltPoolDG::CutUtil
                 if (flags_dofs_gp_extrapolation.in_local_range(dof_index))
                   flags_dofs_gp_extrapolation[dof_index] = 1;
               }
-        else if ((cell_location_old == dealii::NonMatching::LocationToLevelSet::outside) &&
+        else if ((cell_location_old == dealii::NonMatching::LocationToLevelSet::outside) and
                  (is_two_phase == true))
           for (unsigned int i = n_components_per_phase; i < 2 * n_components_per_phase; ++i)
             for (unsigned int q = 0; q < fe.get_sub_fe(i, 1).n_dofs_per_cell(); ++q)
@@ -455,7 +469,7 @@ namespace MeltPoolDG::CutUtil
                     if (flags_dofs_gp_extrapolation.in_local_range(dof_index))
                       flags_dofs_gp_extrapolation[dof_index] = 0;
                   }
-            else if ((cell_location == dealii::NonMatching::LocationToLevelSet::inside) &&
+            else if ((cell_location == dealii::NonMatching::LocationToLevelSet::inside) and
                      (is_two_phase == true))
               for (unsigned int i = n_components_per_phase; i < 2 * n_components_per_phase; ++i)
                 for (unsigned int q = 0; q < fe.get_sub_fe(i, 1).n_dofs_per_cell(); ++q)
@@ -655,92 +669,93 @@ namespace MeltPoolDG::CutUtil
           continue;
 
         // definition of lambda-function for ghost-penalty evaluation
-        const auto eval_ghost_penalty = [&](dealii::FEValuesExtractors::Scalar &u_extractor,
-                                            dealii::NonMatching::LocationToLevelSet
-                                              inactive_location) {
-          dealii::UpdateFlags update_flags =
-            dealii::update_gradients | dealii::update_JxW_values | dealii::update_normal_vectors;
-          if (is_dg)
-            update_flags = dealii::update_values | update_flags;
-          if (fe_degree == 2)
-            update_flags = update_flags | dealii::update_hessians;
+        const auto eval_ghost_penalty =
+          [&](dealii::FEValuesExtractors::Scalar     &u_extractor,
+              dealii::NonMatching::LocationToLevelSet inactive_location) {
+            dealii::UpdateFlags update_flags =
+              dealii::update_gradients | dealii::update_JxW_values | dealii::update_normal_vectors;
+            if (is_dg)
+              update_flags = dealii::update_values | update_flags;
+            if (fe_degree == 2)
+              update_flags = update_flags | dealii::update_hessians;
 
-          dealii::FEInterfaceValues<dim> fe_interface_values(cut_dof_handler.get_fe_collection(),
-                                                             face_quadrature,
-                                                             update_flags);
+            dealii::FEInterfaceValues<dim> fe_interface_values(cut_dof_handler.get_fe_collection(),
+                                                               face_quadrature,
+                                                               update_flags);
 
-          for (const unsigned int f : cell->face_indices())
-            {
-              // check if current face is a ghost-penalty face
-              if (not CutUtil::face_has_ghost_penalty(mesh_classifier, cell, f, inactive_location))
-                continue;
+            for (const unsigned int f : cell->face_indices())
+              {
+                // check if current face is a ghost-penalty face
+                if (not face_has_ghost_penalty(mesh_classifier, cell, f, inactive_location))
+                  continue;
 
-              fe_interface_values.reinit(
-                cell, f, invalid, cell->neighbor(f), cell->neighbor_of_neighbor(f), invalid);
+                fe_interface_values.reinit(
+                  cell, f, invalid, cell->neighbor(f), cell->neighbor_of_neighbor(f), invalid);
 
-              const unsigned int n_interface_dofs = fe_interface_values.n_current_interface_dofs();
+                const unsigned int n_interface_dofs =
+                  fe_interface_values.n_current_interface_dofs();
 
-              // Determine prefactor, for ghost-penalty face term evaluation.
-              // Prefactor 0.5 is used for faces, which are visited twice.
-              number prefactor = 1.;
-              if (CutUtil::is_new_intersected_face(
-                    mesh_classifier, mesh_classifier_old, cell, f, inactive_location))
-                prefactor = 0.5;
+                // Determine prefactor, for ghost-penalty face term evaluation.
+                // Prefactor 0.5 is used for faces, which are visited twice.
+                number prefactor = 1.;
+                if (is_new_intersected_face(
+                      mesh_classifier, mesh_classifier_old, cell, f, inactive_location))
+                  prefactor = 0.5;
 
-              // initialize local ghost-penalty constraint matrix and local rhs
-              dealii::FullMatrix<number> local_ghost_penalty_matrix(n_interface_dofs,
-                                                                    n_interface_dofs);
-              dealii::Vector<number>     local_rhs(n_interface_dofs);
+                // initialize local ghost-penalty constraint matrix and local rhs
+                dealii::FullMatrix<number> local_ghost_penalty_matrix(n_interface_dofs,
+                                                                      n_interface_dofs);
+                dealii::Vector<number>     local_rhs(n_interface_dofs);
 
-              // compute entries of local ghost-penalty constraint matrix
-              for (const auto i : fe_interface_values.dof_indices())
-                for (const auto j : fe_interface_values.dof_indices())
-                  for (unsigned int q = 0; q < fe_interface_values.n_quadrature_points; ++q)
-                    {
-                      const dealii::Tensor<1, dim, number> normal = fe_interface_values.normal(q);
+                // compute entries of local ghost-penalty constraint matrix
+                for (const auto i : fe_interface_values.dof_indices())
+                  for (const auto j : fe_interface_values.dof_indices())
+                    for (unsigned int q = 0; q < fe_interface_values.n_quadrature_points; ++q)
+                      {
+                        const dealii::Tensor<1, dim, number> normal = fe_interface_values.normal(q);
 
-                      // contributions from 1. normal derivative jump
-                      local_ghost_penalty_matrix(i, j) +=
-                        prefactor * normal *
-                        fe_interface_values[u_extractor].jump_in_gradients(i, q) * normal *
-                        fe_interface_values[u_extractor].jump_in_gradients(j, q) *
-                        cell_side_length * gamma_degree_1 * fe_interface_values.JxW(q);
+                        // contributions from 1. normal derivative jump
+                        local_ghost_penalty_matrix(i, j) +=
+                          prefactor * normal *
+                          fe_interface_values[u_extractor].jump_in_gradients(i, q) * normal *
+                          fe_interface_values[u_extractor].jump_in_gradients(j, q) *
+                          cell_side_length * gamma_degree_1 * fe_interface_values.JxW(q);
 
-                      if (is_dg)
-                        {
-                          // contributions from 0. normal derivative jump
-                          local_ghost_penalty_matrix(i, j) +=
-                            prefactor * fe_interface_values[u_extractor].jump_in_values(i, q) *
-                            fe_interface_values[u_extractor].jump_in_values(j, q) /
-                            cell_side_length * gamma_degree_0 * fe_interface_values.JxW(q);
-                        }
+                        if (is_dg)
+                          {
+                            // contributions from 0. normal derivative jump
+                            local_ghost_penalty_matrix(i, j) +=
+                              prefactor * fe_interface_values[u_extractor].jump_in_values(i, q) *
+                              fe_interface_values[u_extractor].jump_in_values(j, q) /
+                              cell_side_length * gamma_degree_0 * fe_interface_values.JxW(q);
+                          }
 
-                      if (fe_degree == 2)
-                        {
-                          // contributions from 2. normal derivative jump
-                          local_ghost_penalty_matrix(i, j) +=
-                            prefactor *
-                            (normal * fe_interface_values[u_extractor].jump_in_hessians(i, q) *
-                             normal /*double contraction*/) *
-                            (normal * fe_interface_values[u_extractor].jump_in_hessians(j, q) *
-                             normal /*double contraction*/) *
-                            dealii::Utilities::fixed_power<3>(cell_side_length) * gamma_degree_2 *
-                            fe_interface_values.JxW(q);
-                        }
-                    }
+                        if (fe_degree == 2)
+                          {
+                            // contributions from 2. normal derivative jump
+                            local_ghost_penalty_matrix(i, j) +=
+                              prefactor *
+                              (normal * fe_interface_values[u_extractor].jump_in_hessians(i, q) *
+                               normal /*double contraction*/) *
+                              (normal * fe_interface_values[u_extractor].jump_in_hessians(j, q) *
+                               normal /*double contraction*/) *
+                              dealii::Utilities::fixed_power<3>(cell_side_length) * gamma_degree_2 *
+                              fe_interface_values.JxW(q);
+                          }
+                      }
 
-              // distribute local ghost-penalty constraint matrix and local_rhs to
-              // global system
-              const std::vector<dealii::types::global_dof_index> local_interface_dof_indices =
-                fe_interface_values.get_interface_dof_indices();
+                // distribute local ghost-penalty constraint matrix and local_rhs to
+                // global system
+                const std::vector<dealii::types::global_dof_index> local_interface_dof_indices =
+                  fe_interface_values.get_interface_dof_indices();
 
-              constraints_gp.distribute_local_to_global(local_ghost_penalty_matrix,
-                                                        local_rhs,
-                                                        local_interface_dof_indices,
-                                                        sparse_matrix,
-                                                        rhs);
-            }
-        };
+                constraints_gp.distribute_local_to_global(local_ghost_penalty_matrix,
+                                                          local_rhs,
+                                                          local_interface_dof_indices,
+                                                          sparse_matrix,
+                                                          rhs);
+              }
+          };
 
         const auto cell_location_old = mesh_classifier_old.location_to_level_set(cell);
 
@@ -750,8 +765,8 @@ namespace MeltPoolDG::CutUtil
               dealii::FEValuesExtractors::Scalar u(i);
               eval_ghost_penalty(u, cell_location_old);
             }
-        else if ((cell_location_old == dealii::NonMatching::LocationToLevelSet::outside) &&
-                 (is_two_phase == true))
+        else if (cell_location_old == dealii::NonMatching::LocationToLevelSet::outside and
+                 is_two_phase == true)
           for (unsigned int i = n_components_per_phase; i < 2 * n_components_per_phase; ++i)
             {
               dealii::FEValuesExtractors::Scalar u(i);

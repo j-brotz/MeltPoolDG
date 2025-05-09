@@ -26,11 +26,11 @@
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/time_integration/solution_history.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
+#include <meltpooldg/utilities/attach_vectors.hpp>
 
 #include <functional>
 #include <map>
 #include <memory>
-#include <utility>
 #include <vector>
 
 
@@ -59,7 +59,7 @@ namespace MeltPoolDG::Heat
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
     VectorType                                   interface_temperature;
-    // TODO: note that this is not jet implemented in the operator
+    // TODO: note that this is not yet implemented in the operator
     VectorType volumetric_heat_source;
 
     // level set which defines the interface with its zero contour
@@ -71,12 +71,10 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier;
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier_old;
 
-    CutUtil::SolutionTransferOperator<dim, number> cut_solution_transfer;
-    std::function<void(VectorType &)>              reinit_vector;
-    std::function<void()>                          setup_dof_system;
-    std::function<void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                                             std::function<void(std::vector<VectorType *> &)>>> &)>
-      attach_all_vectors;
+    CutUtil::SolutionTransferOperator<dim, number>  cut_solution_transfer;
+    std::function<void(VectorType &)>               reinit_vector;
+    std::function<void()>                           setup_dof_system;
+    AttachDoFHandlerAndVectorsType<dim, VectorType> attach_all_vectors;
 
     dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>
       mapping_info_surface;
@@ -95,8 +93,12 @@ namespace MeltPoolDG::Heat
     // bool indicating whether solution vectors are prepared for time advance
     bool ready_for_time_advance = false;
 
-    // bool indicating whether the level set vector is ready to generate intersected quadrature
+    /// the following two parameters are used to manipulate the behaviour of setup_dof_system during
+    /// cut solution transfer:
+    // - bool indicating whether the level set vector is ready to generate intersected quadrature
     bool ready_to_generate_intersected_quadrature = true;
+    // - bool indicating whether to skip classifying cells according to the new interface position
+    bool skip_classify_cells = false;
 
   public:
     HeatCutOperation(
@@ -130,11 +132,8 @@ namespace MeltPoolDG::Heat
      */
     void
     register_lambdas_for_solution_transfer(
-      const std::function<void()> setup_dof_system_in,
-      const std::function<
-        void(std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                                   std::function<void(std::vector<VectorType *> &)>>> &)>
-        attach_vectors_in = {});
+      const std::function<void()>                          &setup_dof_system_in,
+      const AttachDoFHandlerAndVectorsType<dim, VectorType> attach_vectors_in = {});
 
   private:
     void

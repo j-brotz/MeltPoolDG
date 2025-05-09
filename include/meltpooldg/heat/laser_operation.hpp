@@ -16,6 +16,7 @@
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_operation.hpp>
+#include <meltpooldg/utilities/attach_vectors.hpp>
 
 #include <functional>
 #include <memory>
@@ -89,8 +90,7 @@ namespace MeltPoolDG::Heat
     reinit();
 
     void
-    attach_vectors(std::vector<std::pair<const dealii::DoFHandler<dim> *,
-                                         std::function<void(std::vector<VectorType *> &)>>> &data);
+    attach_vectors(DoFHandlerAndVectorDataType<dim, VectorType> &data);
 
     void
     attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
