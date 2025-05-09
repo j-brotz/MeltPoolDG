@@ -73,7 +73,6 @@ namespace MeltPoolDG::Flow
   AdafloWrapperParameters<number>::check_input_parameters(
     const bool enable_evaporative_dilation_rate) const
   {
-    // TODO: move to check in evaporation data
     if (enable_evaporative_dilation_rate)
       {
         AssertThrow(
