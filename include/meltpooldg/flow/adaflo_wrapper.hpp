@@ -49,13 +49,9 @@ namespace MeltPoolDG::Flow
      */
     AdafloWrapper(ScratchData<dim, dim, number>                               &scratch_data,
                   const std::shared_ptr<const SimulationCaseBase<dim, number>> simulation_case,
-                  AdafloWrapperParameters                                     &adaflo_params,
-                  const Evaporation::EvaporationData<number>                  &evapor,
-                  const MaterialData<number>                                  &material,
-                  const BaseData                                              &base,
-                  const TimeIntegration::TimeSteppingData<number>             &time_stepping,
-                  const TimeIntegration::TimeIterator<number>                 &time_iterator,
-                  const bool do_evaporative_mass_flux);
+                  const AdafloWrapperParameters<number>       &adaflo_wrapper_params,
+                  const TimeIntegration::TimeIterator<number> &time_iterator,
+                  const bool                                   do_evaporative_mass_flux);
 
     void
     set_initial_condition(const dealii::Function<dim> &initial_field_function_velocity) override;
@@ -224,14 +220,6 @@ namespace MeltPoolDG::Flow
     get_face_center_quad();
 
   private:
-    void
-    create_parameters(MeltPoolDG::Flow::AdafloWrapperParameters       &adaflo_wrapper_params,
-                      const Evaporation::EvaporationData<number>      &evapor,
-                      const MaterialData<number>                      &material,
-                      const BaseData                                  &base,
-                      const TimeIntegration::TimeSteppingData<number> &time_stepping,
-                      const std::string                                parameter_file);
-
     bool
     time_stepping_synchronized();
 

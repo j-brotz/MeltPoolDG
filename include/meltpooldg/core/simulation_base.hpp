@@ -425,7 +425,9 @@ namespace MeltPoolDG
         [this, &enable_print](dealii::ParameterHandler &prm) {
           enable_print = add_simulation_specific_parameters(prm);
         },
-        enable_print && (dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0));
+        enable_print && (dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0),
+        false /* print details */,
+        true /* skip undefined parameters */);
     }
   };
 
