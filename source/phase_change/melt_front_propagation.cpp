@@ -186,10 +186,10 @@ namespace MeltPoolDG
   MeltFrontPropagation<dim, number>::compute_solid_and_liquid_phases(
     const VectorType &level_set_as_heaviside)
   {
-    const bool update_ghosts = !level_set_as_heaviside.has_ghost_elements();
+    const bool update_ghosts = not level_set_as_heaviside.has_ghost_elements();
     if (update_ghosts)
       level_set_as_heaviside.update_ghost_values();
-    const bool heat_update_ghosts = !temperature.has_ghost_elements();
+    const bool heat_update_ghosts = not temperature.has_ghost_elements();
     if (heat_update_ghosts)
       temperature.update_ghost_values();
 
@@ -199,60 +199,56 @@ namespace MeltPoolDG
     FEValues<dim> ls_heaviside_eval(
       scratch_data.get_mapping(),
       scratch_data.get_dof_handler(ls_dof_idx).get_fe(),
-      Quadrature<dim>(
-        scratch_data.get_dof_handler(phase_fraction_dof_idx).get_fe().get_unit_support_points()),
+      Quadrature<dim>(scratch_data.get_fe(phase_fraction_dof_idx).get_unit_support_points()),
       update_values);
     std::vector<number> ls_heaviside_at_q(ls_heaviside_eval.n_quadrature_points);
-    typename DoFHandler<dim>::active_cell_iterator ls_cell =
-      scratch_data.get_dof_handler(ls_dof_idx).begin_active();
 
     const CutUtil::CutPhaseType cut_type = scratch_data.get_cut_type(heat_hanging_nodes_dof_idx);
     hp::FEValues<dim>           hp_temerature_eval(
       scratch_data.get_dof_handler(heat_hanging_nodes_dof_idx).get_fe_collection(),
-      hp::QCollection<dim>(Quadrature<dim>(
-        scratch_data.get_dof_handler(phase_fraction_dof_idx).get_fe().get_unit_support_points())),
+      hp::QCollection<dim>(
+        Quadrature<dim>(scratch_data.get_fe(phase_fraction_dof_idx).get_unit_support_points())),
       update_values);
-    std::vector<number> temperature_at_q(ls_heaviside_eval.n_quadrature_points);
-    typename DoFHandler<dim>::active_cell_iterator t_cell =
-      scratch_data.get_dof_handler(heat_hanging_nodes_dof_idx).begin_active();
+    std::vector<number> temperature_at_q(ls_heaviside_at_q.size());
 
     liquid = 0;
     solid  = 0;
 
-    for (const auto &cell :
-         scratch_data.get_dof_handler(phase_fraction_dof_idx).active_cell_iterators())
+    auto ls_cell = scratch_data.get_dof_handler(ls_dof_idx).begin_active();
+    auto t_cell  = scratch_data.get_dof_handler(heat_hanging_nodes_dof_idx).begin_active();
+    for (auto cell = scratch_data.get_dof_handler(phase_fraction_dof_idx).begin_active();
+         cell != scratch_data.get_dof_handler(phase_fraction_dof_idx).end();
+         ++cell, ++ls_cell, ++t_cell)
       {
-        if (cell->is_locally_owned())
+        if (not cell->is_locally_owned())
+          continue;
+
+        cell->get_dof_indices(local_dof_indices);
+
+        ls_heaviside_eval.reinit(ls_cell);
+        ls_heaviside_eval.get_function_values(level_set_as_heaviside, ls_heaviside_at_q);
+
+        hp_temerature_eval.reinit(t_cell);
+        const FEValues<dim> &temerature_eval = hp_temerature_eval.get_present_fe_values();
+        if (cut_type != CutUtil::CutPhaseType::two_phase_cut)
+          temerature_eval.get_function_values(temperature, temperature_at_q);
+        else
           {
-            cell->get_dof_indices(local_dof_indices);
-
-            ls_heaviside_eval.reinit(ls_cell);
-            ls_heaviside_eval.get_function_values(level_set_as_heaviside, ls_heaviside_at_q);
-
-            hp_temerature_eval.reinit(t_cell);
-            const FEValues<dim> &temerature_eval = hp_temerature_eval.get_present_fe_values();
-            if (cut_type != CutUtil::CutPhaseType::two_phase_cut)
-              temerature_eval.get_function_values(temperature, temperature_at_q);
-            else
-              {
-                // for the two phase cut, we have two components
-                std::vector<Vector<number>> cut_temperature_at_q(
-                  temerature_eval.n_quadrature_points, Vector<number>(2));
-                temerature_eval.get_function_values(temperature, cut_temperature_at_q);
-                // we are only interested in the liquid temperature
-                for (unsigned int i = 0; i < temperature_at_q.size(); ++i)
-                  temperature_at_q[i] = cut_temperature_at_q[i](0);
-              }
-
-            for (const auto q : ls_heaviside_eval.quadrature_point_indices())
-              {
-                const number temp            = compute_solid_fraction(temperature_at_q[q]);
-                solid[local_dof_indices[q]]  = temp * ls_heaviside_at_q[q];
-                liquid[local_dof_indices[q]] = (1. - temp) * ls_heaviside_at_q[q];
-              }
+            // for the two phase cut, we have two components
+            std::vector<Vector<number>> cut_temperature_at_q(temerature_eval.n_quadrature_points,
+                                                             Vector<number>(2));
+            temerature_eval.get_function_values(temperature, cut_temperature_at_q);
+            // we are only interested in the liquid temperature
+            for (unsigned int i = 0; i < temperature_at_q.size(); ++i)
+              temperature_at_q[i] = cut_temperature_at_q[i](0);
           }
-        ++ls_cell;
-        ++t_cell;
+
+        for (const auto q : ls_heaviside_eval.quadrature_point_indices())
+          {
+            const number temp            = compute_solid_fraction(temperature_at_q[q]);
+            solid[local_dof_indices[q]]  = temp * ls_heaviside_at_q[q];
+            liquid[local_dof_indices[q]] = (1. - temp) * ls_heaviside_at_q[q];
+          }
       }
 
     scratch_data.get_constraint(phase_fraction_dof_idx).distribute(solid);
@@ -300,25 +296,23 @@ namespace MeltPoolDG
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
     std::vector<number>                  solid_at_q(dofs_per_cell);
 
-    typename DoFHandler<dim>::active_cell_iterator solid_cell =
-      scratch_data.get_dof_handler(phase_fraction_dof_idx).begin_active();
-
-    for (const auto &cell : flow_dof_handler.active_cell_iterators())
+    auto solid_cell = scratch_data.get_dof_handler(phase_fraction_dof_idx).begin_active();
+    for (auto cell = flow_dof_handler.begin_active(); cell != flow_dof_handler.end();
+         ++cell, ++solid_cell)
       {
-        if (cell->is_locally_owned())
-          {
-            cell->get_dof_indices(local_dof_indices);
+        if (not cell->is_locally_owned())
+          continue;
 
-            flow_eval.reinit(cell);
+        cell->get_dof_indices(local_dof_indices);
 
-            solid_eval.reinit(solid_cell);
-            solid_eval.get_function_values(solid, solid_at_q);
+        flow_eval.reinit(cell);
 
-            for (const auto q : flow_eval.quadrature_point_indices())
-              if (solid_at_q[q] >= mp_data.solid_fraction_lower_limit)
-                solid_constraints.add_line(local_dof_indices[q]);
-          }
-        ++solid_cell;
+        solid_eval.reinit(solid_cell);
+        solid_eval.get_function_values(solid, solid_at_q);
+
+        for (const auto q : flow_eval.quadrature_point_indices())
+          if (solid_at_q[q] >= mp_data.solid_fraction_lower_limit)
+            solid_constraints.add_line(local_dof_indices[q]);
       }
 
     solid_constraints.make_consistent_in_parallel(flow_dof_handler.locally_owned_dofs(),
@@ -373,25 +367,23 @@ namespace MeltPoolDG
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
     std::vector<number>                  solid_at_q(dofs_per_cell);
 
-    typename DoFHandler<dim>::active_cell_iterator solid_cell =
-      scratch_data.get_dof_handler(phase_fraction_dof_idx).begin_active();
-
-    for (const auto &cell : level_set_dof_handler.active_cell_iterators())
+    auto solid_cell = scratch_data.get_dof_handler(phase_fraction_dof_idx).begin_active();
+    for (auto cell = level_set_dof_handler.begin_active(); cell != level_set_dof_handler.end();
+         ++cell, ++solid_cell)
       {
-        if (cell->is_locally_owned())
-          {
-            cell->get_dof_indices(local_dof_indices);
+        if (not cell->is_locally_owned())
+          continue;
 
-            ls_eval.reinit(cell);
+        cell->get_dof_indices(local_dof_indices);
 
-            solid_eval.reinit(solid_cell);
-            solid_eval.get_function_values(solid, solid_at_q);
+        ls_eval.reinit(cell);
 
-            for (const auto q : ls_eval.quadrature_point_indices())
-              if (solid_at_q[q] >= mp_data.solid_fraction_lower_limit)
-                solid_constraints.add_line(local_dof_indices[q]);
-          }
-        ++solid_cell;
+        solid_eval.reinit(solid_cell);
+        solid_eval.get_function_values(solid, solid_at_q);
+
+        for (const auto q : ls_eval.quadrature_point_indices())
+          if (solid_at_q[q] >= mp_data.solid_fraction_lower_limit)
+            solid_constraints.add_line(local_dof_indices[q]);
       }
 
     solid_constraints.make_consistent_in_parallel(level_set_dof_handler.locally_owned_dofs(),

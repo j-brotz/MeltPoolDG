@@ -129,7 +129,7 @@ namespace MeltPoolDG
      *  perform mesh refinement
      */
     bool
-    mark_cells_for_refinement(dealii::Triangulation<dim> &tria);
+    mark_cells_for_refinement(dealii::Triangulation<dim> &tria, const bool is_initial_solution);
 
     void
     refine_mesh(const bool is_initial_solution = false);
