@@ -1,8 +1,8 @@
 #include <deal.II/base/data_out_base.h>
 #include <deal.II/base/exceptions.h>
 
-#include <meltpooldg/melt_pool/powder_bed.hpp>
 #include <meltpooldg/utilities/characteristic_functions.hpp>
+#include <meltpooldg/utilities/powder_bed.hpp>
 
 #include <algorithm>
 #include <filesystem>

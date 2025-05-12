@@ -4,7 +4,7 @@
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/melt_pool/powder_bed.hpp>
+#include <meltpooldg/utilities/powder_bed.hpp>
 
 #include <memory>
 #include <string>
