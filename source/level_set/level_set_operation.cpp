@@ -474,6 +474,8 @@ namespace MeltPoolDG::LevelSet
         reinit_time_iterator.set_current_time_increment(
           level_set_data.reinit.compute_interface_thickness_parameter_epsilon(
             scratch_data.get_min_cell_size() / level_set_data.get_n_subdivisions()));
+        // TODO AA switch for testing
+        // reinit_time_iterator.set_current_time_increment(time_stepping.get_current_time_increment());
 
         reinit_operation->set_initial_condition(get_level_set());
 

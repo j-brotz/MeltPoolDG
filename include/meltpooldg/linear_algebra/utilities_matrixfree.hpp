@@ -14,7 +14,7 @@ namespace MeltPoolDG::Utilities::MatrixFree
   template <typename number = double>
   using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
   /**
-   * Compute the modified right-handside for (inhomogeneous) dirichlet boundary
+   * Compute the modified right-hand side for (inhomogeneous) dirichlet boundary
    * conditions x_d
    *
    * A * x = B

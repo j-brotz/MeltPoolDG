@@ -89,5 +89,7 @@ namespace MeltPoolDG::LevelSet
     dealii::AlignedVector<dealii::VectorizedArray<number>> diffusion_length;
     mutable dealii::AlignedVector<dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>
       unit_normal;
+    mutable dealii::AlignedVector<dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>
+      unit_tangent;
   };
 } // namespace MeltPoolDG::LevelSet

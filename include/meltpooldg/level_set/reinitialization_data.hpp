@@ -36,6 +36,7 @@ namespace MeltPoolDG::LevelSet
     unsigned int max_n_steps     = 5;
     int          n_initial_steps = -1;
     number       tolerance       = std::numeric_limits<number>::min();
+    number       tangential_diffusion_factor = 0.0;
 
     FiniteElementData fe;
 
