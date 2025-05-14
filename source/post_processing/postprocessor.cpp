@@ -104,7 +104,7 @@ namespace MeltPoolDG
     const unsigned int                 n_time_step,
     const number                       time,
     const GenericDataOut<dim, number> &generic_data_out,
-    const bool                         force_update_requested_output_variables)
+    const bool                         force_output_all)
   {
     Journal::print_line(pcout, "write paraview files", "postprocessor");
 
@@ -112,10 +112,22 @@ namespace MeltPoolDG
     dealii::DataOut<dim> data_out;
 
     // do search algorithm only once
-    if (idx_req_vars.size() == 0 || force_update_requested_output_variables)
+    if (idx_req_vars.size() == 0)
       idx_req_vars = generic_data_out.get_indices_data_request(output_data.output_variables);
 
-    for (const auto &i : idx_req_vars)
+    const std::vector<unsigned int> *used_var_ids = &idx_req_vars;
+
+    // if requested, output all variables
+    std::vector<unsigned int> all_vars;
+    if (force_output_all)
+      {
+        all_vars.resize(generic_data_out.entries.size());
+        for (unsigned int i = 0; i < all_vars.size(); ++i)
+          all_vars[i] = i;
+        used_var_ids = &all_vars;
+      }
+
+    for (const auto &i : *used_var_ids)
       {
         const auto &data = generic_data_out.entries[i];
 
