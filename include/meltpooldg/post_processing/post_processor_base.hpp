@@ -1,4 +1,5 @@
 #pragma once
+
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 
 namespace MeltPoolDG::PostProcessingTools
@@ -12,5 +13,7 @@ namespace MeltPoolDG::PostProcessingTools
 
     virtual void
     reinit(const GenericDataOut<dim, number> &generic_data_out_in) = 0;
+
+    virtual ~PostProcessorBase() = default;
   };
 } // namespace MeltPoolDG::PostProcessingTools

@@ -21,7 +21,7 @@ namespace MeltPoolDG::PostProcessingTools
 
   public:
     DivergenceCalculator(const GenericDataOut<dim, number> &generic_data_out,
-                         const std::string                  request_variable)
+                         const std::string                 &request_variable)
       : generic_data_out(&generic_data_out)
       , request_variable(request_variable)
     {}
@@ -59,7 +59,7 @@ namespace MeltPoolDG::PostProcessingTools
                                        quad,
                                        dealii::update_gradients | dealii::update_JxW_values);
 
-      const dealii::FEValuesExtractors::Vector velocities(0);
+      constexpr dealii::FEValuesExtractors::Vector velocities(0);
 
       std::vector<number> div(vel_values.get_quadrature().size());
 

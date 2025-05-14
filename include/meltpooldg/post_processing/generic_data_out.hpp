@@ -1,10 +1,19 @@
 #pragma once
 
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/fe/mapping.h>
+
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <deal.II/numerics/data_component_interpretation.h>
 #include <deal.II/numerics/data_out.h>
 
+#include <map>
 #include <string>
+#include <tuple>
+#include <vector>
+
 
 namespace MeltPoolDG
 {
@@ -14,9 +23,9 @@ namespace MeltPoolDG
   public:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
-    GenericDataOut(const dealii::Mapping<dim>    &mapping,
-                   const number                   current_time,
-                   const std::vector<std::string> req_var = {"all"});
+    GenericDataOut(const dealii::Mapping<dim>     &mapping,
+                   const number                    current_time,
+                   const std::vector<std::string> &req_vars_in = {"all"});
 
     void
     add_data_vector(
@@ -57,7 +66,7 @@ namespace MeltPoolDG
     is_requested(const std::string &var) const;
 
     std::vector<unsigned int>
-    get_indices_data_request(const std::vector<std::string> req_var) const;
+    get_indices_data_request(const std::vector<std::string> &req_var) const;
 
   private:
     std::map<std::string, unsigned int> entry_id;

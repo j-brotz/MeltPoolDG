@@ -80,7 +80,7 @@ namespace MeltPoolDG
         return true;
       if (time - time_at_last_output >= output_data.write_time_step_size)
         return true;
-      return !(n_time_step % output_data.write_frequency);
+      return not(n_time_step % output_data.write_frequency);
     }
 
     template <class Archive>

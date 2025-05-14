@@ -30,7 +30,7 @@ namespace MeltPoolDG
     , mapping(mapping_in)
     , triangulation(triangulation_in)
     , pcout(pcout_in)
-    , do_simplex(!triangulation.all_reference_cells_are_hyper_cube())
+    , do_simplex(not triangulation.all_reference_cells_are_hyper_cube())
     , end_time(time_data.end_time)
     , time_at_last_output(time_data.start_time)
   {
@@ -54,19 +54,17 @@ namespace MeltPoolDG
                                       const bool                         force_output,
                                       const bool force_update_requested_output_variables)
   {
-    if (not(is_output_timestep(n_time_step, time) || force_output))
+    if (not(is_output_timestep(n_time_step, time) or force_output) or
+        not output_data.paraview.enable)
       return;
 
-    if (output_data.paraview.enable)
-      {
-        write_paraview_files(n_time_step, time, data_out, force_update_requested_output_variables);
+    write_paraview_files(n_time_step, time, data_out, force_update_requested_output_variables);
 
-        if (output_data.paraview.print_boundary_id)
-          print_boundary_ids();
+    if (output_data.paraview.print_boundary_id)
+      print_boundary_ids();
 
-        // record written output time
-        time_at_last_output = time;
-      }
+    // record written output time
+    time_at_last_output = time;
   }
 
   /*
@@ -79,23 +77,20 @@ namespace MeltPoolDG
     const std::function<void(GenericDataOut<dim, number> &)> &attach_output_vectors,
     const number                                              time)
   {
-    if (not is_output_timestep(n_time_step, time))
+    if (not is_output_timestep(n_time_step, time) or not output_data.paraview.enable)
       return;
 
-    if (output_data.paraview.enable)
-      {
-        GenericDataOut<dim, number> data_out(mapping, time, output_data.output_variables);
+    GenericDataOut<dim, number> data_out(mapping, time, output_data.output_variables);
 
-        attach_output_vectors(data_out);
+    attach_output_vectors(data_out);
 
-        write_paraview_files(n_time_step, time, data_out);
+    write_paraview_files(n_time_step, time, data_out);
 
-        if (output_data.paraview.print_boundary_id)
-          print_boundary_ids();
+    if (output_data.paraview.print_boundary_id)
+      print_boundary_ids();
 
-        // record written output time
-        time_at_last_output = time;
-      }
+    // record written output time
+    time_at_last_output = time;
   }
 
   template <int dim, typename number>
@@ -145,6 +140,7 @@ namespace MeltPoolDG
 
         data_out.add_data_vector(subdomains, "subdomains");
       }
+
     if (output_data.paraview.output_material_id)
       {
         const auto &tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
@@ -157,7 +153,7 @@ namespace MeltPoolDG
       }
 
     dealii::DataOutBase::VtkFlags flags;
-    if ((do_simplex == false) && (dim > 1))
+    if (do_simplex == false and dim > 1)
       flags.write_higher_order_cells = output_data.paraview.write_higher_order_cells;
     data_out.set_flags(flags);
 
@@ -197,11 +193,11 @@ namespace MeltPoolDG
     // Only append the *.pvtu-file to the *.pvd file, if the to be appended *.pvtu-file has not
     // been written before. This might happen in case of a restart, when the time of the last
     // written simulation output corresponds to the one in the initial state of the restart.
-    if (times_and_names.empty() || (times_and_names[len - 1].first != time &&
+    if (times_and_names.empty() or (times_and_names[len - 1].first != time and
                                     times_and_names[len - 1].second != pvtu_filename))
       times_and_names.emplace_back(time, pvtu_filename);
 
-    if (dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 && time >= 0.0)
+    if (dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 and time >= 0.0)
       {
         clean_pvd();
 
@@ -223,7 +219,7 @@ namespace MeltPoolDG
     // compared to the original simulation.
     //
     std::erase_if(times_and_names, [this](const std::pair<number, std::string> &x) {
-      return !fs::exists(fs::path(output_data.directory) / fs::path(x.second));
+      return not fs::exists(fs::path(output_data.directory) / fs::path(x.second));
     });
   }
 
