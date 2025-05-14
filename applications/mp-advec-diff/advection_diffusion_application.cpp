@@ -88,8 +88,8 @@ namespace MeltPoolDG::LevelSet
       simulation_case->parameters.time_stepping.start_time);
 
     if (simulation_case->parameters.advec_diff.fe.type != FiniteElementType::FE_DGQ)
-      { // In a DG simulation no hanging node constraints are present and the boundray condtions are
-        // enforced in weak form by changing the fluxes at the boundary
+      { // In a DG simulation no hanging node constraints are present and the boundary conditions
+        // are enforced in weak form by changing the fluxes at the boundary
         MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
                                                                                            number>(
           *scratch_data,

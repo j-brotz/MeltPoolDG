@@ -56,7 +56,7 @@ namespace MeltPoolDG
      * and store it internally.
      *
      * @note The function takes a single value only to confirm to the interface. It is not used in
-     * the fucniton.
+     * the function.
      */
     void
     update(const std::any & = std::any())

@@ -515,7 +515,7 @@ namespace MeltPoolDG::LevelSet
 
     std::ostringstream str;
     str << "Surface mesh generated, "
-        << Utilities::MPI::sum(surface_mesh_info.size(), scratch_data.get_mpi_comm())
+        << dealii::Utilities::MPI::sum(surface_mesh_info.size(), scratch_data.get_mpi_comm())
         << " cut cells found.";
     Journal::print_line(scratch_data.get_pcout(1), str.str(), "level set", 0);
   }

@@ -151,7 +151,10 @@ namespace MeltPoolDG::LevelSet
           ls_quad_idx,
           reinit_dof_idx,
           curv_dof_idx,
-          normal_dof_idx,
+          std::array<unsigned int, dim>(normal_dof_idx), // TODO AA change when implementation will
+                                                         // be done in Level-Set application
+          normal_dof_idx, // TODO AA change when implementation will be done in Level-Set
+                          // application
           vel_dof_idx,
           ls_zero_bc_idx);
       }

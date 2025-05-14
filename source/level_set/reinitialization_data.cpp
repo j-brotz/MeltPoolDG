@@ -35,11 +35,11 @@ namespace MeltPoolDG::LevelSet
                         "maximum change of the level set field, i.e. ||ΔФ||∞, exceeds the "
                         "tolerance, reinitialization steps will be performed.");
       prm.add_parameter("tangential diffusion factor",
-                  tangential_diffusion_factor,
-                  "Factor that multiplies the normal diffusion "
-                  "factor (diffusion length) to obtain the diffusion factor in "
-                  "the tangential direction.",
-                  dealii::Patterns::Double(0.0));
+                        tangential_diffusion_factor,
+                        "Factor that multiplies the normal diffusion "
+                        "factor (diffusion length) to obtain the diffusion factor in "
+                        "the tangential direction.",
+                        dealii::Patterns::Double(0.0));
       prm.add_parameter("type",
                         modeltype,
                         "Sets the type of reinitialization model that should be used.");

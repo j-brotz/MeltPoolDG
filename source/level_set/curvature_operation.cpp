@@ -18,19 +18,21 @@ namespace MeltPoolDG::LevelSet
     const VectorType                    &solution_levelset,
     const unsigned int                   curv_dof_idx_in,
     const unsigned int                   curv_quad_idx_in,
-    const unsigned int                   normal_dof_idx_in,
+    const std::array<unsigned int, dim> &normal_dof_indices_per_block_in,
+    const unsigned int                   normal_no_bc_dof_idx_in,
     const unsigned int                   ls_dof_idx_in)
     : scratch_data(scratch_data_in)
     , curvature_data(curvature_data)
     , solution_levelset(solution_levelset)
     , curv_dof_idx(curv_dof_idx_in)
     , curv_quad_idx(curv_quad_idx_in)
-    , normal_dof_idx(normal_dof_idx_in)
+    , normal_dof_idx(normal_dof_indices_per_block_in[0])
     , ls_dof_idx(ls_dof_idx_in)
     , normal_vector_operation(scratch_data,
                               normal_vec_data,
                               solution_levelset,
-                              normal_dof_idx_in,
+                              normal_dof_indices_per_block_in,
+                              normal_no_bc_dof_idx_in,
                               curv_quad_idx,
                               ls_dof_idx_in)
     , solution_history(curvature_data.predictor.n_old_solution_vectors)

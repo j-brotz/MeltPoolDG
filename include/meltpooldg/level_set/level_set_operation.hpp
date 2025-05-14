@@ -92,9 +92,10 @@ namespace MeltPoolDG::LevelSet
       const unsigned int                                                ls_quad_idx_in,
       const unsigned int                                                reinit_dof_idx_in,
       const unsigned int                                                curv_dof_idx_in,
-      const unsigned int                                                normal_dof_idx_in,
-      const unsigned int                                                vel_dof_idx,
-      const unsigned int                                                ls_zero_bc_idx);
+      const std::array<unsigned int, dim> &normal_dof_indices_per_block_in,
+      const unsigned int                   normal_no_bc_dof_idx_in,
+      const unsigned int                   vel_dof_idx,
+      const unsigned int                   ls_zero_bc_idx);
 
     /**
      * set initial condition

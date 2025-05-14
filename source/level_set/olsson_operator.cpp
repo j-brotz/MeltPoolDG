@@ -189,7 +189,7 @@ namespace MeltPoolDG::LevelSet
 
             for (unsigned int q_index = 0; q_index < rhs.n_q_points; ++q_index)
               {
-                const scalar                                  val = psi_old.get_value(q_index);
+                const scalar val = psi_old.get_value(q_index);
 
                 // Normal unit vector
                 const Tensor<1, dim, VectorizedArray<number>> n_phi =
@@ -199,17 +199,17 @@ namespace MeltPoolDG::LevelSet
                 // Tangential unit vector
                 const Tensor<1, dim, VectorizedArray<number>> tangential_vector =
                   normalize<dim>(psi_old.get_gradient(q_index) -
-                  scalar_product(psi_old.get_gradient(q_index), n_phi) * n_phi, tolerance_normal_vector);
+                                   (scalar_product(psi_old.get_gradient(q_index), n_phi) * n_phi),
+                                 tolerance_normal_vector);
                 unit_tangent[cell * rhs.n_q_points + q_index] = tangential_vector;
 
                 rhs.submit_gradient(
                   this->time_increment * compressive_flux(val) * n_phi
-                  // Normal contribution
-                  - (this->time_increment * diffusion_length[cell] *
-                     scalar_product(psi_old.get_gradient(q_index), n_phi) * n_phi)
+                    // Normal contribution
+                    - (this->time_increment * normal_diffusion_length[cell] *
+                       scalar_product(psi_old.get_gradient(q_index), n_phi) * n_phi)
                     // Tangential contribution
-                    - (this->time_increment * reinit_data.tangential_diffusion_factor *
-                       diffusion_length[cell] *
+                    - (this->time_increment * tangential_diffusion_length[cell] *
                        scalar_product(psi_old.get_gradient(q_index), tangential_vector) *
                        tangential_vector),
                   q_index);
@@ -298,14 +298,15 @@ namespace MeltPoolDG::LevelSet
         const auto tangential_vector =
           unit_tangent[delta_psi.get_current_cell_index() * delta_psi.n_q_points + q_index];
 
+        const auto &cell = delta_psi.get_current_cell_index();
+
         delta_psi.submit_value(delta_psi.get_value(q_index), q_index);
         delta_psi.submit_gradient(
-            // Normal contribution
-          this->time_increment * diffusion_length[delta_psi.get_current_cell_index()] *
+          // Normal contribution
+          this->time_increment * normal_diffusion_length[cell] *
               scalar_product(delta_psi.get_gradient(q_index), n_phi) * n_phi
             // Tangential contribution
-            + this->time_increment * reinit_data.tangential_diffusion_factor *
-                diffusion_length[delta_psi.get_current_cell_index()] *
+            + this->time_increment * tangential_diffusion_length[cell] *
                 scalar_product(delta_psi.get_gradient(q_index), tangential_vector) *
                 tangential_vector,
           q_index);
@@ -320,18 +321,22 @@ namespace MeltPoolDG::LevelSet
   {
     if (reinit_data.linear_solver.do_matrix_free)
       {
-        diffusion_length.resize_fast(scratch_data.get_matrix_free().n_cell_batches());
+        normal_diffusion_length.resize_fast(scratch_data.get_matrix_free().n_cell_batches());
+        tangential_diffusion_length.resize_fast(scratch_data.get_matrix_free().n_cell_batches());
 
         unit_normal.resize_fast(scratch_data.get_matrix_free().n_cell_batches() *
                                 scratch_data.get_n_q_points(reinit_quad_idx));
 
         unit_tangent.resize_fast(scratch_data.get_matrix_free().n_cell_batches() *
-                                scratch_data.get_n_q_points(reinit_quad_idx));
+                                 scratch_data.get_n_q_points(reinit_quad_idx));
 
         for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
           {
-            diffusion_length[cell] = reinit_data.compute_interface_thickness_parameter_epsilon(
-              scratch_data.get_cell_sizes()[cell] / ls_n_subdivisions);
+            normal_diffusion_length[cell] =
+              reinit_data.compute_interface_thickness_parameter_epsilon(
+                scratch_data.get_cell_sizes()[cell] / ls_n_subdivisions);
+            tangential_diffusion_length[cell] =
+              normal_diffusion_length[cell] * reinit_data.tangential_diffusion_factor;
           }
       }
     else

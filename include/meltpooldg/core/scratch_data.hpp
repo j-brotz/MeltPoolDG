@@ -101,6 +101,18 @@ namespace MeltPoolDG
     void
     initialize_dof_vector(BlockVectorType &vec, const unsigned int dof_idx) const;
 
+    /**
+     * @brief Initialize DoFs vectors with a per block DoF index.
+     *
+     * @param[out] vec BlockVector initialized with the DoF indices.
+     *
+     * @param[in]  dof_indices_per_block Array of DoF indices associated with the different blocks
+     * of the BlockVector.
+     */
+    void
+    initialize_dof_vector(BlockVectorType                     &vec,
+                          const std::array<unsigned int, dim> &dof_indices_per_block) const;
+
     void
     initialize_bc_vector(VectorType &vec, const unsigned int dof_idx) const;
 

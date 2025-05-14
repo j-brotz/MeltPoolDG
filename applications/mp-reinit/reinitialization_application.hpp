@@ -11,6 +11,7 @@
 #include <meltpooldg/level_set/reinitialization_operation_base.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
+#include <meltpooldg/utilities/profiling_monitor.hpp>
 
 #include <memory>
 #include <string>
@@ -40,17 +41,25 @@ namespace MeltPoolDG
       run();
 
     private:
-      std::unique_ptr<CaseType>                     simulation_case;
-      const ReinitializationCaseParameters<number> &param;
-      DoFHandlerType                                dof_handler;
-      dealii::AffineConstraints<number>             constraints;
+      std::unique_ptr<CaseType>                            simulation_case;
+      const ReinitializationCaseParameters<number>        &param;
+      DoFHandlerType                                       dof_handler;
+      dealii::AffineConstraints<number>                    constraints;
+      dealii::AffineConstraints<number>                    normal_no_bc_constraints;
+      dealii::AffineConstraints<number>                    normal_dirichlet_x_constraints;
+      dealii::AffineConstraints<number>                    normal_dirichlet_y_constraints;
+      dealii::AffineConstraints<number>                    normal_dirichlet_z_constraints;
+      std::unique_ptr<Profiling::ProfilingMonitor<number>> profiling_monitor;
 
       std::shared_ptr<ScratchData<dim, dim, number>>              scratch_data;
       std::unique_ptr<TimeIntegration::TimeIterator<number>>      time_iterator;
       std::unique_ptr<ReinitializationOperationBase<dim, number>> reinit_operation;
-      unsigned int                                                reinit_dof_idx  = -1;
-      unsigned int                                                normal_dof_idx  = -1;
-      unsigned int                                                reinit_quad_idx = -1;
+      unsigned int                                                reinit_dof_idx             = -1;
+      unsigned int                                                normal_no_bc_dof_idx       = -1;
+      unsigned int                                                normal_dirichlet_x_dof_idx = -1;
+      unsigned int                                                normal_dirichlet_y_dof_idx = -1;
+      unsigned int                                                normal_dirichlet_z_dof_idx = -1;
+      unsigned int                                                reinit_quad_idx            = -1;
 
       std::unique_ptr<Postprocessor<dim, number>> post_processor;
 

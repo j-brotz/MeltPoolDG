@@ -116,7 +116,7 @@ namespace MeltPoolDG::LevelSet
     std::unique_ptr<Predictor<VectorType, number>> predictor;
 
     /*
-     *    This is the primary solution variable of this module, which will be also publically
+     *    This is the primary solution variable of this module, which will be also publicly
      *    accessible for output_results.
      */
     VectorType solution_advected_field_extrapolated;
