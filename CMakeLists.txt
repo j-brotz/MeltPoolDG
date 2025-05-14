@@ -153,7 +153,9 @@ if (MPDG_EANBLE_BENCHMARKING)
             google_benchmark
             GIT_REPOSITORY https://github.com/google/benchmark.git
             GIT_TAG v1.9.3)
+
     FetchContent_MakeAvailable(google_benchmark)
+    include_directories(${google_benchmark_SOURCE_DIR}/src)
     add_subdirectory(benchmarks)
 else ()
     message(STATUS "Benchmarks: disabled")
