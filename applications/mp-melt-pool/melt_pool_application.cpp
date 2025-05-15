@@ -665,6 +665,11 @@ namespace MeltPoolDG
         dof_handler_ls,
         setup_dof_system,
         load_prefix);
+
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+    dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())
+      ->synchronize_time_stepping();
+#endif
   }
 
   template <int dim, typename number>

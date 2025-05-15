@@ -219,6 +219,9 @@ namespace MeltPoolDG::Flow
     const dealii::Quadrature<dim> &
     get_face_center_quad();
 
+    void
+    synchronize_time_stepping();
+
   private:
     bool
     time_stepping_synchronized();
