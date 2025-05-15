@@ -1,13 +1,14 @@
 #pragma once
 
+#include <meltpooldg/utilities/restart.hpp>
+//
 #include <deal.II/base/exceptions.h>
 
-#include <deal.II/distributed/solution_transfer.h>
 #include <deal.II/distributed/tria.h>
 
 #include <deal.II/grid/tria.h>
 
-#include <meltpooldg/utilities/restart.hpp>
+#include <deal.II/numerics/solution_transfer.h>
 
 #include <memory>
 
@@ -20,49 +21,37 @@ namespace MeltPoolDG::Restart
   {
     DoFHandlerAndVectorDataType<dim, VectorType> data;
     attach_vectors(data);
+    data.shrink_to_fit();
 
-    const unsigned int n = data.size();
+    const unsigned int n_dof_handlers = data.size();
 
-    Assert(n > 0, dealii::ExcNotImplemented());
+    Assert(n_dof_handlers > 0, dealii::ExcNotImplemented());
 
-    auto triangulation =
-      const_cast<dealii::Triangulation<dim> *>(&data[0].first->get_triangulation());
+    auto tria = dynamic_cast<dealii::parallel::distributed::Triangulation<dim> *>(
+      const_cast<dealii::Triangulation<dim> *>(&data[0].first->get_triangulation()));
+    AssertThrow(tria, dealii::ExcNotImplemented());
 
-    Assert(triangulation, dealii::ExcNotImplemented());
-
-    if (dynamic_cast<dealii::parallel::distributed::Triangulation<dim> *>(triangulation))
+    // the SolutionTransfer instances may not be destructed until Triangulation::save() is called
+    std::vector<std::shared_ptr<dealii::SolutionTransfer<dim, VectorType>>> solution_transfers(
+      n_dof_handlers);
+    for (unsigned int j = 0; j < n_dof_handlers; ++j)
       {
-        auto tria =
-          dynamic_cast<dealii::parallel::distributed::Triangulation<dim> *>(triangulation);
+        std::vector<VectorType *>       new_grid_solutions;
+        std::vector<const VectorType *> old_grid_solutions;
+        data[j].second(new_grid_solutions);
 
-        std::vector<
-          std::shared_ptr<dealii::parallel::distributed::SolutionTransfer<dim, VectorType>>>
-          solution_transfer(n);
-
-        std::vector<std::vector<VectorType *>>       new_grid_solutions(n);
-        std::vector<std::vector<const VectorType *>> old_grid_solutions(n);
-
-        for (unsigned int j = 0; j < n; ++j)
+        for (const auto &i : new_grid_solutions)
           {
-            data[j].second(new_grid_solutions[j]);
-
-            for (const auto &i : new_grid_solutions[j])
-              {
-                i->update_ghost_values();
-                old_grid_solutions[j].push_back(i);
-              }
-            solution_transfer[j] =
-              std::make_shared<dealii::parallel::distributed::SolutionTransfer<dim, VectorType>>(
-                *data[j].first);
-            solution_transfer[j]->prepare_for_serialization(old_grid_solutions[j]);
+            i->update_ghost_values();
+            old_grid_solutions.push_back(i);
           }
 
-        tria->save(prefix + "_tria");
+        solution_transfers[j] =
+          std::make_unique<dealii::SolutionTransfer<dim, VectorType>>(*data[j].first);
+        solution_transfers[j]->prepare_for_serialization(old_grid_solutions);
       }
-    else
-      {
-        AssertThrow(false, dealii::ExcNotImplemented());
-      }
+
+    tria->save(prefix + "_tria");
   }
 
   template <int dim, typename VectorType>
@@ -74,46 +63,29 @@ namespace MeltPoolDG::Restart
   {
     DoFHandlerAndVectorDataType<dim, VectorType> data;
     attach_vectors(data);
+    data.shrink_to_fit();
 
-    const unsigned int n = data.size();
+    const unsigned int n_dof_handlers = data.size();
 
-    Assert(n > 0, dealii::ExcNotImplemented());
+    Assert(n_dof_handlers > 0, dealii::ExcNotImplemented());
 
-    auto triangulation =
-      const_cast<dealii::Triangulation<dim> *>(&data[0].first->get_triangulation());
+    auto tria = dynamic_cast<dealii::parallel::distributed::Triangulation<dim> *>(
+      const_cast<dealii::Triangulation<dim> *>(&data[0].first->get_triangulation()));
+    AssertThrow(tria, dealii::ExcNotImplemented());
 
-    Assert(triangulation, dealii::ExcNotImplemented());
+    tria->load(prefix + "_tria");
 
-    if (dynamic_cast<dealii::parallel::distributed::Triangulation<dim> *>(triangulation))
+    setup_dof_system();
+
+    for (unsigned int j = 0; j < n_dof_handlers; ++j)
       {
-        auto tria =
-          dynamic_cast<dealii::parallel::distributed::Triangulation<dim> *>(triangulation);
+        std::vector<VectorType *> new_grid_solutions;
+        data[j].second(new_grid_solutions);
 
-        tria->load(prefix + "_tria");
-
-        setup_dof_system();
-
-        std::vector<
-          std::shared_ptr<dealii::parallel::distributed::SolutionTransfer<dim, VectorType>>>
-          solution_transfer(n);
-
-        std::vector<std::vector<VectorType *>> new_grid_solutions(n);
-
-        for (unsigned int j = 0; j < n; ++j)
-          {
-            data[j].second(new_grid_solutions[j]);
-
-            solution_transfer[j] =
-              std::make_shared<dealii::parallel::distributed::SolutionTransfer<dim, VectorType>>(
-                *data[j].first);
-            solution_transfer[j]->deserialize(new_grid_solutions[j]);
-          }
-
-        post();
+        dealii::SolutionTransfer<dim, VectorType> solution_transfer(*data[j].first);
+        solution_transfer.deserialize(new_grid_solutions);
       }
-    else
-      {
-        AssertThrow(false, dealii::ExcNotImplemented());
-      }
+
+    post();
   }
 } // namespace MeltPoolDG::Restart

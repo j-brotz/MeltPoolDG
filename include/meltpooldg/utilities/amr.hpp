@@ -44,7 +44,7 @@ namespace MeltPoolDG::AMR
    * @param post this lambda function is run after AMR was executed
    * @param setup_dof_system setup the dof system, this includes:
    *                         - distribute DoFs on the new mesh
-   *                         - create pratitioning for the new mesh
+   *                         - create partitioning for the new mesh
    *                         - setup constraints on the new mesh
    *                         - reinit the MatrixFree object for the new DoFs (ScratchData::build())
    *                         - initialize all DoF vectors for the new DoF

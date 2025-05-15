@@ -1,7 +1,5 @@
 #pragma once
 
-#include <deal.II/dofs/dof_handler.h>
-
 #include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/attach_vectors.hpp>
 #include <meltpooldg/utilities/restart_data.hpp>
@@ -44,6 +42,7 @@ namespace MeltPoolDG::Restart
     std::vector<std::string>                           suffices = {"_tria",
                                                                    "_tria.info",
                                                                    "_tria_fixed.data",
+                                                                   "_tria_variable.data",
                                                                    "_problem.restart"};
 
     number
@@ -59,6 +58,20 @@ namespace MeltPoolDG::Restart
   serialize_internal(const AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors,
                      const std::string                                     &prefix);
 
+  /**
+   * Reconstruct all solution vectors that are saved in the restart data, given by the @param prefix
+   *
+   * @param attach_vectors  lambda function of type AttachDoFHandlerAndVectorsType, that attaches
+   *                        all DoFHandlers and their respective DoFVectors that ought to be
+   *                        reconstructed
+   * @param post this lambda function is run after AMR was executed
+   * @param setup_dof_system setup the dof system, this includes:
+   *                         - distribute DoFs on the new mesh
+   *                         - create partitioning for the new mesh
+   *                         - setup constraints on the new mesh
+   *                         - reinit the MatrixFree object for the new DoFs (ScratchData::build())
+   *                         - initialize all DoF vectors for the new DoF
+   */
   template <int dim, typename VectorType>
   void
   deserialize_internal(const AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors,
