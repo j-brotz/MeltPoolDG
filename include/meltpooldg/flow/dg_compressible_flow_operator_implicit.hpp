@@ -91,7 +91,7 @@ namespace MeltPoolDG::Flow
      * the jacobian is defined by the user in the compressible flow data.
      *
      * @param src Source vector x with which the jacobian gets mulitplied.
-     * @param dst Loation at which the result of J*x is stored.
+     * @param dst Location at which the result of J*x is stored.
      *
      * @throws Exception if the layout of the two given vectors @p src and @p dst are not identical.
      * @note This function assumes that the function set_stage_constants() has been called in advance.
@@ -147,7 +147,7 @@ namespace MeltPoolDG::Flow
                                unsigned int                                  q_index) const;
 
     /**
-     * Local biundary face operations at the given quadrature point for computing the jacobian.
+     * Local boundary face operations at the given quadrature point for computing the jacobian.
      *
      * @param delta_phi_m Face integrator for the change in the primary variables on the inner face.
      * Quadrature point distributions are added to this integrator.
@@ -164,7 +164,7 @@ namespace MeltPoolDG::Flow
      * Compute the result of J*x, where J is the jacobian computed analytically.
      *
      * @param src Source vector x with which the jacobian gets mulitplied.
-     * @param dst Loation at which the result of J*x is stored.
+     * @param dst Location at which the result of J*x is stored.
      *
      * @throws Exception if the layout of the two given vectors @p src and @p dst are not identical.
      */
