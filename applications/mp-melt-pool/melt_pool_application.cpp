@@ -37,6 +37,7 @@
 #include <meltpooldg/core/material.templates.hpp>
 #include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/cut/amr.hpp>
+#include <meltpooldg/cut/restart.hpp>
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
 #include <meltpooldg/heat/heat_cut_operation.hpp>
@@ -55,7 +56,7 @@
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/restart.templates.hpp>
+#include <meltpooldg/utilities/restart.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -625,8 +626,9 @@ namespace MeltPoolDG
   void
   MeltPoolApplication<dim, number>::load()
   {
-    const std::string load_prefix = simulation_case->parameters.restart.prefix + "_" +
-                                    std::to_string(simulation_case->parameters.restart.load);
+    const auto &param = simulation_case->parameters;
+
+    const std::string load_prefix = param.restart.prefix + "_" + std::to_string(param.restart.load);
 
     AssertThrow(std::filesystem::exists(load_prefix + "_problem.restart"),
                 ExcMessage("You tried to load the following "
@@ -635,17 +637,39 @@ namespace MeltPoolDG
                            "'. However, it could not be found. Did you specify a wrong value "
                            "for the parameter 'load'?"));
 
-    std::ifstream ifs(load_prefix + "_problem.restart");
     {
+      std::ifstream                 ifs(load_prefix + "_problem.restart");
       boost::archive::text_iarchive ia(ifs);
       ia >> *time_iterator;
       ia >> *post_processor;
     }
-    Restart::deserialize_internal<dim, VectorType>(
-      [this](DoFHandlerAndVectorDataType<dim, VectorType> &data) { this->attach_vectors(data); },
-      [this] { this->post(); },
-      [this] { this->setup_dof_system(true); },
-      load_prefix);
+
+    const auto attach_vectors = [this](DoFHandlerAndVectorDataType<dim, VectorType> &data) {
+      this->attach_vectors(data);
+    };
+    const auto post             = [this] { this->post(); };
+    const auto setup_dof_system = [this] { this->setup_dof_system(true); };
+
+    if (param.heat.operator_type != Heat::TwoPhaseOperatorType::cut)
+      Restart::deserialize_internal<dim, VectorType>(attach_vectors,
+                                                     post,
+                                                     setup_dof_system,
+                                                     load_prefix);
+    else
+      CutUtil::deserialize_internal<dim, VectorType>(
+        attach_vectors,
+        post,
+        [this, &param] {
+          FiniteElementUtils::distribute_dofs<dim, 1>(param.ls.fe, dof_handler_ls);
+        },
+        dof_handler_ls,
+        setup_dof_system,
+        load_prefix);
+
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+    dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())
+      ->synchronize_time_stepping();
+#endif
   }
 
   template <int dim, typename number>

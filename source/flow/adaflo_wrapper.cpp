@@ -765,6 +765,36 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim, typename number>
+  void
+  AdafloWrapper<dim, number>::synchronize_time_stepping()
+  {
+    if (time_stepping_synchronized())
+      return;
+
+    adaflo::TimeStepping &adaflo_time = navier_stokes->time_stepping;
+    int diff = time_iterator.get_current_time_step_number() - adaflo_time.step_no();
+    if (diff <= 0 or std::abs(adaflo_time.previous() - time_iterator.get_old_time()) < 1e-16)
+      {
+        adaflo_time.restart();
+        diff = time_iterator.get_current_time_step_number() - adaflo_time.step_no();
+      }
+    if (diff > 2)
+      {
+        adaflo_time.set_time_step(0.0);
+        while (adaflo_time.step_no() < time_iterator.get_current_time_step_number() - 2)
+          adaflo_time.next();
+      }
+    if (diff > 1)
+      {
+        adaflo_time.set_time_step(time_iterator.get_old_time() - adaflo_time.now());
+        adaflo_time.next();
+      }
+    adaflo_time.set_time_step(time_iterator.get_current_time() - adaflo_time.now());
+    adaflo_time.next();
+    adaflo_time.set_time_step(time_iterator.get_current_time_increment());
+  }
+
+  template <int dim, typename number>
   bool
   AdafloWrapper<dim, number>::time_stepping_synchronized()
   {

@@ -17,6 +17,9 @@ namespace MeltPoolDG::CutUtil
    * same as AMR::refine_grid(), but adapted for cases where one or more DoFHandler objects are used
    * in CutFEM operations.
    *
+   * Similarly to CutUtil::deserialize_internal(), the level set must be transferred first, so the
+   * CutFEM operation can classify the mesh to distribute its DoFs before transferring its solution.
+   *
    * @param distribute_level_set_dofs lambda function, that distributes the DoFs of the
    *                                  @param level_set_dof_handler . If no data is attached by
    *                                  @param attach_vectors, e.g., for AMR at the initial condition,
@@ -32,7 +35,7 @@ namespace MeltPoolDG::CutUtil
    * @param post this lambda function is run after AMR was executed
    * @param setup_dof_system setup the dof system, this includes:
    *                         - distribute DoFs on the new mesh
-   *                         - create pratitioning for the new mesh
+   *                         - create partitioning for the new mesh
    *                         - setup constraints on the new mesh
    *                         - reinit the MatrixFree object for the new DoFs (ScratchData::build())
    *                         - initialize all DoF vectors for the new DoF
