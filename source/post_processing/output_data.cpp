@@ -33,7 +33,7 @@ namespace MeltPoolDG
         write_higher_order_cells,
         "Set this parameter to false to write bi- or trilinear data only. "
         "Set this parameter to true to write higher order cell data. Note: higher order "
-        "cell data can only be written for hexaeder meshes and 2 or 3 dimensions.");
+        "cell data can only be written for hexahedron meshes and 2 or 3 dimensions.");
       prm.add_parameter("n groups", n_groups, "Number of parallel written vtu-files.");
       prm.add_parameter("n patches", n_patches, "Control number of patches to enable high-order.");
     }
@@ -114,7 +114,7 @@ namespace MeltPoolDG
         const auto path_dest =
           std::filesystem::path(dir) / std::filesystem::path(parameter_filename).filename();
 
-        if (!std::filesystem::equivalent(path_orig, path_dest))
+        if (not std::filesystem::equivalent(path_orig, path_dest))
           {
             if (std::filesystem::exists(path_dest))
               std::filesystem::remove(path_dest);

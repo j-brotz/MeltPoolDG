@@ -46,7 +46,7 @@ namespace MeltPoolDG::PostProcessingTools
      */
     SliceCreator(const GenericDataOut<dim, number>         &generic_data_out,
                  const dealii::Triangulation<dim - 1, dim> &tria_slice,
-                 const std::vector<std::string>             request_variables,
+                 const std::vector<std::string>            &request_variables,
                  const OutputData<number>                  &output_data_in)
       : generic_data_out(&generic_data_out)
       , tria_slice(tria_slice)

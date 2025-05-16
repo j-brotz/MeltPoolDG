@@ -1,17 +1,22 @@
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+//
+#include <deal.II/base/exceptions.h>
+
+#include <algorithm>
+#include <sstream>
 
 namespace MeltPoolDG
 {
   using namespace dealii;
 
   template <int dim, typename number>
-  GenericDataOut<dim, number>::GenericDataOut(const Mapping<dim>            &mapping,
-                                              const number                   current_time,
-                                              const std::vector<std::string> req_vars)
+  GenericDataOut<dim, number>::GenericDataOut(const Mapping<dim>             &mapping,
+                                              const number                    current_time,
+                                              const std::vector<std::string> &req_vars_in)
     : mapping(mapping)
     , current_time(current_time)
-    , req_vars(req_vars)
-    , req_all(req_vars.size() == 1 && req_vars[0] == "all")
+    , req_vars(req_vars_in)
+    , req_all(req_vars.size() == 1 and req_vars[0] == "all")
   {}
 
   template <int dim, typename number>
@@ -24,7 +29,7 @@ namespace MeltPoolDG
               &data_component_interpretation,
     const bool force_output)
   {
-    if (not(is_requested(names[0]) || force_output))
+    if (not(is_requested(names[0]) or force_output))
       return;
 
     entries.emplace_back(&dof_handler, &data, names, data_component_interpretation);
@@ -53,14 +58,14 @@ namespace MeltPoolDG
   const typename GenericDataOut<dim, number>::VectorType &
   GenericDataOut<dim, number>::get_vector(const std::string &name) const
   {
-    if (entry_id.find(name) == entry_id.end())
+    if (not entry_id.contains(name))
       {
         std::ostringstream exc_message;
         exc_message << "Your requested output variable >>> " + name +
                          " <<< cannot be found in the entries"
                          " of GenericDataOut. The available values are: "
                     << std::endl;
-        for (auto &[key, value] : entry_id)
+        for (const auto &key : entry_id | std::views::keys)
           exc_message << "* " << key << std::endl;
 
         AssertThrow(false, ExcMessage(exc_message.str()));
@@ -73,14 +78,14 @@ namespace MeltPoolDG
   const DoFHandler<dim> &
   GenericDataOut<dim, number>::get_dof_handler(const std::string &name) const
   {
-    if (entry_id.find(name) == entry_id.end())
+    if (not entry_id.contains(name))
       {
         std::ostringstream exc_message;
         exc_message << "Your requested output variable >>> " + name +
                          " <<< cannot be found in the entries"
                          " of GenericDataOut. The available values are: "
                     << std::endl;
-        for (auto &[key, value] : entry_id)
+        for (const auto &key : entry_id | std::views::keys)
           exc_message << "* " << key << std::endl;
 
         AssertThrow(false, ExcMessage(exc_message.str()));
@@ -117,7 +122,7 @@ namespace MeltPoolDG
     catch (...)
       {
         // setup dict containing the request names for a faster search
-        if (std::find(req_vars.begin(), req_vars.end(), name) != req_vars.end())
+        if (std::ranges::find(req_vars, name) != req_vars.end())
           {
             req_vars_info[name] = true;
             return true;
@@ -133,10 +138,10 @@ namespace MeltPoolDG
   template <int dim, typename number>
   std::vector<unsigned int>
   GenericDataOut<dim, number>::get_indices_data_request(
-    const std::vector<std::string> req_var) const
+    const std::vector<std::string> &req_var) const
   {
-    AssertThrow((req_var.size() == 1 && req_var[0] == "all") ||
-                  (std::find(req_var.begin(), req_var.end(), "all") == req_var.end()),
+    AssertThrow((req_var.size() == 1 and req_var[0] == "all") or
+                  (std::ranges::find(req_var, "all") == req_var.end()),
                 ExcMessage(
                   "The requested output variables are ambiguous. Please specify either 'all' or "
                   "a list of specific output variables separated by a comma, e.g. 'var1,var2'."));
@@ -161,10 +166,10 @@ namespace MeltPoolDG
             << "of the following names: " << std::endl;
 
     for (const auto &n : names)
-      if (!n.empty())
+      if (not n.empty())
         message << "  * " << n << std::endl;
 
-    AssertThrow(req_idx.size() == req_var.size() || req_var[0] == "all", ExcMessage(message.str()));
+    AssertThrow(req_idx.size() == req_var.size() or req_var[0] == "all", ExcMessage(message.str()));
 
     AssertThrow(
       req_idx.size() > 0,

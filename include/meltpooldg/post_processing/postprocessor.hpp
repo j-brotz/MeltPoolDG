@@ -80,7 +80,7 @@ namespace MeltPoolDG
         return true;
       if (time - time_at_last_output >= output_data.write_time_step_size)
         return true;
-      return !(n_time_step % output_data.write_frequency);
+      return not(n_time_step % output_data.write_frequency);
     }
 
     template <class Archive>
@@ -99,7 +99,7 @@ namespace MeltPoolDG
     write_paraview_files(const unsigned int                 n_time_step,
                          const number                       time,
                          const GenericDataOut<dim, number> &generic_data_out,
-                         const bool force_update_requested_output_variables = false);
+                         const bool                         force_output_all = false);
 
     void
     print_boundary_ids();

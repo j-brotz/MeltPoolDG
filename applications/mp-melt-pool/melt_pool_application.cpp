@@ -590,6 +590,7 @@ namespace MeltPoolDG
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     catch (const adaflo::ExcNavierStokesNoConvergence &e)
       {
+        Journal::print_line(scratch_data->get_pcout(1));
         finalize(OutputNotConvergedOperation::navier_stokes);
         AssertThrow(false, e);
       }
