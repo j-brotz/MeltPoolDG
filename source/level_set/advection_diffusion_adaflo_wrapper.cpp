@@ -16,74 +16,30 @@ namespace MeltPoolDG::LevelSet
   AdvectionDiffusionOperationAdaflo<dim, number>::AdvectionDiffusionOperationAdaflo(
     const ScratchData<dim, dim, number>             &scratch_data,
     const TimeIntegration::TimeIterator<number>     &time_iterator,
-    const VectorType                                &advection_velocity,
     const int                                        advec_diff_zero_dirichlet_dof_idx,
     const int                                        advec_diff_dirichlet_dof_idx,
+    const int                                        advec_diff_hanging_nodes_dof_idx,
     const int                                        advec_diff_quad_idx,
-    const int                                        velocity_dof_idx,
     const TimeIntegration::TimeSteppingData<number> &time_stepping,
     const AdvectionDiffusionData<number>            &advec_diff_data,
     const BoundaryConditionManager<dim, number>     &bc)
     : scratch_data(scratch_data)
     , time_iterator(time_iterator)
-    , advection_velocity(advection_velocity)
     , pcout(scratch_data.get_pcout(2))
     , dirichlet_dof_idx(advec_diff_dirichlet_dof_idx)
+    , hanging_nodes_dof_idx(advec_diff_hanging_nodes_dof_idx)
   {
-    /**
-     * set parameters of adaflo
-     */
+    // set parameters of adaflo
     set_adaflo_parameters(time_stepping,
                           advec_diff_data,
                           advec_diff_zero_dirichlet_dof_idx,
-                          advec_diff_quad_idx,
-                          velocity_dof_idx);
-    /*
-     * Boundary conditions for the advected field
-     */
+                          advec_diff_quad_idx);
+
+    // Boundary conditions for the advected field
     for (const auto &[symmetry_id, dummy] : bc.get_bc_of_type("symmetry"))
       bcs.symmetry.insert(symmetry_id);
     for (const auto &dirichlet_bc : bc.get_bc_of_type("dirichlet"))
       bcs.dirichlet[dirichlet_bc.first] = dirichlet_bc.second;
-    /*
-     * initialize adaflo operation
-     */
-    advec_diff_operation = std::make_shared<adaflo::LevelSetOKZSolverAdvanceConcentration<dim>>(
-      advected_field,
-      advected_field_old,
-      advected_field_old_old,
-      increment,
-      rhs,
-      velocity_vec,
-      velocity_vec_old,
-      velocity_vec_old_old,
-      scratch_data.get_cell_sizes(),
-      scratch_data.get_constraint(advec_diff_zero_dirichlet_dof_idx),
-      pcout,
-      bcs,
-      scratch_data.get_matrix_free(),
-      adaflo_params,
-      preconditioner);
-  }
-
-  template <int dim, typename number>
-  void
-  AdvectionDiffusionOperationAdaflo<dim, number>::reinit()
-  {
-    /**
-     *  initialize the dof vectors
-     */
-    initialize_vectors();
-
-    /**
-     * initialize the preconditioner
-     */
-    initialize_mass_matrix_diagonal<dim, number>(scratch_data.get_matrix_free(),
-                                                 scratch_data.get_constraint(
-                                                   adaflo_params.dof_index_ls),
-                                                 adaflo_params.dof_index_ls,
-                                                 adaflo_params.quad_index,
-                                                 preconditioner);
   }
 
   template <int dim, typename number>
@@ -104,13 +60,99 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
+  AdvectionDiffusionOperationAdaflo<dim, number>::set_advection_velocity(
+    const VectorType  &advection_velocity_in,
+    const unsigned int velocity_dof_idx_in)
+  {
+    advection_velocity          = &advection_velocity_in;
+    adaflo_params.dof_index_vel = velocity_dof_idx_in;
+  }
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperationAdaflo<dim, number>::set_advection_velocity_function(
+    const std::shared_ptr<Function<dim>> & /*advection_velocity_function_in*/)
+  {
+    AssertThrow(false,
+                ExcMessage("You cannot set a velocity function for this operation. "
+                           "Please use a DoF vector type passed via set_advection_velocity()."));
+  }
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperationAdaflo<dim, number>::setup_constraints(
+    ScratchData<dim, dim, number>         &mutable_scratch_data,
+    const PeriodicBoundaryConditions<dim> &pbc,
+    const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+      &dirichlet_bc_in)
+  {
+    MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim, number>(
+      mutable_scratch_data, dirichlet_bc_in, pbc, dirichlet_dof_idx, hanging_nodes_dof_idx);
+
+    MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim, number>(
+      mutable_scratch_data,
+      dirichlet_bc_in,
+      adaflo_params.dof_index_ls,
+      hanging_nodes_dof_idx,
+      false /*set inhomogeneities to zero*/);
+
+    MeltPoolDG::Constraints::check_constraints(
+      mutable_scratch_data.get_dof_handler(adaflo_params.dof_index_ls),
+      mutable_scratch_data.get_constraint(adaflo_params.dof_index_ls));
+  }
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperationAdaflo<dim, number>::reinit()
+  {
+    if (!advec_diff_operation)
+      create_operator();
+
+    //  initialize the dof vectors
+    initialize_vectors();
+
+    // initialize the preconditioner
+    initialize_mass_matrix_diagonal<dim, number>(scratch_data.get_matrix_free(),
+                                                 scratch_data.get_constraint(
+                                                   adaflo_params.dof_index_ls),
+                                                 adaflo_params.dof_index_ls,
+                                                 adaflo_params.quad_index,
+                                                 preconditioner);
+  }
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperationAdaflo<dim, number>::create_operator()
+  {
+    // initialize adaflo operation
+    advec_diff_operation = std::make_shared<adaflo::LevelSetOKZSolverAdvanceConcentration<dim>>(
+      advected_field,
+      advected_field_old,
+      advected_field_old_old,
+      increment,
+      rhs,
+      velocity_vec,
+      velocity_vec_old,
+      velocity_vec_old_old,
+      scratch_data.get_cell_sizes(),
+      scratch_data.get_constraint(adaflo_params.dof_index_ls),
+      pcout,
+      bcs,
+      scratch_data.get_matrix_free(),
+      adaflo_params,
+      preconditioner);
+  }
+
+  template <int dim, typename number>
+  void
   AdvectionDiffusionOperationAdaflo<dim, number>::init_time_advance()
   {
     advected_field_old_old.reinit(advected_field_old);
     advected_field_old_old.swap(advected_field_old);
     advected_field_old.swap(advected_field);
 
-    set_velocity(time_iterator.get_current_time_step_number() == 1 /* is initial step */);
+    update_velocity_history(time_iterator.get_current_time_step_number() ==
+                            1 /* is initial step */);
 
     this->ready_for_time_advance = true;
   }
@@ -234,8 +276,7 @@ namespace MeltPoolDG::LevelSet
     const TimeIntegration::TimeSteppingData<number> &time_stepping,
     const AdvectionDiffusionData<number>            &advec_diff,
     const int                                        advec_diff_dof_idx,
-    const int                                        advec_diff_quad_idx,
-    const int                                        velocity_dof_idx)
+    const int                                        advec_diff_quad_idx)
   {
     adaflo_params.time.start_time           = time_stepping.start_time;
     adaflo_params.time.end_time             = time_stepping.end_time;
@@ -260,9 +301,8 @@ namespace MeltPoolDG::LevelSet
     adaflo_params.time.time_stepping_cfl   = 0.8;  //@ todo
     adaflo_params.time.time_stepping_coef2 = 10.0; //@ todo capillary number
 
-    adaflo_params.dof_index_ls  = advec_diff_dof_idx;
-    adaflo_params.dof_index_vel = velocity_dof_idx;
-    adaflo_params.quad_index    = advec_diff_quad_idx;
+    adaflo_params.dof_index_ls = advec_diff_dof_idx;
+    adaflo_params.quad_index   = advec_diff_quad_idx;
 
     adaflo_params.convection_stabilization = false; //@ todo
     adaflo_params.do_iteration             = false; //@ todo
@@ -271,7 +311,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  AdvectionDiffusionOperationAdaflo<dim, number>::set_velocity(bool initial_step)
+  AdvectionDiffusionOperationAdaflo<dim, number>::update_velocity_history(bool initial_step)
   {
     velocity_vec_old_old.zero_out_ghost_values();
     velocity_vec_old.zero_out_ghost_values();
@@ -279,15 +319,15 @@ namespace MeltPoolDG::LevelSet
 
     if (initial_step)
       {
-        velocity_vec_old_old = advection_velocity;
-        velocity_vec_old     = advection_velocity;
-        velocity_vec         = advection_velocity;
+        velocity_vec_old_old = *advection_velocity;
+        velocity_vec_old     = *advection_velocity;
+        velocity_vec         = *advection_velocity;
       }
     else
       {
         velocity_vec_old_old = velocity_vec_old;
         velocity_vec_old     = velocity_vec;
-        velocity_vec         = advection_velocity;
+        velocity_vec         = *advection_velocity;
       }
 
     velocity_vec_old_old.update_ghost_values();

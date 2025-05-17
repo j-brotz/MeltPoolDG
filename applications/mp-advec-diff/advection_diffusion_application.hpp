@@ -44,7 +44,7 @@ namespace MeltPoolDG::LevelSet
     std::unique_ptr<TimeIntegration::TimeIterator<number>>        time_iterator;
     std::unique_ptr<AdvectionDiffusionOperationBase<dim, number>> advec_diff_operation;
     std::unique_ptr<Profiling::ProfilingMonitor<number>>          profiling_monitor;
-
+    std::shared_ptr<dealii::Function<dim, number>> advection_velocity_function = nullptr;
 
     unsigned int advec_diff_dof_idx;
     unsigned int advec_diff_hanging_nodes_dof_idx;

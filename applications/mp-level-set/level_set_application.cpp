@@ -70,7 +70,6 @@ namespace MeltPoolDG::LevelSet
 
         level_set_operation->solve();
 
-
         // do output if requested
         output_results(time_iterator->get_current_time_step_number(),
                        time_iterator->get_current_time());
@@ -135,10 +134,6 @@ namespace MeltPoolDG::LevelSet
     time_iterator = std::make_unique<TimeIntegration::TimeIterator<number>>(
       simulation_case->parameters.time_stepping);
 
-    setup_dof_system(false);
-
-    scratch_data->initialize_dof_vector(advection_velocity, vel_dof_idx);
-
     if (simulation_case->parameters.ls.fe.type != FiniteElementType::FE_DGQ)
       {
         // Make array with normal vector dof indices
@@ -172,18 +167,28 @@ namespace MeltPoolDG::LevelSet
       }
     else
       {
+        prescribed_velocity_function =
+          simulation_case->get_field_function("prescribed_velocity", "level_set");
+
+        prescribed_velocity_function->set_time(time_iterator->get_current_time());
+
         level_set_operation = std::make_unique<LevelSetDGOperation<dim, number>>(
           *scratch_data,
           *time_iterator,
           simulation_case->parameters.ls,
           simulation_case->get_boundary_condition_manager("level_set"),
-          simulation_case->get_field_function("prescribed_velocity", "level_set"),
+          prescribed_velocity_function,
           advection_velocity,
           ls_dof_idx,
           ls_quad_idx,
           reinit_dof_idx,
           vel_dof_idx);
       }
+
+    setup_dof_system(false);
+
+    scratch_data->initialize_dof_vector(advection_velocity, vel_dof_idx);
+
     level_set_operation->reinit();
 
     compute_advection_velocity(
@@ -283,69 +288,30 @@ namespace MeltPoolDG::LevelSet
     // create partitioning
     scratch_data->create_partitioning();
 
-    // Strong enforcement of hanging node constraints and periodic boundary conditions for
-    // continuous Galerkin finite elements
-    if (simulation_case->parameters.ls.fe.type != FiniteElementType::FE_DGQ)
-      {
-        // Normal vector constraints
-        if (not simulation_case->parameters.ls.normal_vec.linear_solver.do_matrix_free)
-          AssertThrow(
-            simulation_case->get_boundary_condition("nx", "normal_vector").empty(),
-            dealii::ExcMessage(
-              "The wetting boundary condition is not implemented for the matrix-based implementation of the normal vector filtering equation."));
-        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
-                                                                                           number>(
-          *scratch_data,
-          simulation_case->get_boundary_condition("nx", "normal_vector"),
-          simulation_case->get_periodic_bc(),
-          normal_dirichlet_x_dof_idx,
-          normal_no_bc_dof_idx);
-        if constexpr (dim >= 2)
-          {
-            MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<
-              dim,
-              number>(*scratch_data,
-                      simulation_case->get_boundary_condition("ny", "normal_vector"),
-                      simulation_case->get_periodic_bc(),
-                      normal_dirichlet_y_dof_idx,
-                      normal_no_bc_dof_idx);
-          }
-        if constexpr (dim == 3)
-          {
-            MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<
-              dim,
-              number>(*scratch_data,
-                      simulation_case->get_boundary_condition("nz", "normal_vector"),
-                      simulation_case->get_periodic_bc(),
-                      normal_dirichlet_z_dof_idx,
-                      normal_no_bc_dof_idx);
-          }
+    // fill AffineConstraints objects
+    if (not simulation_case->parameters.ls.normal_vec.linear_solver.do_matrix_free)
+      AssertThrow(
+        simulation_case->get_boundary_condition("nx", "normal_vector").empty() &&
+          simulation_case->get_boundary_condition("ny", "normal_vector").empty() &&
+          simulation_case->get_boundary_condition("nz", "normal_vector").empty(),
+        dealii::ExcMessage(
+          "The wetting boundary condition is not implemented for the matrix-based implementation of the normal vector filtering equation."));
 
-        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
-                                                                                           number>(
-          *scratch_data,
-          simulation_case->get_boundary_condition("dirichlet", "level_set"),
-          simulation_case->get_periodic_bc(),
-          ls_dof_idx,
-          ls_hanging_nodes_dof_idx);
+    level_set_operation->setup_constraints(
+      *scratch_data,
+      simulation_case->get_periodic_bc(),
+      simulation_case->get_boundary_condition("dirichlet", "level_set"),
+      simulation_case->get_boundary_condition("nx", "normal_vector"),
+      simulation_case->get_boundary_condition("ny", "normal_vector"),
+      simulation_case->get_boundary_condition("nz", "normal_vector"));
 
-        MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim, number>(
-          *scratch_data,
-          simulation_case->get_boundary_condition("dirichlet", "level_set"),
-          ls_zero_bc_idx,
-          ls_hanging_nodes_dof_idx,
-          false /*set inhomogeneities to zero*/);
-
-        MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
-                                                        simulation_case->get_periodic_bc(),
-                                                        vel_dof_idx);
-      }
+    MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
+                                                    simulation_case->get_periodic_bc(),
+                                                    vel_dof_idx);
 
     // create the matrix-free object
-    if (simulation_case->parameters.ls.fe.type != FiniteElementType::FE_DGQ)
-      scratch_data->build(false, false);
-    else
-      scratch_data->build(true, true);
+    scratch_data->build(simulation_case->parameters.ls.fe.type == FiniteElementType::FE_DGQ,
+                        simulation_case->parameters.ls.fe.type == FiniteElementType::FE_DGQ);
 
     if (do_reinit)
       {

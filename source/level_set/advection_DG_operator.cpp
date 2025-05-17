@@ -9,40 +9,54 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   AdvectionDGOperator<dim, number>::AdvectionDGOperator(
-    const MeltPoolDG::ScratchData<dim, dim, number>                         &scratch_data_in,
-    VectorType                                                              &advection_velocity_in,
-    const unsigned int                                                       advec_diff_dof_idx_in,
-    const unsigned int                                                       advec_diff_quad_idx_in,
-    const unsigned int                                                       velocity_dof_idx_in,
-    const std::shared_ptr<MeltPoolDG::BoundaryConditionManager<dim, number>> boundary_conditions_in,
-    std::shared_ptr<dealii::Function<dim>>                                  &advection_field_in,
-    bool const enable_analytical_velocity_update_in)
+    const MeltPoolDG::ScratchData<dim, dim, number> &scratch_data_in,
+    const unsigned int                               advec_diff_dof_idx_in,
+    const unsigned int                               advec_diff_quad_idx_in,
+    const std::shared_ptr<MeltPoolDG::BoundaryConditionManager<dim, number>>
+      &boundary_conditions_in)
     : update_field_functions(true)
     , scratch_data_(scratch_data_in)
-    , advection_velocity_(advection_velocity_in)
     , advec_diff_dof_idx(advec_diff_dof_idx_in)
     , advec_diff_quad_idx(advec_diff_quad_idx_in)
-    , velocity_dof_idx(velocity_dof_idx_in)
     , boundary_conditions(boundary_conditions_in)
-    , advection_field(advection_field_in)
-    , enable_analytical_velocity_update(enable_analytical_velocity_update_in)
   {}
 
   template <int dim, typename number>
   void
-  AdvectionDGOperator<dim, number>::set_field_functions(const number time) const
+  AdvectionDGOperator<dim, number>::update_time_velocity_function(const number time) const
   {
-    if (enable_analytical_velocity_update)
-      {
-        scratch_data_.initialize_dof_vector(advection_velocity_, velocity_dof_idx);
-        // et the current time to the advection field function
-        advection_field->set_time(time);
-        // interpolate the values of the advection velocity
-        dealii::VectorTools::interpolate(scratch_data_.get_mapping(),
-                                         scratch_data_.get_dof_handler(velocity_dof_idx),
-                                         *advection_field,
-                                         advection_velocity_);
-      }
+    advection_velocity_function->set_time(time);
+  }
+
+  template <int dim, typename number>
+  void
+  AdvectionDGOperator<dim, number>::set_advection_velocity(const VectorType  &advection_velocity_in,
+                                                           const unsigned int velocity_dof_idx_in)
+  {
+    Assert(
+      advection_velocity_function == nullptr,
+      dealii::ExcMessage(
+        "An advection velocity DoF vector was provided via set_advection_velocity(), "
+        "but an advection velocity function has already been set via set_advection_velocity_function(). "
+        "Please use only one of these methods to specify the advection velocity."));
+
+    advection_velocity_ = &advection_velocity_in;
+    velocity_dof_idx    = velocity_dof_idx_in;
+  }
+
+  template <int dim, typename number>
+  void
+  AdvectionDGOperator<dim, number>::set_advection_velocity_function(
+    const std::shared_ptr<dealii::Function<dim, number>> &advection_velocity_function_in)
+  {
+    Assert(
+      advection_velocity_ == nullptr,
+      dealii::ExcMessage(
+        "An advection velocity function was provided via set_advection_velocity_function(), "
+        "but an advection velocity DoF vector has already been set via set_advection_velocity(). "
+        "Please use only one of these methods to specify the advection velocity."));
+
+    advection_velocity_function = advection_velocity_function_in;
   }
 
   template <int dim, typename number>
@@ -55,19 +69,30 @@ namespace MeltPoolDG::LevelSet
   {
     FECellIntegrator<dim, 1, number> eval(data, advec_diff_dof_idx, advec_diff_quad_idx);
 
-    FECellIntegrator<dim, dim, number> eval_vel(data, velocity_dof_idx, advec_diff_quad_idx);
+    std::unique_ptr<FECellIntegrator<dim, dim, number>> eval_vel;
+
+    if (advection_velocity_)
+      eval_vel = std::make_unique<FECellIntegrator<dim, dim, number>>(data,
+                                                                      velocity_dof_idx,
+                                                                      advec_diff_quad_idx);
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
         eval.reinit(cell);
-        eval_vel.reinit(cell);
-
         eval.gather_evaluate(src, EvaluationFlags::values);
-        eval_vel.gather_evaluate(advection_velocity_, EvaluationFlags::values);
+
+        if (advection_velocity_)
+          {
+            eval_vel->reinit(cell);
+            eval_vel->gather_evaluate(*advection_velocity_, EvaluationFlags::values);
+          }
 
         for (unsigned int q = 0; q < eval.n_q_points; ++q)
           {
-            const vector speed = MeltPoolDG::VectorTools::to_vector<dim>(eval_vel.get_value(q));
+            const vector speed = (advection_velocity_) ?
+                                   MeltPoolDG::VectorTools::to_vector<dim>(eval_vel->get_value(q)) :
+                                   VectorTools::evaluate_function_at_vectorized_points<dim, number>(
+                                     *advection_velocity_function, eval.quadrature_point(q));
             const scalar u     = eval.get_value(q);
             const vector flux  = speed * u;
             eval.submit_gradient(flux, q);
@@ -95,21 +120,35 @@ namespace MeltPoolDG::LevelSet
                                                advec_diff_dof_idx,
                                                advec_diff_quad_idx);
 
-    FEFaceIntegrator<dim, dim, number> eval_vel(data, true, velocity_dof_idx, advec_diff_quad_idx);
+    std::unique_ptr<FEFaceIntegrator<dim, dim, number>> eval_vel;
+
+    if (advection_velocity_)
+      eval_vel = std::make_unique<FEFaceIntegrator<dim, dim, number>>(data,
+                                                                      true,
+                                                                      velocity_dof_idx,
+                                                                      advec_diff_quad_idx);
 
     for (unsigned int face = face_range.first; face < face_range.second; face++)
       {
         eval_minus.reinit(face);
         eval_plus.reinit(face);
-        eval_vel.reinit(face);
 
         eval_minus.gather_evaluate(src, EvaluationFlags::values);
         eval_plus.gather_evaluate(src, EvaluationFlags::values);
-        eval_vel.gather_evaluate(advection_velocity_, EvaluationFlags::values);
+
+        if (advection_velocity_)
+          {
+            eval_vel->reinit(face);
+            eval_vel->gather_evaluate(*advection_velocity_, EvaluationFlags::values);
+          }
 
         for (unsigned int q = 0; q < eval_minus.n_q_points; ++q)
           {
-            const vector speed   = MeltPoolDG::VectorTools::to_vector<dim>(eval_vel.get_value(q));
+            const vector speed =
+              (advection_velocity_) ?
+                MeltPoolDG::VectorTools::to_vector<dim>(eval_vel->get_value(q)) :
+                VectorTools::evaluate_function_at_vectorized_points<dim, number, dim>(
+                  *advection_velocity_function, eval_minus.quadrature_point(q));
             const auto   u_minus = eval_minus.get_value(q);
             const auto   u_plus  = eval_plus.get_value(q);
             const vector normal_vector_minus =
@@ -143,19 +182,31 @@ namespace MeltPoolDG::LevelSet
                                                 advec_diff_dof_idx,
                                                 advec_diff_quad_idx);
 
-    FEFaceIntegrator<dim, dim, number> eval_vel(data, true, velocity_dof_idx, advec_diff_quad_idx);
+    std::unique_ptr<FEFaceIntegrator<dim, dim, number>> eval_vel;
+
+    if (advection_velocity_)
+      eval_vel = std::make_unique<FEFaceIntegrator<dim, dim, number>>(data,
+                                                                      true,
+                                                                      velocity_dof_idx,
+                                                                      advec_diff_quad_idx);
 
     for (unsigned int face = face_range.first; face < face_range.second; face++)
       {
         eval_minus.reinit(face);
         eval_minus.gather_evaluate(src, EvaluationFlags::values);
-        eval_vel.reinit(face);
-        eval_vel.gather_evaluate(advection_velocity_, EvaluationFlags::values);
-
+        if (advection_velocity_)
+          {
+            eval_vel->reinit(face);
+            eval_vel->gather_evaluate(*advection_velocity_, EvaluationFlags::values);
+          }
 
         for (unsigned int q = 0; q < eval_minus.n_q_points; ++q)
           {
-            const vector speed = MeltPoolDG::VectorTools::to_vector<dim>(eval_vel.get_value(q));
+            const vector speed =
+              (advection_velocity_) ?
+                MeltPoolDG::VectorTools::to_vector<dim>(eval_vel->get_value(q)) :
+                VectorTools::evaluate_function_at_vectorized_points<dim, number, dim>(
+                  *advection_velocity_function, eval_minus.quadrature_point(q));
 
             const auto   u_minus = eval_minus.get_value(q);
             const vector normal_vector =
@@ -200,21 +251,35 @@ namespace MeltPoolDG::LevelSet
                                                 advec_diff_dof_idx,
                                                 advec_diff_quad_idx);
 
-    FEFaceIntegrator<dim, dim, number> eval_vel(data, true, velocity_dof_idx, advec_diff_quad_idx);
+    std::unique_ptr<FEFaceIntegrator<dim, dim, number>> eval_vel;
+
+    if (advection_velocity_)
+      eval_vel = std::make_unique<FEFaceIntegrator<dim, dim, number>>(data,
+                                                                      true,
+                                                                      velocity_dof_idx,
+                                                                      advec_diff_quad_idx);
 
     for (unsigned int face = face_range.first; face < face_range.second; face++)
       {
         eval_minus.reinit(face);
         eval_minus.gather_evaluate(src, EvaluationFlags::values);
-        eval_vel.reinit(face);
-        eval_vel.gather_evaluate(advection_velocity_, EvaluationFlags::values);
+        if (advection_velocity_)
+          {
+            eval_vel->reinit(face);
+            eval_vel->gather_evaluate(*advection_velocity_, EvaluationFlags::values);
+          }
 
         const auto boundary_id = data.get_boundary_id(face);
+
         if (boundary_conditions->get_type(boundary_id) == "dirichlet")
           {
             for (unsigned int q = 0; q < eval_minus.n_q_points; ++q)
               {
-                const vector speed = MeltPoolDG::VectorTools::to_vector<dim>(eval_vel.get_value(q));
+                const vector speed =
+                  (advection_velocity_) ?
+                    MeltPoolDG::VectorTools::to_vector<dim>(eval_vel->get_value(q)) :
+                    VectorTools::evaluate_function_at_vectorized_points<dim, number, dim>(
+                      *advection_velocity_function, eval_minus.quadrature_point(q));
 
                 const auto   u_minus = eval_minus.get_value(q);
                 const vector normal_vector =
@@ -249,7 +314,8 @@ namespace MeltPoolDG::LevelSet
     LinearAlgebra::distributed::Vector<number> const      &src,
     const std::function<void(unsigned int, unsigned int)> &func) const
   {
-    boundary_conditions->set_time(time);
+    if (boundary_conditions)
+      boundary_conditions->set_time(time);
 
     this->scratch_data_.get_matrix_free().loop(
       &AdvectionDGOperator<dim, number>::local_apply_domain,
@@ -289,7 +355,10 @@ namespace MeltPoolDG::LevelSet
     LinearAlgebra::distributed::Vector<number>       &dst,
     const LinearAlgebra::distributed::Vector<number> &src) const
   {
-    boundary_conditions->set_time(time);
+    if (boundary_conditions)
+      {
+        boundary_conditions->set_time(time);
+      }
 
     scratch_data_.get_matrix_free().loop(
       &AdvectionDGOperator<dim, number>::local_apply_domain_dummy,

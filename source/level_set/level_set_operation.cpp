@@ -40,10 +40,10 @@ namespace MeltPoolDG::LevelSet
     const unsigned int                                                ls_quad_idx_in,
     const unsigned int                                                reinit_dof_idx_in,
     const unsigned int                                                curv_dof_idx_in,
-    const std::array<unsigned int, dim> &normal_dof_indices_per_block_in,
-    const unsigned int                   normal_no_bc_dof_idx_in,
-    const unsigned int                   vel_dof_idx,
-    const unsigned int                   ls_zero_bc_idx)
+    const std::array<unsigned int, dim> normal_dof_indices_per_block_in,
+    const unsigned int                  normal_no_bc_dof_idx_in,
+    const unsigned int                  vel_dof_idx,
+    const unsigned int                  ls_zero_bc_idx)
     : scratch_data(scratch_data_in)
     , time_stepping(time_stepping)
     , level_set_data(ls)
@@ -52,6 +52,8 @@ namespace MeltPoolDG::LevelSet
     , ls_quad_idx(ls_quad_idx_in)
     , curv_dof_idx(curv_dof_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
+    , normal_no_bc_dof_idx(normal_no_bc_dof_idx_in)
+    , normal_dof_indices_per_block(normal_dof_indices_per_block_in)
     , reinit_time_iterator(
         TimeIntegration::TimeSteppingData<number>{0.0 /*start_time*/,
                                                   std::numeric_limits<number>::max() /*end_time*/,
@@ -70,30 +72,29 @@ namespace MeltPoolDG::LevelSet
                                                                        "dirichlet"),
                                                                      ls.advec_diff,
                                                                      time_stepping,
-                                                                     advection_velocity,
                                                                      ls_dof_idx,
                                                                      ls_hanging_nodes_dof_idx_in,
-                                                                     ls_quad_idx_in,
-                                                                     vel_dof_idx);
+                                                                     ls_quad_idx_in);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (ls.advec_diff.implementation == "adaflo")
       {
-        advec_diff_operation =
-          std::make_shared<AdvectionDiffusionOperationAdaflo<dim, number>>(scratch_data,
-                                                                           time_stepping,
-                                                                           advection_velocity,
-                                                                           ls_zero_bc_idx,
-                                                                           ls_dof_idx,
-                                                                           ls_quad_idx_in,
-                                                                           vel_dof_idx,
-                                                                           time_stepping_data,
-                                                                           ls.advec_diff,
-                                                                           bc_manager);
+        advec_diff_operation = std::make_shared<AdvectionDiffusionOperationAdaflo<dim, number>>(
+          scratch_data,
+          time_stepping,
+          ls_zero_bc_idx,
+          ls_dof_idx,
+          ls_hanging_nodes_dof_idx_in,
+          ls_quad_idx_in,
+          time_stepping_data,
+          ls.advec_diff,
+          bc_manager);
       }
 #endif
     else
       AssertThrow(false, ExcNotImplemented());
+
+    advec_diff_operation->set_advection_velocity(advection_velocity, vel_dof_idx);
 
     /*
      *    initialize the reinit operation
@@ -165,9 +166,53 @@ namespace MeltPoolDG::LevelSet
       AssertThrow(false, ExcNotImplemented());
   }
 
-  /**
-   * set initial condition
-   */
+  template <int dim, typename number>
+  void
+  LevelSetOperation<dim, number>::setup_constraints(
+    ScratchData<dim, dim, number>         &mutable_scratch_data,
+    const PeriodicBoundaryConditions<dim> &periodic_bc,
+    const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+      &ls_dirichlet_bc_in,
+    const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+      &normal_x_dirichlet_bc_in,
+    const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+      &normal_y_dirichlet_bc_in,
+    const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+      &normal_z_dirichlet_bc_in)
+  {
+    // Normal vector constraints
+    MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim, number>(
+      mutable_scratch_data,
+      normal_x_dirichlet_bc_in,
+      periodic_bc,
+      normal_dof_indices_per_block[0],
+      normal_no_bc_dof_idx);
+
+    if constexpr (dim >= 2)
+      {
+        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
+                                                                                           number>(
+          mutable_scratch_data,
+          normal_y_dirichlet_bc_in,
+          periodic_bc,
+          normal_dof_indices_per_block[1],
+          normal_no_bc_dof_idx);
+      }
+
+    if constexpr (dim == 3)
+      {
+        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
+                                                                                           number>(
+          mutable_scratch_data,
+          normal_z_dirichlet_bc_in,
+          periodic_bc,
+          normal_dof_indices_per_block[2],
+          normal_no_bc_dof_idx);
+      }
+
+    advec_diff_operation->setup_constraints(mutable_scratch_data, periodic_bc, ls_dirichlet_bc_in);
+  }
+
   template <int dim, typename number>
   void
   LevelSetOperation<dim, number>::set_initial_condition(

@@ -32,14 +32,28 @@ namespace MeltPoolDG::LevelSet
     using vector = dealii::Tensor<1, dim, scalar>;
 
     AdvectionDGOperator(const MeltPoolDG::ScratchData<dim, dim, number> &scratch_data_in,
-                        VectorType                                      &advection_velocity_in,
                         const unsigned int                               advec_diff_dof_idx_in,
                         const unsigned int                               advec_diff_quad_idx_in,
-                        const unsigned int                               velocity_dof_idx_in,
                         const std::shared_ptr<MeltPoolDG::BoundaryConditionManager<dim, number>>
-                                                                boundary_conditions_in,
-                        std::shared_ptr<dealii::Function<dim>> &advection_field_in,
-                        bool const enable_analytical_velocity_update_in);
+                          &boundary_conditions_in);
+    /**
+     * @brief Assigns a time-dependent advection velocity function.
+     *
+     * @param advection_velocity_function_in Shared pointer to a velocity field function.
+     */
+    void
+    set_advection_velocity_function(
+      const std::shared_ptr<dealii::Function<dim, number>> &advection_velocity_function_in);
+
+    /**
+     * @brief Sets the discrete advection velocity vector and its DoF index.
+     *
+     * @param advection_velocity_in Discrete velocity field.
+     * @param velocity_dof_idx_in Index of the associated DoF handler.
+     */
+    void
+    set_advection_velocity(const VectorType  &advection_velocity_in,
+                           const unsigned int velocity_dof_idx_in);
 
     /**
      * If an analytical function for the velocity field is provided and an analytical update is
@@ -48,7 +62,7 @@ namespace MeltPoolDG::LevelSet
      * @param time current time
      */
     void
-    set_field_functions(const number time) const;
+    update_time_velocity_function(const number time) const;
 
 
     /**
@@ -85,17 +99,14 @@ namespace MeltPoolDG::LevelSet
   private:
     const MeltPoolDG::ScratchData<dim, dim, number> &scratch_data_;
 
-    VectorType &advection_velocity_;
-
     const unsigned int advec_diff_dof_idx  = 0;
     const unsigned int advec_diff_quad_idx = 0;
-    const unsigned int velocity_dof_idx    = 0;
 
-    const std::shared_ptr<MeltPoolDG::BoundaryConditionManager<dim, number>> boundary_conditions;
-    std::shared_ptr<dealii::Function<dim>>                                   advection_field;
+    std::shared_ptr<MeltPoolDG::BoundaryConditionManager<dim, number>> boundary_conditions;
 
-    bool const enable_analytical_velocity_update = false;
-
+    const VectorType *advection_velocity_ = nullptr;
+    unsigned int      velocity_dof_idx    = dealii::numbers::invalid_unsigned_int;
+    std::shared_ptr<dealii::Function<dim, number>> advection_velocity_function = nullptr;
 
     void
     local_apply_domain(const dealii::MatrixFree<dim, number>       &data,
@@ -146,7 +157,4 @@ namespace MeltPoolDG::LevelSet
       [[maybe_unused]] const VectorType                            &src,
       [[maybe_unused]] const std::pair<unsigned int, unsigned int> &cell_range) const;
   };
-
-
-
 } // namespace MeltPoolDG::LevelSet

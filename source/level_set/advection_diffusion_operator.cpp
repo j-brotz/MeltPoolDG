@@ -8,22 +8,22 @@
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
+#include <memory>
+
 namespace MeltPoolDG::LevelSet
 {
   using namespace dealii;
 
   template <int dim, typename number>
   AdvectionDiffusionOperator<dim, number>::AdvectionDiffusionOperator(
-    const ScratchData<dim, dim, number>  &scratch_data_in,
-    const VectorType                     &advection_velocity_in,
-    const AdvectionDiffusionData<number> &data_in,
-    const unsigned int                    dof_idx_in,
-    const unsigned int                    quad_idx_in,
-    const unsigned int                    velocity_dof_idx_in)
+    const ScratchData<dim, dim, number>         &scratch_data_in,
+    const TimeIntegration::TimeIterator<number> &time_iterator,
+    const AdvectionDiffusionData<number>        &data_in,
+    const unsigned int                           dof_idx_in,
+    const unsigned int                           quad_idx_in)
     : scratch_data(scratch_data_in)
-    , advection_velocity(advection_velocity_in)
+    , time_iterator(time_iterator)
     , data(data_in)
-    , velocity_dof_idx(velocity_dof_idx_in)
     , advec_diff_dof_idx(dof_idx_in)
     , advec_diff_quad_idx(quad_idx_in)
   {
@@ -31,9 +31,9 @@ namespace MeltPoolDG::LevelSet
     /*
      *  convert the user input to the generalized theta parameter
      */
-    if (get_generalized_theta.find((+data.time_integrator_data.integrator_type)._to_string()) !=
+    if (get_generalized_theta.find((data.time_integrator_data.integrator_type)._to_string()) !=
         get_generalized_theta.end())
-      theta = get_generalized_theta[(+data.time_integrator_data.integrator_type)._to_string()];
+      theta = get_generalized_theta[(data.time_integrator_data.integrator_type)._to_string()];
     else
       AssertThrow(
         false,
@@ -43,18 +43,43 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
+  AdvectionDiffusionOperator<dim, number>::set_advection_velocity(
+    const VectorType  &advection_velocity_in,
+    const unsigned int velocity_dof_idx_in)
+  {
+    Assert(
+      advection_velocity_function == nullptr,
+      dealii::ExcMessage(
+        "An advection velocity DoF vector was provided via set_advection_velocity(), "
+        "but an advection velocity function has already been set via set_advection_velocity_function(). "
+        "Please use only one of these methods to specify the advection velocity."));
+
+    advection_velocity = &advection_velocity_in;
+    velocity_dof_idx   = velocity_dof_idx_in;
+  }
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperator<dim, number>::set_advection_velocity_function(
+    const std::shared_ptr<dealii::Function<dim>> &advection_velocity_function_in)
+  {
+    Assert(
+      advection_velocity == nullptr,
+      dealii::ExcMessage(
+        "An advection velocity function was provided via set_advection_velocity_function(), "
+        "but an advection velocity DoF vector has already been set via set_advection_velocity(). "
+        "Please use only one of these methods to specify the advection velocity."));
+
+    advection_velocity_function = advection_velocity_function_in;
+  }
+
+  template <int dim, typename number>
+  void
   AdvectionDiffusionOperator<dim, number>::compute_system_matrix_and_rhs(
     const VectorType &advected_field_old,
     VectorType       &rhs) const
   {
     AssertThrowZeroTimeIncrement(this->time_increment);
-
-    const FEValuesExtractors::Vector velocities(0);
-
-    const bool vel_update_ghosts = !advection_velocity.has_ghost_elements();
-    if (vel_update_ghosts)
-      advection_velocity.update_ghost_values();
-
     const bool update_ghosts = !advected_field_old.has_ghost_elements();
     if (update_ghosts)
       advected_field_old.update_ghost_values();
@@ -65,10 +90,16 @@ namespace MeltPoolDG::LevelSet
                                     update_values | update_gradients | update_quadrature_points |
                                       update_JxW_values);
 
-    FEValues<dim> vel_values(scratch_data.get_mapping(),
-                             scratch_data.get_dof_handler(velocity_dof_idx).get_fe(),
-                             scratch_data.get_quadrature(advec_diff_quad_idx),
-                             update_values);
+    std::unique_ptr<FEValues<dim>> vel_values;
+
+    if (advection_velocity)
+      vel_values =
+        std::make_unique<FEValues<dim>>(scratch_data.get_mapping(),
+                                        scratch_data.get_dof_handler(velocity_dof_idx).get_fe(),
+                                        scratch_data.get_quadrature(advec_diff_quad_idx),
+                                        update_values);
+
+    const FEValuesExtractors::Vector velocities(0);
 
     const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(this->dof_idx);
 
@@ -85,10 +116,12 @@ namespace MeltPoolDG::LevelSet
     rhs                 = 0.0;
     this->system_matrix = 0.0;
 
-    std::vector<Tensor<1, dim>> a(n_q_points, Tensor<1, dim>());
+    std::vector<Tensor<1, dim>> local_velocity(n_q_points, Tensor<1, dim>());
 
+    // this creats a dummy index if no velocity vector is assigned
     typename DoFHandler<dim>::active_cell_iterator vel_cell =
-      scratch_data.get_dof_handler(velocity_dof_idx).begin_active();
+      scratch_data.get_dof_handler((advection_velocity) ? velocity_dof_idx : this->dof_idx)
+        .begin_active();
 
     for (const auto &cell : scratch_data.get_dof_handler(this->dof_idx).active_cell_iterators())
       {
@@ -101,9 +134,18 @@ namespace MeltPoolDG::LevelSet
             advec_diff_values.get_function_values(advected_field_old, phi_at_q);
             advec_diff_values.get_function_gradients(advected_field_old, grad_phi_at_q);
 
-            vel_values.reinit(vel_cell);
-            std::vector<Tensor<1, dim>> a(n_q_points, Tensor<1, dim>());
-            vel_values[velocities].get_function_values(advection_velocity, a);
+            if (advection_velocity_function)
+              {
+                for (const unsigned int q_index : advec_diff_values.quadrature_point_indices())
+                  for (unsigned int d = 0; d < dim; ++d)
+                    local_velocity[q_index][d] = advection_velocity_function->value(
+                      advec_diff_values.quadrature_point(q_index), d);
+              }
+            else
+              {
+                vel_values->reinit(vel_cell);
+                (*vel_values)[velocities].get_function_values(*advection_velocity, local_velocity);
+              }
 
             for (const unsigned int q_index : advec_diff_values.quadrature_point_indices())
               {
@@ -112,36 +154,36 @@ namespace MeltPoolDG::LevelSet
                     for (const unsigned int j : advec_diff_values.dof_indices())
                       {
                         auto velocity_grad_phi_j =
-                          a[q_index] * advec_diff_values.shape_grad(j, q_index);
+                          local_velocity[q_index] * advec_diff_values.shape_grad(j, q_index);
                         // clang-format off
-              cell_matrix( i, j ) +=
-                ( advec_diff_values.shape_value( i, q_index)
-                  *
-                  advec_diff_values.shape_value( j, q_index)
-                  *
-                  this->time_increment_inv
-                  +
-                  theta * ( data.diffusivity *
-                                          advec_diff_values.shape_grad( i, q_index) *
-                                          advec_diff_values.shape_grad( j, q_index)
-                                          +
-                                          advec_diff_values.shape_value( i, q_index)  *
-                                          velocity_grad_phi_j )
-                ) * advec_diff_values.JxW(q_index);
+                          cell_matrix( i, j ) +=
+                            ( advec_diff_values.shape_value( i, q_index)
+                              *
+                              advec_diff_values.shape_value( j, q_index)
+                              *
+                              this->time_increment_inv
+                              +
+                              theta * ( data.diffusivity *
+                                                      advec_diff_values.shape_grad( i, q_index) *
+                                                      advec_diff_values.shape_grad( j, q_index)
+                                                      +
+                                                      advec_diff_values.shape_value( i, q_index)  *
+                                                      velocity_grad_phi_j )
+                            ) * advec_diff_values.JxW(q_index);
                         // clang-format on
                       }
 
                     // clang-format off
-            cell_rhs( i ) +=
-              (  advec_diff_values.shape_value( i, q_index) * phi_at_q[q_index] * this->time_increment_inv
-                 -
-                 ( 1. - theta ) *
-                 (
-                   data.diffusivity * advec_diff_values.shape_grad( i, q_index) * grad_phi_at_q[q_index]
-                   +
-                   advec_diff_values.shape_value(i, q_index) * a[q_index] * grad_phi_at_q[q_index]
-                 )
-              ) * advec_diff_values.JxW(q_index) ;
+                      cell_rhs( i ) +=
+                        (  advec_diff_values.shape_value( i, q_index) * phi_at_q[q_index] * this->time_increment_inv
+                           -
+                           ( 1. - theta ) *
+                           (
+                             data.diffusivity * advec_diff_values.shape_grad( i, q_index) * grad_phi_at_q[q_index]
+                             +
+                             advec_diff_values.shape_value(i, q_index) * local_velocity[q_index] * grad_phi_at_q[q_index]
+                           )
+                        ) * advec_diff_values.JxW(q_index) ;
                     // clang-format on
                   }
               } // end gauss
@@ -158,9 +200,6 @@ namespace MeltPoolDG::LevelSet
 
     this->system_matrix.compress(VectorOperation::add);
     rhs.compress(VectorOperation::add);
-
-    if (vel_update_ghosts)
-      advection_velocity.zero_out_ghost_values();
 
     if (update_ghosts)
       advected_field_old.zero_out_ghost_values();
@@ -180,31 +219,46 @@ namespace MeltPoolDG::LevelSet
   void
   AdvectionDiffusionOperator<dim, number>::pre()
   {
+    this->reset_time_increment(time_iterator.get_current_time_increment());
+
     do_update_stab_param = true;
+
+    if (advection_velocity_function)
+      advection_velocity_function->set_time(time_iterator.get_current_time());
+    else
+      {
+        velocity_update_ghosts = !advection_velocity->has_ghost_elements();
+        if (velocity_update_ghosts)
+          advection_velocity->update_ghost_values();
+      }
   }
 
   template <int dim, typename number>
   void
   AdvectionDiffusionOperator<dim, number>::vmult(VectorType &dst, const VectorType &src) const
   {
-    if (do_pre_post)
+    if (do_apply_inflow_outflow_constraints_pre_post)
       do_pre_vmult(dst, src);
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
-        FECellIntegrator<dim, 1, number>   advected_field_vals(matrix_free,
+        FECellIntegrator<dim, 1, number> advected_field_vals(matrix_free,
                                                              this->dof_idx,
                                                              advec_diff_quad_idx);
-        FECellIntegrator<dim, dim, number> velocity_vals(matrix_free,
-                                                         velocity_dof_idx,
-                                                         advec_diff_quad_idx);
+
+        std::unique_ptr<FECellIntegrator<dim, dim, number>> velocity_vals;
+
+        if (not advection_velocity_function)
+          velocity_vals = std::make_unique<FECellIntegrator<dim, dim, number>>(matrix_free,
+                                                                               velocity_dof_idx,
+                                                                               advec_diff_quad_idx);
 
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             advected_field_vals.reinit(cell);
             advected_field_vals.read_dof_values(src);
 
-            tangent_local_cell_operation(advected_field_vals, velocity_vals, true);
+            tangent_local_cell_operation(advected_field_vals, velocity_vals.get(), true);
 
             advected_field_vals.distribute_local_to_global(dst);
           }
@@ -213,7 +267,7 @@ namespace MeltPoolDG::LevelSet
       src,
       true);
 
-    if (do_pre_post)
+    if (do_apply_inflow_outflow_constraints_pre_post)
       do_post_vmult(dst, src);
   }
 
@@ -237,9 +291,13 @@ namespace MeltPoolDG::LevelSet
         FECellIntegrator<dim, 1, number, VectorizedArrayType> rhs_vals(matrix_free,
                                                                        this->dof_idx,
                                                                        advec_diff_quad_idx);
-        FECellIntegrator<dim, dim, number>                    velocity_vals(matrix_free,
-                                                         velocity_dof_idx,
-                                                         advec_diff_quad_idx);
+
+        std::unique_ptr<FECellIntegrator<dim, dim, number>> velocity_vals;
+
+        if (not advection_velocity_function)
+          velocity_vals = std::make_unique<FECellIntegrator<dim, dim, number>>(matrix_free,
+                                                                               velocity_dof_idx,
+                                                                               advec_diff_quad_idx);
 
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
@@ -254,15 +312,22 @@ namespace MeltPoolDG::LevelSet
               advected_field_vals_old.evaluate(EvaluationFlags::values |
                                                EvaluationFlags::gradients);
 
-            velocity_vals.reinit(cell);
-            velocity_vals.read_dof_values_plain(advection_velocity);
-            velocity_vals.evaluate(EvaluationFlags::values);
+            if (velocity_vals)
+              {
+                velocity_vals->reinit(cell);
+                velocity_vals->read_dof_values_plain(*advection_velocity);
+                velocity_vals->evaluate(EvaluationFlags::values);
+              }
 
             for (unsigned int q_index = 0; q_index < rhs_vals.n_q_points; ++q_index)
               {
                 scalar       phi      = advected_field_vals_old.get_value(q_index);
                 const vector grad_phi = advected_field_vals_old.get_gradient(q_index);
-                const vector vel = VectorTools::to_vector<dim>(velocity_vals.get_value(q_index));
+                const vector vel =
+                  (velocity_vals) ? VectorTools::to_vector<dim>(velocity_vals->get_value(q_index)) :
+                                    VectorTools::evaluate_function_at_vectorized_points(
+                                      *advection_velocity_function,
+                                      advected_field_vals_old.quadrature_point(q_index));
 
                 const scalar velocity_grad_phi = scalar_product(vel, grad_phi);
 
@@ -300,10 +365,13 @@ namespace MeltPoolDG::LevelSet
     system_matrix = 0.0;
 
     // note: not thread safe!!!
-    const auto                        &matrix_free = scratch_data.get_matrix_free();
-    FECellIntegrator<dim, dim, number> velocity_vals(matrix_free,
-                                                     velocity_dof_idx,
-                                                     advec_diff_quad_idx);
+    const auto &matrix_free = scratch_data.get_matrix_free();
+    std::unique_ptr<FECellIntegrator<dim, dim, number>> velocity_vals;
+
+    if (not advection_velocity_function)
+      velocity_vals = std::make_unique<FECellIntegrator<dim, dim, number>>(matrix_free,
+                                                                           velocity_dof_idx,
+                                                                           advec_diff_quad_idx);
 
     unsigned int old_cell_index = dealii::numbers::invalid_unsigned_int;
 
@@ -316,7 +384,7 @@ namespace MeltPoolDG::LevelSet
         const unsigned int current_cell_index = advected_field_vals.get_current_cell_index();
 
         tangent_local_cell_operation(advected_field_vals,
-                                     velocity_vals,
+                                     velocity_vals.get(),
                                      old_cell_index != current_cell_index);
 
         old_cell_index = current_cell_index;
@@ -324,7 +392,7 @@ namespace MeltPoolDG::LevelSet
       this->dof_idx,
       advec_diff_quad_idx);
 
-    if (do_pre_post)
+    if (do_apply_inflow_outflow_constraints_pre_post)
       post_system_matrix_compute(system_matrix);
   }
 
@@ -336,10 +404,13 @@ namespace MeltPoolDG::LevelSet
     scratch_data.initialize_dof_vector(diagonal, this->dof_idx);
 
     // note: not thread safe!!!
-    const auto                        &matrix_free = scratch_data.get_matrix_free();
-    FECellIntegrator<dim, dim, number> velocity_vals(matrix_free,
-                                                     velocity_dof_idx,
-                                                     advec_diff_quad_idx);
+    const auto &matrix_free = scratch_data.get_matrix_free();
+    std::unique_ptr<FECellIntegrator<dim, dim, number>> velocity_vals;
+
+    if (not advection_velocity_function)
+      velocity_vals = std::make_unique<FECellIntegrator<dim, dim, number>>(matrix_free,
+                                                                           velocity_dof_idx,
+                                                                           advec_diff_quad_idx);
 
     unsigned int old_cell_index = dealii::numbers::invalid_unsigned_int;
 
@@ -351,7 +422,7 @@ namespace MeltPoolDG::LevelSet
         const unsigned int current_cell_index = advected_field_vals.get_current_cell_index();
 
         tangent_local_cell_operation(advected_field_vals,
-                                     velocity_vals,
+                                     velocity_vals.get(),
                                      old_cell_index != current_cell_index);
 
         old_cell_index = current_cell_index;
@@ -364,18 +435,21 @@ namespace MeltPoolDG::LevelSet
     for (auto &i : diagonal)
       i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
 
-    if (do_pre_post)
-      {
-        for (const auto &i : inflow_outflow_bc_local_indices)
-          diagonal.local_element(i) = 1.0;
-      }
+    if (do_apply_inflow_outflow_constraints_pre_post == false)
+      return;
+
+    if (inflow_outflow_bc_local_indices.size() == 0)
+      return;
+
+    for (const auto &i : inflow_outflow_bc_local_indices)
+      diagonal.local_element(i) = 1.0;
   }
 
   template <int dim, typename number>
   void
   AdvectionDiffusionOperator<dim, number>::tangent_local_cell_operation(
     FECellIntegrator<dim, 1, number>   &advected_field_vals,
-    FECellIntegrator<dim, dim, number> &velocity_vals,
+    FECellIntegrator<dim, dim, number> *velocity_vals,
     const bool                          do_reinit_cells) const
   {
     if (data.conv_stab.type == ConvectionStabilizationType::SUPG)
@@ -384,21 +458,25 @@ namespace MeltPoolDG::LevelSet
     else
       advected_field_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
-    if (do_reinit_cells)
+    if (velocity_vals and do_reinit_cells)
       {
-        velocity_vals.reinit(advected_field_vals.get_current_cell_index());
-        velocity_vals.read_dof_values_plain(advection_velocity);
-        velocity_vals.evaluate(EvaluationFlags::values);
+        velocity_vals->reinit(advected_field_vals.get_current_cell_index());
+        velocity_vals->read_dof_values_plain(*advection_velocity);
+        velocity_vals->evaluate(EvaluationFlags::values);
       }
 
     if (do_update_stab_param)
-      compute_stabilization_parameter(velocity_vals);
+      compute_stabilization_parameter(advected_field_vals, velocity_vals);
 
     for (unsigned int q_index = 0; q_index < advected_field_vals.n_q_points; ++q_index)
       {
         const scalar phi      = advected_field_vals.get_value(q_index);
         const vector grad_phi = advected_field_vals.get_gradient(q_index);
-        const vector vel      = VectorTools::to_vector<dim>(velocity_vals.get_value(q_index));
+        const vector vel =
+          (velocity_vals) ?
+            VectorTools::to_vector<dim>(velocity_vals->get_value(q_index)) :
+            VectorTools::evaluate_function_at_vectorized_points(
+              *advection_velocity_function, advected_field_vals.quadrature_point(q_index));
         const scalar velocity_grad_phi = scalar_product(vel, grad_phi);
 
         scalar res_val  = this->time_increment_inv * phi + theta * velocity_grad_phi;
@@ -419,20 +497,28 @@ namespace MeltPoolDG::LevelSet
   template <int dim, typename number>
   void
   AdvectionDiffusionOperator<dim, number>::compute_stabilization_parameter(
-    const FECellIntegrator<dim, dim, number> &velocity_vals) const
+    const FECellIntegrator<dim, 1, number>   &advected_field_vals,
+    const FECellIntegrator<dim, dim, number> *velocity_vals) const
   {
     if (data.conv_stab.type == ConvectionStabilizationType::SUPG)
       {
-        const unsigned int cell = velocity_vals.get_current_cell_index();
+        const unsigned int cell = advected_field_vals.get_current_cell_index();
 
         if (data.conv_stab.coefficient < 0.0)
           {
             stab_param[cell] = 0.0;
 
-            for (unsigned int q_index = 0; q_index < velocity_vals.n_q_points; ++q_index)
-              stab_param[cell] =
-                std::max(stab_param[cell],
-                         VectorTools::to_vector<dim>(velocity_vals.get_value(q_index)).norm());
+            for (unsigned int q_index = 0; q_index < advected_field_vals.n_q_points; ++q_index)
+              {
+                const auto velocity_magnitude =
+                  (velocity_vals) ?
+                    VectorTools::to_vector<dim>(velocity_vals->get_value(q_index)).norm() :
+                    VectorTools::evaluate_function_at_vectorized_points(
+                      *advection_velocity_function, advected_field_vals.quadrature_point(q_index))
+                      .norm();
+
+                stab_param[cell] = std::max(stab_param[cell], velocity_magnitude);
+              }
 
             stab_param[cell] = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
               stab_param[cell], 1e-6, 1. / stab_param[cell], 0.0);
@@ -441,7 +527,8 @@ namespace MeltPoolDG::LevelSet
           {
             stab_param[cell] = data.conv_stab.coefficient;
           }
-        stab_param[cell] *= scratch_data.get_cell_sizes()[velocity_vals.get_current_cell_index()];
+        stab_param[cell] *=
+          scratch_data.get_cell_sizes()[advected_field_vals.get_current_cell_index()];
       }
   }
 
@@ -455,23 +542,12 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  AdvectionDiffusionOperator<dim, number>::enable_pre_post()
-  {
-    do_pre_post = true;
-  }
-
-  template <int dim, typename number>
-  void
-  AdvectionDiffusionOperator<dim, number>::disable_pre_post()
-  {
-    do_pre_post = false;
-  }
-
-  template <int dim, typename number>
-  void
   AdvectionDiffusionOperator<dim, number>::do_pre_vmult([[maybe_unused]] VectorType &dst,
                                                         const VectorType            &src_in) const
   {
+    if (inflow_outflow_bc_local_indices.size() == 0)
+      return;
+
     VectorType &src = const_cast<VectorType &>(src_in);
 
     inflow_outflow_constraints_values_temp.resize(inflow_outflow_bc_local_indices.size());
@@ -490,6 +566,9 @@ namespace MeltPoolDG::LevelSet
     VectorType                        &dst,
     [[maybe_unused]] const VectorType &src_in) const
   {
+    if (inflow_outflow_bc_local_indices.size() == 0)
+      return;
+
     for (unsigned int i = 0; i < inflow_outflow_bc_local_indices.size(); ++i)
       {
         const auto &index        = inflow_outflow_bc_local_indices[i];
@@ -500,9 +579,20 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
+  AdvectionDiffusionOperator<dim, number>::post()
+  {
+    if (velocity_update_ghosts)
+      advection_velocity->zero_out_ghost_values();
+  }
+
+  template <int dim, typename number>
+  void
   AdvectionDiffusionOperator<dim, number>::post_system_matrix_compute(
     TrilinosWrappers::SparseMatrix &system_matrix) const
   {
+    if (inflow_outflow_bc_local_indices.size() == 0)
+      return;
+
     const auto &partitioner = scratch_data.get_matrix_free().get_vector_partitioner(this->dof_idx);
 
     for (const auto &i : inflow_outflow_bc_local_indices)
@@ -510,6 +600,14 @@ namespace MeltPoolDG::LevelSet
         const auto global_index = partitioner->local_to_global(i);
         system_matrix.clear_row(global_index, 1.0);
       }
+  }
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperator<dim, number>::
+    set_apply_inflow_outflow_constraints_pre_post_matrix_free(bool enable)
+  {
+    do_apply_inflow_outflow_constraints_pre_post = enable;
   }
 
   template class AdvectionDiffusionOperator<1, double>;

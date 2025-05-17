@@ -24,8 +24,6 @@ namespace MeltPoolDG
       return 1;
     }
 
-
-
     template <typename VectorType,
               std::enable_if_t<dealii::IsBlockVector<VectorType>::value, VectorType> * = nullptr>
     unsigned int
@@ -33,8 +31,6 @@ namespace MeltPoolDG
     {
       return vector.n_blocks();
     }
-
-
 
     template <
       typename VectorType,
@@ -47,8 +43,6 @@ namespace MeltPoolDG
       return vector;
     }
 
-
-
     template <typename VectorType,
               std::enable_if_t<dealii::IsBlockVector<VectorType>::value, VectorType> * = nullptr>
     typename VectorType::BlockType &
@@ -56,8 +50,6 @@ namespace MeltPoolDG
     {
       return vector.block(b);
     }
-
-
 
     template <
       typename VectorType,
@@ -69,8 +61,6 @@ namespace MeltPoolDG
       (void)b;
       return vector;
     }
-
-
 
     template <typename VectorType,
               std::enable_if_t<dealii::IsBlockVector<VectorType>::value, VectorType> * = nullptr>

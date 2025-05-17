@@ -99,22 +99,38 @@ namespace MeltPoolDG::LevelSet
 
   public:
     LevelSetDGOperation(
-      const ScratchData<dim, dim, number>                         &scratch_data_in,
-      const TimeIntegration::TimeIterator<number>                 &time_stepping,
-      const LevelSetData<number>                                  &ls_data,
-      const std::shared_ptr<BoundaryConditionManager<dim, number>> boundary_conditions_in,
-      std::shared_ptr<dealii::Function<dim>>                       prescribed_velocity_function,
-      VectorType                                                  &advection_velocity,
-      const unsigned int                                           ls_dof_idx_in,
-      const unsigned int                                           ls_quad_idx_in,
-      const unsigned int                                           reinit_dof_idx_in,
-      const unsigned int                                           vel_dof_idx);
+      const ScratchData<dim, dim, number>                          &scratch_data_in,
+      const TimeIntegration::TimeIterator<number>                  &time_stepping,
+      const LevelSetData<number>                                   &ls_data,
+      const std::shared_ptr<BoundaryConditionManager<dim, number>> &boundary_conditions_in,
+      const std::shared_ptr<dealii::Function<dim, number>>         &prescribed_velocity_function,
+      VectorType                                                   &advection_velocity,
+      const unsigned int                                            ls_dof_idx_in,
+      const unsigned int                                            ls_quad_idx_in,
+      const unsigned int                                            reinit_dof_idx_in,
+      const unsigned int                                            vel_dof_idx);
     /**
      * set initial condition
      */
     void
     set_initial_condition(const dealii::Function<dim> &initial_field_function_level_set,
                           const bool is_signed_distance_initial_field_function = false) override;
+
+    void
+    setup_constraints(
+      ScratchData<dim, dim, number> & /*mutable_scratch_data*/,
+      const PeriodicBoundaryConditions<dim> & /*pbc*/,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        & /*ls_dirichlet_bc_in*/,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        & /*normal_x_dirichlet_bc_in*/,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        & /*normal_y_dirichlet_bc_in*/,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        & /*normal_z_dirichlet_bc_in*/) final
+    {
+      // nothing to be done in the DG case
+    }
 
     void
     set_inflow_outflow_bc([[maybe_unused]] const std::map<dealii::types::boundary_id,
@@ -217,5 +233,7 @@ namespace MeltPoolDG::LevelSet
     // Computes a given error norm of the level set field
     number
     compute_level_set_gradient_error(const VectorType &solution);
+
+    std::shared_ptr<dealii::Function<dim, number>> prescribed_velocity_function;
   };
 } // namespace MeltPoolDG::LevelSet

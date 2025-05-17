@@ -11,6 +11,7 @@
 #include <meltpooldg/core/operator_base.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/level_set/advection_diffusion_data.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
 #include <map>
@@ -45,12 +46,30 @@ namespace MeltPoolDG::LevelSet
     using scalar              = dealii::VectorizedArray<number>;
 
   public:
-    AdvectionDiffusionOperator(const ScratchData<dim, dim, number>  &scratch_data_in,
-                               const VectorType                     &advection_velocity_in,
-                               const AdvectionDiffusionData<number> &data_in,
-                               unsigned int                          dof_idx_in,
-                               unsigned int                          quad_idx_in,
-                               unsigned int                          velocity_dof_idx_in);
+    AdvectionDiffusionOperator(const ScratchData<dim, dim, number>         &scratch_data_in,
+                               const TimeIntegration::TimeIterator<number> &time_iterator,
+                               const AdvectionDiffusionData<number>        &data_in,
+                               unsigned int                                 dof_idx_in,
+                               unsigned int                                 quad_idx_in);
+
+    /**
+     * @brief Assigns a time-dependent advection velocity function.
+     *
+     * @param advection_velocity_function_in Shared pointer to a velocity field function.
+     */
+    void
+    set_advection_velocity_function(
+      const std::shared_ptr<dealii::Function<dim>> &advection_velocity_function_in);
+
+    /**
+     * @brief Sets the discrete advection velocity vector and its DoF index.
+     *
+     * @param advection_velocity_in Discrete velocity field.
+     * @param velocity_dof_idx_in Index of the associated DoF handler.
+     */
+    void
+    set_advection_velocity(const VectorType  &advection_velocity_in,
+                           const unsigned int velocity_dof_idx_in);
 
     /*
      *    this is the matrix-based implementation of the rhs and the matrix
@@ -82,17 +101,14 @@ namespace MeltPoolDG::LevelSet
     void
     pre() final;
 
+    void
+    post() final;
+
     /**
      * additional functions for inflow/outflow boundary conditions
      */
     void
     set_inflow_outflow_bc(std::vector<unsigned int> inflow_outflow_bc_local_indices_);
-
-    void
-    enable_pre_post();
-
-    void
-    disable_pre_post();
 
     void
     do_pre_vmult([[maybe_unused]] VectorType &dst, const VectorType &src_in) const;
@@ -103,29 +119,38 @@ namespace MeltPoolDG::LevelSet
     void
     post_system_matrix_compute(dealii::TrilinosWrappers::SparseMatrix &system_matrix) const;
 
+    void
+    set_apply_inflow_outflow_constraints_pre_post_matrix_free(bool enable);
 
   private:
     void
     tangent_local_cell_operation(FECellIntegrator<dim, 1, number>   &advected_field,
-                                 FECellIntegrator<dim, dim, number> &velocity_vals,
+                                 FECellIntegrator<dim, dim, number> *velocity_vals,
                                  const bool                          do_reinit_cells) const;
 
     void
-    compute_stabilization_parameter(const FECellIntegrator<dim, dim, number> &velocity_vals) const;
+    compute_stabilization_parameter(const FECellIntegrator<dim, 1, number>   &advected_field_vals,
+                                    const FECellIntegrator<dim, dim, number> *velocity_vals) const;
 
-    const ScratchData<dim, dim, number>                           &scratch_data;
-    const VectorType                                              &advection_velocity;
-    const AdvectionDiffusionData<number>                          &data;
-    const unsigned int                                             velocity_dof_idx;
-    const unsigned int                                             advec_diff_dof_idx;
-    const unsigned int                                             advec_diff_quad_idx;
-    number                                                         theta;
+    const ScratchData<dim, dim, number>         &scratch_data;
+    const TimeIntegration::TimeIterator<number> &time_iterator;
+    const AdvectionDiffusionData<number>        &data;
+    const unsigned int                           advec_diff_dof_idx;
+    const unsigned int                           advec_diff_quad_idx;
+    number                                       theta;
+
+    // SUPG stabilization aprameter
     mutable dealii::AlignedVector<dealii::VectorizedArray<number>> stab_param;
     mutable bool                                                   do_update_stab_param = true;
 
-    mutable bool do_pre_post = false;
-
     std::vector<unsigned int>   inflow_outflow_bc_local_indices;
     mutable std::vector<number> inflow_outflow_constraints_values_temp;
+
+    const VectorType *advection_velocity = nullptr;
+    unsigned int      velocity_dof_idx   = dealii::numbers::invalid_unsigned_int;
+
+    std::shared_ptr<dealii::Function<dim>> advection_velocity_function                  = nullptr;
+    bool                                   velocity_update_ghosts                       = false;
+    mutable bool                           do_apply_inflow_outflow_constraints_pre_post = false;
   };
 } // namespace MeltPoolDG::LevelSet

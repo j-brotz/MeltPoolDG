@@ -46,11 +46,13 @@ namespace MeltPoolDG::LevelSet
     /*
      * select the relevant DoFHandler
      */
-    const unsigned int ls_dof_idx;
-    const unsigned int ls_hanging_nodes_dof_idx;
-    const unsigned int ls_quad_idx;
-    const unsigned int curv_dof_idx;
-    const unsigned int reinit_dof_idx;
+    const unsigned int                  ls_dof_idx;
+    const unsigned int                  ls_hanging_nodes_dof_idx;
+    const unsigned int                  ls_quad_idx;
+    const unsigned int                  curv_dof_idx;
+    const unsigned int                  reinit_dof_idx;
+    const unsigned int                  normal_no_bc_dof_idx;
+    const std::array<unsigned int, dim> normal_dof_indices_per_block;
     /*
      *  The reinitialization of the level set function is a "pseudo"-time-dependent
      *  equation, which is solved up to quasi-steady state. Thus a time iterator is
@@ -92,10 +94,23 @@ namespace MeltPoolDG::LevelSet
       const unsigned int                                                ls_quad_idx_in,
       const unsigned int                                                reinit_dof_idx_in,
       const unsigned int                                                curv_dof_idx_in,
-      const std::array<unsigned int, dim> &normal_dof_indices_per_block_in,
-      const unsigned int                   normal_no_bc_dof_idx_in,
-      const unsigned int                   vel_dof_idx,
-      const unsigned int                   ls_zero_bc_idx);
+      const std::array<unsigned int, dim> normal_dof_indices_per_block_in,
+      const unsigned int                  normal_no_bc_dof_idx_in,
+      const unsigned int                  vel_dof_idx,
+      const unsigned int                  ls_zero_bc_idx);
+
+    void
+    setup_constraints(
+      ScratchData<dim, dim, number>         &mutable_scratch_data,
+      const PeriodicBoundaryConditions<dim> &pbc,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        &ls_dirichlet_bc_in,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        &normal_x_dirichlet_bc_in,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        &normal_y_dirichlet_bc_in,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        &normal_z_dirichlet_bc_in) final;
 
     /**
      * set initial condition

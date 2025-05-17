@@ -26,16 +26,16 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   LevelSetDGOperation<dim, number>::LevelSetDGOperation(
-    const ScratchData<dim, dim, number>                         &scratch_data_in,
-    const TimeIntegration::TimeIterator<number>                 &time_stepping,
-    const LevelSetData<number>                                  &ls_data,
-    const std::shared_ptr<BoundaryConditionManager<dim, number>> boundary_conditions_in,
-    std::shared_ptr<dealii::Function<dim>>                       prescribed_velocity_function,
-    VectorType                                                  &advection_velocity,
-    const unsigned int                                           ls_dof_idx_in,
-    const unsigned int                                           ls_quad_idx_in,
-    const unsigned int                                           reinit_dof_idx_in,
-    const unsigned int                                           vel_dof_idx)
+    const ScratchData<dim, dim, number>                          &scratch_data_in,
+    const TimeIntegration::TimeIterator<number>                  &time_stepping,
+    const LevelSetData<number>                                   &ls_data,
+    const std::shared_ptr<BoundaryConditionManager<dim, number>> &boundary_conditions_in,
+    const std::shared_ptr<dealii::Function<dim, number>>         &prescribed_velocity_function_in,
+    VectorType                                                   &advection_velocity,
+    const unsigned int                                            ls_dof_idx_in,
+    const unsigned int                                            ls_quad_idx_in,
+    const unsigned int                                            reinit_dof_idx_in,
+    const unsigned int                                            vel_dof_idx)
     : scratch_data(scratch_data_in)
     , time_stepping(time_stepping)
     , level_set_data(ls_data)
@@ -47,21 +47,19 @@ namespace MeltPoolDG::LevelSet
         std::numeric_limits<number>::max() /*end_time*/,
         -1.0 /*time step size --> will be set before each cycle*/,
         level_set_data.reinit.max_n_steps})
+    , prescribed_velocity_function(prescribed_velocity_function_in)
   {
-    /*
-     *    initialize the advection diffusion operation
-     */
-    advec_operation =
-      std::make_shared<AdvectionDGOperation<dim, number>>(scratch_data,
-                                                          ls_data.advec_diff,
-                                                          time_stepping,
-                                                          advection_velocity,
-                                                          ls_dof_idx,
-                                                          ls_quad_idx,
-                                                          vel_dof_idx,
-                                                          std::move(boundary_conditions_in),
-                                                          std::move(prescribed_velocity_function),
-                                                          false);
+    advec_operation = std::make_shared<AdvectionDGOperation<dim, number>>(scratch_data,
+                                                                          ls_data.advec_diff,
+                                                                          time_stepping,
+                                                                          ls_dof_idx,
+                                                                          ls_quad_idx,
+                                                                          boundary_conditions_in);
+
+    if (prescribed_velocity_function)
+      advec_operation->set_advection_velocity_function(prescribed_velocity_function);
+    else
+      advec_operation->set_advection_velocity(advection_velocity, vel_dof_idx);
 
     /*
      *    initialize the advection smoothed signum operation
@@ -70,13 +68,14 @@ namespace MeltPoolDG::LevelSet
       std::make_shared<AdvectionDGOperation<dim, number>>(scratch_data,
                                                           ls_data.advec_diff,
                                                           time_stepping,
-                                                          advection_velocity,
                                                           ls_dof_idx,
                                                           ls_quad_idx,
-                                                          vel_dof_idx,
-                                                          std::move(boundary_conditions_in),
-                                                          std::move(prescribed_velocity_function),
-                                                          false);
+                                                          boundary_conditions_in);
+    if (prescribed_velocity_function)
+      advec_smoothed_signum_operation->set_advection_velocity_function(
+        prescribed_velocity_function);
+    else
+      advec_smoothed_signum_operation->set_advection_velocity(advection_velocity, vel_dof_idx);
 
 
     /*
