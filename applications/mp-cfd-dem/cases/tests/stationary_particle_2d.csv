@@ -1,2 +1,2 @@
-x1-Position [m],x2-Position [m],x1-Velocity [m/s],x2-Velocity [m/s], Angular Velocity [rad/s],Density [kg/m^3],Radius [m]
-20e-6,20e-6,0.0,0.0,0.0,4430,5e-6
+x1-Position [m],x2-Position [m],Density [kg/m^3],Radius [m]
+20e-6,20e-6,4430,5e-6
