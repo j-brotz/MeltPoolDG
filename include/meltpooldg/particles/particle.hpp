@@ -1,10 +1,14 @@
 
 #pragma once
 
+#include <deal.II/base/config.h>
+
 #include <deal.II/base/array_view.h>
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
+
+#include <deal.II/numerics/data_component_interpretation.h>
 
 #include <deal.II/particles/particle.h>
 #include <deal.II/particles/particle_accessor.h>
@@ -57,6 +61,73 @@ namespace MeltPoolDG
       mass,
       moment_of_inertia,
     };
+
+    /**
+     * @brief Provides the names and component interpretations of particle properties for output.
+     *
+     * This function returns a pair consisting of:
+     * - A list of property names corresponding to physical attributes associated with particles.
+     * - A list of `DataComponentInterpretation` values indicating whether each property should be
+     *   interpreted as part of a vector field or as a scalar.
+     *
+     * @return A pair of vectors:
+     * - `std::vector<std::string>`: property names (with `dim` copies for vector fields),
+     * - `std::vector<DataComponentInterpretation>`: corresponding component interpretations.
+     */
+    static std::pair<std::vector<std::string>,
+                     std::vector<dealii::DataComponentInterpretation::DataComponentInterpretation>>
+    get_property_names_and_component_interpretation()
+    {
+      using namespace dealii::DataComponentInterpretation;
+      constexpr std::array<std::string_view, 10> property_strings = {{"velocity",
+                                                                      "acceleration",
+                                                                      "angular_velocity",
+                                                                      "angular_acceleration",
+                                                                      "force",
+                                                                      "radius",
+                                                                      "volume",
+                                                                      "density",
+                                                                      "mass",
+                                                                      "moment_of_inertia"}};
+
+      constexpr std::array<DataComponentInterpretation, 10> data_component_interpretation{
+        {component_is_part_of_vector,
+         component_is_part_of_vector,
+         dim == 3 ? component_is_part_of_vector : component_is_scalar,
+         dim == 3 ? component_is_part_of_vector : component_is_scalar,
+         component_is_part_of_vector,
+         component_is_scalar,
+         component_is_scalar,
+         component_is_scalar,
+         component_is_scalar,
+         component_is_scalar}};
+
+      std::pair<std::vector<std::string>, std::vector<DataComponentInterpretation>>
+        property_names_and_interpretations;
+
+      property_names_and_interpretations.first.reserve(n_obstacle_properties);
+      property_names_and_interpretations.second.reserve(n_obstacle_properties);
+
+      for (unsigned int i = 0; i < property_strings.size(); ++i)
+        {
+          if (data_component_interpretation[i] == component_is_part_of_vector)
+            {
+              for (unsigned int j = 0; j < dim; ++j)
+                {
+                  property_names_and_interpretations.first.emplace_back(property_strings[i]);
+                  property_names_and_interpretations.second.emplace_back(
+                    data_component_interpretation[i]);
+                }
+            }
+          else
+            {
+              property_names_and_interpretations.first.emplace_back(property_strings[i]);
+              property_names_and_interpretations.second.emplace_back(
+                data_component_interpretation[i]);
+            }
+        }
+      return property_names_and_interpretations;
+    }
 
     /**
      * @brief Parses particle properties and location from a single CSV-formatted line. This

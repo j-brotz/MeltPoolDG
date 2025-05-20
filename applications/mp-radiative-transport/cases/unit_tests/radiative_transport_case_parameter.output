@@ -79,6 +79,11 @@
             "output subdomains": "false",
             "print boundary id": "false",
             "write higher order cells": "true"
+        },
+        "particles":
+        {
+            "enable": "false",
+            "filename": "particle"
         }
     },
     "profiling":

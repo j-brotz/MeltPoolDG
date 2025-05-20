@@ -77,7 +77,6 @@ namespace MeltPoolDG
     get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
                           const dealii::CellAccessor<dim>      &cell) const;
 
-
     /**
      * @brief Identify obstacles that partially or fully occupy any cell in a given cell batch, and
      * store their properties in the destination property pool.
@@ -98,6 +97,17 @@ namespace MeltPoolDG
       const dealii::MatrixFree<dim, number> &matrix_free,
       const unsigned int                     cell_batch_id,
       const unsigned int                     n_lanes = dealii::VectorizedArray<number>::size) const;
+
+    /**
+     * @brief Rerturn a constant reference to the underlying particle handler of this object.
+     *
+     * @return The used particle handler of the current object.
+     */
+    dealii::Particles::ParticleHandler<dim> &
+    get_particle_handler()
+    {
+      return obstacle_handler;
+    }
 
   private:
     /**
