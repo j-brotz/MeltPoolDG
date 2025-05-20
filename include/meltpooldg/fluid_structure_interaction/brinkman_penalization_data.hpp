@@ -5,8 +5,8 @@
 template <typename number>
 struct BrinkmanPenalizationData
 {
-  number permeability;
-  number porosity;
+  number permeability{};
+  number porosity{};
 
   void
   add_parameters(dealii::ParameterHandler &prm)
