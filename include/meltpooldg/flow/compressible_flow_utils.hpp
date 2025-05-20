@@ -159,6 +159,48 @@ namespace MeltPoolDG::Flow
     std::unique_ptr<dealii::Function<dim>> body_force;
   };
 
+  /**
+   * @brief An abstract interface for defining external forces acting on the fluid that must be
+   * evaluated and incorporated during the cell loop of an explicit time integration scheme.
+   *
+   * This struct serves as a base for user-defined external fluid force models. Any derived class
+   * must implement the two core functions:
+   * - @p cell_operation(): Invoked once per cell batch to perform any necessary precomputations.
+   * - @p quad_operation(): Invoked at each quadrature point to compute the contribution of the
+   *   external force.
+   */
+  template <int dim, typename number>
+  struct ExplicitExternalFluidForces
+  {
+    virtual ~ExplicitExternalFluidForces() = default;
+
+    /**
+     * @brief Function called once per cell batch during the cell loop.
+     *
+     * @param matrix_free MatrixFree object providing access to the degrees of freedom and geometry.
+     * @param cell_batch_id Index of the current cell batch.
+     * @param n_lanes Number of lanes (i.e., cells in the batch).
+     */
+    virtual void
+    cell_operation(const dealii::MatrixFree<dim, number> &matrix_free,
+                   unsigned int                           cell_batch_id,
+                   unsigned int n_lanes = dealii::VectorizedArray<number>::size) = 0;
+
+    /**
+     * @brief Function called once per batch of quadrature points to compute the external force
+     * contribution at each point.
+     *
+     * @param q_point Coordinates of the quadrature points.
+     * @param w_q Conserved variables at the corresponding quadrature points.
+     *
+     * @return The computed contribution of the external force to be added to the conservation
+     * equations.
+     */
+    virtual CompressibleFlowTypes::ConservedVariablesType<dim, number>
+    quad_operation(const dealii::Point<dim, dealii::VectorizedArray<number>>        &q_point,
+                   const CompressibleFlowTypes::ConservedVariablesType<dim, number> &w_q) = 0;
+  };
+
   /********************************************************************************************
    * Inlined function definitions
    * *************************************************************************************+****/

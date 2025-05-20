@@ -45,11 +45,14 @@ namespace MeltPoolDG::Flow
      * @param flow_data Reference to the compressible flow data struct used.
      * @param flow_dof_idx Index of the used dof handler in @p scratch_data_in.
      * @param flow_quad_idx Index of the used quadrature object in @p scratch_data_in.
+     * @param external_forces Pointer to a struct implementing external forces acting on the fluid.
      */
-    DGCompressibleFlowOperation(const ScratchData<dim, dim, number> &scratch_data,
-                                const CompressibleFlowData<number>  &flow_data,
-                                unsigned int                         flow_dof_idx  = 0,
-                                unsigned int                         flow_quad_idx = 0);
+    DGCompressibleFlowOperation(
+      const ScratchData<dim, dim, number>                        &scratch_data,
+      const CompressibleFlowData<number>                         &flow_data,
+      unsigned int                                                flow_dof_idx    = 0,
+      unsigned int                                                flow_quad_idx   = 0,
+      std::unique_ptr<ExplicitExternalFluidForces<dim, number>> &&external_forces = nullptr);
 
     /**
      * Set up the required internal data structures. After a call to this function the solve()
@@ -65,7 +68,7 @@ namespace MeltPoolDG::Flow
      * @param time_step Current time step size.
      */
     void
-    solve(number current_time, number time_step);
+    solve(const number current_time, const number time_step);
 
     /**
      * Distribute the degrees of freedom to the passed dof handler object.
@@ -157,9 +160,12 @@ namespace MeltPoolDG::Flow
 
     /**
      * Set up the operator to suit the specified time integration scheme.
+     *
+     * @param external_forces Pointer to a struct implementing external forces acting on the fluid.
      */
     void
-    setup_operator_and_time_integrator();
+    setup_operator_and_time_integrator(
+      std::unique_ptr<ExplicitExternalFluidForces<dim, number>> &&external_forces);
   };
 
 
