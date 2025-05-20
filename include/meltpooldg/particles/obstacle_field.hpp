@@ -1,7 +1,5 @@
 #pragma once
 
-#include <deal.II/base/tensor.h>
-
 #include <deal.II/fe/mapping.h>
 
 #include <deal.II/grid/tria.h>
@@ -11,6 +9,7 @@
 
 #include <meltpooldg/particles/obstacle_data.hpp>
 #include <meltpooldg/particles/obstacle_data_structure.hpp>
+#include <meltpooldg/particles/obstacle_forces.hpp>
 
 #include <vector>
 
@@ -37,6 +36,31 @@ namespace MeltPoolDG
     ObstacleField(const ObstacleData               &data,
                   const dealii::Triangulation<dim> &triangulation,
                   const dealii::Mapping<dim>       &mapping);
+
+    /**
+     * @brief Computes and applies the total force acting on each obstacle in the field.
+     *
+     * This method iterates over all registered forces in the @p forces vector and computes the
+     * cumulative force for each obstacle by summing the contributions of all individual force
+     * models. The resulting total force is then stored in the obstacle’s properties using the
+     * appropriate
+     * setter defined by @p ObstacleType.
+     */
+    void
+    compute_forces_on_obstacles();
+
+    /**
+     * @brief Adds a new obstacle force to the list of forces acting on obstacles.
+     *
+     * This method appends the given force object to the internal list of forces that are applied
+     * when computing the total force on an obstacle.
+     *
+     * @param obstacle_force The force object to be added. It is forwarded and stored via type
+     * erasure.
+     */
+    template <typename ObstacleForceType>
+    void
+    add_force_type(ObstacleForceType &&obstacle_force);
 
     /**
      * @brief Identifies obstacles that partially or fully occupy a given cell, and stores their
@@ -91,6 +115,9 @@ namespace MeltPoolDG
 
     /// Struct holding configuration data for obstacles.
     const ObstacleData &data;
+
+    /// Vector of force objects representing all forces acting on the obstacles.
+    std::vector<ObstacleForce<dim, number, ObstacleType>> forces;
 
     /// Handler responsible for managing obstacle particles within the computational domain.
     dealii::Particles::ParticleHandler<dim> obstacle_handler;

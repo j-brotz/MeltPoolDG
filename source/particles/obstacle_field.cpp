@@ -43,6 +43,33 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell_batc
 }
 
 template <int dim, typename number, typename ObstacleType>
+template <typename ObstacleForceType>
+void
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::add_force_type(
+  ObstacleForceType &&obstacle_force)
+{
+  forces.push_back(ObstacleForce(std::move(obstacle_force)));
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compute_forces_on_obstacles()
+{
+  if (forces.empty())
+    return;
+
+  for (dealii::Particles::ParticleAccessor<dim> obstacle : obstacle_handler)
+    {
+      dealii::Tensor<1, dim, number> force;
+      for (const auto &force_type : forces)
+        {
+          force += force_type.compute_force_on_obstacle(obstacle);
+        }
+      ObstacleType::set_force(force, obstacle);
+    }
+}
+
+template <int dim, typename number, typename ObstacleType>
 void
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::read_particle_state_input_file(
   const dealii::Triangulation<dim> &triangulation)
