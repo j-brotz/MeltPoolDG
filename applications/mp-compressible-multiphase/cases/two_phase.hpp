@@ -1,11 +1,10 @@
 /**
- * @brief Simulation of (currently) one-dimensional two-phase flows.
- * The initial conditions are used from the user input file.
- * There is an inflow boundary for the liquid phase and an outflow boundary with fixed total energy
- * for the gas phase.
+ * @brief Simulation of (currently) one-dimensional two-phase flows with one phase interface.
+ * The initial conditions and boundary types are used from the user input file.
+ *
  *       _____________________________________
- *    ->|      liquid      |        gas      | ->
- *     x=-5              x=0.13             x=5
+ *    ->|      liquid      |        gas      |->
+ *     x=-5e-4           x=0.013e-4         x=5e-4
  */
 
 #pragma once
@@ -56,8 +55,8 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     number
     value(const dealii::Point<dim, number> &p, const unsigned int component) const final
     {
-      unsigned int gas_components[dim + 2];
-      unsigned int liquid_components[dim + 2];
+      std::array<unsigned int, dim + 2> gas_components;
+      std::array<unsigned int, dim + 2> liquid_components;
 
       for (unsigned int i = 0; i < dim + 2; ++i)
         {
@@ -102,10 +101,10 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
   };
 
   template <int dim, typename number>
-  class SimulationStaticTwoPhase final : public Multiphase::CompressibleMultiphaseCase<dim, number>
+  class SimulationTwoPhase final : public Multiphase::CompressibleMultiphaseCase<dim, number>
   {
   public:
-    SimulationStaticTwoPhase(std::string parameter_file, const MPI_Comm mpi_communicator)
+    SimulationTwoPhase(std::string parameter_file, const MPI_Comm mpi_communicator)
       : Multiphase::CompressibleMultiphaseCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
@@ -117,12 +116,12 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
         std::make_shared<dealii::parallel::shared::Triangulation<dim>>(this->mpi_communicator);
 
       dealii::Point<dim, number> lower_left;
-      lower_left[0] = -5.;
+      lower_left[0] = -5.e-4;
       for (unsigned int d = 1; d < dim; ++d)
         lower_left[d] = 0.;
 
       dealii::Point<dim, number> upper_right;
-      upper_right[0] = 5.;
+      upper_right[0] = 5.e-4;
       for (unsigned int d = 1; d < dim; ++d)
         upper_right[d] = 0.;
 
@@ -142,18 +141,18 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     {
       auto inflow_outflow_solution =
         std::make_shared<InitialField<dim, number>>(ic_gas_phase, ic_liquid_phase);
-      auto dummy_solution =
-        std::make_shared<InitialField<dim, number>>(ic_gas_phase, ic_liquid_phase);
 
       // face numbering according to the deal.II colorize flag
       const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
         get_colorized_rectangle_boundary_ids<dim>();
 
+      // left boundary
       this->attach_boundary_condition({lower_bc, inflow_outflow_solution},
-                                      "inflow",
+                                      bc_type_left,
                                       "compressible_multiphase_flow");
+      // right boundary
       this->attach_boundary_condition({upper_bc, inflow_outflow_solution},
-                                      "outflow_fixed_energy",
+                                      bc_type_right,
                                       "compressible_multiphase_flow");
     }
 
@@ -171,7 +170,7 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       // set level-set function
       dealii::Point<dim, number> p;
       // avoid phase interface colliding with element face (bug in dealii has to be fixed)
-      p[0] = 0.13;
+      p[0] = 0.0135468746e-4;
 
       dealii::Tensor<1, dim, number> normal;
       normal[0] = -1.;
@@ -185,12 +184,16 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const override
     {
       InitialField<dim, number> reference_values(ic_gas_phase, ic_liquid_phase);
-      this->print_relative_norm(generic_data_out, reference_values, "norm");
+      this->print_relative_norm(generic_data_out, reference_values, "error");
     }
 
   private:
     // initial conditions functions
     std::string ic_gas_phase    = this->parameters.flow.initial_conditions.gas;
     std::string ic_liquid_phase = this->parameters.flow.initial_conditions.liquid;
+
+    // boundary condition types
+    std::string bc_type_left  = this->parameters.flow.boundary_conditions.left_boundary_condition;
+    std::string bc_type_right = this->parameters.flow.boundary_conditions.right_boundary_condition;
   };
 } // namespace MeltPoolDG::Simulation::CompressibleMultiphase

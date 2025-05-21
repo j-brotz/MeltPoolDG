@@ -9,13 +9,13 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "5e-8"
+    "end time": "1.0e-5"
   },
   "output": {
     "write frequency": "1",
     "do user defined postprocessing": "true",
     "paraview": {
-      "filename": "static_air_air_penalty",
+      "filename": "static_Ti_air_HLLP0_SIPG",
       "enable": "false"
     }
   },
@@ -27,26 +27,20 @@
     "gravity constant": "0.0",
     "domain representation type": "cut",
     "initial conditions": {
-      "gas": "1.0; 0.0; 2.104084125e5",
-      "liquid": "1.0; 0.0; 2.104084125e5"
+      "gas": "0.0977166666666666; 0.0; 2.104084125e5",
+      "liquid": "3622.73659245216946; 0.0; 1.003506642361949e10"
     },
     "boundary conditions": {
       "left boundary condition": "no_slip_wall",
       "right boundary condition": "no_slip_wall"
     },
     "interface jump conditions": {
-      "type": "penalty",
+      "type": "HLLP0_and_SIPG",
       "evaporation mass flux": "0.0",
       "delta q": "0.0",
-      "penalty": {
-        "coefficients": {
-          "density": "100.0",
-          "temperature": "100.0"
-        },
-        "target values": {
-          "density gas phase": "1.0",
-          "temperature gas phase": "293.15"
-        }
+      "HLLP0 and SIPG": {
+        "interior penalty parameter interface": "1.0",
+        "delta T": "0.0"
       }
     },
     "cut": {
@@ -72,7 +66,6 @@
         "dynamic viscosity": "0.00002",
         "specific isobaric heat": "1004.85",
         "specific gas constant": "287.1",
-        "thermal conductivity": "0.028",
         "reference density": "1.0",
         "gamma": "1.4",
         "equation of state": {
@@ -80,14 +73,15 @@
         }
       },
       "liquid": {
-        "dynamic viscosity": "0.00002",
-        "specific isobaric heat": "1004.85",
-        "specific gas constant": "287.1",
-        "thermal conductivity": "0.028",
-        "reference density": "1.0",
-        "gamma": "1.4",
+        "dynamic viscosity": "0.0035",
+        "specific isobaric heat": "1126.0",
+        "reference density": "3622.0",
+        "gamma": "1.4355",
         "equation of state": {
-          "type": "ideal_gas"
+          "type": "noble_abel_stiffened_gas",
+          "p inf": "1.1587e10",
+          "b": "1.8759e-4",
+          "q": "-607968.8"
         }
       }
     },

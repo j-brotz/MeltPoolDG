@@ -24,6 +24,15 @@
         "use cfl criteria": "false",
         "verbosity level": "-1",
         "viscous courant number": "1",
+        "boundary conditions":
+        {
+            "back boundary condition": "no_slip_wall",
+            "bottom boundary condition": "no_slip_wall",
+            "front boundary condition": "no_slip_wall",
+            "left boundary condition": "no_slip_wall",
+            "right boundary condition": "no_slip_wall",
+            "top boundary condition": "no_slip_wall"
+        },
         "cut":
         {
             "two phase": "false",
@@ -54,11 +63,18 @@
         },
         "interface jump conditions":
         {
+            "delta q": "0",
             "evaporation mass flux": "0",
             "type": "penalty",
-            "HLLP0 and Nitsche":
+            "HLLP0 and SIPG":
             {
+                "delta T": "0",
                 "interior penalty parameter interface": "1"
+            },
+            "HLLP0 and penalty":
+            {
+                "delta T": "0",
+                "penalty parameter temperature jump": "1"
             },
             "penalty":
             {

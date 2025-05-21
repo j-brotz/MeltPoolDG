@@ -15,7 +15,7 @@
     "write frequency": "1",
     "do user defined postprocessing": "true",
     "paraview": {
-      "filename": "static_air_air_penalty",
+      "filename": "static_air_air_HLLP0_and_penalty",
       "enable": "false"
     }
   },
@@ -35,18 +35,12 @@
       "right boundary condition": "no_slip_wall"
     },
     "interface jump conditions": {
-      "type": "penalty",
+      "type": "HLLP0_and_penalty",
       "evaporation mass flux": "0.0",
       "delta q": "0.0",
-      "penalty": {
-        "coefficients": {
-          "density": "100.0",
-          "temperature": "100.0"
-        },
-        "target values": {
-          "density gas phase": "1.0",
-          "temperature gas phase": "293.15"
-        }
+      "HLLP0 and penalty": {
+        "penalty parameter temperature jump": "0.2",
+        "delta T": "0.0"
       }
     },
     "cut": {

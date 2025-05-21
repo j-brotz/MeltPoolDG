@@ -7,6 +7,7 @@
 #include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
+#include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_level_set_advection.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Multiphase
@@ -131,13 +132,13 @@ namespace MeltPoolDG::Multiphase
     dealii::FESystem<dim> fe_point_temp;
     const unsigned int    n_dofs_per_cell;
 
-    mutable number velocity_interface = 0.;
-
-    // Weighting factors for Nitsche-type viscous interface flux (for HLLP0+Nitsche method)
-    number alpha_1;
-    number alpha_2;
+    // Weighting factors for Nitsche-type viscous interface flux
+    number visc_ave_weight_phase_1;
+    number visc_ave_weight_phase_2;
 
     mutable number inv_time_step = 0.;
+
+    mutable LevelSetAdvection<dim, number> level_set_advection_operator;
 
     /**
      * Wrapper for the generation of a FECellIntegrator object.

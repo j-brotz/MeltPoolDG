@@ -1,6 +1,7 @@
 {
   "base": {
-    "case name": "static_two_phase",
+    "problem name": "compressible_multiphase",
+    "case name": "two_phase",
     "dimension": "1",
     "verbosity level": "1",
     "do print parameters": "false",
@@ -8,13 +9,13 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "0.002"
+    "end time": "4e-6"
   },
   "output": {
     "write frequency": "1",
     "do user defined postprocessing": "true",
     "paraview": {
-      "filename": "static_air_air_HLLP0",
+      "filename": "moving_Ti_air_HLLP0_and_penalty",
       "enable": "false"
     }
   },
@@ -26,14 +27,20 @@
     "gravity constant": "0.0",
     "domain representation type": "cut",
     "initial conditions": {
-      "gas": "1.0; 0.0; 1. * 1004.85 / 1.4 * 293.15",
-      "liquid": "1.0; 0.0; 1. * 1004.85 / 1.4 * 293.15"
+      "gas": "0.097716666666666; 9.7716666666666; 2.108969958333318e5",
+      "liquid": "3622.73659245216946; 362273.659245216946; 1.005318010658175e10"
+    },
+    "boundary conditions": {
+      "left boundary condition": "inflow",
+      "right boundary condition": "outflow_fixed_energy"
     },
     "interface jump conditions": {
-      "type": "HLLP0_and_Nitsche",
+      "type": "HLLP0_and_penalty",
       "evaporation mass flux": "0.0",
-      "HLLP0 and Nitsche": {
-        "interior penalty parameter interface": "10.0"
+      "delta q": "0.0",
+      "HLLP0 and penalty": {
+        "penalty parameter temperature jump": "0.2",
+        "delta T": "0.0"
       }
     },
     "cut": {
@@ -66,13 +73,15 @@
         }
       },
       "liquid": {
-        "dynamic viscosity": "0.00002",
-        "specific isobaric heat": "1004.85",
-        "specific gas constant": "287.1",
-        "reference density": "1.0",
-        "gamma": "1.4",
+        "dynamic viscosity": "0.0035",
+        "specific isobaric heat": "1126.0",
+        "reference density": "3622.0",
+        "gamma": "1.4355",
         "equation of state": {
-          "type": "ideal_gas"
+          "type": "noble_abel_stiffened_gas",
+          "p inf": "1.1587e10",
+          "b": "1.8759e-4",
+          "q": "-607968.8"
         }
       }
     },
