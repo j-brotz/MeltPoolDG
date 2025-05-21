@@ -184,6 +184,7 @@ namespace MeltPoolDG::LevelSet
           simulation_case->parameters.material,
           normal_dof_idx,
           vel_dof_idx,
+          ls_quad_idx,
           ls_hanging_nodes_dof_idx,
           ls_hanging_nodes_dof_idx,
           ls_quad_idx);

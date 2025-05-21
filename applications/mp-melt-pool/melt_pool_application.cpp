@@ -818,6 +818,7 @@ namespace MeltPoolDG
         param.material,
         normal_dof_idx,
         evapor_vel_dof_idx,
+        flow_operation->get_quad_idx_velocity(),
         evapor_mass_flux_dof_idx,
         ls_hanging_nodes_dof_idx,
         ls_quad_idx);

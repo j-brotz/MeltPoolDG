@@ -13,6 +13,7 @@
 #include <deal.II/matrix_free/fe_evaluation.h>
 
 #include <deal.II/numerics/data_out.h>
+#include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
@@ -22,13 +23,56 @@
 using namespace dealii;
 using VectorType = LinearAlgebra::distributed::Vector<double>;
 
-template <int dim>
-void
-test(const unsigned int fe_degree,
-     const unsigned int n_q_points,
-     const unsigned int n_components,
-     bool               do_local_refinement)
+template <int dim, unsigned int n_components>
+class MyTransformedFunction : public Function<dim>
 {
+public:
+  MyTransformedFunction()
+    : Function<dim>(n_components)
+  {
+    AssertThrow(n_components <= dim, dealii::ExcNotImplemented());
+  }
+
+  double
+  value(const Point<dim> &p, const unsigned int component) const override
+  {
+    if (dim == 2)
+      {
+        const auto &x = p[0];
+        const auto &y = p[1];
+        if (component == 0)
+          return std::sin(dealii::numbers::PI * x) * std::cos(dealii::numbers::PI * y);
+        else if (component == 1)
+          return std::sin(dealii::numbers::PI * x) * std::sin(dealii::numbers::PI * y);
+        else
+          AssertThrow(false, ExcNotImplemented());
+      }
+    else if (dim == 3)
+      {
+        const auto &x = p[0];
+        const auto &y = p[1];
+        const auto &z = p[2];
+        if (component == 0)
+          return std::sin(dealii::numbers::PI * x) * std::cos(dealii::numbers::PI * y) *
+                 std::cos(dealii::numbers::PI * z);
+        else if (component == 1)
+          return std::sin(dealii::numbers::PI * x) * std::sin(dealii::numbers::PI * y) *
+                 std::cos(dealii::numbers::PI * z);
+        else if (component == 2)
+          return std::cos(dealii::numbers::PI * x) * std::cos(dealii::numbers::PI * y) *
+                 std::sin(dealii::numbers::PI * z);
+        else
+          AssertThrow(false, ExcNotImplemented());
+      }
+  }
+};
+
+template <int dim, unsigned int n_components>
+void
+test(const unsigned int fe_degree, const unsigned int n_q_points, bool do_local_refinement)
+{
+  MyTransformedFunction<dim, n_components> my_func;
+
   parallel::distributed::Triangulation<dim> triangulation(MPI_COMM_WORLD);
 
   GridGenerator::hyper_cube(triangulation, 0, 1);
@@ -97,18 +141,21 @@ test(const unsigned int fe_degree,
       solution, matrix_free, 0, 0, [&](const auto cell, const auto q) -> VectorizedArray<double> {
         MeltPoolDG::FECellIntegrator<dim, 1, double> fe_eval(matrix_free);
         fe_eval.reinit(cell);
-        return fe_eval.quadrature_point(q)[0];
+        return MeltPoolDG::VectorTools::evaluate_function_at_vectorized_points<dim, double>(
+          my_func, fe_eval.quadrature_point(q), 0);
       });
   else
-    MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, dim>(
+    MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, n_components>(
       solution,
       matrix_free,
       0,
       0,
-      [&](const auto cell, const auto q) -> Tensor<1, dim, VectorizedArray<double>> {
-        MeltPoolDG::FECellIntegrator<dim, dim, double> fe_eval(matrix_free);
+      [&](const auto cell, const auto q) -> Tensor<1, n_components, VectorizedArray<double>> {
+        MeltPoolDG::FECellIntegrator<dim, n_components, double> fe_eval(matrix_free);
         fe_eval.reinit(cell);
-        return fe_eval.quadrature_point(q);
+        return MeltPoolDG::VectorTools::
+          evaluate_function_at_vectorized_points<dim, double, n_components>(
+            my_func, fe_eval.quadrature_point(q));
       });
 
   constraints.distribute(solution);
@@ -120,8 +167,12 @@ test(const unsigned int fe_degree,
 
       DataOut<dim> data_out;
       data_out.set_flags(flags);
-
       data_out.add_data_vector(dof_handler, solution, "solution");
+
+      VectorType analytical_solution;
+      matrix_free.initialize_dof_vector(analytical_solution);
+      dealii::VectorTools::interpolate(mapping, dof_handler, my_func, analytical_solution);
+      data_out.add_data_vector(dof_handler, analytical_solution, "analytical_solution");
 
       data_out.build_patches(mapping, n_q_points + 1);
       std::ofstream output("test" +
@@ -142,10 +193,10 @@ main(int argc, char *argv[])
   for (unsigned int i = 1; i <= 5; ++i)                                  // fe_degree
     for (unsigned int j = std::max<unsigned int>(i, 2); j <= i + 2; ++j) // n_q_points_1D
       {
-        test<2>(i, j, 1, false);
-        test<2>(i, j, 2, false);
-        test<2>(i, j, 1, true);
-        test<2>(i, j, 2, true);
+        test<2, 1>(i, j, false);
+        test<2, 2>(i, j, false);
+        test<2, 1>(i, j, true);
+        test<2, 2>(i, j, true);
         std::cout << std::endl;
       }
 
