@@ -1,4 +1,5 @@
 #include <deal.II/base/mpi.h>
+#include <deal.II/base/table_handler.h>
 #include <deal.II/base/vectorization.h>
 
 #include <deal.II/dofs/dof_handler.h>
@@ -14,6 +15,7 @@
 
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
+#include <deal.II/numerics/vector_tools_integrate_difference.h>
 
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
@@ -69,7 +71,10 @@ public:
 
 template <int dim, unsigned int n_components>
 void
-test(const unsigned int fe_degree, const unsigned int n_q_points, bool do_local_refinement)
+test(const unsigned int fe_degree,
+     const unsigned int n_q_points,
+     bool               do_local_refinement,
+     TableHandler      &table)
 {
   MyTransformedFunction<dim, n_components> my_func;
 
@@ -160,7 +165,7 @@ test(const unsigned int fe_degree, const unsigned int n_q_points, bool do_local_
 
   constraints.distribute(solution);
 
-  if (true)
+  if (false)
     {
       DataOutBase::VtkFlags flags;
       flags.write_higher_order_cells = true;
@@ -182,7 +187,24 @@ test(const unsigned int fe_degree, const unsigned int n_q_points, bool do_local_
       data_out.write_vtu(output);
     }
 
-  std::cout << solution.l2_norm() << " ";
+  // compute L2Norm of level_set
+  dealii::Vector<double> difference_per_cell(triangulation.n_active_cells());
+  dealii::VectorTools::integrate_difference<dim>(mapping,
+                                                 dof_handler,
+                                                 solution,
+                                                 my_func,
+                                                 difference_per_cell,
+                                                 QGauss<dim>(n_q_points),
+                                                 dealii::VectorTools::L2_norm);
+
+  const double error = dealii::VectorTools::compute_global_error(triangulation,
+                                                                 difference_per_cell,
+                                                                 dealii::VectorTools::L2_norm);
+  table.add_value("degree", fe_degree);
+  table.add_value("n_comp", n_components);
+  table.add_value("L2_error", error);
+  table.add_value("n_q_points_1D", n_q_points);
+  table.add_value("do_local_refinement", do_local_refinement);
 }
 
 int
@@ -190,15 +212,26 @@ main(int argc, char *argv[])
 {
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
-  for (unsigned int i = 1; i <= 5; ++i)                                  // fe_degree
-    for (unsigned int j = std::max<unsigned int>(i, 2); j <= i + 2; ++j) // n_q_points_1D
-      {
-        test<2, 1>(i, j, false);
-        test<2, 2>(i, j, false);
-        test<2, 1>(i, j, true);
-        test<2, 2>(i, j, true);
-        std::cout << std::endl;
-      }
+  for (unsigned int deg = 1; deg <= 5; ++deg)
+    { // fe_degree
+
+      TableHandler table;
+      table.declare_column("n_comp");
+      table.declare_column("do_local_refinement");
+      table.declare_column("degree");
+      table.declare_column("n_q_points_1D");
+      table.declare_column("L2_error");
+      table.set_scientific("L2_error", true);
+
+      for (unsigned int q = std::max<unsigned int>(deg, 1); q <= deg + 2; ++q) // n_q_points_1D
+        {
+          test<2, 1 /*n_components*/>(deg, q, false, table);
+          test<2, 2>(deg, q, false, table);
+          test<2, 1>(deg, q, true, table);
+          test<2, 2>(deg, q, true, table);
+        }
+      table.write_text(std::cout);
+    }
 
   return 0;
 }
