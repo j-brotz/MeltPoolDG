@@ -88,10 +88,12 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       else if (component == gas_components[1])
         return 0.;
       else if (component == gas_components[2])
-        if (p[0] <= 0.5)
-          return p_l / (gas_material_data.gamma - 1.0);
-        else
-          return p_r / (gas_material_data.gamma - 1.0);
+        {
+          if (p[0] <= 0.5)
+            return p_l / (gas_material_data.gamma - 1.0);
+          else
+            return p_r / (gas_material_data.gamma - 1.0);
+        }
 
       // liquid phase
 
