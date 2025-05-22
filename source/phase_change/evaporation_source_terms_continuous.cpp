@@ -25,6 +25,7 @@ namespace MeltPoolDG::Evaporation
     const unsigned int                           ls_quad_idx,
     const unsigned int                           normal_dof_idx,
     const unsigned int                           evapor_vel_dof_idx,
+    const unsigned int                           evapor_vel_quad_idx,
     const unsigned int                           evapor_mass_flux_dof_idx,
     const number                                 tolerance_normal_vector,
     const number                                 density_vapor,
@@ -39,6 +40,7 @@ namespace MeltPoolDG::Evaporation
     , ls_quad_idx(ls_quad_idx)
     , normal_dof_idx(normal_dof_idx)
     , evapor_vel_dof_idx(evapor_vel_dof_idx)
+    , evapor_vel_quad_idx(evapor_vel_quad_idx)
     , evapor_mass_flux_dof_idx(evapor_mass_flux_dof_idx)
     , tolerance_normal_vector(tolerance_normal_vector)
     , density_vapor(density_vapor)
@@ -159,15 +161,15 @@ namespace MeltPoolDG::Evaporation
 
     FECellIntegrator<dim, 1, number> ls(scratch_data.get_matrix_free(),
                                         ls_hanging_nodes_dof_idx,
-                                        ls_quad_idx);
+                                        evapor_vel_quad_idx);
 
     FECellIntegrator<dim, dim, number> normal_vec(scratch_data.get_matrix_free(),
                                                   normal_dof_idx,
-                                                  ls_quad_idx);
+                                                  evapor_vel_quad_idx);
 
     FECellIntegrator<dim, 1, number> evap_flux(scratch_data.get_matrix_free(),
                                                evapor_mass_flux_dof_idx,
-                                               ls_quad_idx);
+                                               evapor_vel_quad_idx);
 
     evaporation_velocities.resize(scratch_data.get_matrix_free().n_cell_batches() * ls.n_q_points);
 
@@ -230,7 +232,7 @@ namespace MeltPoolDG::Evaporation
         evaporation_velocity,
         scratch_data.get_matrix_free(),
         evapor_vel_dof_idx,
-        ls_quad_idx,
+        evapor_vel_quad_idx,
         [&](const unsigned int cell,
             const unsigned int quad) -> const Tensor<1, dim, VectorizedArray<number>> & {
           return begin_evaporation_velocity(cell)[quad];
@@ -244,7 +246,7 @@ namespace MeltPoolDG::Evaporation
         return VectorTools::compute_norm<dim, number>(evaporation_velocity,
                                                       scratch_data,
                                                       evapor_vel_dof_idx,
-                                                      ls_quad_idx);
+                                                      evapor_vel_quad_idx);
       },
       "evaporative_velocity",
       "evaporation_operation",
@@ -376,7 +378,8 @@ namespace MeltPoolDG::Evaporation
     const unsigned int macro_cell)
   {
     AssertIndexRange(macro_cell, scratch_data.get_matrix_free().n_cell_batches());
-    return &evaporation_velocities[scratch_data.get_matrix_free().get_n_q_points(ls_quad_idx) *
+    return &evaporation_velocities[scratch_data.get_matrix_free().get_n_q_points(
+                                     evapor_vel_quad_idx) *
                                    macro_cell];
   }
 
@@ -386,7 +389,8 @@ namespace MeltPoolDG::Evaporation
     const unsigned int macro_cell) const
   {
     AssertIndexRange(macro_cell, scratch_data.get_matrix_free().n_cell_batches());
-    return evaporation_velocities[scratch_data.get_matrix_free().get_n_q_points(ls_quad_idx) *
+    return evaporation_velocities[scratch_data.get_matrix_free().get_n_q_points(
+                                    evapor_vel_quad_idx) *
                                   macro_cell];
   }
   template class EvaporationSourceTermsContinuous<1, double>;

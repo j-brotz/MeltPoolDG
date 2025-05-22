@@ -1,4 +1,5 @@
 #include <deal.II/base/mpi.h>
+#include <deal.II/base/table_handler.h>
 #include <deal.II/base/vectorization.h>
 
 #include <deal.II/dofs/dof_handler.h>
@@ -13,6 +14,8 @@
 #include <deal.II/matrix_free/fe_evaluation.h>
 
 #include <deal.II/numerics/data_out.h>
+#include <deal.II/numerics/vector_tools.h>
+#include <deal.II/numerics/vector_tools_integrate_difference.h>
 
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
@@ -22,13 +25,59 @@
 using namespace dealii;
 using VectorType = LinearAlgebra::distributed::Vector<double>;
 
-template <int dim>
+template <int dim, unsigned int n_components>
+class MyTransformedFunction : public Function<dim>
+{
+public:
+  MyTransformedFunction()
+    : Function<dim>(n_components)
+  {
+    AssertThrow(n_components <= dim, dealii::ExcNotImplemented());
+  }
+
+  double
+  value(const Point<dim> &p, const unsigned int component) const override
+  {
+    if (dim == 2)
+      {
+        const auto &x = p[0];
+        const auto &y = p[1];
+        if (component == 0)
+          return std::sin(dealii::numbers::PI * x) * std::cos(dealii::numbers::PI * y);
+        else if (component == 1)
+          return std::sin(dealii::numbers::PI * x) * std::sin(dealii::numbers::PI * y);
+        else
+          AssertThrow(false, ExcNotImplemented());
+      }
+    else if (dim == 3)
+      {
+        const auto &x = p[0];
+        const auto &y = p[1];
+        const auto &z = p[2];
+        if (component == 0)
+          return std::sin(dealii::numbers::PI * x) * std::cos(dealii::numbers::PI * y) *
+                 std::cos(dealii::numbers::PI * z);
+        else if (component == 1)
+          return std::sin(dealii::numbers::PI * x) * std::sin(dealii::numbers::PI * y) *
+                 std::cos(dealii::numbers::PI * z);
+        else if (component == 2)
+          return std::cos(dealii::numbers::PI * x) * std::cos(dealii::numbers::PI * y) *
+                 std::sin(dealii::numbers::PI * z);
+        else
+          AssertThrow(false, ExcNotImplemented());
+      }
+  }
+};
+
+template <int dim, unsigned int n_components>
 void
 test(const unsigned int fe_degree,
      const unsigned int n_q_points,
-     const unsigned int n_components,
-     bool               do_local_refinement)
+     bool               do_local_refinement,
+     TableHandler      &table)
 {
+  MyTransformedFunction<dim, n_components> my_func;
+
   parallel::distributed::Triangulation<dim> triangulation(MPI_COMM_WORLD);
 
   GridGenerator::hyper_cube(triangulation, 0, 1);
@@ -97,31 +146,38 @@ test(const unsigned int fe_degree,
       solution, matrix_free, 0, 0, [&](const auto cell, const auto q) -> VectorizedArray<double> {
         MeltPoolDG::FECellIntegrator<dim, 1, double> fe_eval(matrix_free);
         fe_eval.reinit(cell);
-        return fe_eval.quadrature_point(q)[0];
+        return MeltPoolDG::VectorTools::evaluate_function_at_vectorized_points<dim, double>(
+          my_func, fe_eval.quadrature_point(q), 0);
       });
   else
-    MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, dim>(
+    MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, n_components>(
       solution,
       matrix_free,
       0,
       0,
-      [&](const auto cell, const auto q) -> Tensor<1, dim, VectorizedArray<double>> {
-        MeltPoolDG::FECellIntegrator<dim, dim, double> fe_eval(matrix_free);
+      [&](const auto cell, const auto q) -> Tensor<1, n_components, VectorizedArray<double>> {
+        MeltPoolDG::FECellIntegrator<dim, n_components, double> fe_eval(matrix_free);
         fe_eval.reinit(cell);
-        return fe_eval.quadrature_point(q);
+        return MeltPoolDG::VectorTools::
+          evaluate_function_at_vectorized_points<dim, double, n_components>(
+            my_func, fe_eval.quadrature_point(q));
       });
 
   constraints.distribute(solution);
 
-  if (true)
+  if (false)
     {
       DataOutBase::VtkFlags flags;
       flags.write_higher_order_cells = true;
 
       DataOut<dim> data_out;
       data_out.set_flags(flags);
-
       data_out.add_data_vector(dof_handler, solution, "solution");
+
+      VectorType analytical_solution;
+      matrix_free.initialize_dof_vector(analytical_solution);
+      dealii::VectorTools::interpolate(mapping, dof_handler, my_func, analytical_solution);
+      data_out.add_data_vector(dof_handler, analytical_solution, "analytical_solution");
 
       data_out.build_patches(mapping, n_q_points + 1);
       std::ofstream output("test" +
@@ -131,7 +187,24 @@ test(const unsigned int fe_degree,
       data_out.write_vtu(output);
     }
 
-  std::cout << solution.l2_norm() << " ";
+  // compute L2Norm of level_set
+  dealii::Vector<double> difference_per_cell(triangulation.n_active_cells());
+  dealii::VectorTools::integrate_difference<dim>(mapping,
+                                                 dof_handler,
+                                                 solution,
+                                                 my_func,
+                                                 difference_per_cell,
+                                                 QGauss<dim>(n_q_points),
+                                                 dealii::VectorTools::L2_norm);
+
+  const double error = dealii::VectorTools::compute_global_error(triangulation,
+                                                                 difference_per_cell,
+                                                                 dealii::VectorTools::L2_norm);
+  table.add_value("degree", fe_degree);
+  table.add_value("n_comp", n_components);
+  table.add_value("L2_error", error);
+  table.add_value("n_q_points_1D", n_q_points);
+  table.add_value("do_local_refinement", do_local_refinement);
 }
 
 int
@@ -139,15 +212,26 @@ main(int argc, char *argv[])
 {
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
-  for (unsigned int i = 1; i <= 5; ++i)                                  // fe_degree
-    for (unsigned int j = std::max<unsigned int>(i, 2); j <= i + 2; ++j) // n_q_points_1D
-      {
-        test<2>(i, j, 1, false);
-        test<2>(i, j, 2, false);
-        test<2>(i, j, 1, true);
-        test<2>(i, j, 2, true);
-        std::cout << std::endl;
-      }
+  for (unsigned int deg = 1; deg <= 5; ++deg)
+    { // fe_degree
+
+      TableHandler table;
+      table.declare_column("n_comp");
+      table.declare_column("do_local_refinement");
+      table.declare_column("degree");
+      table.declare_column("n_q_points_1D");
+      table.declare_column("L2_error");
+      table.set_scientific("L2_error", true);
+
+      for (unsigned int q = std::max<unsigned int>(deg, 1); q <= deg + 2; ++q) // n_q_points_1D
+        {
+          test<2, 1 /*n_components*/>(deg, q, false, table);
+          test<2, 2>(deg, q, false, table);
+          test<2, 1>(deg, q, true, table);
+          test<2, 2>(deg, q, true, table);
+        }
+      table.write_text(std::cout);
+    }
 
   return 0;
 }

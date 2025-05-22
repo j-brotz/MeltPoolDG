@@ -107,6 +107,7 @@ namespace MeltPoolDG::Evaporation
                          const MaterialData<number>          &material_data_in,
                          const unsigned int                   normal_dof_idx_in,
                          const unsigned int                   evapor_vel_dof_idx_in,
+                         const unsigned int                   evapor_vel_quad_idx_in,
                          const unsigned int                   evapor_mass_flux_dof_idx_in,
                          const unsigned int                   ls_hanging_nodes_dof_idx_in,
                          const unsigned int                   ls_quad_idx_in);

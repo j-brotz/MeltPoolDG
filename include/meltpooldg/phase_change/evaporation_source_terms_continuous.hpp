@@ -32,6 +32,7 @@ namespace MeltPoolDG::Evaporation
     const unsigned int                          ls_quad_idx;
     const unsigned int                          normal_dof_idx;
     const unsigned int                          evapor_vel_dof_idx;
+    const unsigned int                          evapor_vel_quad_idx;
     const unsigned int                          evapor_mass_flux_dof_idx;
     const number                                tolerance_normal_vector;
     const number                                density_vapor;
@@ -63,6 +64,7 @@ namespace MeltPoolDG::Evaporation
       const unsigned int                           ls_quad_idx,
       const unsigned int                           normal_dof_idx,
       const unsigned int                           evapor_vel_dof_idx,
+      const unsigned int                           evapor_vel_quad_idx,
       const unsigned int                           evapor_mass_flux_dof_idx,
       const number                                 tolerance_normal_vector,
       const number                                 density_vapor,
