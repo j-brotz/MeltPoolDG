@@ -81,18 +81,6 @@ namespace MeltPoolDG::Flow
       std::string liquid{};
     } initial_conditions;
 
-    // boundary conditions. The options are: "no_slip_wall", "slip_wall", "inflow",
-    // "outflow_fixed_energy", "outflow_fixed_pressure"
-    struct BoundaryConditions
-    {
-      std::string left_boundary_condition   = "no_slip_wall";
-      std::string right_boundary_condition  = "no_slip_wall";
-      std::string top_boundary_condition    = "no_slip_wall";
-      std::string bottom_boundary_condition = "no_slip_wall";
-      std::string front_boundary_condition  = "no_slip_wall";
-      std::string back_boundary_condition   = "no_slip_wall";
-    } boundary_conditions;
-
     // multiphase-related data
     MeltPoolDG::Multiphase::CompressibleMultiphaseData<number> interface_jump_conditions;
 
@@ -160,32 +148,6 @@ namespace MeltPoolDG::Flow
           prm.add_parameter("liquid",
                             initial_conditions.liquid,
                             "Initial condition function for liquid phase.");
-        }
-        prm.leave_subsection();
-        prm.enter_subsection("boundary conditions");
-        {
-          const std::string boundary_condition_types_doc =
-            "The following boundary conditions are supported:\n"
-            "\t 'no_slip_wall', 'slip_wall', 'inflow', 'outflow_fixed_energy', "
-            "\t 'outflow_fixed_pressure'";
-          prm.add_parameter("left boundary condition",
-                            boundary_conditions.left_boundary_condition,
-                            boundary_condition_types_doc);
-          prm.add_parameter("right boundary condition",
-                            boundary_conditions.right_boundary_condition,
-                            boundary_condition_types_doc);
-          prm.add_parameter("top boundary condition",
-                            boundary_conditions.top_boundary_condition,
-                            boundary_condition_types_doc);
-          prm.add_parameter("bottom boundary condition",
-                            boundary_conditions.bottom_boundary_condition,
-                            boundary_condition_types_doc);
-          prm.add_parameter("front boundary condition",
-                            boundary_conditions.front_boundary_condition,
-                            boundary_condition_types_doc);
-          prm.add_parameter("back boundary condition",
-                            boundary_conditions.back_boundary_condition,
-                            boundary_condition_types_doc);
         }
         prm.leave_subsection();
         interface_jump_conditions.add_parameters(prm);

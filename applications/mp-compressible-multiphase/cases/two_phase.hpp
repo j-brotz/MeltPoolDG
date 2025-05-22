@@ -148,11 +148,11 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
 
       // left boundary
       this->attach_boundary_condition({lower_bc, inflow_outflow_solution},
-                                      bc_type_left,
+                                      left_boundary_condition,
                                       "compressible_multiphase_flow");
       // right boundary
       this->attach_boundary_condition({upper_bc, inflow_outflow_solution},
-                                      bc_type_right,
+                                      right_boundary_condition,
                                       "compressible_multiphase_flow");
     }
 
@@ -187,13 +187,36 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       this->print_relative_norm(generic_data_out, reference_values, "error");
     }
 
+    bool
+    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    {
+      const std::string boundary_condition_types_doc =
+        "The following boundary conditions are supported:\n"
+        "\t 'no_slip_wall', 'slip_wall', 'inflow', 'outflow_fixed_energy', "
+        "\t 'outflow_fixed_pressure'";
+
+      prm.enter_subsection("simulation specific parameters");
+      {
+        prm.add_parameter("left boundary condition",
+                          left_boundary_condition,
+                          boundary_condition_types_doc);
+        prm.add_parameter("right boundary condition",
+                          right_boundary_condition,
+                          boundary_condition_types_doc);
+      }
+      prm.leave_subsection();
+
+      return this->parameters.base.do_print_parameters;
+    }
+
   private:
+    // boundary conditions, the options are:
+    // "no_slip_wall", "slip_wall", "inflow", "outflow_fixed_energy", "outflow_fixed_pressure"
+    std::string left_boundary_condition  = "no_slip_wall";
+    std::string right_boundary_condition = "no_slip_wall";
+
     // initial conditions functions
     std::string ic_gas_phase    = this->parameters.flow.initial_conditions.gas;
     std::string ic_liquid_phase = this->parameters.flow.initial_conditions.liquid;
-
-    // boundary condition types
-    std::string bc_type_left  = this->parameters.flow.boundary_conditions.left_boundary_condition;
-    std::string bc_type_right = this->parameters.flow.boundary_conditions.right_boundary_condition;
   };
 } // namespace MeltPoolDG::Simulation::CompressibleMultiphase

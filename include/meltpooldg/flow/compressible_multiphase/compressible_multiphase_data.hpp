@@ -25,7 +25,7 @@ namespace MeltPoolDG::Multiphase
     number delta_q = 0.;
 
     // numerical method for interface jump enforcement
-    InterfaceNumericalMethod type = InterfaceNumericalMethod::penalty;
+    InterfaceNumericalMethod type = InterfaceNumericalMethod::HLLP0_and_SIPG;
 
     struct Penalty
     {

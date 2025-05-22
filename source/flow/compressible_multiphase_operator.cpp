@@ -31,18 +31,16 @@ namespace MeltPoolDG::Multiphase
     , fe_point_temp(FE_DGQ<dim>(flow_scratch_data.flow_data.fe.degree), dim + 2)
     , n_dofs_per_cell(fe_point_temp.dofs_per_cell)
   {
-    const double q_1 = 2. * flow_scratch_data.flow_data.material.liquid.dynamic_viscosity +
-                       flow_scratch_data.flow_data.material.liquid.thermal_conductivity /
-                         (flow_scratch_data.flow_data.material.liquid.specific_isobaric_heat /
-                          flow_scratch_data.flow_data.material.liquid.gamma);
+    const auto &l = flow_scratch_data.flow_data.material.liquid;
+    const auto &g = flow_scratch_data.flow_data.material.gas;
 
-    const double q_2 = 2. * flow_scratch_data.flow_data.material.gas.dynamic_viscosity +
-                       flow_scratch_data.flow_data.material.gas.thermal_conductivity /
-                         (flow_scratch_data.flow_data.material.gas.specific_isobaric_heat /
-                          flow_scratch_data.flow_data.material.gas.gamma);
+    const number q_liquid =
+      2. * l.dynamic_viscosity + l.thermal_conductivity / (l.specific_isobaric_heat / l.gamma);
+    const number q_gas =
+      2. * g.dynamic_viscosity + g.thermal_conductivity / (g.specific_isobaric_heat / g.gamma);
 
-    visc_ave_weight_phase_1 = q_1 / (q_1 + q_2);
-    visc_ave_weight_phase_2 = 1. - visc_ave_weight_phase_1;
+    visc_ave_weight_phase_liquid = q_liquid / (q_liquid + q_gas);
+    visc_ave_weight_phase_gas    = 1. - visc_ave_weight_phase_liquid;
   }
 
   template <unsigned int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
@@ -307,8 +305,10 @@ namespace MeltPoolDG::Multiphase
                             // Outwards pointing normal vector with respect to the liquid domain.
                             const auto normal = -eval_point_interface_liquid.normal_vector(q);
 
+                            // TODO: temporal solution for dim=1; revise for dim>1!
                             const number interface_velocity =
-                              ((w_liquid[Idx::density][0] - w_gas[Idx::density][0]) > 1.e-10 ?
+                              (std::abs(w_liquid[Idx::density][0] - w_gas[Idx::density][0]) >
+                                   1.e-12 ?
                                  (w_liquid[Idx::momentum_x][0] - w_gas[Idx::momentum_x][0]) /
                                    (w_liquid[Idx::density][0] - w_gas[Idx::density][0]) :
                                  w_liquid[Idx::momentum_x][0] / w_liquid[Idx::density][0]) *
@@ -380,8 +380,8 @@ namespace MeltPoolDG::Multiphase
                                         grad_w_liquid,
                                         grad_w_gas,
                                         normal,
-                                        visc_ave_weight_phase_1,
-                                        visc_ave_weight_phase_2,
+                                        visc_ave_weight_phase_liquid,
+                                        visc_ave_weight_phase_gas,
                                         flow_scratch_data.flow_data.interface_jump_conditions
                                           .hllp0_and_sipg.interior_penalty_parameter_interface,
                                         viscous_terms_liquid,
@@ -408,8 +408,8 @@ namespace MeltPoolDG::Multiphase
                                         grad_w_liquid,
                                         grad_w_gas,
                                         normal,
-                                        visc_ave_weight_phase_1,
-                                        visc_ave_weight_phase_2,
+                                        visc_ave_weight_phase_liquid,
+                                        visc_ave_weight_phase_gas,
                                         viscous_terms_liquid,
                                         viscous_terms_gas,
                                         flow_scratch_data.flow_data,
@@ -436,8 +436,8 @@ namespace MeltPoolDG::Multiphase
                                     ConservedVariablesGradType>(w_liquid,
                                                                 w_gas,
                                                                 normal,
-                                                                visc_ave_weight_phase_1,
-                                                                visc_ave_weight_phase_2,
+                                                                visc_ave_weight_phase_liquid,
+                                                                visc_ave_weight_phase_gas,
                                                                 viscous_terms_liquid,
                                                                 viscous_terms_gas,
                                                                 flow_scratch_data.flow_data);

@@ -133,8 +133,8 @@ namespace MeltPoolDG::Multiphase
     const unsigned int    n_dofs_per_cell;
 
     // Weighting factors for Nitsche-type viscous interface flux
-    number visc_ave_weight_phase_1;
-    number visc_ave_weight_phase_2;
+    number visc_ave_weight_phase_liquid;
+    number visc_ave_weight_phase_gas;
 
     mutable number inv_time_step = 0.;
 

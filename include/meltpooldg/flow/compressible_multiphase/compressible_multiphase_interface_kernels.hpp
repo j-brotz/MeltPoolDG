@@ -586,8 +586,8 @@ namespace MeltPoolDG::Multiphase
    * @param grad_u_gas Gradient of conserved variables for gas phase at quadrature point on the
    * (unfitted) interface.
    * @param normal Interface normal vector, pointing outside the liquid phase.
-   * @param visc_ave_weight_phase_1 Weighting factor for Nitsche-type weighted viscous interface fluxes.
-   * @param visc_ave_weight_phase_2 Weighting factor for Nitsche-type weighted viscous interface fluxes.
+   * @param visc_ave_weight_phase_liquid Weighting factor for Nitsche-type weighted viscous interface fluxes.
+   * @param visc_ave_weight_phase_gas Weighting factor for Nitsche-type weighted viscous interface fluxes.
    * @param tau Symmetric interior penalty parameter.
    * @param viscous_terms_liquid Collection of helper functions for viscous term evaluations in the
    * liquid phase.
@@ -611,8 +611,8 @@ namespace MeltPoolDG::Multiphase
       const ConservedVariablesGradType                              &grad_u_liquid,
       const ConservedVariablesGradType                              &grad_u_gas,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
-      const number                                                  &visc_ave_weight_phase_1,
-      const number                                                  &visc_ave_weight_phase_2,
+      const number                                                  &visc_ave_weight_phase_liquid,
+      const number                                                  &visc_ave_weight_phase_gas,
       const number                                                  &tau,
       const auto                                                    &viscous_terms_liquid,
       const auto                                                    &viscous_terms_gas,
@@ -662,14 +662,14 @@ namespace MeltPoolDG::Multiphase
 
     ConservedVariablesGradType total_flux_liquid = dyadic_product(J_Rob, normal);
     total_flux_liquid += viscous_flux_gas;
-    total_flux_liquid *= visc_ave_weight_phase_1;
-    total_flux_liquid += visc_ave_weight_phase_2 * viscous_flux_liquid;
+    total_flux_liquid *= visc_ave_weight_phase_liquid;
+    total_flux_liquid += visc_ave_weight_phase_gas * viscous_flux_liquid;
 
     ConservedVariablesGradType total_flux_gas =
       dyadic_product(J_Rob, -normal); // opposite normal direction for phase 2
     total_flux_gas += viscous_flux_liquid;
-    total_flux_gas *= visc_ave_weight_phase_2;
-    total_flux_gas += visc_ave_weight_phase_1 * viscous_flux_gas;
+    total_flux_gas *= visc_ave_weight_phase_gas;
+    total_flux_gas += visc_ave_weight_phase_liquid * viscous_flux_gas;
 
     // penalty term
 
@@ -711,8 +711,8 @@ namespace MeltPoolDG::Multiphase
    * interface.
    * @param u_gas Conserved variables for gas phase at quadrature point on the (unfitted) interface.
    * @param normal Interface normal vector, pointing outside the liquid phase.
-   * @param visc_ave_weight_phase_1 Weighting factor for Nitsche-type weighted viscous interface fluxes.
-   * @param visc_ave_weight_phase_2 Weighting factor for Nitsche-type weighted viscous interface fluxes.
+   * @param visc_ave_weight_phase_liquid Weighting factor for Nitsche-type weighted viscous interface fluxes.
+   * @param visc_ave_weight_phase_gas Weighting factor for Nitsche-type weighted viscous interface fluxes.
    * @param viscous_terms_liquid Collection of helper functions for viscous term evaluations in the
    * liquid phase.
    * @param viscous_terms_gas Collection of helper functions for viscous term evaluations in the gas
@@ -732,8 +732,8 @@ namespace MeltPoolDG::Multiphase
       const ConservedVariablesType                                  &u_liquid,
       const ConservedVariablesType                                  &u_gas,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
-      const number                                                  &visc_ave_weight_phase_1,
-      const number                                                  &visc_ave_weight_phase_2,
+      const number                                                  &visc_ave_weight_phase_liquid,
+      const number                                                  &visc_ave_weight_phase_gas,
       const auto                                                    &viscous_terms_liquid,
       const auto                                                    &viscous_terms_gas,
       const Flow::CompressibleFlowData<number>                      &flow_data)
@@ -743,9 +743,9 @@ namespace MeltPoolDG::Multiphase
         u_liquid, u_gas, flow_data);
 
     const auto u_liquid_star = UtilityFunctions::calculate_arithmetic_phase_weighted_average(
-      visc_ave_weight_phase_2, u_liquid, visc_ave_weight_phase_1, u_gas + J_Dir_cons);
+      visc_ave_weight_phase_gas, u_liquid, visc_ave_weight_phase_liquid, u_gas + J_Dir_cons);
     const auto u_gas_star = UtilityFunctions::calculate_arithmetic_phase_weighted_average(
-      visc_ave_weight_phase_1, u_gas, visc_ave_weight_phase_2, u_liquid - J_Dir_cons);
+      visc_ave_weight_phase_liquid, u_gas, visc_ave_weight_phase_gas, u_liquid - J_Dir_cons);
 
     auto tmp_liquid = u_liquid_star - u_liquid;
     auto tmp_gas    = u_gas_star - u_gas;
@@ -777,8 +777,8 @@ namespace MeltPoolDG::Multiphase
    * @param grad_u_gas Gradient of conserved variables for gas phase at quadrature point on the
    * (unfitted) interface.
    * @param normal Interface normal vector, pointing outside the liquid phase.
-   * @param visc_ave_weight_phase_1 Weighting factor for Nitsche-type weighted viscous interface fluxes.
-   * @param visc_ave_weight_phase_2 Weighting factor for Nitsche-type weighted viscous interface fluxes.
+   * @param visc_ave_weight_phase_liquid Weighting factor for Nitsche-type weighted viscous interface fluxes.
+   * @param visc_ave_weight_phase_gas Weighting factor for Nitsche-type weighted viscous interface fluxes.
    * @param viscous_terms_liquid Collection of helper functions for viscous term evaluations in the
    * liquid phase.
    *  @param viscous_terms_gas Collection of helper functions for viscous term evaluations in the
@@ -801,8 +801,8 @@ namespace MeltPoolDG::Multiphase
       const ConservedVariablesGradType                              &grad_u_liquid,
       const ConservedVariablesGradType                              &grad_u_gas,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
-      const number                                                  &visc_ave_weight_phase_1,
-      const number                                                  &visc_ave_weight_phase_2,
+      const number                                                  &visc_ave_weight_phase_liquid,
+      const number                                                  &visc_ave_weight_phase_gas,
       const auto                                                    &viscous_terms_liquid,
       const auto                                                    &viscous_terms_gas,
       const Flow::CompressibleFlowData<number>                      &flow_data,
@@ -858,16 +858,16 @@ namespace MeltPoolDG::Multiphase
 
     const ConservedVariablesType weighted_viscous_flux =
       UtilityFunctions::calculate_arithmetic_phase_weighted_average(
-        visc_ave_weight_phase_2,
+        visc_ave_weight_phase_gas,
         contract_tensor_with_vector<dim + 2, dim, number>(viscous_flux_liquid, normal),
-        visc_ave_weight_phase_1,
+        visc_ave_weight_phase_liquid,
         contract_tensor_with_vector<dim + 2, dim, number>(viscous_flux_gas, normal));
 
     const ConservedVariablesType total_viscous_flux_liquid =
-      -J_Rob * visc_ave_weight_phase_1 - weighted_viscous_flux + penalty_term_dT;
+      -J_Rob * visc_ave_weight_phase_liquid - weighted_viscous_flux + penalty_term_dT;
 
     const ConservedVariablesType total_viscous_flux_gas =
-      -J_Rob * visc_ave_weight_phase_2 + weighted_viscous_flux - penalty_term_dT;
+      -J_Rob * visc_ave_weight_phase_gas + weighted_viscous_flux - penalty_term_dT;
 
     return {total_viscous_flux_liquid, total_viscous_flux_gas};
   }

@@ -25,30 +25,12 @@
 
 #include <meltpooldg/flow/compressible_flow_material_data.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
+#include <meltpooldg/utilities/functions.hpp>
 
 #include "../compressible_multiphase_case.hpp"
 
 namespace MeltPoolDG::Simulation::CompressibleMultiphase
 {
-  template <int dim, typename number>
-  class NegatedFunction : public dealii::Function<dim, number>
-  {
-  public:
-    explicit NegatedFunction(std::shared_ptr<const dealii::Function<dim, number>> func)
-      : dealii::Function<dim, number>(func->n_components)
-      , func(func)
-    {}
-
-    number
-    value(const dealii::Point<dim, number> &p, const unsigned int component = 0) const final
-    {
-      return -func->value(p, component);
-    }
-
-  private:
-    std::shared_ptr<const dealii::Function<dim, number>> func;
-  };
-
   template <int dim, typename number>
   class InitialFieldOscillatingWaterColumn : public dealii::Function<dim, number>
   {
@@ -151,7 +133,6 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     void
     create_spatial_discretization() override
     {
-      // TODO: no distributed triangulation possible for dim=1
       this->triangulation =
         std::make_shared<dealii::parallel::shared::Triangulation<dim>>(this->mpi_communicator);
 
@@ -218,7 +199,8 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       const auto inverse_level_set =
         std::make_shared<dealii::Functions::SignedDistance::Sphere<dim>>(p, radius);
       // level-set must be inverted for correct orientation
-      const auto level_set = std::make_shared<NegatedFunction<dim, number>>(inverse_level_set);
+      const auto level_set =
+        std::make_shared<Functions::ChangedSignFunction<dim, number>>(inverse_level_set);
       this->attach_field_function(level_set, "level_set", "compressible_multiphase_flow");
     }
 

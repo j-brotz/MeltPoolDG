@@ -19,6 +19,10 @@
       "enable": "false"
     }
   },
+  "simulation specific parameters": {
+    "left boundary condition": "inflow",
+    "right boundary condition": "outflow_fixed_energy"
+  },
   "compressible navier stokes": {
     "numerical flux type": "lax_friedrichs_modified",
     "courant number": "0.05",
@@ -29,10 +33,6 @@
     "initial conditions": {
       "gas": "0.097716666666666; 100.0 * 0.097716666666666; 2.108969958333318e5",
       "liquid": "3622.73659245216946; 100.0*3622.73659245216946; 1.005318010658175e10"
-    },
-    "boundary conditions": {
-      "left boundary condition": "inflow",
-      "right boundary condition": "outflow_fixed_energy"
     },
     "interface jump conditions": {
       "type": "HLLP0_and_SIPG",

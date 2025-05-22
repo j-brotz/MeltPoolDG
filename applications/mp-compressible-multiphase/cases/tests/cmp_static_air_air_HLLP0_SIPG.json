@@ -19,6 +19,10 @@
       "enable": "false"
     }
   },
+  "simulation specific parameters": {
+    "left boundary condition": "no_slip_wall",
+    "right boundary condition": "no_slip_wall"
+  },
   "compressible navier stokes": {
     "numerical flux type": "lax_friedrichs_modified",
     "courant number": "0.05",
@@ -29,10 +33,6 @@
     "initial conditions": {
       "gas": "1.0; 0.0; 2.104084125e5",
       "liquid": "1.0; 0.0; 2.104084125e5"
-    },
-    "boundary conditions": {
-      "left boundary condition": "no_slip_wall",
-      "right boundary condition": "no_slip_wall"
     },
     "interface jump conditions": {
       "type": "HLLP0_and_SIPG",
