@@ -28,8 +28,8 @@ namespace MeltPoolDG
    */
 
   template <int dim, typename number, typename ObstacleType>
-  struct ExplicitBrinkmanPenalizationFluidForce final
-    : public Flow::ExplicitExternalFluidForces<dim, number>
+  struct BrinkmanPenalizationFluidForceRightHandSideContribution final
+    : public Flow::ExternalFluidForcesRightHandSideContribution<dim, number>
   {
     using ConservedVariablesType = Flow::CompressibleFlowTypes::ConservedVariablesType<dim, number>;
 
@@ -42,7 +42,7 @@ namespace MeltPoolDG
      * @param obstacle_handler Reference to the obstacle handler managing obstacles in the domain.
      * @param brinkman_penalization_data Data required for computing the Brinkman penalization term.
      */
-    ExplicitBrinkmanPenalizationFluidForce(
+    BrinkmanPenalizationFluidForceRightHandSideContribution(
       const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
       const BrinkmanPenalizationData<number>         &brinkman_penalization_data)
       : cell_relevant_obstacles(ObstacleType::n_obstacle_properties)
@@ -58,7 +58,7 @@ namespace MeltPoolDG
      * @param brinkman_penalization_data Data required for computing the Brinkman penalization term.
      * @param mask_function User-defined mask function used in the penalty term evaluation.
      */
-    ExplicitBrinkmanPenalizationFluidForce(
+    BrinkmanPenalizationFluidForceRightHandSideContribution(
       const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
       const BrinkmanPenalizationData<number>         &brinkman_penalization_data,
       std::function<
@@ -146,10 +146,10 @@ namespace MeltPoolDG
  *************************************************************************************************/
 template <int dim, typename number, typename ObstacleType>
 void
-MeltPoolDG::ExplicitBrinkmanPenalizationFluidForce<dim, number, ObstacleType>::cell_operation(
-  const dealii::MatrixFree<dim, number> &matrix_free,
-  const unsigned int                     cell_batch_id,
-  const unsigned int                     n_lanes)
+MeltPoolDG::BrinkmanPenalizationFluidForceRightHandSideContribution<dim, number, ObstacleType>::
+  cell_operation(const dealii::MatrixFree<dim, number> &matrix_free,
+                 const unsigned int                     cell_batch_id,
+                 const unsigned int                     n_lanes)
 {
   obstacle_handler.get_obstacles_in_cell_batch(cell_relevant_obstacles,
                                                matrix_free,
@@ -159,19 +159,17 @@ MeltPoolDG::ExplicitBrinkmanPenalizationFluidForce<dim, number, ObstacleType>::c
 
 template <int dim, typename number, typename ObstacleType>
 auto
-MeltPoolDG::ExplicitBrinkmanPenalizationFluidForce<dim, number, ObstacleType>::quad_operation(
-  const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
-  const ConservedVariablesType                              &w_q) -> ConservedVariablesType
+MeltPoolDG::BrinkmanPenalizationFluidForceRightHandSideContribution<dim, number, ObstacleType>::
+  quad_operation(const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
+                 const ConservedVariablesType &w_q) -> ConservedVariablesType
 {
   // In order to loop over all obstacles in the property pool we need to ensure that there are no
   // 'dead' slots inside the property pool which could provide wrong data. In other words we do
-  // not want empty slots resulting from deregisering particles.
+  // not want empty slots resulting from deregistering particles.
   // TODO: What happens if we removed one handle and added one with a new handle, then the for
   // loop would fail but the assert wouldn't be triggered!
   Assert(cell_relevant_obstacles.n_slots() == cell_relevant_obstacles.n_registered_slots(),
          dealii::ExcInternalError());
-
-  ConservedVariablesType fluid_force;
 
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> fluid_velocity;
   for (int d = 0; d < dim; ++d)
@@ -189,6 +187,7 @@ MeltPoolDG::ExplicitBrinkmanPenalizationFluidForce<dim, number, ObstacleType>::q
                              brinkman_penalization_data.permeability * fluid_velocity;
     }
 
+  ConservedVariablesType fluid_force;
   for (int d = 0; d < dim; ++d)
     fluid_force[d + 1] = momentum_fluid_force[d];
   return fluid_force;

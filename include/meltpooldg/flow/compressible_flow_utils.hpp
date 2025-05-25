@@ -170,9 +170,9 @@ namespace MeltPoolDG::Flow
    *   external force.
    */
   template <int dim, typename number>
-  struct ExplicitExternalFluidForces
+  struct ExternalFluidForcesRightHandSideContribution
   {
-    virtual ~ExplicitExternalFluidForces() = default;
+    virtual ~ExternalFluidForcesRightHandSideContribution() = default;
 
     /**
      * @brief Function called once per cell batch during the cell loop.

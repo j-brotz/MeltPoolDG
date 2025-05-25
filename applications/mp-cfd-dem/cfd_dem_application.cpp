@@ -109,15 +109,20 @@ namespace MeltPoolDG
       simulation_case->parameters.time_stepping);
 
     // initilaize obstacle field
-    obstacle_field = std::make_unique<ObstacleField<dim, number, Particle<dim, number>>>(
+    obstacle_field = std::make_unique<ObstacleField<dim, number, SphericalParticle<dim, number>>>(
       simulation_case->parameters.obstacle_data,
       scratch_data->get_triangulation(),
       scratch_data->get_mapping());
 
     // initialize external fluid forces
-    std::unique_ptr<ExplicitBrinkmanPenalizationFluidForce<dim, number, Particle<dim, number>>>
+    std::unique_ptr<
+      BrinkmanPenalizationFluidForceRightHandSideContribution<dim,
+                                                              number,
+                                                              SphericalParticle<dim, number>>>
       external_fluid_force = std::make_unique<
-        ExplicitBrinkmanPenalizationFluidForce<dim, number, Particle<dim, number>>>(
+        BrinkmanPenalizationFluidForceRightHandSideContribution<dim,
+                                                                number,
+                                                                SphericalParticle<dim, number>>>(
         *obstacle_field, simulation_case->parameters.brinkman_penalization_data);
 
     // initialize compressible flow operation

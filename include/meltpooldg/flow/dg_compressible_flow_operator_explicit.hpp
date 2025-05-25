@@ -34,8 +34,9 @@ namespace MeltPoolDG::Flow
      * @param external_forces Pointer to a struct implementing external forces acting on the fluid.
      */
     explicit DGCompressibleFlowOperatorExplicit(
-      CompressibleFlowScratchData<dim, number>                   &flow_scratch_data,
-      std::unique_ptr<ExplicitExternalFluidForces<dim, number>> &&external_forces = nullptr);
+      CompressibleFlowScratchData<dim, number> &flow_scratch_data,
+      std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces =
+        nullptr);
 
     /**
      * Reinitilaize the internal data structures, i.e., allocate memory for vectors storing
@@ -128,6 +129,6 @@ namespace MeltPoolDG::Flow
 
     CompressibleFlowViscousKernels<dim, number> viscous_terms;
 
-    std::unique_ptr<ExplicitExternalFluidForces<dim, number>> external_forces;
+    std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> external_forces;
   };
 } // namespace MeltPoolDG::Flow

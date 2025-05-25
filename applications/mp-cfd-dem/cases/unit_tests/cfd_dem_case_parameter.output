@@ -1,14 +1,4 @@
 {
-    "Brinkman penalization":
-    {
-        "permeability": "0",
-        "porosity": "0"
-    },
-    "Obstacles":
-    {
-        "obstacle state file": "",
-        "stationary": "false"
-    },
     "base":
     {
         "case name": "not_initialized",
@@ -22,6 +12,11 @@
             "degree": "1",
             "type": "FE_Q"
         }
+    },
+    "brinkman penalization":
+    {
+        "permeability": "0",
+        "porosity": "0"
     },
     "compressible navier stokes":
     {
@@ -64,11 +59,18 @@
         },
         "interface jump conditions":
         {
+            "delta q": "0",
             "evaporation mass flux": "0",
-            "type": "penalty",
-            "HLLP0 and Nitsche":
+            "type": "HLLP0_and_SIPG",
+            "HLLP0 and SIPG":
             {
+                "delta T": "0",
                 "interior penalty parameter interface": "1"
+            },
+            "HLLP0 and penalty":
+            {
+                "delta T": "0",
+                "penalty parameter temperature jump": "1"
             },
             "penalty":
             {
@@ -144,6 +146,11 @@
                 "verbosity level": "-1"
             }
         }
+    },
+    "obstacles":
+    {
+        "obstacle state input file": "",
+        "stationary": "false"
     },
     "output":
     {

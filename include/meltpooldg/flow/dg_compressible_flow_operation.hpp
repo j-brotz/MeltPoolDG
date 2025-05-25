@@ -48,11 +48,12 @@ namespace MeltPoolDG::Flow
      * @param external_forces Pointer to a struct implementing external forces acting on the fluid.
      */
     DGCompressibleFlowOperation(
-      const ScratchData<dim, dim, number>                        &scratch_data,
-      const CompressibleFlowData<number>                         &flow_data,
-      unsigned int                                                flow_dof_idx    = 0,
-      unsigned int                                                flow_quad_idx   = 0,
-      std::unique_ptr<ExplicitExternalFluidForces<dim, number>> &&external_forces = nullptr);
+      const ScratchData<dim, dim, number> &scratch_data,
+      const CompressibleFlowData<number>  &flow_data,
+      unsigned int                         flow_dof_idx  = 0,
+      unsigned int                         flow_quad_idx = 0,
+      std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces =
+        nullptr);
 
     /**
      * Set up the required internal data structures. After a call to this function the solve()
@@ -165,7 +166,7 @@ namespace MeltPoolDG::Flow
      */
     void
     setup_operator_and_time_integrator(
-      std::unique_ptr<ExplicitExternalFluidForces<dim, number>> &&external_forces);
+      std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces);
   };
 
 

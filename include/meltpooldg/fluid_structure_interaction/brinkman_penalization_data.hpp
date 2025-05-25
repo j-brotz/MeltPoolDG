@@ -11,7 +11,7 @@ struct BrinkmanPenalizationData
   void
   add_parameters(dealii::ParameterHandler &prm)
   {
-    prm.enter_subsection("Brinkman penalization");
+    prm.enter_subsection("brinkman penalization");
     {
       prm.add_parameter("permeability", permeability);
       prm.add_parameter("porosity", porosity);

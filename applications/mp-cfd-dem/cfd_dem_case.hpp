@@ -96,8 +96,6 @@ namespace MeltPoolDG
 
       number errors_squared[3] = {};
 
-      // in the fitted mesh case, we can use the DoF values for error computation
-
       std::map<dealii::types::global_dof_index, dealii::Point<dim, number>> support_points =
         dealii::DoFTools::map_dofs_to_support_points(generic_data_out.get_mapping(), dof_handler);
       for (const auto &cell : dof_handler.active_cell_iterators())

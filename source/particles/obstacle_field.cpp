@@ -82,10 +82,10 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::read_particle_state_input_
   if (dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
     {
       std::fstream file;
-      file.open(data.obstacle_state_file, std::ios::in);
+      file.open(data.obstacle_state_input_file, std::ios::in);
       AssertThrow(!(file.fail()),
                   dealii::ExcMessage("Unable to open particle data file \"" +
-                                     data.obstacle_state_file + "\". Aborting!"));
+                                     data.obstacle_state_input_file + "\". Aborting!"));
       std::string line;
       std::getline(file, line); // Ignore the first line
       while (std::getline(file, line))
@@ -111,6 +111,6 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::read_particle_state_input_
                                            properties);
 }
 
-template class MeltPoolDG::ObstacleField<1, double, MeltPoolDG::Particle<1, double>>;
-template class MeltPoolDG::ObstacleField<2, double, MeltPoolDG::Particle<2, double>>;
-template class MeltPoolDG::ObstacleField<3, double, MeltPoolDG::Particle<3, double>>;
+template class MeltPoolDG::ObstacleField<1, double, MeltPoolDG::SphericalParticle<1, double>>;
+template class MeltPoolDG::ObstacleField<2, double, MeltPoolDG::SphericalParticle<2, double>>;
+template class MeltPoolDG::ObstacleField<3, double, MeltPoolDG::SphericalParticle<3, double>>;

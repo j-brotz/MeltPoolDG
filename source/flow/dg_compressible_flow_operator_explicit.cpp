@@ -11,8 +11,8 @@ namespace MeltPoolDG::Flow
   using namespace dealii;
   template <unsigned int dim, typename number, bool is_viscous>
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::DGCompressibleFlowOperatorExplicit(
-    CompressibleFlowScratchData<dim, number>                   &flow_scratch_data,
-    std::unique_ptr<ExplicitExternalFluidForces<dim, number>> &&external_forces)
+    CompressibleFlowScratchData<dim, number>                                    &flow_scratch_data,
+    std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces)
     : flow_scratch_data(flow_scratch_data)
     , convective_terms(flow_scratch_data.flow_data)
     , viscous_terms(flow_scratch_data.flow_data)

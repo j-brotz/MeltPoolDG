@@ -61,14 +61,13 @@ namespace MeltPoolDG
 
     std::shared_ptr<CaseType> simulation_case;
 
-    dealii::DoFHandler<dim>                                dof_handler;
-    dealii::AffineConstraints<number>                      constraints;
-    std::shared_ptr<ScratchData<dim, dim, number>>         scratch_data;
-    std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
-    Flow::CompressibleFlowOperation<dim, number>           comp_flow_operation;
-    // TODO Replace particle template by general obstacle type
-    std::unique_ptr<ObstacleField<dim, number, Particle<dim, number>>> obstacle_field;
-    std::unique_ptr<Profiling::ProfilingMonitor<number>>               profiling_monitor;
+    dealii::DoFHandler<dim>                                                     dof_handler;
+    dealii::AffineConstraints<number>                                           constraints;
+    std::shared_ptr<ScratchData<dim, dim, number>>                              scratch_data;
+    std::shared_ptr<TimeIntegration::TimeIterator<number>>                      time_iterator;
+    Flow::CompressibleFlowOperation<dim, number>                                comp_flow_operation;
+    std::unique_ptr<ObstacleField<dim, number, SphericalParticle<dim, number>>> obstacle_field;
+    std::unique_ptr<Profiling::ProfilingMonitor<number>>                        profiling_monitor;
 
     unsigned int comp_flow_dof_idx{};
     unsigned int comp_flow_quad_idx{};

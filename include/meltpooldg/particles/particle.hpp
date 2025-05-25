@@ -26,7 +26,7 @@ namespace MeltPoolDG
    * ParticleHandler infrastructure.
    */
   template <int dim, typename number>
-  class Particle
+  class SphericalParticle
   {
   public:
     // Number of components of the angular velocity: one in 2D, three in 3D.
@@ -290,13 +290,12 @@ namespace MeltPoolDG
      * @return `true` if the particle likely overlaps the cell; otherwise, `false`.
      */
     static bool
-    in_cell(const dealii::Particles::ParticleAccessor<dim> &particle,
-            const dealii::CellAccessor<dim>                &cell)
+    is_in_cell(const dealii::Particles::ParticleAccessor<dim> &particle,
+               const dealii::CellAccessor<dim>                &cell)
     {
       return particle.get_location().distance(cell.center()) <
              get_property(particle, Properties::radius) + 0.5 * cell.diameter();
     }
-
 
     /**
      * @brief Estimates whether a particle identified in a property pool likely intersects a cell.
@@ -314,9 +313,9 @@ namespace MeltPoolDG
      * @return `true` if the particle likely overlaps the cell; otherwise, `false`.
      */
     static bool
-    in_cell(dealii::Particles::PropertyPool<dim>                 &property_pool,
-            typename dealii::Particles::PropertyPool<dim>::Handle handle,
-            const dealii::CellAccessor<dim>                      &cell)
+    is_in_cell(dealii::Particles::PropertyPool<dim>                 &property_pool,
+               typename dealii::Particles::PropertyPool<dim>::Handle handle,
+               const dealii::CellAccessor<dim>                      &cell)
     {
       return property_pool.get_location(handle).distance(cell.center()) <
              get_property(property_pool, handle, Properties::radius) + 0.5 * cell.diameter();
@@ -327,7 +326,7 @@ namespace MeltPoolDG
 
 template <int dim, typename number>
 std::pair<std::vector<number>, dealii::Point<dim, number>>
-MeltPoolDG::Particle<dim, number>::read_state_input(const std::string &input_data)
+MeltPoolDG::SphericalParticle<dim, number>::read_state_input(const std::string &input_data)
 {
   dealii::Point<dim, number> particle_location;
   std::vector<number>        particle_properties(n_obstacle_properties, 0.0);
@@ -387,7 +386,7 @@ MeltPoolDG::Particle<dim, number>::read_state_input(const std::string &input_dat
 
 template <int dim, typename number>
 number
-MeltPoolDG::Particle<dim, number>::get_property(
+MeltPoolDG::SphericalParticle<dim, number>::get_property(
   const dealii::Particles::ParticleAccessor<dim> &particle,
   const Properties                                property)
 {
@@ -398,7 +397,7 @@ MeltPoolDG::Particle<dim, number>::get_property(
 
 template <int dim, typename number>
 number
-MeltPoolDG::Particle<dim, number>::get_property(
+MeltPoolDG::SphericalParticle<dim, number>::get_property(
   dealii::Particles::PropertyPool<dim>                 &property_pool,
   typename dealii::Particles::PropertyPool<dim>::Handle handle,
   const Properties                                      property)
@@ -410,7 +409,7 @@ MeltPoolDG::Particle<dim, number>::get_property(
 
 template <int dim, typename number>
 auto
-MeltPoolDG::Particle<dim, number>::get_angular_velocity(
+MeltPoolDG::SphericalParticle<dim, number>::get_angular_velocity(
   const dealii::Particles::ParticleAccessor<dim> &particle)
   -> dealii::Tensor<1, size_angular_velocity, number>
 {
@@ -423,7 +422,7 @@ MeltPoolDG::Particle<dim, number>::get_angular_velocity(
 
 template <int dim, typename number>
 auto
-MeltPoolDG::Particle<dim, number>::get_angular_velocity(
+MeltPoolDG::SphericalParticle<dim, number>::get_angular_velocity(
   dealii::Particles::PropertyPool<dim>                 &property_pool,
   typename dealii::Particles::PropertyPool<dim>::Handle handle)
   -> dealii::Tensor<1, size_angular_velocity, number>
@@ -437,7 +436,7 @@ MeltPoolDG::Particle<dim, number>::get_angular_velocity(
 
 template <int dim, typename number>
 auto
-MeltPoolDG::Particle<dim, number>::get_angular_acceleration(
+MeltPoolDG::SphericalParticle<dim, number>::get_angular_acceleration(
   const dealii::Particles::ParticleAccessor<dim> &particle)
   -> dealii::Tensor<1, size_angular_velocity, number>
 {
@@ -450,7 +449,7 @@ MeltPoolDG::Particle<dim, number>::get_angular_acceleration(
 
 template <int dim, typename number>
 dealii::Tensor<1, dim, number>
-MeltPoolDG::Particle<dim, number>::get_acceleration(
+MeltPoolDG::SphericalParticle<dim, number>::get_acceleration(
   const dealii::Particles::ParticleAccessor<dim> &particle)
 {
   dealii::ArrayView<const number> properties = particle.get_properties();
@@ -462,8 +461,9 @@ MeltPoolDG::Particle<dim, number>::get_acceleration(
 
 template <int dim, typename number>
 void
-MeltPoolDG::Particle<dim, number>::set_force(const dealii::Tensor<1, dim, number>     &force,
-                                             dealii::Particles::ParticleAccessor<dim> &particle)
+MeltPoolDG::SphericalParticle<dim, number>::set_force(
+  const dealii::Tensor<1, dim, number>     &force,
+  dealii::Particles::ParticleAccessor<dim> &particle)
 {
   dealii::ArrayView<number> properties = particle.get_properties();
   for (int dimension = 0; dimension < dim; ++dimension)
@@ -472,7 +472,7 @@ MeltPoolDG::Particle<dim, number>::set_force(const dealii::Tensor<1, dim, number
 
 template <int dim, typename number>
 dealii::Tensor<1, dim, number>
-MeltPoolDG::Particle<dim, number>::get_force(
+MeltPoolDG::SphericalParticle<dim, number>::get_force(
   const dealii::Particles::ParticleAccessor<dim> &particle)
 {
   dealii::ArrayView<const number> properties = particle.get_properties();
@@ -485,7 +485,7 @@ MeltPoolDG::Particle<dim, number>::get_force(
 template <int dim, typename number>
 template <typename VectorizedArrayType>
 dealii::Tensor<1, dim, VectorizedArrayType>
-MeltPoolDG::Particle<dim, number>::get_velocity(
+MeltPoolDG::SphericalParticle<dim, number>::get_velocity(
   const dealii::Particles::ParticleAccessor<dim> &particle)
 {
   dealii::ArrayView<const number> properties = particle.get_properties();
@@ -498,7 +498,7 @@ MeltPoolDG::Particle<dim, number>::get_velocity(
 template <int dim, typename number>
 template <typename VectorizedArrayType>
 dealii::Tensor<1, dim, VectorizedArrayType>
-MeltPoolDG::Particle<dim, number>::get_velocity(
+MeltPoolDG::SphericalParticle<dim, number>::get_velocity(
   dealii::Particles::PropertyPool<dim>                 &property_pool,
   typename dealii::Particles::PropertyPool<dim>::Handle handle)
 {
@@ -512,7 +512,7 @@ MeltPoolDG::Particle<dim, number>::get_velocity(
 template <int dim, typename number>
 template <typename VectorizedArrayType>
 dealii::Tensor<1, dim, VectorizedArrayType>
-MeltPoolDG::Particle<dim, number>::get_velocity(
+MeltPoolDG::SphericalParticle<dim, number>::get_velocity(
   const dealii::Particles::ParticleAccessor<dim> &particle,
   const dealii::Point<dim, VectorizedArrayType>  &location)
 {
@@ -537,11 +537,10 @@ MeltPoolDG::Particle<dim, number>::get_velocity(
   AssertThrow(false, dealii::ExcInternalError());
 }
 
-
 template <int dim, typename number>
 template <typename VectorizedArrayType>
 dealii::Tensor<1, dim, VectorizedArrayType>
-MeltPoolDG::Particle<dim, number>::get_velocity(
+MeltPoolDG::SphericalParticle<dim, number>::get_velocity(
   dealii::Particles::PropertyPool<dim>                 &property_pool,
   typename dealii::Particles::PropertyPool<dim>::Handle handle,
   const dealii::Point<dim, VectorizedArrayType>        &location)
@@ -572,7 +571,7 @@ MeltPoolDG::Particle<dim, number>::get_velocity(
 
 template <int dim, typename number>
 dealii::Tensor<1, dim, number>
-MeltPoolDG::Particle<dim, number>::get_acceleration(
+MeltPoolDG::SphericalParticle<dim, number>::get_acceleration(
   const dealii::Particles::ParticleAccessor<dim> &particle,
   const dealii::Point<dim, number>               &location)
 {

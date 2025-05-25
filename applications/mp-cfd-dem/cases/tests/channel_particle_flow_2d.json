@@ -32,11 +32,11 @@
       "type": "FE_DGQ"
     }
   },
-  "Brinkman penalization": {
+  "brinkman penalization": {
     "permeability": 1e-12
   },
-  "Obstacles": {
+  "obstacles": {
     "stationary": true,
-    "obstacle state file": "../../stationary_particle_2d.csv"
+    "obstacle state input file": "../../stationary_particle_2d.csv"
   }
 }

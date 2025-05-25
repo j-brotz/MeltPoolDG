@@ -30,11 +30,11 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   DGCompressibleFlowOperation<dim, number>::DGCompressibleFlowOperation(
-    const ScratchData<dim, dim, number>                        &scratch_data,
-    const CompressibleFlowData<number>                         &flow_data,
-    const unsigned int                                          flow_dof_idx,
-    const unsigned int                                          flow_quad_idx,
-    std::unique_ptr<ExplicitExternalFluidForces<dim, number>> &&external_forces)
+    const ScratchData<dim, dim, number>                                         &scratch_data,
+    const CompressibleFlowData<number>                                          &flow_data,
+    const unsigned int                                                           flow_dof_idx,
+    const unsigned int                                                           flow_quad_idx,
+    std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces)
     : flow_scratch_data(flow_data, scratch_data, flow_dof_idx, flow_quad_idx)
   {
     setup_operator_and_time_integrator(std::move(external_forces));
@@ -289,7 +289,7 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   void
   DGCompressibleFlowOperation<dim, number>::setup_operator_and_time_integrator(
-    std::unique_ptr<ExplicitExternalFluidForces<dim, number>> &&external_forces)
+    std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces)
   {
     // cut operator was already created in the constructor
     if (flow_scratch_data.flow_data.domain_representation_type == "cut")
