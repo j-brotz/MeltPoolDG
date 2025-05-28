@@ -11,10 +11,12 @@ namespace MeltPoolDG::Flow
   using namespace dealii;
   template <unsigned int dim, typename number, bool is_viscous>
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::DGCompressibleFlowOperatorExplicit(
-    CompressibleFlowScratchData<dim, number> &flow_scratch_data)
+    CompressibleFlowScratchData<dim, number>                                    &flow_scratch_data,
+    std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces)
     : flow_scratch_data(flow_scratch_data)
     , convective_terms(flow_scratch_data.flow_data)
     , viscous_terms(flow_scratch_data.flow_data)
+    , external_forces(std::move(external_forces))
   {}
 
   template <unsigned int dim, typename number, bool is_viscous>
@@ -98,6 +100,13 @@ namespace MeltPoolDG::Flow
                             EvaluationFlags::values |
                               (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
 
+        if (external_forces != nullptr)
+          {
+            external_forces->cell_operation(flow_scratch_data.scratch_data.get_matrix_free(),
+                                            cell,
+                                            phi.n_lanes);
+          }
+
         for (const unsigned int q : phi.quadrature_point_indices())
           {
             auto [flux, grad_flux] =
@@ -112,12 +121,19 @@ namespace MeltPoolDG::Flow
                                                    viscous_terms,
                                                    flow_scratch_data);
 
-            if (flow_scratch_data.body_force.get() != nullptr)
+            if (external_forces != nullptr)
+              {
+                const ConservedVariablesType w_q = phi.get_value(q);
+                flux += external_forces->quad_operation(phi.quadrature_point(q), w_q);
+              }
+
+            if (flow_scratch_data.body_force.get() != nullptr || external_forces != nullptr)
               phi.submit_value(flux, q);
             phi.submit_gradient(grad_flux, q);
           }
 
-        phi.integrate_scatter(((flow_scratch_data.body_force.get() != nullptr) ?
+        phi.integrate_scatter(((flow_scratch_data.body_force.get() != nullptr ||
+                                external_forces != nullptr) ?
                                  EvaluationFlags::values :
                                  EvaluationFlags::nothing) |
                                 EvaluationFlags::gradients,

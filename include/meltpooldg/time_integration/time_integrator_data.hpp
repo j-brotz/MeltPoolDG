@@ -14,6 +14,7 @@ namespace MeltPoolDG::TimeIntegration
   BETTER_ENUM(TimeIntegratorSchemes,
               int,
               not_initialized,
+              LSRK_stage_1_order_1,
               LSRK_stage_3_order_3, /* Kennedy, Carpenter, Lewis, 2000 */
               LSRK_stage_5_order_4, /* Kennedy, Carpenter, Lewis, 2000 */
               LSRK_stage_7_order_4, /* Tselios, Simos, 2007 */

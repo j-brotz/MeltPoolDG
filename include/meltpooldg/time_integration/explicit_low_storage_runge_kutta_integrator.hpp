@@ -26,7 +26,8 @@ namespace MeltPoolDG::TimeIntegration
   /**
    * The time integrator schemes supported by the low storage explicit Runge-Kutta time integrator.
    */
-  inline static constexpr std::array<TimeIntegratorSchemes, 4> explicit_lsrk_supported_schemes{{
+  inline static constexpr std::array<TimeIntegratorSchemes, 5> explicit_lsrk_supported_schemes{{
+    TimeIntegratorSchemes::LSRK_stage_1_order_1,
     TimeIntegratorSchemes::LSRK_stage_3_order_3,
     TimeIntegratorSchemes::LSRK_stage_5_order_4,
     TimeIntegratorSchemes::LSRK_stage_7_order_4,
@@ -58,6 +59,12 @@ namespace MeltPoolDG::TimeIntegration
     {
       switch (time_integrator_data.integrator_type)
         {
+            case TimeIntegratorSchemes::LSRK_stage_1_order_1: {
+              bi       = {{1.}};
+              ai       = {{}};
+              n_stages = 1;
+              break;
+            }
             case TimeIntegratorSchemes::LSRK_stage_3_order_3: {
               // Three-stage, third order scheme given in deal.II. While its stability region is
               // significantly smaller than for the other schemes, it only involves three stages,

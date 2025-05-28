@@ -1,0 +1,42 @@
+{
+  "base": {
+    "problem name": "cfd_dem",
+    "case name": "channel_particle_flow",
+    "dimension": "2",
+    "do print parameters": "false",
+    "verbosity level": 2
+  },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "2e-11",
+    "time step size": "2e-12"
+  },
+  "output": {
+    "write frequency": "1",
+    "do user defined postprocessing": "true"
+  },
+  "compressible navier stokes": {
+    "numerical flux type": "lax_friedrichs_modified",
+    "use cfl criteria": "false",
+    "reference density": 0.04,
+    "courant number": 0.001,
+    "gravity constant": 0.0,
+    "dynamic viscosity": 0.00011,
+    "gamma": 1.6666666666,
+    "specific gas constant": 160,
+    "time integration": {
+      "type": "LSRK_stage_5_order_4"
+    },
+    "fe": {
+      "degree": "2",
+      "type": "FE_DGQ"
+    }
+  },
+  "brinkman penalization": {
+    "permeability": 1e-12
+  },
+  "obstacles": {
+    "stationary": true,
+    "obstacle state input file": "../../stationary_particle_2d.csv"
+  }
+}

@@ -1,0 +1,236 @@
+#pragma once
+
+#include <deal.II/base/array_view.h>
+
+#include <deal.II/matrix_free/matrix_free.h>
+
+#include <deal.II/numerics/solution_transfer.h>
+
+#include <deal.II/particles/particle_handler.h>
+#include <deal.II/particles/property_pool.h>
+
+#include <iterator>
+#include <memory>
+#include <utility>
+#include <vector>
+
+namespace MeltPoolDG
+{
+  /**
+   * @brief Interface class for obstacle data structures supporting efficient spatial queries,
+   * such as nearest-neighbor searches.
+   *
+   * This interface abstracts different obstacle search algorithms using type erasure, allowing
+   * flexible integration of various implementations. Any obstacle search algorithm must conform
+   * to this interface to be used within the framework.
+   *
+   * The following member functions must be implemented:
+   * - @p reinit(): Reinitializes the internal state. This should be called after obstacle positions
+   *   have changed or the underlying triangulation has been modified.
+   * - @p get_obstacles_in_cell(): Identifies all obstacles that partially or fully occupy a given
+   *   cell and stores their properties in a specified destination.
+   * - @p get_obstacles_in_cell_batch(): Identifies all obstacles that intersect with any cell in a
+   *   given cell batch and stores their properties in a specified destination.
+   *
+   * See below for more details.
+   */
+  template <int dim, typename number>
+  struct ObstacleDataStructure
+  {
+  private:
+    /**
+     * @brief Concept: Abstract interface for obstacle data structures.
+     *
+     * Implementations must define how to reinitialize the structure, and  how to extract obstacles
+     * from single cells or batches.See public interface for detailed function descriptions.
+     */
+    struct ObstacleDataStructureConcept
+    {
+      virtual ~ObstacleDataStructureConcept() = default;
+
+      virtual void
+      reinit() = 0;
+
+      virtual void
+      get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
+                            const dealii::CellAccessor<dim>      &cell) const = 0;
+
+      virtual void
+      get_obstacles_in_cell_batch(
+        dealii::Particles::PropertyPool<dim>  &dst,
+        const dealii::MatrixFree<dim, number> &matrix_free,
+        const unsigned int                     cell_batch_id,
+        const unsigned int n_lanes = dealii::VectorizedArray<number>::size) const = 0;
+    };
+
+    /**
+     * @brief Model required for type erasure. See public interface for detailed function
+     * descriptions.
+     */
+    template <typename ObstacleDataStructureType>
+    struct ObstacleDataStructureModel final : public ObstacleDataStructureConcept
+    {
+      explicit ObstacleDataStructureModel(ObstacleDataStructureType &&obstacle_data_structure);
+
+      void
+      reinit() override;
+
+      void
+      get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
+                            const dealii::CellAccessor<dim>      &cell) const override;
+
+      void
+      get_obstacles_in_cell_batch(
+        dealii::Particles::PropertyPool<dim>  &dst,
+        const dealii::MatrixFree<dim, number> &matrix_free,
+        const unsigned int                     cell_batch_id,
+        const unsigned int n_lanes = dealii::VectorizedArray<number>::size) const override;
+
+    private:
+      const ObstacleDataStructureType obstacle_data_structure;
+    };
+
+    std::unique_ptr<ObstacleDataStructureConcept> obstacle_data_structure_pimpl;
+
+  public:
+    template <typename ObstacleDataStructureType>
+    explicit ObstacleDataStructure(ObstacleDataStructureType &&obstacle_data_structure);
+
+    /**
+     * @brief Reinitializes the internal data structure.
+     */
+    void
+    reinit();
+
+    /**
+     * @brief Identify obstacles that partially or fully occupy the specified cell, and store their
+     * properties in the destination property pool.
+     *
+     * @param dst Destination property pool where the properties of the identified obstacles will be
+     * stored.
+     * @param cell The cell of interest.
+     */
+    void
+    get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
+                          const dealii::CellAccessor<dim>      &cell) const;
+
+    /**
+     * @brief Identify obstacles that partially or fully occupy any cell in the specified cell batch,
+     * and store their properties in the destination property pool.
+     *
+     * @param dst Destination property pool where the properties of the identified obstacles will be
+     * stored.
+     * @param matrix_free MatrixFree object associated with the current cell batch.
+     * @param cell_batch_id Index of the cell batch to be examined.
+     * @param n_lanes Number of vectorization lanes in the cell batch (i.e., the number of cells in
+     * the batch).
+     */
+    void
+    get_obstacles_in_cell_batch(
+      dealii::Particles::PropertyPool<dim>  &dst,
+      const dealii::MatrixFree<dim, number> &matrix_free,
+      const unsigned int                     cell_batch_id,
+      const unsigned int                     n_lanes = dealii::VectorizedArray<number>::size) const;
+  };
+
+
+  /**
+   * @brief A simple search utility that performs a linear scan over all particles.
+   *
+   * This struct implements a very basic search algorithm by iterating over all particles
+   * in the domain and individually checking whether each one satisfies the desired condition.
+   *
+   * @note This approach is not optimized for performance and is intended primarily for
+   * debugging, prototyping, or use in small-scale simulations.
+   */
+  template <int dim, typename number, typename ObstacleType>
+  struct ObstacleCompleteDomainSearch
+  {
+  public:
+    explicit ObstacleCompleteDomainSearch(
+      const dealii::Particles::ParticleHandler<dim> &obstacle_handler);
+
+    /**
+     * @brief Reinitializes the internal data structure by synchronizing obstacle data across all
+     * MPI processes.
+     *
+     * This function communicates all locally owned obstacles to every other process in the MPI
+     * communicator. As a result, each process obtains and stores a complete local copy of all
+     * obstacles, regardless of ownership. This enables fully local access to obstacle data
+     * during subsequent computations.
+     */
+    void
+    reinit() const;
+
+    /**
+     * @brief Identify obstacles that partially or fully occupy the specified cell, and store their
+     * properties in the destination property pool.
+     *
+     * This function scans a cell and collects the properties of all obstacles that intersect
+     * with the cell. These properties are then stored in the provided destination property
+     * pool.
+     *
+     * The identification strategy is based on a brute-force approach: the function iterates
+     * over all globally known obstacles (previously synchronized), checks each one for
+     * relevance to the specified cell, and includes it if applicable.
+     *
+     * @param dst Destination property pool where the properties of the identified obstacles will be
+     * stored.
+     * @param cell The cell of interest.
+     */
+    void
+    get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
+                          const dealii::CellAccessor<dim>      &cell) const;
+
+    /**
+     * @brief Identify obstacles that partially or fully occupy any cell in the specified cell batch,
+     * and store their properties in the destination property pool.
+     *
+     * This function scans a batch of cells (represented by a MatrixFree cell batch) and
+     * collects the properties of all obstacles that intersect with any cell in the batch. These
+     * properties are then stored in the provided destination property pool.
+     *
+     * The identification strategy is based on a brute-force approach: the function iterates
+     * over all globally known obstacles (previously synchronized), checks each one for
+     * relevance to the specified cell batch, and includes it if applicable.
+     *
+     * @param dst Destination property pool where the properties of the identified obstacles will be
+     * stored.
+     * @param matrix_free MatrixFree object associated with the current cell batch.
+     * @param cell_batch_id Index of the cell batch to be examined.
+     * @param n_lanes Number of vectorization lanes in the cell batch (i.e., the number of cells in
+     * the batch).
+     */
+    void
+    get_obstacles_in_cell_batch(
+      dealii::Particles::PropertyPool<dim>  &dst,
+      const dealii::MatrixFree<dim, number> &matrix_free,
+      const unsigned int                     cell_batch_id,
+      const unsigned int                     n_lanes = dealii::VectorizedArray<number>::size) const;
+
+    /**
+     * @brief Broadcasts obstacle properties of all locally owned particles to all MPI processes.
+     *
+     * This function ensures that each process has access to a complete copy of all obstacles,
+     * regardless of ownership. It enables computations involving obstacles even on processes
+     * that do not originally own them.
+     *
+     * Each process broadcasts its locally owned obstacles in turn, including both their
+     * location and
+     * associated properties. The data is stored in the @p properties_global_obstacles structure.
+     */
+    void
+    broadcast_global_particles() const;
+
+  private:
+    /// Handler managing the locally owned obstacles in the domain.
+    const dealii::Particles::ParticleHandler<dim> &obstacle_handler;
+
+    /// Property pool containing the properties of all global obstacles, stored locally on each
+    /// MPI rank.
+    mutable dealii::Particles::PropertyPool<dim> properties_global_obstacles;
+
+    /// MPI communicator used for synchronizing obstacle data across all ranks.
+    MPI_Comm mpi_communicator = MPI_COMM_WORLD;
+  };
+} // namespace MeltPoolDG

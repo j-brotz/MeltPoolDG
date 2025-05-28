@@ -31,13 +31,16 @@ namespace MeltPoolDG::Flow
      *
      * @param flow_scratch_data Reference to the flow scratch data object (usually owned by the
      * corresponding operation class).
+     * @param external_forces Pointer to a struct implementing external forces acting on the fluid.
      */
     explicit DGCompressibleFlowOperatorExplicit(
-      CompressibleFlowScratchData<dim, number> &flow_scratch_data);
+      CompressibleFlowScratchData<dim, number> &flow_scratch_data,
+      std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces =
+        nullptr);
 
     /**
-     * Reinitilaize the internal data structures, i.e. allocate memory for vectors storing temporary
-     * solutions.
+     * Reinitilaize the internal data structures, i.e., allocate memory for vectors storing
+     * temporary solutions.
      */
     void
     reinit() override;
@@ -125,5 +128,7 @@ namespace MeltPoolDG::Flow
     CompressibleFlowConvectiveKernels<dim, number> convective_terms;
 
     CompressibleFlowViscousKernels<dim, number> viscous_terms;
+
+    std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> external_forces;
   };
 } // namespace MeltPoolDG::Flow
