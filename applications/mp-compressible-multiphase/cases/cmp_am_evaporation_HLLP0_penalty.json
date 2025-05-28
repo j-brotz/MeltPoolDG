@@ -9,19 +9,19 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "5e-8"
+    "end time": "1e-4"
   },
   "output": {
-    "write frequency": "1",
+    "write frequency": "1000",
     "do user defined postprocessing": "true",
     "paraview": {
-      "filename": "static_air_air_penalty",
+      "filename": "am_evaporation_HLLP0_and_penalty",
       "enable": "false"
     }
   },
   "simulation specific parameters": {
-    "left boundary condition": "no_slip_wall",
-    "right boundary condition": "no_slip_wall"
+    "left boundary condition": "inflow",
+    "right boundary condition": "outflow_fixed_energy"
   },
   "compressible navier stokes": {
     "numerical flux type": "lax_friedrichs_modified",
@@ -31,30 +31,24 @@
     "gravity constant": "0.0",
     "domain representation type": "cut",
     "initial conditions": {
-      "gas": "1.0; 0.0; 2.104084125e5",
-      "liquid": "1.0; 0.0; 2.104084125e5"
+      "gas": "0.333854529603565; 229.003987964465; 2.994392142627235e5",
+      "liquid": "3.43910651686115e3; 229.003987964465; 1.146254133351295e10"
     },
     "interface jump conditions": {
-      "type": "penalty",
-      "evaporation mass flux": "0.0",
-      "delta q": "0.0",
-      "penalty": {
-        "coefficients": {
-          "density": "100.0",
-          "temperature": "100.0"
-        },
-        "target values": {
-          "density gas phase": "1.0",
-          "temperature gas phase": "293.15"
-        }
+      "type": "HLLP0_and_penalty",
+      "evaporation mass flux": "229.003987964465",
+      "delta q": "4.56878345514543e8",
+      "HLLP0 and penalty": {
+        "penalty parameter temperature jump": "0.2",
+        "delta T": "964.08565590127"
       }
     },
     "cut": {
       "two phase": "true",
       "stabilization": {
         "ghost-penalty": {
-          "gamma M degree 0": "1.0",
-          "gamma M degree 1": "1.0"
+          "gamma M degree 0": "10.0",
+          "gamma M degree 1": "10.0"
         }
       }
     },
@@ -69,25 +63,27 @@
     },
     "material": {
       "gas": {
-        "dynamic viscosity": "0.00002",
-        "specific isobaric heat": "1004.85",
-        "specific gas constant": "287.1",
-        "thermal conductivity": "0.028",
-        "reference density": "1.0",
-        "gamma": "1.4",
+        "dynamic viscosity": "0.000035",
+        "specific isobaric heat": "700",
+        "specific gas constant": "173.943514644351",
+        "thermal conductivity": "0.02863",
+        "reference density": "0.2",
+        "gamma": "1.666666666666666",
         "equation of state": {
           "type": "ideal_gas"
         }
       },
       "liquid": {
-        "dynamic viscosity": "0.00002",
-        "specific isobaric heat": "1004.85",
-        "specific gas constant": "287.1",
-        "thermal conductivity": "0.028",
-        "reference density": "1.0",
-        "gamma": "1.4",
+        "dynamic viscosity": "0.0035",
+        "specific isobaric heat": "1126.0",
+        "thermal conductivity": "28.63",
+        "reference density": "200.0",
+        "gamma": "1.4355",
         "equation of state": {
-          "type": "ideal_gas"
+          "type": "noble_abel_stiffened_gas",
+          "p inf": "1.1587e10",
+          "b": "1.8759e-4",
+          "q": "-607968.8"
         }
       }
     },

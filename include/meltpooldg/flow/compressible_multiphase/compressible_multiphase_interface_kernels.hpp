@@ -2,12 +2,14 @@
  * @brief A collection of functions for the computation of the interface terms for
  * compressible two-phase flows.
  *
- * Two different strategies for enforcing the interface jump conditions are implemented:
+ * Three different strategies for enforcing the interface jump conditions are implemented:
  *
- * - strong enforcement in the weak formulation and penalty enforcement for Dirichlet density and
- *   temperature constraint for the gas phase
- * - HLLP0 approximate Riemann solver for convective fluxes and weighted average Nitsche-type method
- *   for viscous fluxes
+ * - "HLLP0 and penalty": approximate HLLP0 Riemann solver for convective fluxes and a combination
+ *   of strong incorporation in the weak form and penalty terms for the viscous fluxes
+ * - "HLLP0 and SIPG": approximate HLLP0 Riemann solver for convective fluxes and Nitsche-type
+ *   method for viscous fluxes, consistently aligned to the SIPG method for inner faces
+ * - "penalty": strong enforcement of both convective and viscous fluxes in the weak form and
+ *   penalty terms for Dirichlet density and temperature constraints for the gas phase
  */
 
 #pragma once
@@ -18,7 +20,6 @@
 #include <meltpooldg/flow/compressible_flow_convective_kernels.hpp>
 #include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
-#include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <tuple>
@@ -27,7 +28,7 @@
 namespace MeltPoolDG::Multiphase
 {
   ///////////////////////////////////////////////////////////////////////////////////////////
-  ///                               Penalty method                                        ///
+  ///                              "penalty" method                                       ///
   ///////////////////////////////////////////////////////////////////////////////////////////
 
   /**
@@ -80,8 +81,8 @@ namespace MeltPoolDG::Multiphase
     ConservedVariablesType total_flux_gas;
 
     // TODO: investigate weighting factors!
-    const dealii::VectorizedArray<number> omega_1 = 0.5;
-    const dealii::VectorizedArray<number> omega_2 = 0.5;
+    const dealii::VectorizedArray<number> omega_mass_1 = 0.5;
+    const dealii::VectorizedArray<number> omega_mass_2 = 1. - omega_mass_1;
 
     ///////////////////////
     // mass conservation //
@@ -95,13 +96,13 @@ namespace MeltPoolDG::Multiphase
          (u_liquid[Idx::density] * u_gas[Idx::density]) *
          flow_data.interface_jump_conditions.m_dot_evap);
 
-    total_flux_liquid[Idx::density] = omega_1 * interface_mass_flux_conservation_term;
-    total_flux_gas[Idx::density]    = omega_2 * interface_mass_flux_conservation_term;
+    total_flux_liquid[Idx::density] = omega_mass_1 * interface_mass_flux_conservation_term;
+    total_flux_gas[Idx::density]    = omega_mass_2 * interface_mass_flux_conservation_term;
 
     const dealii::VectorizedArray<number> weighted_average_momentum =
-      UtilityFunctions::calculate_arithmetic_phase_weighted_average(omega_1,
+      UtilityFunctions::calculate_arithmetic_phase_weighted_average(omega_mass_1,
                                                                     u_gas[Idx::momentum_x],
-                                                                    omega_2,
+                                                                    omega_mass_2,
                                                                     u_liquid[Idx::momentum_x]);
 
     total_flux_liquid[Idx::density] += weighted_average_momentum;
@@ -120,15 +121,14 @@ namespace MeltPoolDG::Multiphase
     // momentum conservation //
     ///////////////////////////
 
-    const dealii::VectorizedArray<number> jump_momentum_term =
-      (u_liquid[Idx::momentum_x] * u_liquid[Idx::momentum_x] / u_liquid[Idx::density] -
-       u_gas[Idx::momentum_x] * u_gas[Idx::momentum_x] / u_gas[Idx::density]) -
-      (1. / u_liquid[Idx::density] - 1. / u_gas[Idx::density]) *
-        flow_data.interface_jump_conditions.m_dot_evap *
-        flow_data.interface_jump_conditions.m_dot_evap;
+    // TODO: investigate weighting factors!
+    const dealii::VectorizedArray<number> omega_mom_1_conv = 0.5;
+    const dealii::VectorizedArray<number> omega_mom_2_conv = 1. - omega_mom_1_conv;
 
-    total_flux_liquid[Idx::momentum_x] = jump_momentum_term * omega_1;
-    total_flux_gas[Idx::momentum_x]    = jump_momentum_term * omega_2;
+    const dealii::VectorizedArray<number> omega_mom_1_visc =
+      flow_data.material.liquid.dynamic_viscosity /
+      (flow_data.material.liquid.dynamic_viscosity + flow_data.material.gas.dynamic_viscosity);
+    const dealii::VectorizedArray<number> omega_mom_2_visc = 1. - omega_mom_1_visc;
 
     // compute stress tensor (pressure and viscous contributions) and convert to type
     // dealii::VectorizedArray<number>
@@ -139,57 +139,102 @@ namespace MeltPoolDG::Multiphase
       Flow::EOS::calculate_stress_tensor<dim, number, true /*is_gas_phase*/>(
         u_gas, grad_u_gas, flow_data, viscous_terms_gas)[0][0];
 
-    const dealii::VectorizedArray<number> weighted_average_momentum_term_liquid =
-      u_liquid[Idx::momentum_x] * u_liquid[Idx::momentum_x] / u_liquid[Idx::density] -
-      stress_tensor_liquid;
-    const dealii::VectorizedArray<number> weighted_average_momentum_term_gas =
-      u_gas[Idx::momentum_x] * u_gas[Idx::momentum_x] / u_gas[Idx::density] - stress_tensor_gas;
-    const dealii::VectorizedArray<number> weighted_average_momentum_term =
-      UtilityFunctions::calculate_arithmetic_phase_weighted_average(
-        omega_2,
-        weighted_average_momentum_term_liquid,
-        omega_1,
-        weighted_average_momentum_term_gas);
+    const dealii::VectorizedArray<number> jump_momentum_term_liquid =
+      u_liquid[Idx::momentum_x] * u_liquid[Idx::momentum_x] / u_liquid[Idx::density];
+    const dealii::VectorizedArray<number> jump_momentum_term_gas =
+      u_gas[Idx::momentum_x] * u_gas[Idx::momentum_x] / u_gas[Idx::density];
 
-    total_flux_liquid[Idx::momentum_x] += weighted_average_momentum_term;
-    total_flux_gas[Idx::momentum_x] -= weighted_average_momentum_term;
+    total_flux_liquid[Idx::momentum_x] +=
+      omega_mom_1_conv * (jump_momentum_term_liquid - jump_momentum_term_gas);
+    total_flux_gas[Idx::momentum_x] +=
+      omega_mom_2_conv * (jump_momentum_term_liquid - jump_momentum_term_gas);
+
+    const dealii::VectorizedArray<number> average_momentum_term_1 =
+      UtilityFunctions::calculate_arithmetic_phase_weighted_average(omega_mom_2_conv,
+                                                                    jump_momentum_term_liquid,
+                                                                    omega_mom_1_conv,
+                                                                    jump_momentum_term_gas);
+
+    total_flux_liquid[Idx::momentum_x] += average_momentum_term_1;
+    total_flux_gas[Idx::momentum_x] -= average_momentum_term_1;
+
+    const dealii::VectorizedArray<number> jump_momentum_term_2 =
+      -(u_liquid[Idx::momentum_x] / u_liquid[Idx::density] -
+        u_gas[Idx::momentum_x] / u_gas[Idx::density]) *
+      flow_data.interface_jump_conditions.m_dot_evap;
+
+    const dealii::VectorizedArray<number> average_momentum_term_2 =
+      UtilityFunctions::calculate_arithmetic_phase_weighted_average(omega_mom_2_visc,
+                                                                    -stress_tensor_liquid,
+                                                                    omega_mom_1_visc,
+                                                                    -stress_tensor_gas);
+
+    total_flux_liquid[Idx::momentum_x] +=
+      jump_momentum_term_2 * omega_mom_1_visc + average_momentum_term_2;
+    total_flux_gas[Idx::momentum_x] +=
+      jump_momentum_term_2 * omega_mom_2_visc - average_momentum_term_2;
 
     /////////////////////////
     // energy conservation //
     /////////////////////////
 
-    // compute velocities and convert to dealii::VectorizedArray<number>
+    // TODO: investigate weighting factors!
+    const dealii::VectorizedArray<number> omega_energy_1_conv = 0.5;
+    const dealii::VectorizedArray<number> omega_energy_2_conv = 1. - omega_energy_1_conv;
+
+    const dealii::VectorizedArray<number> omega_energy_1_visc =
+      flow_data.material.liquid.dynamic_viscosity /
+      (flow_data.material.liquid.dynamic_viscosity + flow_data.material.gas.dynamic_viscosity);
+    const dealii::VectorizedArray<number> omega_energy_2_visc = 1. - omega_energy_1_visc;
+
+    // compute velocities and convert to VectorizedArray<number>
     const dealii::VectorizedArray<number> vel_liquid =
       MeltPoolDG::Flow::calculate_velocity<dim, number>(u_liquid)[0];
     const dealii::VectorizedArray<number> vel_gas =
       MeltPoolDG::Flow::calculate_velocity<dim, number>(u_gas)[0];
 
-    const dealii::VectorizedArray<number> delta_q = 0.;
-    const dealii::VectorizedArray<number> jump_energy_term =
-      (u_liquid[Idx::energy] * vel_liquid - u_gas[Idx::energy] * vel_gas) -
-      flow_data.interface_jump_conditions.m_dot_evap *
+    const dealii::VectorizedArray<number> jump_energy_term_1 =
+      (u_liquid[Idx::energy] * vel_liquid - u_gas[Idx::energy] * vel_gas);
+
+    const dealii::VectorizedArray<number> average_energy_term_1 =
+      UtilityFunctions::calculate_arithmetic_phase_weighted_average(omega_energy_2_conv,
+                                                                    u_liquid[Idx::energy] *
+                                                                      vel_liquid,
+                                                                    omega_energy_1_conv,
+                                                                    u_gas[Idx::energy] * vel_gas);
+
+    total_flux_liquid[Idx::energy] =
+      jump_energy_term_1 * omega_energy_1_conv + average_energy_term_1;
+    total_flux_gas[Idx::energy] = jump_energy_term_1 * omega_energy_2_conv - average_energy_term_1;
+
+    const dealii::VectorizedArray<number> delta_q = flow_data.interface_jump_conditions.delta_q;
+    const dealii::VectorizedArray<number> jump_energy_term_2 =
+      -flow_data.interface_jump_conditions.m_dot_evap *
         (u_liquid[Idx::energy] / u_liquid[Idx::density] -
          u_gas[Idx::energy] / u_gas[Idx::density]) +
       delta_q;
 
-    total_flux_liquid[Idx::energy] = jump_energy_term * omega_1;
-    total_flux_gas[Idx::energy]    = jump_energy_term * omega_2;
+    total_flux_liquid[Idx::energy] += jump_energy_term_2 * omega_energy_1_visc;
+    total_flux_gas[Idx::energy] += jump_energy_term_2 * omega_energy_2_visc;
 
     const dealii::VectorizedArray<number> weighted_average_energy_term_liquid =
-      u_liquid[Idx::energy] * vel_liquid - stress_tensor_liquid * vel_liquid -
-      flow_data.material.gas.thermal_conductivity *
+      -stress_tensor_liquid * vel_liquid -
+      flow_data.material.liquid.thermal_conductivity *
         MeltPoolDG::Flow::EOS::calculate_grad_T<dim, number, false /*is_gas_phase*/>(u_liquid,
                                                                                      grad_u_liquid,
                                                                                      flow_data)[0];
     const dealii::VectorizedArray<number> weighted_average_energy_term_gas =
-      u_gas[Idx::energy] * vel_gas - stress_tensor_gas * vel_gas -
-      flow_data.material.liquid.thermal_conductivity *
+      -stress_tensor_gas * vel_gas -
+      flow_data.material.gas.thermal_conductivity *
         MeltPoolDG::Flow::EOS::calculate_grad_T<dim, number, true /*is_gas_phase*/>(u_gas,
                                                                                     grad_u_gas,
                                                                                     flow_data)[0];
     const dealii::VectorizedArray<number> weighted_average_energy_term =
       UtilityFunctions::calculate_arithmetic_phase_weighted_average(
-        omega_2, weighted_average_energy_term_liquid, omega_1, weighted_average_energy_term_gas);
+        omega_energy_2_visc,
+        weighted_average_energy_term_liquid,
+        omega_energy_1_visc,
+        weighted_average_energy_term_gas);
 
     total_flux_liquid[Idx::energy] += weighted_average_energy_term;
     total_flux_gas[Idx::energy] -= weighted_average_energy_term;
@@ -209,7 +254,7 @@ namespace MeltPoolDG::Multiphase
   }
 
   ///////////////////////////////////////////////////////////////////////////////////////////
-  ///             HLLP0 convective flux/Nitsche-weighted viscous flux method              ///
+  ///                               HLLP0 Riemann solver                                  ///
   ///////////////////////////////////////////////////////////////////////////////////////////
 
   /**
@@ -232,23 +277,24 @@ namespace MeltPoolDG::Multiphase
    * interface normal velocity.
    *
    * @note The HLLP0 solver can be solved explicitly, no iterative solution strategy is required.
-   * The solver is also applicable for vanishing evaporation mass flux.
+   * The solver is also applicable for vanishing evaporation mass flux (reduces to the HLLC solver).
    */
   template <int dim,
             typename number,
             typename ConservedVariablesType,
             typename ConservedVariablesGradType>
   inline DEAL_II_ALWAYS_INLINE //
-    std::tuple<ConservedVariablesType, ConservedVariablesType, dealii::VectorizedArray<number>>
-    calculate_convective_interface_flux_HLLP0(
-      const ConservedVariablesType                                  &u_liquid,
-      const ConservedVariablesType                                  &u_gas,
-      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
-      const auto                                                    &convective_terms_liquid,
-      const auto                                                    &convective_terms_gas,
-      const Flow::CompressibleFlowData<number>                      &flow_data)
+    std::
+      tuple<ConservedVariablesGradType, ConservedVariablesGradType, dealii::VectorizedArray<number>>
+      calculate_convective_interface_flux_HLLP0(
+        const ConservedVariablesType                                  &u_liquid,
+        const ConservedVariablesType                                  &u_gas,
+        const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
+        const auto                                                    &convective_terms_liquid,
+        const auto                                                    &convective_terms_gas,
+        const Flow::CompressibleFlowData<number>                      &flow_data)
   {
-    // Note: Variables, that are relevant for both the liquid and the gas phase ,are considered as
+    // Note: Variables, that are relevant for both the liquid and the gas phase, are considered as
     // arrays of length 2 in the following. The first element refers to the liquid phase and the
     // second element to the gas phase.
     constexpr int liquid = 0;
@@ -271,8 +317,8 @@ namespace MeltPoolDG::Multiphase
     for (unsigned int i : {0, 1})
       {
         vel[i]   = Flow::calculate_velocity<dim>(u[i]);
-        rho[i]   = u[i][0];
-        rho_E[i] = u[i][dim + 1];
+        rho[i]   = u[i][Idx::density];
+        rho_E[i] = u[i][Idx::energy];
       }
     pressure[liquid] =
       Flow::EOS::calculate_thermodynamic_pressure<dim, number, false /*is_gas_phase*/>(u[liquid],
@@ -400,7 +446,7 @@ namespace MeltPoolDG::Multiphase
       {
         u_star[i][Idx::density] = m_hat[i] / (vel_n_star[i] - shock_speed[i]);
         for (unsigned int j = 1; j < dim + 1; j++)
-          u_star[i][j] = u_star[i][Idx::density] * vel_star_cartesian[i][j - 1];
+          u_star[i][j] = u_star[i][Idx::density] * vel_star_cartesian[i][0][j - 1];
         u_star[i][Idx::energy] =
           (E_hat[i] - pressure_star[i] * vel_n_star[i]) / (vel_n_star[i] - shock_speed[i]) -
           0.5 * u_star[i][Idx::density] * vel_n_star[i] * vel_n_star[i] +
@@ -420,21 +466,21 @@ namespace MeltPoolDG::Multiphase
                                                                    1.e-12,
                                                                    numerator_normal_vel /
                                                                      denominator_normal_vel,
-                                                                   0.);
+                                                                   vel_n_star[liquid]);
 
     // 9) calculate fluxes for the two phases
 
-    std::array<ConservedVariablesType, 2>     flux;
+    std::array<ConservedVariablesGradType, 2> flux;
     std::array<ConservedVariablesGradType, 2> conv_flux;
-    std::array<ConservedVariablesType, 2>     shock_flux;
+    std::array<ConservedVariablesGradType, 2> shock_flux;
 
     conv_flux[liquid] = convective_terms_liquid.calculate_convective_flux(u[liquid]);
     conv_flux[gas]    = convective_terms_gas.calculate_convective_flux(u[gas]);
 
     for (unsigned int i : {0, 1})
       {
-        shock_flux[i] = shock_speed[i] * (u_star[i] - u[i]);
-        flux[i]       = contract_tensor_with_vector<dim + 2, dim, number>(conv_flux[i], normal);
+        shock_flux[i] = dyadic_product(shock_speed[i] * (u_star[i] - u[i]), normal);
+        flux[i]       = conv_flux[i];
       }
 
     const auto zero_vec = dealii::make_vectorized_array(0.);
@@ -442,13 +488,17 @@ namespace MeltPoolDG::Multiphase
 
     flux[liquid] +=
       shock_flux[liquid] * compare_and_apply_mask<dealii::SIMDComparison::greater_than>(
-                             shock_speed[liquid], zero_vec, one_vec, zero_vec);
+                             shock_speed[liquid], zero_vec, zero_vec, one_vec);
     flux[gas] +=
       shock_flux[gas] * compare_and_apply_mask<dealii::SIMDComparison::less_than_or_equal>(
-                          shock_speed[gas], zero_vec, one_vec, zero_vec);
+                          shock_speed[gas], zero_vec, zero_vec, one_vec);
 
     return {flux[liquid], flux[gas], normal_velocity_interface};
   }
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  ///                     SIPG functions for method "HLLP and SIPG"                       ///
+  ///////////////////////////////////////////////////////////////////////////////////////////
 
   /**
    * This function calculates the Dirichlet jump in conservative variables via transformation into
@@ -492,7 +542,8 @@ namespace MeltPoolDG::Multiphase
     const dealii::VectorizedArray<number> delta_p = 0.;
 
     // TODO: consider temperature jump according to Hertz-Knudsen theory here
-    const dealii::VectorizedArray<number> delta_T = 0.;
+    const dealii::VectorizedArray<number> delta_T =
+      flow_data.interface_jump_conditions.hllp0_and_sipg.delta_T;
 
     // TODO: extend to general case dim>1
     ConservedVariablesType J_Dir;
@@ -501,11 +552,12 @@ namespace MeltPoolDG::Multiphase
     J_Dir[Idx::density] =
       delta_p - flow_data.interface_jump_conditions.m_dot_evap * (u_liquid_prim[1] - u_gas_prim[1]);
     J_Dir[Idx::momentum_x] =
-      flow_data.interface_jump_conditions.m_dot_evap * (1. / u_liquid_prim[0] - 1. / u_gas_prim[0]);
+      flow_data.interface_jump_conditions.m_dot_evap * (1. / u_liquid_cons[0] - 1. / u_gas_cons[0]);
     J_Dir[Idx::energy] = delta_T;
 
-    u_liquid_prim = u_gas_prim + J_Dir;
-    u_gas_prim    = u_liquid_prim - J_Dir;
+    const auto u_liquid_prim_tmp = u_liquid_prim;
+    u_liquid_prim                = u_gas_prim + J_Dir;
+    u_gas_prim                   = u_liquid_prim_tmp - J_Dir;
 
     const auto u_liquid_cons_star =
       Flow::EOS::convert_primitive_into_conservative_variables<dim, number, false /*is_gas_phase*/>(
@@ -534,14 +586,15 @@ namespace MeltPoolDG::Multiphase
    * @param grad_u_gas Gradient of conserved variables for gas phase at quadrature point on the
    * (unfitted) interface.
    * @param normal Interface normal vector, pointing outside the liquid phase.
-   * @param alpha_1 Weighting factor for Nitsche-type weighted viscous interface fluxes.
-   * @param alpha_2 Weighting factor for Nitsche-type weighted viscous interface fluxes.
+   * @param visc_ave_weight_phase_liquid Weighting factor for Nitsche-type weighted viscous interface fluxes.
+   * @param visc_ave_weight_phase_gas Weighting factor for Nitsche-type weighted viscous interface fluxes.
    * @param tau Symmetric interior penalty parameter.
    * @param viscous_terms_liquid Collection of helper functions for viscous term evaluations in the
    * liquid phase.
-   *  @param viscous_terms_liquid Collection of helper functions for viscous term evaluations in the
+   *  @param viscous_terms_gas Collection of helper functions for viscous term evaluations in the
    * gas phase.
    * @param flow_data Collection of parameters required by the compressible Navier-Stokes operator.
+   * @param cell_size Cell size.
    *
    * @return Pair of interface viscous fluxes for liquid and gas phase, which are weighted with the
    * test functions.
@@ -558,12 +611,13 @@ namespace MeltPoolDG::Multiphase
       const ConservedVariablesGradType                              &grad_u_liquid,
       const ConservedVariablesGradType                              &grad_u_gas,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
-      const number                                                  &alpha_1,
-      const number                                                  &alpha_2,
+      const number                                                  &visc_ave_weight_phase_liquid,
+      const number                                                  &visc_ave_weight_phase_gas,
       const number                                                  &tau,
       const auto                                                    &viscous_terms_liquid,
       const auto                                                    &viscous_terms_gas,
-      const Flow::CompressibleFlowData<number>                      &flow_data)
+      const Flow::CompressibleFlowData<number>                      &flow_data,
+      const number                                                  &cell_size)
   {
     // enumeration for conserved variables component indices
     using Idx = std::conditional_t<
@@ -583,30 +637,22 @@ namespace MeltPoolDG::Multiphase
     const dealii::VectorizedArray<number> vel_n_gas    = vel_gas * normal;
 
     const auto pressure_liquid =
-      Flow::EOS::calculate_thermodynamic_pressure<dim, number, true>(u_liquid, flow_data);
-    const auto pressure_p =
-      Flow::EOS::calculate_thermodynamic_pressure<dim, number, false>(u_gas, flow_data);
-
-    const auto grad_vel_liquid = Flow::calculate_grad_velocity(u_liquid, grad_u_liquid);
-    const auto grad_vel_p      = Flow::calculate_grad_velocity(u_gas, grad_u_gas);
-
-    const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> stress_tensor_liquid =
-      viscous_terms_liquid.calculate_viscous_stress_tensor(grad_vel_liquid);
-    const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> stress_tensor_p =
-      viscous_terms_gas.calculate_viscous_stress_tensor(grad_vel_p);
+      Flow::EOS::calculate_thermodynamic_pressure<dim, number, false /*is_gas_phase*/>(u_liquid,
+                                                                                       flow_data);
+    const auto pressure_gas =
+      Flow::EOS::calculate_thermodynamic_pressure<dim, number, true /*is_gas_phase*/>(u_gas,
+                                                                                      flow_data);
 
     // compute Robin-type viscous interface jump conditions
 
     ConservedVariablesType J_Rob;
 
     // TODO: Add entries for case dim>1
-    const dealii::VectorizedArray<number> delta_q = 0.;
-    J_Rob[Idx::energy] = (stress_tensor_liquid * vel_liquid - stress_tensor_p * vel_gas) * normal -
-                         (pressure_liquid * vel_n_liquid - pressure_p * vel_n_gas) -
+    J_Rob[Idx::energy] = (pressure_liquid * vel_n_liquid - pressure_gas * vel_n_gas) +
                          flow_data.interface_jump_conditions.m_dot_evap *
                            (u_liquid[Idx::energy] / u_liquid[Idx::density] -
-                            u_gas[Idx::energy] / u_gas[Idx::density]) +
-                         delta_q;
+                            u_gas[Idx::energy] / u_gas[Idx::density]) -
+                         flow_data.interface_jump_conditions.delta_q;
 
     const ConservedVariablesGradType viscous_flux_liquid =
       viscous_terms_liquid.calculate_viscous_flux(u_liquid, grad_u_liquid);
@@ -616,14 +662,14 @@ namespace MeltPoolDG::Multiphase
 
     ConservedVariablesGradType total_flux_liquid = dyadic_product(J_Rob, normal);
     total_flux_liquid += viscous_flux_gas;
-    total_flux_liquid *= alpha_1;
-    total_flux_liquid += alpha_2 * viscous_flux_liquid;
+    total_flux_liquid *= visc_ave_weight_phase_liquid;
+    total_flux_liquid += visc_ave_weight_phase_gas * viscous_flux_liquid;
 
     ConservedVariablesGradType total_flux_gas =
       dyadic_product(J_Rob, -normal); // opposite normal direction for phase 2
     total_flux_gas += viscous_flux_liquid;
-    total_flux_gas *= alpha_2;
-    total_flux_gas += alpha_1 * viscous_flux_gas;
+    total_flux_gas *= visc_ave_weight_phase_gas;
+    total_flux_gas += visc_ave_weight_phase_liquid * viscous_flux_gas;
 
     // penalty term
 
@@ -631,20 +677,22 @@ namespace MeltPoolDG::Multiphase
       calculate_Dirichlet_jump_in_conservative_variables<dim, number, ConservedVariablesType>(
         u_liquid, u_gas, flow_data);
 
-    const auto u_liquid_star = UtilityFunctions::calculate_arithmetic_phase_weighted_average(
-      alpha_1, u_liquid, alpha_2, u_gas + J_Dir_cons);
-    const auto u_gas_star = UtilityFunctions::calculate_arithmetic_phase_weighted_average(
-      alpha_2, u_gas, alpha_1, u_liquid - J_Dir_cons);
+    const number penalty_parameter = std::min(flow_data.material.liquid.dynamic_viscosity /
+                                                flow_data.material.liquid.reference_density,
+                                              flow_data.material.gas.dynamic_viscosity /
+                                                flow_data.material.gas.reference_density) *
+                                     (flow_data.fe.degree + 1.) * (flow_data.fe.degree + 1.) /
+                                     cell_size * tau;
 
     ConservedVariablesGradType penalty_flux_liquid;
-    const auto                 tmp_m = u_liquid - (u_gas_star + J_Dir_cons);
+    const auto                 tmp_m = u_liquid - (u_gas + J_Dir_cons);
     penalty_flux_liquid              = dyadic_product(tmp_m, normal);
-    penalty_flux_liquid *= tau;
+    penalty_flux_liquid *= penalty_parameter;
 
     ConservedVariablesGradType penalty_flux_gas;
-    const auto                 tmp_p = u_gas - (u_liquid_star - J_Dir_cons);
+    const auto                 tmp_p = u_gas - (u_liquid - J_Dir_cons);
     penalty_flux_gas                 = dyadic_product(tmp_p, -normal);
-    penalty_flux_gas *= tau;
+    penalty_flux_gas *= penalty_parameter;
 
     total_flux_liquid -= penalty_flux_liquid;
     total_flux_gas -= penalty_flux_gas;
@@ -663,9 +711,12 @@ namespace MeltPoolDG::Multiphase
    * interface.
    * @param u_gas Conserved variables for gas phase at quadrature point on the (unfitted) interface.
    * @param normal Interface normal vector, pointing outside the liquid phase.
-   * @param alpha_1 Weighting factor for Nitsche-type weighted viscous interface fluxes.
-   * @param alpha_2 Weighting factor for Nitsche-type weighted viscous interface fluxes.
-   * @param viscous_terms Collection of helper functions for viscous term evaluations.
+   * @param visc_ave_weight_phase_liquid Weighting factor for Nitsche-type weighted viscous interface fluxes.
+   * @param visc_ave_weight_phase_gas Weighting factor for Nitsche-type weighted viscous interface fluxes.
+   * @param viscous_terms_liquid Collection of helper functions for viscous term evaluations in the
+   * liquid phase.
+   * @param viscous_terms_gas Collection of helper functions for viscous term evaluations in the gas
+   * phase.
    * @param flow_data Collection of parameters required by the compressible Navier-Stokes operator.
    *
    * @return Pair of interface viscous fluxes for liquid and gas phase, which are weighted with the
@@ -681,8 +732,8 @@ namespace MeltPoolDG::Multiphase
       const ConservedVariablesType                                  &u_liquid,
       const ConservedVariablesType                                  &u_gas,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
-      const number                                                  &alpha_1,
-      const number                                                  &alpha_2,
+      const number                                                  &visc_ave_weight_phase_liquid,
+      const number                                                  &visc_ave_weight_phase_gas,
       const auto                                                    &viscous_terms_liquid,
       const auto                                                    &viscous_terms_gas,
       const Flow::CompressibleFlowData<number>                      &flow_data)
@@ -692,9 +743,9 @@ namespace MeltPoolDG::Multiphase
         u_liquid, u_gas, flow_data);
 
     const auto u_liquid_star = UtilityFunctions::calculate_arithmetic_phase_weighted_average(
-      alpha_1, u_liquid, alpha_2, u_gas + J_Dir_cons);
+      visc_ave_weight_phase_gas, u_liquid, visc_ave_weight_phase_liquid, u_gas + J_Dir_cons);
     const auto u_gas_star = UtilityFunctions::calculate_arithmetic_phase_weighted_average(
-      alpha_2, u_gas, alpha_1, u_liquid - J_Dir_cons);
+      visc_ave_weight_phase_liquid, u_gas, visc_ave_weight_phase_gas, u_liquid - J_Dir_cons);
 
     auto tmp_liquid = u_liquid_star - u_liquid;
     auto tmp_gas    = u_gas_star - u_gas;
@@ -708,5 +759,116 @@ namespace MeltPoolDG::Multiphase
       viscous_terms_gas.calculate_viscous_flux(u_gas, arg_gas);
 
     return {flux_grad_liquid, flux_grad_gas};
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  ///                 viscous terms for the method "HLLP0 and penalty"                    ///
+  ///////////////////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * This function calculates the viscous interface flux for direct incorporation in the weak form
+   * in combination with a penalty term for the temperature jump contstraint.
+   *
+   * @param u_liquid Conserved variables for liquid phase at quadrature point on the (unfitted)
+   * interface.
+   * @param u_gas Conserved variables for gas phase at quadrature point on the (unfitted) interface.
+   * @param grad_u_liquid Gradient of conserved variables for liquid phase at quadrature point on
+   * the (unfitted) interface.
+   * @param grad_u_gas Gradient of conserved variables for gas phase at quadrature point on the
+   * (unfitted) interface.
+   * @param normal Interface normal vector, pointing outside the liquid phase.
+   * @param visc_ave_weight_phase_liquid Weighting factor for Nitsche-type weighted viscous interface fluxes.
+   * @param visc_ave_weight_phase_gas Weighting factor for Nitsche-type weighted viscous interface fluxes.
+   * @param viscous_terms_liquid Collection of helper functions for viscous term evaluations in the
+   * liquid phase.
+   *  @param viscous_terms_gas Collection of helper functions for viscous term evaluations in the
+   * gas phase.
+   * @param flow_data Collection of parameters required by the compressible Navier-Stokes operator.
+   * @param cell_size Cell size.
+   *
+   * @return Pair of interface viscous fluxes for liquid and gas phase, which are weighted with the
+   * test functions.
+   */
+  template <int dim,
+            typename number,
+            typename ConservedVariablesType,
+            typename ConservedVariablesGradType>
+  inline DEAL_II_ALWAYS_INLINE //
+    std::pair<ConservedVariablesType, ConservedVariablesType>
+    calculate_viscous_interface_flux_method_3(
+      const ConservedVariablesType                                  &u_liquid,
+      const ConservedVariablesType                                  &u_gas,
+      const ConservedVariablesGradType                              &grad_u_liquid,
+      const ConservedVariablesGradType                              &grad_u_gas,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
+      const number                                                  &visc_ave_weight_phase_liquid,
+      const number                                                  &visc_ave_weight_phase_gas,
+      const auto                                                    &viscous_terms_liquid,
+      const auto                                                    &viscous_terms_gas,
+      const Flow::CompressibleFlowData<number>                      &flow_data,
+      const number                                                  &cell_size)
+  {
+    // enumeration for conserved variables component indices
+    using Idx = std::conditional_t<
+      dim == 1,
+      Flow::Idx1D,
+      std::conditional_t<dim == 2, Flow::Idx2D, std::conditional_t<dim == 3, Flow::Idx3D, void>>>;
+
+    const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> vel_liquid =
+      Flow::calculate_velocity<dim>(u_liquid);
+    const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> vel_gas =
+      Flow::calculate_velocity<dim>(u_gas);
+
+    const dealii::VectorizedArray<number> vel_n_liquid = vel_liquid * normal;
+    const dealii::VectorizedArray<number> vel_n_gas    = vel_gas * normal;
+
+    const dealii::VectorizedArray<number> pressure_liquid =
+      Flow::EOS::calculate_thermodynamic_pressure<dim, number, false /*is_gas_phase*/>(u_liquid,
+                                                                                       flow_data);
+    const dealii::VectorizedArray<number> pressure_gas =
+      Flow::EOS::calculate_thermodynamic_pressure<dim, number, true /*is_gas_phase*/>(u_gas,
+                                                                                      flow_data);
+
+    // compute Robin-type viscous interface jump conditions
+    // TODO: add contributions for surface tension and Marangoni forces (for dim>1)
+
+    ConservedVariablesType J_Rob;
+
+    J_Rob[Idx::energy] = flow_data.interface_jump_conditions.m_dot_evap *
+                           (u_liquid[Idx::energy] / u_liquid[Idx::density] -
+                            u_gas[Idx::energy] / u_gas[Idx::density]) +
+                         (pressure_liquid * vel_n_liquid - pressure_gas * vel_n_gas) -
+                         flow_data.interface_jump_conditions.delta_q;
+
+    const ConservedVariablesGradType viscous_flux_liquid =
+      viscous_terms_liquid.calculate_viscous_flux(u_liquid, grad_u_liquid);
+
+    const ConservedVariablesGradType viscous_flux_gas =
+      viscous_terms_gas.calculate_viscous_flux(u_gas, grad_u_gas);
+
+    ConservedVariablesType penalty_term_dT;
+    penalty_term_dT[Idx::energy] =
+      flow_data.interface_jump_conditions.hllp0_and_penalty.penalty_parameter_temperature_jump *
+      (flow_data.material.liquid.thermal_conductivity +
+       flow_data.material.gas.thermal_conductivity) /
+      (2. * cell_size) *
+      ((Flow::EOS::calculate_temperature<dim, number, false>(u_liquid, flow_data) -
+        Flow::EOS::calculate_temperature<dim, number, true>(u_gas, flow_data)) -
+       flow_data.interface_jump_conditions.hllp0_and_penalty.delta_T);
+
+    const ConservedVariablesType weighted_viscous_flux =
+      UtilityFunctions::calculate_arithmetic_phase_weighted_average(
+        visc_ave_weight_phase_gas,
+        contract_tensor_with_vector<dim + 2, dim, number>(viscous_flux_liquid, normal),
+        visc_ave_weight_phase_liquid,
+        contract_tensor_with_vector<dim + 2, dim, number>(viscous_flux_gas, normal));
+
+    const ConservedVariablesType total_viscous_flux_liquid =
+      -J_Rob * visc_ave_weight_phase_liquid - weighted_viscous_flux + penalty_term_dT;
+
+    const ConservedVariablesType total_viscous_flux_gas =
+      -J_Rob * visc_ave_weight_phase_gas + weighted_viscous_flux - penalty_term_dT;
+
+    return {total_viscous_flux_liquid, total_viscous_flux_gas};
   }
 } // namespace MeltPoolDG::Multiphase

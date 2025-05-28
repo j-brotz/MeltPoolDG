@@ -1,6 +1,7 @@
 {
   "base": {
-    "case name": "static_two_phase",
+    "problem name": "compressible_multiphase",
+    "case name": "two_phase",
     "dimension": "1",
     "verbosity level": "1",
     "do print parameters": "false",
@@ -8,15 +9,19 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "0.002"
+    "end time": "5e-8"
   },
   "output": {
     "write frequency": "1",
     "do user defined postprocessing": "true",
     "paraview": {
-      "filename": "static_air_air_HLLP0",
+      "filename": "static_air_air_HLLP0_and_SIPG",
       "enable": "false"
     }
+  },
+  "simulation specific parameters": {
+    "left boundary condition": "no_slip_wall",
+    "right boundary condition": "no_slip_wall"
   },
   "compressible navier stokes": {
     "numerical flux type": "lax_friedrichs_modified",
@@ -26,14 +31,16 @@
     "gravity constant": "0.0",
     "domain representation type": "cut",
     "initial conditions": {
-      "gas": "1.0; 0.0; 1. * 1004.85 / 1.4 * 293.15",
-      "liquid": "1.0; 0.0; 1. * 1004.85 / 1.4 * 293.15"
+      "gas": "1.0; 0.0; 2.104084125e5",
+      "liquid": "1.0; 0.0; 2.104084125e5"
     },
     "interface jump conditions": {
-      "type": "HLLP0_and_Nitsche",
+      "type": "HLLP0_and_SIPG",
       "evaporation mass flux": "0.0",
-      "HLLP0 and Nitsche": {
-        "interior penalty parameter interface": "10.0"
+      "delta q": "0.0",
+      "HLLP0 and SIPG": {
+        "interior penalty parameter interface": "1.0",
+        "delta T": "0.0"
       }
     },
     "cut": {
@@ -59,6 +66,7 @@
         "dynamic viscosity": "0.00002",
         "specific isobaric heat": "1004.85",
         "specific gas constant": "287.1",
+        "thermal conductivity": "0.028",
         "reference density": "1.0",
         "gamma": "1.4",
         "equation of state": {
@@ -69,6 +77,7 @@
         "dynamic viscosity": "0.00002",
         "specific isobaric heat": "1004.85",
         "specific gas constant": "287.1",
+        "thermal conductivity": "0.028",
         "reference density": "1.0",
         "gamma": "1.4",
         "equation of state": {

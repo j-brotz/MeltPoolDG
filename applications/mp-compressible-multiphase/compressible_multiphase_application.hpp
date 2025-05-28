@@ -2,6 +2,7 @@
 
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/compressible_flow_operation.hpp>
+#include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_level_set_advection.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
@@ -53,7 +54,7 @@ namespace MeltPoolDG::Multiphase
      *  @param current_time Current time at t^n.
      */
     void
-    output_results(unsigned int time_step, number current_time);
+    output_results(const unsigned int time_step, const number &current_time);
 
     /**
      * Interpolates the values of a (currently) analytically given level-set function to the
@@ -64,9 +65,11 @@ namespace MeltPoolDG::Multiphase
 
     /**
      * Do level-set advection and reinitialization.
+     *
+     * @param time_step Current time step size.
      */
     void
-    update_level_set();
+    update_level_set(const number &time_step);
 
     std::shared_ptr<CaseType> simulation_case;
 
@@ -78,6 +81,7 @@ namespace MeltPoolDG::Multiphase
     std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
     Flow::CompressibleFlowOperation<dim, number>           comp_multiphase_operation;
     std::unique_ptr<Profiling::ProfilingMonitor<number>>   profiling_monitor;
+    LevelSetAdvection<dim, number>                         level_set_advection_operator;
 
     unsigned int comp_multiphase_dof_idx{};
     unsigned int level_set_dof_idx{};

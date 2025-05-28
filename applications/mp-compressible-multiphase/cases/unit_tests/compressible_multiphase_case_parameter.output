@@ -54,11 +54,18 @@
         },
         "interface jump conditions":
         {
+            "delta q": "0",
             "evaporation mass flux": "0",
-            "type": "penalty",
-            "HLLP0 and Nitsche":
+            "type": "HLLP0_and_SIPG",
+            "HLLP0 and SIPG":
             {
+                "delta T": "0",
                 "interior penalty parameter interface": "1"
+            },
+            "HLLP0 and penalty":
+            {
+                "delta T": "0",
+                "penalty parameter temperature jump": "1"
             },
             "penalty":
             {

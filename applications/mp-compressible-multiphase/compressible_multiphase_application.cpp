@@ -2,13 +2,11 @@
 
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
-#include <meltpooldg/flow/compressible_flow_boundary_conditions.hpp>
 #include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <string>
 
@@ -38,11 +36,11 @@ namespace MeltPoolDG::Multiphase
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout(1));
 
-        // do level-set advection and reinitialization
-        // update_level_set();
-
         comp_multiphase_operation.solve(time_iterator->get_current_time(),
                                         time_iterator->get_current_time_increment());
+
+        // do level-set advection and reinitialization
+        update_level_set(time_iterator->get_current_time_increment());
 
         // do output if requested
         output_results(time_iterator->get_current_time_step_number(),
@@ -84,7 +82,7 @@ namespace MeltPoolDG::Multiphase
 
   template <int dim, typename number>
   void
-  CompressibleMultiphaseApplication<dim, number>::update_level_set()
+  CompressibleMultiphaseApplication<dim, number>::update_level_set(const number &time_step)
   {
     // TODO: introduce dof_handler for level-set advection velocity field, compute projection of
     // interface velocity in normal direction of the interface to reduce the distortion of the
@@ -93,11 +91,16 @@ namespace MeltPoolDG::Multiphase
     // TODO: use advection_DG_operation and reinitialization_..._operation for dim>2 cases with
     // distorted level-set.
 
-    // Currently, we only consider static interfaces
-    AssertThrow(false,
+    // move level-set analytically (currently, only 1D simulations are supported)
+    AssertThrow(dim == 1,
                 dealii::ExcNotImplemented(
-                  "Currently, we only consider static interfaces. "
-                  "No level-set update, i.e. advection and reinitialization, is implemented yet."));
+                  "Currently, interface movement is only allowed for 1D simulations."));
+
+    level_set_advection_operator.move_level_set(level_set,
+                                                time_step,
+                                                simulation_case->parameters.base.case_name,
+                                                scratch_data,
+                                                level_set_dof_idx);
   }
 
   template <int dim, typename number>
@@ -231,7 +234,7 @@ namespace MeltPoolDG::Multiphase
   template <int dim, typename number>
   void
   CompressibleMultiphaseApplication<dim, number>::output_results(const unsigned int time_step,
-                                                                 const number       current_time)
+                                                                 const number      &current_time)
   {
     if (not post_processor->is_output_timestep(time_step, current_time) and
         not simulation_case->parameters.output.do_user_defined_postprocessing)

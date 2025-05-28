@@ -9,7 +9,7 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "5e-8"
+    "end time": "1.0e-4"
   },
   "output": {
     "write frequency": "1",

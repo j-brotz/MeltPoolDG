@@ -31,12 +31,16 @@ namespace MeltPoolDG::Multiphase
     , fe_point_temp(FE_DGQ<dim>(flow_scratch_data.flow_data.fe.degree), dim + 2)
     , n_dofs_per_cell(fe_point_temp.dofs_per_cell)
   {
-    const number q_1 = flow_scratch_data.flow_data.material.liquid.dynamic_viscosity;
+    const auto &l = flow_scratch_data.flow_data.material.liquid;
+    const auto &g = flow_scratch_data.flow_data.material.gas;
 
-    const number q_2 = flow_scratch_data.flow_data.material.gas.dynamic_viscosity;
+    const number q_liquid =
+      2. * l.dynamic_viscosity + l.thermal_conductivity / (l.specific_isobaric_heat / l.gamma);
+    const number q_gas =
+      2. * g.dynamic_viscosity + g.thermal_conductivity / (g.specific_isobaric_heat / g.gamma);
 
-    alpha_1 = q_1 / (q_1 + q_2);
-    alpha_2 = 1. - alpha_1;
+    visc_ave_weight_phase_liquid = q_liquid / (q_liquid + q_gas);
+    visc_ave_weight_phase_gas    = 1. - visc_ave_weight_phase_liquid;
   }
 
   template <unsigned int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
@@ -195,6 +199,9 @@ namespace MeltPoolDG::Multiphase
             dealii::FEPointEvaluation<dim + 2, dim, dim, dealii::VectorizedArray<number>>
               eval_point_interface_gas(mapping_info_interface, fe_point_temp);
 
+            // reset values for interface velocity
+            level_set_advection_operator.clear_interface_velocity();
+
             for (unsigned int cell_batch = cell_range.first; cell_batch < cell_range.second;
                  ++cell_batch)
               {
@@ -258,89 +265,109 @@ namespace MeltPoolDG::Multiphase
                                              EvaluationFlags::values | EvaluationFlags::gradients);
 
                     // do interface integral
-                    switch (flow_scratch_data.flow_data.interface_jump_conditions.type)
+                    if (flow_scratch_data.flow_data.interface_jump_conditions.type ==
+                        InterfaceNumericalMethod::penalty)
                       {
-                          case InterfaceNumericalMethod::penalty: {
-                            // enumeration for conserved variables component indices
-                            using Idx = std::conditional_t<
-                              dim == 1,
-                              Flow::Idx1D,
-                              std::conditional_t<dim == 2,
-                                                 Flow::Idx2D,
-                                                 std::conditional_t<dim == 3, Flow::Idx3D, void>>>;
+                        // enumeration for conserved variables component indices
+                        using Idx = std::conditional_t<
+                          dim == 1,
+                          Flow::Idx1D,
+                          std::conditional_t<dim == 2,
+                                             Flow::Idx2D,
+                                             std::conditional_t<dim == 3, Flow::Idx3D, void>>>;
 
-                            for (const unsigned int q :
-                                 eval_point_interface_liquid.quadrature_point_indices())
-                              {
-                                auto w_liquid      = eval_point_interface_liquid.get_value(q);
-                                auto w_gas         = eval_point_interface_gas.get_value(q);
-                                auto grad_w_liquid = eval_point_interface_liquid.get_gradient(q);
-                                auto grad_w_gas    = eval_point_interface_gas.get_gradient(q);
+                        for (const unsigned int q :
+                             eval_point_interface_liquid.quadrature_point_indices())
+                          {
+                            auto w_liquid      = eval_point_interface_liquid.get_value(q);
+                            auto w_gas         = eval_point_interface_gas.get_value(q);
+                            auto grad_w_liquid = eval_point_interface_liquid.get_gradient(q);
+                            auto grad_w_gas    = eval_point_interface_gas.get_gradient(q);
 
-                                const auto [flux_liquid, flux_gas] =
-                                  calculate_convective_and_viscous_interface_flux_penalty<
-                                    dim,
-                                    number,
-                                    ConservedVariablesType,
-                                    ConservedVariablesGradType>(w_liquid,
-                                                                w_gas,
-                                                                grad_w_liquid,
-                                                                grad_w_gas,
-                                                                flow_scratch_data.flow_data,
-                                                                viscous_terms_liquid,
-                                                                viscous_terms_gas);
+                            const auto [flux_liquid, flux_gas] =
+                              calculate_convective_and_viscous_interface_flux_penalty<
+                                dim,
+                                number,
+                                ConservedVariablesType,
+                                ConservedVariablesGradType>(w_liquid,
+                                                            w_gas,
+                                                            grad_w_liquid,
+                                                            grad_w_gas,
+                                                            flow_scratch_data.flow_data,
+                                                            viscous_terms_liquid,
+                                                            viscous_terms_gas);
 
-                                // TODO: How to determine interface velocity for penalty method?
+                            // Compute the velocity at the interface using the difference in
+                            // momentum and density between the liquid and gas phases
+                            // (mass conservation across the interface).
+                            // indices: [conserved variables component][vectorization index]
 
-                                // Compute the velocity at the interface using the difference in
-                                // momentum and density between the liquid and gas phases
-                                // (mass conservation across the interface).
-                                // indices: [conserved variables component][vectorization index]
-                                velocity_interface =
-                                  (w_liquid[Idx::momentum_x][0] - w_gas[Idx::momentum_x][0]) /
-                                  (w_liquid[Idx::density][0] - w_gas[Idx::density][0]);
+                            // Outwards pointing normal vector with respect to the liquid domain.
+                            const auto normal = -eval_point_interface_liquid.normal_vector(q);
 
-                                eval_point_interface_liquid.submit_value(-flux_liquid, q);
-                                eval_point_interface_gas.submit_value(-flux_gas, q);
-                              }
-                            break;
+                            // TODO: temporal solution for dim=1; revise for dim>1!
+                            const number interface_velocity =
+                              (std::abs(w_liquid[Idx::density][0] - w_gas[Idx::density][0]) >
+                                   1.e-12 ?
+                                 (w_liquid[Idx::momentum_x][0] - w_gas[Idx::momentum_x][0]) /
+                                   (w_liquid[Idx::density][0] - w_gas[Idx::density][0]) :
+                                 w_liquid[Idx::momentum_x][0] / w_liquid[Idx::density][0]) *
+                              normal[0][0];
+
+                            level_set_advection_operator.set_interface_velocity(interface_velocity);
+
+                            eval_point_interface_liquid.submit_value(-flux_liquid, q);
+                            eval_point_interface_gas.submit_value(-flux_gas, q);
                           }
-                          case InterfaceNumericalMethod::HLLP0_and_Nitsche: {
-                            for (const unsigned int q :
-                                 eval_point_interface_gas.quadrature_point_indices())
+                      }
+                    else if (flow_scratch_data.flow_data.interface_jump_conditions.type ==
+                               InterfaceNumericalMethod::HLLP0_and_SIPG or
+                             flow_scratch_data.flow_data.interface_jump_conditions.type ==
+                               InterfaceNumericalMethod::HLLP0_and_penalty)
+                      {
+                        for (const unsigned int q :
+                             eval_point_interface_gas.quadrature_point_indices())
+                          {
+                            const auto w_liquid      = eval_point_interface_liquid.get_value(q);
+                            const auto w_gas         = eval_point_interface_gas.get_value(q);
+                            const auto grad_w_liquid = eval_point_interface_liquid.get_gradient(q);
+                            const auto grad_w_gas    = eval_point_interface_gas.get_gradient(q);
+                            // Outwards pointing normal vector with respect to the liquid domain.
+                            // (The sign depends on the level-set orientation. Currently, we use
+                            // a positive level-set for the liquid phase.)
+                            const auto normal = -eval_point_interface_liquid.normal_vector(q);
+
+                            const auto [riemann_flux_liquid,
+                                        riemann_flux_gas,
+                                        velocity_interface_vec] =
+                              calculate_convective_interface_flux_HLLP0<dim,
+                                                                        number,
+                                                                        ConservedVariablesType,
+                                                                        ConservedVariablesGradType>(
+                                w_liquid,
+                                w_gas,
+                                normal,
+                                convective_terms_liquid,
+                                convective_terms_gas,
+                                flow_scratch_data.flow_data);
+
+                            ConservedVariablesType flux_liquid =
+                              contract_tensor_with_vector<dim + 2, dim, number>(riemann_flux_liquid,
+                                                                                normal);
+                            ConservedVariablesType flux_gas =
+                              contract_tensor_with_vector<dim + 2, dim, number>(riemann_flux_gas,
+                                                                                -normal);
+                            // TODO: consider more complex data structure for velocity for dim>1
+                            // TODO: project interface velocity in normal direction for dim>1
+                            // returns velocity with respect to the outward liquid phase pointing
+                            // normal!
+                            level_set_advection_operator.set_interface_velocity(
+                              velocity_interface_vec[0] * normal[0][0]);
+
+                            if (is_viscous_liquid or is_viscous_gas)
                               {
-                                const auto w_liquid = eval_point_interface_liquid.get_value(q);
-                                const auto w_gas    = eval_point_interface_gas.get_value(q);
-                                const auto grad_w_liquid =
-                                  eval_point_interface_liquid.get_gradient(q);
-                                const auto grad_w_gas = eval_point_interface_gas.get_gradient(q);
-                                // Outside pointing normal vector with respect to the liquid domain.
-                                // (The sign depends on the level-set orientation. Currently, we use
-                                // a positive level-set for the liquid phase.)
-                                const auto normal = -eval_point_interface_liquid.normal_vector(q);
-
-                                const auto [riemann_flux_liquid,
-                                            riemann_flux_gas,
-                                            velocity_interface_vec] =
-                                  calculate_convective_interface_flux_HLLP0<
-                                    dim,
-                                    number,
-                                    ConservedVariablesType,
-                                    ConservedVariablesGradType>(w_liquid,
-                                                                w_gas,
-                                                                normal,
-                                                                convective_terms_liquid,
-                                                                convective_terms_gas,
-                                                                flow_scratch_data.flow_data);
-
-                                auto flux_liquid = riemann_flux_liquid;
-                                auto flux_gas =
-                                  -riemann_flux_gas; // opposite normal direction for phase 2
-                                // TODO: consider more complex data structure for velocity for dim>1
-                                // TODO: project interface velocity in normal direction for dim>1
-                                velocity_interface = velocity_interface_vec[0];
-
-                                if (is_viscous_liquid or is_viscous_gas)
+                                if (flow_scratch_data.flow_data.interface_jump_conditions.type ==
+                                    InterfaceNumericalMethod::HLLP0_and_SIPG)
                                   {
                                     const auto [viscous_interface_flux_liquid,
                                                 viscous_interface_flux_gas] =
@@ -353,57 +380,84 @@ namespace MeltPoolDG::Multiphase
                                         grad_w_liquid,
                                         grad_w_gas,
                                         normal,
-                                        alpha_1,
-                                        alpha_2,
+                                        visc_ave_weight_phase_liquid,
+                                        visc_ave_weight_phase_gas,
                                         flow_scratch_data.flow_data.interface_jump_conditions
-                                          .hllp0_and_nitsche.interior_penalty_parameter_interface,
+                                          .hllp0_and_sipg.interior_penalty_parameter_interface,
                                         viscous_terms_liquid,
                                         viscous_terms_gas,
-                                        flow_scratch_data.flow_data);
+                                        flow_scratch_data.flow_data,
+                                        flow_scratch_data.scratch_data.get_min_cell_size());
 
                                     flux_liquid -= viscous_interface_flux_liquid;
                                     // opposite normal direction for phase 2
                                     flux_gas += viscous_interface_flux_gas;
                                   }
-
-                                eval_point_interface_liquid.submit_value(-flux_liquid, q);
-                                eval_point_interface_gas.submit_value(-flux_gas, q);
-
-                                if (is_viscous_liquid or is_viscous_gas)
+                                else if (flow_scratch_data.flow_data.interface_jump_conditions
+                                           .type == InterfaceNumericalMethod::HLLP0_and_penalty)
                                   {
-                                    const auto [numerical_flux_gradient_liquid,
-                                                numerical_flux_gradient_gas] =
-                                      calculate_viscous_interface_flux_gradient<
+                                    const auto [viscous_interface_flux_liquid,
+                                                viscous_interface_flux_gas] =
+                                      calculate_viscous_interface_flux_method_3<
                                         dim,
                                         number,
                                         ConservedVariablesType,
-                                        ConservedVariablesGradType>(w_liquid,
-                                                                    w_gas,
-                                                                    normal,
-                                                                    alpha_1,
-                                                                    alpha_2,
-                                                                    viscous_terms_liquid,
-                                                                    viscous_terms_gas,
-                                                                    flow_scratch_data.flow_data);
+                                        ConservedVariablesGradType>(
+                                        w_liquid,
+                                        w_gas,
+                                        grad_w_liquid,
+                                        grad_w_gas,
+                                        normal,
+                                        visc_ave_weight_phase_liquid,
+                                        visc_ave_weight_phase_gas,
+                                        viscous_terms_liquid,
+                                        viscous_terms_gas,
+                                        flow_scratch_data.flow_data,
+                                        flow_scratch_data.scratch_data.get_min_cell_size());
 
-                                    eval_point_interface_liquid.submit_gradient(
-                                      -numerical_flux_gradient_liquid, q);
-                                    eval_point_interface_gas.submit_gradient(
-                                      -numerical_flux_gradient_gas, q);
+                                    flux_liquid += viscous_interface_flux_liquid;
+                                    flux_gas += viscous_interface_flux_gas;
                                   }
                               }
-                            break;
+
+                            eval_point_interface_liquid.submit_value(-flux_liquid, q);
+                            eval_point_interface_gas.submit_value(-flux_gas, q);
+
+                            if ((is_viscous_liquid or is_viscous_gas) and
+                                flow_scratch_data.flow_data.interface_jump_conditions.type ==
+                                  InterfaceNumericalMethod::HLLP0_and_SIPG)
+                              {
+                                const auto [numerical_flux_gradient_liquid,
+                                            numerical_flux_gradient_gas] =
+                                  calculate_viscous_interface_flux_gradient<
+                                    dim,
+                                    number,
+                                    ConservedVariablesType,
+                                    ConservedVariablesGradType>(w_liquid,
+                                                                w_gas,
+                                                                normal,
+                                                                visc_ave_weight_phase_liquid,
+                                                                visc_ave_weight_phase_gas,
+                                                                viscous_terms_liquid,
+                                                                viscous_terms_gas,
+                                                                flow_scratch_data.flow_data);
+
+                                eval_point_interface_liquid.submit_gradient(
+                                  -numerical_flux_gradient_liquid, q);
+                                eval_point_interface_gas.submit_gradient(
+                                  -numerical_flux_gradient_gas, q);
+                              }
                           }
-                        default:
-                          Assert(false, dealii::ExcNotImplemented());
                       }
+                    else
+                      Assert(false, dealii::ExcNotImplemented());
 
                     eval_point_interface_liquid.integrate(StridedArrayView<number, n_lanes>(
                                   &eval_liquid_intersected.begin_dof_values()[0][lane],
                                   n_dofs_per_cell),
                                   EvaluationFlags::values |
                                   (flow_scratch_data.flow_data.interface_jump_conditions.type
-                                    == InterfaceNumericalMethod::HLLP0_and_Nitsche ?
+                                    == InterfaceNumericalMethod::HLLP0_and_SIPG ?
                                     EvaluationFlags::gradients: EvaluationFlags::nothing) , true
                                   /*specify flag 'true' for summing the integrated values
                                    *into the solution values*/);
@@ -413,7 +467,7 @@ namespace MeltPoolDG::Multiphase
                                   n_dofs_per_cell),
                                   EvaluationFlags::values |
                                   (flow_scratch_data.flow_data.interface_jump_conditions.type
-                                    == InterfaceNumericalMethod::HLLP0_and_Nitsche ?
+                                    == InterfaceNumericalMethod::HLLP0_and_SIPG ?
                                     EvaluationFlags::gradients : EvaluationFlags::nothing), true
                                   /*specify flag 'true' for summing the integrated values
                                    *into the solution values*/);

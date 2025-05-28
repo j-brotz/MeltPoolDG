@@ -1,7 +1,7 @@
 {
   "base": {
     "problem name": "compressible_multiphase",
-    "case name": "two_phase",
+    "case name": "oscillating_water_column",
     "dimension": "1",
     "verbosity level": "1",
     "do print parameters": "false",
@@ -9,44 +9,30 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "5e-8"
+    "end time": "0.5"
   },
   "output": {
-    "write frequency": "1",
+    "write frequency": "1000",
     "do user defined postprocessing": "true",
     "paraview": {
-      "filename": "static_air_air_penalty",
+      "filename": "oscillating_water_column_HLLP0_SIPG",
       "enable": "false"
     }
   },
-  "simulation specific parameters": {
-    "left boundary condition": "no_slip_wall",
-    "right boundary condition": "no_slip_wall"
-  },
   "compressible navier stokes": {
     "numerical flux type": "lax_friedrichs_modified",
-    "courant number": "0.05",
-    "viscous courant number": "0.02",
+    "courant number": "0.01",
+    "viscous courant number": "0.01",
     "use cfl criteria": "true",
     "gravity constant": "0.0",
     "domain representation type": "cut",
-    "initial conditions": {
-      "gas": "1.0; 0.0; 2.104084125e5",
-      "liquid": "1.0; 0.0; 2.104084125e5"
-    },
     "interface jump conditions": {
-      "type": "penalty",
+      "type": "HLLP0_and_SIPG",
       "evaporation mass flux": "0.0",
       "delta q": "0.0",
-      "penalty": {
-        "coefficients": {
-          "density": "100.0",
-          "temperature": "100.0"
-        },
-        "target values": {
-          "density gas phase": "1.0",
-          "temperature gas phase": "293.15"
-        }
+      "HLLP0 and Nitsche": {
+        "interior penalty parameter interface": "1.0",
+        "delta T": "0.0"
       }
     },
     "cut": {
@@ -72,22 +58,20 @@
         "dynamic viscosity": "0.00002",
         "specific isobaric heat": "1004.85",
         "specific gas constant": "287.1",
-        "thermal conductivity": "0.028",
-        "reference density": "1.0",
+        "reference density": "0.4",
         "gamma": "1.4",
         "equation of state": {
           "type": "ideal_gas"
         }
       },
       "liquid": {
-        "dynamic viscosity": "0.00002",
-        "specific isobaric heat": "1004.85",
-        "specific gas constant": "287.1",
-        "thermal conductivity": "0.028",
-        "reference density": "1.0",
-        "gamma": "1.4",
+        "dynamic viscosity": "0.001",
+        "specific isobaric heat": "4190.0",
+        "reference density": "800.0",
+        "gamma": "2.788103",
         "equation of state": {
-          "type": "ideal_gas"
+          "type": "stiffened_gas",
+          "p inf": "7.862511e8"
         }
       }
     },
