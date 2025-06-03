@@ -70,7 +70,8 @@ namespace MeltPoolDG::Heat
     const unsigned int ls_dof_idx_in,
     const VectorType  &level_set_in,
     const unsigned int vel_dof_idx_in,
-    const VectorType  *velocity_in)
+    const VectorType  *velocity_in,
+    const VectorType  *velocity_old_in)
     : scratch_data(scratch_data_in)
     , dirichlet_bc(
         construct_dirichlet_bc_map<dim, number>(heat_data_in.cut.two_phase,
@@ -126,7 +127,8 @@ namespace MeltPoolDG::Heat
                                                      mapping_info_cells,
                                                      do_solidification_in,
                                                      vel_dof_idx_in,
-                                                     velocity_in);
+                                                     velocity_in,
+                                                     velocity_old_in);
 
     preconditioner = make_preconditioner<dim, number, HeatCutOperator<dim, number>, VectorType>(
       heat_data.linear_solver.preconditioner_type, heat_operator.get());

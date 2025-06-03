@@ -54,7 +54,7 @@ namespace MeltPoolDG::TimeIntegration
     update_ghost_values(const bool check = false) const
     {
       for (unsigned int i = 0; i < solutions.size(); ++i)
-        if (!check || !solutions[i].has_ghost_elements())
+        if (not check or not solutions[i].has_ghost_elements())
           solutions[i].update_ghost_values();
     }
 
@@ -62,7 +62,7 @@ namespace MeltPoolDG::TimeIntegration
     zero_out_ghost_values(const bool check = false) const
     {
       for (unsigned int i = 0; i < solutions.size(); ++i)
-        if (!check || solutions[i].has_ghost_elements())
+        if (not check or solutions[i].has_ghost_elements())
           solutions[i].zero_out_ghost_values();
     }
 
@@ -190,7 +190,7 @@ namespace MeltPoolDG::TimeIntegration
 // const bool         keep_recent,
 // const bool         keep_old) const
 //{
-// return (index == 0 && keep_current) || (index == 1 && keep_recent) || (index > 1 && keep_old);
+// return (index == 0 and keep_current) or (index == 1 and keep_recent) or (index > 1 and keep_old);
 //}
 
 

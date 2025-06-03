@@ -14,6 +14,7 @@
 #include <meltpooldg/heat/laser_operation.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/attach_vectors.hpp>
@@ -36,9 +37,9 @@ namespace MeltPoolDG::Heat
 
     const std::unique_ptr<CaseType> simulation_case;
 
-    VectorType velocity;
-    VectorType level_set_as_heaviside;
-    VectorType level_set;
+    TimeIntegration::SolutionHistory<VectorType> velocity_hist;
+    VectorType                                   level_set_as_heaviside;
+    VectorType                                   level_set;
 
     std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
     dealii::DoFHandler<dim>                                dof_handler;

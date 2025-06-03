@@ -57,7 +57,12 @@ namespace MeltPoolDG::Heat
             time_iterator->print_me(scratch_data->get_pcout(1));
 
             if (velocity_field_function)
-              compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
+              {
+                velocity_hist.commit_old_solutions();
+                compute_field_vector(velocity_hist.get_current_solution(),
+                                     velocity_dof_idx,
+                                     *velocity_field_function);
+              }
 
             if (heaviside_field_function)
               compute_field_vector(level_set_as_heaviside,
@@ -184,12 +189,18 @@ namespace MeltPoolDG::Heat
       }
 
     // set velocity field
-    VectorType *velocity_ptr = nullptr;
-    velocity_field_function  = simulation_case->get_field_function("prescribed_velocity",
+    VectorType *velocity_ptr     = nullptr;
+    VectorType *velocity_old_ptr = nullptr;
+    velocity_field_function      = simulation_case->get_field_function("prescribed_velocity",
                                                                   "heat_transfer",
                                                                   true /*is_optional*/);
     if (velocity_field_function)
-      velocity_ptr = &velocity;
+      {
+        velocity_hist.resize(param.heat.operator_type == TwoPhaseOperatorType::cut ? 2 : 1);
+        velocity_ptr = &velocity_hist.get_current_solution();
+        if (velocity_hist.size() > 1)
+          velocity_old_ptr = &velocity_hist.get_recent_old_solution();
+      }
 
     // set level-set as heaviside field
     VectorType *level_set_as_heaviside_ptr = nullptr;
@@ -257,25 +268,37 @@ namespace MeltPoolDG::Heat
               level_set_dof_idx,
               level_set,
               velocity_dof_idx,
-              velocity_ptr);
+              velocity_ptr,
+              velocity_old_ptr);
 
             if (laser_operation)
               heat_cut_operation->register_laser_intensity_function_and_direction(
                 laser_operation->get_intensity_profile(),
                 param.laser.template get_direction<dim>());
 
-            heat_cut_operation->register_lambdas_for_solution_transfer([&]() {
-              setup_dof_system();
+            heat_cut_operation->register_lambdas_for_solution_transfer(
+              [this]() {
+                setup_dof_system();
 
-              // recompute heat source
-              scratch_data->initialize_dof_vector(heat_operation->get_heat_source(),
-                                                  heat_continuous_no_bc_dof_idx);
-              if (const auto source_field_function = simulation_case->get_field_function(
-                    "prescribed_heat_source", "heat_transfer", true /*is_optional*/))
-                compute_field_vector(heat_operation->get_heat_source(),
-                                     heat_continuous_no_bc_dof_idx,
-                                     *source_field_function);
-            });
+                // recompute heat source
+                scratch_data->initialize_dof_vector(heat_operation->get_heat_source(),
+                                                    heat_continuous_no_bc_dof_idx);
+                if (const auto source_field_function = simulation_case->get_field_function(
+                      "prescribed_heat_source", "heat_transfer", true /*is_optional*/))
+                  compute_field_vector(heat_operation->get_heat_source(),
+                                       heat_continuous_no_bc_dof_idx,
+                                       *source_field_function);
+              },
+              [this](DoFHandlerAndVectorDataType<dim, VectorType> &data) {
+                data.emplace_back(&dof_handler, [this](std::vector<VectorType *> &vectors) {
+                  heat_operation->attach_vectors(vectors);
+                });
+                if (velocity_hist.size() > 1)
+                  data.emplace_back(&dof_handler_velocity, [&](std::vector<VectorType *> &vectors) {
+                    vectors.reserve(1);
+                    vectors.push_back(&velocity_hist.get_recent_old_solution());
+                  });
+              });
 
             // before the CutFEM operation can distribute dofs, the mesh must be classified
             // according to the level set indicator
@@ -306,7 +329,14 @@ namespace MeltPoolDG::Heat
     setup_dof_system();
 
     if (velocity_field_function)
-      compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
+      {
+        compute_field_vector(velocity_hist.get_current_solution(),
+                             velocity_dof_idx,
+                             *velocity_field_function);
+        compute_field_vector(velocity_hist.get_recent_old_solution(),
+                             velocity_dof_idx,
+                             *velocity_field_function);
+      }
     if (heaviside_field_function)
       compute_field_vector(level_set_as_heaviside, level_set_dof_idx, *heaviside_field_function);
     if (level_set_field_function)
@@ -388,6 +418,11 @@ namespace MeltPoolDG::Heat
           data.emplace_back(&dof_handler, [&](std::vector<VectorType *> &vectors) {
             heat_operation->attach_vectors(vectors);
           });
+          if (velocity_hist.size() > 1)
+            data.emplace_back(&dof_handler_velocity, [&](std::vector<VectorType *> &vectors) {
+              vectors.reserve(1);
+              vectors.push_back(&velocity_hist.get_recent_old_solution());
+            });
           if (laser_operation)
             laser_operation->attach_vectors(data);
         };
@@ -396,7 +431,9 @@ namespace MeltPoolDG::Heat
           heat_operation->distribute_constraints();
 
           if (velocity_field_function)
-            compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
+            compute_field_vector(velocity_hist.get_current_solution(),
+                                 velocity_dof_idx,
+                                 *velocity_field_function);
           if (heaviside_field_function)
             compute_field_vector(level_set_as_heaviside,
                                  level_set_dof_idx,
@@ -481,6 +518,9 @@ namespace MeltPoolDG::Heat
     }
 
     heat_operation->reinit();
+    if (velocity_hist.size() > 1)
+      velocity_hist.apply_old(
+        [this](VectorType &vec) { scratch_data->initialize_dof_vector(vec, velocity_dof_idx); });
     if (laser_operation)
       laser_operation->reinit();
   }
@@ -529,9 +569,14 @@ namespace MeltPoolDG::Heat
             dim, dealii::DataComponentInterpretation::component_is_part_of_vector);
 
         data_out.add_data_vector(dof_handler_velocity,
-                                 velocity,
+                                 velocity_hist.get_current_solution(),
                                  std::vector<std::string>(dim, "velocity"),
                                  vector_component_interpretation);
+        if (velocity_hist.size() > 1)
+          data_out.add_data_vector(dof_handler_velocity,
+                                   velocity_hist.get_recent_old_solution(),
+                                   std::vector<std::string>(dim, "velocity_old"),
+                                   vector_component_interpretation);
       }
     // prescribed heaviside
     if (heaviside_field_function)
@@ -558,6 +603,11 @@ namespace MeltPoolDG::Heat
           // set initial conditions after initial AMR
           heat_operation->set_initial_condition(
             *simulation_case->get_initial_condition("heat_transfer"));
+          // set initial condition of old velocity vector
+          if (velocity_hist.size() > 1)
+            compute_field_vector(velocity_hist.get_recent_old_solution(),
+                                 velocity_dof_idx,
+                                 *velocity_field_function);
         };
       }
     else
