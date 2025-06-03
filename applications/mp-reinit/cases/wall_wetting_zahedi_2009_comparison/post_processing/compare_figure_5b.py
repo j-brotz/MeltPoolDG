@@ -3,7 +3,6 @@
 """
  Import libraries
 """
-# import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 import numpy as np
@@ -22,7 +21,6 @@ import seaborn as sns
 """
 plt.rcParams["figure.figsize"] = (8, 6)
 plt.rcParams["figure.dpi"] = 300
-# matplotlib.use('Agg')
 
 """
  Main

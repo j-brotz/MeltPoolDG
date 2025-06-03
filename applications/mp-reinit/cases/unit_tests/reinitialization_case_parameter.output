@@ -58,6 +58,7 @@
     },
     "normal vector":
     {
+        "compute normalized vector": "false",
         "filter parameter": "2",
         "implementation": "meltpooldg",
         "verbosity level": "-1",
@@ -118,6 +119,7 @@
         "implementation": "meltpooldg",
         "max n steps": "5",
         "n initial steps": "-1",
+        "tangential diffusion factor": "0",
         "tolerance": "2.22507e-308",
         "type": "olsson2007",
         "Discontinous Galerkin":

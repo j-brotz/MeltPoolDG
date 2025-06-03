@@ -25,23 +25,6 @@ namespace MeltPoolDG::LevelSet
     virtual void
     set_initial_condition(const dealii::Function<dim> & /*initial_field_function*/) = 0;
 
-    /**
-     *
-     * @param p_wetting_bc_map TODO AA
-     */
-    virtual void
-    set_wetting_bc_map(
-      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-        & /*p_wetting_bc_map*/) = 0;
-    /**
-     *
-     * @param p_wetting_bc_map TODO AA
-     */
-    virtual void
-    set_contact_angle_bc_map(
-      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-        & /*p_contact_angle_bc_map*/) = 0;
-
     virtual const dealii::LinearAlgebra::distributed::Vector<number> &
     get_level_set() const = 0;
 

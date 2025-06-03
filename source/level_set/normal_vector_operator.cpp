@@ -129,10 +129,6 @@ namespace MeltPoolDG::LevelSet
            ExcMessage(
              "Level set solution vector must not be nullptr for a narrow band computation."));
 
-    // Stow away temporarily values corresponding to wetting boundary conditions
-    if (do_pre_post)
-      do_pre_vmult(dst, src);
-
     scratch_data.get_matrix_free().template cell_loop<BlockVectorType, BlockVectorType>(
       [&](const auto &, auto &dst, const auto &src, auto cell_range) {
         FECellIntegrator<dim, 1, number> normal(scratch_data.get_matrix_free(),
@@ -158,10 +154,6 @@ namespace MeltPoolDG::LevelSet
       dst,
       src,
       true);
-
-    // Copy to "dst" values corresponding to wetting boundary conditions
-    if (do_pre_post)
-      do_post_vmult(dst, src);
   }
 
   template <int dim, typename number>
@@ -277,9 +269,6 @@ namespace MeltPoolDG::LevelSet
       normal_quad_idx);
 
     system_matrix.compress(VectorOperation::add);
-
-    if (do_pre_post)
-      post_system_matrix_compute(system_matrix);
   }
 
   template <int dim, typename number>
@@ -330,13 +319,6 @@ namespace MeltPoolDG::LevelSet
     for (unsigned int d = 0; d < dim; ++d)
       for (auto &i : diagonal.block(d))
         i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
-
-    if (do_pre_post)
-      {
-        for (unsigned int d = 0; d < dim; ++d)
-          for (const auto &i : wetting_bc_local_indices)
-            diagonal.block(d).local_element(i) = 1.0;
-      }
   }
 
   template <int dim, typename number>
@@ -420,92 +402,6 @@ namespace MeltPoolDG::LevelSet
       }
     else
       this->reinit_sparsity_pattern(scratch_data);
-  }
-
-  template <int dim, typename number>
-  void
-  NormalVectorOperator<dim, number>::set_wetting_bc_indices(
-    const std::vector<unsigned int> &p_wetting_bc_local_indices)
-  {
-    this->wetting_bc_local_indices = p_wetting_bc_local_indices;
-  }
-
-  template <int dim, typename number>
-  void
-  NormalVectorOperator<dim, number>::set_contact_angle_bc_indices(
-    const std::vector<unsigned int> &p_contact_angle_bc_local_indices)
-  {
-    this->contact_angle_bc_local_indices = p_contact_angle_bc_local_indices;
-  }
-
-  template <int dim, typename number>
-  void
-  NormalVectorOperator<dim, number>::enable_pre_post()
-  {
-    do_pre_post = true;
-  }
-
-  template <int dim, typename number>
-  void
-  NormalVectorOperator<dim, number>::disable_pre_post()
-  {
-    do_pre_post = false;
-  }
-
-  template <int dim, typename number>
-  void
-  NormalVectorOperator<dim, number>::do_pre_vmult([[maybe_unused]] BlockVectorType &dst,
-                                                  const BlockVectorType            &src_in) const
-  {
-    BlockVectorType &src = const_cast<BlockVectorType &>(src_in);
-
-    this->wetting_constraints_values_temp.resize(
-      dim, std::vector<number>(this->wetting_bc_local_indices.size()));
-
-    for (unsigned int d = 0; d < dim; ++d)
-      {
-        auto &src_d = src.block(d);
-        for (unsigned int i = 0; i < this->wetting_bc_local_indices.size(); ++i)
-          {
-            const unsigned int index                    = this->wetting_bc_local_indices[i];
-            this->wetting_constraints_values_temp[d][i] = src_d.local_element(index);
-            src_d.local_element(index)                  = 0.0;
-          }
-      }
-  }
-
-  template <int dim, typename number>
-  void
-  NormalVectorOperator<dim, number>::do_post_vmult(
-    BlockVectorType                        &dst,
-    [[maybe_unused]] const BlockVectorType &src_in) const
-  {
-    for (unsigned int d = 0; d < dim; ++d)
-      {
-        auto &dst_d = dst.block(d);
-        for (unsigned int i = 0; i < this->wetting_bc_local_indices.size(); ++i)
-          {
-            const auto &index          = this->wetting_bc_local_indices[i];
-            const auto &value          = this->wetting_constraints_values_temp[d][i];
-            dst_d.local_element(index) = value;
-          }
-      }
-  }
-
-  template <int dim, typename number>
-  void
-  NormalVectorOperator<dim, number>::post_system_matrix_compute(
-    TrilinosWrappers::SparseMatrix &system_matrix) const
-  {
-    const auto &partitioner =
-      this->scratch_data.get_matrix_free().get_vector_partitioner(this->dof_idx);
-    {
-      for (const auto &i : this->wetting_bc_local_indices)
-        {
-          const auto global_index = partitioner->local_to_global(i);
-          system_matrix.clear_row(global_index, 1.0);
-        }
-    }
   }
 
   template class NormalVectorOperator<1, double>;

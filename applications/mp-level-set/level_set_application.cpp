@@ -139,6 +139,17 @@ namespace MeltPoolDG::LevelSet
 
     if (simulation_case->parameters.ls.fe.type != FiniteElementType::FE_DGQ)
       {
+        // Make array with normal vector dof indices
+        // TODO AA change when implementation willbe done in Level-Set application
+        const std::array<unsigned int, dim> normal_dof_indices_per_block = [this]() {
+          if constexpr (dim == 1)
+            return std::array<unsigned int, 1>{{normal_dof_idx}};
+          else if constexpr (dim == 2)
+            return std::array<unsigned int, 2>{{normal_dof_idx, normal_dof_idx}};
+          else if constexpr (dim == 3)
+            return std::array<unsigned int, 3>{{normal_dof_idx, normal_dof_idx, normal_dof_idx}};
+        }();
+
         level_set_operation = std::make_unique<LevelSetOperation<dim, number>>(
           *scratch_data,
           *time_iterator,
@@ -151,8 +162,7 @@ namespace MeltPoolDG::LevelSet
           ls_quad_idx,
           reinit_dof_idx,
           curv_dof_idx,
-          std::array<unsigned int, dim>(normal_dof_idx), // TODO AA change when implementation will
-                                                         // be done in Level-Set application
+          normal_dof_indices_per_block,
           normal_dof_idx, // TODO AA change when implementation will be done in Level-Set
                           // application
           vel_dof_idx,

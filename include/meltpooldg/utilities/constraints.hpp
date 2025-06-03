@@ -263,23 +263,4 @@ namespace MeltPoolDG::Constraints
 
     check_constraints(scratch_data.get_dof_handler(dof_idx), scratch_data.get_constraint(dof_idx));
   }
-
-  // template <int dim, typename number>
-  // void
-  // make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC(
-  //   ScratchData<dim, dim, number> &scratch_data,
-  //   const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> &bc_data,
-  //   const PeriodicBoundaryConditions<dim>                                              &pbc,
-  //   const unsigned int                                                                  dof_idx,
-  //   const unsigned int dof_hanging_nodes_idx,
-  //   const bool         set_inhomogeneities = true,
-  //   const unsigned int /*component*/)
-  // {
-  //   make_HNC_plus_PBC(scratch_data, pbc, dof_hanging_nodes_idx);
-  //   make_DBC(scratch_data, bc_data, dof_idx, set_inhomogeneities, true /* close */);
-  //   merge_HNC_into_DBC<dim, number>(scratch_data, dof_idx, dof_hanging_nodes_idx);
-  //
-  //   check_constraints(scratch_data.get_dof_handler(dof_idx),
-  //   scratch_data.get_constraint(dof_idx));
-  // }
 } // namespace MeltPoolDG::Constraints

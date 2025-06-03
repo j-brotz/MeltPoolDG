@@ -84,26 +84,6 @@ namespace MeltPoolDG::LevelSet
     void
     solve() override;
 
-    /**
-     * @brief Set wetting boundary condition map.
-     *
-     * @param[in] p_wetting_bc_map Map containing pairs of boundary IDs and their
-     * corresponding boundary condition functions.
-     */
-    void
-    set_wetting_bc_map(
-      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-        &p_wetting_bc_map) override;
-
-    /**
-     *
-     * @param[in] p_contact_angle_bc_map TODO AA
-     */
-    void
-    set_contact_angle_bc_map(
-      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-        &p_contact_angle_bc_map) override; // TODO AA Assertions for other children classes
-
     number
     get_max_change_level_set() const final;
 

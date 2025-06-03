@@ -193,13 +193,6 @@ namespace MeltPoolDG::LevelSet
     else
       AssertThrow(false, ExcNotImplemented());
 
-    // Set wetting boundary conditions
-    reinit_operation->set_wetting_bc_map(
-      simulation_case->get_boundary_condition("wetting", "normal_vector"));
-    // Set contact angle boundary conditions
-    reinit_operation->set_contact_angle_bc_map(
-      simulation_case->get_boundary_condition("contact_angle", "normal_vector"));
-
     reinit_operation->set_initial_condition(*simulation_case->get_initial_condition("level_set"));
 
     if (param.reinit.fe.type == FiniteElementType::FE_DGQ)
@@ -213,9 +206,7 @@ namespace MeltPoolDG::LevelSet
     // output initial state
     output_results(0, simulation_case->parameters.time_stepping.start_time);
 
-    /*
-     *  initialize profiling
-     */
+    // Initialize profiling
     if (simulation_case->parameters.profiling.enable)
       profiling_monitor =
         std::make_unique<Profiling::ProfilingMonitor<number>>(simulation_case->parameters.profiling,

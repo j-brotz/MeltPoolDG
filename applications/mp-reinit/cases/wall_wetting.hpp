@@ -3,7 +3,6 @@
 #include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/table_handler.h>
-#include <deal.II/base/tensor_function.h>
 
 #include <deal.II/distributed/tria.h>
 
@@ -13,9 +12,6 @@
 
 #include <deal.II/grid/grid_generator.h>
 
-#include <deal.II/lac/vector.h>
-
-#include <deal.II/numerics/error_estimator.h>
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
@@ -33,6 +29,7 @@ namespace MeltPoolDG::Simulation::WallWetting
 {
   /**
    * @brief Initial condition of the level-set field.
+   *
    * @tparam dim Number of spatial dimensions of the simulation
    * @tparam number Numeric type used for computations (e.g., float, double)
    */
@@ -209,15 +206,15 @@ namespace MeltPoolDG::Simulation::WallWetting
           "factor multiplying epsilon_n in the computation of the normal vector filter parameter as defined by Zahedi et al. (2009)",
           dealii::Patterns::Double());
         prm.add_parameter(
-          "wetting bc method",
-          wetting_bc_method_string,
-          "type of wetting approach used; options are <wetting_map|wetting_affine_constraints|contact_angle>",
-          dealii::Patterns::Selection("wetting_map|wetting_affine_constraints|contact_angle"));
-        prm.add_parameter(
           "time-step factor",
           time_step_factor,
           "time-step scaling factor; it is used to conduct a time-step sensitivity analysis",
           dealii::Patterns::Double());
+        prm.add_parameter(
+          "output contact angle evolution",
+          output_contact_angle_evolution,
+          "if set to 'true', it outputs the contact angle evolution in a .txt file in the output directory",
+          dealii::Patterns::Bool());
       }
       prm.leave_subsection();
       return this->parameters.base.do_print_parameters;
@@ -258,37 +255,19 @@ namespace MeltPoolDG::Simulation::WallWetting
       // Wetting boundary condition
       const number contact_angle_rad = compute_contact_angle_in_radians(contact_angle_deg);
 
-      if (wetting_bc_method_string == "wetting_map")
-        this->attach_boundary_condition(
-          {bottom_bc, std::make_shared<BottomBoundaryNormal<dim, number>>(contact_angle_rad)},
-          "wetting",
-          "normal_vector");
-      else if (wetting_bc_method_string == "wetting_affine_constraints")
-        // This option requires component-wise definition of AffineConstraints objects. Therefore,
-        // one function per component has to be instantiated.
-        {
-          this->attach_boundary_condition(
-            {bottom_bc,
-             std::make_shared<BottomBoundaryNormalPerComponent<dim, number>>(0, contact_angle_rad)},
-            "nx",
-            "normal_vector");
-          this->attach_boundary_condition(
-            {bottom_bc,
-             std::make_shared<BottomBoundaryNormalPerComponent<dim, number>>(1, contact_angle_rad)},
-            "ny",
-            "normal_vector");
-        }
-      else if (wetting_bc_method_string == "contact_angle")
-        this->attach_boundary_condition({bottom_bc,
-                                         std::make_shared<dealii::Functions::ConstantFunction<dim>>(
-                                           contact_angle_rad)},
-                                        "contact_angle",
-                                        "normal_vector");
-      else
-        AssertThrow(
-          false,
-          dealii::ExcMessage(
-            "The selected wetting method is invalid; options are: <wetting_map|wetting_affine_constraints|contact_angle>"));
+
+      // Component-wise definition of AffineConstraints objects is required. Therefore, one
+      // function per component has to be instantiated.
+      this->attach_boundary_condition(
+        {bottom_bc,
+         std::make_shared<BottomBoundaryNormalPerComponent<dim, number>>(0, contact_angle_rad)},
+        "nx",
+        "normal_vector");
+      this->attach_boundary_condition(
+        {bottom_bc,
+         std::make_shared<BottomBoundaryNormalPerComponent<dim, number>>(1, contact_angle_rad)},
+        "ny",
+        "normal_vector");
     }
 
     /**
@@ -345,17 +324,20 @@ namespace MeltPoolDG::Simulation::WallWetting
           std::cout << "| Static contact angle: " << this->contact_angle_deg << std::endl;
           std::cout << "| Computed contact angle: " << contact_angle << std::endl;
 
-          // Add values to table
-          postprocess_table.add_value("time", generic_data_out.get_time());
-          postprocess_table.set_scientific("time", true);
-          postprocess_table.set_scientific("time", 5);
-          postprocess_table.add_value("contact_angle", contact_angle);
+          if (output_contact_angle_evolution)
+            {
+              // Add values to table
+              postprocess_table.add_value("time", generic_data_out.get_time());
+              postprocess_table.set_scientific("time", true);
+              postprocess_table.set_scientific("time", 5);
+              postprocess_table.add_value("contact_angle", contact_angle);
 
-          // Write in output file
-          namespace fs = std::filesystem;
-          std::ofstream output(fs::path(this->parameters.output.directory) /
-                               fs::path(this->parameters.output.paraview.filename + ".txt"));
-          postprocess_table.write_text(output);
+              // Write in output file
+              namespace fs = std::filesystem;
+              std::ofstream output(fs::path(this->parameters.output.directory) /
+                                   fs::path(this->parameters.output.paraview.filename + ".txt"));
+              postprocess_table.write_text(output);
+            }
         } // End rank 0 scope
     }
 
@@ -584,11 +566,11 @@ namespace MeltPoolDG::Simulation::WallWetting
     /// Time-step scaling factor (for sensitivity analysis on the time-step)
     number time_step_factor = 1.0;
 
-    /// Method used to impose the wetting boundary condition
-    std::string wetting_bc_method_string = "wetting_affine_constraints";
-
     /// Contact angle post-processing table
     mutable dealii::TableHandler postprocess_table;
+
+    /// Bool output contact-angle evolution in a .txt file
+    bool output_contact_angle_evolution = true;
   };
 
 } // namespace MeltPoolDG::Simulation::WallWetting

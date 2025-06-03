@@ -770,6 +770,17 @@ namespace MeltPoolDG
     vel_dof_idx      = flow_operation->get_dof_handler_idx_velocity();
     pressure_dof_idx = flow_operation->get_dof_handler_idx_pressure();
 
+    // Make array with normal vector dof indices
+    // TODO AA change when implementation will be done in Level-Set application
+    const std::array<unsigned int, dim> normal_dof_indices_per_block = [this]() {
+      if constexpr (dim == 1)
+        return std::array<unsigned int, 1>{{normal_dof_idx}};
+      else if constexpr (dim == 2)
+        return std::array<unsigned int, 2>{{normal_dof_idx, normal_dof_idx}};
+      else if constexpr (dim == 3)
+        return std::array<unsigned int, 3>{{normal_dof_idx, normal_dof_idx, normal_dof_idx}};
+    }();
+
     // initialize the levelset operation class
     level_set_operation = std::make_shared<LevelSet::LevelSetOperation<dim, number>>(
       *scratch_data,
@@ -783,6 +794,7 @@ namespace MeltPoolDG
       ls_quad_idx,
       reinit_dof_idx,
       curv_dof_idx,
+      normal_dof_indices_per_block,
       normal_dof_idx,
       vel_dof_idx,
       ls_dof_idx /* todo: ls_zero_bc_idx*/);

@@ -56,19 +56,6 @@ namespace MeltPoolDG::LevelSet
     void
     solve() override;
 
-    /**
-     * @brief Create map containing local DoF indices of DoFs affected by the wetting boundary
-     * condition and the values of each component of the interface normal vector.
-     */
-    void
-    create_wetting_constraints();
-
-    /**
-     * @brief TODO AA
-     */
-    void
-    create_contact_angle_constraints();
-
     const BlockVectorType &
     get_solution_normal_vector() const override;
 
@@ -78,29 +65,6 @@ namespace MeltPoolDG::LevelSet
     void
     attach_vectors(
       std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) override;
-
-    /**
-     * @brief Set wetting boundary IDs and functions map.
-     *
-     * @param p_wetting_bc_map Map containing functions corresponding to different boundaries that
-     * express the value of the normal vector at a given point of a boundary for Dirichlet boundary
-     * conditions.
-     */
-    void
-    set_wetting_bc_map(const std::map<dealii::types::boundary_id,
-                                      std::shared_ptr<dealii::Function<dim>>> &p_wetting_bc_map);
-
-    /**
-     * @brief Set wetting boundary IDs and functions map.
-     *
-     * @param p_contact_angle_bc_map Map containing functions corresponding to different boundaries that
-     * express the value of the normal vector at a given point of a boundary for Dirichlet boundary
-     * conditions.
-     */
-    void
-    set_contact_angle_bc_map(
-      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-        &p_contact_angle_bc_map);
 
   private:
     /**
@@ -141,20 +105,5 @@ namespace MeltPoolDG::LevelSet
      * Preconditioner for the curvature operator
      */
     Preconditioner<dim, BlockVectorType, number> preconditioner;
-
-    /*
-     * Wetting Boundary conditions
-     */
-    /** Map containing boundary IDs where a wetting boundary condition is applied and the functions
-       giving the normal vector values.*/
-    std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> wetting_bc_map;
-    std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-      contact_angle_bc_map;
-    /** Pair regrouping local DoF indices and values of the normal vector for wetting boundary
-       conditions. */
-    std::pair<std::vector<unsigned int>, std::vector<std::vector<number>>>
-      wetting_constraints_indices_and_values;
-    std::pair<std::vector<unsigned int>, std::vector<std::vector<number>>>
-      contact_angle_constraints_indices_and_values;
   };
 } // namespace MeltPoolDG::LevelSet

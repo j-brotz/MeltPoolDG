@@ -106,20 +106,25 @@ namespace MeltPoolDG::Utilities::MatrixFree
   }
 
   /**
-   * @brief
-   * TODO AA
-   * @tparam dim
-   * @tparam number
-   * @tparam DoFVectorType
-   * @tparam SrcRhsVectorType
-   * @param operator_base
-   * @param rhs
-   * @param src
-   * @param scratch_data
-   * @param dof_indices_per_block
-   * @param dof_no_bc_idx
-   * @param zero_out
-   * @param additional_inhomogeneous_constraints
+   * @brief Compute the modified right-hand side for (inhomogeneous) dirichlet boundary
+   * conditions \f$ x_d \f$, as above, but for BlockVector solutions with component-wise DoF
+   * indices.
+   *
+   * @tparam dim Number of spatial dimensions of the simulation
+   * @tparam number Numeric type used for computations (e.g., float, double)
+   * @tparam DoFVectorType Vector-type of the solution
+   * @tparam SrcRhsVectorType Vector-type of the right-hand side
+   *
+   * @param operator_base Operator associated to the equation solved
+   * @param rhs Right-hand side vector
+   * @param src Input solution for the solved equation
+   * @param scratch_data Scratch data associated with the operation
+   * @param dof_indices_per_block Array of DoF indices per block
+   * @param dof_no_bc_idx DoF index associated with the AffineConstraint object without
+   * boundary conditions
+   * @param zero_out If set to @p true, it zeroes out constrained values in the right-hand side.
+   * @param additional_inhomogeneous_constraints Pair containing local DoF indices and values
+   * imposed at the DoFs.
    */
   template <
     int dim,

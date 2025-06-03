@@ -65,80 +65,6 @@ namespace MeltPoolDG::LevelSet
     void
     reinit() final;
 
-    /*
-     * Additional functions for wetting boundary conditions (inhomogenous Dirichlet boundary
-     * conditions).
-     */
-
-    /**
-     * @brief Set local DoF indices of wetting boundary condition in member variable
-     *
-     * @param[in] p_wetting_bc_local_indices Local indices DoF where the wetting boundary condition
-     * is applied.
-     */
-    void
-    set_wetting_bc_indices(const std::vector<unsigned int> &p_wetting_bc_local_indices);
-
-    /**
-     * @brief Set local DoF indices of contact angle boundary condition in member variable
-     *
-     * @param[in] p_contact_angle_bc_local_indices Local indices DoF where the contact angle
-     * boundary condition is applied.
-     */
-    void
-    set_contact_angle_bc_indices(const std::vector<unsigned int> &p_contact_angle_bc_local_indices);
-
-    /**
-     * @brief Disable pre-treatment and post-treatment respectively before and after the
-     * NormalVectorOperator::vmult operation.
-     * This is used to constrain DoFs according to specified wetting boundary conditions.
-     */
-    void
-    enable_pre_post();
-
-    /**
-     * @brief Disable pre-treatment and post-treatment respectively before and after the
-     * NormalVectorOperator::vmult operation.
-     */
-    void
-    disable_pre_post();
-
-    /**
-     * @brief Zero out values of the source vector that corresponds to wetting boundary conditions
-     * and store values in @p wetting_constraints_values_temp.
-     *
-     * @param[out] dst Destination vector
-     *
-     * @param[in] src_in Input vector
-     *
-     * @remark Here, @p dst is unused.
-     */
-    void
-    do_pre_vmult([[maybe_unused]] BlockVectorType &dst, const BlockVectorType &src_in) const;
-
-    /**
-     * @brief Copy values previously stored in @p wetting_constraints_values_temp with
-     * NormalVectorOperator::do_pre_vmult into @p dst. This ensures that correct boundary condition
-     * values are applied.
-     *
-     * @param[out] dst Destination vector
-     *
-     * @param[in] src_in Input vector
-     *
-     * @remark Here, @p src_in is unused.
-     */
-    void
-    do_post_vmult(BlockVectorType &dst, [[maybe_unused]] const BlockVectorType &src_in) const;
-
-    /**
-     * @brief Zero out rows of the matrix corresponding to wetting boundary conditions and set the
-     * diagonal to 1.0. This translates into Dirichlet boundary conditions.
-     *
-     * @param[out] system_matrix Matrix of the linear system solved
-     */
-    void
-    post_system_matrix_compute(dealii::TrilinosWrappers::SparseMatrix &system_matrix) const;
-
   private:
     void
     tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &normal_vals,
@@ -161,17 +87,6 @@ namespace MeltPoolDG::LevelSet
     /*
      * For boundary conditions with wetting
      */
-    /** Boolean indicating if a pre-treatment and a post-treatment respectively before and after the
-     * NormalVectorOperator::vmult operation. */
-    mutable bool do_pre_post = false;
-    /// Local DoF indices corresponding to wetting boundary conditions
-    std::vector<unsigned int> wetting_bc_local_indices;
-    /// Temporary storage of boundary condition values
-    mutable std::vector<std::vector<number>> wetting_constraints_values_temp;
-    /// Local DoF indices corresponding to contact angle boundary conditions
-    std::vector<unsigned int> contact_angle_bc_local_indices;
-    /// Temporary storage of boundary condition values
-    mutable std::vector<std::vector<number>> contact_angle_constraints_values_temp;
   };
 
   /**

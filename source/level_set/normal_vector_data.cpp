@@ -36,7 +36,7 @@ namespace MeltPoolDG::LevelSet
       prm.add_parameter(
         "compute normalized vector",
         compute_normalized_vector,
-        "If set to true the normal vector resulting from the filtering equation will be a unit vector.",
+        "If set to true, the normal vector resulting from the filtering equation will be a unit vector.",
         dealii::Patterns::Bool());
       prm.enter_subsection("narrow band");
       {

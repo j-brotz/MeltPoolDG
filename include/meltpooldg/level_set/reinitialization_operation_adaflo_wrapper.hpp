@@ -79,37 +79,6 @@ namespace MeltPoolDG::LevelSet
     set_initial_condition(const VectorType &level_set_in) override;
 
     /**
-     * @brief Set wetting boundary condition map.
-     *
-     * @param[in] p_wetting_bc_map Map containing pairs of boundary IDs and their
-     * corresponding boundary condition functions.
-     */
-    void
-    set_wetting_bc_map(
-      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-        & /*p_wetting_bc_map*/) override
-    {
-      AssertThrow(false,
-                  dealii::ExcMessage("Wetting boundary conditions are currently not "
-                                     "implemented with ADAFLO."));
-    }
-
-    /**
-     * @brief Set contact angle boundary condition map.
-     *
-     * @param[in] p_contact_angle_bc_map TODO AA
-     */
-    void
-    set_contact_angle_bc_map(
-      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-        & /*p_contact_angle_bc_map*/) override
-    {
-      AssertThrow(false,
-                  dealii::ExcMessage("Wetting boundary conditions are currently not "
-                                     "implemented with ADAFLO."));
-    }
-
-    /**
      * Interpolates the initial conditions from a function to the level set field
      */
     void

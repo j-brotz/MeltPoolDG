@@ -138,25 +138,6 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationOperation<dim, number>::set_wetting_bc_map(
-    const std::map<types::boundary_id, std::shared_ptr<dealii::Function<dim>>> &p_wetting_bc_map)
-  {
-    dynamic_cast<NormalVectorOperation<dim, number> *>(normal_vector_operation.get())
-      ->set_wetting_bc_map(p_wetting_bc_map);
-  }
-
-  template <int dim, typename number>
-  void
-  ReinitializationOperation<dim, number>::set_contact_angle_bc_map(
-    const std::map<types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-      &p_contact_angle_bc_map)
-  {
-    dynamic_cast<NormalVectorOperation<dim, number> *>(normal_vector_operation.get())
-      ->set_contact_angle_bc_map(p_contact_angle_bc_map);
-  }
-
-  template <int dim, typename number>
-  void
   ReinitializationOperation<dim, number>::update_dof_idx(const unsigned int &reinit_dof_idx_in)
   {
     reinit_dof_idx = reinit_dof_idx_in;
