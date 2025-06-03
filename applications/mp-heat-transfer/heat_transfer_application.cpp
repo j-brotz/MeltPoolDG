@@ -333,9 +333,10 @@ namespace MeltPoolDG::Heat
         compute_field_vector(velocity_hist.get_current_solution(),
                              velocity_dof_idx,
                              *velocity_field_function);
-        compute_field_vector(velocity_hist.get_recent_old_solution(),
-                             velocity_dof_idx,
-                             *velocity_field_function);
+        if (velocity_hist.size() > 1)
+          compute_field_vector(velocity_hist.get_recent_old_solution(),
+                               velocity_dof_idx,
+                               *velocity_field_function);
       }
     if (heaviside_field_function)
       compute_field_vector(level_set_as_heaviside, level_set_dof_idx, *heaviside_field_function);
