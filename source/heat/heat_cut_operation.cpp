@@ -600,42 +600,42 @@ namespace MeltPoolDG::Heat
   }
 
   template <int dim, typename number>
-  const HeatCutOperation<dim, number>::VectorType &
+  const typename HeatCutOperation<dim, number>::VectorType &
   HeatCutOperation<dim, number>::get_temperature() const
   {
     return solution_history.get_current_solution();
   }
 
   template <int dim, typename number>
-  HeatCutOperation<dim, number>::VectorType &
+  typename HeatCutOperation<dim, number>::VectorType &
   HeatCutOperation<dim, number>::get_temperature()
   {
     return solution_history.get_current_solution();
   }
 
   template <int dim, typename number>
-  const HeatCutOperation<dim, number>::VectorType &
+  const typename HeatCutOperation<dim, number>::VectorType &
   HeatCutOperation<dim, number>::get_interface_temperature() const
   {
     return interface_temperature;
   }
 
   template <int dim, typename number>
-  HeatCutOperation<dim, number>::VectorType &
+  typename HeatCutOperation<dim, number>::VectorType &
   HeatCutOperation<dim, number>::get_interface_temperature()
   {
     return interface_temperature;
   }
 
   template <int dim, typename number>
-  const HeatCutOperation<dim, number>::VectorType &
+  const typename HeatCutOperation<dim, number>::VectorType &
   HeatCutOperation<dim, number>::get_heat_source() const
   {
     return volumetric_heat_source;
   }
 
   template <int dim, typename number>
-  HeatCutOperation<dim, number>::VectorType &
+  typename HeatCutOperation<dim, number>::VectorType &
   HeatCutOperation<dim, number>::get_heat_source()
   {
     return volumetric_heat_source;

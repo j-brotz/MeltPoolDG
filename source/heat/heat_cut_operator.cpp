@@ -247,7 +247,7 @@ namespace MeltPoolDG::Heat
     }
 
 
-    // residual immsersed boundary integral (one-domain case)
+    // residual immersed boundary integral (one-domain case)
     template <typename Evaluation>
     inline void
     residual_immersed_boundary_integral(
@@ -441,7 +441,7 @@ namespace MeltPoolDG::Heat
       // stiffness stabilization
       auto gp = ost_factor * gamma_A_degree_1 * conductivity * h / 3. * normal_grad_jump;
 
-      // mass stabilizations
+      // mass stabilization
       gp += gamma_M_degree_1 * dealii::Utilities::fixed_power<3>(h) / 3. * normal_grad_jump;
 
       // submit to [∂_n v]
@@ -786,7 +786,7 @@ namespace MeltPoolDG::Heat
                                                                  cell_lane,
                                                                  n_dofs_per_cell_vel);
 
-        // do liquid domain integral
+        // liquid domain integral
         for (const unsigned int q_batch : eval_subdomain_l.quadrature_point_indices())
           {
             const auto [conductivity_l, cv_l, d_conductivity_d_T, d_cv_d_T] =
@@ -812,7 +812,7 @@ namespace MeltPoolDG::Heat
 
         if (eval_interface_l)
           {
-            // do immersed boundary integral
+            // immersed boundary integral
             for (const unsigned int q_batch : eval_interface_l->quadrature_point_indices())
               internal::tangent_immersed_boundary_integral(
                 *eval_interface_l,
@@ -947,7 +947,7 @@ namespace MeltPoolDG::Heat
                                                                    n_dofs_per_cell_vel);
           }
 
-        // do liquid domain integral
+        // liquid domain integral
         for (const unsigned int q_batch : eval_subdomain_l.quadrature_point_indices())
           {
             const auto [conductivity_l, cv_l, d_conductivity_d_T_l, d_cv_d_T_l] =
@@ -971,7 +971,7 @@ namespace MeltPoolDG::Heat
                                                     n_dofs_per_cell_heat),
           evaluate_values | evaluate_gradients);
 
-        // do gas domain integral
+        // gas domain integral
         for (const unsigned int q_batch : eval_subdomain_g.quadrature_point_indices())
           {
             internal::tangent_domain_integral<PointEval<>>(
@@ -991,7 +991,7 @@ namespace MeltPoolDG::Heat
                                                     n_dofs_per_cell_heat),
           evaluate_values | evaluate_gradients);
 
-        // do immersed interface integral
+        // immersed interface integral
         for (const unsigned int q_batch : eval_interface_l.quadrature_point_indices())
           internal::tangent_interface_integral(
             eval_interface_l,
@@ -1592,7 +1592,7 @@ namespace MeltPoolDG::Heat
                   }
 
 
-                // do liquid domain integral
+                // liquid domain integral
                 for (const unsigned int q_batch : T_new_eval_subdomain_l.quadrature_point_indices())
                   {
                     const auto [conductivity_new_l, cv_new_l] =
@@ -1624,7 +1624,7 @@ namespace MeltPoolDG::Heat
                     &T_new_eval_cell_l.begin_dof_values()[0][cell_lane], n_dofs_per_cell_heat),
                   evaluate_values | evaluate_gradients);
 
-                // do immersed boundary integral
+                // immersed boundary integral
                 for (const unsigned int q_batch : T_new_eval_interface_l.quadrature_point_indices())
                   {
                     internal::residual_immersed_boundary_integral(
@@ -1841,7 +1841,7 @@ namespace MeltPoolDG::Heat
                       n_dofs_per_cell_vel);
                   }
 
-                // do liquid domain integral
+                // liquid domain integral
                 for (const unsigned int q_batch : T_new_eval_subdomain_l.quadrature_point_indices())
                   {
                     const auto [conductivity_new_l, cv_new_l] =
@@ -1873,7 +1873,7 @@ namespace MeltPoolDG::Heat
                     &T_new_eval_cell_l.begin_dof_values()[0][cell_lane], n_dofs_per_cell_heat),
                   evaluate_values | evaluate_gradients);
 
-                // do gas domain integral
+                // gas domain integral
                 for (const unsigned int q_batch : T_new_eval_subdomain_g.quadrature_point_indices())
                   {
                     const auto &conductivity_g = material.get_data().gas.thermal_conductivity;
@@ -1902,7 +1902,7 @@ namespace MeltPoolDG::Heat
                     &T_new_eval_cell_g.begin_dof_values()[0][cell_lane], n_dofs_per_cell_heat),
                   evaluate_values | evaluate_gradients);
 
-                // do interface integral
+                // interface integral
                 for (const unsigned int q_batch : T_new_eval_interface_l.quadrature_point_indices())
                   {
                     internal::residual_interface_integral(

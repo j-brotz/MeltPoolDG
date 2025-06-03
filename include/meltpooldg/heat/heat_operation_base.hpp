@@ -20,6 +20,8 @@ namespace MeltPoolDG::Heat
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
+    virtual ~HeatOperationBase() = default;
+
     virtual void
     reinit() = 0;
 

@@ -90,7 +90,7 @@ namespace MeltPoolDG::CutUtil
         solution_transfers[j]->prepare_for_coarsening_and_refinement(old_grid_solutions[j]);
       }
 
-    // setup a separate solution transfer for the level set
+    // set up a separate solution transfer for the level set
     dealii::SolutionTransfer<dim, VectorType> ls_solution_transfer(level_set_dof_handler);
     ls_solution_transfer.prepare_for_coarsening_and_refinement(level_set_dof_vector);
 
