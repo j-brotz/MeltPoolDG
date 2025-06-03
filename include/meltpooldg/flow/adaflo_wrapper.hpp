@@ -107,7 +107,7 @@ namespace MeltPoolDG::Flow
     get_velocity() override;
 
     const dealii::LinearAlgebra::distributed::Vector<number> &
-    get_velocity_old() const;
+    get_velocity_old() const override;
 
     const dealii::LinearAlgebra::distributed::Vector<number> &
     get_velocity_old_old() const;

@@ -158,7 +158,7 @@ namespace MeltPoolDG::Heat
     // tangent operator domain integral
     template <typename Evaluation>
     inline void
-    do_domain_integral_tangent(
+    tangent_domain_integral(
       Evaluation                            &evaluator,
       const Evaluation                      *T_eval,
       const typename Evaluation::value_type &conductivity,
@@ -198,7 +198,7 @@ namespace MeltPoolDG::Heat
     // residual domain integral
     template <typename Evaluation>
     inline void
-    do_domain_integral_residual(
+    residual_domain_integral(
       Evaluation                             &evaluator, // T^n+1
       const Evaluation                       &Told_eval,
       const typename Evaluation::value_type  &conductivity_new,
@@ -206,6 +206,7 @@ namespace MeltPoolDG::Heat
       const typename Evaluation::value_type  &conductivity_old,
       const typename Evaluation::value_type  &cv_old, // density * specific_heat_capacity
       const VelocityType<Evaluation>         &velocity,
+      const VelocityType<Evaluation>         &velocity_old,
       const typename Evaluation::ScalarNumber ost_factor_implicit, // delta_t * theta
       const typename Evaluation::ScalarNumber ost_factor_explicit, // delta_t * (1. - theta)
       const unsigned int                      q)
@@ -220,7 +221,8 @@ namespace MeltPoolDG::Heat
       evaluator.submit_gradient((conductivity_new * flux_1 + conductivity_old * flux_2) * -1., q);
 
       // convective heat flux
-      val += scalar_product(velocity, cv_new * flux_1 + cv_old * flux_2);
+      val +=
+        cv_new * scalar_product(velocity, flux_1) + cv_old * scalar_product(velocity_old, flux_2);
 
       evaluator.submit_value(val * -1., q);
     }
@@ -230,7 +232,7 @@ namespace MeltPoolDG::Heat
     // only if evaporative cooling is enabled
     template <typename Evaluation>
     inline void
-    do_immersed_boundary_integral_tangent(
+    tangent_immersed_boundary_integral(
       Evaluation       &evaluator,
       const Evaluation &T_eval,
       const std::function<typename Evaluation::value_type(const typename Evaluation::value_type &)>
@@ -245,10 +247,10 @@ namespace MeltPoolDG::Heat
     }
 
 
-    // residual immsersed boundary integral (one-domain case)
+    // residual immersed boundary integral (one-domain case)
     template <typename Evaluation>
     inline void
-    do_immersed_boundary_integral_residual(
+    residual_immersed_boundary_integral(
       Evaluation       &evaluator, // T^n+1
       const Evaluation *Told_eval,
       [[maybe_unused]] const std::function<
@@ -265,6 +267,8 @@ namespace MeltPoolDG::Heat
 
       if (Told_eval)
         {
+          Assert(compute_qVapor != nullptr, dealii::ExcInternalError());
+
           // temperature-dependent evaporation-induced heat flux
           val += -ost_factor_implicit * compute_qVapor(evaluator.get_value(q));
 
@@ -278,7 +282,7 @@ namespace MeltPoolDG::Heat
     // tangent operator interface integral (two-domain case)
     template <typename Evaluation>
     inline void
-    do_interface_integral_tangent(
+    tangent_interface_integral(
       Evaluation                                  &evaluator_l,
       Evaluation                                  &evaluator_g,
       [[maybe_unused]] const Evaluation           *T_eval_l,
@@ -335,7 +339,7 @@ namespace MeltPoolDG::Heat
     // residual interface integral (two-domain case)
     template <typename Evaluation>
     inline void
-    do_interface_integral_residual(
+    residual_interface_integral(
       Evaluation       &evaluator_l, // T^n+1_l
       Evaluation       &evaluator_g, // T^n+1_g
       const Evaluation &Told_eval_l,
@@ -420,15 +424,16 @@ namespace MeltPoolDG::Heat
     // ghost-penalty terms for FE_Q elements (p=1)
     template <typename Evaluation>
     inline void
-    do_ghost_penalty_terms(Evaluation                             &evaluator_minus,
-                           Evaluation                             &evaluator_plus,
-                           const typename Evaluation::ScalarNumber conductivity,
-                           const typename Evaluation::ScalarNumber ost_factor, // delta_t * theta
-                           const typename Evaluation::ScalarNumber h,
-                           const typename Evaluation::ScalarNumber gamma_M_degree_1,
-                           const typename Evaluation::ScalarNumber gamma_A_degree_1,
-                           const unsigned int                      q,
-                           const typename Evaluation::ScalarNumber factor = 1.0)
+    ghost_penalty_face_integral(
+      Evaluation                             &evaluator_minus,
+      Evaluation                             &evaluator_plus,
+      const typename Evaluation::ScalarNumber conductivity,
+      const typename Evaluation::ScalarNumber ost_factor, // delta_t * theta
+      const typename Evaluation::ScalarNumber h,
+      const typename Evaluation::ScalarNumber gamma_M_degree_1,
+      const typename Evaluation::ScalarNumber gamma_A_degree_1,
+      const unsigned int                      q,
+      const typename Evaluation::ScalarNumber factor = 1.0)
     {
       const auto normal_grad_jump =
         evaluator_minus.get_normal_derivative(q) - evaluator_plus.get_normal_derivative(q);
@@ -436,7 +441,7 @@ namespace MeltPoolDG::Heat
       // stiffness stabilization
       auto gp = ost_factor * gamma_A_degree_1 * conductivity * h / 3. * normal_grad_jump;
 
-      // mass stabilizations
+      // mass stabilization
       gp += gamma_M_degree_1 * dealii::Utilities::fixed_power<3>(h) / 3. * normal_grad_jump;
 
       // submit to [∂_n v]
@@ -464,7 +469,8 @@ namespace MeltPoolDG::Heat
                       &mapping_info_cells_in,
     const bool         do_solidification_in,
     const unsigned int vel_dof_idx_in,
-    const VectorType  *velocity_in)
+    const VectorType  *velocity_in,
+    const VectorType  *velocity_old_in)
     : scratch_data(scratch_data_in)
     , heat_data(heat_data_in)
     , material(material_data_in,
@@ -488,6 +494,7 @@ namespace MeltPoolDG::Heat
                material.get_data().liquid.thermal_conductivity))
     , vel_dof_idx(vel_dof_idx_in)
     , velocity(velocity_in)
+    , velocity_old(velocity_old_in)
     , do_solidification(do_solidification_in)
   {
     // TODO external heat source
@@ -513,6 +520,9 @@ namespace MeltPoolDG::Heat
                         "assumes equality between the solid and liquid "
                         "phase heat capacity! Abort..."));
       }
+
+    if (velocity != nullptr)
+      AssertThrow(velocity_old != nullptr, dealii::ExcInternalError());
   }
 
 
@@ -568,6 +578,8 @@ namespace MeltPoolDG::Heat
   {
     if (velocity and not velocity->has_ghost_elements())
       velocity->update_ghost_values();
+    if (velocity_old and not velocity_old->has_ghost_elements())
+      velocity_old->update_ghost_values();
   }
 
 
@@ -659,15 +671,15 @@ namespace MeltPoolDG::Heat
         const auto [conductivity_l, cv_l, d_conductivity_d_T, d_cv_d_T] =
           internal::get_liquid_material_parameters_and_derivatives(T_eval_l, material, q);
         const auto vel = vel_eval ? vel_eval->get_value(q) : typename DomainEval<dim>::value_type();
-        internal::do_domain_integral_tangent(eval_l,
-                                             T_eval_l,
-                                             conductivity_l,
-                                             cv_l,
-                                             d_conductivity_d_T,
-                                             d_cv_d_T,
-                                             vel,
-                                             ost_factor_implicit,
-                                             q);
+        internal::tangent_domain_integral(eval_l,
+                                          T_eval_l,
+                                          conductivity_l,
+                                          cv_l,
+                                          d_conductivity_d_T,
+                                          d_cv_d_T,
+                                          vel,
+                                          ost_factor_implicit,
+                                          q);
       }
   }
 
@@ -688,7 +700,7 @@ namespace MeltPoolDG::Heat
       }
 
     for (const unsigned int q : eval_g.quadrature_point_indices())
-      internal::do_domain_integral_tangent<DomainEval<>>(
+      internal::tangent_domain_integral<DomainEval<>>(
         eval_g,
         nullptr,
         material.get_data().gas.thermal_conductivity,
@@ -774,7 +786,7 @@ namespace MeltPoolDG::Heat
                                                                  cell_lane,
                                                                  n_dofs_per_cell_vel);
 
-        // do liquid domain integral
+        // liquid domain integral
         for (const unsigned int q_batch : eval_subdomain_l.quadrature_point_indices())
           {
             const auto [conductivity_l, cv_l, d_conductivity_d_T, d_cv_d_T] =
@@ -783,15 +795,15 @@ namespace MeltPoolDG::Heat
                                                                        q_batch);
             const auto vel = vel_eval_subdomain_l ? vel_eval_subdomain_l->get_value(q_batch) :
                                                     typename DomainEval<dim>::value_type();
-            internal::do_domain_integral_tangent(eval_subdomain_l,
-                                                 T_eval_subdomain_l,
-                                                 conductivity_l,
-                                                 cv_l,
-                                                 d_conductivity_d_T,
-                                                 d_cv_d_T,
-                                                 vel,
-                                                 ost_factor_implicit,
-                                                 q_batch);
+            internal::tangent_domain_integral(eval_subdomain_l,
+                                              T_eval_subdomain_l,
+                                              conductivity_l,
+                                              cv_l,
+                                              d_conductivity_d_T,
+                                              d_cv_d_T,
+                                              vel,
+                                              ost_factor_implicit,
+                                              q_batch);
           }
         eval_subdomain_l.integrate(
           dealii::StridedArrayView<number, n_lanes>(&eval_cell_l.begin_dof_values()[0][cell_lane],
@@ -800,9 +812,9 @@ namespace MeltPoolDG::Heat
 
         if (eval_interface_l)
           {
-            // do immersed boundary integral
+            // immersed boundary integral
             for (const unsigned int q_batch : eval_interface_l->quadrature_point_indices())
-              internal::do_immersed_boundary_integral_tangent(
+              internal::tangent_immersed_boundary_integral(
                 *eval_interface_l,
                 *T_eval_interface_l,
                 [&](const dealii::VectorizedArray<number> &T) {
@@ -935,7 +947,7 @@ namespace MeltPoolDG::Heat
                                                                    n_dofs_per_cell_vel);
           }
 
-        // do liquid domain integral
+        // liquid domain integral
         for (const unsigned int q_batch : eval_subdomain_l.quadrature_point_indices())
           {
             const auto [conductivity_l, cv_l, d_conductivity_d_T_l, d_cv_d_T_l] =
@@ -944,25 +956,25 @@ namespace MeltPoolDG::Heat
                                                                        q_batch);
             const auto vel = vel_eval_subdomain_l ? vel_eval_subdomain_l->get_value(q_batch) :
                                                     typename DomainEval<dim>::value_type();
-            internal::do_domain_integral_tangent(eval_subdomain_l,
-                                                 T_eval_subdomain_l,
-                                                 conductivity_l,
-                                                 cv_l,
-                                                 d_conductivity_d_T_l,
-                                                 d_cv_d_T_l,
-                                                 vel,
-                                                 ost_factor_implicit,
-                                                 q_batch);
+            internal::tangent_domain_integral(eval_subdomain_l,
+                                              T_eval_subdomain_l,
+                                              conductivity_l,
+                                              cv_l,
+                                              d_conductivity_d_T_l,
+                                              d_cv_d_T_l,
+                                              vel,
+                                              ost_factor_implicit,
+                                              q_batch);
           }
         eval_subdomain_l.integrate(
           dealii::StridedArrayView<number, n_lanes>(&eval_cell_l.begin_dof_values()[0][cell_lane],
                                                     n_dofs_per_cell_heat),
           evaluate_values | evaluate_gradients);
 
-        // do gas domain integral
+        // gas domain integral
         for (const unsigned int q_batch : eval_subdomain_g.quadrature_point_indices())
           {
-            internal::do_domain_integral_tangent<PointEval<>>(
+            internal::tangent_domain_integral<PointEval<>>(
               eval_subdomain_g,
               nullptr,
               material.get_data().gas.thermal_conductivity,
@@ -979,9 +991,9 @@ namespace MeltPoolDG::Heat
                                                     n_dofs_per_cell_heat),
           evaluate_values | evaluate_gradients);
 
-        // do immersed interface integral
+        // immersed interface integral
         for (const unsigned int q_batch : eval_interface_l.quadrature_point_indices())
-          internal::do_interface_integral_tangent(
+          internal::tangent_interface_integral(
             eval_interface_l,
             eval_interface_g,
             T_eval_interface_l,
@@ -1277,7 +1289,7 @@ namespace MeltPoolDG::Heat
             eval_plus_l.gather_evaluate(src, evaluate_gradients);
 
             for (const unsigned int q : eval_minus_l.quadrature_point_indices())
-              internal::do_ghost_penalty_terms(
+              internal::ghost_penalty_face_integral(
                 eval_minus_l,
                 eval_plus_l,
                 material.get_data().liquid.thermal_conductivity,
@@ -1319,7 +1331,7 @@ namespace MeltPoolDG::Heat
             eval_plus_g.gather_evaluate(src, evaluate_gradients);
 
             for (const unsigned int q : eval_minus_g.quadrature_point_indices())
-              internal::do_ghost_penalty_terms(
+              internal::ghost_penalty_face_integral(
                 eval_minus_g,
                 eval_plus_g,
                 material.get_data().gas.thermal_conductivity,
@@ -1363,8 +1375,12 @@ namespace MeltPoolDG::Heat
     const std::pair<unsigned int, unsigned int>                            &cell_batch_range) const
   {
     std::unique_ptr<DomainEval<dim>> vel_eval;
+    std::unique_ptr<DomainEval<dim>> vel_old_eval;
     if (velocity)
-      vel_eval = std::make_unique<DomainEval<dim>>(matrix_free, vel_dof_idx, heat_quad_idx);
+      {
+        vel_eval     = std::make_unique<DomainEval<dim>>(matrix_free, vel_dof_idx, heat_quad_idx);
+        vel_old_eval = std::make_unique<DomainEval<dim>>(*vel_eval);
+      }
 
     const auto cell_category = matrix_free.get_cell_range_category(cell_batch_range);
     if (cell_category == CutUtil::CellCategory::liquid)
@@ -1387,6 +1403,8 @@ namespace MeltPoolDG::Heat
               {
                 internal::reinit_and_read_plain(*vel_eval, *velocity, cell_batch);
                 vel_eval->evaluate(evaluate_values);
+                internal::reinit_and_read_plain(*vel_old_eval, *velocity_old, cell_batch);
+                vel_old_eval->evaluate(evaluate_values);
               }
 
             for (const unsigned int q : T_new_eval_l.quadrature_point_indices())
@@ -1399,16 +1417,19 @@ namespace MeltPoolDG::Heat
                     do_solidification ? &T_old_eval_l : nullptr, material, q);
                 const auto vel =
                   vel_eval ? vel_eval->get_value(q) : typename DomainEval<dim>::value_type();
-                internal::do_domain_integral_residual(T_new_eval_l,
-                                                      T_old_eval_l,
-                                                      conductivity_new_l,
-                                                      cv_new_l,
-                                                      conductivity_old_l,
-                                                      cv_old_l,
-                                                      vel,
-                                                      ost_factor_implicit,
-                                                      ost_factor_explicit,
-                                                      q);
+                const auto vel_old = vel_old_eval ? vel_old_eval->get_value(q) :
+                                                    typename DomainEval<dim>::value_type();
+                internal::residual_domain_integral(T_new_eval_l,
+                                                   T_old_eval_l,
+                                                   conductivity_new_l,
+                                                   cv_new_l,
+                                                   conductivity_old_l,
+                                                   cv_old_l,
+                                                   vel,
+                                                   vel_old,
+                                                   ost_factor_implicit,
+                                                   ost_factor_explicit,
+                                                   q);
               }
             T_new_eval_l.integrate_scatter(evaluate_values | evaluate_gradients, residual);
           }
@@ -1433,6 +1454,8 @@ namespace MeltPoolDG::Heat
               {
                 internal::reinit_and_read_plain(*vel_eval, *velocity, cell_batch);
                 vel_eval->evaluate(evaluate_values);
+                internal::reinit_and_read_plain(*vel_old_eval, *velocity_old, cell_batch);
+                vel_old_eval->evaluate(evaluate_values);
               }
 
             for (const unsigned int q : T_new_eval_g.quadrature_point_indices())
@@ -1442,16 +1465,19 @@ namespace MeltPoolDG::Heat
                   material.get_data().gas.density * material.get_data().gas.specific_heat_capacity;
                 const auto vel =
                   vel_eval ? vel_eval->get_value(q) : typename DomainEval<dim>::value_type();
-                internal::do_domain_integral_residual(T_new_eval_g,
-                                                      T_old_eval_g,
-                                                      conductivity_g,
-                                                      cv_g,
-                                                      conductivity_g,
-                                                      cv_g,
-                                                      vel,
-                                                      ost_factor_implicit,
-                                                      ost_factor_explicit,
-                                                      q);
+                const auto vel_old = vel_old_eval ? vel_old_eval->get_value(q) :
+                                                    typename DomainEval<dim>::value_type();
+                internal::residual_domain_integral(T_new_eval_g,
+                                                   T_old_eval_g,
+                                                   conductivity_g,
+                                                   cv_g,
+                                                   conductivity_g,
+                                                   cv_g,
+                                                   vel,
+                                                   vel_old,
+                                                   ost_factor_implicit,
+                                                   ost_factor_explicit,
+                                                   q);
               }
             T_new_eval_g.integrate_scatter(evaluate_values | evaluate_gradients, residual);
           }
@@ -1474,12 +1500,20 @@ namespace MeltPoolDG::Heat
                                          0 /*selected component*/,
                                          true /*force_lexicographic_numbering*/);
         std::unique_ptr<PointEval<dim>> vel_eval_subdomain_l;
+        std::unique_ptr<PointEval<dim>> vel_old_eval_subdomain_l;
         if (vel_eval)
-          vel_eval_subdomain_l =
-            std::make_unique<PointEval<dim>>(*mapping_info_cells[0],
-                                             reference_finite_element_vel,
-                                             0 /*selected component*/,
-                                             true /*force_lexicographic_numbering*/);
+          {
+            vel_eval_subdomain_l =
+              std::make_unique<PointEval<dim>>(*mapping_info_cells[0],
+                                               reference_finite_element_vel,
+                                               0 /*selected component*/,
+                                               true /*force_lexicographic_numbering*/);
+            vel_old_eval_subdomain_l =
+              std::make_unique<PointEval<dim>>(*mapping_info_cells[0],
+                                               reference_finite_element_vel,
+                                               0 /*selected component*/,
+                                               true /*force_lexicographic_numbering*/);
+          }
         PointEval                    T_new_eval_interface_l(mapping_info_surface,
                                          reference_finite_element_heat,
                                          0 /*selected component*/,
@@ -1498,7 +1532,10 @@ namespace MeltPoolDG::Heat
             internal::reinit_and_read_plain(T_new_eval_cell_l, temperature, cell_batch);
             internal::reinit_and_read_plain(T_old_eval_cell_l, temperature_old, cell_batch);
             if (vel_eval)
-              internal::reinit_and_read_plain(*vel_eval, *velocity, cell_batch);
+              {
+                internal::reinit_and_read_plain(*vel_eval, *velocity, cell_batch);
+                internal::reinit_and_read_plain(*vel_old_eval, *velocity_old, cell_batch);
+              }
 
             for (unsigned int cell_lane = 0;
                  cell_lane < matrix_free.n_active_entries_per_cell_batch(cell_batch);
@@ -1537,16 +1574,25 @@ namespace MeltPoolDG::Heat
                                                                     cell_lane,
                                                                     n_dofs_per_cell_heat);
                 if (vel_eval_subdomain_l)
-                  // evaluate velocity for liquid domain integral
-                  CutUtil::evaluate_intersected_domain<dim, number, dim>(*vel_eval_subdomain_l,
-                                                                         *vel_eval,
-                                                                         evaluate_values,
-                                                                         cell_batch,
-                                                                         cell_lane,
-                                                                         n_dofs_per_cell_vel);
+                  {
+                    // evaluate velocity for liquid domain integral
+                    CutUtil::evaluate_intersected_domain<dim, number, dim>(*vel_eval_subdomain_l,
+                                                                           *vel_eval,
+                                                                           evaluate_values,
+                                                                           cell_batch,
+                                                                           cell_lane,
+                                                                           n_dofs_per_cell_vel);
+                    CutUtil::evaluate_intersected_domain<dim, number, dim>(
+                      *vel_old_eval_subdomain_l,
+                      *vel_old_eval,
+                      evaluate_values,
+                      cell_batch,
+                      cell_lane,
+                      n_dofs_per_cell_vel);
+                  }
 
 
-                // do liquid domain integral
+                // liquid domain integral
                 for (const unsigned int q_batch : T_new_eval_subdomain_l.quadrature_point_indices())
                   {
                     const auto [conductivity_new_l, cv_new_l] =
@@ -1555,29 +1601,33 @@ namespace MeltPoolDG::Heat
                     const auto [conductivity_old_l, cv_old_l] =
                       internal::get_liquid_material_parameters(
                         do_solidification ? &T_old_eval_subdomain_l : nullptr, material, q_batch);
-                    const auto vel = vel_eval_subdomain_l ?
-                                       vel_eval_subdomain_l->get_value(q_batch) :
-                                       typename DomainEval<dim>::value_type();
-                    internal::do_domain_integral_residual(T_new_eval_subdomain_l,
-                                                          T_old_eval_subdomain_l,
-                                                          conductivity_new_l,
-                                                          cv_new_l,
-                                                          conductivity_old_l,
-                                                          cv_old_l,
-                                                          vel,
-                                                          ost_factor_implicit,
-                                                          ost_factor_explicit,
-                                                          q_batch);
+                    const auto vel     = vel_eval_subdomain_l ?
+                                           vel_eval_subdomain_l->get_value(q_batch) :
+                                           typename DomainEval<dim>::value_type();
+                    const auto vel_old = vel_old_eval_subdomain_l ?
+                                           vel_old_eval_subdomain_l->get_value(q_batch) :
+                                           typename DomainEval<dim>::value_type();
+                    internal::residual_domain_integral(T_new_eval_subdomain_l,
+                                                       T_old_eval_subdomain_l,
+                                                       conductivity_new_l,
+                                                       cv_new_l,
+                                                       conductivity_old_l,
+                                                       cv_old_l,
+                                                       vel,
+                                                       vel_old,
+                                                       ost_factor_implicit,
+                                                       ost_factor_explicit,
+                                                       q_batch);
                   }
                 T_new_eval_subdomain_l.integrate(
                   dealii::StridedArrayView<number, n_lanes>(
                     &T_new_eval_cell_l.begin_dof_values()[0][cell_lane], n_dofs_per_cell_heat),
                   evaluate_values | evaluate_gradients);
 
-                // do immersed boundary integral
+                // immersed boundary integral
                 for (const unsigned int q_batch : T_new_eval_interface_l.quadrature_point_indices())
                   {
-                    internal::do_immersed_boundary_integral_residual(
+                    internal::residual_immersed_boundary_integral(
                       T_new_eval_interface_l,
                       T_old_eval_interface_l.get(),
                       [&](const dealii::VectorizedArray<number> &T) { return compute_qVapor(T); },
@@ -1618,12 +1668,20 @@ namespace MeltPoolDG::Heat
                                          0 /*selected component*/,
                                          true /*force_lexicographic_numbering*/);
         std::unique_ptr<PointEval<dim>> vel_eval_subdomain_l;
+        std::unique_ptr<PointEval<dim>> vel_old_eval_subdomain_l;
         if (vel_eval)
-          vel_eval_subdomain_l =
-            std::make_unique<PointEval<dim>>(*mapping_info_cells[0],
-                                             reference_finite_element_vel,
-                                             0 /*selected component*/,
-                                             true /*force_lexicographic_numbering*/);
+          {
+            vel_eval_subdomain_l =
+              std::make_unique<PointEval<dim>>(*mapping_info_cells[0],
+                                               reference_finite_element_vel,
+                                               0 /*selected component*/,
+                                               true /*force_lexicographic_numbering*/);
+            vel_old_eval_subdomain_l =
+              std::make_unique<PointEval<dim>>(*mapping_info_cells[0],
+                                               reference_finite_element_vel,
+                                               0 /*selected component*/,
+                                               true /*force_lexicographic_numbering*/);
+          }
         PointEval                       T_new_eval_interface_l(mapping_info_surface,
                                          reference_finite_element_heat,
                                          0 /*selected component*/,
@@ -1647,12 +1705,20 @@ namespace MeltPoolDG::Heat
                                          0 /*selected component*/,
                                          true /*force_lexicographic_numbering*/);
         std::unique_ptr<PointEval<dim>> vel_eval_subdomain_g;
+        std::unique_ptr<PointEval<dim>> vel_old_eval_subdomain_g;
         if (vel_eval)
-          vel_eval_subdomain_g =
-            std::make_unique<PointEval<dim>>(*mapping_info_cells[1],
-                                             reference_finite_element_vel,
-                                             0 /*selected component*/,
-                                             true /*force_lexicographic_numbering*/);
+          {
+            vel_eval_subdomain_g =
+              std::make_unique<PointEval<dim>>(*mapping_info_cells[1],
+                                               reference_finite_element_vel,
+                                               0 /*selected component*/,
+                                               true /*force_lexicographic_numbering*/);
+            vel_old_eval_subdomain_g =
+              std::make_unique<PointEval<dim>>(*mapping_info_cells[1],
+                                               reference_finite_element_vel,
+                                               0 /*selected component*/,
+                                               true /*force_lexicographic_numbering*/);
+          }
         PointEval T_new_eval_interface_g(mapping_info_surface,
                                          reference_finite_element_heat,
                                          0 /*selected component*/,
@@ -1670,7 +1736,10 @@ namespace MeltPoolDG::Heat
             internal::reinit_and_read_plain(T_old_eval_cell_l, temperature_old, cell_batch);
             internal::reinit_and_read_plain(T_old_eval_cell_g, temperature_old, cell_batch);
             if (vel_eval)
-              internal::reinit_and_read_plain(*vel_eval, *velocity, cell_batch);
+              {
+                internal::reinit_and_read_plain(*vel_eval, *velocity, cell_batch);
+                internal::reinit_and_read_plain(*vel_old_eval, *velocity_old, cell_batch);
+              }
 
             for (unsigned int cell_lane = 0;
                  cell_lane < matrix_free.n_active_entries_per_cell_batch(cell_batch);
@@ -1749,6 +1818,13 @@ namespace MeltPoolDG::Heat
                                                                            cell_batch,
                                                                            cell_lane,
                                                                            n_dofs_per_cell_vel);
+                    CutUtil::evaluate_intersected_domain<dim, number, dim>(
+                      *vel_old_eval_subdomain_l,
+                      *vel_old_eval,
+                      evaluate_values,
+                      cell_batch,
+                      cell_lane,
+                      n_dofs_per_cell_vel);
                     // evaluate velocity for gas domain integral
                     CutUtil::evaluate_intersected_domain<dim, number, dim>(*vel_eval_subdomain_g,
                                                                            *vel_eval,
@@ -1756,9 +1832,16 @@ namespace MeltPoolDG::Heat
                                                                            cell_batch,
                                                                            cell_lane,
                                                                            n_dofs_per_cell_vel);
+                    CutUtil::evaluate_intersected_domain<dim, number, dim>(
+                      *vel_old_eval_subdomain_g,
+                      *vel_eval,
+                      evaluate_values,
+                      cell_batch,
+                      cell_lane,
+                      n_dofs_per_cell_vel);
                   }
 
-                // do liquid domain integral
+                // liquid domain integral
                 for (const unsigned int q_batch : T_new_eval_subdomain_l.quadrature_point_indices())
                   {
                     const auto [conductivity_new_l, cv_new_l] =
@@ -1767,54 +1850,62 @@ namespace MeltPoolDG::Heat
                     const auto [conductivity_old_l, cv_old_l] =
                       internal::get_liquid_material_parameters(
                         do_solidification ? &T_old_eval_subdomain_l : nullptr, material, q_batch);
-                    const auto vel = vel_eval_subdomain_l ?
-                                       vel_eval_subdomain_l->get_value(q_batch) :
-                                       typename DomainEval<dim>::value_type();
-                    internal::do_domain_integral_residual(T_new_eval_subdomain_l,
-                                                          T_old_eval_subdomain_l,
-                                                          conductivity_new_l,
-                                                          cv_new_l,
-                                                          conductivity_old_l,
-                                                          cv_old_l,
-                                                          vel,
-                                                          ost_factor_implicit,
-                                                          ost_factor_explicit,
-                                                          q_batch);
+                    const auto vel     = vel_eval_subdomain_l ?
+                                           vel_eval_subdomain_l->get_value(q_batch) :
+                                           typename DomainEval<dim>::value_type();
+                    const auto vel_old = vel_old_eval_subdomain_l ?
+                                           vel_old_eval_subdomain_l->get_value(q_batch) :
+                                           typename DomainEval<dim>::value_type();
+                    internal::residual_domain_integral(T_new_eval_subdomain_l,
+                                                       T_old_eval_subdomain_l,
+                                                       conductivity_new_l,
+                                                       cv_new_l,
+                                                       conductivity_old_l,
+                                                       cv_old_l,
+                                                       vel,
+                                                       vel_old,
+                                                       ost_factor_implicit,
+                                                       ost_factor_explicit,
+                                                       q_batch);
                   }
                 T_new_eval_subdomain_l.integrate(
                   dealii::StridedArrayView<number, n_lanes>(
                     &T_new_eval_cell_l.begin_dof_values()[0][cell_lane], n_dofs_per_cell_heat),
                   evaluate_values | evaluate_gradients);
 
-                // do gas domain integral
+                // gas domain integral
                 for (const unsigned int q_batch : T_new_eval_subdomain_g.quadrature_point_indices())
                   {
                     const auto &conductivity_g = material.get_data().gas.thermal_conductivity;
                     const auto  cv_g           = material.get_data().gas.density *
                                       material.get_data().gas.specific_heat_capacity;
-                    const auto vel = vel_eval_subdomain_g ?
-                                       vel_eval_subdomain_g->get_value(q_batch) :
-                                       typename DomainEval<dim>::value_type();
-                    internal::do_domain_integral_residual(T_new_eval_subdomain_g,
-                                                          T_old_eval_subdomain_g,
-                                                          conductivity_g,
-                                                          cv_g,
-                                                          conductivity_g,
-                                                          cv_g,
-                                                          vel,
-                                                          ost_factor_implicit,
-                                                          ost_factor_explicit,
-                                                          q_batch);
+                    const auto vel     = vel_eval_subdomain_g ?
+                                           vel_eval_subdomain_g->get_value(q_batch) :
+                                           typename DomainEval<dim>::value_type();
+                    const auto vel_old = vel_old_eval_subdomain_g ?
+                                           vel_old_eval_subdomain_g->get_value(q_batch) :
+                                           typename DomainEval<dim>::value_type();
+                    internal::residual_domain_integral(T_new_eval_subdomain_g,
+                                                       T_old_eval_subdomain_g,
+                                                       conductivity_g,
+                                                       cv_g,
+                                                       conductivity_g,
+                                                       cv_g,
+                                                       vel,
+                                                       vel_old,
+                                                       ost_factor_implicit,
+                                                       ost_factor_explicit,
+                                                       q_batch);
                   }
                 T_new_eval_subdomain_g.integrate(
                   dealii::StridedArrayView<number, n_lanes>(
                     &T_new_eval_cell_g.begin_dof_values()[0][cell_lane], n_dofs_per_cell_heat),
                   evaluate_values | evaluate_gradients);
 
-                // do interface integral
+                // interface integral
                 for (const unsigned int q_batch : T_new_eval_interface_l.quadrature_point_indices())
                   {
-                    internal::do_interface_integral_residual(
+                    internal::residual_interface_integral(
                       T_new_eval_interface_l,
                       T_new_eval_interface_g,
                       T_old_eval_interface_l,
@@ -1895,7 +1986,7 @@ namespace MeltPoolDG::Heat
 
             for (const unsigned int q : T_new_eval_minus_l.quadrature_point_indices())
               {
-                internal::do_ghost_penalty_terms(
+                internal::ghost_penalty_face_integral(
                   T_new_eval_minus_l,
                   T_new_eval_plus_l,
                   material.get_data().liquid.thermal_conductivity,
@@ -1939,7 +2030,7 @@ namespace MeltPoolDG::Heat
 
             for (const unsigned int q : T_new_eval_minus_g.quadrature_point_indices())
               {
-                internal::do_ghost_penalty_terms(
+                internal::ghost_penalty_face_integral(
                   T_new_eval_minus_g,
                   T_new_eval_plus_g,
                   material.get_data().gas.thermal_conductivity,
@@ -2326,7 +2417,7 @@ namespace MeltPoolDG::Heat
           eval_plus_l.evaluate(evaluate_gradients);
 
           for (const unsigned int q : eval_minus_l.quadrature_point_indices())
-            internal::do_ghost_penalty_terms(
+            internal::ghost_penalty_face_integral(
               eval_minus_l,
               eval_plus_l,
               material.get_data().liquid.thermal_conductivity,
@@ -2353,7 +2444,7 @@ namespace MeltPoolDG::Heat
           eval_plus_g.evaluate(evaluate_gradients);
 
           for (const unsigned int q : eval_minus_g.quadrature_point_indices())
-            internal::do_ghost_penalty_terms(
+            internal::ghost_penalty_face_integral(
               eval_minus_g,
               eval_plus_g,
               material.get_data().gas.thermal_conductivity,

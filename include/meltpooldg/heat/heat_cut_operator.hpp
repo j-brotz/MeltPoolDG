@@ -98,6 +98,7 @@ namespace MeltPoolDG::Heat
     // optional: flow velocity for internal convection
     const unsigned int vel_dof_idx;
     const VectorType  *velocity;
+    const VectorType  *velocity_old;
 
     // optional: melting/solidification effects
     const bool do_solidification;
@@ -118,8 +119,9 @@ namespace MeltPoolDG::Heat
                       dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>>
                                       &mapping_info_cells_in,
                     const bool         do_solidification_in,
-                    const unsigned int vel_dof_idx_in = 0,
-                    const VectorType  *velocity_in    = nullptr);
+                    const unsigned int vel_dof_idx_in  = -1,
+                    const VectorType  *velocity_in     = nullptr,
+                    const VectorType  *velocity_old_in = nullptr);
 
     void
     register_laser_intensity_function_and_direction(

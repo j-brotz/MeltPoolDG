@@ -116,8 +116,9 @@ namespace MeltPoolDG::Heat
       const bool         do_solidification_in,
       const unsigned int ls_dof_idx_in,
       const VectorType  &level_set_in,
-      const unsigned int vel_dof_idx_in = 0,
-      const VectorType  *velocity_in    = nullptr);
+      const unsigned int vel_dof_idx_in  = -1,
+      const VectorType  *velocity_in     = nullptr,
+      const VectorType  *velocity_old_in = nullptr);
 
     void
     register_laser_intensity_function_and_direction(

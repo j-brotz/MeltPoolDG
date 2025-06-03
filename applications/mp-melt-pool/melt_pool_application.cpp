@@ -867,7 +867,8 @@ namespace MeltPoolDG
                 ls_hanging_nodes_dof_idx,
                 level_set_operation->get_level_set(),
                 vel_dof_idx,
-                &flow_operation->get_velocity());
+                &flow_operation->get_velocity(),
+                &flow_operation->get_velocity_old());
 
               if (laser_operation)
                 heat_cut_operation->register_laser_intensity_function_and_direction(

@@ -247,7 +247,7 @@ namespace MeltPoolDG::Flow
 
         if (not damping_at_q.empty() and scratch_data.is_hex_mesh())
           {
-            MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
+            VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
               damping,
               scratch_data.get_matrix_free(),
               solid_dof_idx,

@@ -24,6 +24,9 @@ namespace MeltPoolDG::Flow
     virtual dealii::LinearAlgebra::distributed::Vector<number> &
     get_velocity() = 0;
 
+    virtual const dealii::LinearAlgebra::distributed::Vector<number> &
+    get_velocity_old() const = 0;
+
     virtual const dealii::DoFHandler<dim> &
     get_dof_handler_velocity() const = 0;
 

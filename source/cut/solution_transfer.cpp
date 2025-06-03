@@ -49,7 +49,10 @@ namespace MeltPoolDG::CutUtil
                                                                   const number gamma_degree_2,
                                                                   const bool   is_two_phase,
                                                                   const int    verbosity)
-    : gamma_degree_0(gamma_degree_0)
+    : fe_degree(0)
+    , n_components_per_phase(0)
+    , is_dg(false)
+    , gamma_degree_0(gamma_degree_0)
     , gamma_degree_1(gamma_degree_1)
     , gamma_degree_2(gamma_degree_2)
     , is_two_phase(is_two_phase)
@@ -89,7 +92,7 @@ namespace MeltPoolDG::CutUtil
       unsigned int dg_counter = 0;
       unsigned int cg_counter = 0;
       if (n_components_per_phase == 1 and not is_two_phase)
-        for (const auto &fe : cut_dof_handler.get_fe_collection())
+        for ([[maybe_unused]] const auto &fe : cut_dof_handler.get_fe_collection())
           {
             if (typeid(fe) == typeid(dealii::FE_Nothing<dim>))
               continue;
@@ -107,7 +110,7 @@ namespace MeltPoolDG::CutUtil
               dynamic_cast<const dealii::FESystem<dim> &>(cut_dof_handler.get_fe_collection()[i]);
             for (unsigned int j = 0; j < fe_system.n_components(); ++j)
               {
-                const auto &fe = fe_system.get_sub_fe(j, 1);
+                [[maybe_unused]] const auto &fe = fe_system.get_sub_fe(j, 1);
 
                 if (typeid(fe) == typeid(dealii::FE_Nothing<dim>))
                   continue;
@@ -267,7 +270,7 @@ namespace MeltPoolDG::CutUtil
     // Note: In contrast to CutUtil::refine_grid(), here, we do not need to transfer the level set
     // solution first. But as a requirement, the lambda function setup_dof_system() cannot include
     // classifying the mesh, and cannot include generating the quadrature of intersected cells,
-    // because the level set is not yet known for the new DoF system. The mesh must be classifyed
+    // because the level set is not yet known for the new DoF system. The mesh must be classified
     // before calling CutUtil::SolutionTransferOperator::reinit(), which leads to this point, and
     // the intersected quadrature must be generated afterward. For an example, see
     // Heat::HeatCutOperation::adapt_to_new_interface_position().
@@ -530,7 +533,7 @@ namespace MeltPoolDG::CutUtil
       cut_dof_handler.get_communicator());
 
     // Check if the partitioner of new_solution is globally compatible with partitioner_dof.
-    // If not, transfer new_solution to default vector stucture.
+    // If not, transfer new_solution to default vector structure.
     // The full set of ghost-values is required for setting the constraints.
     VectorType new_solution_including_all_ghosts;
     const bool is_globally_compatible =
@@ -654,7 +657,7 @@ namespace MeltPoolDG::CutUtil
     dealii::hp::QCollection<dim - 1> face_quadrature;
     face_quadrature.push_back(dealii::QGauss<dim - 1>(fe_degree + 1));
 
-    const unsigned int invalid = dealii::numbers::invalid_unsigned_int;
+    constexpr unsigned int invalid = dealii::numbers::invalid_unsigned_int;
 
     // fill matrix
     for (const auto &cell : cut_dof_handler.active_cell_iterators())
@@ -787,7 +790,7 @@ namespace MeltPoolDG::CutUtil
     if (verbosity >= 2)
       {
         std::ostringstream str;
-        str << "Ghost-penaly extrapolation system solved in " << solver_control.last_step()
+        str << "Ghost-penalty extrapolation system solved in " << solver_control.last_step()
             << " iterations.";
         Journal::print_line(pcout, str.str(), "cut_solution_transfer");
       }
