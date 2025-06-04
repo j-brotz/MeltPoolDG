@@ -31,17 +31,17 @@
         "residual tolerance": 1e-10
       }
     },
-    "material": {
-      "gas": {
-        "dynamic viscosity": 0.0,
-        "equation of state": {
-          "type": "ideal_gas"
-        }
-      }
-    },
     "fe": {
       "degree": "2",
       "type": "FE_DGQ"
+    }
+  },
+  "material": {
+    "gas": {
+      "dynamic viscosity": 0.0,
+      "equation of state": {
+        "type": "ideal_gas"
+      }
     }
   }
 }

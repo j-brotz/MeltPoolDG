@@ -43,15 +43,17 @@ namespace MeltPoolDG::Flow
      *
      * @param scratch_data Reference to the used ScratchData object.
      * @param flow_data Reference to the compressible flow data struct used.
+     * @param material_data_in Reference to the material data struct.
      * @param flow_dof_idx Index of the used dof handler in @p scratch_data_in.
      * @param flow_quad_idx Index of the used quadrature object in @p scratch_data_in.
      * @param external_forces Pointer to a struct implementing external forces acting on the fluid.
      */
     DGCompressibleFlowOperation(
-      const ScratchData<dim, dim, number> &scratch_data,
-      const CompressibleFlowData<number>  &flow_data,
-      unsigned int                         flow_dof_idx  = 0,
-      unsigned int                         flow_quad_idx = 0,
+      const ScratchData<dim, dim, number>              &scratch_data,
+      const CompressibleFlowData<number>               &flow_data,
+      const CompressibleFluidMaterialPhaseData<number> &material_data_in,
+      unsigned int                                      flow_dof_idx  = 0,
+      unsigned int                                      flow_quad_idx = 0,
       std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces =
         nullptr);
 

@@ -25,17 +25,6 @@
     "use cfl criteria": "true",
     "gravity constant": "0.0",
     "domain representation type": "cut",
-    "cut": {
-      "two phase": "false",
-      "unfitted flow boundary condition": "no_slip_wall",
-      "stabilization": {
-        "ghost-penalty": {
-          "gamma M degree 0": "1.0",
-          "gamma M degree 1": "0.1",
-          "gamma M degree 2": "0.01"
-        }
-      }
-    },
     "time integration": {
       "linear solver": {
         "preconditioner type": "Identity",
@@ -45,18 +34,28 @@
         "abs tolerance": "1e-20"
       }
     },
-    "material": {
-      "gas": {
-        "dynamic viscosity": "0.1",
-        "reference density": "0.7",
-        "equation of state": {
-          "type": "ideal_gas"
-        }
-      }
-    },
     "fe": {
       "degree": "2",
       "type": "FE_DGQ"
+    }
+  },
+  "material": {
+    "gas": {
+      "dynamic viscosity": "0.1",
+      "reference density": "0.7",
+      "equation of state": {
+        "type": "ideal_gas"
+      }
+    }
+  },
+  "cut": {
+    "unfitted flow boundary condition": "no_slip_wall",
+    "stabilization": {
+      "ghost-penalty": {
+        "gamma M degree 0": "1.0",
+        "gamma M degree 1": "0.1",
+        "gamma M degree 2": "0.01"
+      }
     }
   }
 }

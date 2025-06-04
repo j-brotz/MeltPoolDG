@@ -174,6 +174,10 @@ namespace MeltPoolDG::Multiphase
       std::make_unique<CompressibleMultiphaseOperation<dim, number>>(
         *scratch_data,
         simulation_case->parameters.flow,
+        simulation_case->parameters.material_gas,
+        simulation_case->parameters.material_liquid,
+        simulation_case->parameters.cut,
+        simulation_case->parameters.phase_coupling,
         *time_iterator,
         [this]() { this->setup_dof_system(); },
         comp_multiphase_dof_idx,

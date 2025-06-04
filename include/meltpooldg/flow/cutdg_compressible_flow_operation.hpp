@@ -59,6 +59,8 @@ namespace MeltPoolDG::Flow
      *
      * @param scratch_data_in Reference to the used ScratchData object.
      * @param comp_flow_data_in Reference to the compressible flow data struct used.
+     * @param material_data_in Reference to the material class.
+     * @param cut_data_in Reference to the class with cut-related parameters.
      * @param time_iterator_in Reference to the used time stepping.
      * @param setup_dof_system_in Reinit_matrix_free function, which is registered.
      * @param comp_flow_dof_idx_in Index of the used dof handler for solution in @p scratch_data_in.
@@ -66,14 +68,17 @@ namespace MeltPoolDG::Flow
      * @param comp_flow_quad_idx_in Index of the used quadrature object in @p scratch_data_in.
      * @param level_set_in level-set dof vector.
      */
-    CutDGCompressibleFlowOperation(const ScratchData<dim, dim, number>         &scratch_data_in,
-                                   const CompressibleFlowData<number>          &comp_flow_data_in,
-                                   const TimeIntegration::TimeIterator<number> &time_iterator_in,
-                                   const std::function<void()>                 &setup_dof_system_in,
-                                   unsigned int      comp_flow_dof_idx_in  = 0,
-                                   unsigned int      level_set_dof_idx_in  = 0,
-                                   unsigned int      comp_flow_quad_idx_in = 0,
-                                   const VectorType &level_set_in          = 0);
+    CutDGCompressibleFlowOperation(
+      const ScratchData<dim, dim, number>              &scratch_data_in,
+      const CompressibleFlowData<number>               &comp_flow_data_in,
+      const CompressibleFluidMaterialPhaseData<number> &material_data_in,
+      const CompressibleFlowCutData<number>            &cut_data_in,
+      const TimeIntegration::TimeIterator<number>      &time_iterator_in,
+      const std::function<void()>                      &setup_dof_system_in,
+      unsigned int                                      comp_flow_dof_idx_in  = 0,
+      unsigned int                                      level_set_dof_idx_in  = 0,
+      unsigned int                                      comp_flow_quad_idx_in = 0,
+      const VectorType                                 &level_set_in          = 0);
 
     /**
      * Set up the required internal data structures. After a call to this function the solve()

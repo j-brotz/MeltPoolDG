@@ -29,97 +29,10 @@
         "use cfl criteria": "false",
         "verbosity level": "-1",
         "viscous courant number": "1",
-        "cut":
-        {
-            "two phase": "false",
-            "unfitted flow boundary condition": "no_slip_wall",
-            "stabilization":
-            {
-                "nitsche parameter": "1",
-                "ghost-penalty":
-                {
-                    "gamma A degree 0": "1",
-                    "gamma A degree 1": "1",
-                    "gamma A degree 2": "1",
-                    "gamma M degree 0": "1",
-                    "gamma M degree 1": "1",
-                    "gamma M degree 2": "1"
-                }
-            }
-        },
         "fe":
         {
             "degree": "-1",
             "type": "not_initialized"
-        },
-        "initial conditions":
-        {
-            "gas": "",
-            "liquid": ""
-        },
-        "interface jump conditions":
-        {
-            "delta q": "0",
-            "evaporation mass flux": "0",
-            "type": "HLLP0_and_SIPG",
-            "HLLP0 and SIPG":
-            {
-                "delta T": "0",
-                "interior penalty parameter interface": "1"
-            },
-            "HLLP0 and penalty":
-            {
-                "delta T": "0",
-                "penalty parameter temperature jump": "1"
-            },
-            "penalty":
-            {
-                "coefficients":
-                {
-                    "density": "1.79769e+308",
-                    "temperature": "1.79769e+308"
-                },
-                "target values":
-                {
-                    "density gas phase": "0",
-                    "temperature gas phase": "0"
-                }
-            }
-        },
-        "material":
-        {
-            "gas":
-            {
-                "dynamic viscosity": "0.000625",
-                "gamma": "1.4",
-                "reference density": "1",
-                "specific gas constant": "287.1",
-                "specific isobaric heat": "1000",
-                "thermal conductivity": "1.79769e+308",
-                "equation of state":
-                {
-                    "b": "1.79769e+308",
-                    "p inf": "1.79769e+308",
-                    "q": "2.22507e-308",
-                    "type": "ideal_gas"
-                }
-            },
-            "liquid":
-            {
-                "dynamic viscosity": "0.000625",
-                "gamma": "1.4",
-                "reference density": "1",
-                "specific gas constant": "287.1",
-                "specific isobaric heat": "1000",
-                "thermal conductivity": "1.79769e+308",
-                "equation of state":
-                {
-                    "b": "1.79769e+308",
-                    "p inf": "1.79769e+308",
-                    "q": "2.22507e-308",
-                    "type": "ideal_gas"
-                }
-            }
         },
         "time integration":
         {
@@ -144,6 +57,25 @@
                 "residual tolerance": "1e-09",
                 "residual tolerance alt": "1e-08",
                 "verbosity level": "-1"
+            }
+        }
+    },
+    "material":
+    {
+        "gas":
+        {
+            "dynamic viscosity": "0.000625",
+            "gamma": "1.4",
+            "reference density": "1",
+            "specific gas constant": "287.1",
+            "specific isobaric heat": "1000",
+            "thermal conductivity": "1.79769e+308",
+            "equation of state":
+            {
+                "b": "1.79769e+308",
+                "p inf": "1.79769e+308",
+                "q": "2.22507e-308",
+                "type": "ideal_gas"
             }
         }
     },

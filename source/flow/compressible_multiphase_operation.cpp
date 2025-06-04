@@ -11,7 +11,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
+#include <meltpooldg/flow/compressible_multiphase/compressible_flow_phase_coupling_data.hpp>
 #include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operation.hpp>
 #include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operator.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
@@ -33,24 +33,32 @@ namespace MeltPoolDG::Multiphase
 
   template <int dim, typename number>
   CompressibleMultiphaseOperation<dim, number>::CompressibleMultiphaseOperation(
-    const ScratchData<dim, dim, number>         &scratch_data_in,
-    const Flow::CompressibleFlowData<number>    &comp_flow_data_in,
-    const TimeIntegration::TimeIterator<number> &time_iterator_in,
-    const std::function<void()>                 &setup_dof_system_in,
-    const unsigned int                           comp_flow_dof_idx_in,
-    const unsigned int                           level_set_dof_idx_in,
-    const unsigned int                           comp_flow_quad_idx_in,
-    const VectorType                            &level_set_in)
-    : flow_scratch_data(comp_flow_data_in,
-                        scratch_data_in,
-                        comp_flow_dof_idx_in,
-                        comp_flow_quad_idx_in)
+    const ScratchData<dim, dim, number>                    &scratch_data_in,
+    const Flow::CompressibleFlowData<number>               &comp_flow_data_in,
+    const Flow::CompressibleFluidMaterialPhaseData<number> &material_data_gas_in,
+    const Flow::CompressibleFluidMaterialPhaseData<number> &material_data_liquid_in,
+    const Flow::CompressibleFlowCutData<number>            &cut_data_in,
+    const CompressibleFlowPhaseCouplingData<number>        &phase_coupling_data_in,
+    const TimeIntegration::TimeIterator<number>            &time_iterator_in,
+    const std::function<void()>                            &setup_dof_system_in,
+    const unsigned int                                      comp_flow_dof_idx_in,
+    const unsigned int                                      level_set_dof_idx_in,
+    const unsigned int                                      comp_flow_quad_idx_in,
+    const VectorType                                       &level_set_in)
+    : multiphase_scratch_data(comp_flow_data_in,
+                              material_data_gas_in,
+                              material_data_liquid_in,
+                              cut_data_in,
+                              phase_coupling_data_in,
+                              scratch_data_in,
+                              comp_flow_dof_idx_in,
+                              comp_flow_quad_idx_in)
     , time_iterator(time_iterator_in)
     , level_set_dof_idx(level_set_dof_idx_in)
     , level_set(level_set_in)
-    , cut_solution_transfer(comp_flow_data_in.cut.stabilization.ghost_penalty.gamma_M_degree_0,
-                            comp_flow_data_in.cut.stabilization.ghost_penalty.gamma_M_degree_1,
-                            comp_flow_data_in.cut.stabilization.ghost_penalty.gamma_M_degree_2,
+    , cut_solution_transfer(cut_data_in.stabilization.ghost_penalty.gamma_M_degree_0,
+                            cut_data_in.stabilization.ghost_penalty.gamma_M_degree_1,
+                            cut_data_in.stabilization.ghost_penalty.gamma_M_degree_2,
                             true /* is_two_phase*/,
                             comp_flow_data_in.verbosity_level /*verbosity level*/)
     , setup_dof_system(setup_dof_system_in)
@@ -60,27 +68,27 @@ namespace MeltPoolDG::Multiphase
                            dealii::update_values | dealii::update_gradients |
                              dealii::update_JxW_values | dealii::update_normal_vectors)
     , cmp_operator(CompressibleMultiphaseOperation<dim, number>::create_cut_flow_operator_variant(
-        comp_flow_data_in.material.gas.dynamic_viscosity > 0.,
-        comp_flow_data_in.material.liquid.dynamic_viscosity > 0.,
-        flow_scratch_data,
+        material_data_gas_in.dynamic_viscosity > 0.,
+        material_data_liquid_in.dynamic_viscosity > 0.,
+        multiphase_scratch_data,
         mapping_info_surface,
         mapping_info_cells,
         mapping_info_faces))
   {
     // Currently, only explicit Euler time discretization with ghost-penalty stabilized mass matrix
     // is enabled for cutDG
-    flow_scratch_data.solution_history.resize(1);
+    multiphase_scratch_data.solution_history.resize(1);
 
     // old and new mesh classifier for representing the interface topologies in two subsequent time
     // levels
     mesh_classifier = std::make_shared<dealii::NonMatching::MeshClassifier<dim>>(
-      this->flow_scratch_data.scratch_data.get_dof_handler(level_set_dof_idx), level_set);
+      this->multiphase_scratch_data.scratch_data.get_dof_handler(level_set_dof_idx), level_set);
     mesh_classifier_old = std::make_shared<dealii::NonMatching::MeshClassifier<dim>>(
-      this->flow_scratch_data.scratch_data.get_dof_handler(level_set_dof_idx), level_set);
+      this->multiphase_scratch_data.scratch_data.get_dof_handler(level_set_dof_idx), level_set);
 
     // lambda function for vector reinitialization with the matrix-free object
     reinit_vector = [this](VectorType &vec) {
-      this->flow_scratch_data.scratch_data.get_matrix_free().initialize_dof_vector(vec);
+      this->multiphase_scratch_data.scratch_data.get_matrix_free().initialize_dof_vector(vec);
     };
 
     // mapping info objects for non-matching quadrature rules
@@ -88,28 +96,28 @@ namespace MeltPoolDG::Multiphase
     // liquid phase
     mapping_info_cells.push_back(
       std::make_shared<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>(
-        this->flow_scratch_data.scratch_data.get_mapping(),
+        this->multiphase_scratch_data.scratch_data.get_mapping(),
         dealii::update_values | dealii::update_gradients | dealii::update_JxW_values |
           dealii::update_normal_vectors));
     // gas phase
     mapping_info_cells.push_back(
       std::make_shared<NonMatching::MappingInfo<dim, dim, VectorizedArray<number>>>(
-        this->flow_scratch_data.scratch_data.get_mapping(),
+        this->multiphase_scratch_data.scratch_data.get_mapping(),
         update_values | update_gradients | update_JxW_values | update_normal_vectors));
 
     UpdateFlags update_flags_faces =
       update_values | update_gradients | update_JxW_values | update_normal_vectors;
-    if (this->flow_scratch_data.flow_data.fe.degree == 2)
+    if (this->multiphase_scratch_data.flow_data.fe.degree == 2)
       update_flags_faces = update_flags_faces | update_hessians;
 
     // liquid phase
     mapping_info_faces.push_back(
       std::make_shared<NonMatching::MappingInfo<dim, dim, VectorizedArray<number>>>(
-        this->flow_scratch_data.scratch_data.get_mapping(), update_flags_faces));
+        this->multiphase_scratch_data.scratch_data.get_mapping(), update_flags_faces));
     // gas phase
     mapping_info_faces.push_back(
       std::make_shared<NonMatching::MappingInfo<dim, dim, VectorizedArray<number>>>(
-        this->flow_scratch_data.scratch_data.get_mapping(), update_flags_faces));
+        this->multiphase_scratch_data.scratch_data.get_mapping(), update_flags_faces));
   }
 
   template <int dim, typename number>
@@ -118,7 +126,8 @@ namespace MeltPoolDG::Multiphase
     const std::shared_ptr<SimulationCaseBase<dim, number>> &simulation_case,
     const std::string                                      &operation_name)
   {
-    flow_scratch_data.boundary_conditions.set_boundary_conditions(simulation_case, operation_name);
+    multiphase_scratch_data.boundary_conditions.set_boundary_conditions(simulation_case,
+                                                                        operation_name);
   }
 
   template <int dim, typename number>
@@ -127,7 +136,7 @@ namespace MeltPoolDG::Multiphase
     std::unique_ptr<Function<dim>> body_force_in)
   {
     AssertDimension(body_force_in->n_components, dim);
-    flow_scratch_data.body_force = std::move(body_force_in);
+    multiphase_scratch_data.body_force = std::move(body_force_in);
   }
 
   template <int dim, typename number>
@@ -147,20 +156,22 @@ namespace MeltPoolDG::Multiphase
         }
 
       const number degree_factor =
-        std::pow(flow_scratch_data.scratch_data.get_degree(flow_scratch_data.dof_idx), 3);
-      const number cell_size_sq = std::pow(flow_scratch_data.scratch_data.get_min_cell_size(), 2);
+        std::pow(multiphase_scratch_data.scratch_data.get_degree(multiphase_scratch_data.dof_idx),
+                 3);
+      const number cell_size_sq =
+        std::pow(multiphase_scratch_data.scratch_data.get_min_cell_size(), 2);
 
-      return (flow_scratch_data.flow_data.viscous_courant_number * min_density_in * cell_size_sq) /
+      return (multiphase_scratch_data.flow_data.viscous_courant_number * min_density_in *
+              cell_size_sq) /
              (degree_factor * dynamic_viscosity);
     };
 
     const number viscous_time_step_limit_liquid =
-      compute_viscous_time_step_limit(flow_scratch_data.flow_data.material.gas.dynamic_viscosity,
+      compute_viscous_time_step_limit(multiphase_scratch_data.material_gas.data.dynamic_viscosity,
                                       min_density.first);
 
-    const number viscous_time_step_limit_gas =
-      compute_viscous_time_step_limit(flow_scratch_data.flow_data.material.liquid.dynamic_viscosity,
-                                      min_density.second);
+    const number viscous_time_step_limit_gas = compute_viscous_time_step_limit(
+      multiphase_scratch_data.material_liquid.data.dynamic_viscosity, min_density.second);
 
     const number viscous_time_step_limit =
       std::min(viscous_time_step_limit_liquid, viscous_time_step_limit_gas);
@@ -171,11 +182,11 @@ namespace MeltPoolDG::Multiphase
 
     if (do_print)
       {
-        flow_scratch_data.scratch_data.get_pcout()
+        multiphase_scratch_data.scratch_data.get_pcout()
           << "Time step size: " << time_step
           << ", convective time step limit: " << convective_time_step_limit
           << ", viscous time step limit: " << viscous_time_step_limit
-          << ",\nminimum h: " << flow_scratch_data.scratch_data.get_min_cell_size()
+          << ",\nminimum h: " << multiphase_scratch_data.scratch_data.get_min_cell_size()
           << ", minimum density liquid: " << min_density.first << std::endl
           << ", minimum density gas: " << min_density.second << std::endl
           << std::endl;
@@ -214,9 +225,9 @@ namespace MeltPoolDG::Multiphase
       interpretation.push_back(DataComponentInterpretation::component_is_part_of_vector);
     interpretation.push_back(DataComponentInterpretation::component_is_scalar);
 
-    data_out.add_data_vector(flow_scratch_data.scratch_data.get_dof_handler(
-                               flow_scratch_data.dof_idx),
-                             flow_scratch_data.solution_history.get_current_solution(),
+    data_out.add_data_vector(multiphase_scratch_data.scratch_data.get_dof_handler(
+                               multiphase_scratch_data.dof_idx),
+                             multiphase_scratch_data.solution_history.get_current_solution(),
                              names,
                              interpretation);
 
@@ -233,17 +244,19 @@ namespace MeltPoolDG::Multiphase
     // check if fe type is equal to FE_DGQ<dim>
     AssertThrow(
       dynamic_cast<const dealii::FE_DGQ<dim> *>(
-        &(flow_scratch_data.scratch_data.get_fe(flow_scratch_data.dof_idx).base_element(0))) !=
-        nullptr,
+        &(multiphase_scratch_data.scratch_data.get_fe(multiphase_scratch_data.dof_idx)
+            .base_element(0))) != nullptr,
       dealii::ExcMessage(
         "The cutDG compressible multiphase flow solver only supports finite element types of FE_DGQ!"));
 
-    flow_scratch_data.reinit(2);
+    multiphase_scratch_data.reinit(2);
 
-    flow_scratch_data.scratch_data.initialize_dof_vector(
-      flow_scratch_data.solution_history.get_current_solution(), flow_scratch_data.dof_idx);
+    multiphase_scratch_data.scratch_data.initialize_dof_vector(
+      multiphase_scratch_data.solution_history.get_current_solution(),
+      multiphase_scratch_data.dof_idx);
 
-    flow_scratch_data.scratch_data.initialize_dof_vector(rhs, flow_scratch_data.dof_idx);
+    multiphase_scratch_data.scratch_data.initialize_dof_vector(rhs,
+                                                               multiphase_scratch_data.dof_idx);
 
     compute_intersected_quadrature();
   }
@@ -258,7 +271,7 @@ namespace MeltPoolDG::Multiphase
     dealii::hp::FECollection<dim> fe_collection;
     const unsigned int            n_solution_components = dim + 2;
 
-    FE_DGQ<dim>     fe_dgq(flow_scratch_data.flow_data.fe.degree);
+    FE_DGQ<dim>     fe_dgq(multiphase_scratch_data.flow_data.fe.degree);
     FE_Nothing<dim> fe_n;
 
     fe_collection.push_back(
@@ -288,14 +301,14 @@ namespace MeltPoolDG::Multiphase
         op.create_rhs(current_time,
                       time_step,
                       rhs,
-                      flow_scratch_data.solution_history.get_current_solution());
+                      multiphase_scratch_data.solution_history.get_current_solution());
 
         // solve linear and symmetric system of equations with CG
         LinearSolver::solve<VectorType>(
           op,
-          flow_scratch_data.solution_history.get_current_solution(),
+          multiphase_scratch_data.solution_history.get_current_solution(),
           rhs,
-          flow_scratch_data.flow_data.time_integrator.linear_solver_data);
+          multiphase_scratch_data.flow_data.time_integrator.linear_solver_data);
       },
       cmp_operator);
   }
@@ -304,13 +317,13 @@ namespace MeltPoolDG::Multiphase
   void
   CompressibleMultiphaseOperation<dim, number>::set_initial_condition(const Function<dim> &function)
   {
-    if (flow_scratch_data.solution_history.get_current_solution().has_ghost_elements())
-      flow_scratch_data.solution_history.get_current_solution().zero_out_ghost_values();
-    dealii::VectorTools::interpolate(flow_scratch_data.scratch_data.get_dof_handler(
-                                       flow_scratch_data.dof_idx),
-                                     function,
-                                     flow_scratch_data.solution_history.get_current_solution());
-    flow_scratch_data.solution_history.get_current_solution().update_ghost_values();
+    if (multiphase_scratch_data.solution_history.get_current_solution().has_ghost_elements())
+      multiphase_scratch_data.solution_history.get_current_solution().zero_out_ghost_values();
+    dealii::VectorTools::interpolate(
+      multiphase_scratch_data.scratch_data.get_dof_handler(multiphase_scratch_data.dof_idx),
+      function,
+      multiphase_scratch_data.solution_history.get_current_solution());
+    multiphase_scratch_data.solution_history.get_current_solution().update_ghost_values();
   }
 
   template <int dim, typename number>
@@ -332,26 +345,29 @@ namespace MeltPoolDG::Multiphase
 
     // transfer old solution according to the new interface position,
     // the matrix-free object is reinitialized within the reinit function
-    cut_solution_transfer.reinit(
-      const_cast<dealii::DoFHandler<dim> &>(
-        flow_scratch_data.scratch_data.get_dof_handler(flow_scratch_data.dof_idx)),
-      const_cast<dealii::Triangulation<dim> &>(flow_scratch_data.scratch_data.get_triangulation()),
-      flow_scratch_data.solution_history.get_current_solution(),
-      *mesh_classifier_old,
-      *mesh_classifier,
-      reinit_vector,
-      setup_dof_system);
+    cut_solution_transfer.reinit(const_cast<dealii::DoFHandler<dim> &>(
+                                   multiphase_scratch_data.scratch_data.get_dof_handler(
+                                     multiphase_scratch_data.dof_idx)),
+                                 const_cast<dealii::Triangulation<dim> &>(
+                                   multiphase_scratch_data.scratch_data.get_triangulation()),
+                                 multiphase_scratch_data.solution_history.get_current_solution(),
+                                 *mesh_classifier_old,
+                                 *mesh_classifier,
+                                 reinit_vector,
+                                 setup_dof_system);
 
     // reinit solution vector and rhs vector
-    flow_scratch_data.scratch_data.initialize_dof_vector(
-      flow_scratch_data.solution_history.get_current_solution(), flow_scratch_data.dof_idx);
-    flow_scratch_data.scratch_data.initialize_dof_vector(rhs, flow_scratch_data.dof_idx);
+    multiphase_scratch_data.scratch_data.initialize_dof_vector(
+      multiphase_scratch_data.solution_history.get_current_solution(),
+      multiphase_scratch_data.dof_idx);
+    multiphase_scratch_data.scratch_data.initialize_dof_vector(rhs,
+                                                               multiphase_scratch_data.dof_idx);
 
     // compute non-matching quadrature rules
     compute_intersected_quadrature();
 
     // get extrapolated solution
-    flow_scratch_data.solution_history.get_current_solution().swap(
+    multiphase_scratch_data.solution_history.get_current_solution().swap(
       cut_solution_transfer.get_updated_solution());
   }
 
@@ -359,17 +375,17 @@ namespace MeltPoolDG::Multiphase
   std::pair<number, number>
   CompressibleMultiphaseOperation<dim, number>::compute_minimum_density() const
   {
-    flow_scratch_data.solution_history.get_current_solution().update_ghost_values();
+    multiphase_scratch_data.solution_history.get_current_solution().update_ghost_values();
 
     constexpr unsigned int n_lanes            = VectorizedArray<number>::size();
     number                 min_density_liquid = std::numeric_limits<number>::max();
     number                 min_density_gas    = std::numeric_limits<number>::max();
-    const auto            &matrix_free        = flow_scratch_data.scratch_data.get_matrix_free();
+    const auto            &matrix_free = multiphase_scratch_data.scratch_data.get_matrix_free();
 
     // lambda function for computing min density using FECellIntegrator
     auto compute_min_density_standard = [&](auto &phi, unsigned int cell, number min_density) {
       phi.reinit(cell);
-      phi.gather_evaluate(flow_scratch_data.solution_history.get_current_solution(),
+      phi.gather_evaluate(multiphase_scratch_data.solution_history.get_current_solution(),
                           EvaluationFlags::values);
       for (const unsigned int q : phi.quadrature_point_indices())
         {
@@ -384,7 +400,7 @@ namespace MeltPoolDG::Multiphase
     auto compute_min_density_intersected =
       [&](auto &phi, auto &fe_point_eval, unsigned int cell, number min_density) {
         phi.reinit(cell);
-        phi.read_dof_values(flow_scratch_data.solution_history.get_current_solution());
+        phi.read_dof_values(multiphase_scratch_data.solution_history.get_current_solution());
 
         for (unsigned int lane = 0; lane < matrix_free.n_active_entries_per_cell_batch(cell);
              ++lane)
@@ -411,8 +427,8 @@ namespace MeltPoolDG::Multiphase
         if (active_fe_index == CutUtil::CellCategory::liquid)
           {
             FECellIntegrator<dim, 1, number> phi(matrix_free,
-                                                 flow_scratch_data.dof_idx,
-                                                 flow_scratch_data.quad_idx,
+                                                 multiphase_scratch_data.dof_idx,
+                                                 multiphase_scratch_data.quad_idx,
                                                  0,
                                                  CutUtil::CellCategory::liquid);
             compute_min_density_standard(phi, cell, min_density_liquid);
@@ -421,8 +437,8 @@ namespace MeltPoolDG::Multiphase
           {
             // liquid phase (inside)
             FECellIntegrator<dim, 1, number>                        phi(matrix_free,
-                                                 flow_scratch_data.dof_idx,
-                                                 flow_scratch_data.quad_idx,
+                                                 multiphase_scratch_data.dof_idx,
+                                                 multiphase_scratch_data.quad_idx,
                                                  0,
                                                  CutUtil::CellCategory::intersected);
             FEPointEvaluation<1, dim, dim, VectorizedArray<number>> fe_point_eval(
@@ -431,8 +447,8 @@ namespace MeltPoolDG::Multiphase
 
             // gas phase (outside)
             FECellIntegrator<dim, 1, number>                        phi_outside(matrix_free,
-                                                         flow_scratch_data.dof_idx,
-                                                         flow_scratch_data.quad_idx,
+                                                         multiphase_scratch_data.dof_idx,
+                                                         multiphase_scratch_data.quad_idx,
                                                          dim + 2,
                                                          CutUtil::CellCategory::intersected);
             FEPointEvaluation<1, dim, dim, VectorizedArray<number>> fe_point_eval_outside(
@@ -445,8 +461,8 @@ namespace MeltPoolDG::Multiphase
         else if (active_fe_index == CutUtil::CellCategory::gas)
           {
             FECellIntegrator<dim, 1, number> phi_outside(matrix_free,
-                                                         flow_scratch_data.dof_idx,
-                                                         flow_scratch_data.quad_idx,
+                                                         multiphase_scratch_data.dof_idx,
+                                                         multiphase_scratch_data.quad_idx,
                                                          dim + 2,
                                                          CutUtil::CellCategory::gas);
             compute_min_density_standard(phi_outside, cell, min_density_gas);
@@ -456,9 +472,10 @@ namespace MeltPoolDG::Multiphase
     // compute the minimum density across all MPI processes
     min_density_liquid = Utilities::MPI::min(
       min_density_liquid,
-      matrix_free.get_dof_handler(flow_scratch_data.dof_idx).get_communicator());
+      matrix_free.get_dof_handler(multiphase_scratch_data.dof_idx).get_communicator());
     min_density_gas = Utilities::MPI::min(
-      min_density_gas, matrix_free.get_dof_handler(flow_scratch_data.dof_idx).get_communicator());
+      min_density_gas,
+      matrix_free.get_dof_handler(multiphase_scratch_data.dof_idx).get_communicator());
 
     return {min_density_liquid, min_density_gas};
   }
@@ -471,11 +488,11 @@ namespace MeltPoolDG::Multiphase
 
     CutUtil::compute_intersected_quadrature(mapping_info_cells,
                                             mapping_info_surface,
-                                            flow_scratch_data.scratch_data.get_dof_handler(
+                                            multiphase_scratch_data.scratch_data.get_dof_handler(
                                               level_set_dof_idx),
                                             level_set,
-                                            flow_scratch_data.scratch_data.get_matrix_free(),
-                                            flow_scratch_data.flow_data.fe.degree,
+                                            multiphase_scratch_data.scratch_data.get_matrix_free(),
+                                            multiphase_scratch_data.flow_data.fe.degree,
                                             true /*two_phase*/,
                                             true /*is_dg*/,
                                             mapping_info_faces);
@@ -503,8 +520,11 @@ namespace MeltPoolDG::Multiphase
           convective_limit = std::max(convective_limit, std::abs(convective_speed[d]));
 
         const auto speed_of_sound =
-          MeltPoolDG::Flow::EOS::calculate_speed_of_sound<dim, number, is_gas_phase>(
-            conserved_variables, flow_scratch_data.flow_data);
+          is_gas_phase ?
+            multiphase_scratch_data.material_gas.eos_utils->calculate_speed_of_sound(
+              conserved_variables) :
+            multiphase_scratch_data.material_liquid.eos_utils->calculate_speed_of_sound(
+              conserved_variables);
 
         Tensor<1, dim, VectorizedArray<number>> eigenvector;
         for (unsigned int d = 0; d < dim; ++d)
@@ -524,32 +544,30 @@ namespace MeltPoolDG::Multiphase
       };
 
     for (unsigned int cell = 0;
-         cell < this->flow_scratch_data.scratch_data.get_matrix_free().n_cell_batches();
+         cell < this->multiphase_scratch_data.scratch_data.get_matrix_free().n_cell_batches();
          ++cell)
       {
         const auto active_fe_index =
-          this->flow_scratch_data.scratch_data.get_matrix_free().get_cell_category(cell);
+          this->multiphase_scratch_data.scratch_data.get_matrix_free().get_cell_category(cell);
 
         if (active_fe_index == CutUtil::CellCategory::liquid)
           {
             FECellIntegrator<dim, dim + 2, number> phi(
-              flow_scratch_data.scratch_data.get_matrix_free(),
-              flow_scratch_data.dof_idx,
-              flow_scratch_data.quad_idx,
+              multiphase_scratch_data.scratch_data.get_matrix_free(),
+              multiphase_scratch_data.dof_idx,
+              multiphase_scratch_data.quad_idx,
               0,
               CutUtil::CellCategory::liquid);
 
             phi.reinit(cell);
-            phi.gather_evaluate(flow_scratch_data.solution_history.get_current_solution(),
+            phi.gather_evaluate(multiphase_scratch_data.solution_history.get_current_solution(),
                                 EvaluationFlags::values);
             VectorizedArray<number> local_max = 0.;
             for (const unsigned int q : phi.quadrature_point_indices())
               compute_convective_time_step_limit_at_q.template operator()<false>(phi, q, local_max);
 
-            for (unsigned int v = 0;
-                 v <
-                 flow_scratch_data.scratch_data.get_matrix_free().n_active_entries_per_cell_batch(
-                   cell);
+            for (unsigned int v = 0; v < multiphase_scratch_data.scratch_data.get_matrix_free()
+                                           .n_active_entries_per_cell_batch(cell);
                  ++v)
               max_transport = std::max(max_transport, local_max[v]);
           }
@@ -561,9 +579,9 @@ namespace MeltPoolDG::Multiphase
 
             // liquid phase (inside)
             FECellIntegrator<dim, dim + 2, number> phi(
-              flow_scratch_data.scratch_data.get_matrix_free(),
-              flow_scratch_data.dof_idx,
-              flow_scratch_data.quad_idx,
+              multiphase_scratch_data.scratch_data.get_matrix_free(),
+              multiphase_scratch_data.dof_idx,
+              multiphase_scratch_data.quad_idx,
               0,
               CutUtil::CellCategory::intersected);
 
@@ -574,12 +592,11 @@ namespace MeltPoolDG::Multiphase
             constexpr unsigned int  n_lanes   = VectorizedArray<number>::size();
 
             phi.reinit(cell);
-            phi.read_dof_values(flow_scratch_data.solution_history.get_current_solution());
+            phi.read_dof_values(multiphase_scratch_data.solution_history.get_current_solution());
 
             for (unsigned int lane = 0;
-                 lane <
-                 flow_scratch_data.scratch_data.get_matrix_free().n_active_entries_per_cell_batch(
-                   cell);
+                 lane < multiphase_scratch_data.scratch_data.get_matrix_free()
+                          .n_active_entries_per_cell_batch(cell);
                  ++lane)
               {
                 fe_point_eval.reinit(cell * n_lanes + lane);
@@ -601,9 +618,9 @@ namespace MeltPoolDG::Multiphase
 
             // gas phase (outside) for two-phase case
             FECellIntegrator<dim, dim + 2, number> phi_outside(
-              flow_scratch_data.scratch_data.get_matrix_free(),
-              flow_scratch_data.dof_idx,
-              flow_scratch_data.quad_idx,
+              multiphase_scratch_data.scratch_data.get_matrix_free(),
+              multiphase_scratch_data.dof_idx,
+              multiphase_scratch_data.quad_idx,
               dim + 2,
               CutUtil::CellCategory::intersected);
 
@@ -611,12 +628,12 @@ namespace MeltPoolDG::Multiphase
               *mapping_info_cells[1], fe_point_temp);
 
             phi_outside.reinit(cell);
-            phi_outside.read_dof_values(flow_scratch_data.solution_history.get_current_solution());
+            phi_outside.read_dof_values(
+              multiphase_scratch_data.solution_history.get_current_solution());
 
             for (unsigned int lane = 0;
-                 lane <
-                 flow_scratch_data.scratch_data.get_matrix_free().n_active_entries_per_cell_batch(
-                   cell);
+                 lane < multiphase_scratch_data.scratch_data.get_matrix_free()
+                          .n_active_entries_per_cell_batch(cell);
                  ++lane)
               {
                 fe_point_eval_outside.reinit(cell * n_lanes + lane);
@@ -640,36 +657,36 @@ namespace MeltPoolDG::Multiphase
         else if (active_fe_index == CutUtil::CellCategory::gas)
           {
             FECellIntegrator<dim, dim + 2, number> phi_outside(
-              flow_scratch_data.scratch_data.get_matrix_free(),
-              flow_scratch_data.dof_idx,
-              flow_scratch_data.quad_idx,
+              multiphase_scratch_data.scratch_data.get_matrix_free(),
+              multiphase_scratch_data.dof_idx,
+              multiphase_scratch_data.quad_idx,
               dim + 2,
               CutUtil::CellCategory::gas);
 
             phi_outside.reinit(cell);
-            phi_outside.gather_evaluate(flow_scratch_data.solution_history.get_current_solution(),
-                                        EvaluationFlags::values);
+            phi_outside.gather_evaluate(
+              multiphase_scratch_data.solution_history.get_current_solution(),
+              EvaluationFlags::values);
             VectorizedArray<number> local_max = 0.;
             for (const unsigned int q : phi_outside.quadrature_point_indices())
               compute_convective_time_step_limit_at_q.template operator()<true>(phi_outside,
                                                                                 q,
                                                                                 local_max);
 
-            for (unsigned int v = 0;
-                 v <
-                 flow_scratch_data.scratch_data.get_matrix_free().n_active_entries_per_cell_batch(
-                   cell);
+            for (unsigned int v = 0; v < multiphase_scratch_data.scratch_data.get_matrix_free()
+                                           .n_active_entries_per_cell_batch(cell);
                  ++v)
               max_transport = std::max(max_transport, local_max[v]);
           }
       }
 
     max_transport =
-      Utilities::MPI::max(max_transport, flow_scratch_data.scratch_data.get_mpi_comm());
+      Utilities::MPI::max(max_transport, multiphase_scratch_data.scratch_data.get_mpi_comm());
 
     convective_time_step_limit =
-      flow_scratch_data.flow_data.courant_number /
-      std::pow(flow_scratch_data.scratch_data.get_degree(flow_scratch_data.dof_idx), 1.5) /
+      multiphase_scratch_data.flow_data.courant_number /
+      std::pow(multiphase_scratch_data.scratch_data.get_degree(multiphase_scratch_data.dof_idx),
+               1.5) /
       max_transport;
 
     return convective_time_step_limit;

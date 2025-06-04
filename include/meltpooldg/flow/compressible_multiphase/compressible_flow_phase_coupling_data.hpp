@@ -8,13 +8,16 @@
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/utilities/better_enum.hpp>
+#include <meltpooldg/utilities/numbers.hpp>
+
+#include <string>
 
 namespace MeltPoolDG::Multiphase
 {
   BETTER_ENUM(InterfaceNumericalMethod, char, HLLP0_and_SIPG, HLLP0_and_penalty, penalty)
 
   template <typename number>
-  struct CompressibleMultiphaseData
+  struct CompressibleFlowPhaseCouplingData
   {
     // evaporation mass flux
     // TODO: use Hertz-Knudsen theory and enable constant evaporation mass flux for testing
@@ -68,7 +71,7 @@ namespace MeltPoolDG::Multiphase
     void
     add_parameters(dealii::ParameterHandler &prm)
     {
-      prm.enter_subsection("interface jump conditions");
+      prm.enter_subsection("compressible flow phase coupling");
       {
         // TODO: add parameter "bool const_m_dot_evap" when Hertz-Knudsen theory is enabled
         prm.add_parameter(

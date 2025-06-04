@@ -6,7 +6,6 @@
 
 #include <deal.II/numerics/data_component_interpretation.h>
 
-#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_explicit.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_implicit.hpp>
@@ -32,10 +31,11 @@ namespace MeltPoolDG::Flow
   DGCompressibleFlowOperation<dim, number>::DGCompressibleFlowOperation(
     const ScratchData<dim, dim, number>                                         &scratch_data,
     const CompressibleFlowData<number>                                          &flow_data,
+    const CompressibleFluidMaterialPhaseData<number>                            &material_data,
     const unsigned int                                                           flow_dof_idx,
     const unsigned int                                                           flow_quad_idx,
     std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces)
-    : flow_scratch_data(flow_data, scratch_data, flow_dof_idx, flow_quad_idx)
+    : flow_scratch_data(flow_data, material_data, scratch_data, flow_dof_idx, flow_quad_idx)
   {
     setup_operator_and_time_integrator(std::move(external_forces));
   }
@@ -186,8 +186,7 @@ namespace MeltPoolDG::Flow
               convective_limit = std::max(convective_limit, std::abs(convective_speed[d]));
 
             const auto speed_of_sound =
-              EOS::calculate_speed_of_sound<dim, number>(conserved_variables,
-                                                         flow_scratch_data.flow_data);
+              flow_scratch_data.material.eos_utils->calculate_speed_of_sound(conserved_variables);
 
             Tensor<1, dim, VectorizedArray<number>> eigenvector;
             for (unsigned int d = 0; d < dim; ++d)
@@ -235,11 +234,11 @@ namespace MeltPoolDG::Flow
     AssertThrow(min_density > 0, ExcMessage("Minimum density must not be zero."));
 
     const number viscous_time_step_limit =
-      (flow_scratch_data.flow_data.material.gas.dynamic_viscosity > 0) ?
+      (flow_scratch_data.material.data.dynamic_viscosity > 0) ?
         flow_scratch_data.flow_data.viscous_courant_number /
           std::pow(flow_scratch_data.scratch_data.get_degree(flow_scratch_data.dof_idx), 3) *
           std::pow(flow_scratch_data.scratch_data.get_min_cell_size(), 2) * min_density /
-          flow_scratch_data.flow_data.material.gas.dynamic_viscosity :
+          flow_scratch_data.material.data.dynamic_viscosity :
         std::numeric_limits<number>::max();
 
     const number convective_time_step_limit = compute_convective_time_step_limit();
@@ -294,7 +293,7 @@ namespace MeltPoolDG::Flow
     // cut operator was already created in the constructor
     if (flow_scratch_data.flow_data.domain_representation_type == "cut")
       return;
-    const bool is_viscous = flow_scratch_data.flow_data.material.gas.dynamic_viscosity > 0.;
+    const bool is_viscous = flow_scratch_data.material.data.dynamic_viscosity > 0.;
     if (time_integrator_scheme_is_explicit(
           flow_scratch_data.flow_data.time_integrator.integrator_type))
       {

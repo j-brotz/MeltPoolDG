@@ -4,7 +4,6 @@
 
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/compressible_flow_convective_kernels.hpp>
-#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
 #include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_level_set_advection.hpp>
@@ -30,7 +29,7 @@ namespace MeltPoolDG::Multiphase
     /**
      * Constructor.
      *
-     * @param flow_scratch_data Flow scratch data object holding all relevant compressible flow data
+     * @param multiphase_scratch_data Flow scratch data object holding all relevant compressible flow data
      * required by the operator.
      * @param mapping_info_interface_in dealii::NonMatching::MappingInfo object, provides the mapping
      * information computation and mapping data storage of the interface.
@@ -42,10 +41,10 @@ namespace MeltPoolDG::Multiphase
      * inner subdomain and the outer subdomain, respectively.
      */
     CompressibleMultiphaseOperator(
-      MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-      const MappingInfoType                                      &mapping_info_interface_in,
-      const MappingInfoVectorType                                &mapping_info_cells_in,
-      const MappingInfoVectorType                                &mapping_info_faces_in);
+      Flow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
+      const MappingInfoType                                &mapping_info_interface_in,
+      const MappingInfoVectorType                          &mapping_info_cells_in,
+      const MappingInfoVectorType                          &mapping_info_faces_in);
 
     /**
      * Local appliers for right-hand side evaluation.
@@ -113,17 +112,13 @@ namespace MeltPoolDG::Multiphase
     vmult(VectorType &dst, const VectorType &src) const;
 
   private:
-    MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number> &flow_scratch_data;
+    Flow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data;
 
-    const MeltPoolDG::Flow::CompressibleFlowConvectiveKernels<dim, number, false /*is_gas_phase*/>
-      convective_terms_liquid;
-    const MeltPoolDG::Flow::CompressibleFlowConvectiveKernels<dim, number, true /*is_gas_phase*/>
-      convective_terms_gas;
+    const Flow::CompressibleFlowConvectiveKernels<dim, number> convective_terms_liquid;
+    const Flow::CompressibleFlowConvectiveKernels<dim, number> convective_terms_gas;
 
-    const MeltPoolDG::Flow::CompressibleFlowViscousKernels<dim, number, false /*is_gas_phase*/>
-      viscous_terms_liquid;
-    const MeltPoolDG::Flow::CompressibleFlowViscousKernels<dim, number, true /*is_gas_phase*/>
-      viscous_terms_gas;
+    const Flow::CompressibleFlowViscousKernels<dim, number> viscous_terms_liquid;
+    const Flow::CompressibleFlowViscousKernels<dim, number> viscous_terms_gas;
 
     const MappingInfoType       &mapping_info_interface;
     const MappingInfoVectorType &mapping_info_cells;
@@ -151,9 +146,9 @@ namespace MeltPoolDG::Multiphase
                            const unsigned int          offset = 0) const
     {
       return FECellIntegrator<dim, dim + 2, number>(
-        flow_scratch_data.scratch_data.get_matrix_free(),
-        flow_scratch_data.dof_idx,
-        flow_scratch_data.quad_idx,
+        multiphase_scratch_data.scratch_data.get_matrix_free(),
+        multiphase_scratch_data.dof_idx,
+        multiphase_scratch_data.quad_idx,
         offset,
         category);
     }
@@ -174,10 +169,10 @@ namespace MeltPoolDG::Multiphase
                            const unsigned int          offset = 0) const
     {
       return FEFaceIntegrator<dim, dim + 2, number>(
-        flow_scratch_data.scratch_data.get_matrix_free(),
+        multiphase_scratch_data.scratch_data.get_matrix_free(),
         is_inner_face,
-        flow_scratch_data.dof_idx,
-        flow_scratch_data.quad_idx,
+        multiphase_scratch_data.dof_idx,
+        multiphase_scratch_data.quad_idx,
         offset,
         category);
     };

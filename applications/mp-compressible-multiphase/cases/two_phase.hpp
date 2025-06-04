@@ -140,7 +140,8 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     set_boundary_conditions() override
     {
       auto inflow_outflow_solution =
-        std::make_shared<InitialField<dim, number>>(ic_gas_phase, ic_liquid_phase);
+        std::make_shared<InitialField<dim, number>>(initial_conditions.gas,
+                                                    initial_conditions.liquid);
 
       // face numbering according to the deal.II colorize flag
       const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
@@ -162,8 +163,8 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       // The solution vector is ordered, such that the liquid phase is the first phase and the gas
       // phase is the second phase.
       auto initial_condition =
-        std::make_shared<InitialField<dim, number>>(ic_gas_phase,
-                                                    ic_liquid_phase,
+        std::make_shared<InitialField<dim, number>>(initial_conditions.gas,
+                                                    initial_conditions.liquid,
                                                     false /*gas_phase_is_first*/);
       this->attach_initial_condition(initial_condition, "compressible_multiphase_flow");
 
@@ -183,7 +184,7 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     void
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const override
     {
-      InitialField<dim, number> reference_values(ic_gas_phase, ic_liquid_phase);
+      InitialField<dim, number> reference_values(initial_conditions.gas, initial_conditions.liquid);
       this->print_relative_norm(generic_data_out, reference_values, "error");
     }
 
@@ -203,6 +204,16 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
         prm.add_parameter("right boundary condition",
                           right_boundary_condition,
                           boundary_condition_types_doc);
+        prm.enter_subsection("initial conditions");
+        {
+          prm.add_parameter("gas",
+                            initial_conditions.gas,
+                            "Initial condition function for gas phase.");
+          prm.add_parameter("liquid",
+                            initial_conditions.liquid,
+                            "Initial condition function for liquid phase.");
+        }
+        prm.leave_subsection();
       }
       prm.leave_subsection();
 
@@ -215,8 +226,11 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     std::string left_boundary_condition  = "no_slip_wall";
     std::string right_boundary_condition = "no_slip_wall";
 
-    // initial conditions functions
-    std::string ic_gas_phase    = this->parameters.flow.initial_conditions.gas;
-    std::string ic_liquid_phase = this->parameters.flow.initial_conditions.liquid;
+    // functions for the initial conditions
+    struct InitialConditions
+    {
+      std::string gas{};
+      std::string liquid{};
+    } initial_conditions;
   };
 } // namespace MeltPoolDG::Simulation::CompressibleMultiphase

@@ -22,8 +22,8 @@ namespace MeltPoolDG::Flow
     const MappingInfoVectorType              &mapping_info_cells_in,
     const MappingInfoVectorType              &mapping_info_faces_in)
     : flow_scratch_data(flow_scratch_data)
-    , convective_terms(flow_scratch_data.flow_data)
-    , viscous_terms(flow_scratch_data.flow_data)
+    , convective_terms(flow_scratch_data.flow_data, flow_scratch_data.material)
+    , viscous_terms(flow_scratch_data.material)
     , mapping_info_surface(mapping_info_surface_in)
     , mapping_info_cells(mapping_info_cells_in)
     , mapping_info_faces(mapping_info_faces_in)
@@ -67,11 +67,11 @@ namespace MeltPoolDG::Flow
     AssertThrow(time_step > 0., dealii::ExcMessage("Time step size must be larger than 0."));
     inv_time_step = 1. / time_step;
 
-    typedef std::function<void(const MatrixFree<dim, number> &,
-                               LinearAlgebra::distributed::Vector<number>       &dst,
-                               const LinearAlgebra::distributed::Vector<number> &src,
-                               const std::pair<unsigned int, unsigned int> &)>
-      local_applier_type;
+    using local_applier_type =
+      std::function<void(const MatrixFree<dim, number> &,
+                         LinearAlgebra::distributed::Vector<number>       &dst,
+                         const LinearAlgebra::distributed::Vector<number> &src,
+                         const std::pair<unsigned int, unsigned int> &)>;
 
     flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
     local_applier_type cell          = MPDG_LAMBDA_WRAPPER(local_apply_cell_rhs);
@@ -488,7 +488,8 @@ namespace MeltPoolDG::Flow
                     interior_penalty_parameter,
                     convective_terms,
                     viscous_terms,
-                    flow_scratch_data);
+                    flow_scratch_data.material,
+                    flow_scratch_data.boundary_conditions);
                 phi.submit_value(flux_m, q);
                 if (is_viscous)
                   phi.submit_gradient(grad_flux_m, q);
@@ -544,7 +545,8 @@ namespace MeltPoolDG::Flow
                       interior_penalty_parameter,
                       convective_terms,
                       viscous_terms,
-                      flow_scratch_data);
+                      flow_scratch_data.material,
+                      flow_scratch_data.boundary_conditions);
 
                     fe_point_eval_minus.submit_value(flux_m, q);
                     if (is_viscous)
@@ -682,12 +684,12 @@ namespace MeltPoolDG::Flow
 
                 const auto ghost_penalty_term_0 =
                   (u_minus - u_plus) *
-                  flow_scratch_data.flow_data.cut.stabilization.ghost_penalty.gamma_M_degree_0 *
+                  flow_scratch_data.cut->stabilization.ghost_penalty.gamma_M_degree_0 *
                   cell_side_length;
 
                 const auto ghost_penalty_term_1 =
                   (u_normal_grad_minus - u_normal_grad_plus) *
-                  flow_scratch_data.flow_data.cut.stabilization.ghost_penalty.gamma_M_degree_1 *
+                  flow_scratch_data.cut->stabilization.ghost_penalty.gamma_M_degree_1 *
                   Utilities::fixed_power<3>(cell_side_length);
 
                 if (flow_scratch_data.flow_data.fe.degree == 2)
@@ -697,7 +699,7 @@ namespace MeltPoolDG::Flow
 
                     const auto ghost_penalty_term_2 =
                       (u_normal_hessian_minus - u_normal_hessian_plus) *
-                      flow_scratch_data.flow_data.cut.stabilization.ghost_penalty.gamma_M_degree_2 *
+                      flow_scratch_data.cut->stabilization.ghost_penalty.gamma_M_degree_2 *
                       Utilities::fixed_power<5>(cell_side_length);
 
                     phi_m.submit_normal_hessian(ghost_penalty_term_2, q);
@@ -738,7 +740,7 @@ namespace MeltPoolDG::Flow
       const ConservedVariablesGradType                          &grad_w_m,
       ConservedVariablesGradType                                &grad_w_p) const
   {
-    if (flow_scratch_data.flow_data.cut.unfitted_flow_boundary_condition == "no_slip_wall")
+    if (flow_scratch_data.cut->unfitted_flow_boundary_condition == "no_slip_wall")
       {
         // homogeneous Neumann
         w_p[0]      = w_m[0];
@@ -759,7 +761,7 @@ namespace MeltPoolDG::Flow
         grad_w_p[dim + 1] = -grad_w_m[dim + 1];
         w_p[dim + 1]      = w_m[dim + 1];
       }
-    else if (flow_scratch_data.flow_data.cut.unfitted_flow_boundary_condition == "inflow")
+    else if (flow_scratch_data.cut->unfitted_flow_boundary_condition == "inflow")
       {
         // Dirichlet
         w_p = VectorTools::evaluate_function_at_vectorized_points<dim, number, dim + 2>(

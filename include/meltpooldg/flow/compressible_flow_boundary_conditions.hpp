@@ -13,6 +13,7 @@
 
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
+#include <meltpooldg/flow/compressible_flow_material.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -163,8 +164,8 @@ namespace MeltPoolDG::Flow
      * @param boundary_id ID of the boundary.
      * @param w_m Conserved variables on the inner face.
      * @param grad_w_m Gradient of the conserved variables on the inner face.
-     * @param flow_data Collection of parameters required by the compressible Navier-Stokes
-     * operator.
+     * @param material Material class, which contains the material parameters and helper functions
+     * for thermodynamic relations.
      * @param is_gas_phase Boolean variable to indicate if the gas phase (default for single-phase
      * case) or the liquid phase is considered.
      *
@@ -178,7 +179,7 @@ namespace MeltPoolDG::Flow
       dealii::types::boundary_id                                     boundary_id,
       const ConservedVariablesType                                  &w_m,
       const ConservedVariablesGradType                              &grad_w_m,
-      const CompressibleFlowData<number>                            &flow_data,
+      const CompressibleFlowMaterial<dim, number>                   &material,
       bool                                                           is_gas_phase = true) const;
 
     /**

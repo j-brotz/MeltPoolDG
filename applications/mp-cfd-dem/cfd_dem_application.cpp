@@ -130,6 +130,7 @@ namespace MeltPoolDG
       std::make_unique<Flow::DGCompressibleFlowOperation<dim, number>>(
         *scratch_data,
         simulation_case->parameters.flow,
+        simulation_case->parameters.material,
         comp_flow_dof_idx,
         comp_flow_quad_idx,
         std::move(external_fluid_force));

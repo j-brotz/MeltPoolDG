@@ -11,8 +11,8 @@
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/flow/compressible_flow_data.hpp>
-#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
+#include <meltpooldg/flow/compressible_multiphase/compressible_flow_phase_coupling_data.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 
 #include <algorithm>
@@ -22,14 +22,16 @@
 
 namespace MeltPoolDG::Flow
 {
-  template <int dim, typename number, bool is_gas_phase = true>
+  template <int dim, typename number>
   struct CompressibleFlowConvectiveKernels
   {
     using ConservedVariablesType = CompressibleFlowTypes::ConservedVariablesType<dim, number>;
     using ConservedVariablesGradType =
       CompressibleFlowTypes::ConservedVariablesGradType<dim, number>;
 
-    explicit CompressibleFlowConvectiveKernels(const CompressibleFlowData<number> &flow_data);
+    explicit CompressibleFlowConvectiveKernels(
+      const CompressibleFlowData<number>          &flow_data,
+      const CompressibleFlowMaterial<dim, number> &material);
 
     /**
      * Calculate the convective flux F_c.
@@ -102,7 +104,8 @@ namespace MeltPoolDG::Flow
       const std::pair<ConservedVariablesType, ConservedVariablesType> &delta_w_q,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>   &normal) const;
 
-    const CompressibleFlowData<number> &flow_data;
+    const CompressibleFlowData<number>          &flow_data;
+    const CompressibleFlowMaterial<dim, number> &material;
 
     // precomputed constants
     number rs_div_c;
@@ -111,26 +114,27 @@ namespace MeltPoolDG::Flow
   /********************************************************************************************
    * Inlined function definitions
    * *************************************************************************************+****/
-  template <int dim, typename number, bool is_gas_phase>
-  CompressibleFlowConvectiveKernels<dim, number, is_gas_phase>::CompressibleFlowConvectiveKernels(
-    const CompressibleFlowData<number> &flow_data)
-    : flow_data(flow_data)
+  template <int dim, typename number>
+  CompressibleFlowConvectiveKernels<dim, number>::CompressibleFlowConvectiveKernels(
+    const CompressibleFlowData<number>          &flow_data_in,
+    const CompressibleFlowMaterial<dim, number> &material_in)
+    : flow_data(flow_data_in)
+    , material(material_in)
   {
     // Currently, only relevant for the single phase (gas) solver
-    rs_div_c = flow_data.material.gas.gamma - 1.0;
+    rs_div_c = material.data.gamma - 1.0;
   }
 
-  template <int dim, typename number, bool is_gas_phase>
+  template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     auto
-    CompressibleFlowConvectiveKernels<dim, number, is_gas_phase>::calculate_convective_flux(
+    CompressibleFlowConvectiveKernels<dim, number>::calculate_convective_flux(
       const ConservedVariablesType &conserved_variables) const -> ConservedVariablesGradType
   {
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> velocity =
       calculate_velocity<dim, number>(conserved_variables);
     const dealii::VectorizedArray<number> pressure =
-      EOS::calculate_thermodynamic_pressure<dim, number, is_gas_phase>(conserved_variables,
-                                                                       flow_data);
+      material.eos_utils->calculate_thermodynamic_pressure(conserved_variables);
 
     ConservedVariablesGradType flux;
     for (unsigned int d = 0; d < dim; ++d)
@@ -144,14 +148,13 @@ namespace MeltPoolDG::Flow
     return flux;
   }
 
-  template <int dim, typename number, bool is_gas_phase>
+  template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     auto
-    CompressibleFlowConvectiveKernels<dim, number, is_gas_phase>::
-      calculate_convective_numerical_flux(
-        const ConservedVariablesType                                  &u_m,
-        const ConservedVariablesType                                  &u_p,
-        const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const
+    CompressibleFlowConvectiveKernels<dim, number>::calculate_convective_numerical_flux(
+      const ConservedVariablesType                                  &u_m,
+      const ConservedVariablesType                                  &u_p,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const
     -> ConservedVariablesType
   {
     const auto velocity_m = calculate_velocity<dim, number>(u_m);
@@ -160,10 +163,8 @@ namespace MeltPoolDG::Flow
     const auto flux_m = calculate_convective_flux(u_m);
     const auto flux_p = calculate_convective_flux(u_p);
 
-    const auto sound_speed_p =
-      EOS::calculate_speed_of_sound<dim, number, is_gas_phase>(u_p, flow_data);
-    const auto sound_speed_m =
-      EOS::calculate_speed_of_sound<dim, number, is_gas_phase>(u_m, flow_data);
+    const auto sound_speed_p = material.eos_utils->calculate_speed_of_sound(u_p);
+    const auto sound_speed_m = material.eos_utils->calculate_speed_of_sound(u_m);
 
     switch (flow_data.numerical_flux_type)
       {
@@ -211,14 +212,13 @@ namespace MeltPoolDG::Flow
       }
   }
 
-  template <int dim, typename number, bool is_gas_phase>
+  template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     auto
-    CompressibleFlowConvectiveKernels<dim, number, is_gas_phase>::
-      calculate_jacobian_convective_numerical_flux(
-        const std::pair<ConservedVariablesType, ConservedVariablesType> &w_q,
-        const std::pair<ConservedVariablesType, ConservedVariablesType> &delta_w_q,
-        const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>   &normal) const
+    CompressibleFlowConvectiveKernels<dim, number>::calculate_jacobian_convective_numerical_flux(
+      const std::pair<ConservedVariablesType, ConservedVariablesType> &w_q,
+      const std::pair<ConservedVariablesType, ConservedVariablesType> &delta_w_q,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>   &normal) const
     -> ConservedVariablesGradType
   {
     // For now only the exact and modified Lax-Friedrichs flux are supported
@@ -243,13 +243,12 @@ namespace MeltPoolDG::Flow
     return flux;
   }
 
-  template <int dim, typename number, bool is_gas_phase>
+  template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     auto
-    CompressibleFlowConvectiveKernels<dim, number, is_gas_phase>::
-      calculate_jacobian_convective_flux(const ConservedVariablesType &w_q,
-                                         const ConservedVariablesType &delta_w_q) const
-    -> ConservedVariablesGradType
+    CompressibleFlowConvectiveKernels<dim, number>::calculate_jacobian_convective_flux(
+      const ConservedVariablesType &w_q,
+      const ConservedVariablesType &delta_w_q) const -> ConservedVariablesGradType
   {
     ConservedVariablesGradType convective_differential_change;
 
@@ -314,10 +313,10 @@ namespace MeltPoolDG::Flow
     return convective_differential_change;
   }
 
-  template <int dim, typename number, bool is_gas_phase>
+  template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     auto
-    CompressibleFlowConvectiveKernels<dim, number, is_gas_phase>::
+    CompressibleFlowConvectiveKernels<dim, number>::
       calculate_jacobian_convective_numerical_flux_jump_term(
         const std::pair<ConservedVariablesType, ConservedVariablesType> &w_q,
         const std::pair<ConservedVariablesType, ConservedVariablesType> &delta_w_q,
@@ -343,26 +342,20 @@ namespace MeltPoolDG::Flow
       {
           case NumericalFluxType::lax_friedrichs_exact: {
             compute_lambda_times_jump =
-              [&flow_data =
-                 flow_data](const ConservedVariablesType &w_p,
-                            const ConservedVariablesType &w_m,
-                            const ConservedVariablesType &delta_w_p,
-                            const ConservedVariablesType &delta_w_m,
-                            const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal)
+              [&material =
+                 material](const ConservedVariablesType                                  &w_p,
+                           const ConservedVariablesType                                  &w_m,
+                           const ConservedVariablesType                                  &delta_w_p,
+                           const ConservedVariablesType                                  &delta_w_m,
+                           const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal)
               -> ConservedVariablesType {
               const auto velocity_m = calculate_velocity<dim, number>(w_m);
               const auto velocity_p = calculate_velocity<dim, number>(w_p);
 
-              const auto pressure_m =
-                EOS::calculate_thermodynamic_pressure<dim, number>(w_m, flow_data);
-              const auto pressure_p =
-                EOS::calculate_thermodynamic_pressure<dim, number>(w_p, flow_data);
-
-              const auto lambda =
-                std::max(std::abs(velocity_p * normal) +
-                           std::sqrt(flow_data.material.gas.gamma * pressure_p / w_p[0]),
-                         std::abs(velocity_m * normal) +
-                           std::sqrt(flow_data.material.gas.gamma * pressure_m / w_m[0]));
+              const auto lambda = std::max(std::abs(velocity_p * normal) +
+                                             material.eos_utils->calculate_speed_of_sound(w_p),
+                                           std::abs(velocity_m * normal) +
+                                             material.eos_utils->calculate_speed_of_sound(w_m));
               return lambda * (delta_w_m - delta_w_p);
             };
             break;
@@ -378,17 +371,14 @@ namespace MeltPoolDG::Flow
               const auto velocity_m = calculate_velocity<dim, number>(w_m);
               const auto velocity_p = calculate_velocity<dim, number>(w_p);
 
-              const auto pressure_m =
-                EOS::calculate_thermodynamic_pressure<dim, number>(w_m, flow_data);
-              const auto pressure_p =
-                EOS::calculate_thermodynamic_pressure<dim, number>(w_p, flow_data);
+              const auto pressure_m = material.eos_utils->calculate_thermodynamic_pressure(w_m);
+              const auto pressure_p = material.eos_utils->calculate_thermodynamic_pressure(w_p);
 
               const auto lambda =
-                0.5 *
-                std::sqrt(std::max(velocity_p.norm_square() +
-                                     std::abs(flow_data.material.gas.gamma * pressure_p / w_p[0]),
-                                   velocity_m.norm_square() +
-                                     std::abs(flow_data.material.gas.gamma * pressure_m / w_m[0])));
+                0.5 * std::sqrt(std::max(velocity_p.norm_square() +
+                                           std::abs(material.data.gamma * pressure_p / w_p[0]),
+                                         velocity_m.norm_square() +
+                                           std::abs(material.data.gamma * pressure_m / w_m[0])));
               return lambda * (delta_w_m - delta_w_p);
             };
             break;
@@ -444,12 +434,11 @@ namespace MeltPoolDG::Flow
                 }
               dealii::VectorizedArray<number> rho_inv = 1. / w_q[0];
               dealii::VectorizedArray<number> lin_c =
-                delta_w_q[0] / (2.0 * c) * flow_data.material.gas.gamma * rho_inv * rho_inv *
-                rs_div_c * (rho_inv * m_q * m_q - w_q[dim + 1]);
-              lin_c -= flow_data.material.gas.gamma / (2.0 * c) * rho_inv * rho_inv * rs_div_c *
-                       m_q * delta_m_q;
-              lin_c +=
-                flow_data.material.gas.gamma / (2.0 * c) * rho_inv * rs_div_c * delta_w_q[dim + 1];
+                delta_w_q[0] / (2.0 * c) * material.data.gamma * rho_inv * rho_inv * rs_div_c *
+                (rho_inv * m_q * m_q - w_q[dim + 1]);
+              lin_c -=
+                material.data.gamma / (2.0 * c) * rho_inv * rho_inv * rs_div_c * m_q * delta_m_q;
+              lin_c += material.data.gamma / (2.0 * c) * rho_inv * rs_div_c * delta_w_q[dim + 1];
               return lin_c;
             };
 
@@ -477,15 +466,11 @@ namespace MeltPoolDG::Flow
             const auto velocity_m = calculate_velocity<dim, number>(w_m);
             const auto velocity_p = calculate_velocity<dim, number>(w_p);
 
-            const auto pressure_m =
-              EOS::calculate_thermodynamic_pressure<dim, number>(w_m, flow_data);
-            const auto pressure_p =
-              EOS::calculate_thermodynamic_pressure<dim, number>(w_p, flow_data);
+            const auto pressure_m = material.eos_utils->calculate_thermodynamic_pressure(w_m);
+            const auto pressure_p = material.eos_utils->calculate_thermodynamic_pressure(w_p);
 
-            const auto speed_of_sound_m =
-              std::sqrt(flow_data.material.gas.gamma * pressure_m / w_m[0]);
-            const auto speed_of_sound_p =
-              std::sqrt(flow_data.material.gas.gamma * pressure_p / w_p[0]);
+            const auto speed_of_sound_m = material.eos_utils->calculate_speed_of_sound(w_m);
+            const auto speed_of_sound_p = material.eos_utils->calculate_speed_of_sound(w_p);
 
             const auto lin_lambda_p =
               signum(velocity_p * normal) * norm_lin_velocity(w_p, delta_w_p, normal) +
