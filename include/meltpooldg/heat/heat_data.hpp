@@ -59,7 +59,7 @@ namespace MeltPoolDG::Heat
 
     NonlinearSolverData<number> nlsolve;
     LinearSolverData<number>    linear_solver;
-    PredictorData<number>       predictor;
+    PredictorData               predictor;
 
     FiniteElementData fe;
 

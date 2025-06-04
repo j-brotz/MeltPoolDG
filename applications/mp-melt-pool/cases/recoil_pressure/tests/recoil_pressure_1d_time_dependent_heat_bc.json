@@ -67,10 +67,7 @@
     },
     "normal vector": {
       "filter parameter": "0.1",
-      "implementation": "meltpooldg",
-      "narrow band": {
-        "enable": "false"
-      }
+      "implementation": "meltpooldg"
     }
   },
   "flow": {

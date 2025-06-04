@@ -32,7 +32,7 @@ namespace MeltPoolDG::LevelSet
       prm.add_parameter("tolerance",
                         tolerance,
                         "Set the tolerance for reinitialization. If the "
-                        "maximum change of the level set field, i.e. ||ΔФ||∞, exceeds the "
+                        "maximum change of the level set field, i.e.  orΔФ or∞, exceeds the "
                         "tolerance, reinitialization steps will be performed.");
       prm.add_parameter("type",
                         modeltype,
@@ -153,21 +153,23 @@ namespace MeltPoolDG::LevelSet
   void
   ReinitializationData<number>::check_input_parameters(const bool normal_vec_do_matrix_free) const
   {
-    AssertThrow(linear_solver.do_matrix_free || implementation == "meltpooldg",
+    AssertThrow(linear_solver.do_matrix_free or implementation == "meltpooldg",
                 dealii::ExcNotImplemented());
     AssertThrow(normal_vec_do_matrix_free == linear_solver.do_matrix_free,
                 dealii::ExcMessage("For the reinitialization operation both the "
                                    "normal vector and the reinitialization operation have to be "
                                    "computed either matrix-based or matrix-free."));
     AssertThrow(interface_thickness_parameter.type ==
-                    InterfaceThicknessParameterType::proportional_to_cell_size ||
+                    InterfaceThicknessParameterType::proportional_to_cell_size or
                   implementation == "meltpooldg",
                 dealii::ExcMessage("For the adaflo implementation, a variable thickness "
                                    "parameter epsilon is mandatory."));
 
     // Cross check for DG since for DG only matrix free is supported
-    AssertThrow(fe.type != FiniteElementType::FE_DGQ || linear_solver.do_matrix_free,
+    AssertThrow(fe.type != FiniteElementType::FE_DGQ or linear_solver.do_matrix_free,
                 dealii::ExcMessage("For the DG element only matrix free is implemented."));
+
+    predictor.check_input_parameters();
   }
 
   template struct ReinitializationData<double>;

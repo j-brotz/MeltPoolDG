@@ -30,7 +30,7 @@ namespace MeltPoolDG::LevelSet
       number penalty_factor = 100.0;
     } normal_DG_specific_data;
 
-    PredictorData<number>    predictor;
+    PredictorData            predictor;
     LinearSolverData<number> linear_solver;
 
     void

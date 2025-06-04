@@ -89,7 +89,7 @@ namespace MeltPoolDG
   class Predictor
   {
   private:
-    const PredictorData<number>                   data;
+    const PredictorData                           data;
     TimeIntegration::SolutionHistory<VectorType> &solution_history;
     const TimeIntegration::TimeIterator<number>  *time_iterator;
     const LeastSquaresProjection<VectorType>      lsp;
@@ -97,7 +97,7 @@ namespace MeltPoolDG
     mutable unsigned int n_calls = 0;
 
   public:
-    Predictor(const PredictorData<number>                   data,
+    Predictor(const PredictorData                           data,
               TimeIntegration::SolutionHistory<VectorType> &solution_history_in,
               const TimeIntegration::TimeIterator<number>  *time_iterator = nullptr)
       : data(data)
@@ -119,31 +119,39 @@ namespace MeltPoolDG
     void
     vmult(const MatrixType &matrix, VectorType &solution, const VectorType &rhs) const
     {
-      if (data.type == PredictorType::none)
+      switch (data.type)
         {
-          solution = solution_history.get_current_solution();
+            case PredictorType::none: {
+              solution = solution_history.get_current_solution();
+              break;
+            }
+            case PredictorType::zero: {
+              solution = 0;
+              break;
+            }
+            case PredictorType::linear_extrapolation: {
+              compute_linear_predictor(solution_history.get_current_solution(),
+                                       solution_history.get_recent_old_solution(),
+                                       solution,
+                                       time_iterator ? time_iterator->get_current_time_increment() :
+                                                       1.0,
+                                       time_iterator ? time_iterator->get_old_time_increment() :
+                                                       1.0);
+              solution.update_ghost_values();
+              break;
+            }
+            case PredictorType::least_squares_projection: {
+              // use LSP only if n_old_solution_vectors are stored
+              if (n_calls >= data.n_old_solution_vectors)
+                lsp.vmult(matrix, solution, rhs);
+              else
+                // use const predictor
+                solution.swap(solution_history.get_current_solution());
+              break;
+            }
+          default:
+            DEAL_II_NOT_IMPLEMENTED();
         }
-      else if (data.type == PredictorType::linear_extrapolation)
-        {
-          compute_linear_predictor(solution_history.get_current_solution(),
-                                   solution_history.get_recent_old_solution(),
-                                   solution,
-                                   time_iterator ? time_iterator->get_current_time_increment() :
-                                                   1.0,
-                                   time_iterator ? time_iterator->get_old_time_increment() : 1.0);
-          solution.update_ghost_values();
-        }
-      else if (data.type == PredictorType::least_squares_projection)
-        {
-          // use LSP only if n_old_solution_vectors are stored
-          if (n_calls >= data.n_old_solution_vectors)
-            lsp.vmult(matrix, solution, rhs);
-          else
-            // use const predictor
-            solution.swap(solution_history.get_current_solution());
-        }
-      else
-        AssertThrow(false, dealii::ExcNotImplemented());
 
       solution_history.commit_old_solutions();
       solution_history.get_current_solution().swap(solution);

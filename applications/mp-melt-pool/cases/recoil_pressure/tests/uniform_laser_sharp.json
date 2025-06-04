@@ -84,10 +84,7 @@
         "abs tolerance": "1e-14"
       },
       "filter parameter": "2",
-      "implementation": "meltpooldg",
-      "narrow band": {
-        "enable": "false"
-      }
+      "implementation": "meltpooldg"
     },
     "normal vector": {
       "linear solver": {

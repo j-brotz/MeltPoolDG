@@ -122,19 +122,13 @@
       },
       "filter parameter": "16",
       "implementation": "meltpooldg",
-      "narrow band": {
-        "enable": "false"
-      },
       "do curvature correction": "false"
     },
     "normal vector": {
       "linear solver": {
         "do matrix free": "true"
       },
-      "filter parameter": "4",
-      "narrow band": {
-        "enable": "false"
-      }
+      "filter parameter": "4"
     },
     "advection diffusion": {
       "linear solver": {

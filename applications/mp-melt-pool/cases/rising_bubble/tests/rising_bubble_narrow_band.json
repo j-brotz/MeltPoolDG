@@ -50,6 +50,9 @@
       "narrow band": {
         "enable": "true",
         "level set threshold": "0.9999999"
+      },
+      "predictor": {
+        "type": "zero"
       }
     },
     "normal vector": {
@@ -60,6 +63,9 @@
       "narrow band": {
         "enable": "true",
         "level set threshold": "0.9999999"
+      },
+      "predictor": {
+        "type": "zero"
       }
     },
     "advection diffusion": {
