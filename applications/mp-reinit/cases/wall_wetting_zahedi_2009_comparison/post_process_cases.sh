@@ -14,7 +14,7 @@ USAGE="Usage: $0 [-p <path_to_folder_with_python_scripts>] \n
        -s:  List of python scripts to launch \n
        \t   (default: \"compare_figure_2.py, compare_figure_3.py, compare_figure_4.py, compare_figure_5a.py, compare_figure_5b.py, compare_figure_6.py\") \n
        -f:  Path to folder where figures are stored (default: ./post_processing/comparison_figures/) \n
-       -r:  Path to CSV file with simulation results summary (default: ./contact_angles_summary_20250530_144304.csv) \n
+       -r:  Path to CSV file with simulation results summary (no default value, it must be specified by the user) \n
        -cf: Path to CSV file with case parameters (default: ./case_parameters.csv) \n
        -h:  Show help \n"
 
@@ -57,12 +57,18 @@ while [[ "$#" -gt 0 ]]; do
   esac
 done
 
+# Ensure required argument -r is specified
+if [[ -z "$simulation_results_file" ]]; then
+  echo "Error: Missing required argument -r <path_to_file_with_simulation_results_summary>"
+  echo -e "$USAGE"
+  exit 1
+fi
+
 # Assign default values if not set
 post_processing_folder="${post_processing_folder:-./post_processing/}"
 zahedi_folder="${zahedi_folder:-./post_processing/zahedi_results_csv_files/}"
 python_scripts_list="${python_scripts_list:-"compare_figure_2.py, compare_figure_3.py, compare_figure_4.py, compare_figure_5a.py, compare_figure_5b.py, compare_figure_6.py"}"
 figures_folder="${figures_folder:-./post_processing/comparison_figures/}"
-simulation_results_file="${simulation_results_file:-./contact_angles_summary_20250530_144304.csv}"
 cases_csv_file="${cases_csv_file:-./case_parameters.csv}"
 
 # Check if the folders and files exist
