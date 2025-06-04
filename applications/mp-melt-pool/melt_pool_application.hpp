@@ -162,6 +162,9 @@ namespace MeltPoolDG
     dealii::AffineConstraints<number> ls_hanging_node_constraints;
     dealii::AffineConstraints<number> reinit_constraints_dirichlet;
     dealii::AffineConstraints<number> reinit_no_solid_constraints_dirichlet;
+    dealii::AffineConstraints<number> normal_dirichlet_x_constraints;
+    dealii::AffineConstraints<number> normal_dirichlet_y_constraints;
+    dealii::AffineConstraints<number> normal_dirichlet_z_constraints;
 
     std::unique_ptr<dealii::AffineConstraints<number>> heat_dirichlet_constraints;
     std::unique_ptr<dealii::AffineConstraints<number>> heat_hanging_node_constraints;
@@ -191,10 +194,13 @@ namespace MeltPoolDG
     unsigned int pressure_dof_idx;
     unsigned int flow_vel_no_solid_dof_idx;
 
-    const unsigned int &curv_dof_idx             = ls_hanging_nodes_dof_idx;
-    const unsigned int &normal_dof_idx           = ls_hanging_nodes_dof_idx;
-    const unsigned int &evapor_vel_dof_idx       = vel_dof_idx;
-    const unsigned int &evapor_mass_flux_dof_idx = heat_no_bc_dof_idx;
+    const unsigned int &curv_dof_idx               = ls_hanging_nodes_dof_idx;
+    unsigned int        normal_no_bc_dof_idx       = -1;
+    unsigned int        normal_dirichlet_x_dof_idx = -1;
+    unsigned int        normal_dirichlet_y_dof_idx = -1;
+    unsigned int        normal_dirichlet_z_dof_idx = -1;
+    const unsigned int &evapor_vel_dof_idx         = vel_dof_idx;
+    const unsigned int &evapor_mass_flux_dof_idx   = heat_no_bc_dof_idx;
 
     std::shared_ptr<ScratchData<dim, dim, number>>                  scratch_data;
     std::shared_ptr<Material<number>>                               material;

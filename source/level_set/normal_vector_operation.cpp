@@ -88,7 +88,7 @@ namespace MeltPoolDG::LevelSet
           scratch_data,
           normal_dof_indices_per_block,
           normal_no_bc_dof_idx,
-          false);
+          true);
       }
 
     predictor->vmult(*normal_vector_operator, solution_normal_vector_predictor, rhs);
@@ -109,7 +109,7 @@ namespace MeltPoolDG::LevelSet
           scratch_data,
           normal_dof_indices_per_block,
           normal_no_bc_dof_idx,
-          false);
+          true);
 
         iter = LinearSolver::solve<BlockVectorType>(*normal_vector_operator,
                                                     solution_history.get_current_solution(),

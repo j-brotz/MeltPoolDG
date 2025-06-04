@@ -83,10 +83,6 @@ namespace MeltPoolDG::LevelSet
     const VectorType *solution_level_set;
 
     dealii::AlignedVector<dealii::VectorizedArray<number>> damping;
-
-    /*
-     * For boundary conditions with wetting
-     */
   };
 
   /**

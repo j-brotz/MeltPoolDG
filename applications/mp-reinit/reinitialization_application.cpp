@@ -234,20 +234,26 @@ namespace MeltPoolDG::LevelSet
           simulation_case->get_periodic_bc(),
           normal_dirichlet_x_dof_idx,
           normal_no_bc_dof_idx);
-        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
-                                                                                           number>(
-          *scratch_data,
-          simulation_case->get_boundary_condition("ny", "normal_vector"),
-          simulation_case->get_periodic_bc(),
-          normal_dirichlet_y_dof_idx,
-          normal_no_bc_dof_idx);
-        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
-                                                                                           number>(
-          *scratch_data,
-          simulation_case->get_boundary_condition("nz", "normal_vector"),
-          simulation_case->get_periodic_bc(),
-          normal_dirichlet_z_dof_idx,
-          normal_no_bc_dof_idx);
+        if constexpr (dim == 2)
+          {
+            MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<
+              dim,
+              number>(*scratch_data,
+                      simulation_case->get_boundary_condition("ny", "normal_vector"),
+                      simulation_case->get_periodic_bc(),
+                      normal_dirichlet_y_dof_idx,
+                      normal_no_bc_dof_idx);
+          }
+        if constexpr (dim == 3)
+          {
+            MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<
+              dim,
+              number>(*scratch_data,
+                      simulation_case->get_boundary_condition("nz", "normal_vector"),
+                      simulation_case->get_periodic_bc(),
+                      normal_dirichlet_z_dof_idx,
+                      normal_no_bc_dof_idx);
+          }
 
         MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
                                                         simulation_case->get_periodic_bc(),

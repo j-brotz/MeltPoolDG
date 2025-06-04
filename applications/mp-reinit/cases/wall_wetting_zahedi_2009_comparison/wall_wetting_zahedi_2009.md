@@ -33,7 +33,7 @@ All the files and folders described below are locate in the study folder `wall_w
 The initial configuration of the problem is given by the figure 1.
 
 <figure align="center">
-  <img src="./md_figures/initial_state.png"  width="800"/>
+  <img src="./md_figures/initial_state.png" style="border: 2px solid black" width="800"/>
 </figure> 
 
 **Figure 1**. Initial state of the problem. 
