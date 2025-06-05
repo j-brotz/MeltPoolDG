@@ -55,7 +55,7 @@ jobs:
           if [ -z ${TEST_FILTER} ] ; then
             FINAL_CTEST_COMMAND="${{ env.CTEST_COMMAND }}"
           else
-            FINAL_CTEST_COMMAND="${{ env.CTEST_COMMAND }} -R ${TEST_FILTER}"
+            FINAL_CTEST_COMMAND="${{ env.CTEST_COMMAND }} -R \"${TEST_FILTER}\""
           fi
           echo "CTest command: $FINAL_CTEST_COMMAND"
 
