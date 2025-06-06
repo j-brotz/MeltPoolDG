@@ -119,7 +119,7 @@ namespace MeltPoolDG::Flow
                                                                        nullptr,
                                                    convective_terms,
                                                    viscous_terms,
-                                                   flow_scratch_data);
+                                                   flow_scratch_data.body_force);
 
             if (external_forces != nullptr)
               {

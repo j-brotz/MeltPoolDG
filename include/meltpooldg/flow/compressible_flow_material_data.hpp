@@ -10,22 +10,6 @@ namespace MeltPoolDG::Flow
   // Currently supported equations of state to model compressible or (nearly) incompressible fluids
   BETTER_ENUM(EquationOfState, char, ideal_gas, stiffened_gas, noble_abel_stiffened_gas)
 
-  // Forward declarations
-  namespace EOS
-  {
-    template <int dim, typename number>
-    class EquationOfStateUtils;
-
-    template <int dim, typename number>
-    class IdealGas;
-
-    template <int dim, typename number>
-    class StiffenedGas;
-
-    template <int dim, typename number>
-    class NobleAbelStiffenedGas;
-  } // namespace EOS
-
   template <typename number>
   struct EOSData
   {

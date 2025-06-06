@@ -243,7 +243,7 @@ namespace MeltPoolDG::Flow
                                                                        nullptr,
                                                    convective_terms,
                                                    viscous_terms,
-                                                   flow_scratch_data);
+                                                   flow_scratch_data.body_force);
             grad_q *= residual_rhs_scaling_factor;
 
             value_q *= residual_rhs_scaling_factor;

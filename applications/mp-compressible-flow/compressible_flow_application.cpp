@@ -179,10 +179,10 @@ namespace MeltPoolDG::Flow
             simulation_case->parameters.cut,
             *time_iterator,
             [this]() { this->setup_dof_system(); },
+            level_set,
             comp_flow_dof_idx,
             level_set_dof_idx,
-            comp_flow_quad_idx,
-            level_set);
+            comp_flow_quad_idx);
 
         // prescribe a function for the object velocity in the case of a moving immersed (rigid)
         // object

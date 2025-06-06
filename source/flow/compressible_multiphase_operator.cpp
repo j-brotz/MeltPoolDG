@@ -137,7 +137,7 @@ namespace MeltPoolDG::Multiphase
                 constant_function ? &constant_body_force : nullptr,
                 convective_terms,
                 viscous_terms,
-                multiphase_scratch_data);
+                multiphase_scratch_data.body_force);
 
             // consider mass term
             if (multiphase_scratch_data.body_force.get() != nullptr)

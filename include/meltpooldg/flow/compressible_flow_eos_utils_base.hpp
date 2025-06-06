@@ -7,14 +7,19 @@
 
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 
+// Forward declaration due to circular dependency
+namespace MeltPoolDG::Flow
+{
+  template <int dim, typename number>
+  struct CompressibleFlowViscousKernels;
+}
+
 namespace MeltPoolDG::Flow::EOS
 {
   template <int dim, typename number>
   class EquationOfStateUtils
   {
   public:
-    EquationOfStateUtils() = default;
-
     /**
      * Calculate the pressure from the conserved variables for a specific equation of state.
      *
@@ -83,8 +88,8 @@ namespace MeltPoolDG::Flow::EOS
       calculate_stress_tensor(
         const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
         const CompressibleFlowTypes::ConservedVariablesGradType<dim, number>
-                   &grad_conserved_variables,
-        const auto &viscous_terms)
+                                                          &grad_conserved_variables,
+        const CompressibleFlowViscousKernels<dim, number> &viscous_terms)
     {
       const auto grad_vel =
         calculate_grad_velocity<dim, number>(conserved_variables, grad_conserved_variables);

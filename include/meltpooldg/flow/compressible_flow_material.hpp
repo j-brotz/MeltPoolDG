@@ -11,6 +11,22 @@
 
 namespace MeltPoolDG::Flow
 {
+  // Forward declarations to resolve circular dependencies
+  namespace EOS
+  {
+    template <int dim, typename number>
+    class EquationOfStateUtils;
+
+    template <int dim, typename number>
+    class IdealGas;
+
+    template <int dim, typename number>
+    class StiffenedGas;
+
+    template <int dim, typename number>
+    class NobleAbelStiffenedGas;
+  } // namespace EOS
+
   template <unsigned int dim, typename number>
   class CompressibleFlowMaterial
   {

@@ -180,10 +180,10 @@ namespace MeltPoolDG::Multiphase
         simulation_case->parameters.phase_coupling,
         *time_iterator,
         [this]() { this->setup_dof_system(); },
+        level_set,
         comp_multiphase_dof_idx,
         level_set_dof_idx,
-        comp_multiphase_quad_idx,
-        level_set);
+        comp_multiphase_quad_idx);
 
     comp_multiphase_operation =
       MeltPoolDG::Flow::CompressibleFlowOperation<dim, number>(std::move(operation));

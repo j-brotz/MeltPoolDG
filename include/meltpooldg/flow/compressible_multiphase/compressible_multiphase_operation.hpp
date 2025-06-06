@@ -66,10 +66,10 @@ namespace MeltPoolDG::Multiphase
      * @param phase_coupling_data_in Reference to the struct for phase coupling parameters.
      * @param time_iterator_in Reference to the used time stepping.
      * @param setup_dof_system_in Reinit_matrix_free function, which is registered.
+     * @param level_set_in level-set dof vector.
      * @param comp_flow_dof_idx_in Index of the used dof handler for solution in @p scratch_data_in.
      * @param level_set_dof_idx_in Index of the used dof handler for level-set in @p scratch_data_in.
      * @param comp_flow_quad_idx_in Index of the used quadrature object in @p scratch_data_in.
-     * @param level_set_in level-set dof vector.
      */
     CompressibleMultiphaseOperation(
       const ScratchData<dim, dim, number>                    &scratch_data_in,
@@ -80,10 +80,10 @@ namespace MeltPoolDG::Multiphase
       const CompressibleFlowPhaseCouplingData<number>        &phase_coupling_data_in,
       const TimeIntegration::TimeIterator<number>            &time_iterator_in,
       const std::function<void()>                            &setup_dof_system_in,
-      unsigned int                                            comp_flow_dof_idx_in  = 0,
-      unsigned int                                            level_set_dof_idx_in  = 0,
-      unsigned int                                            comp_flow_quad_idx_in = 0,
-      const VectorType                                       &level_set_in          = 0);
+      const VectorType                                       &level_set_in,
+      unsigned int comp_flow_dof_idx_in  = dealii::numbers::invalid_unsigned_int,
+      unsigned int level_set_dof_idx_in  = dealii::numbers::invalid_unsigned_int,
+      unsigned int comp_flow_quad_idx_in = dealii::numbers::invalid_unsigned_int);
 
     /**
      * Set up the required internal data structures. After a call to this function the solve()

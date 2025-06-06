@@ -41,10 +41,10 @@ namespace MeltPoolDG::Multiphase
     const CompressibleFlowPhaseCouplingData<number>        &phase_coupling_data_in,
     const TimeIntegration::TimeIterator<number>            &time_iterator_in,
     const std::function<void()>                            &setup_dof_system_in,
+    const VectorType                                       &level_set_in,
     const unsigned int                                      comp_flow_dof_idx_in,
     const unsigned int                                      level_set_dof_idx_in,
-    const unsigned int                                      comp_flow_quad_idx_in,
-    const VectorType                                       &level_set_in)
+    const unsigned int                                      comp_flow_quad_idx_in)
     : multiphase_scratch_data(comp_flow_data_in,
                               material_data_gas_in,
                               material_data_liquid_in,

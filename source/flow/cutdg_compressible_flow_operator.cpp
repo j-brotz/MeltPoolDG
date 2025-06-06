@@ -147,7 +147,7 @@ namespace MeltPoolDG::Flow
                     constant_function ? &constant_body_force : nullptr,
                     convective_terms,
                     viscous_terms,
-                    flow_scratch_data);
+                    flow_scratch_data.body_force);
 
                 // consider mass term
                 if (flow_scratch_data.body_force.get() != nullptr)
@@ -207,7 +207,7 @@ namespace MeltPoolDG::Flow
                       constant_function ? &constant_body_force : nullptr,
                       convective_terms,
                       viscous_terms,
-                      flow_scratch_data);
+                      flow_scratch_data.body_force);
 
                     // consider mass term
                     if (flow_scratch_data.body_force.get() != nullptr)
