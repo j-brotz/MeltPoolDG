@@ -314,7 +314,7 @@ namespace MeltPoolDG
                         heat_quad_idx,
                         true /* zero_out */,
                         &level_set_operation->get_normal_vector(),
-                        normal_dof_idx);
+                        normal_no_bc_dof_idx);
                   }
 
                 // the heat equation will NOT be solved if
@@ -696,11 +696,23 @@ namespace MeltPoolDG
     scratch_data->attach_dof_handler(dof_handler_ls); // reinit_constraints_dirichlet
     scratch_data->attach_dof_handler(dof_handler_ls); // reinit_no_solid_dof_idx
 
+    scratch_data->attach_dof_handler(dof_handler_ls); // normal_vector_no_bc
+    scratch_data->attach_dof_handler(dof_handler_ls); // normal_dirichlet_x
+    scratch_data->attach_dof_handler(dof_handler_ls); // normal_dirichlet_y
+    scratch_data->attach_dof_handler(dof_handler_ls); // normal_dirichlet_z
+
     ls_hanging_nodes_dof_idx = scratch_data->attach_constraint_matrix(ls_hanging_node_constraints);
     ls_dof_idx               = scratch_data->attach_constraint_matrix(ls_constraints_dirichlet);
     reinit_dof_idx           = scratch_data->attach_constraint_matrix(reinit_constraints_dirichlet);
     reinit_no_solid_dof_idx =
       scratch_data->attach_constraint_matrix(reinit_no_solid_constraints_dirichlet);
+    normal_no_bc_dof_idx = scratch_data->attach_constraint_matrix(ls_hanging_node_constraints);
+    normal_dirichlet_x_dof_idx =
+      scratch_data->attach_constraint_matrix(normal_dirichlet_x_constraints);
+    normal_dirichlet_y_dof_idx =
+      scratch_data->attach_constraint_matrix(normal_dirichlet_y_constraints);
+    normal_dirichlet_z_dof_idx =
+      scratch_data->attach_constraint_matrix(normal_dirichlet_z_constraints);
 
     ls_quad_idx =
       scratch_data->attach_quadrature(FiniteElementUtils::create_quadrature<dim>(param.ls.fe));
@@ -770,6 +782,18 @@ namespace MeltPoolDG
     vel_dof_idx      = flow_operation->get_dof_handler_idx_velocity();
     pressure_dof_idx = flow_operation->get_dof_handler_idx_pressure();
 
+    // Make array with normal vector dof indices
+    const std::array<unsigned int, dim> normal_dof_indices_per_block = [this]() {
+      if constexpr (dim == 1)
+        return std::array<unsigned int, 1>{{normal_dirichlet_x_dof_idx}};
+      else if constexpr (dim == 2)
+        return std::array<unsigned int, 2>{
+          {normal_dirichlet_x_dof_idx, normal_dirichlet_y_dof_idx}};
+      else if constexpr (dim == 3)
+        return std::array<unsigned int, 3>{
+          {normal_dirichlet_x_dof_idx, normal_dirichlet_y_dof_idx, normal_dirichlet_z_dof_idx}};
+    }();
+
     // initialize the levelset operation class
     level_set_operation = std::make_shared<LevelSet::LevelSetOperation<dim, number>>(
       *scratch_data,
@@ -783,7 +807,8 @@ namespace MeltPoolDG
       ls_quad_idx,
       reinit_dof_idx,
       curv_dof_idx,
-      normal_dof_idx,
+      normal_dof_indices_per_block,
+      normal_no_bc_dof_idx,
       vel_dof_idx,
       ls_dof_idx /* todo: ls_zero_bc_idx*/);
 
@@ -816,7 +841,7 @@ namespace MeltPoolDG
         level_set_operation->get_normal_vector(),
         param.evapor,
         param.material,
-        normal_dof_idx,
+        normal_no_bc_dof_idx,
         evapor_vel_dof_idx,
         flow_operation->get_quad_idx_velocity(),
         evapor_mass_flux_dof_idx,
@@ -946,7 +971,7 @@ namespace MeltPoolDG
           {
             surface_tension_operation->register_temperature_and_normal_vector(
               heat_dof_idx,
-              normal_dof_idx,
+              normal_no_bc_dof_idx,
               &heat_operation->get_temperature(),
               &level_set_operation->get_normal_vector());
           }
@@ -955,7 +980,7 @@ namespace MeltPoolDG
           {
             surface_tension_operation->register_temperature_and_normal_vector(
               heat_continuous_no_bc_dof_idx,
-              normal_dof_idx,
+              normal_no_bc_dof_idx,
               &heat_operation->get_interface_temperature(),
               &level_set_operation->get_normal_vector());
             compute_interface_temperature = true;
@@ -1032,7 +1057,7 @@ namespace MeltPoolDG
               },
               level_set_operation->get_normal_vector(),
               level_set_operation->get_level_set_as_heaviside(),
-              normal_dof_idx,
+              normal_no_bc_dof_idx,
               ls_hanging_nodes_dof_idx,
               flow_operation->get_quad_idx_velocity());
 
@@ -1339,6 +1364,39 @@ namespace MeltPoolDG
                                  true,
                                  true);
     reinit_no_solid_constraints_dirichlet.copy_from(reinit_constraints_dirichlet);
+
+    // Normal vector constraints
+    if (not simulation_case->parameters.ls.normal_vec.linear_solver.do_matrix_free)
+      AssertThrow(
+        simulation_case->get_boundary_condition("nx", "normal_vector").empty(),
+        dealii::ExcMessage(
+          "The wetting boundary condition is not implemented for the matrix-based implementation of the normal vector filtering equation."));
+    MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim, number>(
+      *scratch_data,
+      simulation_case->get_boundary_condition("nx", "normal_vector"),
+      simulation_case->get_periodic_bc(),
+      normal_dirichlet_x_dof_idx,
+      normal_no_bc_dof_idx);
+    if constexpr (dim >= 2)
+      {
+        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
+                                                                                           number>(
+          *scratch_data,
+          simulation_case->get_boundary_condition("ny", "normal_vector"),
+          simulation_case->get_periodic_bc(),
+          normal_dirichlet_y_dof_idx,
+          normal_no_bc_dof_idx);
+      }
+    if constexpr (dim == 3)
+      {
+        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
+                                                                                           number>(
+          *scratch_data,
+          simulation_case->get_boundary_condition("nz", "normal_vector"),
+          simulation_case->get_periodic_bc(),
+          normal_dirichlet_z_dof_idx,
+          normal_no_bc_dof_idx);
+      }
 
     if (heat_operation)
       heat_operation->setup_constraints(*scratch_data);

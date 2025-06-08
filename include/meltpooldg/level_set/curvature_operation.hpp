@@ -39,7 +39,8 @@ namespace MeltPoolDG::LevelSet
                        const VectorType                    &solution_levelset,
                        const unsigned int                   curv_dof_idx_in,
                        const unsigned int                   curv_quad_idx_in,
-                       const unsigned int                   normal_dof_idx_in,
+                       const std::array<unsigned int, dim> &normal_dof_indices_per_block_in,
+                       const unsigned int                   normal_no_bc_dof_idx_in,
                        const unsigned int                   ls_dof_idx_in);
 
     void

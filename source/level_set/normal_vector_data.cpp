@@ -33,6 +33,11 @@ namespace MeltPoolDG::LevelSet
         verbosity_level,
         "Sets the maximum verbosity level of the console output. The maximum level with respect to the "
         " base value is decisive.");
+      prm.add_parameter(
+        "compute normalized vector",
+        compute_normalized_vector,
+        "If set to true, the normal vector resulting from the filtering equation will be a unit vector.",
+        dealii::Patterns::Bool());
       prm.enter_subsection("narrow band");
       {
         prm.add_parameter(

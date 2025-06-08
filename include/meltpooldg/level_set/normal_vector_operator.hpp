@@ -31,7 +31,7 @@ namespace MeltPoolDG::LevelSet
 
     NormalVectorOperator(const ScratchData<dim, dim, number> &scratch_data_in,
                          const NormalVectorData<number>      &normal_vector_data_in,
-                         const unsigned int                   normal_dof_idx_in,
+                         const std::array<unsigned int, dim> &normal_dof_indices_per_block_in,
                          const unsigned int                   normal_quad_idx_in,
                          const unsigned int                   ls_dof_idx_in,
                          const VectorType                    *solution_level_set_in = nullptr);
@@ -75,9 +75,9 @@ namespace MeltPoolDG::LevelSet
     const ScratchData<dim, dim, number> &scratch_data;
     const NormalVectorData<number>      &normal_vector_data;
 
-    const unsigned int normal_dof_idx;
-    const unsigned int normal_quad_idx;
-    const unsigned int ls_dof_idx;
+    const std::array<unsigned int, dim> normal_dof_indices_per_block;
+    const unsigned int                  normal_quad_idx;
+    const unsigned int                  ls_dof_idx;
 
     // optional parameters for narrow band
     const VectorType *solution_level_set;

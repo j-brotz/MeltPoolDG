@@ -61,7 +61,22 @@ namespace MeltPoolDG::LevelSet
 
         if (param.amr.do_amr)
           refine_mesh();
+
+        if (profiling_monitor && profiling_monitor->now())
+          {
+            profiling_monitor->print(scratch_data->get_pcout(1),
+                                     scratch_data->get_timer(),
+                                     scratch_data->get_mpi_comm());
+          }
       }
+    //... always print timing statistics
+    if (profiling_monitor)
+      {
+        profiling_monitor->print(scratch_data->get_pcout(1),
+                                 scratch_data->get_timer(),
+                                 scratch_data->get_mpi_comm());
+      }
+
     Journal::print_end(scratch_data->get_pcout(1));
   }
 
@@ -85,7 +100,18 @@ namespace MeltPoolDG::LevelSet
 
       scratch_data->attach_dof_handler(dof_handler);
       reinit_dof_idx = scratch_data->attach_constraint_matrix(constraints);
-      normal_dof_idx = reinit_dof_idx;
+
+      scratch_data->attach_dof_handler(dof_handler); // normal_vector_no_bc
+      scratch_data->attach_dof_handler(dof_handler); // normal_dirichlet_x
+      scratch_data->attach_dof_handler(dof_handler); // normal_dirichlet_y
+      scratch_data->attach_dof_handler(dof_handler); // normal_dirichlet_z
+      normal_no_bc_dof_idx = scratch_data->attach_constraint_matrix(normal_no_bc_constraints);
+      normal_dirichlet_x_dof_idx =
+        scratch_data->attach_constraint_matrix(normal_dirichlet_x_constraints);
+      normal_dirichlet_y_dof_idx =
+        scratch_data->attach_constraint_matrix(normal_dirichlet_y_constraints);
+      normal_dirichlet_z_dof_idx =
+        scratch_data->attach_constraint_matrix(normal_dirichlet_z_constraints);
 
       // setup DoFHandler
       dof_handler.reinit(*simulation_case->triangulation);
@@ -105,6 +131,18 @@ namespace MeltPoolDG::LevelSet
     // initialize the time iterator
     time_iterator = std::make_unique<TimeIntegration::TimeIterator<number>>(param.time_stepping);
 
+    // Make array with normal vector dof indices
+    const std::array<unsigned int, dim> normal_dof_indices_per_block = [this]() {
+      if constexpr (dim == 1)
+        return std::array<unsigned int, 1>{{normal_dirichlet_x_dof_idx}};
+      else if constexpr (dim == 2)
+        return std::array<unsigned int, 2>{
+          {normal_dirichlet_x_dof_idx, normal_dirichlet_y_dof_idx}};
+      else if constexpr (dim == 3)
+        return std::array<unsigned int, 3>{
+          {normal_dirichlet_x_dof_idx, normal_dirichlet_y_dof_idx, normal_dirichlet_z_dof_idx}};
+    }();
+
     // initialize the reinitialization operation class
     if (param.reinit.implementation == "meltpooldg")
       {
@@ -119,7 +157,8 @@ namespace MeltPoolDG::LevelSet
               reinit_dof_idx,
               reinit_quad_idx,
               reinit_dof_idx,
-              normal_dof_idx);
+              normal_dof_indices_per_block,
+              normal_no_bc_dof_idx);
           }
         else
           {
@@ -143,7 +182,7 @@ namespace MeltPoolDG::LevelSet
           *time_iterator,
           reinit_dof_idx,
           reinit_quad_idx,
-          normal_dof_idx, // normal vec @todo
+          normal_dof_indices_per_block[0], // normal vec @todo
           param.time_stepping,
           param.normal_vec,
           param.reinit.interface_thickness_parameter.value,
@@ -163,6 +202,15 @@ namespace MeltPoolDG::LevelSet
         reinit_operation->get_sign_indicator_function()->copy_locally_owned_data_from(
           reinit_operation->get_level_set());
       }
+
+    // output initial state
+    output_results(0, simulation_case->parameters.time_stepping.start_time);
+
+    // Initialize profiling
+    if (simulation_case->parameters.profiling.enable)
+      profiling_monitor =
+        std::make_unique<Profiling::ProfilingMonitor<number>>(simulation_case->parameters.profiling,
+                                                              *time_iterator);
   }
 
   template <int dim, typename number>
@@ -179,6 +227,41 @@ namespace MeltPoolDG::LevelSet
     // continuous Galerkin finite elements
     if (param.reinit.fe.type != FiniteElementType::FE_DGQ)
       {
+        // Normal vector constraints
+        if (not param.normal_vec.linear_solver.do_matrix_free)
+          AssertThrow(
+            simulation_case->get_boundary_condition("nx", "normal_vector").empty(),
+            dealii::ExcMessage(
+              "The wetting boundary condition is not implemented for the matrix-based implementation of the normal vector filtering equation."));
+
+        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
+                                                                                           number>(
+          *scratch_data,
+          simulation_case->get_boundary_condition("nx", "normal_vector"),
+          simulation_case->get_periodic_bc(),
+          normal_dirichlet_x_dof_idx,
+          normal_no_bc_dof_idx);
+        if constexpr (dim >= 2)
+          {
+            MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<
+              dim,
+              number>(*scratch_data,
+                      simulation_case->get_boundary_condition("ny", "normal_vector"),
+                      simulation_case->get_periodic_bc(),
+                      normal_dirichlet_y_dof_idx,
+                      normal_no_bc_dof_idx);
+          }
+        if constexpr (dim == 3)
+          {
+            MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<
+              dim,
+              number>(*scratch_data,
+                      simulation_case->get_boundary_condition("nz", "normal_vector"),
+                      simulation_case->get_periodic_bc(),
+                      normal_dirichlet_z_dof_idx,
+                      normal_no_bc_dof_idx);
+          }
+
         MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
                                                         simulation_case->get_periodic_bc(),
                                                         reinit_dof_idx);

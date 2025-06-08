@@ -32,7 +32,8 @@ namespace MeltPoolDG::LevelSet
     const unsigned int                           reinit_dof_idx_in,
     const unsigned int                           reinit_quad_idx_in,
     const unsigned int                           ls_dof_idx_in,
-    const unsigned int                           normal_dof_idx_in)
+    const std::array<unsigned int, dim>         &normal_dof_indices_per_block_in,
+    const unsigned int                           normal_no_bc_dof_idx_in)
     : scratch_data(scratch_data_in)
     , reinit_data(reinit_data)
     , ls_n_subdivisions(ls_n_subdivisions_in)
@@ -40,7 +41,8 @@ namespace MeltPoolDG::LevelSet
     , reinit_dof_idx(reinit_dof_idx_in)
     , reinit_quad_idx(reinit_quad_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
-    , normal_dof_idx(normal_dof_idx_in)
+    , normal_dof_indices_per_block(normal_dof_indices_per_block_in)
+    , normal_no_bc_dof_idx(normal_no_bc_dof_idx_in)
     , solution_history(reinit_data.predictor.n_old_solution_vectors)
   {
     if (normal_vec_data.implementation == "meltpooldg")
@@ -49,7 +51,8 @@ namespace MeltPoolDG::LevelSet
           std::make_shared<NormalVectorOperation<dim, number>>(scratch_data_in,
                                                                normal_vec_data,
                                                                solution_level_set,
-                                                               normal_dof_idx,
+                                                               normal_dof_indices_per_block,
+                                                               normal_no_bc_dof_idx,
                                                                reinit_quad_idx,
                                                                ls_dof_idx);
       }
@@ -60,7 +63,7 @@ namespace MeltPoolDG::LevelSet
           scratch_data_in,
           normal_vec_data,
           ls_dof_idx_in,
-          normal_dof_idx,
+          normal_dof_indices_per_block[0],
           reinit_quad_idx,
           solution_level_set,
           reinit_data.interface_thickness_parameter.value / ls_n_subdivisions);
@@ -360,7 +363,7 @@ namespace MeltPoolDG::LevelSet
           reinit_dof_idx,
           reinit_quad_idx,
           ls_dof_idx,
-          normal_dof_idx);
+          normal_dof_indices_per_block[0]);
 
         preconditioner = make_preconditioner<dim, number, OlssonOperator<dim, number>, VectorType>(
           reinit_data.linear_solver.preconditioner_type,

@@ -1,3 +1,19 @@
+---------------------------------------------
+    Starting user defined postprocessing
+---------------------------------------------
+Accessible vectors:
+ *        reinit_DG_psi Max-norm:     1.1132 number of dofs: 1024
+ *             normal_0 Max-norm:     1.9561 number of dofs: 1024
+ *             normal_1 Max-norm:     1.9561 number of dofs: 1024
+ *            curvature Max-norm:     9.5665 number of dofs: 1024
+Relative error to exact solution 1.0119
+Mass of bubble 0.070693
+Mass loss 0 %
+Relative error to exact curvature 0.056801
+Relative error in gradient 0.99761
+---------------------------------------------
+    End of user defined postprocessing
+---------------------------------------------
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 0.0000e+00 ( dt = 0.0000e+00 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+

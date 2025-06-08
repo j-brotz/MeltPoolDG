@@ -18,6 +18,8 @@ namespace MeltPoolDG::LevelSet
     number      filter_parameter = 2.0;
     std::string implementation   = "meltpooldg";
     int         verbosity_level  = -1;
+    /// Enables the computation of normalized interface normal vectors
+    bool compute_normalized_vector = false;
 
     struct NarrowBand
     {

@@ -123,10 +123,20 @@ namespace MeltPoolDG::LevelSet
     ls_zero_bc_idx                 = scratch_data->attach_dof_handler(dof_handler);
     vel_dof_idx                    = scratch_data->attach_dof_handler(dof_handler_velocity);
 
+    normal_no_bc_dof_idx       = scratch_data->attach_dof_handler(dof_handler);
+    normal_dirichlet_x_dof_idx = scratch_data->attach_dof_handler(dof_handler);
+    normal_dirichlet_y_dof_idx = scratch_data->attach_dof_handler(dof_handler);
+    normal_dirichlet_z_dof_idx = scratch_data->attach_dof_handler(dof_handler);
+
     scratch_data->attach_constraint_matrix(hanging_node_constraints);
     scratch_data->attach_constraint_matrix(constraints_dirichlet);
     scratch_data->attach_constraint_matrix(hanging_node_constraints_with_zero_dirichlet);
     scratch_data->attach_constraint_matrix(hanging_node_constraints_velocity);
+
+    scratch_data->attach_constraint_matrix(hanging_node_constraints);
+    scratch_data->attach_constraint_matrix(normal_dirichlet_x_constraints);
+    scratch_data->attach_constraint_matrix(normal_dirichlet_y_constraints);
+    scratch_data->attach_constraint_matrix(normal_dirichlet_z_constraints);
 
     ls_quad_idx = scratch_data->attach_quadrature(
       FiniteElementUtils::create_quadrature<dim>(simulation_case->parameters.ls.fe));
@@ -139,6 +149,18 @@ namespace MeltPoolDG::LevelSet
 
     if (simulation_case->parameters.ls.fe.type != FiniteElementType::FE_DGQ)
       {
+        // Make array with normal vector dof indices
+        const std::array<unsigned int, dim> normal_dof_indices_per_block = [this]() {
+          if constexpr (dim == 1)
+            return std::array<unsigned int, 1>{{normal_dirichlet_x_dof_idx}};
+          else if constexpr (dim == 2)
+            return std::array<unsigned int, 2>{
+              {normal_dirichlet_x_dof_idx, normal_dirichlet_y_dof_idx}};
+          else if constexpr (dim == 3)
+            return std::array<unsigned int, 3>{
+              {normal_dirichlet_x_dof_idx, normal_dirichlet_y_dof_idx, normal_dirichlet_z_dof_idx}};
+        }();
+
         level_set_operation = std::make_unique<LevelSetOperation<dim, number>>(
           *scratch_data,
           *time_iterator,
@@ -151,7 +173,8 @@ namespace MeltPoolDG::LevelSet
           ls_quad_idx,
           reinit_dof_idx,
           curv_dof_idx,
-          normal_dof_idx,
+          normal_dof_indices_per_block,
+          normal_no_bc_dof_idx,
           vel_dof_idx,
           ls_zero_bc_idx);
       }
@@ -182,7 +205,7 @@ namespace MeltPoolDG::LevelSet
           level_set_operation->get_normal_vector(),
           simulation_case->parameters.evapor,
           simulation_case->parameters.material,
-          normal_dof_idx,
+          normal_dirichlet_x_dof_idx,
           vel_dof_idx,
           ls_quad_idx,
           ls_hanging_nodes_dof_idx,
@@ -272,6 +295,40 @@ namespace MeltPoolDG::LevelSet
     // continuous Galerkin finite elements
     if (simulation_case->parameters.ls.fe.type != FiniteElementType::FE_DGQ)
       {
+        // Normal vector constraints
+        if (not simulation_case->parameters.ls.normal_vec.linear_solver.do_matrix_free)
+          AssertThrow(
+            simulation_case->get_boundary_condition("nx", "normal_vector").empty(),
+            dealii::ExcMessage(
+              "The wetting boundary condition is not implemented for the matrix-based implementation of the normal vector filtering equation."));
+        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
+                                                                                           number>(
+          *scratch_data,
+          simulation_case->get_boundary_condition("nx", "normal_vector"),
+          simulation_case->get_periodic_bc(),
+          normal_dirichlet_x_dof_idx,
+          normal_no_bc_dof_idx);
+        if constexpr (dim >= 2)
+          {
+            MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<
+              dim,
+              number>(*scratch_data,
+                      simulation_case->get_boundary_condition("ny", "normal_vector"),
+                      simulation_case->get_periodic_bc(),
+                      normal_dirichlet_y_dof_idx,
+                      normal_no_bc_dof_idx);
+          }
+        if constexpr (dim == 3)
+          {
+            MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<
+              dim,
+              number>(*scratch_data,
+                      simulation_case->get_boundary_condition("nz", "normal_vector"),
+                      simulation_case->get_periodic_bc(),
+                      normal_dirichlet_z_dof_idx,
+                      normal_no_bc_dof_idx);
+          }
+
         MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
                                                                                            number>(
           *scratch_data,

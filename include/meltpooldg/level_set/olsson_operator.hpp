@@ -86,8 +86,11 @@ namespace MeltPoolDG::LevelSet
 
     const number tolerance_normal_vector;
 
-    dealii::AlignedVector<dealii::VectorizedArray<number>> diffusion_length;
+    dealii::AlignedVector<dealii::VectorizedArray<number>> normal_diffusion_length;
+    dealii::AlignedVector<dealii::VectorizedArray<number>> tangential_diffusion_length;
     mutable dealii::AlignedVector<dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>
       unit_normal;
+    mutable dealii::AlignedVector<dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>
+      unit_tangent;
   };
 } // namespace MeltPoolDG::LevelSet

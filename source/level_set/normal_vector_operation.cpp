@@ -16,13 +16,15 @@ namespace MeltPoolDG::LevelSet
     const ScratchData<dim, dim, number> &scratch_data_in,
     const NormalVectorData<number>      &normal_vector_data,
     const VectorType                    &solution_level_set,
-    const unsigned int                   normal_dof_idx_in,
+    const std::array<unsigned int, dim> &normal_dof_indices_per_block_in,
+    const unsigned int                   normal_no_bc_dof_idx_in,
     const unsigned int                   normal_quad_idx_in,
     const unsigned int                   ls_dof_idx_in)
     : scratch_data(scratch_data_in)
     , normal_vector_data(normal_vector_data)
     , solution_level_set(solution_level_set)
-    , normal_dof_idx(normal_dof_idx_in)
+    , normal_no_bc_dof_idx(normal_no_bc_dof_idx_in)
+    , normal_dof_indices_per_block(normal_dof_indices_per_block_in)
     , normal_quad_idx(normal_quad_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
     , solution_history(normal_vector_data.predictor.n_old_solution_vectors)
@@ -35,11 +37,13 @@ namespace MeltPoolDG::LevelSet
   void
   NormalVectorOperation<dim, number>::reinit()
   {
-    solution_history.apply(
-      [this](BlockVectorType &v) { scratch_data.initialize_dof_vector(v, normal_dof_idx); });
+    solution_history.apply([this](BlockVectorType &v) {
+      scratch_data.initialize_dof_vector(v, normal_dof_indices_per_block);
+    });
 
-    scratch_data.initialize_dof_vector(solution_normal_vector_predictor, normal_dof_idx);
-    scratch_data.initialize_dof_vector(rhs, normal_dof_idx);
+    scratch_data.initialize_dof_vector(solution_normal_vector_predictor,
+                                       normal_dof_indices_per_block);
+    scratch_data.initialize_dof_vector(rhs, normal_dof_indices_per_block);
 
     normal_vector_operator->reinit();
 
@@ -50,7 +54,7 @@ namespace MeltPoolDG::LevelSet
         if (update_ghosts)
           solution_history.get_current_solution().update_ghost_values();
 
-        preconditioner.reinit(scratch_data, normal_dof_idx);
+        preconditioner.reinit(scratch_data, normal_dof_indices_per_block[0]);
         preconditioner.update();
 
         if (update_ghosts)
@@ -77,21 +81,36 @@ namespace MeltPoolDG::LevelSet
     if (normal_vector_data.linear_solver.do_matrix_free &&
         normal_vector_data.predictor.type == PredictorType::least_squares_projection)
       {
-        normal_vector_operator->create_rhs(rhs, solution_level_set);
+        Utilities::MatrixFree::create_rhs_and_apply_dirichlet_matrixfree<dim, number>(
+          *normal_vector_operator,
+          rhs,
+          solution_level_set,
+          scratch_data,
+          normal_dof_indices_per_block,
+          normal_no_bc_dof_idx,
+          true);
       }
 
     predictor->vmult(*normal_vector_operator, solution_normal_vector_predictor, rhs);
 
-    // apply hanging node constraints to predictor
     for (unsigned int d = 0; d < dim; ++d)
-      scratch_data.get_constraint(normal_dof_idx)
+      scratch_data.get_constraint(normal_dof_indices_per_block[d])
         .distribute(solution_history.get_current_solution().block(d));
 
     unsigned int iter = 0;
 
     if (normal_vector_data.linear_solver.do_matrix_free)
       {
-        normal_vector_operator->create_rhs(rhs, solution_level_set);
+        //  Apply wetting boundary conditions
+        Utilities::MatrixFree::create_rhs_and_apply_dirichlet_matrixfree<dim, number>(
+          *normal_vector_operator,
+          rhs,
+          solution_level_set,
+          scratch_data,
+          normal_dof_indices_per_block,
+          normal_no_bc_dof_idx,
+          true);
+
         iter = LinearSolver::solve<BlockVectorType>(*normal_vector_operator,
                                                     solution_history.get_current_solution(),
                                                     rhs,
@@ -117,7 +136,7 @@ namespace MeltPoolDG::LevelSet
 
     for (unsigned int d = 0; d < dim; ++d)
       {
-        scratch_data.get_constraint(normal_dof_idx)
+        scratch_data.get_constraint(normal_dof_indices_per_block[d])
           .distribute(solution_history.get_current_solution().block(d));
       }
     constexpr int             verbosity_l2_norm = dim > 1 ? 1 : 2;
@@ -131,7 +150,7 @@ namespace MeltPoolDG::LevelSet
           return MeltPoolDG::VectorTools::compute_norm<dim, number>(
             solution_history.get_current_solution().block(d),
             scratch_data,
-            normal_dof_idx,
+            normal_dof_indices_per_block[d],
             normal_quad_idx);
         },
         "normal_" + std::to_string(d),
@@ -181,7 +200,7 @@ namespace MeltPoolDG::LevelSet
     normal_vector_operator =
       std::make_unique<NormalVectorOperator<dim, number>>(scratch_data,
                                                           normal_vector_data,
-                                                          normal_dof_idx,
+                                                          normal_dof_indices_per_block,
                                                           normal_quad_idx,
                                                           ls_dof_idx,
                                                           &solution_level_set);

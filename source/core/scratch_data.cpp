@@ -281,6 +281,17 @@ namespace MeltPoolDG
 
   template <int dim, int spacedim, typename number>
   void
+  ScratchData<dim, spacedim, number>::initialize_dof_vector(
+    BlockVectorType                     &vec,
+    const std::array<unsigned int, dim> &dof_indices_per_block) const
+  {
+    vec.reinit(dim);
+    for (unsigned int d = 0; d < dim; ++d)
+      this->initialize_dof_vector(vec.block(d), dof_indices_per_block[d]);
+  }
+
+  template <int dim, int spacedim, typename number>
+  void
   ScratchData<dim, spacedim, number>::initialize_bc_vector(VectorType        &vec,
                                                            const unsigned int dof_idx) const
   {

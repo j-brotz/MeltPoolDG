@@ -13,8 +13,10 @@ namespace MeltPoolDG::Utilities::MatrixFree
 {
   template <typename number = double>
   using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
+  template <typename number = double>
+  using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
   /**
-   * Compute the modified right-handside for (inhomogeneous) dirichlet boundary
+   * Compute the modified right-hand side for (inhomogeneous) dirichlet boundary
    * conditions x_d
    *
    * A * x = B
@@ -31,7 +33,8 @@ namespace MeltPoolDG::Utilities::MatrixFree
   template <int dim,
             typename number           = double,
             typename DoFVectorType    = VectorType<number>,
-            typename SrcRhsVectorType = VectorType<number>>
+            typename SrcRhsVectorType = VectorType<number>,
+            typename std::enable_if_t<std::is_same_v<DoFVectorType, VectorType<number>>, int> = 0>
   inline void
   create_rhs_and_apply_dirichlet_matrixfree(
     OperatorMatrixFree<dim, number>     &operator_base,
@@ -100,6 +103,114 @@ namespace MeltPoolDG::Utilities::MatrixFree
     scratch_data.get_constraint(dof_idx).set_zero(rhs);
 
     operator_base.reset_dof_index(dof_idx);
+  }
+
+  /**
+   * @brief Compute the modified right-hand side for (inhomogeneous) dirichlet boundary
+   * conditions \f$ x_d \f$, as above, but for BlockVector solutions with component-wise DoF
+   * indices.
+   *
+   * @tparam dim Number of spatial dimensions of the simulation
+   * @tparam number Numeric type used for computations (e.g., float, double)
+   * @tparam DoFVectorType Vector-type of the solution
+   * @tparam SrcRhsVectorType Vector-type of the right-hand side
+   *
+   * @param operator_base Operator associated to the equation solved
+   * @param rhs Right-hand side vector
+   * @param src Input solution for the solved equation
+   * @param scratch_data Scratch data associated with the operation
+   * @param dof_indices_per_block Array of DoF indices per block
+   * @param dof_no_bc_idx DoF index associated with the AffineConstraint object without
+   * boundary conditions
+   * @param zero_out If set to @p true, it zeroes out constrained values in the right-hand side.
+   * @param additional_inhomogeneous_constraints Pair containing local DoF indices and values
+   * imposed at the DoFs.
+   */
+  template <
+    int dim,
+    typename number           = double,
+    typename DoFVectorType    = BlockVectorType<number>,
+    typename SrcRhsVectorType = VectorType<number>,
+    typename std::enable_if_t<std::is_same_v<DoFVectorType, BlockVectorType<number>>, int> = 0>
+  inline void
+  create_rhs_and_apply_dirichlet_matrixfree(
+    OperatorMatrixFree<dim, number>     &operator_base,
+    DoFVectorType                       &rhs,
+    const SrcRhsVectorType              &src,
+    const ScratchData<dim, dim, number> &scratch_data,
+    const std::array<unsigned int, dim> &dof_indices_per_block,
+    const unsigned int                  &dof_no_bc_idx,
+    const bool                           zero_out,
+    const std::optional<std::pair<std::vector<unsigned int>, std::vector<std::vector<number>>>>
+      &additional_inhomogeneous_constraints = std::nullopt)
+  {
+    // The dof index that is used for the DoF Vector from the matrix-vector
+    // product must be switched to the one without Dirichlet boundary
+    // conditions, such that inhomogeneities are not zeroed out during
+    // read_dof_values().
+    operator_base.reset_dof_index(dof_no_bc_idx);
+
+    DoFVectorType temp_rhs;
+    scratch_data.initialize_dof_vector(temp_rhs, dof_no_bc_idx);
+
+    // This copy is necessary since we observed problems with incompatible
+    // communication pattern when using periodic BC.
+    SrcRhsVectorType temp_src;
+    scratch_data.initialize_dof_vector(temp_src, dof_no_bc_idx);
+    temp_src = src;
+
+    DoFVectorType bc_values;
+    scratch_data.initialize_dof_vector(bc_values, dof_no_bc_idx);
+
+    for (unsigned int d = 0; d < dim; ++d)
+      {
+        auto &bc_values_d = bc_values.block(d);
+
+        // set inhomogeneity
+        if (additional_inhomogeneous_constraints)
+          {
+            const auto &bc = *additional_inhomogeneous_constraints;
+            for (unsigned int i = 0; i < bc.first.size(); ++i)
+              {
+                bc_values_d.local_element(bc.first[i]) = bc.second[d][i];
+              }
+          }
+        scratch_data.get_constraint(dof_indices_per_block[d]).distribute(bc_values_d);
+      }
+
+    // perform matrix-vector multiplication (with unconstrained system and constrained set in
+    // Vector)
+    operator_base.vmult(temp_rhs, bc_values);
+
+    // Modify right-hand side
+    temp_rhs *= -1.0;
+    operator_base.create_rhs(temp_rhs, temp_src);
+    /*
+     * Zero-out constrained values
+     */
+    if (zero_out)
+      rhs = temp_rhs;
+    else
+      rhs += temp_rhs;
+
+    for (unsigned int d = 0; d < dim; ++d)
+      {
+        auto &rhs_d = rhs.block(d);
+
+        // zero-out values of additional inhomogeneity
+        if (additional_inhomogeneous_constraints)
+          {
+            const auto &bc = *additional_inhomogeneous_constraints;
+            for (const auto &i : bc.first)
+              {
+                rhs_d.local_element(i) = 0;
+              }
+          }
+
+        scratch_data.get_constraint(dof_indices_per_block[d]).set_zero(rhs_d);
+      }
+
+    operator_base.reset_dof_index(dof_indices_per_block[0]);
   }
 
   /**

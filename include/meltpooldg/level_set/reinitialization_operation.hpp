@@ -6,6 +6,7 @@
 #include <deal.II/lac/la_parallel_vector.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 
+#include <meltpooldg/core/boundary_conditions.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/level_set/normal_vector_operation.hpp>
 #include <meltpooldg/level_set/normal_vector_operation_adaflo_wrapper.hpp>
@@ -49,7 +50,8 @@ namespace MeltPoolDG::LevelSet
                               const unsigned int                           reinit_dof_idx_in,
                               const unsigned int                           reinit_quad_idx_in,
                               const unsigned int                           ls_dof_idx_in,
-                              const unsigned int                           normal_dof_idx_in);
+                              const std::array<unsigned int, dim> &normal_dof_indices_per_block_in,
+                              const unsigned int                   normal_no_bc_dof_idx_in);
 
     void
     reinit() override;
@@ -118,10 +120,11 @@ namespace MeltPoolDG::LevelSet
      *  ScratchData<dim,dim,number> object is selected. This is important when
      * ScratchData<dim,dim,number> holds multiple DoFHandlers, quadrature rules, etc.
      */
-    mutable unsigned int reinit_dof_idx;
-    const unsigned int   reinit_quad_idx;
-    const unsigned int   ls_dof_idx;
-    const unsigned int   normal_dof_idx;
+    mutable unsigned int                reinit_dof_idx;
+    const unsigned int                  reinit_quad_idx;
+    const unsigned int                  ls_dof_idx;
+    const std::array<unsigned int, dim> normal_dof_indices_per_block;
+    const unsigned int                  normal_no_bc_dof_idx;
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 
@@ -135,7 +138,7 @@ namespace MeltPoolDG::LevelSet
      */
     std::shared_ptr<NormalVectorOperationBase<dim, number>> normal_vector_operation;
     /*
-     *    This is the primary solution variable of this module, which will be also publically
+     *    This is the primary solution variable of this module, which will be also publicly
      *    accessible for output_results.
      */
     VectorType solution_level_set;

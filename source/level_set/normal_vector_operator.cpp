@@ -2,7 +2,7 @@
 
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/normal_vector_operator.hpp>
-
+#include <meltpooldg/utilities/dealii_tensor.hpp>
 
 namespace MeltPoolDG::LevelSet
 {
@@ -12,18 +12,18 @@ namespace MeltPoolDG::LevelSet
   NormalVectorOperator<dim, number>::NormalVectorOperator(
     const ScratchData<dim, dim, number> &scratch_data_in,
     const NormalVectorData<number>      &normal_vector_data_in,
-    const unsigned int                   normal_dof_idx_in,
+    const std::array<unsigned int, dim> &normal_dof_indices_per_block_in,
     const unsigned int                   normal_quad_idx_in,
     const unsigned int                   ls_dof_idx_in,
     const VectorType                    *solution_level_set_in)
     : scratch_data(scratch_data_in)
     , normal_vector_data(normal_vector_data_in)
-    , normal_dof_idx(normal_dof_idx_in)
+    , normal_dof_indices_per_block(normal_dof_indices_per_block_in)
     , normal_quad_idx(normal_quad_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
     , solution_level_set(solution_level_set_in)
   {
-    this->reset_dof_index(normal_dof_idx_in);
+    this->reset_dof_index(normal_dof_indices_per_block_in[0]);
   }
 
   template <int dim, typename number>
@@ -31,18 +31,19 @@ namespace MeltPoolDG::LevelSet
   NormalVectorOperator<dim, number>::compute_system_matrix_and_rhs(const VectorType &level_set_in,
                                                                    BlockVectorType  &rhs) const
   {
-    FEValues<dim> normal_values(scratch_data.get_mapping(),
-                                scratch_data.get_dof_handler(normal_dof_idx).get_fe(),
-                                scratch_data.get_quadrature(normal_quad_idx),
-                                update_values | update_gradients | update_quadrature_points |
-                                  update_JxW_values);
+    FEValues<dim> normal_values(
+      scratch_data.get_mapping(),
+      scratch_data.get_dof_handler(normal_dof_indices_per_block[0]).get_fe(),
+      scratch_data.get_quadrature(normal_quad_idx),
+      update_values | update_gradients | update_quadrature_points | update_JxW_values);
 
     FEValues<dim> ls_values(scratch_data.get_mapping(),
                             scratch_data.get_dof_handler(ls_dof_idx).get_fe(),
                             scratch_data.get_quadrature(normal_quad_idx),
                             update_gradients);
 
-    const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(normal_dof_idx);
+    const unsigned int dofs_per_cell =
+      scratch_data.get_n_dofs_per_cell(normal_dof_indices_per_block[0]);
 
     FullMatrix<number>                   normal_cell_matrix(dofs_per_cell, dofs_per_cell);
     std::vector<Vector<number>>          normal_cell_rhs(dim, Vector<number>(dofs_per_cell));
@@ -55,7 +56,8 @@ namespace MeltPoolDG::LevelSet
     this->system_matrix = 0.0;
     rhs                 = 0.0;
 
-    for (const auto &cell : scratch_data.get_dof_handler(normal_dof_idx).active_cell_iterators())
+    for (const auto &cell :
+         scratch_data.get_dof_handler(normal_dof_indices_per_block[0]).active_cell_iterators())
       if (cell->is_locally_owned())
         {
           normal_values.reinit(cell);
@@ -70,7 +72,10 @@ namespace MeltPoolDG::LevelSet
             level_set_in, normal_at_q); // compute normals from level set solution at tau=0
 
           const number damping = compute_cell_size_dependent_filter_parameter<dim, number>(
-            scratch_data, normal_dof_idx, cell, normal_vector_data.filter_parameter);
+            scratch_data,
+            normal_dof_indices_per_block[0],
+            cell,
+            normal_vector_data.filter_parameter);
 
           for (const unsigned int q_index : normal_values.quadrature_point_indices())
             {
@@ -105,10 +110,10 @@ namespace MeltPoolDG::LevelSet
           // assembly
           cell->get_dof_indices(local_dof_indices);
 
-          scratch_data.get_constraint(normal_dof_idx)
+          scratch_data.get_constraint(normal_dof_indices_per_block[0])
             .distribute_local_to_global(normal_cell_matrix, local_dof_indices, this->system_matrix);
           for (unsigned int d = 0; d < dim; ++d)
-            scratch_data.get_constraint(normal_dof_idx)
+            scratch_data.get_constraint(normal_dof_indices_per_block[d])
               .distribute_local_to_global(normal_cell_rhs[d], local_dof_indices, rhs.block(d));
 
         } // end of cell loop
@@ -127,7 +132,7 @@ namespace MeltPoolDG::LevelSet
     scratch_data.get_matrix_free().template cell_loop<BlockVectorType, BlockVectorType>(
       [&](const auto &, auto &dst, const auto &src, auto cell_range) {
         FECellIntegrator<dim, 1, number> normal(scratch_data.get_matrix_free(),
-                                                normal_dof_idx,
+                                                this->dof_idx,
                                                 normal_quad_idx);
         FECellIntegrator<dim, 1, number> level_set(scratch_data.get_matrix_free(),
                                                    ls_dof_idx,
@@ -156,41 +161,81 @@ namespace MeltPoolDG::LevelSet
   NormalVectorOperator<dim, number>::create_rhs(BlockVectorType &dst, const VectorType &src) const
   {
     FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
-                                                     normal_dof_idx,
+                                                     this->dof_idx,
                                                      normal_quad_idx);
     FECellIntegrator<dim, 1, number>   level_set(scratch_data.get_matrix_free(),
                                                ls_dof_idx,
                                                normal_quad_idx);
 
-    scratch_data.get_matrix_free().template cell_loop<BlockVectorType, VectorType>(
-      [&](const auto &, auto &dst, const auto &src, auto macro_cells) {
-        for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
-          {
-            normal_vector.reinit(cell);
-
-            level_set.reinit(cell);
-            level_set.read_dof_values_plain(src);
-            level_set.evaluate(EvaluationFlags::gradients | EvaluationFlags::values);
-
-            for (unsigned int q_index = 0; q_index < normal_vector.n_q_points; ++q_index)
+    if (not normal_vector_data.compute_normalized_vector)
+      {
+        scratch_data.get_matrix_free().template cell_loop<BlockVectorType, VectorType>(
+          [&](const auto &, auto &dst, const auto &src, auto macro_cells) {
+            for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
               {
-                const VectorizedArray<number> narrow_band_mask =
-                  normal_vector_data.narrow_band.enable ?
-                    Tools::compute_mask_narrow_band<number>(
-                      level_set.get_value(q_index),
-                      normal_vector_data.narrow_band.level_set_threshold) :
-                    1.0;
+                normal_vector.reinit(cell);
 
-                normal_vector.submit_value(narrow_band_mask * level_set.get_gradient(q_index),
-                                           q_index);
+                level_set.reinit(cell);
+                level_set.read_dof_values_plain(src);
+                level_set.evaluate(EvaluationFlags::gradients | EvaluationFlags::values);
+
+                for (unsigned int q_index = 0; q_index < normal_vector.n_q_points; ++q_index)
+                  {
+                    const VectorizedArray<number> narrow_band_mask =
+                      normal_vector_data.narrow_band.enable ?
+                        Tools::compute_mask_narrow_band<number>(
+                          level_set.get_value(q_index),
+                          normal_vector_data.narrow_band.level_set_threshold) :
+                        1.0;
+
+                    normal_vector.submit_value(narrow_band_mask * level_set.get_gradient(q_index),
+                                               q_index);
+                  }
+
+                normal_vector.integrate_scatter(EvaluationFlags::values, dst);
               }
+          },
+          dst,
+          src,
+          false);
+      }
+    else /*compute_normalized_vector == true*/
+      {
+        scratch_data.get_matrix_free().template cell_loop<BlockVectorType, VectorType>(
+          [&](const auto &, auto &dst, const auto &src, auto macro_cells) {
+            const number norm_tolerance = 1e-16;
+            for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
+              {
+                normal_vector.reinit(cell);
 
-            normal_vector.integrate_scatter(EvaluationFlags::values, dst);
-          }
-      },
-      dst,
-      src,
-      true);
+                level_set.reinit(cell);
+                level_set.read_dof_values_plain(src);
+                level_set.evaluate(EvaluationFlags::gradients | EvaluationFlags::values);
+
+                for (unsigned int q_index = 0; q_index < normal_vector.n_q_points; ++q_index)
+                  {
+                    const VectorizedArray<number> narrow_band_mask =
+                      normal_vector_data.narrow_band.enable ?
+                        Tools::compute_mask_narrow_band<number>(
+                          level_set.get_value(q_index),
+                          normal_vector_data.narrow_band.level_set_threshold) :
+                        1.0;
+
+                    const auto level_set_gradient =
+                      narrow_band_mask * level_set.get_gradient(q_index);
+                    const auto level_set_gradient_normalized =
+                      normalize<dim>(level_set_gradient, norm_tolerance);
+
+                    normal_vector.submit_value(level_set_gradient_normalized, q_index);
+                  }
+
+                normal_vector.integrate_scatter(EvaluationFlags::values, dst);
+              }
+          },
+          dst,
+          src,
+          false);
+      }
   }
 
   template <int dim, typename number>
@@ -209,7 +254,7 @@ namespace MeltPoolDG::LevelSet
     // compute matrix (only cell contributions)
     MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
       matrix_free,
-      scratch_data.get_constraint(normal_dof_idx),
+      scratch_data.get_constraint(normal_dof_indices_per_block[0]),
       system_matrix,
       [&](auto &normal_vals) {
         const unsigned int current_cell_index = normal_vals.get_current_cell_index();
@@ -220,7 +265,7 @@ namespace MeltPoolDG::LevelSet
 
         old_cell_index = current_cell_index;
       },
-      normal_dof_idx,
+      normal_dof_indices_per_block[0],
       normal_quad_idx);
 
     system_matrix.compress(VectorOperation::add);
@@ -231,7 +276,7 @@ namespace MeltPoolDG::LevelSet
   NormalVectorOperator<dim, number>::compute_inverse_diagonal_from_matrixfree(
     BlockVectorType &diagonal) const
   {
-    scratch_data.initialize_dof_vector(diagonal, normal_dof_idx);
+    scratch_data.initialize_dof_vector(diagonal, normal_dof_indices_per_block);
 
     bool update_ghosts = true;
 
@@ -265,7 +310,7 @@ namespace MeltPoolDG::LevelSet
 
             old_cell_index = current_cell_index;
           },
-          normal_dof_idx,
+          normal_dof_indices_per_block[0],
           normal_quad_idx);
 
     // ... and invert it
@@ -349,7 +394,10 @@ namespace MeltPoolDG::LevelSet
         for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
           {
             damping[cell] = compute_cell_size_dependent_filter_parameter_mf<dim, number>(
-              scratch_data, normal_dof_idx, cell, normal_vector_data.filter_parameter);
+              scratch_data,
+              normal_dof_indices_per_block[0],
+              cell,
+              normal_vector_data.filter_parameter);
           }
       }
     else

@@ -31,14 +31,20 @@ namespace MeltPoolDG::LevelSet
     dealii::AffineConstraints<number> hanging_node_constraints;
     dealii::AffineConstraints<number> hanging_node_constraints_velocity;
     dealii::AffineConstraints<number> hanging_node_constraints_with_zero_dirichlet;
+    dealii::AffineConstraints<number> normal_dirichlet_x_constraints;
+    dealii::AffineConstraints<number> normal_dirichlet_y_constraints;
+    dealii::AffineConstraints<number> normal_dirichlet_z_constraints;
 
     unsigned int        ls_dof_idx;
     unsigned int        ls_quad_idx;
     unsigned int        ls_zero_bc_idx;
     unsigned int        ls_hanging_nodes_dof_idx;
     unsigned int        vel_dof_idx;
-    const unsigned int &curv_dof_idx   = ls_hanging_nodes_dof_idx;
-    const unsigned int &normal_dof_idx = ls_hanging_nodes_dof_idx;
+    const unsigned int &curv_dof_idx               = ls_hanging_nodes_dof_idx;
+    unsigned int        normal_no_bc_dof_idx       = -1;
+    unsigned int        normal_dirichlet_x_dof_idx = -1;
+    unsigned int        normal_dirichlet_y_dof_idx = -1;
+    unsigned int        normal_dirichlet_z_dof_idx = -1;
     const unsigned int &reinit_dof_idx =
       ls_hanging_nodes_dof_idx; //@todo: would it make sense to use ls_zero_bc_idx?
     const unsigned int &reinit_hanging_nodes_dof_idx =
