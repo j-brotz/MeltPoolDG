@@ -14,6 +14,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 #include <meltpooldg/utilities/characteristic_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -23,7 +24,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "../reinitialization_case.hpp"
+#include "../../reinitialization_case.hpp"
 
 namespace MeltPoolDG::Simulation::WallWetting
 {
@@ -34,7 +35,7 @@ namespace MeltPoolDG::Simulation::WallWetting
    * @tparam number Numeric type used for computations (e.g., float, double)
    */
   template <int dim, typename number>
-  class InitialSignedDistance : public dealii::Function<dim>
+  class InitialLevelSet : public dealii::Function<dim>
   {
   public:
     /**
@@ -44,7 +45,7 @@ namespace MeltPoolDG::Simulation::WallWetting
      * @param[in] p_x_interface Position of the vertical interface (\f$ phi \f$ = 0).
      * @param[in] p_epsilon Interface thickness parameter.
      */
-    InitialSignedDistance(const number p_x_interface, const number p_epsilon)
+    InitialLevelSet(const number p_x_interface, const number p_epsilon)
       : dealii::Function<dim>()
       , x_interface(p_x_interface)
       , epsilon(p_epsilon)
@@ -87,9 +88,6 @@ namespace MeltPoolDG::Simulation::WallWetting
      * @paramp[in] p_vector_component Component of the normal vector to compute
      *
      * @paramp[in] p_contact_angle Imposed static contact angle value in radians
-     *
-     * @note Here, opposed to BottomBoundaryNormal, the vector component is fixed in the constructor
-     * to ensure that the component-wise AffineConstraints object holds the right values.
      */
     BottomBoundaryNormalPerComponent(const number p_vector_component, const number p_contact_angle)
       : dealii::Function<dim>()
@@ -114,49 +112,6 @@ namespace MeltPoolDG::Simulation::WallWetting
   private:
     /// Component of the normal vector currently evaluated
     const number vector_component;
-    /// Imposed static contact angle in radians
-    const number contact_angle;
-  };
-
-  /**
-   * @brief Function that computes the normal vector at bottom boundary considering wetting.
-   *
-   * @tparam dim Number of spatial dimensions of the simulation
-   * @tparam number Numeric type used for computations (e.g., float, double)
-   */
-  template <int dim, typename number>
-  class BottomBoundaryNormal : public dealii::Function<dim>
-  {
-  public:
-    /**
-     * @brief Function used to compute the normal vector at the bottom boundary considering wetting.
-     *
-     * @paramp[in] p_contact_angle Imposed static contact angle value in radians.
-     */
-    BottomBoundaryNormal(const number p_contact_angle)
-      : dealii::Function<dim>()
-      , contact_angle(p_contact_angle)
-    {}
-
-    /**
-     * @brief Evaluate the value of the normal vector @p component at a given point @p
-     * of the boundary.
-     *
-     * @param[in] p Evaluation point coordinates
-     * @param[in] component Component of the normal vector to compute
-     *
-     * @return Value of the normal vector component
-     */
-    double
-    value(const dealii::Point<dim> & /*p*/, const unsigned int component) const final
-    {
-      if (component == 0)
-        return std::sin(contact_angle);
-      else /*component == 1*/
-        return std::cos(contact_angle);
-    }
-
-  private:
     /// Imposed static contact angle in radians
     const number contact_angle;
   };
@@ -277,14 +232,14 @@ namespace MeltPoolDG::Simulation::WallWetting
     set_field_conditions() final
     {
       // Compute normal diffusion factor (we consider a static mesh)
-      number cell_size =
+      cell_size_min =
         dealii::GridTools::minimal_cell_diameter(*this->triangulation) / std::sqrt(dim);
       epsilon = this->parameters.reinit.compute_interface_thickness_parameter_epsilon(
-        cell_size / this->parameters.reinit.fe.get_n_subdivisions());
+        cell_size_min / this->parameters.reinit.fe.get_n_subdivisions());
 
       // Compute time-step and change data value
       /* dt = h^2 / [2 * (epsilon_n + epsilon_t)] * time_step_factor */
-      number time_step = time_step_factor * 0.5 * dealii::Utilities::fixed_power<2>(cell_size) /
+      number time_step = time_step_factor * 0.5 * dealii::Utilities::fixed_power<2>(cell_size_min) /
                          (epsilon * (1 + this->parameters.reinit.tangential_diffusion_factor));
       this->parameters.time_stepping.time_step_size = time_step;
 
@@ -294,13 +249,14 @@ namespace MeltPoolDG::Simulation::WallWetting
       this->parameters.normal_vec.filter_parameter = gamma;
 
       // Initial level-set condition
-      this->attach_initial_condition(
-        std::make_shared<InitialSignedDistance<dim, number>>(x_interface, epsilon), "level_set");
+      this->attach_initial_condition(std::make_shared<InitialLevelSet<dim, number>>(x_interface,
+                                                                                    epsilon),
+                                     "level_set");
     }
 
     /**
      * @brief Post-process the solution to extract the contact angle at the boundary for the current
-     * time-step and write them in an output file.
+     * time-step and write it in an output file.
      *
      * @param[in] generic_data_out GenericDataOut object containing solution information
      */
@@ -312,12 +268,9 @@ namespace MeltPoolDG::Simulation::WallWetting
       if (not this->parameters.output.do_user_defined_postprocessing)
         return;
 
-      // Face numbering according to the deal.II colorize flag
-      const auto [bottom_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
-        get_colorized_rectangle_boundary_ids<dim>();
-
+      // Compute contact angle
       number contact_angle;
-      this->compute_contact_angle_with_grad_phi(contact_angle, generic_data_out, bottom_bc);
+      compute_contact_angle_at_boundary(contact_angle, generic_data_out);
 
       if (dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
         {
@@ -355,185 +308,94 @@ namespace MeltPoolDG::Simulation::WallWetting
     }
 
     /**
-     * @brief Compute the contact angle at the contact point from level-set indicator gradients
-     * (grad_phi). To evaluate at grad_phi at interface, a linear interpolation with the grad_phi
-     * values of the two nearest quadrature points to the interface is done. Then, using the
-     * y-component of the gradient vector, the contact angle is evaluated: n_y = cos(contact_angle).
+     * @brief Computes the position-weighted contact angle at the bottom boundary.
+     *
+     * This function evaluates the contact angle between the fluid interface and the bottom wall of
+     * the domain. It traverses the interface using `LevelSet::Tools::evaluate_at_interface`,
+     * identifies points near the bottom boundary, and computes the contact angle
+     * using a scalar product between the wall normal and the gradient of the level set indicator.
+     *
+     * The resulting contact angle is weighted based on the vertical distance from the
+     * interface point to the bottom wall, so that points closer to the wall have a
+     * stronger influence on the result.
      *
      * @param[out] contact_angle Computed contact angle value in degrees
      *
      * @param[in] generic_data_out GenericDataOut object containing solution information
      */
     void
-    compute_contact_angle_with_grad_phi(number                            &contact_angle,
-                                        const GenericDataOut<dim, double> &generic_data_out,
-                                        const unsigned int                 bottom_bc) const
+    compute_contact_angle_at_boundary(number                            &contact_angle,
+                                      const GenericDataOut<dim, double> &generic_data_out) const
     {
-      // Compute contact angle at the boundary
-      dealii::FE_Q<dim>            fe(this->parameters.base.fe.degree);
-      dealii::MappingQGeneric<dim> mapping(this->parameters.base.fe.degree);
+      const auto &dof_handler      = generic_data_out.get_dof_handler("psi");
+      const auto &mapping          = generic_data_out.get_mapping();
+      const auto &level_set_vector = generic_data_out.get_vector("psi");
 
-      dealii::FEFaceValues<dim> phi_eval(
+      number contact_angle_sum = 0.0;
+      number total_weight      = 0.0;
+
+      const unsigned int n_subdivisions = 2;
+      const number       tolerance      = 3 * epsilon;
+      const number       contour_value  = 0.0;
+
+      // Bottom wall normal
+      dealii::Tensor<1, dim> wall_normal;
+      wall_normal[1] = 1.0; // unit normal in +y direction
+
+      // Tolerance identifying value at the bottom wall
+      const number tolerance_bottom_wall = 0.25 * cell_size_min;
+
+      // Evaluate the contact angle
+      LevelSet::Tools::evaluate_at_interface<dim, number>(
+        dof_handler,
         mapping,
-        fe,
-        dealii::Quadrature<dim - 1>(fe.get_unit_face_support_points()),
-        dealii::update_values | dealii::update_gradients | dealii::update_quadrature_points);
+        level_set_vector,
+        [&](const auto &cell,
+            const auto &interface_points,
+            const auto &reference_points,
+            const auto & /*JxW*/) {
+          const auto           &fe = dof_handler.get_fe();
+          dealii::FEValues<dim> fe_values(mapping,
+                                          fe,
+                                          dealii::Quadrature<dim>(reference_points),
+                                          dealii::update_gradients);
+          fe_values.reinit(cell);
+          std::vector<dealii::Tensor<1, dim>> grad_phi(reference_points.size());
+          fe_values.get_function_gradients(level_set_vector, grad_phi);
 
-      const unsigned int                          n_q_points = phi_eval.n_quadrature_points;
-      std::vector<number>                         phi(n_q_points);
-      std::vector<dealii::Tensor<1, dim, number>> grad_phi(n_q_points,
-                                                           dealii::Tensor<1, dim, number>());
-
-      // Set a tolerance to find points near the interface
-      number phi_tolerance = 3 * epsilon;
-
-      // Map containing local pair of level-set indicator absolute value and gradient
-      std::map<number, dealii::Tensor<1, dim, number>> phi_positive_and_grad_phi_local_map;
-      std::map<number, dealii::Tensor<1, dim, number>> phi_negative_and_grad_phi_local_map;
-      std::map<number, dealii::Tensor<1, dim, number>> phi_zero_and_grad_phi_local_map;
-
-      generic_data_out.get_vector("psi").update_ghost_values();
-
-      for (const auto &cell : generic_data_out.get_dof_handler("psi").active_cell_iterators())
-        {
-          if (cell->is_locally_owned())
+          for (unsigned int i = 0; i < reference_points.size(); ++i)
             {
-              unsigned int face_index = 0;
-              // Loop over all faces of the cell
-              for (const auto &face : cell->face_iterators())
+              // Extract real points and level-set indicator gradient values
+              const auto &point_i    = interface_points[i];
+              const auto &grad_phi_i = grad_phi[i];
+
+              // Check if point is at the bottom wall
+              const number distance_to_wall = std::abs(point_i[dim - 1] - y_min);
+              if (distance_to_wall < tolerance_bottom_wall)
                 {
-                  // Check if the face is at the boundary with the prescribed wetting boundary
-                  // condition
-                  if (face->at_boundary() and face->boundary_id() == bottom_bc)
-                    {
-                      // Update FEFaceValues with current face info
-                      phi_eval.reinit(cell, face_index);
+                  // Compute contact angle with normal vector and grad_phi scalar product
+                  const number cos_alpha = grad_phi_i * wall_normal / (grad_phi_i.norm() + 1e-16);
+                  const number alpha_rad = std::acos(cos_alpha);
 
-                      // Get phi values and gradients
-                      phi_eval.get_function_values(generic_data_out.get_vector("psi"), phi);
-                      phi_eval.get_function_gradients(generic_data_out.get_vector("psi"), grad_phi);
-
-                      // Loop over quadrature points on the face
-                      for (const auto &q : phi_eval.quadrature_point_indices())
-                        {
-                          number phi_q = phi[q];
-                          if (std::abs(phi_q) < phi_tolerance)
-                            {
-                              if (phi_q > 1e-16)
-                                phi_positive_and_grad_phi_local_map.insert(
-                                  std::make_pair(phi[q], grad_phi[q]));
-                              else if (phi_q < -1e-16)
-                                phi_negative_and_grad_phi_local_map.insert(
-                                  std::make_pair(phi[q], grad_phi[q]));
-                              else
-                                phi_zero_and_grad_phi_local_map.insert(
-                                  std::make_pair(phi[q], grad_phi[q]));
-                            }
-                        } // End loop over quadrature points
-                    }
-                  ++face_index;
-                } // End loop over faces
-            }
-        } // End loop over cells
-
-      generic_data_out.get_vector("psi").zero_out_ghost_values();
-
-      // Gather all local maps
-      auto phi_positive_and_grad_phi_gathered_maps =
-        dealii::Utilities::MPI::gather(this->mpi_communicator,
-                                       phi_positive_and_grad_phi_local_map,
-                                       0);
-      auto phi_negative_and_grad_phi_gathered_maps =
-        dealii::Utilities::MPI::gather(this->mpi_communicator,
-                                       phi_negative_and_grad_phi_local_map,
-                                       0);
-      auto phi_zero_and_grad_phi_gathered_maps =
-        dealii::Utilities::MPI::gather(this->mpi_communicator, phi_zero_and_grad_phi_local_map, 0);
-
-      if (dealii::Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
-        {
-          dealii::Tensor<1, dim, number> grad_phi_at_interface;
-
-          // Build global map
-          std::map<number, dealii::Tensor<1, dim, number>> phi_zero_and_grad_phi_global_map;
-
-          for (const auto &local_map : phi_zero_and_grad_phi_gathered_maps)
-            {
-              phi_zero_and_grad_phi_global_map.insert(local_map.begin(), local_map.end());
-            }
-          if (phi_zero_and_grad_phi_global_map.empty())
-            {
-              std::map<number, dealii::Tensor<1, dim, number>> phi_positive_and_grad_phi_global_map;
-              std::map<number, dealii::Tensor<1, dim, number>> phi_negative_and_grad_phi_global_map;
-              for (const auto &local_map : phi_positive_and_grad_phi_gathered_maps)
-                {
-                  phi_positive_and_grad_phi_global_map.insert(local_map.begin(), local_map.end());
-                }
-              for (const auto &local_map : phi_negative_and_grad_phi_gathered_maps)
-                {
-                  phi_negative_and_grad_phi_global_map.insert(local_map.begin(), local_map.end());
-                }
-
-              // Check that the map is not empty
-              AssertThrow(
-                phi_positive_and_grad_phi_global_map.size() > 0,
-                dealii::ExcMessage(
-                  "Not enough points were found to evaluate the contact angle at the interface. "
-                  "'phi_tolerance' is too restrictive."));
-              AssertThrow(
-                phi_negative_and_grad_phi_global_map.size() > 0,
-                dealii::ExcMessage(
-                  "Not enough points were found to evaluate the contact angle at the interface. "
-                  "'phi_tolerance' is too restrictive."));
-
-              // Recover the gradient at the closest points to the interface
-              number phi_plus  = std::numeric_limits<number>::max();  // Smallest positive phi
-              number phi_minus = -std::numeric_limits<number>::max(); // Largest negative phi
-              dealii::Tensor<1, dim, number> grad_phi_at_interface_plus;
-              dealii::Tensor<1, dim, number> grad_phi_at_interface_minus;
-
-              for (const auto &[phi, grad_phi] : phi_positive_and_grad_phi_global_map)
-                {
-                  if (phi < phi_plus)
-                    {
-                      phi_plus                   = phi;
-                      grad_phi_at_interface_plus = grad_phi;
-                    }
-                }
-              for (const auto &[phi, grad_phi] : phi_negative_and_grad_phi_global_map)
-                {
-                  if (phi > phi_minus)
-                    {
-                      phi_minus                   = phi;
-                      grad_phi_at_interface_minus = grad_phi;
-                    }
-                }
-
-              // Interpolate gradient value at the interface
-              number phi_interpolation = (-phi_minus) / (phi_plus - phi_minus);
-              grad_phi_at_interface    = (1 - phi_interpolation) * grad_phi_at_interface_minus +
-                                      phi_interpolation * grad_phi_at_interface_plus;
-            }
-          else
-            {
-              number phi_interface = std::numeric_limits<number>::max();
-              for (const auto &[phi, grad_phi] : phi_zero_and_grad_phi_global_map)
-                {
-                  if (phi < phi_interface)
-                    {
-                      phi_interface         = phi;
-                      grad_phi_at_interface = grad_phi;
-                    }
+                  // Sum weighted contributions, so that if multiple points are considered, the
+                  // closest to the bottom wall have more weight
+                  const number weight = (tolerance - distance_to_wall) / tolerance;
+                  contact_angle_sum += weight * alpha_rad * 180.0 / dealii::numbers::PI;
+                  total_weight += weight;
                 }
             }
+        },
+        contour_value,
+        n_subdivisions,
+        tolerance,
+        true /*use_mca=*/);
 
-          // Normalize vector
-          grad_phi_at_interface = grad_phi_at_interface / (grad_phi_at_interface.norm() + 1e-16);
-
-          // Recover contact angle from grad_phi [0 - 180] deg
-          contact_angle = std::acos(grad_phi_at_interface[1]) * 180 /
-                          dealii::numbers::PI; /* n_y = cos(contact_angle) */
-        }
+      // Sum results from all processes
+      const number global_contact_angle_sum =
+        dealii::Utilities::MPI::sum(contact_angle_sum, MPI_COMM_WORLD);
+      const number global_total_weight = dealii::Utilities::MPI::sum(total_weight, MPI_COMM_WORLD);
+      contact_angle = (global_total_weight > 0) ? global_contact_angle_sum / global_total_weight :
+                                                  std::numeric_limits<number>::quiet_NaN();
     }
 
   private:
@@ -562,6 +424,9 @@ namespace MeltPoolDG::Simulation::WallWetting
 
     /// Interface thickness parameter
     number epsilon;
+
+    /// Minimum cell size
+    number cell_size_min;
 
     /// Time-step scaling factor (for sensitivity analysis on the time-step)
     number time_step_factor = 1.0;

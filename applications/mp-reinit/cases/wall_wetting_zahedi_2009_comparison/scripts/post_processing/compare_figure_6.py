@@ -118,7 +118,7 @@ if __name__ == "__main__":
 
     plt.xscale("log")
     plt.xlim(1e-1, 1e3)
-    plt.ylim(1, 2.1)
+    plt.ylim(1, 2.2)
     ax1.tick_params(axis='x', which='both', top=True, direction='in')
     ax1.tick_params(axis='y', which='both', right=True, direction='in')
     ax1.set_axisbelow(False)

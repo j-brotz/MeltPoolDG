@@ -3,35 +3,34 @@
     "case name": "wall_wetting",
     "dimension": "2",
     "global refinements": "4",
-    "do print parameters": "false",
+    "verbosity level": "3",
     "fe": {
-      "degree": "2"
+      "degree": "1"
     }
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "0.01"
+    "end time": "END_TIME"
   },
   "output": {
+    "directory": "../../meltpooldg_results/CASE_NAME",
     "do user defined postprocessing": "true",
     "paraview": {
       "filename": "wall_wetting",
-      "enable": "false"
+      "enable": "true"
     }
   },
   "reinitialization": {
     "linear solver": {
-      "do matrix free": "true"
+      "do matrix free": "true",
+      "preconditioner type": "Diagonal"
     },
     "type": "olsson2007",
-    "fe": {
-      "degree": "2"
-    },
     "interface thickness parameter": {
       "type": "proportional_to_cell_size",
-      "val": "8"
+      "val": "EPSILON_N_FACTOR"
     },
-    "tangential diffusion factor": "3"
+    "tangential diffusion factor": "EPSILON_T_FACTOR"
   },
   "normal vector": {
     "compute normalized vector": "true",
@@ -41,8 +40,7 @@
     }
   },
   "simulation specific": {
-    "contact angle": "45",
-    "gamma factor": "2.5",
-    "output contact angle evolution": "false"
+    "contact angle": "STATIC_CONTACT_ANGLE",
+    "gamma factor": "GAMMA_FACTOR"
   }
 }

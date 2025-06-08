@@ -36,7 +36,7 @@ if __name__ == "__main__":
                         help="Output folder with simulation results for epsilon_tau = 48 epsilon_n")
     parser.add_argument("-f4", "--folder4", type=str, default="zahedi_wall_wetting_011/",
                         help="Output folder with simulation results for epsilon_tau = 192 epsilon_n")
-    parser.add_argument("-of", "--output_folders_path", type=str, default="../outputs/",
+    parser.add_argument("-of", "--output_folders_path", type=str, default="../../meltpooldg_results/",
                         help="Path to output folders")
     parser.add_argument("-zf", "--zahedi_results_folder_path", type=str, default="./zahedi_results_csv_files/",
                         help="Path to Zahedi et al. (2009) results folders")

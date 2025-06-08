@@ -9,13 +9,13 @@ USAGE="Usage: $0 [-p <path_to_folder_with_python_scripts>] \n
       \t[-r <path_to_file_with_simulation_results_summary>] \n
       \t[-cf <path_to_file_with_case_parameters>] \n
       \n
-       -p:  Path to folder with python scripts (default: ./post_processing/) \n
-       -z:  Path to folder with results from Zahedi et al. (2009) (default: ./post_processing/zahedi_results_csv_files/) \n
+       -p:  Path to folder with python scripts (default: ./) \n
+       -z:  Path to folder with results from Zahedi et al. (2009) (default: ../../zahedi_results/) \n
        -s:  List of python scripts to launch \n
        \t   (default: \"compare_figure_2.py, compare_figure_3.py, compare_figure_4.py, compare_figure_5a.py, compare_figure_5b.py, compare_figure_6.py\") \n
-       -f:  Path to folder where figures are stored (default: ./post_processing/comparison_figures/) \n
+       -f:  Path to folder where figures are stored (default: ../../meltpooldg_results/comparison_figures/) \n
        -r:  Path to CSV file with simulation results summary (no default value, it must be specified by the user) \n
-       -cf: Path to CSV file with case parameters (default: ./case_parameters.csv) \n
+       -cf: Path to CSV file with case parameters (default: ../pre_processing/case_parameters.csv) \n
        -h:  Show help \n"
 
 # Parse named arguments
@@ -65,11 +65,11 @@ if [[ -z "$simulation_results_file" ]]; then
 fi
 
 # Assign default values if not set
-post_processing_folder="${post_processing_folder:-./post_processing/}"
-zahedi_folder="${zahedi_folder:-./post_processing/zahedi_results_csv_files/}"
+post_processing_folder="${post_processing_folder:-./}"
+zahedi_folder="${zahedi_folder:-../../zahedi_results/}"
 python_scripts_list="${python_scripts_list:-"compare_figure_2.py, compare_figure_3.py, compare_figure_4.py, compare_figure_5a.py, compare_figure_5b.py, compare_figure_6.py"}"
-figures_folder="${figures_folder:-./post_processing/comparison_figures/}"
-cases_csv_file="${cases_csv_file:-./case_parameters.csv}"
+figures_folder="${figures_folder:-../../meltpooldg_results/comparison_figures/}"
+cases_csv_file="${cases_csv_file:-../pre_processing/case_parameters.csv}"
 
 # Check if the folders and files exist
 if [ ! -d "$post_processing_folder" ]; then
@@ -127,42 +127,42 @@ do
   case "$python_script" in
     "compare_figure_2.py")
       echo " Running figure 2 comparison"
-      python3 compare_figure_2.py -zf ../$zahedi_folder -ff ../$figures_folder
-      python3 compare_figure_2.py -zf ../$zahedi_folder -ff ../$figures_folder -c True -n True # Closeup with interface normal vectors
+      python3 compare_figure_2.py -zf ./$zahedi_folder -ff ./$figures_folder
+      python3 compare_figure_2.py -zf ./$zahedi_folder -ff ./$figures_folder -c True -n True # Closeup with interface normal vectors
       ;;
     "compare_figure_3.py")
       echo " Running figure 3 comparison"
-      python3 compare_figure_3.py -zf ../$zahedi_folder -ff ../$figures_folder
+      python3 compare_figure_3.py -zf ./$zahedi_folder -ff ./$figures_folder
       ;;
     "compare_figure_4.py")
       echo " Running figure 4 comparison"
-      python3 compare_figure_4.py -zf ../$zahedi_folder -ff ../$figures_folder
+      python3 compare_figure_4.py -zf ./$zahedi_folder -ff ./$figures_folder
       ;;
     "compare_figure_5a.py")
       echo " Running figure 5a comparison"
       # 45 degree contact angle
-      python3 compare_figure_5a.py -zf ../$zahedi_folder -ff ../$figures_folder
+      python3 compare_figure_5a.py -zf ./$zahedi_folder -ff ./$figures_folder
       # 25 degree contact angle
       python3 compare_figure_5a.py -f1 zahedi_wall_wetting_014/ -f2 zahedi_wall_wetting_016/ \
       -f3 zahedi_wall_wetting_018/ -f4 zahedi_wall_wetting_019/ -f5 zahedi_wall_wetting_020/\
-      -zf ../$zahedi_folder -ff ../$figures_folder \
+      -zf ./$zahedi_folder -ff ./$figures_folder \
       -fig zahedi_figure5a_25deg.png -nz True
       ;;
     "compare_figure_5b.py")
       echo " Running figure 5b comparison"
       # 45 degree static contact angle
-      python3 compare_figure_5b.py -zf ../$zahedi_folder -ff ../$figures_folder
-      python3 compare_figure_5b.py -zf ../$zahedi_folder -ff ../$figures_folder -n True # With interface normal vectors
+      python3 compare_figure_5b.py -zf ./$zahedi_folder -ff ./$figures_folder
+      python3 compare_figure_5b.py -zf ./$zahedi_folder -ff ./$figures_folder -n True # With interface normal vectors
       # 25 degree static contact angle
       python3 compare_figure_5b.py -f1 zahedi_wall_wetting_014/ -f2 zahedi_wall_wetting_016/ \
       -f3 zahedi_wall_wetting_018/ -f4 zahedi_wall_wetting_019/ -f5 zahedi_wall_wetting_020/ \
-      -zf ../$zahedi_folder -ff ../$figures_folder \
+      -zf ./$zahedi_folder -ff ./$figures_folder \
       -fig zahedi_figure5b_25deg.png -nz True -n True
       ;;
     "compare_figure_6.py")
       echo " Running figure 6 comparison"
-      python3 compare_figure_6.py -zf ../$zahedi_folder -ff ../$figures_folder \
-      -r ../$simulation_results_file -c ../$cases_csv_file
+      python3 compare_figure_6.py -zf ./$zahedi_folder -ff ./$figures_folder \
+      -r ./$simulation_results_file -c ./$cases_csv_file
       ;;
     *)
       echo " Unknown script: $1"

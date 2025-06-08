@@ -5,9 +5,9 @@
 USAGE="Usage: $0 [-e path_to_mp-reinit-executable] [-np <number of processors to run simulations on>] \n
       \t[-f <path_to_parameter_files_folder>] [-c <\"sequence_of_case_numbers\">] \n
       \n
-       -e:  Path to mp-reinit executable (default: ../../../../../build_release/applications/mp-reinit/mp-reinit) \n
+       -e:  Path to mp-reinit executable (default: ../../../../../../../build_release/applications/mp-reinit/mp-reinit) \n
        -np: Number of processes on which the simulations are run (default: 20) \n
-       -f:  Path to parameter files folder (default: ./parameter_files/) \n
+       -f:  Path to parameter files folder (default: ../../parameter_files/) \n
        -c:  Case numbers (default: \"0-20\") \n
        -h:  Show help \n
        \n
@@ -48,8 +48,8 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 # Assign default values if not set
-mp_reinit_executable_path="${mp_reinit_executable_path:-../../../../../build_release/applications/mp-reinit/mp-reinit}"
-parameter_files_folder="${parameter_files_folder:-./parameter_files/}"
+mp_reinit_executable_path="${mp_reinit_executable_path:-../../../../../../../build_release/applications/mp-reinit/mp-reinit}"
+parameter_files_folder="${parameter_files_folder:-../../parameter_files/}"
 number_of_processors="${number_of_processors:-20}"
 case_sequence="${case_sequence:-"0-20"}"
 
@@ -88,18 +88,20 @@ expand_case_numbers() {
 IFS=',' read -ra case_numbers_array <<< "$(expand_case_numbers "$case_sequence")"
 
 # Check if the outputs folder exits, and if not create it
-if [ ! -d "./outputs" ]; then
-  mkdir -p "./outputs"
+results_folder="../../meltpooldg_results"
+if [ ! -d "$results_folder" ]; then
+  mkdir -p "$results_folder"
 fi
 
 # Check if the logs folder exits, and if not create it
-if [ ! -d "./logs" ]; then
-  mkdir -p "./logs"
+logs_folder="${results_folder}/logs"
+if [ ! -d "$logs_folder" ]; then
+  mkdir -p "$logs_folder"
 fi
 
 # Create a summary file
 timestamp=$(date +"%Y%m%d_%H%M%S")
-output_csv="contact_angles_summary_${timestamp}.csv"
+output_csv="${results_folder}/contact_angles_summary_${timestamp}.csv"
 echo "case_number,dt_value,static_contact_angle,computed_contact_angle" > "$output_csv"
 
 # Case processing function
@@ -109,12 +111,11 @@ process_case() {
 
   case_name="${parameter_file%.json}"
   case_number=$(echo "$case_name" | grep -oP '\d{3}$')
-  log_file="./logs/${case_name}.txt"
+  log_file="${logs_folder}/${case_name}.txt"
   echo "Logging simulation into: $log_file"
 
-  mpirun -np $number_of_processors $mp_reinit_executable_path "$parameter_files_folder/$parameter_file" < /dev/null 2>&1 \
-    | grep -v -E '^(|.*MIT-MAGIC-COOKIE.*|.*Authorization required.*)$' \
-    | tee "$log_file" > /dev/null
+  # Run simulation and log into log file
+  mpirun -np $number_of_processors $mp_reinit_executable_path "$parameter_files_folder/$parameter_file" > "$log_file"
 
   log_tail=$(tail -n 25 "$log_file")
   dt_value=$(echo "$log_tail" | grep -oP 'dt = \K[0-9.e+-]+' | head -n 1)

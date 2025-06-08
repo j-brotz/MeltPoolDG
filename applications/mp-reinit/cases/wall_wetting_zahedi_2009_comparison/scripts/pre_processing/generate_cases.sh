@@ -9,7 +9,7 @@ USAGE="Usage: $0 [-t <path_to_template_parameter_file>] \n
       \n
        -t: Path to template parameter file (default: ./zahedi_wall_wetting.tpl) \n
        -p: Path to CSV file with case parameters (default: ./case_parameters.csv) \n
-       -f:  Path to parameter files folder (default: ./parameter_files/) \n
+       -f:  Path to parameter files folder (default: ../../parameter_files/) \n
        -c: Case numbers (default: \"0-20\") \n
        -h: Show help \n
        \n
@@ -52,7 +52,7 @@ done
 # Assign default values if not set
 template_parameter_file="${template_parameter_file:-./zahedi_wall_wetting.tpl}"
 cases_csv_file="${cases_csv_file:-./case_parameters.csv}"
-parameter_files_folder="${parameter_files_folder:-./parameter_files/}"
+parameter_files_folder="${parameter_files_folder:-../../parameter_files/}"
 case_sequence="${case_sequence:-"0-20"}"
 
 # Check if the file exists

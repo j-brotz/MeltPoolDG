@@ -1366,13 +1366,18 @@ namespace MeltPoolDG
     reinit_no_solid_constraints_dirichlet.copy_from(reinit_constraints_dirichlet);
 
     // Normal vector constraints
+    if (not simulation_case->parameters.ls.normal_vec.linear_solver.do_matrix_free)
+      AssertThrow(
+        simulation_case->get_boundary_condition("nx", "normal_vector").empty(),
+        dealii::ExcMessage(
+          "The wetting boundary condition is not implemented for the matrix-based implementation of the normal vector filtering equation."));
     MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim, number>(
       *scratch_data,
       simulation_case->get_boundary_condition("nx", "normal_vector"),
       simulation_case->get_periodic_bc(),
       normal_dirichlet_x_dof_idx,
       normal_no_bc_dof_idx);
-    if constexpr (dim == 2)
+    if constexpr (dim >= 2)
       {
         MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
                                                                                            number>(
