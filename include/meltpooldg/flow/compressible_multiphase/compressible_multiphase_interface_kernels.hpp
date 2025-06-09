@@ -134,12 +134,21 @@ namespace MeltPoolDG::Multiphase
 
     // compute stress tensor (pressure and viscous contributions) and convert to type
     // dealii::VectorizedArray<number>
+    const auto grad_vel_liquid =
+      Flow::calculate_grad_velocity<dim, number>(u_liquid, grad_u_liquid);
+    const auto grad_vel_gas = Flow::calculate_grad_velocity<dim, number>(u_gas, grad_u_gas);
+
+    const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> viscous_stress_tensor_liquid =
+      viscous_terms_liquid.calculate_viscous_stress_tensor(grad_vel_liquid);
+    const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> viscous_stress_tensor_gas =
+      viscous_terms_gas.calculate_viscous_stress_tensor(grad_vel_gas);
+
     const dealii::VectorizedArray<number> stress_tensor_liquid =
       multiphase_scratch_data.material_liquid.eos_utils->calculate_stress_tensor(
-        u_liquid, grad_u_liquid, viscous_terms_liquid)[0][0];
+        u_liquid, viscous_stress_tensor_liquid)[0][0];
     const dealii::VectorizedArray<number> stress_tensor_gas =
       multiphase_scratch_data.material_gas.eos_utils->calculate_stress_tensor(
-        u_gas, grad_u_gas, viscous_terms_gas)[0][0];
+        u_gas, viscous_stress_tensor_gas)[0][0];
 
     const dealii::VectorizedArray<number> jump_momentum_term_liquid =
       u_liquid[Idx::momentum_x] * u_liquid[Idx::momentum_x] / u_liquid[Idx::density];

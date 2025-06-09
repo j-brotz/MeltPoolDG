@@ -5,14 +5,7 @@
 
 #pragma once
 
-#include <meltpooldg/flow/compressible_flow_utils.hpp>
-
-// Forward declaration due to circular dependency
-namespace MeltPoolDG::Flow
-{
-  template <int dim, typename number>
-  struct CompressibleFlowViscousKernels;
-}
+#include <meltpooldg/flow/compressible_flow_types.hpp>
 
 namespace MeltPoolDG::Flow::EOS
 {
@@ -77,8 +70,7 @@ namespace MeltPoolDG::Flow::EOS
      * sigma_ij = tau_ij - p * delta_ij
      *
      * @param conserved_variables Current values of the conserved variables.
-     * @param grad_conserved_variables Current gradient of the conserved variables.
-     * @param viscous_terms Collection of viscous term computations for the compressible Navier-Stokes
+     * @param viscous_stress_tensor Given viscous tress tensor.
      * equations.
      *
      * @return Stress tensor resulting from the values and gradients of the conserved variables.
@@ -87,15 +79,8 @@ namespace MeltPoolDG::Flow::EOS
       dealii::Tensor<2, dim, dealii::VectorizedArray<number>>
       calculate_stress_tensor(
         const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
-        const CompressibleFlowTypes::ConservedVariablesGradType<dim, number>
-                                                          &grad_conserved_variables,
-        const CompressibleFlowViscousKernels<dim, number> &viscous_terms)
+        const dealii::Tensor<2, dim, dealii::VectorizedArray<number>>    &viscous_stress_tensor)
     {
-      const auto grad_vel =
-        calculate_grad_velocity<dim, number>(conserved_variables, grad_conserved_variables);
-
-      const auto viscous_stress_tensor = viscous_terms.calculate_viscous_stress_tensor(grad_vel);
-
       const auto pressure_tensor =
         calculate_thermodynamic_pressure(conserved_variables) *
         dealii::unit_symmetric_tensor<dim, dealii::VectorizedArray<number>>();

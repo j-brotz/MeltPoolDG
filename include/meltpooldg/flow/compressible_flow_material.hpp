@@ -5,28 +5,16 @@
 
 #pragma once
 
+#include <meltpooldg/flow/compressible_flow_eos_utils_base.hpp>
+#include <meltpooldg/flow/compressible_flow_ideal_gas_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_material_data.hpp>
+#include <meltpooldg/flow/compressible_flow_noble_abel_stiffened_gas_utils.hpp>
+#include <meltpooldg/flow/compressible_flow_stiffened_gas_utils.hpp>
 
 #include <memory>
 
 namespace MeltPoolDG::Flow
 {
-  // Forward declarations to resolve circular dependencies
-  namespace EOS
-  {
-    template <int dim, typename number>
-    class EquationOfStateUtils;
-
-    template <int dim, typename number>
-    class IdealGas;
-
-    template <int dim, typename number>
-    class StiffenedGas;
-
-    template <int dim, typename number>
-    class NobleAbelStiffenedGas;
-  } // namespace EOS
-
   template <unsigned int dim, typename number>
   class CompressibleFlowMaterial
   {

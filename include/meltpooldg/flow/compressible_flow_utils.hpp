@@ -14,30 +14,12 @@
 #include <meltpooldg/flow/compressible_flow_cut_data.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_material.hpp>
+#include <meltpooldg/flow/compressible_flow_types.hpp>
 #include <meltpooldg/flow/compressible_multiphase/compressible_flow_phase_coupling_data.hpp>
 #include <meltpooldg/time_integration/solution_history.hpp>
 
 namespace MeltPoolDG::Flow
 {
-  /**
-   * Struct providing type aliases that might be useful in the compressible flow implementations.
-   */
-  struct CompressibleFlowTypes
-  {
-    /**
-     * Type of the conserved variables []
-     */
-    template <int dim, typename number>
-    using ConservedVariablesType = dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>>;
-
-    /**
-     * Type of the gradient of the conserved variables []
-     */
-    template <int dim, typename number>
-    using ConservedVariablesGradType =
-      dealii::Tensor<1, dim + 2, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
-  };
-
   /**
    * Index set for the components of the compressible Navier-Stokes equations.
    */
