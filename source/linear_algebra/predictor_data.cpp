@@ -1,31 +1,55 @@
 #include <meltpooldg/linear_algebra/predictor_data.hpp>
+//
+#include <deal.II/base/exceptions.h>
 
 namespace MeltPoolDG
 {
-  template <typename number>
   void
-  PredictorData<number>::add_parameters(dealii::ParameterHandler &prm)
+  PredictorData::add_parameters(dealii::ParameterHandler &prm)
   {
     prm.enter_subsection("predictor");
     {
-      prm.add_parameter("type", type, "Choose a predictor type.");
+      prm.add_parameter(
+        "type",
+        type,
+        "Choose a predictor type: "
+        "none: use old value as initial guess; "
+        "zero: se zeros as initial guess; "
+        "linear_extrapolation: calculate the predictor by a linear combination from the two old solution vectors; "
+        "least_squares_projection: least squares projection (WIP)");
+
       prm.add_parameter("n old solutions",
                         n_old_solution_vectors,
                         "Choose the number of old solution vectors considered."
-                        "This parameter is only relevant for least squares projection.");
+                        "This parameter is only relevant for least squares projection."
+                        "For all other predictors, this parameter will be set appropriately.");
     }
     prm.leave_subsection();
   }
 
-  template <typename number>
   void
-  PredictorData<number>::post()
+  PredictorData::post()
   {
-    if (type == PredictorType::none)
-      n_old_solution_vectors = 1;
-    else if (type == PredictorType::linear_extrapolation)
-      n_old_solution_vectors = 2;
+    switch (type)
+      {
+        case PredictorType::none:
+          case PredictorType::zero: {
+            n_old_solution_vectors = 1;
+            break;
+          }
+          case PredictorType::linear_extrapolation: {
+            n_old_solution_vectors = 2;
+          }
+        case PredictorType::least_squares_projection:
+        default:
+          break;
+      }
   }
 
-  template struct PredictorData<double>;
+  void
+  PredictorData::check_input_parameters() const
+  {
+    AssertThrow(n_old_solution_vectors > 0,
+                dealii::ExcMessage("The solution history cannot have a length of zero."));
+  }
 } // namespace MeltPoolDG

@@ -60,18 +60,18 @@ namespace MeltPoolDG::LevelSet
   void
   AdvectionDiffusionData<number>::check_input_parameters() const
   {
-    AssertThrow(linear_solver.do_matrix_free || implementation == "meltpooldg",
+    AssertThrow(linear_solver.do_matrix_free or implementation == "meltpooldg",
                 dealii::ExcNotImplemented());
 
-    AssertThrow(!enable_time_dependent_bc || implementation == "meltpooldg",
+    AssertThrow(not enable_time_dependent_bc or implementation == "meltpooldg",
                 dealii::ExcNotImplemented());
 
-    AssertThrow((conv_stab.type == ConvectionStabilizationType::SUPG &&
-                 linear_solver.do_matrix_free && implementation == "meltpooldg") ||
+    AssertThrow((conv_stab.type == ConvectionStabilizationType::SUPG and
+                 linear_solver.do_matrix_free and implementation == "meltpooldg") or
                   conv_stab.type == ConvectionStabilizationType::none,
                 dealii::ExcNotImplemented());
     AssertThrow(
-      predictor.type != PredictorType::least_squares_projection || linear_solver.do_matrix_free,
+      predictor.type != PredictorType::least_squares_projection or linear_solver.do_matrix_free,
       dealii::ExcMessage(
         "For matrix-based advection-diffusion solver least squares projection is not supported."));
 
@@ -80,11 +80,13 @@ namespace MeltPoolDG::LevelSet
                   "Advection diffusion operator: diffusivity is smaller than zero!"));
 
     // Cross check for DG since for DG only matrix free is supported
-    if ((fe.type == FiniteElementType::FE_DGQ) && (!linear_solver.do_matrix_free))
+    if (fe.type == FiniteElementType::FE_DGQ and not linear_solver.do_matrix_free)
       {
         AssertThrow(false,
                     dealii::ExcMessage("For the DG element only matrix free is implemented."));
       }
+
+    predictor.check_input_parameters();
   }
 
   template struct AdvectionDiffusionData<double>;

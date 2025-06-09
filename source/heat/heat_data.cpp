@@ -113,6 +113,7 @@ namespace MeltPoolDG::Heat
   HeatData<number>::check_input_parameters(const FiniteElementData &base_fe_data) const
   {
     fe.check_input_parameters(base_fe_data);
+    predictor.check_input_parameters();
   }
 
   template struct HeatData<double>;

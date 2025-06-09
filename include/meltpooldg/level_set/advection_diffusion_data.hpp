@@ -37,7 +37,7 @@ namespace MeltPoolDG::LevelSet
       number                      coefficient = -1.0;
     } conv_stab;
 
-    PredictorData<number>    predictor;
+    PredictorData            predictor;
     LinearSolverData<number> linear_solver;
 
     void

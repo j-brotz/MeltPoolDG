@@ -9,25 +9,30 @@ namespace MeltPoolDG
   // choose the particular predictor type for the nonlinear/linear solver
   BETTER_ENUM(PredictorType,
               char,
-              // no predictor specified; use old value as initial guess
+              // use old value as initial guess
               none,
+              // use zeros as initial guess
+              zero,
               // calculate the predictor by a linear combination from the two old solution vectors
               linear_extrapolation,
               // least squares projection (WIP)
               least_squares_projection)
 
 
-  template <typename number = double>
   struct PredictorData
   {
-  public:
-    PredictorType type                   = PredictorType::none;
-    unsigned int  n_old_solution_vectors = 2;
+    PredictorType type = PredictorType::none;
+
+    unsigned int n_old_solution_vectors =
+      2; // only relevant for least_squares_projection, otherwise set appropriately
 
     void
     add_parameters(dealii::ParameterHandler &prm);
 
     void
     post();
+
+    void
+    check_input_parameters() const;
   };
 } // namespace MeltPoolDG

@@ -82,7 +82,7 @@ namespace MeltPoolDG::LevelSet
 
     std::string              modeltype      = "olsson2007";
     std::string              implementation = "meltpooldg";
-    PredictorData<number>    predictor;
+    PredictorData            predictor;
     LinearSolverData<number> linear_solver;
 
     void
