@@ -4,6 +4,8 @@
  */
 #pragma once
 
+#include <meltpooldg/flow/compressible_flow_material_data.hpp>
+
 namespace MeltPoolDG::Flow::EOS
 {
   template <int dim, typename number>
