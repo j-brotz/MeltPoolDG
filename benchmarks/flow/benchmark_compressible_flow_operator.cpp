@@ -17,6 +17,7 @@
 
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
+#include <meltpooldg/flow/compressible_flow_material_data.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_explicit.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_implicit.hpp>
@@ -116,12 +117,13 @@ namespace
         set_initial_and_boundary_conditions();
       }
 
-      dealii::parallel::distributed::Triangulation<dim> triangulation;
-      dealii::DoFHandler<dim>                           dof_handler;
-      MeltPoolDG::FiniteElementData                     fe_data;
-      MeltPoolDG::Flow::CompressibleFlowData<number>    flow_data;
-      dealii::AffineConstraints<number>                 affine_constraints;
-      MeltPoolDG::ScratchData<dim, dim, number>         scratch_data;
+      dealii::parallel::distributed::Triangulation<dim>            triangulation;
+      dealii::DoFHandler<dim>                                      dof_handler;
+      MeltPoolDG::FiniteElementData                                fe_data;
+      MeltPoolDG::Flow::CompressibleFlowData<number>               flow_data;
+      MeltPoolDG::Flow::CompressibleFluidMaterialPhaseData<number> material;
+      dealii::AffineConstraints<number>                            affine_constraints;
+      MeltPoolDG::ScratchData<dim, dim, number>                    scratch_data;
 
       std::unique_ptr<MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number>> flow_scratch_data;
 
@@ -155,10 +157,8 @@ namespace
         scratch_data.build(true, true, false, false);
 
         flow_scratch_data =
-          std::make_unique<MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number>>(flow_data,
-                                                                                       scratch_data,
-                                                                                       dof_index,
-                                                                                       quad_index);
+          std::make_unique<MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number>>(
+            flow_data, material, scratch_data, dof_index, quad_index);
         flow_scratch_data->reinit(2);
       }
 

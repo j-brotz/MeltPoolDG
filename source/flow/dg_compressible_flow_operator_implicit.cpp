@@ -14,8 +14,8 @@ namespace MeltPoolDG::Flow
   DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::DGCompressibleFlowOperatorImplicit(
     CompressibleFlowScratchData<dim, number> &flow_scratch_data)
     : flow_scratch_data(flow_scratch_data)
-    , convective_terms(flow_scratch_data.flow_data)
-    , viscous_terms(flow_scratch_data.flow_data)
+    , convective_terms(flow_scratch_data.flow_data, flow_scratch_data.material)
+    , viscous_terms(flow_scratch_data.material)
   {}
 
   template <int dim, typename number, bool is_viscous>
@@ -243,7 +243,7 @@ namespace MeltPoolDG::Flow
                                                                        nullptr,
                                                    convective_terms,
                                                    viscous_terms,
-                                                   flow_scratch_data);
+                                                   flow_scratch_data.body_force);
             grad_q *= residual_rhs_scaling_factor;
 
             value_q *= residual_rhs_scaling_factor;
@@ -351,7 +351,8 @@ namespace MeltPoolDG::Flow
                                                             interior_penalty_parameter,
                                                             convective_terms,
                                                             viscous_terms,
-                                                            flow_scratch_data);
+                                                            flow_scratch_data.material,
+                                                            flow_scratch_data.boundary_conditions);
 
             phi.submit_value(residual_rhs_scaling_factor * flux_m, q);
             phi.submit_gradient(residual_rhs_scaling_factor * grad_flux_m, q);
@@ -636,7 +637,7 @@ namespace MeltPoolDG::Flow
         delta_w_m,
         grad_w_m,
         grad_delta_w_m,
-        flow_scratch_data.flow_data.material.gas.gamma);
+        flow_scratch_data.material.data.gamma);
 
     ConservedVariablesGradType numerical_flux =
       convective_terms.calculate_jacobian_convective_numerical_flux({w_m, w_p},

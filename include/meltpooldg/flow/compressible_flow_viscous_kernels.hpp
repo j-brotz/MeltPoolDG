@@ -10,7 +10,10 @@
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/flow/compressible_flow_data.hpp>
-#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
+#include <meltpooldg/flow/compressible_flow_eos_utils_base.hpp>
+#include <meltpooldg/flow/compressible_flow_ideal_gas_utils.hpp>
+#include <meltpooldg/flow/compressible_flow_noble_abel_stiffened_gas_utils.hpp>
+#include <meltpooldg/flow/compressible_flow_stiffened_gas_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 
@@ -19,14 +22,15 @@
 
 namespace MeltPoolDG::Flow
 {
-  template <int dim, typename number, bool is_gas_phase = true>
+  template <int dim, typename number>
   struct CompressibleFlowViscousKernels
   {
     using ConservedVariablesType = CompressibleFlowTypes::ConservedVariablesType<dim, number>;
     using ConservedVariablesGradType =
       CompressibleFlowTypes::ConservedVariablesGradType<dim, number>;
 
-    explicit CompressibleFlowViscousKernels(const CompressibleFlowData<number> &flow_data);
+    explicit CompressibleFlowViscousKernels(
+      const CompressibleFlowMaterial<dim, number> &material_in);
     /**
      * Calculate the viscous stress tensor τ given by τ = μ*(grad(u)+grad(u)^T-2/3*(grad*u)*I),
      * where μ is the dynamic viscosity and I representing the identity matrix.
@@ -147,7 +151,7 @@ namespace MeltPoolDG::Flow
       dealii::VectorizedArray<number>                                  penalty_parameter) const;
 
   private:
-    const CompressibleFlowData<number> &flow_data;
+    const CompressibleFlowMaterial<dim, number> &material;
 
     // precomputed constant
     number lambda_div_c;
@@ -156,42 +160,38 @@ namespace MeltPoolDG::Flow
   /********************************************************************************************
    * Inlined function definitions
    * *************************************************************************************+****/
-  template <int dim, typename number, bool is_gas_phase>
-  CompressibleFlowViscousKernels<dim, number, is_gas_phase>::CompressibleFlowViscousKernels(
-    const CompressibleFlowData<number> &flow_data)
-    : flow_data(flow_data)
+  template <int dim, typename number>
+  CompressibleFlowViscousKernels<dim, number>::CompressibleFlowViscousKernels(
+    const CompressibleFlowMaterial<dim, number> &material_in)
+    : material(material_in)
   {
-    lambda_div_c = flow_data.material.gas.thermal_conductivity /
-                   flow_data.material.gas.specific_gas_constant *
-                   (flow_data.material.gas.gamma - 1.0);
+    lambda_div_c = material.data.thermal_conductivity / material.data.specific_gas_constant *
+                   (material.data.gamma - 1.0);
   }
 
-  template <int dim, typename number, bool is_gas_phase>
+  template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     dealii::Tensor<2, dim, dealii::VectorizedArray<number>>
-    CompressibleFlowViscousKernels<dim, number, is_gas_phase>::calculate_viscous_stress_tensor(
+    CompressibleFlowViscousKernels<dim, number>::calculate_viscous_stress_tensor(
       const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> &grad_u) const
   {
-    const number dynamic_viscosity = is_gas_phase ? flow_data.material.gas.dynamic_viscosity :
-                                                    flow_data.material.liquid.dynamic_viscosity;
-
     const dealii::VectorizedArray<number> div_u = 2. / 3. * dealii::trace(grad_u);
 
     dealii::Tensor<2, dim, dealii::VectorizedArray<number>> out;
     for (unsigned int d = 0; d < dim; ++d)
       {
         for (unsigned int e = 0; e < dim; ++e)
-          out[d][e] = dynamic_viscosity * (grad_u[d][e] + grad_u[e][d]);
-        out[d][d] -= dynamic_viscosity * div_u;
+          out[d][e] = material.data.dynamic_viscosity * (grad_u[d][e] + grad_u[e][d]);
+        out[d][d] -= material.data.dynamic_viscosity * div_u;
       }
 
     return out;
   }
 
-  template <int dim, typename number, bool is_gas_phase>
+  template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     auto
-    CompressibleFlowViscousKernels<dim, number, is_gas_phase>::calculate_viscous_flux(
+    CompressibleFlowViscousKernels<dim, number>::calculate_viscous_flux(
       const ConservedVariablesType     &conserved_variables,
       const ConservedVariablesGradType &grad_conserved_variables) const
     -> ConservedVariablesGradType
@@ -204,13 +204,9 @@ namespace MeltPoolDG::Flow
     const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> viscous_stress =
       calculate_viscous_stress_tensor(grad_u);
 
-    const number thermal_conductivity = is_gas_phase ?
-                                          flow_data.material.gas.thermal_conductivity :
-                                          flow_data.material.liquid.thermal_conductivity;
-
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> neg_heat_flux =
-      thermal_conductivity * EOS::calculate_grad_T<dim, number, is_gas_phase>(
-                               conserved_variables, grad_conserved_variables, flow_data);
+      material.data.thermal_conductivity *
+      material.eos_utils->calculate_grad_T(conserved_variables, grad_conserved_variables);
 
     ConservedVariablesGradType flux;
     for (unsigned int d = 0; d < dim; ++d)
@@ -232,10 +228,10 @@ namespace MeltPoolDG::Flow
     return flux;
   }
 
-  template <int dim, typename number, bool is_gas_phase>
+  template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     auto
-    CompressibleFlowViscousKernels<dim, number, is_gas_phase>::calculate_viscous_numerical_flux(
+    CompressibleFlowViscousKernels<dim, number>::calculate_viscous_numerical_flux(
       const ConservedVariablesType                                  &u_m,
       const ConservedVariablesType                                  &u_p,
       const ConservedVariablesGradType                              &grad_u_m,
@@ -247,23 +243,18 @@ namespace MeltPoolDG::Flow
 
     const auto flux_p = calculate_viscous_flux(u_p, grad_u_p);
 
-    const number dynamic_viscosity = is_gas_phase ? flow_data.material.gas.dynamic_viscosity :
-                                                    flow_data.material.liquid.dynamic_viscosity;
-    const number reference_density = is_gas_phase ? flow_data.material.gas.reference_density :
-                                                    flow_data.material.liquid.reference_density;
-
     return contract_average_tensor_with_vector<dim + 2, dim, number>(flux_m, flux_p, normal) -
-           penalty_parameter * dynamic_viscosity / reference_density * (u_m - u_p);
+           penalty_parameter * material.data.dynamic_viscosity / material.data.reference_density *
+             (u_m - u_p);
   }
 
-  template <int dim, typename number, bool is_gas_phase>
+  template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     auto
-    CompressibleFlowViscousKernels<dim, number, is_gas_phase>::
-      calculate_viscous_numerical_flux_gradient(
-        const ConservedVariablesType                                  &u_m,
-        const ConservedVariablesType                                  &u_p,
-        const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const
+    CompressibleFlowViscousKernels<dim, number>::calculate_viscous_numerical_flux_gradient(
+      const ConservedVariablesType                                  &u_m,
+      const ConservedVariablesType                                  &u_p,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const
     -> std::pair<ConservedVariablesGradType, ConservedVariablesGradType>
   {
     ConservedVariablesGradType jump_u;
@@ -278,17 +269,16 @@ namespace MeltPoolDG::Flow
     return std::make_pair(flux_m, flux_p);
   }
 
-  template <int dim, typename number, bool is_gas_phase>
+  template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     auto
-    CompressibleFlowViscousKernels<dim, number, is_gas_phase>::
-      calculate_jacobian_viscous_numerical_flux(
-        const std::pair<ConservedVariablesType, ConservedVariablesType>         &w_q,
-        const std::pair<ConservedVariablesGradType, ConservedVariablesGradType> &grad_w_q,
-        const std::pair<ConservedVariablesType, ConservedVariablesType>         &delta_w_q,
-        const std::pair<ConservedVariablesGradType, ConservedVariablesGradType> &grad_delta_w_q,
-        const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>           &normal,
-        dealii::VectorizedArray<number> penalty_parameter) const -> ConservedVariablesGradType
+    CompressibleFlowViscousKernels<dim, number>::calculate_jacobian_viscous_numerical_flux(
+      const std::pair<ConservedVariablesType, ConservedVariablesType>         &w_q,
+      const std::pair<ConservedVariablesGradType, ConservedVariablesGradType> &grad_w_q,
+      const std::pair<ConservedVariablesType, ConservedVariablesType>         &delta_w_q,
+      const std::pair<ConservedVariablesGradType, ConservedVariablesGradType> &grad_delta_w_q,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>           &normal,
+      dealii::VectorizedArray<number> penalty_parameter) const -> ConservedVariablesGradType
   {
     ConservedVariablesGradType flux_p =
       0.5 * calculate_jacobian_viscous_flux(w_q.second,
@@ -309,10 +299,10 @@ namespace MeltPoolDG::Flow
     return flux;
   }
 
-  template <int dim, typename number, bool is_gas_phase>
+  template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     auto
-    CompressibleFlowViscousKernels<dim, number, is_gas_phase>::calculate_jacobian_viscous_flux(
+    CompressibleFlowViscousKernels<dim, number>::calculate_jacobian_viscous_flux(
       const ConservedVariablesType     &w_q,
       const ConservedVariablesGradType &grad_w_q,
       const ConservedVariablesType     &delta_w_q,
@@ -357,7 +347,7 @@ namespace MeltPoolDG::Flow
       param_a;
     param_c += transpose(param_a);
     param_c -= 2. / 3. * trace(param_a) * identity<dim, dealii::VectorizedArray<number>>();
-    param_c *= flow_data.material.gas.dynamic_viscosity;
+    param_c *= material.data.dynamic_viscosity;
 
     dealii::Tensor<1, dim, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>> param_b =
       rho_inv * grad_delta_m_q;
@@ -367,7 +357,7 @@ namespace MeltPoolDG::Flow
       param_b;
     param_d += transpose(param_b);
     param_d -= 2. / 3. * trace(param_b) * identity<dim, dealii::VectorizedArray<number>>();
-    param_d *= flow_data.material.gas.dynamic_viscosity;
+    param_d *= material.data.dynamic_viscosity;
 
 
     for (unsigned int i = 0; i < dim; ++i)
@@ -428,17 +418,17 @@ namespace MeltPoolDG::Flow
     return viscous_differential_change;
   }
 
-  template <int dim, typename number, bool is_gas_phase>
+  template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     auto
-    CompressibleFlowViscousKernels<dim, number, is_gas_phase>::
+    CompressibleFlowViscousKernels<dim, number>::
       calculate_jacobian_viscous_numerical_flux_jump_term(
         const std::pair<ConservedVariablesType, ConservedVariablesType> &delta_w_q,
         const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>   &normal,
         dealii::VectorizedArray<number> penalty_parameter) const -> ConservedVariablesGradType
   {
-    return matrix_matrix_product(penalty_parameter * flow_data.material.gas.dynamic_viscosity /
-                                   flow_data.material.gas.reference_density *
+    return matrix_matrix_product(penalty_parameter * material.data.dynamic_viscosity /
+                                   material.data.reference_density *
                                    identity<dim + 2, dealii::VectorizedArray<number>>(),
                                  dyadic_product(delta_w_q.first - delta_w_q.second, normal));
   }

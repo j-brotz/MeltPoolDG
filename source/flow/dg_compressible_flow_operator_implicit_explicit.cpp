@@ -15,8 +15,8 @@ namespace MeltPoolDG::Flow
     DGCompressibleFlowOperatorImplicitExplicit(
       CompressibleFlowScratchData<dim, number> &flow_scratch_data)
     : flow_scratch_data(flow_scratch_data)
-    , convective_terms(flow_scratch_data.flow_data)
-    , viscous_terms(flow_scratch_data.flow_data)
+    , convective_terms(flow_scratch_data.flow_data, flow_scratch_data.material)
+    , viscous_terms(flow_scratch_data.material)
   {
     AssertThrow(
       is_viscous,
@@ -215,7 +215,7 @@ namespace MeltPoolDG::Flow
         delta_w_m,
         grad_w_m,
         grad_delta_w_m,
-        flow_scratch_data.flow_data.material.gas.gamma);
+        flow_scratch_data.material.data.gamma);
 
     ConservedVariablesGradType numerical_flux =
       viscous_terms.calculate_jacobian_viscous_numerical_flux(
@@ -353,7 +353,7 @@ namespace MeltPoolDG::Flow
                 phi.boundary_id(),
                 w_m,
                 grad_w_m,
-                flow_scratch_data.flow_data);
+                flow_scratch_data.material);
 
             auto flux = convective_terms.calculate_convective_numerical_flux(w_m, w_p, normal);
 
@@ -647,7 +647,7 @@ namespace MeltPoolDG::Flow
                 phi.boundary_id(),
                 w_m,
                 grad_w_m,
-                flow_scratch_data.flow_data);
+                flow_scratch_data.material);
 
             ConservedVariablesType flux = viscous_terms.calculate_viscous_numerical_flux(
               w_m, w_p, grad_w_m, grad_w_p, normal, interior_penalty_parameter);

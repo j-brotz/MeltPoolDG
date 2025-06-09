@@ -6,12 +6,8 @@
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/core/finite_element_data.hpp>
-#include <meltpooldg/cut/cut_data.hpp>
-#include <meltpooldg/flow/compressible_flow_material_data.hpp>
-#include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
-#include <meltpooldg/utilities/numbers.hpp>
 
 #include <string>
 
@@ -35,15 +31,6 @@ namespace MeltPoolDG::Flow
 
     // time integration data
     TimeIntegration::TimeIntegratorData<number> time_integrator;
-
-    struct Material
-    {
-      // gas phase material data
-      CompressibleFluidMaterialPhaseData<number> gas;
-      // fluid phase material data
-      // (only relevant for two-phase case)
-      CompressibleFluidMaterialPhaseData<number> liquid;
-    } material;
 
     // numerical flux type for the convective flux
     NumericalFluxType numerical_flux_type = NumericalFluxType::lax_friedrichs_modified;
@@ -74,31 +61,6 @@ namespace MeltPoolDG::Flow
     // verbosity level
     int verbosity_level = -1;
 
-    // functions for the initial conditions
-    struct InitialConditions
-    {
-      std::string gas{};
-      std::string liquid{};
-    } initial_conditions;
-
-    // multiphase-related data
-    MeltPoolDG::Multiphase::CompressibleMultiphaseData<number> interface_jump_conditions;
-
-    // cut-related data
-    struct Cut
-    {
-      // consider single-phase or two-phase case?
-      bool two_phase = false;
-
-      // flow boundary condition at the immersed boundary
-      // (only relevant for single phase flow problem)
-      // (choose between: "no_slip_wall", "inflow")
-      std::string unfitted_flow_boundary_condition = "no_slip_wall";
-
-      // cut-related stabilization parameters
-      CutStabilizationData<number> stabilization;
-    } cut;
-
     void
     add_parameters(dealii::ParameterHandler &prm)
     {
@@ -106,10 +68,6 @@ namespace MeltPoolDG::Flow
       {
         fe.add_parameters(prm);
         time_integrator.add_parameters(prm);
-        prm.enter_subsection("material");
-        material.gas.add_parameters(prm, true /*is_gas_phase*/);
-        material.liquid.add_parameters(prm, false /*is_gas_phase*/);
-        prm.leave_subsection();
         prm.add_parameter(
           "linearization jump convective flux",
           linearization_jump_convective_flux,
@@ -140,26 +98,6 @@ namespace MeltPoolDG::Flow
                           "Domain representation type. Choose between 'fitted' and 'cut'.",
                           dealii::Patterns::Selection("fitted|cut"));
         prm.add_parameter("verbosity level", verbosity_level, "Verbosity level for output.");
-        prm.enter_subsection("initial conditions");
-        {
-          prm.add_parameter("gas",
-                            initial_conditions.gas,
-                            "Initial condition function for gas phase.");
-          prm.add_parameter("liquid",
-                            initial_conditions.liquid,
-                            "Initial condition function for liquid phase.");
-        }
-        prm.leave_subsection();
-        interface_jump_conditions.add_parameters(prm);
-        prm.enter_subsection("cut");
-        {
-          prm.add_parameter("two phase", cut.two_phase, "Is two-phase case?");
-          prm.add_parameter("unfitted flow boundary condition",
-                            cut.unfitted_flow_boundary_condition,
-                            "Flow boundary condition type at the unfitted boundary.");
-          cut.stabilization.add_parameters(prm);
-        }
-        prm.leave_subsection();
       }
       prm.leave_subsection();
     }
@@ -171,9 +109,6 @@ namespace MeltPoolDG::Flow
       AssertThrow(fe.type == FiniteElementType::FE_DGQ,
                   dealii::ExcMessage(
                     "The compressible flow solver only supports elements of type 'FE_DGQ'."));
-
-      if (cut.two_phase)
-        interface_jump_conditions.post();
 
       // set default time integration scheme for cut
       if (domain_representation_type == "cut")
@@ -192,55 +127,6 @@ namespace MeltPoolDG::Flow
       // Synchronize verbosity with base verbosity if not set explicitly.
       if (verbosity_level < 0)
         verbosity_level = base_verbosity_level;
-
-      // Set thermal conductivity, if not explicitly set by the user.
-      // For physical consistency, set thermal conductivity based on the user-defined dynamic
-      // viscosity, gamma and specific gas constant. The Prandtl number is currently set
-      // constant to Pr=0.71 for the gas phase (air) and to Pr=0.01 for the liquid phase (metal).
-      if (material.gas.thermal_conductivity == std::numeric_limits<number>::max())
-        material.gas.thermal_conductivity = material.gas.dynamic_viscosity * material.gas.gamma *
-                                            material.gas.specific_gas_constant /
-                                            (material.gas.gamma - 1.) * 1. / 0.71;
-      if (cut.two_phase and
-          material.liquid.thermal_conductivity == std::numeric_limits<number>::max())
-        material.liquid.thermal_conductivity =
-          material.liquid.dynamic_viscosity * material.liquid.gamma *
-          material.liquid.specific_gas_constant / (material.liquid.gamma - 1.) * 1. / 0.01;
-
-      // Ensure that parameters are set for advanced equations of state
-      if (material.gas.eos_data.type == EquationOfState::stiffened_gas)
-        AssertThrow(material.liquid.eos_data.p_inf != std::numeric_limits<number>::max(),
-                    dealii::ExcMessage(
-                      "The parameter p_inf is required for the stiffened gas EOS."));
-      else if (material.gas.eos_data.type == EquationOfState::noble_abel_stiffened_gas)
-        AssertThrow(material.liquid.eos_data.p_inf != std::numeric_limits<number>::max() and
-                      material.liquid.eos_data.b != std::numeric_limits<number>::max() and
-                      material.liquid.eos_data.q != std::numeric_limits<number>::min(),
-                    dealii::ExcMessage(
-                      "The parameters p_inf, b and q are required for the Noble-Abel stiffened"
-                      " gas EOS."));
-
-      if (cut.two_phase)
-        {
-          if (material.liquid.eos_data.type == EquationOfState::stiffened_gas)
-            AssertThrow(material.liquid.eos_data.p_inf != std::numeric_limits<number>::max(),
-                        dealii::ExcMessage(
-                          "The parameter p_inf is required for the stiffened gas EOS."));
-          else if (material.liquid.eos_data.type == EquationOfState::noble_abel_stiffened_gas)
-            AssertThrow((material.liquid.eos_data.p_inf != std::numeric_limits<number>::max()) and
-                          (material.liquid.eos_data.b != std::numeric_limits<number>::max()) and
-                          (material.liquid.eos_data.q != std::numeric_limits<number>::min()),
-                        dealii::ExcMessage(
-                          "The parameters p_inf, b and q are required for the Noble-Abel stiffened"
-                          " gas EOS."));
-        }
-
-      // Advanced EOS are currently only allowed for explicit time integration.
-      if (material.gas.eos_data.type != EquationOfState::ideal_gas)
-        AssertThrow(!MeltPoolDG::TimeIntegration::time_integrator_scheme_is_explicit(
-                      time_integrator.integrator_type),
-                    dealii::ExcMessage(
-                      "Only the ideal gas EOS is allowed for implicit time integration."));
     }
   };
 } // namespace MeltPoolDG::Flow

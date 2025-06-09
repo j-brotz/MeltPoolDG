@@ -162,7 +162,11 @@ namespace MeltPoolDG::Flow
       {
         std::unique_ptr<DGCompressibleFlowOperation<dim, number>> operation =
           std::make_unique<DGCompressibleFlowOperation<dim, number>>(
-            *scratch_data, simulation_case->parameters.flow, comp_flow_dof_idx, comp_flow_quad_idx);
+            *scratch_data,
+            simulation_case->parameters.flow,
+            simulation_case->parameters.material,
+            comp_flow_dof_idx,
+            comp_flow_quad_idx);
         comp_flow_operation = CompressibleFlowOperation<dim, number>(std::move(operation));
       }
     else if (simulation_case->parameters.flow.domain_representation_type == "cut")
@@ -171,12 +175,14 @@ namespace MeltPoolDG::Flow
           std::make_unique<CutDGCompressibleFlowOperation<dim, number>>(
             *scratch_data,
             simulation_case->parameters.flow,
+            simulation_case->parameters.material,
+            simulation_case->parameters.cut,
             *time_iterator,
             [this]() { this->setup_dof_system(); },
+            level_set,
             comp_flow_dof_idx,
             level_set_dof_idx,
-            comp_flow_quad_idx,
-            level_set);
+            comp_flow_quad_idx);
 
         // prescribe a function for the object velocity in the case of a moving immersed (rigid)
         // object
@@ -193,7 +199,7 @@ namespace MeltPoolDG::Flow
         unfitted_inflow_function = simulation_case->get_field_function(
           "unfitted_inflow",
           "compressible_flow",
-          !(simulation_case->parameters.flow.cut.unfitted_flow_boundary_condition ==
+          !(simulation_case->parameters.cut.unfitted_flow_boundary_condition ==
             "inflow") /* is_optional */);
         if (unfitted_inflow_function)
           operation->set_inflow_field_unfitted_boundary(unfitted_inflow_function);

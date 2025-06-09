@@ -174,12 +174,16 @@ namespace MeltPoolDG::Multiphase
       std::make_unique<CompressibleMultiphaseOperation<dim, number>>(
         *scratch_data,
         simulation_case->parameters.flow,
+        simulation_case->parameters.material_gas,
+        simulation_case->parameters.material_liquid,
+        simulation_case->parameters.cut,
+        simulation_case->parameters.phase_coupling,
         *time_iterator,
         [this]() { this->setup_dof_system(); },
+        level_set,
         comp_multiphase_dof_idx,
         level_set_dof_idx,
-        comp_multiphase_quad_idx,
-        level_set);
+        comp_multiphase_quad_idx);
 
     comp_multiphase_operation =
       MeltPoolDG::Flow::CompressibleFlowOperation<dim, number>(std::move(operation));

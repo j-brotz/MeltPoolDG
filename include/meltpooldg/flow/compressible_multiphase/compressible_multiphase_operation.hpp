@@ -60,21 +60,30 @@ namespace MeltPoolDG::Multiphase
      *
      * @param scratch_data_in Reference to the used ScratchData object.
      * @param comp_flow_data_in Reference to the compressible flow data struct used.
+     * @param material_data_gas_in Reference to the material data scruct for the gas phase.
+     * @param material_data_liquid_in Reference to the material data scruct for the liquid phase.
+     * @param cut_data_in Reference to the data object with cut-related parameters.
+     * @param phase_coupling_data_in Reference to the struct for phase coupling parameters.
      * @param time_iterator_in Reference to the used time stepping.
      * @param setup_dof_system_in Reinit_matrix_free function, which is registered.
+     * @param level_set_in level-set dof vector.
      * @param comp_flow_dof_idx_in Index of the used dof handler for solution in @p scratch_data_in.
      * @param level_set_dof_idx_in Index of the used dof handler for level-set in @p scratch_data_in.
      * @param comp_flow_quad_idx_in Index of the used quadrature object in @p scratch_data_in.
-     * @param level_set_in level-set dof vector.
      */
-    CompressibleMultiphaseOperation(const ScratchData<dim, dim, number>         &scratch_data_in,
-                                    const Flow::CompressibleFlowData<number>    &comp_flow_data_in,
-                                    const TimeIntegration::TimeIterator<number> &time_iterator_in,
-                                    const std::function<void()> &setup_dof_system_in,
-                                    unsigned int                 comp_flow_dof_idx_in  = 0,
-                                    unsigned int                 level_set_dof_idx_in  = 0,
-                                    unsigned int                 comp_flow_quad_idx_in = 0,
-                                    const VectorType            &level_set_in          = 0);
+    CompressibleMultiphaseOperation(
+      const ScratchData<dim, dim, number>                    &scratch_data_in,
+      const Flow::CompressibleFlowData<number>               &comp_flow_data_in,
+      const Flow::CompressibleFluidMaterialPhaseData<number> &material_data_gas_in,
+      const Flow::CompressibleFluidMaterialPhaseData<number> &material_data_liquid_in,
+      const Flow::CompressibleFlowCutData<number>            &cut_data_in,
+      const CompressibleFlowPhaseCouplingData<number>        &phase_coupling_data_in,
+      const TimeIntegration::TimeIterator<number>            &time_iterator_in,
+      const std::function<void()>                            &setup_dof_system_in,
+      const VectorType                                       &level_set_in,
+      unsigned int comp_flow_dof_idx_in  = dealii::numbers::invalid_unsigned_int,
+      unsigned int level_set_dof_idx_in  = dealii::numbers::invalid_unsigned_int,
+      unsigned int comp_flow_quad_idx_in = dealii::numbers::invalid_unsigned_int);
 
     /**
      * Set up the required internal data structures. After a call to this function the solve()
@@ -165,37 +174,37 @@ namespace MeltPoolDG::Multiphase
 
     typename CompressibleMultiphaseOperation<dim, number>::
       CompMultiphaseOperatorVariant static create_cut_flow_operator_variant(
-        bool                                                        is_viscous_gas,
-        bool                                                        is_viscous_liquid,
-        MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-        const MappingInfoType                                      &mapping_info_surface_in,
-        const MappingInfoVectorType                                &mapping_info_cells_in,
-        const MappingInfoVectorType                                &mapping_info_faces_in)
+        bool                                                  is_viscous_gas,
+        bool                                                  is_viscous_liquid,
+        Flow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
+        const MappingInfoType                                &mapping_info_surface_in,
+        const MappingInfoVectorType                          &mapping_info_cells_in,
+        const MappingInfoVectorType                          &mapping_info_faces_in)
     {
       if (is_viscous_gas and is_viscous_liquid)
-        return CompressibleMultiphaseOperator<dim, number, true, true>(flow_scratch_data,
+        return CompressibleMultiphaseOperator<dim, number, true, true>(multiphase_scratch_data,
                                                                        mapping_info_surface_in,
                                                                        mapping_info_cells_in,
                                                                        mapping_info_faces_in);
       else if (is_viscous_gas and !is_viscous_liquid)
-        return CompressibleMultiphaseOperator<dim, number, true, false>(flow_scratch_data,
+        return CompressibleMultiphaseOperator<dim, number, true, false>(multiphase_scratch_data,
                                                                         mapping_info_surface_in,
                                                                         mapping_info_cells_in,
                                                                         mapping_info_faces_in);
       else if (!is_viscous_gas and is_viscous_liquid)
-        return CompressibleMultiphaseOperator<dim, number, false, true>(flow_scratch_data,
+        return CompressibleMultiphaseOperator<dim, number, false, true>(multiphase_scratch_data,
                                                                         mapping_info_surface_in,
                                                                         mapping_info_cells_in,
                                                                         mapping_info_faces_in);
       else
-        return CompressibleMultiphaseOperator<dim, number, false, false>(flow_scratch_data,
+        return CompressibleMultiphaseOperator<dim, number, false, false>(multiphase_scratch_data,
                                                                          mapping_info_surface_in,
                                                                          mapping_info_cells_in,
                                                                          mapping_info_faces_in);
     }
 
   private:
-    Flow::CompressibleFlowScratchData<dim, number> flow_scratch_data;
+    Flow::CompressibleMultiphaseScratchData<dim, number> multiphase_scratch_data;
 
     const TimeIntegration::TimeIterator<number> &time_iterator;
 
@@ -261,21 +270,21 @@ namespace MeltPoolDG::Multiphase
   const dealii::LinearAlgebra::distributed::Vector<number> &
   CompressibleMultiphaseOperation<dim, number>::get_solution() const
   {
-    return flow_scratch_data.solution_history.get_current_solution();
+    return multiphase_scratch_data.solution_history.get_current_solution();
   }
 
   template <int dim, typename number>
   dealii::LinearAlgebra::distributed::Vector<number> &
   CompressibleMultiphaseOperation<dim, number>::get_solution()
   {
-    return flow_scratch_data.solution_history.get_current_solution();
+    return multiphase_scratch_data.solution_history.get_current_solution();
   }
 
   template <int dim, typename number>
   const dealii::DoFHandler<dim> &
   CompressibleMultiphaseOperation<dim, number>::get_dof_handler() const
   {
-    return flow_scratch_data.scratch_data.get_dof_handler(flow_scratch_data.dof_idx);
+    return multiphase_scratch_data.scratch_data.get_dof_handler(multiphase_scratch_data.dof_idx);
   }
 
 } // namespace MeltPoolDG::Multiphase

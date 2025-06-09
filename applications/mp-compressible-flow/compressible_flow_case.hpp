@@ -19,7 +19,9 @@
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/flow/compressible_flow_cut_data.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
+#include <meltpooldg/flow/compressible_flow_material_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/time_integration/time_stepping_data.hpp>
@@ -39,6 +41,8 @@ namespace MeltPoolDG::Flow
     {
       base.add_parameters(prm);
       flow.add_parameters(prm);
+      material.add_parameters(prm, true /*is_gas*/);
+      cut.add_parameters(prm);
       time_stepping.add_parameters(prm);
       output.add_parameters(prm);
       profiling.add_parameters(prm);
@@ -49,9 +53,17 @@ namespace MeltPoolDG::Flow
     {
       output.post(time_stepping.time_step_size, parameter_filename);
       flow.post(base.fe, base.verbosity_level);
+      material.post(true /*is_gas*/);
 
       // check input parameters for validity
       profiling.check_input_parameters(time_stepping.time_step_size);
+
+      // Advanced EOS are currently only allowed for explicit time integration.
+      if (material.eos_data.type != EquationOfState::ideal_gas)
+        AssertThrow(!MeltPoolDG::TimeIntegration::time_integrator_scheme_is_explicit(
+                      flow.time_integrator.integrator_type),
+                    dealii::ExcMessage(
+                      "Only the ideal gas EOS is allowed for implicit time integration."));
 
       if (flow.domain_representation_type == "cut")
         {
@@ -65,11 +77,13 @@ namespace MeltPoolDG::Flow
     }
 
   public:
-    BaseData                                  base;
-    CompressibleFlowData<number>              flow;
-    TimeIntegration::TimeSteppingData<number> time_stepping;
-    OutputData<number>                        output;
-    Profiling::ProfilingData<number>          profiling;
+    BaseData                                   base;
+    CompressibleFlowData<number>               flow;
+    CompressibleFluidMaterialPhaseData<number> material;
+    CompressibleFlowCutData<number>            cut;
+    TimeIntegration::TimeSteppingData<number>  time_stepping;
+    OutputData<number>                         output;
+    Profiling::ProfilingData<number>           profiling;
   };
 
   template <int dim, typename number>

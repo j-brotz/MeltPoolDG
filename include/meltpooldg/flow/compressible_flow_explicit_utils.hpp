@@ -54,7 +54,7 @@ namespace MeltPoolDG::Flow
    * pointer must be set to nullptr.
    * @param convective_terms Collection of convective term computations for the compressible Navier-Stokes equations.
    * @param viscous_terms Collection of viscous term computations for the compressible Navier-Stokes equations.
-   * @param flow_scratch_data Struct providing the relevant data required by all compressible flow solvers.
+   * @param body_force Pointer to a body force function.
    *
    * @return Tuple, containing the flux, weighted with the value of the test function, as first
    * argument, and the flux, weighted with the gradient of the test function, as second argument.
@@ -70,9 +70,9 @@ namespace MeltPoolDG::Flow
       const Integrator                                              &evaluator,
       const unsigned int                                             q,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> *constant_body_force,
-      const auto                                                    &convective_terms,
-      const auto                                                    &viscous_terms,
-      const CompressibleFlowScratchData<dim, number>                &flow_scratch_data)
+      const CompressibleFlowConvectiveKernels<dim, number>          &convective_terms,
+      const CompressibleFlowViscousKernels<dim, number>             &viscous_terms,
+      const std::unique_ptr<dealii::Function<dim>>                  &body_force)
   {
     const auto w_q = evaluator.get_value(q);
 
@@ -86,12 +86,12 @@ namespace MeltPoolDG::Flow
 
     dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>> forcing;
 
-    if (flow_scratch_data.body_force.get() != nullptr)
+    if (body_force.get() != nullptr)
       {
         const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> force =
           constant_body_force ?
             *constant_body_force :
-            VectorTools::evaluate_function_at_vectorized_points(*flow_scratch_data.body_force,
+            VectorTools::evaluate_function_at_vectorized_points(*body_force,
                                                                 evaluator.quadrature_point(q));
         for (unsigned int d = 0; d < dim; ++d)
           forcing[d + 1] = w_q[0] * force[d];
@@ -134,8 +134,8 @@ namespace MeltPoolDG::Flow
                              const Integrator               &evaluator_p,
                              const unsigned int              q,
                              dealii::VectorizedArray<number> penalty_parameter,
-                             const auto                     &convective_terms,
-                             const auto                     &viscous_terms)
+                             const CompressibleFlowConvectiveKernels<dim, number> &convective_terms,
+                             const CompressibleFlowViscousKernels<dim, number>    &viscous_terms)
   {
     auto numerical_flux =
       convective_terms.calculate_convective_numerical_flux(evaluator_m.get_value(q),
@@ -180,7 +180,9 @@ namespace MeltPoolDG::Flow
    * @param penalty_parameter Value of the symmetric interior penalty parameter on the face.
    * @param convective_terms Collection of convective term computations for the compressible Navier-Stokes equations.
    * @param viscous_terms Collection of viscous term computations for the compressible Navier-Stokes equations.
-   * @param flow_scratch_data Struct providing the relevant data required by all compressible flow solvers.
+   * @param material Class providing material data and calculations of thermodynamic relations.
+   * @param boundary_conditions Class providing boundary condition related computations for the
+   * compressible flow solver
    *
    * @return Tuple, containing the flux for the boundary face, weighted with the value of the test
    * function, as first argument, and the flux for the boundary face, weighted with the gradient
@@ -195,27 +197,21 @@ namespace MeltPoolDG::Flow
     std::tuple<CompressibleFlowTypes::ConservedVariablesType<dim, number>,
                CompressibleFlowTypes::ConservedVariablesGradType<dim, number>>
     rhs_boundary_face_integral_kernel(
-      const Integrator                                                   &evaluator_m,
-      const unsigned int                                                  q,
-      const dealii::types::boundary_id                                    boundary_id,
-      const dealii::VectorizedArray<number>                               penalty_parameter,
-      const CompressibleFlowConvectiveKernels<dim, number, is_gas_phase> &convective_terms,
-      const CompressibleFlowViscousKernels<dim, number, is_gas_phase>    &viscous_terms,
-      const CompressibleFlowScratchData<dim, number>                     &flow_scratch_data)
+      const Integrator                                      &evaluator_m,
+      const unsigned int                                     q,
+      const dealii::types::boundary_id                       boundary_id,
+      const dealii::VectorizedArray<number>                  penalty_parameter,
+      const CompressibleFlowConvectiveKernels<dim, number>  &convective_terms,
+      const CompressibleFlowViscousKernels<dim, number>     &viscous_terms,
+      const CompressibleFlowMaterial<dim, number>           &material,
+      const CompressibleFlowBoundaryConditions<dim, number> &boundary_conditions)
   {
     const auto w_m      = evaluator_m.get_value(q);
     const auto normal   = evaluator_m.normal_vector(q);
     const auto grad_w_m = evaluator_m.get_gradient(q);
 
-    const auto [w_p, grad_w_p] =
-      flow_scratch_data.boundary_conditions.get_boundary_face_value_and_gradient(
-        evaluator_m.quadrature_point(q),
-        normal,
-        boundary_id,
-        w_m,
-        grad_w_m,
-        flow_scratch_data.flow_data,
-        is_gas_phase);
+    const auto [w_p, grad_w_p] = boundary_conditions.get_boundary_face_value_and_gradient(
+      evaluator_m.quadrature_point(q), normal, boundary_id, w_m, grad_w_m, material, is_gas_phase);
 
     auto flux = convective_terms.calculate_convective_numerical_flux(w_m, w_p, normal);
 

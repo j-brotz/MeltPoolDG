@@ -15,7 +15,10 @@
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/flow/compressible_flow_cut_data.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
+#include <meltpooldg/flow/compressible_flow_material_data.hpp>
+#include <meltpooldg/flow/compressible_multiphase/compressible_flow_phase_coupling_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/time_integration/time_stepping_data.hpp>
 #include <meltpooldg/utilities/profiling_data.hpp>
@@ -34,6 +37,10 @@ namespace MeltPoolDG::Multiphase
     {
       base.add_parameters(prm);
       flow.add_parameters(prm);
+      material_gas.add_parameters(prm, true /*is_gas*/);
+      material_liquid.add_parameters(prm, false /*is_gas*/);
+      cut.add_parameters(prm);
+      phase_coupling.add_parameters(prm);
       time_stepping.add_parameters(prm);
       output.add_parameters(prm);
       profiling.add_parameters(prm);
@@ -44,6 +51,9 @@ namespace MeltPoolDG::Multiphase
     {
       output.post(time_stepping.time_step_size, parameter_filename);
       flow.post(base.fe, base.verbosity_level);
+      material_gas.post(true /*is_gas*/);
+      material_liquid.post(false /*is_gas*/);
+      phase_coupling.post();
 
       // check input parameters for validity
       profiling.check_input_parameters(time_stepping.time_step_size);
@@ -57,11 +67,15 @@ namespace MeltPoolDG::Multiphase
     }
 
   public:
-    BaseData                                  base;
-    Flow::CompressibleFlowData<number>        flow;
-    TimeIntegration::TimeSteppingData<number> time_stepping;
-    OutputData<number>                        output;
-    Profiling::ProfilingData<number>          profiling;
+    BaseData                                         base;
+    Flow::CompressibleFlowData<number>               flow;
+    Flow::CompressibleFluidMaterialPhaseData<number> material_gas;
+    Flow::CompressibleFluidMaterialPhaseData<number> material_liquid;
+    Flow::CompressibleFlowCutData<number>            cut;
+    CompressibleFlowPhaseCouplingData<number>        phase_coupling;
+    TimeIntegration::TimeSteppingData<number>        time_stepping;
+    OutputData<number>                               output;
+    Profiling::ProfilingData<number>                 profiling;
   };
 
   template <int dim, typename number>

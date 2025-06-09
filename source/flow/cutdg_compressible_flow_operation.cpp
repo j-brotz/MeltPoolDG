@@ -9,7 +9,6 @@
 
 #include <deal.II/non_matching/mesh_classifier.h>
 
-#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
 #include <meltpooldg/flow/cutdg_compressible_flow_operation.hpp>
 #include <meltpooldg/flow/cutdg_compressible_flow_operator.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
@@ -30,24 +29,28 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   CutDGCompressibleFlowOperation<dim, number>::CutDGCompressibleFlowOperation(
-    const ScratchData<dim, dim, number>         &scratch_data_in,
-    const CompressibleFlowData<number>          &comp_flow_data_in,
-    const TimeIntegration::TimeIterator<number> &time_iterator_in,
-    const std::function<void()>                 &setup_dof_system_in,
-    const unsigned int                           comp_flow_dof_idx_in,
-    const unsigned int                           level_set_dof_idx_in,
-    const unsigned int                           comp_flow_quad_idx_in,
-    const VectorType                            &level_set_in)
+    const ScratchData<dim, dim, number>              &scratch_data_in,
+    const CompressibleFlowData<number>               &comp_flow_data_in,
+    const CompressibleFluidMaterialPhaseData<number> &material_data_in,
+    const CompressibleFlowCutData<number>            &cut_data_in,
+    const TimeIntegration::TimeIterator<number>      &time_iterator_in,
+    const std::function<void()>                      &setup_dof_system_in,
+    const VectorType                                 &level_set_in,
+    const unsigned int                                comp_flow_dof_idx_in,
+    const unsigned int                                level_set_dof_idx_in,
+    const unsigned int                                comp_flow_quad_idx_in)
     : flow_scratch_data(comp_flow_data_in,
+                        material_data_in,
                         scratch_data_in,
                         comp_flow_dof_idx_in,
-                        comp_flow_quad_idx_in)
+                        comp_flow_quad_idx_in,
+                        &cut_data_in)
     , time_iterator(time_iterator_in)
     , level_set_dof_idx(level_set_dof_idx_in)
     , level_set(level_set_in)
-    , cut_solution_transfer(comp_flow_data_in.cut.stabilization.ghost_penalty.gamma_M_degree_0,
-                            comp_flow_data_in.cut.stabilization.ghost_penalty.gamma_M_degree_1,
-                            comp_flow_data_in.cut.stabilization.ghost_penalty.gamma_M_degree_2,
+    , cut_solution_transfer(cut_data_in.stabilization.ghost_penalty.gamma_M_degree_0,
+                            cut_data_in.stabilization.ghost_penalty.gamma_M_degree_1,
+                            cut_data_in.stabilization.ghost_penalty.gamma_M_degree_2,
                             false /* is_two_phase*/,
                             comp_flow_data_in.verbosity_level /*verbosity level*/)
     , setup_dof_system(setup_dof_system_in)
@@ -58,7 +61,7 @@ namespace MeltPoolDG::Flow
                              dealii::update_JxW_values | dealii::update_normal_vectors)
     , cut_flow_operator(
         CutDGCompressibleFlowOperation<dim, number>::create_cut_flow_operator_variant(
-          comp_flow_data_in.material.gas.dynamic_viscosity > 0.,
+          material_data_in.dynamic_viscosity > 0.,
           flow_scratch_data,
           mapping_info_surface,
           mapping_info_cells,
@@ -123,11 +126,11 @@ namespace MeltPoolDG::Flow
     AssertThrow(min_density > 0, ExcMessage("Minimum density must not be zero."));
 
     const number viscous_time_step_limit =
-      (flow_scratch_data.flow_data.material.gas.dynamic_viscosity > 0) ?
+      (flow_scratch_data.material.data.dynamic_viscosity > 0) ?
         flow_scratch_data.flow_data.viscous_courant_number /
           std::pow(flow_scratch_data.scratch_data.get_degree(flow_scratch_data.dof_idx), 3) *
           std::pow(flow_scratch_data.scratch_data.get_min_cell_size(), 2) * min_density /
-          flow_scratch_data.flow_data.material.gas.dynamic_viscosity :
+          flow_scratch_data.material.data.dynamic_viscosity :
         std::numeric_limits<number>::max();
 
     const number convective_time_step_limit = compute_convective_time_step_limit();
@@ -395,7 +398,7 @@ namespace MeltPoolDG::Flow
                                             level_set,
                                             flow_scratch_data.scratch_data.get_matrix_free(),
                                             flow_scratch_data.flow_data.fe.degree,
-                                            flow_scratch_data.flow_data.cut.two_phase,
+                                            false /*is_two_phase*/,
                                             true /*is_dg*/,
                                             mapping_info_faces);
   }
@@ -435,8 +438,8 @@ namespace MeltPoolDG::Flow
                   convective_limit = std::max(convective_limit, std::abs(convective_speed[d]));
 
                 const auto speed_of_sound =
-                  EOS::calculate_speed_of_sound<dim, number>(conserved_variables,
-                                                             flow_scratch_data.flow_data);
+                  flow_scratch_data.material.eos_utils->calculate_speed_of_sound(
+                    conserved_variables);
 
                 dealii::Tensor<1, dim, dealii::VectorizedArray<number>> eigenvector;
                 for (unsigned int d = 0; d < dim; ++d)
@@ -501,8 +504,8 @@ namespace MeltPoolDG::Flow
                       convective_limit = std::max(convective_limit, std::abs(convective_speed[d]));
 
                     const auto speed_of_sound =
-                      EOS::calculate_speed_of_sound<dim, number>(conserved_variables,
-                                                                 flow_scratch_data.flow_data);
+                      flow_scratch_data.material.eos_utils->calculate_speed_of_sound(
+                        conserved_variables);
 
                     dealii::Tensor<1, dim, dealii::VectorizedArray<number>> eigenvector;
                     for (unsigned int d = 0; d < dim; ++d)

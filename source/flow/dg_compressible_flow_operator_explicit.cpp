@@ -14,8 +14,8 @@ namespace MeltPoolDG::Flow
     CompressibleFlowScratchData<dim, number>                                    &flow_scratch_data,
     std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces)
     : flow_scratch_data(flow_scratch_data)
-    , convective_terms(flow_scratch_data.flow_data)
-    , viscous_terms(flow_scratch_data.flow_data)
+    , convective_terms(flow_scratch_data.flow_data, flow_scratch_data.material)
+    , viscous_terms(flow_scratch_data.material)
     , external_forces(std::move(external_forces))
   {}
 
@@ -119,7 +119,7 @@ namespace MeltPoolDG::Flow
                                                                        nullptr,
                                                    convective_terms,
                                                    viscous_terms,
-                                                   flow_scratch_data);
+                                                   flow_scratch_data.body_force);
 
             if (external_forces != nullptr)
               {
@@ -236,7 +236,8 @@ namespace MeltPoolDG::Flow
                                                             interior_penalty_parameter,
                                                             convective_terms,
                                                             viscous_terms,
-                                                            flow_scratch_data);
+                                                            flow_scratch_data.material,
+                                                            flow_scratch_data.boundary_conditions);
 
             phi.submit_value(flux_m, q);
             if (is_viscous)

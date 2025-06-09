@@ -4,7 +4,6 @@
 #include <deal.II/base/patterns.h>
 
 #include <meltpooldg/utilities/better_enum.hpp>
-#include <meltpooldg/utilities/numbers.hpp>
 
 namespace MeltPoolDG::Flow
 {
@@ -99,6 +98,7 @@ namespace MeltPoolDG::Flow
     add_parameters(dealii::ParameterHandler &prm, const bool is_gas_phase)
     {
       const std::string subsection_name = is_gas_phase ? "gas" : "liquid";
+      prm.enter_subsection("material");
       prm.enter_subsection(subsection_name);
       {
         prm.add_parameter("specific isobaric heat",
@@ -128,6 +128,33 @@ namespace MeltPoolDG::Flow
         eos_data.add_parameters(prm);
       }
       prm.leave_subsection();
+      prm.leave_subsection();
+    };
+
+    void
+    post(const bool is_gas)
+    {
+      // Set thermal conductivity, if not explicitly set by the user.
+      // For physical consistency, set thermal conductivity based on the user-defined dynamic
+      // viscosity, gamma and specific gas constant. The Prandtl number is currently set
+      // constant to Pr=0.71 for the gas phase (air) and to Pr=0.01 for the liquid phase (metal).
+      const number Pr = is_gas ? 0.71 : 0.01;
+      if (thermal_conductivity == std::numeric_limits<number>::max())
+        thermal_conductivity =
+          dynamic_viscosity * gamma * specific_gas_constant / (gamma - 1.) * 1. / Pr;
+
+      // Ensure that parameters are set for advanced equations of state
+      if (eos_data.type == EquationOfState::stiffened_gas)
+        AssertThrow(eos_data.p_inf != std::numeric_limits<number>::max(),
+                    dealii::ExcMessage(
+                      "The parameter p_inf is required for the stiffened gas EOS."));
+      else if (eos_data.type == EquationOfState::noble_abel_stiffened_gas)
+        AssertThrow(eos_data.p_inf != std::numeric_limits<number>::max() and
+                      eos_data.b != std::numeric_limits<number>::max() and
+                      eos_data.q != std::numeric_limits<number>::min(),
+                    dealii::ExcMessage(
+                      "The parameters p_inf, b and q are required for the Noble-Abel stiffened"
+                      " gas EOS."));
     };
   };
 } // namespace MeltPoolDG::Flow

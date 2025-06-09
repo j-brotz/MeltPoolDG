@@ -164,7 +164,7 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     {
       auto inflow_outflow_solution =
         std::make_shared<InitialFieldOscillatingWaterColumn<dim, number>>(
-          this->parameters.flow.material.liquid, this->parameters.flow.material.gas);
+          this->parameters.material_liquid, this->parameters.material_gas);
 
       // face numbering according to the deal.II colorize flag
       const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
@@ -186,8 +186,8 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       // The solution vector is ordered, such that the liquid phase is the first phase and the gas
       // phase is the second phase.
       auto initial_condition = std::make_shared<InitialFieldOscillatingWaterColumn<dim, number>>(
-        this->parameters.flow.material.liquid,
-        this->parameters.flow.material.gas,
+        this->parameters.material_liquid,
+        this->parameters.material_gas,
         false /*gas_phase_is_first*/);
       this->attach_initial_condition(initial_condition, "compressible_multiphase_flow");
 
@@ -210,7 +210,7 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const override
     {
       InitialFieldOscillatingWaterColumn<dim, number> reference_values(
-        this->parameters.flow.material.liquid, this->parameters.flow.material.gas);
+        this->parameters.material_liquid, this->parameters.material_gas);
       this->print_relative_norm(generic_data_out, reference_values, "norm");
     }
   };

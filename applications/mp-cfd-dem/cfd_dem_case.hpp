@@ -7,6 +7,7 @@
 #include <meltpooldg/core/parameters_base.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
+#include <meltpooldg/flow/compressible_flow_material_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
 #include <meltpooldg/particles/obstacle_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>
@@ -25,6 +26,7 @@ namespace MeltPoolDG
       base.add_parameters(prm);
       brinkman_penalization_data.add_parameters(prm);
       flow.add_parameters(prm);
+      material.add_parameters(prm, true /*is_gas*/);
       time_stepping.add_parameters(prm);
       obstacle_data.add_parameters(prm);
       output.add_parameters(prm);
@@ -36,19 +38,21 @@ namespace MeltPoolDG
     {
       output.post(time_stepping.time_step_size, parameter_filename);
       flow.post(base.fe, base.verbosity_level);
+      material.post(true /*is_gas*/);
 
       // check input parameters for validity
       profiling.check_input_parameters(time_stepping.time_step_size);
     }
 
   public:
-    BaseData                                  base;
-    BrinkmanPenalizationData<number>          brinkman_penalization_data;
-    Flow::CompressibleFlowData<number>        flow;
-    TimeIntegration::TimeSteppingData<number> time_stepping;
-    ObstacleData                              obstacle_data;
-    OutputData<number>                        output;
-    Profiling::ProfilingData<number>          profiling;
+    BaseData                                         base;
+    BrinkmanPenalizationData<number>                 brinkman_penalization_data;
+    Flow::CompressibleFlowData<number>               flow;
+    Flow::CompressibleFluidMaterialPhaseData<number> material;
+    TimeIntegration::TimeSteppingData<number>        time_stepping;
+    ObstacleData                                     obstacle_data;
+    OutputData<number>                               output;
+    Profiling::ProfilingData<number>                 profiling;
   };
 
   template <int dim, typename number>

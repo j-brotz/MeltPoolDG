@@ -1,6 +1,9 @@
 
 #include <meltpooldg/flow/compressible_flow_boundary_conditions.hpp>
-#include <meltpooldg/flow/compressible_flow_eos_utils.hpp>
+#include <meltpooldg/flow/compressible_flow_eos_utils_base.hpp>
+#include <meltpooldg/flow/compressible_flow_ideal_gas_utils.hpp>
+#include <meltpooldg/flow/compressible_flow_noble_abel_stiffened_gas_utils.hpp>
+#include <meltpooldg/flow/compressible_flow_stiffened_gas_utils.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
@@ -100,7 +103,7 @@ namespace MeltPoolDG::Flow
     const dealii::types::boundary_id                               boundary_id,
     const ConservedVariablesType                                  &w_m,
     const ConservedVariablesGradType                              &grad_w_m,
-    const CompressibleFlowData<number>                            &flow_data,
+    const CompressibleFlowMaterial<dim, number>                   &material,
     const bool is_gas_phase) const -> std::tuple<ConservedVariablesType, ConservedVariablesGradType>
   {
     using namespace dealii;
@@ -170,11 +173,9 @@ namespace MeltPoolDG::Flow
                              q_point,
                              dim + 1 + component_offset);
 
-        const auto material_data =
-          is_gas_phase ? flow_data.material.gas : flow_data.material.liquid;
         // consider equation of state for computation of inner energy from given pressure
         const VectorizedArray<number> inner_energy =
-          EOS::compute_inner_energy_from_pressure<dim, number>(pressure, w_p[0], material_data);
+          material.eos_utils->compute_inner_energy_from_pressure(pressure, w_p[0]);
 
         w_p[dim + 1]      = inner_energy + p_dyn;
         grad_w_p[dim + 1] = grad_w_m[dim + 1];
