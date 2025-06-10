@@ -17,7 +17,7 @@
 
 #include <cmath>
 
-#include "../reinitialization_case.hpp"
+#include "../../reinitialization_case.hpp"
 
 namespace MeltPoolDG::Simulation::ReinitCircle
 {

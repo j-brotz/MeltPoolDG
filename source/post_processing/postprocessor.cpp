@@ -122,14 +122,37 @@ namespace MeltPoolDG
         used_var_ids = &all_vars;
       }
 
+    // Collect indices for element-wise output (to be handled later).
+    // This postponement ensures we skip cases where the corresponding DoFHandler
+    // has not yet been attached, avoiding invalid access.
+    std::vector<unsigned int> element_ids;
+
     for (const auto &i : *used_var_ids)
       {
         const auto &data = generic_data_out.entries[i];
 
-        data_out.add_data_vector(*std::get<0>(data),
-                                 *std::get<1>(data),
-                                 std::get<2>(data),
-                                 std::get<3>(data));
+        // If the DoFHandler pointer is null, this corresponds to element-wise data.
+        // Store the index for deferred processing after all DoFHandlers are available.
+        if (std::get<0>(data) == nullptr)
+          element_ids.emplace_back(i);
+        // Otherwise, this is nodal data and can be attached immediately.
+        else
+          {
+            data_out.add_data_vector(*std::get<0>(data),
+                                     *std::get<1>(data),
+                                     std::get<3>(data),
+                                     std::get<4>(data));
+          }
+      }
+
+    // Attach element-wise output data.
+    for (const auto &i : element_ids)
+      {
+        const auto &data = generic_data_out.entries[i];
+        data_out.add_data_vector(*std::get<2>(data),
+                                 std::get<3>(data),
+                                 dealii::DataOut_DoFData<dim, dim>::DataVectorType::type_cell_data,
+                                 std::get<4>(data));
       }
 
     if (output_data.paraview.output_subdomains)
@@ -161,7 +184,11 @@ namespace MeltPoolDG
 
     if (n_patches == 0)
       for (const auto &data : generic_data_out.entries)
-        n_patches = std::max(n_patches, std::get<0>(data)->get_fe().degree);
+        {
+          if (std::get<0>(data) == nullptr)
+            continue;
+          n_patches = std::max(n_patches, std::get<0>(data)->get_fe().degree);
+        }
 
     data_out.build_patches(mapping, n_patches);
 

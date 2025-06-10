@@ -87,10 +87,18 @@ namespace MeltPoolDG::PostProcessingTools
             {
               const auto &data = generic_data_out->entries[i];
 
-              data_out.add_data_vector(*std::get<0>(data),
-                                       *std::get<1>(data),
-                                       std::get<2>(data),
-                                       std::get<3>(data));
+              // element wise ouput
+              if (std::get<0>(data) == nullptr)
+                data_out.add_data_vector(*std::get<2>(data),
+                                         std::get<3>(data),
+                                         dealii::DataOutResample<dim, dim - 1, dim>::type_cell_data,
+                                         std::get<4>(data));
+              // nodal output
+              else
+                data_out.add_data_vector(*std::get<0>(data),
+                                         *std::get<1>(data),
+                                         std::get<3>(data),
+                                         std::get<4>(data));
             }
 
 

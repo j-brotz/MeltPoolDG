@@ -20,7 +20,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "../reinitialization_case.hpp"
+#include "../../reinitialization_case.hpp"
 
 namespace MeltPoolDG::Simulation::ReinitCircleDG
 {
@@ -156,16 +156,6 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
       pcout << "---------------------------------------------" << std::endl;
       pcout << "    Starting user defined postprocessing" << std::endl;
       pcout << "---------------------------------------------" << std::endl;
-      pcout << "Accessible vectors:" << std::endl;
-      for (const auto &entry : generic_data_out.entries)
-        for (const auto &name : std::get<2>(entry))
-          {
-            pcout << " * " << std::setw(20) << name << " Max-norm: " << std::setprecision(5)
-                  << std::setw(10) << generic_data_out.get_vector(name).linfty_norm()
-                  << " number of dofs: " << generic_data_out.get_dof_handler(name).n_dofs()
-                  << std::endl;
-            break;
-          }
 
       /*Error Calculation*/
       ExactSolution<dim, number> exact_solution(0.1);
@@ -300,16 +290,17 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
       norm_gradient_exact =
         dealii::Utilities::MPI::sum(norm_gradient_exact, this->mpi_communicator);
 
-      pcout << "Relative error to exact solution " << std::sqrt(error) / std::sqrt(norm_exact)
-            << std::endl;
+      pcout << "Relative error to exact solution " << std::setprecision(6)
+            << std::sqrt(error) / std::sqrt(norm_exact) << std::endl;
 
-      pcout << "Mass of bubble " << mass << std::endl;
-      pcout << "Mass loss " << ((mass - initial_mass) / initial_mass) * 100.0 << " % " << std::endl;
+      pcout << "Mass of bubble " << std::setprecision(6) << mass << std::endl;
+      pcout << "Mass loss " << std::setprecision(6)
+            << ((mass - initial_mass) / initial_mass) * 100.0 << " % " << std::endl;
 
-      pcout << "Relative error to exact curvature "
+      pcout << "Relative error to exact curvature " << std::setprecision(6)
             << std::sqrt(error_curvature) / std::sqrt(norm_curvature_exact) << std::endl;
 
-      pcout << "Relative error in gradient "
+      pcout << "Relative error in gradient " << std::setprecision(6)
             << std::sqrt(error_gradient) / std::sqrt(norm_gradient_exact) << std::endl;
 
       pcout << "---------------------------------------------" << std::endl;

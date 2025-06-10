@@ -1,11 +1,14 @@
 #include <deal.II/base/exceptions.h>
 
+#include <deal.II/grid/filtered_iterator.h>
+
 #include <meltpooldg/core/material.templates.hpp>
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
+#include <limits>
 #include <memory>
 
 namespace MeltPoolDG::Flow
@@ -15,14 +18,12 @@ namespace MeltPoolDG::Flow
     const DarcyDampingData<number>      &data_in,
     const ScratchData<dim, dim, number> &scratch_data,
     const unsigned int                   flow_vel_hanging_nodes_dof_idx,
-    const unsigned int                   flow_quad_idx,
-    const unsigned int                   solid_dof_idx)
+    const unsigned int                   flow_quad_idx)
     : mushy_zone_morphology(data_in.mushy_zone_morphology)
     , avoid_div_zero_constant(data_in.avoid_div_zero_constant)
     , scratch_data(scratch_data)
     , flow_vel_hanging_nodes_dof_idx(flow_vel_hanging_nodes_dof_idx)
     , flow_quad_idx(flow_quad_idx)
-    , solid_dof_idx(solid_dof_idx)
   {
     AssertThrow(mushy_zone_morphology == 0.0 || avoid_div_zero_constant > 0.0,
                 dealii::ExcMessage(
@@ -30,76 +31,11 @@ namespace MeltPoolDG::Flow
                   "darcy damping avoid div zero constant\" must be greater than zero! Abort.."));
   }
 
-
-
   template <int dim, typename number>
   void
-  DarcyDampingOperation<dim, number>::compute_darcy_damping(VectorType       &force_rhs,
-                                                            const VectorType &velocity_vec,
-                                                            const VectorType &solid_fraction_vec,
-                                                            const bool        zero_out)
-  {
-    const bool update_ghosts = !velocity_vec.has_ghost_elements();
-
-    if (update_ghosts)
-      velocity_vec.update_ghost_values();
-
-    scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
-      [&](const auto &matrix_free,
-          auto       &force_rhs,
-          const auto &solid_fraction_vec,
-          auto        macro_cells) {
-        FECellIntegrator<dim, 1, number> solid(matrix_free, solid_dof_idx, flow_quad_idx);
-
-        FECellIntegrator<dim, dim, number> velocity(matrix_free,
-                                                    flow_vel_hanging_nodes_dof_idx,
-                                                    flow_quad_idx);
-
-        FECellIntegrator<dim, dim, number> darcy_damping_force(matrix_free,
-                                                               flow_vel_hanging_nodes_dof_idx,
-                                                               flow_quad_idx);
-
-        damping_at_q.resize_fast(scratch_data.get_matrix_free().n_cell_batches() *
-                                 darcy_damping_force.n_q_points);
-
-        for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
-          {
-            solid.reinit(cell);
-            solid.read_dof_values_plain(solid_fraction_vec);
-            solid.evaluate(dealii::EvaluationFlags::values);
-
-            velocity.reinit(cell);
-            velocity.read_dof_values_plain(velocity_vec);
-            velocity.evaluate(dealii::EvaluationFlags::values);
-
-            darcy_damping_force.reinit(cell);
-
-            for (unsigned int q_index = 0; q_index < darcy_damping_force.n_q_points; ++q_index)
-              {
-                damping_at_q[cell * darcy_damping_force.n_q_points + q_index] =
-                  compute_darcy_damping_coefficient(solid.get_value(q_index));
-
-                darcy_damping_force.submit_value(
-                  damping_at_q[cell * darcy_damping_force.n_q_points + q_index] *
-                    velocity.get_value(q_index),
-                  q_index);
-              }
-            darcy_damping_force.integrate_scatter(dealii::EvaluationFlags::values, force_rhs);
-          }
-      },
-      force_rhs,
-      solid_fraction_vec,
-      zero_out);
-
-    if (update_ghosts)
-      velocity_vec.zero_out_ghost_values();
-  }
-
-  template <int dim, typename number>
-  void
-  DarcyDampingOperation<dim, number>::compute_darcy_damping(VectorType       &force_rhs,
-                                                            const VectorType &velocity_vec,
-                                                            const bool        zero_out)
+  DarcyDampingOperation<dim, number>::assemble_rhs(VectorType       &force_rhs,
+                                                   const VectorType &velocity_vec,
+                                                   const bool        zero_out)
   {
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &force_rhs, const auto &velocity_vec, auto macro_cells) {
@@ -240,30 +176,38 @@ namespace MeltPoolDG::Flow
   DarcyDampingOperation<dim, number>::attach_output_vectors(
     GenericDataOut<dim, number> &data_out) const
   {
-    if (data_out.is_requested("Darcy_damping"))
+    if (not data_out.is_requested("Darcy_damping"))
+      return;
+
+
+    damping_output.reinit(scratch_data.get_triangulation().n_active_cells());
+
+    // write element-wise darcy damping coefficient to output vector
+    if (not damping_at_q.empty() and scratch_data.is_hex_mesh())
       {
-        // write conductivity vector to dof vector
-        scratch_data.initialize_dof_vector(damping, solid_dof_idx);
-
-        if (not damping_at_q.empty() and scratch_data.is_hex_mesh())
+        for (auto &cell :
+             scratch_data.get_dof_handler(flow_vel_hanging_nodes_dof_idx).active_cell_iterators() |
+               dealii::IteratorFilters::LocallyOwnedCell())
           {
-            VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
-              damping,
-              scratch_data.get_matrix_free(),
-              solid_dof_idx,
-              flow_quad_idx,
-              [&](const unsigned int cell,
-                  const unsigned int quad) -> const dealii::VectorizedArray<number> & {
-                return damping_at_q[cell * scratch_data.get_n_q_points(flow_quad_idx) + quad];
-              });
+            const unsigned int mf_index =
+              scratch_data.get_matrix_free().get_matrix_free_cell_index(cell);
+            const unsigned int cell_batch_idx = mf_index / dealii::VectorizedArray<number>::size();
+            const unsigned int lane_index     = mf_index % dealii::VectorizedArray<number>::size();
 
-            scratch_data.get_constraint(solid_dof_idx).distribute(damping);
+            number max_per_element = std::numeric_limits<number>::lowest();
+
+            for (unsigned int q = 0; q < scratch_data.get_n_q_points(flow_quad_idx); ++q)
+              {
+                max_per_element = std::max(
+                  max_per_element,
+                  damping_at_q[cell_batch_idx * scratch_data.get_n_q_points(flow_quad_idx) + q]
+                              [lane_index]);
+              }
+            damping_output[cell->active_cell_index()] = max_per_element;
           }
-
-        data_out.add_data_vector(scratch_data.get_dof_handler(solid_dof_idx),
-                                 damping,
-                                 "Darcy_damping");
       }
+
+    data_out.add_element_wise_data_vector(damping_output, "Darcy_damping");
   }
   template <int dim, typename number>
   void

@@ -255,7 +255,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
       pcout << "---------------------------------------------" << std::endl;
       pcout << "Accessible vectors:" << std::endl;
       for (const auto &entry : generic_data_out.entries)
-        for (const auto &name : std::get<2>(entry))
+        for (const auto &name : std::get<3>(entry))
           {
             pcout << " * " << std::setw(20) << name << " Max-norm: " << std::setprecision(5)
                   << std::setw(10) << generic_data_out.get_vector(name).linfty_norm()

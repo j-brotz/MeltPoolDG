@@ -516,9 +516,9 @@ namespace MeltPoolDG
                 // ... f) explicit Darcy damping force
                 if (darcy_operation and param.flow.darcy_damping.formulation ==
                                           DarcyDampingFormulation::explicit_formulation)
-                  darcy_operation->compute_darcy_damping(vel_force_rhs,
-                                                         flow_operation->get_velocity(),
-                                                         false /*zero_out*/);
+                  darcy_operation->assemble_rhs(vel_force_rhs,
+                                                flow_operation->get_velocity(),
+                                                false /*zero_out*/);
 
                 //  ... and set the resulting forces within the Navier-Stokes solver
                 flow_operation->set_force_rhs(vel_force_rhs);
@@ -1119,8 +1119,7 @@ namespace MeltPoolDG
               param.flow.darcy_damping,
               *scratch_data,
               flow_operation->get_dof_handler_idx_velocity(),
-              flow_operation->get_quad_idx_velocity(),
-              flow_operation->get_dof_handler_idx_pressure());
+              flow_operation->get_quad_idx_velocity());
           }
       }
 

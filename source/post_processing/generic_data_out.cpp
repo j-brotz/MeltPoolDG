@@ -32,7 +32,11 @@ namespace MeltPoolDG
     if (not(is_requested(names[0]) or force_output))
       return;
 
-    entries.emplace_back(&dof_handler, &data, names, data_component_interpretation);
+    entries.emplace_back(&dof_handler,
+                         &data,
+                         nullptr /*dummy, no element wise vector*/,
+                         names,
+                         data_component_interpretation);
     entry_id[names[0]] = entries.size() - 1;
   }
 
@@ -47,6 +51,25 @@ namespace MeltPoolDG
       return;
 
     entries.emplace_back(&dof_handler,
+                         &data,
+                         nullptr, /*dummy, no element wise vector*/
+                         std::vector<std::string>{name},
+                         std::vector<DataComponentInterpretation::DataComponentInterpretation>{
+                           DataComponentInterpretation::component_is_scalar});
+    entry_id[name] = entries.size() - 1;
+  }
+
+  template <int dim, typename number>
+  void
+  GenericDataOut<dim, number>::add_element_wise_data_vector(const ElementWiseVectorType &data,
+                                                            const std::string           &name,
+                                                            const bool force_output)
+  {
+    if (not(is_requested(name) or force_output))
+      return;
+
+    entries.emplace_back(nullptr, /*dummy, no DoFHandler*/
+                         nullptr, /*dummy, no DoF vector*/
                          &data,
                          std::vector<std::string>{name},
                          std::vector<DataComponentInterpretation::DataComponentInterpretation>{
@@ -71,6 +94,10 @@ namespace MeltPoolDG
         AssertThrow(false, ExcMessage(exc_message.str()));
       }
 
+    AssertThrow(std::get<0>(entries[entry_id.at(name)]) and std::get<1>(entries[entry_id.at(name)]),
+                ExcMessage("You are requesting the result of an element-wise "
+                           "vector which is not supported."));
+
     return *std::get<1>(entries[entry_id.at(name)]);
   }
 
@@ -90,6 +117,10 @@ namespace MeltPoolDG
 
         AssertThrow(false, ExcMessage(exc_message.str()));
       }
+    AssertThrow(std::get<0>(entries[entry_id.at(name)]) and std::get<1>(entries[entry_id.at(name)]),
+                ExcMessage("You are requesting the DoFHandler of an element-wise "
+                           "vector which is not supported."));
+
 
     return *std::get<0>(entries[entry_id.at(name)]);
   }

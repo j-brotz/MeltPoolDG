@@ -1,7 +1,6 @@
 setup_application()
 
-# Tests
-add_subdirectory(cases/tests)
+# Unit tests
 add_subdirectory(cases/unit_tests)
 
 # Add tests in subdirectories
