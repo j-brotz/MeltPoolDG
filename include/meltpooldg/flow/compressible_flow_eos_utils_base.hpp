@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <meltpooldg/flow/compressible_flow_types.hpp>
+#include <meltpooldg/flow/compressible_flow_utils.hpp>
 
 namespace MeltPoolDG::Flow::EOS
 {

@@ -30,6 +30,7 @@
 #include <meltpooldg/cut/solution_transfer.hpp>
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/compressible_flow_boundary_conditions.hpp>
+#include <meltpooldg/flow/compressible_flow_scratch_data.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operation.hpp>
 #include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operator.hpp>

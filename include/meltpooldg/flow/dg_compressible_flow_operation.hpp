@@ -22,6 +22,7 @@
 
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
+#include <meltpooldg/flow/compressible_flow_scratch_data.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_base.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
