@@ -2,10 +2,10 @@
     Starting user defined postprocessing
 ---------------------------------------------
 Relative error to exact solution 1.0119
-Mass of bubble 0.070693
+Mass of bubble 0.0706927
 Mass loss 0 %
-Relative error to exact curvature 0.056801
-Relative error in gradient 0.99761
+Relative error to exact curvature 0.0568008
+Relative error in gradient 0.997614
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -16,10 +16,10 @@ Relative error in gradient 0.99761
     Starting user defined postprocessing
 ---------------------------------------------
 Relative error to exact solution 1.0119
-Mass of bubble 0.070693
+Mass of bubble 0.0706927
 Mass loss 0 %
-Relative error to exact curvature 0.056801
-Relative error in gradient 0.99761
+Relative error to exact curvature 0.0568008
+Relative error in gradient 0.997614
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -29,11 +29,11 @@ Relative error in gradient 0.99761
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Relative error to exact solution 0.95299
-Mass of bubble 0.070359
-Mass loss -0.47186 %
-Relative error to exact curvature 0.056801
-Relative error in gradient 0.95242
+Relative error to exact solution 0.952988
+Mass of bubble 0.0703591
+Mass loss -0.471859 %
+Relative error to exact curvature 0.0568008
+Relative error in gradient 0.952416
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -43,11 +43,11 @@ Relative error in gradient 0.95242
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Relative error to exact solution 0.90213
-Mass of bubble 0.070082
-Mass loss -0.86341 %
-Relative error to exact curvature 0.056801
-Relative error in gradient 0.89591
+Relative error to exact solution 0.902132
+Mass of bubble 0.0700823
+Mass loss -0.863406 %
+Relative error to exact curvature 0.0568008
+Relative error in gradient 0.895907
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -57,10 +57,10 @@ Relative error in gradient 0.89591
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Relative error to exact solution 0.85651
-Mass of bubble 0.070044
-Mass loss -0.91742 %
-Relative error to exact curvature 0.056801
+Relative error to exact solution 0.856513
+Mass of bubble 0.0700441
+Mass loss -0.917423 %
+Relative error to exact curvature 0.0568008
 Relative error in gradient 0.84217
 ---------------------------------------------
     End of user defined postprocessing
@@ -71,11 +71,11 @@ Relative error in gradient 0.84217
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Relative error to exact solution 0.81621
-Mass of bubble 0.069748
-Mass loss -1.336 %
-Relative error to exact curvature 0.056801
-Relative error in gradient 0.79111
+Relative error to exact solution 0.816212
+Mass of bubble 0.0697482
+Mass loss -1.33604 %
+Relative error to exact curvature 0.0568008
+Relative error in gradient 0.791114
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -85,11 +85,11 @@ Relative error in gradient 0.79111
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Relative error to exact solution 0.78129
+Relative error to exact solution 0.781289
 Mass of bubble 0.0692
-Mass loss -2.1116 %
-Relative error to exact curvature 0.056801
-Relative error in gradient 0.74264
+Mass loss -2.11157 %
+Relative error to exact curvature 0.0568008
+Relative error in gradient 0.742645
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -99,10 +99,10 @@ Relative error in gradient 0.74264
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Relative error to exact solution 0.75177
-Mass of bubble 0.068956
-Mass loss -2.4571 %
-Relative error to exact curvature 0.056801
+Relative error to exact solution 0.751768
+Mass of bubble 0.0689557
+Mass loss -2.45711 %
+Relative error to exact curvature 0.0568008
 Relative error in gradient 0.69667
 ---------------------------------------------
     End of user defined postprocessing
@@ -113,11 +113,11 @@ Relative error in gradient 0.69667
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Relative error to exact solution 0.72762
-Mass of bubble 0.068656
-Mass loss -2.8817 %
-Relative error to exact curvature 0.056801
-Relative error in gradient 0.6531
+Relative error to exact solution 0.727622
+Mass of bubble 0.0686555
+Mass loss -2.88172 %
+Relative error to exact curvature 0.0568008
+Relative error in gradient 0.653099
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -127,10 +127,10 @@ Relative error in gradient 0.6531
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Relative error to exact solution 0.70876
-Mass of bubble 0.068269
+Relative error to exact solution 0.708761
+Mass of bubble 0.0682695
 Mass loss -3.4278 %
-Relative error to exact curvature 0.056801
+Relative error to exact curvature 0.0568008
 Relative error in gradient 0.61184
 ---------------------------------------------
     End of user defined postprocessing
@@ -142,10 +142,10 @@ Relative error in gradient 0.61184
     Starting user defined postprocessing
 ---------------------------------------------
 Relative error to exact solution 0.69502
-Mass of bubble 0.068186
+Mass of bubble 0.0681863
 Mass loss -3.5455 %
-Relative error to exact curvature 0.056801
-Relative error in gradient 0.57281
+Relative error to exact curvature 0.0568008
+Relative error in gradient 0.572806
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -155,11 +155,11 @@ Relative error in gradient 0.57281
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Relative error to exact solution 0.68616
-Mass of bubble 0.067845
-Mass loss -4.0284 %
-Relative error to exact curvature 0.056801
-Relative error in gradient 0.53591
+Relative error to exact solution 0.686161
+Mass of bubble 0.0678449
+Mass loss -4.02838 %
+Relative error to exact curvature 0.0568008
+Relative error in gradient 0.535909
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -169,11 +169,11 @@ Relative error in gradient 0.53591
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Relative error to exact solution 0.68188
-Mass of bubble 0.06757
-Mass loss -4.4177 %
-Relative error to exact curvature 0.056801
-Relative error in gradient 0.50106
+Relative error to exact solution 0.681876
+Mass of bubble 0.0675697
+Mass loss -4.41773 %
+Relative error to exact curvature 0.0568008
+Relative error in gradient 0.501064
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -183,11 +183,11 @@ Relative error in gradient 0.50106
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Relative error to exact solution 0.6818
-Mass of bubble 0.067224
-Mass loss -4.9061 %
-Relative error to exact curvature 0.056801
-Relative error in gradient 0.46819
+Relative error to exact solution 0.681801
+Mass of bubble 0.0672245
+Mass loss -4.90605 %
+Relative error to exact curvature 0.0568008
+Relative error in gradient 0.468188
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -197,11 +197,11 @@ Relative error in gradient 0.46819
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Relative error to exact solution 0.68501
-Mass of bubble 0.066872
-Mass loss -5.405 %
-Relative error to exact curvature 0.056801
-Relative error in gradient 0.44146
+Relative error to exact solution 0.685009
+Mass of bubble 0.0668718
+Mass loss -5.40497 %
+Relative error to exact curvature 0.0568008
+Relative error in gradient 0.441455
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
