@@ -122,14 +122,40 @@ namespace MeltPoolDG
         used_var_ids = &all_vars;
       }
 
+
+    std::vector<unsigned int> element_wise_vars;
+
     for (const auto &i : *used_var_ids)
       {
         const auto &data = generic_data_out.entries[i];
 
-        data_out.add_data_vector(*std::get<0>(data),
-                                 *std::get<1>(data),
-                                 std::get<2>(data),
-                                 std::get<3>(data));
+        // element-wise output
+        if (std::get<0>(data) == nullptr)
+          {
+            std::cout << "element wise output -_> do later" << std::endl;
+            element_wise_vars.emplace_back(i);
+          }
+        // nodal output
+        else
+          {
+            std::cout << "nodal output" << std::endl;
+            data_out.add_data_vector(*std::get<0>(data),
+                                     *std::get<1>(data),
+                                     std::get<3>(data),
+                                     std::get<4>(data));
+          }
+      }
+
+    for (const auto &i : element_wise_vars)
+      {
+        const auto &data = generic_data_out.entries[i];
+        std::cout << "element wise output attach data vector" << std::endl;
+        std::cout << "vector element " << (*std::get<2>(data))[0] << std::endl;
+        std::cout << "after vector access " << std::endl;
+        data_out.add_data_vector(*std::get<2>(data),
+                                 std::get<3>(data),
+                                 dealii::DataOut_DoFData<dim, dim>::DataVectorType::type_cell_data,
+                                 std::get<4>(data));
       }
 
     if (output_data.paraview.output_subdomains)
@@ -161,7 +187,11 @@ namespace MeltPoolDG
 
     if (n_patches == 0)
       for (const auto &data : generic_data_out.entries)
-        n_patches = std::max(n_patches, std::get<0>(data)->get_fe().degree);
+        {
+          if (std::get<0>(data) == nullptr)
+            continue;
+          n_patches = std::max(n_patches, std::get<0>(data)->get_fe().degree);
+        }
 
     data_out.build_patches(mapping, n_patches);
 

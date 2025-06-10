@@ -14,19 +14,68 @@
 #include <tuple>
 #include <vector>
 
-
 namespace MeltPoolDG
 {
+  /**
+   * @brief A generic utility for managing simulation output data in the MeltPoolDG context.
+   *
+   * This class provides a structured interface to collect and access simulation data vectors,
+   * either from degrees of freedom (DoF) based structures or from element-wise results. It allows
+   * for filtered output based on a list of requested variables and supports scalar and interpreted
+   * component data. The class also verifies correct usage and provides meaningful diagnostics.
+   *
+   * @tparam dim Spatial dimension (1D, 2D, or 3D).
+   * @tparam number Numeric type of the underlying data (e.g., float, double).
+   */
   template <int dim, typename number>
   class GenericDataOut
   {
   public:
+    /// The distributed vector type used for parallel computations. Used for DoF output vectors.
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
+    /// The element-wise (non-distributed) vector type. Used for element-wise output vectors.
+    using ElementWiseVectorType = dealii::Vector<number>;
+
+    /**
+     * @brief Storage of registered data entries.
+     *
+     * Each entry contains:
+     * - a pointer to the DoFHandler (or nullptr for element-wise),
+     * - a pointer to the distributed vector (or nullptr for element-wise),
+     * - a pointer to the element-wise vector (or nullptr for DoF-based data),
+     * - a list of variable/component names,
+     * - the component interpretations.
+     */
+    std::vector<
+      std::tuple<const dealii::DoFHandler<dim> * /*optional*/,
+                 const VectorType *,
+                 const ElementWiseVectorType * /*optional*/,
+                 const std::vector<std::string>,
+                 std::vector<dealii::DataComponentInterpretation::DataComponentInterpretation>>>
+      entries;
+    /**
+     * @brief Constructor.
+     * @param mapping Reference to the mapping object used for geometry transformation.
+     * @param current_time The time value associated with the output.
+     * @param req_vars_in List of requested variable names (defaults to {"all"}).
+     */
     GenericDataOut(const dealii::Mapping<dim>     &mapping,
                    const number                    current_time,
                    const std::vector<std::string> &req_vars_in = {"all"});
 
+    /**
+     * @brief Add a distributed vector with multiple components and custom interpretations.
+     *
+     * Only adds the data if the first component name is among the requested variables or
+     * if `force_output` is true.
+     *
+     * @param dof_handler The associated DoFHandler.
+     * @param data The distributed vector.
+     * @param names Component names.
+     * @param data_component_interpretation Interpretations of each component (optional).
+     * @param force_output If true, forces the addition even if not requested.
+     */
     void
     add_data_vector(
       const dealii::DoFHandler<dim>  &dof_handler,
@@ -37,43 +86,113 @@ namespace MeltPoolDG
           std::vector<dealii::DataComponentInterpretation::DataComponentInterpretation>(),
       const bool force_output = false);
 
+    /**
+     * @brief Add a distributed vector with a single scalar component.
+     *
+     * @param dof_handler The associated DoFHandler.
+     * @param data The distributed vector.
+     * @param name The name of the variable.
+     * @param force_output If true, forces the data to be added regardless of request filtering.
+     */
     void
     add_data_vector(const dealii::DoFHandler<dim> &dof_handler,
                     const VectorType              &data,
                     const std::string             &name,
                     const bool                     force_output = false);
 
-    std::vector<
-      std::tuple<const dealii::DoFHandler<dim> *,
-                 const VectorType *,
-                 const std::vector<std::string>,
-                 std::vector<dealii::DataComponentInterpretation::DataComponentInterpretation>>>
-      entries;
+    /**
+     * @brief Add an element-wise vector.
+     *
+     * These are typically used for cell-wise scalar quantities not tied to a DoFHandler.
+     *
+     * @param data The element-wise vector.
+     * @param name The name of the output variable.
+     * @param force_output If true, forces the data to be added regardless of request filtering.
+     */
+    void
+    add_element_wise_data_vector(const ElementWiseVectorType &data,
+                                 const std::string           &name,
+                                 const bool                   force_output = false);
 
+    /**
+     * @brief Retrieve a previously added distributed vector by name.
+     *
+     * Throws if the variable name is not found or if it is an element-wise vector.
+     *
+     * @param name The name of the vector.
+     * @return A reference to the vector.
+     */
     const VectorType &
     get_vector(const std::string &name) const;
 
+    /**
+     * @brief Retrieve the DoFHandler associated with a named distributed vector.
+     *
+     * Throws if the variable name is not found or if it corresponds to element-wise data.
+     *
+     * @param name The name of the variable.
+     * @return Reference to the associated DoFHandler.
+     */
     const dealii::DoFHandler<dim> &
     get_dof_handler(const std::string &name) const;
 
+    /**
+     * @brief Access the stored Mapping used in the constructor.
+     *
+     * @return The mapping reference.
+     */
     const dealii::Mapping<dim> &
     get_mapping() const;
 
+    /**
+     * @brief Get the time value associated with this output.
+     *
+     * @return The current simulation time.
+     */
     const number &
     get_time() const;
 
+    /**
+     * @brief Determine if a variable has been requested for output.
+     *
+     * The logic caches lookup results for performance and returns true if either
+     * `req_vars = {"all"}` or if the specific variable was listed.
+     *
+     * @param name Name of the variable.
+     * @return True if the variable is to be output.
+     */
     bool
     is_requested(const std::string &var) const;
 
+    /**
+     * @brief Retrieve the entry indices of requested variables.
+     *
+     * Validates consistency of the request. If the request is ambiguous or no match
+     * is found, an exception with diagnostics is thrown.
+     *
+     * @param req_var The list of requested variable names.
+     * @return Indices of valid entries in the internal storage.
+     */
     std::vector<unsigned int>
     get_indices_data_request(const std::vector<std::string> &req_var) const;
 
   private:
+    /// Maps variable names to their entry index.
     std::map<std::string, unsigned int> entry_id;
-    const dealii::Mapping<dim>         &mapping;
-    number                              current_time;
-    const std::vector<std::string>      req_vars;
+
+    /// Mapping object reference.
+    const dealii::Mapping<dim> &mapping;
+
+    /// Time associated with the current output.
+    number current_time;
+
+    /// List of requested variable names.
+    const std::vector<std::string> req_vars;
+
+    /// Caching mechanism to store whether a variable is requested.
     mutable std::map<std::string, bool> req_vars_info;
-    const bool                          req_all = false;
+
+    /// Flag indicating if all variables are requested.
+    const bool req_all = false;
   };
 } // namespace MeltPoolDG
