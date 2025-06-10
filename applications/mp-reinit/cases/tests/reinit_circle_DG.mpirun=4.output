@@ -1,11 +1,6 @@
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Accessible vectors:
- *        reinit_DG_psi Max-norm:     1.1132 number of dofs: 1024
- *             normal_0 Max-norm:     1.9561 number of dofs: 1024
- *             normal_1 Max-norm:     1.9561 number of dofs: 1024
- *            curvature Max-norm:     9.5665 number of dofs: 1024
 Relative error to exact solution 1.0119
 Mass of bubble 0.070693
 Mass loss 0 %
@@ -20,11 +15,6 @@ Relative error in gradient 0.99761
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Accessible vectors:
- *        reinit_DG_psi Max-norm:     1.1132 number of dofs: 1024
- *             normal_0 Max-norm:     1.9561 number of dofs: 1024
- *             normal_1 Max-norm:     1.9561 number of dofs: 1024
- *            curvature Max-norm:     9.5665 number of dofs: 1024
 Relative error to exact solution 1.0119
 Mass of bubble 0.070693
 Mass loss 0 %
@@ -39,11 +29,6 @@ Relative error in gradient 0.99761
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Accessible vectors:
- *        reinit_DG_psi Max-norm:     1.1103 number of dofs: 1024
- *             normal_0 Max-norm:     1.9561 number of dofs: 1024
- *             normal_1 Max-norm:     1.9561 number of dofs: 1024
- *            curvature Max-norm:     9.5665 number of dofs: 1024
 Relative error to exact solution 0.95299
 Mass of bubble 0.070359
 Mass loss -0.47186 %
@@ -58,11 +43,6 @@ Relative error in gradient 0.95242
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Accessible vectors:
- *        reinit_DG_psi Max-norm:     1.1072 number of dofs: 1024
- *             normal_0 Max-norm:     1.9561 number of dofs: 1024
- *             normal_1 Max-norm:     1.9561 number of dofs: 1024
- *            curvature Max-norm:     9.5665 number of dofs: 1024
 Relative error to exact solution 0.90213
 Mass of bubble 0.070082
 Mass loss -0.86341 %
@@ -77,11 +57,6 @@ Relative error in gradient 0.89591
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Accessible vectors:
- *        reinit_DG_psi Max-norm:     1.1042 number of dofs: 1024
- *             normal_0 Max-norm:     1.9561 number of dofs: 1024
- *             normal_1 Max-norm:     1.9561 number of dofs: 1024
- *            curvature Max-norm:     9.5665 number of dofs: 1024
 Relative error to exact solution 0.85651
 Mass of bubble 0.070044
 Mass loss -0.91742 %
@@ -96,11 +71,6 @@ Relative error in gradient 0.84217
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Accessible vectors:
- *        reinit_DG_psi Max-norm:     1.1011 number of dofs: 1024
- *             normal_0 Max-norm:     1.9561 number of dofs: 1024
- *             normal_1 Max-norm:     1.9561 number of dofs: 1024
- *            curvature Max-norm:     9.5665 number of dofs: 1024
 Relative error to exact solution 0.81621
 Mass of bubble 0.069748
 Mass loss -1.336 %
@@ -115,11 +85,6 @@ Relative error in gradient 0.79111
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Accessible vectors:
- *        reinit_DG_psi Max-norm:      1.098 number of dofs: 1024
- *             normal_0 Max-norm:     1.9561 number of dofs: 1024
- *             normal_1 Max-norm:     1.9561 number of dofs: 1024
- *            curvature Max-norm:     9.5665 number of dofs: 1024
 Relative error to exact solution 0.78129
 Mass of bubble 0.0692
 Mass loss -2.1116 %
@@ -134,11 +99,6 @@ Relative error in gradient 0.74264
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Accessible vectors:
- *        reinit_DG_psi Max-norm:      1.095 number of dofs: 1024
- *             normal_0 Max-norm:     1.9561 number of dofs: 1024
- *             normal_1 Max-norm:     1.9561 number of dofs: 1024
- *            curvature Max-norm:     9.5665 number of dofs: 1024
 Relative error to exact solution 0.75177
 Mass of bubble 0.068956
 Mass loss -2.4571 %
@@ -153,11 +113,6 @@ Relative error in gradient 0.69667
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Accessible vectors:
- *        reinit_DG_psi Max-norm:     1.0919 number of dofs: 1024
- *             normal_0 Max-norm:     1.9561 number of dofs: 1024
- *             normal_1 Max-norm:     1.9561 number of dofs: 1024
- *            curvature Max-norm:     9.5665 number of dofs: 1024
 Relative error to exact solution 0.72762
 Mass of bubble 0.068656
 Mass loss -2.8817 %
@@ -172,11 +127,6 @@ Relative error in gradient 0.6531
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Accessible vectors:
- *        reinit_DG_psi Max-norm:     1.0888 number of dofs: 1024
- *             normal_0 Max-norm:     1.9561 number of dofs: 1024
- *             normal_1 Max-norm:     1.9561 number of dofs: 1024
- *            curvature Max-norm:     9.5665 number of dofs: 1024
 Relative error to exact solution 0.70876
 Mass of bubble 0.068269
 Mass loss -3.4278 %
@@ -191,11 +141,6 @@ Relative error in gradient 0.61184
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Accessible vectors:
- *        reinit_DG_psi Max-norm:     1.0858 number of dofs: 1024
- *             normal_0 Max-norm:     1.9561 number of dofs: 1024
- *             normal_1 Max-norm:     1.9561 number of dofs: 1024
- *            curvature Max-norm:     9.5665 number of dofs: 1024
 Relative error to exact solution 0.69502
 Mass of bubble 0.068186
 Mass loss -3.5455 %
@@ -210,11 +155,6 @@ Relative error in gradient 0.57281
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Accessible vectors:
- *        reinit_DG_psi Max-norm:     1.0827 number of dofs: 1024
- *             normal_0 Max-norm:     1.9561 number of dofs: 1024
- *             normal_1 Max-norm:     1.9561 number of dofs: 1024
- *            curvature Max-norm:     9.5665 number of dofs: 1024
 Relative error to exact solution 0.68616
 Mass of bubble 0.067845
 Mass loss -4.0284 %
@@ -229,11 +169,6 @@ Relative error in gradient 0.53591
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Accessible vectors:
- *        reinit_DG_psi Max-norm:     1.0797 number of dofs: 1024
- *             normal_0 Max-norm:     1.9561 number of dofs: 1024
- *             normal_1 Max-norm:     1.9561 number of dofs: 1024
- *            curvature Max-norm:     9.5665 number of dofs: 1024
 Relative error to exact solution 0.68188
 Mass of bubble 0.06757
 Mass loss -4.4177 %
@@ -248,11 +183,6 @@ Relative error in gradient 0.50106
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Accessible vectors:
- *        reinit_DG_psi Max-norm:     1.0766 number of dofs: 1024
- *             normal_0 Max-norm:     1.9561 number of dofs: 1024
- *             normal_1 Max-norm:     1.9561 number of dofs: 1024
- *            curvature Max-norm:     9.5665 number of dofs: 1024
 Relative error to exact solution 0.6818
 Mass of bubble 0.067224
 Mass loss -4.9061 %
@@ -267,11 +197,6 @@ Relative error in gradient 0.46819
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
-Accessible vectors:
- *        reinit_DG_psi Max-norm:     1.0741 number of dofs: 1024
- *             normal_0 Max-norm:     1.9561 number of dofs: 1024
- *             normal_1 Max-norm:     1.9561 number of dofs: 1024
- *            curvature Max-norm:     9.5665 number of dofs: 1024
 Relative error to exact solution 0.68501
 Mass of bubble 0.066872
 Mass loss -5.405 %

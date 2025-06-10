@@ -156,16 +156,6 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
       pcout << "---------------------------------------------" << std::endl;
       pcout << "    Starting user defined postprocessing" << std::endl;
       pcout << "---------------------------------------------" << std::endl;
-      pcout << "Accessible vectors:" << std::endl;
-      for (const auto &entry : generic_data_out.entries)
-        for (const auto &name : std::get<2>(entry))
-          {
-            pcout << " * " << std::setw(20) << name << " Max-norm: " << std::setprecision(5)
-                  << std::setw(10) << generic_data_out.get_vector(name).linfty_norm()
-                  << " number of dofs: " << generic_data_out.get_dof_handler(name).n_dofs()
-                  << std::endl;
-            break;
-          }
 
       /*Error Calculation*/
       ExactSolution<dim, number> exact_solution(0.1);
