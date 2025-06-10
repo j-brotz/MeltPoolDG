@@ -122,23 +122,22 @@ namespace MeltPoolDG
         used_var_ids = &all_vars;
       }
 
-
-    std::vector<unsigned int> element_wise_vars;
+    // Collect indices for element-wise output (to be handled later).
+    // This postponement ensures we skip cases where the corresponding DoFHandler
+    // has not yet been attached, avoiding invalid access.
+    std::vector<unsigned int> element_ids;
 
     for (const auto &i : *used_var_ids)
       {
         const auto &data = generic_data_out.entries[i];
 
-        // element-wise output
+        // If the DoFHandler pointer is null, this corresponds to element-wise data.
+        // Store the index for deferred processing after all DoFHandlers are available.
         if (std::get<0>(data) == nullptr)
-          {
-            std::cout << "element wise output -_> do later" << std::endl;
-            element_wise_vars.emplace_back(i);
-          }
-        // nodal output
+          element_ids.emplace_back(i);
+        // Otherwise, this is nodal data and can be attached immediately.
         else
           {
-            std::cout << "nodal output" << std::endl;
             data_out.add_data_vector(*std::get<0>(data),
                                      *std::get<1>(data),
                                      std::get<3>(data),
@@ -146,12 +145,10 @@ namespace MeltPoolDG
           }
       }
 
-    for (const auto &i : element_wise_vars)
+    // Attach element-wise output data.
+    for (const auto &i : element_ids)
       {
         const auto &data = generic_data_out.entries[i];
-        std::cout << "element wise output attach data vector" << std::endl;
-        std::cout << "vector element " << (*std::get<2>(data))[0] << std::endl;
-        std::cout << "after vector access " << std::endl;
         data_out.add_data_vector(*std::get<2>(data),
                                  std::get<3>(data),
                                  dealii::DataOut_DoFData<dim, dim>::DataVectorType::type_cell_data,

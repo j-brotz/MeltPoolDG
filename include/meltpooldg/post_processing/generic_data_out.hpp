@@ -54,6 +54,7 @@ namespace MeltPoolDG
                  const std::vector<std::string>,
                  std::vector<dealii::DataComponentInterpretation::DataComponentInterpretation>>>
       entries;
+
     /**
      * @brief Constructor.
      * @param mapping Reference to the mapping object used for geometry transformation.
