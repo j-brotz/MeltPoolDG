@@ -169,6 +169,13 @@ namespace MeltPoolDG
                                                      comp_flow_dof_idx),
                                                    scratch_data->get_pcout(2));
 
+    const auto [property_names, property_component_interpretations] =
+      SphericalParticle<dim, number>::get_property_names_and_component_interpretation();
+
+    post_processor->register_obstacle_output(&obstacle_field->get_particle_handler(),
+                                             property_names,
+                                             property_component_interpretations);
+
     // initialize profiling
     if (simulation_case->parameters.profiling.enable)
       profiling_monitor =

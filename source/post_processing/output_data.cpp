@@ -8,6 +8,19 @@
 namespace MeltPoolDG
 {
   void
+  ParticleOutputData::add_parameters(dealii::ParameterHandler &prm)
+  {
+    prm.enter_subsection("particles");
+    {
+      prm.add_parameter("enable",
+                        enable,
+                        "Set this parameter to true to activate particle paraview output.");
+      prm.add_parameter("filename", filename, "Sets the base name for particle output files.");
+    }
+    prm.leave_subsection();
+  }
+
+  void
   ParaviewData::add_parameters(dealii::ParameterHandler &prm)
   {
     prm.enter_subsection("paraview");
@@ -62,6 +75,7 @@ namespace MeltPoolDG
                         "Set this parameter to true to enable user defined postprocessing.");
 
       paraview.add_parameters(prm);
+      particle.add_parameters(prm);
     }
     prm.leave_subsection();
   }

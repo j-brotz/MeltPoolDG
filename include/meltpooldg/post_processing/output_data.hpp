@@ -8,6 +8,18 @@
 
 namespace MeltPoolDG
 {
+  struct ParticleOutputData
+  {
+    /// If true, particle output is generated for paraview
+    bool enable = false;
+
+    /// Base name for particle output files
+    std::string filename = "particle";
+
+    void
+    add_parameters(dealii::ParameterHandler &prm);
+  };
+
   struct ParaviewData
   {
     bool        enable                   = false;
@@ -33,6 +45,7 @@ namespace MeltPoolDG
     std::vector<std::string> output_variables               = {"all"};
     bool                     do_user_defined_postprocessing = false;
     ParaviewData             paraview;
+    ParticleOutputData       particle;
 
     void
     add_parameters(dealii::ParameterHandler &prm);
