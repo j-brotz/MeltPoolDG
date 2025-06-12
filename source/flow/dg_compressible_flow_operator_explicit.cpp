@@ -76,7 +76,7 @@ namespace MeltPoolDG::Flow
   template <unsigned int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::local_apply_cell(
-    const MatrixFree<dim, number> &,
+    const MatrixFree<dim, number>                    &matrix_free,
     LinearAlgebra::distributed::Vector<number>       &dst,
     const LinearAlgebra::distributed::Vector<number> &src,
     const std::pair<unsigned, unsigned>              &cell_range) const
@@ -104,7 +104,7 @@ namespace MeltPoolDG::Flow
           {
             external_forces->cell_operation(flow_scratch_data.scratch_data.get_matrix_free(),
                                             cell,
-                                            phi.n_lanes);
+                                            matrix_free.n_active_entries_per_cell_batch(cell));
           }
 
         for (const unsigned int q : phi.quadrature_point_indices())

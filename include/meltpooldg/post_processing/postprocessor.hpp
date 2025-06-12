@@ -75,8 +75,8 @@ namespace MeltPoolDG
     void
     serialize(Archive &ar, const unsigned int /*version*/)
     {
-      ar & vector_times_and_names;
-      ar & time_at_last_output;
+      ar &vector_times_and_names;
+      ar &time_at_last_output;
     }
 
     void

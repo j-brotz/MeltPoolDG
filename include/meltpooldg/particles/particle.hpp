@@ -391,7 +391,7 @@ namespace MeltPoolDG
       return property_pool.get_location(handle).distance(cell.center()) <
              get_property(property_pool, handle, Properties::radius) + 0.5 * cell.diameter();
     }
-  }; // namespace MeltPoolDG
+  };
 } // namespace MeltPoolDG
 
 
@@ -404,16 +404,16 @@ MeltPoolDG::SphericalParticle<dim, number>::read_state_input(const std::string &
   std::string                temp;
   std::istringstream         data_string(input_data);
   // particle position
-  for (unsigned int i = 0; i < dim; i++)
+  for (int i = 0; i < dim; i++)
     {
       std::getline(data_string, temp, ',');
       particle_location[i] = std::stod(temp);
     }
 
-  // particle velocity and angular velocity
+  // set particle translational velocity and angular velocity to zero by default
   for (unsigned int i = Properties::velocity; i < Properties::angular_acceleration; ++i)
     {
-      particle_properties[i] = 0; // default to zero
+      particle_properties[i] = 0;
     }
 
   // density and radius

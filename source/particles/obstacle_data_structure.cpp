@@ -20,17 +20,17 @@ MeltPoolDG::ObstacleDataStructure<dim, number>::ObstacleDataStructureModel<
 
 template <int dim, typename number>
 template <typename ObstacleDataStructureType>
-void
+std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
 MeltPoolDG::ObstacleDataStructure<dim, number>::ObstacleDataStructureModel<
   ObstacleDataStructureType>::get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
                                                     const dealii::CellAccessor<dim> &cell) const
 {
-  return obstacle_data_structure.compute_force_on_obstacle(dst, cell);
+  return obstacle_data_structure.get_obstacles_in_cell(dst, cell);
 }
 
 template <int dim, typename number>
 template <typename ObstacleDataStructureType>
-void
+std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
 MeltPoolDG::ObstacleDataStructure<dim, number>::ObstacleDataStructureModel<
   ObstacleDataStructureType>::get_obstacles_in_cell_batch(dealii::Particles::PropertyPool<dim> &dst,
                                                           const dealii::MatrixFree<dim, number>
@@ -38,10 +38,10 @@ MeltPoolDG::ObstacleDataStructure<dim, number>::ObstacleDataStructureModel<
                                                           const unsigned int cell_batch_id,
                                                           const unsigned int n_lanes) const
 {
-  return obstacle_data_structure.compute_force_on_obstacle(dst,
-                                                           matrix_free,
-                                                           cell_batch_id,
-                                                           n_lanes);
+  return obstacle_data_structure.get_obstacles_in_cell_batch(dst,
+                                                             matrix_free,
+                                                             cell_batch_id,
+                                                             n_lanes);
 }
 
 template <int dim, typename number>
@@ -61,7 +61,7 @@ MeltPoolDG::ObstacleDataStructure<dim, number>::reinit()
 }
 
 template <int dim, typename number>
-void
+std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
 MeltPoolDG::ObstacleDataStructure<dim, number>::get_obstacles_in_cell(
   dealii::Particles::PropertyPool<dim> &dst,
   const dealii::CellAccessor<dim>      &cell) const
@@ -70,7 +70,7 @@ MeltPoolDG::ObstacleDataStructure<dim, number>::get_obstacles_in_cell(
 }
 
 template <int dim, typename number>
-void
+std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
 MeltPoolDG::ObstacleDataStructure<dim, number>::get_obstacles_in_cell_batch(
   dealii::Particles::PropertyPool<dim>  &dst,
   const dealii::MatrixFree<dim, number> &matrix_free,
@@ -91,29 +91,34 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::ObstacleCom
 {}
 
 template <int dim, typename number, typename ObstacleType>
-void
-MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::reinit() const
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::~ObstacleCompleteDomainSearch()
 {
-  for (unsigned int i = 0; i < properties_global_obstacles.n_registered_slots(); ++i)
-    {
-      properties_global_obstacles.deregister_particle(i);
-    }
-  broadcast_global_particles();
+  deregister_property_pool();
 }
 
 template <int dim, typename number, typename ObstacleType>
 void
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::reinit()
+{
+  deregister_property_pool();
+  properties_global_obstacles.clear();
+  broadcast_global_particles();
+}
+
+template <int dim, typename number, typename ObstacleType>
+std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::get_obstacles_in_cell(
   dealii::Particles::PropertyPool<dim> &dst,
   const dealii::CellAccessor<dim>      &cell) const
 {
-  dst.clear();
+  std::vector<typename dealii::Particles::PropertyPool<dim>::Handle> handles;
   for (unsigned int src_handle = 0; src_handle < properties_global_obstacles.n_registered_slots();
        ++src_handle)
     {
       if (ObstacleType::is_in_cell(properties_global_obstacles, src_handle, cell))
         {
           auto dst_handle = dst.register_particle();
+          handles.emplace_back(dst_handle);
           dst.set_location(dst_handle, properties_global_obstacles.get_location(src_handle));
           auto dst_properties = dst.get_properties(dst_handle);
           auto src_properties = properties_global_obstacles.get_properties(src_handle);
@@ -126,17 +131,18 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::get_obstacl
           break;
         }
     }
+  return handles;
 }
 
 template <int dim, typename number, typename ObstacleType>
-void
+std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::get_obstacles_in_cell_batch(
   dealii::Particles::PropertyPool<dim>  &dst,
   const dealii::MatrixFree<dim, number> &matrix_free,
   const unsigned int                     cell_batch_id,
   const unsigned int                     n_lanes) const
 {
-  dst.clear();
+  std::vector<typename dealii::Particles::PropertyPool<dim>::Handle> handles;
   for (unsigned int src_handle = 0; src_handle < properties_global_obstacles.n_registered_slots();
        ++src_handle)
     {
@@ -147,6 +153,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::get_obstacl
                                        *matrix_free.get_cell_iterator(cell_batch_id, batch_lane)))
             {
               auto dst_handle = dst.register_particle();
+              handles.emplace_back(dst_handle);
               dst.set_location(dst_handle, properties_global_obstacles.get_location(src_handle));
               auto dst_properties = dst.get_properties(dst_handle);
               auto src_properties = properties_global_obstacles.get_properties(src_handle);
@@ -160,6 +167,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::get_obstacl
             }
         }
     }
+  return handles;
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -208,6 +216,20 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::broadcast_g
         }
     }
 }
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::deregister_property_pool()
+{
+  // The property pool containing the properties of all global particles is initialized once during
+  // the `reinit()` call and remains unchanged thereafter. As a result, we don't need to track
+  // individual handles explicitly. We know that handles are assigned sequentially, starting from
+  // zero up to the number of registered slots. Therefore, a simple loop is sufficient to deregister
+  // all particles before releasing the associated resources.
+  for (unsigned int i = 0; i < properties_global_obstacles.n_registered_slots(); ++i)
+    properties_global_obstacles.deregister_particle(i);
+}
+
 
 template class MeltPoolDG::ObstacleDataStructure<1, double>;
 template class MeltPoolDG::ObstacleDataStructure<2, double>;
