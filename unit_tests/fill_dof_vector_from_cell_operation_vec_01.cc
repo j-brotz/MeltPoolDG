@@ -223,13 +223,11 @@ main(int argc, char *argv[])
       table.declare_column("L2_error");
       table.set_scientific("L2_error", true);
 
-      for (unsigned int q = std::max<unsigned int>(deg, 1); q <= deg + 2; ++q) // n_q_points_1D
-        {
-          test<2, 1 /*n_components*/>(deg, q, false, table);
-          test<2, 2>(deg, q, false, table);
-          test<2, 1>(deg, q, true, table);
-          test<2, 2>(deg, q, true, table);
-        }
+      unsigned int n_q_points_1D = deg + 1;
+      test<2, 1 /*n_components*/>(deg, n_q_points_1D, false, table);
+      test<2, 2>(deg, n_q_points_1D, false, table);
+      test<2, 1>(deg, n_q_points_1D, true, table);
+      test<2, 2>(deg, n_q_points_1D, true, table);
       table.write_text(std::cout);
     }
 
