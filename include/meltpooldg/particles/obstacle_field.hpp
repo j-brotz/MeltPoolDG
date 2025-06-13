@@ -72,8 +72,10 @@ namespace MeltPoolDG
      * @param dst Destination property pool where the properties of the identified obstacles will be
      * stored.
      * @param cell The cell to be investigated.
+     *
+     * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
-    void
+    std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
     get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
                           const dealii::CellAccessor<dim>      &cell) const;
 
@@ -90,8 +92,10 @@ namespace MeltPoolDG
      * @param cell_batch_id Index of the cell batch to be examined.
      * @param n_lanes Number of vectorization lanes in the cell batch, i.e., the number of cells
      * present in the cell batch.
+     *
+     * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
-    void
+    std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
     get_obstacles_in_cell_batch(
       dealii::Particles::PropertyPool<dim>  &dst,
       const dealii::MatrixFree<dim, number> &matrix_free,
@@ -134,7 +138,7 @@ namespace MeltPoolDG
 
     /// Obstacle search utility for locating relevant obstacles within a given cell or batch.
     /// TODO: Extend to support nearest-neighbor searches and other spatial queries.
-    const ObstacleCompleteDomainSearch<dim, number, ObstacleType> obstacle_data_structure;
+    ObstacleCompleteDomainSearch<dim, number, ObstacleType> obstacle_data_structure;
 
     /// MPI communicator used for parallel operations on the obstacle field.
     MPI_Comm mpi_communicator;

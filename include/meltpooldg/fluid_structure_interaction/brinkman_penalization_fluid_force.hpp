@@ -69,6 +69,12 @@ namespace MeltPoolDG
       , mask_function(mask_function)
     {}
 
+    ~BrinkmanPenalizationFluidForceRightHandSideContribution() override
+    {
+      for (auto handle : cell_relevant_obstacle_handles)
+        cell_relevant_obstacles.deregister_particle(handle);
+    }
+
     /**
      * @brief Identifies and stores all relevant particles for the given cell batch, to be used
      * during the quadrature operation.
@@ -104,6 +110,11 @@ namespace MeltPoolDG
   private:
     /// Property pool used to cache obstacle properties relevant for the current cell batch.
     dealii::Particles::PropertyPool<dim> cell_relevant_obstacles;
+
+    /// Handles of the particles which properties are stored in the @p cell_relevant_obstacles
+    /// property pool.
+    std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
+      cell_relevant_obstacle_handles;
 
     /// Reference to the obstacle handler managing all obstacles in the domain.
     const ObstacleField<dim, number, ObstacleType> &obstacle_handler;
@@ -151,10 +162,11 @@ MeltPoolDG::BrinkmanPenalizationFluidForceRightHandSideContribution<dim, number,
                  const unsigned int                     cell_batch_id,
                  const unsigned int                     n_lanes)
 {
-  obstacle_handler.get_obstacles_in_cell_batch(cell_relevant_obstacles,
-                                               matrix_free,
-                                               cell_batch_id,
-                                               n_lanes);
+  for (auto handle : cell_relevant_obstacle_handles)
+    cell_relevant_obstacles.deregister_particle(handle);
+  cell_relevant_obstacle_handles.clear();
+  cell_relevant_obstacle_handles = obstacle_handler.get_obstacles_in_cell_batch(
+    cell_relevant_obstacles, matrix_free, cell_batch_id, n_lanes);
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -163,14 +175,6 @@ MeltPoolDG::BrinkmanPenalizationFluidForceRightHandSideContribution<dim, number,
   quad_operation(const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
                  const ConservedVariablesType &w_q) -> ConservedVariablesType
 {
-  // In order to loop over all obstacles in the property pool we need to ensure that there are no
-  // 'dead' slots inside the property pool which could provide wrong data. In other words we do
-  // not want empty slots resulting from deregistering particles.
-  // TODO: What happens if we removed one handle and added one with a new handle, then the for
-  // loop would fail but the assert wouldn't be triggered!
-  Assert(cell_relevant_obstacles.n_slots() == cell_relevant_obstacles.n_registered_slots(),
-         dealii::ExcInternalError());
-
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> fluid_velocity;
   for (int d = 0; d < dim; ++d)
     fluid_velocity[d] = w_q[d + 1];
@@ -178,9 +182,7 @@ MeltPoolDG::BrinkmanPenalizationFluidForceRightHandSideContribution<dim, number,
   // TODO Penalty term for mass balance equation?
 
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> momentum_fluid_force;
-  for (typename dealii::Particles::PropertyPool<dim>::Handle obstacle_handle = 0;
-       obstacle_handle < cell_relevant_obstacles.n_slots();
-       ++obstacle_handle)
+  for (auto obstacle_handle : cell_relevant_obstacle_handles)
     {
       // TODO: Consider obstacle velocity
       momentum_fluid_force = -mask_function(q_point, cell_relevant_obstacles, obstacle_handle) /

@@ -72,7 +72,7 @@ namespace MeltPoolDG
     /**
      * This function calculates and prints the l2-norm/l2-error of the solution given in
      * @p generic_data_out compared to a reference state given by the function
-     * @p reference_function, i.e. it computes ||solution-reference||_2 for the primary variables
+     * @p reference_function, i.e., it computes ||solution-reference||_2 for the primary variables
      * density, momentum and energy density. The string @p norm_name is printed to the console to
      * indicate what the calculated values represent. If the reference solution represents an exact
      * analytical solution, the norm_name @p "error" should be chosen. Otherwise, the @p norm_name

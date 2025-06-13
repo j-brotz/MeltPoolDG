@@ -25,23 +25,26 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
 }
 
 template <int dim, typename number, typename ObstacleType>
-void
+std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell(
   dealii::Particles::PropertyPool<dim> &dst,
   const dealii::CellAccessor<dim>      &cell) const
 {
-  obstacle_data_structure.get_obstacles_in_cell(dst, cell);
+  return obstacle_data_structure.get_obstacles_in_cell(dst, cell);
 }
 
 template <int dim, typename number, typename ObstacleType>
-void
+std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell_batch(
   dealii::Particles::PropertyPool<dim>  &dst,
   const dealii::MatrixFree<dim, number> &matrix_free,
   const unsigned int                     cell_batch_id,
   const unsigned int                     n_lanes) const
 {
-  obstacle_data_structure.get_obstacles_in_cell_batch(dst, matrix_free, cell_batch_id, n_lanes);
+  return obstacle_data_structure.get_obstacles_in_cell_batch(dst,
+                                                             matrix_free,
+                                                             cell_batch_id,
+                                                             n_lanes);
 }
 
 template <int dim, typename number, typename ObstacleType>

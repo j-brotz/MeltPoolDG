@@ -404,24 +404,16 @@ MeltPoolDG::SphericalParticle<dim, number>::read_state_input(const std::string &
   std::string                temp;
   std::istringstream         data_string(input_data);
   // particle position
-  for (unsigned int i = 0; i < dim; i++)
+  for (int i = 0; i < dim; i++)
     {
       std::getline(data_string, temp, ',');
       particle_location[i] = std::stod(temp);
     }
 
-  // particle velocity
-  for (unsigned int i = Properties::velocity; i < Properties::acceleration; ++i)
+  // set particle translational velocity and angular velocity to zero by default
+  for (unsigned int i = Properties::velocity; i < Properties::angular_acceleration; ++i)
     {
-      std::getline(data_string, temp, ',');
-      particle_properties[i] = std::stod(temp);
-    }
-
-  // particle angular velocity
-  for (unsigned int i = Properties::angular_velocity; i < Properties::angular_acceleration; ++i)
-    {
-      std::getline(data_string, temp, ',');
-      particle_properties[i] = std::stod(temp);
+      particle_properties[i] = 0;
     }
 
   // density and radius

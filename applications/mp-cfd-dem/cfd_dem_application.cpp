@@ -21,6 +21,10 @@ namespace MeltPoolDG
   {
     initialize();
 
+    // output the initial condition
+    output_results(time_iterator->get_current_time_step_number(),
+                   time_iterator->get_current_time());
+
     while (!time_iterator->is_finished())
       {
         // use CFL condition to compute time step size if required

@@ -37,62 +37,12 @@ namespace MeltPoolDG
   template <int dim, typename number>
   struct ObstacleDataStructure
   {
-  private:
-    /**
-     * @brief Concept: Abstract interface for obstacle data structures.
-     *
-     * Implementations must define how to reinitialize the structure, and  how to extract obstacles
-     * from single cells or batches.See public interface for detailed function descriptions.
-     */
-    struct ObstacleDataStructureConcept
-    {
-      virtual ~ObstacleDataStructureConcept() = default;
-
-      virtual void
-      reinit() = 0;
-
-      virtual void
-      get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
-                            const dealii::CellAccessor<dim>      &cell) const = 0;
-
-      virtual void
-      get_obstacles_in_cell_batch(
-        dealii::Particles::PropertyPool<dim>  &dst,
-        const dealii::MatrixFree<dim, number> &matrix_free,
-        const unsigned int                     cell_batch_id,
-        const unsigned int n_lanes = dealii::VectorizedArray<number>::size) const = 0;
-    };
-
-    /**
-     * @brief Model required for type erasure. See public interface for detailed function
-     * descriptions.
-     */
-    template <typename ObstacleDataStructureType>
-    struct ObstacleDataStructureModel final : public ObstacleDataStructureConcept
-    {
-      explicit ObstacleDataStructureModel(ObstacleDataStructureType &&obstacle_data_structure);
-
-      void
-      reinit() override;
-
-      void
-      get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
-                            const dealii::CellAccessor<dim>      &cell) const override;
-
-      void
-      get_obstacles_in_cell_batch(
-        dealii::Particles::PropertyPool<dim>  &dst,
-        const dealii::MatrixFree<dim, number> &matrix_free,
-        const unsigned int                     cell_batch_id,
-        const unsigned int n_lanes = dealii::VectorizedArray<number>::size) const override;
-
-    private:
-      const ObstacleDataStructureType obstacle_data_structure;
-    };
-
-    std::unique_ptr<ObstacleDataStructureConcept> obstacle_data_structure_pimpl;
-
   public:
+    /**
+     * Constructor. Store the passed oobstacle data structure internally.
+     *
+     * @param obstacle_data_structure Concrete obstacle data structure used in the class.
+     */
     template <typename ObstacleDataStructureType>
     explicit ObstacleDataStructure(ObstacleDataStructureType &&obstacle_data_structure);
 
@@ -109,8 +59,10 @@ namespace MeltPoolDG
      * @param dst Destination property pool where the properties of the identified obstacles will be
      * stored.
      * @param cell The cell of interest.
+     *
+     * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
-    void
+    std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
     get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
                           const dealii::CellAccessor<dim>      &cell) const;
 
@@ -124,13 +76,100 @@ namespace MeltPoolDG
      * @param cell_batch_id Index of the cell batch to be examined.
      * @param n_lanes Number of vectorization lanes in the cell batch (i.e., the number of cells in
      * the batch).
+     *
+     * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
-    void
+    std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
     get_obstacles_in_cell_batch(
       dealii::Particles::PropertyPool<dim>  &dst,
       const dealii::MatrixFree<dim, number> &matrix_free,
       const unsigned int                     cell_batch_id,
       const unsigned int                     n_lanes = dealii::VectorizedArray<number>::size) const;
+
+  private:
+    /**
+     * @brief Concept: Abstract interface for obstacle data structures.
+     *
+     * Implementations must define how to reinitialize the structure, and  how to extract obstacles
+     * from single cells or batches.See public interface for detailed function descriptions.
+     */
+    struct ObstacleDataStructureConcept
+    {
+      virtual ~ObstacleDataStructureConcept() = default;
+
+      /**
+       * Part of the type erasure interface. Refer to the public interface documentation for more
+       * details.
+       */
+      virtual void
+      reinit() = 0;
+
+      /**
+       * Part of the type erasure interface. Refer to the public interface documentation for more
+       * details.
+       */
+      virtual std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
+      get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
+                            const dealii::CellAccessor<dim>      &cell) const = 0;
+
+      /**
+       * Part of the type erasure interface. Refer to the public interface documentation for more
+       * details.
+       */
+      virtual std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
+      get_obstacles_in_cell_batch(
+        dealii::Particles::PropertyPool<dim>  &dst,
+        const dealii::MatrixFree<dim, number> &matrix_free,
+        const unsigned int                     cell_batch_id,
+        const unsigned int n_lanes = dealii::VectorizedArray<number>::size) const = 0;
+    };
+
+    /**
+     * @brief Model required for type erasure. See public interface for detailed function
+     * descriptions.
+     */
+    template <typename ObstacleDataStructureType>
+    struct ObstacleDataStructureModel final : public ObstacleDataStructureConcept
+    {
+      /**
+       * Constructor. Stores the given obstacle data structure internally.
+       *
+       * @param obstacle_data_structure Data structure of the obstacles.
+       */
+      explicit ObstacleDataStructureModel(ObstacleDataStructureType &&obstacle_data_structure);
+
+      /**
+       * Part of the type erasure interface. Refer to the public interface documentation for more
+       * details.
+       */
+      void
+      reinit() override;
+
+      /**
+       * Part of the type erasure interface. Refer to the public interface documentation for more
+       * details.
+       */
+      std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
+      get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
+                            const dealii::CellAccessor<dim>      &cell) const override;
+
+      /**
+       * Part of the type erasure interface. Refer to the public interface documentation for more
+       * details.
+       */
+      std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
+      get_obstacles_in_cell_batch(
+        dealii::Particles::PropertyPool<dim>  &dst,
+        const dealii::MatrixFree<dim, number> &matrix_free,
+        const unsigned int                     cell_batch_id,
+        const unsigned int n_lanes = dealii::VectorizedArray<number>::size) const override;
+
+    private:
+      const ObstacleDataStructureType obstacle_data_structure;
+    };
+
+    /// Pointer to the concrete obstacle data structure used withion this class.
+    std::unique_ptr<ObstacleDataStructureConcept> obstacle_data_structure_pimpl;
   };
 
 
@@ -151,6 +190,12 @@ namespace MeltPoolDG
       const dealii::Particles::ParticleHandler<dim> &obstacle_handler);
 
     /**
+     * @brief Destructor. Explicitly deregisters all particles from the global obstacle property
+     * pool.
+     */
+    ~ObstacleCompleteDomainSearch();
+
+    /**
      * @brief Reinitializes the internal data structure by synchronizing obstacle data across all
      * MPI processes.
      *
@@ -160,7 +205,7 @@ namespace MeltPoolDG
      * during subsequent computations.
      */
     void
-    reinit() const;
+    reinit();
 
     /**
      * @brief Identify obstacles that partially or fully occupy the specified cell, and store their
@@ -177,8 +222,10 @@ namespace MeltPoolDG
      * @param dst Destination property pool where the properties of the identified obstacles will be
      * stored.
      * @param cell The cell of interest.
+     *
+     * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
-    void
+    std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
     get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
                           const dealii::CellAccessor<dim>      &cell) const;
 
@@ -200,8 +247,10 @@ namespace MeltPoolDG
      * @param cell_batch_id Index of the cell batch to be examined.
      * @param n_lanes Number of vectorization lanes in the cell batch (i.e., the number of cells in
      * the batch).
+     *
+     * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
-    void
+    std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
     get_obstacles_in_cell_batch(
       dealii::Particles::PropertyPool<dim>  &dst,
       const dealii::MatrixFree<dim, number> &matrix_free,
@@ -232,5 +281,11 @@ namespace MeltPoolDG
 
     /// MPI communicator used for synchronizing obstacle data across all ranks.
     MPI_Comm mpi_communicator = MPI_COMM_WORLD;
+
+    /**
+     * @brief Deregisters all particles from the global obstacle property pool.
+     */
+    void
+    deregister_property_pool();
   };
 } // namespace MeltPoolDG
