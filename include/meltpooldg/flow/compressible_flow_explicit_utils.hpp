@@ -21,6 +21,22 @@
 
 namespace MeltPoolDG::Flow
 {
+  /**
+   * @brief Concept to check whether a given type conforms to a valid cell evaluator interface.
+   *
+   * This concept validates whether the provided `evaluator_type` is derived from either:
+   * - `FECellIntegrator<dim, n_components, number, VectorizedArrayType>`, or
+   * - `dealii::FEPointEvaluation<n_components, dim, dim, VectorizedArrayType>`.
+   *
+   * This ensures that `evaluator_type` can be used for finite element cell integration
+   * or point evaluation.
+   *
+   * @tparam evaluator_type The type being checked.
+   * @tparam dim The spatial dimension.
+   * @tparam n_components The number of components in the finite element space.
+   * @tparam number The scalar type used for numerical operations.
+   * @tparam VectorizedArrayType The used vectorized array type.
+   */
   template <typename evaluator_type,
             int dim,
             int n_components,
@@ -32,6 +48,22 @@ namespace MeltPoolDG::Flow
     std::is_base_of_v<dealii::FEPointEvaluation<n_components, dim, dim, VectorizedArrayType>,
                       evaluator_type>;
 
+  /**
+   * @brief Concept to check whether a given type conforms to a valid face evaluator interface.
+   *
+   * This concept validates whether the provided `evaluator_type` is derived from either:
+   * - `FEFaceIntegrator<dim, n_components, number, VectorizedArrayType>`, or
+   * - `dealii::FEFacePointEvaluation<n_components, dim, dim, VectorizedArrayType>`.
+   *
+   * This ensures that `evaluator_type` can be used for evaluating finite element data on faces
+   * of mesh cells.
+   *
+   * @tparam evaluator_type The type being checked.
+   * @tparam dim The spatial dimension.
+   * @tparam n_components The number of components in the finite element space.
+   * @tparam number The scalar type used for numerical operations.
+   * @tparam VectorizedArrayType The used vectorized array type.
+   */
   template <typename evaluator_type,
             int dim,
             int n_components,
@@ -44,6 +76,8 @@ namespace MeltPoolDG::Flow
                       evaluator_type>;
 
   /**
+   * @brief Computes the right-hand side cell integral kernels at a quadrature point.
+   *
    * Kernel of the local cell applier for the right-hand side function. This function computes the
    * cell integral contribution to the right hand side for the quadrature point index and the
    * corresponding FE evaluator.
@@ -103,6 +137,8 @@ namespace MeltPoolDG::Flow
   }
 
   /**
+   * @brief Computes the right-hand side face integral kernels at a face quadrature point.
+   *
    * Kernel of the local inner face applier for the right-hand side function. This function
    * computes the face integral contribution of inner faces to the right hand side for the
    * quadrature point index and the corresponding FE evaluator.
@@ -170,6 +206,9 @@ namespace MeltPoolDG::Flow
   }
 
   /**
+   * @brief Computes the right-hand side boundary face integral kernels at a boundary face
+   * quadrature point.
+   *
    * Kernel of the local boundary face applier for the right-hand side function. This function
    * computes the face integral contribution of boundary faces to the right hand side for the
    * quadrature point index and the corresponding FE evaluator.

@@ -25,10 +25,23 @@
 
 namespace MeltPoolDG::Simulation::CompressibleMultiphase
 {
+  /**
+   * @brief Initial flow field function.
+   */
   template <int dim, typename number>
   class InitialField : public dealii::Function<dim, number>
   {
   public:
+    /**
+     * @brief Constructor.
+     *
+     * @param ic_gas_phase Function for the initial conditions of the gas phase.
+     * @param ic_liquid_phase Function for the initial conditions of the liquid phase.
+     * @param gas_phase_is_first Indicator whether the gas phase is the first phase in the two-phase
+     * system.
+     *
+     * @throws dealii::ExcNotImplemented If `dim != 1`.
+     */
     explicit InitialField(std::string ic_gas_phase,
                           std::string ic_liquid_phase,
                           const bool  gas_phase_is_first = true)
@@ -52,6 +65,12 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       Assert(dim == 1, dealii::ExcNotImplemented());
     }
 
+    /**
+     * @brief Computes the current function value for a specific @p component at a given point @p p.
+     *
+     * @param p Point at which the function should be evaluated.
+     * @param component Component for which the function value should be returned.
+     */
     number
     value(const dealii::Point<dim, number> &p, const unsigned int component) const final
     {
@@ -92,22 +111,42 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     }
 
   private:
-    bool                                         gas_phase_is_first;
-    std::map<std::string, number>                constants;
+    /// Indicator whether the gas phase is the first phase in the two-phase system
+    bool gas_phase_is_first;
+
+    /// Constants for function parsing
+    std::map<std::string, number> constants;
+
+    /// Function parser for initial conditions in gas phase
     std::unique_ptr<dealii::FunctionParser<dim>> parsing_function_gas =
       std::make_unique<dealii::FunctionParser<dim>>(dim + 2);
+
+    /// Function parser for initial conditions in liquid phase
     std::unique_ptr<dealii::FunctionParser<dim>> parsing_function_liquid =
       std::make_unique<dealii::FunctionParser<dim>>(dim + 2);
   };
 
+  /**
+   * @brief A specific compressible flow simulation setup for a one-dimensional two-phase case with
+   * one (moving) interface.
+   */
   template <int dim, typename number>
   class SimulationTwoPhase final : public Multiphase::CompressibleMultiphaseCase<dim, number>
   {
   public:
-    SimulationTwoPhase(std::string parameter_file, const MPI_Comm mpi_communicator)
+    /**
+     * @brief Constructor.
+     *
+     * @param parameter_file Parameter file that contains simulation input settings.
+     * @param mpi_communicator The MPI communicator used to run the simulation in parallel.
+     */
+    explicit SimulationTwoPhase(std::string parameter_file, const MPI_Comm mpi_communicator)
       : Multiphase::CompressibleMultiphaseCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
+    /**
+     * @brief Creates the spatial discretization for the simulation setup.
+     */
     void
     create_spatial_discretization() override
     {
@@ -136,6 +175,9 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 
+    /**
+     * @brief Sets the boundary conditions.
+     */
     void
     set_boundary_conditions() override
     {
@@ -157,6 +199,9 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
                                       "compressible_multiphase_flow");
     }
 
+    /**
+     * @brief Sets the field functions for the simulation.
+     */
     void
     set_field_conditions() override
     {
@@ -181,6 +226,11 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       this->attach_field_function(level_set, "level_set", "compressible_multiphase_flow");
     }
 
+    /**
+     * @brief Performs post-processing by evaluating and outputting error norms.
+     *
+     * @param generic_data_out A generic utility for managing simulation output data.
+     */
     void
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const override
     {
@@ -188,6 +238,11 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       this->print_relative_norm(generic_data_out, reference_values, "error");
     }
 
+    /**
+     * @brief Add simulation specific parameters to the parameter handler.
+     *
+     * @param prm The parameter handler to which the parameters are added.
+     */
     bool
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
@@ -221,12 +276,12 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     }
 
   private:
-    // boundary conditions, the options are:
-    // "no_slip_wall", "slip_wall", "inflow", "outflow_fixed_energy", "outflow_fixed_pressure"
+    /// Boundary conditions, the options are:
+    /// "no_slip_wall", "slip_wall", "inflow", "outflow_fixed_energy", "outflow_fixed_pressure"
     std::string left_boundary_condition  = "no_slip_wall";
     std::string right_boundary_condition = "no_slip_wall";
 
-    // functions for the initial conditions
+    /// Functions for the initial conditions
     struct InitialConditions
     {
       std::string gas{};

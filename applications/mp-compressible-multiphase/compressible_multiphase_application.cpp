@@ -2,7 +2,7 @@
 
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
-#include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operation.hpp>
+#include <meltpooldg/flow/compressible_multiphase_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
@@ -26,7 +26,7 @@ namespace MeltPoolDG::Multiphase
     output_results(time_iterator->get_current_time_step_number(),
                    time_iterator->get_current_time());
 
-    while (!time_iterator->is_finished())
+    while (not time_iterator->is_finished())
       {
         // use CFL condition to compute time step size if required
         if (simulation_case->parameters.flow.do_cfl_time_stepping)

@@ -10,34 +10,29 @@
 
 namespace MeltPoolDG::Flow
 {
-  /**
-   * Index set for the components of the compressible Navier-Stokes equations.
-   */
+  /// Index sets for the components of the compressible Navier-Stokes equations.
   BETTER_ENUM(Idx1D, char, density, momentum_x, energy);
   BETTER_ENUM(Idx2D, char, density, momentum_x, momentum_y, energy);
   BETTER_ENUM(Idx3D, char, density, momentum_x, momentum_y, momentum_z, energy);
 
   /**
-   * Struct providing type aliases that might be useful in the compressible flow implementations.
+   * @brief Struct providing type aliases that might be useful in the compressible flow
+   * implementations.
    */
   struct CompressibleFlowTypes
   {
-    /**
-     * Type of the conserved variables []
-     */
+    /// Type of the conserved variables
     template <int dim, typename number>
     using ConservedVariablesType = dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>>;
 
-    /**
-     * Type of the gradient of the conserved variables []
-     */
+    /// Type of the gradient of the conserved variables
     template <int dim, typename number>
     using ConservedVariablesGradType =
       dealii::Tensor<1, dim + 2, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
   };
 
   /**
-   * Calculate the velocity from the conserved variables by computing u = (ρu)/ρ.
+   * @brief Calculate the velocity from the conserved variables by computing u = (ρu)/ρ.
    *
    * @param conserved_variables Current values of the conserved variables.
    *
@@ -50,6 +45,8 @@ namespace MeltPoolDG::Flow
       const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables);
 
   /**
+   * @brief Calculate the velocity gradient.
+   *
    * Calculate the gradient of the  velocity from the conserved variables and their gradients by
    * computing grad(u) = 1/ρ * (grad(ρu) - u*grad(ρ)).
    *
@@ -67,8 +64,8 @@ namespace MeltPoolDG::Flow
         &grad_conserved_variables);
 
   /**
-   * This function computes the local values of the internal penalty parameter used in the viscous
-   * numerical flux.
+   * @brief This function computes the local values of the internal penalty parameter used in the
+   * viscous numerical flux.
    *
    * @param array_penalty_parameter Array in which the values of the penalty parameter are stored.
    * @param matrix_free Matrix-free object providing the required geometrical data.

@@ -15,19 +15,26 @@ namespace MeltPoolDG::Multiphase
 {
   /**
    * @brief Class for the analytical advection of a 1D test case with two phase interfaces.
-   * The initial interface points are hard-coded for the case "oscillating_water_column".
+   *
+   * @note The initial interface points are hard-coded for the case "oscillating_water_column".
    */
   template <int dim, typename number>
   class LevelSetOscillatingWaterColumn : public dealii::Function<dim, number>
   {
   public:
+    /**
+     * @brief Constructor.
+     */
     explicit LevelSetOscillatingWaterColumn()
       : dealii::Function<dim, number>(1)
     {}
 
     /**
-     * Function to update the two interface coordinates for the case that two phase interfaces
+     * @brief Function to update the two interface coordinates for the case that two phase interfaces
      * exist.
+     *
+     * The phase interface coordinates are updated according to the current time step size and the
+     * provided current interface velocity: dx = dt * v.
      *
      * @param time_step Current time step size.
      * @param interface_velocity Vector which contains the two current interface velocities.
@@ -41,32 +48,43 @@ namespace MeltPoolDG::Multiphase
     }
 
     /**
-     * Analytical function for the level-set field for the "oscillating_water_column" case.
+     * @brief Analytical function for the level-set field for the "oscillating_water_column" case.
+     *
+     * @param p Point at which the function should be evaluated.
      */
-    double
-    value(const dealii::Point<dim> &p, const unsigned int /*component*/) const final
+    number
+    value(const dealii::Point<dim, number> &p, const unsigned int /*component*/) const final
     {
       return std::min(p[0] - interface_coordinates[0], -(p[0] - interface_coordinates[1]));
     }
 
   private:
-    /// Note that the initial interface coordinates are aligned to the data in the case file
-    /// "oscillating_water_column.hpp".
+    /// Vector of interface coordinates
+    // Note that the initial interface coordinates are aligned to the data in the case file
+    // "oscillating_water_column.hpp".
     std::vector<number> interface_coordinates = {0.100156487, 0.800156487};
   };
 
+  /**
+   * @brief Class for the analytical advection of a 1D test case.
+   *
+   * @note This class exists only temporarily and should be removed.
+   */
   template <int dim, typename number>
   class LevelSetAdvection
   {
   public:
-    // Constructor
+    /**
+     * @brief Constructor.
+     */
     LevelSetAdvection();
 
+    /// Object for the oscillating water column test case
     static LevelSetOscillatingWaterColumn<dim, number> level_set_oscillating_water_column;
 
     /**
-     * Function for analytical advection of a level-set field according to computed interface
-     * velocities for one-dimensional simulations.
+     * @brief Function for analytical advection of a level-set field according to computed
+     * interface velocities for one-dimensional simulations.
      *
      * @param level_set DoF vector for the current level-set field.
      * @param time_step Current time step size.
@@ -112,7 +130,7 @@ namespace MeltPoolDG::Multiphase
     }
 
     /**
-     * Setter function for the computed interface velocity.
+     * @brief Setter function for the computed interface velocity.
      *
      * @param interface_velocity_in Computed interface velocity.
      */
@@ -123,7 +141,7 @@ namespace MeltPoolDG::Multiphase
     }
 
     /**
-     * Clear current interface velocity field.
+     * @brief Clear current interface velocity field.
      */
     void
     clear_interface_velocity()

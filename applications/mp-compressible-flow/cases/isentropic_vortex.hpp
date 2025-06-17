@@ -15,16 +15,30 @@
 
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {
-
+  /**
+   * @brief Exact solution function for the isentropic vortex simulation.
+   */
   template <int dim, typename number>
   class IsentropicVortexExactSolution : public dealii::Function<dim, number>
   {
   public:
-    IsentropicVortexExactSolution(const number time, const number gamma)
+    /**
+     * @brief Constructor.
+     *
+     * @param time Current simulation time.
+     * @param gamma Specific heat ratio.
+     */
+    explicit IsentropicVortexExactSolution(const number time, const number gamma)
       : dealii::Function<dim, number>(dim + 2, time)
       , gamma(gamma)
     {}
 
+    /**
+     * @brief Computes the current function value for a specific component at a given point @p x.
+     *
+     * @param x Given point at which the function should be evaluated.
+     * @param component Component for which the function value should be returned.
+     */
     number
     value(const dealii::Point<dim, number> &x, const unsigned int component) const override
     {
@@ -57,17 +71,30 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
 
   private:
+    /// Specific heat ratio
     const number gamma;
   };
 
+  /**
+   * @brief A specific compressible flow simulation setup for the isentropic vortex.
+   */
   template <int dim, typename number>
   class SimulationIsentropicVortex final : public Flow::CompressibleFlowCase<dim, number>
   {
   public:
-    SimulationIsentropicVortex(std::string parameter_file, const MPI_Comm mpi_communicator)
+    /**
+     * @brief Constructor.
+     *
+     * @param parameter_file Parameter file that contains simulation input settings.
+     * @param mpi_communicator The MPI communicator used to run the simulation in parallel.
+     */
+    explicit SimulationIsentropicVortex(std::string parameter_file, const MPI_Comm mpi_communicator)
       : Flow::CompressibleFlowCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
+    /**
+     * @brief Creates the spatial discretization for the simulation setup.
+     */
     void
     create_spatial_discretization() override
     {
@@ -87,6 +114,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 
+    /**
+     * @brief Sets the boundary conditions.
+     */
     void
     set_boundary_conditions() override
     {
@@ -95,6 +125,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       this->attach_boundary_condition({0, exact_solution}, "inflow", "compressible_flow");
     }
 
+    /**
+     * @brief Sets the field functions for the simulation.
+     */
     void
     set_field_conditions() override
     {
@@ -104,6 +137,11 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       this->attach_field_function(exact_solution, "exact_solution", "compressible_flow");
     }
 
+    /**
+     * @brief Performs post-processing by evaluating and outputting error norms.
+     *
+     * @param generic_data_out A generic utility for managing simulation output data.
+     */
     void
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const override
     {

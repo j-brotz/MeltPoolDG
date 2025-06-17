@@ -11,32 +11,41 @@
 
 namespace MeltPoolDG::Flow
 {
+  /**
+   * @brief Operator for the matrix-free evaluation of a compressible single-phase flow cutDG
+   * formulation for implicit time integration.
+   *
+   * @tparam dim Dimension of the considered simulation case.
+   * @tparam number Floating point format type.
+   * @tparam is_viscous Indicates whether the flow is viscous.
+   */
   template <int dim, typename number, bool is_viscous = true>
   class DGCompressibleFlowOperatorImplicit final : public DGCompressibleFlowOperatorBase<number>
   {
+  public:
     using VectorType             = dealii::LinearAlgebra::distributed::Vector<number>;
     using ConservedVariablesType = CompressibleFlowTypes::ConservedVariablesType<dim, number>;
     using ConservedVariablesGradType =
       CompressibleFlowTypes::ConservedVariablesGradType<dim, number>;
 
-  public:
     /**
-     * Constructor.
+     * @brief Constructor.
      *
-     * @param flow_scratch_data Reference to flow scratch data object.
+     * @param flow_scratch_data Reference to the flow scratch data object (usually owned by the
+     * corresponding operation class).
      */
     explicit DGCompressibleFlowOperatorImplicit(
       CompressibleFlowScratchData<dim, number> &flow_scratch_data);
 
     /**
-     * Reinitilaize the internal data structures, i.e. allocate memory for vectors storing temporary
-     * solutions.
+     * @brief Reinitialize the internal data structures, i.e., allocate memory for vectors storing
+     * temporary solutions.
      */
     void
     reinit() override;
 
     /**
-     * Compute the matrix representation of the Jacobian.
+     * @brief Compute the matrix representation of the Jacobian.
      *
      * @param sparse_matrix Spars matrix in which the resulting matrix representation is stored.
      */
@@ -45,7 +54,7 @@ namespace MeltPoolDG::Flow
       dealii::TrilinosWrappers::SparseMatrix &sparse_matrix) const;
 
     /**
-     * Compute the inverse elements of the diagonal of the jacobian.
+     * @brief Compute the inverse elements of the diagonal of the Jacobian.
      *
      * @param diagonal Vector in which the inverse elements of the diagonal are stored.
      */
@@ -53,7 +62,7 @@ namespace MeltPoolDG::Flow
     compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const;
 
     /**
-     * Creates and returns an implicit time integrator object which is set up with the current
+     * @brief Creates and returns an implicit time integrator object which is set up with the current
      * operator.
      *
      * @param time_integrator_data Reference to the time integrator data object.
@@ -68,10 +77,11 @@ namespace MeltPoolDG::Flow
       const TimeIntegration::TimeIntegratorData<number> &time_integrator_data) override;
 
     /**
-     * This function sets class member variables which are constant within a single time stage (e.g.
-     * boundary conditions) and used in both the residual and jacobian calculation. A suitable time
-     * integrator class is expected to call this functions before a call to compute_residual() and
-     * compute_jacobian().
+     * @brief This function sets class member variables which are constant within a single time
+     * stage (e.g. boundary conditions) and used in both the residual and Jacobian calculation.
+     *
+     * A suitable time integrator class is expected to call this functions before a call to
+     * compute_residual() and compute_jacobian().
      *
      * @param current_time Current time.
      * @param time_step Current time step size.
@@ -87,19 +97,24 @@ namespace MeltPoolDG::Flow
                         number            rhs_scaling_factor = 1.) const; // TODO
 
     /**
-     * Compute the result of J*x, where J is the jacobian. The method on how to compute/approximate
-     * the jacobian is defined by the user in the compressible flow data.
+     * @brief Compute the result of J*x, where J is the Jacobian.
      *
-     * @param src Source vector x with which the jacobian gets mulitplied.
+     * The method on how to compute/approximate the Jacobian is defined by the user in the
+     * compressible flow data.
+     *
+     * @param src Source vector x with which the Jacobian gets multiplied.
      * @param dst Location at which the result of J*x is stored.
      *
      * @throws Exception if the layout of the two given vectors @p src and @p dst are not identical.
+     *
      * @note This function assumes that the function set_stage_constants() has been called in advance.
      */
     void
     apply_jacobian(VectorType &dst, const VectorType &src) const; // TODO
 
     /**
+     * @brief Compute the negative residual.
+     *
      * Compute the negative residual, i.e. -(y'-F(y)) where y' is the temporal derivative of the
      * primary variables and F is the sum of all fluxes occuring in the compressible Navier-Stokes
      * equations (right-hand side).
@@ -109,6 +124,7 @@ namespace MeltPoolDG::Flow
      * @param dst Vector in which the residual is stored.
      *
      * @throws Assert if the layout of the two given vectors @p src and @p dst are not identical.
+     *
      * @note This function assumes that the function set_stage_constants() has been called in advance.
      */
     void
@@ -116,11 +132,11 @@ namespace MeltPoolDG::Flow
 
 
     /**
-     * Local cell operations at the given quadrature point for computing the jacobian.
+     * @brief Local cell operations at the given quadrature point for computing the Jacobian.
      *
      * @param delta_phi Cell integrator for the change in the primary variables. Quadrature point
      * distributions are added to this integrator.
-     * @param phi Cell integrator for the primary varibales.
+     * @param phi Cell integrator for the primary variables.
      * @param q_index Quadrature point index.
      */
     void
@@ -129,7 +145,7 @@ namespace MeltPoolDG::Flow
                                unsigned int                                  q_index) const;
 
     /**
-     * Local face operations at the given quadrature point for computing the jacobian.
+     * @brief Local face operations at the given quadrature point for computing the Jacobian.
      *
      * @param delta_phi_m Face integrator for the change in the primary variables on the inner face.
      * Quadrature point distributions are added to this integrator.
@@ -147,7 +163,7 @@ namespace MeltPoolDG::Flow
                                unsigned int                                  q_index) const;
 
     /**
-     * Local boundary face operations at the given quadrature point for computing the jacobian.
+     * @brief Local boundary face operations at the given quadrature point for computing the Jacobian.
      *
      * @param delta_phi_m Face integrator for the change in the primary variables on the inner face.
      * Quadrature point distributions are added to this integrator.
@@ -160,10 +176,39 @@ namespace MeltPoolDG::Flow
                                         unsigned int q_index) const;
 
   private:
+    /// When computing the residual this factor defines a scaling factor for the right-hand side.
+    /// The final residual is then given by R=y'-a*f(y), where 'a' is the factor defined by thi
+    /// variable.
+    mutable number residual_rhs_scaling_factor = 1.;
+
+    /// This vector is used to compute the temporal derivative y' in the residual computation by
+    /// y'=(current_solution-old_solution)/dt. We do not take the old_solution directly from
+    /// solution_history as providing the option to pass a (fictional) old solution can have
+    /// performance advantages, e.g. in the bdf time integration. It can be set by the function
+    /// set_stage_constants().
+    mutable const VectorType *time_integrator_old_solution = nullptr;
+
+    /// This vector is used in the approximation of the jacobian by finite differences. Here the
+    /// vector stores the residual with a disturbed input.
+    mutable VectorType disturbed_residual;
+
+    /// Current time step size. This needs to be stored as this value is required by the local cell
+    /// appliers.
+    mutable number current_time_step;
+
+    /// Scratch data for compressible flows
+    CompressibleFlowScratchData<dim, number> &flow_scratch_data;
+
+    /// Object for the convective term evaluations
+    CompressibleFlowConvectiveKernels<dim, number> convective_terms;
+
+    /// Object for the viscous term evaluations
+    CompressibleFlowViscousKernels<dim, number> viscous_terms;
+
     /**
-     * Compute the result of J*x, where J is the jacobian computed analytically.
+     * @brief Compute the result of J*x, where J is the Jacobian computed analytically.
      *
-     * @param src Source vector x with which the jacobian gets mulitplied.
+     * @param src Source vector x with which the Jacobian gets multiplied.
      * @param dst Location at which the result of J*x is stored.
      *
      * @throws Exception if the layout of the two given vectors @p src and @p dst are not identical.
@@ -172,10 +217,10 @@ namespace MeltPoolDG::Flow
     apply_jacobian_analytic(const VectorType &src, VectorType &dst) const;
 
     /**
-     * Compute the result of J*x, where J is the jacobian approximated by finite differences.
+     * @brief Compute the result of J*x, where J is the Jacobian approximated by finite differences.
      *
-     * @param src Source vector x with which the jacobian gets mulitplied.
-     * @param dst Loation at which the result of J*x is stored.
+     * @param src Source vector x with which the Jacobian gets multiplied.
+     * @param dst Location at which the result of J*x is stored.
      *
      * @throws Exception if the layout of the two given vectors @p src and @p dst are not identical.
      */
@@ -183,7 +228,7 @@ namespace MeltPoolDG::Flow
     apply_jacobian_finite_differences(const VectorType &src, VectorType &dst) const;
 
     /**
-     * The local cell applier computing the residual contribution of the cell.
+     * @brief The local cell applier computing the residual contribution of the cell.
      *
      * @param matrix_free Matrix free object on which the applier works on.
      * @param dst Destination vector to which the result is added.
@@ -197,7 +242,7 @@ namespace MeltPoolDG::Flow
                         const std::pair<unsigned int, unsigned int>              &cell_range) const;
 
     /**
-     * The local cell applier computing the residual contribution of the inner faces.
+     * @brief The local cell applier computing the residual contribution of the inner faces.
      *
      * @param matrix_free Matrix free object on which the applier works on.
      * @param dst Destination vector to which the result is added.
@@ -211,7 +256,7 @@ namespace MeltPoolDG::Flow
                         const std::pair<unsigned int, unsigned int>              &face_range) const;
 
     /**
-     * The local cell applier computing the residual contribution of the boundary faces.
+     * @brief The local cell applier computing the residual contribution of the boundary faces.
      *
      * @param matrix_free Matrix free object on which the applier works on.
      * @param dst Destination vector to which the result is added.
@@ -225,6 +270,8 @@ namespace MeltPoolDG::Flow
                                  const std::pair<unsigned int, unsigned int> &face_range) const;
 
     /**
+     * @brief Computes the cell contribution of the Jacobian.
+     *
      * Computes the contribution of the cells to the product of the Jacobian and the provided source
      * vector for a specified cell range. The current solution of the primary variables, required
      * for the Jacobian computation, is retrieved from the solution_history object.
@@ -241,6 +288,8 @@ namespace MeltPoolDG::Flow
                         const std::pair<unsigned int, unsigned int> &cell_range) const;
 
     /**
+     * @brief Computes the inner face contribution of the Jacobian.
+     *
      * Computes the contribution of the inner faces to the product of the Jacobian and the provided
      * source vector for a specified face range. The current solution of the primary variables,
      * required for the Jacobian computation, is retrieved from the solution_history object.
@@ -257,6 +306,8 @@ namespace MeltPoolDG::Flow
                         const std::pair<unsigned int, unsigned int> &face_range) const;
 
     /**
+     * @brief Computes the boundary face contribution of the Jacobian.
+     *
      * Computes the contribution of the boundary faces to the product of the Jacobian and the
      * provided source vector for a specified face range. The current solution of the primary
      * variables, required for the Jacobian computation, is retrieved from the solution_history
@@ -272,38 +323,5 @@ namespace MeltPoolDG::Flow
                                  dealii::LinearAlgebra::distributed::Vector<number> &dst,
                                  const dealii::LinearAlgebra::distributed::Vector<number> &src,
                                  const std::pair<unsigned int, unsigned int> &face_range) const;
-
-    /**
-     * When computing the residual this factor defines a scaling factor for the right-hand side. The
-     * final residual is then given by R=y'-a*f(y), where 'a' is the factor defined by thi variable.
-     */
-    mutable number residual_rhs_scaling_factor = 1.;
-
-    /**
-     * This vector is used to compute the temporal derivative y' in the residual computation by
-     * y'=(current_solution-old_solution)/dt. We do not take the old_solution directly from
-     * solution_history as providing the option to pass a (fictional) old solution can have
-     * performance advantages, e.g. in the bdf time integration. It can be set by the function
-     * set_stage_constants().
-     */
-    mutable const VectorType *time_integrator_old_solution = nullptr;
-
-    /**
-     * This vector is used in the approximation of the jacobian by finite differences. Here the
-     * vector stores the residual with a disturbed input.
-     */
-    mutable VectorType disturbed_residual;
-
-    /**
-     * Current time step size. This needs to be stored as this value is required by the local cell
-     * appliers.
-     */
-    mutable number current_time_step;
-
-    CompressibleFlowScratchData<dim, number> &flow_scratch_data;
-
-    CompressibleFlowConvectiveKernels<dim, number> convective_terms;
-
-    CompressibleFlowViscousKernels<dim, number> viscous_terms;
   };
 } // namespace MeltPoolDG::Flow

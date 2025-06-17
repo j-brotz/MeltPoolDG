@@ -31,10 +31,23 @@
 
 namespace MeltPoolDG::Simulation::CompressibleMultiphase
 {
+  /**
+   * @brief Initial flow field function for the oscillating water column test case.
+   */
   template <int dim, typename number>
   class InitialFieldOscillatingWaterColumn : public dealii::Function<dim, number>
   {
   public:
+    /**
+     * @brief Constructor.
+     *
+     * @param liquid_material_data Material parameters for liquid phase.
+     * @param gas_material_data Material parameters for gas phase.
+     * @param gas_phase_is_first Indicator whether the gas phase is the first phase in the two-phase
+     * system.
+     *
+     * @throws dealii::ExcNotImplemented If `dim != 1`.
+     */
     explicit InitialFieldOscillatingWaterColumn(const auto &liquid_material_data,
                                                 const auto &gas_material_data,
                                                 const bool  gas_phase_is_first = true)
@@ -47,6 +60,12 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       Assert(dim == 1, dealii::ExcNotImplemented());
     }
 
+    /**
+     * @brief Computes the current function value for a specific @p component at a given point @p p.
+     *
+     * @param p Point at which the function should be evaluated.
+     * @param component Component for which the function value should be returned.
+     */
     number
     value(const dealii::Point<dim, number> &p, const unsigned int component) const final
     {
@@ -118,20 +137,38 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     }
 
   private:
+    /// Material parameters for liquid phase
     Flow::CompressibleFluidMaterialPhaseData<number> liquid_material_data;
+
+    /// Material parameters for gas phase
     Flow::CompressibleFluidMaterialPhaseData<number> gas_material_data;
-    bool                                             gas_phase_is_first;
+
+    /// Indicator whether the gas phase is the first phase in the two-phase system
+    bool gas_phase_is_first;
   };
 
+  /**
+   * @brief A specific compressible flow simulation setup for an oscillating water column between
+   * two air columns.
+   */
   template <int dim, typename number>
   class SimulationOscillatingWaterColumn final
     : public Multiphase::CompressibleMultiphaseCase<dim, number>
   {
   public:
+    /**
+     * @brief Constructor.
+     *
+     * @param parameter_file Parameter file that contains simulation input settings.
+     * @param mpi_communicator The MPI communicator used to run the simulation in parallel.
+     */
     SimulationOscillatingWaterColumn(std::string parameter_file, const MPI_Comm mpi_communicator)
       : Multiphase::CompressibleMultiphaseCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
+    /**
+     * @brief Creates the spatial discretization for the simulation setup.
+     */
     void
     create_spatial_discretization() override
     {
@@ -159,6 +196,9 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 
+    /**
+     * @brief Sets the boundary conditions.
+     */
     void
     set_boundary_conditions() override
     {
@@ -180,6 +220,9 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
                                       "compressible_multiphase_flow");
     }
 
+    /**
+     * @brief Sets the field functions for the simulation.
+     */
     void
     set_field_conditions() override
     {
@@ -192,7 +235,7 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       this->attach_initial_condition(initial_condition, "compressible_multiphase_flow");
 
       // set level-set function
-      dealii::Point<dim> p;
+      dealii::Point<dim, number> p;
       // avoid phase interface colliding with element face (bug in dealii has to be fixed)
       p[0] = 0.45001;
 
@@ -206,6 +249,11 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       this->attach_field_function(level_set, "level_set", "compressible_multiphase_flow");
     }
 
+    /**
+     * @brief Performs post-processing by evaluating and outputting error norms.
+     *
+     * @param generic_data_out A generic utility for managing simulation output data.
+     */
     void
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const override
     {

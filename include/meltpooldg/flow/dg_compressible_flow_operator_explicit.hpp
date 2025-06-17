@@ -17,17 +17,24 @@
 
 namespace MeltPoolDG::Flow
 {
-  template <unsigned int dim, typename number, bool is_viscous = true>
+  /**
+   * @brief Operator for the matrix-free evaluation of a compressible single-phase flow cutDG
+   * formulation for explicit time integration.
+   *
+   * @tparam dim Dimension of the considered simulation case.
+   * @tparam number Floating point format type.
+   * @tparam is_viscous Indicates whether the flow is viscous.
+   */
+  template <int dim, typename number, bool is_viscous = true>
   class DGCompressibleFlowOperatorExplicit final : public DGCompressibleFlowOperatorBase<number>
   {
+  public:
     using VectorType             = dealii::LinearAlgebra::distributed::Vector<number>;
     using ConservedVariablesType = CompressibleFlowTypes::ConservedVariablesType<dim, number>;
     using ConservedVariablesGradType =
       CompressibleFlowTypes::ConservedVariablesGradType<dim, number>;
-
-  public:
     /**
-     * Constructor.
+     * @brief Constructor.
      *
      * @param flow_scratch_data Reference to the flow scratch data object (usually owned by the
      * corresponding operation class).
@@ -39,14 +46,14 @@ namespace MeltPoolDG::Flow
         nullptr);
 
     /**
-     * Reinitilaize the internal data structures, i.e., allocate memory for vectors storing
+     * @brief Reinitialize the internal data structures, i.e., allocate memory for vectors storing
      * temporary solutions.
      */
     void
     reinit() override;
 
     /**
-     * Creates and returns an explicit time integrator object which is set up with the current
+     * @brief Creates and returns an explicit time integrator object which is set up with the current
      * operator.
      *
      * @param time_integrator_data Reference to the time integrator data object.
@@ -61,8 +68,10 @@ namespace MeltPoolDG::Flow
       const TimeIntegration::TimeIntegratorData<number> &time_integrator_data) override;
 
     /**
-     * Computes the value of the function f(y) for the compressible Navier-Stokes equations of the
-     * form y' = f(y). From a discretization perspective, f(y) is given by f(y) = M^(-1) * F(y),
+     * @brief Computes the value of the function f(y) for the compressible Navier-Stokes equations of the
+     * form y' = f(y).
+     *
+     * From a discretization perspective, f(y) is given by f(y) = M^(-1) * F(y),
      * where M is the mass matrix and F(y) is the sum of all flux contributions: F_v + F_c + F_rhs.
      *
      * @param time The current time at which the function is evaluated.
@@ -78,9 +87,24 @@ namespace MeltPoolDG::Flow
                    const std::function<void(unsigned int, unsigned int)> &func) const;
 
   private:
+    /// Scratch data for compressible flows
+    CompressibleFlowScratchData<dim, number> &flow_scratch_data;
+
+    /// Object for the convective term evaluations
+    CompressibleFlowConvectiveKernels<dim, number> convective_terms;
+
+    /// Object for the viscous term evaluations
+    CompressibleFlowViscousKernels<dim, number> viscous_terms;
+
+    /// This pointer may hold an instance of an external fluid force contribution
+    /// (e.g., gravity, body forces, or user - defined source terms)
+    std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> external_forces;
+
     /**
-     * Local cell applier computing the cell contribution to the rhs if the compressible
-     * Navier-Stokes equations are written in the form y'=rhs(y).
+     * @brief Local cell applier.
+     *
+     * Computes the cell contribution to the rhs if the compressible Navier-Stokes equations are
+     * written in the form y'=rhs(y).
      *
      * @param matrix_free Matrix free object on which the applier works on.
      * @param dst Destination vector to which the result is added.
@@ -94,8 +118,10 @@ namespace MeltPoolDG::Flow
                      const std::pair<unsigned int, unsigned int>              &cell_range) const;
 
     /**
-     * Local face applier computing the face contribution to the rhs if the compressible
-     * Navier-Stokes equations are written in the form y'=rhs(y).
+     * @brief Local face applier.
+     *
+     * Computes the face contribution to the rhs if the compressible Navier-Stokes equations are
+     * written in the form y'=rhs(y).
      *
      * @param matrix_free Matrix free object on which the applier works on.
      * @param dst Destination vector to which the result is added.
@@ -109,8 +135,10 @@ namespace MeltPoolDG::Flow
                      const std::pair<unsigned int, unsigned int>              &face_range) const;
 
     /**
-     * Local boundaryface applier computing the boudnary face contribution to the rhs if the
-     * compressible Navier-Stokes equations are written in the form y'=rhs(y).
+     * @brief Local boundary face applier.
+     *
+     * Computes the boundary face contribution to the rhs if the compressible Navier-Stokes
+     * equations are written in the form y'=rhs(y).
      *
      * @param matrix_free Matrix free object on which the applier works on.
      * @param dst Destination vector to which the result is added.
@@ -122,13 +150,5 @@ namespace MeltPoolDG::Flow
                               dealii::LinearAlgebra::distributed::Vector<number>       &dst,
                               const dealii::LinearAlgebra::distributed::Vector<number> &src,
                               const std::pair<unsigned int, unsigned int> &face_range) const;
-
-    CompressibleFlowScratchData<dim, number> &flow_scratch_data;
-
-    CompressibleFlowConvectiveKernels<dim, number> convective_terms;
-
-    CompressibleFlowViscousKernels<dim, number> viscous_terms;
-
-    std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> external_forces;
   };
 } // namespace MeltPoolDG::Flow

@@ -9,21 +9,31 @@
 
 namespace MeltPoolDG::Flow
 {
-  template <unsigned int dim, typename number, bool is_viscous = true>
+  /**
+   * @brief Operator for the matrix-free evaluation of a compressible single-phase flow cutDG
+   * formulation.
+   *
+   * @tparam dim Dimension of the considered simulation case.
+   * @tparam number Floating point format type.
+   * @tparam is_viscous Indicates whether the flow is viscous.
+   */
+  template <int dim, typename number, bool is_viscous = true>
   class CutDGCompressibleFlowOperator
   {
+  public:
     using VectorType            = dealii::LinearAlgebra::distributed::Vector<number>;
     using MappingInfoType       = CutUtil::MappingInfoType<dim, number>;
     using MappingInfoVectorType = CutUtil::MappingInfoVectorType<dim, number>;
 
-  public:
     using ConservedVariablesType = dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>>;
     using ConservedVariablesGradType =
       dealii::Tensor<1, dim + 2, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
 
-
     /**
-     * Constructor.
+     * @brief Constructor.
+     *
+     * Initializes the operators, integrators, and mapping objects needed to compute
+     * the matrix-free evaluation of a compressible single-phase flow cutDG formulation.
      *
      * @param flow_scratch_data Flow scratch data object holding all relevant compressible flow data
      * required by the operator.
@@ -36,13 +46,14 @@ namespace MeltPoolDG::Flow
      * the mapping information computation and mapping data storage of the faces on the
      * inner subdomain and the outer subdomain, respectively.
      */
-    CutDGCompressibleFlowOperator(CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-                                  const MappingInfoType                    &mapping_info_surface_in,
-                                  const MappingInfoVectorType              &mapping_info_cells_in,
-                                  const MappingInfoVectorType              &mapping_info_faces_in);
+    explicit CutDGCompressibleFlowOperator(
+      CompressibleFlowScratchData<dim, number> &flow_scratch_data,
+      const MappingInfoType                    &mapping_info_surface_in,
+      const MappingInfoVectorType              &mapping_info_cells_in,
+      const MappingInfoVectorType              &mapping_info_faces_in);
 
     /**
-     * Set the inflow field function in the case of an unfitted inflow boundary.
+     * @brief Set the inflow field function in the case of an unfitted inflow boundary.
      *
      * @param inflow_function Function which describes the inflow field at the unfitted inflow boundary.
      */
@@ -50,7 +61,7 @@ namespace MeltPoolDG::Flow
     set_inflow_field_unfitted_boundary(std::shared_ptr<dealii::Function<dim>> &inflow_function);
 
     /**
-     * Set the velocity function in the case of an unfitted (rigid) moving object.
+     * @brief Set the velocity function in the case of an unfitted (rigid) moving object.
      *
      * @param velocity_function Scalar function which describes the velocity of an unfitted (rigid) moving object
      */
@@ -58,7 +69,12 @@ namespace MeltPoolDG::Flow
     set_unfitted_object_velocity(std::shared_ptr<dealii::Function<dim>> &velocity_function);
 
     /**
-     * Local appliers for right-hand side evaluation.
+     * @brief Local applier for the cell integrals in the right-hand side evaluation.
+     *
+     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst [out] Destination vector, in which the result is written.
+     * @param src [in] Source vector for the operator evaluation.
+     * @param cell_range [in] Considered cell range.
      */
     void
     local_apply_cell_rhs(const dealii::MatrixFree<dim, number>       &matrix_free,
@@ -66,12 +82,28 @@ namespace MeltPoolDG::Flow
                          const VectorType                            &src,
                          const std::pair<unsigned int, unsigned int> &cell_range) const;
 
+    /**
+     * @brief Local applier for the face integrals in the right-hand side evaluation.
+     *
+     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst [out] Destination vector, in which the result is written.
+     * @param src [in] Source vector for the operator evaluation.
+     * @param face_range [in] Considered face range.
+     */
     void
     local_apply_face_rhs(const dealii::MatrixFree<dim, number>       &matrix_free,
                          VectorType                                  &dst,
                          const VectorType                            &src,
                          const std::pair<unsigned int, unsigned int> &face_range) const;
 
+    /**
+     * @brief Local applier for the boundary face integral in the right-hand side evaluation.
+     *
+     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst [out] Destination vector, in which the result is written.
+     * @param src [in] Source vector for the operator evaluation.
+     * @param face_range [in] Considered face range.
+     */
     void
     local_apply_boundary_face_rhs(const dealii::MatrixFree<dim, number>       &matrix_free,
                                   VectorType                                  &dst,
@@ -79,7 +111,12 @@ namespace MeltPoolDG::Flow
                                   const std::pair<unsigned int, unsigned int> &face_range) const;
 
     /**
-     * Local appliers for left-hand side matrix-vector product evaluation.
+     * @brief Local applier for the cell integrals in the left-hand side matrix-vector product evaluation.
+     *
+     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst [out] Destination vector, in which the result is written.
+     * @param src [in] Source vector for the operator evaluation.
+     * @param cell_range [in] Considered cell range.
      */
     void
     local_apply_cell_lhs(const dealii::MatrixFree<dim, number>       &matrix_free,
@@ -87,12 +124,29 @@ namespace MeltPoolDG::Flow
                          const VectorType                            &src,
                          const std::pair<unsigned int, unsigned int> &cell_range) const;
 
+    /**
+     * @brief Local applier for the face integrals in the left-hand side matrix-vector product evaluation.
+     *
+     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst [out] Destination vector, in which the result is written.
+     * @param src [in] Source vector for the operator evaluation.
+     * @param face_range [in] Considered face range.
+     */
     void
     local_apply_face_lhs(const dealii::MatrixFree<dim, number>       &matrix_free,
                          VectorType                                  &dst,
                          const VectorType                            &src,
                          const std::pair<unsigned int, unsigned int> &face_range) const;
 
+    /**
+     * @brief Local applier for the boundary face integrals in the left-hand side matrix-vector product
+     * evaluation.
+     *
+     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst [out] Destination vector, in which the result is written.
+     * @param src [in] Source vector for the operator evaluation.
+     * @param face_range [in] Considered face range.
+     */
     void
     local_apply_boundary_face_lhs(const dealii::MatrixFree<dim, number>       &matrix_free,
                                   VectorType                                  &dst,
@@ -100,7 +154,7 @@ namespace MeltPoolDG::Flow
                                   const std::pair<unsigned int, unsigned int> &face_range) const;
 
     /**
-     * Function for the matrix-free right-hand side vector evaluation.
+     * @brief Function for the matrix-free right-hand side vector evaluation.
      *
      * @param time Current simulation time.
      * @param time_step Current time step size.
@@ -114,7 +168,7 @@ namespace MeltPoolDG::Flow
                const VectorType &src) const;
 
     /**
-     * Function for the matrix-free matrix-vector product evaluation.
+     * @brief Function for the matrix-free matrix-vector product evaluation.
      *
      * @param dst Vector where the computed evaluated vector-matrix product is stored.
      * @param src The solution vector at the current time.
@@ -123,8 +177,41 @@ namespace MeltPoolDG::Flow
     vmult(VectorType &dst, const VectorType &src) const;
 
   private:
+    /// Scratch data for compressible flows
+    CompressibleFlowScratchData<dim, number> &flow_scratch_data;
+
+    /// Object for the convective term evaluations
+    const CompressibleFlowConvectiveKernels<dim, number> convective_terms;
+
+    /// Object for the viscous term evaluations
+    const CompressibleFlowViscousKernels<dim, number> viscous_terms;
+
+    /// Mapping information for integration over immersed boundaries
+    const MappingInfoType &mapping_info_surface;
+
+    /// Mapping information for integration over cut cells
+    const MappingInfoVectorType &mapping_info_cells;
+
+    /// Mapping information for integration over cut faces
+    const MappingInfoVectorType &mapping_info_faces;
+
+    /// FESystem object, required by FEPointEvaluation
+    dealii::FESystem<dim> fe_point_temp;
+
+    /// Number of DoFs per cell
+    const unsigned int n_dofs_per_cell;
+
+    /// Inverse time step size
+    mutable number inv_time_step = 0.;
+
+    /// Function, which describes the velocity of the unfitted object
+    std::shared_ptr<dealii::Function<dim>> unfitted_object_velocity;
+
+    /// Inflow function for unfitted inflow boundary
+    std::shared_ptr<dealii::Function<dim>> unfitted_inflow;
+
     /**
-     * This function sets the corresponding values on the fictional outer face if the face is
+     * @brief This function sets the corresponding values on the fictional outer face if the face is
      * located at an unfitted boundary.
      *
      * @param q_point Location of the quadrature points at which the values shall be computed.
@@ -141,25 +228,5 @@ namespace MeltPoolDG::Flow
       ConservedVariablesType                                    &w_p,
       const ConservedVariablesGradType                          &grad_w_m,
       ConservedVariablesGradType                                &grad_w_p) const;
-
-    CompressibleFlowScratchData<dim, number> &flow_scratch_data;
-
-    const CompressibleFlowConvectiveKernels<dim, number> convective_terms;
-
-    const CompressibleFlowViscousKernels<dim, number> viscous_terms;
-
-    const MappingInfoType       &mapping_info_surface;
-    const MappingInfoVectorType &mapping_info_cells;
-    const MappingInfoVectorType &mapping_info_faces;
-
-    dealii::FESystem<dim> fe_point_temp;
-    const unsigned int    n_dofs_per_cell;
-
-    mutable number inv_time_step = 0.;
-
-    // Function, which describes the velocity of the unfitted object
-    std::shared_ptr<dealii::Function<dim>> unfitted_object_velocity;
-    // Inflow function for unfitted inflow boundary
-    std::shared_ptr<dealii::Function<dim>> unfitted_inflow;
   };
 } // namespace MeltPoolDG::Flow

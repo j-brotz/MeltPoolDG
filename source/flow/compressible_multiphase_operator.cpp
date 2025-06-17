@@ -6,14 +6,14 @@
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/compressible_flow_explicit_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
-#include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_interface_kernels.hpp>
-#include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operator.hpp>
+#include <meltpooldg/flow/compressible_multiphase_interface_kernels.hpp>
+#include <meltpooldg/flow/compressible_multiphase_operator.hpp>
 
 namespace MeltPoolDG::Multiphase
 {
   using namespace dealii;
 
-  template <unsigned int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
+  template <int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
   CompressibleMultiphaseOperator<dim, number, is_viscous_gas, is_viscous_liquid>::
     CompressibleMultiphaseOperator(
       MeltPoolDG::Flow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
@@ -44,7 +44,7 @@ namespace MeltPoolDG::Multiphase
     visc_ave_weight_phase_gas    = 1. - visc_ave_weight_phase_liquid;
   }
 
-  template <unsigned int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
+  template <int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
   void
   CompressibleMultiphaseOperator<dim, number, is_viscous_gas, is_viscous_liquid>::vmult(
     VectorType       &dst,
@@ -70,7 +70,7 @@ namespace MeltPoolDG::Multiphase
       MatrixFree<dim, number>::DataAccessOnFaces::gradients);
   }
 
-  template <unsigned int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
+  template <int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
   void
   CompressibleMultiphaseOperator<dim, number, is_viscous_gas, is_viscous_liquid>::create_rhs(
     const number     &time,
@@ -81,11 +81,11 @@ namespace MeltPoolDG::Multiphase
     Assert(time_step > 0., dealii::ExcMessage("Time step size must be larger than 0!"));
     inv_time_step = 1. / time_step;
 
-    typedef std::function<void(const MatrixFree<dim, number> &,
-                               LinearAlgebra::distributed::Vector<number>       &dst,
-                               const LinearAlgebra::distributed::Vector<number> &src,
-                               const std::pair<unsigned int, unsigned int> &)>
-      local_applier_type;
+    using local_applier_type =
+      std::function<void(const MatrixFree<dim, number> &,
+                         LinearAlgebra::distributed::Vector<number> &,
+                         const LinearAlgebra::distributed::Vector<number> &,
+                         const std::pair<unsigned int, unsigned int> &)>;
 
     multiphase_scratch_data.boundary_conditions.update_boundary_conditions(time);
     local_applier_type cell          = MPDG_LAMBDA_WRAPPER(local_apply_cell_rhs);
@@ -104,7 +104,7 @@ namespace MeltPoolDG::Multiphase
     dst *= time_step;
   }
 
-  template <unsigned int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
+  template <int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
   void
   CompressibleMultiphaseOperator<dim, number, is_viscous_gas, is_viscous_liquid>::
     local_apply_cell_rhs(const dealii::MatrixFree<dim, number> &,
@@ -485,7 +485,7 @@ namespace MeltPoolDG::Multiphase
       }
   }
 
-  template <unsigned int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
+  template <int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
   void
   CompressibleMultiphaseOperator<dim, number, is_viscous_gas, is_viscous_liquid>::
     local_apply_face_rhs(const dealii::MatrixFree<dim, number> &,
@@ -720,7 +720,7 @@ namespace MeltPoolDG::Multiphase
       }
   }
 
-  template <unsigned int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
+  template <int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
   void
   CompressibleMultiphaseOperator<dim, number, is_viscous_gas, is_viscous_liquid>::
     local_apply_boundary_face_rhs(const dealii::MatrixFree<dim, number> &,
@@ -890,7 +890,7 @@ namespace MeltPoolDG::Multiphase
       }
   }
 
-  template <unsigned int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
+  template <int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
   void
   CompressibleMultiphaseOperator<dim, number, is_viscous_gas, is_viscous_liquid>::
     local_apply_cell_lhs(const dealii::MatrixFree<dim, number> &,
@@ -980,7 +980,7 @@ namespace MeltPoolDG::Multiphase
       }
   }
 
-  template <unsigned int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
+  template <int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
   void
   CompressibleMultiphaseOperator<dim, number, is_viscous_gas, is_viscous_liquid>::
     local_apply_face_lhs(const dealii::MatrixFree<dim, number> &,
@@ -1103,7 +1103,7 @@ namespace MeltPoolDG::Multiphase
       }
   }
 
-  template <unsigned int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
+  template <int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
   void
   CompressibleMultiphaseOperator<dim, number, is_viscous_gas, is_viscous_liquid>::
     local_apply_boundary_face_lhs(const dealii::MatrixFree<dim, number> &,

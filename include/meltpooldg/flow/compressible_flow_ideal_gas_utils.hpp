@@ -1,20 +1,19 @@
-/**
- * @brief A class for a collection of thermodynamic helper functions for the ideal gas equation of
- * state.
- */
-
 #pragma once
 
 #include <meltpooldg/flow/compressible_flow_material_data.hpp>
 
 namespace MeltPoolDG::Flow::EOS
 {
+  /**
+   * @brief A class for a collection of thermodynamic helper functions for the ideal gas
+   * equation of state.
+   */
   template <int dim, typename number>
   class IdealGas : public EquationOfStateUtils<dim, number>
   {
   public:
     /**
-     * Constructor.
+     * @brief Constructor.
      *
      * @param material_data_in Reference to a material data object providing all relevant material
      * parameters.
@@ -24,7 +23,7 @@ namespace MeltPoolDG::Flow::EOS
     {}
 
     /**
-     * Calculate the pressure from the conserved variables for an ideal gas.
+     * @brief Calculate the pressure from the conserved variables for an ideal gas.
      *
      * @param conserved_variables Current values of the conserved variables.
      *
@@ -45,8 +44,8 @@ namespace MeltPoolDG::Flow::EOS
     }
 
     /**
-     * Calculate the gradient of the temperature from the conserved variables and their gradients
-     * for an ideal gas.
+     * @brief Calculate the gradient of the temperature from the conserved variables and their
+     * gradients for an ideal gas.
      *
      * @param conserved_variables Current values of the conserved variables.
      * @param grad_conserved_variables Current gradient of the conserved variables.
@@ -77,7 +76,7 @@ namespace MeltPoolDG::Flow::EOS
     }
 
     /**
-     * Calculate the speed of sound for an ideal gas.
+     * @brief Calculate the speed of sound for an ideal gas.
      *
      * @param conserved_variables Current values of the conserved variables.
      *
@@ -95,7 +94,7 @@ namespace MeltPoolDG::Flow::EOS
     }
 
     /**
-     * Calculate the temperature for an ideal gas.
+     * @brief Calculate the temperature for an ideal gas.
      *
      * @param conserved_variables Current values of the conserved variables.
      *
@@ -113,8 +112,8 @@ namespace MeltPoolDG::Flow::EOS
     }
 
     /**
-     * Convert the given primitive variables (pressure, velocity, temperature) to conservative
-     * variables (rho, momentum, total energy).
+     * @brief Convert the given primitive variables (pressure, velocity, temperature) to
+     * conservative variables (rho, momentum, total energy).
      *
      * @param u_prim Current values in primitive variables formulation.
      *
@@ -142,7 +141,7 @@ namespace MeltPoolDG::Flow::EOS
     }
 
     /**
-     * Calculate the inner energy from a given pressure.
+     * @brief Calculate the inner energy from a given pressure.
      *
      * @param pressure Given pressure value.
      *
@@ -157,7 +156,7 @@ namespace MeltPoolDG::Flow::EOS
     }
 
   private:
-    /// material data object providing all relevant material parameters
+    /// Material data object providing all relevant material parameters
     const CompressibleFluidMaterialPhaseData<number> &material_data;
   };
 } // namespace MeltPoolDG::Flow::EOS

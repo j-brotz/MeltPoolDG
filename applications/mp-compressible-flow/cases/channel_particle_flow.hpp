@@ -12,14 +12,27 @@
 
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {
+  /**
+   * @brief Inflow field function.
+   */
   template <int dim, typename number>
   class InflowFlowField : public dealii::Function<dim, number>
   {
   public:
+    /**
+     * @brief Constructor.
+     *
+     * @param time Current simulation time.
+     */
     explicit InflowFlowField(const number time)
       : dealii::Function<dim, number>(dim + 2, time)
     {}
 
+    /**
+     * @brief Computes the current function value for a specific @p component.
+     *
+     * @param component Component for which the function value should be returned.
+     */
     number
     value(const dealii::Point<dim, number> &, const unsigned int component) const final
     {
@@ -34,10 +47,21 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
   };
 
+  /**
+   * @brief A specific compressible flow simulation setup for channel flow with particles.
+   */
   template <int dim, typename number>
   class SimulationChannelParticleFlow final : public Flow::CompressibleFlowCase<dim, number>
   {
   public:
+    /**
+     * @brief Constructor.
+     *
+     * @param parameter_file Parameter file that contains simulation input settings.
+     * @param mpi_communicator The MPI communicator used to run the simulation in parallel.
+     *
+     * @throw dealii::ExcMessage if `dim <= 1`, since the channel simulation requires at least 2D.
+     */
     SimulationChannelParticleFlow(std::string parameter_file, const MPI_Comm mpi_communicator)
       : Flow::CompressibleFlowCase<dim, number>(parameter_file, mpi_communicator)
     {
@@ -48,6 +72,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
           std::to_string(dim) + "."));
     }
 
+    /**
+     * @brief Creates the spatial discretization for the simulation setup.
+     */
     void
     create_spatial_discretization() override
     {
@@ -59,6 +86,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 
+    /**
+     * @brief Sets the boundary conditions.
+     */
     void
     set_boundary_conditions() override
     {
@@ -76,6 +106,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       this->attach_boundary_condition({3, dummy_solution}, "slip_wall", "compressible_flow");
     }
 
+    /**
+     * @brief Sets the field functions for the simulation.
+     */
     void
     set_field_conditions() override
     {
@@ -84,6 +117,11 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       this->attach_initial_condition(initial_condition, "compressible_flow");
     }
 
+    /**
+     * @brief Performs post-processing by evaluating and outputting error norms.
+     *
+     * @param generic_data_out A generic utility for managing simulation output data.
+     */
     void
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const override
     {

@@ -10,11 +10,14 @@
  *  - stiffened gas
  *  - Noble-Abel stiffened gas
  *
- *  Two different methods for enforcing the interface jump conditions are enabled:
- * - strong enforcement in the weak formulation and penalty enforcement for Dirichlet density and
- *   temperature constraint for the gas phase
- * - HLLP0 approximate Riemann solver for convective fluxes and weighted average Nitsche-type method
- *   for viscous fluxes
+ * Three different strategies for enforcing the interface jump conditions are implemented:
+ *
+ * - "HLLP0 and penalty": approximate HLLP0 Riemann solver for convective fluxes and a combination
+ *   of strong incorporation in the weak form and penalty terms for the viscous fluxes
+ * - "HLLP0 and SIPG": approximate HLLP0 Riemann solver for convective fluxes and Nitsche-type
+ *   method for viscous fluxes, consistently aligned to the SIPG method for inner faces
+ * - "penalty": strong enforcement of both convective and viscous fluxes in the weak form and
+ *   penalty terms for Dirichlet density and temperature constraints for the gas phase
  */
 
 #pragma once
@@ -32,8 +35,8 @@
 #include <meltpooldg/flow/compressible_flow_boundary_conditions.hpp>
 #include <meltpooldg/flow/compressible_flow_scratch_data.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
-#include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operation.hpp>
-#include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operator.hpp>
+#include <meltpooldg/flow/compressible_multiphase_operation.hpp>
+#include <meltpooldg/flow/compressible_multiphase_operator.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
 
@@ -42,9 +45,14 @@
 
 namespace MeltPoolDG::Multiphase
 {
+  /**
+   * @brief Operation that performs a full time step for the compressible two-phase Navier-Stokes
+   * equations in a cutDG context.
+   */
   template <int dim, typename number>
   class CompressibleMultiphaseOperation
   {
+  public:
     using VectorType            = dealii::LinearAlgebra::distributed::Vector<number>;
     using MappingInfoType       = CutUtil::MappingInfoType<dim, number>;
     using MappingInfoVectorType = CutUtil::MappingInfoVectorType<dim, number>;
@@ -55,14 +63,16 @@ namespace MeltPoolDG::Multiphase
                    CompressibleMultiphaseOperator<dim, number, false, true>,
                    CompressibleMultiphaseOperator<dim, number, false, false>>;
 
-  public:
     /**
-     * Constructor.
+     * @brief Constructor.
+     *
+     * Initializes all internal data structures required to simulate compressible multiphase
+     * Navier-Stokes flows using a cutDG approach.
      *
      * @param scratch_data_in Reference to the used ScratchData object.
      * @param comp_flow_data_in Reference to the compressible flow data struct used.
-     * @param material_data_gas_in Reference to the material data scruct for the gas phase.
-     * @param material_data_liquid_in Reference to the material data scruct for the liquid phase.
+     * @param material_data_gas_in Reference to the material data struct for the gas phase.
+     * @param material_data_liquid_in Reference to the material data struct for the liquid phase.
      * @param cut_data_in Reference to the data object with cut-related parameters.
      * @param phase_coupling_data_in Reference to the struct for phase coupling parameters.
      * @param time_iterator_in Reference to the used time stepping.
@@ -71,8 +81,11 @@ namespace MeltPoolDG::Multiphase
      * @param comp_flow_dof_idx_in Index of the used dof handler for solution in @p scratch_data_in.
      * @param level_set_dof_idx_in Index of the used dof handler for level-set in @p scratch_data_in.
      * @param comp_flow_quad_idx_in Index of the used quadrature object in @p scratch_data_in.
+     *
+     * @note This constructor assumes that explicit time stepping is used. Only one solution is
+     * stored in the history, and ghost-penalty stabilization is enabled.
      */
-    CompressibleMultiphaseOperation(
+    explicit CompressibleMultiphaseOperation(
       const ScratchData<dim, dim, number>                    &scratch_data_in,
       const Flow::CompressibleFlowData<number>               &comp_flow_data_in,
       const Flow::CompressibleFluidMaterialPhaseData<number> &material_data_gas_in,
@@ -87,14 +100,15 @@ namespace MeltPoolDG::Multiphase
       unsigned int comp_flow_quad_idx_in = dealii::numbers::invalid_unsigned_int);
 
     /**
-     * Set up the required internal data structures. After a call to this function the solve()
-     * function of the class can be utilized.
+     * @brief Set up the required internal data structures.
+     *
+     * After a call to this function the solve() function of the class can be utilized.
      */
     void
     reinit();
 
     /**
-     * Set a body force, e.g. gravity, specified by the passed function.
+     * @brief Set a body force, e.g. gravity, specified by the passed function.
      *
      * @param body_force_in Function specifying the body force.
      *
@@ -104,16 +118,21 @@ namespace MeltPoolDG::Multiphase
     set_body_force(std::unique_ptr<dealii::Function<dim>> body_force_in);
 
     /**
-     * Compute the maximum time step size arising from the convective and viscous time step limits
-     * and optionally print it to the console.
+     * @brief Compute the maximum time step size.
+     *
+     * The maximum time step size arises from the convective and viscous time step limits.
+     * Optionally, it is printed to the console.
      *
      * @param do_print If true, the time step limit is printed to the console.
+     *
+     * @return The computed maximum time step size.
      */
     number
     compute_time_step_size(bool do_print = false) const;
 
     /**
-     * Distribute dofs needed for a finite element type given in @p CompressibleFlowData.
+     * @brief Distribute dofs needed for a finite element type given in @p CompressibleFlowData.
+     *
      * A FECollection is created to distinguish between liquid phase, gas phase and intersected
      * elements.
      *
@@ -123,7 +142,7 @@ namespace MeltPoolDG::Multiphase
     distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const;
 
     /**
-     * Solves the compressible two-phase Navier-Stokes equations for a single time step.
+     * @brief Solves the compressible two-phase Navier-Stokes equations for a single time step.
      *
      * @param current_time Current time at t^n.
      * @param time_step Current time step size.
@@ -132,7 +151,7 @@ namespace MeltPoolDG::Multiphase
     solve(number current_time, number time_step);
 
     /**
-     * Set the initial condition of the solution dof vector.
+     * @brief Set the initial condition of the solution dof vector.
      *
      * @param function Given function for initial condition.
      */
@@ -140,8 +159,8 @@ namespace MeltPoolDG::Multiphase
     set_initial_condition(const dealii::Function<dim> &function);
 
     /**
-     * Attach the solution to the passed data out object. The solution which are added are the
-     * density, the momentum and the energy density.
+     * @brief Attach the solution to the passed data out object. The solution which are added are
+     * the density, the momentum and the energy density.
      *
      * @param data_out Object to which the solution vector is attached.
      */
@@ -149,7 +168,7 @@ namespace MeltPoolDG::Multiphase
     attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
 
     /**
-     * Set the boundary conditions.
+     * @brief Set the boundary conditions.
      *
      * @param simulation_case Pointer to the considered simulation case class.
      * @param operation_name String for the name of the considered operation.
@@ -162,37 +181,60 @@ namespace MeltPoolDG::Multiphase
                             const std::string                                      &operation_name);
 
     /**
-     * Getter functions.
+     * @brief Constant getter function for the current solution vector.
      */
     const VectorType &
     get_solution() const;
 
+    /**
+     * @brief Getter function for the current solution vector.
+     */
     VectorType &
     get_solution();
 
+    /**
+     * @brief Constant getter function for the DoFHandler.
+     */
     const dealii::DoFHandler<dim> &
     get_dof_handler() const;
 
-    typename CompressibleMultiphaseOperation<dim, number>::
-      CompMultiphaseOperatorVariant static create_cut_flow_operator_variant(
-        bool                                                  is_viscous_gas,
-        bool                                                  is_viscous_liquid,
-        Flow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
-        const MappingInfoType                                &mapping_info_surface_in,
-        const MappingInfoVectorType                          &mapping_info_cells_in,
-        const MappingInfoVectorType                          &mapping_info_faces_in)
+    /**
+     * @brief Create and return the appropriate compressible multiphase operator variant.
+     *
+     * This static factory method instantiates and returns the correct variant of the
+     * `CompressibleMultiphaseOperator` based on whether the gas and liquid phases are
+     * viscous. The returned operator is used for applying the cut-cell method for
+     * compressible multiphase Navier-Stokes equations.
+     *
+     * @param is_viscous_gas Boolean indicating if the gas phase has viscosity.
+     * @param is_viscous_liquid Boolean indicating if the liquid phase has viscosity.
+     * @param multiphase_scratch_data Reference to the scratch data used for the operator.
+     * @param mapping_info_surface_in Mapping information for integration over phase interfaces.
+     * @param mapping_info_cells_in Mapping information for integration over cut cells.
+     * @param mapping_info_faces_in Mapping information for integration over cut faces.
+     *
+     * @return A variant of the `CompressibleMultiphaseOperator` with the appropriate template
+     * specialization selected based on the viscosity configuration.
+     */
+    CompMultiphaseOperatorVariant static create_cut_flow_operator_variant(
+      bool                                                  is_viscous_gas,
+      bool                                                  is_viscous_liquid,
+      Flow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
+      const MappingInfoType                                &mapping_info_surface_in,
+      const MappingInfoVectorType                          &mapping_info_cells_in,
+      const MappingInfoVectorType                          &mapping_info_faces_in)
     {
       if (is_viscous_gas and is_viscous_liquid)
         return CompressibleMultiphaseOperator<dim, number, true, true>(multiphase_scratch_data,
                                                                        mapping_info_surface_in,
                                                                        mapping_info_cells_in,
                                                                        mapping_info_faces_in);
-      else if (is_viscous_gas and !is_viscous_liquid)
+      else if (is_viscous_gas and (not is_viscous_liquid))
         return CompressibleMultiphaseOperator<dim, number, true, false>(multiphase_scratch_data,
                                                                         mapping_info_surface_in,
                                                                         mapping_info_cells_in,
                                                                         mapping_info_faces_in);
-      else if (!is_viscous_gas and is_viscous_liquid)
+      else if ((not is_viscous_gas) and is_viscous_liquid)
         return CompressibleMultiphaseOperator<dim, number, false, true>(multiphase_scratch_data,
                                                                         mapping_info_surface_in,
                                                                         mapping_info_cells_in,
@@ -205,33 +247,62 @@ namespace MeltPoolDG::Multiphase
     }
 
   private:
+    /// Scratch data for multiphase case
     Flow::CompressibleMultiphaseScratchData<dim, number> multiphase_scratch_data;
 
+    /// Time iterator
     const TimeIntegration::TimeIterator<number> &time_iterator;
 
+    /// DoF index associated to the level set field
     const unsigned int level_set_dof_idx;
-    const VectorType  &level_set;
-    VectorType         rhs;
 
+    /// Reference to the level-set field used to represent the interface between phases
+    const VectorType &level_set;
+
+    /// Right-hand side vector
+    VectorType rhs;
+
+    /// Mesh classifier, which contains information if a cell is in the gas phase, liquid phase or
+    /// cut. It corresponds to the current level set position.
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier;
+
+    /// Mesh classifier, which contains information if a cell is in the gas phase, liquid phase or
+    /// cut. It corresponds to the level set position at the previous time step.
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier_old;
 
+    /// Solution transfer object for the interpolation between function spaces at two subsequent
+    /// time steps with moving phase interfaces.
     CutUtil::SolutionTransferOperator<dim, number> cut_solution_transfer;
-    std::function<void()>                          setup_dof_system;
-    std::function<void(VectorType &)>              reinit_vector;
 
+    /// Function to set up the DoF system
+    std::function<void()> setup_dof_system;
+
+    /// Function for DoF vector reinitialization
+    std::function<void(VectorType &)> reinit_vector;
+
+    /// FESystem object, required by FEPointEvaluation
     dealii::FESystem<dim> fe_point_temp;
-    const unsigned int    n_dofs_per_cell;
 
-    MappingInfoType       mapping_info_surface;
+    /// Number of DoFs per cell
+    const unsigned int n_dofs_per_cell;
+
+    /// Mapping information for integration over phase interfaces
+    MappingInfoType mapping_info_surface;
+
+    /// Mapping information for integration over cut cells
     MappingInfoVectorType mapping_info_cells;
+
+    /// Mapping information for integration over cut faces
     MappingInfoVectorType mapping_info_faces;
 
+    /// Compressible multiphase operator object
     CompMultiphaseOperatorVariant cmp_operator;
 
     /**
-     * Adapt the dof layout and solution vector to a new interface position, which is defined by the
-     * zero-level-set-isosurface. The function contains following steps:
+     * @brief Adapt the dof layout and solution vector to a new interface position, which is defined
+     * by the zero-level-set-isosurface.
+     *
+     * The function contains following steps:
      * - classify cells according to current interface position
      * - adapt DoFHandler and solution vectors according to new interface position, extrapolate new
      * DoF values via ghost-penalty extrapolation
@@ -242,31 +313,36 @@ namespace MeltPoolDG::Multiphase
     adapt_to_new_interface_position();
 
     /**
-     * Classify cells according to the current state of the level-set field.
+     * @brief Classify cells according to the current state of the level-set field.
      */
     void
     classify_cells() const;
 
     /**
-     * Compute the convective time step limit for the current mesh and flow field.
+     * @brief Compute the convective time step limit for the current mesh and flow field.
+     *
+     * @return Maximum convective time step size.
      */
     number
     compute_convective_time_step_limit() const;
 
     /**
-     * Compute the minimum density currently occurring in the flow field.
+     * @brief Compute the minimum density currently occurring in the flow field.
+     *
+     * @return A pair of minimum densities in the liquid and gas phase.
      */
     std::pair<number, number>
     compute_minimum_density() const;
 
     /**
-     * Compute the quadrature rules for intersected elements, intersected faces and phase surfaces
+     * @brief Compute the quadrature rules for intersected elements, intersected faces and phase
+     * surfaces.
      */
     void
     compute_intersected_quadrature();
   };
 
-  //! inlined functions
+  // inlined functions
   template <int dim, typename number>
   const dealii::LinearAlgebra::distributed::Vector<number> &
   CompressibleMultiphaseOperation<dim, number>::get_solution() const

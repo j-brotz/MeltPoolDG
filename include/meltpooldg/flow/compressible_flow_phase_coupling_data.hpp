@@ -1,8 +1,3 @@
-/**
- * @brief Data structure, which contains parameters specifically for the phase coupling of
- * compressible multiphase simulations.
- */
-
 #pragma once
 
 #include <deal.II/base/parameter_handler.h>
@@ -16,58 +11,74 @@ namespace MeltPoolDG::Multiphase
 {
   BETTER_ENUM(InterfaceNumericalMethod, char, HLLP0_and_SIPG, HLLP0_and_penalty, penalty)
 
+  /**
+   * @brief Data structure, which contains parameters specifically for the phase coupling of
+   * compressible multiphase simulations.
+   */
   template <typename number>
   struct CompressibleFlowPhaseCouplingData
   {
-    // evaporation mass flux
+    /// Evaporation mass flux
     // TODO: use Hertz-Knudsen theory and enable constant evaporation mass flux for testing
     number m_dot_evap = 0.;
 
-    // energy flux jump (q_liquid - q_gas) (sum of evaporative enthalpy loss and laser heat source)
+    /// Energy flux jump (q_liquid - q_gas) (sum of evaporative enthalpy loss and laser heat source)
     // TODO: the parameter is only temporarily relevant
     number delta_q = 0.;
 
-    // numerical method for interface jump enforcement
+    /// Numerical method for interface jump enforcement
     InterfaceNumericalMethod type = InterfaceNumericalMethod::HLLP0_and_SIPG;
 
+    /// Parameters specifically for the penalty interface numerical method
     struct Penalty
     {
       struct Coefficients
       {
-        // density constraint penalty factor
+        /// Density constraint penalty factor
         number density = std::numeric_limits<number>::max();
 
-        // temperature constraint penalty factor
+        /// Temperature constraint penalty factor
         number temperature = std::numeric_limits<number>::max();
       } coefficients;
 
       struct TargetValues
       {
+        /// Target values for density for gas phase
         // TODO: remove from input file, only temporary required for testing
-        // target values for density and temperature for gas phase, required for penalty approach of
-        // interface jump conditions
-        number density_gas_phase     = 0.;
+        number density_gas_phase = 0.;
+
+        /// Target values for temperature for gas phase
+        // TODO: remove from input file, only temporary required for testing
         number temperature_gas_phase = 0.;
       } target_values;
 
     } penalty;
 
+    /// Parameters specifically for the HLLP0 and SIPG interface numerical method
     struct HLLP0_SIPG
     {
-      // symmetric interior penalty parameter for the viscous interface term
+      /// Symmetric interior penalty parameter for the viscous interface term
       number interior_penalty_parameter_interface = 1.;
-      // temperature jump (T_liquid - T_gas)
+
+      /// Temperature jump (T_liquid - T_gas)
       number delta_T = 0.;
     } hllp0_and_sipg;
 
+    /// Parameters specifically for the HLLP0 and penalty interface numerical method
     struct HLLP0_penalty
     {
-      // penalty parameter for temperature jump constraint
+      /// Penalty parameter for temperature jump constraint
       number penalty_parameter_temperature_jump = 1.;
-      // temperature jump (T_liquid - T_gas)
+
+      /// Temperature jump (T_liquid - T_gas)
       number delta_T = 0.;
     } hllp0_and_penalty;
 
+    /**
+     * @brief Add compressible flow phase coupling parameters in the parameter handler.
+     *
+     * @param prm The parameter handler to which the parameters are added.
+     */
     void
     add_parameters(dealii::ParameterHandler &prm)
     {
@@ -146,6 +157,9 @@ namespace MeltPoolDG::Multiphase
       prm.leave_subsection();
     };
 
+    /**
+     * @brief Checks compressible flow phase coupling parameters after reading user input.
+     */
     void
     post()
     {

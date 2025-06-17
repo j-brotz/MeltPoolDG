@@ -9,7 +9,7 @@
 namespace MeltPoolDG::Flow
 {
   using namespace dealii;
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::DGCompressibleFlowOperatorExplicit(
     CompressibleFlowScratchData<dim, number>                                    &flow_scratch_data,
     std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces)
@@ -19,14 +19,14 @@ namespace MeltPoolDG::Flow
     , external_forces(std::move(external_forces))
   {}
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::reinit()
   {
     // nothing to do here
   }
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::
     make_application_specific_time_integrator(
@@ -38,7 +38,7 @@ namespace MeltPoolDG::Flow
         *this, time_integrator_data, flow_scratch_data.scratch_data.get_timer()));
   }
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::apply_operator(
     const number                                           time,
@@ -65,7 +65,7 @@ namespace MeltPoolDG::Flow
          flow_scratch_data.quad_idx](const MatrixFree<dim, number>                    &matrix_free,
                                      LinearAlgebra::distributed::Vector<number>       &dst,
                                      const LinearAlgebra::distributed::Vector<number> &src,
-                                     const std::pair<unsigned int, unsigned int>       cell_range) {
+                                     const std::pair<unsigned int, unsigned int>      &cell_range) {
         Utilities::MatrixFree::local_apply_inverse_mass_matrix<dim, dim + 2, number>(
           matrix_free, dst, src, cell_range, dof_idx, quad_idx);
       };
@@ -73,7 +73,7 @@ namespace MeltPoolDG::Flow
       inverse, dst, dst, std::function<void(unsigned int, unsigned int)>(), func);
   }
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::local_apply_cell(
     const MatrixFree<dim, number>                    &matrix_free,
@@ -127,12 +127,12 @@ namespace MeltPoolDG::Flow
                 flux += external_forces->quad_operation(phi.quadrature_point(q), w_q);
               }
 
-            if (flow_scratch_data.body_force.get() != nullptr || external_forces != nullptr)
+            if (flow_scratch_data.body_force.get() != nullptr or external_forces != nullptr)
               phi.submit_value(flux, q);
             phi.submit_gradient(grad_flux, q);
           }
 
-        phi.integrate_scatter(((flow_scratch_data.body_force.get() != nullptr ||
+        phi.integrate_scatter(((flow_scratch_data.body_force.get() != nullptr or
                                 external_forces != nullptr) ?
                                  EvaluationFlags::values :
                                  EvaluationFlags::nothing) |
@@ -141,7 +141,7 @@ namespace MeltPoolDG::Flow
       }
   }
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::local_apply_face(
     const MatrixFree<dim, number> &,
@@ -203,7 +203,7 @@ namespace MeltPoolDG::Flow
       }
   }
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::local_apply_boundary_face(
     const MatrixFree<dim, number> &,

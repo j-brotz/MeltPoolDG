@@ -11,9 +11,9 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/flow/compressible_multiphase/compressible_flow_phase_coupling_data.hpp>
-#include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operation.hpp>
-#include <meltpooldg/flow/compressible_multiphase/compressible_multiphase_operator.hpp>
+#include <meltpooldg/flow/compressible_flow_phase_coupling_data.hpp>
+#include <meltpooldg/flow/compressible_multiphase_operation.hpp>
+#include <meltpooldg/flow/compressible_multiphase_operator.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>

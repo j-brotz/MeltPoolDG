@@ -32,6 +32,9 @@ namespace MeltPoolDG::Multiphase
   ///////////////////////////////////////////////////////////////////////////////////////////
 
   /**
+   * @brief Compute the convective and viscous fluxes according to the penalty method for phase
+   * coupling.
+   *
    * This function calculates the interface flux terms, considering both convective and viscous
    * interface jump conditions. A combination of strong enforcement within the weak form and a
    * penalty method is applied.
@@ -267,6 +270,8 @@ namespace MeltPoolDG::Multiphase
   ///////////////////////////////////////////////////////////////////////////////////////////
 
   /**
+   * @brief Calculate the convective flux with the HLLP0 Riemann solver.
+   *
    * This function calculates the convective fluxes for both phases at the phase interface and the
    * interface normal speed at the considered quadrature point. The HLLP0 approximate Riemannn
    * solver for phase transition is implemented according to the following paper: Joens, Munz, 2023:
@@ -509,6 +514,8 @@ namespace MeltPoolDG::Multiphase
   ///////////////////////////////////////////////////////////////////////////////////////////
 
   /**
+   * @brief Calculates the Dirichlet jump in conservative variables between two phases.
+   *
    * This function calculates the Dirichlet jump in conservative variables via transformation into
    * primitive variables, as described in: Henneaux, 2023: 'Higher-order enforcement of jumps
    * conditions between compressible viscous phases: An extended interior penalty discontinuous
@@ -581,6 +588,8 @@ namespace MeltPoolDG::Multiphase
   }
 
   /**
+   * @brief Calculate the viscous interface flux for viscous phase coupling with the SIPG method.
+   *
    * This function calculates the viscous interface flux, as described in:
    * Henneaux, 2023: 'Higher-order enforcement of jumps conditions between compressible viscous
    * phases: An extended interior penalty discontinuous Galerkin method for sharp interface
@@ -712,6 +721,9 @@ namespace MeltPoolDG::Multiphase
   }
 
   /**
+   * @brief Calculate gradient-tested viscous interface flux for viscous phase coupling with the
+   * SIPG method.
+   *
    * This function calculates the viscous interface fluxes, which are weighted with the gradient of
    * the test functions, as described in: Henneaux, 2023: 'Higher-order enforcement of jumps
    * conditions between compressible viscous phases: An extended interior penalty discontinuous
@@ -779,8 +791,11 @@ namespace MeltPoolDG::Multiphase
   ///////////////////////////////////////////////////////////////////////////////////////////
 
   /**
+   * @brief Calculates the viscous flux at the phase interface with a combined direct and penalty
+   * approach.
+   *
    * This function calculates the viscous interface flux for direct incorporation in the weak form
-   * in combination with a penalty term for the temperature jump contstraint.
+   * in combination with a penalty term for the temperature jump constraint.
    *
    * @param u_liquid Conserved variables for liquid phase at quadrature point on the (unfitted)
    * interface.

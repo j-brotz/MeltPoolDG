@@ -10,36 +10,91 @@
 
 namespace MeltPoolDG::Flow
 {
+  /**
+   * @brief Application for the simulation of the compressible Navier-Stokes equations using DG or
+   * cutDG.
+   */
   template <int dim, typename number>
   class CompressibleFlowApplication
   {
-  private:
+  public:
     using CaseType   = CompressibleFlowCase<dim, number>;
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
-  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param simulation_case Pointer to the considered simulation case.
+     */
     explicit CompressibleFlowApplication(std::unique_ptr<CaseType> simulation_case)
       : simulation_case(std::move(simulation_case))
     {}
 
     /**
-     * Run the simulation. This function internally sets up all required member data and performs
-     * the time loop.
+     * @brief Run the simulation.
+     *
+     * This function internally sets up all required member data and performs the time loop.
      */
     void
     run();
 
   private:
+    /// Pointer to the considered simulation case
+    std::shared_ptr<CaseType> simulation_case;
+
+    /// DoFHandler for the solution vector
+    dealii::DoFHandler<dim> dof_handler;
+
+    /// DoFHandler for the level-set field
+    dealii::DoFHandler<dim> dof_handler_level_set;
+
+    /// Constraints for the solution vector
+    dealii::AffineConstraints<number> constraints;
+
+    /// Constraints for the level-set field
+    dealii::AffineConstraints<number> constraints_level_set;
+
+    /// Pointer to the scratch data object
+    std::shared_ptr<ScratchData<dim, dim, number>> scratch_data;
+
+    /// Pointer to the time iterator
+    std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
+
+    /// Compressible flow operation object
+    CompressibleFlowOperation<dim, number> comp_flow_operation;
+
+    /// Pointer to the profiling object
+    std::unique_ptr<Profiling::ProfilingMonitor<number>> profiling_monitor;
+
+    /// Index for the solution DoFHandler
+    unsigned int comp_flow_dof_idx{};
+
+    /// Index for the level-set DoFHandler
+    unsigned int level_set_dof_idx{};
+
+    /// Quadrature index for the computation of flow quantities
+    unsigned int comp_flow_quad_idx{};
+
+    /// Pointer to the post processor object
+    std::unique_ptr<Postprocessor<dim, number>> post_processor;
+
+    /// Pointer to the level-set field function
+    std::shared_ptr<dealii::Function<dim>> level_set_field_function;
+
+    /// Level-set DoF vector
+    VectorType level_set;
+
     /**
-     * Set up all dof related data.
+     * @brief Set up all dof related data.
      */
     void
     setup_dof_system();
 
     /**
-     * Initializes the relevant member data required for solving the compressible flow problem
-     * and prepares the object for starting the time loop. This includes setting the necessary
-     * boundary and initial conditions.
+     * @brief Initializes the relevant member data required for solving the compressible flow
+     * problem and prepares the object for starting the time loop.
+     *
+     * This includes setting the necessary boundary and initial conditions.
      *
      * @note Internally calls the setup_dof_system() function.
      */
@@ -47,7 +102,7 @@ namespace MeltPoolDG::Flow
     initialize();
 
     /**
-     *  Perform the output of the results.
+     *  @brief Perform the output of the results.
      *
      *  @param time_step Current time step size.
      *  @param current_time Current time at t^n.
@@ -56,31 +111,11 @@ namespace MeltPoolDG::Flow
     output_results(unsigned int time_step, number current_time);
 
     /**
-     * Interpolates the values of a (currently) analytically given level-set function to the
+     * @brief Interpolates the values of a (currently) analytically given level-set function to the
      * level-set dof vector.
      */
     void
     compute_level_set();
-
-    std::shared_ptr<CaseType> simulation_case;
-
-    dealii::DoFHandler<dim>                                dof_handler;
-    dealii::DoFHandler<dim>                                dof_handler_level_set;
-    dealii::AffineConstraints<number>                      constraints;
-    dealii::AffineConstraints<number>                      constraints_level_set;
-    std::shared_ptr<ScratchData<dim, dim, number>>         scratch_data;
-    std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
-    CompressibleFlowOperation<dim, number>                 comp_flow_operation;
-    std::unique_ptr<Profiling::ProfilingMonitor<number>>   profiling_monitor;
-
-    unsigned int comp_flow_dof_idx{};
-    unsigned int level_set_dof_idx{};
-    unsigned int comp_flow_quad_idx{};
-
-    std::unique_ptr<Postprocessor<dim, number>> post_processor;
-
-    std::shared_ptr<dealii::Function<dim>> level_set_field_function;
-    VectorType                             level_set;
   };
 
 } // namespace MeltPoolDG::Flow

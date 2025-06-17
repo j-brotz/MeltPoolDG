@@ -15,16 +15,27 @@
 
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {
+  /**
+   * @brief Function for the initial flow field.
+   */
   template <int dim, typename number>
   class InitialFlowField : public dealii::Function<dim, number>
   {
   public:
+    /**
+     * @brief Constructor.
+     */
     explicit InitialFlowField()
       : dealii::Function<dim, number>(dim + 2)
     {
       Assert(dim == 2 or dim == 3, dealii::ExcNotImplemented());
     }
 
+    /**
+     * @brief Computes the function value for a specific @p component.
+     *
+     * @param component Component for which the function value should be returned.
+     */
     number
     value(const dealii::Point<dim, number> &, const unsigned int component) const final
     {
@@ -37,14 +48,25 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
   };
 
+  /**
+   * @brief Function for the velocity of the rigid immersed object.
+   */
   template <int dim, typename number>
   class UnfittedObjectVelocity : public dealii::Function<dim, number>
   {
   public:
+    /**
+     * @brief Constructor.
+     */
     explicit UnfittedObjectVelocity()
       : dealii::Function<dim, number>(dim)
     {}
 
+    /**
+     * @brief Computes the function value for a specific component.
+     *
+     * @param component Component for which the function value should be returned.
+     */
     number
     value(const dealii::Point<dim, number> &, const unsigned int component) const final
     {
@@ -55,14 +77,27 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
   };
 
+  /**
+   * @brief Function for the moving level set field.
+   */
   template <int dim, typename number>
   class MovingLevelSet : public dealii::Function<dim, number>
   {
   public:
+    /**
+     * @brief Constructor.
+     *
+     * @param time Current simulation time.
+     */
     explicit MovingLevelSet(const number time)
       : dealii::Function<dim, number>(1, time)
     {}
 
+    /**
+     * @brief Computes the current function value for a specific component at a given point.
+     *
+     * @param p Point at which the function should be evaluated.
+     */
     number
     value(const dealii::Point<dim, number> &p, const unsigned int /* component */) const override
     {
@@ -78,17 +113,31 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
 
   private:
+    /// Radius of the immersed cylinder
     const number radius = 0.1;
   };
 
+  /**
+   * @brief A specific compressible flow simulation setup for a flow over a moving cylinder using
+   * cutDG.
+   */
   template <int dim, typename number>
   class SimulationCutMovingCylinder final : public Flow::CompressibleFlowCase<dim, number>
   {
   public:
+    /**
+     * @brief Constructor.
+     *
+     * @param parameter_file Parameter file that contains simulation input settings.
+     * @param mpi_communicator The MPI communicator used to run the simulation in parallel.
+     */
     SimulationCutMovingCylinder(std::string parameter_file, const MPI_Comm mpi_communicator)
       : Flow::CompressibleFlowCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
+    /**
+     * @brief Creates the spatial discretization for the simulation setup.
+     */
     void
     create_spatial_discretization() override
     {
@@ -119,6 +168,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 
+    /**
+     * @brief Sets the boundary conditions.
+     */
     void
     set_boundary_conditions() override
     {
@@ -127,6 +179,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       this->attach_boundary_condition({0, dummy_solution}, "no_slip_wall", "compressible_flow");
     }
 
+    /**
+     * @brief Sets the field functions for the simulation.
+     */
     void
     set_field_conditions() override
     {
@@ -144,6 +199,11 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
                                   "compressible_flow");
     }
 
+    /**
+     * @brief Performs post-processing by evaluating and outputting error norms.
+     *
+     * @param generic_data_out A generic utility for managing simulation output data.
+     */
     void
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const override
     {
@@ -153,7 +213,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
 
   private:
     /**
-     * Set boundary id's for fitted boundaries
+     * @brief Set boundary id's for fitted boundaries.
+     *
+     * @param triangulation Triangulation object.
      */
     void
     set_fitted_boundary_id(const auto &triangulation) const
@@ -168,7 +230,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
                 if ((std::fabs(center(0)) < 1e-12) or (std::fabs(center(0)) > 1. - 1e-12) or
                     (std::fabs(center(1)) < 1e-12) or (std::fabs(center(1)) > 0.4 - 1e-12))
                   face->set_boundary_id(0);
-                else if (dim == 3 &&
+                else if (dim == 3 and
                          ((std::fabs(center(2)) < 1e-12) or (std::fabs(center(2)) > 0.4 - 1e-12)))
                   face->set_boundary_id(0);
               }

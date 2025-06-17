@@ -14,14 +14,17 @@
 #include <meltpooldg/flow/compressible_flow_cut_data.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_material.hpp>
+#include <meltpooldg/flow/compressible_flow_phase_coupling_data.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
-#include <meltpooldg/flow/compressible_multiphase/compressible_flow_phase_coupling_data.hpp>
 #include <meltpooldg/time_integration/solution_history.hpp>
 
 namespace MeltPoolDG::Flow
 {
   /**
-   * A struct providing the relevant data required by all compressible single-phase flow solvers.
+   * @brief Scratch data structure for compressible single-phase flow solvers.
+   *
+   * This struct encapsulates all data necessary for the evaluation of local integrals in
+   * compressible single-phase flow simulations.
    */
   template <int dim, typename number>
   struct CompressibleFlowScratchData
@@ -29,7 +32,7 @@ namespace MeltPoolDG::Flow
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
     /**
-     * Constructor
+     * @brief Constructor.
      *
      * @param flow_data_in Reference to the flow data object.
      * @param material_data_in Reference to the material data object.
@@ -41,12 +44,13 @@ namespace MeltPoolDG::Flow
      * @note The cut data object @param cut_data_in is optional. For non-cut applications, it does not
      * need to be passed to the constructor.
      */
-    CompressibleFlowScratchData(const CompressibleFlowData<number>               &flow_data_in,
-                                const CompressibleFluidMaterialPhaseData<number> &material_data_in,
-                                const ScratchData<dim, dim, number>              &scratch_data_in,
-                                const unsigned int                                dof_idx_in,
-                                const unsigned int                                quad_idx_in,
-                                const CompressibleFlowCutData<number> *cut_data_in = nullptr)
+    explicit CompressibleFlowScratchData(
+      const CompressibleFlowData<number>               &flow_data_in,
+      const CompressibleFluidMaterialPhaseData<number> &material_data_in,
+      const ScratchData<dim, dim, number>              &scratch_data_in,
+      const unsigned int                                dof_idx_in,
+      const unsigned int                                quad_idx_in,
+      const CompressibleFlowCutData<number>            *cut_data_in = nullptr)
       : flow_data(flow_data_in)
       , scratch_data(scratch_data_in)
       , material(material_data_in)
@@ -64,9 +68,44 @@ namespace MeltPoolDG::Flow
             "CompressibleFlowScratchData in the case of domain_representation_type = 'cut'."));
     }
 
+    /// General parameters for the compressible Navier-Stokes operators
+    const CompressibleFlowData<number> flow_data;
+
+    /// Mapping-, finite-element-, and quadrature-related parameters
+    const ScratchData<dim, dim, number> &scratch_data;
+
+    /// Material parameters and thermodynamic relations
+    const CompressibleFlowMaterial<dim, number> material;
+
+    /// Cut-related parameters (only relevant for cut applications)
+    const CompressibleFlowCutData<number> *cut = nullptr;
+
+    /// DoF index within the matrix-free object
+    const unsigned int dof_idx = 0;
+
+    /// Quadrature index within the matrix-free object
+    const unsigned int quad_idx = 0;
+
+    /// Boolean variable indicating whether viscosity is present
+    bool is_viscous = false;
+
+    /// Object taking care of all boundary condition related computations
+    CompressibleFlowBoundaryConditions<dim, number> boundary_conditions;
+
+    /// Penalty parameter for the Symmetric Interior Penalty Galerkin (SIPG) method
+    dealii::AlignedVector<dealii::VectorizedArray<number>> interior_penalty_parameter;
+
+    /// Solution history object
+    TimeIntegration::SolutionHistory<VectorType> solution_history;
+
+    /// Pointer to the body force function
+    std::unique_ptr<dealii::Function<dim>> body_force;
+
     /**
-     * Set up the internal data structures, i.e. allocate memory for the solution history object and
-     * precompute the penalty parameter for the symmetric interior penalty method.
+     * @brief Set up the internal data structures.
+     *
+     * Allocate memory for the solution history object and precompute the penalty parameter for the
+     * symmetric interior penalty method.
      *
      * @param solution_history_size Size of the solution history object, i.e. the number of vectors
      * at different concrete times n for which the solution history is responsible.
@@ -86,32 +125,13 @@ namespace MeltPoolDG::Flow
                                     flow_data.domain_representation_type,
                                     dof_idx);
     }
-
-    const CompressibleFlowData<number> flow_data;
-
-    const ScratchData<dim, dim, number> &scratch_data;
-
-    const CompressibleFlowMaterial<dim, number> material;
-
-    // only relevant for cut applications
-    const CompressibleFlowCutData<number> *cut = nullptr;
-
-    const unsigned int dof_idx  = 0;
-    const unsigned int quad_idx = 0;
-
-    bool is_viscous = false;
-
-    CompressibleFlowBoundaryConditions<dim, number> boundary_conditions;
-
-    dealii::AlignedVector<dealii::VectorizedArray<number>> interior_penalty_parameter;
-
-    TimeIntegration::SolutionHistory<VectorType> solution_history;
-
-    std::unique_ptr<dealii::Function<dim>> body_force;
   };
 
   /**
-   * A struct providing the relevant data required by all compressible multiphase flow solvers.
+   * @brief Scratch data structure for compressible multiphase flow solvers.
+   *
+   * This struct encapsulates all data necessary for the evaluation of local integrals in
+   * compressible multiphase flow simulations.
    */
   template <int dim, typename number>
   struct CompressibleMultiphaseScratchData
@@ -119,7 +139,7 @@ namespace MeltPoolDG::Flow
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
     /**
-     * Constructor
+     * @brief Constructor.
      *
      * @param flow_data_in Reference to the flow data object.
      * @param material_data_gas_in Reference to the material data object for the gas phase.
@@ -130,7 +150,7 @@ namespace MeltPoolDG::Flow
      * @param dof_idx_in Relevant dof index of the flow solver in the scratch data object.
      * @param quad_idx_in Relevant quadrature index of the flow solver in the scratch data object.
      */
-    CompressibleMultiphaseScratchData(
+    explicit CompressibleMultiphaseScratchData(
       const CompressibleFlowData<number>                          &flow_data_in,
       const CompressibleFluidMaterialPhaseData<number>            &material_data_gas_in,
       const CompressibleFluidMaterialPhaseData<number>            &material_data_liquid_in,
@@ -152,9 +172,50 @@ namespace MeltPoolDG::Flow
         material_gas.data.dynamic_viscosity > 0. or material_liquid.data.dynamic_viscosity > 0.;
     }
 
+    /// General parameters for the compressible Navier-Stokes operators
+    const CompressibleFlowData<number> flow_data;
+
+    /// Mapping-, finite-element-, and quadrature-related parameters
+    const ScratchData<dim, dim, number> &scratch_data;
+
+    /// Material parameters and thermodynamic relations for the gas phase
+    const CompressibleFlowMaterial<dim, number> material_gas;
+
+    /// Material parameters and thermodynamic relations for the liquid phase
+    const CompressibleFlowMaterial<dim, number> material_liquid;
+
+    /// Cut-related parameters
+    const CompressibleFlowCutData<number> cut;
+
+    /// Parameters for the coupling of two compressible (or nearly incompressible) phases
+    const Multiphase::CompressibleFlowPhaseCouplingData<number> phase_coupling;
+
+    /// DoF index within the matrix-free object
+    const unsigned int dof_idx = 0;
+
+    /// Quadrature index within the matrix-free object
+    const unsigned int quad_idx = 0;
+
+    /// Boolean variable indicating whether viscosity is present
+    bool is_viscous = false;
+
+    /// Object taking care of all boundary condition related computations
+    CompressibleFlowBoundaryConditions<dim, number> boundary_conditions;
+
+    /// Penalty parameter for the Symmetric Interior Penalty Galerkin (SIPG) method
+    dealii::AlignedVector<dealii::VectorizedArray<number>> interior_penalty_parameter;
+
+    /// Solution history object
+    TimeIntegration::SolutionHistory<VectorType> solution_history;
+
+    /// Pointer to the body force function
+    std::unique_ptr<dealii::Function<dim>> body_force;
+
     /**
-     * Set up the internal data structures, i.e. allocate memory for the solution history object and
-     * precompute the penalty parameter for the symmetric interior penalty method.
+     * @brief Set up the internal data structures.
+     *
+     * Allocate memory for the solution history object and precompute the penalty parameter for the
+     * symmetric interior penalty method.
      *
      * @param solution_history_size Size of the solution history object, i.e. the number of vectors
      * at different concrete times n for which the solution history is responsible.
@@ -174,29 +235,5 @@ namespace MeltPoolDG::Flow
                                     flow_data.domain_representation_type,
                                     dof_idx);
     }
-
-    const CompressibleFlowData<number> flow_data;
-
-    const ScratchData<dim, dim, number> &scratch_data;
-
-    const CompressibleFlowMaterial<dim, number> material_gas;
-    const CompressibleFlowMaterial<dim, number> material_liquid;
-
-    const CompressibleFlowCutData<number> cut;
-
-    const Multiphase::CompressibleFlowPhaseCouplingData<number> phase_coupling;
-
-    const unsigned int dof_idx  = 0;
-    const unsigned int quad_idx = 0;
-
-    bool is_viscous = false;
-
-    CompressibleFlowBoundaryConditions<dim, number> boundary_conditions;
-
-    dealii::AlignedVector<dealii::VectorizedArray<number>> interior_penalty_parameter;
-
-    TimeIntegration::SolutionHistory<VectorType> solution_history;
-
-    std::unique_ptr<dealii::Function<dim>> body_force;
   };
 } // namespace MeltPoolDG::Flow

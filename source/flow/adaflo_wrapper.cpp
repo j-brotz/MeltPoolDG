@@ -270,8 +270,6 @@ namespace MeltPoolDG::Flow
     ready_for_time_advance = false;
   }
 
-
-
   template <int dim, typename number>
   void
   AdafloWrapper<dim, number>::set_face_average_density_augmented_taylor_hood(
@@ -749,7 +747,7 @@ namespace MeltPoolDG::Flow
   const dealii::Quadrature<dim> &
   AdafloWrapper<dim, number>::get_face_center_quad()
   {
-    if (!face_center_quad)
+    if (not face_center_quad)
       {
         // quadrature rule of face centers
         std::vector<dealii::Point<dim>> face_centers;
@@ -799,12 +797,13 @@ namespace MeltPoolDG::Flow
   AdafloWrapper<dim, number>::time_stepping_synchronized()
   {
     return std::abs(navier_stokes->time_stepping.step_size() -
-                    time_iterator.get_current_time_increment()) < 1e-16 &&
-           navier_stokes->time_stepping.step_no() == time_iterator.get_current_time_step_number() &&
+                    time_iterator.get_current_time_increment()) < 1e-16 and
+           navier_stokes->time_stepping.step_no() ==
+             time_iterator.get_current_time_step_number() and
            std::abs(navier_stokes->time_stepping.old_step_size() -
-                    time_iterator.get_old_time_increment()) < 1e-16 &&
+                    time_iterator.get_old_time_increment()) < 1e-16 and
            std::abs(navier_stokes->time_stepping.now() - time_iterator.get_current_time()) <
-             1e-16 &&
+             1e-16 and
            std::abs(navier_stokes->time_stepping.previous() - time_iterator.get_old_time()) < 1e-16;
   }
 

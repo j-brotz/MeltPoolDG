@@ -16,7 +16,7 @@
 namespace MeltPoolDG::Flow
 {
   /**
-   * This class computes the Darcy damping force (or Darcy source term).
+   * @brief This class computes the Darcy damping force (or Darcy source term).
    *
    *         /              \
    *  f_d =  | N_a, K N_b u |
@@ -56,20 +56,21 @@ namespace MeltPoolDG::Flow
      * @param flow_vel_hanging_nodes_dof_idx DoFHandler index pointing to the flow velocity in @p scratch_data.
      * @param flow_quad_idx Quadrature index pointing to the flow velocity in @p scratch_data.
      */
-    DarcyDampingOperation(const DarcyDampingData<number>      &data_in,
-                          const ScratchData<dim, dim, number> &scratch_data,
-                          const unsigned int                   flow_vel_hanging_nodes_dof_idx,
-                          const unsigned int                   flow_quad_idx);
+    explicit DarcyDampingOperation(const DarcyDampingData<number>      &data_in,
+                                   const ScratchData<dim, dim, number> &scratch_data,
+                                   const unsigned int flow_vel_hanging_nodes_dof_idx,
+                                   const unsigned int flow_quad_idx);
 
     /**
-     * Reinitialize data structures. This function needs to be called after e.g.
-     * the mesh has changed.
+     * @brief Reinitialize data structures.
+     *
+     * This function needs to be called after e.g. the mesh has changed.
      */
     void
     reinit();
 
     /**
-     * Loop over all cells and quadrature points (defined via @p flow_quad_idx),
+     * @brief Loop over all cells and quadrature points (defined via @p flow_quad_idx),
      * compute the Darcy damping coefficient and store it.
      *
      * @param material Material object holding the phase parameters.
@@ -86,7 +87,7 @@ namespace MeltPoolDG::Flow
                            const unsigned int      temp_dof_idx);
 
     /**
-     * Assemble the Darcy damping force contribution into the right-hand side (RHS) vector @p force_rhs.
+     * @brief Assemble the Darcy damping force contribution into the right-hand side (RHS) vector @p force_rhs.
      *
      * This function computes and adds (or sets, if @p zero_out is true) the contribution of the Darcy damping
      * force, based on the provided velocity vector @p velocity_vec.
@@ -103,7 +104,7 @@ namespace MeltPoolDG::Flow
     assemble_rhs(VectorType &force_rhs, const VectorType &velocity_vec, const bool zero_out = true);
 
     /**
-     * Attach the element-wise damping coefficient to the output output data.
+     * @brief Attach the element-wise damping coefficient to the output data.
      *
      * @param data_out Container handling output requests.
      */
@@ -111,21 +112,25 @@ namespace MeltPoolDG::Flow
     attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
 
     /**
-     * Getter functions for the damping coefficients cellwise at each quadrature point
+     * @brief Getter function for the damping coefficients cell-wise at each quadrature point
      * (modifiable version).
      *
-     * @param cell Finite element.
-     * @param q Quadrature Point.
+     * @param cell Cell index.
+     * @param q Quadrature point index.
+     *
+     * @return Cell-wise damping coefficients at quadrature point @p q.
      */
     dealii::VectorizedArray<number> &
     get_damping(const unsigned int cell, const unsigned int q);
 
     /**
-     * Getter functions for the damping coefficients cellwise at each quadrature point
-     * (const version).
+     * @brief Getter function for the damping coefficients cell-wise at each quadrature
+     * point (const version).
      *
-     * @param cell Finite element.
-     * @param q Quadrature Point.
+     * @param cell Cell index.
+     * @param q Quadrature point index.
+     *
+     * @return Cell-wise damping coefficients at quadrature point @p q.
      */
     const dealii::VectorizedArray<number> &
     get_damping(const unsigned int cell, const unsigned int q) const;
@@ -156,16 +161,20 @@ namespace MeltPoolDG::Flow
     mutable dealii::Vector<number> damping_output;
 
     /**
-     * Compute the Darcy damping coefficient based on a given @param solid_fraction.
+     * @brief Compute the Darcy damping coefficient based on a given @p solid_fraction.
      *
      * @param solid_fraction Volume fraction of solid phase between 0 and 1.
+     *
+     * @return Darcy damping coefficient.
      */
     dealii::VectorizedArray<number>
     compute_darcy_damping_coefficient(const dealii::VectorizedArray<number> &solid_fraction) const;
 
     /**
-     * Getter function for the vector of damping coefficients, holding the values at each cell and
+     * @brief Getter function for the vector of damping coefficients, holding the values at each cell and
      * at each quadrature point.
+     *
+     * @return Vector of damping coefficients.
      */
     dealii::AlignedVector<dealii::VectorizedArray<number>> &
     get_damping_at_q();

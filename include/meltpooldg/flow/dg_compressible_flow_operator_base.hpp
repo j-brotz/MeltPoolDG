@@ -1,7 +1,3 @@
-/**
- * @brief Interface of the compressible flow operator interacting with the compressible flow operation.
- */
-
 #pragma once
 
 
@@ -10,6 +6,10 @@
 
 namespace MeltPoolDG::Flow
 {
+  /**
+   * @brief Interface of the compressible flow operator interacting with the compressible flow
+   * operation.
+   */
   template <typename number>
   class DGCompressibleFlowOperatorBase
   {
@@ -17,15 +17,17 @@ namespace MeltPoolDG::Flow
     virtual ~DGCompressibleFlowOperatorBase() = default;
 
     /**
-     * Reinit the operator. This function is intended to be called every time at which the data
-     * structure needs to be updated.
+     * @brief Reinit the operator.
+     *
+     * This function is intended to be called every time at which the data structure needs to be
+     * updated.
      */
     virtual void
     reinit() = 0;
 
     /**
-     * Creates and returns the time integrator object which can be used in combination with the own
-     * operator type.
+     * @brief Creates and returns the time integrator object which can be used in combination with
+     * the own operator type.
      *
      * @param time_integrator_data Reference to the time integrator data object.
      *

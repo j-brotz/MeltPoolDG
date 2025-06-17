@@ -1,7 +1,3 @@
-/**
- * @brief Collection of cut-related parameters required by the cut single-phase and multiphase
- * compressible Navier-Stokes operators.
- */
 #pragma once
 
 #include <deal.II/base/parameter_handler.h>
@@ -12,17 +8,26 @@
 
 namespace MeltPoolDG::Flow
 {
+  /**
+   * @brief Collection of cut-related parameters required by the cut single-phase and multiphase
+   * compressible Navier-Stokes operators.
+   */
   template <typename number>
   struct CompressibleFlowCutData
   {
-    // flow boundary condition at the immersed boundary
-    // (only relevant for single phase flow problem)
-    // (choose between: "no_slip_wall", "inflow")
+    /// flow boundary condition at the immersed boundary
+    /// (only relevant for single phase flow problem)
+    /// (choose between: "no_slip_wall", "inflow")
     std::string unfitted_flow_boundary_condition = "no_slip_wall";
 
-    // cut-related stabilization parameters
+    /// cut-related stabilization parameters
     CutStabilizationData<number> stabilization;
 
+    /**
+     * @brief Add cut parameters in the parameter handler.
+     *
+     * @param prm The parameter handler to which the parameters are added.
+     */
     void
     add_parameters(dealii::ParameterHandler &prm)
     {

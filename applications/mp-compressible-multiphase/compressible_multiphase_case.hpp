@@ -18,7 +18,7 @@
 #include <meltpooldg/flow/compressible_flow_cut_data.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_material_data.hpp>
-#include <meltpooldg/flow/compressible_multiphase/compressible_flow_phase_coupling_data.hpp>
+#include <meltpooldg/flow/compressible_flow_phase_coupling_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/time_integration/time_stepping_data.hpp>
 #include <meltpooldg/utilities/profiling_data.hpp>
@@ -28,10 +28,18 @@
 
 namespace MeltPoolDG::Multiphase
 {
+  /**
+   * @brief Struct that manages all relevant parameters for compressible multiphase flow simulations.
+   */
   template <typename number>
   struct CompressibleMultiphaseCaseParameters final : public ParametersBase
   {
   protected:
+    /**
+     * @brief Add all relevant parameters in the parameter handler.
+     *
+     * @param prm The parameter handler to which the parameters are added.
+     */
     void
     add_parameters(dealii::ParameterHandler &prm) override
     {
@@ -46,8 +54,13 @@ namespace MeltPoolDG::Multiphase
       profiling.add_parameters(prm);
     }
 
+    /**
+     * @brief Post-process parameters.
+     *
+     * @param parameter_filename Name of the parameter file.
+     */
     void
-    post(const std::string &parameter_filename) final
+    post(const std::string &parameter_filename) override final
     {
       output.post(time_stepping.time_step_size, parameter_filename);
       flow.post(base.fe, base.verbosity_level);
@@ -67,24 +80,52 @@ namespace MeltPoolDG::Multiphase
     }
 
   public:
-    BaseData                                         base;
-    Flow::CompressibleFlowData<number>               flow;
+    /// Simulation basic data
+    BaseData base;
+
+    /// Data specific for compressible flow simulations
+    Flow::CompressibleFlowData<number> flow;
+
+    /// Material parameters for the gas phase
     Flow::CompressibleFluidMaterialPhaseData<number> material_gas;
+
+    /// Material parameters for the liquid phase
     Flow::CompressibleFluidMaterialPhaseData<number> material_liquid;
-    Flow::CompressibleFlowCutData<number>            cut;
-    CompressibleFlowPhaseCouplingData<number>        phase_coupling;
-    TimeIntegration::TimeSteppingData<number>        time_stepping;
-    OutputData<number>                               output;
-    Profiling::ProfilingData<number>                 profiling;
+
+    /// Cut-related data
+    Flow::CompressibleFlowCutData<number> cut;
+
+    /// Data for phase-coupling including interface jump conditions and numerical parameters
+    CompressibleFlowPhaseCouplingData<number> phase_coupling;
+
+    /// Data for time stepping
+    TimeIntegration::TimeSteppingData<number> time_stepping;
+
+    /// Data for output
+    OutputData<number> output;
+
+    /// Data for profiling
+    Profiling::ProfilingData<number> profiling;
   };
 
+  /**
+   * @brief Case base class for compressible multiphase flow cases.
+   */
   template <int dim, typename number>
   class CompressibleMultiphaseCase : public SimulationCaseBase<dim, number>
   {
   public:
+    /// Case-specific parameters
     CompressibleMultiphaseCaseParameters<number> parameters;
 
-    CompressibleMultiphaseCase(const std::string &parameter_file_in, MPI_Comm mpi_communicator_in)
+    /**
+     * @brief Constructor.
+     *
+     * @param parameter_file_in Parameter file that contains simulation input settings.
+     * @param mpi_communicator_in The MPI communicator used to run the simulation in parallel.
+     */
+    explicit CompressibleMultiphaseCase(const std::string &parameter_file_in,
+                                        MPI_Comm           mpi_communicator_in)
       : SimulationCaseBase<dim, number>(parameter_file_in, mpi_communicator_in)
     {
       dealii::ParameterHandler prm;
@@ -93,6 +134,8 @@ namespace MeltPoolDG::Multiphase
 
   protected:
     /**
+     * @brief Compute and print the relative error norm.
+     *
      * This function calculates and prints the l2-norm/l2-error of the solution given in
      * @p generic_data_out compared to a reference state given by the function
      * @p reference_function, i.e. it computes ||solution-reference||_2 for the primary variables
@@ -208,7 +251,7 @@ namespace MeltPoolDG::Multiphase
 
         for (const auto &cell : dof_handler.active_cell_iterators())
           {
-            if (cell->is_artificial() or cell->is_ghost() or !physical_domain(cell))
+            if (cell->is_artificial() or cell->is_ghost() or (not physical_domain(cell)))
               continue;
 
             const unsigned int  n_dofs_per_cell = cell->get_fe().dofs_per_cell;

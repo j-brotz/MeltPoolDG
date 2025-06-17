@@ -32,10 +32,18 @@
 
 namespace MeltPoolDG::Flow
 {
+  /**
+   * @brief Struct that manages all relevant parameters for compressible flow simulations.
+   */
   template <typename number>
   struct CompressibleFlowCaseParameters final : public ParametersBase
   {
   protected:
+    /**
+     * @brief Add all relevant parameters in the parameter handler.
+     *
+     * @param prm The parameter handler to which the parameters are added.
+     */
     void
     add_parameters(dealii::ParameterHandler &prm) override
     {
@@ -48,8 +56,13 @@ namespace MeltPoolDG::Flow
       profiling.add_parameters(prm);
     }
 
+    /**
+     * @brief Post-process parameters.
+     *
+     * @param parameter_filename Name of the parameter file.
+     */
     void
-    post(const std::string &parameter_filename) final
+    post(const std::string &parameter_filename) override final
     {
       output.post(time_stepping.time_step_size, parameter_filename);
       flow.post(base.fe, base.verbosity_level);
@@ -60,7 +73,7 @@ namespace MeltPoolDG::Flow
 
       // Advanced EOS are currently only allowed for explicit time integration.
       if (material.eos_data.type != EquationOfState::ideal_gas)
-        AssertThrow(!MeltPoolDG::TimeIntegration::time_integrator_scheme_is_explicit(
+        AssertThrow(not MeltPoolDG::TimeIntegration::time_integrator_scheme_is_explicit(
                       flow.time_integrator.integrator_type),
                     dealii::ExcMessage(
                       "Only the ideal gas EOS is allowed for implicit time integration."));
@@ -77,22 +90,46 @@ namespace MeltPoolDG::Flow
     }
 
   public:
-    BaseData                                   base;
-    CompressibleFlowData<number>               flow;
+    /// Simulation basic data
+    BaseData base;
+
+    /// Data specific for compressible flow simulations
+    CompressibleFlowData<number> flow;
+
+    /// Material parameters for a compressible (or nearly incompressible) fluid
     CompressibleFluidMaterialPhaseData<number> material;
-    CompressibleFlowCutData<number>            cut;
-    TimeIntegration::TimeSteppingData<number>  time_stepping;
-    OutputData<number>                         output;
-    Profiling::ProfilingData<number>           profiling;
+
+    /// Cut-related data (only relevant for cutDG)
+    CompressibleFlowCutData<number> cut;
+
+    /// Data for time stepping
+    TimeIntegration::TimeSteppingData<number> time_stepping;
+
+    /// Data for output
+    OutputData<number> output;
+
+    /// Data for profiling
+    Profiling::ProfilingData<number> profiling;
   };
 
+  /**
+   * @brief Case base class for compressible flow cases.
+   */
   template <int dim, typename number>
   class CompressibleFlowCase : public SimulationCaseBase<dim, number>
   {
   public:
+    /// Case-specific parameters
     CompressibleFlowCaseParameters<number> parameters;
 
-    CompressibleFlowCase(const std::string &parameter_file_in, MPI_Comm mpi_communicator_in)
+    /**
+     * @brief Constructor.
+     *
+     * @param parameter_file_in Parameter file that contains simulation input settings.
+     * @param mpi_communicator_in The MPI communicator used to run the simulation in parallel.
+     */
+    explicit CompressibleFlowCase(const std::string &parameter_file_in,
+                                  MPI_Comm           mpi_communicator_in)
       : SimulationCaseBase<dim, number>(parameter_file_in, mpi_communicator_in)
     {
       dealii::ParameterHandler prm;
@@ -101,6 +138,8 @@ namespace MeltPoolDG::Flow
 
   protected:
     /**
+     * @brief Compute and print the relative error norm.
+     *
      * This function calculates and prints the l2-norm/l2-error of the solution given in
      * @p generic_data_out compared to a reference state given by the function
      * @p reference_function, i.e. it computes ||solution-reference||_2 for the primary variables
@@ -243,7 +282,7 @@ namespace MeltPoolDG::Flow
 
           for (const auto &cell : dof_handler.active_cell_iterators())
             {
-              if (cell->is_artificial() or cell->is_ghost() or !physical(cell))
+              if (cell->is_artificial() or cell->is_ghost() or (not physical(cell)))
                 continue;
 
               std::vector<number> solution_values_in(cell->get_fe().dofs_per_cell);

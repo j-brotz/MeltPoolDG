@@ -128,11 +128,11 @@ namespace MeltPoolDG::Flow
     const VectorType &src,
     const bool        zero_dst_vec) const
   {
-    typedef std::function<void(const MatrixFree<dim, number> &,
-                               LinearAlgebra::distributed::Vector<number>       &dst,
-                               const LinearAlgebra::distributed::Vector<number> &src,
-                               const std::pair<unsigned int, unsigned int> &)>
-      local_applier_type;
+    using local_applier_type =
+      std::function<void(const MatrixFree<dim, number> &,
+                         LinearAlgebra::distributed::Vector<number> &,
+                         const LinearAlgebra::distributed::Vector<number> &,
+                         const std::pair<unsigned int, unsigned int> &)>;
 
     local_applier_type cell          = MPDG_LAMBDA_WRAPPER(local_cell_explicit_stage);
     local_applier_type face          = MPDG_LAMBDA_WRAPPER(local_face_explicit_stage);

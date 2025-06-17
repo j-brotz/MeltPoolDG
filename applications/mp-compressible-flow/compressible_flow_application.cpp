@@ -23,7 +23,7 @@ namespace MeltPoolDG::Flow
   {
     initialize();
 
-    while (!time_iterator->is_finished())
+    while (not time_iterator->is_finished())
       {
         // update level-set for cutDG
         if (level_set_field_function)
@@ -199,8 +199,8 @@ namespace MeltPoolDG::Flow
         unfitted_inflow_function = simulation_case->get_field_function(
           "unfitted_inflow",
           "compressible_flow",
-          !(simulation_case->parameters.cut.unfitted_flow_boundary_condition ==
-            "inflow") /* is_optional */);
+          not(simulation_case->parameters.cut.unfitted_flow_boundary_condition ==
+              "inflow") /* is_optional */);
         if (unfitted_inflow_function)
           operation->set_inflow_field_unfitted_boundary(unfitted_inflow_function);
 

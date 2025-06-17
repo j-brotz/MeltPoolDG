@@ -56,9 +56,9 @@ namespace MeltPoolDG::Flow
   {
     // check if curvature computation is enabled in case of surface tension
     const bool do_compute_surface_tension =
-      std::abs(surface_tension_coefficient) > 1e-10 ||
+      std::abs(surface_tension_coefficient) > 1e-10 or
       std::abs(temperature_dependent_surface_tension_coefficient) > 1e-10;
-    AssertThrow(!do_compute_surface_tension || curv_enable,
+    AssertThrow((not do_compute_surface_tension) or curv_enable,
                 dealii::ExcMessage(
                   "Curvature computation must be enabled in case of surface tension."));
   }
