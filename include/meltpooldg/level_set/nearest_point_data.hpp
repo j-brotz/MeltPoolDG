@@ -9,21 +9,21 @@ namespace MeltPoolDG::LevelSet
 {
   BETTER_ENUM(NearestPointType,
               char,
-              // closest point in normal direction
+              /// closest point in normal direction
               closest_point_normal,
-              // closest point in normal direction and enforcing collinearity; here we
-              // perform an iterative sequence of (1) correction in normal direction until the
-              // tolerance is fulfilled and (2) subsequent correction in tangential direction
+              /// closest point in normal direction and enforcing collinearity; here we
+              /// perform an iterative sequence of (1) correction in normal direction until the
+              /// tolerance is fulfilled and (2) subsequent correction in tangential direction
               closest_point_normal_collinear,
-              // closest point in normal direction and enforcing collinearity considering the
-              // algorithm by Coquerelle (2014); here we
-              // perform an iterative sequence of (1) correction in tangential direction and
-              // (2) subsequent iterative correction in normal direction
+              /// closest point in normal direction and enforcing collinearity considering the
+              /// algorithm by Coquerelle (2014); here we
+              /// perform an iterative sequence of (1) correction in tangential direction and
+              /// (2) subsequent iterative correction in normal direction
               closest_point_normal_collinear_coquerelle,
-              // nearest point in the point cloud
+              /// nearest point in the point cloud
               nearest_point,
-              // fast algorithm to identify nearest point in the point cloud using distributed
-              // search algorithms of ArborX
+              /// fast algorithm to identify nearest point in the point cloud using distributed
+              /// search algorithms of ArborX
               nearest_point_fast)
 
   template <typename number>
