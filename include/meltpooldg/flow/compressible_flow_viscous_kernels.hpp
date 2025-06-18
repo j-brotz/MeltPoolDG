@@ -1,7 +1,3 @@
-/**
- * @brief Collection of viscous term computations for the compressible Navier-Stokes equations.
- */
-
 #pragma once
 
 #include <deal.II/base/config.h>
@@ -22,6 +18,16 @@
 
 namespace MeltPoolDG::Flow
 {
+  /**
+   * @brief Viscous kernel operations for compressible flow solvers.
+   *
+   * This struct implements the evaluation of viscous fluxes and their linearizations
+   * for compressible flow governed by the Euler or Navier–Stokes equations. It supports
+   * flux evaluation on both volume cells and faces.
+   *
+   * It also provides functionality to compute the Jacobian (linearized form) of these fluxes,
+   * which is required for implicit schemes.
+   */
   template <int dim, typename number>
   struct CompressibleFlowViscousKernels
   {
@@ -32,6 +38,8 @@ namespace MeltPoolDG::Flow
     explicit CompressibleFlowViscousKernels(
       const CompressibleFlowMaterial<dim, number> &material_in);
     /**
+     * @brief Calculate the viscous stress tensor.
+     *
      * Calculate the viscous stress tensor τ given by τ = μ*(grad(u)+grad(u)^T-2/3*(grad*u)*I),
      * where μ is the dynamic viscosity and I representing the identity matrix.
      *
@@ -45,7 +53,7 @@ namespace MeltPoolDG::Flow
         const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> &grad_u) const;
 
     /**
-     * Calculate the viscous flux F_v, i.e. F_v(u, grad(u)).
+     * @brief Calculate the viscous flux F_v, i.e. F_v(u, grad(u)).
      *
      * @param conserved_variables Current values of the conserved variables.
      * @param grad_conserved_variables Current gradient of the conserved variables.
@@ -58,7 +66,8 @@ namespace MeltPoolDG::Flow
                              const ConservedVariablesGradType &grad_conserved_variables) const;
 
     /**
-     * Calculate the visocus numerical flux F_v^* using the symmetric interioer penalty method.
+     * @brief Calculate the viscous numerical flux F_v^* using the symmetric interior penalty
+     * method.
      *
      * @param u_m Current values of the conserved variables on the inner face.
      * @param u_p Current values of the conserved variables on the outer type.
@@ -80,14 +89,14 @@ namespace MeltPoolDG::Flow
         dealii::VectorizedArray<number>                                penalty_parameter) const;
 
     /**
-     * Calculate the visocus flux, where jump(u) instead of grad(u) is used resulting in the
+     * @brief Calculate the visocus flux, where jump(u) instead of grad(u) is used resulting in the
      * F_v(u, jump(u)).
      *
      * @param u_m Current values of the conserved variables on the inner face.
      * @param u_p Current values of the conserved variables on the outer type.
      * @param normal Outer facing normal vector.
      *
-     * @return Visocus flux F_v(u, jump(u)).
+     * @return Viscous flux F_v(u, jump(u)).
      */
     inline DEAL_II_ALWAYS_INLINE //
       std::pair<ConservedVariablesGradType, ConservedVariablesGradType>
@@ -97,7 +106,7 @@ namespace MeltPoolDG::Flow
         const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const;
 
     /**
-     * Compute the linearization of the viscous numerical flux with respect to the primary
+     * @brief Compute the linearization of the viscous numerical flux with respect to the primary
      * variables.
      *
      * @param w_q Primary variables on the inner (first) and outer (second) face.
@@ -108,6 +117,7 @@ namespace MeltPoolDG::Flow
      * outer (second) face.
      * @param normal Outer facing normal vector.
      * @param penalty_parameter Value of the symmetric interior penalty parameter.
+     *
      * @return Linearized viscous numerical flux.
      */
     ConservedVariablesGradType
@@ -120,12 +130,13 @@ namespace MeltPoolDG::Flow
       dealii::VectorizedArray<number> penalty_parameter) const;
 
     /**
-     * Compute the linearization of the viscous flux with respect to the primary variables.
+     * @brief Compute the linearization of the viscous flux with respect to the primary variables.
      *
      * @param w_q Primary variables.
      * @param grad_w_q Gradient of the primary variables.
      * @param delta_w_q Change in the primary variables.
      * @param grad_delta_w_q Gradient of the change in the primary variables.
+     *
      * @return Linearized viscous flux.
      */
     ConservedVariablesGradType
@@ -135,14 +146,17 @@ namespace MeltPoolDG::Flow
                                     const ConservedVariablesGradType &grad_delta_w_q) const;
 
     /**
-     * Compute the jump term in the viscous numerical flux. For the used symmetric interior penalty
-     * approach the jump therm is given by the penalty parameter multiplied with the jump in the
-     * primary variables.
+     * @brief Compute the linearization of the viscous numerical flux jump term.
+     *
+     * Compute the Jacobian of the jump term in the viscous numerical flux. For the used symmetric
+     * interior penalty approach the jump therm is given by the penalty parameter multiplied with
+     * the jump in the primary variables.
      *
      * @param delta_w_q Change in the primary variables n the inner (first) and outer (second) face.
      * @param normal Outer facing normal vector.
      * @param penalty_parameter Value of the symmetric interior penalty parameter.
-     * @return Jump term of the symmetric interior penalty flux.
+     *
+     * @return Linearized jump term of the viscous numerical flux jump term.
      */
     ConservedVariablesGradType
     calculate_jacobian_viscous_numerical_flux_jump_term(
@@ -151,9 +165,10 @@ namespace MeltPoolDG::Flow
       dealii::VectorizedArray<number>                                  penalty_parameter) const;
 
   private:
+    /// Object which provides all relevant material properties for a specific phase
     const CompressibleFlowMaterial<dim, number> &material;
 
-    // precomputed constant
+    /// precomputed constant
     number lambda_div_c;
   };
 

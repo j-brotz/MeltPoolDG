@@ -15,7 +15,7 @@ namespace MeltPoolDG::Flow
 {
   using namespace dealii;
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::CutDGCompressibleFlowOperator(
     CompressibleFlowScratchData<dim, number> &flow_scratch_data,
     const MappingInfoType                    &mapping_info_surface_in,
@@ -31,7 +31,7 @@ namespace MeltPoolDG::Flow
     , n_dofs_per_cell(fe_point_temp.dofs_per_cell)
   {}
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::vmult(VectorType       &dst,
                                                                 const VectorType &src) const
@@ -56,7 +56,7 @@ namespace MeltPoolDG::Flow
       MatrixFree<dim, number>::DataAccessOnFaces::gradients);
   }
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::create_rhs(const number     &time,
                                                                      const number     &time_step,
@@ -90,7 +90,7 @@ namespace MeltPoolDG::Flow
     dst *= time_step;
   }
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::set_inflow_field_unfitted_boundary(
     std::shared_ptr<dealii::Function<dim>> &inflow_function)
@@ -98,7 +98,7 @@ namespace MeltPoolDG::Flow
     unfitted_inflow = inflow_function;
   }
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::set_unfitted_object_velocity(
     std::shared_ptr<dealii::Function<dim>> &velocity_function)
@@ -106,7 +106,7 @@ namespace MeltPoolDG::Flow
     unfitted_object_velocity = velocity_function;
   }
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::local_apply_cell_rhs(
     const dealii::MatrixFree<dim, number> &,
@@ -274,7 +274,7 @@ namespace MeltPoolDG::Flow
       }
   }
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::local_apply_face_rhs(
     const dealii::MatrixFree<dim, number> &,
@@ -448,7 +448,7 @@ namespace MeltPoolDG::Flow
       }
   }
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::local_apply_boundary_face_rhs(
     const dealii::MatrixFree<dim, number> &,
@@ -567,7 +567,7 @@ namespace MeltPoolDG::Flow
       }
   }
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::local_apply_cell_lhs(
     const dealii::MatrixFree<dim, number> &,
@@ -632,7 +632,7 @@ namespace MeltPoolDG::Flow
       }
   }
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::local_apply_face_lhs(
     const dealii::MatrixFree<dim, number> &,
@@ -719,7 +719,7 @@ namespace MeltPoolDG::Flow
       }
   }
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::local_apply_boundary_face_lhs(
     const dealii::MatrixFree<dim, number> &,
@@ -730,7 +730,7 @@ namespace MeltPoolDG::Flow
     // nothing to do here
   }
 
-  template <unsigned int dim, typename number, bool is_viscous>
+  template <int dim, typename number, bool is_viscous>
   void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::
     get_adjacent_face_values_at_unfitted_boundary(

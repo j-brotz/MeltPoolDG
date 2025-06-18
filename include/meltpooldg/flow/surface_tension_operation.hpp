@@ -13,8 +13,8 @@
 namespace MeltPoolDG::Flow
 {
   /**
-   *  This class enables to compute the contribution to interfacial forces due
-   *  to temperature-(in)dependent surface tension
+   *  @brief This class enables to compute the contribution to interfacial forces due
+   *  to temperature-(in)dependent surface tension.
    *
    *          /                \        /                         \
    *  f_st =  | N_a,  α κ n  δ |   +    | N_a,  (I - n ⊗ n ) ∇α δ |
@@ -45,52 +45,42 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   class SurfaceTensionOperation
   {
-  private:
+  public:
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
-    const SurfaceTensionData<number> &data;
-
-    const ScratchData<dim, dim, number> &scratch_data;
-
-    const VectorType &level_set_as_heaviside;
-    const VectorType &solution_curvature;
-
-    const unsigned int ls_dof_idx;
-    const unsigned int curv_dof_idx;
-    const unsigned int flow_vel_dof_idx;
-    const unsigned int flow_pressure_hanging_nodes_dof_idx;
-    const unsigned int flow_vel_quad_idx;
-
-    const VectorType      *temperature            = nullptr;
-    const BlockVectorType *solution_normal_vector = nullptr;
-    const VectorType      *solid                  = nullptr;
-    unsigned int           temp_dof_idx;
-    unsigned int           normal_dof_idx;
-    unsigned int           solid_dof_idx;
-
-    const bool                 do_level_set_pressure_gradient_interpolation;
-    dealii::FullMatrix<number> ls_to_pressure_grad_interpolation_matrix;
-
-    std::unique_ptr<const LevelSet::DeltaApproximationBase<number>> delta_phase_weighted;
-
-    const number alpha_residual;
-
-  public:
-    SurfaceTensionOperation(const SurfaceTensionData<number>    &data_in,
-                            const ScratchData<dim, dim, number> &scratch_data,
-                            const VectorType                    &level_set_as_heaviside,
-                            const VectorType                    &solution_curvature,
-                            const unsigned int                   ls_dof_idx,
-                            const unsigned int                   curv_dof_idx,
-                            const unsigned int                   flow_vel_hanging_nodes_dof_idx,
-                            const unsigned int flow_pressure_hanging_nodes_dof_idx,
-                            const unsigned int flow_quad_idx);
+    /**
+     * @brief Constructor.
+     *
+     * @param data_in Surface tension data object for surface tension related parameters.
+     * @param scratch_data Scratch data object.
+     * @param level_set_as_heaviside Level set vector of type heaviside.
+     * @param solution_curvature Vector of the current solution curvature.
+     * @param ls_dof_idx Index for the level set DoFHandler.
+     * @param curv_dof_idx Index for the curvature DoFHandler
+     * @param flow_vel_hanging_nodes_dof_idx Index for the flow velocity hanging nodes DoFHandler.
+     * @param flow_pressure_hanging_nodes_dof_idx Index for the pressure hanging nodes DoFHandler.
+     * @param flow_quad_idx Flow quadrature index.
+     */
+    explicit SurfaceTensionOperation(const SurfaceTensionData<number>    &data_in,
+                                     const ScratchData<dim, dim, number> &scratch_data,
+                                     const VectorType                    &level_set_as_heaviside,
+                                     const VectorType                    &solution_curvature,
+                                     const unsigned int                   ls_dof_idx,
+                                     const unsigned int                   curv_dof_idx,
+                                     const unsigned int flow_vel_hanging_nodes_dof_idx,
+                                     const unsigned int flow_pressure_hanging_nodes_dof_idx,
+                                     const unsigned int flow_quad_idx);
 
     /**
-     * Registers the DoF vectors of the @p temperature and normal vector (@p solution_normal_vector),
+     * @brief Registers the DoF vectors of the @p temperature and normal vector (@p solution_normal_vector),
      * which are required for temperature-dependent surface tension forces, i.e. Marangoni
      * convection.
+     *
+     * @param temp_dof_idx Index for the temperature DoFHandler.
+     * @param normal_dof_idx Index for the normal vector DoFHandler.
+     * @param temperature Pointer to the temperature vector.
+     * @param solution_normal_vector Pointer to the solution normal vector block vector.
      */
     void
     register_temperature_and_normal_vector(const unsigned int     temp_dof_idx,
@@ -98,21 +88,26 @@ namespace MeltPoolDG::Flow
                                            const VectorType      *temperature,
                                            const BlockVectorType *solution_normal_vector);
     /**
-     * Registers the solid fraction, given by a DoF vector @p solid and a DoF index @p solid_dof_idx,
+     * @brief Registers the solid fraction, given by a DoF vector @p solid and a DoF index @p solid_dof_idx,
      * which is required if surface tension should be zeroed out in the solid domain.
+     *
+     * @param solid_dof_idx Index for the solid DoFHandler.
+     * @param solid Pointer to the solid vector.
      */
     void
     register_solid_fraction(const unsigned int solid_dof_idx, const VectorType *solid);
 
     /**
-     * Compute a DoF vector of the surface tension and add it into to @p force_rhs. If the
-     * latter should be zeroed out first, @p zero_out must be set true.
+     * @brief Compute a DoF vector of the surface tension and add it into to @p force_rhs.
+     *
+     * @param force_rhs Force right-hand side vector.
+     * @param zero_out Indicator whether @p force_rhs should be zeroed out first.
      */
     void
     compute_surface_tension(VectorType &force_rhs, const bool zero_out = true);
 
     /**
-     * Compute the time step limit for explicit treatment of surface tension [*], as
+     * @brief Compute the time step limit for explicit treatment of surface tension [*], as
      *
      *                __________________
      *               / (ρ1 + ρ2) * Δx^3
@@ -127,6 +122,11 @@ namespace MeltPoolDG::Flow
      * [*] J.U. Brackbill, D.B. Kothe, C. Zemach: A continuum method for modeling surface
      *      tension, J. Comput. Phys. 100 (2) (1992) 335–354.
      *
+     * @param density_1 Density value for the first fluid.
+     * @param density_2 Density value for the second fluid.
+     *
+     * @return Time step limit.
+     *
      * @note As a conservative assumption, we choose α as max (α (T)) in case of
      * temperature-dependent surface tension.
      */
@@ -134,12 +134,73 @@ namespace MeltPoolDG::Flow
     compute_time_step_limit(const number density_1, const number density_2);
 
   private:
+    /// Parameters related to surface tension
+    const SurfaceTensionData<number> &data;
+
+    /// Container for mapping-, finite-element-, and quadrature-related objects
+    const ScratchData<dim, dim, number> &scratch_data;
+
+    /// Level set vector of type heaviside
+    const VectorType &level_set_as_heaviside;
+
+    /// Vector for the curvature values of the solution
+    const VectorType &solution_curvature;
+
+    /// Index for the level set DoFHandler
+    const unsigned int ls_dof_idx;
+
+    /// Index for the curvature DoFHandler
+    const unsigned int curv_dof_idx;
+
+    /// Index for the flow velocity DoFHandler
+    const unsigned int flow_vel_dof_idx;
+
+    /// Index for the flow pressure hanging nodes DoFHandler
+    const unsigned int flow_pressure_hanging_nodes_dof_idx;
+
+    /// Quadrature index for the flow velocity computation
+    const unsigned int flow_vel_quad_idx;
+
+    /// Pointer to the temperature vector
+    const VectorType *temperature = nullptr;
+
+    /// Pointer to the normal vector block vector
+    const BlockVectorType *solution_normal_vector = nullptr;
+
+    /// Pointer to the solid vector
+    const VectorType *solid = nullptr;
+
+    /// Index for the temperature DoFHandler
+    unsigned int temp_dof_idx;
+
+    /// Index for the normal vector DoFHandler
+    unsigned int normal_dof_idx;
+
+    /// Index for the solid DoFHandler
+    unsigned int solid_dof_idx;
+
+    /// Boolean indicator whether level-set pressure gradient interpolation should be done
+    const bool do_level_set_pressure_gradient_interpolation;
+
+    /// Matrix for the interpolation from level set to pressure gradient
+    dealii::FullMatrix<number> ls_to_pressure_grad_interpolation_matrix;
+
+    /// Pointer to the phase-weighted delta approximation object
+    std::unique_ptr<const LevelSet::DeltaApproximationBase<number>> delta_phase_weighted;
+
+    /// Alpha residual
+    const number alpha_residual;
+
     /**
-     * Compute the temperature-dependent surface tension coefficient for a given temperature
+     * @brief Compute the temperature-dependent surface tension coefficient for a given temperature
      * @p T, according to
      *
      *  α = α_0 - α'_0 ( T - T    ).
      *                        α_0
+     *
+     * @param T Given temperature T.
+     *
+     * @return Temperature-dependent surface tension coefficient.
      *
      * @note If α'_0 is positive, α decreases with increasing temperature.
      */

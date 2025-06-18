@@ -11,9 +11,9 @@
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/flow/compressible_flow_data.hpp>
+#include <meltpooldg/flow/compressible_flow_phase_coupling_data.hpp>
 #include <meltpooldg/flow/compressible_flow_scratch_data.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
-#include <meltpooldg/flow/compressible_multiphase/compressible_flow_phase_coupling_data.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 
 #include <algorithm>
@@ -23,6 +23,16 @@
 
 namespace MeltPoolDG::Flow
 {
+  /**
+   * @brief Convective kernel operations for compressible flow solvers.
+   *
+   * This struct implements the evaluation of convective fluxes and their linearizations
+   * for compressible flow governed by the Euler or Navier–Stokes equations. It supports
+   * flux evaluation on both volume cells and faces.
+   *
+   * It also provides functionality to compute the Jacobian (linearized form) of these fluxes,
+   * which is required for implicit schemes.
+   */
   template <int dim, typename number>
   struct CompressibleFlowConvectiveKernels
   {
@@ -30,12 +40,18 @@ namespace MeltPoolDG::Flow
     using ConservedVariablesGradType =
       CompressibleFlowTypes::ConservedVariablesGradType<dim, number>;
 
+    /**
+     * @brief Constructor initializing the convective kernel with flow and material properties.
+     *
+     * @param flow_data Reference to the flow data object containing simulation-specific parameters.
+     * @param material Reference to the material model providing thermodynamic properties.
+     */
     explicit CompressibleFlowConvectiveKernels(
       const CompressibleFlowData<number>          &flow_data,
       const CompressibleFlowMaterial<dim, number> &material);
 
     /**
-     * Calculate the convective flux F_c.
+     * @brief Calculate the convective flux F_c.
      *
      * @param conserved_variables Current values of the conserved variables.
      *
@@ -46,7 +62,7 @@ namespace MeltPoolDG::Flow
       calculate_convective_flux(const ConservedVariablesType &conserved_variables) const;
 
     /**
-     * Calculate the convective numerical flux F_c^*.
+     * @brief Calculate the convective numerical flux F_c^*.
      *
      * @param u_m Current values of the conserved variables on the inner face.
      * @param u_p Current values of the conserved variables on the outer type.
@@ -62,12 +78,13 @@ namespace MeltPoolDG::Flow
         const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const;
 
     /**
-     * Compute the linearization of the convective numerical flux with respect to the primary
+     * @brief Compute the linearization of the convective numerical flux with respect to the primary
      * variables.
      *
      * @param w_q Primary variables on the inner (first) and outer (second) face.
      * @param delta_w_q Change in the primary variables n the inner (first) and outer (second) face.
      * @param normal Outer facing normal vector.
+     *
      * @return Linearized convective numerical flux.
      */
     inline DEAL_II_ALWAYS_INLINE //
@@ -78,10 +95,12 @@ namespace MeltPoolDG::Flow
         const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>   &normal) const;
 
     /**
-     * Compute the linearization of the convective flux with respect to the primary variables.
+     * @brief Compute the linearization of the convective flux with respect to the primary
+     * variables.
      *
      * @param w_q Primary variables.
      * @param delta_w_q Change in the primary variables.
+     *
      * @return Linearized convective flux.
      */
     inline DEAL_II_ALWAYS_INLINE //
@@ -90,13 +109,25 @@ namespace MeltPoolDG::Flow
                                          const ConservedVariablesType &delta_w_q) const;
 
   private:
+    /// Flow-related parameters
+    const CompressibleFlowData<number> &flow_data;
+
+    /// Material-related parameters
+    const CompressibleFlowMaterial<dim, number> &material;
+
+    /// precomputed constant
+    number rs_div_c;
+
     /**
-     * Compute the jump term in the convective numerical flux. For the used Lax-Friedrichs flux the
-     * jump term is given by lambda/2 times the jump in the primary variables.
+     * @brief Compute the jump term in the convective numerical flux.
+     *
+     * For the used Lax-Friedrichs flux the jump term is given by lambda/2 times the jump in the
+     * primary variables.
      *
      * @param w_q Primary variables on the inner (first) and outer (second) face.
      * @param delta_w_q Change in the primary variables n the inner (first) and outer (second) face.
      * @param normal Outer facing normal vector.
+     *
      * @return Jump term of the Lax-Friedrichs flux.
      */
     ConservedVariablesGradType
@@ -104,12 +135,6 @@ namespace MeltPoolDG::Flow
       const std::pair<ConservedVariablesType, ConservedVariablesType> &w_q,
       const std::pair<ConservedVariablesType, ConservedVariablesType> &delta_w_q,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>   &normal) const;
-
-    const CompressibleFlowData<number>          &flow_data;
-    const CompressibleFlowMaterial<dim, number> &material;
-
-    // precomputed constants
-    number rs_div_c;
   };
 
   /********************************************************************************************

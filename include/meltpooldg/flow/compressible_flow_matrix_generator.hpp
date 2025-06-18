@@ -1,5 +1,5 @@
 /**
- * @brief Collection of functions that create a matrix representaiton (diagonal, sparse system
+ * @brief Collection of functions that create a matrix representation (diagonal, sparse system
  * matrix) for a matrix free object.
  */
 
@@ -15,9 +15,8 @@
 
 namespace MeltPoolDG::Flow
 {
-  /**
-   * An enum of possible matrix representation types that can be computed from a matrix free object.
-   */
+  /// An enum of possible matrix representation types that can be computed from a matrix free
+  /// object.
   enum MatrixRepresentationType
   {
     DiagonalMatrix,
@@ -60,6 +59,8 @@ namespace MeltPoolDG::Flow
     };
 
   /**
+   * @brief Computes the matrix based representation of a Jacobian.
+   *
    * Given a matrix free implementation of the jacobian matrix, this function computes the matrix
    * based representation of the jacobian in various forms (diagonal matrix, sparse matrix).
    *

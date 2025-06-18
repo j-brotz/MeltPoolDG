@@ -1,8 +1,3 @@
-/**
- * @brief Helper class taking care of all boundary condition related computations for the
- * compressible flow solver.
- */
-
 #pragma once
 
 #include <deal.II/base/exceptions.h>
@@ -34,18 +29,34 @@ namespace MeltPoolDG::Flow
               subsonic_outflow_fixed_energy,
               subsonic_outflow_fixed_pressure);
 
+  /**
+   * @brief Helper class taking care of all boundary condition related computations for the
+   * compressible flow solver.
+   *
+   * This class provides an interface to set, manage, and evaluate a variety of physical boundary
+   * conditions that may arise in simulations of compressible Navier-Stokes flows.
+   *
+   * Supported boundary condition types:
+   * - Inflow
+   * - Slip wall
+   * - No-slip adiabatic wall
+   * - Subsonic outflow with fixed pressure
+   * - Subsonic outflow with fixed energy
+   */
   template <int dim, typename number>
   class CompressibleFlowBoundaryConditions
   {
+  public:
     using ConservedVariablesType = dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>>;
     using ConservedVariablesGradType =
       dealii::Tensor<1, dim + 2, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
     using BoundaryType = CompressibleBoundaryConditionType;
 
-  public:
     /**
-     * Update the boundary conditions. This means if the boundary conditions are time-dependent
-     * functions compute and store their values for the given time.
+     * @brief Update the boundary conditions.
+     *
+     * This means if the boundary conditions are time-dependent functions compute and store their
+     * values for the given time.
      *
      * @param time Time at which the boundary conditions are evaluated.
      */
@@ -53,6 +64,8 @@ namespace MeltPoolDG::Flow
     update_boundary_conditions(number time);
 
     /**
+     * @brief Set the compressible flow boundary conditions.
+     *
      * Set the boundary conditions by internally calling the function set_boundary_condition for the
      * currently implemented boundary types.
      *
@@ -83,7 +96,7 @@ namespace MeltPoolDG::Flow
     }
 
     /**
-     * Set a specific boundary condition and store it internally.
+     * @brief Set a specific boundary condition and store it internally.
      *
      * @param boundary_condition Type of the boundary condition.
      * @param boundary_condition_function Map containing the boundary id at which the condition
@@ -97,7 +110,7 @@ namespace MeltPoolDG::Flow
         boundary_condition_function = {});
 
     /**
-     * Get the type of the boundary condition at a specific domain boundary.
+     * @brief Get the type of the boundary condition at a specific domain boundary.
      *
      * @param boundary_id Boundary id of the boundary of interest.
      *
@@ -126,7 +139,7 @@ namespace MeltPoolDG::Flow
     }
 
     /**
-     * Compute the prescribed boundary value at a specific location on the boundary.
+     * @brief Compute the prescribed boundary value at a specific location on the boundary.
      *
      * @param boundary_id Boundary id of the boundary of interest.
      * @param boundary_condition Type of the boundary condition.
@@ -143,11 +156,12 @@ namespace MeltPoolDG::Flow
                        unsigned                                                   component) const;
 
     /**
-     * Same as above but returns the complete vector.
+     * @brief Same as above but returns the complete vector.
      *
      * @param boundary_id Boundary id of the boundary of interest.
      * @param boundary_condition Type of the boundary condition.
      * @param location Coordinates at which the boundary value is computed.
+     *
      * @return Prescribed boundary value.
      */
     dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>>
@@ -156,7 +170,7 @@ namespace MeltPoolDG::Flow
                        const dealii::Point<dim, dealii::VectorizedArray<number>> &location) const;
 
     /**
-     * This function sets the corresponding values on the fictional outer face if the face is
+     * @brief This function sets the corresponding values on the fictional outer face if the face is
      * located at a boundary.
      *
      * @param q_point Location of the quadrature points at which the values shall be computed.
@@ -183,6 +197,8 @@ namespace MeltPoolDG::Flow
       bool                                                           is_gas_phase = true) const;
 
     /**
+     * @brief Compute boundary values and gradients, as well as their linearizations for the Jacobian.
+     *
      * This function sets the corresponding values on the fictional outer face if the face is
      * located at a boundary. It returns the values and the gradient of the boundary values as well
      * as their linearized version required when for example computing the Jacobian in an implicit
@@ -216,11 +232,14 @@ namespace MeltPoolDG::Flow
       number                                                         gamma) const;
 
   private:
+    /// Maps boundary IDs to the specific boundary functions.
     std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> inflow_boundaries;
     std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
       subsonic_outflow_fixed_pressure;
     std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
-                                         subsonic_outflow_fixed_energy;
+      subsonic_outflow_fixed_energy;
+
+    /// Sets of boundary IDs.
     std::set<dealii::types::boundary_id> slip_wall_boundaries;
     std::set<dealii::types::boundary_id> no_slip_adiabatic_wall_boundaries;
   };

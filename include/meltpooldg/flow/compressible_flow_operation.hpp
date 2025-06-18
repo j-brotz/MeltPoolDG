@@ -1,8 +1,3 @@
-/**
- * @brief Common interface class for compressible flow operation classes based on the type
- * erasure idiom.
- */
-
 #pragma once
 
 #include <deal.II/base/function.h>
@@ -18,17 +13,23 @@
 
 namespace MeltPoolDG::Flow
 {
-
-  template <unsigned int dim, typename number>
+  /**
+   * @brief Common interface class for compressible flow operation classes based on the type
+   * erasure idiom.
+   */
+  template <int dim, typename number>
   class CompressibleFlowOperation
   {
+  public:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
-  public:
+    /**
+     * @brief Default constructor.
+     */
     CompressibleFlowOperation() = default;
 
     /**
-     * Constructor, takes ownership of the passed unique pointer.
+     * @brief Constructor, takes ownership of the passed unique pointer.
      *
      * @param operation Unique pointer to an operation object for a specific type of compressible
      * flow operation.
@@ -39,7 +40,7 @@ namespace MeltPoolDG::Flow
     {}
 
     /**
-     * Solves the compressible Navier-Stokes equations for a single time step.
+     * @brief Solves the compressible Navier-Stokes equations for a single time step.
      *
      * @param current_time Current time at t^n.
      * @param time_step Current time step size.
@@ -51,9 +52,9 @@ namespace MeltPoolDG::Flow
     }
 
     /**
-     * Distribute the degrees of freedom to the passed dof handler object.
+     * @brief Distribute the degrees of freedom to the passed dof handler object.
      *
-     * @param dof_handler Dof handler object ussed for the compressible flow solver.
+     * @param dof_handler Dof handler object used for the compressible flow solver.
      */
     void
     distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const
@@ -62,8 +63,9 @@ namespace MeltPoolDG::Flow
     }
 
     /**
-     * Set up the required internal data structures. After a call to this function the solve()
-     * function of the class can be utilized.
+     * @brief Set up the required internal data structures.
+     *
+     * After a call to this function the solve() function of the class can be utilized.
      */
     void
     reinit()
@@ -72,8 +74,10 @@ namespace MeltPoolDG::Flow
     }
 
     /**
-     * Compute the maximum time step size arising from the convective and viscous time step limits
-     * and optionally print it to the console.
+     * @brief Compute the maximum time step size.
+     *
+     * The maximum time step size arises from the convective and viscous time step limits.
+     * It is optionally printed to the console.
      *
      * @param do_print If true, the time step limit is printed to the console.
      */
@@ -84,7 +88,7 @@ namespace MeltPoolDG::Flow
     }
 
     /**
-     * Set the solution vector to the passed initial flow field state.
+     * @brief Set the solution vector to the passed initial flow field state.
      *
      * @param function Initial condition of the flow field.
      */
@@ -95,7 +99,7 @@ namespace MeltPoolDG::Flow
     }
 
     /**
-     * Set the boundary conditions.
+     * @brief Set the boundary conditions.
      *
      * @param simulation_case dealii::Pointer to the considered simulation case class.
      * @param operation_name String for the name of the considered operation.
@@ -110,7 +114,7 @@ namespace MeltPoolDG::Flow
     }
 
     /**
-     * Set a body force, e.g. gravity, specified by the passed function.
+     * @brief Set a body force, e.g. gravity, specified by the passed function.
      *
      * @param body_force_in Function specifying the body force.
      *
@@ -122,18 +126,33 @@ namespace MeltPoolDG::Flow
       operation_pimpl->set_body_force(std::move(body_force_in));
     }
 
+    /**
+     * @brief Get a constant reference to the DoFHandler used in the current operation.
+     *
+     * @return A constant reference to the dealii::DoFHandler object.
+     */
     const dealii::DoFHandler<dim> &
     get_dof_handler() const
     {
       return operation_pimpl->get_dof_handler();
     }
 
+    /**
+     * @brief Get a constant reference to the solution vector.
+     *
+     * @return A constant reference to the solution vector.
+     */
     const VectorType &
     get_solution() const
     {
       return operation_pimpl->get_solution();
     }
 
+    /**
+     * @brief Get a reference to the solution vector.
+     *
+     * @return A reference to the solution vector.
+     */
     VectorType &
     get_solution()
     {
@@ -141,8 +160,9 @@ namespace MeltPoolDG::Flow
     }
 
     /**
-     * Attach the solution to the passed data out object. The solution which are added are the
-     * density, the momentum and the energy density.
+     * @brief Attach the solution to the passed data out object.
+     *
+     * The solution which are added are the density, the momentum and the energy density.
      *
      * @param data_out Object to which the solution vector is attached.
      */
@@ -198,10 +218,12 @@ namespace MeltPoolDG::Flow
     }
 
     /**
-     * Check if the compressible flow operation is initialized, i.e. that the current object holds a
-     * valid pointer to any compressible flow operation object.
+     * @brief Check if the compressible flow operation is initialized,
      *
-     * @return True if object holds a valid preconditoner object.
+     * Check that the current object holds a valid pointer to any compressible flow operation
+     * object.
+     *
+     * @return True if object holds a valid preconditioner object.
      */
     bool
     is_initialized() const
@@ -210,7 +232,7 @@ namespace MeltPoolDG::Flow
     }
 
     /**
-     * Delete the compressible flow operation object stored in this class.
+     * @brief Delete the compressible flow operation object stored in this class.
      */
     void
     clear()
@@ -219,6 +241,13 @@ namespace MeltPoolDG::Flow
     }
 
   private:
+    /**
+     * @brief Abstract base class defining the interface for compressible flow operations.
+     *
+     * This struct defines the pure virtual interface used for implementing type erasure in the
+     * CompressibleFlowOperation class. Concrete operation classes must implement this interface
+     * to be used with CompressibleFlowOperation.
+     */
     struct OperationConcept
     {
       virtual ~OperationConcept() = default;
@@ -256,6 +285,17 @@ namespace MeltPoolDG::Flow
       get_dof_handler() const = 0;
     };
 
+    /**
+     * @brief Concrete implementation of OperationConcept using a specific compressible flow
+     * operation type.
+     *
+     * This struct wraps an actual compressible flow operation object (templated type) and forwards
+     * all interface calls defined in OperationConcept to it. This enables type-erased storage of
+     * operation implementations in CompressibleFlowOperation.
+     *
+     * @tparam OperationType The concrete class type implementing the compressible flow operation
+     * logic.
+     */
     template <typename OperationType>
     struct OperationModel final : public OperationConcept
     {
@@ -327,13 +367,12 @@ namespace MeltPoolDG::Flow
       }
 
     private:
+      /// Pointer to the concrete compressible flow operation object.
       std::unique_ptr<OperationType> operation;
     };
 
-    /**
-     * dealii::Pointer to the actual compressible flow operation object to which the function calls
-     * are forwarded.
-     */
+    /// Pointer to the actual compressible flow operation object to which the function calls
+    /// are forwarded.
     std::unique_ptr<OperationConcept> operation_pimpl;
   };
 } // namespace MeltPoolDG::Flow

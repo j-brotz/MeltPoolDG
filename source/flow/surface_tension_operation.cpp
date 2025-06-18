@@ -66,8 +66,6 @@ namespace MeltPoolDG::Flow
     //@todo add assert for parameters
   }
 
-
-
   template <int dim, typename number>
   void
   SurfaceTensionOperation<dim, number>::register_temperature_and_normal_vector(
@@ -86,8 +84,6 @@ namespace MeltPoolDG::Flow
         "For temperature-dependent surface tension, a reference temperature needs to be defined. Abort..."));
   }
 
-
-
   template <int dim, typename number>
   void
   SurfaceTensionOperation<dim, number>::register_solid_fraction(const unsigned int solid_dof_idx_in,
@@ -96,8 +92,6 @@ namespace MeltPoolDG::Flow
     solid_dof_idx = solid_dof_idx_in;
     solid         = solid_in;
   }
-
-
 
   template <int dim, typename number>
   void
@@ -442,7 +436,6 @@ namespace MeltPoolDG::Flow
                                                               alpha);
     return alpha;
   }
-
 
   template class SurfaceTensionOperation<1, double>;
   template class SurfaceTensionOperation<2, double>;

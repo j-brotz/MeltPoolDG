@@ -13,7 +13,7 @@
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
-#include <meltpooldg/flow/flow_base.hpp>
+#include <meltpooldg/flow/incompressible_flow_operation_base.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
 #include <meltpooldg/heat/heat_operation_base.hpp>
 #include <meltpooldg/heat/laser_operation.hpp>
@@ -202,12 +202,12 @@ namespace MeltPoolDG
     const unsigned int &evapor_vel_dof_idx         = vel_dof_idx;
     const unsigned int &evapor_mass_flux_dof_idx   = heat_no_bc_dof_idx;
 
-    std::shared_ptr<ScratchData<dim, dim, number>>                  scratch_data;
-    std::shared_ptr<Material<number>>                               material;
-    std::shared_ptr<Flow::FlowBase<dim, number>>                    flow_operation;
-    std::shared_ptr<LevelSet::LevelSetOperation<dim, number>>       level_set_operation;
-    std::shared_ptr<Heat::LaserOperation<dim, number>>              laser_operation;
-    std::shared_ptr<MeltFrontPropagation<dim, number>>              melt_front_propagation;
+    std::shared_ptr<ScratchData<dim, dim, number>>                      scratch_data;
+    std::shared_ptr<Material<number>>                                   material;
+    std::shared_ptr<Flow::IncompressibleFlowOperationBase<dim, number>> flow_operation;
+    std::shared_ptr<LevelSet::LevelSetOperation<dim, number>>           level_set_operation;
+    std::shared_ptr<Heat::LaserOperation<dim, number>>                  laser_operation;
+    std::shared_ptr<MeltFrontPropagation<dim, number>>                  melt_front_propagation;
     std::shared_ptr<Evaporation::EvaporationOperation<dim, number>> evaporation_operation = nullptr;
     std::shared_ptr<Evaporation::IncompressibleNewtonianFluidEvaporationMaterial<dim, number>>
                                                                        evaporation_fluid_material;

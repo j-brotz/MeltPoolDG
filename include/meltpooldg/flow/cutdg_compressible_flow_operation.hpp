@@ -43,19 +43,25 @@
 
 namespace MeltPoolDG::Flow
 {
+  /**
+   * @brief Operation that performs a full time step for the compressible single-phase Navier-Stokes
+   * equations in a cutDG context.
+   */
   template <int dim, typename number>
   class CutDGCompressibleFlowOperation
   {
+  public:
     using VectorType            = dealii::LinearAlgebra::distributed::Vector<number>;
     using MappingInfoType       = CutUtil::MappingInfoType<dim, number>;
     using MappingInfoVectorType = CutUtil::MappingInfoVectorType<dim, number>;
 
     using CutFlowOperatorVariant = std::variant<CutDGCompressibleFlowOperator<dim, number, true>,
                                                 CutDGCompressibleFlowOperator<dim, number, false>>;
-
-  public:
     /**
-     * Constructor.
+     * @brief Constructor.
+     *
+     * Initializes all internal data structures required to simulate compressible single-phase
+     * Navier-Stokes flows using a cutDG approach.
      *
      * @param scratch_data_in Reference to the used ScratchData object.
      * @param comp_flow_data_in Reference to the compressible flow data struct used.
@@ -68,7 +74,7 @@ namespace MeltPoolDG::Flow
      * @param level_set_dof_idx_in Index of the used dof handler for level-set in @p scratch_data_in.
      * @param comp_flow_quad_idx_in Index of the used quadrature object in @p scratch_data_in.
      */
-    CutDGCompressibleFlowOperation(
+    explicit CutDGCompressibleFlowOperation(
       const ScratchData<dim, dim, number>              &scratch_data_in,
       const CompressibleFlowData<number>               &comp_flow_data_in,
       const CompressibleFluidMaterialPhaseData<number> &material_data_in,
@@ -81,14 +87,15 @@ namespace MeltPoolDG::Flow
       unsigned int comp_flow_quad_idx_in = dealii::numbers::invalid_unsigned_int);
 
     /**
-     * Set up the required internal data structures. After a call to this function the solve()
-     * function of the class can be utilized.
+     * @brief Set up the required internal data structures.
+     *
+     * After a call to this function the solve() function of the class can be utilized.
      */
     void
     reinit();
 
     /**
-     * Set a body force, e.g. gravity, specified by the passed function.
+     * @brief Set a body force, e.g. gravity, specified by the passed function.
      *
      * @param body_force_in Function specifying the body force.
      *
@@ -98,16 +105,21 @@ namespace MeltPoolDG::Flow
     set_body_force(std::unique_ptr<dealii::Function<dim>> body_force_in);
 
     /**
-     * Compute the maximum time step size arising from the convective and viscous time step limits
-     * and optionally print it to the console.
+     * @brief Compute the maximum time step size.
+     *
+     * The maximum time step size arises from the convective and viscous time step limits.
+     * Optionally, it is printed to the console.
      *
      * @param do_print If true, the time step limit is printed to the console.
+     *
+     * @return The computed maximum time step size.
      */
     number
     compute_time_step_size(bool do_print = false) const;
 
     /**
-     * Distribute dofs needed for a finite element type given in @p CompressibleFlowData.
+     * @brief Distribute dofs needed for a finite element type given in @p CompressibleFlowData.
+     *
      * A FECollection is created to distinguish between liquid phase, gas phase and intersected
      * elements.
      *
@@ -117,7 +129,7 @@ namespace MeltPoolDG::Flow
     distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const;
 
     /**
-     * Solves the compressible Navier-Stokes equations for a single time step.
+     * @brief Solves the compressible Navier-Stokes equations for a single time step.
      *
      * @param current_time Current time at t^n.
      * @param time_step Current time step size.
@@ -126,7 +138,7 @@ namespace MeltPoolDG::Flow
     solve(number current_time, number time_step);
 
     /**
-     * Set the initial condition of the solution dof vector.
+     * @brief Set the initial condition of the solution dof vector.
      *
      * @param function Given function for initial condition.
      */
@@ -134,7 +146,7 @@ namespace MeltPoolDG::Flow
     set_initial_condition(const dealii::Function<dim> &function);
 
     /**
-     * Set the inflow field function in the case of an unfitted inflow boundary.
+     * @brief Set the inflow field function in the case of an unfitted inflow boundary.
      *
      * @note The function simply passes the function to the corresponding cut operator function.
      */
@@ -142,7 +154,7 @@ namespace MeltPoolDG::Flow
     set_inflow_field_unfitted_boundary(std::shared_ptr<dealii::Function<dim>> &inflow_function);
 
     /**
-     * Set the velocity function in the case of an unfitted (rigid) moving object.
+     * @brief Set the velocity function in the case of an unfitted (rigid) moving object.
      *
      * @note The function simply passes the function to the corresponding cut operator function.
      */
@@ -150,7 +162,7 @@ namespace MeltPoolDG::Flow
     set_unfitted_object_velocity(std::shared_ptr<dealii::Function<dim>> &velocity_function);
 
     /**
-     * Set the (standard compressible flow, i.e. non-cut specific) boundary conditions.
+     * @brief Set the (standard compressible flow, i.e. non-cut specific) boundary conditions.
      *
      * @param simulation_case dealii::Pointer to the considered simulation case class.
      * @param operation_name String for the name of the considered operation.
@@ -163,24 +175,45 @@ namespace MeltPoolDG::Flow
                             const std::string                                      &operation_name);
 
     /**
-     * Getter functions.
+     * @brief Constant getter function for the current solution vector.
      */
     const VectorType &
     get_solution() const;
 
+    /**
+     * @brief Getter function for the current solution vector.
+     */
     VectorType &
     get_solution();
 
+    /**
+     * @brief Constant getter function for the DoFHandler.
+     */
     const dealii::DoFHandler<dim> &
     get_dof_handler() const;
 
-    typename CutDGCompressibleFlowOperation<dim, number>::
-      CutFlowOperatorVariant static create_cut_flow_operator_variant(
-        bool                                      is_viscous,
-        CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-        const MappingInfoType                    &mapping_info_surface_in,
-        const MappingInfoVectorType              &mapping_info_cells_in,
-        const MappingInfoVectorType              &mapping_info_faces_in)
+    /**
+     * @brief Factory function to create a variant of the CutDGCompressibleFlowOperator depending on
+     * viscosity.
+     *
+     * This function returns an instance of `CutDGCompressibleFlowOperator` templated
+     * on the viscosity flag. It selects the correct operator variant based on whether
+     * the flow is viscous or inviscid.
+     *
+     * @param is_viscous Flag indicating whether the flow includes viscous terms.
+     * @param flow_scratch_data Data structure holding flow-related scratch data and parameters.
+     * @param mapping_info_surface_in Mapping information for integration over cut boundaries.
+     * @param mapping_info_cells_in Mapping information for integration over cut cells.
+     * @param mapping_info_faces_in Mapping information for integration over cut faces.
+     *
+     * @return An instance of the appropriate `CutDGCompressibleFlowOperator` variant.
+     */
+    CutFlowOperatorVariant static create_cut_flow_operator_variant(
+      bool                                      is_viscous,
+      CompressibleFlowScratchData<dim, number> &flow_scratch_data,
+      const MappingInfoType                    &mapping_info_surface_in,
+      const MappingInfoVectorType              &mapping_info_cells_in,
+      const MappingInfoVectorType              &mapping_info_faces_in)
     {
       if (is_viscous)
         return CutDGCompressibleFlowOperator<dim, number, true>(flow_scratch_data,
@@ -195,33 +228,64 @@ namespace MeltPoolDG::Flow
     }
 
   private:
+    /// Scratch data for compressible flows
     CompressibleFlowScratchData<dim, number> flow_scratch_data;
 
+    /// Time iterator
     const TimeIntegration::TimeIterator<number> &time_iterator;
 
+    /// DoF index associated to the level set field
     const unsigned int level_set_dof_idx;
-    const VectorType  &level_set;
-    VectorType         rhs;
 
+    /// Reference to the level-set field used to represent the immersed boundary
+    const VectorType &level_set;
+
+    /// Right-hand side vector
+    VectorType rhs;
+
+    /// Mesh classifier, which contains information if a cell is inside or outside the physically
+    /// relevant region, or cut by the immersed boundary. It corresponds to the current level set
+    /// position.
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier;
+
+    /// Mesh classifier, which contains information if a cell is inside or outside the physically
+    /// relevant region, or cut by the immersed boundary. It corresponds to the level set position
+    /// at the previous time step.
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier_old;
 
+    /// Solution transfer object for the interpolation between function spaces at two subsequent
+    /// time steps with moving immersed boundaries.
     CutUtil::SolutionTransferOperator<dim, number> cut_solution_transfer;
-    std::function<void()>                          setup_dof_system;
-    std::function<void(VectorType &)>              reinit_vector;
 
+    /// Function to set up the DoF system
+    std::function<void()> setup_dof_system;
+
+    /// Function for DoF vector reinitialization
+    std::function<void(VectorType &)> reinit_vector;
+
+    /// FESystem object, required by FEPointEvaluation
     dealii::FESystem<dim> fe_point_temp;
-    const unsigned int    n_dofs_per_cell;
 
-    MappingInfoType       mapping_info_surface;
+    /// Number of DoFs per cell
+    const unsigned int n_dofs_per_cell;
+
+    /// Mapping information for integration over immersed boundaries
+    MappingInfoType mapping_info_surface;
+
+    /// Mapping information for integration over cut cells
     MappingInfoVectorType mapping_info_cells;
+
+    /// Mapping information for integration over cut faces
     MappingInfoVectorType mapping_info_faces;
 
+    /// Compressible flow operator object
     CutFlowOperatorVariant cut_flow_operator;
 
     /**
-     * Adapt the dof layout and solution vector to a new interface position, which is defined by the
-     * zero-level-set-isosurface. The function contains following steps:
+     * @brief Adapt the dof layout and solution vector to a new interface position, which is defined
+     * by the zero-level-set-isosurface.
+     *
+     * The function contains following steps:
      * - classify cells according to current interface position
      * - adapt DoFHandler and solution vectors according to new interface position, extrapolate new
      * DoF values via ghost-penalty extrapolation
@@ -232,25 +296,30 @@ namespace MeltPoolDG::Flow
     adapt_to_new_interface_position();
 
     /**
-     * Classify cells according to the current state of the level-set field.
+     * @brief Classify cells according to the current state of the level-set field.
      */
     void
     classify_cells() const;
 
     /**
-     * Compute the convective time step limit for the current mesh and flow field.
+     * @brief Compute the convective time step limit for the current mesh and flow field.
+     *
+     * @return Maximum convective time step size.
      */
     number
     compute_convective_time_step_limit() const;
 
     /**
-     * Compute the minimum density currently occurring in the flow field.
+     * @brief Compute the minimum density currently occurring in the flow field.
+     *
+     * @return Minimum density.
      */
     number
     compute_minimum_density() const;
 
     /**
-     * Compute the quadrature rules for intersected elements, intersected faces and phase surfaces
+     * @brief Compute the quadrature rules for intersected elements, intersected faces and immersed
+     * phase boundaries.
      */
     void
     compute_intersected_quadrature();

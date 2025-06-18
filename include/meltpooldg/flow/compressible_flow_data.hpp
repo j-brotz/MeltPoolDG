@@ -1,6 +1,3 @@
-/**
- * @brief Collection of parameters required by the compressible Navier-Stokes operator.
- */
 #pragma once
 
 #include <deal.II/base/parameter_handler.h>
@@ -23,44 +20,53 @@ namespace MeltPoolDG::Flow
 
   BETTER_ENUM(JacobianType, char, exact, finite_difference);
 
+  /**
+   * @brief Collection of parameters required by the compressible Navier-Stokes operator.
+   */
   template <typename number>
   struct CompressibleFlowData
   {
-    // finite element data
+    /// Finite element data
     FiniteElementData fe;
 
-    // time integration data
+    /// Time integration data
     TimeIntegration::TimeIntegratorData<number> time_integrator;
 
-    // numerical flux type for the convective flux
+    /// Numerical flux type for the convective flux
     NumericalFluxType numerical_flux_type = NumericalFluxType::lax_friedrichs_modified;
 
-    // calculation method of the linearized jump operator in the convective numerical flux (required
-    // for implicit time stepping). The options are "analytic", "complete_fd" and "lambda_fd"
+    /// Calculation method of the linearized jump operator in the convective numerical flux
+    /// (required for implicit time stepping). The options are "analytic", "complete_fd" and
+    /// "lambda_fd"
     LinearizedConvectiveFluxJumpType linearization_jump_convective_flux =
       LinearizedConvectiveFluxJumpType::complete_fd;
 
-    // jacobian approximation type. The options are "exact" and "finite_difference"
+    /// Jacobian approximation type. The options are "exact" and "finite_difference"
     JacobianType jacobian_type = JacobianType::exact;
 
-    // Courant number for the convective time step restriction
+    /// Courant number for the convective time step restriction
     number courant_number = 0.15;
 
-    // similar to Courant number but for the viscous time step restriction
+    /// Similar to Courant number but for the viscous time step restriction
     number viscous_courant_number = 1.0;
 
-    // if set to true the CFL-criteria determines the size of a time step
+    /// If set to true the CFL-criteria determines the size of a time step
     bool do_cfl_time_stepping = false;
 
-    // gravity constant used in the body force computation
+    /// Gravity constant used in the body force computation
     number gravity_constant = 0.0;
 
-    // operator type. The options are "fitted" and "cut"
+    /// Operator type. The options are "fitted" and "cut"
     std::string domain_representation_type = "fitted";
 
-    // verbosity level
+    /// Verbosity level
     int verbosity_level = -1;
 
+    /**
+     * @brief Add compressible flow parameters in the parameter handler.
+     *
+     * @param prm The parameter handler to which the parameters are added.
+     */
     void
     add_parameters(dealii::ParameterHandler &prm)
     {
@@ -102,6 +108,12 @@ namespace MeltPoolDG::Flow
       prm.leave_subsection();
     }
 
+    /**
+     * @brief Finalizes, adjusts and checks compressible flow parameters after reading user input.
+     *
+     * @param base_fe_data Default finite element data.
+     * @param base_verbosity_level Default verbosity level.
+     */
     void
     post(const FiniteElementData &base_fe_data, const unsigned int base_verbosity_level)
     {

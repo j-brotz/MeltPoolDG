@@ -7,29 +7,39 @@
 
 namespace MeltPoolDG::Flow
 {
-  // Currently supported equations of state to model compressible or (nearly) incompressible fluids
+  /// Enumeration for the currently supported equations of state to model compressible or (nearly)
+  /// incompressible fluids
   BETTER_ENUM(EquationOfState, char, ideal_gas, stiffened_gas, noble_abel_stiffened_gas)
 
+  /**
+   * @brief Collection of parameters related to the equation of state for a compressible or nearly
+   * incompressible fluid.
+   */
   template <typename number>
   struct EOSData
   {
-    // type of equation of state
+    /// Type of equation of state
     EquationOfState type = EquationOfState::ideal_gas;
 
-    // parameter to model molecular attraction within condensed matter
-    // (required for stiffened_gas and noble_abel_stiffened_gas)
+    /// Parameter to model molecular attraction within condensed matter
+    /// (required for stiffened_gas and noble_abel_stiffened_gas)
     number p_inf = std::numeric_limits<number>::max();
 
-    // parameter to model the covolume of the fluid, i.e., the exclude volume
-    // due to the finite size of the molecules
-    // (required for noble_abel_stiffened_gas)
+    /// Parameter to model the covolume of the fluid, i.e., the exclude volume
+    /// due to the finite size of the molecules
+    /// (required for noble_abel_stiffened_gas)
     number b = std::numeric_limits<number>::max();
 
-    // parameter to model the 'heat bound', i.e., the energy due to chemical bounds,
-    // hydrogen bondings, latent heat,...
-    // (required for noble_abel_stiffened_gas)
+    /// Parameter to model the 'heat bound', i.e., the energy due to chemical bounds,
+    /// hydrogen bondings, latent heat,...
+    /// (required for noble_abel_stiffened_gas)
     number q = std::numeric_limits<number>::min();
 
+    /**
+     * @brief Add EOS-specific material parameters in the parameter handler.
+     *
+     * @param prm The parameter handler to which the parameters are added.
+     */
     void
     add_parameters(dealii::ParameterHandler &prm)
     {
@@ -69,31 +79,41 @@ namespace MeltPoolDG::Flow
     };
   };
 
+  /**
+   * @brief Collection of material parameters for a specific fluid phase.
+   */
   template <typename number>
   struct CompressibleFluidMaterialPhaseData
   {
-    // specific isobaric heat (SI: J/(kg K))
+    /// Specific isobaric heat (SI: J/(kg K))
     number specific_isobaric_heat = 1000.0;
 
-    // dynamic viscosity (SI: kg/(m s))
+    /// Dynamic viscosity (SI: kg/(m s))
     number dynamic_viscosity = 1. / 1600.;
 
-    // ratio of specific heat (specific heat at constant pressure divided by
-    // specific heat at constant volume)
+    /// Ratio of specific heat (specific heat at constant pressure divided by
+    /// specific heat at constant volume)
     number gamma = 1.4;
 
-    // specific gas constant (SI: J/(kg K))
+    /// Specific gas constant (SI: J/(kg K))
     number specific_gas_constant = 287.1;
 
-    // reference density for interior penalty (SI: kg/m3)
+    /// Reference density for interior penalty (SI: kg/m3)
     number reference_density = 1.0;
 
-    // thermal conductivity (SI: W/(m K))
+    /// Thermal conductivity (SI: W/(m K))
     number thermal_conductivity = std::numeric_limits<number>::max();
 
-    // data for the equation of state
+    /// Data for the equation of state
     EOSData<number> eos_data;
 
+    /**
+     * @brief Add material parameters in the parameter handler.
+     *
+     * @param prm The parameter handler to which the parameters are added.
+     * @param is_gas_phase Boolean indicator specifying whether the gas or liquid phase is
+     * considered.
+     */
     void
     add_parameters(dealii::ParameterHandler &prm, const bool is_gas_phase)
     {
@@ -131,6 +151,11 @@ namespace MeltPoolDG::Flow
       prm.leave_subsection();
     };
 
+    /**
+     * @brief Post-process material data parameters.
+     *
+     * @param is_gas Boolean indicator specifying whether a gas or liquid phase is considered.
+     */
     void
     post(const bool is_gas)
     {

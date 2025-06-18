@@ -1,20 +1,19 @@
-/**
- * @brief A base class for a collection of thermodynamic helper functions, which depend on the
- * equation of state.
- */
-
 #pragma once
 
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 
 namespace MeltPoolDG::Flow::EOS
 {
+  /**
+   * @brief A base class for a collection of thermodynamic helper functions, which depend on the
+   * equation of state.
+   */
   template <int dim, typename number>
   class EquationOfStateUtils
   {
   public:
     /**
-     * Calculate the pressure from the conserved variables for a specific equation of state.
+     * @brief Calculate the pressure from the conserved variables for a specific equation of state.
      *
      * @param conserved_variables Current values of the conserved variables.
      *
@@ -26,7 +25,7 @@ namespace MeltPoolDG::Flow::EOS
         const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables) = 0;
 
     /**
-     * Calculate the gradient of the temperature from the conserved variables and their gradients
+     * @brief Calculate the gradient of the temperature from the conserved variables and their gradients
      * for a specific equation of state.
      *
      * @param conserved_variables Current values of the conserved variables.
@@ -42,7 +41,7 @@ namespace MeltPoolDG::Flow::EOS
           &grad_conserved_variables) = 0;
 
     /**
-     * Calculate the speed of sound for a specific equation of state.
+     * @brief Calculate the speed of sound for a specific equation of state.
      *
      * @param conserved_variables Current values of the conserved variables.
      *
@@ -54,7 +53,7 @@ namespace MeltPoolDG::Flow::EOS
         const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables) = 0;
 
     /**
-     * Calculate the temperature for a specific equation of state.
+     * @brief Calculate the temperature for a specific equation of state.
      *
      * @param conserved_variables Current values of the conserved variables.
      *
@@ -66,12 +65,11 @@ namespace MeltPoolDG::Flow::EOS
         const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables) = 0;
 
     /**
-     * Calculate the total stress tensor from pressure contribution and viscous stress contribution.
-     * sigma_ij = tau_ij - p * delta_ij
+     * @brief Calculate the total stress tensor from pressure contribution and viscous stress
+     * contribution sigma_ij = tau_ij - p * delta_ij.
      *
      * @param conserved_variables Current values of the conserved variables.
      * @param viscous_stress_tensor Given viscous tress tensor.
-     * equations.
      *
      * @return Stress tensor resulting from the values and gradients of the conserved variables.
      */
@@ -89,8 +87,8 @@ namespace MeltPoolDG::Flow::EOS
     }
 
     /**
-     * Convert the given conservative variables (rho, momentum, total energy) to primitive variables
-     * (pressure, velocity, temperature).
+     * @brief Convert the given conservative variables (rho, momentum, total energy) to primitive
+     * variables (pressure, velocity, temperature).
      *
      * @param u_cons Current values in conservative variables formulation.
      *
@@ -117,7 +115,7 @@ namespace MeltPoolDG::Flow::EOS
     }
 
     /**
-     * Convert the given primitive variables (pressure, velocity, temperature) to conservative
+     * @brief Convert the given primitive variables (pressure, velocity, temperature) to conservative
      * variables (rho, momentum, total energy).
      *
      * @param u_prim Current values in primitive variables formulation.
@@ -130,7 +128,7 @@ namespace MeltPoolDG::Flow::EOS
         const CompressibleFlowTypes::ConservedVariablesType<dim, number> &u_prim) = 0;
 
     /**
-     * Calculate the inner energy from a given pressure.
+     * @brief Calculate the inner energy from a given pressure.
      *
      * @param pressure Given pressure value.
      * @param density Given density value.

@@ -3,7 +3,7 @@
 namespace MeltPoolDG::Flow
 {
   /**
-   * Base class for the shear stress computation of an incompressible fluid material
+   * @brief Base class for the shear stress computation of an incompressible fluid material
    *
    * It is assumed that the stress computation has the form
    *
@@ -24,9 +24,11 @@ namespace MeltPoolDG::Flow
   {
   public:
     /**
-     * Reinit function to be used to compute quadrature point variables. The gradient of
-     * the velocity vector @p velocity_gradient, the current cell index @p cell_idx and
-     * the current quadrature point index @p quad_idx are known.
+     * @brief Reinit function to be used to compute quadrature point variables.
+     *
+     * @param velocity_gradient Gradient of the velocity vector.
+     * @param cell_idx Current cell index.
+     * @param quad_idx Current quadrature point index.
      */
     virtual void
     reinit(const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> &velocity_gradient,
@@ -34,14 +36,15 @@ namespace MeltPoolDG::Flow
            const unsigned int                                             quad_idx) = 0;
 
     /**
-     * Return the deviatoric stress τ for the given velocity gradient ∇u, set by reinit().
-     *  τ(∇u)
+     * @brief Compute the deviatoric stress τ for the given velocity gradient ∇u, set by reinit().
+     *
+     * @return Deviatoric stress tensor τ(∇u).
      */
     virtual dealii::Tensor<2, dim, dealii::VectorizedArray<number>>
     get_tau() = 0;
 
     /**
-     * Return the material tangent of the deviatoric stress and perform a vmult with the
+     * @brief Compute the material tangent of the deviatoric stress and perform a vmult with the
      * gradient of the nodal DoF values δu, set by reinit(),
      *
      *    ∂ τ
@@ -53,12 +56,15 @@ namespace MeltPoolDG::Flow
      *
      * with the shape functions N.
      *
+     * @return Material tangent of the deviatoric stress tensor multiplied with the gradient of the
+     * nodal DoF values δu.
      */
     virtual dealii::Tensor<2, dim, dealii::VectorizedArray<number>>
     get_vmult_d_tau_d_grad_vel() = 0;
 
     /**
-     * Update ghost values of the vectors, to be used to compute the deviatoric stress.
+     * @brief Update ghost values of the vectors, to be used to compute the deviatoric stress.
+     *
      * Default: do nothing
      */
     virtual void
@@ -68,7 +74,8 @@ namespace MeltPoolDG::Flow
     }
 
     /**
-     * Zero out ghost values of the vectors, to be used to compute the deviatoric stress.
+     * @brief Zero out ghost values of the vectors, to be used to compute the deviatoric stress.
+     *
      * Default: do nothing
      */
     virtual void

@@ -25,7 +25,7 @@ namespace MeltPoolDG::Flow
     , flow_vel_hanging_nodes_dof_idx(flow_vel_hanging_nodes_dof_idx)
     , flow_quad_idx(flow_quad_idx)
   {
-    AssertThrow(mushy_zone_morphology == 0.0 || avoid_div_zero_constant > 0.0,
+    AssertThrow(mushy_zone_morphology == 0.0 or avoid_div_zero_constant > 0.0,
                 dealii::ExcMessage(
                   "When using the Darcy damping force, the parameter \"mp solid "
                   "darcy damping avoid div zero constant\" must be greater than zero! Abort.."));
@@ -73,8 +73,6 @@ namespace MeltPoolDG::Flow
       velocity_vec,
       zero_out);
   }
-
-
 
   template <int dim, typename number>
   void
@@ -155,8 +153,6 @@ namespace MeltPoolDG::Flow
       dummy,
       ls_as_heaviside);
   }
-
-
 
   template <int dim, typename number>
   dealii::VectorizedArray<number>

@@ -15,16 +15,29 @@
 
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {
+  /**
+   * @brief Inflow field function.
+   */
   template <int dim, typename number>
   class SteadyInflowField : public dealii::Function<dim, number>
   {
   public:
+    /**
+     * @brief Constructor.
+     *
+     * @throw dealii::ExcNotImplemented Thrown if `dim` is not 2 or 3.
+     */
     explicit SteadyInflowField()
       : dealii::Function<dim, number>(dim + 2)
     {
       Assert(dim == 2 or dim == 3, dealii::ExcNotImplemented());
     }
 
+    /**
+     * @brief Computes the current function value for a specific @p component.
+     *
+     * @param component Component for which the function value should be returned.
+     */
     number
     value(const dealii::Point<dim, number> &, const unsigned int component) const final
     {
@@ -39,14 +52,28 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
   };
 
+  /**
+   * @brief A specific compressible flow simulation setup for a flow which contains an unfitted
+   * inflow boundary using cutDG.
+   */
   template <int dim, typename number>
   class SimulationCutUnfittedInflow final : public Flow::CompressibleFlowCase<dim, number>
   {
   public:
-    SimulationCutUnfittedInflow(std::string parameter_file, const MPI_Comm mpi_communicator)
+    /**
+     * @brief Constructor.
+     *
+     * @param parameter_file Parameter file that contains simulation input settings.
+     * @param mpi_communicator The MPI communicator used to run the simulation in parallel.
+     */
+    explicit SimulationCutUnfittedInflow(std::string    parameter_file,
+                                         const MPI_Comm mpi_communicator)
       : Flow::CompressibleFlowCase<dim, number>(parameter_file, mpi_communicator)
     {}
 
+    /**
+     * @brief Creates the spatial discretization for the simulation setup.
+     */
     void
     create_spatial_discretization() override
     {
@@ -77,6 +104,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 
+    /**
+     * @brief Sets the boundary conditions.
+     */
     void
     set_boundary_conditions() override
     {
@@ -92,6 +122,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
                                       "compressible_flow");
     }
 
+    /**
+     * @brief Sets the field functions for the simulation.
+     */
     void
     set_field_conditions() override
     {
@@ -104,7 +137,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       for (unsigned int d = 1; d < dim; ++d)
         center[d] = 0.004;
 
-      dealii::Tensor<1, dim> normal;
+      dealii::Tensor<1, dim, number> normal;
       normal[0] = 1.;
 
       const auto level_set =
@@ -115,6 +148,11 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       this->attach_field_function(initial_condition, "unfitted_inflow", "compressible_flow");
     }
 
+    /**
+     * @brief Performs post-processing by evaluating and outputting error norms.
+     *
+     * @param generic_data_out A generic utility for managing simulation output data.
+     */
     void
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const override
     {
@@ -123,9 +161,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     }
 
   private:
-    /**
-     * Enumeration for the boundary id's.
-     */
+    /// Enumeration for the boundary id's.
     enum BoundaryID
     {
       subsonic_outflow_with_fixed_energy,
@@ -133,7 +169,9 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     };
 
     /**
-     * Set boundary id's for fitted boundaries
+     * @brief Set boundary id's for fitted boundaries.
+     *
+     * @param triangulation Triangulation object.
      */
     void
     set_fitted_boundary_id(const auto &triangulation) const

@@ -1,8 +1,3 @@
-/**
- * @brief A class that provides all relevant material parameters of the considered fluid phase, as
- * well as thermodynamic computations related to the specific equation of state.
- */
-
 #pragma once
 
 #include <meltpooldg/flow/compressible_flow_eos_utils_base.hpp>
@@ -15,12 +10,24 @@
 
 namespace MeltPoolDG::Flow
 {
-  template <unsigned int dim, typename number>
+  /**
+   * @brief A class which provides all relevant material properties for a specific phase.
+   *
+   * A class that provides all relevant material parameters of the considered fluid phase, as
+   * well as thermodynamic computations related to the specific equation of state.
+   */
+  template <int dim, typename number>
   class CompressibleFlowMaterial
   {
   public:
+    /// Material data object providing all relevant material parameters
+    const CompressibleFluidMaterialPhaseData<number> &data;
+
+    /// Class specific to an equation of state for thermodynamics-related computations
+    std::shared_ptr<EOS::EquationOfStateUtils<dim, number>> eos_utils;
+
     /**
-     * Constructor.
+     * @brief Constructor.
      *
      * @param material_data_in Reference to a material data object providing all relevant material
      * parameters.
@@ -32,20 +39,16 @@ namespace MeltPoolDG::Flow
       eos_utils = make_eos_utils(data);
     }
 
-    /// material data object providing all relevant material parameters
-    const CompressibleFluidMaterialPhaseData<number> &data;
-
-    /// class specific to an equation of state for thermodynamics-related computations
-    std::shared_ptr<EOS::EquationOfStateUtils<dim, number>> eos_utils;
-
   private:
     /**
+     * @brief Set up helper class for thermodynamic relations.
+     *
      * Sets the pointer to the correct helper class for thermodynamic-related computations according
      * to the defined type of equation of state.
      *
      * @param material_data Material data struct providing all relevant material parameters.
      *
-     * @return Currently, three equations of state are implemented: ideal gas, stiffened gas,
+     * @note Currently, three equations of state are implemented: ideal gas, stiffened gas,
      * Noble-Abel stiffened gas.
      */
     std::shared_ptr<EOS::EquationOfStateUtils<dim, number>>
