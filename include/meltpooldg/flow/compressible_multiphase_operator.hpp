@@ -57,10 +57,10 @@ namespace MeltPoolDG::Multiphase
     /**
      * @brief Local applier for the cell integrals in the right-hand side evaluation.
      *
-     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
-     * @param dst [out] Destination vector, in which the result is written.
-     * @param src [in] Source vector for the operator evaluation.
-     * @param cell_range [in] Considered cell range.
+     * @param matrix_free Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst Destination vector, in which the result is written.
+     * @param src Source vector for the operator evaluation.
+     * @param cell_range Considered cell range.
      */
     void
     local_apply_cell_rhs(const dealii::MatrixFree<dim, number>       &matrix_free,
@@ -71,10 +71,10 @@ namespace MeltPoolDG::Multiphase
     /**
      * @brief Local applier for the face integrals in the right-hand side evaluation.
      *
-     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
-     * @param dst [out] Destination vector, in which the result is written.
-     * @param src [in] Source vector for the operator evaluation.
-     * @param face_range [in] Considered face range.
+     * @param matrix_free Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst Destination vector, in which the result is written.
+     * @param src Source vector for the operator evaluation.
+     * @param face_range Considered face range.
      */
     void
     local_apply_face_rhs(const dealii::MatrixFree<dim, number>       &matrix_free,
@@ -85,10 +85,10 @@ namespace MeltPoolDG::Multiphase
     /**
      * @brief Local applier for the boundary face integral in the right-hand side evaluation.
      *
-     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
-     * @param dst [out] Destination vector, in which the result is written.
-     * @param src [in] Source vector for the operator evaluation.
-     * @param face_range [in] Considered face range.
+     * @param matrix_free Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst Destination vector, in which the result is written.
+     * @param src Source vector for the operator evaluation.
+     * @param face_range Considered face range.
      */
     void
     local_apply_boundary_face_rhs(const dealii::MatrixFree<dim, number>       &matrix_free,
@@ -99,10 +99,10 @@ namespace MeltPoolDG::Multiphase
     /**
      * @brief Local applier for the cell integrals in the left-hand side matrix-vector product evaluation.
      *
-     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
-     * @param dst [out] Destination vector, in which the result is written.
-     * @param src [in] Source vector for the operator evaluation.
-     * @param cell_range [in] Considered cell range.
+     * @param matrix_free Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst Destination vector, in which the result is written.
+     * @param src Source vector for the operator evaluation.
+     * @param cell_range Considered cell range.
      */
     void
     local_apply_cell_lhs(const dealii::MatrixFree<dim, number>       &matrix_free,
@@ -113,10 +113,10 @@ namespace MeltPoolDG::Multiphase
     /**
      * @brief Local applier for the face integrals in the left-hand side matrix-vector product evaluation.
      *
-     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
-     * @param dst [out] Destination vector, in which the result is written.
-     * @param src [in] Source vector for the operator evaluation.
-     * @param face_range [in] Considered face range.
+     * @param matrix_free Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst Destination vector, in which the result is written.
+     * @param src Source vector for the operator evaluation.
+     * @param face_range Considered face range.
      */
     void
     local_apply_face_lhs(const dealii::MatrixFree<dim, number>       &matrix_free,
@@ -128,10 +128,10 @@ namespace MeltPoolDG::Multiphase
      * @brief Local applier for the boundary face integrals in the left-hand side matrix-vector product
      * evaluation.
      *
-     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
-     * @param dst [out] Destination vector, in which the result is written.
-     * @param src [in] Source vector for the operator evaluation.
-     * @param face_range [in] Considered face range.
+     * @param matrix_free Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst Destination vector, in which the result is written.
+     * @param src Source vector for the operator evaluation.
+     * @param face_range Considered face range.
      */
     void
     local_apply_boundary_face_lhs(const dealii::MatrixFree<dim, number>       &matrix_free,
@@ -142,10 +142,10 @@ namespace MeltPoolDG::Multiphase
     /**
      * @brief Function for the matrix-free right-hand side vector evaluation.
      *
-     * @param time [in] Current simulation time.
-     * @param time_step [in] Current time step size.
-     * @param dst [out] Vector where the computed right-hand side rhs(src) is stored.
-     * @param src [in] The solution vector at the current time.
+     * @param time Current simulation time.
+     * @param time_step Current time step size.
+     * @param dst Vector where the computed right-hand side rhs(src) is stored.
+     * @param src The solution vector at the current time.
      */
     void
     create_rhs(const number     &time,
@@ -156,8 +156,8 @@ namespace MeltPoolDG::Multiphase
     /**
      * @brief Function for the matrix-free matrix-vector product evaluation.
      *
-     * @param dst [out] Vector where the computed evaluated vector-matrix product is stored.
-     * @param src [in] The solution vector at the current time.
+     * @param dst Vector where the computed evaluated vector-matrix product is stored.
+     * @param src The solution vector at the current time.
      */
     void
     vmult(VectorType &dst, const VectorType &src) const;

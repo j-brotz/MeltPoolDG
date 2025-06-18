@@ -21,7 +21,7 @@
 #  include <meltpooldg/core/scratch_data.hpp>
 #  include <meltpooldg/core/simulation_base.hpp>
 #  include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
-#  include <meltpooldg/flow/flow_base.hpp>
+#  include <meltpooldg/flow/incompressible_flow_operation_base.hpp>
 #  include <meltpooldg/phase_change/evaporation_data.hpp>
 #  include <meltpooldg/post_processing/generic_data_out.hpp>
 #  include <meltpooldg/time_integration/time_iterator.hpp>
@@ -44,11 +44,12 @@ namespace MeltPoolDG::Flow
    * Navier-Stokes solver. It enables incompressible fluid flow simulations in a multiphysics
    * context of melt pool modeling with evaporation and phase change phenomena.
    *
-   * `AdafloWrapper` derives from `FlowBase` and provides all the necessary interfaces to handle
-   * velocity and pressure fields, solver initialization, time stepping, and postprocessing.
+   * `AdafloWrapper` derives from `IncompressibleFlowOperationBase` and provides all the necessary
+   * interfaces to handle velocity and pressure fields, solver initialization, time stepping, and
+   * postprocessing.
    */
   template <int dim, typename number>
-  class AdafloWrapper : public FlowBase<dim, number>
+  class AdafloWrapper : public IncompressibleFlowOperationBase<dim, number>
   {
   public:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -414,8 +415,8 @@ namespace MeltPoolDG::Flow
      * This function appends pointers to the current, previous, and second-previous velocity
      * solution vectors to the provided vector.
      *
-     * @param vectors [in/out] A vector of pointers to distributed velocity vectors.
-     *                         The function will append three vectors: current, old, and old-old.
+     * @param vectors A vector of pointers to distributed velocity vectors.
+     *                The function will append three vectors: current, old, and old-old.
      */
     void
     attach_vectors_u(
@@ -427,8 +428,8 @@ namespace MeltPoolDG::Flow
      * This function appends pointers to the current, previous, and second-previous pressure
      * solution vectors to the provided vector.
      *
-     * @param vectors [in/out] A vector of pointers to distributed pressure vectors.
-     *                         The function will append three vectors: current, old, and old-old.
+     * @param vectors A vector of pointers to distributed pressure vectors.
+     *                he function will append three vectors: current, old, and old-old.
      */
     void
     attach_vectors_p(
@@ -465,7 +466,7 @@ namespace MeltPoolDG::Flow
      * - Raw and projected mass balance source terms
      * - Density and viscosity fields (if requested and available)
      *
-     * @param data_out [in/out] Data output object to which vectors will be attached.
+     * @param data_out Data output object to which vectors will be attached.
      */
     void
     attach_output_vectors(GenericDataOut<dim, number> &data_out) const override;
@@ -483,7 +484,7 @@ namespace MeltPoolDG::Flow
      * All fields are forcibly added to the output regardless of `is_requested()`
      * to aid in debugging and post-processing.
      *
-     * @param data_out [in/out] Data output object to which diagnostic vectors will be attached.
+     * @param data_out Data output object to which diagnostic vectors will be attached.
      */
     void
     attach_output_vectors_failed_step(GenericDataOut<dim, number> &data_out) const override;

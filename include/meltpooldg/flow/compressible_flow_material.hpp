@@ -41,7 +41,7 @@ namespace MeltPoolDG::Flow
 
   private:
     /**
-     * @ Set up helper class for thermodynamic relations.
+     * @brief Set up helper class for thermodynamic relations.
      *
      * Sets the pointer to the correct helper class for thermodynamic-related computations according
      * to the defined type of equation of state.

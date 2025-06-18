@@ -71,10 +71,10 @@ namespace MeltPoolDG::Flow
     /**
      * @brief Local applier for the cell integrals in the right-hand side evaluation.
      *
-     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
-     * @param dst [out] Destination vector, in which the result is written.
-     * @param src [in] Source vector for the operator evaluation.
-     * @param cell_range [in] Considered cell range.
+     * @param matrix_free Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst Destination vector, in which the result is written.
+     * @param src Source vector for the operator evaluation.
+     * @param cell_range Considered cell range.
      */
     void
     local_apply_cell_rhs(const dealii::MatrixFree<dim, number>       &matrix_free,
@@ -85,10 +85,10 @@ namespace MeltPoolDG::Flow
     /**
      * @brief Local applier for the face integrals in the right-hand side evaluation.
      *
-     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
-     * @param dst [out] Destination vector, in which the result is written.
-     * @param src [in] Source vector for the operator evaluation.
-     * @param face_range [in] Considered face range.
+     * @param matrix_free Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst Destination vector, in which the result is written.
+     * @param src Source vector for the operator evaluation.
+     * @param face_range Considered face range.
      */
     void
     local_apply_face_rhs(const dealii::MatrixFree<dim, number>       &matrix_free,
@@ -99,10 +99,10 @@ namespace MeltPoolDG::Flow
     /**
      * @brief Local applier for the boundary face integral in the right-hand side evaluation.
      *
-     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
-     * @param dst [out] Destination vector, in which the result is written.
-     * @param src [in] Source vector for the operator evaluation.
-     * @param face_range [in] Considered face range.
+     * @param matrix_free Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst Destination vector, in which the result is written.
+     * @param src Source vector for the operator evaluation.
+     * @param face_range Considered face range.
      */
     void
     local_apply_boundary_face_rhs(const dealii::MatrixFree<dim, number>       &matrix_free,
@@ -113,10 +113,10 @@ namespace MeltPoolDG::Flow
     /**
      * @brief Local applier for the cell integrals in the left-hand side matrix-vector product evaluation.
      *
-     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
-     * @param dst [out] Destination vector, in which the result is written.
-     * @param src [in] Source vector for the operator evaluation.
-     * @param cell_range [in] Considered cell range.
+     * @param matrix_free Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst Destination vector, in which the result is written.
+     * @param src Source vector for the operator evaluation.
+     * @param cell_range Considered cell range.
      */
     void
     local_apply_cell_lhs(const dealii::MatrixFree<dim, number>       &matrix_free,
@@ -127,10 +127,10 @@ namespace MeltPoolDG::Flow
     /**
      * @brief Local applier for the face integrals in the left-hand side matrix-vector product evaluation.
      *
-     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
-     * @param dst [out] Destination vector, in which the result is written.
-     * @param src [in] Source vector for the operator evaluation.
-     * @param face_range [in] Considered face range.
+     * @param matrix_free Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst Destination vector, in which the result is written.
+     * @param src Source vector for the operator evaluation.
+     * @param face_range Considered face range.
      */
     void
     local_apply_face_lhs(const dealii::MatrixFree<dim, number>       &matrix_free,
@@ -142,10 +142,10 @@ namespace MeltPoolDG::Flow
      * @brief Local applier for the boundary face integrals in the left-hand side matrix-vector product
      * evaluation.
      *
-     * @param matrix_free [in] Matrix-free object which contains all relevant data for matrix free evaluation.
-     * @param dst [out] Destination vector, in which the result is written.
-     * @param src [in] Source vector for the operator evaluation.
-     * @param face_range [in] Considered face range.
+     * @param matrix_free Matrix-free object which contains all relevant data for matrix free evaluation.
+     * @param dst Destination vector, in which the result is written.
+     * @param src Source vector for the operator evaluation.
+     * @param face_range Considered face range.
      */
     void
     local_apply_boundary_face_lhs(const dealii::MatrixFree<dim, number>       &matrix_free,

@@ -6,13 +6,13 @@
 namespace MeltPoolDG::Flow
 {
   /**
-   * @brief Abstract base class for flow solvers.
+   * @brief Abstract base class for incompressible flow solvers.
    *
-   * This interface defines the common operations and data access patterns required by flow solvers
-   * in MeltPoolDG.
+   * This interface defines the common operations and data access patterns required by
+   * incompressible flow solvers in MeltPoolDG.
    */
   template <int dim, typename number>
-  class FlowBase
+  class IncompressibleFlowOperationBase
   {
   public:
     /**

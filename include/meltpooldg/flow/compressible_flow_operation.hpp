@@ -371,7 +371,7 @@ namespace MeltPoolDG::Flow
       std::unique_ptr<OperationType> operation;
     };
 
-    /// dealii::Pointer to the actual compressible flow operation object to which the function calls
+    /// Pointer to the actual compressible flow operation object to which the function calls
     /// are forwarded.
     std::unique_ptr<OperationConcept> operation_pimpl;
   };
