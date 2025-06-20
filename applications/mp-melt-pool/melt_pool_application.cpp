@@ -1120,21 +1120,15 @@ namespace MeltPoolDG
               *scratch_data,
               flow_operation->get_dof_handler_idx_velocity(),
               flow_operation->get_quad_idx_velocity());
+
+            if (param.heat.operator_type == Heat::TwoPhaseOperatorType::cut and
+                not param.heat.cut.two_phase)
+              compute_interface_temperature = true;
           }
       }
 
     // for the heat cut operation, the level set must be initialized before reinit can be called
     set_initial_condition_level_set();
-
-    // reinit the heat operation before its initial condition is set
-    if (heat_operation)
-      heat_operation->reinit();
-
-    set_initial_condition_heat_transfer();
-
-    set_initial_condition_flow();
-
-    set_initial_condition_evaporation();
 
     // setup interface temperature projection if needed
     if (compute_interface_temperature)
@@ -1145,6 +1139,19 @@ namespace MeltPoolDG
           level_set_operation->get_normal_vector(),
           param.ls.nearest_point);
       }
+
+    // reinit the heat operation before its initial condition is set
+    if (heat_operation)
+      heat_operation->reinit();
+
+    set_initial_condition_heat_transfer();
+
+    if (compute_interface_temperature)
+      heat_operation->compute_interface_temperature();
+
+    set_initial_condition_flow();
+
+    set_initial_condition_evaporation();
 
     // initialize postprocessor
     post_processor =
@@ -1472,11 +1479,23 @@ namespace MeltPoolDG
   {
     // compute damping coefficients at the quadrature points of the fluid solver
     if (darcy_operation)
-      darcy_operation->set_darcy_damping_at_q(*material,
-                                              level_set_operation->get_level_set_as_heaviside(),
-                                              heat_operation->get_temperature(),
-                                              ls_hanging_nodes_dof_idx,
-                                              heat_dof_idx);
+      {
+        if (simulation_case->parameters.heat.operator_type == Heat::TwoPhaseOperatorType::cut and
+            not simulation_case->parameters.heat.cut.two_phase)
+          darcy_operation->set_darcy_damping_at_q(*material,
+                                                  level_set_operation->get_level_set_as_heaviside(),
+                                                  heat_operation->get_temperature(),
+                                                  &heat_operation->get_interface_temperature(),
+                                                  ls_hanging_nodes_dof_idx,
+                                                  heat_dof_idx,
+                                                  heat_continuous_no_bc_dof_idx);
+        else
+          darcy_operation->set_darcy_damping_at_q(*material,
+                                                  level_set_operation->get_level_set_as_heaviside(),
+                                                  heat_operation->get_temperature(),
+                                                  ls_hanging_nodes_dof_idx,
+                                                  heat_dof_idx);
+      }
 
     // compute density and viscosity at the quadrature points.
 
@@ -1554,8 +1573,8 @@ namespace MeltPoolDG
                 flow_operation->get_viscosity(cell, q) = material_values.dynamic_viscosity;
 
                 // set damping coefficient of the fluid solver
-                if (darcy_operation and (parameters.flow.darcy_damping.formulation ==
-                                         DarcyDampingFormulation::implicit_formulation))
+                if (darcy_operation and parameters.flow.darcy_damping.formulation ==
+                                          DarcyDampingFormulation::implicit_formulation)
                   flow_operation->get_damping(cell, q) = darcy_operation->get_damping(cell, q);
               }
           }
