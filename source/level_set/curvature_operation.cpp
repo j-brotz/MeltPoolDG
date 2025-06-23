@@ -15,7 +15,7 @@ namespace MeltPoolDG::LevelSet
     const ScratchData<dim, dim, number> &scratch_data_in,
     const CurvatureData<number>         &curvature_data,
     const NormalVectorData<number>      &normal_vec_data,
-    const VectorType                    &solution_levelset,
+    const VectorType                    &solution_level_set_in,
     const unsigned int                   curv_dof_idx_in,
     const unsigned int                   curv_quad_idx_in,
     const std::array<unsigned int, dim> &normal_dof_indices_per_block_in,
@@ -23,14 +23,14 @@ namespace MeltPoolDG::LevelSet
     const unsigned int                   ls_dof_idx_in)
     : scratch_data(scratch_data_in)
     , curvature_data(curvature_data)
-    , solution_levelset(solution_levelset)
+    , solution_level_set(solution_level_set_in)
     , curv_dof_idx(curv_dof_idx_in)
     , curv_quad_idx(curv_quad_idx_in)
     , normal_dof_idx(normal_dof_indices_per_block_in[0])
     , ls_dof_idx(ls_dof_idx_in)
     , normal_vector_operation(scratch_data,
                               normal_vec_data,
-                              solution_levelset,
+                              solution_level_set_in,
                               normal_dof_indices_per_block_in,
                               normal_no_bc_dof_idx_in,
                               curv_quad_idx,
@@ -38,7 +38,7 @@ namespace MeltPoolDG::LevelSet
     , solution_history(curvature_data.predictor.n_old_solution_vectors)
   {
     if (!curvature_operator)
-      create_operator(solution_levelset);
+      create_operator(solution_level_set);
   }
 
   template <int dim, typename number>
@@ -64,9 +64,9 @@ namespace MeltPoolDG::LevelSet
     if (!curvature_data.enable)
       return;
 
-    const bool update_ghosts = !solution_levelset.has_ghost_elements();
+    const bool update_ghosts = !solution_level_set.has_ghost_elements();
     if (update_ghosts)
-      solution_levelset.update_ghost_values();
+      solution_level_set.update_ghost_values();
 
     const bool normal_update_ghosts =
       !normal_vector_operation.get_solution_normal_vector().has_ghost_elements();
@@ -115,7 +115,7 @@ namespace MeltPoolDG::LevelSet
       }
 
     if (update_ghosts)
-      solution_levelset.zero_out_ghost_values();
+      solution_level_set.zero_out_ghost_values();
 
     if (normal_update_ghosts)
       normal_vector_operation.get_solution_normal_vector().zero_out_ghost_values();
@@ -221,7 +221,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  CurvatureOperation<dim, number>::create_operator(const VectorType &solution_levelset)
+  CurvatureOperation<dim, number>::create_operator(const VectorType &solution_level_set)
   {
     curvature_operator = std::make_shared<CurvatureOperator<dim, number>>(scratch_data,
                                                                           curvature_data,
@@ -229,7 +229,7 @@ namespace MeltPoolDG::LevelSet
                                                                           curv_quad_idx,
                                                                           normal_dof_idx,
                                                                           ls_dof_idx,
-                                                                          &solution_levelset);
+                                                                          &solution_level_set);
 
 
     preconditioner = make_preconditioner<dim, number, CurvatureOperator<dim, number>, VectorType>(

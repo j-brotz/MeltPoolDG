@@ -117,6 +117,7 @@ namespace MeltPoolDG::LevelSet
     const VectorType                                              &advection_velocity;
     const AdvectionDiffusionData<number>                          &data;
     const unsigned int                                             velocity_dof_idx;
+    const unsigned int                                             advec_diff_dof_idx;
     const unsigned int                                             advec_diff_quad_idx;
     number                                                         theta;
     mutable dealii::AlignedVector<dealii::VectorizedArray<number>> stab_param;

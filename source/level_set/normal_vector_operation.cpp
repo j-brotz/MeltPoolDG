@@ -212,7 +212,6 @@ namespace MeltPoolDG::LevelSet
         normal_vector_data.linear_solver.do_matrix_free);
   }
 
-
   template class NormalVectorOperation<1, double>;
   template class NormalVectorOperation<2, double>;
   template class NormalVectorOperation<3, double>;

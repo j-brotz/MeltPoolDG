@@ -36,7 +36,7 @@ namespace MeltPoolDG::LevelSet
     CurvatureOperation(const ScratchData<dim, dim, number> &scratch_data_in,
                        const CurvatureData<number>         &curvature_data,
                        const NormalVectorData<number>      &normal_vec_data,
-                       const VectorType                    &solution_levelset,
+                       const VectorType                    &solution_level_set,
                        const unsigned int                   curv_dof_idx_in,
                        const unsigned int                   curv_quad_idx_in,
                        const std::array<unsigned int, dim> &normal_dof_indices_per_block_in,
@@ -70,13 +70,13 @@ namespace MeltPoolDG::LevelSet
 
   private:
     void
-    create_operator(const VectorType &solution_levelset);
+    create_operator(const VectorType &solution_level_set);
 
     const ScratchData<dim, dim, number> &scratch_data;
 
     const CurvatureData<number> curvature_data;
 
-    const VectorType &solution_levelset;
+    const VectorType &solution_level_set;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
      *  ScratchData<dim,dim,number> object is selected. This is important when
