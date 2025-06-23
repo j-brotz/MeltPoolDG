@@ -56,12 +56,6 @@ namespace MeltPoolDG::Utilities::MatrixFree
     DoFVectorType temp_rhs;
     scratch_data.initialize_dof_vector(temp_rhs, dof_no_bc_idx);
 
-    // This copy is necessary since we observed problems with incompatible
-    // communication pattern when using periodic BC.
-    SrcRhsVectorType temp_src;
-    scratch_data.initialize_dof_vector(temp_src, dof_no_bc_idx);
-    temp_src = src;
-
     DoFVectorType bc_values;
     scratch_data.initialize_dof_vector(bc_values, dof_no_bc_idx);
 
@@ -81,7 +75,7 @@ namespace MeltPoolDG::Utilities::MatrixFree
 
     // Modify right-hand side
     temp_rhs *= -1.0;
-    operator_base.create_rhs(temp_rhs, temp_src);
+    operator_base.create_rhs(temp_rhs, src);
     /*
      * Zero-out constrained values
      */
@@ -153,12 +147,6 @@ namespace MeltPoolDG::Utilities::MatrixFree
     DoFVectorType temp_rhs;
     scratch_data.initialize_dof_vector(temp_rhs, dof_no_bc_idx);
 
-    // This copy is necessary since we observed problems with incompatible
-    // communication pattern when using periodic BC.
-    SrcRhsVectorType temp_src;
-    scratch_data.initialize_dof_vector(temp_src, dof_no_bc_idx);
-    temp_src = src;
-
     DoFVectorType bc_values;
     scratch_data.initialize_dof_vector(bc_values, dof_no_bc_idx);
 
@@ -184,7 +172,7 @@ namespace MeltPoolDG::Utilities::MatrixFree
 
     // Modify right-hand side
     temp_rhs *= -1.0;
-    operator_base.create_rhs(temp_rhs, temp_src);
+    operator_base.create_rhs(temp_rhs, src);
     /*
      * Zero-out constrained values
      */

@@ -124,7 +124,7 @@ namespace MeltPoolDG::LevelSet
                                      initial_field_function,
                                      solution_level_set);
 
-    scratch_data.get_constraint(reinit_dof_idx).distribute(solution_level_set);
+    scratch_data.get_constraint(ls_dof_idx).distribute(solution_level_set);
 
 
     /*
