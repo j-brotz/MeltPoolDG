@@ -77,14 +77,35 @@ namespace MeltPoolDG::Flow
      * @param ls_as_heaviside Indicator function between gas and heavy phase.
      * @param temperature DoF vector of the temperature field.
      * @param ls_hanging_nodes_dof_idx DoF index of the indicator field inside ScratchData.
-     * @param temp_dof_idx DoF index of the temperature field.
+     * @param heat_dof_idx DoF index of the temperature field.
      */
     void
     set_darcy_damping_at_q(const Material<number> &material,
                            const VectorType       &ls_as_heaviside,
                            const VectorType       &temperature,
                            const unsigned int      ls_hanging_nodes_dof_idx,
-                           const unsigned int      temp_dof_idx);
+                           const unsigned int      heat_dof_idx);
+    /**
+     * Same as above, but for the case that the @param temperature Dof vector is from a one-phase
+     * CutFEM operation. In that case, we use the projected @param interface_temperature to compute
+     * the Darcy damping outside the liquid domain.
+     *
+     * @param material Material object holding the phase parameters.
+     * @param ls_as_heaviside Indicator function between gas and heavy phase.
+     * @param temperature DoF vector of the CutFEM temperature field.
+     * @param interface_temperature DoF vector of the projected interface temperature.
+     * @param ls_hanging_nodes_dof_idx DoF index of the indicator field inside ScratchData.
+     * @param heat_cut_dof_idx DoF index of the CutFEM temperature field.
+     * @param heat_cont_no_bc_dof_idx DoF index of the projected interface temperature field.
+     */
+    void
+    set_darcy_damping_at_q(const Material<number> &material,
+                           const VectorType       &ls_as_heaviside,
+                           const VectorType       &temperature,
+                           const VectorType       *interface_temperature,
+                           const unsigned int      ls_hanging_nodes_dof_idx,
+                           const unsigned int      heat_cut_dof_idx,
+                           const unsigned int      heat_cont_no_bc_dof_idx);
 
     /**
      * @brief Assemble the Darcy damping force contribution into the right-hand side (RHS) vector @p force_rhs.

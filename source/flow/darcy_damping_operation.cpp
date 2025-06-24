@@ -1,15 +1,19 @@
+#include <meltpooldg/flow/darcy_damping_operation.hpp>
+//
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/numbers.h>
 
 #include <deal.II/grid/filtered_iterator.h>
 
 #include <meltpooldg/core/material.templates.hpp>
 #include <meltpooldg/cut/util.hpp>
-#include <meltpooldg/flow/darcy_damping_operation.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
+#include <algorithm>
 #include <limits>
 #include <memory>
+#include <vector>
 
 namespace MeltPoolDG::Flow
 {
@@ -81,22 +85,58 @@ namespace MeltPoolDG::Flow
     const VectorType       &ls_as_heaviside,
     const VectorType       &temperature,
     const unsigned int      ls_hanging_nodes_dof_idx,
-    const unsigned int      temp_dof_idx)
+    const unsigned int      heat_dof_idx)
   {
+    set_darcy_damping_at_q(material,
+                           ls_as_heaviside,
+                           temperature,
+                           nullptr,
+                           ls_hanging_nodes_dof_idx,
+                           heat_dof_idx,
+                           dealii::numbers::invalid_dof_index);
+  }
+
+  template <int dim, typename number>
+  void
+  DarcyDampingOperation<dim, number>::set_darcy_damping_at_q(
+    const Material<number> &material,
+    const VectorType       &ls_as_heaviside,
+    const VectorType       &temperature,
+    const VectorType       *interface_temperature,
+    const unsigned int      ls_hanging_nodes_dof_idx,
+    const unsigned int      heat_dof_idx,
+    const unsigned int      heat_cont_no_bc_dof_idx)
+  {
+    const auto &matrix_free = scratch_data.get_matrix_free();
+
     // check if damping_at_q has its correct size
     AssertDimension(damping_at_q.size(),
-                    scratch_data.get_matrix_free().n_cell_batches() *
-                      scratch_data.get_n_q_points(flow_quad_idx));
+                    matrix_free.n_cell_batches() * scratch_data.get_n_q_points(flow_quad_idx));
 
-    const CutUtil::CutPhaseType cut_type = scratch_data.get_cut_type(temp_dof_idx);
+    const CutUtil::CutPhaseType cut_type = scratch_data.get_cut_type(heat_dof_idx);
+
+    if (cut_type == CutUtil::CutPhaseType::one_phase_cut)
+      Assert(interface_temperature != nullptr and
+               heat_cont_no_bc_dof_idx != dealii::numbers::invalid_dof_index,
+             dealii::ExcInternalError());
+
+    FECellIntegrator<dim, 1, number>                  heaviside_eval(matrix_free,
+                                                    ls_hanging_nodes_dof_idx,
+                                                    flow_quad_idx);
+    std::unique_ptr<FECellIntegrator<dim, 1, number>> interface_temperature_eval;
+    if (interface_temperature)
+      {
+        if (not interface_temperature->has_ghost_elements())
+          interface_temperature->update_ghost_values();
+        interface_temperature_eval =
+          std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
+                                                             heat_cont_no_bc_dof_idx,
+                                                             flow_quad_idx);
+      }
 
     number dummy;
-    scratch_data.get_matrix_free().template cell_loop<number, VectorType>(
+    matrix_free.template cell_loop<number, VectorType>(
       [&](const auto &matrix_free, auto &, const auto &ls_as_heaviside, auto cell_range) {
-        FECellIntegrator<dim, 1, number> ls_values(matrix_free,
-                                                   ls_hanging_nodes_dof_idx,
-                                                   flow_quad_idx);
-
         const unsigned int cell_category = cut_type == CutUtil::CutPhaseType::not_cut ?
                                              0 :
                                              matrix_free.get_cell_range_category(cell_range);
@@ -105,13 +145,13 @@ namespace MeltPoolDG::Flow
         if (material.has_dependency(Material<number>::FieldType::temperature))
           {
             if (cut_type == CutUtil::CutPhaseType::not_cut)
-              temperature_eval.emplace_back(matrix_free, temp_dof_idx, flow_quad_idx);
+              temperature_eval.emplace_back(matrix_free, heat_dof_idx, flow_quad_idx);
             else // temperature is cut
               {
                 if (cell_category == CutUtil::CellCategory::liquid or
                     cell_category == CutUtil::CellCategory::intersected)
                   temperature_eval.emplace_back(matrix_free,
-                                                temp_dof_idx,
+                                                heat_dof_idx,
                                                 flow_quad_idx,
                                                 0 /*selected component*/,
                                                 cell_category /*active_fe_index*/);
@@ -119,7 +159,7 @@ namespace MeltPoolDG::Flow
                     (cell_category == CutUtil::CellCategory::gas or
                      cell_category == CutUtil::CellCategory::intersected))
                   temperature_eval.emplace_back(matrix_free,
-                                                temp_dof_idx,
+                                                heat_dof_idx,
                                                 flow_quad_idx,
                                                 1 /*selected component*/,
                                                 cell_category /*active_fe_index*/);
@@ -128,9 +168,9 @@ namespace MeltPoolDG::Flow
 
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
-            ls_values.reinit(cell);
-            ls_values.read_dof_values_plain(ls_as_heaviside);
-            ls_values.evaluate(dealii::EvaluationFlags::values);
+            heaviside_eval.reinit(cell);
+            heaviside_eval.read_dof_values_plain(ls_as_heaviside);
+            heaviside_eval.evaluate(dealii::EvaluationFlags::values);
 
             for (auto &temp_eval : temperature_eval)
               {
@@ -139,13 +179,40 @@ namespace MeltPoolDG::Flow
                 temp_eval.evaluate(dealii::EvaluationFlags::values);
               }
 
-            for (unsigned int q = 0; q < ls_values.n_q_points; ++q)
+            if (interface_temperature_eval)
               {
-                const auto solid_fraction =
-                  material
-                    .template compute_parameters<dealii::VectorizedArray<number>>(
-                      ls_values, temperature_eval, MaterialUpdateFlags::phase_fractions, q)
-                    .solid_fraction;
+                interface_temperature_eval->reinit(cell);
+                interface_temperature_eval->gather_evaluate(*interface_temperature,
+                                                            dealii::EvaluationFlags::values);
+              }
+
+            for (unsigned int q = 0; q < heaviside_eval.n_q_points; ++q)
+              {
+                dealii::VectorizedArray<number> solid_fraction;
+                {
+                  if (cut_type != CutUtil::CutPhaseType::one_phase_cut)
+                    solid_fraction =
+                      material
+                        .template compute_parameters<dealii::VectorizedArray<number>>(
+                          heaviside_eval, temperature_eval, MaterialUpdateFlags::phase_fractions, q)
+                        .solid_fraction;
+                  else // one phase cut
+                    {
+                      // Here, we use the projected interface temperature in the gas domain.
+                      const auto heaviside        = heaviside_eval.get_value(q);
+                      const auto cut_temperature  = temperature_eval.size() == 1 ?
+                                                      temperature_eval[0].get_value(q) :
+                                                      0.0 /*dummy*/;
+                      const auto used_temperature = dealii::compare_and_apply_mask<
+                        dealii::SIMDComparison::greater_than_or_equal>(
+                        heaviside, 0.5, cut_temperature, interface_temperature_eval->get_value(q));
+                      solid_fraction =
+                        material
+                          .template compute_parameters<dealii::VectorizedArray<number>>(
+                            heaviside, used_temperature, MaterialUpdateFlags::phase_fractions)
+                          .solid_fraction;
+                    }
+                }
                 get_damping(cell, q) = compute_darcy_damping_coefficient(solid_fraction);
               }
           }

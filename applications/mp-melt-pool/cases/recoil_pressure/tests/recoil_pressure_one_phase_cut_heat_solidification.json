@@ -132,6 +132,9 @@
     },
     "normal vector": {
       "filter parameter": "2"
+    },
+    "nearest point": {
+      "type": "nearest_point"
     }
   },
   "flow": {
