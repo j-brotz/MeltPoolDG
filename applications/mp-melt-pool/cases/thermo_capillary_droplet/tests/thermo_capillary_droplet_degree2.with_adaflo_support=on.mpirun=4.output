@@ -24,7 +24,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.32785356045e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.32785367966e+00                                               normal_vector |
-| || curvature ||L2 = 6.33317661285e+00                                                  curvature |
+| || curvature ||L2 = 6.33317744732e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 5.0000e-04 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -32,7 +32,7 @@
 |  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
 | || normal_0 ||L2 = 5.32785356045e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.32785367966e+00                                               normal_vector |
-| || curvature ||L2 = 6.33317720890e+00                                                  curvature |
+| || curvature ||L2 = 6.33317840099e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
 | || velocity ||L2 = 1.400237506084140e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.340853655039480e-02                                    navier_stokes_adaflo |
@@ -56,7 +56,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.33747196767e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.33747208176e+00                                               normal_vector |
-| || curvature ||L2 = 6.33727574427e+00                                                  curvature |
+| || curvature ||L2 = 6.33727455601e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
 | || velocity ||L2 = 2.589501205135764e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.341055414025424e-02                                    navier_stokes_adaflo |
@@ -80,7 +80,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.33893899543e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.33893907285e+00                                               normal_vector |
-| || curvature ||L2 = 6.33747333474e+00                                                  curvature |
+| || curvature ||L2 = 6.33747310381e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
 | || velocity ||L2 = 3.601829991470464e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.341022135269521e-02                                    navier_stokes_adaflo |
@@ -104,7 +104,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.33913783135e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.33913851210e+00                                               normal_vector |
-| || curvature ||L2 = 6.33772798095e+00                                                  curvature |
+| || curvature ||L2 = 6.33772834802e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
 | || velocity ||L2 = 4.486397260077921e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.340940418431890e-02                                    navier_stokes_adaflo |

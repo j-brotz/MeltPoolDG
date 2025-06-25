@@ -1377,6 +1377,17 @@ namespace MeltPoolDG
         simulation_case->get_boundary_condition("nx", "normal_vector").empty(),
         dealii::ExcMessage(
           "The wetting boundary condition is not implemented for the matrix-based implementation of the normal vector filtering equation."));
+
+    // set wetting boundary conditions
+    if (not simulation_case->get_boundary_condition("nx", "normal_vector").empty())
+      {
+        std::vector<dealii::types::boundary_id> wetting_bc_ids =
+          simulation_case->get_boundary_condition_manager("normal_vector")
+            ->get_indices_of_type("nx");
+
+        level_set_operation->set_wetting_boundary_condition_ids(std::move(wetting_bc_ids));
+      }
+
     MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim, number>(
       *scratch_data,
       simulation_case->get_boundary_condition("nx", "normal_vector"),
@@ -1412,7 +1423,9 @@ namespace MeltPoolDG
 
     {
       // TODO: add function to each operation to check the requirements on ScratchData
-      const bool enable_boundary_face_loops = heat_operation != nullptr;
+      const bool enable_boundary_face_loops =
+        (heat_operation != nullptr ||
+         not simulation_case->get_boundary_condition("nx", "normal_vector").empty());
       const bool enable_inner_face_loops =
         (heat_operation and param.heat.operator_type == Heat::TwoPhaseOperatorType::cut) or
         (laser_operation and

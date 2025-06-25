@@ -217,6 +217,7 @@ namespace MeltPoolDG::LevelSet
      */
     correct_curvature_values();
   }
+
   template <int dim, typename number>
   void
   LevelSetOperation<dim, number>::set_inflow_outflow_bc(
@@ -226,6 +227,15 @@ namespace MeltPoolDG::LevelSet
       dynamic_cast<AdvectionDiffusionOperation<dim, number> *>(advec_diff_operation.get())
         ->set_inflow_outflow_bc(inflow_outflow_bc);
   }
+
+  template <int dim, typename number>
+  void
+  LevelSetOperation<dim, number>::set_wetting_boundary_condition_ids(
+    std::vector<dealii::types::boundary_id> &&wetting_bc_ids_in)
+  {
+    reinit_operation->set_wetting_boundary_condition_ids(std::move(wetting_bc_ids_in));
+  }
+
 
   template <int dim, typename number>
   void

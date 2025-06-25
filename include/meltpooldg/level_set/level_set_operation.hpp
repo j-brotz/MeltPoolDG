@@ -110,6 +110,13 @@ namespace MeltPoolDG::LevelSet
         inflow_outflow_bc) override;
 
     void
+    set_level_set_user_rhs(const VectorType &level_set_user_rhs) override;
+
+    void
+    set_wetting_boundary_condition_ids(
+      std::vector<dealii::types::boundary_id> && /*wetting_bc_ids*/) final;
+
+    void
     reinit() override;
 
     void
@@ -123,9 +130,6 @@ namespace MeltPoolDG::LevelSet
 
     void
     finish_time_advance() override;
-
-    void
-    set_level_set_user_rhs(const VectorType &level_set_user_rhs) override;
 
     void
     update_normal_vector() override;

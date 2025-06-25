@@ -25,6 +25,13 @@ namespace MeltPoolDG::LevelSet
     virtual void
     set_initial_condition(const dealii::Function<dim> & /*initial_field_function*/) = 0;
 
+    virtual void
+    set_wetting_boundary_condition_ids(
+      std::vector<dealii::types::boundary_id> && /*wetting_bc_ids*/)
+    {
+      AssertThrow(false, dealii::ExcNotImplemented());
+    }
+
     virtual const dealii::LinearAlgebra::distributed::Vector<number> &
     get_level_set() const = 0;
 

@@ -138,6 +138,16 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
+  ReinitializationOperation<dim, number>::set_wetting_boundary_condition_ids(
+    std::vector<dealii::types::boundary_id> &&wetting_bc_ids_in)
+  {
+    Assert(reinit_operator, ExcMessage("Before setting wetting BC, call the reinit() function."));
+
+    reinit_operator->set_wetting_boundary_condition_ids(std::move(wetting_bc_ids_in));
+  }
+
+  template <int dim, typename number>
+  void
   ReinitializationOperation<dim, number>::update_dof_idx(const unsigned int &reinit_dof_idx_in)
   {
     reinit_dof_idx = reinit_dof_idx_in;
@@ -167,7 +177,7 @@ namespace MeltPoolDG::LevelSet
 
     // apply hanging node constraints to predictor
     scratch_data.get_constraint(reinit_dof_idx).distribute(solution_history.get_current_solution());
-    solution_history.get_current_solution().zero_out_ghost_values();
+    solution_history.commit_old_solutions();
   }
 
   template <int dim, typename number>
@@ -235,20 +245,9 @@ namespace MeltPoolDG::LevelSet
 
     // update ghost values of solution
     solution_level_set.update_ghost_values();
-    max_change_level_set = solution_history.get_current_solution().linfty_norm();
+    max_change_level_set =
+      solution_history.get_current_solution().l2_norm() / solution_level_set.l2_norm();
 
-    Journal::print_formatted_norm<number>(
-      scratch_data.get_pcout(2),
-      [&]() -> number {
-        return MeltPoolDG::VectorTools::compute_norm<dim, number>(rhs,
-                                                                  scratch_data,
-                                                                  reinit_dof_idx,
-                                                                  reinit_quad_idx);
-      },
-      "RHS",
-      "reinitialization",
-      15 /*precision*/
-    );
     Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(1),
       [&]() -> number {
@@ -264,11 +263,12 @@ namespace MeltPoolDG::LevelSet
 
     Journal::print_formatted_norm<number>(scratch_data.get_pcout(2),
                                           max_change_level_set,
-                                          "delta phi",
+                                          "|Δψ|/|ψ^n+1|",
                                           "reinitialization",
                                           15 /*precision*/,
-                                          "∞ ",
-                                          2);
+                                          "L2 ",
+                                          3);
+
     Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(2),
       [&]() -> number {
@@ -283,7 +283,7 @@ namespace MeltPoolDG::LevelSet
     );
 
     Journal::print_line(scratch_data.get_pcout(2),
-                        "     * CG: i = " + std::to_string(iter),
+                        "LinearSolver completed in " + std::to_string(iter) + " iterations.",
                         "reinitialization");
 
     IterationMonitor<number>::add_linear_iterations(scope_n, iter);

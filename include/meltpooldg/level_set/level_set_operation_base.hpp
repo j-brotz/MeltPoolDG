@@ -60,6 +60,13 @@ namespace MeltPoolDG::LevelSet
       const dealii::LinearAlgebra::distributed::Vector<number> &level_set_user_rhs) = 0;
 
     virtual void
+    set_wetting_boundary_condition_ids(
+      std::vector<dealii::types::boundary_id> && /*wetting_bc_ids*/)
+    {
+      AssertThrow(false, dealii::ExcNotImplemented());
+    }
+
+    virtual void
     update_normal_vector() = 0;
 
     /*

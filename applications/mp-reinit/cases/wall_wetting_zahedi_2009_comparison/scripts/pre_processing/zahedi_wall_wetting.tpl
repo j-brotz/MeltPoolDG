@@ -10,7 +10,7 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "END_TIME"
+    "end time": "1.0"
   },
   "output": {
     "directory": "../../meltpooldg_results/CASE_NAME",
@@ -23,8 +23,10 @@
   "reinitialization": {
     "linear solver": {
       "do matrix free": "true",
-      "preconditioner type": "Diagonal"
+      "preconditioner type": "ILU",
+      "abs tolerance": "1e-10"
     },
+    "tolerance": "1e-5",
     "type": "olsson2007",
     "interface thickness parameter": {
       "type": "proportional_to_cell_size",
@@ -36,7 +38,7 @@
     "compute normalized vector": "true",
     "linear solver": {
       "do matrix free": "true",
-      "preconditioner type": "AMG"
+      "preconditioner type": "ILU"
     }
   },
   "simulation specific": {
