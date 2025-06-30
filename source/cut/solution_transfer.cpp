@@ -60,8 +60,6 @@ namespace MeltPoolDG::CutUtil
     , pcout(std::cout, dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0)
   {}
 
-
-
   template <int dim, typename number>
   void
   SolutionTransferOperator<dim, number>::reinit(
@@ -175,7 +173,6 @@ namespace MeltPoolDG::CutUtil
                                   reinit_cut_vector);
   }
 
-
   template <int dim, typename number>
   void
   SolutionTransferOperator<dim, number>::reinit(
@@ -197,8 +194,6 @@ namespace MeltPoolDG::CutUtil
            setup_dof_system,
            attach_vectors);
   }
-
-
 
   template <int dim, typename number>
   void
@@ -378,8 +373,6 @@ namespace MeltPoolDG::CutUtil
       }
   }
 
-
-
   template <int dim, typename number>
   dealii::LinearAlgebra::distributed::Vector<number>
   SolutionTransferOperator<dim, number>::mark_dofs_for_gp_extrapolation(
@@ -517,8 +510,6 @@ namespace MeltPoolDG::CutUtil
     return flags_dofs_gp_extrapolation;
   }
 
-
-
   template <int dim, typename number>
   dealii::AffineConstraints<number>
   SolutionTransferOperator<dim, number>::create_constraints_gp_extrapolation(
@@ -600,8 +591,6 @@ namespace MeltPoolDG::CutUtil
 
     return constraints_gp;
   }
-
-
 
   template <int dim, typename number>
   void
@@ -799,8 +788,6 @@ namespace MeltPoolDG::CutUtil
     for (auto &new_solution : new_solutions)
       constraints_gp.distribute(new_solution);
   }
-
-
 
   template class SolutionTransferOperator<1, double>;
   template class SolutionTransferOperator<2, double>;

@@ -38,7 +38,7 @@ namespace MeltPoolDG::CutUtil
     if (is_two_phase)
       n_comp /= 2;
     Assert(n_components == n_comp,
-           dealii::ExcMessage("For now, this function is only implemened for n_components = 1!"));
+           dealii::ExcMessage("For now, this function is only implemented for n_components = 1!"));
 #endif
 
     const bool update_ghosts = not solution.has_ghost_elements();
@@ -218,7 +218,6 @@ namespace MeltPoolDG::CutUtil
       }
     return 0.0;
   }
-
 
   template double
   compute_cut_norm(

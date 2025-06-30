@@ -18,7 +18,7 @@ namespace MeltPoolDG::CutUtil
   CutPhaseType
   get_cut_type(const dealii::DoFHandler<dim> &dof_handler)
   {
-    // Detect weather the DoFHandler is setup for CutFEM by checking if it is in hp-mode.
+    // Detect whether the DoFHandler is set up for CutFEM by checking if it is in hp-mode.
     if (not dof_handler.has_hp_capabilities())
       return CutPhaseType::not_cut;
     // If so, detect weather it is in one phase or on two phase cut mode. To that, we  check the
@@ -33,8 +33,6 @@ namespace MeltPoolDG::CutUtil
     DEAL_II_NOT_IMPLEMENTED();
     return CutPhaseType::not_cut;
   }
-
-
 
   FaceType
   get_face_type(const std::pair<unsigned int, unsigned int> &adjacent_cell_categories)
@@ -91,8 +89,6 @@ namespace MeltPoolDG::CutUtil
       }
   }
 
-
-
   template <int dim>
   void
   set_fe_index(const dealii::DoFHandler<dim>                  &dof_handler,
@@ -124,7 +120,6 @@ namespace MeltPoolDG::CutUtil
           AssertThrow(false, dealii::ExcMessage("Location not found."));
       }
   }
-
 
   template <int dim, typename number, typename VectorType>
   void
@@ -241,14 +236,12 @@ namespace MeltPoolDG::CutUtil
       }
   }
 
-
   template CutPhaseType
   get_cut_type(const dealii::DoFHandler<1> &dof_handler);
   template CutPhaseType
   get_cut_type(const dealii::DoFHandler<2> &dof_handler);
   template CutPhaseType
   get_cut_type(const dealii::DoFHandler<3> &dof_handler);
-
 
   template void
   set_fe_index<1>(const dealii::DoFHandler<1> &,

@@ -24,7 +24,7 @@
 namespace MeltPoolDG::CutUtil
 {
   /**
-   * Enum that names a type of CutFEM in use.
+   * @brief Enum that names a type of CutFEM in use.
    * - not_cut: no CutFEM in use, the field in continuous
    * - one_phase_cut: The domain of the field is restricted to the liquid domain, i.e., positive
    *                  level set values. CutFEM is used for cells that contain the interface.
@@ -33,14 +33,20 @@ namespace MeltPoolDG::CutUtil
   BETTER_ENUM(CutPhaseType, char, not_cut, one_phase_cut, two_phase_cut)
 
   /**
-   * determine the CutType of the @param dof_handler
+   * @brief Determine the CutPhaseType of the @p dof_handler.
+   *
+   * @tparam dim Dimension in which this function is to be used.
+   *
+   * @param dof_handler Given DoF-Handler.
+   *
+   * @return CutPhaseType of the considered @p dof_handler.
    */
   template <int dim>
   CutPhaseType
   get_cut_type(const dealii::DoFHandler<dim> &dof_handler);
 
   /**
-   * definition of aliases for dealii::MappingInfo types
+   * Definition of aliases for dealii::MappingInfo types.
    */
   template <int dim, typename number>
   using MappingInfoType =
@@ -50,7 +56,7 @@ namespace MeltPoolDG::CutUtil
   using MappingInfoVectorType = std::vector<std::shared_ptr<MappingInfoType<dim, number>>>;
 
   /**
-   * definition of the cell category numbering (active FE index)
+   * @brief Definition of the cell category numbering (active FE index).
    */
   enum CellCategory
   {
@@ -60,7 +66,7 @@ namespace MeltPoolDG::CutUtil
   };
 
   /**
-   * enumeration for the face type
+   * @brief Enumeration for the face type.
    */
   enum FaceType
   {
@@ -74,18 +80,20 @@ namespace MeltPoolDG::CutUtil
   };
 
   /**
-   * This function categorizes the FaceType of the current face range.
+   * @brief This function categorizes the FaceType of the current face range.
    *
    * @param adjacent_cell_categories Pair which contains the category of the cells
    * on the two sides of the current range of faces.
    *
+   * @retrun FaceType of the shared face between the provided cell pair.
    */
   FaceType
   get_face_type(const std::pair<unsigned int, unsigned int> &adjacent_cell_categories);
 
-
   /**
-   * This function is setting the FE index for every cell.
+   * @brief This function is setting the FE index for every cell.
+   *
+   * @tparam dim Dimension in which this function is to be used.
    *
    * @param dof_handler DoFHandler object, provides the cell iterator.
    * @param mesh_classifier The dealii::NonMatching::MeshClassifier object which contains the
@@ -102,15 +110,14 @@ namespace MeltPoolDG::CutUtil
                const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier,
                const bool                                      set_future);
 
-
-
   /**
-   * This function generates the immersed quadrature rules in the case that the
+   * @brief This function generates the immersed quadrature rules in the case that the
    * domain is described by a discrete level-set function.
+   *
    * The classes NonMatching::DiscreteQuadratureGenerator<dim> and
    * NonMatching::DiscreteFaceQuadratureGenerator<dim> are used to generate the immersed
    * quadrature rules, for the immersed geometry described by discrete level-set function
-   * via a (level_set_dof_handler, level_set) pair.
+   * via a (@p level_set_dof_handler, @p level_set) pair.
    *
    * @tparam dim Dimension in which this function is to be used.
    * @tparam number Floating-point value type used for this function.
@@ -133,7 +140,8 @@ namespace MeltPoolDG::CutUtil
    *
    * @note Currently, the @p fe_degree has to be the same for both subdomains in
    * the case of a two-domain problem.
-   * @note Keep attention of the definition of the level-set field orientation. Currently, the single-phase region is assigned to the positive level-set region.
+   * @note Keep attention of the definition of the level-set field orientation. Currently, the single-phase region
+   * is assigned to the positive level-set region.
    *
    */
   template <int dim, typename number, typename VectorType>
@@ -149,8 +157,27 @@ namespace MeltPoolDG::CutUtil
     const bool                                                              is_dg = false,
     MappingInfoVectorType<dim, number> mapping_info_faces                         = {});
 
-
-
+  /**
+   * @brief Evaluates solution values in the intersected domain for a specific SIMD lane within a cell batch.
+   *
+   * This function performs finite element point evaluation on a single lane (i.e., SIMD vector
+   * entry) of a cell batch in the context of vectorized matrix-free computations.
+   *
+   * It uses the given `FECellIntegrator` to access DoF values and performs an evaluation
+   * at the point corresponding to the provided lane index.
+   *
+   * @tparam dim Dimension in which this function is to be used.
+   * @tparam number Floating-point value type used for this function.
+   * @tparam n_components Number of solution components (per phase). The default value is 1, which corresponds to
+   * scalar problems.
+   *
+   * @param point_eval FEPointEvaluation object in which the evaluations are stored.
+   * @param cell_eval FECellIntegrator providing the DoF values.
+   * @param evaluation_flags Flags indicating what kind of evaluation (values, gradients, etc.) to perform.
+   * @param cell_batch Cell batch index
+   * @param cell_lane The SIMD lane within the batch to evaluate.
+   * @param n_dofs_per_cell Number of DoFs per cell in the evaluated system.
+   */
   template <int dim, typename number, int n_components = 1>
   inline void
   evaluate_intersected_domain(
@@ -169,13 +196,12 @@ namespace MeltPoolDG::CutUtil
                         evaluation_flags);
   }
 
-
-
   /**
-   * This function checks whether the currently considered face requires the application
-   * of ghost-penalty stabilization or not. A face is a ghost-penalty face if one of the two
-   * adjacent cells is an intersected cell and the other cell is either inside the active
-   * domain or is also an intersected cell.
+   * @brief This function checks whether the currently considered face requires the application
+   * of ghost-penalty stabilization or not.
+   *
+   * A face is a ghost-penalty face if one of the two adjacent cells is an intersected cell and
+   * the other cell is either inside the active domain or is also an intersected cell.
    *
    * @tparam dim Dimension in which this function is to be used.
    *
@@ -223,10 +249,9 @@ namespace MeltPoolDG::CutUtil
     return false;
   }
 
-
-
   /**
-   * This function checks whether the considered face is a newly created intersected face.
+   * @brief This function checks whether the considered face is a newly created intersected face.
+   *
    * This occurs when both adjacent cells of the face are currently intersected cells and
    * were in the inactive location in the old state. This function is created for handling
    * moving interface problems.
@@ -253,7 +278,6 @@ namespace MeltPoolDG::CutUtil
    * component problems, the default value of the inactive location is outside.
    * It has to be ensured that the @p mesh_classifier_old and @p mesh_classifier are
    * reclassified according to the correct states.
-   *
    */
   template <int dim>
   bool
