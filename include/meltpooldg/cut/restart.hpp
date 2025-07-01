@@ -11,26 +11,28 @@
 namespace MeltPoolDG::CutUtil
 {
   /**
-   * same as Restart::deserialize_internal(), but adapted for cases where one or more DoFHandler
-   * objects are used in CutFEM operations.
+   * @brief Same as Restart::deserialize_internal(), but adapted for cases where one or more
+   * DoFHandler objects are used in CutFEM operations.
    *
    * Similarly to CutUtil::refine_grid(), the level set must be transferred first, so the CutFEM
    * operation can classify the mesh to distribute its DoFs before transferring its solution.
    *
-   * @param distribute_level_set_dofs lambda function, that distributes the DoFs of the
-   *                                  @param level_set_dof_handler .
+   * @param distribute_level_set_dofs Lambda function, that distributes the DoFs of the
+   * @p level_set_dof_handler.
+   * @param level_set_dof_handler DoF-Handler for the level-set field.
    *
    * same as in Restart::deserialize_internal():
-   * @param attach_vectors  lambda function of type AttachDoFHandlerAndVectorsType, that attaches
+   * @param attach_vectors  Lambda function of type AttachDoFHandlerAndVectorsType, that attaches
    *                        all DoFHandlers and their respective DoFVectors that ought to be
-   *                        reconstructed
-   * @param post this lambda function is run after AMR was executed
-   * @param setup_dof_system setup the dof system, this includes:
+   *                        reconstructed.
+   * @param post This lambda function is run after AMR was executed.
+   * @param setup_dof_system Set up the dof system, this includes:
    *                         - distribute DoFs on the new mesh
    *                         - create partitioning for the new mesh
    *                         - setup constraints on the new mesh
    *                         - reinit the MatrixFree object for the new DoFs (ScratchData::build())
-   *                         - initialize all DoF vectors for the new DoF
+   *                         - initialize all DoF vectors for the new DoF layout
+   * @param prefix File basename.
    */
   template <int dim, typename VectorType>
   void

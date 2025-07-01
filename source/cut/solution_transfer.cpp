@@ -44,23 +44,18 @@
 namespace MeltPoolDG::CutUtil
 {
   template <int dim, typename number>
-  SolutionTransferOperator<dim, number>::SolutionTransferOperator(const number gamma_degree_0,
-                                                                  const number gamma_degree_1,
-                                                                  const number gamma_degree_2,
-                                                                  const bool   is_two_phase,
-                                                                  const int    verbosity)
+  SolutionTransferOperator<dim, number>::SolutionTransferOperator(
+    const GhostPenaltyData<number> &ghost_penalty_in,
+    const bool                      is_two_phase,
+    const int                       verbosity)
     : fe_degree(0)
     , n_components_per_phase(0)
     , is_dg(false)
-    , gamma_degree_0(gamma_degree_0)
-    , gamma_degree_1(gamma_degree_1)
-    , gamma_degree_2(gamma_degree_2)
+    , ghost_penalty(ghost_penalty_in)
     , is_two_phase(is_two_phase)
     , verbosity(verbosity)
     , pcout(std::cout, dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0)
   {}
-
-
 
   template <int dim, typename number>
   void
@@ -167,14 +162,13 @@ namespace MeltPoolDG::CutUtil
                                     setup_dof_system,
                                     attach_vectors);
 
-    // 2) set-up and solve system for ghost-penalty extrapolation to determine the values of the
+    // 2) set up and solve system for ghost-penalty extrapolation to determine the values of the
     //    remaining undetermined DoFs
     extrapolate_solution_new_dofs(cut_dof_handler,
                                   mesh_classifier,
                                   mesh_classifier_old,
                                   reinit_cut_vector);
   }
-
 
   template <int dim, typename number>
   void
@@ -197,8 +191,6 @@ namespace MeltPoolDG::CutUtil
            setup_dof_system,
            attach_vectors);
   }
-
-
 
   template <int dim, typename number>
   void
@@ -378,8 +370,6 @@ namespace MeltPoolDG::CutUtil
       }
   }
 
-
-
   template <int dim, typename number>
   dealii::LinearAlgebra::distributed::Vector<number>
   SolutionTransferOperator<dim, number>::mark_dofs_for_gp_extrapolation(
@@ -517,8 +507,6 @@ namespace MeltPoolDG::CutUtil
     return flags_dofs_gp_extrapolation;
   }
 
-
-
   template <int dim, typename number>
   dealii::AffineConstraints<number>
   SolutionTransferOperator<dim, number>::create_constraints_gp_extrapolation(
@@ -601,8 +589,6 @@ namespace MeltPoolDG::CutUtil
     return constraints_gp;
   }
 
-
-
   template <int dim, typename number>
   void
   SolutionTransferOperator<dim, number>::extrapolate_solution_new_dofs(
@@ -623,7 +609,7 @@ namespace MeltPoolDG::CutUtil
     const dealii::AffineConstraints<number> constraints_gp =
       create_constraints_gp_extrapolation(cut_dof_handler, flags_dofs_gp_extrapolation);
 
-    // set-up sparsity pattern
+    // set up sparsity pattern
     dealii::TrilinosWrappers::SparsityPattern dsp;
     dsp.reinit(cut_dof_handler.locally_owned_dofs(),
                cut_dof_handler.locally_owned_dofs(),
@@ -722,7 +708,8 @@ namespace MeltPoolDG::CutUtil
                           prefactor * normal *
                           fe_interface_values[u_extractor].jump_in_gradients(i, q) * normal *
                           fe_interface_values[u_extractor].jump_in_gradients(j, q) *
-                          cell_side_length * gamma_degree_1 * fe_interface_values.JxW(q);
+                          cell_side_length * ghost_penalty.gamma_M_degree_1 *
+                          fe_interface_values.JxW(q);
 
                         if (is_dg)
                           {
@@ -730,7 +717,8 @@ namespace MeltPoolDG::CutUtil
                             local_ghost_penalty_matrix(i, j) +=
                               prefactor * fe_interface_values[u_extractor].jump_in_values(i, q) *
                               fe_interface_values[u_extractor].jump_in_values(j, q) /
-                              cell_side_length * gamma_degree_0 * fe_interface_values.JxW(q);
+                              cell_side_length * ghost_penalty.gamma_M_degree_0 *
+                              fe_interface_values.JxW(q);
                           }
 
                         if (fe_degree == 2)
@@ -742,8 +730,8 @@ namespace MeltPoolDG::CutUtil
                                normal /*double contraction*/) *
                               (normal * fe_interface_values[u_extractor].jump_in_hessians(j, q) *
                                normal /*double contraction*/) *
-                              dealii::Utilities::fixed_power<3>(cell_side_length) * gamma_degree_2 *
-                              fe_interface_values.JxW(q);
+                              dealii::Utilities::fixed_power<3>(cell_side_length) *
+                              ghost_penalty.gamma_M_degree_2 * fe_interface_values.JxW(q);
                           }
                       }
 
@@ -799,8 +787,6 @@ namespace MeltPoolDG::CutUtil
     for (auto &new_solution : new_solutions)
       constraints_gp.distribute(new_solution);
   }
-
-
 
   template class SolutionTransferOperator<1, double>;
   template class SolutionTransferOperator<2, double>;

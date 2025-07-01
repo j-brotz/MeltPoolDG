@@ -56,9 +56,7 @@ namespace MeltPoolDG::Multiphase
     , time_iterator(time_iterator_in)
     , level_set_dof_idx(level_set_dof_idx_in)
     , level_set(level_set_in)
-    , cut_solution_transfer(cut_data_in.stabilization.ghost_penalty.gamma_M_degree_0,
-                            cut_data_in.stabilization.ghost_penalty.gamma_M_degree_1,
-                            cut_data_in.stabilization.ghost_penalty.gamma_M_degree_2,
+    , cut_solution_transfer(cut_data_in.stabilization.ghost_penalty,
                             true /* is_two_phase*/,
                             comp_flow_data_in.verbosity_level /*verbosity level*/)
     , setup_dof_system(setup_dof_system_in)

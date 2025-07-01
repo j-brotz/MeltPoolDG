@@ -86,9 +86,7 @@ namespace MeltPoolDG::Heat
     , solution_history(std::max(2U, heat_data.predictor.n_old_solution_vectors))
     , ls_dof_idx(ls_dof_idx_in)
     , level_set(level_set_in)
-    , cut_solution_transfer(heat_data.cut.stabilization.ghost_penalty.gamma_A_degree_0,
-                            heat_data.cut.stabilization.ghost_penalty.gamma_A_degree_1,
-                            heat_data.cut.stabilization.ghost_penalty.gamma_A_degree_2,
+    , cut_solution_transfer(heat_data.cut.stabilization.ghost_penalty,
                             heat_data.cut.two_phase,
                             heat_data.verbosity_level)
     , mapping_info_surface(scratch_data.get_mapping(),

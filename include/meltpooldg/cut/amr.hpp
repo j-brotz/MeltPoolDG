@@ -14,33 +14,38 @@
 namespace MeltPoolDG::CutUtil
 {
   /**
-   * same as AMR::refine_grid(), but adapted for cases where one or more DoFHandler objects are used
-   * in CutFEM operations.
+   * @brief same as AMR::refine_grid(), but adapted for cases where one or more DoFHandler objects
+   * are used in CutFEM operations.
    *
    * Similarly to CutUtil::deserialize_internal(), the level set must be transferred first, so the
    * CutFEM operation can classify the mesh to distribute its DoFs before transferring its solution.
    *
-   * @param distribute_level_set_dofs lambda function, that distributes the DoFs of the
-   *                                  @param level_set_dof_handler . If no data is attached by
-   *                                  @param attach_vectors, e.g., for AMR at the initial condition,
+   * @param distribute_level_set_dofs Lambda function, that distributes the DoFs of the
+   *                                  @p level_set_dof_handler. If no data is attached by
+   *                                  @p attach_vectors, e.g., for AMR at the initial condition,
    *                                  this lambda function must also interpolate the initial level
-   *                                  set solution onto the @param level_set_dof_vector
+   *                                  set solution onto the @p level_set_dof_vector.
+   * @param level_set_dof_handler DoF-Handler for the level-set field.
+   * @param level_set_dof_vector Level-set DoF vector.
    *
    * same as in AMR::refine_grid():
-   * @param mark_cells_for_refinement lambda function of type MarkCellsForRefinementType, see its
-   *                                  documentation for info
-   * @param attach_vectors  lambda function of type AttachDoFHandlerAndVectorsType, that attaches
+   * @param mark_cells_for_refinement Lambda function of type MarkCellsForRefinementType, see its
+   *                                  documentation for info.
+   * @param attach_vectors  Lambda function of type AttachDoFHandlerAndVectorsType, that attaches
    *                        all DoFHandlers and their respective DoFVectors that ought to be
-   *                        transferred to the new mesh
-   * @param post this lambda function is run after AMR was executed
-   * @param setup_dof_system setup the dof system, this includes:
+   *                        transferred to the new mesh.
+   * @param post This lambda function is run after AMR was executed.
+   * @param setup_dof_system Set up the dof system, this includes:
    *                         - distribute DoFs on the new mesh
    *                         - create partitioning for the new mesh
-   *                         - setup constraints on the new mesh
+   *                         - set up constraints on the new mesh
    *                         - reinit the MatrixFree object for the new DoFs (ScratchData::build())
    *                         - initialize all DoF vectors for the new DoF
+   * @param amr Data struct for adaptive meshing parameters.
+   * @param tria Triangulation object.
+   * @param n_time_step Current time step number.
    */
-  template <int dim, typename VectorType, typename number = VectorType::value_type>
+  template <int dim, typename VectorType, typename number = typename VectorType::value_type>
   void
   refine_grid(const AMR::MarkCellsForRefinementType<dim>            &mark_cells_for_refinement,
               const AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors,
