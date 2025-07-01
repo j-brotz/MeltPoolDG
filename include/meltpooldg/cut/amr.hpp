@@ -38,7 +38,7 @@ namespace MeltPoolDG::CutUtil
    * @param setup_dof_system Set up the dof system, this includes:
    *                         - distribute DoFs on the new mesh
    *                         - create partitioning for the new mesh
-   *                         - setup constraints on the new mesh
+   *                         - set up constraints on the new mesh
    *                         - reinit the MatrixFree object for the new DoFs (ScratchData::build())
    *                         - initialize all DoF vectors for the new DoF
    * @param amr Data struct for adaptive meshing parameters.

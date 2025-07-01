@@ -38,6 +38,7 @@
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/cut/cut_data.hpp>
 #include <meltpooldg/cut/solution_transfer.hpp>
 #include <meltpooldg/cut/util.hpp>
 
@@ -212,10 +213,14 @@ test()
         << ", components of solution=" << n_solution_components << ", dimension=" << dim
         << ", is_matrix_free=" << is_matrix_free << ", fe_degree=" << fe_degree << std::endl;
 
-  // parameters
-  const double gamma_degree_0 = 0.5; // ghost-penalty parameter for jump in the 0. normal derivative
-  const double gamma_degree_1 = 0.5; // ghost-penalty parameter for jump in the 1. normal derivative
-  const double gamma_degree_2 = 0.5; // ghost-penalty parameter for jump in the 2. normal derivative
+  // ghost-penalty stabilization parameters
+  GhostPenaltyData<Number> ghost_penalty;
+  // ghost-penalty parameter for jump in the 0. normal derivative
+  ghost_penalty.gamma_M_degree_0 = 0.5;
+  // ghost-penalty parameter for jump in the 1. normal derivative
+  ghost_penalty.gamma_M_degree_1 = 0.5;
+  // ghost-penalty parameter for jump in the 2. normal derivative
+  ghost_penalty.gamma_M_degree_2 = 0.5;
 
   // create mesh
   parallel::distributed::Triangulation<dim> tria(MPI_COMM_WORLD);
@@ -364,8 +369,9 @@ test()
 
   // consider dummy-data input for 'gamma_degree_0' for the cg-case and
   // for 'gamma_degree_2' for polynomial degree 1.
-  CutUtil::SolutionTransferOperator<dim, Number> solution_transfer_operator(
-    gamma_degree_0, gamma_degree_1, gamma_degree_2, is_two_phase, verbosity);
+  CutUtil::SolutionTransferOperator<dim, Number> solution_transfer_operator(ghost_penalty,
+                                                                            is_two_phase,
+                                                                            verbosity);
 
   solution.update_ghost_values();
 

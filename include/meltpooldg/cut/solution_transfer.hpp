@@ -11,6 +11,7 @@
 
 #include <deal.II/non_matching/mesh_classifier.h>
 
+#include <meltpooldg/cut/cut_data.hpp>
 #include <meltpooldg/utilities/attach_vectors.hpp>
 
 #include <functional>
@@ -23,14 +24,14 @@ namespace MeltPoolDG::CutUtil
    * @brief Operator for the solution transfer in moving boundary/interface simulations.
    *
    * The operator transfers the solution vector between different function spaces at two consecutive
-   * time levels. It adapts the DoF layout to a moved interface position and extrapolates unknown
+   * time steps. It adapts the DoF layout to a moved interface position and extrapolates unknown
    * new DoF values using ghost-penalty extrapolation.
    *
    * The solution transfer works for both single- and two-phase cases, and for scalar as well as
    * vector-valued solution fields.
    *
    * @note Currently, the solution transfer is limited to interface movements of less than one
-   * element length between two subsequent time levels.
+   * element length between two subsequent time steps.
    */
   template <int dim, typename Number>
   class SolutionTransferOperator
@@ -41,26 +42,19 @@ namespace MeltPoolDG::CutUtil
     /**
      * @brief Constructor.
      *
-     * @param gamma_degree_0 Ghost-penalty parameter for penalization of jumps in the values on the
-     * ghost-faces.
-     * @param gamma_degree_1 Ghost-penalty parameter for penalization of jumps in the normal
-     * gradients on the ghost-faces
-     * @param gamma_degree_2 Ghost-penalty parameter for penalization of jumps in the normal
-     * hessians on the ghost-faces (dummy value for polynomial degree 1).
+     * @param ghost_penalty_in Set of ghost-penalty parameters for stabilization of cut elements.
      * @param is_two_phase Boolean indicator whether a two-phase case is considered.
      * @param verbosity Verbosity level with default value 0.
      */
-    SolutionTransferOperator(const Number gamma_degree_0,
-                             const Number gamma_degree_1,
-                             const Number gamma_degree_2,
-                             const bool   is_two_phase,
-                             const int    verbosity = 0);
+    SolutionTransferOperator(const GhostPenaltyData<Number> &ghost_penalty_in,
+                             const bool                      is_two_phase,
+                             const int                       verbosity = 0);
 
     /**
      * @brief Reinit function for the solution transfer according to the new immersed interface position.
      *
      * 1) Update FE-index and distribute DoFs according to new state with the moved interface.
-     * 2) Set-up and solve system for ghost-penalty extrapolation to determine the values of the
+     * 2) Set up and solve system for ghost-penalty extrapolation to determine the values of the
      * remaining undetermined DoFs
      *
      * @param cut_dof_handler DoF-Handler of the considered field with non-fitted (cut) domain representation.
@@ -70,12 +64,11 @@ namespace MeltPoolDG::CutUtil
      * @param mesh_classifier Mesh classifier object which corresponds to the new (moved) interface position.
      * @param reinit_cut_vector A Lambda function for the vector reinitialization.
      * @param setup_dof_system Set up the dof system, this includes:
-     *                         - distribute DoFs on the new mesh
-     *                         - create partitioning for the new mesh
-     *                         - setup constraints on the new mesh
-     *                         - reinit the MatrixFree object for the new DoFs
-     * (ScratchData::build())
-     *                         - initialize all DoF vectors for the new DoF layout
+     *                        - distribute DoFs on the new mesh
+     *                        - create partitioning for the new mesh
+     *                        - set up constraints on the new mesh
+     *                        - reinit the MatrixFree object for the new DoFs (ScratchData::build())
+     *                        - initialize all DoF vectors for the new DoF layout
      * @param attach_vectors Lambda function of type AttachDoFHandlerAndVectorsType, that attaches
      *                       all DoFHandlers and their respective DoFVectors that ought to be
      *                       reconstructed.
@@ -97,7 +90,7 @@ namespace MeltPoolDG::CutUtil
      * @brief Same as above but with multiple cut solution vectors given by @p cut_solutions.
      *
      * 1) Update FE-index and distribute DoFs according to new state with the moved interface.
-     * 2) Set-up and solve system for ghost-penalty extrapolation to determine the values of the
+     * 2) Set up and solve system for ghost-penalty extrapolation to determine the values of the
      * remaining undetermined DoFs.
      *
      * @param cut_dof_handler DoF-Handler of the considered field with non-fitted (cut) domain representation.
@@ -107,13 +100,12 @@ namespace MeltPoolDG::CutUtil
      * @param mesh_classifier_old Mesh classifier object which corresponds to the old interface position.
      * @param mesh_classifier Mesh classifier object which corresponds to the new (moved) interface position.
      * @param reinit_cut_vector A Lambda function for the vector reinitialization.
-     * @param setup_dof_system Setup the dof system, this includes:
-     *                         - distribute DoFs on the new mesh
-     *                         - create partitioning for the new mesh
-     *                         - setup constraints on the new mesh
-     *                         - reinit the MatrixFree object for the new DoFs
-     * (ScratchData::build())
-     *                         - initialize all DoF vectors for the new DoF layout
+     * @param setup_dof_system Set up the dof system, this includes:
+     *                       - distribute DoFs on the new mesh
+     *                       - create partitioning for the new mesh
+     *                       - set up constraints on the new mesh
+     *                       - reinit the MatrixFree object for the new DoFs (ScratchData::build())
+     *                       - initialize all DoF vectors for the new DoF layout
      * @param attach_vectors Lambda function of type AttachDoFHandlerAndVectorsType, that attaches
      *                       all DoFHandlers and their respective DoFVectors that ought to be
      *                       reconstructed.
@@ -204,14 +196,8 @@ namespace MeltPoolDG::CutUtil
     /// Boolean indicator whether DG is used
     bool is_dg;
 
-    /// Ghost-penalty parameter for degree 0
-    const Number gamma_degree_0;
-
-    /// Ghost-penalty parameter for degree 1
-    const Number gamma_degree_1;
-
-    /// Ghost-penalty parameter for degree 2
-    const Number gamma_degree_2;
+    /// Ghost-penalty parameters for stabilization of cut elements
+    const GhostPenaltyData<Number> ghost_penalty;
 
     /// Boolean indicator whether a two-phase case is considered
     const bool is_two_phase;
@@ -233,12 +219,11 @@ namespace MeltPoolDG::CutUtil
      * @param mesh_classifier Mesh classifier object which corresponds to the new (moved) interface position.
      * @param reinit_cut_vector A Lambda function for the vector reinitialization.
      * @param setup_dof_system Set up the dof system, this includes:
-     *                         - distribute DoFs on the new mesh
-     *                         - create partitioning for the new mesh
-     *                         - setup constraints on the new mesh
-     *                         - reinit the MatrixFree object for the new DoFs
-     * (ScratchData::build())
-     *                         - initialize all DoF vectors for the new DoF layout
+     *                       - distribute DoFs on the new mesh
+     *                       - create partitioning for the new mesh
+     *                       - set up constraints on the new mesh
+     *                       - reinit the MatrixFree object for the new DoFs (ScratchData::build())
+     *                       - initialize all DoF vectors for the new DoF layout
      * @param attach_vectors Lambda function of type AttachDoFHandlerAndVectorsType, that attaches
      *                       all DoFHandlers and their respective DoFVectors that ought to be
      *                       reconstructed.
