@@ -52,11 +52,11 @@ namespace MeltPoolDG::LevelSet
     , ls_quad_idx(ls_quad_idx_in)
     , curv_dof_idx(curv_dof_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
-    , reinit_time_iterator(TimeIntegration::TimeSteppingData<number>{
-        0.0 /*start_time*/,
-        std::numeric_limits<number>::max() /*end_time*/,
-        -1.0 /*time step size --> will be set before each cycle*/,
-        level_set_data.reinit.max_n_steps})
+    , reinit_time_iterator(
+        TimeIntegration::TimeSteppingData<number>{0.0 /*start_time*/,
+                                                  std::numeric_limits<number>::max() /*end_time*/,
+                                                  level_set_data.reinit.pseudo_time_step_size,
+                                                  level_set_data.reinit.max_n_steps})
   {
     /*
      *    initialize the advection diffusion operation
@@ -474,10 +474,12 @@ namespace MeltPoolDG::LevelSet
     // do reinitialization only if the level set has changed more than a certain tolerance
     if (max_d_level_set_since_last_reinit > level_set_data.reinit.tolerance)
       {
-        // Compute time increment for reinitialization from epsilon
-        reinit_time_iterator.set_current_time_increment(
-          level_set_data.reinit.compute_interface_thickness_parameter_epsilon(
-            scratch_data.get_min_cell_size() / level_set_data.get_n_subdivisions()));
+        if (level_set_data.reinit.pseudo_time_step_size <= 0.0)
+          // Compute time increment for reinitialization from epsilon
+          reinit_time_iterator.set_current_time_increment(
+            level_set_data.reinit.pseudo_time_step_factor *
+            level_set_data.reinit.compute_interface_thickness_parameter_epsilon(
+              scratch_data.get_min_cell_size() / level_set_data.get_n_subdivisions()));
 
         reinit_operation->set_initial_condition(get_level_set());
 
