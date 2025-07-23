@@ -134,10 +134,8 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
   dof_handler.distribute_dofs(fe);
 
   // setup level set related vectors
-  IndexSet locally_owned_dofs;
-  IndexSet locally_relevant_dofs;
-  locally_owned_dofs = dof_handler.locally_owned_dofs();
-  DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
+  IndexSet locally_owned_dofs    = dof_handler.locally_owned_dofs();
+  IndexSet locally_relevant_dofs = DoFTools::extract_locally_relevant_dofs(dof_handler);
 
   VectorType solution_distance;
   solution_distance.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
@@ -196,8 +194,8 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
     }
 
   VectorType solution_temp, solution_temp_interface;
-  locally_owned_dofs = dof_handler_temp.locally_owned_dofs();
-  DoFTools::extract_locally_relevant_dofs(dof_handler_temp, locally_relevant_dofs);
+  locally_owned_dofs    = dof_handler_temp.locally_owned_dofs();
+  locally_relevant_dofs = DoFTools::extract_locally_relevant_dofs(dof_handler_temp);
 
   solution_temp.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
   solution_temp_interface.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_comm);

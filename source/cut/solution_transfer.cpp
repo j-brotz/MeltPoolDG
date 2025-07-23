@@ -381,7 +381,7 @@ namespace MeltPoolDG::CutUtil
     flags_dofs_gp_extrapolation.reinit(cut_dof_handler.locally_owned_dofs(),
                                        dealii::DoFTools::extract_locally_relevant_dofs(
                                          cut_dof_handler),
-                                       cut_dof_handler.get_communicator());
+                                       cut_dof_handler.get_mpi_communicator());
     flags_dofs_gp_extrapolation = 0.;
 
     // a) Loop over intersected cells that previously did not belong to the
@@ -518,7 +518,7 @@ namespace MeltPoolDG::CutUtil
     const dealii::Utilities::MPI::Partitioner partitioner_dof(
       cut_dof_handler.locally_owned_dofs(),
       dealii::DoFTools::extract_locally_relevant_dofs(cut_dof_handler),
-      cut_dof_handler.get_communicator());
+      cut_dof_handler.get_mpi_communicator());
 
     // Check if the partitioner of new_solution is globally compatible with partitioner_dof.
     // If not, transfer new_solution to default vector structure.
@@ -531,7 +531,7 @@ namespace MeltPoolDG::CutUtil
         new_solution_including_all_ghosts.reinit(cut_dof_handler.locally_owned_dofs(),
                                                  dealii::DoFTools::extract_locally_relevant_dofs(
                                                    cut_dof_handler),
-                                                 cut_dof_handler.get_communicator());
+                                                 cut_dof_handler.get_mpi_communicator());
         new_solution_including_all_ghosts = new_solutions[0];
         new_solution_including_all_ghosts.update_ghost_values();
       }
@@ -578,10 +578,10 @@ namespace MeltPoolDG::CutUtil
       }
 
     Assert(constraints_gp.is_consistent_in_parallel(
-             dealii::Utilities::MPI::all_gather(cut_dof_handler.get_communicator(),
+             dealii::Utilities::MPI::all_gather(cut_dof_handler.get_mpi_communicator(),
                                                 cut_dof_handler.locally_owned_dofs()),
              dealii::DoFTools::extract_locally_active_dofs(cut_dof_handler),
-             cut_dof_handler.get_communicator()),
+             cut_dof_handler.get_mpi_communicator()),
            dealii::ExcInternalError());
 
     constraints_gp.close();
@@ -614,7 +614,7 @@ namespace MeltPoolDG::CutUtil
     dsp.reinit(cut_dof_handler.locally_owned_dofs(),
                cut_dof_handler.locally_owned_dofs(),
                dealii::DoFTools::extract_locally_relevant_dofs(cut_dof_handler),
-               cut_dof_handler.get_communicator());
+               cut_dof_handler.get_mpi_communicator());
 
     dealii::DoFTools::make_flux_sparsity_pattern(cut_dof_handler, dsp, constraints_gp, false);
 
@@ -701,7 +701,8 @@ namespace MeltPoolDG::CutUtil
                   for (const auto j : fe_interface_values.dof_indices())
                     for (unsigned int q = 0; q < fe_interface_values.n_quadrature_points; ++q)
                       {
-                        const dealii::Tensor<1, dim, number> normal = fe_interface_values.normal(q);
+                        const dealii::Tensor<1, dim, number> normal =
+                          fe_interface_values.normal_vector(q);
 
                         // contributions from 1. normal derivative jump
                         local_ghost_penalty_matrix(i, j) +=

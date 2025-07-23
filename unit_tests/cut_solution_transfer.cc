@@ -165,7 +165,7 @@ public:
       else
         vec.reinit(dof_handler.locally_owned_dofs(),
                    DoFTools::extract_locally_relevant_dofs(dof_handler),
-                   dof_handler.get_communicator());
+                   dof_handler.get_mpi_communicator());
     };
   }
 
@@ -233,7 +233,7 @@ test()
   VectorType ls_vector;
   ls_vector.reinit(ls_dof_handler.locally_owned_dofs(),
                    DoFTools::extract_locally_relevant_dofs(ls_dof_handler),
-                   tria.get_communicator());
+                   tria.get_mpi_communicator());
 
   // create mesh classifier
   NonMatching::MeshClassifier<dim> mesh_classifier(ls_dof_handler, ls_vector);
@@ -335,12 +335,12 @@ test()
   data_out.add_data_vector(dof_handler, solution, "solution");
 
   Vector<Number> mpi_owner(tria.n_active_cells());
-  mpi_owner = Utilities::MPI::this_mpi_process(tria.get_communicator());
+  mpi_owner = Utilities::MPI::this_mpi_process(tria.get_mpi_communicator());
   data_out.add_data_vector(mpi_owner, "owner");
 
   data_out.build_patches();
   const std::string filename = "moving_grid.vtu";
-  data_out.write_vtu_in_parallel(filename, tria.get_communicator());
+  data_out.write_vtu_in_parallel(filename, tria.get_mpi_communicator());
 #endif
 
   ///////////////////////////////////////////////////////////////////
@@ -418,12 +418,12 @@ test()
     data_out.add_data_vector(ls_dof_handler, ls_vector, "level_set");
 
     Vector<Number> mpi_owner(tria.n_active_cells());
-    mpi_owner = Utilities::MPI::this_mpi_process(tria.get_communicator());
+    mpi_owner = Utilities::MPI::this_mpi_process(tria.get_mpi_communicator());
     data_out.add_data_vector(mpi_owner, "owner");
 
     data_out.build_patches();
     const std::string filename = "moving_grid_new_gp_extrapolated.vtu";
-    data_out.write_vtu_in_parallel(filename, tria.get_communicator());
+    data_out.write_vtu_in_parallel(filename, tria.get_mpi_communicator());
   }
 #endif
 }

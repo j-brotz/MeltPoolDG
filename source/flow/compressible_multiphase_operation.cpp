@@ -470,10 +470,10 @@ namespace MeltPoolDG::Multiphase
     // compute the minimum density across all MPI processes
     min_density_liquid = Utilities::MPI::min(
       min_density_liquid,
-      matrix_free.get_dof_handler(multiphase_scratch_data.dof_idx).get_communicator());
+      matrix_free.get_dof_handler(multiphase_scratch_data.dof_idx).get_mpi_communicator());
     min_density_gas = Utilities::MPI::min(
       min_density_gas,
-      matrix_free.get_dof_handler(multiphase_scratch_data.dof_idx).get_communicator());
+      matrix_free.get_dof_handler(multiphase_scratch_data.dof_idx).get_mpi_communicator());
 
     return {min_density_liquid, min_density_gas};
   }

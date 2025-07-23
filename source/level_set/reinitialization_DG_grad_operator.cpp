@@ -106,7 +106,7 @@ namespace MeltPoolDG::LevelSet
           {
             const auto u_minus             = eval_minus.get_value(q);
             const auto u_plus              = eval_plus.get_value(q);
-            const auto normal_vector_minus = eval_minus.get_normal_vector(q);
+            const auto normal_vector_minus = eval_minus.normal_vector(q);
 
             const auto flux = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
               normal_vector_minus[component],
@@ -144,7 +144,7 @@ namespace MeltPoolDG::LevelSet
         for (unsigned int q = 0; q < eval_minus.n_q_points; ++q)
           {
             const auto u_minus             = eval_minus.get_value(q);
-            const auto normal_vector_minus = eval_minus.get_normal_vector(q);
+            const auto normal_vector_minus = eval_minus.normal_vector(q);
 
             // Compute the outer solution value
             const auto u_plus = u_minus;

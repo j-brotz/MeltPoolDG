@@ -916,7 +916,7 @@ namespace MeltPoolDG
                 level_set_operation->get_level_set().reinit(
                   dof_handler_ls.locally_owned_dofs(),
                   dealii::DoFTools::extract_locally_relevant_dofs(dof_handler_ls),
-                  dof_handler_ls.get_communicator());
+                  dof_handler_ls.get_mpi_communicator());
 
                 std::shared_ptr<dealii::Function<dim>> initial_level_set =
                   simulation_case->get_initial_condition("level_set", true /*is optional*/);
@@ -2406,7 +2406,7 @@ namespace MeltPoolDG
           level_set_operation->get_level_set().reinit(
             dof_handler_ls.locally_owned_dofs(),
             dealii::DoFTools::extract_locally_relevant_dofs(dof_handler_ls),
-            dof_handler_ls.get_communicator());
+            dof_handler_ls.get_mpi_communicator());
 
           if (is_inital_solution)
             {

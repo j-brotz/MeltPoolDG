@@ -63,10 +63,10 @@ namespace MeltPoolDG::LevelSet::Tools
     , tolerance_normal_vector(UtilityFunctions::compute_numerical_zero_of_norm<dim, number>(
         dof_handler_ls.get_triangulation(),
         mapping))
-    , mpi_comm(dof_handler_ls.get_communicator())
+    , mpi_comm(dof_handler_ls.get_mpi_communicator())
     , pcout(std::cout,
             dealii::Utilities::MPI::this_mpi_process(
-              dof_handler_signed_distance.get_communicator()) == 0)
+              dof_handler_signed_distance.get_mpi_communicator()) == 0)
     , timer_output(timer_output)
   {
     if (nearest_point_data.verbosity_level > 0)

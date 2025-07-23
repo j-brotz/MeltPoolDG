@@ -164,8 +164,8 @@ namespace MeltPoolDG
          */
         this->locally_owned_dofs.push_back(dof->locally_owned_dofs());
 
-        dealii::IndexSet locally_relevant_dofs_temp;
-        dealii::DoFTools::extract_locally_relevant_dofs(*dof, locally_relevant_dofs_temp);
+        dealii::IndexSet locally_relevant_dofs_temp =
+          dealii::DoFTools::extract_locally_relevant_dofs(*dof);
         this->locally_relevant_dofs.push_back(locally_relevant_dofs_temp);
 
         this->partitioner.push_back(std::make_shared<dealii::Utilities::MPI::Partitioner>(
@@ -503,7 +503,7 @@ namespace MeltPoolDG
   MPI_Comm
   ScratchData<dim, spacedim, number>::get_mpi_comm(const unsigned int dof_idx) const
   {
-    return this->dof_handler[dof_idx]->get_communicator();
+    return this->dof_handler[dof_idx]->get_mpi_communicator();
   }
 
   template <int dim, int spacedim, typename number>

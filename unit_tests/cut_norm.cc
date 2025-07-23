@@ -87,7 +87,7 @@ test()
   LinearAlgebra::distributed::Vector<number> level_set;
   level_set.reinit(dof_handler_ls.locally_owned_dofs(),
                    DoFTools::extract_locally_relevant_dofs(dof_handler_ls),
-                   tria.get_communicator());
+                   tria.get_mpi_communicator());
   const Functions::SignedDistance::Plane<dim> signed_distance(Point<dim>(),
                                                               Point<dim>::unit_vector(0));
   VectorTools::interpolate(dof_handler_ls, signed_distance, level_set);
@@ -132,7 +132,7 @@ test()
 
   const number norm = compute_cut_norm<dim>(
     solution, matrix_free, mapping_info_cells, is_two_phase, fe_q, 0, 0, NormType::L1_norm);
-  if (Utilities::MPI::this_mpi_process(tria.get_communicator()) == 0)
+  if (Utilities::MPI::this_mpi_process(tria.get_mpi_communicator()) == 0)
     std::cout << "L1 norm: " << norm << std::endl;
 }
 

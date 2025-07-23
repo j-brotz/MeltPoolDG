@@ -20,14 +20,14 @@ namespace MeltPoolDG::Constraints
     return;
 #endif
 
-    dealii::IndexSet locally_active_dofs;
-    dealii::DoFTools::extract_locally_active_dofs(dof_handler, locally_active_dofs);
+    dealii::IndexSet locally_active_dofs =
+      dealii::DoFTools::extract_locally_active_dofs(dof_handler);
 
     Assert(constraints.is_consistent_in_parallel(
-             dealii::Utilities::MPI::all_gather(dof_handler.get_communicator(),
+             dealii::Utilities::MPI::all_gather(dof_handler.get_mpi_communicator(),
                                                 dof_handler.locally_owned_dofs()),
              locally_active_dofs,
-             dof_handler.get_communicator()),
+             dof_handler.get_mpi_communicator()),
            dealii::ExcInternalError());
   }
 
@@ -99,7 +99,8 @@ namespace MeltPoolDG::Constraints
     const bool set_inhomogeneities = true,
     const bool close               = true)
   {
-    scratch_data.get_constraint(dof_idx).reinit(scratch_data.get_locally_relevant_dofs(dof_idx));
+    scratch_data.get_constraint(dof_idx).reinit(scratch_data.get_locally_owned_dofs(dof_idx),
+                                                scratch_data.get_locally_relevant_dofs(dof_idx));
 
     fill_DBC(scratch_data, bc_data, dof_idx, set_inhomogeneities, close);
   }
@@ -118,7 +119,8 @@ namespace MeltPoolDG::Constraints
            const bool                     close = true)
   {
     scratch_data.get_constraint(dof_hanging_nodes_idx)
-      .reinit(scratch_data.get_locally_relevant_dofs(dof_hanging_nodes_idx));
+      .reinit(scratch_data.get_locally_owned_dofs(dof_hanging_nodes_idx),
+              scratch_data.get_locally_relevant_dofs(dof_hanging_nodes_idx));
     dealii::DoFTools::make_hanging_node_constraints(
       scratch_data.get_dof_handler(dof_hanging_nodes_idx),
       scratch_data.get_constraint(dof_hanging_nodes_idx));

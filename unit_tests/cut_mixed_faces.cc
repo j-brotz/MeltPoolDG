@@ -208,7 +208,7 @@ test()
   VectorType ls_vector;
   ls_vector.reinit(ls_dof_handler.locally_owned_dofs(),
                    DoFTools::extract_locally_relevant_dofs(ls_dof_handler),
-                   tria.get_communicator());
+                   tria.get_mpi_communicator());
   Point<dim> p;
   // choose interface in the center of the third element
   p[0] = 0.25;

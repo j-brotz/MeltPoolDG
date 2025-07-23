@@ -306,12 +306,10 @@ namespace MeltPoolDG::Heat
               Assert(level_set_field_function != nullptr, dealii::ExcInternalError());
               FiniteElementUtils::distribute_dofs<dim, 1>(simulation_case->parameters.base.fe,
                                                           dof_handler_level_set);
-              dealii::IndexSet locally_relevant_dofs;
-              dealii::DoFTools::extract_locally_relevant_dofs(dof_handler_level_set,
-                                                              locally_relevant_dofs);
               level_set.reinit(dof_handler_level_set.locally_owned_dofs(),
-                               locally_relevant_dofs,
-                               dof_handler_level_set.get_communicator());
+                               dealii::DoFTools::extract_locally_relevant_dofs(
+                                 dof_handler_level_set),
+                               dof_handler_level_set.get_mpi_communicator());
               level_set_field_function->set_time(time_iterator->get_current_time());
               dealii::VectorTools::interpolate(scratch_data->get_mapping(),
                                                dof_handler_level_set,
@@ -636,7 +634,7 @@ namespace MeltPoolDG::Heat
                                                       dof_handler_level_set);
           level_set.reinit(dof_handler_level_set.locally_owned_dofs(),
                            dealii::DoFTools::extract_locally_relevant_dofs(dof_handler_level_set),
-                           dof_handler_level_set.get_communicator());
+                           dof_handler_level_set.get_mpi_communicator());
           if (is_inital_solution)
             dealii::VectorTools::interpolate(scratch_data->get_mapping(),
                                              dof_handler_level_set,

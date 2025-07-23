@@ -220,7 +220,7 @@ namespace MeltPoolDG::Flow
 
         level_set.reinit(dof_handler_level_set.locally_owned_dofs(),
                          DoFTools::extract_locally_relevant_dofs(dof_handler_level_set),
-                         dof_handler_level_set.get_communicator());
+                         dof_handler_level_set.get_mpi_communicator());
         compute_level_set();
       }
 
