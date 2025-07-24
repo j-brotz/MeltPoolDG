@@ -333,9 +333,16 @@ namespace MeltPoolDG
     const std::function<std::vector<bool>()> &marked_vertices)
   {
     if (not rpe.contains(dof_idx))
-      rpe.insert({dof_idx,
-                  std::make_shared<dealii::Utilities::MPI::RemotePointEvaluation<dim, dim>>(
-                    1e-6 /*tolerance*/, true /*unique mapping*/, 0, marked_vertices)});
+      {
+        const typename dealii::Utilities::MPI::RemotePointEvaluation<dim, dim>::AdditionalData
+          additional_data(1e-6 /*tolerance*/,
+                          true /*unique mapping*/,
+                          0 /*rtree level*/,
+                          marked_vertices);
+        rpe.insert({dof_idx,
+                    std::make_shared<dealii::Utilities::MPI::RemotePointEvaluation<dim, dim>>(
+                      additional_data)});
+      }
   }
 
   template <int dim, int spacedim, typename number>
