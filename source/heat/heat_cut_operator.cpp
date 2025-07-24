@@ -89,7 +89,7 @@ namespace MeltPoolDG::Heat
         return dealii::VectorizedArray<number>(0.0);
 
       return evaluate_function<dim, number>(*laser_intensity_profile,
-                                            temperature_eval.real_point(q)) *
+                                            temperature_eval.quadrature_point(q)) *
              compute_projection_factor(laser_direction, temperature_eval.normal_vector(q));
     }
 
