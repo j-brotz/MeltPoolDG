@@ -537,7 +537,8 @@ namespace MeltPoolDG::CutUtil
       }
 
     dealii::AffineConstraints<number> constraints_gp;
-    constraints_gp.reinit(dealii::DoFTools::extract_locally_relevant_dofs(cut_dof_handler));
+    constraints_gp.reinit(cut_dof_handler.locally_owned_dofs(),
+                          dealii::DoFTools::extract_locally_relevant_dofs(cut_dof_handler));
 
     std::vector<bool> dof_processed(partitioner_dof.locally_owned_size() +
                                       partitioner_dof.n_ghost_indices(),

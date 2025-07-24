@@ -170,8 +170,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
                                              const MPI_Comm mpi_communicator)
       : MeltPoolCase<dim, number>(parameter_file, mpi_communicator)
       , x_max(y_max / std::pow(dim, this->parameters.base.global_refinements))
-      , remote_point_evaluation(
-          dealii::Utilities::MPI::RemotePointEvaluation<dim, dim>::AdditionalData(1e-6, true))
+      , remote_point_evaluation()
     {
       AssertThrow(y_interface >= y_min && y_interface <= y_max,
                   dealii::ExcMessage(
