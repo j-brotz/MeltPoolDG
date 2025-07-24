@@ -281,10 +281,9 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
     return marked_vertices;
   };
 
-  Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(1e-6 /*tolerance*/,
-                                                                          true /*unique mapping*/,
-                                                                          0 /*rtree_level=*/,
-                                                                          marked_vertices);
+  const typename Utilities::MPI::RemotePointEvaluation<dim, dim>::AdditionalData additional_data(
+    1e-6 /*tolerance*/, true /*unique mapping*/, 0 /*rtree_level=*/, marked_vertices);
+  Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(additional_data);
 
   const double min_cell_size = GridTools::minimal_cell_diameter(triangulation) / std::sqrt(dim);
 
