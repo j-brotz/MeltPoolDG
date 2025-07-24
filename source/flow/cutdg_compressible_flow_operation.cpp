@@ -378,7 +378,7 @@ namespace MeltPoolDG::Flow
     min_density = dealii::Utilities::MPI::min(min_density,
                                               flow_scratch_data.scratch_data.get_matrix_free()
                                                 .get_dof_handler(flow_scratch_data.dof_idx)
-                                                .get_communicator());
+                                                .get_mpi_communicator());
 
     return min_density;
   }

@@ -300,17 +300,14 @@ namespace MeltPoolDG::Flow
     dealii::Tensor<1, dim, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>> helper;
     // density direction
     helper -= rho_inv * rho_inv * delta_w_q[0] *
-              dyadic_product<dim, dim, dealii::VectorizedArray<number>>(w_q.begin_raw() + 1,
-                                                                        w_q.begin_raw() + 1);
+              dyadic_product<dim, dim, dealii::VectorizedArray<number>>(&w_q[1], &w_q[1]);
     helper += rho_inv * rho_inv * rs_div_c * momentum_norm_squared * delta_w_q[0] * 0.5 *
               identity<dim, dealii::VectorizedArray<number>>();
     // momentum direction
     helper +=
-      rho_inv * dyadic_product<dim, dim, dealii::VectorizedArray<number>>(delta_w_q.begin_raw() + 1,
-                                                                          w_q.begin_raw() + 1);
-    helper += rho_inv *
-              dyadic_product<dim, dim, dealii::VectorizedArray<number>>(w_q.begin_raw() + 1,
-                                                                        delta_w_q.begin_raw() + 1);
+      rho_inv * dyadic_product<dim, dim, dealii::VectorizedArray<number>>(&delta_w_q[1], &w_q[1]);
+    helper +=
+      rho_inv * dyadic_product<dim, dim, dealii::VectorizedArray<number>>(&w_q[1], &delta_w_q[1]);
     helper -= rs_div_c * rho_inv * momentum_times_delta_momentum_squared *
               identity<dim, dealii::VectorizedArray<number>>();
     // energy direction

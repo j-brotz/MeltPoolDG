@@ -65,7 +65,7 @@ namespace MeltPoolDG::CutUtil
       for (auto vec : level_set_dof_vectors)
         vec->reinit(locally_owned_dofs,
                     locally_relevant_dofs,
-                    level_set_dof_handler.get_communicator());
+                    level_set_dof_handler.get_mpi_communicator());
     }
 
     dealii::SolutionTransfer<dim, VectorType> ls_solution_transfer(level_set_dof_handler);

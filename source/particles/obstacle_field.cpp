@@ -16,7 +16,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   : data(data)
   , obstacle_handler(triangulation, mapping, ObstacleType::n_obstacle_properties)
   , obstacle_data_structure(obstacle_handler)
-  , mpi_communicator(triangulation.get_communicator())
+  , mpi_communicator(triangulation.get_mpi_communicator())
 {
   read_particle_state_input_file(triangulation);
   obstacle_data_structure.reinit();

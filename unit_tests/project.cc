@@ -81,7 +81,7 @@ main(int argc, char *argv[])
   data_out.add_data_vector(rhs, "rhs");
   data_out.add_data_vector(rhs_projected, "rhs_projected");
   data_out.build_patches(2);
-  data_out.write_vtu_with_pvtu_record("./", "result", 0, triangulation.get_communicator());
+  data_out.write_vtu_with_pvtu_record("./", "result", 0, triangulation.get_mpi_communicator());
 #endif
 
   return 0;

@@ -164,8 +164,8 @@ namespace MeltPoolDG
          */
         this->locally_owned_dofs.push_back(dof->locally_owned_dofs());
 
-        dealii::IndexSet locally_relevant_dofs_temp;
-        dealii::DoFTools::extract_locally_relevant_dofs(*dof, locally_relevant_dofs_temp);
+        dealii::IndexSet locally_relevant_dofs_temp =
+          dealii::DoFTools::extract_locally_relevant_dofs(*dof);
         this->locally_relevant_dofs.push_back(locally_relevant_dofs_temp);
 
         this->partitioner.push_back(std::make_shared<dealii::Utilities::MPI::Partitioner>(
@@ -333,9 +333,16 @@ namespace MeltPoolDG
     const std::function<std::vector<bool>()> &marked_vertices)
   {
     if (not rpe.contains(dof_idx))
-      rpe.insert({dof_idx,
-                  std::make_shared<dealii::Utilities::MPI::RemotePointEvaluation<dim, dim>>(
-                    1e-6 /*tolerance*/, true /*unique mapping*/, 0, marked_vertices)});
+      {
+        const typename dealii::Utilities::MPI::RemotePointEvaluation<dim, dim>::AdditionalData
+          additional_data(1e-6 /*tolerance*/,
+                          true /*unique mapping*/,
+                          0 /*rtree level*/,
+                          marked_vertices);
+        rpe.insert({dof_idx,
+                    std::make_shared<dealii::Utilities::MPI::RemotePointEvaluation<dim, dim>>(
+                      additional_data)});
+      }
   }
 
   template <int dim, int spacedim, typename number>
@@ -503,7 +510,7 @@ namespace MeltPoolDG
   MPI_Comm
   ScratchData<dim, spacedim, number>::get_mpi_comm(const unsigned int dof_idx) const
   {
-    return this->dof_handler[dof_idx]->get_communicator();
+    return this->dof_handler[dof_idx]->get_mpi_communicator();
   }
 
   template <int dim, int spacedim, typename number>

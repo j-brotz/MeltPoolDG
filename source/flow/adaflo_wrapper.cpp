@@ -146,11 +146,11 @@ namespace MeltPoolDG::Flow
 
     // only for output purposes
     constraints_parameters.clear();
-    dealii::IndexSet locally_relevant_dofs_temp;
-    dealii::DoFTools::extract_locally_relevant_dofs(dof_handler_parameters,
-                                                    locally_relevant_dofs_temp);
+    dealii::IndexSet locally_relevant_dofs_temp =
+      dealii::DoFTools::extract_locally_relevant_dofs(dof_handler_parameters);
 
-    constraints_parameters.reinit(locally_relevant_dofs_temp);
+    constraints_parameters.reinit(dof_handler_parameters.locally_owned_dofs(),
+                                  locally_relevant_dofs_temp);
     dealii::DoFTools::make_hanging_node_constraints(dof_handler_parameters, constraints_parameters);
     constraints_parameters.close();
     Constraints::check_constraints(dof_handler_parameters, constraints_parameters);

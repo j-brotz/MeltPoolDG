@@ -142,7 +142,7 @@ namespace MeltPoolDG::Heat
       const auto &dh = scratch_data.get_dof_handler(heat_cut_dof_idx);
       vec.reinit(dh.locally_owned_dofs(),
                  scratch_data.get_locally_relevant_dofs(heat_cut_dof_idx),
-                 dh.get_communicator());
+                 dh.get_mpi_communicator());
     };
   }
 

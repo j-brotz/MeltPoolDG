@@ -165,12 +165,12 @@ namespace MeltPoolDG::LevelSet
             const auto average =
               0.5 * (cell_damping_minus * u_gradient_minus + cell_damping_plus * u_gradient_plus);
 
-            const auto flux_2 = 0.5 * (u_minus - u_plus) * eval_minus.get_normal_vector(q);
+            const auto flux_2 = 0.5 * (u_minus - u_plus) * eval_minus.normal_vector(q);
 
-            eval_minus.submit_value(-eval_minus.get_normal_vector(q) * average +
+            eval_minus.submit_value(-eval_minus.normal_vector(q) * average +
                                       (u_minus - u_plus) * penalty,
                                     q);
-            eval_plus.submit_value(eval_minus.get_normal_vector(q) * average -
+            eval_plus.submit_value(eval_minus.normal_vector(q) * average -
                                      (u_minus - u_plus) * penalty,
                                    q);
 
@@ -215,9 +215,9 @@ namespace MeltPoolDG::LevelSet
             const auto average =
               0.5 * (cell_damping_minus * u_gradient_minus + cell_damping_plus * u_gradient_plus);
 
-            const auto flux_2 = 0.5 * (u_minus - u_plus) * eval_minus.get_normal_vector(q);
+            const auto flux_2 = 0.5 * (u_minus - u_plus) * eval_minus.normal_vector(q);
 
-            eval_minus.submit_value(-eval_minus.get_normal_vector(q) * average +
+            eval_minus.submit_value(-eval_minus.normal_vector(q) * average +
                                       (u_minus - u_plus) * penalty,
                                     q);
 
@@ -279,12 +279,12 @@ namespace MeltPoolDG::LevelSet
         const auto average =
           0.5 * (cell_damping_minus * u_gradient_minus + cell_damping_plus * u_gradient_plus);
 
-        const auto flux_2 = 0.5 * (u_minus - u_plus) * face_integrator_minus.get_normal_vector(q);
+        const auto flux_2 = 0.5 * (u_minus - u_plus) * face_integrator_minus.normal_vector(q);
 
-        face_integrator_minus.submit_value(-face_integrator_minus.get_normal_vector(q) * average +
+        face_integrator_minus.submit_value(-face_integrator_minus.normal_vector(q) * average +
                                              (u_minus - u_plus) * penalty,
                                            q);
-        face_integrator_plus.submit_value(face_integrator_minus.get_normal_vector(q) * average -
+        face_integrator_plus.submit_value(face_integrator_minus.normal_vector(q) * average -
                                             (u_minus - u_plus) * penalty,
                                           q);
 
@@ -319,9 +319,9 @@ namespace MeltPoolDG::LevelSet
         const auto average =
           0.5 * (cell_damping_minus * u_gradient_minus + cell_damping_plus * u_gradient_plus);
 
-        const auto flux_2 = 0.5 * (u_minus - u_plus) * face_integrator_minus.get_normal_vector(q);
+        const auto flux_2 = 0.5 * (u_minus - u_plus) * face_integrator_minus.normal_vector(q);
 
-        face_integrator_minus.submit_value(-face_integrator_minus.get_normal_vector(q) * average +
+        face_integrator_minus.submit_value(-face_integrator_minus.normal_vector(q) * average +
                                              (u_minus - u_plus) * penalty,
                                            q);
 
@@ -343,7 +343,7 @@ namespace MeltPoolDG::LevelSet
     dsp.reinit(scratch_data.get_dof_handler(dof_idx).locally_owned_dofs(),
                scratch_data.get_dof_handler(dof_idx).locally_owned_dofs(),
                DoFTools::extract_locally_relevant_dofs(scratch_data.get_dof_handler(dof_idx)),
-               scratch_data.get_dof_handler(dof_idx).get_communicator());
+               scratch_data.get_dof_handler(dof_idx).get_mpi_communicator());
 
     DoFTools::make_flux_sparsity_pattern(scratch_data.get_dof_handler(dof_idx),
                                          dsp,

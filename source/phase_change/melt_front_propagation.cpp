@@ -276,11 +276,10 @@ namespace MeltPoolDG
 
     flow_constraints.copy_from(flow_constraints_no_solid);
 
-    IndexSet flow_locally_relevant_dofs;
-    DoFTools::extract_locally_relevant_dofs(flow_dof_handler, flow_locally_relevant_dofs);
+    IndexSet flow_locally_relevant_dofs = DoFTools::extract_locally_relevant_dofs(flow_dof_handler);
 
     AffineConstraints<number> solid_constraints;
-    solid_constraints.reinit(flow_locally_relevant_dofs);
+    solid_constraints.reinit(flow_dof_handler.locally_owned_dofs(), flow_locally_relevant_dofs);
 
     FEValues<dim> flow_eval(scratch_data.get_mapping(),
                             flow_dof_handler.get_fe(),
@@ -347,10 +346,10 @@ namespace MeltPoolDG
 
     AffineConstraints<number> solid_constraints;
 
-    IndexSet ls_locally_relevant_dofs;
-    DoFTools::extract_locally_relevant_dofs(level_set_dof_handler, ls_locally_relevant_dofs);
+    IndexSet ls_locally_relevant_dofs =
+      DoFTools::extract_locally_relevant_dofs(level_set_dof_handler);
 
-    solid_constraints.reinit(ls_locally_relevant_dofs);
+    solid_constraints.reinit(level_set_dof_handler.locally_owned_dofs(), ls_locally_relevant_dofs);
 
     FEValues<dim> ls_eval(scratch_data.get_mapping(),
                           level_set_dof_handler.get_fe(),

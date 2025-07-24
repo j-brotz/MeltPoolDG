@@ -731,7 +731,7 @@ namespace MeltPoolDG::Heat
 
                 val -= MeltPoolDG::VectorTools::evaluate_function_at_vectorized_points(
                          *neumann_bc.at(bc_index), quad_point) *
-                       T_eval.get_normal_vector(q);
+                       T_eval.normal_vector(q);
               }
             if (do_radiation)
               val -= data.radiation.emissivity * PhysicalConstants::stefan_boltzmann_constant *

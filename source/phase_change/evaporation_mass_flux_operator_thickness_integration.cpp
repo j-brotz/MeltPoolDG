@@ -136,8 +136,10 @@ namespace MeltPoolDG::Evaporation
         /*
          * evaluate result at points normal to interface
          */
-        Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
-          1e-6 /*tolerance*/, true /*unique mapping*/);
+        const typename Utilities::MPI::RemotePointEvaluation<dim, dim>::AdditionalData
+          additional_data(1e-6 /*tolerance*/, true /*unique mapping*/);
+
+        Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(additional_data);
 
         remote_point_evaluation.reinit(global_points_normal_to_interface,
                                        scratch_data.get_triangulation(),

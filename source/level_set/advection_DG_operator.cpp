@@ -113,7 +113,7 @@ namespace MeltPoolDG::LevelSet
             const auto   u_minus = eval_minus.get_value(q);
             const auto   u_plus  = eval_plus.get_value(q);
             const vector normal_vector_minus =
-              MeltPoolDG::VectorTools::to_vector<dim>(eval_minus.get_normal_vector(q));
+              MeltPoolDG::VectorTools::to_vector<dim>(eval_minus.normal_vector(q));
 
             const scalar normal_times_speed = speed * normal_vector_minus;
 
@@ -159,7 +159,7 @@ namespace MeltPoolDG::LevelSet
 
             const auto   u_minus = eval_minus.get_value(q);
             const vector normal_vector =
-              MeltPoolDG::VectorTools::to_vector<dim>(eval_minus.get_normal_vector(q));
+              MeltPoolDG::VectorTools::to_vector<dim>(eval_minus.normal_vector(q));
 
             dealii::VectorizedArray<number> u_plus;
             const auto                      boundary_id = data.get_boundary_id(face);
@@ -218,7 +218,7 @@ namespace MeltPoolDG::LevelSet
 
                 const auto   u_minus = eval_minus.get_value(q);
                 const vector normal_vector =
-                  MeltPoolDG::VectorTools::to_vector<dim>(eval_minus.get_normal_vector(q));
+                  MeltPoolDG::VectorTools::to_vector<dim>(eval_minus.normal_vector(q));
 
                 // dealii::VectorizedArray<number> u_plus;
                 auto const u_plus =

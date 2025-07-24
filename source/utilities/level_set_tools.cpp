@@ -255,11 +255,9 @@ namespace MeltPoolDG::LevelSet::Tools
         nm_mesh_classifier = std::make_unique<dealii::NonMatching::MeshClassifier<dim>>(
           dof_handler, nm_locally_relevant_level_set_vector);
 
-        dealii::IndexSet locally_relevant_dofs;
-        dealii::DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
-
         nm_locally_relevant_level_set_vector.reinit(dof_handler.locally_owned_dofs(),
-                                                    locally_relevant_dofs,
+                                                    dealii::DoFTools::extract_locally_relevant_dofs(
+                                                      dof_handler),
                                                     level_set_vector.get_mpi_communicator());
         nm_locally_relevant_level_set_vector.copy_locally_owned_data_from(level_set_vector);
         nm_locally_relevant_level_set_vector.update_ghost_values();

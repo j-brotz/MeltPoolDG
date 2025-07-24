@@ -36,10 +36,9 @@ namespace MeltPoolDG::Heat
 
     std::vector<dealii::types::global_dof_index> local_dof_indices(dofs_per_cell);
 
-    std::map<dealii::types::global_dof_index, dealii::Point<dim>> support_points;
-    dealii::DoFTools::map_dofs_to_support_points(scratch_data.get_mapping(),
-                                                 scratch_data.get_dof_handler(heat_dof_idx),
-                                                 support_points);
+    std::map<dealii::types::global_dof_index, dealii::Point<dim>> support_points =
+      dealii::DoFTools::map_dofs_to_support_points(scratch_data.get_mapping(),
+                                                   scratch_data.get_dof_handler(heat_dof_idx));
 
     for (const auto &cell : scratch_data.get_dof_handler(heat_dof_idx).active_cell_iterators())
       if (cell->is_locally_owned())
