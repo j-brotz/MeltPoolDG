@@ -47,4 +47,4 @@ or in more detail
 
 ## Documentation
 
-see https://meltpooldg.github.io/MeltPoolDG/
+see https://meltpooldg.github.io/MeltPoolDG/ and https://meltpooldg.github.io/MeltPoolDG/MeltPoolDG-dev
