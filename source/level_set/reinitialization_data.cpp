@@ -26,6 +26,14 @@ namespace MeltPoolDG::LevelSet
         n_initial_steps,
         "Defines the number of initial reinitialization steps of the level set function. "
         "In the default case, the number is set equal to the number of max n steps.");
+      prm.add_parameter(
+        "pseudo time step size",
+        pseudo_time_step_size,
+        "Sets the reinitialization time step size. By default its computed from the cell size.");
+      prm.add_parameter(
+        "pseudo time step factor",
+        pseudo_time_step_factor,
+        "Factor on the reinitialization time step size that is computed from the cell size.");
       prm.add_parameter("max n steps",
                         max_n_steps,
                         "Sets the maximum number of reinitialization steps");
@@ -174,6 +182,9 @@ namespace MeltPoolDG::LevelSet
     // Cross check for DG since for DG only matrix free is supported
     AssertThrow(fe.type != FiniteElementType::FE_DGQ or linear_solver.do_matrix_free,
                 dealii::ExcMessage("For the DG element only matrix free is implemented."));
+
+    AssertThrow(pseudo_time_step_factor > 0.0,
+                dealii::ExcMessage("The time step factor must be positive."));
 
     predictor.check_input_parameters();
   }
