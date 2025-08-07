@@ -235,11 +235,6 @@ namespace MeltPoolDG::TimeIntegration
           return LinearSolver::solve(jacobian, dst, rhs, data, preconditioner);
         };
 
-      static int count = 0;
-      if (count % this->time_integrator_data.preconditioner_update_frequency == 0)
-        preconditioner.update();
-      count++;
-
       if (stage_pre_processing)
         stage_pre_processing(current_time,
                              solution_history.get_current_solution(),
@@ -249,6 +244,11 @@ namespace MeltPoolDG::TimeIntegration
                                        time_step,
                                        summed_old_solution,
                                        rhs_prefactor);
+
+      static int count = 0;
+      if (count % this->time_integrator_data.preconditioner_update_frequency == 0)
+        preconditioner.update();
+      count++;
 
       nonlinear_solver.solve(solution_history.get_current_solution());
 
