@@ -124,6 +124,8 @@
         "implementation": "meltpooldg",
         "max n steps": "5",
         "n initial steps": "-1",
+        "pseudo time step factor": "1",
+        "pseudo time step size": "-1",
         "tangential diffusion factor": "0",
         "tolerance": "2.22507e-308",
         "type": "olsson2007",
