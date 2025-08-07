@@ -218,7 +218,7 @@ namespace MeltPoolDG::Flow
           }
           case NumericalFluxType::harten_lax_vanleer: {
             const auto avg_velocity_normal = 0.5 * ((velocity_m + velocity_p) * normal);
-            const auto avg_c = std::sqrt(std::abs(0.5 * (sound_speed_m + sound_speed_p)));
+            const auto avg_c               = std::abs(0.5 * (sound_speed_m + sound_speed_p));
             const dealii::VectorizedArray<number> s_pos =
               std::max(dealii::VectorizedArray<number>(), avg_velocity_normal + avg_c);
             const dealii::VectorizedArray<number> s_neg =
