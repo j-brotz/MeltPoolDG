@@ -24,6 +24,7 @@
     "jacobian type": "exact",
     "gravity": 0.5,
     "time integration": {
+      "preconditioner update frequency": 1,
       "type": "bdf_4",
       "linear solver": {
         "rel tolerance": 1e-10,
