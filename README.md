@@ -23,27 +23,6 @@ We gratefully acknowledge the contributions and discussions with Christoph Meier
 ## Installation
 
 A description on the installation procedure including the coniguration scripts can be found in [scripts/config](https://github.com/MeltPoolDG/MeltPoolDG-dev/tree/master/scripts/config) directory. 
-<!---
-The documentation can be found under https://meltpooldg.github.io/MeltPoolDG/.
--->
-## Run a simulation
-
-To run a simulation case, e.g. `../tests/advection_diffusion.json`, with 6 processes execute
-
-```
-mpirun -np 6 meltpooldg `../tests/advection_diffusion.json`
-```
-## Parameters
-
-A list of available parameters for a certain simulation case, e.g. `../tests/advection_diffusion.json`, can be obtained via
-
-```
-./meltpooldg --help ../tests/advection_diffusion.json
-```
-or in more detail
-```
-./meltpooldg --help-detail ../tests/advection_diffusion.json
-```
 
 ## Documentation
 
