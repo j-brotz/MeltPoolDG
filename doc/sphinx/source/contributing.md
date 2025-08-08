@@ -1,5 +1,17 @@
 # ✋ How to Contribute
 
+## Table of Contents
+
+- [Forking the repository](#forking-the-repository)
+- [Making Changes and Pushing to the Repository](#making-changes-and-pushing-to-the-repository)
+- [Testing](#testing)
+- [How to Work with CMake Presets](#how-to-work-with-cmake-presets)
+- [Code Formatting](#code-formatting)
+- [How to use `clang-tidy` to check your code](#how-to-use-clang-tidy-to-check-your-code)
+- [Installing Pre-commit Hooks](#installing-pre-commit-hooks)
+- [Useful GIT commands](#useful-git-commands)
+
+
 ## Forking the repository
 
 Before making any changes, you need to fork the repository to your own GitHub account. You can do this by clicking the Fork button at the top right corner of the repository page on GitHub. Once forked, clone your forked repository to your local machine:
