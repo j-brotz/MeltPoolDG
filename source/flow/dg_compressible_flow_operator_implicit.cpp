@@ -48,6 +48,7 @@ namespace MeltPoolDG::Flow
   DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::
     compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const
   {
+    diagonal = 0.;
     compute_jacobian_matrix_representation<dim, dim + 2, number>(
       *this,
       &diagonal,
