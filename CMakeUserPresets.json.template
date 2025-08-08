@@ -5,7 +5,6 @@
       "name": "local-paths",
       "hidden": true,
       "cacheVariables": {
-        "ADAFLO_LIB": "${sourceDir}/../external_libs/adaflo/build_release",
         "ADAFLO_INCLUDE": "${sourceDir}/../external_libs/adaflo/include",
         "DEAL_II_DIR": "${sourceDir}/../external_libs/dealii-build"
       }
