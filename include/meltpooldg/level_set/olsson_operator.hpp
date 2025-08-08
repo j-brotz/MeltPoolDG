@@ -30,6 +30,12 @@ namespace MeltPoolDG::LevelSet
    * *Journal of Computational Physics*, 225(1), 785–807, 2007.
    * https://doi.org/10.1016/j.jcp.2007.01.026
    *
+   * and for wetting consideration, we add the tangential component as described in:
+   *
+   * S. Zahedi, K. Gustavsson, and G. Kreiss, “A conservative level set method
+   * for contact line dynamics,” J. Comput. Phys., vol. 228, no. 17,
+   * pp. 6361–6375, Sep. 2009, doi: 10.1016/j.jcp.2009.05.043.
+   *
    * @tparam dim    Spatial dimension (2 or 3).
    * @tparam number Scalar number type (e.g., double or float).
    */

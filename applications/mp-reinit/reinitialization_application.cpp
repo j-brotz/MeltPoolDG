@@ -287,9 +287,11 @@ namespace MeltPoolDG::LevelSet
                                                         reinit_dof_idx);
       }
 
-    scratch_data->build(true /*boundary_face_integrals*/,
+    scratch_data->build(param.reinit.fe.type == FiniteElementType::FE_DGQ or
+                          not simulation_case->get_boundary_condition("nx", "normal_vector")
+                                .empty() /*boundary_face_integrals*/,
                         param.reinit.fe.type == FiniteElementType::FE_DGQ /*inner face integrals*/,
-                        true /*normal_vectors*/);
+                        false /*normal_vectors*/);
 
     if (reinit_operation)
       reinit_operation->reinit();

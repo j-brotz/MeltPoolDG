@@ -25,6 +25,16 @@ namespace MeltPoolDG::LevelSet
     virtual void
     set_initial_condition(const dealii::Function<dim> & /*initial_field_function*/) = 0;
 
+    /**
+     * @brief Sets the boundary IDs where wetting boundary conditions should be applied.
+     *
+     * This function forwards the provided list of boundary IDs to the reinitialization
+     * operation, indicating which boundaries are subject to wetting conditions.
+     *
+     * @param[in] wetting_bc_ids_in A list of boundary IDs where wetting conditions apply.
+     *
+     * @remark This function is not implemented for the base class.
+     */
     virtual void
     set_wetting_boundary_condition_ids(
       std::vector<dealii::types::boundary_id> && /*wetting_bc_ids*/)

@@ -12,6 +12,15 @@ namespace MeltPoolDG::LevelSet
 {
   using namespace dealii;
 
+  /**
+   * @brief Computes the compressive flux term in the reinitialization equation for a level set formulation.
+   *
+   * @tparam number A scalar numeric type (e.g., float, double).
+   *
+   * @param[in] psi The level set value at a point.
+   *
+   * @return The value of the compressive flux evaluated at the given \p psi.
+   */
   template <typename number>
   number
   compressive_flux(const number psi)
@@ -494,18 +503,16 @@ namespace MeltPoolDG::LevelSet
   {
     face_eval.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
-    normal_face_eval.reinit(face_eval.get_current_cell_index());
+    const auto &cell = face_eval.get_current_cell_index();
+    normal_face_eval.reinit(cell);
     normal_face_eval.read_dof_values_plain(normal_vec);
     normal_face_eval.evaluate(EvaluationFlags::values);
 
-    // TODO: compute diffusion coefficients similar to cell-based evaluation
-
     // normal diffusion coefficient
-    const auto eps_n = reinit_data.compute_interface_thickness_parameter_epsilon(
-      scratch_data.get_min_cell_size() / ls_n_subdivisions);
+    const auto eps_n = normal_diffusion_length[cell];
 
     // tangential diffusion coefficient
-    const auto eps_t = eps_n * reinit_data.tangential_diffusion_factor;
+    const auto eps_t = tangential_diffusion_length[cell];
 
     for (unsigned int q = 0; q < face_eval.n_q_points; ++q)
       {
@@ -541,18 +548,16 @@ namespace MeltPoolDG::LevelSet
   {
     face_eval.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
-    normal_face_eval.reinit(face_eval.get_current_cell_index());
+    const auto &cell = face_eval.get_current_cell_index();
+    normal_face_eval.reinit(cell);
     normal_face_eval.read_dof_values_plain(normal_vec);
     normal_face_eval.evaluate(EvaluationFlags::values);
 
-    // TODO: compute diffusion coefficients similar to cell-based evaluation
-
     // normal diffusion coefficient
-    const auto eps_n = reinit_data.compute_interface_thickness_parameter_epsilon(
-      scratch_data.get_min_cell_size() / ls_n_subdivisions);
+    const auto eps_n = normal_diffusion_length[cell];
 
     // tangential diffusion coefficient
-    const auto eps_t = eps_n * reinit_data.tangential_diffusion_factor;
+    const auto eps_t = tangential_diffusion_length[cell];
 
     for (unsigned int q = 0; q < face_eval.n_q_points; ++q)
       {
@@ -601,7 +606,7 @@ namespace MeltPoolDG::LevelSet
           {
             normal_diffusion_length[cell] =
               reinit_data.compute_interface_thickness_parameter_epsilon(
-                scratch_data.get_min_cell_size() / ls_n_subdivisions);
+                scratch_data.get_cell_sizes()[cell] / ls_n_subdivisions);
             tangential_diffusion_length[cell] =
               normal_diffusion_length[cell] * reinit_data.tangential_diffusion_factor;
           }
