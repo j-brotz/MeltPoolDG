@@ -190,7 +190,7 @@ namespace MeltPoolDG::Flow
      */
     void
     attach_output_vectors(GenericDataOut<dim, number> &data_out,
-                          const bool do_primitive_variable_output = false) const
+                          const bool                   do_primitive_variable_output = false) const
     {
       // check, if single-phase or two-phase case is considered
       const auto &dof_handler = operation_pimpl->get_dof_handler();
