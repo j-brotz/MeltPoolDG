@@ -10,6 +10,10 @@
 
 namespace MeltPoolDG::Flow
 {
+  // Forward declaration
+  template <int dim, typename number>
+  class CompressibleFlowMaterial;
+
   /// Index sets for the components of the compressible Navier-Stokes equations.
   BETTER_ENUM(Idx1D, char, density, momentum_x, energy);
   BETTER_ENUM(Idx2D, char, density, momentum_x, momentum_y, energy);
@@ -81,6 +85,29 @@ namespace MeltPoolDG::Flow
     const std::string                                      &domain_representation_type,
     const unsigned int                                      dof_index      = 0,
     const Number                                            scaling_factor = 1.0);
+
+  /**
+   * @brief Update the primitive variable solution according to the current solution vector.
+   *
+   * @param solution_primitive_variables Vector where the solution in primitive variables is stored.
+   * @param solution Current solution vector in conservative variable formulation.
+   * @param dof_idx Index of the relevant dof handler in the matrix-free object.
+   * @param quad_idx Relevant quadrature index of the flow solver.
+   * @param material_liquid Pointer to the material object for liquid phase.
+   * @param material_gas Pointer to the material object for the gas phase.
+   *
+   * @note The second material object is only required for the two-phase case.
+   */
+  template <int dim, typename number>
+  void
+  update_primitive_variables_solution(
+    dealii::LinearAlgebra::distributed::Vector<number>       &solution_primitive_variables,
+    const dealii::LinearAlgebra::distributed::Vector<number> &solution,
+    const ScratchData<dim, dim, number>                      &scratch_data,
+    const unsigned int                                        dof_idx,
+    const unsigned int                                        quad_idx,
+    const CompressibleFlowMaterial<dim, number>              *material_liquid,
+    const CompressibleFlowMaterial<dim, number>              *material_gas = nullptr);
 
   /**
    * @brief An abstract interface for defining external forces acting on the fluid that must be
@@ -262,5 +289,61 @@ namespace MeltPoolDG::Flow
       AssertThrow(false,
                   dealii::ExcMessage("The domain representation type '" +
                                      domain_representation_type + "' is not supported."));
+  }
+
+  template <int dim, typename number>
+  void
+  update_primitive_variables_solution(
+    dealii::LinearAlgebra::distributed::Vector<number>       &solution_primitive_variables,
+    const dealii::LinearAlgebra::distributed::Vector<number> &solution,
+    const ScratchData<dim, dim, number>                      &scratch_data,
+    const unsigned int                                        dof_idx,
+    const unsigned int                                        quad_idx,
+    const CompressibleFlowMaterial<dim, number>              *material_liquid,
+    const CompressibleFlowMaterial<dim, number>              *material_gas)
+  {
+    const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free =
+      scratch_data.get_matrix_free();
+    unsigned int n_support_points_per_cell = scratch_data.get_n_dofs_per_cell(dof_idx) / (dim + 2);
+
+    auto process_cell = [&](CutUtil::CellCategory                        category,
+                            unsigned int                                 first_component,
+                            const CompressibleFlowMaterial<dim, number> *material,
+                            const unsigned int                           cell_batch) {
+      if (!material)
+        return;
+      auto eval = FECellIntegrator<dim, dim + 2, number>(
+        matrix_free, dof_idx, quad_idx, first_component, category);
+      eval.reinit(cell_batch);
+      eval.read_dof_values(solution);
+
+      for (unsigned int i = 0; i < n_support_points_per_cell; ++i)
+        {
+          const auto &u_cons = eval.get_dof_value(i);
+          auto u_prim = material->eos_utils->convert_conservative_into_primitive_variables(u_cons);
+          eval.submit_dof_value(u_prim, i);
+        }
+
+      eval.set_dof_values(solution_primitive_variables);
+    };
+
+    for (unsigned int cell_batch = 0; cell_batch < matrix_free.n_cell_batches(); ++cell_batch)
+      {
+        const auto cell_category = matrix_free.get_cell_category(cell_batch);
+
+        if (cell_category == CutUtil::CellCategory::liquid)
+          {
+            process_cell(CutUtil::CellCategory::liquid, 0, material_liquid, cell_batch);
+          }
+        else if (cell_category == CutUtil::CellCategory::gas)
+          {
+            process_cell(CutUtil::CellCategory::gas, dim + 2, material_gas, cell_batch);
+          }
+        else if (cell_category == CutUtil::CellCategory::intersected)
+          {
+            process_cell(CutUtil::CellCategory::intersected, 0, material_liquid, cell_batch);
+            process_cell(CutUtil::CellCategory::intersected, dim + 2, material_gas, cell_batch);
+          }
+      }
   }
 } // namespace MeltPoolDG::Flow

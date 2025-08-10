@@ -150,7 +150,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  CutDGCompressibleFlowOperation<dim, number>::reinit()
+  CutDGCompressibleFlowOperation<dim, number>::reinit(const bool do_primitive_variable_output)
   {
     // check if fe type is equal to FE_DGQ<dim>
     AssertThrow(
@@ -164,6 +164,9 @@ namespace MeltPoolDG::Flow
     flow_scratch_data.scratch_data.initialize_dof_vector(
       flow_scratch_data.solution_history.get_current_solution(), flow_scratch_data.dof_idx);
     flow_scratch_data.scratch_data.initialize_dof_vector(rhs, flow_scratch_data.dof_idx);
+    if (do_primitive_variable_output)
+      flow_scratch_data.scratch_data.initialize_dof_vector(solution_primitive_variables,
+                                                           flow_scratch_data.dof_idx);
     compute_intersected_quadrature();
   }
 

@@ -21,6 +21,21 @@ namespace MeltPoolDG
   }
 
   void
+  CompFlowOutputData::add_parameters(dealii::ParameterHandler &prm)
+  {
+    prm.enter_subsection("compressible flow");
+    {
+      prm.add_parameter(
+        "do primitive variable output",
+        do_primitive_variable_output,
+        "Set this parameter to true to output the solution vector in p"
+        "primitive variables formulation, in addition to the output in conservative "
+        "variable formulation.");
+    }
+    prm.leave_subsection();
+  }
+
+  void
   ParaviewData::add_parameters(dealii::ParameterHandler &prm)
   {
     prm.enter_subsection("paraview");
@@ -76,6 +91,7 @@ namespace MeltPoolDG
 
       paraview.add_parameters(prm);
       particle.add_parameters(prm);
+      comp_flow.add_parameters(prm);
     }
     prm.leave_subsection();
   }

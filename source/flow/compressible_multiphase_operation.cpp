@@ -195,49 +195,7 @@ namespace MeltPoolDG::Multiphase
 
   template <int dim, typename number>
   void
-  CompressibleMultiphaseOperation<dim, number>::attach_output_vectors(
-    GenericDataOut<dim, number> &data_out) const
-  {
-    std::cout << "do multiphsae attach output vectors" << std::endl;
-    std::vector<std::string> names;
-    // liquid phase
-    names.emplace_back("density (liquid)");
-    for (unsigned int d = 0; d < dim; ++d)
-      names.emplace_back("momentum (liquid)");
-    names.emplace_back("energy (liquid)");
-    // gas phase
-    names.emplace_back("density (gas)");
-    for (unsigned int d = 0; d < dim; ++d)
-      names.emplace_back("momentum (gas)");
-    names.emplace_back("energy (gas)");
-
-    std::vector<DataComponentInterpretation::DataComponentInterpretation> interpretation;
-    // liquid phase
-    interpretation.push_back(DataComponentInterpretation::component_is_scalar);
-    for (unsigned int d = 0; d < dim; ++d)
-      interpretation.push_back(DataComponentInterpretation::component_is_part_of_vector);
-    interpretation.push_back(DataComponentInterpretation::component_is_scalar);
-    // gas phase
-    interpretation.push_back(DataComponentInterpretation::component_is_scalar);
-    for (unsigned int d = 0; d < dim; ++d)
-      interpretation.push_back(DataComponentInterpretation::component_is_part_of_vector);
-    interpretation.push_back(DataComponentInterpretation::component_is_scalar);
-
-    data_out.add_data_vector(multiphase_scratch_data.scratch_data.get_dof_handler(
-                               multiphase_scratch_data.dof_idx),
-                             multiphase_scratch_data.solution_history.get_current_solution(),
-                             names,
-                             interpretation);
-
-    std::cout << names.size() << std::endl;
-    std::cout << interpretation.size() << std::endl;
-
-    // TODO: Output primitive variables
-  }
-
-  template <int dim, typename number>
-  void
-  CompressibleMultiphaseOperation<dim, number>::reinit()
+  CompressibleMultiphaseOperation<dim, number>::reinit(const bool do_primitive_variable_output)
   {
     // check if fe type is equal to FE_DGQ<dim>
     AssertThrow(
@@ -255,6 +213,10 @@ namespace MeltPoolDG::Multiphase
 
     multiphase_scratch_data.scratch_data.initialize_dof_vector(rhs,
                                                                multiphase_scratch_data.dof_idx);
+
+    if (do_primitive_variable_output)
+      multiphase_scratch_data.scratch_data.initialize_dof_vector(solution_primitive_variables,
+                                                                 multiphase_scratch_data.dof_idx);
 
     compute_intersected_quadrature();
   }

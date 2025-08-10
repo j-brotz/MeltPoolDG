@@ -102,10 +102,14 @@ namespace MeltPoolDG::Multiphase
     /**
      * @brief Set up the required internal data structures.
      *
+     * @param do_primitive_variable_output Boolean indicator whether the output of the solution
+     * vector should be done for the primitive variable formulation in addition to the output in
+     * conservative variable formulation.
+     *
      * After a call to this function the solve() function of the class can be utilized.
      */
     void
-    reinit();
+    reinit(const bool do_primitive_variable_output);
 
     /**
      * @brief Set a body force, e.g. gravity, specified by the passed function.
@@ -159,15 +163,6 @@ namespace MeltPoolDG::Multiphase
     set_initial_condition(const dealii::Function<dim> &function);
 
     /**
-     * @brief Attach the solution to the passed data out object. The solution which are added are
-     * the density, the momentum and the energy density.
-     *
-     * @param data_out Object to which the solution vector is attached.
-     */
-    void
-    attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
-
-    /**
      * @brief Set the boundary conditions.
      *
      * @param simulation_case Pointer to the considered simulation case class.
@@ -191,6 +186,13 @@ namespace MeltPoolDG::Multiphase
      */
     VectorType &
     get_solution();
+
+    /**
+     * @brief Getter function for the current solution vector in primitive variables (pressure,
+     * velocity, temperature).
+     */
+    VectorType &
+    get_solution_in_primitive_variables();
 
     /**
      * @brief Constant getter function for the DoFHandler.
@@ -261,6 +263,9 @@ namespace MeltPoolDG::Multiphase
 
     /// Right-hand side vector
     VectorType rhs;
+
+    /// Solution vector in primitive variable formulation (pressure, velocity, temperature)
+    VectorType solution_primitive_variables;
 
     /// Mesh classifier, which contains information if a cell is in the gas phase, liquid phase or
     /// cut. It corresponds to the current level set position.
@@ -355,6 +360,20 @@ namespace MeltPoolDG::Multiphase
   CompressibleMultiphaseOperation<dim, number>::get_solution()
   {
     return multiphase_scratch_data.solution_history.get_current_solution();
+  }
+
+  template <int dim, typename number>
+  dealii::LinearAlgebra::distributed::Vector<number> &
+  CompressibleMultiphaseOperation<dim, number>::get_solution_in_primitive_variables()
+  {
+    update_primitive_variables_solution<dim, number>(solution_primitive_variables,
+                                                     get_solution(),
+                                                     multiphase_scratch_data.scratch_data,
+                                                     multiphase_scratch_data.dof_idx,
+                                                     multiphase_scratch_data.quad_idx,
+                                                     &multiphase_scratch_data.material_liquid,
+                                                     &multiphase_scratch_data.material_gas);
+    return solution_primitive_variables;
   }
 
   template <int dim, typename number>
