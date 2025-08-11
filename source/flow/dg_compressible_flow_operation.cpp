@@ -42,14 +42,13 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  DGCompressibleFlowOperation<dim, number>::reinit(const bool do_primitive_variable_output)
+  DGCompressibleFlowOperation<dim, number>::reinit()
   {
     flow_scratch_data.reinit(time_integrator->required_solution_history_size());
     comp_flow_operator->reinit();
     time_integrator->reinit(flow_scratch_data.solution_history);
-    if (do_primitive_variable_output)
-      flow_scratch_data.scratch_data.initialize_dof_vector(solution_primitive_variables,
-                                                           flow_scratch_data.dof_idx);
+    flow_scratch_data.scratch_data.initialize_dof_vector(solution_primitive_variables,
+                                                         flow_scratch_data.dof_idx);
   }
 
   template <int dim, typename number>

@@ -20,15 +20,6 @@ namespace MeltPoolDG
     add_parameters(dealii::ParameterHandler &prm);
   };
 
-  struct CompFlowOutputData
-  {
-    /// Output solution vector in primitive variable formulation
-    bool do_primitive_variable_output = false;
-
-    void
-    add_parameters(dealii::ParameterHandler &prm);
-  };
-
   struct ParaviewData
   {
     bool        enable                   = false;
@@ -55,7 +46,6 @@ namespace MeltPoolDG
     bool                     do_user_defined_postprocessing = false;
     ParaviewData             paraview;
     ParticleOutputData       particle;
-    CompFlowOutputData       comp_flow;
 
     void
     add_parameters(dealii::ParameterHandler &prm);

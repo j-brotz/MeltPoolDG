@@ -195,7 +195,7 @@ namespace MeltPoolDG::Multiphase
 
   template <int dim, typename number>
   void
-  CompressibleMultiphaseOperation<dim, number>::reinit(const bool do_primitive_variable_output)
+  CompressibleMultiphaseOperation<dim, number>::reinit()
   {
     // check if fe type is equal to FE_DGQ<dim>
     AssertThrow(
@@ -213,10 +213,8 @@ namespace MeltPoolDG::Multiphase
 
     multiphase_scratch_data.scratch_data.initialize_dof_vector(rhs,
                                                                multiphase_scratch_data.dof_idx);
-
-    if (do_primitive_variable_output)
-      multiphase_scratch_data.scratch_data.initialize_dof_vector(solution_primitive_variables,
-                                                                 multiphase_scratch_data.dof_idx);
+    multiphase_scratch_data.scratch_data.initialize_dof_vector(solution_primitive_variables,
+                                                               multiphase_scratch_data.dof_idx);
 
     compute_intersected_quadrature();
   }

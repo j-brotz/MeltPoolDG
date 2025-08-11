@@ -67,14 +67,10 @@ namespace MeltPoolDG::Flow
     /**
      * @brief Set up the required internal data structures.
      *
-     * @param do_primitive_variable_output Boolean indicator whether the output of the solution
-     * vector should be done for the primitive variable formulation in addition to the output in
-     * conservative variable formulation.
-     *
      * After a call to this function the solve() function of the class can be utilized.
      */
     void
-    reinit(const bool do_primitive_variable_output);
+    reinit();
 
     /**
      * @brief Solves the compressible Navier-Stokes equations for a single time step.

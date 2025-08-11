@@ -147,8 +147,7 @@ namespace MeltPoolDG
     comp_flow_operation.set_boundary_conditions(simulation_case, "cfd_dem");
 
     // initialize operation
-    comp_flow_operation.reinit(
-      simulation_case->parameters.output.comp_flow.do_primitive_variable_output);
+    comp_flow_operation.reinit();
 
     // set initial condition for the flow field
     comp_flow_operation.set_initial_condition(*simulation_case->get_initial_condition("cfd_dem"));
@@ -198,8 +197,7 @@ namespace MeltPoolDG
       return;
 
     const auto attach_output_vectors = [&](GenericDataOut<dim, number> &data_out) {
-      comp_flow_operation.attach_output_vectors(
-        data_out, simulation_case->parameters.output.comp_flow.do_primitive_variable_output);
+      comp_flow_operation.attach_output_vectors(data_out);
     };
 
     GenericDataOut<dim, number> generic_data_out(

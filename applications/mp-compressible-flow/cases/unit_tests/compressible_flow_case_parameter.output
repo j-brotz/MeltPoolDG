@@ -98,10 +98,6 @@
         "output variables": "all",
         "write frequency": "1",
         "write time step size": "1.79769e+308",
-        "compressible flow":
-        {
-            "do primitive variable output": "false"
-        },
         "paraview":
         {
             "enable": "false",

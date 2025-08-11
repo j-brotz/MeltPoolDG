@@ -113,8 +113,7 @@ namespace MeltPoolDG::Flow
                                   scratch_data->get_min_cell_size(),
                                   scratch_data->get_max_cell_size());
 
-    comp_flow_operation.reinit(
-      simulation_case->parameters.output.comp_flow.do_primitive_variable_output);
+    comp_flow_operation.reinit();
   }
 
   template <int dim, typename number>
@@ -273,8 +272,7 @@ namespace MeltPoolDG::Flow
       return;
 
     const auto attach_output_vectors = [&](GenericDataOut<dim, number> &data_out) {
-      comp_flow_operation.attach_output_vectors(
-        data_out, simulation_case->parameters.output.comp_flow.do_primitive_variable_output);
+      comp_flow_operation.attach_output_vectors(data_out);
     };
 
     GenericDataOut<dim, number> generic_data_out(
