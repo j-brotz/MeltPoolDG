@@ -287,11 +287,12 @@ namespace MeltPoolDG::LevelSet
                                                         reinit_dof_idx);
       }
 
+    const bool wetting_enabled =
+      not simulation_case->get_boundary_condition("nx", "normal_vector").empty();
     scratch_data->build(param.reinit.fe.type == FiniteElementType::FE_DGQ or
-                          not simulation_case->get_boundary_condition("nx", "normal_vector")
-                                .empty() /*boundary_face_integrals*/,
+                          wetting_enabled /*boundary_face_integrals*/,
                         param.reinit.fe.type == FiniteElementType::FE_DGQ /*inner face integrals*/,
-                        false /*normal_vectors*/);
+                        wetting_enabled /*normal_vectors*/);
 
     if (reinit_operation)
       reinit_operation->reinit();

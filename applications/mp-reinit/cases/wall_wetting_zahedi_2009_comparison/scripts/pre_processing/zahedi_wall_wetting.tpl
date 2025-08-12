@@ -17,7 +17,8 @@
     "do user defined postprocessing": "true",
     "paraview": {
       "filename": "wall_wetting",
-      "enable": "true"
+      "enable": "true",
+      "n groups": "2"
     }
   },
   "reinitialization": {
