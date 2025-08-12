@@ -156,6 +156,13 @@ namespace MeltPoolDG::Flow
     get_solution();
 
     /**
+     * @brief Getter function for the current solution vector in primitive variables (pressure,
+     * velocity, temperature).
+     */
+    VectorType &
+    get_solution_in_primitive_variables();
+
+    /**
      * @brief Constant getter function for the DoFHandler.
      */
     const dealii::DoFHandler<dim> &
@@ -170,6 +177,9 @@ namespace MeltPoolDG::Flow
 
     /// Time integrator
     std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>> time_integrator;
+
+    /// Solution vector in primitive variable formulation (pressure, velocity, temperature)
+    VectorType solution_primitive_variables;
 
     /**
      * @brief Compute the convective time step limit for the current mesh and flow field.
@@ -211,6 +221,19 @@ namespace MeltPoolDG::Flow
   DGCompressibleFlowOperation<dim, number>::get_solution()
   {
     return flow_scratch_data.solution_history.get_current_solution();
+  }
+
+  template <int dim, typename number>
+  dealii::LinearAlgebra::distributed::Vector<number> &
+  DGCompressibleFlowOperation<dim, number>::get_solution_in_primitive_variables()
+  {
+    update_primitive_variables_solution<dim, number>(solution_primitive_variables,
+                                                     get_solution(),
+                                                     flow_scratch_data.scratch_data,
+                                                     flow_scratch_data.dof_idx,
+                                                     flow_scratch_data.quad_idx,
+                                                     &flow_scratch_data.material);
+    return solution_primitive_variables;
   }
 
   template <int dim, typename number>

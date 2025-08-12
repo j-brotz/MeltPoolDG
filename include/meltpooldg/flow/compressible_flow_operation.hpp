@@ -160,9 +160,22 @@ namespace MeltPoolDG::Flow
     }
 
     /**
+     * @brief Get a reference to the solution vector in primitive variables
+     * (pressure, velocity, temperature).
+     *
+     * @return A reference to the solution vector in primitive variables.
+     */
+    VectorType &
+    get_solution_in_primitive_variables()
+    {
+      return operation_pimpl->get_solution_in_primitive_variables();
+    }
+
+    /**
      * @brief Attach the solution to the passed data out object.
      *
-     * The solution which are added are the density, the momentum and the energy density.
+     * The solution is added in conservative variable formulation (density, momentum, energy
+     * density) and primitive variable formulation (pressure, velocity, temperature).
      *
      * @param data_out Object to which the solution vector is attached.
      */
@@ -172,28 +185,6 @@ namespace MeltPoolDG::Flow
       // check, if single-phase or two-phase case is considered
       const auto &dof_handler = operation_pimpl->get_dof_handler();
       const bool  two_phase   = dof_handler.get_fe_collection().n_components() / (dim + 2) == 2;
-
-      std::vector<std::string> names;
-
-      if (not two_phase)
-        {
-          names.emplace_back("density");
-          for (unsigned int d = 0; d < dim; ++d)
-            names.emplace_back("momentum");
-          names.emplace_back("energy");
-        }
-      else
-        {
-          names.emplace_back("density_liquid");
-          for (unsigned int d = 0; d < dim; ++d)
-            names.emplace_back("momentum_liquid");
-          names.emplace_back("energy_liquid");
-
-          names.emplace_back("density_gas");
-          for (unsigned int d = 0; d < dim; ++d)
-            names.emplace_back("momentum_gas");
-          names.emplace_back("energy_gas");
-        }
 
       std::vector<dealii::DataComponentInterpretation::DataComponentInterpretation> interpretation;
       interpretation.push_back(dealii::DataComponentInterpretation::component_is_scalar);
@@ -211,9 +202,52 @@ namespace MeltPoolDG::Flow
           interpretation.push_back(dealii::DataComponentInterpretation::component_is_scalar);
         }
 
+      std::vector<std::string> names_conservative;
+      std::vector<std::string> names_primitive;
+
+      if (not two_phase)
+        {
+          names_conservative.emplace_back("density");
+          for (unsigned int d = 0; d < dim; ++d)
+            names_conservative.emplace_back("momentum");
+          names_conservative.emplace_back("energy");
+
+          names_primitive.emplace_back("pressure");
+          for (unsigned int d = 0; d < dim; ++d)
+            names_primitive.emplace_back("velocity");
+          names_primitive.emplace_back("temperature");
+        }
+      else
+        {
+          names_conservative.emplace_back("density_liquid");
+          for (unsigned int d = 0; d < dim; ++d)
+            names_conservative.emplace_back("momentum_liquid");
+          names_conservative.emplace_back("energy_liquid");
+
+          names_conservative.emplace_back("density_gas");
+          for (unsigned int d = 0; d < dim; ++d)
+            names_conservative.emplace_back("momentum_gas");
+          names_conservative.emplace_back("energy_gas");
+
+          names_primitive.emplace_back("pressure_liquid");
+          for (unsigned int d = 0; d < dim; ++d)
+            names_primitive.emplace_back("velocity_liquid");
+          names_primitive.emplace_back("temperature_liquid");
+
+          names_primitive.emplace_back("pressure_gas");
+          for (unsigned int d = 0; d < dim; ++d)
+            names_primitive.emplace_back("velocity_gas");
+          names_primitive.emplace_back("temperature_gas");
+        }
+
       data_out.add_data_vector(operation_pimpl->get_dof_handler(),
                                operation_pimpl->get_solution(),
-                               names,
+                               names_conservative,
+                               interpretation);
+
+      data_out.add_data_vector(operation_pimpl->get_dof_handler(),
+                               operation_pimpl->get_solution_in_primitive_variables(),
+                               names_primitive,
                                interpretation);
     }
 
@@ -280,6 +314,9 @@ namespace MeltPoolDG::Flow
 
       virtual VectorType &
       get_solution() = 0;
+
+      virtual VectorType &
+      get_solution_in_primitive_variables() = 0;
 
       virtual const dealii::DoFHandler<dim> &
       get_dof_handler() const = 0;
@@ -358,6 +395,12 @@ namespace MeltPoolDG::Flow
       get_solution() override
       {
         return operation->get_solution();
+      }
+
+      VectorType &
+      get_solution_in_primitive_variables() override
+      {
+        return operation->get_solution_in_primitive_variables();
       }
 
       const dealii::DoFHandler<dim> &

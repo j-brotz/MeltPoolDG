@@ -164,6 +164,8 @@ namespace MeltPoolDG::Flow
     flow_scratch_data.scratch_data.initialize_dof_vector(
       flow_scratch_data.solution_history.get_current_solution(), flow_scratch_data.dof_idx);
     flow_scratch_data.scratch_data.initialize_dof_vector(rhs, flow_scratch_data.dof_idx);
+    flow_scratch_data.scratch_data.initialize_dof_vector(solution_primitive_variables,
+                                                         flow_scratch_data.dof_idx);
     compute_intersected_quadrature();
   }
 
