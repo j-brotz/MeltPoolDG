@@ -1,8 +1,3 @@
-/* ---------------------------------------------------------------------
- *
- * Author: Peter Munch, Magdalena Schreter, TUM, September 2020
- *
- * ---------------------------------------------------------------------*/
 #pragma once
 
 #include <deal.II/base/index_set.h>

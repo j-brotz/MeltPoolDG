@@ -24,7 +24,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.32785356045e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.32785367966e+00                                               normal_vector |
-| || curvature ||L2 = 7.87510561943e+00                                                  curvature |
+| || curvature ||L2 = 7.87510836124e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 5.0000e-04 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -32,7 +32,7 @@
 |  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
 | || normal_0 ||L2 = 5.32785356045e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.32785367966e+00                                               normal_vector |
-| || curvature ||L2 = 7.87510657310e+00                                                  curvature |
+| || curvature ||L2 = 7.87510931492e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
 | || velocity ||L2 = 1.520301820617359e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.361787246181813e-02                                    navier_stokes_adaflo |
@@ -56,7 +56,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.33747244338e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.33747243945e+00                                               normal_vector |
-| || curvature ||L2 = 7.90906433435e+00                                                  curvature |
+| || curvature ||L2 = 7.90905910435e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
 | || velocity ||L2 = 2.754956255440047e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.361876087802746e-02                                    navier_stokes_adaflo |

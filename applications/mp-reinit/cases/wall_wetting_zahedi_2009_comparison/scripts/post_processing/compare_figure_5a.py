@@ -66,11 +66,11 @@ if __name__ == "__main__":
     epsilon_list = [8, 8, 8, 8, 8]
     gamma_list = [2.5, 2.5, 2.5, 2.5, 2.5]
     eta_n_list = [gamma**2 * eps**2 for gamma, eps in zip(gamma_list, epsilon_list)]
-    parameter_list = [r"$\left(\eta_n = %.1e,\ \epsilon_n = %dh\right)$" % (eta_n, eps) for eps, eta_n in zip(epsilon_list, eta_n_list)]
+    parameter_list = [r"$\left(\eta_\text{n} = %.1e,\ \epsilon_\text{n} = %dh\right)$" % (eta_n, eps) for eps, eta_n in zip(epsilon_list, eta_n_list)]
 
     # Set curve properties
-    label_list = [r"$\epsilon_\tau = \ \ \ \ 3\epsilon_n$ ", r"$\epsilon_\tau = \ \ 12\epsilon_n$ ",
-                  r"$\epsilon_\tau = \ \ 48\epsilon_n$ ", r"$\epsilon_\tau = \ \ 96\epsilon_n$ ", r"$\epsilon_\tau = 192\epsilon_n$ "]
+    label_list = [r"$\epsilon_\text{t} = \ \ \ \ 3\epsilon_\text{n}$ ", r"$\epsilon_\text{t} = \ \ 12\epsilon_\text{n}$ ",
+                  r"$\epsilon_\text{t} = \ \ 48\epsilon_\text{n}$ ", r"$\epsilon_\text{t} = \ \ 96\epsilon_\text{n}$ ", r"$\epsilon_\text{t} = 192\epsilon_\text{n}$ "]
     label_list = [label + " " + parameters for label, parameters in zip(label_list, parameter_list)]
     marker_list = ['.', 'x']
     linewidth_list = [2, 1]

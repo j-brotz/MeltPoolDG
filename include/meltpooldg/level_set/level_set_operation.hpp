@@ -109,6 +109,32 @@ namespace MeltPoolDG::LevelSet
       const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
         inflow_outflow_bc) override;
 
+    /**
+     * @brief Sets the user-defined right-hand side (RHS) vector for the level set equation.
+     *
+     * This function assigns the provided RHS vector to the internal advection-diffusion
+     * operation's user RHS. It is typically used when the level set equation includes
+     * a non-homogeneous source term that is specified externally.
+     *
+     * @param[in] level_set_user_rhs A vector representing the user-defined RHS for the level set
+     * field.
+     *
+     */
+    void
+    set_level_set_user_rhs(const VectorType &level_set_user_rhs) override;
+
+    /**
+     * @brief Sets the boundary IDs where wetting boundary conditions should be applied.
+     *
+     * This function forwards the provided list of boundary IDs to the reinitialization
+     * operation, indicating which boundaries are subject to wetting conditions.
+     *
+     * @param[in] wetting_bc_ids_in A list of boundary IDs where wetting conditions apply.
+     */
+    void
+    set_wetting_boundary_condition_ids(
+      std::vector<dealii::types::boundary_id> && /*wetting_bc_ids*/) final;
+
     void
     reinit() override;
 
@@ -123,9 +149,6 @@ namespace MeltPoolDG::LevelSet
 
     void
     finish_time_advance() override;
-
-    void
-    set_level_set_user_rhs(const VectorType &level_set_user_rhs) override;
 
     void
     update_normal_vector() override;

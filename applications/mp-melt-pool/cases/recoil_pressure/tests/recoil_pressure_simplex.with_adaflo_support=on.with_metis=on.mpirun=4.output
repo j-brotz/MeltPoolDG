@@ -17,7 +17,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 1.08142130677e-02                                               normal_vector |
 | || normal_1 ||L2 = 5.24344198459e+00                                               normal_vector |
-| || curvature ||L2 = 1.24549788180e-01                                                  curvature |
+| || curvature ||L2 = 1.24548442563e-01                                                  curvature |
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
 | || velocity ||L2 = 1.049330744042461e-06                                    navier_stokes_adaflo |
@@ -36,7 +36,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 1.46520114856e-02                                               normal_vector |
 | || normal_1 ||L2 = 5.24711173494e+00                                               normal_vector |
-| || curvature ||L2 = 2.42596499331e-01                                                  curvature |
+| || curvature ||L2 = 2.42592141279e-01                                                  curvature |
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
 | || velocity ||L2 = 2.091945299259368e-06                                    navier_stokes_adaflo |
@@ -55,7 +55,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 1.67680629788e-02                                               normal_vector |
 | || normal_1 ||L2 = 5.24927867237e+00                                               normal_vector |
-| || curvature ||L2 = 3.53899704698e-01                                                  curvature |
+| || curvature ||L2 = 3.53895524508e-01                                                  curvature |
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
 | || velocity ||L2 = 3.110747789412963e-06                                    navier_stokes_adaflo |
@@ -74,7 +74,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 1.91402875952e-02                                               normal_vector |
 | || normal_1 ||L2 = 5.25039741999e+00                                               normal_vector |
-| || curvature ||L2 = 4.56683089459e-01                                                  curvature |
+| || curvature ||L2 = 4.56680596604e-01                                                  curvature |
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
 | || velocity ||L2 = 4.100779353287035e-06                                    navier_stokes_adaflo |

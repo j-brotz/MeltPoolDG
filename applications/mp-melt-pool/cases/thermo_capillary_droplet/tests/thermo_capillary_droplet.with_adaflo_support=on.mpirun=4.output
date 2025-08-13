@@ -32,7 +32,7 @@
 |  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
 | || normal_0 ||L2 = 5.32785356045e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.32785367966e+00                                               normal_vector |
-| || curvature ||L2 = 6.33317720890e+00                                                  curvature |
+| || curvature ||L2 = 6.33317840099e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
 | || velocity ||L2 = 1.400472246480621e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.340853656351040e-02                                    navier_stokes_adaflo |
@@ -56,7 +56,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.33747196767e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.33747196255e+00                                               normal_vector |
-| || curvature ||L2 = 6.33727585795e+00                                                  curvature |
+| || curvature ||L2 = 6.33727455232e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
 | || velocity ||L2 = 2.589946563931652e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.341054772666377e-02                                    navier_stokes_adaflo |

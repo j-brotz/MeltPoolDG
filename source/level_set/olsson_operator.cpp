@@ -12,6 +12,22 @@ namespace MeltPoolDG::LevelSet
 {
   using namespace dealii;
 
+  /**
+   * @brief Computes the compressive flux term in the reinitialization equation for a level set formulation.
+   *
+   * @tparam number A scalar numeric type (e.g., float, double).
+   *
+   * @param[in] psi The level set value at a point.
+   *
+   * @return The value of the compressive flux evaluated at the given \p psi.
+   */
+  template <typename number>
+  number
+  compressive_flux(const number psi)
+  {
+    return number(0.5) * (number(1.) - psi * psi);
+  }
+
   template <int dim, typename number>
   OlssonOperator<dim, number>::OlssonOperator(const ScratchData<dim, dim, number> &scratch_data_in,
                                               const ReinitializationData<number>  &reinit_data_in,
@@ -33,6 +49,15 @@ namespace MeltPoolDG::LevelSet
         scratch_data.get_mapping()))
   {
     this->reset_dof_index(reinit_dof_idx_in);
+  }
+
+  template <int dim, typename number>
+  void
+  OlssonOperator<dim, number>::set_wetting_boundary_condition_ids(
+    std::vector<dealii::types::boundary_id> &&wetting_bc_ids_in)
+  {
+    wetting_bc_ids                = std::move(wetting_bc_ids_in);
+    enable_boundary_face_integral = (wetting_bc_ids.size() > 0);
   }
 
   template <int dim, typename number>
@@ -108,13 +133,8 @@ namespace MeltPoolDG::LevelSet
                   const number diffRhs =
                     epsilon_cell * normal_at_q[q_index] * grad_psi_at_q[q_index];
 
-                  //clang-format off
-                  const auto compressive_flux = [](const number psi) {
-                    return 0.5 * (1. - psi * psi);
-                  };
                   cell_rhs(i) += (compressive_flux(psi_at_q[q_index]) - diffRhs) *
                                  nTimesGradient_i * this->time_increment * fe_values.JxW(q_index);
-                  //clang-format on
                 }
             } // end loop over gauss points
           // assembly
@@ -133,24 +153,30 @@ namespace MeltPoolDG::LevelSet
   void
   OlssonOperator<dim, number>::vmult(VectorType &dst, const VectorType &src) const
   {
-    scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
-      [&](const auto &, auto &dst, const auto &src, auto cell_range) {
-        FECellIntegrator<dim, 1, number> delta_psi(scratch_data.get_matrix_free(),
-                                                   this->dof_idx,
-                                                   reinit_quad_idx);
+    scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
+      [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
+        FECellIntegrator<dim, 1, number> delta_psi(matrix_free, this->dof_idx, reinit_quad_idx);
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             delta_psi.reinit(cell);
             delta_psi.read_dof_values(src);
 
-            tangent_local_cell_operation(delta_psi);
+            tangent_cell_operation(delta_psi);
 
             delta_psi.distribute_local_to_global(dst);
           }
+      }, // cell loop
+      [&](const auto &,
+          auto &,
+          const auto &,
+          auto /*face_range*/) { /*do nothing*/ }, // internal face loop
+      [&](const auto &matrix_free, auto &dst, const auto &src, auto face_range) {
+        if (enable_boundary_face_integral)
+          tangent_boundary_loop(matrix_free, dst, src, face_range);
       },
       dst,
       src,
-      true);
+      true /*zero dst vector*/);
   }
 
   template <int dim, typename number>
@@ -159,18 +185,10 @@ namespace MeltPoolDG::LevelSet
   {
     AssertThrowZeroTimeIncrement(this->time_increment);
 
-    const auto compressive_flux = [&](const auto &phi) {
-      return 0.5 * (make_vectorized_array<number>(1.) - phi * phi);
-    };
-
-    scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
-      [&](const auto &, auto &dst, const auto &src, auto macro_cells) {
-        FECellIntegrator<dim, 1, number>   rhs(scratch_data.get_matrix_free(),
-                                             this->dof_idx,
-                                             reinit_quad_idx);
-        FECellIntegrator<dim, 1, number>   psi_old(scratch_data.get_matrix_free(),
-                                                 ls_dof_idx,
-                                                 reinit_quad_idx);
+    scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
+      [&](const auto &matrix_free, auto &dst, const auto &src, auto macro_cells) {
+        FECellIntegrator<dim, 1, number>   rhs(matrix_free, this->dof_idx, reinit_quad_idx);
+        FECellIntegrator<dim, 1, number>   psi_old(matrix_free, ls_dof_idx, reinit_quad_idx);
         FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
                                                          normal_dof_idx,
                                                          reinit_quad_idx);
@@ -192,31 +210,37 @@ namespace MeltPoolDG::LevelSet
                 const scalar val = psi_old.get_value(q_index);
 
                 // Normal unit vector
-                const Tensor<1, dim, VectorizedArray<number>> n_phi =
+                const vector unit_normal_interface =
                   normalize<dim>(normal_vector.get_value(q_index), tolerance_normal_vector);
-                unit_normal[cell * rhs.n_q_points + q_index] = n_phi;
+                unit_normal[cell * rhs.n_q_points + q_index]  = unit_normal_interface;
+                solution_old[cell * rhs.n_q_points + q_index] = val;
 
-                // Tangential unit vector
-                const Tensor<1, dim, VectorizedArray<number>> tangential_vector =
-                  normalize<dim>(psi_old.get_gradient(q_index) -
-                                   (scalar_product(psi_old.get_gradient(q_index), n_phi) * n_phi),
-                                 tolerance_normal_vector);
-                unit_tangent[cell * rhs.n_q_points + q_index] = tangential_vector;
+                const auto normal_diffusive_flux =
+                  (scalar_product(psi_old.get_gradient(q_index), unit_normal_interface) *
+                   unit_normal_interface);
+                vector tangential_diffusive_flux =
+                  psi_old.get_gradient(q_index) - normal_diffusive_flux;
 
-                rhs.submit_gradient(
-                  this->time_increment * compressive_flux(val) * n_phi
-                    // Normal contribution
-                    - (this->time_increment * normal_diffusion_length[cell] *
-                       scalar_product(psi_old.get_gradient(q_index), n_phi) * n_phi)
-                    // Tangential contribution
-                    - (this->time_increment * tangential_diffusion_length[cell] *
-                       scalar_product(psi_old.get_gradient(q_index), tangential_vector) *
-                       tangential_vector),
-                  q_index);
+                rhs.submit_gradient(compressive_flux(val) * unit_normal_interface
+                                      // Normal contribution
+                                      - normal_diffusion_length[cell] * normal_diffusive_flux
+                                      // Tangential contribution
+                                      -
+                                      tangential_diffusion_length[cell] * tangential_diffusive_flux,
+                                    q_index);
               }
 
             rhs.integrate_scatter(EvaluationFlags::gradients, dst);
           }
+      },
+      [&](const auto &,
+          auto &,
+          const auto &,
+          auto /*face_range*/) { /*do nothing*/ }, // internal face loop
+      [&](const auto &matrix_free, auto &dst, const auto &src, auto face_range) {
+        // only for wetting boundary condition
+        if (enable_boundary_face_integral)
+          rhs_boundary_loop(matrix_free, dst, src, face_range);
       },
       dst,
       src,
@@ -231,24 +255,65 @@ namespace MeltPoolDG::LevelSet
     system_matrix = 0.0;
 
     // note: not thread safe!!!
-    const auto &matrix_free = scratch_data.get_matrix_free();
+    const auto                        &matrix_free = scratch_data.get_matrix_free();
+    FEFaceIntegrator<dim, dim, number> normal_face_eval(matrix_free,
+                                                        true /*is_interior_face*/,
+                                                        normal_dof_idx,
+                                                        reinit_quad_idx);
 
     unsigned int old_cell_index = dealii::numbers::invalid_unsigned_int;
 
-    // compute matrix (only cell contributions)
-    MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
-      matrix_free,
-      scratch_data.get_constraint(this->dof_idx),
-      system_matrix,
-      [&](auto &delta_psi) {
-        const unsigned int current_cell_index = delta_psi.get_current_cell_index();
 
-        tangent_local_cell_operation(delta_psi);
+    // Compute diagonal of the operator using MatrixFreeTools.
+    //
+    // We distinguish two cases:
+    // 1. If boundary face integrals are enabled (`enable_boundary_face_integral == true`),
+    //    we must pass a valid boundary operation to `compute_diagonal`.
+    // 2. If boundary face integrals are disabled, we use a simplified variant
+    //    without boundary or interior face operations.
+    //
+    // Note: The boundary face evaluation used in 2. is only possible when the matrix-free
+    //       framework has face loops enabled. If face loops are disabled and we attempt to use
+    //       boundary face operations, this will lead to an assertion failure in deal.II:
+    //
+    //       FEEvaluationData(..., is_face = true): !data->data.empty()
+    if (enable_boundary_face_integral)
+      {
+        MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
+          matrix_free,
+          scratch_data.get_constraint(this->dof_idx),
+          system_matrix,
+          [&](auto &delta_psi) {
+            const unsigned int current_cell_index = delta_psi.get_current_cell_index();
 
-        old_cell_index = current_cell_index;
-      },
-      this->dof_idx,
-      reinit_quad_idx);
+            tangent_cell_operation(delta_psi);
+
+            old_cell_index = current_cell_index;
+          },
+          // face operation
+          {},
+          // boundary operation
+          [&](auto &face_eval) { tangent_boundary_face_operation(face_eval, normal_face_eval); },
+          this->dof_idx,
+          reinit_quad_idx);
+      }
+    else
+      {
+        // Simpler version without boundary face operations
+        MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
+          matrix_free,
+          scratch_data.get_constraint(this->dof_idx),
+          system_matrix,
+          [&](auto &delta_psi) {
+            const unsigned int current_cell_index = delta_psi.get_current_cell_index();
+
+            tangent_cell_operation(delta_psi);
+
+            old_cell_index = current_cell_index;
+          },
+          this->dof_idx,
+          reinit_quad_idx);
+      }
   }
 
   template <int dim, typename number>
@@ -262,19 +327,60 @@ namespace MeltPoolDG::LevelSet
 
     unsigned int old_cell_index = dealii::numbers::invalid_unsigned_int;
 
-    // compute diagonal ...
-    MatrixFreeTools::template compute_diagonal<dim, -1, 0, 1, number, VectorizedArray<number>>(
-      matrix_free,
-      diagonal,
-      [&](auto &delta_psi) {
-        const unsigned int current_cell_index = delta_psi.get_current_cell_index();
+    FEFaceIntegrator<dim, dim, number> normal_face_eval(matrix_free,
+                                                        true /*is_interior_face*/,
+                                                        normal_dof_idx,
+                                                        reinit_quad_idx);
 
-        tangent_local_cell_operation(delta_psi);
+    // Compute diagonal of the operator using MatrixFreeTools.
+    //
+    // We distinguish two cases:
+    // 1. If boundary face integrals are enabled (`enable_boundary_face_integral == true`),
+    //    we must pass a valid boundary operation to `compute_diagonal`.
+    // 2. If boundary face integrals are disabled, we use a simplified variant
+    //    without boundary or interior face operations.
+    //
+    // Note: The boundary face evaluation used in 2. is only possible when the matrix-free
+    //       framework has face loops enabled. If face loops are disabled and we attempt to use
+    //       boundary face operations, this will lead to an assertion failure in deal.II:
+    //
+    //       FEEvaluationData(..., is_face = true): !data->data.empty()
+    if (enable_boundary_face_integral)
+      {
+        // Full version with boundary face operations
+        MatrixFreeTools::template compute_diagonal<dim, -1, 0, 1, number, VectorizedArray<number>>(
+          matrix_free,
+          diagonal,
+          [&](auto &delta_psi) {
+            const unsigned int current_cell_index = delta_psi.get_current_cell_index();
 
-        old_cell_index = current_cell_index;
-      },
-      this->dof_idx,
-      reinit_quad_idx);
+            tangent_cell_operation(delta_psi);
+
+            old_cell_index = current_cell_index;
+          },
+          // face operation
+          {},
+          // boundary operation
+          [&](auto &face_eval) { tangent_boundary_face_operation(face_eval, normal_face_eval); },
+          this->dof_idx,
+          reinit_quad_idx);
+      }
+    else
+      {
+        // Simpler version without boundary face operations
+        MatrixFreeTools::template compute_diagonal<dim, -1, 0, 1, number, VectorizedArray<number>>(
+          matrix_free,
+          diagonal,
+          [&](auto &delta_psi) {
+            const unsigned int current_cell_index = delta_psi.get_current_cell_index();
+
+            tangent_cell_operation(delta_psi);
+
+            old_cell_index = current_cell_index;
+          },
+          this->dof_idx,
+          reinit_quad_idx);
+      }
 
     // ... and invert it
     const number linfty_norm = std::max(1.0, diagonal.linfty_norm());
@@ -285,34 +391,201 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  OlssonOperator<dim, number>::tangent_local_cell_operation(
+  OlssonOperator<dim, number>::tangent_cell_operation(
     FECellIntegrator<dim, 1, number> &delta_psi) const
   {
     delta_psi.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
     for (unsigned int q_index = 0; q_index < delta_psi.n_q_points; q_index++)
       {
-        const auto n_phi =
-          unit_normal[delta_psi.get_current_cell_index() * delta_psi.n_q_points + q_index];
+        const auto &cell                  = delta_psi.get_current_cell_index();
+        const auto  unit_normal_interface = unit_normal[cell * delta_psi.n_q_points + q_index];
 
-        const auto tangential_vector =
-          unit_tangent[delta_psi.get_current_cell_index() * delta_psi.n_q_points + q_index];
+        const vector normal_diffusive_flux =
+          scalar_product(delta_psi.get_gradient(q_index), unit_normal_interface) *
+          unit_normal_interface;
 
-        const auto &cell = delta_psi.get_current_cell_index();
+        const vector tangential_diffusive_flux =
+          delta_psi.get_gradient(q_index) - normal_diffusive_flux;
 
-        delta_psi.submit_value(delta_psi.get_value(q_index), q_index);
+        delta_psi.submit_value(this->time_increment_inv * delta_psi.get_value(q_index), q_index);
         delta_psi.submit_gradient(
           // Normal contribution
-          this->time_increment * normal_diffusion_length[cell] *
-              scalar_product(delta_psi.get_gradient(q_index), n_phi) * n_phi
-            // Tangential contribution
-            + this->time_increment * tangential_diffusion_length[cell] *
-                scalar_product(delta_psi.get_gradient(q_index), tangential_vector) *
-                tangential_vector,
+          (normal_diffusion_length[cell] * normal_diffusive_flux
+           // Tangential contribution
+           + tangential_diffusion_length[cell] * tangential_diffusive_flux),
           q_index);
       }
 
     delta_psi.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
+  }
+
+  template <int dim, typename number>
+  void
+  OlssonOperator<dim, number>::tangent_boundary_loop(
+    const MatrixFree<dim, number>        &matrix_free,
+    VectorType                           &dst,
+    const VectorType                     &src,
+    std::pair<unsigned int, unsigned int> face_range) const
+  {
+    FEFaceIntegrator<dim, 1, number>   delta_psi_face_eval(matrix_free,
+                                                         true /*is_interior_face*/,
+                                                         this->dof_idx,
+                                                         reinit_quad_idx);
+    FEFaceIntegrator<dim, dim, number> normal_face_eval(matrix_free,
+                                                        true /*is_interior_face*/,
+                                                        normal_dof_idx,
+                                                        reinit_quad_idx);
+
+    for (unsigned int face = face_range.first; face < face_range.second; ++face)
+      {
+        delta_psi_face_eval.reinit(face);
+
+        // check whether the face has a prescribed wetting angle
+        const types::boundary_id bc_index = scratch_data.get_matrix_free().get_boundary_id(
+          delta_psi_face_eval.get_current_cell_index());
+
+        if (std::find(wetting_bc_ids.begin(), wetting_bc_ids.end(), bc_index) ==
+            wetting_bc_ids.end())
+          continue;
+
+
+        delta_psi_face_eval.read_dof_values(src);
+
+        tangent_boundary_face_operation(delta_psi_face_eval, normal_face_eval);
+
+        delta_psi_face_eval.distribute_local_to_global(dst);
+      }
+  }
+
+  template <int dim, typename number>
+  void
+  OlssonOperator<dim, number>::rhs_boundary_loop(
+    const MatrixFree<dim, number>        &matrix_free,
+    VectorType                           &dst,
+    const VectorType                     &src,
+    std::pair<unsigned int, unsigned int> face_range) const
+  {
+    FEFaceIntegrator<dim, 1, number>   face_eval(matrix_free,
+                                               true /*is_interior_face*/,
+                                               ls_dof_idx,
+                                               reinit_quad_idx);
+    FEFaceIntegrator<dim, dim, number> normal_face_eval(matrix_free,
+                                                        true /*is_interior_face*/,
+                                                        normal_dof_idx,
+                                                        reinit_quad_idx);
+
+    for (unsigned int face = face_range.first; face < face_range.second; ++face)
+      {
+        face_eval.reinit(face);
+
+        // check whether the face has a prescribed wetting angle
+        const types::boundary_id bc_index =
+          scratch_data.get_matrix_free().get_boundary_id(face_eval.get_current_cell_index());
+
+        if (std::find(wetting_bc_ids.begin(), wetting_bc_ids.end(), bc_index) ==
+            wetting_bc_ids.end())
+          continue;
+
+        face_eval.read_dof_values_plain(src);
+
+        rhs_boundary_face_operation(face_eval, normal_face_eval);
+
+        face_eval.distribute_local_to_global(dst);
+      }
+  }
+
+  template <int dim, typename number>
+  void
+  OlssonOperator<dim, number>::tangent_boundary_face_operation(
+    FEFaceIntegrator<dim, 1, number>   &face_eval,
+    FEFaceIntegrator<dim, dim, number> &normal_face_eval) const
+  {
+    face_eval.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+
+    const auto &cell = face_eval.get_current_cell_index();
+    normal_face_eval.reinit(cell);
+    normal_face_eval.read_dof_values_plain(normal_vec);
+    normal_face_eval.evaluate(EvaluationFlags::values);
+
+    // normal diffusion coefficient
+    const auto eps_n = normal_diffusion_length[cell];
+
+    // tangential diffusion coefficient
+    const auto eps_t = tangential_diffusion_length[cell];
+
+    for (unsigned int q = 0; q < face_eval.n_q_points; ++q)
+      {
+        // interface normal vector
+        const vector unit_normal_interface =
+          normalize<dim>(normal_face_eval.get_value(q), tolerance_normal_vector);
+
+        // Decompose gradients into normal ...
+        const vector normal_diffusive_flux =
+          (scalar_product(face_eval.get_gradient(q), unit_normal_interface) *
+           VectorTools::to_vector<dim>(unit_normal_interface));
+
+        // ... and tangential components
+        const vector tangential_diffusive_flux = face_eval.get_gradient(q) - normal_diffusive_flux;
+
+        // normal diffusion
+        auto flux = eps_n * normal_diffusive_flux;
+
+        // Tangential contribution
+        flux += eps_t * tangential_diffusive_flux;
+
+        // NOTE: Here, the sign is the opposite of what was developed by hand
+        face_eval.submit_value(scalar_product(flux, face_eval.normal_vector(q)), q);
+      }
+    face_eval.integrate(EvaluationFlags::values);
+  }
+
+  template <int dim, typename number>
+  void
+  OlssonOperator<dim, number>::rhs_boundary_face_operation(
+    FEFaceIntegrator<dim, 1, number>   &face_eval, // old psi,
+    FEFaceIntegrator<dim, dim, number> &normal_face_eval) const
+  {
+    face_eval.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+
+    const auto &cell = face_eval.get_current_cell_index();
+    normal_face_eval.reinit(cell);
+    normal_face_eval.read_dof_values_plain(normal_vec);
+    normal_face_eval.evaluate(EvaluationFlags::values);
+
+    // normal diffusion coefficient
+    const auto eps_n = normal_diffusion_length[cell];
+
+    // tangential diffusion coefficient
+    const auto eps_t = tangential_diffusion_length[cell];
+
+    for (unsigned int q = 0; q < face_eval.n_q_points; ++q)
+      {
+        // interface normal vector
+        const vector unit_normal_interface =
+          normalize<dim>(normal_face_eval.get_value(q), tolerance_normal_vector);
+
+        // Decompose gradients into normal ...
+        const vector normal_diffusive_flux =
+          (scalar_product(face_eval.get_gradient(q), unit_normal_interface) *
+           VectorTools::to_vector<dim>(unit_normal_interface));
+
+        // ... and tangential components
+        const vector tangential_diffusive_flux = face_eval.get_gradient(q) - normal_diffusive_flux;
+
+        // compressive flux
+        auto flux = -compressive_flux(face_eval.get_value(q)) * unit_normal_interface;
+
+        // normal diffusion
+        flux += eps_n * normal_diffusive_flux;
+
+        // tangential diffusion
+        flux += eps_t * tangential_diffusive_flux;
+
+        // NOTE: Here, the sign is the opposite of what was developed by hand
+        face_eval.submit_value(-scalar_product(flux, face_eval.normal_vector(q)), q);
+      }
+    face_eval.integrate(EvaluationFlags::values);
   }
 
   template <int dim, typename number>
@@ -326,8 +599,7 @@ namespace MeltPoolDG::LevelSet
 
         unit_normal.resize_fast(scratch_data.get_matrix_free().n_cell_batches() *
                                 scratch_data.get_n_q_points(reinit_quad_idx));
-
-        unit_tangent.resize_fast(scratch_data.get_matrix_free().n_cell_batches() *
+        solution_old.resize_fast(scratch_data.get_matrix_free().n_cell_batches() *
                                  scratch_data.get_n_q_points(reinit_quad_idx));
 
         for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
@@ -344,8 +616,6 @@ namespace MeltPoolDG::LevelSet
         this->reinit_sparsity_pattern(scratch_data);
       }
   }
-
-
 
   template class OlssonOperator<1, double>;
   template class OlssonOperator<2, double>;

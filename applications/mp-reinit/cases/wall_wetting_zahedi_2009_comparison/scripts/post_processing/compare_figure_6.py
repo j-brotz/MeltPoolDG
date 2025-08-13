@@ -55,7 +55,7 @@ if __name__ == "__main__":
     ax1 = fig1.add_subplot(111)
 
     # Set curve properties
-    label_list = [r"$\alpha_s = 25$", r"$\alpha_s =45$"]
+    label_list = [r"$\alpha_\text{s} = 25$", r"$\alpha_\text{s} =45$"]
     marker_list = ['.', 'x']
     linestyle_list = ['-', '-.']
     linewidth_list = [1, 2]
@@ -122,7 +122,7 @@ if __name__ == "__main__":
     ax1.tick_params(axis='x', which='both', top=True, direction='in')
     ax1.tick_params(axis='y', which='both', right=True, direction='in')
     ax1.set_axisbelow(False)
-    plt.xlabel(r"Diffusion coefficient ratio $(\epsilon_\tau/\epsilon_n)$ [-]")
+    plt.xlabel(r"Diffusion coefficient ratio $(\epsilon_\text{t}/\epsilon_n)$ [-]")
     plt.ylabel(r"Contact angle ratio ($\alpha/\alpha_s$) [-]")
     plt.legend(handles=legend, ncol=3)
     plt.savefig(f"{args.figures_folder_path}/{args.figure_name}", bbox_inches='tight')

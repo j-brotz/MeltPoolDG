@@ -64,7 +64,7 @@ if __name__ == "__main__":
     parameter_list = [f"$(\\eta_n = {eta_n:.1e}, \\epsilon_n = {eps}h)$" for eps, eta_n in zip(epsilon_list, eta_n_list)]
 
     # Set curve properties
-    label_list = [r"$\gamma = \ \ \ 1\epsilon_n$", r"$\gamma = 2.5\epsilon_n$", r"$\gamma = \ \ \ 5\epsilon_n$", r"$\gamma = \ 10\epsilon_n$"]
+    label_list = [r"$\gamma = \ \ \ 1\epsilon_\text{n}$", r"$\gamma = 2.5\epsilon_\text{n}$", r"$\gamma = \ \ \ 5\epsilon_\text{n}$", r"$\gamma = \ 10\epsilon_\text{n}$"]
     label_list = [label + " " + parameters for label, parameters in zip(label_list, parameter_list)]
     marker_list = ['.', '']
     linestyle_list = ['-', '-.']

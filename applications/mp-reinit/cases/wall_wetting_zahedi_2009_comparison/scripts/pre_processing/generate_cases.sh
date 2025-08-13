@@ -136,8 +136,7 @@ do
   epsilon_n_factor=${case_parameters[2]}
   epsilon_t_factor=${case_parameters[3]}
   gamma_factor=${case_parameters[4]}
-  end_time=${case_parameters[5]}
-  end_time="${end_time//[$'\t\r\n ']/}" # strip last argument of whitespace characters
+  gamma_factor="${gamma_factor//[$'\t\r\n ']/}" # strip last argument of whitespace characters
 
   echo " Writing files for:"
   echo " \"$case_name\""
@@ -147,7 +146,6 @@ do
   echo "  EPSILON_N_FACTOR:           $epsilon_n_factor"
   echo "  EPSILON_T_FACTOR:           $epsilon_t_factor"
   echo "  GAMMA_FACTOR:               $gamma_factor"
-  echo "  END_TIME:                   $end_time"
   echo ""
 
   # Create parameter file for the case
@@ -157,7 +155,6 @@ do
   sed -i "s/EPSILON_N_FACTOR/$epsilon_n_factor/g" "$parameter_files_folder/$case_parameter_file"
   sed -i "s/EPSILON_T_FACTOR/$epsilon_t_factor/g" "$parameter_files_folder/$case_parameter_file"
   sed -i "s/GAMMA_FACTOR/$gamma_factor/g" "$parameter_files_folder/$case_parameter_file"
-  sed -i "s/END_TIME/$end_time/g" "$parameter_files_folder/$case_parameter_file"
 done
 
 echo "********************************************************************************"

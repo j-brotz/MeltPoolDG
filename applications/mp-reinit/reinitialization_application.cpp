@@ -59,15 +59,23 @@ namespace MeltPoolDG::LevelSet
         output_results(time_iterator->get_current_time_step_number(),
                        time_iterator->get_current_time());
 
-        if (param.amr.do_amr)
-          refine_mesh();
-
         if (profiling_monitor && profiling_monitor->now())
           {
             profiling_monitor->print(scratch_data->get_pcout(1),
                                      scratch_data->get_timer(),
                                      scratch_data->get_mpi_comm());
           }
+        // Check if we obtained steady state
+        if (reinit_operation->get_max_change_level_set() < param.reinit.tolerance and
+            time_iterator->get_current_time_step_number() >
+              1 /*do not check at the initial condition*/)
+          {
+            Journal::print_line(scratch_data->get_pcout(0), "Steady state reached.");
+            break;
+          }
+
+        if (param.amr.do_amr)
+          refine_mesh();
       }
     //... always print timing statistics
     if (profiling_monitor)
@@ -202,6 +210,18 @@ namespace MeltPoolDG::LevelSet
         reinit_operation->get_sign_indicator_function()->copy_locally_owned_data_from(
           reinit_operation->get_level_set());
       }
+    else
+      {
+        // set wetting boundary ids
+        if (not simulation_case->get_boundary_condition("nx", "normal_vector").empty())
+          {
+            std::vector<dealii::types::boundary_id> wetting_bc_ids =
+              simulation_case->get_boundary_condition_manager("normal_vector")
+                ->get_indices_of_type("nx");
+
+            reinit_operation->set_wetting_boundary_condition_ids(std::move(wetting_bc_ids));
+          }
+      }
 
     // output initial state
     output_results(0, simulation_case->parameters.time_stepping.start_time);
@@ -229,10 +249,10 @@ namespace MeltPoolDG::LevelSet
       {
         // Normal vector constraints
         if (not param.normal_vec.linear_solver.do_matrix_free)
-          AssertThrow(
-            simulation_case->get_boundary_condition("nx", "normal_vector").empty(),
-            dealii::ExcMessage(
-              "The wetting boundary condition is not implemented for the matrix-based implementation of the normal vector filtering equation."));
+          AssertThrow(simulation_case->get_boundary_condition("nx", "normal_vector").empty(),
+                      dealii::ExcMessage(
+                        "The wetting boundary condition is not implemented for the matrix-based "
+                        "implementation of the normal vector filtering equation."));
 
         MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
                                                                                            number>(
@@ -267,11 +287,12 @@ namespace MeltPoolDG::LevelSet
                                                         reinit_dof_idx);
       }
 
-    // create the matrix-free object
-    if (param.reinit.fe.type != FiniteElementType::FE_DGQ)
-      scratch_data->build(false, false);
-    else
-      scratch_data->build(true, true);
+    const bool wetting_enabled =
+      not simulation_case->get_boundary_condition("nx", "normal_vector").empty();
+    scratch_data->build(param.reinit.fe.type == FiniteElementType::FE_DGQ or
+                          wetting_enabled /*boundary_face_integrals*/,
+                        param.reinit.fe.type == FiniteElementType::FE_DGQ /*inner face integrals*/,
+                        wetting_enabled /*normal_vectors*/);
 
     if (reinit_operation)
       reinit_operation->reinit();
