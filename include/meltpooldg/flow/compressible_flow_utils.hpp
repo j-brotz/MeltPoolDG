@@ -327,22 +327,34 @@ namespace MeltPoolDG::Flow
       eval.set_dof_values(solution_primitive_variables);
     };
 
-    for (unsigned int cell_batch = 0; cell_batch < matrix_free.n_cell_batches(); ++cell_batch)
+    if (!matrix_free.get_dof_info(dof_idx).cell_active_fe_index.empty())
       {
-        const auto cell_category = matrix_free.get_cell_category(cell_batch);
+        // using hp::FECollection (cutFEM/DG)
+        for (unsigned int cell_batch = 0; cell_batch < matrix_free.n_cell_batches(); ++cell_batch)
+          {
+            const auto cell_category = matrix_free.get_cell_category(cell_batch);
 
-        if (cell_category == CutUtil::CellCategory::liquid)
+            if (cell_category == CutUtil::CellCategory::liquid)
+              {
+                process_cell(CutUtil::CellCategory::liquid, 0, material_liquid, cell_batch);
+              }
+            else if (cell_category == CutUtil::CellCategory::gas)
+              {
+                process_cell(CutUtil::CellCategory::gas, dim + 2, material_gas, cell_batch);
+              }
+            else if (cell_category == CutUtil::CellCategory::intersected)
+              {
+                process_cell(CutUtil::CellCategory::intersected, 0, material_liquid, cell_batch);
+                process_cell(CutUtil::CellCategory::intersected, dim + 2, material_gas, cell_batch);
+              }
+          }
+      }
+    else
+      {
+        // not using hp::FECollection (fitted mesh)
+        for (unsigned int cell_batch = 0; cell_batch < matrix_free.n_cell_batches(); ++cell_batch)
           {
             process_cell(CutUtil::CellCategory::liquid, 0, material_liquid, cell_batch);
-          }
-        else if (cell_category == CutUtil::CellCategory::gas)
-          {
-            process_cell(CutUtil::CellCategory::gas, dim + 2, material_gas, cell_batch);
-          }
-        else if (cell_category == CutUtil::CellCategory::intersected)
-          {
-            process_cell(CutUtil::CellCategory::intersected, 0, material_liquid, cell_batch);
-            process_cell(CutUtil::CellCategory::intersected, dim + 2, material_gas, cell_batch);
           }
       }
   }
