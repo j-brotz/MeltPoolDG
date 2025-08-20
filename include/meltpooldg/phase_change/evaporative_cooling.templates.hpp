@@ -4,6 +4,7 @@
 //
 #include <deal.II/base/exceptions.h>
 
+#include <meltpooldg/phase_change/evaporation_model_saturated_vapor_pressure.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
 
 
@@ -28,15 +29,28 @@ namespace MeltPoolDG::Evaporation
 
     if (setup_internal_mass_flux_operator)
       {
-        AssertThrow(evapor_data.evaporative_mass_flux_model ==
-                      EvaporationModelType::recoil_pressure,
-                    dealii::ExcNotImplemented());
+        if (evapor_data.evaporative_mass_flux_model == EvaporationModelType::recoil_pressure)
+          {
+            mass_flux_operator = std::make_unique<EvaporationModelRecoilPressure<number>>(
+              evapor_data.recoil,
+              material_data.boiling_temperature,
+              material_data.molar_mass,
+              material_data.latent_heat_of_evaporation);
+          }
+        else if (evapor_data.evaporative_mass_flux_model ==
+                 EvaporationModelType::saturated_vapor_pressure)
+          {
+            mass_flux_operator = std::make_unique<EvaporationModelSaturatedVaporPressure<number>>(
+              evapor_data.recoil,
+              material_data.boiling_temperature,
+              material_data.molar_mass,
+              material_data.latent_heat_of_evaporation);
+          }
+        else
+          {
+            AssertThrow(false, dealii::ExcNotImplemented());
+          }
 
-        mass_flux_operator = std::make_unique<EvaporationModelRecoilPressure<number>>(
-          evapor_data.recoil,
-          material_data.boiling_temperature,
-          material_data.molar_mass,
-          material_data.latent_heat_of_evaporation);
 
         if (numbers::is_invalid(evapor_data.evaporative_cooling.activation_temperature))
           {
@@ -98,10 +112,16 @@ namespace MeltPoolDG::Evaporation
            dealii::ExcMessage("To use this function, the class must be constructed with "
                               "setup_internal_mass_flux_operator = true."));
 
-    dealii::VectorizedArray<number> rv;
-    for (unsigned int i = 0; i < dealii::VectorizedArray<number>::size(); ++i)
-      rv[i] = compute_evaporative_cooling(temperature[i]);
-    return rv;
+    return dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+      temperature,
+      activation_temperature,
+      0,
+      dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than_or_equal>(
+        temperature,
+        boiling_temperature,
+        compute_evaporative_cooling(
+          mass_flux_operator->local_compute_evaporative_mass_flux_vec(temperature), temperature),
+        activation_ramp_derivative * (temperature - activation_temperature)));
   }
 
 
@@ -158,13 +178,22 @@ namespace MeltPoolDG::Evaporation
            dealii::ExcMessage("To use this function, the class must be constructed with "
                               "setup_internal_mass_flux_operator = true."));
 
-    dealii::VectorizedArray<number> rv;
-    for (unsigned int i = 0; i < dealii::VectorizedArray<number>::size(); ++i)
-      rv[i] =
-        compute_evaporative_cooling_derivative_with_temperature_dependent_mass_flux(temperature[i]);
-    return rv;
+    return dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+      temperature,
+      activation_temperature,
+      0,
+      dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than_or_equal>(
+        temperature,
+        boiling_temperature,
+        (do_phenomenological_recoil_pressure) ?
+          -specific_heat_capacity *
+              mass_flux_operator->local_compute_evaporative_mass_flux_vec(temperature) -
+            (latent_heat_of_evaporation + compute_phenomenological_specific_enthalpy(temperature)) *
+              mass_flux_operator->local_compute_evaporative_mass_flux_vec_derivative(temperature) :
+          -specific_heat_capacity *
+            mass_flux_operator->local_compute_evaporative_mass_flux_vec_derivative(temperature),
+        activation_ramp_derivative));
   }
-
 
   template <typename number>
   template <typename ValueType>

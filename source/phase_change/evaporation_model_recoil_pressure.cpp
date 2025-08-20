@@ -30,7 +30,7 @@ namespace MeltPoolDG::Evaporation
 
   template <typename number>
   dealii::VectorizedArray<number>
-  EvaporationModelRecoilPressure<number>::local_compute_evaporative_mass_flux(
+  EvaporationModelRecoilPressure<number>::local_compute_evaporative_mass_flux_vec(
     const dealii::VectorizedArray<number> &T) const
   {
     return 0.82 * sticking_constant * recoil_model.compute_recoil_pressure_coefficient(T) *
@@ -42,18 +42,16 @@ namespace MeltPoolDG::Evaporation
   EvaporationModelRecoilPressure<number>::local_compute_evaporative_mass_flux_derivative(
     const number T) const
   {
-    return local_compute_evaporative_mass_flux(T) *
-           (temperature_constant / (T * T) - 1. / (2. * T));
+    return local_compute_evaporative_mass_flux(T) * (temperature_constant / (T * T) - 0.5 / T);
   }
 
   template <typename number>
   dealii::VectorizedArray<number>
-  EvaporationModelRecoilPressure<number>::local_compute_evaporative_mass_flux_derivative(
+  EvaporationModelRecoilPressure<number>::local_compute_evaporative_mass_flux_vec_derivative(
     const dealii::VectorizedArray<number> &T) const
   {
     // TODO this is not the derivative if temperature is between activation und boiling temperature
-    return local_compute_evaporative_mass_flux(T) *
-           (temperature_constant / (T * T) - 1. / (2. * T));
+    return local_compute_evaporative_mass_flux_vec(T) * (temperature_constant / (T * T) - 0.5 / T);
   }
 
   template class EvaporationModelRecoilPressure<double>;

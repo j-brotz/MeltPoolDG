@@ -129,13 +129,13 @@ namespace MeltPoolDG::Evaporation
     inline ValueType
     compute_phenomenological_specific_enthalpy(const ValueType &temperature) const;
 
-    const bool                                              do_phenomenological_recoil_pressure;
-    const number                                            latent_heat_of_evaporation;
-    const number                                            specific_heat_capacity;
-    const number                                            specific_enthalpy_reference_temperature;
-    const number                                            boiling_temperature;
-    number                                                  activation_temperature;
-    number                                                  activation_ramp_derivative;
-    std::unique_ptr<EvaporationModelRecoilPressure<number>> mass_flux_operator;
+    const bool                                    do_phenomenological_recoil_pressure;
+    const number                                  latent_heat_of_evaporation;
+    const number                                  specific_heat_capacity;
+    const number                                  specific_enthalpy_reference_temperature;
+    const number                                  boiling_temperature;
+    number                                        activation_temperature;
+    number                                        activation_ramp_derivative;
+    std::unique_ptr<EvaporationModelBase<number>> mass_flux_operator;
   };
 } // namespace MeltPoolDG::Evaporation
