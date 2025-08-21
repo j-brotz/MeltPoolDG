@@ -51,7 +51,7 @@ namespace MeltPoolDG::Evaporation
     local_compute_evaporative_mass_flux(const number T) const final;
 
     dealii::VectorizedArray<number>
-    local_compute_evaporative_mass_flux(const dealii::VectorizedArray<number> &T) const;
+    local_compute_evaporative_mass_flux_vec(const dealii::VectorizedArray<number> &T) const final;
 
     /**
      * Compute the derivative of the evaporative mass flux as
@@ -75,9 +75,10 @@ namespace MeltPoolDG::Evaporation
      *
      */
     number
-    local_compute_evaporative_mass_flux_derivative(const number T) const;
+    local_compute_evaporative_mass_flux_derivative(const number T) const final;
 
     dealii::VectorizedArray<number>
-    local_compute_evaporative_mass_flux_derivative(const dealii::VectorizedArray<number> &T) const;
+    local_compute_evaporative_mass_flux_vec_derivative(
+      const dealii::VectorizedArray<number> &T) const final;
   };
 } // namespace MeltPoolDG::Evaporation

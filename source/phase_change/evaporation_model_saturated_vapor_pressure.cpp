@@ -35,6 +35,38 @@ namespace MeltPoolDG::Evaporation
                                           recoil_data.temperature_constant) *
            std::sqrt(Cm / T);
   }
+  template <typename number>
+  dealii::VectorizedArray<number>
+  EvaporationModelSaturatedVaporPressure<number>::local_compute_evaporative_mass_flux_vec(
+    const dealii::VectorizedArray<number> &T) const
+  {
+    return 0.82 * sticking_constant *
+           compute_saturated_gas_pressure(T,
+                                          boiling_temperature,
+                                          recoil_data.ambient_gas_pressure,
+                                          recoil_data.temperature_constant) *
+           std::sqrt(Cm / T);
+  }
+
+  template <typename number>
+  number
+  EvaporationModelSaturatedVaporPressure<number>::local_compute_evaporative_mass_flux_derivative(
+    const number T) const
+  {
+    return local_compute_evaporative_mass_flux(T) *
+           (recoil_data.temperature_constant / (T * T) - 0.5 / T);
+  }
+
+  template <typename number>
+  dealii::VectorizedArray<number>
+  EvaporationModelSaturatedVaporPressure<number>::
+    local_compute_evaporative_mass_flux_vec_derivative(
+      const dealii::VectorizedArray<number> &T) const
+  {
+    // TODO this is not the derivative if temperature is between activation und boiling temperature
+    return local_compute_evaporative_mass_flux_vec(T) *
+           (recoil_data.temperature_constant / (T * T) - 0.5 / T);
+  }
 
   template class EvaporationModelSaturatedVaporPressure<double>;
 } // namespace MeltPoolDG::Evaporation
