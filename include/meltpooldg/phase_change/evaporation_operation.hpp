@@ -109,21 +109,61 @@ namespace MeltPoolDG::Evaporation
                          const unsigned int                   ls_hanging_nodes_dof_idx_in,
                          const unsigned int                   ls_quad_idx_in);
 
+    /**
+     * @brief Compute the evaporative mass flux DoF vector for the current evaporation model.
+     *
+     * This is the unified entry point:
+     * - If the model is analytical (`do_analytical_evaporative_mass_flux == true`),
+     *   it delegates to compute_analytical_evaporative_mass_flux().
+     * - Otherwise, it requires a temperature field and a valid heat DoF index and
+     *   delegates to compute_temperature_dependent_evaporative_mass_flux().
+     *
+     * The resulting `evaporative_mass_flux` vector is written in-place and its ghost
+     * values are updated.
+     *
+     * @param time                Physical time at which to evaluate the mass flux (used by analytical models).
+     * @param temperature         Pointer to the temperature field. Must be non-null for non-analytical models;
+     *                            ignored for analytical models.
+     * @param heat_no_bc_dof_idx  DoF index for the heat field **without BCs** (used by non-analytical models).
+     *                            Must differ from `dealii::numbers::invalid_unsigned_int` when
+     * required.
+     *
+     * @see compute_analytical_evaporative_mass_flux()
+     * @see compute_temperature_dependent_evaporative_mass_flux()
+     */
 
     void
     compute_evaporative_mass_flux(
       const number      &time,
       const VectorType  *temperature        = nullptr,
       const unsigned int heat_no_bc_dof_idx = dealii::numbers::invalid_unsigned_int);
-    /*
-     * Compute DoF vector holding evaporative mass flux depending on the given evaporation model
-     * and the evaporation mass flux operator for computing the distribution across the interface.
+
+    /**
+     * @brief Compute the evaporative mass flux DoF vector for an analytical evaporation model.
+     *
+     * Evaluates the model locally at the given time and writes the result into
+     * `evaporative_mass_flux`. Also prints a formatted norm to the journal and updates
+     * ghost values.
+     *
+     * @param time  Physical time at which to evaluate the analytical model.
+     *
+     * @see compute_evaporative_mass_flux()
      */
     void
     compute_analytical_evaporative_mass_flux(const number &time);
-    /*
-     * Compute DoF vector holding evaporative mass flux depending on the given evaporation model
-     * and the evaporation mass flux operator for computing the distribution across the interface.
+
+    /**
+     * @brief Compute the evaporative mass flux DoF vector for a temperature-dependent (non-analytical) model.
+     *
+     * Uses (or lazily constructs) an EvaporationMassFluxOperatorContinuous to compute the
+     * distribution across the interface from the provided temperature field. Writes the
+     * result into `evaporative_mass_flux`, prints a formatted norm to the journal, and
+     * updates ghost values.
+     *
+     * @param temperature         Temperature field used to evaluate the evaporation model.
+     * @param heat_no_bc_dof_idx  DoF index for the heat field **without BCs** (used for norm/evaluation context).
+     *
+     * @see compute_evaporative_mass_flux()
      */
     void
     compute_temperature_dependent_evaporative_mass_flux(const VectorType  &temperature,
