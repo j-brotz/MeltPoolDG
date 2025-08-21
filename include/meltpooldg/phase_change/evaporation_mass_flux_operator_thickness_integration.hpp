@@ -18,6 +18,15 @@ namespace MeltPoolDG::Evaporation
    *
    * TODO
    */
+
+
+  struct EvaporationThicknessIntegrationData
+  {
+    unsigned int subdivisions_per_side = 10;
+    unsigned int subdivisions_MCA      = 1;
+  } thickness_integral;
+
+
   template <int dim, typename number>
   class EvaporationMassFluxOperatorThicknessIntegration
     : public EvaporationMassFluxOperatorBase<dim, number>
@@ -26,10 +35,10 @@ namespace MeltPoolDG::Evaporation
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
-    const ScratchData<dim, dim, number>                     &scratch_data;
-    const EvaporationModelBase<number>                      &evaporation_model;
-    const EvaporationData<number>::ThicknessIntegrationData &thickness_integration_data;
-    const LevelSet::ReinitializationData<number>            &reinit_data;
+    const ScratchData<dim, dim, number>          &scratch_data;
+    const EvaporationModelBase<number>           &evaporation_model;
+    const EvaporationThicknessIntegrationData    &thickness_integration_data;
+    const LevelSet::ReinitializationData<number> &reinit_data;
 
     const VectorType      &level_set_as_heaviside;
     const BlockVectorType &normal_vector;
@@ -43,16 +52,16 @@ namespace MeltPoolDG::Evaporation
 
   public:
     EvaporationMassFluxOperatorThicknessIntegration(
-      const ScratchData<dim, dim, number>                     &scratch_data,
-      const EvaporationModelBase<number>                      &evaporation_model,
-      const EvaporationData<number>::ThicknessIntegrationData &thickness_integration_data,
-      const LevelSet::ReinitializationData<number>            &reinit_data,
-      const VectorType                                        &level_set_as_heaviside,
-      const BlockVectorType                                   &normal_vector,
-      const unsigned int                                       ls_hanging_nodes_dof_idx,
-      const unsigned int                                       normal_dof_idx,
-      const unsigned int                                       heat_hanging_nodes_dof_idx,
-      const unsigned int                                       evapor_mass_flux_dof_idx);
+      const ScratchData<dim, dim, number>          &scratch_data,
+      const EvaporationModelBase<number>           &evaporation_model,
+      const EvaporationThicknessIntegrationData    &thickness_integration_data,
+      const LevelSet::ReinitializationData<number> &reinit_data,
+      const VectorType                             &level_set_as_heaviside,
+      const BlockVectorType                        &normal_vector,
+      const unsigned int                            ls_hanging_nodes_dof_idx,
+      const unsigned int                            normal_dof_idx,
+      const unsigned int                            heat_hanging_nodes_dof_idx,
+      const unsigned int                            evapor_mass_flux_dof_idx);
 
     /**
      *  Compute the evaporative mass flux by means of 1d integration across the
