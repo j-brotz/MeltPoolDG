@@ -5,8 +5,6 @@
 #include <deal.II/numerics/data_component_interpretation.h>
 
 #include <meltpooldg/phase_change/evaporation_mass_flux_operator_continuous.hpp>
-#include <meltpooldg/phase_change/evaporation_mass_flux_operator_interface_value.hpp>
-#include <meltpooldg/phase_change/evaporation_mass_flux_operator_thickness_integration.hpp>
 #include <meltpooldg/phase_change/evaporation_model_constant.hpp>
 #include <meltpooldg/phase_change/evaporation_model_factory.hpp>
 #include <meltpooldg/phase_change/evaporation_source_terms_continuous.hpp>
@@ -49,6 +47,8 @@ namespace MeltPoolDG::Evaporation
     , tolerance_normal_vector(UtilityFunctions::compute_numerical_zero_of_norm<dim, number>(
         scratch_data.get_triangulation(),
         scratch_data.get_mapping()))
+    , do_analytical_evaporative_mass_flux(evapor_data.evaporative_mass_flux_model ==
+                                          EvaporationModelType::analytical)
   {
     AssertThrow(material_data.gas.density > 0.0 && material_data.liquid.density > 0.0,
                 ExcMessage("The materials' densities must be greater than zero! Abort..."));
@@ -90,11 +90,7 @@ namespace MeltPoolDG::Evaporation
     else
       Assert(false, ExcMessage("Specified evaporation source term is not implemented!"));
 
-    if (evapor_data.evaporative_mass_flux_model == EvaporationModelType::analytical)
-      {
-        evapor_model =
-          std::make_shared<EvaporationModelConstant<number>>(evapor_data.analytical.function);
-      }
+    evapor_model = get_evaporation_model(evapor_data, material_data);
   }
 
   template <int dim, typename number>
@@ -111,60 +107,6 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim, typename number>
   void
-  EvaporationOperation<dim, number>::reinit(
-    const VectorType                             *temperature_in,
-    const VectorType                             &distance,
-    const LevelSet::NearestPointData<number>     &nearest_point_data,
-    const LevelSet::ReinitializationData<number> &reinit_data,
-    const unsigned int                            heat_dof_idx_in)
-  {
-    temperature  = temperature_in;
-    heat_dof_idx = heat_dof_idx_in;
-
-    // setup of temperature-dependent evaporation models
-    evapor_model = get_evaporation_model(evapor_data, material_data);
-
-    /*
-     * Computation of DoF-Vector
-     */
-    if (evapor_data.interface_temperature_evaluation_type ==
-        EvaporativeMassFluxTemperatureEvaluationType::local_value)
-      evapor_mass_flux_operator =
-        std::make_shared<EvaporationMassFluxOperatorContinuous<dim, number>>(scratch_data,
-                                                                             *evapor_model);
-    else if (evapor_data.interface_temperature_evaluation_type ==
-             EvaporativeMassFluxTemperatureEvaluationType::interface_value)
-      {
-        evapor_mass_flux_operator =
-          std::make_shared<EvaporationMassFluxOperatorInterfaceValue<dim, number>>(
-            scratch_data,
-            nearest_point_data,
-            *evapor_model,
-            level_set_as_heaviside,
-            distance,
-            normal_vector,
-            ls_hanging_nodes_dof_idx,
-            heat_dof_idx,
-            evapor_mass_flux_dof_idx);
-      }
-    else if (evapor_data.interface_temperature_evaluation_type ==
-             EvaporativeMassFluxTemperatureEvaluationType::thickness_integral)
-      evapor_mass_flux_operator =
-        std::make_shared<EvaporationMassFluxOperatorThicknessIntegration<dim, number>>(
-          scratch_data,
-          *evapor_model,
-          evapor_data.thickness_integral,
-          reinit_data,
-          level_set_as_heaviside,
-          normal_vector,
-          ls_hanging_nodes_dof_idx,
-          normal_dof_idx,
-          heat_dof_idx,
-          evapor_mass_flux_dof_idx);
-  }
-
-  template <int dim, typename number>
-  void
   EvaporationOperation<dim, number>::set_time(const number &time_in)
   {
     time = time_in;
@@ -172,22 +114,66 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim, typename number>
   void
-  EvaporationOperation<dim, number>::compute_evaporative_mass_flux()
+  EvaporationOperation<dim, number>::compute_evaporative_mass_flux(
+    const number      &time,
+    const VectorType  *temperature,
+    const unsigned int heat_no_bc_dof_idx)
   {
-    // prescribe spatially constant, potentially time-dependent evaporative mass flux
-    if (evapor_data.evaporative_mass_flux_model == EvaporationModelType::analytical)
-      {
-        evaporative_mass_flux = evapor_model->local_compute_evaporative_mass_flux(time);
-      }
+    if (do_analytical_evaporative_mass_flux)
+      compute_analytical_evaporative_mass_flux(time);
     else
       {
-        Assert(evapor_mass_flux_operator && temperature,
+        // For non-analytical models, we require valid args
+        Assert(temperature != nullptr,
                ExcMessage(
-                 "Before computing the evaporative mass flux, register_evaporative_mass_flux_model "
-                 "needs to be called."));
-        evapor_mass_flux_operator->compute_evaporative_mass_flux(evaporative_mass_flux,
-                                                                 *temperature);
+                 "Temperature vector must be provided for non-analytical evaporation model."));
+        Assert(heat_no_bc_dof_idx != dealii::numbers::invalid_unsigned_int,
+               ExcMessage(
+                 "Valid heat_dof_idx must be provided for non-analytical evaporation model."));
+        compute_temperature_dependent_evaporative_mass_flux(*temperature, heat_no_bc_dof_idx);
       }
+  }
+
+  template <int dim, typename number>
+  void
+  EvaporationOperation<dim, number>::compute_analytical_evaporative_mass_flux(const number &time)
+  {
+    Assert(evapor_data.evaporative_mass_flux_model == EvaporationModelType::analytical,
+           ExcNotImplemented());
+    evaporative_mass_flux = evapor_model->local_compute_evaporative_mass_flux(time);
+
+    Journal::print_formatted_norm<number>(
+      scratch_data.get_pcout(2),
+      [&]() -> number {
+        return MeltPoolDG::VectorTools::compute_norm<dim, number>(evaporative_mass_flux,
+                                                                  scratch_data,
+                                                                  evapor_mass_flux_dof_idx,
+                                                                  ls_quad_idx);
+      },
+      "evaporative_mass_flux",
+      "evaporation_operation",
+      10);
+
+    // update ghost values of current solution
+    evaporative_mass_flux.update_ghost_values();
+  }
+
+  template <int dim, typename number>
+  void
+  EvaporationOperation<dim, number>::compute_temperature_dependent_evaporative_mass_flux(
+    const VectorType  &temperature,
+    const unsigned int heat_dof_idx)
+  {
+    Assert(evapor_data.evaporative_mass_flux_model != EvaporationModelType::analytical,
+           ExcNotImplemented());
+
+    evaporative_mass_flux = 0.0;
+
+    if (not evapor_mass_flux_operator)
+      evapor_mass_flux_operator =
+        std::make_shared<EvaporationMassFluxOperatorContinuous<dim, number>>(scratch_data,
+                                                                             *evapor_model);
+    evapor_mass_flux_operator->compute_evaporative_mass_flux(evaporative_mass_flux, temperature);
 
     Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(2),

@@ -73,11 +73,6 @@ namespace MeltPoolDG::Evaporation
      * cut-off value for normalizing the normal vector field
      */
     const number tolerance_normal_vector;
-    /*
-     * optional: temperature-dependent evaporation
-     */
-    mutable const VectorType *temperature;
-    unsigned int              heat_dof_idx;
 
     // only needed if a time-dependent function is given
     mutable number time = numbers::invalid_double;
@@ -94,6 +89,8 @@ namespace MeltPoolDG::Evaporation
      * evaporation velocity due to evaporation and flow
      */
     VectorType evaporation_velocity;
+
+    bool do_analytical_evaporative_mass_flux = false;
 
     std::shared_ptr<EvaporationModelBase<number>>                 evapor_model;
     std::shared_ptr<EvaporationMassFluxOperatorBase<dim, number>> evapor_mass_flux_operator;
@@ -113,22 +110,24 @@ namespace MeltPoolDG::Evaporation
                          const unsigned int                   ls_quad_idx_in);
 
 
-    /*
-     * Configure the evaporation operation with temperature dependence.
-     */
     void
-    reinit(const VectorType                             *temperature_in,
-           const VectorType                             &distance,
-           const LevelSet::NearestPointData<number>     &nearest_point_data,
-           const LevelSet::ReinitializationData<number> &reinit_data,
-           const unsigned int                            heat_dof_idx_in);
-
+    compute_evaporative_mass_flux(
+      const number      &time,
+      const VectorType  *temperature        = nullptr,
+      const unsigned int heat_no_bc_dof_idx = dealii::numbers::invalid_unsigned_int);
     /*
      * Compute DoF vector holding evaporative mass flux depending on the given evaporation model
      * and the evaporation mass flux operator for computing the distribution across the interface.
      */
     void
-    compute_evaporative_mass_flux();
+    compute_analytical_evaporative_mass_flux(const number &time);
+    /*
+     * Compute DoF vector holding evaporative mass flux depending on the given evaporation model
+     * and the evaporation mass flux operator for computing the distribution across the interface.
+     */
+    void
+    compute_temperature_dependent_evaporative_mass_flux(const VectorType  &temperature,
+                                                        const unsigned int heat_no_bc_dof_idx);
 
     void
     compute_evaporation_velocity();

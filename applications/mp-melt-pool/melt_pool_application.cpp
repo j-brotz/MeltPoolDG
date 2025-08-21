@@ -250,10 +250,13 @@ namespace MeltPoolDG
                         // update evaporative mass flux if it is extrapolated from quantities at the
                         // interface
                         if (evaporation_operation and
-                            param.evapor.interface_temperature_evaluation_type !=
+                            param.evapor.interface_temperature_evaluation_type ==
                               Evaporation::EvaporativeMassFluxTemperatureEvaluationType::
-                                local_value)
-                          evaporation_operation->compute_evaporative_mass_flux();
+                                interface_value)
+                          evaporation_operation->compute_evaporative_mass_flux(
+                            time_iterator->get_current_time(),
+                            &heat_operation->get_interface_temperature(),
+                            heat_continuous_no_bc_dof_idx);
                       }
                   }
 
@@ -385,8 +388,21 @@ namespace MeltPoolDG
                             Journal::print_decoration_line(scratch_data->get_pcout(2));
 
                             heat_diffuse_operation->solve(false);
+                            if (compute_interface_temperature)
+                              heat_operation->compute_interface_temperature();
 
-                            evaporation_operation->compute_evaporative_mass_flux();
+                            if (evaporation_operation)
+                              {
+                                const bool use_interface =
+                                  param.evapor.interface_temperature_evaluation_type ==
+                                  Evaporation::EvaporativeMassFluxTemperatureEvaluationType::
+                                    interface_value;
+                                evaporation_operation->compute_evaporative_mass_flux(
+                                  time_iterator->get_current_time(),
+                                  use_interface ? &heat_operation->get_interface_temperature() :
+                                                  &heat_operation->get_temperature(),
+                                  heat_continuous_no_bc_dof_idx);
+                              }
                           }
 
                         if (param.base.verbosity_level >= 2)
@@ -441,7 +457,14 @@ namespace MeltPoolDG
                 const ScopedName         scope_n("evaporation::mass_flux");
                 const TimerOutput::Scope scope_t(scratch_data->get_timer(), scope_n);
 
-                evaporation_operation->compute_evaporative_mass_flux();
+                const bool use_interface =
+                  param.evapor.interface_temperature_evaluation_type ==
+                  Evaporation::EvaporativeMassFluxTemperatureEvaluationType::interface_value;
+                evaporation_operation->compute_evaporative_mass_flux(
+                  time_iterator->get_current_time(),
+                  use_interface ? &heat_operation->get_interface_temperature() :
+                                  &heat_operation->get_temperature(),
+                  heat_continuous_no_bc_dof_idx);
               }
 
             /******************************************************************************************
@@ -1029,13 +1052,6 @@ namespace MeltPoolDG
               Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy)
           scratch_data->create_remote_point_evaluation(vel_dof_idx);
 
-        // register temperature field
-        evaporation_operation->reinit(&heat_operation->get_temperature(),
-                                      level_set_operation->get_distance_to_level_set(),
-                                      param.ls.nearest_point,
-                                      param.ls.reinit,
-                                      heat_dof_idx);
-
         if (param.evapor.evaporative_dilation_rate.enable and
             param.evapor.evaporative_dilation_rate.model == Evaporation::InterfaceFluxType::sharp)
           evaporation_operation->register_surface_mesh(
@@ -1295,7 +1311,14 @@ namespace MeltPoolDG
     // the time is needed to evaluate the function.
     evaporation_operation->set_time(time_iterator->get_current_time());
 
-    evaporation_operation->compute_evaporative_mass_flux();
+    const bool use_interface =
+      simulation_case->parameters.evapor.interface_temperature_evaluation_type ==
+      Evaporation::EvaporativeMassFluxTemperatureEvaluationType::interface_value;
+    evaporation_operation->compute_evaporative_mass_flux(
+      time_iterator->get_current_time(),
+      use_interface ? &heat_operation->get_interface_temperature() :
+                      &heat_operation->get_temperature(),
+      heat_continuous_no_bc_dof_idx);
 
     if (simulation_case->parameters.evapor.evaporative_cooling.model ==
           Evaporation::EvaporCoolingInterfaceFluxType::sharp or
