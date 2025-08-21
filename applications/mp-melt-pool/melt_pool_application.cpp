@@ -233,7 +233,7 @@ namespace MeltPoolDG
                     this->compute_interface_velocity(param.ls, param.evapor);
 
                     // ... solve level-set problem with the given advection field
-                    // scratch_data->get_constraint(vel_dof_idx).distribute(interface_velocity);
+                    scratch_data->get_constraint(vel_dof_idx).distribute(interface_velocity);
 
                     level_set_operation->solve(false /*finish time step will be called later*/);
 
@@ -383,8 +383,6 @@ namespace MeltPoolDG
                             Journal::print_decoration_line(scratch_data->get_pcout(2));
 
                             heat_diffuse_operation->solve(false);
-                            if (compute_interface_temperature)
-                              heat_operation->compute_interface_temperature();
 
                             if (evaporation_operation)
                               {
@@ -1158,9 +1156,6 @@ namespace MeltPoolDG
 
     set_initial_condition_heat_transfer();
 
-    if (compute_interface_temperature)
-      heat_operation->compute_interface_temperature();
-
     set_initial_condition_flow();
 
     set_initial_condition_evaporation();
@@ -1260,6 +1255,9 @@ namespace MeltPoolDG
       // constant evaporative mass flux --> no need to set initial condition
       heat_operation->set_initial_condition(
         *simulation_case->get_initial_condition("heat_transfer"));
+
+    if (compute_interface_temperature)
+      heat_operation->compute_interface_temperature();
   }
 
 
@@ -1402,33 +1400,34 @@ namespace MeltPoolDG
             ->get_indices_of_type("nx");
 
         level_set_operation->set_wetting_boundary_condition_ids(std::move(wetting_bc_ids));
-      }
 
-    MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim, number>(
-      *scratch_data,
-      simulation_case->get_boundary_condition("nx", "normal_vector"),
-      simulation_case->get_periodic_bc(),
-      normal_dirichlet_x_dof_idx,
-      normal_no_bc_dof_idx);
-    if constexpr (dim >= 2)
-      {
         MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
                                                                                            number>(
           *scratch_data,
-          simulation_case->get_boundary_condition("ny", "normal_vector"),
+          simulation_case->get_boundary_condition("nx", "normal_vector"),
           simulation_case->get_periodic_bc(),
-          normal_dirichlet_y_dof_idx,
+          normal_dirichlet_x_dof_idx,
           normal_no_bc_dof_idx);
-      }
-    if constexpr (dim == 3)
-      {
-        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
-                                                                                           number>(
-          *scratch_data,
-          simulation_case->get_boundary_condition("nz", "normal_vector"),
-          simulation_case->get_periodic_bc(),
-          normal_dirichlet_z_dof_idx,
-          normal_no_bc_dof_idx);
+        if constexpr (dim >= 2)
+          {
+            MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<
+              dim,
+              number>(*scratch_data,
+                      simulation_case->get_boundary_condition("ny", "normal_vector"),
+                      simulation_case->get_periodic_bc(),
+                      normal_dirichlet_y_dof_idx,
+                      normal_no_bc_dof_idx);
+          }
+        if constexpr (dim == 3)
+          {
+            MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<
+              dim,
+              number>(*scratch_data,
+                      simulation_case->get_boundary_condition("nz", "normal_vector"),
+                      simulation_case->get_periodic_bc(),
+                      normal_dirichlet_z_dof_idx,
+                      normal_no_bc_dof_idx);
+          }
       }
 
     if (heat_operation)
@@ -2210,6 +2209,7 @@ namespace MeltPoolDG
             CutUtil::CutPhaseType::not_cut :
           param.heat.cut.two_phase ? CutUtil::CutPhaseType::two_phase_cut :
                                      CutUtil::CutPhaseType::one_phase_cut;
+
         hp::FEValues<dim> hp_temerature_eval(
           scratch_data->get_dof_handler(heat_no_bc_dof_idx).get_fe_collection(),
           hp::QCollection<dim>(Quadrature<dim>(
