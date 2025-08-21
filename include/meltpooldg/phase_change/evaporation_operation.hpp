@@ -74,8 +74,6 @@ namespace MeltPoolDG::Evaporation
      */
     const number tolerance_normal_vector;
 
-    // only needed if a time-dependent function is given
-    mutable number time = numbers::invalid_double;
     /**
      * evaporative mass flux
      */
@@ -193,9 +191,6 @@ namespace MeltPoolDG::Evaporation
                    >> &surface_mesh_info);
     void
     reinit();
-
-    void
-    set_time(const number &time);
     /*
      * attach functions
      */

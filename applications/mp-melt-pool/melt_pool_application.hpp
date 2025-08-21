@@ -200,7 +200,7 @@ namespace MeltPoolDG
     unsigned int        normal_dirichlet_y_dof_idx = -1;
     unsigned int        normal_dirichlet_z_dof_idx = -1;
     const unsigned int &evapor_vel_dof_idx         = vel_dof_idx;
-    const unsigned int &evapor_mass_flux_dof_idx   = heat_no_bc_dof_idx;
+    const unsigned int &evapor_mass_flux_dof_idx   = heat_continuous_no_bc_dof_idx;
 
     std::shared_ptr<ScratchData<dim, dim, number>>                      scratch_data;
     std::shared_ptr<Material<number>>                                   material;

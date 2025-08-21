@@ -107,13 +107,6 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim, typename number>
   void
-  EvaporationOperation<dim, number>::set_time(const number &time_in)
-  {
-    time = time_in;
-  }
-
-  template <int dim, typename number>
-  void
   EvaporationOperation<dim, number>::compute_evaporative_mass_flux(
     const number      &time,
     const VectorType  *temperature,
@@ -124,12 +117,12 @@ namespace MeltPoolDG::Evaporation
     else
       {
         // For non-analytical models, we require valid args
-        Assert(temperature != nullptr,
-               ExcMessage(
-                 "Temperature vector must be provided for non-analytical evaporation model."));
-        Assert(heat_no_bc_dof_idx != dealii::numbers::invalid_unsigned_int,
-               ExcMessage(
-                 "Valid heat_dof_idx must be provided for non-analytical evaporation model."));
+        AssertThrow(temperature != nullptr,
+                    ExcMessage(
+                      "Temperature vector must be provided for non-analytical evaporation model."));
+        AssertThrow(heat_no_bc_dof_idx != dealii::numbers::invalid_unsigned_int,
+                    ExcMessage(
+                      "Valid heat_dof_idx must be provided for non-analytical evaporation model."));
         compute_temperature_dependent_evaporative_mass_flux(*temperature, heat_no_bc_dof_idx);
       }
   }
@@ -140,6 +133,9 @@ namespace MeltPoolDG::Evaporation
   {
     Assert(evapor_data.evaporative_mass_flux_model == EvaporationModelType::analytical,
            ExcNotImplemented());
+
+    AssertThrow(evapor_model, ExcNotImplemented());
+
     evaporative_mass_flux = evapor_model->local_compute_evaporative_mass_flux(time);
 
     Journal::print_formatted_norm<number>(
@@ -169,10 +165,13 @@ namespace MeltPoolDG::Evaporation
 
     evaporative_mass_flux = 0.0;
 
+    AssertThrow(evapor_model, ExcNotImplemented());
+
     if (not evapor_mass_flux_operator)
       evapor_mass_flux_operator =
         std::make_shared<EvaporationMassFluxOperatorContinuous<dim, number>>(scratch_data,
                                                                              *evapor_model);
+
     evapor_mass_flux_operator->compute_evaporative_mass_flux(evaporative_mass_flux, temperature);
 
     Journal::print_formatted_norm<number>(
