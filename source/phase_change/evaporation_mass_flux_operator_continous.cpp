@@ -27,14 +27,8 @@ namespace MeltPoolDG::Evaporation
       temperature.update_ghost_values();
 
     for (unsigned int i = 0; i < evaporative_mass_flux.locally_owned_size(); ++i)
-      {
-        // TODO
-        if (temperature.local_element(i) == 0)
-          evaporative_mass_flux.local_element(i) = 0;
-        else
-          evaporative_mass_flux.local_element(i) =
-            evaporation_model.local_compute_evaporative_mass_flux(temperature.local_element(i));
-      }
+      evaporative_mass_flux.local_element(i) =
+        evaporation_model.local_compute_evaporative_mass_flux(temperature.local_element(i));
 
     if (update_ghosts)
       temperature.zero_out_ghost_values();

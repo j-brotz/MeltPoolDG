@@ -24,6 +24,8 @@ namespace MeltPoolDG::Evaporation
   number
   EvaporationModelRecoilPressure<number>::local_compute_evaporative_mass_flux(const number T) const
   {
+    if (std::abs(T) < 1e-12)
+      return 0.0;
     return 0.82 * sticking_constant * recoil_model.compute_recoil_pressure_coefficient(T) *
            std::sqrt(Cm / T); //@todo: replace recoil pressure by saturated vapor pressure
   }
@@ -33,8 +35,12 @@ namespace MeltPoolDG::Evaporation
   EvaporationModelRecoilPressure<number>::local_compute_evaporative_mass_flux_vec(
     const dealii::VectorizedArray<number> &T) const
   {
-    return 0.82 * sticking_constant * recoil_model.compute_recoil_pressure_coefficient(T) *
-           std::sqrt(Cm / T);
+    return dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+      std::abs(T),
+      1e-12,
+      0.0,
+      0.82 * sticking_constant * recoil_model.compute_recoil_pressure_coefficient(T) *
+        std::sqrt(Cm / T));
   }
 
   template <typename number>
@@ -42,6 +48,9 @@ namespace MeltPoolDG::Evaporation
   EvaporationModelRecoilPressure<number>::local_compute_evaporative_mass_flux_derivative(
     const number T) const
   {
+    if (std::abs(T) < 1e-12)
+      return 0.0;
+
     return local_compute_evaporative_mass_flux(T) * (temperature_constant / (T * T) - 0.5 / T);
   }
 
@@ -51,7 +60,11 @@ namespace MeltPoolDG::Evaporation
     const dealii::VectorizedArray<number> &T) const
   {
     // TODO this is not the derivative if temperature is between activation und boiling temperature
-    return local_compute_evaporative_mass_flux_vec(T) * (temperature_constant / (T * T) - 0.5 / T);
+    return dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+      std::abs(T),
+      1e-12,
+      0.0,
+      local_compute_evaporative_mass_flux_vec(T) * (temperature_constant / (T * T) - 0.5 / T));
   }
 
   template class EvaporationModelRecoilPressure<double>;

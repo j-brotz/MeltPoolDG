@@ -28,6 +28,9 @@ namespace MeltPoolDG::Evaporation
   EvaporationModelSaturatedVaporPressure<number>::local_compute_evaporative_mass_flux(
     const number T) const
   {
+    if (std::abs(T) < 1e-12)
+      return 0.0;
+
     return 0.82 * sticking_constant *
            compute_saturated_gas_pressure(T,
                                           boiling_temperature,
@@ -40,12 +43,16 @@ namespace MeltPoolDG::Evaporation
   EvaporationModelSaturatedVaporPressure<number>::local_compute_evaporative_mass_flux_vec(
     const dealii::VectorizedArray<number> &T) const
   {
-    return 0.82 * sticking_constant *
-           compute_saturated_gas_pressure(T,
-                                          boiling_temperature,
-                                          recoil_data.ambient_gas_pressure,
-                                          recoil_data.temperature_constant) *
-           std::sqrt(Cm / T);
+    return dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+      std::abs(T),
+      1e-12,
+      0.0,
+      0.82 * sticking_constant *
+        compute_saturated_gas_pressure(T,
+                                       boiling_temperature,
+                                       recoil_data.ambient_gas_pressure,
+                                       recoil_data.temperature_constant) *
+        std::sqrt(Cm / T));
   }
 
   template <typename number>
@@ -53,6 +60,9 @@ namespace MeltPoolDG::Evaporation
   EvaporationModelSaturatedVaporPressure<number>::local_compute_evaporative_mass_flux_derivative(
     const number T) const
   {
+    if (std::abs(T) < 1e-12)
+      return 0.0;
+
     return local_compute_evaporative_mass_flux(T) *
            (recoil_data.temperature_constant / (T * T) - 0.5 / T);
   }
@@ -64,8 +74,12 @@ namespace MeltPoolDG::Evaporation
       const dealii::VectorizedArray<number> &T) const
   {
     // TODO this is not the derivative if temperature is between activation und boiling temperature
-    return local_compute_evaporative_mass_flux_vec(T) *
-           (recoil_data.temperature_constant / (T * T) - 0.5 / T);
+    return dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+      std::abs(T),
+      1e-12,
+      0.0,
+      local_compute_evaporative_mass_flux_vec(T) *
+        (recoil_data.temperature_constant / (T * T) - 0.5 / T));
   }
 
   template class EvaporationModelSaturatedVaporPressure<double>;

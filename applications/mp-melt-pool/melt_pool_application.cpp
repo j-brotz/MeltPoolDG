@@ -1400,34 +1400,33 @@ namespace MeltPoolDG
             ->get_indices_of_type("nx");
 
         level_set_operation->set_wetting_boundary_condition_ids(std::move(wetting_bc_ids));
+      }
 
+    MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim, number>(
+      *scratch_data,
+      simulation_case->get_boundary_condition("nx", "normal_vector"),
+      simulation_case->get_periodic_bc(),
+      normal_dirichlet_x_dof_idx,
+      normal_no_bc_dof_idx);
+    if constexpr (dim >= 2)
+      {
         MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
                                                                                            number>(
           *scratch_data,
-          simulation_case->get_boundary_condition("nx", "normal_vector"),
+          simulation_case->get_boundary_condition("ny", "normal_vector"),
           simulation_case->get_periodic_bc(),
-          normal_dirichlet_x_dof_idx,
+          normal_dirichlet_y_dof_idx,
           normal_no_bc_dof_idx);
-        if constexpr (dim >= 2)
-          {
-            MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<
-              dim,
-              number>(*scratch_data,
-                      simulation_case->get_boundary_condition("ny", "normal_vector"),
-                      simulation_case->get_periodic_bc(),
-                      normal_dirichlet_y_dof_idx,
-                      normal_no_bc_dof_idx);
-          }
-        if constexpr (dim == 3)
-          {
-            MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<
-              dim,
-              number>(*scratch_data,
-                      simulation_case->get_boundary_condition("nz", "normal_vector"),
-                      simulation_case->get_periodic_bc(),
-                      normal_dirichlet_z_dof_idx,
-                      normal_no_bc_dof_idx);
-          }
+      }
+    if constexpr (dim == 3)
+      {
+        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
+                                                                                           number>(
+          *scratch_data,
+          simulation_case->get_boundary_condition("nz", "normal_vector"),
+          simulation_case->get_periodic_bc(),
+          normal_dirichlet_z_dof_idx,
+          normal_no_bc_dof_idx);
       }
 
     if (heat_operation)
@@ -1629,6 +1628,13 @@ namespace MeltPoolDG
                                                           const number gravity,
                                                           const bool   zero_out) const
   {
+    if (std::abs(gravity) < 1e-12)
+      {
+        if (zero_out == 0)
+          vec = 0;
+        return;
+      }
+
     scratch_data->get_matrix_free().template cell_loop<VectorType, std::nullptr_t>(
       [&](const auto &matrix_free, auto &vec, const auto &, auto macro_cells) {
         FECellIntegrator<dim, dim, number> force_values(matrix_free,
@@ -1690,7 +1696,9 @@ namespace MeltPoolDG
               case Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_local: {
                 // Option 1: compute modified advection velocity due to evaporation
                 if (param.application_specific_parameters.do_extrapolate_coupling_terms)
-                  level_set_operation->update_normal_vector();
+                  {
+                    level_set_operation->update_normal_vector();
+                  }
                 evaporation_operation->compute_evaporation_velocity();
                 interface_velocity += evaporation_operation->get_velocity();
 

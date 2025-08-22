@@ -82,7 +82,7 @@
   },
   "output": {
     "paraview": {
-      "enable": "true"
+      "enable": "false"
     }
   },
   "level set": {
