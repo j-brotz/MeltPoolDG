@@ -1036,7 +1036,9 @@ namespace MeltPoolDG
       {
         if (param.evapor.interface_temperature_evaluation_type ==
             Evaporation::EvaporativeMassFluxTemperatureEvaluationType::interface_value)
-          scratch_data->create_remote_point_evaluation(evapor_mass_flux_dof_idx);
+          {
+            compute_interface_temperature = true;
+          }
 
         if (param.evapor.formulation_source_term_level_set ==
               Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_local or
@@ -1628,7 +1630,7 @@ namespace MeltPoolDG
                                                           const number gravity,
                                                           const bool   zero_out) const
   {
-    if (std::abs(gravity) < 1e-12)
+    if (gravity == 0.0)
       {
         if (zero_out == 0)
           vec = 0;

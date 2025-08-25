@@ -163,6 +163,11 @@ namespace MeltPoolDG::Evaporation
     Assert(evapor_data.evaporative_mass_flux_model != EvaporationModelType::analytical,
            ExcNotImplemented());
 
+    AssertThrow(
+      heat_dof_idx == evapor_mass_flux_dof_idx,
+      ExcMessage(
+        "The DoFHandlers for the evaporative mass flux and the thermal problem need to match."));
+
     evaporative_mass_flux = 0.0;
 
     AssertThrow(evapor_model, ExcNotImplemented());
@@ -264,9 +269,6 @@ namespace MeltPoolDG::Evaporation
   EvaporationOperation<dim, number>::attach_output_vectors(
     GenericDataOut<dim, number> &data_out) const
   {
-    /*
-     *  evaporation velocity
-     */
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
       vector_component_interpretation(dim,
                                       DataComponentInterpretation::component_is_part_of_vector);
@@ -275,9 +277,7 @@ namespace MeltPoolDG::Evaporation
                              evaporation_velocity,
                              std::vector<std::string>(dim, "evaporation_velocity"),
                              vector_component_interpretation);
-    /*
-     *  evaporation mass flux
-     */
+
     data_out.add_data_vector(scratch_data.get_dof_handler(evapor_mass_flux_dof_idx),
                              evaporative_mass_flux,
                              "evaporative_mass_flux");

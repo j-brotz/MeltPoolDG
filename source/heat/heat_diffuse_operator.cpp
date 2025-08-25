@@ -136,9 +136,9 @@ namespace MeltPoolDG::Heat
   {
     unsigned int i = 0;
 
-    if (do_update_ghosts[i++] = not temperature.has_ghost_elements())
+    if ((do_update_ghosts[i++] = not temperature.has_ghost_elements()))
       MeltPoolDG::VectorTools::update_ghost_values(temperature);
-    if (do_update_ghosts[i++] = not heat_source.has_ghost_elements())
+    if ((do_update_ghosts[i++] = not heat_source.has_ghost_elements()))
       MeltPoolDG::VectorTools::update_ghost_values(heat_source);
     if (velocity and (do_update_ghosts[i++] = not velocity->has_ghost_elements()))
       MeltPoolDG::VectorTools::update_ghost_values(*velocity);

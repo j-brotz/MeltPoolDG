@@ -198,7 +198,7 @@ namespace MeltPoolDG
       laser.check_input_parameters();
       rte.check_input_parameters(base.fe);
       ls.check_input_parameters(base.fe);
-      evapor.check_input_parameters(material, ls.get_n_subdivisions());
+      evapor.check_input_parameters(material);
       flow.check_input_parameters(ls.curv.enable);
       profiling.check_input_parameters(time_stepping.time_step_size);
       restart.check_input_parameters(time_stepping.time_step_size);

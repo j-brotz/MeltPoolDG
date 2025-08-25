@@ -28,7 +28,7 @@ namespace MeltPoolDG::Evaporation
   EvaporationModelSaturatedVaporPressure<number>::local_compute_evaporative_mass_flux(
     const number T) const
   {
-    if (std::abs(T) < 1e-12)
+    if (T < 1e-12)
       return 0.0;
 
     return 0.82 * sticking_constant *
@@ -44,7 +44,7 @@ namespace MeltPoolDG::Evaporation
     const dealii::VectorizedArray<number> &T) const
   {
     return dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
-      std::abs(T),
+      T,
       1e-12,
       0.0,
       0.82 * sticking_constant *
@@ -60,7 +60,7 @@ namespace MeltPoolDG::Evaporation
   EvaporationModelSaturatedVaporPressure<number>::local_compute_evaporative_mass_flux_derivative(
     const number T) const
   {
-    if (std::abs(T) < 1e-12)
+    if (T < 1e-12)
       return 0.0;
 
     return local_compute_evaporative_mass_flux(T) *
@@ -75,7 +75,7 @@ namespace MeltPoolDG::Evaporation
   {
     // TODO this is not the derivative if temperature is between activation und boiling temperature
     return dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
-      std::abs(T),
+      T,
       1e-12,
       0.0,
       local_compute_evaporative_mass_flux_vec(T) *

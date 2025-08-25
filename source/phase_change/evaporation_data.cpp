@@ -131,8 +131,7 @@ namespace MeltPoolDG::Evaporation
 
   template <typename number>
   void
-  EvaporationData<number>::check_input_parameters(const MaterialData<number> &material,
-                                                  const unsigned int ls_n_subdivisions) const
+  EvaporationData<number>::check_input_parameters(const MaterialData<number> &material) const
   {
     AssertThrow(!recoil.enable ||
                   (evaporative_dilation_rate.enable ||
