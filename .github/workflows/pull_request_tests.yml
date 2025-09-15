@@ -102,10 +102,7 @@ jobs:
         with:
           name: test-log
           path: |
-            build/tests/**/*output*
-            build/tests/**/*stdout*
-            build/unit_tests/**/*output*
-            build/unit_tests/**/*stdout*
+              build/**/{tests,unit_tests}/**/*{stdout,output}*
 
   clean:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'ready to test') }}
