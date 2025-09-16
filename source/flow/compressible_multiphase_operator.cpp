@@ -8,6 +8,8 @@
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_multiphase_interface_kernels.hpp>
 #include <meltpooldg/flow/compressible_multiphase_operator.hpp>
+#include <meltpooldg/utilities/preprocessor_directives.hpp>
+
 
 namespace MeltPoolDG::Multiphase
 {

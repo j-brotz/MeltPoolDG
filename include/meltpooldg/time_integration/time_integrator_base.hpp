@@ -12,27 +12,6 @@
 
 namespace MeltPoolDG::TimeIntegration
 {
-  /**
-   * Requirements for a pde operator in order to use it with the explicit time integrator.
-   */
-  template <typename Operator, typename number, typename VectorType>
-  concept ExplicitPDEOperator =
-    requires(Operator                                               pde_operator,
-             VectorType                                            &vec,
-             const VectorType                                      &const_vec,
-             number                                                 scalar,
-             const std::function<void(unsigned int, unsigned int)> &func) {
-      /**
-       * Given an ODE of the form y' = f(y), this function computes f(y) based on the provided
-       * parameters. It takes the current time, the current value of y, a destination vector where
-       * f(y) will be stored, and an additional function that is applied after f(y) is computed.
-       * This function is designed to be directly called from the matrix-free cell-loop and
-       * therefore takes a pair of indices indicating the start and end range for processing.
-       */
-      pde_operator.apply_operator(scalar, vec, const_vec, func);
-    };
-
-
   template <typename number>
   class TimeIntegratorBase
   {

@@ -18,14 +18,12 @@
 #include <meltpooldg/time_integration/time_integrator_base.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 
-#include <string>
+#include <functional>
 #include <vector>
 
 namespace MeltPoolDG::TimeIntegration
 {
-  /**
-   * The time integrator schemes supported by the low storage explicit Runge-Kutta time integrator.
-   */
+  /// The time integrator schemes supported by the low storage explicit Runge-Kutta time integrator.
   inline static constexpr std::array<TimeIntegratorSchemes, 5> explicit_lsrk_supported_schemes{{
     TimeIntegratorSchemes::LSRK_stage_1_order_1,
     TimeIntegratorSchemes::LSRK_stage_3_order_3,
@@ -34,28 +32,28 @@ namespace MeltPoolDG::TimeIntegration
     TimeIntegratorSchemes::LSRK_stage_9_order_5,
   }};
 
-  template <
-    typename number,
-    ExplicitPDEOperator<number, dealii::LinearAlgebra::distributed::Vector<number>> PDEOperator>
+  template <typename number>
   class LowStorageExplicitRungeKuttaIntegrator final : public TimeIntegratorBase<number>
   {
   public:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
+    using RhsFunctionType = std::function<void(number,
+                                               number,
+                                               VectorType &,
+                                               const VectorType &,
+                                               std::function<void(unsigned, unsigned)>)>;
+
+
+
     /**
      * Constructor. Set the coefficients for the low storage explicit Runge-Kutta scheme.
      *
-     * @param pde_operator Operator providing the necessary functionality to perform the time
-     * integration.
      * @param time_integrator_data Time integrator data struct setting the scheme of the integrator.
-     * @param timer Timer used for computation time tracking.
      */
-    LowStorageExplicitRungeKuttaIntegrator(const PDEOperator                &pde_operator,
-                                           const TimeIntegratorData<number> &time_integrator_data,
-                                           dealii::TimerOutput              &timer)
+    explicit LowStorageExplicitRungeKuttaIntegrator(
+      const TimeIntegratorData<number> &time_integrator_data)
       : TimeIntegratorBase<number>(time_integrator_data)
-      , pde_operator(pde_operator)
-      , timer(timer)
     {
       switch (time_integrator_data.integrator_type)
         {
@@ -146,15 +144,35 @@ namespace MeltPoolDG::TimeIntegration
         }
     }
 
+    /**
+     * Returns the number of previous solutions, that is solutions at time step n - x, where x >= 0,
+     * required by the time integrator.
+     */
     unsigned int
     required_solution_history_size() const override
     {
       return 1;
     }
 
+
+    /**
+     * @brief Configure the function used to compute the right-hand side of the ODE.
+     *
+     * Sets the class member @ref compute_rhs to the provided function.
+     * For details on the expected function signature and behavior, see the
+     * documentation of the corresponding class member.
+     *
+     * @param compute_rhs_in Function to compute the right-hand side of the ODE.
+     */
+    void
+    configure_rhs(const RhsFunctionType &compute_rhs_in)
+    {
+      compute_rhs = compute_rhs_in;
+    }
+
     /**
      * Allocate memory for the required vectors used during the integration. This function needs to
-     * be called once before the function perform_time_step() can be called.
+     * be called once before the function @ref perform_time_step() can be called.
      *
      * @param vector_template Reference vector used to define the partitioning for all internal
      * vectors.
@@ -168,7 +186,7 @@ namespace MeltPoolDG::TimeIntegration
 
     /**
      * Sets up the necessary internal data structures by internally calling
-     * reinit(solution_history.get_current_solution()).
+     * @ref reinit(solution_history.get_current_solution()).
      */
     void
     reinit(const SolutionHistory<VectorType> &solution_history) override
@@ -205,25 +223,27 @@ namespace MeltPoolDG::TimeIntegration
              dealii::ExcMessage(
                "The size of the solution history object does not fit the requirements of the "
                "chosen time integration scheme."));
-      dealii::TimerOutput::Scope timer_section(timer, "Explicit Runge-Kutta time integration");
+
       rk_register_ri = 0.;
       if (stage_pre_processing)
         stage_pre_processing(current_time, rk_register_ri, solution_history.get_current_solution());
-      pde_operator.apply_operator(
-        current_time,
-        rk_register_ri,
-        solution_history.get_current_solution(),
-        [&](const unsigned int start_range, const unsigned int end_range) {
-          DEAL_II_OPENMP_SIMD_PRAGMA
-          for (unsigned int i = start_range; i < end_range; ++i)
-            {
-              const number k_i   = rk_register_ri.local_element(i);
-              const number sol_i = solution_history.get_current_solution().local_element(i);
-              solution_history.get_current_solution().local_element(i) =
-                sol_i + bi[0] * time_step * k_i;
-              rk_register_ri.local_element(i) = sol_i + ai[0] * time_step * k_i;
-            }
-        });
+      compute_rhs(current_time,
+                  time_step,
+                  rk_register_ri,
+                  solution_history.get_current_solution(),
+                  [&](const unsigned int start_range, const unsigned int end_range) {
+                    DEAL_II_OPENMP_SIMD_PRAGMA
+                    for (unsigned int i = start_range; i < end_range; ++i)
+                      {
+                        const number k_i = rk_register_ri.local_element(i);
+                        const number sol_i =
+                          solution_history.get_current_solution().local_element(i);
+                        solution_history.get_current_solution().local_element(i) =
+                          sol_i + bi[0] * time_step * k_i;
+                        rk_register_ri.local_element(i) = sol_i + ai[0] * time_step * k_i;
+                      }
+                  });
+
       if (stage_post_processing)
         stage_post_processing(current_time + ci[1] * time_step, rk_register_ri, rk_register_ri);
 
@@ -234,35 +254,38 @@ namespace MeltPoolDG::TimeIntegration
             stage_pre_processing(current_time + ci[stage - 1] * time_step,
                                  rk_register_ki,
                                  rk_register_ri);
-          pde_operator.apply_operator(
-            current_time,
-            rk_register_ki,
-            rk_register_ri,
-            [&](const unsigned int start_range, const unsigned int end_range) {
-              if (stage < bi.size() - 1)
-                {
-                  DEAL_II_OPENMP_SIMD_PRAGMA
-                  for (unsigned int i = start_range; i < end_range; ++i)
-                    {
-                      const number k_i   = rk_register_ki.local_element(i);
-                      const number sol_i = solution_history.get_current_solution().local_element(i);
-                      solution_history.get_current_solution().local_element(i) =
-                        sol_i + bi[stage] * time_step * k_i;
-                      rk_register_ki.local_element(i) = sol_i + ai[stage] * time_step * k_i;
-                    }
-                }
-              else
-                {
-                  DEAL_II_OPENMP_SIMD_PRAGMA
-                  for (unsigned int i = start_range; i < end_range; ++i)
-                    {
-                      const number k_i   = rk_register_ki.local_element(i);
-                      const number sol_i = solution_history.get_current_solution().local_element(i);
-                      solution_history.get_current_solution().local_element(i) =
-                        sol_i + bi[stage] * time_step * k_i;
-                    }
-                }
-            });
+          compute_rhs(current_time,
+                      time_step,
+                      rk_register_ki,
+                      rk_register_ri,
+                      [&](const unsigned int start_range, const unsigned int end_range) {
+                        if (stage < bi.size() - 1)
+                          {
+                            DEAL_II_OPENMP_SIMD_PRAGMA
+                            for (unsigned int i = start_range; i < end_range; ++i)
+                              {
+                                const number k_i = rk_register_ki.local_element(i);
+                                const number sol_i =
+                                  solution_history.get_current_solution().local_element(i);
+                                solution_history.get_current_solution().local_element(i) =
+                                  sol_i + bi[stage] * time_step * k_i;
+                                rk_register_ki.local_element(i) =
+                                  sol_i + ai[stage] * time_step * k_i;
+                              }
+                          }
+                        else
+                          {
+                            DEAL_II_OPENMP_SIMD_PRAGMA
+                            for (unsigned int i = start_range; i < end_range; ++i)
+                              {
+                                const number k_i = rk_register_ki.local_element(i);
+                                const number sol_i =
+                                  solution_history.get_current_solution().local_element(i);
+                                solution_history.get_current_solution().local_element(i) =
+                                  sol_i + bi[stage] * time_step * k_i;
+                              }
+                          }
+                      });
           if (stage_post_processing)
             stage_post_processing(current_time + ci[stage] * time_step,
                                   rk_register_ki,
@@ -273,18 +296,48 @@ namespace MeltPoolDG::TimeIntegration
     }
 
   private:
+    /// Runge-Kutta final update weights.
     std::vector<number> bi;
+
+    /// Runge-Kutta stage weight coefficients.
     std::vector<number> ai;
+
+    /// Runge-Kutta stage time coefficients.
     std::vector<number> ci;
 
+    /// Number of stages of the Runge-Kutta scheme.
     unsigned int n_stages;
 
-    // register for time integrator
+    /// Intermediate storage for the Runge-Kutta stage derivatives.
     dealii::LinearAlgebra::distributed::Vector<number> rk_register_ri;
+
+    /// Intermediate storage for the Runge-Kutta stage solutions.
     dealii::LinearAlgebra::distributed::Vector<number> rk_register_ki;
 
-    const PDEOperator &pde_operator;
-
-    dealii::TimerOutput &timer;
+    /// Given an ODE system of the form
+    /// \f[
+    ///   y' = F(y),
+    /// \f]
+    /// this function computes the right-hand side \f$F(y)\f$.
+    ///
+    /// **Function Signature:**
+    /// ```cpp
+    /// void f(number time,
+    ///        number time_step,
+    ///        VectorType &dst,
+    ///        const VectorType &src,
+    ///        std::function<void(unsigned, unsigned)> post);
+    /// ```
+    ///
+    /// **Parameters:**
+    /// - `time`         : Current simulation time at \f$t^n\f$.
+    /// - `time_step`    : Current step size \f$\Delta t\f$.
+    /// - `dst`          : Destination vector for the RHS result.
+    /// - `src`          : Source solution vector \f$y^n\f$.
+    /// - `post`         : Post-processing function applied after computing the RHS. Receives
+    ///                    a range of global indices `[begin, end)` to process, ensuring all
+    ///                    indices are handled. Designed for efficient integration with deal.II’s
+    ///                    matrix-free framework.
+    RhsFunctionType compute_rhs;
   };
 } // namespace MeltPoolDG::TimeIntegration

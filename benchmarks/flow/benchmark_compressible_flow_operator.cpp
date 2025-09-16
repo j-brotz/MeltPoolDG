@@ -328,15 +328,14 @@ namespace
     constexpr number time_step    = 1e-4;
     this->setup_operator(OperatorType::Implicit);
     this->data->flow_scratch_data->solution_history.commit_old_solutions();
-    this->data->implicit_flow_operator->set_stage_constants(
-      current_time,
-      time_step,
-      this->data->flow_scratch_data->solution_history.get_recent_old_solution());
+
     MeltPoolDG::mpi_benchmark_loop(state, [&]() {
       this->data->implicit_flow_operator->compute_residual(
-        0.1,
+        current_time,
+        time_step,
         this->data->flow_scratch_data->solution_history.get_solution(1),
-        this->data->flow_scratch_data->solution_history.get_current_solution());
+        this->data->flow_scratch_data->solution_history.get_current_solution(),
+        this->data->flow_scratch_data->solution_history.get_recent_old_solution());
     });
     state.counters["DoFs"] = this->data->dof_handler.n_dofs();
   }
@@ -356,16 +355,13 @@ namespace
   BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture, ImplicitOperatorJacobian)
   (benchmark::State &state)
   {
-    constexpr number current_time = 0.1;
-    constexpr number time_step    = 1e-4;
+    constexpr number time_step = 1e-4;
     this->setup_operator(OperatorType::Implicit);
     this->data->flow_scratch_data->solution_history.commit_old_solutions();
-    this->data->implicit_flow_operator->set_stage_constants(
-      current_time,
-      time_step,
-      this->data->flow_scratch_data->solution_history.get_recent_old_solution());
+
     MeltPoolDG::mpi_benchmark_loop(state, [&]() {
       this->data->implicit_flow_operator->apply_jacobian(
+        time_step,
         this->data->flow_scratch_data->solution_history.get_current_solution(),
         this->data->flow_scratch_data->solution_history.get_recent_old_solution());
     });
@@ -391,15 +387,14 @@ namespace
     constexpr number time_step    = 1e-4;
     this->setup_operator(OperatorType::ImEx);
     this->data->flow_scratch_data->solution_history.commit_old_solutions();
-    this->data->imex_flow_operator->set_stage_constants(
-      current_time,
-      time_step,
-      this->data->flow_scratch_data->solution_history.get_recent_old_solution());
+
     MeltPoolDG::mpi_benchmark_loop(state, [&]() {
       this->data->imex_flow_operator->compute_residual(
-        0.1,
+        current_time,
+        time_step,
         this->data->flow_scratch_data->solution_history.get_solution(1),
-        this->data->flow_scratch_data->solution_history.get_current_solution());
+        this->data->flow_scratch_data->solution_history.get_current_solution(),
+        this->data->flow_scratch_data->solution_history.get_recent_old_solution());
     });
     state.counters["DoFs"] = this->data->dof_handler.n_dofs();
   }
@@ -418,12 +413,11 @@ namespace
     constexpr number time_step    = 1e-4;
     this->setup_operator(OperatorType::ImEx);
     this->data->flow_scratch_data->solution_history.commit_old_solutions();
-    this->data->imex_flow_operator->set_stage_constants(
-      current_time,
-      time_step,
-      this->data->flow_scratch_data->solution_history.get_recent_old_solution());
+
     MeltPoolDG::mpi_benchmark_loop(state, [&]() {
       this->data->imex_flow_operator->apply_jacobian(
+        current_time,
+        time_step,
         this->data->flow_scratch_data->solution_history.get_current_solution(),
         this->data->flow_scratch_data->solution_history.get_recent_old_solution());
     });
@@ -448,7 +442,9 @@ namespace
         current_time,
         time_step,
         this->data->flow_scratch_data->solution_history.get_current_solution(),
-        this->data->flow_scratch_data->solution_history.get_recent_old_solution());
+        this->data->flow_scratch_data->solution_history.get_recent_old_solution(),
+        true,
+        std::function<void(unsigned, unsigned)>());
     });
     state.counters["DoFs"] = this->data->dof_handler.n_dofs();
   }

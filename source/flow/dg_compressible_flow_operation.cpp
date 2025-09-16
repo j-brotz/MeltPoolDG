@@ -69,7 +69,6 @@ namespace MeltPoolDG::Flow
     };
 
     flow_scratch_data.solution_history.update_ghost_values();
-
     time_integrator->perform_time_step(current_time,
                                        time_step,
                                        flow_scratch_data.solution_history,

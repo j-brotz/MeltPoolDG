@@ -77,26 +77,6 @@ namespace MeltPoolDG::Flow
       const TimeIntegration::TimeIntegratorData<number> &time_integrator_data) override;
 
     /**
-     * @brief This function sets class member variables which are constant within a single time
-     * stage (e.g. boundary conditions) and used in both the residual and Jacobian calculation.
-     *
-     * A suitable time integrator class is expected to call this functions before a call to
-     * compute_residual() and compute_jacobian().
-     *
-     * @param current_time Current time.
-     * @param time_step Current time step size.
-     * @param old_solution_in (Fictional) solution at the previous time used to approximate the
-     * temporal derivative by 1/dt*(U^(n)-U^(n-1)).
-     * @param rhs_scaling_factor Factor used to scle the rhs, i.e. the final residual is given by
-     * R=y'-a*f(y), where the variable 'a' is the passed factor.
-     */
-    void
-    set_stage_constants(number            current_time,
-                        number            time_step,
-                        const VectorType &old_solution_in,
-                        number            rhs_scaling_factor = 1.) const; // TODO
-
-    /**
      * @brief Compute the result of J*x, where J is the Jacobian.
      *
      * The method on how to compute/approximate the Jacobian is defined by the user in the
@@ -110,7 +90,9 @@ namespace MeltPoolDG::Flow
      * @note This function assumes that the function set_stage_constants() has been called in advance.
      */
     void
-    apply_jacobian(VectorType &dst, const VectorType &src) const; // TODO
+    apply_jacobian(number            time_step,
+                   VectorType       &dst,
+                   const VectorType &src) const; // TODO
 
     /**
      * @brief Compute the negative residual.
@@ -128,7 +110,11 @@ namespace MeltPoolDG::Flow
      * @note This function assumes that the function set_stage_constants() has been called in advance.
      */
     void
-    compute_residual(number current_time, const VectorType &src, VectorType &dst) const; // TODO
+    compute_residual(number            current_time,
+                     number            time_step,
+                     const VectorType &src,
+                     VectorType       &dst,
+                     const VectorType &old_solution) const; // TODO
 
 
     /**
@@ -176,11 +162,6 @@ namespace MeltPoolDG::Flow
                                         unsigned int q_index) const;
 
   private:
-    /// When computing the residual this factor defines a scaling factor for the right-hand side.
-    /// The final residual is then given by R=y'-a*f(y), where 'a' is the factor defined by thi
-    /// variable.
-    mutable number residual_rhs_scaling_factor = 1.;
-
     /// This vector is used to compute the temporal derivative y' in the residual computation by
     /// y'=(current_solution-old_solution)/dt. We do not take the old_solution directly from
     /// solution_history as providing the option to pass a (fictional) old solution can have

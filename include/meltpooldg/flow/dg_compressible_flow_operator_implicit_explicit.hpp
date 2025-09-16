@@ -118,17 +118,6 @@ namespace MeltPoolDG::Flow
                                         unsigned q_index) const;
 
     /**
-     * @brief Perform an initial guess for the solution of at the next time step.
-     *
-     * The guessed solution is thereby given by the intermediate explicit solution computed during
-     * the explicit step of the imex scheme.
-     *
-     * @param solution Vector in which the solution guess is stored.
-     */
-    void
-    make_initial_guess(VectorType &solution) const;
-
-    /**
      * @brief This function sets class member variables which are constant within a single time stage
      * (e.g. boundary conditions) and used in both the residual and jacobian calculation.
      *
@@ -158,11 +147,12 @@ namespace MeltPoolDG::Flow
      * @param zero_dst_vec Flag whether the vector dst will be set to zero inside the loop.
      */
     void
-    perform_explicit_stage(number            current_time,
-                           number            time_step,
-                           VectorType       &dst,
-                           const VectorType &src,
-                           bool              zero_dst_vec = false) const;
+    perform_explicit_stage(number                                         current_time,
+                           number                                         time_step,
+                           VectorType                                    &dst,
+                           const VectorType                              &src,
+                           bool                                           zero_dst_vec,
+                           const std::function<void(unsigned, unsigned)> &post) const;
 
     /**
      * @brief Compute the result of J*x, where J is the Jacobian.
@@ -177,7 +167,7 @@ namespace MeltPoolDG::Flow
      * @note This function assumes that the function set_stage_constants() has been called in advance.
      */
     void
-    apply_jacobian(VectorType &dst, const VectorType &src) const;
+    apply_jacobian(number time, number time_step, VectorType &dst, const VectorType &src) const;
 
     /**
      * @brief Compute the negative residual, i.e. -(y'-F(y)) where y' is the temporal derivative of
@@ -192,7 +182,11 @@ namespace MeltPoolDG::Flow
      * @note This function assumes that the function set_stage_constants() has been called in advance.
      */
     void
-    compute_residual(number current_time, const VectorType &src, VectorType &dst) const;
+    compute_residual(number            current_time,
+                     number            time_step,
+                     const VectorType &src,
+                     VectorType       &dst,
+                     const VectorType &explicit_solution) const;
 
   private:
     /// When computing the residual this factor defines a scaling factor for the right-hand side.

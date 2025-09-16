@@ -35,7 +35,7 @@ namespace MeltPoolDG::Flow
     return std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>(
       explicit_time_integrator_factory<number,
                                        DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>>(
-        *this, time_integrator_data, flow_scratch_data.scratch_data.get_timer()));
+        *this, time_integrator_data));
   }
 
   template <int dim, typename number, bool is_viscous>
