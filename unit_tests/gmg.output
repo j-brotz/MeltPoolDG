@@ -1,0 +1,9 @@
+Start linear solution procedure for number of DoFs: 1905
+Setup geometric multigrid
+   MG Level 0: 9 DoFs, 1 cells
+   MG Level 1: 25 DoFs, 4 cells
+   MG Level 2: 43 DoFs, 7 cells
+   MG Level 3: 141 DoFs, 28 cells
+   MG Level 4: 505 DoFs, 112 cells
+   MG Level 5: 1905 DoFs, 448 cells
+  Solved in 3 iterations.
