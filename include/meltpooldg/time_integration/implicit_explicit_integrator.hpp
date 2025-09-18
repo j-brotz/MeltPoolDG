@@ -2,13 +2,11 @@
 
 #include <deal.II/lac/la_parallel_vector.h>
 
-#include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
-#include <meltpooldg/linear_algebra/preconditioner_trilinos_wrapper.hpp>
+#include <meltpooldg/time_integration/solution_history.hpp>
 #include <meltpooldg/time_integration/time_integrator_base.hpp>
-
-#include <meltpooldg/utilities/matrix_type_wrapper.h>
+#include <meltpooldg/time_integration/time_integrator_data.hpp>
 
 #include <functional>
 #include <optional>
@@ -56,19 +54,14 @@ namespace MeltPoolDG::TimeIntegration
      *
      * @param time_integrator_data Time integrator data struct setting the scheme of the integrator.
      */
-    ImplicitExplicitIntegrator(const TimeIntegratorData<number> &time_integrator_data)
-      : TimeIntegratorBase<number>(time_integrator_data)
-    {}
+    explicit ImplicitExplicitIntegrator(const TimeIntegratorData<number> &time_integrator_data);
 
     /**
      * Returns the number of previous solutions, that is solutions at time step n - x, where x >= 0,
      * required by the time integrator.
      */
-    unsigned int
-    required_solution_history_size() const override
-    {
-      return 2;
-    }
+    unsigned
+    required_solution_history_size() const override;
 
     /**
      * Allocate memory for the required vectors used during the integration. This function needs to
@@ -78,20 +71,14 @@ namespace MeltPoolDG::TimeIntegration
      * vectors.
      */
     void
-    reinit(const VectorType &vector_template) override
-    {
-      intermediate_explicit_solution.reinit(vector_template, true);
-    }
+    reinit(const VectorType &vector_template) override;
 
     /**
      * Sets up the necessary internal data structures by internally calling
      * @ref reinit(solution_history.get_current_solution()).
      */
     void
-    reinit(const SolutionHistory<VectorType> &solution_history) override
-    {
-      reinit(solution_history.get_current_solution());
-    }
+    reinit(const SolutionHistory<VectorType> &solution_history) override;
 
     /**
      * @brief Configure the function used to compute the explicit right-hand side.
@@ -103,10 +90,7 @@ namespace MeltPoolDG::TimeIntegration
      * @param explicit_rhs Function to compute the right-hand side in the explicit step.
      */
     void
-    configure_explicit_step(ExplicitRhsFunctionType explicit_rhs)
-    {
-      explicit_compute_rhs = explicit_rhs;
-    }
+    configure_explicit_step(ExplicitRhsFunctionType explicit_rhs);
 
     /**
      * Configure a custom solver function used to solve the implicit step.
@@ -121,16 +105,13 @@ namespace MeltPoolDG::TimeIntegration
      * @param custom_solver_in Custom solver function to be used in the implicit step.
      */
     void
-    configure_implicit_step(CustomSolverType custom_solver_in)
-    {
-      custom_solver = custom_solver_in;
-    }
+    configure_implicit_step_wo_internal_nonlinear_solver(CustomSolverType custom_solver_in);
 
     /**
      * @brief Configure the functions used by the internal nonlinear solver to solve the implicit step. For
      * details on the functions see the corresponding class member descriptions.
      *
-     * Sets the class member @ref compute_jacobian , @ref compute_residual and @ref distribute_constraints to the
+     * Sets the class member @ref compute_jacobian, @ref compute_residual and @ref distribute_constraints to the
      * provided functions. For details on the expected function signatures and behavior, see the
      * documentation of the corresponding class member.
      *
@@ -145,24 +126,7 @@ namespace MeltPoolDG::TimeIntegration
     configure_implicit_step(
       JacobianType              jacobian,
       ResidualType              residual,
-      DistributeConstraintsType constraints = [](VectorType &) {})
-    {
-      compute_jacobian       = jacobian;
-      compute_residual       = residual;
-      distribute_constraints = constraints;
-
-      solver.emplace(
-        NewtonRaphsonSolver<number, VectorType>(this->time_integrator_data.nlsolver_data));
-
-      // Ensure that a preconditioner is set. If not set previously it is set to identity but can be
-      // changed by the user anytime by calling set_preconditioner().
-      if (!preconditioner.is_initialized())
-        {
-          preconditioner = Preconditioner<dim, VectorType, number>(
-            IdentityPreconditioner<dim, VectorType, number>());
-        }
-      preconditioner_update_flag = true;
-    }
+      DistributeConstraintsType constraints = [](VectorType &) {});
 
     /**
      * Set the preconditioner used in the linear solver of the implicit step. If this function is
@@ -174,11 +138,7 @@ namespace MeltPoolDG::TimeIntegration
      * custom solver function is set it is not used at all.
      */
     void
-    set_preconditioner(Preconditioner<dim, VectorType, number> &&preconditioner_in)
-    {
-      preconditioner             = std::move(preconditioner_in);
-      preconditioner_update_flag = true;
-    }
+    set_preconditioner(Preconditioner<dim, VectorType, number> &&preconditioner_in);
 
     /**
      * Perform a single time step by first computing an intermediate explicit solution using an
@@ -201,32 +161,7 @@ namespace MeltPoolDG::TimeIntegration
       SolutionHistory<VectorType>                                         &solution_history,
       const std::function<void(number, VectorType &, const VectorType &)> &stage_pre_processing,
       const std::function<void(number, VectorType &, const VectorType &)> &stage_post_processing)
-      override
-    {
-      if (stage_pre_processing)
-        stage_pre_processing(current_time,
-                             solution_history.get_current_solution(),
-                             solution_history.get_current_solution());
-
-      apply_explicit_step(current_time,
-                          time_step,
-                          solution_history.get_current_solution(),
-                          intermediate_explicit_solution);
-
-      apply_implicit_step(current_time,
-                          time_step,
-                          intermediate_explicit_solution,
-                          solution_history.get_current_solution());
-
-
-
-      if (stage_post_processing)
-        stage_post_processing(current_time,
-                              solution_history.get_current_solution(),
-                              solution_history.get_current_solution());
-
-      ++n_steps_performed;
-    }
+      override;
 
   private:
     /// @brief Compute the negative residual for the implicit step of the time integrator.
@@ -393,23 +328,10 @@ namespace MeltPoolDG::TimeIntegration
      * vector @p src.
      */
     void
-    apply_explicit_step(number time, number time_step, const VectorType &src, VectorType &dst) const
-    {
-      Assert(explicit_compute_rhs,
-             dealii::ExcMessage(
-               "No function has been set for computing the right-hand side in the explicit step!"));
-
-      dst.zero_out_ghost_values();
-      explicit_compute_rhs(
-        time, time_step, dst, src, true, [&](const unsigned start_range, const unsigned end_range) {
-          DEAL_II_OPENMP_SIMD_PRAGMA
-          for (unsigned int i = start_range; i < end_range; ++i)
-            {
-              dst.local_element(i) *= time_step;
-              dst.local_element(i) += src.local_element(i);
-            }
-        });
-    }
+    apply_explicit_step(number            time,
+                        number            time_step,
+                        const VectorType &src,
+                        VectorType       &dst) const;
 
     /**
      * Solve the implicit step of the implicit-explicit scheme. If the function @ref custom_solver
@@ -421,67 +343,6 @@ namespace MeltPoolDG::TimeIntegration
     apply_implicit_step(number      time,
                         number      time_step,
                         VectorType &explicit_solution,
-                        VectorType &solution)
-    {
-      if (custom_solver)
-        {
-          custom_solver(time, time_step, explicit_solution, solution);
-        }
-      else
-        {
-          Assert(
-            compute_residual,
-            dealii::ExcMessage(
-              "No function has been set for computing the computing the residual in the implicit step!"));
-          Assert(
-            compute_jacobian,
-            dealii::ExcMessage(
-              "No function has been set for computing the computing the jacobian in the implicit step!"));
-          Assert(solver.has_value(), dealii::ExcInternalError());
-
-          // update preconditioner if required
-          if (n_steps_performed % this->time_integrator_data.preconditioner_update_frequency == 0 or
-              preconditioner_update_flag)
-            {
-              preconditioner.update();
-              preconditioner_update_flag = false;
-            }
-          solver->norm_of_solution_vector = [&solution = solution]() -> number {
-            return solution.l2_norm();
-          };
-
-          // setup solver
-          solver->distribute_constraints = [&](VectorType &solution) -> void {
-            if (distribute_constraints)
-              distribute_constraints(solution);
-          };
-
-          solver->reinit_vector = [&solution = solution](VectorType &vec) -> void {
-            vec.reinit(solution);
-          };
-
-          solver->residual = [&](const VectorType &src, VectorType &dst) {
-            compute_residual(time, time_step, src, dst, intermediate_explicit_solution);
-          };
-
-          std::function<void(VectorType &, const VectorType &)> jacobian_multiplication =
-            [&](VectorType &dst, const VectorType &src) {
-              compute_jacobian(time, time_step, dst, src);
-            };
-
-          MatrixTypeObject<VectorType> jacobian(jacobian_multiplication);
-
-          solver->solve_with_jacobian = [&jacobian = jacobian,
-                                         &data     = this->time_integrator_data.linear_solver_data,
-                                         &preconditioner = preconditioner](const VectorType &rhs,
-                                                                           VectorType       &dst) {
-            return LinearSolver::solve(jacobian, dst, rhs, data, preconditioner);
-          };
-
-          // use explicit solution as initial guess
-          solution = explicit_solution;
-          solver->solve(solution);
-        }
-    }
+                        VectorType &solution);
   };
 } // namespace MeltPoolDG::TimeIntegration
