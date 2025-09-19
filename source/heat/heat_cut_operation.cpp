@@ -129,7 +129,10 @@ namespace MeltPoolDG::Heat
                                                      velocity_old_in);
 
     preconditioner = make_preconditioner<dim, number, HeatCutOperator<dim, number>, VectorType>(
-      heat_data.linear_solver.preconditioner_type, heat_operator.get());
+      heat_data.linear_solver.preconditioner_type,
+      heat_operator.get(),
+      scratch_data,
+      heat_cut_dof_idx);
 
     mesh_classifier = std::make_shared<dealii::NonMatching::MeshClassifier<dim>>(
       scratch_data.get_dof_handler(ls_dof_idx), mc_level_set);
@@ -335,7 +338,7 @@ namespace MeltPoolDG::Heat
 
     heat_operator->reinit();
 
-    preconditioner.reinit(scratch_data, heat_cut_dof_idx);
+    preconditioner.reinit();
 
     compute_intersected_quadrature();
   }

@@ -6,7 +6,8 @@
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_base.hpp>
-#include <meltpooldg/time_integration/time_integrator_base.hpp>
+#include <meltpooldg/time_integration/bdf_time_integration.hpp>
+#include <meltpooldg/time_integration/time_integrator_data.hpp>
 
 
 namespace MeltPoolDG::Flow
@@ -38,11 +39,27 @@ namespace MeltPoolDG::Flow
       CompressibleFlowScratchData<dim, number> &flow_scratch_data);
 
     /**
-     * @brief Reinitialize the internal data structures, i.e., allocate memory for vectors storing
-     * temporary solutions.
+     * @brief Reinitialize the internal data structures.
+     *
+     * The reinitialization includes setting a new required size for the solution history object
+     * according to the demands of the used time integrator.
      */
     void
     reinit() override;
+
+    /**
+     * @brief Advances solver by a single time step.
+     *
+     * This function performs a single implicit time step of size @p time_step starting from the
+     * solution at time @p time.
+     *
+     * @note The function does not take care about updating the solution history object or similar
+     * operations which are not directly related to the integration. It **only** advances the
+     * solution by a single time step starting from the current solution in the solution history
+     * object of the @ref flow_scratch_data object.
+     */
+    void
+    advance_time_step(number time, number time_step) override;
 
     /**
      * @brief Compute the matrix representation of the Jacobian.
@@ -60,21 +77,6 @@ namespace MeltPoolDG::Flow
      */
     void
     compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const;
-
-    /**
-     * @brief Creates and returns an implicit time integrator object which is set up with the current
-     * operator.
-     *
-     * @param time_integrator_data Reference to the time integrator data object.
-     *
-     * @return Unique pointer to a time integrator which is templated on the own operator type.
-     *
-     * @throws If the time integrator type in the time integrator data is not an implicit time
-     * integrator.
-     */
-    std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>
-    make_application_specific_time_integrator(
-      const TimeIntegration::TimeIntegratorData<number> &time_integrator_data) override;
 
     /**
      * @brief Compute the result of J*x, where J is the Jacobian.
@@ -175,10 +177,13 @@ namespace MeltPoolDG::Flow
 
     /// Current time step size. This needs to be stored as this value is required by the local cell
     /// appliers.
-    mutable number current_time_step;
+    mutable number inverse_current_time_step;
 
     /// Scratch data for compressible flows
     CompressibleFlowScratchData<dim, number> &flow_scratch_data;
+
+    /// Time integrator class used for the time integration.
+    TimeIntegration::BDFIntegrator<dim, number> time_integrator;
 
     /// Object for the convective term evaluations
     CompressibleFlowConvectiveKernels<dim, number> convective_terms;

@@ -33,8 +33,7 @@ namespace MeltPoolDG
       /**
        * Initilaize the preconditioner.
        */
-      preconditioner.reinit(std::declval<ScratchData<dim, dim, number>>(),
-                            std::declval<unsigned int>());
+      preconditioner.reinit();
     };
 
 
@@ -83,9 +82,9 @@ namespace MeltPoolDG
      * preconditioner classes.
      */
     void
-    reinit(const ScratchData<dim, dim, number> &scratch_data, const unsigned int dof_idx)
+    reinit()
     {
-      preconditioner_pimpl->reinit(scratch_data, dof_idx);
+      preconditioner_pimpl->reinit();
     }
 
     /**
@@ -153,7 +152,7 @@ namespace MeltPoolDG
       update(const std::any &external_setup) = 0;
 
       virtual void
-      reinit(const ScratchData<dim, dim, number> &scratch_data, const unsigned int dof_idx) = 0;
+      reinit() = 0;
     };
 
     template <PreconditionerTypeConcept<dim, VectorType, number> PreconditionerType>
@@ -177,9 +176,9 @@ namespace MeltPoolDG
       }
 
       void
-      reinit(const ScratchData<dim, dim, number> &scratch_data, const unsigned int dof_idx) override
+      reinit() override
       {
-        preconditioner.reinit(scratch_data, dof_idx);
+        preconditioner.reinit();
       }
 
     private:

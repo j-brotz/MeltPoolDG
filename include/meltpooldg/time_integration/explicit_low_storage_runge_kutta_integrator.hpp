@@ -104,13 +104,13 @@ namespace MeltPoolDG::TimeIntegration
      * Runge-Kutta stage.
      */
     void
-    perform_time_step(
-      const number                                                         current_time,
-      const number                                                         time_step,
-      SolutionHistory<VectorType>                                         &solution_history,
-      const std::function<void(number, VectorType &, const VectorType &)> &stage_pre_processing,
-      const std::function<void(number, VectorType &, const VectorType &)> &stage_post_processing)
-      override;
+    perform_time_step(const number                 current_time,
+                      const number                 time_step,
+                      SolutionHistory<VectorType> &solution_history,
+                      const std::function<void(number, number, VectorType &, const VectorType &)>
+                        &stage_pre_processing,
+                      const std::function<void(number, number, VectorType &, const VectorType &)>
+                        &stage_post_processing) override;
 
   private:
     /// Runge-Kutta final update weights.

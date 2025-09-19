@@ -47,7 +47,10 @@ namespace MeltPoolDG::LevelSet
     this->advec_diff_data = advec_diff_data_in;
     preconditioner =
       make_preconditioner<dim, number, AdvectionDiffusionOperator<dim, number>, VectorType>(
-        this->advec_diff_data.linear_solver.preconditioner_type, advec_diff_operator.get());
+        this->advec_diff_data.linear_solver.preconditioner_type,
+        advec_diff_operator.get(),
+        scratch_data,
+        advec_diff_dof_idx);
   }
 
   template <int dim, typename number>
@@ -87,7 +90,7 @@ namespace MeltPoolDG::LevelSet
     // TODO: setup sparsity pattern of system matrix only if the latter is needed for computing the
     // preconditioner
     if (preconditioner.is_initialized())
-      preconditioner.reinit(scratch_data, advec_diff_dof_idx);
+      preconditioner.reinit();
 
     if (advec_diff_operator)
       advec_diff_operator->reinit();
@@ -518,8 +521,11 @@ namespace MeltPoolDG::LevelSet
     advec_diff_operator->reinit();
     preconditioner =
       make_preconditioner<dim, number, AdvectionDiffusionOperator<dim, number>, VectorType>(
-        this->advec_diff_data.linear_solver.preconditioner_type, advec_diff_operator.get());
-    preconditioner.reinit(scratch_data, advec_diff_dof_idx);
+        this->advec_diff_data.linear_solver.preconditioner_type,
+        advec_diff_operator.get(),
+        scratch_data,
+        advec_diff_dof_idx);
+    preconditioner.reinit();
   }
 
   template class AdvectionDiffusionOperation<1, double>;

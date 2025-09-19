@@ -70,8 +70,8 @@ namespace MeltPoolDG::LevelSet
      * Therefore a preconditioner is needed.
      */
     preconditioner = make_preconditioner<dim, number, HelmholtzDGOperator<dim, number>, VectorType>(
-      preconditioner_type, this, false);
-    preconditioner.reinit(scratch_data, dof_idx);
+      preconditioner_type, this, scratch_data, dof_idx, false);
+    preconditioner.reinit();
     preconditioner.update(&system_matrix);
   }
 

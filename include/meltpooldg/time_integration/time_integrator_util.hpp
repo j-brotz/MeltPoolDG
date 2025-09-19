@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "meltpooldg/core/scratch_data.hpp"
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
@@ -86,6 +87,8 @@ namespace MeltPoolDG::TimeIntegration
    * based on the scheme specified in @p TimeIntegratorData.
    *
    * @param params Contains the configuration details for the time integrator.
+   * @param scratch_data Scratch data object to get relevant dof information for the integrator.
+   * @param dof_idx Relevant dof index in the scratch data object.
    * @param timer Timer passed to the constructor of the time integrator.
    *
    * @return A raw pointer to the appropriate implicit time integrator.
@@ -95,15 +98,21 @@ namespace MeltPoolDG::TimeIntegration
    */
   template <int dim, typename number, typename PDEOperator>
   TimeIntegratorBase<number> *
-  implicit_time_integrator_factory(const PDEOperator                &pde_operator,
-                                   const TimeIntegratorData<number> &params)
+  implicit_time_integrator_factory(const PDEOperator                   &pde_operator,
+                                   const ScratchData<dim, dim, number> &scratch_data,
+                                   const unsigned int                   dof_idx,
+                                   const TimeIntegratorData<number>    &params)
   {
     using VectorType = typename BDFIntegrator<dim, number>::VectorType;
 
     if (Utils::contains(bdf_supported_schemes, params.integrator_type))
       {
         auto preconditioner = make_preconditioner<dim, number, PDEOperator, VectorType>(
-          params.linear_solver_data.preconditioner_type, &pde_operator, true);
+          params.linear_solver_data.preconditioner_type,
+          &pde_operator,
+          scratch_data,
+          dof_idx,
+          true);
         auto integrator = new BDFIntegrator<dim, number>(params);
         integrator->set_preconditioner(std::move(preconditioner));
         integrator->configure_solver_functions(

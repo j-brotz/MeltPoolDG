@@ -14,17 +14,51 @@ namespace MeltPoolDG::Flow
   DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::DGCompressibleFlowOperatorImplicit(
     CompressibleFlowScratchData<dim, number> &flow_scratch_data)
     : flow_scratch_data(flow_scratch_data)
+    , time_integrator(flow_scratch_data.flow_data.time_integrator)
     , convective_terms(flow_scratch_data.flow_data, flow_scratch_data.material)
     , viscous_terms(flow_scratch_data.material)
-  {}
+  {
+    using Operator = DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>;
+
+    auto preconditioner = make_preconditioner<dim, number, Operator, VectorType>(
+      flow_scratch_data.flow_data.time_integrator.linear_solver_data.preconditioner_type,
+      this,
+      flow_scratch_data.scratch_data,
+      flow_scratch_data.dof_idx,
+      true);
+    time_integrator.set_preconditioner(std::move(preconditioner));
+    time_integrator.configure_solver_functions(std::bind_front(&Operator::apply_jacobian, this),
+                                               std::bind_front(&Operator::compute_residual, this));
+  }
 
   template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::reinit()
   {
+    flow_scratch_data.reinit(time_integrator.required_solution_history_size());
+    time_integrator.reinit(flow_scratch_data.solution_history.get_current_solution());
     if (flow_scratch_data.flow_data.jacobian_type == JacobianType::finite_difference)
       flow_scratch_data.scratch_data.initialize_dof_vector(disturbed_residual,
                                                            flow_scratch_data.dof_idx);
+  }
+
+  template <int dim, typename number, bool is_viscous>
+  void
+  DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::advance_time_step(number time,
+                                                                                 number time_step)
+  {
+    std::function<void(number, number, VectorType &, const VectorType &)> pre_processing =
+      [&](number time, number time_step, VectorType &, const VectorType &) -> void {
+      inverse_current_time_step = 1. / time_step; // set for computing the preconditioner
+      flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
+    };
+
+    time_integrator.perform_time_step(
+      time,
+      time_step,
+      flow_scratch_data.solution_history,
+      pre_processing,
+      std::function<void(number, number, VectorType &, const VectorType &)>());
   }
 
   template <int dim, typename number, bool is_viscous>
@@ -66,19 +100,6 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim, typename number, bool is_viscous>
-  std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>
-  DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::
-    make_application_specific_time_integrator(
-      const TimeIntegration::TimeIntegratorData<number> &time_integrator_data)
-  {
-    return std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>(
-      implicit_time_integrator_factory<dim,
-                                       number,
-                                       DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>>(
-        *this, time_integrator_data));
-  }
-
-  template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::compute_residual(
     number,
@@ -91,7 +112,7 @@ namespace MeltPoolDG::Flow
            typename VectorType::ExcVectorTypeNotCompatible());
 
     // TODO: This can be done as pre time step operation
-    current_time_step            = time_step;
+    inverse_current_time_step    = 1. / time_step;
     time_integrator_old_solution = &old_solution;
     flow_scratch_data.scratch_data.get_matrix_free().loop(
       &DGCompressibleFlowOperatorImplicit::local_cell_residual,
@@ -113,7 +134,7 @@ namespace MeltPoolDG::Flow
     Assert(dst.partitioners_are_globally_compatible(*(current_solution.get_partitioner())),
            typename VectorType::ExcVectorTypeNotCompatible());
 
-    current_time_step = time_step;
+    inverse_current_time_step = 1. / time_step;
     switch (flow_scratch_data.flow_data.jacobian_type)
       {
           case JacobianType::finite_difference: {
@@ -240,7 +261,7 @@ namespace MeltPoolDG::Flow
                                                    viscous_terms,
                                                    flow_scratch_data.body_force);
 
-            value_q -= 1 / current_time_step * (phi.get_value(q) - phi_old.get_value(q));
+            value_q -= inverse_current_time_step * (phi.get_value(q) - phi_old.get_value(q));
 
             phi.submit_gradient(grad_q, q);
             phi.submit_value(value_q, q);
@@ -520,7 +541,8 @@ namespace MeltPoolDG::Flow
     const auto delta_w_q = delta_phi.get_value(q_index);
 
     // time derivative
-    ConservedVariablesType differential_change_time_derivative = 1. / current_time_step * delta_w_q;
+    ConservedVariablesType differential_change_time_derivative =
+      inverse_current_time_step * delta_w_q;
     delta_phi.submit_value(differential_change_time_derivative, q_index);
 
     dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>> forcing;

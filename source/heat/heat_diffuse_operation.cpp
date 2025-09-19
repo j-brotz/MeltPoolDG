@@ -71,7 +71,10 @@ namespace MeltPoolDG::Heat
 
     preconditioner =
       make_preconditioner<dim, number, HeatDiffuseMultiPhaseOperator<dim, number>, VectorType>(
-        heat_data.linear_solver.preconditioner_type, heat_operator.get());
+        heat_data.linear_solver.preconditioner_type,
+        heat_operator.get(),
+        scratch_data,
+        heat_dof_idx);
 
     setup_newton();
   }
@@ -201,7 +204,7 @@ namespace MeltPoolDG::Heat
 
     heat_operator->reinit();
 
-    preconditioner.reinit(scratch_data, heat_dof_idx);
+    preconditioner.reinit();
   }
 
   template <int dim, typename number>

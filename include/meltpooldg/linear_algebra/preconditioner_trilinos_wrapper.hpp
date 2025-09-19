@@ -53,9 +53,13 @@ namespace MeltPoolDG
      * @param do_matrix_free Flag indicating whether the operator is used for matrix-free
      * computations.
      */
-    explicit DealiiPreconditionerWrapper(const OperatorType *operator_in,
-                                         const bool          do_matrix_free = true)
+    explicit DealiiPreconditionerWrapper(const OperatorType                  *operator_in,
+                                         const ScratchData<dim, dim, number> &scratch_data_in,
+                                         const unsigned                       dof_idx_in,
+                                         const bool                           do_matrix_free = true)
       : eq_operator(operator_in)
+      , scratch_data(scratch_data_in)
+      , dof_idx(dof_idx_in)
       , do_matrix_free(do_matrix_free)
     {}
 
@@ -128,13 +132,9 @@ namespace MeltPoolDG
      * Initialize the internal data structures. In the matrix-based case this function does
      * effectively do nothing. However, in the matrix-free case memory is allocated for the (sparse)
      * preconditioner matrix.
-     *
-     * @param scratch_data Scratch data object to get relevant dof information for setting up the
-     * sparse matrix.
-     * @param dof_idx Relevant dof index in the scratch data object.
      */
     void
-    reinit(const ScratchData<dim, dim, number> &scratch_data, const unsigned int dof_idx)
+    reinit()
     {
       if (eq_operator != nullptr && do_matrix_free)
         {
@@ -172,7 +172,12 @@ namespace MeltPoolDG
     dealii::DynamicSparsityPattern         dsp;
 
     const OperatorType *eq_operator;
-    const bool          do_matrix_free;
+
+    const ScratchData<dim, dim, number> &scratch_data;
+
+    const unsigned int dof_idx;
+
+    const bool do_matrix_free;
   };
 
   /**
@@ -194,7 +199,7 @@ namespace MeltPoolDG
     {}
 
     void
-    reinit(const ScratchData<dim, dim, number> &, unsigned int) const
+    reinit() const
     {}
   };
 } // namespace MeltPoolDG

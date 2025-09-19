@@ -10,7 +10,6 @@
 #include <meltpooldg/flow/dg_compressible_flow_operator_explicit.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_implicit.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_implicit_explicit.hpp>
-#include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
@@ -37,16 +36,14 @@ namespace MeltPoolDG::Flow
     std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces)
     : flow_scratch_data(flow_data, material_data, scratch_data, flow_dof_idx, flow_quad_idx)
   {
-    setup_operator_and_time_integrator(std::move(external_forces));
+    setup_operator(std::move(external_forces));
   }
 
   template <int dim, typename number>
   void
   DGCompressibleFlowOperation<dim, number>::reinit()
   {
-    flow_scratch_data.reinit(time_integrator->required_solution_history_size());
     comp_flow_operator->reinit();
-    time_integrator->reinit(flow_scratch_data.solution_history);
     flow_scratch_data.scratch_data.initialize_dof_vector(solution_primitive_variables,
                                                          flow_scratch_data.dof_idx);
   }
@@ -63,16 +60,9 @@ namespace MeltPoolDG::Flow
   DGCompressibleFlowOperation<dim, number>::solve(const number current_time, const number time_step)
   {
     flow_scratch_data.solution_history.commit_old_solutions();
-    std::function<void(number, VectorType &, const VectorType &)> pre_processing =
-      [&](number time, VectorType &, const VectorType &) -> void {
-      flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
-    };
-
     flow_scratch_data.solution_history.update_ghost_values();
-    time_integrator->perform_time_step(current_time,
-                                       time_step,
-                                       flow_scratch_data.solution_history,
-                                       pre_processing);
+
+    comp_flow_operator->advance_time_step(current_time, time_step);
   }
 
   template <int dim, typename number>
@@ -288,7 +278,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  DGCompressibleFlowOperation<dim, number>::setup_operator_and_time_integrator(
+  DGCompressibleFlowOperation<dim, number>::setup_operator(
     std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces)
   {
     // cut operator was already created in the constructor
@@ -306,8 +296,6 @@ namespace MeltPoolDG::Flow
           comp_flow_operator =
             std::make_unique<DGCompressibleFlowOperatorExplicit<dim, number, false>>(
               flow_scratch_data, std::move(external_forces));
-        time_integrator = comp_flow_operator->make_application_specific_time_integrator(
-          flow_scratch_data.flow_data.time_integrator);
       }
     else if (time_integrator_scheme_is_implicit(
                flow_scratch_data.flow_data.time_integrator.integrator_type))
@@ -320,8 +308,6 @@ namespace MeltPoolDG::Flow
           comp_flow_operator =
             std::make_unique<DGCompressibleFlowOperatorImplicit<dim, number, false>>(
               flow_scratch_data);
-        time_integrator = comp_flow_operator->make_application_specific_time_integrator(
-          flow_scratch_data.flow_data.time_integrator);
       }
     // TODO
     else if (flow_scratch_data.flow_data.time_integrator.integrator_type ==
@@ -335,8 +321,6 @@ namespace MeltPoolDG::Flow
           comp_flow_operator =
             std::make_unique<DGCompressibleFlowOperatorImplicitExplicit<dim, number, false>>(
               flow_scratch_data);
-        time_integrator = comp_flow_operator->make_application_specific_time_integrator(
-          flow_scratch_data.flow_data.time_integrator);
       }
     else
       AssertThrow(false,

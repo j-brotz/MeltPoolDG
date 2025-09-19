@@ -52,26 +52,27 @@ namespace MeltPoolDG::Flow
     compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const;
 
     /**
-     * @brief Reinitialize the internal data structures, i.e. allocate memory for vectors storing
-     * temporary solutions.
+     * @brief Reinitialize the internal data structures.
+     *
+     * The reinitialization includes setting a new required size for the solution history object
+     * according to the demands of the used time integrator.
      */
     void
     reinit() override;
 
     /**
-     * @brief Creates and returns an implicit-explicit time integrator object which is set up with
-     * the current operator.
+     * @brief Advances solver by a single time step.
      *
-     * @param time_integrator_data Reference to the time integrator data object.
+     * This function performs a single implicit-explicit time step of size @p time_step starting
+     * from the solution at time @p time.
      *
-     * @return Unique pointer to a time integrator which is templated on the own operator type.
-     *
-     * @throws If the time integrator type in the time integrator data is not an implicit-explicit
-     * time integrator.
+     * @note The function does not take care about updating the solution history object or similar
+     * operations which are not directly related to the integration. It **only** advances the
+     * solution by a single time step starting from the current solution in the solution history
+     * object of the @ref flow_scratch_data object.
      */
-    std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>
-    make_application_specific_time_integrator(
-      const TimeIntegration::TimeIntegratorData<number> &time_integrator_data) override;
+    void
+    advance_time_step(number time, number time_step) override;
 
     /**
      * @brief Local cell operations at the given quadrature point for computing the Jacobian.
@@ -189,11 +190,6 @@ namespace MeltPoolDG::Flow
                      const VectorType &explicit_solution) const;
 
   private:
-    /// When computing the residual this factor defines a scaling factor for the right-hand side.
-    /// The final residual is then given by R=y'-a*f(y), where 'a' is the factor defined by thi
-    /// variable.
-    mutable number residual_rhs_scaling_factor = 1.;
-
     /// Pointer to an intermediate explicit solution vector.
     mutable const VectorType *intermediate_explicit_solution = nullptr;
 
@@ -203,10 +199,13 @@ namespace MeltPoolDG::Flow
 
     /// Current time step size. This needs to be stored as this value is required by the local cell
     /// appliers.
-    mutable number current_time_increment;
+    mutable number inverse_current_time_step;
 
     /// Scratch data for compressible flows
     CompressibleFlowScratchData<dim, number> &flow_scratch_data;
+
+    /// Time integrator class used for the time integration.
+    TimeIntegration::ImplicitExplicitIntegrator<dim, number> time_integrator;
 
     /// Object for the convective term evaluations
     CompressibleFlowConvectiveKernels<dim, number> convective_terms;

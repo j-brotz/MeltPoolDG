@@ -8,6 +8,7 @@
 
 #include <deal.II/lac/trilinos_precondition.h>
 
+#include "meltpooldg/core/scratch_data.hpp"
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_jacobi.hpp>
@@ -23,6 +24,8 @@ namespace MeltPoolDG
    * @param preconditioner_type Type of the desired preconditioner.
    * @param operator_in Operator that supports the required functions for the computations inside
    * the preconditioner (see specific preconditioner classes for additional information).
+   * @param scratch_data Scratch data object to get relevant dof information for the preconditioner.
+   * @param dof_idx Relevant dof index in the scratch data object.
    * @param do_matrix_free A flag indicating if the operator shall be used in a matrix-free or
    * matrix-based way.
    *
@@ -31,9 +34,11 @@ namespace MeltPoolDG
    */
   template <int dim, typename number, typename OperatorType, typename VectorType>
   Preconditioner<dim, VectorType, number>
-  make_preconditioner(const PreconditionerType &preconditioner_type,
-                      const OperatorType       *operator_in,
-                      const bool                do_matrix_free = true)
+  make_preconditioner(const PreconditionerType            &preconditioner_type,
+                      const OperatorType                  *operator_in,
+                      const ScratchData<dim, dim, number> &scratch_data,
+                      const unsigned                       dof_idx,
+                      const bool                           do_matrix_free = true)
   {
     switch (preconditioner_type)
       {
@@ -47,7 +52,8 @@ namespace MeltPoolDG
                                           number,
                                           VectorType,
                                           dealii::TrilinosWrappers::PreconditionAMG,
-                                          OperatorType>(operator_in, do_matrix_free));
+                                          OperatorType>(
+                operator_in, scratch_data, dof_idx, do_matrix_free));
           }
           case PreconditionerType::ILU: {
             return Preconditioner<dim, VectorType, number>(
@@ -55,7 +61,8 @@ namespace MeltPoolDG
                                           number,
                                           VectorType,
                                           dealii::TrilinosWrappers::PreconditionILU,
-                                          OperatorType>(operator_in, do_matrix_free));
+                                          OperatorType>(
+                operator_in, scratch_data, dof_idx, do_matrix_free));
           }
           case PreconditionerType::Diagonal: {
             if constexpr (JacobiPreconditionerOperatorType<OperatorType, VectorType>)
@@ -63,7 +70,9 @@ namespace MeltPoolDG
                 if (do_matrix_free)
                   {
                     return Preconditioner<dim, VectorType, number>(
-                      JacobiPreconditioner<dim, number, VectorType, OperatorType>(*operator_in));
+                      JacobiPreconditioner<dim, number, VectorType, OperatorType>(*operator_in,
+                                                                                  scratch_data,
+                                                                                  dof_idx));
                   }
               }
             return Preconditioner<dim, VectorType, number>(
@@ -71,7 +80,7 @@ namespace MeltPoolDG
                                           number,
                                           VectorType,
                                           dealii::TrilinosWrappers::PreconditionJacobi,
-                                          OperatorType>(operator_in, false));
+                                          OperatorType>(operator_in, scratch_data, dof_idx, false));
           }
           default: {
             AssertThrow(false,

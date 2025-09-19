@@ -74,6 +74,7 @@ namespace MeltPoolDG::TimeIntegration
   BDFIntegrator<dim, number>::reinit(const VectorType &vector_template)
   {
     summed_old_solution.reinit(vector_template, true);
+    preconditioner.reinit();
     preconditioner_update_flag = true;
   }
 
@@ -87,11 +88,13 @@ namespace MeltPoolDG::TimeIntegration
   template <int dim, typename number>
   void
   BDFIntegrator<dim, number>::perform_time_step(
-    const number                                                         current_time,
-    const number                                                         time_step,
-    SolutionHistory<VectorType>                                         &solution_history,
-    const std::function<void(number, VectorType &, const VectorType &)> &stage_pre_processing,
-    const std::function<void(number, VectorType &, const VectorType &)> &stage_post_processing)
+    const number                 current_time,
+    const number                 time_step,
+    SolutionHistory<VectorType> &solution_history,
+    const std::function<void(number, number, VectorType &, const VectorType &)>
+      &stage_pre_processing,
+    const std::function<void(number, number, VectorType &, const VectorType &)>
+      &stage_post_processing)
   {
     Assert(compute_jacobian and compute_residual,
            dealii::ExcMessage("The integrator has not been initialized!"));
@@ -114,6 +117,7 @@ namespace MeltPoolDG::TimeIntegration
 
     if (stage_pre_processing)
       stage_pre_processing(current_time,
+                           time_step,
                            solution_history.get_current_solution(),
                            solution_history.get_current_solution());
 
@@ -165,6 +169,7 @@ namespace MeltPoolDG::TimeIntegration
 
     if (stage_post_processing)
       stage_post_processing(current_time + time_step,
+                            time_step,
                             solution_history.get_current_solution(),
                             solution_history.get_current_solution());
 

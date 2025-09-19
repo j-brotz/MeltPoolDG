@@ -14,28 +14,44 @@ namespace MeltPoolDG::Flow
     CompressibleFlowScratchData<dim, number>                                    &flow_scratch_data,
     std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces)
     : flow_scratch_data(flow_scratch_data)
+    , time_integrator(flow_scratch_data.flow_data.time_integrator)
     , convective_terms(flow_scratch_data.flow_data, flow_scratch_data.material)
     , viscous_terms(flow_scratch_data.material)
     , external_forces(std::move(external_forces))
-  {}
+  {
+    time_integrator.configure_rhs([&](number time,
+                                      number,
+                                      dealii::LinearAlgebra::distributed::Vector<number>       &dst,
+                                      const dealii::LinearAlgebra::distributed::Vector<number> &src,
+                                      const std::function<void(unsigned, unsigned)> &post) {
+      this->apply_operator(time, dst, src, post);
+    });
+  }
 
   template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::reinit()
   {
-    // nothing to do here
+    flow_scratch_data.reinit(time_integrator.required_solution_history_size());
+    time_integrator.reinit(flow_scratch_data.solution_history.get_current_solution());
   }
 
   template <int dim, typename number, bool is_viscous>
-  std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>
-  DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::
-    make_application_specific_time_integrator(
-      const TimeIntegration::TimeIntegratorData<number> &time_integrator_data)
+  void
+  DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::advance_time_step(number time,
+                                                                                 number time_step)
   {
-    return std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>(
-      explicit_time_integrator_factory<number,
-                                       DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>>(
-        *this, time_integrator_data));
+    std::function<void(number, number, VectorType &, const VectorType &)> pre_processing =
+      [&](number time, number time_step, VectorType &, const VectorType &) -> void {
+      flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
+    };
+
+    time_integrator.perform_time_step(
+      time,
+      time_step,
+      flow_scratch_data.solution_history,
+      pre_processing,
+      std::function<void(number, number, VectorType &, const VectorType &)>());
   }
 
   template <int dim, typename number, bool is_viscous>

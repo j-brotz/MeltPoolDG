@@ -137,11 +137,13 @@ namespace MeltPoolDG::TimeIntegration
   template <typename number>
   void
   LowStorageExplicitRungeKuttaIntegrator<number>::perform_time_step(
-    const number                                                         current_time,
-    const number                                                         time_step,
-    SolutionHistory<VectorType>                                         &solution_history,
-    const std::function<void(number, VectorType &, const VectorType &)> &stage_pre_processing,
-    const std::function<void(number, VectorType &, const VectorType &)> &stage_post_processing)
+    const number                 current_time,
+    const number                 time_step,
+    SolutionHistory<VectorType> &solution_history,
+    const std::function<void(number, number, VectorType &, const VectorType &)>
+      &stage_pre_processing,
+    const std::function<void(number, number, VectorType &, const VectorType &)>
+      &stage_post_processing)
   {
     Assert(solution_history.size() >= required_solution_history_size(),
            dealii::ExcMessage(
@@ -150,7 +152,10 @@ namespace MeltPoolDG::TimeIntegration
 
     rk_register_ri = 0.;
     if (stage_pre_processing)
-      stage_pre_processing(current_time, rk_register_ri, solution_history.get_current_solution());
+      stage_pre_processing(current_time,
+                           ci[1] * time_step,
+                           rk_register_ri,
+                           solution_history.get_current_solution());
     compute_rhs(current_time,
                 time_step,
                 rk_register_ri,
@@ -168,13 +173,17 @@ namespace MeltPoolDG::TimeIntegration
                 });
 
     if (stage_post_processing)
-      stage_post_processing(current_time + ci[1] * time_step, rk_register_ri, rk_register_ri);
+      stage_post_processing(current_time + ci[1] * time_step,
+                            ci[1] * time_step,
+                            rk_register_ri,
+                            rk_register_ri);
 
     for (unsigned int stage = 1; stage < bi.size(); ++stage)
       {
         rk_register_ki = 0.;
         if (stage_pre_processing)
           stage_pre_processing(current_time + ci[stage - 1] * time_step,
+                               ci[stage] * time_step,
                                rk_register_ki,
                                rk_register_ri);
         compute_rhs(current_time,
@@ -210,6 +219,7 @@ namespace MeltPoolDG::TimeIntegration
                     });
         if (stage_post_processing)
           stage_post_processing(current_time + ci[stage] * time_step,
+                                ci[stage] * time_step,
                                 rk_register_ki,
                                 rk_register_ki);
 

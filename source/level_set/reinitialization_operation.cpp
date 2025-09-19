@@ -93,7 +93,7 @@ namespace MeltPoolDG::LevelSet
 
     normal_vector_operation->reinit();
     reinit_operator->reinit();
-    preconditioner.reinit(scratch_data, reinit_dof_idx);
+    preconditioner.reinit();
   }
 
   template <int dim, typename number>
@@ -368,6 +368,8 @@ namespace MeltPoolDG::LevelSet
         preconditioner = make_preconditioner<dim, number, OlssonOperator<dim, number>, VectorType>(
           reinit_data.linear_solver.preconditioner_type,
           reinit_operator.get(),
+          scratch_data,
+          reinit_dof_idx,
           reinit_data.linear_solver.do_matrix_free);
         preconditioner.set_do_update_preconditioner(false);
       }

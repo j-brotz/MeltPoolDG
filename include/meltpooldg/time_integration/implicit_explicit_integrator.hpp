@@ -23,12 +23,13 @@ namespace MeltPoolDG::TimeIntegration
   {
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
-    using ExplicitRhsFunctionType = std::function<void(number,
-                                                       number,
-                                                       VectorType &,
-                                                       const VectorType &,
-                                                       const bool,
-                                                       std::function<void(unsigned, unsigned)>)>;
+    using ExplicitRhsFunctionType =
+      std::function<void(number,
+                         number,
+                         VectorType &,
+                         const VectorType &,
+                         const bool,
+                         const std::function<void(unsigned, unsigned)> &)>;
 
     using JacobianType =
       std::function<void(number time, number time_step, VectorType &dst, const VectorType &src)>;
@@ -155,13 +156,13 @@ namespace MeltPoolDG::TimeIntegration
      * step has been computed.
      */
     void
-    perform_time_step(
-      const number                                                         current_time,
-      const number                                                         time_step,
-      SolutionHistory<VectorType>                                         &solution_history,
-      const std::function<void(number, VectorType &, const VectorType &)> &stage_pre_processing,
-      const std::function<void(number, VectorType &, const VectorType &)> &stage_post_processing)
-      override;
+    perform_time_step(const number                 current_time,
+                      const number                 time_step,
+                      SolutionHistory<VectorType> &solution_history,
+                      const std::function<void(number, number, VectorType &, const VectorType &)>
+                        &stage_pre_processing,
+                      const std::function<void(number, number, VectorType &, const VectorType &)>
+                        &stage_post_processing) override;
 
   private:
     /// @brief Compute the negative residual for the implicit step of the time integrator.

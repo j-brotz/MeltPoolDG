@@ -28,6 +28,8 @@ namespace MeltPoolDG::TimeIntegration
   ImplicitExplicitIntegrator<dim, number>::reinit(const VectorType &vector_template)
   {
     intermediate_explicit_solution.reinit(vector_template, true);
+    preconditioner.reinit();
+    preconditioner_update_flag = true;
   }
 
   template <unsigned int dim, typename number>
@@ -90,14 +92,17 @@ namespace MeltPoolDG::TimeIntegration
   template <unsigned int dim, typename number>
   void
   ImplicitExplicitIntegrator<dim, number>::perform_time_step(
-    const number                                                         current_time,
-    const number                                                         time_step,
-    SolutionHistory<VectorType>                                         &solution_history,
-    const std::function<void(number, VectorType &, const VectorType &)> &stage_pre_processing,
-    const std::function<void(number, VectorType &, const VectorType &)> &stage_post_processing)
+    const number                 current_time,
+    const number                 time_step,
+    SolutionHistory<VectorType> &solution_history,
+    const std::function<void(number, number, VectorType &, const VectorType &)>
+      &stage_pre_processing,
+    const std::function<void(number, number, VectorType &, const VectorType &)>
+      &stage_post_processing)
   {
     if (stage_pre_processing)
       stage_pre_processing(current_time,
+                           time_step,
                            solution_history.get_current_solution(),
                            solution_history.get_current_solution());
 
@@ -115,6 +120,7 @@ namespace MeltPoolDG::TimeIntegration
 
     if (stage_post_processing)
       stage_post_processing(current_time,
+                            time_step,
                             solution_history.get_current_solution(),
                             solution_history.get_current_solution());
 

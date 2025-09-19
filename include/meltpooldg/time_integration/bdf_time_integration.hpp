@@ -43,7 +43,8 @@ namespace MeltPoolDG::TimeIntegration
     using DistributeConstraintsType = std::function<void(VectorType &dst)>;
 
     /**
-     * Constructor. Sets up the nonlinear solver. After construction it is still required to set the required 
+     * Constructor. Sets up the nonlinear solver. After construction it is still required to set the
+     * required
      * functions by calling @ref configure_solver_functions() and calling @ref reinit() to allocate required memory before the integrator can be used.
      *
      * @param time_integrator_data Time integrator data struct setting the scheme of the integrator.
@@ -114,13 +115,13 @@ namespace MeltPoolDG::TimeIntegration
      * Runge-Kutta stage.
      */
     void
-    perform_time_step(
-      const number                                                         current_time,
-      const number                                                         time_step,
-      SolutionHistory<VectorType>                                         &solution_history,
-      const std::function<void(number, VectorType &, const VectorType &)> &stage_pre_processing,
-      const std::function<void(number, VectorType &, const VectorType &)> &stage_post_processing)
-      override;
+    perform_time_step(const number                 current_time,
+                      const number                 time_step,
+                      SolutionHistory<VectorType> &solution_history,
+                      const std::function<void(number, number, VectorType &, const VectorType &)>
+                        &stage_pre_processing,
+                      const std::function<void(number, number, VectorType &, const VectorType &)>
+                        &stage_post_processing) override;
 
   private:
     /// @brief Compute the negative residual for the implicit step of the time integrator.

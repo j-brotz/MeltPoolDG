@@ -63,13 +63,13 @@ namespace MeltPoolDG::TimeIntegration
      * specific time integrator.
      */
     virtual void
-    perform_time_step(
-      number                                                               current_time,
-      number                                                               time_step,
-      SolutionHistory<VectorType>                                         &solution_history,
-      const std::function<void(number, VectorType &, const VectorType &)> &pre_processing = {},
-      const std::function<void(number, VectorType &, const VectorType &)> &post_processing =
-        {}) = 0;
+    perform_time_step(number                       current_time,
+                      number                       time_step,
+                      SolutionHistory<VectorType> &solution_history,
+                      const std::function<void(number, number, VectorType &, const VectorType &)>
+                        &pre_processing = {},
+                      const std::function<void(number, number, VectorType &, const VectorType &)>
+                        &post_processing = {}) = 0;
 
     /**
      * Function that returns the time integration scheme of the time integrator object.

@@ -7,6 +7,8 @@
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
+#include <functional>
+
 
 namespace MeltPoolDG::Flow
 {
@@ -17,6 +19,7 @@ namespace MeltPoolDG::Flow
     DGCompressibleFlowOperatorImplicitExplicit(
       CompressibleFlowScratchData<dim, number> &flow_scratch_data)
     : flow_scratch_data(flow_scratch_data)
+    , time_integrator(flow_scratch_data.flow_data.time_integrator)
     , convective_terms(flow_scratch_data.flow_data, flow_scratch_data.material)
     , viscous_terms(flow_scratch_data.material)
   {
@@ -25,6 +28,23 @@ namespace MeltPoolDG::Flow
       dealii::ExcMessage(
         "Using the imex scheme for in-viscid compressible flows is inefficient. Please use "
         "either the full explicit or implicit schemes."));
+
+    using Operator = DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>;
+
+    time_integrator.configure_explicit_step(
+      std::bind_front(&Operator::perform_explicit_stage, this));
+
+    time_integrator.configure_implicit_step(std::bind_front(&Operator::apply_jacobian, this),
+                                            std::bind_front(&Operator::compute_residual, this));
+
+    auto preconditioner = make_preconditioner<dim, number, Operator, VectorType>(
+      flow_scratch_data.flow_data.time_integrator.linear_solver_data.preconditioner_type,
+      this,
+      flow_scratch_data.scratch_data,
+      flow_scratch_data.dof_idx,
+      true);
+
+    time_integrator.set_preconditioner(std::move(preconditioner));
   }
 
   template <int dim, typename number, bool is_viscous>
@@ -68,55 +88,29 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>::reinit()
-  {}
+  {
+    flow_scratch_data.reinit(time_integrator.required_solution_history_size());
+    time_integrator.reinit(flow_scratch_data.solution_history.get_current_solution());
+  }
 
   template <int dim, typename number, bool is_viscous>
-  std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>
-  DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>::
-    make_application_specific_time_integrator(
-      const TimeIntegration::TimeIntegratorData<number> &time_integrator_data)
+  void
+  DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>::advance_time_step(
+    number time,
+    number time_step)
   {
-    auto integrator = std::make_unique<TimeIntegration::ImplicitExplicitIntegrator<dim, number>>(
-      time_integrator_data);
-
-
-    auto explicit_compute_rhs = [&](number                                         time,
-                                    number                                         time_step,
-                                    VectorType                                    &dst,
-                                    const VectorType                              &src,
-                                    const bool                                     zero_dst_vector,
-                                    const std::function<void(unsigned, unsigned)> &post) {
-      this->perform_explicit_stage(time, time_step, dst, src, zero_dst_vector, post);
+    std::function<void(number, number, VectorType &, const VectorType &)> pre_processing =
+      [&](number time, number time_step, VectorType &, const VectorType &) -> void {
+      inverse_current_time_step = 1. / time_step; // set for computing the preconditioner
+      flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
     };
 
-    integrator->configure_explicit_step(explicit_compute_rhs);
-
-    auto compute_residual = [&](number            time,
-                                number            time_step,
-                                const VectorType &src,
-                                VectorType       &dst,
-                                const VectorType &explicit_solution) {
-      this->compute_residual(time, time_step, src, dst, explicit_solution);
-    };
-
-    auto compute_jacobian =
-      [&](number time, number time_step, VectorType &dst, const VectorType &src) {
-        this->apply_jacobian(time, time_step, dst, src);
-      };
-
-    integrator->configure_implicit_step(compute_jacobian, compute_residual);
-
-    auto preconditioner =
-      make_preconditioner<dim,
-                          number,
-                          DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>,
-                          VectorType>(time_integrator_data.linear_solver_data.preconditioner_type,
-                                      this,
-                                      true);
-
-    integrator->set_preconditioner(std::move(preconditioner));
-
-    return integrator;
+    time_integrator.perform_time_step(
+      time,
+      time_step,
+      flow_scratch_data.solution_history,
+      pre_processing,
+      std::function<void(number, number, VectorType &, const VectorType &)>());
   }
 
   template <int dim, typename number, bool is_viscous>
@@ -166,7 +160,8 @@ namespace MeltPoolDG::Flow
     const auto delta_w_q = delta_phi.get_value(q_index);
 
     // time derivative
-    ConservedVariablesType differential_change_time_derivative = delta_w_q / current_time_increment;
+    ConservedVariablesType differential_change_time_derivative =
+      delta_w_q * inverse_current_time_step;
     delta_phi.submit_value(differential_change_time_derivative, q_index);
 
     // viscous flux
@@ -272,7 +267,6 @@ namespace MeltPoolDG::Flow
             auto flux = convective_terms.calculate_convective_flux(w_q);
 
             phi.submit_gradient(flux, q);
-            // phi.submit_value(w_q, q);
           }
 
         phi.integrate_scatter(EvaluationFlags::gradients, dst);
@@ -388,7 +382,7 @@ namespace MeltPoolDG::Flow
     Assert(dst.partitioners_are_globally_compatible(*(src.get_partitioner())),
            typename VectorType::ExcVectorTypeNotCompatible());
 
-    current_time_increment = time_step;
+    inverse_current_time_step = 1. / time_step;
     flow_scratch_data.scratch_data.get_matrix_free().loop(
       &DGCompressibleFlowOperatorImplicitExplicit::local_cell_jacobian,
       &DGCompressibleFlowOperatorImplicitExplicit::local_face_jacobian,
@@ -533,7 +527,7 @@ namespace MeltPoolDG::Flow
     Assert(dst.partitioners_are_globally_compatible(*(src.get_partitioner())),
            typename VectorType::ExcVectorTypeNotCompatible());
 
-    current_time_increment         = time_step;
+    inverse_current_time_step      = 1. / time_step;
     intermediate_explicit_solution = &explicit_solution;
     flow_scratch_data.scratch_data.get_matrix_free().loop(
       &DGCompressibleFlowOperatorImplicitExplicit::local_cell_residual,
@@ -575,7 +569,7 @@ namespace MeltPoolDG::Flow
             auto flux = viscous_terms.calculate_viscous_flux(phi.get_value(q), phi.get_gradient(q));
 
             ConservedVariablesType value_q =
-              1. / current_time_increment *
+              inverse_current_time_step *
               (-phi.get_value(q) + phi_intermediate_explicit.get_value(q));
 
             phi.submit_gradient(-flux, q);

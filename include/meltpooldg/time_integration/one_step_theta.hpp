@@ -93,18 +93,22 @@ namespace MeltPoolDG::TimeIntegration
      */
     void
     perform_time_step(
-      const number                                                         current_time,
-      const number                                                         time_step,
-      SolutionHistory<VectorType>                                         &solution_history,
-      const std::function<void(number, VectorType &, const VectorType &)> &pre_processing,
-      const std::function<void(number, VectorType &, const VectorType &)> &post_processing) override
+      const number                                                                 current_time,
+      const number                                                                 time_step,
+      SolutionHistory<VectorType>                                                 &solution_history,
+      const std::function<void(number, number, VectorType &, const VectorType &)> &pre_processing,
+      const std::function<void(number, number, VectorType &, const VectorType &)> &post_processing)
+      override
     {
       Assert(solution_history.size() >= required_solution_history_size(),
              dealii::ExcMessage(
                "The size of the solution history object does not fit the requirements of the "
                "chosen time integration scheme."));
       if (pre_processing)
-        pre_processing(current_time, right_hand_side_, solution_history.get_recent_old_solution());
+        pre_processing(current_time,
+                       time_step,
+                       right_hand_side_,
+                       solution_history.get_recent_old_solution());
       dt_       = time_step;
       old_time_ = current_time - time_step;
       // Create the right hand side
@@ -151,6 +155,7 @@ namespace MeltPoolDG::TimeIntegration
 
       if (post_processing)
         post_processing(current_time + time_step,
+                        time_step,
                         solution_history.get_current_solution(),
                         solution_history.get_current_solution());
     }
