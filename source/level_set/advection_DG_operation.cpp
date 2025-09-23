@@ -173,11 +173,11 @@ namespace MeltPoolDG::LevelSet
     rhs = user_rhs;
 
     // type alias for the pre- and post-processing functions
-    std::function<void(number, VectorType &, const VectorType &)> pre_processing;
+    std::function<void(number, number, VectorType &, const VectorType &)> pre_processing;
 
     if (time_integrator_scheme_is_explicit(advection_integration->get_integrator_type()))
       pre_processing =
-        [&](number time, VectorType &dst, const VectorType &current_solution) -> void {
+        [&](number time, number, VectorType &dst, const VectorType &current_solution) -> void {
         advection_DG_operator.set_field_functions(time);
         advection_DG_operator.apply_dirichlet_boundary_operator(time, dst, current_solution);
       };

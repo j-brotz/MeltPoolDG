@@ -34,8 +34,12 @@ namespace MeltPoolDG
      *
      * @param operator_in Operator object used to compute the system matrix representation.
      */
-    explicit JacobiPreconditioner(const OperatorType &operator_in)
+    explicit JacobiPreconditioner(const OperatorType                  &operator_in,
+                                  const ScratchData<dim, dim, number> &scratch_data_in,
+                                  const unsigned                       dof_idx_in)
       : eq_operator(operator_in)
+      , scratch_data(scratch_data_in)
+      , dof_idx(dof_idx_in)
     {}
 
     /**
@@ -66,12 +70,9 @@ namespace MeltPoolDG
 
     /**
      * Initialize the internal data structures.
-     *
-     * @param scratch_data Scratch data object to get partitioning of vectors.
-     * @param dof_idx Relevant dof index in the scratch data object.
      */
     void
-    reinit(const ScratchData<dim, dim, number> &scratch_data, const unsigned int dof_idx)
+    reinit()
     {
       scratch_data.initialize_dof_vector(inverse_diag, dof_idx);
     }
@@ -81,5 +82,9 @@ namespace MeltPoolDG
     VectorType inverse_diag;
 
     const OperatorType &eq_operator;
+
+    const ScratchData<dim, dim, number> &scratch_data;
+
+    const unsigned int dof_idx;
   };
 } // namespace MeltPoolDG

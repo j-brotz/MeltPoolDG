@@ -17,6 +17,16 @@ namespace MeltPoolDG::Flow
     virtual ~DGCompressibleFlowOperatorBase() = default;
 
     /**
+     * @brief Advances solver by a single time step.
+     *
+     * This function performs a single time step of size @p time_step starting from the solution
+     * at time @p time. For a detailed description refer to the documentation of the derived
+     * classes.
+     */
+    virtual void
+    advance_time_step(number time, number time_step) = 0;
+
+    /**
      * @brief Reinit the operator.
      *
      * This function is intended to be called every time at which the data structure needs to be
@@ -24,21 +34,5 @@ namespace MeltPoolDG::Flow
      */
     virtual void
     reinit() = 0;
-
-    /**
-     * @brief Creates and returns the time integrator object which can be used in combination with
-     * the own operator type.
-     *
-     * @param time_integrator_data Reference to the time integrator data object.
-     *
-     * @return Unique pointer to a time integrator which is templated on the own operator type.
-     *
-     * @throws If the time integrator type in the time integrator data does not fit to the current
-     * operator type, e.g. if the operator type is implicit but the required time integration scheme
-     * is an explicit scheme.
-     */
-    virtual std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>
-    make_application_specific_time_integrator(
-      const TimeIntegration::TimeIntegratorData<number> &time_integrator_data) = 0;
   };
 } // namespace MeltPoolDG::Flow

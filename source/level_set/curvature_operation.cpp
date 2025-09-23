@@ -191,7 +191,7 @@ namespace MeltPoolDG::LevelSet
     if (curvature_operator)
       curvature_operator->reinit();
 
-    preconditioner.reinit(scratch_data, curv_dof_idx);
+    preconditioner.reinit();
     normal_vector_operation.reinit();
     if (curvature_data.linear_solver.do_matrix_free)
       preconditioner.update();
@@ -235,6 +235,8 @@ namespace MeltPoolDG::LevelSet
     preconditioner = make_preconditioner<dim, number, CurvatureOperator<dim, number>, VectorType>(
       curvature_data.linear_solver.preconditioner_type,
       curvature_operator.get(),
+      scratch_data,
+      curv_dof_idx,
       curvature_data.linear_solver.do_matrix_free);
   }
 

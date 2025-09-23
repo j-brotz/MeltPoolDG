@@ -54,7 +54,7 @@ namespace MeltPoolDG::LevelSet
         if (update_ghosts)
           solution_history.get_current_solution().update_ghost_values();
 
-        preconditioner.reinit(scratch_data, normal_dof_indices_per_block[0]);
+        preconditioner.reinit();
         preconditioner.update();
 
         if (update_ghosts)
@@ -209,6 +209,8 @@ namespace MeltPoolDG::LevelSet
       make_preconditioner<dim, number, NormalVectorOperator<dim, number>, BlockVectorType>(
         normal_vector_data.linear_solver.preconditioner_type,
         normal_vector_operator.get(),
+        scratch_data,
+        normal_dof_indices_per_block[0],
         normal_vector_data.linear_solver.do_matrix_free);
   }
 

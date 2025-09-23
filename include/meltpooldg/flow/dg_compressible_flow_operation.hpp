@@ -175,9 +175,6 @@ namespace MeltPoolDG::Flow
     /// Compressible flow operator object
     std::unique_ptr<DGCompressibleFlowOperatorBase<number>> comp_flow_operator;
 
-    /// Time integrator
-    std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>> time_integrator;
-
     /// Solution vector in primitive variable formulation (pressure, velocity, temperature)
     VectorType solution_primitive_variables;
 
@@ -203,7 +200,7 @@ namespace MeltPoolDG::Flow
      * @param external_forces Pointer to a struct implementing external forces acting on the fluid.
      */
     void
-    setup_operator_and_time_integrator(
+    setup_operator(
       std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces);
   };
 

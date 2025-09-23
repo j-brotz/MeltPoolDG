@@ -23,6 +23,14 @@ namespace MeltPoolDG
   void
   NewtonRaphsonSolver<number, VectorType>::solve(VectorType &solution)
   {
+    Assert(residual, dealii::ExcMessage("No rule for computing the residual available!"));
+    Assert(solve_with_jacobian, dealii::ExcMessage("No rule for solving with jacobian available!"));
+    Assert(reinit_vector, dealii::ExcMessage("No rule for vector reinitialization available!"));
+    Assert(distribute_constraints,
+           dealii::ExcMessage("No rule for distributing constraints available!"));
+    Assert(norm_of_solution_vector,
+           dealii::ExcMessage("No rule for computing vector norm available!"));
+
     print_header();
 
     reinit_vector(rhs);

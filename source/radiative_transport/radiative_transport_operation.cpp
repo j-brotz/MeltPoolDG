@@ -53,6 +53,8 @@ namespace MeltPoolDG::RadiativeTransport
       make_preconditioner<dim, number, RadiativeTransportOperator<dim, number>, VectorType>(
         rte_data.linear_solver.preconditioner_type,
         rte_operator.get(),
+        scratch_data,
+        rte_dof_idx,
         rte_data.linear_solver.do_matrix_free);
 
     if (rte_data.predictor_type == RTEPredictorType::pseudo_time_stepping)
@@ -77,7 +79,7 @@ namespace MeltPoolDG::RadiativeTransport
     scratch_data.initialize_dof_vector(intensity, rte_dof_idx);
     scratch_data.initialize_dof_vector(rhs, rte_dof_idx);
 
-    preconditioner.reinit(scratch_data, rte_dof_idx);
+    preconditioner.reinit();
 
     if (rte_data.predictor_type == RTEPredictorType::pseudo_time_stepping)
       pseudo_rte_operation->reinit();

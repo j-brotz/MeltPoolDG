@@ -42,6 +42,8 @@ namespace MeltPoolDG::RadiativeTransport
     preconditioner = make_preconditioner<dim, number, PseudoRTEOperator<dim, number>, VectorType>(
       rte_data.linear_solver.preconditioner_type,
       pseudo_rte_operator.get(),
+      scratch_data,
+      rte_dof_idx,
       rte_data.linear_solver.do_matrix_free);
   }
 
@@ -54,7 +56,7 @@ namespace MeltPoolDG::RadiativeTransport
 
     scratch_data.initialize_dof_vector(rhs, rte_hanging_nodes_dof_idx);
 
-    preconditioner.reinit(scratch_data, rte_dof_idx);
+    preconditioner.reinit();
 
     if (rte_data.pseudo_time_stepping.time_stepping_data.time_step_size > 1e-16)
       pseudo_rte_operator->reset_time_increment(

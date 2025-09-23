@@ -1,7 +1,10 @@
 
 #pragma once
 
+#include "meltpooldg/core/scratch_data.hpp"
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
+#include <meltpooldg/linear_algebra/preconditioner.hpp>
+#include <meltpooldg/linear_algebra/preconditioner_factory.hpp>
 #include <meltpooldg/time_integration/bdf_time_integration.hpp>
 #include <meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp>
 #include <meltpooldg/time_integration/one_step_theta.hpp>
@@ -9,6 +12,8 @@
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 
 #include <meltpooldg/utilities/cpp23_functions.h>
+
+#include <functional>
 
 namespace MeltPoolDG::TimeIntegration
 {
@@ -59,19 +64,22 @@ namespace MeltPoolDG::TimeIntegration
   template <typename number, typename PDEOperator>
   TimeIntegratorBase<number> *
   explicit_time_integrator_factory(const PDEOperator                &pde_operator,
-                                   const TimeIntegratorData<number> &params,
-                                   dealii::TimerOutput              &timer)
+                                   const TimeIntegratorData<number> &params)
   {
-    if constexpr (ExplicitPDEOperator<PDEOperator,
-                                      number,
-                                      dealii::LinearAlgebra::distributed::Vector<number>>)
+    if (Utils::contains(explicit_lsrk_supported_schemes, params.integrator_type))
       {
-        if (Utils::contains(explicit_lsrk_supported_schemes, params.integrator_type))
-          return new LowStorageExplicitRungeKuttaIntegrator<number, PDEOperator>(pde_operator,
-                                                                                 params,
-                                                                                 timer);
+        auto integrator = new LowStorageExplicitRungeKuttaIntegrator<number>(params);
+        integrator->configure_rhs(
+          [&pde_operator](number time,
+                          number,
+                          dealii::LinearAlgebra::distributed::Vector<number>       &dst,
+                          const dealii::LinearAlgebra::distributed::Vector<number> &src,
+                          std::function<void(unsigned, unsigned)>                   post) {
+            pde_operator.apply_operator(time, dst, src, post);
+          });
+        return integrator;
       }
-    DEAL_II_NOT_IMPLEMENTED();
+    return nullptr;
   }
 
   /**
@@ -79,6 +87,8 @@ namespace MeltPoolDG::TimeIntegration
    * based on the scheme specified in @p TimeIntegratorData.
    *
    * @param params Contains the configuration details for the time integrator.
+   * @param scratch_data Scratch data object to get relevant dof information for the integrator.
+   * @param dof_idx Relevant dof index in the scratch data object.
    * @param timer Timer passed to the constructor of the time integrator.
    *
    * @return A raw pointer to the appropriate implicit time integrator.
@@ -89,21 +99,28 @@ namespace MeltPoolDG::TimeIntegration
   template <int dim, typename number, typename PDEOperator>
   TimeIntegratorBase<number> *
   implicit_time_integrator_factory(const PDEOperator                   &pde_operator,
-                                   const TimeIntegratorData<number>    &params,
                                    const ScratchData<dim, dim, number> &scratch_data,
-                                   const unsigned int                   dof_idx)
+                                   const unsigned int                   dof_idx,
+                                   const TimeIntegratorData<number>    &params)
   {
-    if constexpr (BDFImplicitPDEOperator<PDEOperator,
-                                         number,
-                                         dealii::LinearAlgebra::distributed::Vector<number>>)
+    using VectorType = typename BDFIntegrator<dim, number>::VectorType;
+
+    if (Utils::contains(bdf_supported_schemes, params.integrator_type))
       {
-        if (Utils::contains(bdf_supported_schemes, params.integrator_type))
-          return new BDFIntegrator<dim, number, PDEOperator>(pde_operator,
-                                                             params,
-                                                             scratch_data,
-                                                             dof_idx);
+        auto preconditioner = make_preconditioner<dim, number, PDEOperator, VectorType>(
+          params.linear_solver_data.preconditioner_type,
+          &pde_operator,
+          scratch_data,
+          dof_idx,
+          true);
+        auto integrator = new BDFIntegrator<dim, number>(params);
+        integrator->set_preconditioner(std::move(preconditioner));
+        integrator->configure_solver_functions(
+          std::bind_front(&PDEOperator::apply_jacobian, pde_operator),
+          std::bind_front(&PDEOperator::compute_residual, pde_operator));
+        return integrator;
       }
-    DEAL_II_NOT_IMPLEMENTED();
+    return nullptr;
   }
 
 
@@ -128,22 +145,20 @@ namespace MeltPoolDG::TimeIntegration
   time_integrator_factory(const PDEOperator                &pde_operator,
                           const TimeIntegratorData<number> &params,
                           const LinearSolverData<number>   &linear_solver_data,
-                          dealii::TimerOutput              &timer)
+                          dealii::TimerOutput &)
   {
-    if constexpr (ExplicitPDEOperator<PDEOperator, number, VectorType>)
+    if (Utils::contains(explicit_lsrk_supported_schemes, params.integrator_type))
       {
-        if (Utils::contains(explicit_lsrk_supported_schemes, params.integrator_type))
-          return new LowStorageExplicitRungeKuttaIntegrator<number, PDEOperator>(pde_operator,
-                                                                                 params,
-                                                                                 timer);
-      }
-    if constexpr (BDFImplicitPDEOperator<PDEOperator, number, VectorType>)
-      {
-        // TODO
-        /*
-        if (Utils::contains(bdf_supported_schemes, params.integrator_type))
-          return new BDFIntegrator<number, PDEOperator>(pde_operator, params, timer);
-          */
+        auto integrator = new LowStorageExplicitRungeKuttaIntegrator<number>(params);
+        integrator->configure_rhs(
+          [&pde_operator](number time,
+                          number,
+                          dealii::LinearAlgebra::distributed::Vector<number>       &dst,
+                          const dealii::LinearAlgebra::distributed::Vector<number> &src,
+                          std::function<void(unsigned, unsigned)>                   post) {
+            pde_operator.apply_operator(time, dst, src, post);
+          });
+        return integrator;
       }
     if (Utils::contains(one_step_theta_supported_schemes, params.integrator_type))
       return new OneStepTheta<number, PDEOperator>(pde_operator, params, linear_solver_data);

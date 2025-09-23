@@ -4,11 +4,12 @@
 
 #include <deal.II/matrix_free/matrix_free.h>
 
+#include "meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp"
 #include <meltpooldg/flow/compressible_flow_convective_kernels.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_base.hpp>
-#include <meltpooldg/time_integration/time_integrator_base.hpp>
+#include <meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 
 #include <functional>
@@ -46,26 +47,27 @@ namespace MeltPoolDG::Flow
         nullptr);
 
     /**
-     * @brief Reinitialize the internal data structures, i.e., allocate memory for vectors storing
-     * temporary solutions.
+     * @brief Advances solver by a single time step.
+     *
+     * This function performs a single explicit time step of size @p time_step starting from the
+     * solution at time @p time.
+     *
+     * @note The function does not take care about updating the solution history object or similar
+     * operations which are not directly related to the integration. It **only** advances the
+     * solution by a single time step starting from the current solution in the solution history
+     * object of the @ref flow_scratch_data object.
+     */
+    void
+    advance_time_step(number time, number time_step) override;
+
+    /**
+     * @brief Reinitialize the internal data structures.
+     *
+     * The reinitialization includes setting a new required size for the solution history object
+     * according to the demands of the used time integrator.
      */
     void
     reinit() override;
-
-    /**
-     * @brief Creates and returns an explicit time integrator object which is set up with the current
-     * operator.
-     *
-     * @param time_integrator_data Reference to the time integrator data object.
-     *
-     * @return Unique pointer to a time integrator which is templated on the own operator type.
-     *
-     * @throws If the time integrator type in the time integrator data is not an explicit time
-     * integrator.
-     */
-    std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>>
-    make_application_specific_time_integrator(
-      const TimeIntegration::TimeIntegratorData<number> &time_integrator_data) override;
 
     /**
      * @brief Computes the value of the function f(y) for the compressible Navier-Stokes equations of the
@@ -89,6 +91,9 @@ namespace MeltPoolDG::Flow
   private:
     /// Scratch data for compressible flows
     CompressibleFlowScratchData<dim, number> &flow_scratch_data;
+
+    /// Time integrator class used for the time integration.
+    TimeIntegration::LowStorageExplicitRungeKuttaIntegrator<number> time_integrator;
 
     /// Object for the convective term evaluations
     CompressibleFlowConvectiveKernels<dim, number> convective_terms;
