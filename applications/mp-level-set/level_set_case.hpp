@@ -50,7 +50,7 @@ namespace MeltPoolDG::LevelSet
       // check input parameters for validity
       ls.check_input_parameters(base.fe);
       profiling.check_input_parameters(time_stepping.time_step_size);
-      evapor.check_input_parameters(material, ls.get_n_subdivisions());
+      evapor.check_input_parameters(material);
 
       AssertThrow(evapor.evaporative_mass_flux_model ==
                     Evaporation::EvaporationModelType::analytical,

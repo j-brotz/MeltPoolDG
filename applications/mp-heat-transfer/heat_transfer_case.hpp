@@ -71,7 +71,7 @@ namespace MeltPoolDG::Heat
       heat.check_input_parameters(base.fe);
       laser.check_input_parameters();
       rad_trans.check_input_parameters(base.fe);
-      evapor.check_input_parameters(material, 1);
+      evapor.check_input_parameters(material);
       profiling.check_input_parameters(time_stepping.time_step_size);
     }
 

@@ -35,16 +35,16 @@ namespace MeltPoolDG::Evaporation
   template <int dim, typename number>
   EvaporationMassFluxOperatorThicknessIntegration<dim, number>::
     EvaporationMassFluxOperatorThicknessIntegration(
-      const ScratchData<dim, dim, number>                     &scratch_data,
-      const EvaporationModelBase<number>                      &evaporation_model,
-      const EvaporationData<number>::ThicknessIntegrationData &thickness_integration_data,
-      const LevelSet::ReinitializationData<number>            &reinit_data,
-      const VectorType                                        &level_set_as_heaviside,
-      const BlockVectorType                                   &normal_vector,
-      const unsigned int                                       ls_hanging_nodes_dof_idx,
-      const unsigned int                                       normal_dof_idx,
-      const unsigned int                                       heat_hanging_nodes_dof_idx,
-      const unsigned int                                       evapor_mass_flux_dof_idx)
+      const ScratchData<dim, dim, number>          &scratch_data,
+      const EvaporationModelBase<number>           &evaporation_model,
+      const EvaporationThicknessIntegrationData    &thickness_integration_data,
+      const LevelSet::ReinitializationData<number> &reinit_data,
+      const VectorType                             &level_set_as_heaviside,
+      const BlockVectorType                        &normal_vector,
+      const unsigned int                            ls_hanging_nodes_dof_idx,
+      const unsigned int                            normal_dof_idx,
+      const unsigned int                            heat_hanging_nodes_dof_idx,
+      const unsigned int                            evapor_mass_flux_dof_idx)
     : scratch_data(scratch_data)
     , evaporation_model(evaporation_model)
     , thickness_integration_data(thickness_integration_data)

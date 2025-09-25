@@ -25,20 +25,6 @@ namespace MeltPoolDG::Evaporation
         "When the CutFEM heat transfer operator is used, this input parameter is ignored and the temperature "
         "is evaluated at the sharp interface which is equivalent to \"sharp\".");
 
-      prm.enter_subsection("thickness integral");
-      {
-        prm.add_parameter("subdivisions per side",
-                          thickness_integral.subdivisions_per_side,
-                          "Number of subdivisions per side to compute the points perpendicular to "
-                          "the interface for the evaporative mass flux evaluation by "
-                          "means of the line integral.");
-        prm.add_parameter("subdivisions MCA",
-                          thickness_integral.subdivisions_MCA,
-                          "Number of subdivisions for the Marching Cube Algorithm within the "
-                          "evaporative mass flux evaluation by means of the thickness integral.");
-      }
-      prm.leave_subsection();
-
       prm.enter_subsection("analytical");
       {
         prm.add_parameter(
@@ -145,17 +131,8 @@ namespace MeltPoolDG::Evaporation
 
   template <typename number>
   void
-  EvaporationData<number>::check_input_parameters(const MaterialData<number> &material,
-                                                  const unsigned int ls_n_subdivisions) const
+  EvaporationData<number>::check_input_parameters(const MaterialData<number> &material) const
   {
-    AssertThrow((ls_n_subdivisions == 1 ||
-                 interface_temperature_evaluation_type !=
-                   EvaporativeMassFluxTemperatureEvaluationType::thickness_integral),
-                dealii::ExcMessage(
-                  "If you use the formulation of the evaporative mass flux over the interface "
-                  "using the value at the interface or a line integral, n_subdivisions for the "
-                  "level set must be 1."));
-
     AssertThrow(!recoil.enable ||
                   (evaporative_dilation_rate.enable ||
                    recoil.type == Evaporation::RecoilPressureModelType::phenomenological),

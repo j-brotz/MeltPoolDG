@@ -56,11 +56,7 @@ namespace MeltPoolDG::Evaporation
               local_value,
               // The flux distributed in the interfacial zone is computed based on values evaluated
               // at the projected quadrature points to the level set = 0 isosurface.
-              interface_value,
-              // The flux distributed in the interfacial zone is computed based
-              // on integrating the local flux over the thickness and perform
-              // an averaging.
-              thickness_integral)
+              interface_value)
 
   BETTER_ENUM(EvaporCoolingInterfaceFluxType,
               char,
@@ -110,12 +106,6 @@ namespace MeltPoolDG::Evaporation
     EvaporationLevelSetSourceTermType formulation_source_term_level_set =
       EvaporationLevelSetSourceTermType::interface_velocity_local;
 
-    struct ThicknessIntegrationData
-    {
-      unsigned int subdivisions_per_side = 10;
-      unsigned int subdivisions_MCA      = 1;
-    } thickness_integral;
-
     struct HardtWondraData
     {
       number coefficient = 0.0;
@@ -140,8 +130,7 @@ namespace MeltPoolDG::Evaporation
     add_parameters(dealii::ParameterHandler &prm);
 
     void
-    check_input_parameters(const MaterialData<number> &material,
-                           const unsigned int          ls_n_subdivisions) const;
+    check_input_parameters(const MaterialData<number> &material) const;
 
     /**
      * Post operation

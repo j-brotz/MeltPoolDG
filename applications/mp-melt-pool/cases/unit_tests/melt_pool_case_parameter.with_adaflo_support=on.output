@@ -110,11 +110,6 @@
                 "heavy phase weight 2": "1",
                 "type": "norm_of_indicator_gradient"
             }
-        },
-        "thickness integral":
-        {
-            "subdivisions MCA": "1",
-            "subdivisions per side": "10"
         }
     },
     "flow":

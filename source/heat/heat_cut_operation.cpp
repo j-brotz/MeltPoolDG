@@ -490,6 +490,8 @@ namespace MeltPoolDG::Heat
     const ScopedName                 scope_n("project_interface_temperature");
     const dealii::TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
 
+    interface_temperature = 0;
+
     AssertThrow(
       nearest_point_search,
       dealii::ExcMessage(
@@ -502,6 +504,7 @@ namespace MeltPoolDG::Heat
     nearest_point_search->extend_interface_values(interface_temperature, get_temperature());
 
     scratch_data.get_constraint(heat_cont_no_bc_dof_idx).distribute(interface_temperature);
+    interface_temperature.update_ghost_values();
   }
 
 
