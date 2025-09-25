@@ -42,7 +42,7 @@ namespace MeltPoolDG::Flow
                                                                                  number time_step)
   {
     std::function<void(number, number, VectorType &, const VectorType &)> pre_processing =
-      [&](number time, number time_step, VectorType &, const VectorType &) -> void {
+      [&](number time, number, VectorType &, const VectorType &) -> void {
       flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
     };
 
