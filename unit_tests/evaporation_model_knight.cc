@@ -1,6 +1,5 @@
 #include <meltpooldg/phase_change/evaporation_model_knight.hpp>
 
-#include <format>
 #include <iomanip>
 #include <iostream>
 #include <vector>
