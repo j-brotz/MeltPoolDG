@@ -2,6 +2,7 @@
 #include <deal.II/base/numbers.h>
 
 #include <meltpooldg/phase_change/evaporation_model_knight.hpp>
+#include <meltpooldg/phase_change/evaporation_tools.hpp>
 
 #include <cmath>
 #include <numbers>
@@ -20,6 +21,7 @@ namespace MeltPoolDG::Evaporation
     , latent_heat_of_evaporation(latent_heat_of_evaporation)
     , specific_gas_constant(specific_gas_constant)
     , specific_heat_ratio_vapor(specific_heat_ratio_vapor)
+    , temperature_constant(latent_heat_of_evaporation / specific_gas_constant)
   {
     AssertThrow(boiling_temperature_at_atmospheric_pressure > 1e-12,
                 dealii::ExcMessage("The boiling temperature must not be zero."));
@@ -31,22 +33,29 @@ namespace MeltPoolDG::Evaporation
 
   template <typename number>
   void
-  EvaporationModelKnight<number>::local_evaluate_evaporative_mass_flux_and_temperature_jump(
-    const number &T_liquid,
-    const number &Ma_gas)
+  EvaporationModelKnight<number>::reinit(const number &T_liquid, const number &Ma_gas)
   {
+    // Assert when Mach numbers are very high. The result is expected to be non-physical.
+    AssertThrow(Ma_gas < 10.,
+                dealii::ExcMessage("The Mach number exceeds Ma = 10. The result is expected to"
+                                   " be non-physical!"));
+
     // Correct potentially slightly negative Ma numbers at interface position due to numerical
     // inaccuracies
     const number Ma_gas_corrected = std::max(Ma_gas, 0.);
 
     // Dimensionless velocity
-    const number m = Ma_gas_corrected * std::sqrt(specific_heat_ratio_vapor / 2.);
+    const number m = Ma_gas_corrected * std::sqrt(0.5 * specific_heat_ratio_vapor);
 
     // Saturated vapor temperature (assumption of thermal equilibrium with liquid surface)
     const number T_sat = T_liquid;
 
     // Saturated vapor pressure according to Clausius-Clapeyron
-    const number p_sat = compute_saturated_vapor_pressure_from_clausius_clapeyron(T_sat);
+    const number p_sat =
+      compute_saturated_gas_pressure<number, number>(T_sat,
+                                                     boiling_temperature_at_atmospheric_pressure,
+                                                     atmospheric_pressure,
+                                                     temperature_constant);
 
     // Saturated vapor density from ideal gas law
     const number rho_sat = p_sat / (specific_gas_constant * T_sat);
@@ -102,24 +111,10 @@ namespace MeltPoolDG::Evaporation
 
   template <typename number>
   number
-  EvaporationModelKnight<number>::compute_saturated_vapor_pressure_from_clausius_clapeyron(
-    const number &T_sat) const
-  {
-    const number p_sat =
-      atmospheric_pressure *
-      std::exp(latent_heat_of_evaporation /
-               (specific_gas_constant * boiling_temperature_at_atmospheric_pressure) *
-               (1. - boiling_temperature_at_atmospheric_pressure / T_sat));
-
-    return p_sat;
-  }
-
-  template <typename number>
-  number
   EvaporationModelKnight<number>::compute_temperature_ratio(const number &m) const
   {
     const number helper =
-      (specific_heat_ratio_vapor - 1.) / (specific_heat_ratio_vapor + 1.) * m / 2.;
+      0.5 * (specific_heat_ratio_vapor - 1.) / (specific_heat_ratio_vapor + 1.) * m;
     constexpr number sqrt_pi = std::sqrt(std::numbers::pi);
 
     const number sqrt_T_gas_over_T_sat =

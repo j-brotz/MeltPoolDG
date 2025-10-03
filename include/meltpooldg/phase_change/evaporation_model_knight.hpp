@@ -23,7 +23,7 @@ namespace MeltPoolDG::Evaporation
     /**
      * @brief Constructor.
      *
-     * @param atmospheric_pressure Atmospheric pressure in the gas phase (Gas chamber pressure).
+     * @param atmospheric_pressure Atmospheric pressure in the gas phase (gas chamber pressure).
      * @param boiling_temperature_at_atmospheric_pressure Boiling temperature of the considered material at atmospheric
      * pressure conditions.
      * @param latent_heat_of_evaporation Latent heat of evaporation.
@@ -37,8 +37,8 @@ namespace MeltPoolDG::Evaporation
                                     const number specific_heat_ratio_vapor);
 
     /**
-     * @brief Use Knight's theory to evaluate the evaporative mass flux and temperature jump
-     * [T_liquid - T_gas].
+     * @brief Use Knight's theory to evaluate the current evaporative mass flux and temperature jump
+     * T_liquid - T_gas.
      *
      * @param T_liquid Current liquid surface temperature.
      * @param Ma_gas Current Mach number in the gas phase at interface position.
@@ -48,8 +48,7 @@ namespace MeltPoolDG::Evaporation
      * this function before you apply the getter functions for mass flux and temperature jump.
      */
     void
-    local_evaluate_evaporative_mass_flux_and_temperature_jump(const number &T_liquid,
-                                                              const number &Ma_gas);
+    reinit(const number &T_liquid, const number &Ma_gas);
 
     /**
      * @brief Getter function for the evaporative mass flux.
@@ -63,9 +62,9 @@ namespace MeltPoolDG::Evaporation
     }
 
     /**
-     * @brief Getter function for the temperature jump [T_liquid - T_gas].
+     * @brief Getter function for the temperature jump T_liquid - T_gas.
      *
-     * @return Temperature jump [T_liquid - T_gas].
+     * @return Temperature jump T_liquid - T_gas.
      */
     number
     get_temperature_jump() const
@@ -74,7 +73,7 @@ namespace MeltPoolDG::Evaporation
     }
 
   private:
-    /// Atmospheric pressure in the gas phase (Gas chamber pressure)
+    /// Atmospheric pressure in the gas phase (gas chamber pressure)
     const number atmospheric_pressure;
 
     /// Boiling temperature of the considered material at atmospheric pressure conditions
@@ -89,22 +88,14 @@ namespace MeltPoolDG::Evaporation
     /// Ratio of specific heats for the vapor phase
     const number specific_heat_ratio_vapor;
 
+    /// Temperature constant for Clausius-Clapeyron equation
+    const number temperature_constant;
+
     /// Evaporative mass flux from Knight's theory
     number evaporative_mass_flux = 0.;
 
     /// Temperature jump from Knight's theory
     number temperature_jump = 0.;
-
-    /**
-     * @brief Calculate the saturated vapor pressure at a certain vapor temperature according to the
-     * Clausius-Clapeyron equation.
-     *
-     * @param T_sat Satured vapor temperature.
-     *
-     * @return Satured vapor pressure at the provided saturated vapor temperature @p T_sat.
-     */
-    number
-    compute_saturated_vapor_pressure_from_clausius_clapeyron(const number &T_sat) const;
 
     /**
      * @brief Calculate the temperature ratio T_gas/T_sat according to Knight's theory.

@@ -38,8 +38,7 @@ main()
     {
       for (number T_liquid : T_liquid_vec)
         {
-          evap_model_knight.local_evaluate_evaporative_mass_flux_and_temperature_jump(T_liquid,
-                                                                                      Ma_gas);
+          evap_model_knight.reinit(T_liquid, Ma_gas);
           const number m_dot  = evap_model_knight.get_evaporative_mass_flux();
           const number T_jump = evap_model_knight.get_temperature_jump();
 

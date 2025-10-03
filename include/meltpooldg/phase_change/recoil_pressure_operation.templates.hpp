@@ -1,5 +1,6 @@
 #pragma once
 
+#include <meltpooldg/phase_change/evaporation_tools.hpp>
 #include <meltpooldg/phase_change/recoil_pressure_operation.hpp>
 //
 #include <deal.II/base/utilities.h>
@@ -9,26 +10,6 @@
 
 namespace MeltPoolDG::Evaporation
 {
-  /**
-   * Compute saturated gas pressure.
-   *
-   * @param[in] T Temperature.
-   * @param[in] boiling_temperature Boiling point.
-   * @param[in] ambient_gas_pressure Ambient gas pressure.
-   * @param[in] temperature_constant Temperature constant; It should be
-   * computed from latent_heat_of_evaporation * molar_mass / universal_gas_constant.
-   */
-  template <typename number, typename number_2>
-  inline number_2
-  compute_saturated_gas_pressure(const number_2 &T,
-                                 const number    boiling_temperature,
-                                 const number    ambient_gas_pressure,
-                                 const number    temperature_constant)
-  {
-    const number T_v = boiling_temperature;
-    return ambient_gas_pressure * std::exp(-temperature_constant * (1. / T - 1. / T_v));
-  }
-
   namespace internal
   {
     // In order to smoothly activate the recoil pressure, a scaling coefficient is computed and
