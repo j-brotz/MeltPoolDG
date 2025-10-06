@@ -619,11 +619,11 @@ namespace MeltPoolDG::Heat
       AMR::refine_grid<dim, VectorType>(
         mark_cells_for_refinement,
         attach_vectors,
-        post,
         [this] { this->setup_dof_system(); },
         simulation_case->parameters.amr,
         *simulation_case->triangulation,
-        time_iterator->get_current_time_step_number());
+        time_iterator->get_current_time_step_number(),
+        post);
     else
       CutUtil::refine_grid<dim, VectorType>(
         mark_cells_for_refinement,

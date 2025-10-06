@@ -2,20 +2,51 @@
 
 #include <deal.II/base/mpi.h>
 
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/grid/tria.h>
+
 #include "meltpooldg/utilities/cell_monitor.hpp"
+#include "meltpooldg/utilities/journal.hpp"
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_fluid_to_obstacle.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_obstacle_to_fluid.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
+#include <meltpooldg/utilities/amr.hpp>
+#include <meltpooldg/utilities/amr_indicators.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
+
+#include <memory>
 
 #include "cfd_dem_case.hpp"
 
 namespace MeltPoolDG
 {
+  /**
+   * Internal helper function to print # cells and # dofs to the console.
+   *
+   * @param pcout Output stream used for console output.
+   * @param tria_name Name of the triangulation printed at the beginning of line.
+   * @param tria Triangulation from which # cells is taken from.
+   * @param dof_handler Dof handler from which # dofs is taken from.
+   */
+  template <int dim>
+  void
+  print_triangulation_info(const ConditionalOStream         &pcout,
+                           const std::string                &tria_name,
+                           const dealii::Triangulation<dim> &tria,
+                           const dealii::DoFHandler<dim>    &dof_handler)
+  {
+    std::ostringstream str;
+    str << tria_name << ": " << std::setw(12) << std::right
+        << "# cells: " << tria.n_global_active_cells() << ", "
+        << "# dofs: " << dof_handler.n_dofs();
+    Journal::print_line(pcout, str.str(), "");
+  }
+
   template <int dim, typename number>
   void
   CfdDemApplication<dim, number>::run()
@@ -24,11 +55,17 @@ namespace MeltPoolDG
 
     Journal::print_start(scratch_data->get_pcout(1));
 
+    print_triangulation_info(scratch_data->get_pcout(1),
+                             "Initial flow grid",
+                             *this->simulation_case->triangulation,
+                             scratch_data->get_dof_handler(comp_flow_dof_idx));
+    Journal::print_decoration_line(scratch_data->get_pcout(1));
+
     // output the initial condition
     output_results(time_iterator->get_current_time_step_number(),
                    time_iterator->get_current_time());
 
-    while (!time_iterator->is_finished())
+    while (not time_iterator->is_finished())
       {
         // use CFL condition to compute time step size if required
         if (simulation_case->parameters.flow.do_cfl_time_stepping)
@@ -53,6 +90,8 @@ namespace MeltPoolDG
                                      scratch_data->get_timer(),
                                      scratch_data->get_mpi_comm());
           }
+
+        refine_mesh();
       }
 
     // always print timing statistics
@@ -88,6 +127,40 @@ namespace MeltPoolDG
                                     scratch_data->get_min_cell_size(),
                                     scratch_data->get_max_cell_size());
     }
+  }
+
+  template <int dim, typename number>
+  void
+  CfdDemApplication<dim, number>::setup_amr_indicator()
+  {
+    if (not this->simulation_case->parameters.amr.do_amr)
+      return;
+
+    if (scratch_data->get_degree(comp_flow_dof_idx) < 2)
+      amr_indicator.add_indicator(
+        std::make_unique<AMR::JumpIndicator<dim, number>>(scratch_data->get_matrix_free(),
+                                                          comp_flow_operation->get_solution(),
+                                                          comp_flow_dof_idx,
+                                                          comp_flow_quad_idx,
+                                                          0));
+    else
+      {
+        amr_indicator.add_indicator(
+          std::make_unique<AMR::JumpIndicator<dim, number>>(scratch_data->get_matrix_free(),
+                                                            comp_flow_operation->get_solution(),
+                                                            comp_flow_dof_idx,
+                                                            comp_flow_quad_idx,
+                                                            0),
+          1. / scratch_data->get_degree(0));
+        amr_indicator.add_indicator(std::make_unique<AMR::SSEDIndicator<dim, number>>(
+                                      scratch_data->get_matrix_free(),
+                                      comp_flow_operation->get_solution(),
+                                      comp_flow_dof_idx,
+                                      comp_flow_quad_idx,
+                                      0,
+                                      scratch_data->get_degree(comp_flow_dof_idx)),
+                                    1);
+      }
   }
 
   template <int dim, typename number>
@@ -165,6 +238,9 @@ namespace MeltPoolDG
         comp_flow_operation->set_body_force(std::move(body_force));
       }
 
+    // setup amr indicator
+    setup_amr_indicator();
+
     // add relevant obstacle forces to obstacle field
     obstacle_field->add_force_type(
       BrinkmanObstacleForce<dim, number, SphericalParticle<dim, number>>(
@@ -229,6 +305,69 @@ namespace MeltPoolDG
     // postprocessing
     post_processor->process(time_step, generic_data_out, current_time);
   }
+
+  template <int dim, typename number>
+  void
+  CfdDemApplication<dim, number>::refine_mesh()
+  {
+    if (not simulation_case->parameters.amr.do_amr)
+      return;
+
+    Assert(
+      not amr_indicator.empty(),
+      dealii::ExcMessage(
+        "No AMR indicator has been set up. Without indicator adaptive mesh refinement is not possible."));
+
+    const AMR::MarkCellsForRefinementType<dim> mark_cells_for_refinement =
+      [&](dealii::Triangulation<dim> &tria) {
+        return AMR::mark_fixed_fraction<dim, number>(tria,
+                                                     amr_indicator.compute_indicator(tria),
+                                                     this->simulation_case->parameters.amr);
+      };
+
+    const std::function<void(std::vector<VectorType *> &)> attach_vectors =
+      [&](std::vector<VectorType *> &in) { in.push_back(&comp_flow_operation->get_solution()); };
+
+    std::function<void()> pre = [&] {
+      obstacle_field->get_particle_handler().prepare_for_coarsening_and_refinement();
+
+      // print mesh refinement info to console
+      Journal::print_decoration_line(scratch_data->get_pcout(1));
+      std::ostringstream str_header;
+      str_header << "Performing mesh refinement...";
+      Journal::print_line(scratch_data->get_pcout(1), str_header.str(), "");
+      print_triangulation_info(scratch_data->get_pcout(1),
+                               "Flow grid before refinement",
+                               *this->simulation_case->triangulation,
+                               scratch_data->get_dof_handler(comp_flow_dof_idx));
+    };
+
+    std::function<void()> post = [&] {
+      obstacle_field->get_particle_handler().unpack_after_coarsening_and_refinement();
+      print_triangulation_info(scratch_data->get_pcout(1),
+                               "Flow grid after refinement ",
+                               *this->simulation_case->triangulation,
+                               scratch_data->get_dof_handler(comp_flow_dof_idx));
+      Journal::print_decoration_line(scratch_data->get_pcout(1));
+    };
+
+    std::function<void()> setup_dofs = [&] {
+      comp_flow_operation->distribute_dofs(dof_handler);
+      scratch_data->create_partitioning();
+      scratch_data->build(true, true, false, false);
+      comp_flow_operation->reinit();
+    };
+
+    AMR::refine_grid(mark_cells_for_refinement,
+                     attach_vectors,
+                     setup_dofs,
+                     this->simulation_case->parameters.amr,
+                     scratch_data->get_dof_handler(comp_flow_dof_idx),
+                     time_iterator->get_current_time_step_number(),
+                     post,
+                     pre);
+  }
+
 
   template class CfdDemApplication<2, double>;
   template class CfdDemApplication<3, double>;

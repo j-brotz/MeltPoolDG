@@ -50,6 +50,50 @@ namespace MeltPoolDG::VectorTools
     dealii::LinearAlgebra::distributed::Vector<number>            &out,
     const dealii::DoFHandler<dim, spacedim>                       &dof_handler_fe_system);
 
+  /**
+   * Converts a `dealii::AlignedVector<dealii::VectorizedArray>`—where each entry of a SIMD vector
+   * represents a value for a specific cell in the mesh—into a `dealii::Vector<number>`.
+   *
+   * In the resulting vector, each value corresponds to one (local) active cell on the
+   * triangulation. The index of a value in the output vector matches the index of the
+   * corresponding active cell.
+   *
+   * In a nutshell, this function effectively de-vectorizes cell-wise SIMD data into a standard
+   * cell-indexed vector representation.
+   *
+   * @param mf Matrix-free object used to compute the aligned vector.
+   * @param cell_aligned_vector Input vector containing SIMD-packed values per cell.
+   * @param tria Triangulation associated with the mesh cells.
+   * @param dof_idx Dof index relevant to the matrix-free object.
+   * @param quad_idx Quadrature index relevant to the matrix-free object.
+   */
+
+  template <int dim, typename number, int n_components = dim>
+  dealii::Vector<number>
+  convert_matrix_free_cell_aligned_vector_to_vector(
+    const dealii::MatrixFree<dim, number>                        &mf,
+    const dealii::AlignedVector<dealii::VectorizedArray<number>> &cell_aligned_vector,
+    const dealii::Triangulation<dim>                             &tria,
+    const unsigned                                                dof_idx  = 0,
+    const unsigned                                                quad_idx = 0)
+  {
+    dealii::Vector<number> vec_out(tria.n_active_cells());
+    for (unsigned cell_batch = 0; cell_batch < mf.n_cell_batches(); ++cell_batch)
+      {
+        FECellIntegrator<dim, n_components, number> phi(mf, dof_idx, quad_idx);
+        phi.reinit(cell_batch);
+        const dealii::VectorizedArray<number> cell_batch_indicator =
+          phi.read_cell_data(cell_aligned_vector);
+
+        for (unsigned lane = 0; lane < mf.n_active_entries_per_cell_batch(cell_batch); ++lane)
+          {
+            const auto cell                    = mf.get_cell_iterator(cell_batch, lane);
+            vec_out(cell->active_cell_index()) = cell_batch_indicator[lane];
+          }
+      }
+    return vec_out;
+  }
+
   template <typename... T>
   void
   update_ghost_values(const T &...args)

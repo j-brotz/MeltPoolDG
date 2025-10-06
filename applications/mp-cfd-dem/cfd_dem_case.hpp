@@ -12,6 +12,7 @@
 #include <meltpooldg/particles/obstacle_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/time_integration/time_stepping_data.hpp>
+#include <meltpooldg/utilities/amr_data.hpp>
 #include <meltpooldg/utilities/profiling_data.hpp>
 
 namespace MeltPoolDG
@@ -23,6 +24,7 @@ namespace MeltPoolDG
     void
     add_parameters(dealii::ParameterHandler &prm) override
     {
+      amr.add_parameters(prm);
       base.add_parameters(prm);
       brinkman_penalization_data.add_parameters(prm);
       flow.add_parameters(prm);
@@ -36,6 +38,7 @@ namespace MeltPoolDG
     void
     post(const std::string &parameter_filename) override
     {
+      amr.post(base.global_refinements, false);
       output.post(time_stepping.time_step_size, parameter_filename);
       flow.post(base.fe, base.verbosity_level);
       material.post(true /*is_gas*/);
@@ -45,6 +48,7 @@ namespace MeltPoolDG
     }
 
   public:
+    AdaptiveMeshingData<number>                      amr;
     BaseData                                         base;
     BrinkmanPenalizationData<number>                 brinkman_penalization_data;
     Flow::CompressibleFlowData<number>               flow;

@@ -245,11 +245,11 @@ namespace MeltPoolDG::RadiativeTransport
 
     AMR::refine_grid<dim, VectorType>(mark_cells_for_refinement,
                                       attach_vectors,
-                                      post,
                                       setup_dof_system,
                                       simulation_case->parameters.amr,
                                       dof_handler,
-                                      time_iterator->get_current_time_step_number());
+                                      time_iterator->get_current_time_step_number(),
+                                      post);
   }
 
   template class RadiativeTransportApplication<1, double>;
