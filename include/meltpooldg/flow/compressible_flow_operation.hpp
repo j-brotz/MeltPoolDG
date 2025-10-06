@@ -126,6 +126,12 @@ namespace MeltPoolDG::Flow
       operation_pimpl->set_body_force(std::move(body_force_in));
     }
 
+    void
+    add_external_force(
+      std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>         external_force_residuum,
+      std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>> external_force_jacobian =
+        nullptr);
+
     /**
      * @brief Get a constant reference to the DoFHandler used in the current operation.
      *

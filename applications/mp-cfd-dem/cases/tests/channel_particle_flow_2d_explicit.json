@@ -4,7 +4,8 @@
     "case name": "channel_particle_flow",
     "dimension": "2",
     "do print parameters": "false",
-    "verbosity level": 2
+    "verbosity level": 1,
+    "global refinements": 2
   },
   "time stepping": {
     "start time": "0.0",

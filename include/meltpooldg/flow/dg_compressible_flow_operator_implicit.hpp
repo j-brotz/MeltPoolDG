@@ -21,7 +21,8 @@ namespace MeltPoolDG::Flow
    * @tparam is_viscous Indicates whether the flow is viscous.
    */
   template <int dim, typename number, bool is_viscous = true>
-  class DGCompressibleFlowOperatorImplicit final : public DGCompressibleFlowOperatorBase<number>
+  class DGCompressibleFlowOperatorImplicit final
+    : public DGCompressibleFlowOperatorBase<dim, number>
   {
   public:
     using VectorType             = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -60,6 +61,12 @@ namespace MeltPoolDG::Flow
      */
     void
     advance_time_step(number time, number time_step) override;
+
+    void
+    add_external_force(
+      std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>         external_force_residuum,
+      std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>> external_force_jacobian)
+      override;
 
     /**
      * @brief Compute the matrix representation of the Jacobian.
@@ -177,7 +184,7 @@ namespace MeltPoolDG::Flow
 
     /// Current time step size. This needs to be stored as this value is required by the local cell
     /// appliers.
-    mutable number inverse_current_time_step;
+    mutable number current_time_step;
 
     /// Scratch data for compressible flows
     CompressibleFlowScratchData<dim, number> &flow_scratch_data;
@@ -190,6 +197,16 @@ namespace MeltPoolDG::Flow
 
     /// Object for the viscous term evaluations
     CompressibleFlowViscousKernels<dim, number> viscous_terms;
+
+    /// This set of pointers may hold a list of external fluid force contributions to the residuum
+    /// (e.g., gravity, or user-defined source terms)
+    std::vector<std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>>
+      external_forces_residual;
+
+    /// This set of pointers may hold a list of external fluid force contributions to the jacobian
+    /// (e.g., gravity, or user-defined source terms)
+    std::vector<std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>>>
+      external_forces_jacobian;
 
     /**
      * @brief Compute the result of J*x, where J is the Jacobian computed analytically.

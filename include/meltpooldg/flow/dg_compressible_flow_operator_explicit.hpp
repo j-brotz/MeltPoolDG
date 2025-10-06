@@ -27,7 +27,8 @@ namespace MeltPoolDG::Flow
    * @tparam is_viscous Indicates whether the flow is viscous.
    */
   template <int dim, typename number, bool is_viscous = true>
-  class DGCompressibleFlowOperatorExplicit final : public DGCompressibleFlowOperatorBase<number>
+  class DGCompressibleFlowOperatorExplicit final
+    : public DGCompressibleFlowOperatorBase<dim, number>
   {
   public:
     using VectorType             = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -42,9 +43,7 @@ namespace MeltPoolDG::Flow
      * @param external_forces Pointer to a struct implementing external forces acting on the fluid.
      */
     explicit DGCompressibleFlowOperatorExplicit(
-      CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-      std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces =
-        nullptr);
+      CompressibleFlowScratchData<dim, number> &flow_scratch_data);
 
     /**
      * @brief Advances solver by a single time step.
@@ -84,9 +83,15 @@ namespace MeltPoolDG::Flow
      */
     void
     apply_operator(number                                                 time,
+                   number                                                 time_step,
                    VectorType                                            &dst,
                    const VectorType                                      &src,
                    const std::function<void(unsigned int, unsigned int)> &func) const;
+
+    void
+    add_external_force(
+      std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>> external_force,
+      std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>>) override;
 
   private:
     /// Scratch data for compressible flows
@@ -103,7 +108,10 @@ namespace MeltPoolDG::Flow
 
     /// This pointer may hold an instance of an external fluid force contribution
     /// (e.g., gravity, body forces, or user - defined source terms)
-    std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> external_forces;
+    std::vector<std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>> external_forces;
+
+    /// Current time step size
+    mutable number current_time_step;
 
     /**
      * @brief Local cell applier.

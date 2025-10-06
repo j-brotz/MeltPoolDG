@@ -8,6 +8,11 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
+#include <deal.II/lac/la_parallel_vector.h>
+
+#include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/utilities/better_enum.hpp>
+
 namespace MeltPoolDG::Flow
 {
   // Forward declaration
@@ -120,21 +125,19 @@ namespace MeltPoolDG::Flow
    *   external force.
    */
   template <int dim, typename number>
-  struct ExternalFluidForcesRightHandSideContribution
+  struct AdditionalCellAndQuadOperation
   {
-    virtual ~ExternalFluidForcesRightHandSideContribution() = default;
+    virtual ~AdditionalCellAndQuadOperation() = default;
 
     /**
      * @brief Function called once per cell batch during the cell loop.
      *
      * @param matrix_free MatrixFree object providing access to the degrees of freedom and geometry.
      * @param cell_batch_id Index of the current cell batch.
-     * @param n_lanes Number of lanes (i.e., cells in the batch).
      */
     virtual void
     cell_operation(const dealii::MatrixFree<dim, number> &matrix_free,
-                   unsigned int                           cell_batch_id,
-                   unsigned int n_lanes = dealii::VectorizedArray<number>::size) = 0;
+                   unsigned int                           cell_batch_id) = 0;
 
     /**
      * @brief Function called once per batch of quadrature points to compute the external force
@@ -147,8 +150,43 @@ namespace MeltPoolDG::Flow
      * equations.
      */
     virtual CompressibleFlowTypes::ConservedVariablesType<dim, number>
-    quad_operation(const dealii::Point<dim, dealii::VectorizedArray<number>>        &q_point,
+    quad_operation(number                                                            time_step_size,
+                   const dealii::Point<dim, dealii::VectorizedArray<number>>        &q_point,
                    const CompressibleFlowTypes::ConservedVariablesType<dim, number> &w_q) = 0;
+  };
+
+
+  template <int dim, typename number>
+  struct AdditionalCellAndQuadOperationJacobian
+  {
+    virtual ~AdditionalCellAndQuadOperationJacobian() = default;
+
+    /**
+     * @brief Function called once per cell batch during the cell loop.
+     *
+     * @param matrix_free MatrixFree object providing access to the degrees of freedom and geometry.
+     * @param cell_batch_id Index of the current cell batch.
+     */
+    virtual void
+    cell_operation(const dealii::MatrixFree<dim, number> &matrix_free,
+                   unsigned int                           cell_batch_id) = 0;
+
+    /**
+     * @brief Function called once per batch of quadrature points to compute the external force
+     * contribution at each point.
+     *
+     * @param q_point Coordinates of the quadrature points.
+     * @param w_q Conserved variables at the corresponding quadrature points.
+     *
+     *
+     * @return The computed contribution of the external force to be added to the conservation
+     * equations.
+     */
+    virtual CompressibleFlowTypes::ConservedVariablesType<dim, number>
+    quad_operation(number                                                            time_step_size,
+                   const dealii::Point<dim, dealii::VectorizedArray<number>>        &q_point,
+                   const CompressibleFlowTypes::ConservedVariablesType<dim, number> &w_q,
+                   const CompressibleFlowTypes::ConservedVariablesType<dim, number> &delta_w_q) = 0;
   };
 
   /********************************************************************************************

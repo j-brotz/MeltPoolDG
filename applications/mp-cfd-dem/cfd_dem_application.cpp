@@ -5,7 +5,8 @@
 #include "meltpooldg/utilities/cell_monitor.hpp"
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
-#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_fluid_force.hpp>
+#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_fluid_to_obstacle.hpp>
+#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_obstacle_to_fluid.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
@@ -21,6 +22,8 @@ namespace MeltPoolDG
   {
     initialize();
 
+    Journal::print_start(scratch_data->get_pcout(1));
+
     // output the initial condition
     output_results(time_iterator->get_current_time_step_number(),
                    time_iterator->get_current_time());
@@ -29,14 +32,16 @@ namespace MeltPoolDG
       {
         // use CFL condition to compute time step size if required
         if (simulation_case->parameters.flow.do_cfl_time_stepping)
-          time_iterator->set_current_time_increment(comp_flow_operation.compute_time_step_size(),
+          time_iterator->set_current_time_increment(comp_flow_operation->compute_time_step_size(),
                                                     std::numeric_limits<number>::max());
 
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout(1));
 
-        comp_flow_operation.solve(time_iterator->get_current_time(),
-                                  time_iterator->get_current_time_increment());
+        comp_flow_operation->solve(time_iterator->get_current_time(),
+                                   time_iterator->get_current_time_increment());
+
+        obstacle_field->compute_forces_on_obstacles();
 
         // do output if requested
         output_results(time_iterator->get_current_time_step_number(),
@@ -65,7 +70,7 @@ namespace MeltPoolDG
   CfdDemApplication<dim, number>::setup_dof_system()
   {
     // distribute DoFs
-    comp_flow_operation.distribute_dofs(dof_handler);
+    comp_flow_operation->distribute_dofs(dof_handler);
 
     scratch_data->create_partitioning();
 
@@ -118,39 +123,36 @@ namespace MeltPoolDG
       scratch_data->get_triangulation(),
       scratch_data->get_mapping());
 
-    // initialize external fluid forces
-    std::unique_ptr<
-      BrinkmanPenalizationFluidForceRightHandSideContribution<dim,
-                                                              number,
-                                                              SphericalParticle<dim, number>>>
-      external_fluid_force = std::make_unique<
-        BrinkmanPenalizationFluidForceRightHandSideContribution<dim,
-                                                                number,
-                                                                SphericalParticle<dim, number>>>(
-        *obstacle_field, simulation_case->parameters.brinkman_penalization_data);
-
     // initialize compressible flow operation
-    std::unique_ptr<Flow::DGCompressibleFlowOperation<dim, number>> operation =
-      std::make_unique<Flow::DGCompressibleFlowOperation<dim, number>>(
-        *scratch_data,
-        simulation_case->parameters.flow,
-        simulation_case->parameters.material,
-        comp_flow_dof_idx,
-        comp_flow_quad_idx,
-        std::move(external_fluid_force));
-
-    comp_flow_operation = Flow::CompressibleFlowOperation<dim, number>(std::move(operation));
+    comp_flow_operation = std::make_unique<Flow::DGCompressibleFlowOperation<dim, number>>(
+      *scratch_data,
+      simulation_case->parameters.flow,
+      simulation_case->parameters.material,
+      comp_flow_dof_idx,
+      comp_flow_quad_idx);
 
     setup_dof_system();
 
     // set boundary conditions
-    comp_flow_operation.set_boundary_conditions(simulation_case, "cfd_dem");
+    comp_flow_operation->set_boundary_conditions(simulation_case, "cfd_dem");
 
     // initialize operation
-    comp_flow_operation.reinit();
+    comp_flow_operation->reinit();
 
     // set initial condition for the flow field
-    comp_flow_operation.set_initial_condition(*simulation_case->get_initial_condition("cfd_dem"));
+    comp_flow_operation->set_initial_condition(*simulation_case->get_initial_condition("cfd_dem"));
+
+    // initialize volume penalization fluid forces
+    auto external_fluid_force_residual = std::make_shared<
+      BrinkmanPenalizationResidualContribution<dim, number, SphericalParticle<dim, number>>>(
+      *obstacle_field, simulation_case->parameters.brinkman_penalization_data);
+
+    auto external_fluid_force_jacobian = std::make_shared<
+      BrinkmanPenalizationJacobianContribution<dim, number, SphericalParticle<dim, number>>>(
+      *obstacle_field, simulation_case->parameters.brinkman_penalization_data);
+
+    comp_flow_operation->add_external_force(external_fluid_force_residual,
+                                            external_fluid_force_jacobian);
 
     // set fluid body force
     if (dim > 1 and simulation_case->parameters.flow.gravity_constant > 0.)
@@ -160,8 +162,18 @@ namespace MeltPoolDG
             dim > 2 ?
               std::vector<number>({0., 0., -simulation_case->parameters.flow.gravity_constant}) :
               std::vector<number>({0., -simulation_case->parameters.flow.gravity_constant}));
-        comp_flow_operation.set_body_force(std::move(body_force));
+        comp_flow_operation->set_body_force(std::move(body_force));
       }
+
+    // add relevant obstacle forces to obstacle field
+    obstacle_field->add_force_type(
+      BrinkmanObstacleForce<dim, number, SphericalParticle<dim, number>>(
+        comp_flow_operation->get_solution(),
+        scratch_data->get_matrix_free(),
+        comp_flow_dof_idx,
+        comp_flow_quad_idx,
+        BrinkmanPenalizationCellScratchData<dim, number, SphericalParticle<dim, number>>(
+          *obstacle_field, simulation_case->parameters.brinkman_penalization_data)));
 
     // initialize postprocessor
     post_processor =
@@ -197,7 +209,7 @@ namespace MeltPoolDG
       return;
 
     const auto attach_output_vectors = [&](GenericDataOut<dim, number> &data_out) {
-      comp_flow_operation.attach_output_vectors(data_out);
+      comp_flow_operation->attach_output_vectors(data_out);
     };
 
     GenericDataOut<dim, number> generic_data_out(
@@ -209,7 +221,10 @@ namespace MeltPoolDG
     // user-defined postprocessing
     if (simulation_case->parameters.output.do_user_defined_postprocessing and
         post_processor->is_output_timestep(time_step, current_time))
-      simulation_case->do_postprocessing(generic_data_out);
+      {
+        simulation_case->do_postprocessing(generic_data_out);
+        obstacle_field->print_accumulated_obstacle_force_norm(scratch_data->get_pcout(1));
+      }
 
     // postprocessing
     post_processor->process(time_step, generic_data_out, current_time);

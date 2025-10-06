@@ -1,8 +1,8 @@
 #pragma once
 
+#include <meltpooldg/flow/compressible_flow_utils.hpp>
 
-#include <meltpooldg/time_integration/time_integrator_base.hpp>
-#include <meltpooldg/time_integration/time_integrator_data.hpp>
+#include <memory>
 
 namespace MeltPoolDG::Flow
 {
@@ -10,7 +10,7 @@ namespace MeltPoolDG::Flow
    * @brief Interface of the compressible flow operator interacting with the compressible flow
    * operation.
    */
-  template <typename number>
+  template <int dim, typename number>
   class DGCompressibleFlowOperatorBase
   {
   public:
@@ -34,5 +34,11 @@ namespace MeltPoolDG::Flow
      */
     virtual void
     reinit() = 0;
+
+    virtual void
+    add_external_force(
+      std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>> external_force_residuum,
+      std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>>
+        external_force_jacobian) = 0;
   };
 } // namespace MeltPoolDG::Flow

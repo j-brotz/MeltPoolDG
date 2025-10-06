@@ -4,7 +4,7 @@
     "case name": "am_powder_bed",
     "dimension": "3",
     "do print parameters": "false",
-    "verbosity level": 2
+    "verbosity level": 1
   },
   "time stepping": {
     "start time": "0.0",

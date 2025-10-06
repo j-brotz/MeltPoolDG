@@ -49,6 +49,25 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number, bool is_viscous>
   void
+  DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>::add_external_force(
+    std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>         external_force_residuum,
+    std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>> external_force_jacobian)
+  {
+    Assert(external_force_residuum != nullptr, dealii::ExcInternalError());
+
+    if (external_force_jacobian)
+      {
+        external_forces_implicit_residual.push_back(external_force_residuum);
+        external_forces_implicit_jacobian.push_back(external_force_jacobian);
+      }
+    else
+      {
+        external_forces_explicit_rhs.push_back(external_force_residuum);
+      }
+  }
+
+  template <int dim, typename number, bool is_viscous>
+  void
   DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>::
     compute_system_matrix_from_matrixfree(
       dealii::TrilinosWrappers::SparseMatrix &sparse_matrix) const
@@ -101,7 +120,7 @@ namespace MeltPoolDG::Flow
   {
     std::function<void(number, number, VectorType &, const VectorType &)> pre_processing =
       [&](number time, number time_step, VectorType &, const VectorType &) -> void {
-      inverse_current_time_step = 1. / time_step; // set for computing the preconditioner
+      current_time_increment = time_step; // set for computing the preconditioner
       flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
     };
 
@@ -160,9 +179,16 @@ namespace MeltPoolDG::Flow
     const auto delta_w_q = delta_phi.get_value(q_index);
 
     // time derivative
-    ConservedVariablesType differential_change_time_derivative =
-      delta_w_q * inverse_current_time_step;
-    delta_phi.submit_value(differential_change_time_derivative, q_index);
+    ConservedVariablesType value_q = 1. / current_time_increment * delta_w_q;
+
+    // external forces
+    for (auto &external_force : external_forces_implicit_jacobian)
+      value_q -= external_force->quad_operation(current_time_increment,
+                                                phi.quadrature_point(q_index),
+                                                w_q,
+                                                delta_w_q);
+
+    delta_phi.submit_value(value_q, q_index);
 
     // viscous flux
     const auto                 grad_w_q       = phi.get_gradient(q_index);
@@ -260,13 +286,22 @@ namespace MeltPoolDG::Flow
         phi.reinit(cell);
         phi.gather_evaluate(src, EvaluationFlags::values);
 
+        for (auto &external_force : external_forces_explicit_rhs)
+          external_force->cell_operation(flow_scratch_data.scratch_data.get_matrix_free(), cell);
+
         for (const unsigned int q : phi.quadrature_point_indices())
           {
-            const auto w_q = phi.get_value(q);
+            auto flux = convective_terms.calculate_convective_flux(phi.get_value(q));
 
-            auto flux = convective_terms.calculate_convective_flux(w_q);
+            ConservedVariablesType value_q;
+            for (auto &external_force : external_forces_explicit_rhs)
+              value_q += external_force->quad_operation(current_time_increment,
+                                                        phi.quadrature_point(q),
+                                                        phi.get_value(q));
 
             phi.submit_gradient(flux, q);
+            if (!external_forces_explicit_rhs.empty())
+              phi.submit_value(value_q, q);
           }
 
         phi.integrate_scatter(EvaluationFlags::gradients, dst);
@@ -382,7 +417,7 @@ namespace MeltPoolDG::Flow
     Assert(dst.partitioners_are_globally_compatible(*(src.get_partitioner())),
            typename VectorType::ExcVectorTypeNotCompatible());
 
-    inverse_current_time_step = 1. / time_step;
+    current_time_increment = time_step;
     flow_scratch_data.scratch_data.get_matrix_free().loop(
       &DGCompressibleFlowOperatorImplicitExplicit::local_cell_jacobian,
       &DGCompressibleFlowOperatorImplicitExplicit::local_face_jacobian,
@@ -416,6 +451,9 @@ namespace MeltPoolDG::Flow
                             EvaluationFlags::values | EvaluationFlags::gradients);
         delta_phi.reinit(cell);
         delta_phi.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
+
+        for (auto &external_force : external_forces_implicit_jacobian)
+          external_force->cell_operation(flow_scratch_data.scratch_data.get_matrix_free(), cell);
 
         for (const unsigned int q_index : phi.quadrature_point_indices())
           {
@@ -527,7 +565,7 @@ namespace MeltPoolDG::Flow
     Assert(dst.partitioners_are_globally_compatible(*(src.get_partitioner())),
            typename VectorType::ExcVectorTypeNotCompatible());
 
-    inverse_current_time_step      = 1. / time_step;
+    current_time_increment         = time_step;
     intermediate_explicit_solution = &explicit_solution;
     flow_scratch_data.scratch_data.get_matrix_free().loop(
       &DGCompressibleFlowOperatorImplicitExplicit::local_cell_residual,
@@ -563,14 +601,21 @@ namespace MeltPoolDG::Flow
         phi_intermediate_explicit.gather_evaluate(*intermediate_explicit_solution,
                                                   dealii::EvaluationFlags::values);
 
+        for (auto &external_force : external_forces_implicit_residual)
+          external_force->cell_operation(flow_scratch_data.scratch_data.get_matrix_free(), cell);
 
         for (const unsigned int q : phi.quadrature_point_indices())
           {
             auto flux = viscous_terms.calculate_viscous_flux(phi.get_value(q), phi.get_gradient(q));
 
             ConservedVariablesType value_q =
-              inverse_current_time_step *
+              1. / current_time_increment *
               (-phi.get_value(q) + phi_intermediate_explicit.get_value(q));
+
+            for (auto &external_force : external_forces_implicit_residual)
+              value_q += external_force->quad_operation(current_time_increment,
+                                                        phi.quadrature_point(q),
+                                                        phi.get_value(q));
 
             phi.submit_gradient(-flux, q);
             phi.submit_value(value_q, q);
