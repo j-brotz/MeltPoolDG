@@ -21,14 +21,20 @@ namespace MeltPoolDG::Simulation::CfdDem
     {}
 
     number
-    value(const dealii::Point<dim, number> &, const unsigned int component) const final
+    value(const dealii::Point<dim, number> &loc, const unsigned int component) const final
     {
       if (component == 0)
         return 0.4;
       else if (component == 1)
-        return 40;
+        return loc[0] == 0. ?
+                 (this->get_time() < 1e-8 ? 0.4 * 150 / 1e-8 * this->get_time() : 0.4 * 150) :
+                 0.;
       else if (component == dim + 1)
-        return 0.4 * 725000;
+        return 0.4 * (loc[0] == 0. ? 750450 + 0.5 * std::pow(this->get_time() < 1e-8 ?
+                                                               0.4 * 150 / 1e-8 * this->get_time() :
+                                                               0.4 * 150,
+                                                             2) :
+                                     739200);
       else
         return 0.;
     }
@@ -60,19 +66,21 @@ namespace MeltPoolDG::Simulation::CfdDem
       dealii::Point<dim, number> p2;
       if constexpr (dim == 2)
         {
-          repetitions = {25, 25};
+          repetitions = {12, 6};
           p1          = dealii::Point<2, number>(0, 0);
-          p2          = dealii::Point<2, number>(40e-6, 40e-6);
+          p2          = dealii::Point<2, number>(80e-6, 40e-6);
         }
       else if constexpr (dim == 3)
         {
-          repetitions = {100, 20, 20};
+          repetitions = {12, 6, 6};
           p1          = dealii::Point<3, number>(0, 0, 0);
-          p2          = dealii::Point<3, number>(220e-6, 41e-6, 41e-6);
+          p2          = dealii::Point<3, number>(80e-6, 40e-6, 40e-6);
         }
 
       dealii::GridGenerator::subdivided_hyper_rectangle(
         *this->triangulation, repetitions, p1, p2, true);
+
+      this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 
     void

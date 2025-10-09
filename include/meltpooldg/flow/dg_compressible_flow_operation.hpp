@@ -60,9 +60,7 @@ namespace MeltPoolDG::Flow
       const CompressibleFlowData<number>               &flow_data,
       const CompressibleFluidMaterialPhaseData<number> &material_data_in,
       unsigned int                                      flow_dof_idx  = 0,
-      unsigned int                                      flow_quad_idx = 0,
-      std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces =
-        nullptr);
+      unsigned int                                      flow_quad_idx = 0);
 
     /**
      * @brief Set up the required internal data structures.
@@ -111,6 +109,11 @@ namespace MeltPoolDG::Flow
      */
     void
     set_body_force(std::unique_ptr<dealii::Function<dim>> body_force_in);
+
+    void
+    add_external_force(
+      std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>         external_force_residuum,
+      std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>> external_force_jacobian);
 
     /**
      * @brief Compute the maximum time step size.
@@ -173,7 +176,7 @@ namespace MeltPoolDG::Flow
     CompressibleFlowScratchData<dim, number> flow_scratch_data;
 
     /// Compressible flow operator object
-    std::unique_ptr<DGCompressibleFlowOperatorBase<number>> comp_flow_operator;
+    std::unique_ptr<DGCompressibleFlowOperatorBase<dim, number>> comp_flow_operator;
 
     /// Solution vector in primitive variable formulation (pressure, velocity, temperature)
     VectorType solution_primitive_variables;
@@ -200,8 +203,7 @@ namespace MeltPoolDG::Flow
      * @param external_forces Pointer to a struct implementing external forces acting on the fluid.
      */
     void
-    setup_operator(
-      std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces);
+    setup_operator();
   };
 
 

@@ -11,21 +11,15 @@ namespace MeltPoolDG::Flow
   using namespace dealii;
   template <int dim, typename number, bool is_viscous>
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::DGCompressibleFlowOperatorExplicit(
-    CompressibleFlowScratchData<dim, number>                                    &flow_scratch_data,
-    std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces)
+    CompressibleFlowScratchData<dim, number> &flow_scratch_data)
     : flow_scratch_data(flow_scratch_data)
     , time_integrator(flow_scratch_data.flow_data.time_integrator)
     , convective_terms(flow_scratch_data.flow_data, flow_scratch_data.material)
     , viscous_terms(flow_scratch_data.material)
-    , external_forces(std::move(external_forces))
   {
-    time_integrator.configure_rhs([&](number time,
-                                      number,
-                                      dealii::LinearAlgebra::distributed::Vector<number>       &dst,
-                                      const dealii::LinearAlgebra::distributed::Vector<number> &src,
-                                      const std::function<void(unsigned, unsigned)> &post) {
-      this->apply_operator(time, dst, src, post);
-    });
+    time_integrator.configure_rhs(
+      std::bind_front(&DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::apply_operator,
+                      this));
   }
 
   template <int dim, typename number, bool is_viscous>
@@ -58,10 +52,12 @@ namespace MeltPoolDG::Flow
   void
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::apply_operator(
     const number                                           time,
+    const number                                           time_step,
     VectorType                                            &dst,
     const VectorType                                      &src,
     const std::function<void(unsigned int, unsigned int)> &func) const
   {
+    current_time_step = time_step;
     using local_applier_type =
       std::function<void(const dealii::MatrixFree<dim, number> &,
                          dealii::LinearAlgebra::distributed::Vector<number>       &dst,
@@ -91,8 +87,18 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number, bool is_viscous>
   void
+  DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::add_external_force(
+    std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>> external_force,
+    std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>>)
+  {
+    Assert(external_force != nullptr, dealii::ExcInternalError());
+    external_forces.push_back(external_force);
+  }
+
+  template <int dim, typename number, bool is_viscous>
+  void
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::local_apply_cell(
-    const MatrixFree<dim, number>                    &matrix_free,
+    const MatrixFree<dim, number> &,
     LinearAlgebra::distributed::Vector<number>       &dst,
     const LinearAlgebra::distributed::Vector<number> &src,
     const std::pair<unsigned, unsigned>              &cell_range) const
@@ -116,12 +122,8 @@ namespace MeltPoolDG::Flow
                             EvaluationFlags::values |
                               (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
 
-        if (external_forces != nullptr)
-          {
-            external_forces->cell_operation(flow_scratch_data.scratch_data.get_matrix_free(),
-                                            cell,
-                                            matrix_free.n_active_entries_per_cell_batch(cell));
-          }
+        for (auto &external_force : external_forces)
+          external_force->cell_operation(flow_scratch_data.scratch_data.get_matrix_free(), cell);
 
         for (const unsigned int q : phi.quadrature_point_indices())
           {
@@ -137,19 +139,18 @@ namespace MeltPoolDG::Flow
                                                    viscous_terms,
                                                    flow_scratch_data.body_force);
 
-            if (external_forces != nullptr)
-              {
-                const ConservedVariablesType w_q = phi.get_value(q);
-                flux += external_forces->quad_operation(phi.quadrature_point(q), w_q);
-              }
+            for (auto &external_force : external_forces)
+              flux += external_force->quad_operation(current_time_step,
+                                                     phi.quadrature_point(q),
+                                                     phi.get_value(q));
 
-            if (flow_scratch_data.body_force.get() != nullptr or external_forces != nullptr)
+            if (flow_scratch_data.body_force.get() != nullptr or !external_forces.empty())
               phi.submit_value(flux, q);
             phi.submit_gradient(grad_flux, q);
           }
 
         phi.integrate_scatter(((flow_scratch_data.body_force.get() != nullptr or
-                                external_forces != nullptr) ?
+                                not external_forces.empty()) ?
                                  EvaluationFlags::values :
                                  EvaluationFlags::nothing) |
                                 EvaluationFlags::gradients,

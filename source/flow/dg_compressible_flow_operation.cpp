@@ -28,15 +28,14 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   DGCompressibleFlowOperation<dim, number>::DGCompressibleFlowOperation(
-    const ScratchData<dim, dim, number>                                         &scratch_data,
-    const CompressibleFlowData<number>                                          &flow_data,
-    const CompressibleFluidMaterialPhaseData<number>                            &material_data,
-    const unsigned int                                                           flow_dof_idx,
-    const unsigned int                                                           flow_quad_idx,
-    std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces)
+    const ScratchData<dim, dim, number>              &scratch_data,
+    const CompressibleFlowData<number>               &flow_data,
+    const CompressibleFluidMaterialPhaseData<number> &material_data,
+    const unsigned int                                flow_dof_idx,
+    const unsigned int                                flow_quad_idx)
     : flow_scratch_data(flow_data, material_data, scratch_data, flow_dof_idx, flow_quad_idx)
   {
-    setup_operator(std::move(external_forces));
+    setup_operator();
   }
 
   template <int dim, typename number>
@@ -107,6 +106,16 @@ namespace MeltPoolDG::Flow
                                                  phi.begin_dof_values());
         phi.set_dof_values(flow_scratch_data.solution_history.get_current_solution());
       }
+  }
+
+  template <int dim, typename number>
+  void
+  DGCompressibleFlowOperation<dim, number>::add_external_force(
+    std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>         external_force_residuum,
+    std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>> external_force_jacobian)
+  {
+    comp_flow_operator->add_external_force(std::move(external_force_residuum),
+                                           std::move(external_force_jacobian));
   }
 
   template <int dim, typename number>
@@ -278,8 +287,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  DGCompressibleFlowOperation<dim, number>::setup_operator(
-    std::unique_ptr<ExternalFluidForcesRightHandSideContribution<dim, number>> &&external_forces)
+  DGCompressibleFlowOperation<dim, number>::setup_operator()
   {
     // cut operator was already created in the constructor
     if (flow_scratch_data.flow_data.domain_representation_type == "cut")
@@ -291,11 +299,11 @@ namespace MeltPoolDG::Flow
         if (is_viscous)
           comp_flow_operator =
             std::make_unique<DGCompressibleFlowOperatorExplicit<dim, number, true>>(
-              flow_scratch_data, std::move(external_forces));
+              flow_scratch_data);
         else
           comp_flow_operator =
             std::make_unique<DGCompressibleFlowOperatorExplicit<dim, number, false>>(
-              flow_scratch_data, std::move(external_forces));
+              flow_scratch_data);
       }
     else if (time_integrator_scheme_is_implicit(
                flow_scratch_data.flow_data.time_integrator.integrator_type))

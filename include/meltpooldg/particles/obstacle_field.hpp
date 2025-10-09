@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deal.II/base/conditional_ostream.h>
+
 #include <deal.II/fe/mapping.h>
 
 #include <deal.II/grid/tria.h>
@@ -60,7 +62,10 @@ namespace MeltPoolDG
      */
     template <typename ObstacleForceType>
     void
-    add_force_type(ObstacleForceType &&obstacle_force);
+    add_force_type(ObstacleForceType &&obstacle_force)
+    {
+      forces.push_back(ObstacleForce<dim, number, ObstacleType>(std::move(obstacle_force)));
+    }
 
     /**
      * @brief Identifies obstacles that partially or fully occupy a given cell, and stores their
@@ -96,14 +101,21 @@ namespace MeltPoolDG
      * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
     std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-    get_obstacles_in_cell_batch(
-      dealii::Particles::PropertyPool<dim>  &dst,
-      const dealii::MatrixFree<dim, number> &matrix_free,
-      const unsigned int                     cell_batch_id,
-      const unsigned int                     n_lanes = dealii::VectorizedArray<number>::size) const;
+    get_obstacles_in_cell_batch(dealii::Particles::PropertyPool<dim>  &dst,
+                                const dealii::MatrixFree<dim, number> &matrix_free,
+                                const unsigned int                     cell_batch_id) const;
+
 
     /**
-     * @brief Rerturn a constant reference to the underlying particle handler of this object.
+     * Computes the sum of all particle forces and prints the corresponding norm to the console.
+     *
+     * @note This function is intended to be used for testing purposes.
+     */
+    void
+    print_accumulated_obstacle_force_norm(const dealii::ConditionalOStream pout) const;
+
+    /**
+     * @brief Rerturn a reference to the underlying particle handler of this object.
      *
      * @return The used particle handler of the current object.
      */
@@ -111,6 +123,17 @@ namespace MeltPoolDG
     get_particle_handler()
     {
       return obstacle_handler;
+    }
+
+    /**
+     * @brief Rerturn a constant reference to the underlying obstacle data structure of this object.
+     *
+     * @return The used obstacle data structure of the current object.
+     */
+    const ObstacleCompleteDomainSearch<dim, number, ObstacleType> &
+    get_obstacle_data_structure() const
+    {
+      return obstacle_data_structure;
     }
 
   private:

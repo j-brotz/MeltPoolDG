@@ -49,7 +49,7 @@ namespace MeltPoolDG::Flow
   {
     std::function<void(number, number, VectorType &, const VectorType &)> pre_processing =
       [&](number time, number time_step, VectorType &, const VectorType &) -> void {
-      inverse_current_time_step = 1. / time_step; // set for computing the preconditioner
+      current_time_step = time_step; // set for computing the preconditioner
       flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
     };
 
@@ -59,6 +59,19 @@ namespace MeltPoolDG::Flow
       flow_scratch_data.solution_history,
       pre_processing,
       std::function<void(number, number, VectorType &, const VectorType &)>());
+  }
+
+  template <int dim, typename number, bool is_viscous>
+  void
+  DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::add_external_force(
+    std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>         external_force_residuum,
+    std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>> external_force_jacobian)
+  {
+    Assert(external_force_residuum != nullptr && external_force_jacobian != nullptr,
+           dealii::ExcInternalError());
+
+    external_forces_residual.push_back(external_force_residuum);
+    external_forces_jacobian.push_back(external_force_jacobian);
   }
 
   template <int dim, typename number, bool is_viscous>
@@ -112,7 +125,7 @@ namespace MeltPoolDG::Flow
            typename VectorType::ExcVectorTypeNotCompatible());
 
     // TODO: This can be done as pre time step operation
-    inverse_current_time_step    = 1. / time_step;
+    current_time_step            = time_step;
     time_integrator_old_solution = &old_solution;
     flow_scratch_data.scratch_data.get_matrix_free().loop(
       &DGCompressibleFlowOperatorImplicit::local_cell_residual,
@@ -134,7 +147,7 @@ namespace MeltPoolDG::Flow
     Assert(dst.partitioners_are_globally_compatible(*(current_solution.get_partitioner())),
            typename VectorType::ExcVectorTypeNotCompatible());
 
-    inverse_current_time_step = 1. / time_step;
+    current_time_step = time_step;
     switch (flow_scratch_data.flow_data.jacobian_type)
       {
           case JacobianType::finite_difference: {
@@ -247,6 +260,9 @@ namespace MeltPoolDG::Flow
         phi_old.reinit(cell);
         phi_old.gather_evaluate(*time_integrator_old_solution, dealii::EvaluationFlags::values);
 
+        for (auto &external_force : external_forces_residual)
+          external_force->cell_operation(flow_scratch_data.scratch_data.get_matrix_free(), cell);
+
         for (const unsigned int q : phi.quadrature_point_indices())
           {
             auto [value_q, grad_q] =
@@ -261,7 +277,12 @@ namespace MeltPoolDG::Flow
                                                    viscous_terms,
                                                    flow_scratch_data.body_force);
 
-            value_q -= inverse_current_time_step * (phi.get_value(q) - phi_old.get_value(q));
+            for (auto &external_force : external_forces_residual)
+              value_q += external_force->quad_operation(current_time_step,
+                                                        phi.quadrature_point(q),
+                                                        phi.get_value(q));
+
+            value_q -= 1. / current_time_step * (phi.get_value(q) - phi_old.get_value(q));
 
             phi.submit_gradient(grad_q, q);
             phi.submit_value(value_q, q);
@@ -411,6 +432,9 @@ namespace MeltPoolDG::Flow
         delta_phi.reinit(cell);
         delta_phi.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
+        for (auto &external_force : external_forces_jacobian)
+          external_force->cell_operation(flow_scratch_data.scratch_data.get_matrix_free(), cell);
+
         for (const unsigned int q_index : phi.quadrature_point_indices())
           {
             local_cell_jacobian_kernel(delta_phi, phi, q_index);
@@ -540,10 +564,14 @@ namespace MeltPoolDG::Flow
     const auto w_q       = phi.get_value(q_index);
     const auto delta_w_q = delta_phi.get_value(q_index);
 
-    // time derivative
-    ConservedVariablesType differential_change_time_derivative =
-      inverse_current_time_step * delta_w_q;
-    delta_phi.submit_value(differential_change_time_derivative, q_index);
+    ConservedVariablesType value_q = 1. / current_time_step * delta_w_q;
+    for (auto &external_force : external_forces_jacobian)
+      value_q -= external_force->quad_operation(current_time_step,
+                                                phi.quadrature_point(q_index),
+                                                w_q,
+                                                delta_w_q);
+
+    delta_phi.submit_value(value_q, q_index);
 
     dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>> forcing;
     if (flow_scratch_data.body_force.get() != nullptr)

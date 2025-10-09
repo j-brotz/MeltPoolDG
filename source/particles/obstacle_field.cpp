@@ -1,9 +1,12 @@
 
+#include <deal.II/base/conditional_ostream.h>
+
 #include <deal.II/grid/filtered_iterator.h>
 #include <deal.II/grid/grid_tools.h>
 
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 
 #include <fstream>
 
@@ -38,23 +41,11 @@ std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell_batch(
   dealii::Particles::PropertyPool<dim>  &dst,
   const dealii::MatrixFree<dim, number> &matrix_free,
-  const unsigned int                     cell_batch_id,
-  const unsigned int                     n_lanes) const
+  const unsigned int                     cell_batch_id) const
 {
-  return obstacle_data_structure.get_obstacles_in_cell_batch(dst,
-                                                             matrix_free,
-                                                             cell_batch_id,
-                                                             n_lanes);
+  return obstacle_data_structure.get_obstacles_in_cell_batch(dst, matrix_free, cell_batch_id);
 }
 
-template <int dim, typename number, typename ObstacleType>
-template <typename ObstacleForceType>
-void
-MeltPoolDG::ObstacleField<dim, number, ObstacleType>::add_force_type(
-  ObstacleForceType &&obstacle_force)
-{
-  forces.push_back(ObstacleForce(std::move(obstacle_force)));
-}
 
 template <int dim, typename number, typename ObstacleType>
 void
@@ -63,15 +54,33 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compute_forces_on_obstacle
   if (forces.empty())
     return;
 
+  // Update global particle property pool in case any of the forces needs an actual version.
+  obstacle_data_structure.broadcast_global_particles();
+
+  // Reset current particle forces
   for (dealii::Particles::ParticleAccessor<dim> obstacle : obstacle_handler)
-    {
-      dealii::Tensor<1, dim, number> force;
-      for (const auto &force_type : forces)
-        {
-          force += force_type.compute_force_on_obstacle(obstacle);
-        }
-      ObstacleType::set_force(force, obstacle);
-    }
+    ObstacleType::set_force(dealii::Tensor<1, dim, number>(), obstacle);
+
+  // Accumulate all forces acting on the particles
+  for (const auto &force_type : forces)
+    force_type.add_force_to_obstacles(*this);
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::print_accumulated_obstacle_force_norm(
+  const dealii::ConditionalOStream pout) const
+{
+  dealii::Tensor<1, dim, number> accumulated_force;
+  for (dealii::Particles::ParticleAccessor<dim> obstacle : obstacle_handler)
+    accumulated_force += ObstacleType::get_force(obstacle);
+
+  accumulated_force = dealii::Utilities::MPI::sum(accumulated_force, mpi_communicator);
+
+  std::ostringstream output;
+  output << std::scientific << std::setprecision(4)
+         << "accumulated norm: " << accumulated_force.norm();
+  Journal::print_line(pout, output.str(), "obstacle_force");
 }
 
 template <int dim, typename number, typename ObstacleType>

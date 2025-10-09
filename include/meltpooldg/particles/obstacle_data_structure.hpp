@@ -9,9 +9,7 @@
 #include <deal.II/particles/particle_handler.h>
 #include <deal.II/particles/property_pool.h>
 
-#include <iterator>
 #include <memory>
-#include <utility>
 #include <vector>
 
 namespace MeltPoolDG
@@ -80,11 +78,9 @@ namespace MeltPoolDG
      * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
     std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-    get_obstacles_in_cell_batch(
-      dealii::Particles::PropertyPool<dim>  &dst,
-      const dealii::MatrixFree<dim, number> &matrix_free,
-      const unsigned int                     cell_batch_id,
-      const unsigned int                     n_lanes = dealii::VectorizedArray<number>::size) const;
+    get_obstacles_in_cell_batch(dealii::Particles::PropertyPool<dim>  &dst,
+                                const dealii::MatrixFree<dim, number> &matrix_free,
+                                const unsigned int                     cell_batch_id) const;
 
   private:
     /**
@@ -117,11 +113,9 @@ namespace MeltPoolDG
        * details.
        */
       virtual std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-      get_obstacles_in_cell_batch(
-        dealii::Particles::PropertyPool<dim>  &dst,
-        const dealii::MatrixFree<dim, number> &matrix_free,
-        const unsigned int                     cell_batch_id,
-        const unsigned int n_lanes = dealii::VectorizedArray<number>::size) const = 0;
+      get_obstacles_in_cell_batch(dealii::Particles::PropertyPool<dim>  &dst,
+                                  const dealii::MatrixFree<dim, number> &matrix_free,
+                                  const unsigned int                     cell_batch_id) const = 0;
     };
 
     /**
@@ -158,11 +152,9 @@ namespace MeltPoolDG
        * details.
        */
       std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-      get_obstacles_in_cell_batch(
-        dealii::Particles::PropertyPool<dim>  &dst,
-        const dealii::MatrixFree<dim, number> &matrix_free,
-        const unsigned int                     cell_batch_id,
-        const unsigned int n_lanes = dealii::VectorizedArray<number>::size) const override;
+      get_obstacles_in_cell_batch(dealii::Particles::PropertyPool<dim>  &dst,
+                                  const dealii::MatrixFree<dim, number> &matrix_free,
+                                  const unsigned int cell_batch_id) const override;
 
     private:
       const ObstacleDataStructureType obstacle_data_structure;
@@ -245,17 +237,13 @@ namespace MeltPoolDG
      * stored.
      * @param matrix_free MatrixFree object associated with the current cell batch.
      * @param cell_batch_id Index of the cell batch to be examined.
-     * @param n_lanes Number of vectorization lanes in the cell batch (i.e., the number of cells in
-     * the batch).
      *
      * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
     std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-    get_obstacles_in_cell_batch(
-      dealii::Particles::PropertyPool<dim>  &dst,
-      const dealii::MatrixFree<dim, number> &matrix_free,
-      const unsigned int                     cell_batch_id,
-      const unsigned int                     n_lanes = dealii::VectorizedArray<number>::size) const;
+    get_obstacles_in_cell_batch(dealii::Particles::PropertyPool<dim>  &dst,
+                                const dealii::MatrixFree<dim, number> &matrix_free,
+                                const unsigned int                     cell_batch_id) const;
 
     /**
      * @brief Broadcasts obstacle properties of all locally owned particles to all MPI processes.
@@ -270,6 +258,17 @@ namespace MeltPoolDG
      */
     void
     broadcast_global_particles() const;
+
+    /**
+     * Return a reference to a property pool containing the properties of all globally available
+     * particles. The properties stored in the property pool represent those available in the field
+     * when broadcast_global_particles() has been called the last time.
+     */
+    const dealii::Particles::PropertyPool<dim> &
+    get_global_particle_properties() const
+    {
+      return properties_global_obstacles;
+    }
 
   private:
     /// Handler managing the locally owned obstacles in the domain.
@@ -286,6 +285,6 @@ namespace MeltPoolDG
      * @brief Deregisters all particles from the global obstacle property pool.
      */
     void
-    deregister_property_pool();
+    deregister_property_pool() const;
   };
 } // namespace MeltPoolDG

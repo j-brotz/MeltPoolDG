@@ -1,5 +1,6 @@
 #pragma once
 
+#include "meltpooldg/flow/dg_compressible_flow_operation.hpp"
 #include <meltpooldg/flow/compressible_flow_operation.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
@@ -65,7 +66,7 @@ namespace MeltPoolDG
     dealii::AffineConstraints<number>                                           constraints;
     std::shared_ptr<ScratchData<dim, dim, number>>                              scratch_data;
     std::shared_ptr<TimeIntegration::TimeIterator<number>>                      time_iterator;
-    Flow::CompressibleFlowOperation<dim, number>                                comp_flow_operation;
+    std::unique_ptr<Flow::DGCompressibleFlowOperation<dim, number>>             comp_flow_operation;
     std::unique_ptr<ObstacleField<dim, number, SphericalParticle<dim, number>>> obstacle_field;
     std::unique_ptr<Profiling::ProfilingMonitor<number>>                        profiling_monitor;
 

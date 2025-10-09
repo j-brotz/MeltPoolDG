@@ -41,9 +41,9 @@ namespace MeltPoolDG
     // - 2 * size_angular_velocity: angular velocity and angular acceleration
     // - 2 * dim: velocity and acceleration
     // - dim: (directional) force acting on the particle
-    // - 5: radius, volume, density, mass, moment of intertia
+    // - 5: radius, volume, density, mass, moment of intertia, particle id
     static constexpr unsigned int n_obstacle_properties =
-      2 * size_angular_velocity + 2 * dim + dim + 5;
+      2 * size_angular_velocity + 2 * dim + dim + 6;
 
     /**
      * @brief Enum to define the index of each property in the particle's property vector.
@@ -60,6 +60,9 @@ namespace MeltPoolDG
       density,
       mass,
       moment_of_inertia,
+      // TODO: This is temporary and should be replaced by a proper deal.II ghost particle
+      // implementation
+      particle_id, // used to identify particles received from other processes
     };
 
     /**
@@ -79,7 +82,7 @@ namespace MeltPoolDG
     get_property_names_and_component_interpretation()
     {
       using namespace dealii::DataComponentInterpretation;
-      constexpr std::array<std::string_view, 10> property_strings = {{"velocity",
+      constexpr std::array<std::string_view, 11> property_strings = {{"velocity",
                                                                       "acceleration",
                                                                       "angular_velocity",
                                                                       "angular_acceleration",
@@ -88,14 +91,16 @@ namespace MeltPoolDG
                                                                       "volume",
                                                                       "density",
                                                                       "mass",
-                                                                      "moment_of_inertia"}};
+                                                                      "moment_of_inertia",
+                                                                      "ID"}};
 
-      constexpr std::array<DataComponentInterpretation, 10> data_component_interpretation{
+      constexpr std::array<DataComponentInterpretation, 11> data_component_interpretation{
         {component_is_part_of_vector,
          component_is_part_of_vector,
          dim == 3 ? component_is_part_of_vector : component_is_scalar,
          dim == 3 ? component_is_part_of_vector : component_is_scalar,
          component_is_part_of_vector,
+         component_is_scalar,
          component_is_scalar,
          component_is_scalar,
          component_is_scalar,
@@ -152,6 +157,14 @@ namespace MeltPoolDG
     get_force(const dealii::Particles::ParticleAccessor<dim> &particle);
 
     /**
+     * As above but operates on a property pool with a specified handle to identify where to get
+     * force from.
+     */
+    static dealii::Tensor<1, dim, number>
+    get_force(dealii::Particles::PropertyPool<dim>                 &property_pool,
+              typename dealii::Particles::PropertyPool<dim>::Handle handle);
+
+    /**
      * @brief Assigns the specified force vector to the particle by writing its components into the
      * particle's property array.
      *
@@ -161,6 +174,35 @@ namespace MeltPoolDG
     static void
     set_force(const dealii::Tensor<1, dim, number>     &force,
               dealii::Particles::ParticleAccessor<dim> &particle);
+
+    /**
+     * As above but operates on a property pool with a specified handle to identify where to set
+     * the corresponding force.
+     */
+    static void
+    set_force(const dealii::Tensor<1, dim, number>                 &force,
+              dealii::Particles::PropertyPool<dim>                 &property_pool,
+              typename dealii::Particles::PropertyPool<dim>::Handle handle);
+
+    /**
+     * @brief Accumulates the specified force vector to the particle by adding its components into the
+     * particle's property array.
+     *
+     * @param force The force vector to assign to the particle.
+     * @param particle The particle to which the force will be applied.
+     */
+    static void
+    accumulate_force(const dealii::Tensor<1, dim, number>     &force,
+                     dealii::Particles::ParticleAccessor<dim> &particle);
+
+    /**
+     * As above but operates on a property pool with a specified handle to identify where to add the
+     * force to.
+     */
+    static void
+    accumulate_force(const dealii::Tensor<1, dim, number>                 &force,
+                     dealii::Particles::PropertyPool<dim>                 &property_pool,
+                     typename dealii::Particles::PropertyPool<dim>::Handle handle);
 
     /**
      * @brief Returns the translational velocity vector of the specified particle, i.e., the
@@ -534,11 +576,59 @@ MeltPoolDG::SphericalParticle<dim, number>::set_force(
 }
 
 template <int dim, typename number>
+void
+MeltPoolDG::SphericalParticle<dim, number>::set_force(
+  const dealii::Tensor<1, dim, number>                 &force,
+  dealii::Particles::PropertyPool<dim>                 &property_pool,
+  typename dealii::Particles::PropertyPool<dim>::Handle handle)
+{
+  dealii::ArrayView<number> properties = property_pool.get_properties(handle);
+  for (int dimension = 0; dimension < dim; ++dimension)
+    properties[Properties::force + dimension] = force[dimension];
+}
+
+template <int dim, typename number>
+void
+MeltPoolDG::SphericalParticle<dim, number>::accumulate_force(
+  const dealii::Tensor<1, dim, number>     &force,
+  dealii::Particles::ParticleAccessor<dim> &particle)
+{
+  dealii::ArrayView<number> properties = particle.get_properties();
+  for (int dimension = 0; dimension < dim; ++dimension)
+    properties[Properties::force + dimension] += force[dimension];
+}
+
+template <int dim, typename number>
+void
+MeltPoolDG::SphericalParticle<dim, number>::accumulate_force(
+  const dealii::Tensor<1, dim, number>                 &force,
+  dealii::Particles::PropertyPool<dim>                 &property_pool,
+  typename dealii::Particles::PropertyPool<dim>::Handle handle)
+{
+  dealii::ArrayView<number> properties = property_pool.get_properties(handle);
+  for (int dimension = 0; dimension < dim; ++dimension)
+    properties[Properties::force + dimension] += force[dimension];
+}
+
+template <int dim, typename number>
 dealii::Tensor<1, dim, number>
 MeltPoolDG::SphericalParticle<dim, number>::get_force(
   const dealii::Particles::ParticleAccessor<dim> &particle)
 {
   dealii::ArrayView<const number> properties = particle.get_properties();
+  dealii::Tensor<1, dim, number>  force;
+  for (int dimension = 0; dimension < dim; ++dimension)
+    force[dimension] = properties[Properties::force + dimension];
+  return force;
+}
+
+template <int dim, typename number>
+dealii::Tensor<1, dim, number>
+MeltPoolDG::SphericalParticle<dim, number>::get_force(
+  dealii::Particles::PropertyPool<dim>                 &property_pool,
+  typename dealii::Particles::PropertyPool<dim>::Handle handle)
+{
+  dealii::ArrayView<const number> properties = property_pool.get_properties(handle);
   dealii::Tensor<1, dim, number>  force;
   for (int dimension = 0; dimension < dim; ++dimension)
     force[dimension] = properties[Properties::force + dimension];

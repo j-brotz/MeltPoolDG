@@ -297,10 +297,13 @@ namespace
   BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture, ExplicitOperator)
   (benchmark::State &state)
   {
+    constexpr number current_time = 0.1;
+    constexpr number time_step    = 1e-4;
     this->setup_operator(OperatorType::Explicit);
     MeltPoolDG::mpi_benchmark_loop(state, [&]() {
       this->data->explicit_flow_operator->apply_operator(
-        0.,
+        current_time,
+        time_step,
         this->data->flow_scratch_data->solution_history.get_current_solution(),
         this->data->flow_scratch_data->solution_history.get_recent_old_solution(),
         std::function<void(unsigned int, unsigned int)>());
