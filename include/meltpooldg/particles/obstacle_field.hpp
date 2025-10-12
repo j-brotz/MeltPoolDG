@@ -9,6 +9,8 @@
 #include <deal.II/particles/particle_accessor.h>
 #include <deal.II/particles/particle_handler.h>
 
+#include <meltpooldg/particles/dem_time_integrators.hpp>
+#include <meltpooldg/particles/dem_util.hpp>
 #include <meltpooldg/particles/obstacle_data.hpp>
 #include <meltpooldg/particles/obstacle_data_structure.hpp>
 #include <meltpooldg/particles/obstacle_forces.hpp>
@@ -40,31 +42,60 @@ namespace MeltPoolDG
                   const dealii::Mapping<dim>       &mapping);
 
     /**
-     * @brief Computes and applies the total force acting on each obstacle in the field.
+     * @brief Constructor. Initializes the obstacle field and supporting data structures.
      *
-     * This method iterates over all registered forces in the @p forces vector and computes the
-     * cumulative force for each obstacle by summing the contributions of all individual force
-     * models. The resulting total force is then stored in the obstacle’s properties using the
-     * appropriate
-     * setter defined by @p ObstacleType.
+     * This constructor initializes the internal particle handler with the provided obstacle
+     * locations and properties, preparing the obstacle field for simulation. After
+     * construction, the obstacle field is ready for further computations.
+     *
+     * @param data Obstacle-related configuration data.
+     * @param triangulation The triangulation on which the obstacles are placed.
+     * @param mapping Mapping used to interpret geometry on the given triangulation.
+     * @param obstacle_locations Vector of obstacle center locations.
+     * @param obstacle_properties Vector of obstacle properties corresponding to each location.
      */
-    void
-    compute_forces_on_obstacles();
+    ObstacleField(const ObstacleData                      &data,
+                  const dealii::Triangulation<dim>        &triangulation,
+                  const dealii::Mapping<dim>              &mapping,
+                  std::vector<dealii::Point<dim, number>> &obstacle_locations,
+                  std::vector<std::vector<number>>        &obstacle_properties);
 
     /**
-     * @brief Adds a new obstacle force to the list of forces acting on obstacles.
+     * @brief Advances the state of all obstacles in time by a single time step.
      *
-     * This method appends the given force object to the internal list of forces that are applied
-     * when computing the total force on an obstacle.
+     * @param current_time The current simulation time after the time step.
+     * @param time_step The size of the time step to advance.
+     * @param n_time_step The current time step number in the simulation.
+     */
+    void
+    advance_time(const number current_time, const number time_step);
+
+    /**
+     * @brief Computes and applies the total load acting on each obstacle in the field. This
+     * includes both forces and torques.
      *
-     * @param obstacle_force The force object to be added. It is forwarded and stored via type
+     * This method iterates over all registered loads in the @p loads vector and computes the
+     * cumulative load for each obstacle by summing the contributions of all individual load
+     * models. The resulting total load (force and torque) is then stored in the obstacle’s
+     * properties using the appropriate setter defined by @p ObstacleType.
+     */
+    void
+    compute_loads_on_obstacles();
+
+    /**
+     * @brief Adds a new obstacle load to the list of loads acting on obstacles.
+     *
+     * This method appends the given load object to the internal list of load that are applied
+     * when computing the total load on an obstacle -- this includes forces and torques.
+     *
+     * @param obstacle_load The load object to be added. It is forwarded and stored via type
      * erasure.
      */
-    template <typename ObstacleForceType>
+    template <typename ObstacleLoadType>
     void
-    add_force_type(ObstacleForceType &&obstacle_force)
+    add_load_type(ObstacleLoadType &&obstacle_load)
     {
-      forces.push_back(ObstacleForce<dim, number, ObstacleType>(std::move(obstacle_force)));
+      loads.push_back(ObstacleLoad<dim, number, ObstacleType>(std::move(obstacle_load)));
     }
 
     /**
@@ -115,7 +146,7 @@ namespace MeltPoolDG
     print_accumulated_obstacle_force_norm(const dealii::ConditionalOStream pout) const;
 
     /**
-     * @brief Rerturn a reference to the underlying particle handler of this object.
+     * @brief Return a reference to the underlying particle handler of this object.
      *
      * @return The used particle handler of the current object.
      */
@@ -126,7 +157,7 @@ namespace MeltPoolDG
     }
 
     /**
-     * @brief Rerturn a constant reference to the underlying obstacle data structure of this object.
+     * @brief Return a constant reference to the underlying obstacle data structure of this object.
      *
      * @return The used obstacle data structure of the current object.
      */
@@ -138,26 +169,48 @@ namespace MeltPoolDG
 
   private:
     /**
-     * @brief Reads the obstacle state input file and initializes obstacles in the simulation domain.
+     * @brief Reads the obstacle state input file and returns obstacle locations and properties.
      *
      * This function reads the obstacle data file specified in the configuration and generates
-     * obstacle representations accordingly. It populates the internal particle handler with the
-     * parsed obstacle positions and properties, preparing the obstacle field for use in subsequent
-     * computations.
+     * obstacle representations accordingly. The resulting vectors for the obstacle properties and
+     * locations are returned. It populates the internal particle handler with the parsed obstacle
+     * positions and properties, preparing the obstacle field for use in subsequent computations.
      *
-     * @param triangulation The triangulation over which the obstacles are distributed.
+     * @return A pair consisting of a vector of obstacle locations and a vector of  corresponding
+     * properties.
+     */
+    std::pair<std::vector<dealii::Point<dim, number>>, std::vector<std::vector<number>>>
+    read_obstacle_state_input_file();
+
+    /**
+     * @brief Insert obstacles into the particle handler based on provided locations and properties.
+     *
+     * This function takes a set of obstacle locations and their corresponding properties, and
+     * inserts them into the internal particle handler. It ensures that the obstacles are properly
+     * initialized and ready for simulation.
+     *
+     * @param triangulation The triangulation on which the obstacles are placed.
+     * @param obstacle_locations A vector of points representing the locations of the obstacles.
+     * @param obstacle_properties A vector of vectors, where each inner vector contains the
+     * properties associated with the corresponding obstacle location.
      */
     void
-    read_particle_state_input_file(const dealii::Triangulation<dim> &triangulation);
+    insert_obstacles(const dealii::Triangulation<dim>        &triangulation,
+                     std::vector<dealii::Point<dim, number>> &obstacle_locations,
+                     std::vector<std::vector<number>>        &obstacle_properties);
 
     /// Struct holding configuration data for obstacles.
     const ObstacleData &data;
 
-    /// Vector of force objects representing all forces acting on the obstacles.
-    std::vector<ObstacleForce<dim, number, ObstacleType>> forces;
+    /// Vector of load objects representing all loads acting on the obstacles.
+    std::vector<ObstacleLoad<dim, number, ObstacleType>> loads;
 
     /// Handler responsible for managing obstacle particles within the computational domain.
     dealii::Particles::ParticleHandler<dim> obstacle_handler;
+
+    /// Vector views into the particle handler for easy access to obstacle properties during
+    /// time integration.
+    DemTimeIntegratorVectorViews<dim, number, ObstacleType> obstacle_handler_vector_views;
 
     /// Obstacle search utility for locating relevant obstacles within a given cell or batch.
     /// TODO: Extend to support nearest-neighbor searches and other spatial queries.

@@ -4,11 +4,14 @@
 #include <deal.II/grid/filtered_iterator.h>
 #include <deal.II/grid/grid_tools.h>
 
+#include <deal.II/particles/particle_handler.h>
+
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
 #include <fstream>
+#include <functional>
 
 
 template <int dim, typename number, typename ObstacleType>
@@ -18,14 +21,77 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   const dealii::Mapping<dim>       &mapping)
   : data(data)
   , obstacle_handler(triangulation, mapping, ObstacleType::n_obstacle_properties)
+  , obstacle_handler_vector_views(
+      std::vector<std::reference_wrapper<dealii::Particles::ParticleHandler<dim>>>(
+        {obstacle_handler}),
+      1)
   , obstacle_data_structure(obstacle_handler)
   , mpi_communicator(triangulation.get_mpi_communicator())
 {
-  read_particle_state_input_file(triangulation);
+  auto [obstacle_locations, obstacle_properties] = read_obstacle_state_input_file();
+  insert_obstacles(triangulation, obstacle_locations, obstacle_properties);
   obstacle_data_structure.reinit();
-  AssertThrow(data.stationary_obstacles == true,
-              dealii::ExcMessage("Currently only stationary particles are supported!"));
 }
+
+template <int dim, typename number, typename ObstacleType>
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
+  const ObstacleData                      &data,
+  const dealii::Triangulation<dim>        &triangulation,
+  const dealii::Mapping<dim>              &mapping,
+  std::vector<dealii::Point<dim, number>> &obstacle_locations,
+  std::vector<std::vector<number>>        &obstacle_properties)
+  : data(data)
+  , obstacle_handler(triangulation, mapping, ObstacleType::n_obstacle_properties)
+  , obstacle_handler_vector_views(
+      std::vector<std::reference_wrapper<dealii::Particles::ParticleHandler<dim>>>(
+        {obstacle_handler}),
+      1)
+  , obstacle_data_structure(obstacle_handler)
+  , mpi_communicator(triangulation.get_mpi_communicator())
+{
+  insert_obstacles(triangulation, obstacle_locations, obstacle_properties);
+  obstacle_data_structure.reinit();
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number current_time,
+                                                                   const number time_step)
+{
+  compute_loads_on_obstacles();
+
+  symplectic_euler_advance_time_step<dim, double, ParticleHandlerBlockVectorView<dim, number>>(
+    current_time,
+    time_step,
+    obstacle_handler_vector_views.location,
+    obstacle_handler_vector_views.translational_velocity,
+    obstacle_handler_vector_views.translational_acceleration,
+    obstacle_handler_vector_views.angular_velocity,
+    obstacle_handler_vector_views.angular_acceleration,
+    [&](number, ParticleHandlerBlockVectorView<dim, number> &) {
+      for (auto &obstacle : obstacle_handler)
+        {
+          ObstacleType::set_acceleration(
+            obstacle,
+            ObstacleType::get_force(obstacle) /
+              ObstacleType::get_property(obstacle, ObstacleType::Properties::mass));
+        }
+    },
+    [&](number, ParticleHandlerBlockVectorView<dim, number> &) {
+      for (auto &obstacle : obstacle_handler)
+        {
+          ObstacleType::set_angular_acceleration(
+            obstacle,
+            ObstacleType::get_torque(obstacle) /
+              ObstacleType::get_property(obstacle, ObstacleType::Properties::moment_of_inertia));
+        }
+    },
+    [&]() {
+      obstacle_handler.exchange_ghost_particles(true);
+      obstacle_handler.update_ghost_particles();
+    });
+}
+
 
 template <int dim, typename number, typename ObstacleType>
 std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
@@ -49,21 +115,25 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell_batc
 
 template <int dim, typename number, typename ObstacleType>
 void
-MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compute_forces_on_obstacles()
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compute_loads_on_obstacles()
 {
-  if (forces.empty())
+  if (loads.empty())
     return;
 
-  // Update global particle property pool in case any of the forces needs an actual version.
+  // Update global particle property pool in case any of the loads needs an up-to-date version.
   obstacle_data_structure.broadcast_global_particles();
 
-  // Reset current particle forces
+  // Reset current particle forces and torques
   for (dealii::Particles::ParticleAccessor<dim> obstacle : obstacle_handler)
-    ObstacleType::set_force(dealii::Tensor<1, dim, number>(), obstacle);
+    {
+      ObstacleType::set_force(dealii::Tensor<1, dim, number>(), obstacle);
+      ObstacleType::set_torque(dealii::Tensor<1, ObstacleType::size_angular_velocity, number>(),
+                               obstacle);
+    }
 
   // Accumulate all forces acting on the particles
-  for (const auto &force_type : forces)
-    force_type.add_force_to_obstacles(*this);
+  for (const auto &load_type : loads)
+    load_type.add_load_to_obstacles(*this);
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -84,9 +154,8 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::print_accumulated_obstacle
 }
 
 template <int dim, typename number, typename ObstacleType>
-void
-MeltPoolDG::ObstacleField<dim, number, ObstacleType>::read_particle_state_input_file(
-  const dealii::Triangulation<dim> &triangulation)
+std::pair<std::vector<dealii::Point<dim, number>>, std::vector<std::vector<number>>>
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::read_obstacle_state_input_file()
 {
   std::vector<dealii::Point<dim>> particle_locations;
   // Make global particle properties vector
@@ -108,19 +177,30 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::read_particle_state_input_
         }
     }
 
-  // Make the particles from the data in @struct particle_data
+  return {particle_locations, properties};
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::insert_obstacles(
+  const dealii::Triangulation<dim>        &triangulation,
+  std::vector<dealii::Point<dim, number>> &obstacle_locations,
+  std::vector<std::vector<number>>        &obstacle_properties)
+{
   std::vector<dealii::BoundingBox<dim>> local_bounding_box =
     dealii::GridTools::compute_mesh_predicate_bounding_box(
       triangulation, dealii::IteratorFilters::LocallyOwnedCell());
   std::vector<std::vector<dealii::BoundingBox<dim>>> global_bounding_box =
     dealii::Utilities::MPI::all_gather(mpi_communicator, local_bounding_box);
 
-  obstacle_handler.insert_global_particles(dealii::Utilities::MPI::this_mpi_process(
-                                             mpi_communicator) == 0 ?
-                                             particle_locations :
-                                             std::vector<dealii::Point<dim, number>>{},
-                                           global_bounding_box,
-                                           properties);
+  obstacle_handler.insert_global_particles(
+    dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 ?
+      obstacle_locations :
+      std::vector<dealii::Point<dim, number>>{},
+    global_bounding_box,
+    dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 ?
+      obstacle_properties :
+      std::vector<std::vector<number>>{});
 }
 
 template class MeltPoolDG::ObstacleField<1, double, MeltPoolDG::SphericalParticle<1, double>>;

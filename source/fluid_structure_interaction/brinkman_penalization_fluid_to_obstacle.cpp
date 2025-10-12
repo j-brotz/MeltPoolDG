@@ -28,7 +28,7 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::BrinkmanObstacleFo
 {}
 template <int dim, typename number, typename ObstacleType>
 void
-MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_force_to_obstacles(
+MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstacles(
   ObstacleField<dim, number, ObstacleType> &obstacle_field) const
 {
   // We need a copy of the global particle properties in order to reset obstacle forces.

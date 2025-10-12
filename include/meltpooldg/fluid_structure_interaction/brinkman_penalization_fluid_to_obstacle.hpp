@@ -38,7 +38,7 @@ namespace MeltPoolDG
      * force property of the corresponding obstacle.
      */
     void
-    add_force_to_obstacles(ObstacleField<dim, number, ObstacleType> &obstacle_field) const;
+    add_load_to_obstacles(ObstacleField<dim, number, ObstacleType> &obstacle_field) const;
 
   private:
     /// Cached cell data for computing Brinkman penalty term.
