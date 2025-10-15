@@ -67,7 +67,7 @@
     "use cfl criteria": true,
     "courant number": 0.05,
     "viscous courant number": 0.05,
-    "gravity constant": 0,
+    "gravity constant": 10,
     "jacobian type": "exact",
     "time integration": {
       "type": "bdf_2",
@@ -92,7 +92,7 @@
     "permeability": 1e-12
   },
   "obstacles": {
-    "stationary": true,
+    "stationary": false,
     "obstacle state input file": "../../stationary_particle_2d.csv"
   }
 }

@@ -10,19 +10,19 @@
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 1.50544e+07                newton_raphson_solver |
 | norm rho: 5.4169e-05, rho * u: 8.8989e-01, rho * energy: 6.7912e+03            compressible_flow |
-| accumulated norm: 3.6718e-08                                                      obstacle_force |
+| accumulated norm: 3.4798e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 4.4444e-11 to 8.8889e-11 ( dt = 4.4444e-11 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 1.50552e+07                newton_raphson_solver |
 | norm rho: 1.3259e-04, rho * u: 1.8985e+00, rho * energy: 1.2504e+04            compressible_flow |
-| accumulated norm: 1.0933e-07                                                      obstacle_force |
+| accumulated norm: 3.4813e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 8.8889e-11 to 1.0000e-10 ( dt = 1.1111e-11 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 1.50556e+07                newton_raphson_solver |
 | norm rho: 1.7311e-04, rho * u: 2.4021e+00, rho * energy: 1.5145e+04            compressible_flow |
-| accumulated norm: 1.5361e-07                                                      obstacle_force |
+| accumulated norm: 3.4707e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+

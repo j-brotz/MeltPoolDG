@@ -47,20 +47,23 @@ MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>:
   for (int d = 0; d < dim; ++d)
     fluid_momentum[d] = w_q[d + 1];
 
-  // TODO Penalty term for mass balance equation?
-
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> momentum_penalty;
   dealii::VectorizedArray<number>                         energy_penalty = 0.;
   for (auto obstacle_handle : brinkman_cell_scratch_data.relevant_obstacle_handles)
     {
-      // TODO: Consider obstacle velocity
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> local_obstacle_velocity =
+        ObstacleType::get_velocity(brinkman_cell_scratch_data.relevant_obstacles,
+                                   obstacle_handle,
+                                   q_point);
       auto mask =
         brinkman_cell_scratch_data.mask_function(q_point,
                                                  brinkman_cell_scratch_data.relevant_obstacles,
                                                  obstacle_handle);
-      momentum_penalty -= mask / brinkman_cell_scratch_data.data.permeability * fluid_momentum;
-      energy_penalty = mask / brinkman_cell_scratch_data.data.permeability * fluid_momentum *
-                       fluid_momentum / w_q[0];
+      momentum_penalty -= mask / brinkman_cell_scratch_data.data.permeability *
+                          (fluid_momentum - w_q[0] * local_obstacle_velocity);
+      energy_penalty = mask / brinkman_cell_scratch_data.data.permeability *
+                       (fluid_momentum - w_q[0] * local_obstacle_velocity) * fluid_momentum /
+                       w_q[0];
     }
 
   ConservedVariablesType fluid_force;
@@ -111,12 +114,15 @@ MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>:
   for (int d = 0; d < dim; ++d)
     fluid_momentum_differential_change[d] = delta_w_q[d + 1];
 
-  // TODO Penalty term for mass balance equation?
   dealii::VectorizedArray<number>                         energy_penalty_differential_change(0.);
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> momentum_penalty_differential_change;
   for (auto obstacle_handle : brinkman_cell_scratch_data.relevant_obstacle_handles)
     {
-      // TODO: Consider obstacle velocity
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> local_obstacle_velocity =
+        ObstacleType::get_velocity(brinkman_cell_scratch_data.relevant_obstacles,
+                                   obstacle_handle,
+                                   q_point);
+
       auto mask =
         brinkman_cell_scratch_data.mask_function(q_point,
                                                  brinkman_cell_scratch_data.relevant_obstacles,
@@ -125,12 +131,13 @@ MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>:
       energy_penalty_differential_change +=
         mask / brinkman_cell_scratch_data.data.permeability *
         (dealii::scalar_product(fluid_momentum, fluid_momentum) / (w_q[0] * w_q[0]) * delta_w_q[0] -
-         2. / w_q[0] * dealii::scalar_product(fluid_momentum, fluid_momentum_differential_change));
+         2. / w_q[0] * dealii::scalar_product(fluid_momentum, fluid_momentum_differential_change) +
+         dealii::scalar_product(local_obstacle_velocity, fluid_momentum_differential_change));
 
       for (int i = 0; i < dim; ++i)
-        momentum_penalty_differential_change[i] -= mask /
-                                                   brinkman_cell_scratch_data.data.permeability *
-                                                   fluid_momentum_differential_change[i];
+        momentum_penalty_differential_change[i] -=
+          mask / brinkman_cell_scratch_data.data.permeability *
+          (fluid_momentum_differential_change[i] - local_obstacle_velocity[i] * delta_w_q[0]);
     }
   ConservedVariablesType penalty_differential_change;
   penalty_differential_change[0] = 0.;

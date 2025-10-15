@@ -6,6 +6,7 @@
 
 #include <deal.II/grid/tria.h>
 
+#include "meltpooldg/particles/obstacle_forces.hpp"
 #include "meltpooldg/utilities/cell_monitor.hpp"
 #include "meltpooldg/utilities/journal.hpp"
 #include <meltpooldg/core/simulation_base.hpp>
@@ -258,6 +259,10 @@ namespace MeltPoolDG
         comp_flow_quad_idx,
         BrinkmanPenalizationCellScratchData<dim, number, SphericalParticle<dim, number>>(
           *obstacle_field, simulation_case->parameters.brinkman_penalization_data)));
+
+    obstacle_field->add_load_type(
+      ObstacleGravitationalForce<dim, number, SphericalParticle<dim, number>>(
+        this->simulation_case->parameters.flow.gravity_constant));
 
     // initialize postprocessor
     post_processor =
