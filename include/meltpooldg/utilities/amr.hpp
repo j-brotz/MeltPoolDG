@@ -41,23 +41,25 @@ namespace MeltPoolDG::AMR
    * @param attach_vectors  lambda function of type AttachDoFHandlerAndVectorsType, that attaches
    *                        all DoFHandlers and their respective DoFVectors that ought to be
    *                        transferred to the new mesh
-   * @param post this lambda function is run after AMR was executed
    * @param setup_dof_system setup the dof system, this includes:
    *                         - distribute DoFs on the new mesh
    *                         - create partitioning for the new mesh
    *                         - setup constraints on the new mesh
    *                         - reinit the MatrixFree object for the new DoFs (ScratchData::build())
    *                         - initialize all DoF vectors for the new DoF
+   * @param post this optional lambda function is run after AMR was executed
+   * @param pre this optional lambda function is run before AMR was executed
    */
   template <int dim, typename VectorType, typename number = typename VectorType::value_type>
   void
   refine_grid(const MarkCellsForRefinementType<dim>                 &mark_cells_for_refinement,
               const AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors,
-              const std::function<void()>                           &post,
               const std::function<void()>                           &setup_dof_system,
               const AdaptiveMeshingData<number>                     &amr,
               dealii::Triangulation<dim>                            &tria,
-              const int                                              n_time_step);
+              const int                                              n_time_step,
+              const std::function<void()>                           &post = std::function<void()>(),
+              const std::function<void()>                           &pre = std::function<void()>());
 
   /**
    * Same as above, but for only one @param dof_handler
@@ -66,11 +68,49 @@ namespace MeltPoolDG::AMR
   void
   refine_grid(const std::function<bool(dealii::Triangulation<dim> &)> &mark_cells_for_refinement,
               const std::function<void(std::vector<VectorType *> &)>  &attach_vectors,
-              const std::function<void()>                             &post,
               const std::function<void()>                             &setup_dof_system,
               const AdaptiveMeshingData<number>                       &amr,
               dealii::DoFHandler<dim>                                 &dof_handler,
-              const int                                                n_time_step);
+              const int                                                n_time_step,
+              const std::function<void()> &post = std::function<void()>(),
+              const std::function<void()> &pre  = std::function<void()>());
+
+  /**
+   * Marks cells for refinement or coarsening based on the provided indicator.
+   *
+   * The marking strategy follows the approach described in deal.II’s documentation for
+   * GridRefinement::refine_and_coarsen_fixed_number().
+   *
+   * @param tria Triangulation whose cells are to be marked for refinement or coarsening. Smaller
+   * values indicate a lower need for refinement.
+   * @param indicator Vector of refinement indicators for the active cells.
+   * @param amr_data Object defining the lower and upper fractions of cells to refine or coarsen.
+   * @param max_n_cells Maximum number of total cells allowed in the triangulation.
+   */
+  template <int dim, typename number>
+  bool
+  mark_fixed_number(dealii::Triangulation<dim>        &tria,
+                    const dealii::Vector<number>      &indicator,
+                    const AdaptiveMeshingData<number> &amr_data,
+                    dealii::types::global_cell_index   max_n_cells =
+                      std::numeric_limits<dealii::types::global_cell_index>::max());
+
+  /**
+   * Marks cells for refinement or coarsening based on the provided indicator.
+   *
+   * The marking strategy follows the approach described in deal.II’s documentation for
+   * GridRefinement::refine_and_coarsen_fixed_fraction().
+   *
+   * @param tria Triangulation whose cells are to be marked for refinement or coarsening. Smaller
+   * values indicate a lower need for refinement.
+   * @param indicator  Vector of refinement indicators for the active cells.
+   * @param amr_data Object defining the lower and upper fractions of cells to refine or coarsen.
+   */
+  template <int dim, typename number>
+  bool
+  mark_fixed_fraction(dealii::Triangulation<dim>        &tria,
+                      const dealii::Vector<number>      &indicator,
+                      const AdaptiveMeshingData<number> &amr_data);
 
   namespace internal
   {
@@ -80,5 +120,40 @@ namespace MeltPoolDG::AMR
     template <int dim, typename number>
     void
     limit_amr(dealii::Triangulation<dim> &tria, const AdaptiveMeshingData<number> &amr_data);
+
+    /**
+     * Clears refinement flags for cells whose indicators fall below a given threshold.
+     *
+     * The triangulation is assumed to already have refinement flags set. For each active cell
+     * marked for refinement, the flag is removed if the corresponding indicator value is less
+     * than the specified threshold.
+     *
+     * @param tria       Triangulation whose refinement flags may be modified.
+     * @param indicator  Vector of refinement indicators for the active cells.
+     * @param threshold  Minimum indicator value required to keep a cell marked for refinement.
+     */
+    template <int dim, typename number>
+    void
+    clear_refine_flags_below_threshold(dealii::Triangulation<dim>   &tria,
+                                       const dealii::Vector<number> &indicator,
+                                       number                        threshold);
+
+    /**
+     * Checks whether enough (global) cells in the triangulation are marked for refinement or
+     * coarsening.
+     *
+     * Counts all locally owned active cells that have either the refinement or coarsening flag set.
+     * The counts are summed across all MPI processes. Returns true if the total number of such
+     * cells is greater than or equal to the given threshold.
+     *
+     * @param tria       Triangulation to inspect.
+     * @param min_cells  Minimum number of flagged cells to return true.
+     *
+     * @return True if at least @p min_cells are marked for refinement or coarsening, false otherwise.
+     */
+    template <int dim>
+    bool
+    do_refine_based_on_n_marked_cells(const dealii::Triangulation<dim> &tria,
+                                      unsigned                          min_cells = 1);
   } // namespace internal
 } // namespace MeltPoolDG::AMR

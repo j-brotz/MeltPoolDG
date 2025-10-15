@@ -36,6 +36,14 @@ namespace MeltPoolDG
       prm.add_parameter("every n step",
                         every_n_step,
                         "Defines at every nth step the amr should be performed.");
+      prm.add_parameter(
+        "min cells marked to refine",
+        min_cells_marked_for_refinement,
+        "Minimum number of cells that must be marked for refinement/coarsening before the mesh is updated.");
+      prm.add_parameter(
+        "min indicator threshold to refine cell",
+        indicator_min_value_to_mark_for_refinement,
+        "Minimum indicator value required for a cell to be considered for refinement.");
     }
     prm.leave_subsection();
   }

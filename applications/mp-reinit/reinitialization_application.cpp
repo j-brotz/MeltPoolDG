@@ -343,11 +343,11 @@ namespace MeltPoolDG::LevelSet
 
     AMR::refine_grid<dim, VectorType>(mark_cells_for_refinement,
                                       attach_vectors,
-                                      post,
                                       setup_dof_system,
                                       param.amr,
                                       dof_handler,
-                                      time_iterator->get_current_time_step_number());
+                                      time_iterator->get_current_time_step_number(),
+                                      post);
 
     // In the DG case the artificial diffusitivity needs to be recalculated if mesh is refined
     reinit_operation->set_artificial_diffusitivity();
