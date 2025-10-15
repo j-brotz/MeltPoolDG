@@ -142,8 +142,7 @@ namespace MeltPoolDG::Simulation::CfdDem
       // outflow boundaries (all except the floor)
       auto outflow_energy = std::make_shared<dealii::Functions::ConstantFunction<dim, number>>(
         ambient_density * this->parameters.material.specific_gas_constant /
-          (this->parameters.material.gamma - 1.) * ambient_temperature,
-        dim + 2);
+        (this->parameters.material.gamma - 1.) * ambient_temperature);
       for (unsigned int i : {0, 1, 2, 3, 5})
         this->attach_boundary_condition({i, outflow_energy}, "outflow_fixed_energy", "cfd_dem");
     }

@@ -69,7 +69,7 @@ namespace MeltPoolDG::Flow
      * Set the boundary conditions by internally calling the function set_boundary_condition for the
      * currently implemented boundary types.
      *
-     * @param simulation_case dealii::Pointer to the considered simulation case class.
+     * @param simulation_case Pointer to the considered simulation case class.
      * @param operation_name String for the name of the considered operation.
      */
     void

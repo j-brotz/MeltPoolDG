@@ -26,10 +26,10 @@
 namespace MeltPoolDG::Simulation::CompressibleMultiphase
 {
   /**
-   * @brief Initial flow field function.
+   * @brief Initial flow field for single valued function like pressure or energy.
    */
   template <int dim, typename number>
-  class InitialField : public dealii::Function<dim, number>
+  class SingleVariableTwoPhaseField : public dealii::Function<dim, number>
   {
   public:
     /**
@@ -42,9 +42,76 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
      *
      * @throws dealii::ExcNotImplemented If `dim != 1`.
      */
-    explicit InitialField(std::string ic_gas_phase,
-                          std::string ic_liquid_phase,
-                          const bool  gas_phase_is_first = true)
+    explicit SingleVariableTwoPhaseField(std::string ic_gas_phase,
+                                         std::string ic_liquid_phase,
+                                         const bool  gas_phase_is_first = true)
+      : dealii::Function<dim, number>(2)
+      , gas_phase_is_first(gas_phase_is_first)
+    {
+      parsing_function_gas->initialize(dealii::FunctionParser<dim>::default_variable_names(),
+                                       ic_gas_phase,
+                                       typename dealii::FunctionParser<dim>::ConstMap(),
+                                       false);
+      parsing_function_liquid->initialize(dealii::FunctionParser<dim>::default_variable_names(),
+                                          ic_liquid_phase,
+                                          typename dealii::FunctionParser<dim>::ConstMap(),
+                                          false);
+
+      // Currently, only 1D simulations are possible
+      Assert(dim == 1, dealii::ExcNotImplemented());
+    }
+
+    /**
+     * @brief Computes the current function value for a specific @p component at a given point @p p.
+     *
+     * @param p Point at which the function should be evaluated.
+     * @param component Component for which the function value should be returned.
+     */
+    number
+    value(const dealii::Point<dim, number> &p, const unsigned int component) const final
+    {
+      Assert(component < 2, dealii::ExcIndexRange(component, 0, 2));
+      // gas phase
+      if (component == not gas_phase_is_first)
+        return parsing_function_gas->value(p, dim + 1);
+      // liquid phase
+      else
+        return parsing_function_liquid->value(p, dim + 1);
+    }
+
+  private:
+    /// Indicator whether the gas phase is the first phase in the two-phase system
+    bool gas_phase_is_first;
+
+    /// Function parser for initial conditions in gas phase
+    std::unique_ptr<dealii::FunctionParser<dim>> parsing_function_gas =
+      std::make_unique<dealii::FunctionParser<dim>>(dim + 2);
+
+    /// Function parser for initial conditions in liquid phase
+    std::unique_ptr<dealii::FunctionParser<dim>> parsing_function_liquid =
+      std::make_unique<dealii::FunctionParser<dim>>(dim + 2);
+  };
+
+  /**
+   * @brief Initial flow field function for the conserved variables.
+   */
+  template <int dim, typename number>
+  class ConservedVariablesInitialField : public dealii::Function<dim, number>
+  {
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param ic_gas_phase Function for the initial conditions of the gas phase.
+     * @param ic_liquid_phase Function for the initial conditions of the liquid phase.
+     * @param gas_phase_is_first Indicator whether the gas phase is the first phase in the two-phase
+     * system.
+     *
+     * @throws dealii::ExcNotImplemented If `dim != 1`.
+     */
+    explicit ConservedVariablesInitialField(std::string ic_gas_phase,
+                                            std::string ic_liquid_phase,
+                                            const bool  gas_phase_is_first = true)
       : dealii::Function<dim, number>(2 * (dim + 2))
       , gas_phase_is_first(gas_phase_is_first)
     {
@@ -181,22 +248,49 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     void
     set_boundary_conditions() override
     {
-      auto inflow_outflow_solution =
-        std::make_shared<InitialField<dim, number>>(initial_conditions.gas,
-                                                    initial_conditions.liquid);
-
       // face numbering according to the deal.II colorize flag
       const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
         get_colorized_rectangle_boundary_ids<dim>();
 
       // left boundary
-      this->attach_boundary_condition({lower_bc, inflow_outflow_solution},
-                                      left_boundary_condition,
-                                      "compressible_multiphase_flow");
+      if (left_boundary_condition == "outflow_fixed_energy" or
+          left_boundary_condition == "outflow_fixed_pressure")
+        {
+          auto boundary_condition =
+            std::make_shared<SingleVariableTwoPhaseField<dim, number>>(initial_conditions.gas,
+                                                                       initial_conditions.liquid);
+          this->attach_boundary_condition({lower_bc, boundary_condition},
+                                          left_boundary_condition,
+                                          "compressible_multiphase_flow");
+        }
+      else
+        {
+          auto boundary_condition = std::make_shared<ConservedVariablesInitialField<dim, number>>(
+            initial_conditions.gas, initial_conditions.liquid);
+          this->attach_boundary_condition({lower_bc, boundary_condition},
+                                          left_boundary_condition,
+                                          "compressible_multiphase_flow");
+        }
+
       // right boundary
-      this->attach_boundary_condition({upper_bc, inflow_outflow_solution},
-                                      right_boundary_condition,
-                                      "compressible_multiphase_flow");
+      if (right_boundary_condition == "outflow_fixed_energy" or
+          right_boundary_condition == "outflow_fixed_pressure")
+        {
+          auto boundary_condition =
+            std::make_shared<SingleVariableTwoPhaseField<dim, number>>(initial_conditions.gas,
+                                                                       initial_conditions.liquid);
+          this->attach_boundary_condition({upper_bc, boundary_condition},
+                                          right_boundary_condition,
+                                          "compressible_multiphase_flow");
+        }
+      else
+        {
+          auto boundary_condition = std::make_shared<ConservedVariablesInitialField<dim, number>>(
+            initial_conditions.gas, initial_conditions.liquid);
+          this->attach_boundary_condition({upper_bc, boundary_condition},
+                                          right_boundary_condition,
+                                          "compressible_multiphase_flow");
+        }
     }
 
     /**
@@ -208,9 +302,9 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       // The solution vector is ordered, such that the liquid phase is the first phase and the gas
       // phase is the second phase.
       auto initial_condition =
-        std::make_shared<InitialField<dim, number>>(initial_conditions.gas,
-                                                    initial_conditions.liquid,
-                                                    false /*gas_phase_is_first*/);
+        std::make_shared<ConservedVariablesInitialField<dim, number>>(initial_conditions.gas,
+                                                                      initial_conditions.liquid,
+                                                                      false /*gas_phase_is_first*/);
       this->attach_initial_condition(initial_condition, "compressible_multiphase_flow");
 
       // set level-set function
@@ -234,7 +328,8 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     void
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const override
     {
-      InitialField<dim, number> reference_values(initial_conditions.gas, initial_conditions.liquid);
+      ConservedVariablesInitialField<dim, number> reference_values(initial_conditions.gas,
+                                                                   initial_conditions.liquid);
       this->print_relative_norm(generic_data_out, reference_values, "error");
     }
 

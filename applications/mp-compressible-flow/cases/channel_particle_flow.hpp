@@ -41,10 +41,12 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       else if (component == 1)
         return 0.4;
       else if (component == dim + 1)
-        return 3.097857142857143;
+        return energy_inflow;
       else
         return 0.;
     }
+
+    static constexpr number energy_inflow = 3.097857142857143;
   };
 
   /**
@@ -92,12 +94,14 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     void
     set_boundary_conditions() override
     {
-      auto inflow_outflow_solution =
+      auto inflow_solution =
         std::make_shared<InflowFlowField<dim, number>>(this->parameters.time_stepping.start_time);
+      auto outflow_solution = std::make_shared<dealii::Functions::ConstantFunction<dim>>(
+        InflowFlowField<dim, number>::energy_inflow);
       auto dummy_solution =
         std::make_shared<InflowFlowField<dim, number>>(this->parameters.time_stepping.start_time);
-      this->attach_boundary_condition({0, inflow_outflow_solution}, "inflow", "compressible_flow");
-      this->attach_boundary_condition({1, inflow_outflow_solution},
+      this->attach_boundary_condition({0, inflow_solution}, "inflow", "compressible_flow");
+      this->attach_boundary_condition({1, outflow_solution},
                                       "outflow_fixed_energy",
                                       "compressible_flow");
       // particle surface
