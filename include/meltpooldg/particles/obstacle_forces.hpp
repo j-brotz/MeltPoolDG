@@ -14,62 +14,61 @@ namespace MeltPoolDG
   class ObstacleField;
 
   /**
-   * @brief Interface class for forces acting on obstacles using type erasure.
+   * @brief Interface class for loads acting on obstacles using type erasure.
    *
-   * This interface enables uniform handling of different force models by abstracting them through
-   * type erasure. Any force acting on the obstacles in an obstacle field must conform to this
-   * interface.
+   * This interface enables uniform handling of different load models by abstracting them through
+   * type erasure. Any load acting on the obstacles in an obstacle field must conform to this
+   * interface. Hereby a load can be both forces and torques.
    *
-   * The only requirement for a class implementing a force model is to provide a member function
+   * The only requirement for a class implementing a load model is to provide a member function
    * named
-   * @p add_force_to_obstacles() that:
+   * @p add_load_to_obstacles() that:
    * - Takes a @p MeltPoolDG::ObstacleField as its argument. This object provides
-   *   access to all necessary data describing the obstacles. Also the forces are added to the
-   *   corresponing obstacles in this field.
+   *   access to all necessary data describing the obstacles. Also the loads are added to the
+   *   corresponding obstacles in this field.
    */
   template <int dim, typename number, typename ObstacleType>
-  struct ObstacleForce
+  struct ObstacleLoad
   {
   private:
-    struct ObstacleForceConcept
+    struct ObstacleLoadConcept
     {
-      virtual ~ObstacleForceConcept() = default;
+      virtual ~ObstacleLoadConcept() = default;
 
       virtual void
-      add_force_to_obstacles(ObstacleField<dim, number, ObstacleType> &obstacle_field) const = 0;
+      add_load_to_obstacles(ObstacleField<dim, number, ObstacleType> &obstacle_field) const = 0;
     };
 
-    template <typename ObstacleForceType>
-    struct ObstacleForceModel final : public ObstacleForceConcept
+    template <typename ObstacleLoadType>
+    struct ObstacleLoadModel final : public ObstacleLoadConcept
     {
-      explicit ObstacleForceModel(ObstacleForceType &&obstacle_force)
-        : obstacle_force(std::move(obstacle_force))
+      explicit ObstacleLoadModel(ObstacleLoadType &&obstacle_load)
+        : obstacle_load(std::move(obstacle_load))
       {}
 
       void
-      add_force_to_obstacles(
-        ObstacleField<dim, number, ObstacleType> &obstacle_field) const override
+      add_load_to_obstacles(ObstacleField<dim, number, ObstacleType> &obstacle_field) const override
       {
-        obstacle_force.add_force_to_obstacles(obstacle_field);
+        obstacle_load.add_load_to_obstacles(obstacle_field);
       }
 
     private:
-      const ObstacleForceType obstacle_force;
+      const ObstacleLoadType obstacle_load;
     };
 
-    std::unique_ptr<ObstacleForceConcept> obstacle_force_pimpl;
+    std::unique_ptr<ObstacleLoadConcept> obstacle_load_pimpl;
 
   public:
-    template <typename ObstacleForceType>
-    explicit ObstacleForce(ObstacleForceType &&obstacle_force)
-      : obstacle_force_pimpl(
-          std::make_unique<ObstacleForceModel<ObstacleForceType>>(std::move(obstacle_force)))
+    template <typename ObstacleLoadType>
+    explicit ObstacleLoad(ObstacleLoadType &&obstacle_load)
+      : obstacle_load_pimpl(
+          std::make_unique<ObstacleLoadModel<ObstacleLoadType>>(std::move(obstacle_load)))
     {}
 
     void
-    add_force_to_obstacles(ObstacleField<dim, number, ObstacleType> &obstacle_field) const
+    add_load_to_obstacles(ObstacleField<dim, number, ObstacleType> &obstacle_field) const
     {
-      obstacle_force_pimpl->add_force_to_obstacles(obstacle_field);
+      obstacle_load_pimpl->add_load_to_obstacles(obstacle_field);
     }
   };
 
@@ -97,7 +96,9 @@ namespace MeltPoolDG
      * field and adds the force contribution to the corresponding obstacle force property.
      *
      * The force is computed as:
+     * \[
      * F = -g * m
+     * \]
      * where is the gravitational constant and is the mass of the obstacle. The force is
      * applied in the negative direction of the last axis.
      *
@@ -105,7 +106,7 @@ namespace MeltPoolDG
      * gravitational forces are to be computed.
      */
     void
-    add_force_to_obstacles(const ObstacleField<dim, number, ObstacleType> &obstacle_field) const
+    add_load_to_obstacles(ObstacleField<dim, number, ObstacleType> &obstacle_field) const
     {
       for (dealii::Particles::ParticleAccessor<dim> obstacle :
            obstacle_field.get_particle_handler())
@@ -113,7 +114,7 @@ namespace MeltPoolDG
           dealii::Tensor<1, dim, number> force;
           force[dim - 1] = -gravitational_constant *
                            ObstacleType::get_property(obstacle, ObstacleType::Properties::mass);
-          ObstacleType::add_force(force, obstacle);
+          ObstacleType::accumulate_force(force, obstacle);
         }
     }
 

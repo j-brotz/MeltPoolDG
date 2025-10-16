@@ -41,6 +41,21 @@ namespace MeltPoolDG::Journal
              const unsigned int        extra_size     = 0);
 
   /**
+   * @brief Prints a formatted header consisting of a centered text surrounded
+   * by decorative lines above and below.
+   *
+   * @param[in] pcout Conditional output stream used for printing.
+   * @param[in] header Text of the header to be printed.
+   */
+  inline void
+  print_header(const ConditionalOStream &pcout, const std::string &header)
+  {
+    print_decoration_line(pcout);
+    print_line(pcout, std::string(0.5 * (max_text_width - header.size()), ' ') + header);
+    print_decoration_line(pcout);
+  }
+
+  /**
    * Shorthand to print end of the simulation.
    *
    * @param[in] pcout ConditionalOStream to print the text.
