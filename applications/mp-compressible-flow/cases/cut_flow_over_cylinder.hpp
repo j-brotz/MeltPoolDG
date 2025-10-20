@@ -42,10 +42,12 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       else if (component == 1)
         return 0.1;
       else if (component == dim + 1)
-        return 3.0228571429;
+        return energy;
       else
         return 0.;
     }
+
+    static constexpr number energy = 3.0228571429;
   };
 
   /**
@@ -104,13 +106,15 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     void
     set_boundary_conditions() override
     {
-      auto inflow_outflow_solution = std::make_shared<FlowField<dim, number>>();
-      auto dummy_solution          = std::make_shared<FlowField<dim, number>>();
-      this->attach_boundary_condition({BoundaryID::inflow, inflow_outflow_solution},
+      auto inflow_solution = std::make_shared<FlowField<dim, number>>();
+      auto outflow_solution =
+        std::make_shared<dealii::Functions::ConstantFunction<dim>>(FlowField<dim, number>::energy);
+      auto dummy_solution = std::make_shared<FlowField<dim, number>>();
+      this->attach_boundary_condition({BoundaryID::inflow, inflow_solution},
                                       "inflow",
                                       "compressible_flow");
       this->attach_boundary_condition({BoundaryID::subsonic_outflow_with_fixed_energy,
-                                       inflow_outflow_solution},
+                                       outflow_solution},
                                       "outflow_fixed_energy",
                                       "compressible_flow");
       this->attach_boundary_condition({BoundaryID::slip_wall, dummy_solution},

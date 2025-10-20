@@ -74,8 +74,12 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
                   const auto mask = brinkman_scratch_data.mask_function(phi.quadrature_point(q),
                                                                         global_particle_properties,
                                                                         src_handle);
-                  force =
-                    mask / brinkman_scratch_data.data.permeability * fluid_momentum * phi.JxW(q);
+                  force           = mask / brinkman_scratch_data.data.permeability *
+                          (fluid_momentum -
+                           w_q[0] * ObstacleType::get_velocity(global_particle_properties,
+                                                               src_handle,
+                                                               phi.quadrature_point(q))) *
+                          phi.JxW(q);
                   dealii::Tensor<1, dim, number> summed_force;
 
                   for (int i = 0; i < dim; ++i)
@@ -91,7 +95,7 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
   dealii::Tensor<1, dim, number> particle_force_dummy;
   matrix_free.cell_loop(local_apply_cell, particle_force_dummy, solution);
 
-  // Step 3: Brodcast local force results and accumulate them on all processes. This results in
+  // Step 3: Broadcast local force results and accumulate them on all processes. This results in
   // the final fluid force on the particles.
   for (unsigned int src_handle = 0; src_handle < global_particle_properties.n_registered_slots();
        ++src_handle)

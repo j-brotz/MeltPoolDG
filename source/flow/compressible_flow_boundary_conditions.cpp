@@ -166,12 +166,9 @@ namespace MeltPoolDG::Flow
           p_dyn += w_m[i] * w_m[i];
 
         p_dyn /= (w_m[0] * 2.);
-        const unsigned int            component_offset = is_gas_phase ? 0 : dim + 2;
-        const VectorizedArray<number> pressure =
-          get_boundary_value(boundary_id,
-                             BoundaryType::subsonic_outflow_fixed_pressure,
-                             q_point,
-                             dim + 1 + component_offset);
+        const unsigned int            component_offset = is_gas_phase ? 0 : 1;
+        const VectorizedArray<number> pressure         = get_boundary_value(
+          boundary_id, BoundaryType::subsonic_outflow_fixed_pressure, q_point, component_offset);
 
         // consider equation of state for computation of inner energy from given pressure
         const VectorizedArray<number> inner_energy =
@@ -186,11 +183,11 @@ namespace MeltPoolDG::Flow
         w_p      = w_m;
         grad_w_p = -grad_w_m;
         // Dirichlet
-        const unsigned int component_offset = is_gas_phase ? 0 : dim + 2;
+        const unsigned int component_offset = is_gas_phase ? 0 : 1;
         w_p[dim + 1]                        = get_boundary_value(boundary_id,
                                           BoundaryType::subsonic_outflow_fixed_energy,
                                           q_point,
-                                          dim + 1 + component_offset);
+                                          component_offset);
         grad_w_p[dim + 1]                   = grad_w_m[dim + 1];
       }
     else
@@ -312,7 +309,7 @@ namespace MeltPoolDG::Flow
         w_p[dim + 1] = get_boundary_value(boundary_id,
                                           BoundaryType::subsonic_outflow_fixed_pressure,
                                           q_point,
-                                          dim + 1) /
+                                          0) /
                          (gamma - 1.) +
                        p_dyn;
         grad_w_p[dim + 1]       = grad_w_m[dim + 1];
@@ -338,10 +335,8 @@ namespace MeltPoolDG::Flow
         grad_delta_w_p = -grad_delta_w_m;
 
         // Dirichlet
-        w_p[dim + 1] = get_boundary_value(boundary_id,
-                                          BoundaryType::subsonic_outflow_fixed_energy,
-                                          q_point,
-                                          dim + 1);
+        w_p[dim + 1] =
+          get_boundary_value(boundary_id, BoundaryType::subsonic_outflow_fixed_energy, q_point, 0);
 
         grad_w_p[dim + 1]       = grad_w_m[dim + 1];
         delta_w_p[dim + 1]      = 0.0;
