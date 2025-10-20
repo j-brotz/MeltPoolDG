@@ -146,6 +146,37 @@ namespace MeltPoolDG
     print_accumulated_obstacle_force_norm(const dealii::ConditionalOStream pout) const;
 
     /**
+     * @brief Performs the objects deserialization.
+     *
+     * This function forwards the call to dealii::ParticleHandler::deserialize(). See the
+     * documentation of that function for further details.
+     */
+    void
+    deserialize();
+
+    /**
+     * @brief Serializes the internal state of the class.
+     *
+     * This function forwards the call to dealii::ParticleHandler::serialize(). See the
+     * documentation of that function for further details.
+     *
+     * @param ar       The archive used for serialization or deserialization.
+     * @param version  The serialization version.
+     */
+    template <class Archive>
+    void
+    serialize(Archive &ar, const unsigned int version);
+
+    /**
+     * @brief Prepares this object for serialization.
+     *
+     * This function forwards the call to dealii::ParticleHandler::prepare_for_serialization(). See
+     * the documentation of that function for further details.
+     */
+    void
+    prepare_for_serialization();
+
+    /**
      * @brief Return a reference to the underlying particle handler of this object.
      *
      * @return The used particle handler of the current object.
@@ -219,4 +250,12 @@ namespace MeltPoolDG
     /// MPI communicator used for parallel operations on the obstacle field.
     MPI_Comm mpi_communicator;
   };
+
+  template <int dim, typename number, typename ObstacleType>
+  template <class Archive>
+  void
+  ObstacleField<dim, number, ObstacleType>::serialize(Archive &ar, const unsigned int version)
+  {
+    obstacle_handler.serialize(ar, version);
+  }
 } // namespace MeltPoolDG

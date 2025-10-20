@@ -8,6 +8,7 @@
 #include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/amr_indicators.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
+#include <meltpooldg/utilities/restart.hpp>
 
 #include <memory>
 #include <utility>
@@ -35,12 +36,31 @@ namespace MeltPoolDG
     void
     run();
 
+    /**
+     * @brief Serializes the internal state of this class using the given archive.
+     *
+     * This function handles the serialization of the internal data members necessary to reconstruct
+     * the class state, excluding the triangulation and solution vector(s).
+     *
+     * @param ar       The archive used for serialization or deserialization.
+     * @param version  The serialization version (currently unused).
+     *
+     * @note The triangulation and associated solution fields are not serialized here. They are managed
+     * separately through deal.II's SolutionTransfer mechanism within the functions
+     * save_state_to_restart_file() and load_state_from_restart_file().
+     */
+    template <class Archive>
+    void
+    serialize(Archive &ar, const unsigned int version);
+
   private:
     /**
      * @brief Set up all dof related data.
+     *
+     * @param do_reinit If set, the flow solver is reinitialized.
      */
     void
-    setup_dof_system();
+    setup_dof_system(bool do_reinit = false);
 
     /**
      * @brief Sets up the amr indicator used to identify cells which need to be refined/coarsened.
@@ -81,6 +101,30 @@ namespace MeltPoolDG
     void
     refine_mesh();
 
+    /**
+     * @brief Saves the current simulation state to a restart file.
+     *
+     * This function performs a full checkpoint of the simulation, enabling it to be resumed later
+     * using load_state_from_restart_file().
+     *
+     * The serialization process includes:
+     *  - The internal state of this application (via Boost.Serialization of *this)
+     *  - The triangulation, DoFHandler, and associated solution vectors (via deal.II's Restart and
+     *    SolutionTransfer utilities)
+     */
+    void
+    save_state_to_restart_file();
+
+    /**
+     * @brief Restores the simulation state from a previously saved restart file.
+     *
+     * This function performs a full reconstruction of the simulation from the checkpoint files
+     * produced by save_state_to_restart_file(). It restores both the internal state of the
+     * application and the numerical state associated with the triangulation and dof handler.
+     */
+    void
+    load_state_from_restart_file();
+
     std::shared_ptr<CaseType> simulation_case;
 
     dealii::DoFHandler<dim>                                                     dof_handler;
@@ -90,6 +134,7 @@ namespace MeltPoolDG
     std::unique_ptr<Flow::DGCompressibleFlowOperation<dim, number>>             comp_flow_operation;
     std::unique_ptr<ObstacleField<dim, number, SphericalParticle<dim, number>>> obstacle_field;
     std::unique_ptr<Profiling::ProfilingMonitor<number>>                        profiling_monitor;
+    std::unique_ptr<Restart::RestartMonitor<number>>                            restart_monitor;
     AMR::BinaryOpIndicatorComposite<dim, number, std::plus>                     amr_indicator;
 
     unsigned int comp_flow_dof_idx{};
@@ -97,5 +142,16 @@ namespace MeltPoolDG
 
     std::unique_ptr<Postprocessor<dim, number>> post_processor;
   };
+
+
+  template <int dim, typename number>
+  template <class Archive>
+  void
+  CfdDemApplication<dim, number>::serialize(Archive &ar, const unsigned int /* version */)
+  {
+    ar &*time_iterator;
+    ar &*post_processor;
+    ar &*obstacle_field;
+  }
 
 } // namespace MeltPoolDG
