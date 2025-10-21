@@ -1,3 +1,6 @@
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/vectorization.h>
+
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <deal.II/matrix_free/matrix_free.h>
@@ -31,6 +34,8 @@ void
 MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstacles(
   ObstacleField<dim, number, ObstacleType> &obstacle_field) const
 {
+  constexpr unsigned torque_size = ObstacleType::size_angular_velocity;
+
   // We need a copy of the global particle properties in order to reset obstacle forces.
   auto global_particle_properties =
     obstacle_field.get_obstacle_data_structure().get_global_particle_properties();
@@ -41,9 +46,9 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
                             global_particle_properties,
                             src_handle);
 
-  // Step 1: Cell loop locally on each process to compute the local force contribution to each
-  // global particle for each MPI rank. The local force results are accumulated in the
-  // global_particle_properties variable.
+  // Step 1: Cell loop locally on each process to compute the local force and torque contribution to
+  // each global particle for each MPI rank. The local force and torque results are accumulated in
+  // the global_particle_properties variable.
   std::function<void(const dealii::MatrixFree<dim, number> &,
                      dealii::Tensor<1, dim, number> &,
                      const VectorType &,
@@ -69,7 +74,8 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
                    src_handle < global_particle_properties.n_registered_slots();
                    ++src_handle)
                 {
-                  dealii::Tensor<1, dim, dealii::VectorizedArray<number>> force;
+                  dealii::Tensor<1, dim, dealii::VectorizedArray<number>>         force;
+                  dealii::Tensor<1, torque_size, dealii::VectorizedArray<number>> torque;
 
                   const auto mask = brinkman_scratch_data.mask_function(phi.quadrature_point(q),
                                                                         global_particle_properties,
@@ -80,13 +86,39 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
                                                                src_handle,
                                                                phi.quadrature_point(q))) *
                           phi.JxW(q);
-                  dealii::Tensor<1, dim, number> summed_force;
+
+                  if constexpr (dim == 2)
+                    {
+                      auto vector_to_center_of_gravity =
+                        ObstacleType::vector_to_center_of_gravity(phi.quadrature_point(q),
+                                                                  global_particle_properties,
+                                                                  src_handle);
+                      torque[0] = -vector_to_center_of_gravity[0] * force[1] +
+                                  vector_to_center_of_gravity[1] * force[0];
+                    }
+                  if constexpr (dim == 3)
+                    {
+                      torque = -dealii::cross_product_3d(
+                        ObstacleType::vector_to_center_of_gravity(phi.quadrature_point(q),
+                                                                  global_particle_properties,
+                                                                  src_handle),
+                        force);
+                    }
+
+                  dealii::Tensor<1, dim, number>         summed_force;
+                  dealii::Tensor<1, torque_size, number> summed_torque;
 
                   for (int i = 0; i < dim; ++i)
                     summed_force[i] = force[i].sum();
+                  for (unsigned i = 0; i < torque_size; ++i)
+                    summed_torque[i] = torque[i].sum();
+
                   ObstacleType::accumulate_force(summed_force,
                                                  global_particle_properties,
                                                  src_handle);
+                  ObstacleType::accumulate_torque(summed_torque,
+                                                  global_particle_properties,
+                                                  src_handle);
                 }
             }
         }
@@ -95,20 +127,26 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
   dealii::Tensor<1, dim, number> particle_force_dummy;
   matrix_free.cell_loop(local_apply_cell, particle_force_dummy, solution);
 
-  // Step 3: Broadcast local force results and accumulate them on all processes. This results in
-  // the final fluid force on the particles.
+  // Step 3: Broadcast local force and torque results and accumulate them on all processes. This
+  // results in the final fluid force and torque acting on the particles.
   for (unsigned int src_handle = 0; src_handle < global_particle_properties.n_registered_slots();
        ++src_handle)
     {
       dealii::Tensor<1, dim, number> local_force =
         ObstacleType::get_force(global_particle_properties, src_handle);
+      dealii::Tensor<1, torque_size, number> local_torque =
+        ObstacleType::get_torque(global_particle_properties, src_handle);
 
-      dealii::Tensor<1, dim, number> new_force;
+      dealii::Tensor<1, dim, number>         new_force;
+      dealii::Tensor<1, torque_size, number> new_torque;
 
       for (int i = 0; i < dim; ++i)
         MPI_Allreduce(&local_force[i], &new_force[i], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      for (unsigned i = 0; i < torque_size; ++i)
+        MPI_Allreduce(&local_torque[i], &new_torque[i], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
       ObstacleType::set_force(new_force, global_particle_properties, src_handle);
+      ObstacleType::set_torque(new_torque, global_particle_properties, src_handle);
     }
 
   // Step 4: Return result to actual local particles in obstacle field.
@@ -120,9 +158,14 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
         {
           if (particle.get_id() == global_particle_properties.get_properties(
                                      src_handle)[ObstacleType::Properties::particle_id])
-            ObstacleType::accumulate_force(ObstacleType::get_force(global_particle_properties,
-                                                                   src_handle),
-                                           particle);
+            {
+              ObstacleType::accumulate_force(ObstacleType::get_force(global_particle_properties,
+                                                                     src_handle),
+                                             particle);
+              ObstacleType::accumulate_torque(ObstacleType::get_torque(global_particle_properties,
+                                                                       src_handle),
+                                              particle);
+            }
         }
     }
 
