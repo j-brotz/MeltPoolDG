@@ -92,6 +92,25 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
       obstacle_handler.exchange_ghost_particles(true);
       obstacle_handler.update_ghost_particles();
     });
+
+  // Temporary: We do not want any particles to go below ground level, for that the current solution
+  // is bruteforcing them to not do so
+  for (auto &particle : obstacle_handler)
+    if (particle.get_location()[dim - 1] -
+          ObstacleType::get_property(particle, ObstacleType::Properties::radius) <
+        0)
+      {
+        particle.get_location()[dim - 1] =
+          ObstacleType::get_property(particle, ObstacleType::Properties::radius);
+        auto velocity     = ObstacleType::template get_velocity<number>(particle);
+        velocity[dim - 1] = 0;
+        ObstacleType::set_velocity(particle, velocity);
+
+
+        auto acceleration = ObstacleType::get_acceleration(particle);
+        velocity[dim - 1] = 0;
+        ObstacleType::set_acceleration(particle, acceleration);
+      }
 }
 
 

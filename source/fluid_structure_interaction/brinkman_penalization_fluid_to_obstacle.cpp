@@ -93,6 +93,7 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
                         ObstacleType::vector_to_center_of_gravity(phi.quadrature_point(q),
                                                                   global_particle_properties,
                                                                   src_handle);
+
                       torque[0] = -vector_to_center_of_gravity[0] * force[1] +
                                   vector_to_center_of_gravity[1] * force[0];
                     }

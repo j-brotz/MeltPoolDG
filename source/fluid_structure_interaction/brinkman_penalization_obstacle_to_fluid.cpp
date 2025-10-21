@@ -5,7 +5,7 @@
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
-#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
+#include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_obstacle_to_fluid.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_util.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
@@ -17,7 +17,7 @@ template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>::
   BrinkmanPenalizationResidualContribution(
     const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-    const BrinkmanPenalizationData<number>         &brinkman_penalization_data,
+    const FluidStructureInteractionData<number>    &brinkman_penalization_data,
     typename BrinkmanPenalizationCellScratchData<dim, number, ObstacleType>::MaskFunctionType
       mask_function)
   : brinkman_cell_scratch_data(obstacle_handler,
@@ -29,7 +29,8 @@ template <int dim, typename number, typename ObstacleType>
 void
 MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>::cell_operation(
   const dealii::MatrixFree<dim, number> &matrix_free,
-  const unsigned int                     cell_batch_id)
+  const unsigned int                     cell_batch_id,
+  const unsigned int /*dof_idx*/)
 {
   find_relevant_obstacles_in_cell_batch<dim, number, ObstacleType>(brinkman_cell_scratch_data,
                                                                    matrix_free,
@@ -77,7 +78,7 @@ template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>::
   BrinkmanPenalizationJacobianContribution(
     const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-    const BrinkmanPenalizationData<number>         &brinkman_penalization_data,
+    const FluidStructureInteractionData<number>    &brinkman_penalization_data,
     typename BrinkmanPenalizationCellScratchData<dim, number, ObstacleType>::MaskFunctionType
       mask_function)
   : brinkman_cell_scratch_data(obstacle_handler,

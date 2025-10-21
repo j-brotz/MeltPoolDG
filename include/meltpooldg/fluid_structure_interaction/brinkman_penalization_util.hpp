@@ -3,7 +3,7 @@
 #include <deal.II/particles/particle_accessor.h>
 
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
-#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
+#include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 
 #include <functional>
@@ -57,7 +57,7 @@ namespace MeltPoolDG
 
     BrinkmanPenalizationCellScratchData(
       const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-      const BrinkmanPenalizationData<number>         &brinkman_penalization_data,
+      const FluidStructureInteractionData<number>    &brinkman_penalization_data,
       MaskFunctionType                                mask_function =
         discontinuous_mask_function<dim, VectorizedArrayType, ObstacleType>)
       : relevant_obstacles(ObstacleType::n_obstacle_properties)
@@ -83,7 +83,7 @@ namespace MeltPoolDG
     const ObstacleField<dim, number, ObstacleType> &obstacle_handler;
 
     /// Data structure containing parameters required for computing the Brinkman penalization term.
-    const BrinkmanPenalizationData<number> &data;
+    const FluidStructureInteractionData<number> &data;
 
     /// Mask function used in the computation of the Brinkman penalization term. The default
     /// implementation returns 1.0 if the point lies inside the obstacle's radius, and 0.0

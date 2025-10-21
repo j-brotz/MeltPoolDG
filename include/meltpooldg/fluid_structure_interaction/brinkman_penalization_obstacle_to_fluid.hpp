@@ -5,7 +5,7 @@
 
 #include <deal.II/matrix_free/matrix_free.h>
 
-#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
+#include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_util.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 
@@ -47,7 +47,7 @@ namespace MeltPoolDG
      */
     BrinkmanPenalizationResidualContribution(
       const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-      const BrinkmanPenalizationData<number>         &brinkman_penalization_data,
+      const FluidStructureInteractionData<number>    &brinkman_penalization_data,
       typename BrinkmanPenalizationCellScratchData<dim, number, ObstacleType>::MaskFunctionType
         mask_function =
           static_cast<typename BrinkmanPenalizationCellScratchData<dim, number, ObstacleType>::
@@ -64,10 +64,12 @@ namespace MeltPoolDG
      *
      * @param matrix_free The MatrixFree object relevant for the cell batch.
      * @param cell_batch_id The index of the cell batch to process.
+     * @param dof_idx Index of the relevant dof handler in the matrix-free object.
      */
     void
     cell_operation(const dealii::MatrixFree<dim, number> &matrix_free,
-                   const unsigned int                     cell_batch_id) override;
+                   const unsigned int                     cell_batch_id,
+                   const unsigned int                     dof_idx) override;
 
     /**
      * @brief Computes the Brinkman penalty term at the specified (vectorized) points, typically
@@ -126,7 +128,7 @@ namespace MeltPoolDG
      */
     BrinkmanPenalizationJacobianContribution(
       const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-      const BrinkmanPenalizationData<number>         &brinkman_penalization_data,
+      const FluidStructureInteractionData<number>    &brinkman_penalization_data,
       typename BrinkmanPenalizationCellScratchData<dim, number, ObstacleType>::MaskFunctionType
         mask_function =
           static_cast<typename BrinkmanPenalizationCellScratchData<dim, number, ObstacleType>::

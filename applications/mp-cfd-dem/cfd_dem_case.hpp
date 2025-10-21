@@ -8,7 +8,7 @@
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_material_data.hpp>
-#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
+#include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/particles/obstacle_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/time_integration/time_stepping_data.hpp>
@@ -79,7 +79,7 @@ namespace MeltPoolDG
 
     AdaptiveMeshingData<number>                      amr;
     BaseData                                         base;
-    BrinkmanPenalizationData<number>                 brinkman_penalization_data;
+    FluidStructureInteractionData<number>            brinkman_penalization_data;
     Flow::CompressibleFlowData<number>               flow;
     Flow::CompressibleFluidMaterialPhaseData<number> material;
     TimeIntegration::TimeSteppingData<number>        time_stepping;

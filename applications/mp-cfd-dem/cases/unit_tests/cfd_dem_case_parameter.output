@@ -32,8 +32,8 @@
     },
     "brinkman penalization":
     {
-        "permeability": "0",
-        "porosity": "0"
+        "coupling method": "brinkman_penalty",
+        "permeability": "0"
     },
     "compressible navier stokes":
     {

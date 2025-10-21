@@ -53,7 +53,7 @@ add_penalty_vector(
   const dealii::MatrixFree<dim, number>                    &matrix_free,
   const dealii::LinearAlgebra::distributed::Vector<number> &flow_solution,
   dealii::LinearAlgebra::distributed::Vector<number>       &dst,
-  const BrinkmanPenalizationData<number>                   &data,
+  const FluidStructureInteractionData<number>              &data,
   const typename BrinkmanPenalizationCellScratchData<dim, number, ObstacleType>::MaskFunctionType
                                                  &mask_function,
   const ObstacleField<dim, number, ObstacleType> &obstacle_field,
@@ -425,7 +425,7 @@ private:
   Flow::CompressibleFlowData<number>                              flow_data;
   Flow::CompressibleFluidMaterialPhaseData<number>                flow_material;
   dealii::AffineConstraints<number>                               constraints;
-  BrinkmanPenalizationData<number>                                brinkman_penalization_data;
+  FluidStructureInteractionData<number>                           brinkman_penalization_data;
 
   unsigned                      comp_flow_dof_idx;
   unsigned                      comp_flow_quad_idx;

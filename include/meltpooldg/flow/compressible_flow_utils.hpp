@@ -134,10 +134,12 @@ namespace MeltPoolDG::Flow
      *
      * @param matrix_free MatrixFree object providing access to the degrees of freedom and geometry.
      * @param cell_batch_id Index of the current cell batch.
+     * @param dof_idx Index of the relevant dof handler in the matrix-free object.
      */
     virtual void
     cell_operation(const dealii::MatrixFree<dim, number> &matrix_free,
-                   unsigned int                           cell_batch_id) = 0;
+                   unsigned int                           cell_batch_id,
+                   const unsigned int                     dof_idx) = 0;
 
     /**
      * @brief Function called once per batch of quadrature points to compute the external force
