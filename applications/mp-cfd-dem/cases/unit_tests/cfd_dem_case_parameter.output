@@ -128,6 +128,15 @@
         "time type": "real",
         "write time step size": "10"
     },
+    "restart":
+    {
+        "directory": "",
+        "load": "-1",
+        "prefix": "restart",
+        "save": "-1",
+        "time type": "real",
+        "write time step size": "0"
+    },
     "time stepping":
     {
         "end time": "1",

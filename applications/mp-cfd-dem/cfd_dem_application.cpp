@@ -7,8 +7,10 @@
 #include <deal.II/grid/tria.h>
 
 #include "meltpooldg/particles/obstacle_forces.hpp"
+#include "meltpooldg/utilities/attach_vectors.hpp"
 #include "meltpooldg/utilities/cell_monitor.hpp"
 #include "meltpooldg/utilities/journal.hpp"
+#include "meltpooldg/utilities/restart.hpp"
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_fluid_to_obstacle.hpp>
@@ -20,6 +22,10 @@
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+
+#include <functional>
 #include <memory>
 
 #include "cfd_dem_case.hpp"
@@ -53,6 +59,9 @@ namespace MeltPoolDG
   CfdDemApplication<dim, number>::run()
   {
     initialize();
+
+    if (restart_monitor->do_load())
+      load_state_from_restart_file();
 
     Journal::print_start(scratch_data->get_pcout(1));
 
@@ -101,6 +110,9 @@ namespace MeltPoolDG
           }
 
         refine_mesh();
+
+        if (restart_monitor->do_save())
+          save_state_to_restart_file();
       }
 
     // always print timing statistics
@@ -115,7 +127,7 @@ namespace MeltPoolDG
 
   template <int dim, typename number>
   void
-  CfdDemApplication<dim, number>::setup_dof_system()
+  CfdDemApplication<dim, number>::setup_dof_system(const bool do_reinit)
   {
     // distribute DoFs
     comp_flow_operation->distribute_dofs(dof_handler);
@@ -127,6 +139,9 @@ namespace MeltPoolDG
 
     // create the matrix-free object
     scratch_data->build(true, true, false, false);
+
+    if (do_reinit)
+      comp_flow_operation->reinit();
 
     // print mesh information
     {
@@ -281,6 +296,11 @@ namespace MeltPoolDG
                                              property_names,
                                              property_component_interpretations);
 
+    // initialize restart monitor
+    restart_monitor =
+      std::make_unique<Restart::RestartMonitor<number>>(this->simulation_case->parameters.restart,
+                                                        *time_iterator);
+
     // initialize profiling
     if (simulation_case->parameters.profiling.enable)
       profiling_monitor =
@@ -381,11 +401,68 @@ namespace MeltPoolDG
                      pre);
   }
 
+  template <int dim, typename number>
+  void
+  CfdDemApplication<dim, number>::load_state_from_restart_file()
+  {
+    Journal::print_line(scratch_data->get_pcout(1), "Loading state from restart file.");
+
+    const std::string load_prefix = this->simulation_case->parameters.restart.prefix + "_" +
+                                    std::to_string(this->simulation_case->parameters.restart.load);
+
+    {
+      std::ifstream                 ifs(load_prefix + "_problem.restart");
+      boost::archive::text_iarchive ia(ifs);
+      ia >> *this;
+    }
+
+    const std::function<void(DoFHandlerAndVectorDataType<dim, VectorType> &)> attach_vectors =
+      [&](DoFHandlerAndVectorDataType<dim, VectorType> &in) {
+        in.emplace_back(&scratch_data->get_dof_handler(comp_flow_dof_idx),
+                        [&](std::vector<VectorType *> &vec_in) {
+                          vec_in.push_back(&comp_flow_operation->get_solution());
+                        });
+      };
+
+    std::function<void()> setup_dof_system = [&]() { this->setup_dof_system(true); };
+
+    std::function<void()> post = [&]() { obstacle_field->deserialize(); };
+
+    Restart::deserialize_internal(attach_vectors, post, setup_dof_system, load_prefix);
+  }
+
+  template <int dim, typename number>
+  void
+  CfdDemApplication<dim, number>::save_state_to_restart_file()
+  {
+    Journal::print_line(scratch_data->get_pcout(1), "Saving state to restart file.");
+
+    restart_monitor->prepare_save();
+    obstacle_field->prepare_for_serialization();
+
+    std::ofstream ofs(simulation_case->parameters.restart.prefix + "_0_problem.restart");
+    {
+      boost::archive::text_oarchive oa(ofs);
+      oa << *this;
+    }
+
+    const std::function<void(DoFHandlerAndVectorDataType<dim, VectorType> &)> attach_vectors =
+      [&](DoFHandlerAndVectorDataType<dim, VectorType> &in) {
+        in.emplace_back(&scratch_data->get_dof_handler(comp_flow_dof_idx),
+                        [&](std::vector<VectorType *> &vec_in) {
+                          vec_in.push_back(&comp_flow_operation->get_solution());
+                        });
+      };
+
+    const std::string save_prefix = this->simulation_case->parameters.restart.prefix + "_0";
+
+    Restart::serialize_internal(attach_vectors, save_prefix);
+  }
 
   template class CfdDemApplication<2, double>;
   template class CfdDemApplication<3, double>;
-
 } // namespace MeltPoolDG
+
 int
 main(int argc, char *argv[])
 {

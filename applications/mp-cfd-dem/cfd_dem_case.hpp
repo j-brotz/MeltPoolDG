@@ -14,6 +14,7 @@
 #include <meltpooldg/time_integration/time_stepping_data.hpp>
 #include <meltpooldg/utilities/amr_data.hpp>
 #include <meltpooldg/utilities/profiling_data.hpp>
+#include <meltpooldg/utilities/restart.hpp>
 
 namespace MeltPoolDG
 {
@@ -33,6 +34,7 @@ namespace MeltPoolDG
       obstacle_data.add_parameters(prm);
       output.add_parameters(prm);
       profiling.add_parameters(prm);
+      restart.add_parameters(prm);
     }
 
     void
@@ -42,9 +44,11 @@ namespace MeltPoolDG
       output.post(time_stepping.time_step_size, parameter_filename);
       flow.post(base.fe, base.verbosity_level);
       material.post(true /*is_gas*/);
+      restart.post(output.directory);
 
       // check input parameters for validity
       profiling.check_input_parameters(time_stepping.time_step_size);
+      restart.check_input_parameters(time_stepping.time_step_size);
     }
 
   public:
@@ -57,6 +61,7 @@ namespace MeltPoolDG
     ObstacleData                                     obstacle_data;
     OutputData<number>                               output;
     Profiling::ProfilingData<number>                 profiling;
+    Restart::RestartData<number>                     restart;
   };
 
   template <int dim, typename number>

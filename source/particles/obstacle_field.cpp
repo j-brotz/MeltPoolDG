@@ -112,6 +112,12 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell_batc
   return obstacle_data_structure.get_obstacles_in_cell_batch(dst, matrix_free, cell_batch_id);
 }
 
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::prepare_for_serialization()
+{
+  obstacle_handler.prepare_for_serialization();
+}
 
 template <int dim, typename number, typename ObstacleType>
 void
@@ -151,6 +157,14 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::print_accumulated_obstacle
   output << std::scientific << std::setprecision(4)
          << "accumulated norm: " << accumulated_force.norm();
   Journal::print_line(pout, output.str(), "obstacle_force");
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::deserialize()
+{
+  // Assumes that triangulation.load() has already been called!
+  obstacle_handler.deserialize();
 }
 
 template <int dim, typename number, typename ObstacleType>
