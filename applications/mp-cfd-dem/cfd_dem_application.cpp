@@ -314,7 +314,8 @@ namespace MeltPoolDG
                                                  const number       current_time)
   {
     if (not post_processor->is_output_timestep(time_step, current_time) and
-        not simulation_case->parameters.output.do_user_defined_postprocessing)
+        not simulation_case->parameters.output.do_user_defined_postprocessing and
+        not time_iterator->is_finished())
       return;
 
     const auto attach_output_vectors = [&](GenericDataOut<dim, number> &data_out) {

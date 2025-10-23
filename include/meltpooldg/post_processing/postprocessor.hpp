@@ -64,8 +64,6 @@ namespace MeltPoolDG
     {
       if (n_time_step == 0)
         return true;
-      if (std::abs(time - end_time) <= 1e-10)
-        return true;
       if (time - time_at_last_output >= output_data.write_time_step_size)
         return true;
       return not(n_time_step % output_data.write_frequency);

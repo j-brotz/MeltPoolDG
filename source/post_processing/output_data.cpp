@@ -66,7 +66,7 @@ namespace MeltPoolDG
       prm.add_parameter("write time step size",
                         write_time_step_size,
                         "Write output output every given time step. If this parameter is "
-                        "set, the output write frequency is overwritten.");
+                        "set, the output write frequency is deactivated.");
       prm.add_parameter("output variables",
                         output_variables,
                         "Specify variables that you request to output.");
@@ -94,8 +94,7 @@ namespace MeltPoolDG
           write_time_step_size >= time_step_size,
           dealii::ExcMessage(
             "The time step size for writing output must be equal or larger than the simulation time step size."));
-        write_frequency =
-          write_time_step_size / time_step_size; //@todo: adapt in case of adaptive time stepping
+        write_frequency = std::numeric_limits<int>::max();
       }
 
 
