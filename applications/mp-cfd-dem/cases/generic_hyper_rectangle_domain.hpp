@@ -1,5 +1,6 @@
 #pragma once
 
+#include <deal.II/base/bounding_box.h>
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_parser.h>
@@ -10,6 +11,7 @@
 #include <deal.II/grid/grid_generator.h>
 
 #include <meltpooldg/flow/compressible_flow_boundary_conditions.hpp>
+#include <meltpooldg/utilities/amr_regions.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 
 #include <memory>
@@ -278,17 +280,21 @@ namespace MeltPoolDG::Simulation::CfdDem
     void
     create_spatial_discretization() override
     {
+      auto create_point_from_container =
+        []<typename T>(const T &container) -> dealii::Point<dim, number> {
+        dealii::Point<dim, number> point;
+        if constexpr (dim == 2)
+          point = dealii::Point<dim, number>(container[0], container[1]);
+        else if constexpr (dim == 3)
+          point = dealii::Point<dim, number>(container[0], container[1], container[2]);
+        return point;
+      };
+
       this->triangulation =
         std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
-      dealii::Point<dim, number> dimensions;
-      if constexpr (dim == 2)
-        dimensions = dealii::Point<dim, number>(scenario_data.domain_dimensions[0],
-                                                scenario_data.domain_dimensions[1]);
-      else if constexpr (dim == 3)
-        dimensions = dealii::Point<dim, number>(scenario_data.domain_dimensions[0],
-                                                scenario_data.domain_dimensions[1],
-                                                scenario_data.domain_dimensions[2]);
+      dealii::Point<dim, number> dimensions =
+        create_point_from_container(scenario_data.domain_dimensions);
 
       dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
                                                         scenario_data.domain_base_discretization,
@@ -297,6 +303,31 @@ namespace MeltPoolDG::Simulation::CfdDem
                                                         true);
 
       this->triangulation->refine_global(this->parameters.base.global_refinements);
+
+      // Perform additional mesh refinement in the user-defined region of interest
+      if (scenario_data.region_of_interest_refinement_times > 0)
+        {
+          AssertThrow(scenario_data.region_of_interest_corner[0].size() == dim &&
+                        scenario_data.region_of_interest_corner[1].size() == dim,
+                      dealii::ExcMessage(
+                        "Invalid size for region-of-interest corner points. "
+                        "Both points must have size " +
+                        std::to_string(dim) + ", but got sizes " +
+                        std::to_string(scenario_data.region_of_interest_corner[0].size()) +
+                        " and " +
+                        std::to_string(scenario_data.region_of_interest_corner[1].size()) + "."));
+
+
+          std::vector<AMR::AMRRegion<dim, number>> regions;
+          regions.emplace_back(dealii::BoundingBox<dim, number>(
+            {create_point_from_container(scenario_data.region_of_interest_corner[0]),
+             create_point_from_container(scenario_data.region_of_interest_corner[1])}));
+          for (unsigned i = 0; i < scenario_data.region_of_interest_refinement_times; ++i)
+            {
+              AMR::set_refinement_flags_in_regions<dim, number>(*this->triangulation, regions);
+              this->triangulation->execute_coarsening_and_refinement();
+            }
+        }
     }
 
     void
@@ -360,7 +391,6 @@ namespace MeltPoolDG::Simulation::CfdDem
      * Reads boundary conditions, initial conditions, and domain size parameters from
      * the user input file.
      */
-
     bool
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
@@ -404,6 +434,27 @@ namespace MeltPoolDG::Simulation::CfdDem
             "and optionally the third for the z-direction. "
             "Note: the final mesh resolution may differ depending on other parameters "
             "(e.g., global refinements).");
+          prm.enter_subsection("region of interest");
+          {
+            prm.add_parameter(
+              "first corner",
+              scenario_data.region_of_interest_corner[0],
+              "Coordinates of the bottom corner of the region of interest. "
+              "Provide comma-separated values: the first for the x-coordinate, the second for the y-coordinate, "
+              "and optionally the third for the z-coordinate.");
+            prm.add_parameter(
+              "second corner",
+              scenario_data.region_of_interest_corner[1],
+              "Coordinates of the top corner of the region of interest. "
+              "Provide comma-separated values: the first for the x-coordinate, the second for the y-coordinate, "
+              "and optionally the third for the z-coordinate.");
+            prm.add_parameter(
+              "refinements",
+              scenario_data.region_of_interest_refinement_times,
+              "Number of additional refinement levels to apply inside the defined region. "
+              "A value of zero disables region-specific refinement.");
+          }
+          prm.leave_subsection();
         }
         prm.leave_subsection();
         prm.enter_subsection("initial conditions");
@@ -498,6 +549,16 @@ namespace MeltPoolDG::Simulation::CfdDem
       /// Discretization of the domain in each dimension. The x, y, and z discretizations are given
       /// at indices 0, 1, and 2, respectively.
       std::vector<unsigned> domain_base_discretization;
+
+      /// Defines the opposite corners of an axis-aligned box in physical space. The region enclosed
+      /// by these points may be subject to additional refinement, depending on the value of
+      /// @ref region_of_interest_refinement_times.
+      std::array<std::vector<number>, 2> region_of_interest_corner;
+
+      /// If greater than zero, cells whose centers lie within the region defined by
+      /// @ref region_of_interest_corner will be refined this many additional times
+      /// beyond the global refinement level.
+      unsigned region_of_interest_refinement_times = 0;
 
     } scenario_data;
 
