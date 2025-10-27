@@ -126,9 +126,6 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compute_loads_on_obstacles
   if (loads.empty())
     return;
 
-  // Update global particle property pool in case any of the loads needs an up-to-date version.
-  obstacle_data_structure.broadcast_global_particles();
-
   // Reset current particle forces and torques
   for (dealii::Particles::ParticleAccessor<dim> obstacle : obstacle_handler)
     {
@@ -136,6 +133,9 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compute_loads_on_obstacles
       ObstacleType::set_torque(dealii::Tensor<1, ObstacleType::size_angular_velocity, number>(),
                                obstacle);
     }
+
+  // Update global particle property pool in case any of the loads needs an up-to-date version.
+  obstacle_data_structure.broadcast_global_particles();
 
   // Accumulate all forces acting on the particles
   for (const auto &load_type : loads)

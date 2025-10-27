@@ -152,6 +152,33 @@ namespace MeltPoolDG
     read_state_input(const std::string &input_data);
 
     /**
+     * This function returns a vector from the given point, towards the particle's center of
+     * gravity, i.e., the center of the particle.
+     *
+     * @param loc Starting point of the vector.
+     * @param property_pool The property pool containing the particle data.
+     * @param handle The handle identifying the specific particle within the property pool.
+     */
+    template <typename VectorizedArrayType>
+    static dealii::Tensor<1, dim, VectorizedArrayType>
+    vector_to_center_of_gravity(const dealii::Point<dim, VectorizedArrayType> &loc,
+                                dealii::Particles::PropertyPool<dim>          &property_pool,
+                                const typename dealii::Particles::PropertyPool<dim>::Handle handle);
+
+    /**
+     * This function returns a vector from the given point, towards the nearest point on the
+     * particles surface.
+     *
+     * @param loc Starting point of the vector.
+     * @param property_pool The property pool containing the particle data.
+     * @param handle The handle identifying the specific particle within the property pool.
+     */
+    template <typename VectorizedArrayType>
+    static dealii::Tensor<1, dim, VectorizedArrayType>
+    vector_to_surface(const dealii::Point<dim, VectorizedArrayType>  &loc,
+                      const dealii::Particles::ParticleAccessor<dim> &particle);
+
+    /**
      * @brief Returns the torque vector acting on the given particle.
      *
      * @param particle The particle of interest.
@@ -159,6 +186,14 @@ namespace MeltPoolDG
      */
     static dealii::Tensor<1, size_angular_velocity, number>
     get_torque(const dealii::Particles::ParticleAccessor<dim> &particle);
+
+    /**
+     * As above but operates on a property pool with a specified handle to identify where to get
+     * torque from.
+     */
+    static dealii::Tensor<1, size_angular_velocity, number>
+    get_torque(dealii::Particles::PropertyPool<dim>                 &property_pool,
+               typename dealii::Particles::PropertyPool<dim>::Handle handle);
 
     /**
      * @brief Assigns the specified torque vector to the particle by writing its components into the
@@ -172,6 +207,15 @@ namespace MeltPoolDG
                dealii::Particles::ParticleAccessor<dim>               &particle);
 
     /**
+     * As above but operates on a property pool with a specified handle to identify where to set
+     * the corresponding torque.
+     */
+    static void
+    set_torque(const dealii::Tensor<1, size_angular_velocity, number> &torque,
+               dealii::Particles::PropertyPool<dim>                   &property_pool,
+               typename dealii::Particles::PropertyPool<dim>::Handle   handle);
+
+    /**
      * @brief Accumulates the specified torque vector to the particle by adding its components into the
      * particle's property array.
      *
@@ -181,6 +225,15 @@ namespace MeltPoolDG
     static void
     accumulate_torque(const dealii::Tensor<1, size_angular_velocity, number> &torque,
                       dealii::Particles::ParticleAccessor<dim>               &particle);
+
+    /**
+     * As above but operates on a property pool with a specified handle to identify where to add the
+     * torque to.
+     */
+    static void
+    accumulate_torque(const dealii::Tensor<1, size_angular_velocity, number> &torque,
+                      dealii::Particles::PropertyPool<dim>                   &property_pool,
+                      typename dealii::Particles::PropertyPool<dim>::Handle   handle);
 
     /**
      * @brief Returns the force vector acting on the given particle.
@@ -657,6 +710,20 @@ MeltPoolDG::SphericalParticle<dim, number>::get_torque(
 }
 
 template <int dim, typename number>
+auto
+MeltPoolDG::SphericalParticle<dim, number>::get_torque(
+  dealii::Particles::PropertyPool<dim>                 &property_pool,
+  typename dealii::Particles::PropertyPool<dim>::Handle handle)
+  -> dealii::Tensor<1, size_angular_velocity, number>
+{
+  dealii::ArrayView<const number> properties = property_pool.get_properties(handle);
+  dealii::Tensor<1, size_angular_velocity, number> torque;
+  for (unsigned i = 0; i < size_angular_velocity; ++i)
+    torque[i] = properties[Properties::torque + i];
+  return torque;
+}
+
+template <int dim, typename number>
 void
 MeltPoolDG::SphericalParticle<dim, number>::set_torque(
   const dealii::Tensor<1, size_angular_velocity, number> &torque,
@@ -669,11 +736,36 @@ MeltPoolDG::SphericalParticle<dim, number>::set_torque(
 
 template <int dim, typename number>
 void
+MeltPoolDG::SphericalParticle<dim, number>::set_torque(
+  const dealii::Tensor<1, size_angular_velocity, number> &torque,
+  dealii::Particles::PropertyPool<dim>                   &property_pool,
+  typename dealii::Particles::PropertyPool<dim>::Handle   handle)
+{
+  dealii::ArrayView<number> properties = property_pool.get_properties(handle);
+  for (unsigned i = 0; i < size_angular_velocity; ++i)
+    properties[Properties::torque + i] = torque[i];
+}
+
+template <int dim, typename number>
+void
 MeltPoolDG::SphericalParticle<dim, number>::accumulate_torque(
   const dealii::Tensor<1, size_angular_velocity, number> &torque,
   dealii::Particles::ParticleAccessor<dim>               &particle)
 {
   dealii::ArrayView<number> properties = particle.get_properties();
+  for (unsigned i = 0; i < size_angular_velocity; ++i)
+    properties[Properties::torque + i] += torque[i];
+}
+
+
+template <int dim, typename number>
+void
+MeltPoolDG::SphericalParticle<dim, number>::accumulate_torque(
+  const dealii::Tensor<1, size_angular_velocity, number> &torque,
+  dealii::Particles::PropertyPool<dim>                   &property_pool,
+  typename dealii::Particles::PropertyPool<dim>::Handle   handle)
+{
+  dealii::ArrayView<number> properties = property_pool.get_properties(handle);
   for (unsigned i = 0; i < size_angular_velocity; ++i)
     properties[Properties::torque + i] += torque[i];
 }
@@ -834,6 +926,35 @@ MeltPoolDG::SphericalParticle<dim, number>::get_velocity(
                                       distance_to_center);
     }
   AssertThrow(false, dealii::ExcInternalError());
+}
+
+template <int dim, typename number>
+template <typename VectorizedArrayType>
+auto
+MeltPoolDG::SphericalParticle<dim, number>::vector_to_center_of_gravity(
+  const dealii::Point<dim, VectorizedArrayType>              &loc,
+  dealii::Particles::PropertyPool<dim>                       &property_pool,
+  const typename dealii::Particles::PropertyPool<dim>::Handle handle)
+  -> dealii::Tensor<1, dim, VectorizedArrayType>
+{
+  dealii::Point<dim, VectorizedArrayType> particle_loc;
+
+  for (int i = 0; i < dim; ++i)
+    particle_loc[i] = VectorizedArrayType(property_pool.get_location(handle)[i]);
+
+  return particle_loc - loc;
+}
+
+template <int dim, typename number>
+template <typename VectorizedArrayType>
+auto
+MeltPoolDG::SphericalParticle<dim, number>::vector_to_surface(
+  const dealii::Point<dim, VectorizedArrayType>  &loc,
+  const dealii::Particles::ParticleAccessor<dim> &particle)
+  -> dealii::Tensor<1, dim, VectorizedArrayType>
+{
+  dealii::Tensor<1, dim, VectorizedArrayType> vec_to_center = particle.get_location() - loc;
+  return (1 - get_property(Properties::radius) / vec_to_center.norm()) * vec_to_center;
 }
 
 template <int dim, typename number>
