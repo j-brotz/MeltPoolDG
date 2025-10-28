@@ -13,11 +13,15 @@
 #include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/time_integration/time_stepping_data.hpp>
 #include <meltpooldg/utilities/amr_data.hpp>
+#include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/profiling_data.hpp>
 #include <meltpooldg/utilities/restart.hpp>
 
 namespace MeltPoolDG
 {
+  /// Enum for the type of amr strategy used by the application.
+  BETTER_ENUM(AMRStrategy, char, indicator, obstacle_surface);
+
   template <typename number>
   struct CfdDemCaseParameters final : public ParametersBase
   {
@@ -35,6 +39,7 @@ namespace MeltPoolDG
       output.add_parameters(prm);
       profiling.add_parameters(prm);
       restart.add_parameters(prm);
+      add_application_specific_parameters(prm);
     }
 
     void
@@ -51,14 +56,34 @@ namespace MeltPoolDG
       restart.check_input_parameters(time_stepping.time_step_size);
     }
 
+    void
+    add_application_specific_parameters(dealii::ParameterHandler &prm)
+    {
+      prm.enter_subsection("application");
+      {
+        prm.add_parameter(
+          "amr strategies",
+          application.amr_strategies,
+          "List of comma separated AMR strategies used to determine whether cells should be refined or coarsened. "
+          "This parameter is only relevant when AMR is enabled.");
+      }
+      prm.leave_subsection();
+    }
+
   public:
+    struct
+    {
+      /// List of AMR strategies used to determine whether cells should be refined or coarsened.
+      std::vector<AMRStrategy> amr_strategies;
+    } application;
+
     AdaptiveMeshingData<number>                      amr;
     BaseData                                         base;
     BrinkmanPenalizationData<number>                 brinkman_penalization_data;
     Flow::CompressibleFlowData<number>               flow;
     Flow::CompressibleFluidMaterialPhaseData<number> material;
     TimeIntegration::TimeSteppingData<number>        time_stepping;
-    ObstacleData                                     obstacle_data;
+    ObstacleData<number>                             obstacle_data;
     OutputData<number>                               output;
     Profiling::ProfilingData<number>                 profiling;
     Restart::RestartData<number>                     restart;

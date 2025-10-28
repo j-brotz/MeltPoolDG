@@ -1,5 +1,6 @@
 
 #include <deal.II/base/conditional_ostream.h>
+#include <deal.II/base/mpi.h>
 
 #include <deal.II/grid/filtered_iterator.h>
 #include <deal.II/grid/grid_tools.h>
@@ -8,6 +9,7 @@
 
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
+#include <meltpooldg/utilities/amr_regions.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
 #include <fstream>
@@ -16,7 +18,7 @@
 
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
-  const ObstacleData               &data,
+  const ObstacleData<number>       &data,
   const dealii::Triangulation<dim> &triangulation,
   const dealii::Mapping<dim>       &mapping)
   : data(data)
@@ -35,7 +37,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
 
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
-  const ObstacleData                      &data,
+  const ObstacleData<number>              &data,
   const dealii::Triangulation<dim>        &triangulation,
   const dealii::Mapping<dim>              &mapping,
   std::vector<dealii::Point<dim, number>> &obstacle_locations,
@@ -117,6 +119,34 @@ void
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::prepare_for_serialization()
 {
   obstacle_handler.prepare_for_serialization();
+}
+
+template <int dim, typename number, typename ObstacleType>
+std::vector<MeltPoolDG::AMR::AMRRegion<dim, number>>
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_refinement_regions() const
+{
+  if (not data.amr.do_refine_obstacles)
+    return std::vector<AMR::AMRRegion<dim, number>>();
+
+  std::vector<AMR::SphericalShellAMRRegion<dim, number>> local_ref_regions;
+  local_ref_regions.reserve(obstacle_handler.n_locally_owned_particles());
+  for (const auto &obstacle : obstacle_handler)
+    local_ref_regions.emplace_back(obstacle.get_location(),
+                                   data.amr.inner_fractional_distance_to_surface *
+                                     ObstacleType::get_characteristic_length(obstacle),
+                                   data.amr.outer_fractional_distance_to_surface *
+                                     ObstacleType::get_characteristic_length(obstacle));
+
+  std::vector<std::vector<AMR::SphericalShellAMRRegion<dim, number>>> global_ref_regions =
+    dealii::Utilities::MPI::all_gather(mpi_communicator, local_ref_regions);
+
+  std::vector<AMR::AMRRegion<dim, number>> final_amr_regions;
+  final_amr_regions.reserve(obstacle_handler.n_global_particles());
+  for (unsigned i = 0; i < global_ref_regions.size(); ++i)
+    for (unsigned j = 0; j < global_ref_regions[i].size(); ++j)
+      final_amr_regions.emplace_back(std::move(global_ref_regions[i][j]));
+
+  return final_amr_regions;
 }
 
 template <int dim, typename number, typename ObstacleType>

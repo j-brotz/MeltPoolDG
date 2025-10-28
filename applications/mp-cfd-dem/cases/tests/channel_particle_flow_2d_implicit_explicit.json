@@ -1,4 +1,7 @@
 {
+  "application": {
+    "amr strategies": "obstacle_surface"
+  },
   "base": {
     "problem name": "cfd_dem",
     "case name": "generic_hyper_rectangle_domain",
@@ -93,6 +96,17 @@
   },
   "obstacles": {
     "stationary": true,
-    "obstacle state input file": "../../stationary_particle_2d.csv"
+    "obstacle state input file": "../../stationary_particle_2d.csv",
+    "amr": {
+      "do refine": true,
+      "inner surface distance": 0.3,
+      "outer surface distance": 1
+    }
+  },
+  "adaptive meshing": {
+    "do amr": true,
+    "max grid refinement level": 2,
+    "min grid refinement level": 0,
+    "every n step": 1
   }
 }

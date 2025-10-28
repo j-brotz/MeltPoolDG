@@ -6,24 +6,27 @@
 
 #include <deal.II/grid/tria.h>
 
-#include "meltpooldg/particles/obstacle_forces.hpp"
-#include "meltpooldg/utilities/attach_vectors.hpp"
-#include "meltpooldg/utilities/cell_monitor.hpp"
-#include "meltpooldg/utilities/journal.hpp"
-#include "meltpooldg/utilities/restart.hpp"
+#include "meltpooldg/utilities/amr_regions.hpp"
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_fluid_to_obstacle.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_obstacle_to_fluid.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
+#include <meltpooldg/particles/obstacle_forces.hpp>
 #include <meltpooldg/particles/particle.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/amr_indicators.hpp>
+#include <meltpooldg/utilities/attach_vectors.hpp>
+#include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
+#include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/restart.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+
+#include <meltpooldg/utilities/cpp23_functions.h>
 
 #include <functional>
 #include <memory>
@@ -354,9 +357,21 @@ namespace MeltPoolDG
 
     const AMR::MarkCellsForRefinementType<dim> mark_cells_for_refinement =
       [&](dealii::Triangulation<dim> &tria) {
-        return AMR::mark_fixed_fraction<dim, number>(tria,
-                                                     amr_indicator.compute_indicator(tria),
-                                                     this->simulation_case->parameters.amr);
+        bool do_amr = false;
+        if (Utils::contains(simulation_case->parameters.application.amr_strategies,
+                            AMRStrategy::indicator))
+          do_amr |= AMR::mark_fixed_fraction<dim, number>(tria,
+                                                          amr_indicator.compute_indicator(tria),
+                                                          this->simulation_case->parameters.amr);
+        if (Utils::contains(simulation_case->parameters.application.amr_strategies,
+                            AMRStrategy::obstacle_surface))
+          {
+            do_amr |= AMR::set_refinement_flags_in_regions(tria,
+                                                           obstacle_field->get_refinement_regions(),
+                                                           true);
+          }
+
+        return do_amr;
       };
 
     const std::function<void(std::vector<VectorType *> &)> attach_vectors =

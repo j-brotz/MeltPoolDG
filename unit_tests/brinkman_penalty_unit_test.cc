@@ -416,7 +416,7 @@ public:
 private:
   std::unique_ptr<dealii::Triangulation<dim>>                     triangulation;
   std::unique_ptr<dealii::Mapping<dim>>                           mapping;
-  ObstacleData                                                    obstacle_data;
+  ObstacleData<number>                                            obstacle_data;
   std::unique_ptr<ObstacleField<dim, number, ObstacleType>>       obstacle_field;
   std::unique_ptr<Flow::DGCompressibleFlowOperation<dim, number>> flow_field;
   dealii::ConditionalOStream                                      pcout;

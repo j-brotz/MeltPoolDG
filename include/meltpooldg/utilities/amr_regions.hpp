@@ -15,10 +15,13 @@
 
 #pragma once
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 
 #include <deal.II/grid/tria.h>
+
+#include <boost/serialization/access.hpp>
 
 #include <cmath>
 #include <memory>
@@ -78,7 +81,7 @@ namespace MeltPoolDG::AMR
       virtual ~Concept() = default;
 
       virtual bool
-      point_inside(const dealii::Point<dim, number> &p) const;
+      point_inside(const dealii::Point<dim, number> &p) const = 0;
     };
 
     /**
@@ -114,32 +117,159 @@ namespace MeltPoolDG::AMR
   };
 
   /**
+   * @brief Represents a spherical region for adaptive mesh refinement.
+   */
+  template <int dim, typename number>
+  class SphereAMRRegion
+  {
+  public:
+    /**
+     * @brief Construct a spherical AMR region.
+     *
+     * @param center The center of the sphere.
+     * @param radius The radius of the sphere.
+     *
+     * @throws dealii::ExcMessage if radius <= 0.
+     */
+    SphereAMRRegion(const dealii::Point<dim, number> &center, const number radius)
+      : center(center)
+      , radius(radius)
+    {
+      AssertThrow(radius > 0, dealii::ExcMessage("The radius cannot be negative."));
+    }
+
+    /**
+     * @brief Check whether a point lies inside the sphere.
+     *
+     * @param p The point to test.
+     * @return `true` if the point is inside the sphere (including the surface), `false` otherwise.
+     */
+    bool
+    point_inside(const dealii::Point<dim, number> &p) const
+    {
+      return p.distance(center) <= radius;
+    }
+
+  private:
+    const dealii::Point<dim, number> center;
+    const number                     radius;
+  };
+
+  /**
+   * @brief Represents a spherical shell region for adaptive mesh refinement (AMR).
+   */
+  template <int dim, typename number>
+  class SphericalShellAMRRegion
+  {
+  public:
+    /**
+     * @brief Default constructor (required for boost serialization). Sets all members to 0.
+     *
+     * @note This constructor is not meant to be used by the user as it leaves the object in a state
+     * where the main function of the class point_inside() cannot be used in a meaningful way.
+     */
+    SphericalShellAMRRegion() = default;
+
+    /**
+     * @brief Construct a spherical shell AMR region.
+     *
+     * @param center The center of the shell.
+     * @param inner_radius The inner radius of the shell.
+     * @param outer_radius The outer radius of the shell.
+     *
+     * @throws dealii::ExcMessage if inner_radius < 0 or inner_radius > outer_radius.
+     */
+    SphericalShellAMRRegion(const dealii::Point<dim, number> &center,
+                            const number                      inner_radius,
+                            const number                      outer_radius)
+      : center(center)
+      , inner_radius(inner_radius)
+      , outer_radius(outer_radius)
+    {
+      AssertThrow(inner_radius >= 0, dealii::ExcMessage("The radius cannot be negative."));
+      AssertThrow(inner_radius < outer_radius,
+                  dealii::ExcMessage("The inner radius must be smaller than the outer radius"));
+    }
+
+    /**
+     * @brief Check whether a point lies inside the spherical shell.
+     *
+     * @param p The point to test.
+     * @return `true` if the point is inside the shell (including the surface), `false` otherwise.
+     */
+    bool
+    point_inside(const dealii::Point<dim, number> &p) const
+    {
+      const number distance = p.distance(center);
+      return (distance <= outer_radius and distance >= inner_radius);
+    }
+
+    /**
+     * @brief Serialize or deserialize the object's data members.
+     *
+     * @param ar Reference to the archive object used for serialization/deserialization.
+     * @param version Version number of the class (unused).
+     */
+    template <class Archive>
+    void
+    serialize(Archive &ar, const unsigned int /*version*/)
+    {
+      ar &center;
+      ar &inner_radius;
+      ar &outer_radius;
+    }
+
+  private:
+    dealii::Point<dim, number> center       = dealii::Point<dim, number>();
+    number                     inner_radius = 0.;
+    number                     outer_radius = 0.;
+  };
+
+
+  /**
    * @brief Marks cells in a triangulation for refinement if their centers fall inside specified regions.
    *
    * This function iterates over all active cells in the given triangulation and sets the refine
-   * flag for each cell whose center lies within any of the provided adaptive mesh refinement (AMR)
-   * regions.
+   * flag for each cell whose center lies within any of the provided adaptive mesh refinement
+   * regions. Optionally, if the cell center does not lie within any region and the refine flag has
+   * not been already set for the cell, the coarsen flag is set.
    *
    * @param tria    The triangulation whose cells will be marked for refinement.
    * @param regions A list of AMR regions. If a cell center lies inside any of those regions, the
    * corresponding refinement flag will be set.
+   * @param do_coarsening If set, all cells which are not inside any of the regions and not yet marked for * refinement are marked for coarsening.
    *
+   * @return Returns `true` if any refine or coarsen flag has been set, otherwise returns `false`.
    * @note If no regions are provided, the function returns immediately.
    */
   template <int dim, typename number>
-  void
+  bool
   set_refinement_flags_in_regions(dealii::Triangulation<dim>                &tria,
-                                  const std::vector<AMRRegion<dim, number>> &regions = {})
+                                  const std::vector<AMRRegion<dim, number>> &regions       = {},
+                                  bool                                       do_coarsening = false)
   {
     if (regions.empty())
-      return;
+      return false;
 
+    bool any_flag_set = false;
     for (auto &cell : tria.active_cell_iterators())
-      for (const auto &region : regions)
-        if (region.point_inside(cell->center()))
+      if (not cell->refine_flag_set())
+        for (const auto &region : regions)
           {
-            cell->set_refine_flag();
-            break;
+            if (region.point_inside(cell->center()))
+              {
+                cell->clear_coarsen_flag();
+                cell->set_refine_flag();
+                any_flag_set = true;
+                break;
+              }
+            else if (do_coarsening)
+              {
+                cell->set_coarsen_flag();
+                any_flag_set = true;
+              }
           }
+
+    return any_flag_set;
   }
 } // namespace MeltPoolDG::AMR
