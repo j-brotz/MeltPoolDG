@@ -12,17 +12,65 @@
 | norm rho: 6.4838e-05, rho * u: 8.4205e-01, rho * energy: 5.9143e+03            compressible_flow |
 | accumulated norm: 9.2603e-12                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
-|  Time increment # 2      t = 4.4444e-11 to 8.8889e-11 ( dt = 4.4444e-11 )          time_iterator |
+| Performing mesh refinement...                                                                    |
+| Flow grid before refinement:    # cells: 288, # dofs: 10368                                      |
+| Flow grid after refinement :    # cells: 96, # dofs: 3456                                        |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 1.50550e+07                newton_raphson_solver |
-| norm rho: 1.5733e-04, rho * u: 1.8367e+00, rho * energy: 1.0724e+04            compressible_flow |
-| accumulated norm: 2.7962e-10                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
-|  Time increment # 3      t = 8.8889e-11 to 1.0000e-10 ( dt = 1.1111e-11 )          time_iterator |
+|  Time increment # 2      t = 4.4444e-11 to 5.5556e-11 ( dt = 1.1111e-11 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 1.50552e+07                newton_raphson_solver |
-| norm rho: 1.7672e-04, rho * u: 2.1098e+00, rho * energy: 1.1995e+04            compressible_flow |
-| accumulated norm: 1.3355e-09                                                      obstacle_force |
+| Newton Raphson solver converged: ||solution|| = 8.69177e+06                newton_raphson_solver |
+| norm rho: 3.2993e-05, rho * u: 4.7019e-01, rho * energy: 3.6995e+03            compressible_flow |
+| accumulated norm: 1.6032e-07                                                      obstacle_force |
++--------------------------------------------------------------------------------------------------+
+| Performing mesh refinement...                                                                    |
+| Flow grid before refinement:    # cells: 96, # dofs: 3456                                        |
+| Flow grid after refinement :    # cells: 99, # dofs: 3564                                        |
++--------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 3      t = 5.5556e-11 to 6.6667e-11 ( dt = 1.1111e-11 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| Newton Raphson solver converged: ||solution|| = 8.82657e+06                newton_raphson_solver |
+| norm rho: 4.3730e-05, rho * u: 5.5695e-01, rho * energy: 4.0466e+03            compressible_flow |
+| accumulated norm: 2.8888e-07                                                      obstacle_force |
++--------------------------------------------------------------------------------------------------+
+| Performing mesh refinement...                                                                    |
+| Flow grid before refinement:    # cells: 99, # dofs: 3564                                        |
+| Flow grid after refinement :    # cells: 99, # dofs: 3564                                        |
++--------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 4      t = 6.6667e-11 to 7.7778e-11 ( dt = 1.1111e-11 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| Newton Raphson solver converged: ||solution|| = 8.82663e+06                newton_raphson_solver |
+| norm rho: 5.6030e-05, rho * u: 6.4845e-01, rho * energy: 4.3893e+03            compressible_flow |
+| accumulated norm: 4.6498e-07                                                      obstacle_force |
++--------------------------------------------------------------------------------------------------+
+| Performing mesh refinement...                                                                    |
+| Flow grid before refinement:    # cells: 99, # dofs: 3564                                        |
+| Flow grid after refinement :    # cells: 99, # dofs: 3564                                        |
++--------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 5      t = 7.7778e-11 to 8.8889e-11 ( dt = 1.1111e-11 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| Newton Raphson solver converged: ||solution|| = 8.82668e+06                newton_raphson_solver |
+| norm rho: 6.9793e-05, rho * u: 7.4455e-01, rho * energy: 4.7274e+03            compressible_flow |
+| accumulated norm: 5.8478e-07                                                      obstacle_force |
++--------------------------------------------------------------------------------------------------+
+| Performing mesh refinement...                                                                    |
+| Flow grid before refinement:    # cells: 99, # dofs: 3564                                        |
+| Flow grid after refinement :    # cells: 99, # dofs: 3564                                        |
++--------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 6      t = 8.8889e-11 to 1.0000e-10 ( dt = 1.1111e-11 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| Newton Raphson solver converged: ||solution|| = 8.82673e+06                newton_raphson_solver |
+| norm rho: 8.4937e-05, rho * u: 8.4514e-01, rho * energy: 5.0608e+03            compressible_flow |
+| accumulated norm: 6.7253e-07                                                      obstacle_force |
++--------------------------------------------------------------------------------------------------+
+| Performing mesh refinement...                                                                    |
+| Flow grid before refinement:    # cells: 99, # dofs: 3564                                        |
+| Flow grid after refinement :    # cells: 99, # dofs: 3564                                        |
++--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+

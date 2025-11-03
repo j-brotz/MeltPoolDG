@@ -12,6 +12,10 @@
         "n initial refinement cycles": "0",
         "upper perc to refine": "0"
     },
+    "application":
+    {
+        "amr strategies": ""
+    },
     "base":
     {
         "case name": "not_initialized",
@@ -95,7 +99,13 @@
     "obstacles":
     {
         "obstacle state input file": "",
-        "stationary": "false"
+        "stationary": "false",
+        "amr":
+        {
+            "do refine": "false",
+            "inner surface distance": "1",
+            "outer surface distance": "1"
+        }
     },
     "output":
     {

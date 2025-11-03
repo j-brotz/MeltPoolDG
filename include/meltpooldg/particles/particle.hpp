@@ -541,6 +541,12 @@ namespace MeltPoolDG
       return property_pool.get_location(handle).distance(cell.center()) <
              get_property(property_pool, handle, Properties::radius) + 0.5 * cell.diameter();
     }
+
+    /**
+     * Return the characteristic length (i.e. the radius) of the specified particle @param particle.
+     */
+    static number
+    get_characteristic_length(const dealii::Particles::ParticleAccessor<dim> &particle);
   };
 } // namespace MeltPoolDG
 
@@ -977,4 +983,12 @@ MeltPoolDG::SphericalParticle<dim, number>::get_acceleration(
              dealii::cross_product_3d(get_angular_acceleration(particle), distance_to_center);
     }
   AssertThrow(false, dealii::ExcInternalError());
+}
+
+template <int dim, typename number>
+number
+MeltPoolDG::SphericalParticle<dim, number>::get_characteristic_length(
+  const dealii::Particles::ParticleAccessor<dim> &particle)
+{
+  return particle.get_properties()[Properties::radius];
 }

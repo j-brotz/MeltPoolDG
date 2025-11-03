@@ -367,7 +367,7 @@ public:
 private:
   std::unique_ptr<dealii::Triangulation<dim>>                           triangulation;
   std::unique_ptr<dealii::Mapping<dim>>                                 mapping;
-  MeltPoolDG::ObstacleData                                              obstacle_data;
+  MeltPoolDG::ObstacleData<number>                                      obstacle_data;
   std::unique_ptr<MeltPoolDG::ObstacleField<dim, number, ObstacleType>> obstacle_field;
   std::unique_ptr<MeltPoolDG::TimeIntegration::TimeIterator<number>>    time_iterator;
   dealii::ConditionalOStream                                            pcout;

@@ -14,6 +14,7 @@
 #include <meltpooldg/particles/obstacle_data.hpp>
 #include <meltpooldg/particles/obstacle_data_structure.hpp>
 #include <meltpooldg/particles/obstacle_forces.hpp>
+#include <meltpooldg/utilities/amr_regions.hpp>
 
 #include <vector>
 
@@ -37,7 +38,7 @@ namespace MeltPoolDG
      * @param triangulation The triangulation on which the obstacles are placed.
      * @param mapping Mapping used to interpret geometry on the given triangulation.
      */
-    ObstacleField(const ObstacleData               &data,
+    ObstacleField(const ObstacleData<number>       &data,
                   const dealii::Triangulation<dim> &triangulation,
                   const dealii::Mapping<dim>       &mapping);
 
@@ -54,7 +55,7 @@ namespace MeltPoolDG
      * @param obstacle_locations Vector of obstacle center locations.
      * @param obstacle_properties Vector of obstacle properties corresponding to each location.
      */
-    ObstacleField(const ObstacleData                      &data,
+    ObstacleField(const ObstacleData<number>              &data,
                   const dealii::Triangulation<dim>        &triangulation,
                   const dealii::Mapping<dim>              &mapping,
                   std::vector<dealii::Point<dim, number>> &obstacle_locations,
@@ -177,6 +178,22 @@ namespace MeltPoolDG
     prepare_for_serialization();
 
     /**
+     * @brief Return the AMR regions relevant for the obstacle field in region-based refinement.
+     *
+     * This function computes and returns a vector of AMR regions corresponding to all particles
+     * in the obstacle field. Each particle contributes a spherical shell region, with the shell
+     * size determined by the parameters stored in the obstacle data structure associated with
+     * the object's obstacle field.
+     *
+     * @return A vector of AMR regions for all particles in the field.
+     *
+     * @note The returned vector contains regions for all **global** particles, not just those
+     * local to the current process or subdomain.
+     */
+    std::vector<AMR::AMRRegion<dim, number>>
+    get_refinement_regions() const;
+
+    /**
      * @brief Return a reference to the underlying particle handler of this object.
      *
      * @return The used particle handler of the current object.
@@ -231,7 +248,7 @@ namespace MeltPoolDG
                      std::vector<std::vector<number>>        &obstacle_properties);
 
     /// Struct holding configuration data for obstacles.
-    const ObstacleData &data;
+    const ObstacleData<number> &data;
 
     /// Vector of load objects representing all loads acting on the obstacles.
     std::vector<ObstacleLoad<dim, number, ObstacleType>> loads;
