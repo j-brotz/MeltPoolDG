@@ -439,6 +439,7 @@ namespace MeltPoolDG
 #else
                         AssertThrow(false, ExcNotImplemented());
 #endif
+                        scratch_data->initialize_dof_vector(vel_force_rhs, vel_dof_idx);
                       }
                   }
               }
