@@ -1,0 +1,78 @@
+{
+  "base": {
+    "case name": "fixed_melt_pool",
+    "dimension": "2",
+    "do print parameters": "false",
+    "global refinements": "9",
+    "verbosity level": "1",
+    "fe": {
+      "degree": "1"
+    }
+  },
+  "time stepping": {
+    "time step size": "2e-06",
+    "end time": "1e-05",
+    "max n steps": "5"
+  },
+  "heat": {
+    "operator type": "cut",
+    "cut": {
+      "two phase": "true",
+      "stabilization": {
+        "nitsche parameter": "500.0",
+        "gamma A degree 1": "1.5",
+        "gamma M degree 1": "0.75"
+      }
+    },
+    "linear solver": {
+      "preconditioner type": "Diagonal",
+      "rel tolerance": "1e-12"
+    },
+    "nlsolve": {
+      "residual tolerance": "1e-12"
+    }
+  },
+  "laser": {
+    "model": "interface_projection_sharp",
+    "intensity profile": "Gauss",
+    "power": "87.5",
+    "radius": "70e-6"
+  },
+  "material": {
+    "material template": "Ti64",
+    "gas": {
+      "density": "4.087",
+      "specific heat capacity": "11.3",
+      "thermal conductivity": "0.02863"
+    },
+    "liquid": {
+      "density": "4087.0",
+      "specific heat capacity": "1130.0",
+      "thermal conductivity": "28.63"
+    }
+  },
+  "evaporation": {
+    "evaporative mass flux model": "recoil_pressure",
+    "interface temperature evaluation type": "interface_value",
+    "evaporative cooling": {
+      "enable": "true",
+      "consider enthalpy transport vapor mass flux": "default",
+      "activation temperature": "2936.9829300348565",
+      "model": "sharp"
+    },
+    "recoil pressure": {
+      "enable": "true",
+      "type": "phenomenological",
+      "temperature constant": "50700.0",
+      "pressure coefficient": "0.54",
+      "ambient gas pressure": "1e5",
+      "interface distributed flux type": "interface_value",
+      "activation temperature": "2936.9829300348565"
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "true"
+    }
+  }
+}

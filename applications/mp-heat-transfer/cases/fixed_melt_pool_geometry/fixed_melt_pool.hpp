@@ -10,7 +10,7 @@
 
 #include <string>
 
-#include "../heat_transfer_case.hpp"
+#include "../../heat_transfer_case.hpp"
 
 /**
  * This case implements the benchmark example: laser-induced heating of a 2D fixed melt pool surface
@@ -32,44 +32,70 @@ namespace MeltPoolDG::Simulation::FixedMeltPool
   class FixedMeltPoolGeometry : public dealii::Function<dim, number>
   {
   public:
+    /**
+     * @param level_set_type level set type, options: level_set, heaviside, signed_distance
+     * @param eps interface thickness parameter epsilon: interface_thickness = 6*eps
+     *            only required for level set type level_set or heaviside
+     */
     FixedMeltPoolGeometry(const LevelSetType level_set_type, const number eps = 0.0);
 
+    /**
+     * returns value corresponding to Point @param p
+     */
     number
     value(const dealii::Point<dim> &p, const unsigned int /*component*/) const override;
 
   private:
+    /**
+     * compute signed distance to top level of interface, i.e. @param y_level
+     */
     number
-    sd_level(const dealii::Point<dim> &p) const;
+    signed_distance_level(const dealii::Point<dim> &p) const;
 
+    /**
+     * compute signed distance to centre semicircle
+     */
     number
-    sd_pool(const dealii::Point<dim> &p) const;
+    signed_distance_pool(const dealii::Point<dim> &p) const;
 
+    /**
+     * compute signed distance to beads
+     */
     number
-    sd_beads(const dealii::Point<dim> &p) const;
+    signed_distance_beads(const dealii::Point<dim> &p) const;
 
-    inline bool
+    bool
     is_inside_melt_pool(const dealii::Point<dim> &p) const;
 
-    const number             y_level = 10e-6;
-    const dealii::Point<dim> center{0.0, 0.0};
-    const number             center_radius = 50e-6;
+    /// top level of interface
+    const number y_level = 10e-6;
+
+    const dealii::Point<dim> centre{0.0, 0.0};
+    const number             centre_radius = 50e-6;
     const number             bead_radius   = 10e-6;
 
-    const number melt_pool_radius = center_radius + bead_radius;
-    const number bead_center_x    = center[0] + melt_pool_radius;
+    const number melt_pool_radius = centre_radius + bead_radius;
+    const number bead_center_x    = centre[0] + melt_pool_radius;
 
     const LevelSetType level_set_type;
     const number       eps;
   };
-  ;
 
+  /**
+   * Simulation case for  benchmark example: laser-induced heating of a 2D fixed melt pool surface
+   * [1]
+   */
   template <int dim, typename number>
   class SimulationFixedMeltPool : public Heat::HeatTransferCase<dim, number>
   {
   private:
+    /// length paramter
     const number a = 100e-6;
-    std::string  grid_file;
 
+    /// optional starting grid file
+    std::string grid_file;
+
+    /// initial and dirichlet boundary temperature
     const number T_hat = 500.0;
 
     number interface_thickness = numbers::invalid_double;

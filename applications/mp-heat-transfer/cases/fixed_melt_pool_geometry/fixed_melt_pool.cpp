@@ -37,19 +37,19 @@ namespace MeltPoolDG::Simulation::FixedMeltPool
   {
     number     signed_distance;
     const auto inside_melt_pool = is_inside_melt_pool(p);
-    if (p[1] >= center[1]) // above centre line
+    if (p[1] >= centre[1]) // above centre line
       {
         if (inside_melt_pool)
-          signed_distance = sd_beads(p);
+          signed_distance = signed_distance_beads(p);
         else // not inside melt pool
-          signed_distance = sd_level(p);
+          signed_distance = signed_distance_level(p);
       }
     else // below center line
       {
         if (inside_melt_pool)
-          signed_distance = sd_pool(p);
+          signed_distance = signed_distance_pool(p);
         else // not inside melt pool
-          signed_distance = std::min(sd_pool(p), sd_level(p));
+          signed_distance = std::min(signed_distance_pool(p), signed_distance_level(p));
       }
 
     switch (level_set_type)
@@ -69,7 +69,7 @@ namespace MeltPoolDG::Simulation::FixedMeltPool
 
   template <int dim, typename number>
   number
-  FixedMeltPoolGeometry<dim, number>::sd_level(const dealii::Point<dim> &p) const
+  FixedMeltPoolGeometry<dim, number>::signed_distance_level(const dealii::Point<dim> &p) const
   {
     Assert(not is_inside_melt_pool(p), dealii::ExcMessage("can only apply outside melt pool"));
     return -p[1] + y_level;
@@ -77,20 +77,20 @@ namespace MeltPoolDG::Simulation::FixedMeltPool
 
   template <int dim, typename number>
   number
-  FixedMeltPoolGeometry<dim, number>::sd_pool(const dealii::Point<dim> &p) const
+  FixedMeltPoolGeometry<dim, number>::signed_distance_pool(const dealii::Point<dim> &p) const
   {
-    Assert(p[1] <= center[1], dealii::ExcMessage("can only apply below center line"));
-    return p.distance(center) - center_radius;
+    Assert(p[1] <= centre[1], dealii::ExcMessage("can only apply below center line"));
+    return p.distance(centre) - centre_radius;
   }
 
   template <int dim, typename number>
   number
-  FixedMeltPoolGeometry<dim, number>::sd_beads(const dealii::Point<dim> &p) const
+  FixedMeltPoolGeometry<dim, number>::signed_distance_beads(const dealii::Point<dim> &p) const
   {
     Assert(is_inside_melt_pool(p), dealii::ExcMessage("can only apply inside melt pool"));
-    Assert(p[1] >= center[1], dealii::ExcMessage("can only apply above center line"));
-    const dealii::Point<dim> p_proj(std::abs(p[0] - center[0]), p[1]);
-    const dealii::Point<dim> bead_center_proj(bead_center_x - center[0], center[1]);
+    Assert(p[1] >= centre[1], dealii::ExcMessage("can only apply above center line"));
+    const dealii::Point<dim> p_proj(std::abs(p[0] - centre[0]), p[1]);
+    const dealii::Point<dim> bead_center_proj(bead_center_x - centre[0], centre[1]);
     return bead_radius - p_proj.distance(bead_center_proj);
   }
 
@@ -98,7 +98,7 @@ namespace MeltPoolDG::Simulation::FixedMeltPool
   bool
   FixedMeltPoolGeometry<dim, number>::is_inside_melt_pool(const dealii::Point<dim> &p) const
   {
-    return std::abs(p[0] - center[0]) <= bead_center_x;
+    return std::abs(p[0] - centre[0]) <= bead_center_x;
   }
 
   template <int dim, typename number>
@@ -187,20 +187,9 @@ namespace MeltPoolDG::Simulation::FixedMeltPool
       std::make_shared<dealii::Functions::ConstantFunction<dim, number>>(T_hat), "heat_transfer");
   }
 
-
-  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
-                           SimulationFixedMeltPool,
-                           "fixed_melt_pool",
-                           1,
-                           double);
   MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
                            SimulationFixedMeltPool,
                            "fixed_melt_pool",
                            2,
-                           double);
-  MELTPOOLDG_REGISTER_CASE(Heat::HeatTransferCase,
-                           SimulationFixedMeltPool,
-                           "fixed_melt_pool",
-                           3,
                            double);
 } // namespace MeltPoolDG::Simulation::FixedMeltPool
