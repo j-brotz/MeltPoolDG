@@ -43,6 +43,8 @@ namespace MeltPoolDG
   class SimulationCaseBase
   {
   public:
+    virtual ~SimulationCaseBase() = default;
+
     // Triangulation object. Needs to be filled inside create_spatial_discretization()
     std::shared_ptr<dealii::Triangulation<dim, spacedim>> triangulation;
 

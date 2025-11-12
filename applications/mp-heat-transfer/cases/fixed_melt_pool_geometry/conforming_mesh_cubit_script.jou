@@ -1,0 +1,67 @@
+reset
+
+# { domain_size         = 200e-6 }
+# { substrate_level     =  10e-6 }
+# { center_radius       =  50e-6 }
+# { bead_radius         =  10e-6 }
+# { interface_thickness =   6e-6 }
+
+# { interface_mesh_size =   interface_thickness/16 }
+# { far_field_mesh_size =  2e-6 }
+
+# { a  = domain_size/2         }
+# { rc = center_radius         }
+# { rb = bead_radius           }
+# { h  = substrate_level       }
+# { e  = interface_thickness/2 }
+
+$ GEOMETRY
+
+$$ DOMAIN
+create surface rectangle width {a*2} zplane  $ centered at the origin
+
+$$ INTERFACE
+$$$ INTERFACE MIDPLANE
+create curve location {-a} {h} 0 location {-rc-rb} {h} 0
+create curve arc radius {rb} center location {-rc-rb} 0 0 normal 0 0 1 start angle   0 stop angle  90
+create curve arc radius {rc} center location        0 0 0 normal 0 0 1 start angle 180 stop angle 360
+create curve arc radius {rb} center location  {rc+rb} 0 0 normal 0 0 1 start angle  90 stop angle 180
+create curve location  {a} {h} 0 location  {rc+rb} {h} 0
+$$$ UPPER HALF OF INTERFACE
+create curve location {-a} {h+e} 0 location {-rc-rb} {h+e} 0
+create curve arc radius {rb+e} center location {-rc-rb} 0 0 normal 0 0 1 start angle   0 stop angle  90
+create curve arc radius {rc-e} center location        0 0 0 normal 0 0 1 start angle 180 stop angle 360
+create curve arc radius {rb+e} center location  {rc+rb} 0 0 normal 0 0 1 start angle  90 stop angle 180
+create curve location  {a} {h+e} 0 location  {rc+rb} {h+e} 0
+$$$ LOWER HALF OF INTERFACE
+create curve location {-a}  {h-e} 0 location {-rc-rb} {h-e} 0
+create curve arc radius {rb-e} center location {-rc-rb} 0 0 normal 0 0 1 start angle   0 stop angle  90
+create curve arc radius {rc+e} center location        0 0 0 normal 0 0 1 start angle 180 stop angle 360
+create curve arc radius {rb-e} center location  {rc+rb} 0 0 normal 0 0 1 start angle  90 stop angle 180
+create curve location  {a}  {h-e} 0 location  {rc+rb} {h-e} 0
+$$$ CONNECTORS
+create curve location {-rc-rb} {h-e} 0 location {-rc-rb} {h} 0
+create curve location {-rc-rb} {h+e} 0 location {-rc-rb} {h} 0
+create curve location {-rc-e}      0 0 location    {-rc}   0 0
+create curve location {-rc+e}      0 0 location    {-rc}   0 0
+create curve location  {rc-e}      0 0 location     {rc}   0 0
+create curve location  {rc+e}      0 0 location     {rc}   0 0
+create curve location  {rc+rb} {h-e} 0 location  {rc+rb} {h} 0
+create curve location  {rc+rb} {h+e} 0 location  {rc+rb} {h} 0
+
+imprint surface 1 curve  5 6 7 8 9   10 11 12 13 14   15 16 17 18 19   20 21 22 23 24 25 26 27
+delete curve             5 6 7 8 9   10 11 12 13 14   15 16 17 18 19   20 21 22 23 24 25 26 27
+
+$ MESH
+
+$$ INTERFACE
+surface      2 3 4 5 6 7 8 9 10 12 scheme map size {interface_mesh_size}
+mesh surface 2 3 4 5 6 7 8 9 10 12
+
+$$ FAR FIELD
+paver cleanup extend
+surface 11 13 scheme pave
+surface 11 13 sizing function type skeleton min_size auto max_size {far_field_mesh_size} max_gradient 0.5 min_num_layers_2d 1 min_num_layers_1d 1
+mesh surface 11 13
+
+export mesh "fixed_melt_pool.exodusii" dimension 2  overwrite
