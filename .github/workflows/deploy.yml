@@ -38,7 +38,7 @@ jobs:
         run: |
           bash doc/create_sphinx.sh
           mkdir deploy
-          cp -r doc/sphinx/_build/* deploy/
+          cp -r doc/sphinx/_build/* doc/deploy/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
