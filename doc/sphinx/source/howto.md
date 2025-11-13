@@ -1,4 +1,4 @@
-# 💻 How to Work With MeltPoolDG
+# Coding Conventions
 
 ## Glossary
 

@@ -9,11 +9,14 @@ from sphinx.util import docutils
 import os
 import sys
 
+from pathlib import Path
+
 # Add the root project directory to sys.path to resolve external files
 sys.path.insert(0, os.path.abspath('..'))  # Adjust this if needed
 
 # Specify the directories myst-parser should look in for include files
 myst_include_dirs = [os.path.abspath('../')]  # Adjust this as needed
+
 
 # conf.py
 
@@ -35,15 +38,23 @@ author = 'MeltPoolDG'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['nbsphinx', 'myst_parser']
-templates_path = ['_templates']
-exclude_patterns = []
-source_suffix = {
-    '.rst': 'rst',
-    '.md': 'markdown',
-    '.ipynb': 'ipynb',
+extensions = ['nbsphinx', 'myst_parser', "sphinx.ext.graphviz", 'sphinxcontrib.doxylink']
+
+HERE = Path(__file__).resolve().parent
+TAGFILE = (HERE / "doxygen/html/tagfile.xml").resolve()
+
+doxylink = {
+    "MeltPoolDG": (str(TAGFILE), str(TAGFILE.parent))  # (tagfile, html_root)
 }
 
+
+templates_path = ['_templates']
+exclude_patterns = []
+# source_suffix = {
+# '.rst': 'rst',
+# '.md': 'markdown',
+# '.ipynb': 'ipynb',
+# }
 # Enable MathJax for LaTeX rendering
 mathjax_path = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js'
 
@@ -61,3 +72,6 @@ html_css_files = [
 ]
 html_theme = 'sphinx_rtd_theme'
 html_logo = '../../logo/logo_icon.png'
+
+# For code highlighting
+pygments_style = "sphinx"

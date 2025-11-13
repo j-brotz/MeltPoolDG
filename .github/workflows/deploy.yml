@@ -36,16 +36,9 @@ jobs:
 
       - name: Build Sphinx HTML, Doxygen and aggregate files
         run: |
-          cd doc/sphinx
-          sphinx-build -v -b html -a source/ _build/
-          cd ../../
-          doxygen doc/doxygen/Doxyfile
-          # create temporary folder for deployment
-          cd doc
+          bash doc/create_sphinx.sh
           mkdir deploy
-          mkdir deploy/doxygen
-          cp -r sphinx/_build/* deploy/
-          cp -r ../html/* deploy/doxygen
+          cp -r doc/sphinx/_build/* deploy/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

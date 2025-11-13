@@ -1,4 +1,4 @@
-# ✋ How to Contribute
+# How to Contribute
 
 ## Table of Contents
 

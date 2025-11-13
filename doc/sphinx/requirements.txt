@@ -4,3 +4,6 @@ jupyter
 ipython
 sphinx_rtd_theme
 myst-parser
+docutils
+doxysphinx
+sphinxcontrib-doxylink
