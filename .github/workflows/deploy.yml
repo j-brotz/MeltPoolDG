@@ -37,7 +37,7 @@ jobs:
       - name: Build Sphinx HTML, Doxygen and aggregate files
         run: |
           bash doc/create_sphinx.sh
-          mkdir deploy
+          mkdir doc/deploy
           cp -r doc/sphinx/_build/* doc/deploy/
 
       - name: Upload artifacts
