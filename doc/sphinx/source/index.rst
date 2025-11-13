@@ -20,6 +20,5 @@ Welcome to
    :maxdepth: 2
 
    installation
-   howto
-   contributing
+   developer_guide
    publications
