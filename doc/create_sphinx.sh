@@ -18,5 +18,5 @@ else
 fi
 
 doxygen doc/doxygen/Doxyfile
-doxysphinx build doc/sphinx/source/ doc/sphinx/_build/html/ doc/doxygen/Doxyfile
+doxysphinx build doc/sphinx/source/ doc/sphinx/_build/ doc/doxygen/Doxyfile
 sphinx-build -v -b html -a doc/sphinx/source/ doc/sphinx/_build
