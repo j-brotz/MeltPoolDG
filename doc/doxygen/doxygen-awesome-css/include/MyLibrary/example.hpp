@@ -1,18 +1,25 @@
 #pragma once
 #include <string>
 
-namespace MyLibrary {
+namespace MyLibrary
+{
 
-enum Color { red  = 1, green = 2, blue = 3 };
+  enum Color
+  {
+    red   = 1,
+    green = 2,
+    blue  = 3
+  };
 
-/**
- * @brief Example class to demonstrate the features of the custom CSS.
- *
- * @author jothepro
- *
- */
-class Example {
-public:
+  /**
+   * @brief Example class to demonstrate the features of the custom CSS.
+   *
+   * @author jothepro
+   *
+   */
+  class Example
+  {
+  public:
     /**
      * @brief brief summary
      *
@@ -63,7 +70,8 @@ public:
      *   <tr><td rowspan="2">cell row=2+3,col=2                    <td>cell row=2,col=3
      *   <tr><td>cell row=3,col=1                                  <td>cell row=3,col=3
      *   </table>
-     * - <b class="tab-title">Overflow Scrolling</b> The table content is scrollable if the table gets too wide.<br>
+     * - <b class="tab-title">Overflow Scrolling</b> The table content is scrollable if the table
+     * gets too wide.<br>
      *   | first_column | second_column | third_column | fourth_column | fifth_column | sixth_column | seventh_column | eighth_column | ninth_column |
      *   |--------------|---------------|--------------|---------------|--------------|--------------|----------------|---------------|--------------|
      *   | 1            | 2             | 3            | 4             | 5            | 6            | 7              | 8             | 9            |
@@ -71,7 +79,7 @@ public:
      *   | Column 1                  | Column 2                                        |
      *   |---------------------------|-------------------------------------------------|
      *   | ![doxygen](testimage.png) | ← the image should not be inverted in dark-mode |
-     * 
+     *
      *
      * </div>
      *
@@ -100,10 +108,10 @@ public:
      *
      * ## Quotes
      *
-     * > Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt 
-     * > ut labore et dolore magna aliqua. Vitae proin sagittis nisl rhoncus mattis rhoncus urna neque viverra. 
-     * > Velit sed ullamcorper morbi tincidunt ornare. 
-     * > 
+     * > Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+     * > ut labore et dolore magna aliqua. Vitae proin sagittis nisl rhoncus mattis rhoncus urna
+     * neque viverra. > Velit sed ullamcorper morbi tincidunt ornare.
+     * >
      * > Lorem ipsum dolor sit amet consectetur adipiscing elit duis.
      * *- jothepro*
      *
@@ -125,7 +133,9 @@ public:
      *     auto test = std::shared_ptr<Example(5);
      *
      *
-     * Inline `code` elements in a text. *Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.* This also works within multiline text and does not break the `layout`.
+     * Inline `code` elements in a text. *Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+     * sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.* This also works within
+     * multiline text and does not break the `layout`.
      *
      *
      * ## Special hints
@@ -152,18 +162,20 @@ public:
      * @remark This is awesome!
      *
      */
-    std::string test(const std::string& test);
+    std::string
+    test(const std::string &test);
 
-    virtual int virtualfunc() = 0;
+    virtual int
+    virtualfunc() = 0;
 
-    static bool staticfunc();
+    static bool
+    staticfunc();
+  };
 
+  class SecondExample
+  {
+    std::string
+    foo();
+  }
 
-};
-
-class SecondExample {
-    std::string foo();
-}
-
-}
-
+} // namespace MyLibrary
