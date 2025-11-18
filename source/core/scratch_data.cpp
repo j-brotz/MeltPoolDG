@@ -53,10 +53,7 @@ namespace MeltPoolDG
     set_mapping(mapping);
 
     for (unsigned int i = 0; i < dof_handler.size(); ++i)
-      this->attach_dof_handler(*dof_handler[i]);
-
-    for (unsigned int i = 0; i < constraint.size(); ++i)
-      this->attach_constraint_matrix(*constraint[i]);
+      this->attach_dof_handler_and_constraint(*dof_handler[i], *constraint[i]);
 
     for (unsigned int i = 0; i < quad.size(); ++i)
       this->attach_quadrature(quad[i]);
@@ -98,6 +95,20 @@ namespace MeltPoolDG
     const dealii::AffineConstraints<number> &constraint)
   {
     this->constraint.emplace_back(&constraint);
+    return this->constraint.size() - 1;
+  }
+
+  template <int dim, int spacedim, typename number>
+  unsigned int
+  ScratchData<dim, spacedim, number>::attach_dof_handler_and_constraint(
+    const dealii::DoFHandler<dim, spacedim> &dof_handler,
+    const dealii::AffineConstraints<number> &constraint)
+  {
+    this->dof_handler.emplace_back(&dof_handler);
+    this->constraint.emplace_back(&constraint);
+
+    AssertDimension(this->constraint.size(), this->dof_handler.size());
+
     return this->constraint.size() - 1;
   }
 

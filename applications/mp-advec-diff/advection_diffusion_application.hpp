@@ -34,11 +34,11 @@ namespace MeltPoolDG::LevelSet
     std::unique_ptr<CaseType> simulation_case;
 
     dealii::DoFHandler<dim>                        dof_handler;
-    dealii::AffineConstraints<number>              constraints;
-    dealii::AffineConstraints<number>              hanging_node_constraints;
-    dealii::AffineConstraints<number>              hanging_node_constraints_with_zero_dirichlet;
+    dealii::AffineConstraints<number>              advec_diff_full_constraints;
+    dealii::AffineConstraints<number>              advec_diff_mesh_constraints;
+    dealii::AffineConstraints<number>              advec_diff_full_constraints_hom_dirichlet;
     dealii::DoFHandler<dim>                        dof_handler_velocity;
-    dealii::AffineConstraints<number>              hanging_node_constraints_velocity;
+    dealii::AffineConstraints<number>              velocity_full_constraints;
     std::shared_ptr<ScratchData<dim, dim, number>> scratch_data;
     VectorType                                     advection_velocity;
     std::unique_ptr<TimeIntegration::TimeIterator<number>>        time_iterator;
@@ -46,12 +46,16 @@ namespace MeltPoolDG::LevelSet
     std::unique_ptr<Profiling::ProfilingMonitor<number>>          profiling_monitor;
     std::shared_ptr<dealii::Function<dim, number>> advection_velocity_function = nullptr;
 
-    unsigned int advec_diff_dof_idx;
-    unsigned int advec_diff_hanging_nodes_dof_idx;
-    unsigned int advec_diff_adaflo_dof_idx;
-    unsigned int velocity_dof_idx;
+    unsigned int advec_diff_dof_idx              = dealii::numbers::invalid_unsigned_int;
+    unsigned int advec_diff_mesh_constraints_idx = dealii::numbers::invalid_unsigned_int;
+    unsigned int velocity_dof_idx                = dealii::numbers::invalid_unsigned_int;
 
-    unsigned int advec_diff_quad_idx;
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+    unsigned int advec_diff_full_constraints_hom_dirichlet_idx =
+      dealii::numbers::invalid_unsigned_int;
+#endif
+
+    unsigned int advec_diff_quad_idx = dealii::numbers::invalid_unsigned_int;
 
     std::unique_ptr<Postprocessor<dim, number>> post_processor;
 

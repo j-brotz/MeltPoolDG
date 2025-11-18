@@ -129,32 +129,31 @@ namespace MeltPoolDG::LevelSet
     dof_handler_velocity.reinit(*simulation_case->triangulation);
 
     // setup scratch data
-    {
-      scratch_data = std::make_shared<ScratchData<dim, dim, number>>(
-        simulation_case->mpi_communicator,
-        simulation_case->parameters.base.verbosity_level,
-        simulation_case->parameters.advec_diff.linear_solver.do_matrix_free);
+    scratch_data = std::make_shared<ScratchData<dim, dim, number>>(
+      simulation_case->mpi_communicator,
+      simulation_case->parameters.base.verbosity_level,
+      simulation_case->parameters.advec_diff.linear_solver.do_matrix_free);
 
-      // setup mapping
-      scratch_data->set_mapping(
-        FiniteElementUtils::create_mapping<dim>(simulation_case->parameters.advec_diff.fe));
+    // setup mapping
+    scratch_data->set_mapping(
+      FiniteElementUtils::create_mapping<dim>(simulation_case->parameters.advec_diff.fe));
 
-      // create quadrature rule
-      advec_diff_quad_idx = scratch_data->attach_quadrature(
-        FiniteElementUtils::create_quadrature<dim>(simulation_case->parameters.advec_diff.fe));
+    // create quadrature rule
+    advec_diff_quad_idx = scratch_data->attach_quadrature(
+      FiniteElementUtils::create_quadrature<dim>(simulation_case->parameters.advec_diff.fe));
 
-      // attach DoFHandler
-      advec_diff_dof_idx               = scratch_data->attach_dof_handler(dof_handler);
-      advec_diff_hanging_nodes_dof_idx = scratch_data->attach_dof_handler(dof_handler);
-      advec_diff_adaflo_dof_idx        = scratch_data->attach_dof_handler(dof_handler);
-      velocity_dof_idx                 = scratch_data->attach_dof_handler(dof_handler_velocity);
+    // attach DoFHandler and AffineConstraints
+    advec_diff_dof_idx =
+      scratch_data->attach_dof_handler_and_constraint(dof_handler, advec_diff_full_constraints);
+    advec_diff_mesh_constraints_idx =
+      scratch_data->attach_dof_handler_and_constraint(dof_handler, advec_diff_mesh_constraints);
+    velocity_dof_idx = scratch_data->attach_dof_handler_and_constraint(dof_handler_velocity,
+                                                                       velocity_full_constraints);
 
-      // attach Constraints
-      scratch_data->attach_constraint_matrix(constraints);
-      scratch_data->attach_constraint_matrix(hanging_node_constraints);
-      scratch_data->attach_constraint_matrix(hanging_node_constraints_with_zero_dirichlet);
-      scratch_data->attach_constraint_matrix(hanging_node_constraints_velocity);
-    }
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+    advec_diff_full_constraints_hom_dirichlet_idx = scratch_data->attach_dof_handler(dof_handler);
+    scratch_data->attach_constraint_matrix(advec_diff_full_constraints_hom_dirichlet);
+#endif
 
     // initialize the time iterator
     time_iterator = std::make_unique<TimeIntegration::TimeIterator<number>>(
@@ -170,7 +169,7 @@ namespace MeltPoolDG::LevelSet
               simulation_case->parameters.advec_diff,
               *time_iterator,
               advec_diff_dof_idx,
-              advec_diff_hanging_nodes_dof_idx,
+              advec_diff_mesh_constraints_idx,
               advec_diff_quad_idx);
 
             dynamic_cast<AdvectionDiffusionOperation<dim, number> *>(advec_diff_operation.get())
@@ -199,9 +198,9 @@ namespace MeltPoolDG::LevelSet
         advec_diff_operation = std::make_unique<AdvectionDiffusionOperationAdaflo<dim, number>>(
           *scratch_data,
           *time_iterator,
-          advec_diff_adaflo_dof_idx,
+          advec_diff_full_constraints_hom_dirichlet_idx,
           advec_diff_dof_idx,
-          advec_diff_hanging_nodes_dof_idx,
+          advec_diff_mesh_constraints_idx,
           advec_diff_quad_idx,
           simulation_case->parameters.time_stepping,
           simulation_case->parameters.advec_diff,
@@ -311,7 +310,7 @@ namespace MeltPoolDG::LevelSet
       locally_relevant_solution.reinit(scratch_data->get_partitioner(advec_diff_dof_idx));
       locally_relevant_solution.copy_locally_owned_data_from(
         advec_diff_operation->get_advected_field());
-      constraints.distribute(locally_relevant_solution);
+      advec_diff_full_constraints.distribute(locally_relevant_solution);
       locally_relevant_solution.update_ghost_values();
 
       KellyErrorEstimator<dim>::estimate(scratch_data->get_mapping(),
@@ -337,7 +336,9 @@ namespace MeltPoolDG::LevelSet
       advec_diff_operation->attach_vectors(vectors);
     };
 
-    const auto post = [&]() { constraints.distribute(advec_diff_operation->get_advected_field()); };
+    const auto post = [&]() {
+      advec_diff_full_constraints.distribute(advec_diff_operation->get_advected_field());
+    };
 
     const auto setup_dof_system = [&]() { this->setup_dof_system(); };
 
