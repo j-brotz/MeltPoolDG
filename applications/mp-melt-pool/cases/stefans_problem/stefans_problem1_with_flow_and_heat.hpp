@@ -208,7 +208,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
 #else
           AssertThrow(
             false,
-            ExcMessage(
+            dealii::ExcMessage(
               "Missing Metis support of the deal.II installation. "
               "Configure deal.II with -D DEAL_II_WITH_METIS='ON' to execute this example."));
 #endif
