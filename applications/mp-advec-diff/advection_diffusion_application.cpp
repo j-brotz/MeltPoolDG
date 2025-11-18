@@ -25,42 +25,54 @@ namespace MeltPoolDG::LevelSet
   void
   AdvectionDiffusionApplication<dim, number>::run()
   {
+    // Initialize simulation components: set up DoFHandlers, quadrature, mapping, scratch data,
+    // constraints, time iterator, and create the appropriate advection-diffusion operator.
+    // Configure initial and boundary conditions, and initialize optional postprocessing and
+    // profiling.
     initialize();
 
+    // output initial state
+    output_results(time_iterator->get_current_time_step_number(),
+                   time_iterator->get_current_time());
+
+    // time loop
     while (!time_iterator->is_finished())
       {
+        // calculate new time increment ...
         time_iterator->compute_next_time_increment();
+
+        // ... and print time step information
         time_iterator->print_me(scratch_data->get_pcout(1));
-        /*
-         * compute the advection velocity for the current time
-         */
+
+        // compute the advection velocity
         compute_advection_velocity(
           *simulation_case->get_field_function("prescribed_velocity", "advection_diffusion"));
 
+        // solve advection-diffusion equation
         advec_diff_operation->solve();
-        /*
-         *  do output if requested
-         */
+
+        // do output if requested
         output_results(time_iterator->get_current_time_step_number(),
                        time_iterator->get_current_time());
 
+        // adaptive mesh refinement
         if (simulation_case->parameters.amr.do_amr)
           refine_mesh();
 
+        // print profiling data if requested
         if (profiling_monitor && profiling_monitor->now())
-          {
-            profiling_monitor->print(scratch_data->get_pcout(1),
-                                     scratch_data->get_timer(),
-                                     scratch_data->get_mpi_comm());
-          }
+          profiling_monitor->print(scratch_data->get_pcout(1),
+                                   scratch_data->get_timer(),
+                                   scratch_data->get_mpi_comm());
       }
-    //... always print timing statistics
+
+    // print timing statistics
     if (profiling_monitor)
-      {
-        profiling_monitor->print(scratch_data->get_pcout(1),
-                                 scratch_data->get_timer(),
-                                 scratch_data->get_mpi_comm());
-      }
+      profiling_monitor->print(scratch_data->get_pcout(1),
+                               scratch_data->get_timer(),
+                               scratch_data->get_mpi_comm());
+
+    // print end information
     Journal::print_end(scratch_data->get_pcout(1));
   }
 
@@ -68,64 +80,40 @@ namespace MeltPoolDG::LevelSet
   void
   AdvectionDiffusionApplication<dim, number>::setup_dof_system()
   {
-    /*
-     *  setup DoFHandler
-     */
+    // setup DoFHandler
     FiniteElementUtils::distribute_dofs<dim, 1>(simulation_case->parameters.advec_diff.fe,
                                                 dof_handler);
     FiniteElementUtils::distribute_dofs<dim, dim>(simulation_case->parameters.advec_diff.fe,
                                                   dof_handler_velocity);
 
-    /*
-     *  create the partititioning
-     */
+    // create the partititioning
     scratch_data->create_partitioning();
-    /*
-     *  make hanging nodes and dirichlet constraints (Note: at the moment no time-dependent
-     *  dirichlet constraints are supported)
-     */
+
+    // make hanging nodes and dirichlet constraints (IMPORTANT: at the moment no time-dependent
+    // dirichlet constraints are supported)
     simulation_case->set_time_boundary_conditions(
       simulation_case->parameters.time_stepping.start_time);
 
-    if (simulation_case->parameters.advec_diff.fe.type != FiniteElementType::FE_DGQ)
-      { // In a DG simulation no hanging node constraints are present and the boundary conditions
-        // are enforced in weak form by changing the fluxes at the boundary
-        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim,
-                                                                                           number>(
-          *scratch_data,
-          simulation_case->get_boundary_condition("dirichlet", "advection_diffusion"),
-          simulation_case->get_periodic_bc(),
-          advec_diff_dof_idx,
-          advec_diff_hanging_nodes_dof_idx);
-        if (simulation_case->parameters.advec_diff.implementation == "adaflo")
-          MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim, number>(
-            *scratch_data,
-            simulation_case->get_boundary_condition("dirichlet", "advection_diffusion"),
-            advec_diff_adaflo_dof_idx,
-            advec_diff_hanging_nodes_dof_idx,
-            false /*set inhomogeneities to zero*/);
-        MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
-                                                        simulation_case->get_periodic_bc(),
-                                                        velocity_dof_idx);
-      }
-    /*
-     *  create the matrix-free object
-     */
-    if (simulation_case->parameters.advec_diff.fe.type != FiniteElementType::FE_DGQ)
-      {
-        scratch_data->build(false, false);
-      }
-    else
-      {
-        scratch_data->build(true, true);
-      }
+    // fill AffineConstraints objects
+    advec_diff_operation->setup_constraints(
+      *scratch_data,
+      simulation_case->get_periodic_bc(),
+      simulation_case->get_boundary_condition("dirichlet", "advection_diffusion"));
 
-    if (advec_diff_operation) // TODO: better place
+    // setup HNC and PBC for velocity field if requested
+    MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
+                                                    simulation_case->get_periodic_bc(),
+                                                    velocity_dof_idx);
+
+    // create the matrix-free object
+    scratch_data->build(simulation_case->parameters.advec_diff.fe.type == FiniteElementType::FE_DGQ,
+                        simulation_case->parameters.advec_diff.fe.type ==
+                          FiniteElementType::FE_DGQ);
+
+    if (advec_diff_operation)
       advec_diff_operation->reinit();
 
-    /*
-     * print mesh information
-     */
+    // print mesh information
     CellMonitor<number>::add_info("advecDiff::cells",
                                   scratch_data->get_triangulation().n_global_active_cells(),
                                   scratch_data->get_min_cell_size(),
@@ -136,47 +124,38 @@ namespace MeltPoolDG::LevelSet
   void
   AdvectionDiffusionApplication<dim, number>::initialize()
   {
-    /*
-     *  setup DoFHandler
-     */
+    // setup DoFHandler
     dof_handler.reinit(*simulation_case->triangulation);
     dof_handler_velocity.reinit(*simulation_case->triangulation);
 
-    /*
-     *  setup scratch data
-     */
-    {
-      scratch_data = std::make_shared<ScratchData<dim, dim, number>>(
-        simulation_case->mpi_communicator,
-        simulation_case->parameters.base.verbosity_level,
-        simulation_case->parameters.advec_diff.linear_solver.do_matrix_free);
-      /*
-       *  setup mapping
-       */
-      scratch_data->set_mapping(
-        FiniteElementUtils::create_mapping<dim>(simulation_case->parameters.advec_diff.fe));
-      /*
-       *  create quadrature rule
-       */
-      advec_diff_quad_idx = scratch_data->attach_quadrature(
-        FiniteElementUtils::create_quadrature<dim>(simulation_case->parameters.advec_diff.fe));
+    // setup scratch data
+    scratch_data = std::make_shared<ScratchData<dim, dim, number>>(
+      simulation_case->mpi_communicator,
+      simulation_case->parameters.base.verbosity_level,
+      simulation_case->parameters.advec_diff.linear_solver.do_matrix_free);
 
-      advec_diff_dof_idx               = scratch_data->attach_dof_handler(dof_handler);
-      advec_diff_hanging_nodes_dof_idx = scratch_data->attach_dof_handler(dof_handler);
-      advec_diff_adaflo_dof_idx        = scratch_data->attach_dof_handler(dof_handler);
-      velocity_dof_idx                 = scratch_data->attach_dof_handler(dof_handler_velocity);
+    // setup mapping
+    scratch_data->set_mapping(
+      FiniteElementUtils::create_mapping<dim>(simulation_case->parameters.advec_diff.fe));
 
-      scratch_data->attach_constraint_matrix(constraints);
-      scratch_data->attach_constraint_matrix(hanging_node_constraints);
-      scratch_data->attach_constraint_matrix(hanging_node_constraints_with_zero_dirichlet);
-      scratch_data->attach_constraint_matrix(hanging_node_constraints_velocity);
-    }
+    // create quadrature rule
+    advec_diff_quad_idx = scratch_data->attach_quadrature(
+      FiniteElementUtils::create_quadrature<dim>(simulation_case->parameters.advec_diff.fe));
 
-    setup_dof_system();
+    // attach DoFHandler and AffineConstraints
+    advec_diff_dof_idx =
+      scratch_data->attach_dof_handler_and_constraint(dof_handler, advec_diff_full_constraints);
+    advec_diff_mesh_constraints_idx =
+      scratch_data->attach_dof_handler_and_constraint(dof_handler, advec_diff_mesh_constraints);
+    velocity_dof_idx = scratch_data->attach_dof_handler_and_constraint(dof_handler_velocity,
+                                                                       velocity_full_constraints);
 
-    /*
-     *  initialize the time iterator
-     */
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+    advec_diff_full_constraints_hom_dirichlet_idx = scratch_data->attach_dof_handler(dof_handler);
+    scratch_data->attach_constraint_matrix(advec_diff_full_constraints_hom_dirichlet);
+#endif
+
+    // initialize the time iterator
     time_iterator = std::make_unique<TimeIntegration::TimeIterator<number>>(
       simulation_case->parameters.time_stepping);
 
@@ -189,11 +168,9 @@ namespace MeltPoolDG::LevelSet
               simulation_case->get_boundary_condition("dirichlet", "advection_diffusion"),
               simulation_case->parameters.advec_diff,
               *time_iterator,
-              advection_velocity,
               advec_diff_dof_idx,
-              advec_diff_hanging_nodes_dof_idx,
-              advec_diff_quad_idx,
-              velocity_dof_idx);
+              advec_diff_mesh_constraints_idx,
+              advec_diff_quad_idx);
 
             dynamic_cast<AdvectionDiffusionOperation<dim, number> *>(advec_diff_operation.get())
               ->set_inflow_outflow_bc(
@@ -205,17 +182,10 @@ namespace MeltPoolDG::LevelSet
               *scratch_data,
               simulation_case->parameters.advec_diff,
               *time_iterator,
-              advection_velocity,
               advec_diff_dof_idx,
               advec_diff_quad_idx,
-              velocity_dof_idx,
-              simulation_case->get_boundary_condition_manager("advection_diffusion"),
-              simulation_case->get_field_function("prescribed_velocity", "advection_diffusion"),
-              true);
-
-            /*In the DG case the boundary conditions are applied weakly inside the operator*/
+              simulation_case->get_boundary_condition_manager("advection_diffusion"));
           }
-        advec_diff_operation->reinit();
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (simulation_case->parameters.advec_diff.implementation == "adaflo")
@@ -228,29 +198,40 @@ namespace MeltPoolDG::LevelSet
         advec_diff_operation = std::make_unique<AdvectionDiffusionOperationAdaflo<dim, number>>(
           *scratch_data,
           *time_iterator,
-          advection_velocity,
-          advec_diff_adaflo_dof_idx,
+          advec_diff_full_constraints_hom_dirichlet_idx,
           advec_diff_dof_idx,
+          advec_diff_mesh_constraints_idx,
           advec_diff_quad_idx,
-          velocity_dof_idx,
           simulation_case->parameters.time_stepping,
           simulation_case->parameters.advec_diff,
           *simulation_case->get_boundary_condition_manager("advection_diffusion"));
-        advec_diff_operation->reinit();
       }
 #endif
     else
       AssertThrow(false, ExcNotImplemented());
-    /*
-     *  set initial conditions for the advected field
-     */
-    compute_advection_velocity(
-      *simulation_case->get_field_function("prescribed_velocity", "advection_diffusion"));
+
+    // -- dependencies
+    // set velocity of advection diffusion operation
+    if (simulation_case->parameters.advec_diff.implementation == "adaflo")
+      advec_diff_operation->set_advection_velocity(advection_velocity, velocity_dof_idx);
+    else
+      {
+        advection_velocity_function =
+          simulation_case->get_field_function("prescribed_velocity", "advection_diffusion");
+        advec_diff_operation->set_advection_velocity_function(advection_velocity_function);
+      }
+
+    // setup DoFHandler, AffineConstraints and ScratchData
+    setup_dof_system();
+
+    // set initial conditions for the advected field
     advec_diff_operation->set_initial_condition(
       *simulation_case->get_initial_condition("advection_diffusion"));
-    /*
-     *  initialize postprocessor
-     */
+
+    compute_advection_velocity(
+      *simulation_case->get_field_function("prescribed_velocity", "advection_diffusion"));
+
+    // initialize postprocessor
     post_processor =
       std::make_unique<Postprocessor<dim, number>>(scratch_data->get_mpi_comm(advec_diff_dof_idx),
                                                    simulation_case->parameters.output,
@@ -259,9 +240,7 @@ namespace MeltPoolDG::LevelSet
                                                    scratch_data->get_triangulation(
                                                      advec_diff_dof_idx),
                                                    scratch_data->get_pcout(2));
-    /*
-     *  initialize profiling
-     */
+    // initialize profiling
     if (simulation_case->parameters.profiling.enable)
       profiling_monitor =
         std::make_unique<Profiling::ProfilingMonitor<number>>(simulation_case->parameters.profiling,
@@ -274,13 +253,11 @@ namespace MeltPoolDG::LevelSet
     Function<dim, number> &advec_func)
   {
     scratch_data->initialize_dof_vector(advection_velocity, velocity_dof_idx);
-    /*
-     *  set the current time to the advection field function
-     */
+
+    //  set the current time to the advection field function
     advec_func.set_time(time_iterator->get_current_time());
-    /*
-     *  interpolate the values of the advection velocity
-     */
+
+    // interpolate the values of the advection velocity
     dealii::VectorTools::interpolate(scratch_data->get_mapping(),
                                      scratch_data->get_dof_handler(velocity_dof_idx),
                                      advec_func,
@@ -333,7 +310,7 @@ namespace MeltPoolDG::LevelSet
       locally_relevant_solution.reinit(scratch_data->get_partitioner(advec_diff_dof_idx));
       locally_relevant_solution.copy_locally_owned_data_from(
         advec_diff_operation->get_advected_field());
-      constraints.distribute(locally_relevant_solution);
+      advec_diff_full_constraints.distribute(locally_relevant_solution);
       locally_relevant_solution.update_ghost_values();
 
       KellyErrorEstimator<dim>::estimate(scratch_data->get_mapping(),
@@ -359,7 +336,9 @@ namespace MeltPoolDG::LevelSet
       advec_diff_operation->attach_vectors(vectors);
     };
 
-    const auto post = [&]() { constraints.distribute(advec_diff_operation->get_advected_field()); };
+    const auto post = [&]() {
+      advec_diff_full_constraints.distribute(advec_diff_operation->get_advected_field());
+    };
 
     const auto setup_dof_system = [&]() { this->setup_dof_system(); };
 

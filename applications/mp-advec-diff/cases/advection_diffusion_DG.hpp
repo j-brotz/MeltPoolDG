@@ -32,7 +32,6 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
 {
   static bool inflow_outflow_bc = false;
 
-
   template <int dim, typename number>
   class ExactSolution : public dealii::Function<dim, number>
   {
@@ -116,7 +115,6 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
   /*
    *      This class collects all relevant input data for the level set simulation
    */
-
   template <int dim, typename number>
   class SimulationAdvecDG : public LevelSet::AdvectionDiffusionCase<dim, number>
   {

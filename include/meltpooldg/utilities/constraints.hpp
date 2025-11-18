@@ -1,4 +1,6 @@
 #pragma once
+#include <deal.II/dofs/dof_tools.h>
+
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/core/periodic_boundary_conditions.hpp>

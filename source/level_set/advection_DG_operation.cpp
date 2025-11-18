@@ -21,40 +21,43 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   AdvectionDGOperation<dim, number>::AdvectionDGOperation(
-    const ScratchData<dim, dim, number>                           &scratch_data_in,
-    const AdvectionDiffusionData<number>                          &advec_diff_data_in,
-    const TimeIntegration::TimeIterator<number>                   &time_iterator,
-    VectorType                                                    &advection_velocity,
-    const unsigned int                                             advec_diff_dof_idx_in,
-    const unsigned int                                             advec_diff_quad_idx_in,
-    const unsigned int                                             velocity_dof_idx_in,
-    const std::shared_ptr<BoundaryConditionManager<dim, number>> &&boundary_conditions_in,
-    std::shared_ptr<dealii::Function<dim>>                       &&advection_field_in,
-    bool const enable_analytical_velocity_update_in)
+    const ScratchData<dim, dim, number>                          &scratch_data_in,
+    const AdvectionDiffusionData<number>                         &advec_diff_data_in,
+    const TimeIntegration::TimeIterator<number>                  &time_iterator,
+    const unsigned int                                            advec_diff_dof_idx_in,
+    const unsigned int                                            advec_diff_quad_idx_in,
+    const std::shared_ptr<BoundaryConditionManager<dim, number>> &boundary_conditions_in)
     : scratch_data(scratch_data_in)
     , time_iterator(time_iterator)
-    , advection_velocity(advection_velocity)
     , advec_diff_dof_idx(advec_diff_dof_idx_in)
     , advec_diff_quad_idx(advec_diff_quad_idx_in)
-    , velocity_dof_idx(velocity_dof_idx_in)
+    , boundary_conditions(boundary_conditions_in)
     , solution_history(std::max(advec_diff_data_in.predictor.n_old_solution_vectors,
                                 2U /*TODO: include time integration scheme*/))
-    , advection_DG_operator(scratch_data_in,
-                            advection_velocity,
-                            advec_diff_dof_idx_in,
-                            advec_diff_quad_idx_in,
-                            velocity_dof_idx_in,
-                            boundary_conditions_in,
-                            advection_field_in,
-                            enable_analytical_velocity_update_in)
-
   {
     this->advec_diff_data = advec_diff_data_in;
+  }
 
-    advection_integration = std::shared_ptr<TimeIntegration::TimeIntegratorBase<number>>(
-      time_integrator_factory<number>(advection_DG_operator,
-                                      advec_diff_data_in.time_integrator_data,
-                                      advec_diff_data_in.linear_solver,
+  template <int dim, typename number>
+  void
+  AdvectionDGOperation<dim, number>::create_operator()
+  {
+    AssertThrow(advection_velocity or advection_velocity_function,
+                ExcMessage(
+                  "Either advection_velocity or advection_velocity_function needs to be set."));
+    advection_DG_operator = std::make_shared<AdvectionDGOperator<dim, number>>(scratch_data,
+                                                                               advec_diff_dof_idx,
+                                                                               advec_diff_quad_idx,
+                                                                               boundary_conditions);
+    if (advection_velocity)
+      advection_DG_operator->set_advection_velocity(*advection_velocity, velocity_dof_idx);
+    else
+      advection_DG_operator->set_advection_velocity_function(advection_velocity_function);
+
+    time_integrator = std::shared_ptr<TimeIntegration::TimeIntegratorBase<number>>(
+      time_integrator_factory<number>(*advection_DG_operator,
+                                      this->advec_diff_data.time_integrator_data,
+                                      this->advec_diff_data.linear_solver,
                                       scratch_data.get_timer()));
   }
 
@@ -66,7 +69,6 @@ namespace MeltPoolDG::LevelSet
     FECellIntegrator<dim, 1, number> phi(scratch_data.get_matrix_free(),
                                          advec_diff_dof_idx,
                                          advec_diff_quad_idx);
-
 
     MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, number> inverse(phi);
 
@@ -126,16 +128,36 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
+  AdvectionDGOperation<dim, number>::set_advection_velocity(const VectorType &advection_velocity_in,
+                                                            const unsigned int velocity_dof_idx_in)
+  {
+    advection_velocity = &advection_velocity_in;
+    velocity_dof_idx   = velocity_dof_idx_in;
+  }
+
+  template <int dim, typename number>
+  void
+  AdvectionDGOperation<dim, number>::set_advection_velocity_function(
+    const std::shared_ptr<Function<dim, number>> &advection_velocity_function_in)
+  {
+    advection_velocity_function = advection_velocity_function_in;
+  }
+
+  template <int dim, typename number>
+  void
   AdvectionDGOperation<dim, number>::reinit()
   {
+    if (!advection_DG_operator)
+      create_operator();
+
     solution_history.apply(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, advec_diff_dof_idx); });
 
     scratch_data.initialize_dof_vector(rhs, advec_diff_dof_idx);
     scratch_data.initialize_dof_vector(user_rhs, advec_diff_dof_idx);
 
-    advection_integration->reinit(solution_history);
-    advection_integration->set_monitoring_vector(user_rhs);
+    time_integrator->reinit(solution_history);
+    time_integrator->set_monitoring_vector(user_rhs);
   }
 
 
@@ -143,6 +165,8 @@ namespace MeltPoolDG::LevelSet
   void
   AdvectionDGOperation<dim, number>::init_time_advance()
   {
+    solution_history.commit_old_solutions();
+
     const bool solution_update_ghosts =
       !solution_history.get_current_solution().has_ghost_elements();
     if (solution_update_ghosts)
@@ -161,9 +185,11 @@ namespace MeltPoolDG::LevelSet
     if (!this->ready_for_time_advance)
       init_time_advance();
 
-    const bool velocity_update_ghosts = !advection_velocity.has_ghost_elements();
-    if (velocity_update_ghosts)
-      advection_velocity.update_ghost_values();
+    const bool velocity_update_ghosts =
+      (advection_velocity) ? not advection_velocity->has_ghost_elements() : false;
+
+    if (advection_velocity and velocity_update_ghosts)
+      advection_velocity->update_ghost_values();
 
     const bool solution_update_ghosts =
       !solution_history.get_recent_old_solution().has_ghost_elements();
@@ -175,19 +201,22 @@ namespace MeltPoolDG::LevelSet
     // type alias for the pre- and post-processing functions
     std::function<void(number, number, VectorType &, const VectorType &)> pre_processing;
 
-    if (time_integrator_scheme_is_explicit(advection_integration->get_integrator_type()))
-      pre_processing =
-        [&](number time, number, VectorType &dst, const VectorType &current_solution) -> void {
-        advection_DG_operator.set_field_functions(time);
-        advection_DG_operator.apply_dirichlet_boundary_operator(time, dst, current_solution);
-      };
+    // if the time stepping scheme is explicit we need to move the inhomogeneity to the right
+    // hand side
+    if (time_integrator_scheme_is_explicit(time_integrator->get_integrator_type()))
+      {
+        pre_processing =
+          [&](number time, number, VectorType &dst, const VectorType &current_solution) -> void {
+          advection_DG_operator->update_time_velocity_function(time);
+          advection_DG_operator->apply_dirichlet_boundary_operator(time, dst, current_solution);
+        };
+      }
 
-    advection_integration->perform_time_step(time_iterator.get_current_time(),
-                                             time_iterator.get_current_time_increment(),
-                                             solution_history,
-                                             pre_processing);
+    time_integrator->perform_time_step(time_iterator.get_current_time(),
+                                       time_iterator.get_current_time_increment(),
+                                       solution_history,
+                                       pre_processing);
 
-    solution_history.commit_old_solutions();
 
     Journal::print_formatted_norm<number>(
       scratch_data.get_pcout(1),
@@ -206,13 +235,11 @@ namespace MeltPoolDG::LevelSet
     if (solution_update_ghosts)
       solution_history.get_recent_old_solution().zero_out_ghost_values();
 
-    if (velocity_update_ghosts)
-      advection_velocity.zero_out_ghost_values();
+    if (advection_velocity and velocity_update_ghosts)
+      advection_velocity->zero_out_ghost_values();
 
     if (do_finish_time_step)
-      {
-        this->finish_time_advance();
-      }
+      this->finish_time_advance();
 
     // update ghost values of solution
     solution_history.get_current_solution().update_ghost_values();

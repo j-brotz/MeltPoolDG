@@ -40,6 +40,19 @@ namespace MeltPoolDG::LevelSet
         inflow_outflow_bc) = 0;
 
     virtual void
+    setup_constraints(
+      ScratchData<dim, dim, number>         &mutable_scratch_data,
+      const PeriodicBoundaryConditions<dim> &pbc,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        &ls_dirichlet_bc_in,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        &normal_x_dirichlet_bc_in,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        &normal_y_dirichlet_bc_in,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        &normal_z_dirichlet_bc_in) = 0;
+
+    virtual void
     reinit() = 0;
 
     virtual void

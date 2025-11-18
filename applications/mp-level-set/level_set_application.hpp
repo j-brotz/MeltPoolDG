@@ -58,6 +58,7 @@ namespace MeltPoolDG::LevelSet
     std::unique_ptr<TimeIntegration::TimeIterator<number>>          time_iterator;
     std::unique_ptr<Postprocessor<dim, number>>                     post_processor;
     std::unique_ptr<Profiling::ProfilingMonitor<number>>            profiling_monitor;
+    std::shared_ptr<dealii::Function<dim, number>>                  prescribed_velocity_function;
 
     void
     initialize();

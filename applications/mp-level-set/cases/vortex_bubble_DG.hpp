@@ -103,6 +103,14 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
       : dealii::Function<dim, number>(dim)
     {}
 
+    number
+    value(const dealii::Point<dim, number> &p, const unsigned int c) const override
+    {
+      dealii::Vector<number> values(dim);
+      vector_value(p, values);
+      return values[c];
+    }
+
     void
     vector_value(const dealii::Point<dim, number> &p, dealii::Vector<number> &values) const override
     {

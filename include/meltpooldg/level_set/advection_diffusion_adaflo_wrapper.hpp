@@ -9,6 +9,7 @@
 #  include <meltpooldg/level_set/advection_diffusion_operation_base.hpp>
 #  include <meltpooldg/post_processing/generic_data_out.hpp>
 #  include <meltpooldg/time_integration/time_iterator.hpp>
+#  include <meltpooldg/utilities/constraints.hpp>
 
 #  include <adaflo/diagonal_preconditioner.h>
 #  include <adaflo/level_set_okz_advance_concentration.h>
@@ -30,57 +31,71 @@ namespace MeltPoolDG::LevelSet
     AdvectionDiffusionOperationAdaflo(
       const ScratchData<dim, dim, number>             &scratch_data,
       const TimeIntegration::TimeIterator<number>     &time_iterator,
-      const VectorType                                &advection_velocity,
       const int                                        advec_diff_zero_dirichlet_dof_idx,
       const int                                        advec_diff_dirichlet_dof_idx,
+      const int                                        advec_diff_hanging_nodes_dof_idx,
       const int                                        advec_diff_quad_idx,
-      const int                                        velocity_dof_idx,
       const TimeIntegration::TimeSteppingData<number> &time_stepping,
       const AdvectionDiffusionData<number>            &ls,
       const BoundaryConditionManager<dim, number>     &bc);
 
     void
-    reinit() override;
+    reinit() final;
 
     /**
      *  set initial solution of advected field
      */
     void
-    set_initial_condition(const dealii::Function<dim> &initial_field_function) override;
+    set_initial_condition(const dealii::Function<dim> &initial_field_function) final;
 
     void
-    init_time_advance() override;
+    set_advection_velocity(const VectorType  &advection_velocity_in,
+                           const unsigned int velocity_dof_idx_in) final;
+
+    void
+    set_advection_velocity_function(
+      const std::shared_ptr<dealii::Function<dim>> &advection_velocity) final;
+
+    void
+    setup_constraints(
+      ScratchData<dim, dim, number> &mutable_scratch_data,
+      const PeriodicBoundaryConditions<dim> & /*pbc*/,
+      const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+        &dirichlet_bc_in) final;
+
+    void
+    init_time_advance() final;
 
     /**
      * Solve time step
      */
     void
-    solve(const bool do_finish_time_step = true) override;
+    solve(const bool do_finish_time_step = true) final;
 
     const dealii::LinearAlgebra::distributed::Vector<number> &
-    get_advected_field() const override;
+    get_advected_field() const final;
 
     dealii::LinearAlgebra::distributed::Vector<number> &
-    get_advected_field() override;
+    get_advected_field() final;
 
     dealii::LinearAlgebra::distributed::Vector<number> &
-    get_user_rhs() override;
+    get_user_rhs() final;
 
     const dealii::LinearAlgebra::distributed::Vector<number> &
-    get_user_rhs() const override;
+    get_user_rhs() const final;
 
     void
     attach_vectors(
-      std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) override;
+      std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) final;
 
     void
-    attach_output_vectors(GenericDataOut<dim, number> &data_out) const override;
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const final;
 
     const dealii::LinearAlgebra::distributed::Vector<number> &
-    get_advected_field_old() const override;
+    get_advected_field_old() const final;
 
     dealii::LinearAlgebra::distributed::Vector<number> &
-    get_advected_field_old() override;
+    get_advected_field_old() final;
 
     const dealii::LinearAlgebra::distributed::Vector<number> &
     get_advected_field_old_old() const;
@@ -90,18 +105,19 @@ namespace MeltPoolDG::LevelSet
     set_adaflo_parameters(const TimeIntegration::TimeSteppingData<number> &time_stepping,
                           const AdvectionDiffusionData<number>            &ls,
                           int                                              advec_diff_dof_idx,
-                          int                                              advec_diff_quad_idx,
-                          int                                              velocity_dof_idx);
+                          int                                              advec_diff_quad_idx);
 
     void
-    set_velocity(bool initial_step = false);
+    create_operator();
+
+    void
+    update_velocity_history(bool initial_step = false);
 
     void
     initialize_vectors();
 
-    const ScratchData<dim, dim, number>                      &scratch_data;
-    const TimeIntegration::TimeIterator<number>              &time_iterator;
-    const dealii::LinearAlgebra::distributed::Vector<number> &advection_velocity;
+    const ScratchData<dim, dim, number>         &scratch_data;
+    const TimeIntegration::TimeIterator<number> &time_iterator;
     /**
      *  advected field
      */
@@ -117,9 +133,10 @@ namespace MeltPoolDG::LevelSet
     /**
      *  velocity
      */
-    VectorType velocity_vec;
-    VectorType velocity_vec_old;
-    VectorType velocity_vec_old_old;
+    const dealii::LinearAlgebra::distributed::Vector<number> *advection_velocity = nullptr;
+    VectorType                                                velocity_vec;
+    VectorType                                                velocity_vec_old;
+    VectorType                                                velocity_vec_old_old;
     /**
      * Boundary conditions for the advection diffusion operation
      */
@@ -146,7 +163,8 @@ namespace MeltPoolDG::LevelSet
     /**
      *  dof idx for constraints with dirichlet values (relevant for dirichlet neq 0)
      */
-    unsigned int dirichlet_dof_idx;
+    const unsigned int dirichlet_dof_idx     = dealii::numbers::invalid_unsigned_int;
+    const unsigned int hanging_nodes_dof_idx = dealii::numbers::invalid_unsigned_int;
   };
 
 } // namespace MeltPoolDG::LevelSet

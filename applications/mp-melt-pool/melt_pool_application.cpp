@@ -1363,7 +1363,7 @@ namespace MeltPoolDG
 
     scratch_data->create_partitioning();
 
-    // make constraints
+    // make constraints for advection diffusion
     Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim, number>(
       *scratch_data,
       simulation_case->get_boundary_condition("dirichlet", "level_set"),
