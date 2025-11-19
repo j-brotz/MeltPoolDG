@@ -2,24 +2,32 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 
-BETTER_ENUM(FSICouplingMethod, char, brinkman_penalty, unresolved_penalty);
-
-template <typename number>
-struct FluidStructureInteractionData
+namespace MeltPoolDG
 {
-  FSICouplingMethod fsi_coupling_method = FSICouplingMethod::brinkman_penalty;
-  number            permeability{};
+  BETTER_ENUM(FSICouplingMethod, char, brinkman_penalization, stokes_law);
 
-  void
-  add_parameters(dealii::ParameterHandler &prm)
+  template <typename number>
+  struct FluidStructureInteractionData
   {
-    prm.enter_subsection("brinkman penalization");
+    FSICouplingMethod fsi_coupling_method = FSICouplingMethod::brinkman_penalization;
+
+    BrinkmanPenalizationData<number> brinkman_penalization_data;
+
+    void
+    add_parameters(dealii::ParameterHandler &prm)
     {
-      prm.add_parameter("coupling method", fsi_coupling_method);
-      prm.add_parameter("permeability", permeability);
+      prm.enter_subsection("fluid structure interaction");
+      {
+        prm.add_parameter(
+          "coupling method",
+          fsi_coupling_method,
+          "Type of FSI coupling method. Available options are 'brinkman_penalization' and 'stokes_law'.");
+        brinkman_penalization_data.add_parameters(prm);
+      }
+      prm.leave_subsection();
     }
-    prm.leave_subsection();
-  }
-};
+  };
+} // namespace MeltPoolDG

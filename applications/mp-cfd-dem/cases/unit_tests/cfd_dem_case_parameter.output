@@ -30,11 +30,6 @@
             "type": "FE_Q"
         }
     },
-    "brinkman penalization":
-    {
-        "coupling method": "brinkman_penalty",
-        "permeability": "0"
-    },
     "compressible navier stokes":
     {
         "courant number": "0.15",
@@ -75,6 +70,15 @@
                 "residual tolerance alt": "1e-08",
                 "verbosity level": "-1"
             }
+        }
+    },
+    "fluid structure interaction":
+    {
+        "coupling method": "brinkman_penalization",
+        "brinkman penalization":
+        {
+            "mask type": "discontinuous",
+            "permeability": "0"
         }
     },
     "material":

@@ -16,8 +16,6 @@
 
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
-#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_fluid_to_obstacle.hpp>
-#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_util.hpp>
 #include <meltpooldg/fluid_structure_interaction/stokes_law.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/obstacle_forces.hpp>
@@ -93,7 +91,7 @@ void
 MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::cell_operation(
   const dealii::MatrixFree<dim, number> &matrix_free,
   const unsigned int                     cell_batch_id,
-const unsigned int dof_idx)
+  const unsigned int                     dof_idx)
 {
   cell_penalty_force = dealii::Tensor<1, dim, dealii::VectorizedArray<number>>();
   for (unsigned int i = 0; i < matrix_free.n_active_entries_per_cell_batch(cell_batch_id); ++i)

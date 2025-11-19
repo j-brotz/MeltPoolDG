@@ -31,7 +31,7 @@ namespace MeltPoolDG
     {
       amr.add_parameters(prm);
       base.add_parameters(prm);
-      brinkman_penalization_data.add_parameters(prm);
+      fluid_structure_interaction_data.add_parameters(prm);
       flow.add_parameters(prm);
       material.add_parameters(prm, true /*is_gas*/);
       time_stepping.add_parameters(prm);
@@ -79,7 +79,7 @@ namespace MeltPoolDG
 
     AdaptiveMeshingData<number>                      amr;
     BaseData                                         base;
-    FluidStructureInteractionData<number>            brinkman_penalization_data;
+    FluidStructureInteractionData<number>            fluid_structure_interaction_data;
     Flow::CompressibleFlowData<number>               flow;
     Flow::CompressibleFluidMaterialPhaseData<number> material;
     TimeIntegration::TimeSteppingData<number>        time_stepping;

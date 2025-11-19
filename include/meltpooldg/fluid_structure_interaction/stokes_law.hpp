@@ -8,7 +8,7 @@
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
-#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_util.hpp>
+#include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 
 namespace MeltPoolDG

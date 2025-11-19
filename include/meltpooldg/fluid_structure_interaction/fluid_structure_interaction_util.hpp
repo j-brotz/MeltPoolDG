@@ -3,13 +3,14 @@
 #include <deal.II/particles/particle_accessor.h>
 
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
-#include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 
 #include <functional>
 
 namespace MeltPoolDG
 {
+  BETTER_ENUM(MaskFunctionType, char, discontinuous);
+
   /**
    * Implementation of a discontinuous mask function, which returns one if a given coordinate is
    * inside an obstacle and zero otherwise.
@@ -39,34 +40,40 @@ namespace MeltPoolDG
       VectorizedArrayType(0.));
   }
 
+  template <int dim, typename VectorizedArrayType, typename ObstacleType>
+  VectorizedArrayType
+  mask_function(const MaskFunctionType                           mask_function_type,
+                const dealii::Point<dim, VectorizedArrayType> &location,
+                dealii::Particles::PropertyPool<dim>          &property_pool,
+                const typename dealii::Particles::PropertyPool<dim>::Handle handle)
+  {
+    switch (mask_function_type)
+      {
+        case MaskFunctionType::discontinuous:
+          return discontinuous_mask_function<dim, VectorizedArrayType, ObstacleType>(
+            location, property_pool, handle);
+        default:
+          AssertThrow(false,
+                      dealii::ExcMessage("Unknown mask function type."));
+      }
+    return VectorizedArrayType(0.);
+  }
+  
+
   /**
    * @brief Scratch data structure used for caching cell relevant data when computing the
    * Brinkman penalization force for a specific cell or cell batch in the case of vectroized
    * computations.
    */
-  template <int dim,
-            typename number,
-            typename ObstacleType,
-            typename VectorizedArrayType = dealii::VectorizedArray<number>>
-  struct BrinkmanPenalizationCellScratchData
+  template <int dim, typename number, typename ObstacleType>
+  struct CellObstacleCache
   {
-    using MaskFunctionType =
-      std::function<VectorizedArrayType(const dealii::Point<dim, VectorizedArrayType> &,
-                                        dealii::Particles::PropertyPool<dim> &,
-                                        typename dealii::Particles::PropertyPool<dim>::Handle)>;
-
-    BrinkmanPenalizationCellScratchData(
-      const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-      const FluidStructureInteractionData<number>    &brinkman_penalization_data,
-      MaskFunctionType                                mask_function =
-        discontinuous_mask_function<dim, VectorizedArrayType, ObstacleType>)
+    CellObstacleCache(const ObstacleField<dim, number, ObstacleType> &obstacle_handler)
       : relevant_obstacles(ObstacleType::n_obstacle_properties)
       , obstacle_handler(obstacle_handler)
-      , data(brinkman_penalization_data)
-      , mask_function(mask_function)
     {}
 
-    ~BrinkmanPenalizationCellScratchData()
+    ~CellObstacleCache()
     {
       for (auto handle : relevant_obstacle_handles)
         relevant_obstacles.deregister_particle(handle);
@@ -81,14 +88,6 @@ namespace MeltPoolDG
 
     /// Reference to the obstacle handler managing all obstacles in the domain.
     const ObstacleField<dim, number, ObstacleType> &obstacle_handler;
-
-    /// Data structure containing parameters required for computing the Brinkman penalization term.
-    const FluidStructureInteractionData<number> &data;
-
-    /// Mask function used in the computation of the Brinkman penalization term. The default
-    /// implementation returns 1.0 if the point lies inside the obstacle's radius, and 0.0
-    /// otherwise.
-    MaskFunctionType mask_function;
   };
 
   /**
@@ -98,10 +97,9 @@ namespace MeltPoolDG
    */
   template <int dim, typename number, typename ObstacleType>
   void
-  find_relevant_obstacles_in_cell_batch(
-    BrinkmanPenalizationCellScratchData<dim, number, ObstacleType> &data,
-    const dealii::MatrixFree<dim, number>                          &mf,
-    const unsigned                                                  cell_batch)
+  find_relevant_obstacles_in_cell_batch(CellObstacleCache<dim, number, ObstacleType> &data,
+                                        const dealii::MatrixFree<dim, number>        &mf,
+                                        const unsigned                                cell_batch)
   {
     for (auto handle : data.relevant_obstacle_handles)
       data.relevant_obstacles.deregister_particle(handle);
@@ -109,25 +107,5 @@ namespace MeltPoolDG
     data.relevant_obstacle_handles.clear();
     data.relevant_obstacle_handles =
       data.obstacle_handler.get_obstacles_in_cell_batch(data.relevant_obstacles, mf, cell_batch);
-  }
-
-  /**
-   * Helper function which does essentially the same as above but for a single cell.
-   *
-   * @param data Stores relebvant obstacles which to be checked if in the given cell.
-   * @param cell Cell for which relevant obstacles shall be find.
-   */
-  template <int dim, typename number, typename ObstacleType>
-  void
-  find_relevant_obstacles_in_cell(
-    BrinkmanPenalizationCellScratchData<dim, number, ObstacleType, number> &data,
-    const dealii::CellAccessor<dim>                                        &cell)
-  {
-    for (auto handle : data.relevant_obstacle_handles)
-      data.relevant_obstacles.deregister_particle(handle);
-
-    data.relevant_obstacle_handles.clear();
-    data.relevant_obstacle_handles =
-      data.obstacle_handler.get_obstacles_in_cell(data.relevant_obstacles, cell);
   }
 } // namespace MeltPoolDG
