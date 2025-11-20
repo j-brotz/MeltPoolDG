@@ -42,23 +42,23 @@ namespace MeltPoolDG
 
   template <int dim, typename VectorizedArrayType, typename ObstacleType>
   VectorizedArrayType
-  mask_function(const MaskFunctionType                           mask_function_type,
-                const dealii::Point<dim, VectorizedArrayType> &location,
-                dealii::Particles::PropertyPool<dim>          &property_pool,
+  mask_function(const MaskFunctionType                                      mask_function_type,
+                const dealii::Point<dim, VectorizedArrayType>              &location,
+                dealii::Particles::PropertyPool<dim>                       &property_pool,
                 const typename dealii::Particles::PropertyPool<dim>::Handle handle)
   {
     switch (mask_function_type)
       {
         case MaskFunctionType::discontinuous:
-          return discontinuous_mask_function<dim, VectorizedArrayType, ObstacleType>(
-            location, property_pool, handle);
+          return discontinuous_mask_function<dim, VectorizedArrayType, ObstacleType>(location,
+                                                                                     property_pool,
+                                                                                     handle);
         default:
-          AssertThrow(false,
-                      dealii::ExcMessage("Unknown mask function type."));
+          AssertThrow(false, dealii::ExcMessage("Unknown mask function type."));
       }
     return VectorizedArrayType(0.);
   }
-  
+
 
   /**
    * @brief Scratch data structure used for caching cell relevant data when computing the

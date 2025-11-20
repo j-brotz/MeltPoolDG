@@ -27,14 +27,10 @@
 
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::StokesLawSphericalParticleForce<dim, number, ObstacleType>::
-  StokesLawSphericalParticleForce(const VectorType                      &solution,
-                                  const dealii::MatrixFree<dim, number> &mf,
-                                  const unsigned                         dof_idx,
-                                  const unsigned                         quad_idx,
-                                  const number                           dynamic_viscosity)
-  : matrix_free(mf)
-  , dof_idx(dof_idx)
-  , quad_idx(quad_idx)
+  StokesLawSphericalParticleForce(const VectorType                     &solution,
+                                  const MatrixFreeContext<dim, number> &matrix_free,
+                                  const number                          dynamic_viscosity)
+  : matrix_free(matrix_free)
   , solution(solution)
   , dynamic_viscosity(dynamic_viscosity)
 {}
@@ -47,17 +43,17 @@ MeltPoolDG::StokesLawSphericalParticleForce<dim, number, ObstacleType>::add_load
   for (auto &particle : obstacle_field.get_particle_handler())
     {
       dealii::FEPointEvaluation<dim + 2, dim> fe_point_eval(
-        *matrix_free.get_mapping_info().mapping,
-        matrix_free.get_dof_handler(dof_idx).get_fe(),
+        *matrix_free.mf.get_mapping_info().mapping,
+        matrix_free.mf.get_dof_handler(matrix_free.dof_idx).get_fe(),
         dealii::UpdateFlags::update_values);
       dealii::Point<dim, number> coordinates_on_unit_cell =
-        matrix_free.get_mapping_info().mapping->transform_real_to_unit_cell(
+        matrix_free.mf.get_mapping_info().mapping->transform_real_to_unit_cell(
           particle.get_surrounding_cell(), particle.get_location());
 
       fe_point_eval.reinit(particle.get_surrounding_cell(),
                            dealii::ArrayView<dealii::Point<dim, number>>(coordinates_on_unit_cell));
       auto dof_cell = particle.get_surrounding_cell()->as_dof_handler_iterator(
-        matrix_free.get_dof_handler(dof_idx));
+        matrix_free.mf.get_dof_handler(matrix_free.dof_idx));
       dealii::Vector<number> dof_values(dof_cell->get_fe().n_dofs_per_cell());
       dof_cell->get_dof_values(solution, dof_values);
       fe_point_eval.evaluate(dof_values, dealii::EvaluationFlags::values);
@@ -89,31 +85,30 @@ MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::StokesLawFluidForce(
 template <int dim, typename number, typename ObstacleType>
 void
 MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::cell_operation(
-  const dealii::MatrixFree<dim, number> &matrix_free,
-  const unsigned int                     cell_batch_id,
-  const unsigned int                     dof_idx)
+  const MatrixFreeContext<dim, number> &matrix_free,
+  const unsigned int                    cell_batch_id)
 {
   cell_penalty_force = dealii::Tensor<1, dim, dealii::VectorizedArray<number>>();
-  for (unsigned int i = 0; i < matrix_free.n_active_entries_per_cell_batch(cell_batch_id); ++i)
+  for (unsigned int i = 0; i < matrix_free.mf.n_active_entries_per_cell_batch(cell_batch_id); ++i)
     {
-      const auto   cell        = matrix_free.get_cell_iterator(cell_batch_id, i);
+      const auto   cell        = matrix_free.mf.get_cell_iterator(cell_batch_id, i);
       const number cell_volume = cell->measure();
 
       for (const auto &particle : obstacle_handler.get_particle_handler().particles_in_cell(cell))
         {
           dealii::FEPointEvaluation<dim + 2, dim> fe_point_eval(
-            *matrix_free.get_mapping_info().mapping,
-            matrix_free.get_dof_handler(dof_idx).get_fe(),
+            *matrix_free.mf.get_mapping_info().mapping,
+            matrix_free.mf.get_dof_handler(matrix_free.dof_idx).get_fe(),
             dealii::UpdateFlags::update_values);
           dealii::Point<dim, number> coordinates_on_unit_cell =
-            matrix_free.get_mapping_info().mapping->transform_real_to_unit_cell(
+            matrix_free.mf.get_mapping_info().mapping->transform_real_to_unit_cell(
               particle.get_surrounding_cell(), particle.get_location());
 
           fe_point_eval.reinit(particle.get_surrounding_cell(),
                                dealii::ArrayView<dealii::Point<dim, number>>(
                                  coordinates_on_unit_cell));
           auto dof_cell = particle.get_surrounding_cell()->as_dof_handler_iterator(
-            matrix_free.get_dof_handler(dof_idx));
+            matrix_free.mf.get_dof_handler(matrix_free.dof_idx));
           dealii::Vector<number> dof_values(dof_cell->get_fe().n_dofs_per_cell());
           dof_cell->get_dof_values(solution, dof_values);
           fe_point_eval.evaluate(dof_values, dealii::EvaluationFlags::values);

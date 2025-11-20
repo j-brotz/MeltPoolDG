@@ -99,7 +99,7 @@ namespace MeltPoolDG
         comp_flow_operation->solve(time_iterator->get_current_time(),
                                    time_iterator->get_current_time_increment());
 
-        if (this->simulation_case->parameters.obstacle_data.stationary_obstacles)
+        if (false && this->simulation_case->parameters.obstacle_data.stationary_obstacles)
           obstacle_field->compute_loads_on_obstacles();
         else
           {
@@ -292,9 +292,7 @@ namespace MeltPoolDG
                 BrinkmanObstacleForce<dim, number, SphericalParticle<dim, number>>(
                   *obstacle_field,
                   comp_flow_operation->get_solution(),
-                  scratch_data->get_matrix_free(),
-                  comp_flow_dof_idx,
-                  comp_flow_quad_idx,
+                  {scratch_data->get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx},
                   simulation_case->parameters.fluid_structure_interaction_data
                     .brinkman_penalization_data));
             break;
@@ -316,9 +314,7 @@ namespace MeltPoolDG
               std::make_unique<ObstacleLoad<dim, number, SphericalParticle<dim, number>>>(
                 StokesLawSphericalParticleForce<dim, number, SphericalParticle<dim, number>>(
                   comp_flow_operation->get_solution(),
-                  scratch_data->get_matrix_free(),
-                  comp_flow_dof_idx,
-                  comp_flow_quad_idx,
+                  {scratch_data->get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx},
                   simulation_case->parameters.material.dynamic_viscosity));
             break;
           }

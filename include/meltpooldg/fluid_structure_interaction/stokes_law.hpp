@@ -7,8 +7,8 @@
 
 #include <deal.II/matrix_free/matrix_free.h>
 
-#include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
+#include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 
 namespace MeltPoolDG
@@ -22,16 +22,12 @@ namespace MeltPoolDG
      * @brief Constructor. Stores all relevant data internally.
      *
      * @param solution Reference to the solution of the flow field.
-     * @param mf Matrix free object used by the compressible flow solver.
-     * @param dof_idx DoF index within the matrix-free object.
-     * @param quad_idx Quadrature index within the matrix-free object.
+     * @param matrix_free MatrixFree object and corresponding relevant indices.
      * @param scratch_data Object for caching relevant data for the penalty term computation.
      */
-    StokesLawSphericalParticleForce(const VectorType                      &solution,
-                                    const dealii::MatrixFree<dim, number> &mf,
-                                    const unsigned                         dof_idx,
-                                    const unsigned                         quad_idx,
-                                    const number                           dynamic_viscosity);
+    StokesLawSphericalParticleForce(const VectorType                     &solution,
+                                    const MatrixFreeContext<dim, number> &matrix_free,
+                                    const number                          dynamic_viscosity);
 
     /**
      * Computes the hydrodynamic force exerted by the fluid on all obstacles in the provided
@@ -50,14 +46,8 @@ namespace MeltPoolDG
     add_load_to_obstacles(ObstacleField<dim, number, ObstacleType> &obstacle_field) const;
 
   private:
-    /// Matrix free object used by the compressible flow solver.
-    const dealii::MatrixFree<dim, number> &matrix_free;
-
-    /// DoF index within the matrix-free object.
-    unsigned dof_idx;
-
-    /// Quadrature index within the matrix-free object.
-    unsigned quad_idx;
+    /// Matrix free object and corresponding relevant indices used by the compressible flow solver.
+    const MatrixFreeContext<dim, number> matrix_free;
 
     /// Solution of the flow field.
     const VectorType &solution;
@@ -108,14 +98,12 @@ namespace MeltPoolDG
      * The resulting momentum penalty force is stored internally and used in the subsequent call to
      * quad_operation().
      *
-     * @param matrix_free The MatrixFree object relevant for the cell batch.
+     * @param matrix_free MatrixFree object and corresponding relevant indices.
      * @param cell_batch_id The index of the cell batch to process.
-     * @param dof_idx Index of the relevant dof handler in the matrix-free object.
      */
     void
-    cell_operation(const dealii::MatrixFree<dim, number> &matrix_free,
-                   const unsigned int                     cell_batch_id,
-                   const unsigned int                     dof_idx) override;
+    cell_operation(const MatrixFreeContext<dim, number> &matrix_free,
+                   unsigned int                          cell_batch_id) override;
 
     /**
      * Computes the penalty term at the given points. This function effectively returns the penalty

@@ -24,15 +24,11 @@ template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::BrinkmanObstacleForce(
   const ObstacleField<dim, number, ObstacleType> &obstacle_field,
   const VectorType                               &solution,
-  const dealii::MatrixFree<dim, number>          &mf,
-  const unsigned                                  dof_idx,
-  const unsigned                                  quad_idx,
+  const MatrixFreeContext<dim, number>           &matrix_free,
   const BrinkmanPenalizationData<number>         &data)
   : brinkman_penalization_data(data)
   , cell_obstacle_cache(obstacle_field)
-  , matrix_free(mf)
-  , dof_idx(dof_idx)
-  , quad_idx(quad_idx)
+  , matrix_free(matrix_free)
   , solution(solution)
 {}
 
@@ -60,11 +56,13 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
                      dealii::Tensor<1, dim, number> &,
                      const VectorType &,
                      const std::pair<unsigned, unsigned> &)>
-    local_apply_cell = [&](const dealii::MatrixFree<dim, number> &mf,
+    local_apply_cell = [&](const dealii::MatrixFree<dim, number> &,
                            dealii::Tensor<1, dim, number> &,
                            const VectorType                    &solution,
                            const std::pair<unsigned, unsigned> &cell_range) {
-      FECellIntegrator<dim, dim + 2, number> phi(mf, dof_idx, quad_idx);
+      FECellIntegrator<dim, dim + 2, number> phi(matrix_free.mf,
+                                                 matrix_free.dof_idx,
+                                                 matrix_free.quad_idx);
 
       for (unsigned cell = cell_range.first; cell < cell_range.second; ++cell)
         {
@@ -136,7 +134,7 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
     };
 
   dealii::Tensor<1, dim, number> particle_force_dummy;
-  matrix_free.cell_loop(local_apply_cell, particle_force_dummy, solution);
+  matrix_free.mf.cell_loop(local_apply_cell, particle_force_dummy, solution);
 
   // Step 3: Broadcast local force and torque results and accumulate them on all processes. This
   // results in the final fluid force and torque acting on the particles.
@@ -198,12 +196,11 @@ MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>:
 template <int dim, typename number, typename ObstacleType>
 void
 MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>::cell_operation(
-  const dealii::MatrixFree<dim, number> &matrix_free,
-  const unsigned int                     cell_batch_id,
-  const unsigned int /*dof_idx*/)
+  const MatrixFreeContext<dim, number> &matrix_free,
+  const unsigned int                    cell_batch_id)
 {
   find_relevant_obstacles_in_cell_batch<dim, number, ObstacleType>(cell_obstacle_cache,
-                                                                   matrix_free,
+                                                                   matrix_free.mf,
                                                                    cell_batch_id);
 }
 
@@ -257,11 +254,11 @@ MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>:
 template <int dim, typename number, typename ObstacleType>
 void
 MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>::cell_operation(
-  const dealii::MatrixFree<dim, number> &matrix_free,
-  const unsigned int                     cell_batch_id)
+  const MatrixFreeContext<dim, number> &matrix_free,
+  const unsigned int                    cell_batch_id)
 {
   find_relevant_obstacles_in_cell_batch<dim, number, ObstacleType>(cell_obstacle_cache,
-                                                                   matrix_free,
+                                                                   matrix_free.mf,
                                                                    cell_batch_id);
 }
 
