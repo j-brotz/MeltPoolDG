@@ -48,11 +48,11 @@ namespace MeltPoolDG::Flow
       const CompressibleFlowData<number>               &flow_data_in,
       const CompressibleFluidMaterialPhaseData<number> &material_data_in,
       const ScratchData<dim, dim, number>              &scratch_data_in,
-      const unsigned int                                dof_idx_in,
-      const unsigned int                                quad_idx_in,
+      const unsigned int                                dof_idx_in  = 0,
+      const unsigned int                                quad_idx_in = 0,
       const CompressibleFlowCutData<number>            *cut_data_in = nullptr)
       : flow_data(flow_data_in)
-      , scratch_data(scratch_data_in)
+      , scratch_data(const_cast<ScratchData<dim, dim, number>&>(scratch_data_in))
       , material(material_data_in)
       , cut(cut_data_in)
       , dof_idx(dof_idx_in)
@@ -72,7 +72,7 @@ namespace MeltPoolDG::Flow
     const CompressibleFlowData<number> flow_data;
 
     /// Mapping-, finite-element-, and quadrature-related parameters
-    const ScratchData<dim, dim, number> &scratch_data;
+    ScratchData<dim, dim, number> &scratch_data;
 
     /// Material parameters and thermodynamic relations
     const CompressibleFlowMaterial<dim, number> material;
@@ -81,10 +81,10 @@ namespace MeltPoolDG::Flow
     const CompressibleFlowCutData<number> *cut = nullptr;
 
     /// DoF index within the matrix-free object
-    const unsigned int dof_idx = 0;
+    unsigned int dof_idx = 0;
 
     /// Quadrature index within the matrix-free object
-    const unsigned int quad_idx = 0;
+    unsigned int quad_idx = 0;
 
     /// Boolean variable indicating whether viscosity is present
     bool is_viscous = false;

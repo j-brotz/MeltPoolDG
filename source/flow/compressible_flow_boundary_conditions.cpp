@@ -45,8 +45,10 @@ namespace MeltPoolDG::Flow
           for (const auto &boundary : boundary_condition_function)
             no_slip_adiabatic_wall_boundaries.insert(boundary.first);
         else
-          AssertThrow(false,
-                      dealii::ExcMessage("The provided boundary condition is not supported."));
+          AssertThrow(
+            false,
+            dealii::ExcMessage(
+              "The provided boundary condition is not supported for compressible flows."));
       }
   }
 

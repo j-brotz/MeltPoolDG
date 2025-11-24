@@ -6,7 +6,10 @@
 
 #include <deal.II/grid/tria.h>
 
+#include "meltpooldg/flow/cfd_dem_flow_operation.hpp"
+#include "meltpooldg/phase_change/evaporation_data.hpp"
 #include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/flow/adaflo_wrapper_wrapper.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
@@ -87,17 +90,17 @@ namespace MeltPoolDG
     while (not time_iterator->is_finished())
       {
         // use CFL condition to compute time step size if required
-        if (simulation_case->parameters.flow.do_cfl_time_stepping)
+        if (simulation_case->parameters.compressible_flow.do_cfl_time_stepping)
           time_iterator->set_current_time_increment(
-            std::min(comp_flow_operation->compute_time_step_size(),
+            std::min(flow_operation.compute_time_step_size(),
                      simulation_case->parameters.time_stepping.time_step_size),
             std::numeric_limits<number>::max());
 
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout(1));
 
-        comp_flow_operation->solve(time_iterator->get_current_time(),
-                                   time_iterator->get_current_time_increment());
+        flow_operation.solve(time_iterator->get_current_time(),
+                             time_iterator->get_current_time_increment());
 
         if (false && this->simulation_case->parameters.obstacle_data.stationary_obstacles)
           obstacle_field->compute_loads_on_obstacles();
@@ -138,21 +141,21 @@ namespace MeltPoolDG
 
   template <int dim, typename number>
   void
-  CfdDemApplication<dim, number>::setup_dof_system(const bool do_reinit)
+  CfdDemApplication<dim, number>::setup_dof_system()
   {
     // distribute DoFs
-    comp_flow_operation->distribute_dofs(dof_handler);
+    flow_operation.distribute_dofs();
 
     scratch_data->create_partitioning();
 
+    // TODO: Can we put this somewhere else?
     simulation_case->set_time_boundary_conditions(
       simulation_case->parameters.time_stepping.start_time);
 
     // create the matrix-free object
     scratch_data->build(true, true, false, false);
 
-    if (do_reinit)
-      comp_flow_operation->reinit();
+    flow_operation.reinit();
 
     // print mesh information
     {
@@ -174,7 +177,7 @@ namespace MeltPoolDG
     if (scratch_data->get_degree(comp_flow_dof_idx) < 2)
       amr_indicator.add_indicator(
         std::make_unique<AMR::JumpIndicator<dim, number>>(scratch_data->get_matrix_free(),
-                                                          comp_flow_operation->get_solution(),
+                                                          flow_operation.get_solution(),
                                                           comp_flow_dof_idx,
                                                           comp_flow_quad_idx,
                                                           0));
@@ -182,14 +185,14 @@ namespace MeltPoolDG
       {
         amr_indicator.add_indicator(
           std::make_unique<AMR::JumpIndicator<dim, number>>(scratch_data->get_matrix_free(),
-                                                            comp_flow_operation->get_solution(),
+                                                            flow_operation.get_solution(),
                                                             comp_flow_dof_idx,
                                                             comp_flow_quad_idx,
                                                             0),
           1. / scratch_data->get_degree(0));
         amr_indicator.add_indicator(std::make_unique<AMR::SSEDIndicator<dim, number>>(
                                       scratch_data->get_matrix_free(),
-                                      comp_flow_operation->get_solution(),
+                                      flow_operation.get_solution(),
                                       comp_flow_dof_idx,
                                       comp_flow_quad_idx,
                                       0,
@@ -202,23 +205,14 @@ namespace MeltPoolDG
   void
   CfdDemApplication<dim, number>::initialize()
   {
-    // setup DoFHandler
-    dof_handler.reinit(*simulation_case->triangulation);
-
     // setup scratch data
     {
       scratch_data = std::make_shared<ScratchData<dim, dim, number>>(
         simulation_case->mpi_communicator, simulation_case->parameters.base.verbosity_level, true);
+
       // set up mapping
       scratch_data->set_mapping(
-        FiniteElementUtils::create_mapping<dim>(simulation_case->parameters.flow.fe));
-
-      // create quadrature rule
-      comp_flow_quad_idx = scratch_data->attach_quadrature(
-        FiniteElementUtils::create_quadrature<dim>(simulation_case->parameters.flow.fe));
-
-      comp_flow_dof_idx = scratch_data->attach_dof_handler(dof_handler);
-      scratch_data->attach_constraint_matrix(constraints);
+        FiniteElementUtils::create_mapping<dim>(simulation_case->parameters.base.fe));
     }
 
     // initialize the time iterator
@@ -228,38 +222,52 @@ namespace MeltPoolDG
     // initialize obstacle field
     obstacle_field = std::make_unique<ObstacleField<dim, number, SphericalParticle<dim, number>>>(
       simulation_case->parameters.obstacle_data,
-      scratch_data->get_triangulation(),
+      *simulation_case->triangulation,
       scratch_data->get_mapping());
 
     // initialize compressible flow operation
-    comp_flow_operation = std::make_unique<Flow::DGCompressibleFlowOperation<dim, number>>(
-      *scratch_data,
-      simulation_case->parameters.flow,
-      simulation_case->parameters.material,
-      comp_flow_dof_idx,
-      comp_flow_quad_idx);
+    switch (simulation_case->parameters.application.flow_solver_type)
+      {
+          case FlowSolverType::compressible: {
+            flow_operation = Flow::CfdDemFlowOperation<dim, number>(
+              std::make_unique<Flow::DGCompressibleFlowOperation<dim, number>>(
+                *simulation_case->triangulation,
+                *scratch_data,
+                simulation_case->parameters.compressible_flow,
+                simulation_case->parameters.compressible_material));
+            break;
+          }
+          case FlowSolverType::incompressible: {
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+            flow_operation = Flow::CfdDemFlowOperation<dim, number>(
+              std::make_unique<Flow::IncompressibleFlowSolverWrapper<dim, number>>(
+                simulation_case->parameters.incompressible_flow,
+                simulation_case->parameters.fluid_structure_interaction_data,
+                *simulation_case->triangulation,
+                scratch_data->get_mapping(),
+                *scratch_data));
+            break;
+#endif
+          }
+        default:
+          AssertThrow(false, dealii::ExcMessage("The provided flow solver type is not supported."));
+      }
+
+    flow_operation.distribute_dofs();
+
+    // create quadrature rule
+    flow_operation.create_quadrature();
+
+    // create constraints
+    flow_operation.create_constraints();
 
     setup_dof_system();
 
     // set boundary conditions
-    comp_flow_operation->set_boundary_conditions(simulation_case, "cfd_dem");
-
-    // initialize operation
-    comp_flow_operation->reinit();
+    flow_operation.set_boundary_conditions(simulation_case, "cfd_dem");
 
     // set initial condition for the flow field
-    comp_flow_operation->set_initial_condition(*simulation_case->get_initial_condition("cfd_dem"));
-
-    // set fluid body force
-    if (dim > 1 and simulation_case->parameters.flow.gravity_constant > 0.)
-      {
-        std::unique_ptr<dealii::Functions::ConstantFunction<dim>> body_force =
-          std::make_unique<dealii::Functions::ConstantFunction<dim>>(
-            dim > 2 ?
-              std::vector<number>({0., 0., -simulation_case->parameters.flow.gravity_constant}) :
-              std::vector<number>({0., -simulation_case->parameters.flow.gravity_constant}));
-        comp_flow_operation->set_body_force(std::move(body_force));
-      }
+    flow_operation.set_initial_condition(*simulation_case->get_initial_condition("cfd_dem"));
 
     // setup amr indicator
     setup_amr_indicator();
@@ -291,7 +299,7 @@ namespace MeltPoolDG
               std::make_unique<ObstacleLoad<dim, number, SphericalParticle<dim, number>>>(
                 BrinkmanObstacleForce<dim, number, SphericalParticle<dim, number>>(
                   *obstacle_field,
-                  comp_flow_operation->get_solution(),
+                  flow_operation.get_solution(),
                   {scratch_data->get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx},
                   simulation_case->parameters.fluid_structure_interaction_data
                     .brinkman_penalization_data));
@@ -300,9 +308,9 @@ namespace MeltPoolDG
           case FSICouplingMethod::stokes_law: {
             fsi_fluid_force_residual =
               std::make_shared<StokesLawFluidForce<dim, number, SphericalParticle<dim, number>>>(
-                comp_flow_operation->get_solution(),
+                flow_operation.get_solution(),
                 *obstacle_field,
-                simulation_case->parameters.material.dynamic_viscosity);
+                simulation_case->parameters.compressible_material.dynamic_viscosity);
             fsi_fluid_force_jacobian = std::make_shared<
               BrinkmanPenalizationJacobianContribution<dim,
                                                        number,
@@ -313,23 +321,23 @@ namespace MeltPoolDG
             fsi_obstacle_load =
               std::make_unique<ObstacleLoad<dim, number, SphericalParticle<dim, number>>>(
                 StokesLawSphericalParticleForce<dim, number, SphericalParticle<dim, number>>(
-                  comp_flow_operation->get_solution(),
+                  flow_operation.get_solution(),
                   {scratch_data->get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx},
-                  simulation_case->parameters.material.dynamic_viscosity));
+                  simulation_case->parameters.compressible_material.dynamic_viscosity));
             break;
           }
         default:
           AssertThrow(false,
                       dealii::ExcMessage("The provided FSI coupling method is not supported."));
       }
-    comp_flow_operation->add_external_force(fsi_fluid_force_residual, fsi_fluid_force_jacobian);
+    flow_operation.add_external_force(fsi_fluid_force_residual, fsi_fluid_force_jacobian);
 
     // add relevant obstacle forces to obstacle field
     obstacle_field->add_load_type(std::move(*fsi_obstacle_load));
 
     obstacle_field->add_load_type(
       ObstacleGravitationalForce<dim, number, SphericalParticle<dim, number>>(
-        this->simulation_case->parameters.flow.gravity_constant));
+        this->simulation_case->parameters.compressible_flow.gravity_constant));
 
     // initialize postprocessor
     post_processor =
@@ -371,7 +379,7 @@ namespace MeltPoolDG
       return;
 
     const auto attach_output_vectors = [&](GenericDataOut<dim, number> &data_out) {
-      comp_flow_operation->attach_output_vectors(data_out);
+      flow_operation.attach_output_vectors(data_out);
     };
 
     GenericDataOut<dim, number> generic_data_out(
@@ -424,7 +432,7 @@ namespace MeltPoolDG
       };
 
     const std::function<void(std::vector<VectorType *> &)> attach_vectors =
-      [&](std::vector<VectorType *> &in) { in.push_back(&comp_flow_operation->get_solution()); };
+      [&](std::vector<VectorType *> &in) { in.push_back(&flow_operation.get_solution()); };
 
     std::function<void()> pre = [&] {
       obstacle_field->get_particle_handler().prepare_for_coarsening_and_refinement();
@@ -450,10 +458,10 @@ namespace MeltPoolDG
     };
 
     std::function<void()> setup_dofs = [&] {
-      comp_flow_operation->distribute_dofs(dof_handler);
+      flow_operation.distribute_dofs();
       scratch_data->create_partitioning();
       scratch_data->build(true, true, false, false);
-      comp_flow_operation->reinit();
+      flow_operation.reinit();
     };
 
     AMR::refine_grid(mark_cells_for_refinement,
@@ -485,11 +493,11 @@ namespace MeltPoolDG
       [&](DoFHandlerAndVectorDataType<dim, VectorType> &in) {
         in.emplace_back(&scratch_data->get_dof_handler(comp_flow_dof_idx),
                         [&](std::vector<VectorType *> &vec_in) {
-                          vec_in.push_back(&comp_flow_operation->get_solution());
+                          vec_in.push_back(&flow_operation.get_solution());
                         });
       };
 
-    std::function<void()> setup_dof_system = [&]() { this->setup_dof_system(true); };
+    std::function<void()> setup_dof_system = [&]() { this->setup_dof_system(); };
 
     std::function<void()> post = [&]() { obstacle_field->deserialize(); };
 
@@ -515,7 +523,7 @@ namespace MeltPoolDG
       [&](DoFHandlerAndVectorDataType<dim, VectorType> &in) {
         in.emplace_back(&scratch_data->get_dof_handler(comp_flow_dof_idx),
                         [&](std::vector<VectorType *> &vec_in) {
-                          vec_in.push_back(&comp_flow_operation->get_solution());
+                          vec_in.push_back(&flow_operation.get_solution());
                         });
       };
 

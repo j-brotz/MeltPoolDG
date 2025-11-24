@@ -18,6 +18,10 @@
 
 #include <deal.II/base/function.h>
 
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/grid/tria.h>
+
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
@@ -51,9 +55,25 @@ namespace MeltPoolDG::Flow
      * @param scratch_data Reference to the used ScratchData object.
      * @param flow_data Reference to the compressible flow data struct used.
      * @param material_data_in Reference to the material data struct.
-     * @param flow_dof_idx Index of the used dof handler in @p scratch_data_in.
-     * @param flow_quad_idx Index of the used quadrature object in @p scratch_data_in.
-     * @param external_forces Pointer to a struct implementing external forces acting on the fluid.
+     */
+    explicit DGCompressibleFlowOperation(
+      const dealii::Triangulation<dim>                 &tria,
+      ScratchData<dim, dim, number>                    &scratch_data,
+      const CompressibleFlowData<number>               &flow_data,
+      const CompressibleFluidMaterialPhaseData<number> &material_data_in);
+
+
+    /**
+     * @brief Constructor.
+     *
+     * Initializes all internal data structures required to simulate compressible Navier-Stokes
+     * flows.
+     *
+     * @param scratch_data Reference to the used ScratchData object.
+     * @param flow_data Reference to the compressible flow data struct used.
+     * @param material_data_in Reference to the material data struct.
+     * @param flow_dof_idx Index of the used dof handler in @p scratch_data.
+     * @param flow_quad_idx Index of the used quadrature object in @p scratch_data.
      */
     explicit DGCompressibleFlowOperation(
       const ScratchData<dim, dim, number>              &scratch_data,
@@ -86,6 +106,26 @@ namespace MeltPoolDG::Flow
      */
     void
     distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const;
+
+    /**
+     * @brief Distribute the degrees of freedom to the object local dof handler and attach it to scratch data.
+     */
+    void
+    distribute_dofs();
+
+    /**
+     * @brief Create the quadrature object and attach it to scratch data.
+     */
+    void
+    create_quadrature();
+
+    /**
+     * @brief Create the required constraints and attach it to scratch data.
+     */
+    void
+    create_constraints();
+
+
 
     /**
      * @brief Set the boundary conditions.
@@ -180,6 +220,11 @@ namespace MeltPoolDG::Flow
 
     /// Solution vector in primitive variable formulation (pressure, velocity, temperature)
     VectorType solution_primitive_variables;
+
+    ///
+    dealii::DoFHandler<dim> dof_handler;
+
+    dealii::AffineConstraints<number> constraints;
 
     /**
      * @brief Compute the convective time step limit for the current mesh and flow field.

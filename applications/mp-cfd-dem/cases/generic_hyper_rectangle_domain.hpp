@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deal.II/base/bounding_box.h>
+#include <deal.II/base/exception_macros.h>
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_parser.h>
@@ -43,15 +44,38 @@ namespace MeltPoolDG::Simulation::CfdDem
                          const std::shared_ptr<dealii::Function<dim, number>> density,
                          const std::shared_ptr<dealii::Function<dim, number>> velocity,
                          const std::shared_ptr<dealii::Function<dim, number>> energy,
+                         const FlowSolverType                                 flow_solver_type,
                          const number     inflow_ramp_up_duration = 0.,
                          const RampUpType ramp_up_type            = RampUpType::linear)
-      : dealii::Function<dim, number>(dim + 2, initial_time)
+      : dealii::Function<dim, number>(flow_solver_type == FlowSolverType::compressible ? dim + 2 :
+                                                                                         dim,
+                                      initial_time)
       , density(density)
       , velocity(velocity)
       , energy(energy)
       , inflow_ramp_up_duration(inflow_ramp_up_duration)
       , ramp_up_type(ramp_up_type)
+      , flow_solver_type(flow_solver_type)
     {}
+
+    ConservativeFunction(const number                                         initial_time,
+                         const std::shared_ptr<dealii::Function<dim, number>> velocity,
+                         const FlowSolverType                                 flow_solver_type,
+                         const number     inflow_ramp_up_duration = 0.,
+                         const RampUpType ramp_up_type            = RampUpType::linear)
+      : dealii::Function<dim, number>(flow_solver_type == FlowSolverType::compressible ? dim + 2 :
+                                                                                         dim,
+                                      initial_time)
+      , velocity(velocity)
+      , inflow_ramp_up_duration(inflow_ramp_up_duration)
+      , ramp_up_type(ramp_up_type)
+      , flow_solver_type(flow_solver_type)
+    {
+      AssertThrow(
+        flow_solver_type == FlowSolverType::incompressible,
+        dealii::ExcMessage(
+          "Density and energy functions must be provided for compressible flow solver type."));
+    }
 
     /**
      * Set the time for the function.
@@ -118,31 +142,47 @@ namespace MeltPoolDG::Simulation::CfdDem
         return density->value(loc, 0) * (energy->value(loc, 0) + 0.5 * velocity_vec.norm_sqr());
       };
 
-      switch (component)
+      switch (flow_solver_type)
         {
-          case 0:
-            return density->value(loc, 0);
+          case FlowSolverType::compressible:
+            switch (component)
+              {
+                case 0:
+                  return density->value(loc, 0);
+                  break;
+                case 1:
+                  return density->value(loc, 0) * inflow_ramp_up_scaling() *
+                         velocity->value(loc, 0);
+                  break;
+                case 2:
+                  return density->value(loc, 0) * inflow_ramp_up_scaling() *
+                         velocity->value(loc, 1);
+                  break;
+                case 3:
+                  if constexpr (dim == 3)
+                    return density->value(loc, 0) * inflow_ramp_up_scaling() *
+                           velocity->value(loc, 2);
+                  else
+                    return compute_conserved_energy(loc);
+                  break;
+                case 4:
+                  if constexpr (dim == 3)
+                    return compute_conserved_energy(loc);
+                  else
+                    AssertThrow(false, dealii::ExcInternalError());
+                  break;
+                default:
+                  AssertThrow(false, dealii::ExcInternalError());
+              }
             break;
-          case 1:
-            return density->value(loc, 0) * inflow_ramp_up_scaling() * velocity->value(loc, 0);
-            break;
-          case 2:
-            return density->value(loc, 0) * inflow_ramp_up_scaling() * velocity->value(loc, 1);
-            break;
-          case 3:
-            if constexpr (dim == 3)
-              return density->value(loc, 0) * inflow_ramp_up_scaling() * velocity->value(loc, 2);
-            else
-              return compute_conserved_energy(loc);
-            break;
-          case 4:
-            if constexpr (dim == 3)
-              return compute_conserved_energy(loc);
-            else
-              AssertThrow(false, dealii::ExcInternalError());
+          case FlowSolverType::incompressible:
+            AssertThrow(component < dim,
+                        dealii::ExcMessage(
+                          "For incompressible flow, only velocity components are defined."));
+            return inflow_ramp_up_scaling() * velocity->value(loc, component);
             break;
           default:
-            AssertThrow(false, dealii::ExcInternalError());
+            AssertThrow(false, dealii::ExcMessage("Unknown flow solver type!"));
         }
     }
 
@@ -161,6 +201,8 @@ namespace MeltPoolDG::Simulation::CfdDem
 
     /// In the case of an inflow boundary the type of ramp-up function for the velocity.
     const RampUpType ramp_up_type;
+
+    const FlowSolverType flow_solver_type;
   };
 
 
@@ -206,39 +248,59 @@ namespace MeltPoolDG::Simulation::CfdDem
      * @return Shared pointer to a dealii::Function representing the boundary condition.
      */
     std::shared_ptr<dealii::Function<dim>>
-    create_boundary_function(const number start_time)
+    create_boundary_function(const number start_time, FlowSolverType flow_solver_type)
     {
       switch (type)
         {
             case (Flow::CompressibleBoundaryConditionType::inflow): {
-              auto density_boundary_function =
-                std::make_shared<dealii::FunctionParser<dim>>(1, start_time);
-              density_boundary_function->initialize(
-                dealii::FunctionParser<dim>::default_variable_names(),
-                density,
-                typename dealii::FunctionParser<dim>::ConstMap());
-
-              auto velocity_boundary_function = std::make_shared<dealii::FunctionParser<dim>>(dim);
+              auto velocity_boundary_function =
+                std::make_shared<dealii::FunctionParser<dim>>(dim, start_time);
               velocity_boundary_function->initialize(
                 dealii::FunctionParser<dim>::default_variable_names(),
                 velocity,
                 typename dealii::FunctionParser<dim>::ConstMap());
 
-              auto energy_boundary_function =
-                std::make_shared<dealii::FunctionParser<dim>>(1, start_time);
-              energy_boundary_function->initialize(
-                dealii::FunctionParser<dim>::default_variable_names(),
-                energy,
-                typename dealii::FunctionParser<dim>::ConstMap());
+              switch (flow_solver_type)
+                {
+                    case FlowSolverType::compressible: {
+                      auto density_boundary_function =
+                        std::make_shared<dealii::FunctionParser<dim>>(1, start_time);
+                      density_boundary_function->initialize(
+                        dealii::FunctionParser<dim>::default_variable_names(),
+                        density,
+                        typename dealii::FunctionParser<dim>::ConstMap());
 
-              return std::make_shared<ConservativeFunction<dim, number>>(start_time,
-                                                                         density_boundary_function,
-                                                                         velocity_boundary_function,
-                                                                         energy_boundary_function,
-                                                                         inflow_ramp_up_duration,
-                                                                         inflow_ramp_up_type);
+                      auto energy_boundary_function =
+                        std::make_shared<dealii::FunctionParser<dim>>(1, start_time);
+                      energy_boundary_function->initialize(
+                        dealii::FunctionParser<dim>::default_variable_names(),
+                        energy,
+                        typename dealii::FunctionParser<dim>::ConstMap());
+
+                      return std::make_shared<ConservativeFunction<dim, number>>(
+                        start_time,
+                        density_boundary_function,
+                        velocity_boundary_function,
+                        energy_boundary_function,
+                        flow_solver_type,
+                        inflow_ramp_up_duration,
+                        inflow_ramp_up_type);
+                      break;
+                    }
+                    case FlowSolverType::incompressible: {
+                      return velocity_boundary_function;
+                      break;
+                    }
+                    default: {
+                      AssertThrow(false, dealii::ExcMessage("Unknown flow solver type!"));
+                    }
+                }
             }
             case (Flow::CompressibleBoundaryConditionType::subsonic_outflow_fixed_energy): {
+              AssertThrow(flow_solver_type == FlowSolverType::compressible,
+                          dealii::ExcMessage("The subsonic outflow with fixed energy "
+                                             "boundary condition is only supported "
+                                             "for compressible flows."));
               auto energy_boundary_function =
                 std::make_shared<dealii::FunctionParser<dim>>(1, start_time);
               energy_boundary_function->initialize(
@@ -334,11 +396,13 @@ namespace MeltPoolDG::Simulation::CfdDem
     void
     set_boundary_conditions() override
     {
+      std::shared_ptr<dealii::Function<dim>> initial_condition;
       for (unsigned i = 0; i < scenario_data.boundary_conditions.size(); ++i)
         this->attach_boundary_condition(
           std::make_pair(i,
                          scenario_data.boundary_conditions[i].create_boundary_function(
-                           this->parameters.time_stepping.start_time)),
+                           this->parameters.time_stepping.start_time,
+                           this->parameters.application.flow_solver_type)),
           boundary_type_to_string_map.at(scenario_data.boundary_conditions[i].type),
           "cfd_dem");
     }
@@ -346,21 +410,45 @@ namespace MeltPoolDG::Simulation::CfdDem
     void
     set_field_conditions() override
     {
-      auto density = std::make_shared<dealii::FunctionParser<dim>>(1);
-      density->initialize(dealii::FunctionParser<dim>::default_variable_names(),
-                          scenario_data.initial_condition.density,
-                          typename dealii::FunctionParser<dim>::ConstMap());
-      auto velocity = std::make_shared<dealii::FunctionParser<dim>>(dim);
-      velocity->initialize(dealii::FunctionParser<dim>::default_variable_names(),
-                           scenario_data.initial_condition.velocity,
-                           typename dealii::FunctionParser<dim>::ConstMap());
-      auto energy = std::make_shared<dealii::FunctionParser<dim>>(1);
-      energy->initialize(dealii::FunctionParser<dim>::default_variable_names(),
-                         scenario_data.initial_condition.energy,
-                         typename dealii::FunctionParser<dim>::ConstMap());
-
-      auto initial_condition = std::make_shared<ConservativeFunction<dim, number>>(
-        this->parameters.time_stepping.start_time, density, velocity, energy);
+      std::shared_ptr<dealii::Function<dim>> initial_condition;
+      switch (this->parameters.application.flow_solver_type)
+        {
+            case FlowSolverType::compressible: {
+              auto density = std::make_shared<dealii::FunctionParser<dim>>(1);
+              density->initialize(dealii::FunctionParser<dim>::default_variable_names(),
+                                  scenario_data.initial_condition.density,
+                                  typename dealii::FunctionParser<dim>::ConstMap());
+              auto velocity = std::make_shared<dealii::FunctionParser<dim>>(dim);
+              velocity->initialize(dealii::FunctionParser<dim>::default_variable_names(),
+                                   scenario_data.initial_condition.velocity,
+                                   typename dealii::FunctionParser<dim>::ConstMap());
+              auto energy = std::make_shared<dealii::FunctionParser<dim>>(1);
+              energy->initialize(dealii::FunctionParser<dim>::default_variable_names(),
+                                 scenario_data.initial_condition.energy,
+                                 typename dealii::FunctionParser<dim>::ConstMap());
+              initial_condition = std::make_shared<ConservativeFunction<dim, number>>(
+                this->parameters.time_stepping.start_time,
+                density,
+                velocity,
+                energy,
+                this->parameters.application.flow_solver_type);
+              break;
+            }
+            case FlowSolverType::incompressible: {
+              auto velocity = std::make_shared<dealii::FunctionParser<dim>>(dim);
+              velocity->initialize(dealii::FunctionParser<dim>::default_variable_names(),
+                                   scenario_data.initial_condition.velocity,
+                                   typename dealii::FunctionParser<dim>::ConstMap());
+              initial_condition = std::make_shared<ConservativeFunction<dim, number>>(
+                this->parameters.time_stepping.start_time,
+                velocity,
+                this->parameters.application.flow_solver_type);
+              break;
+            }
+            default: {
+              AssertThrow(false, dealii::ExcMessage("Unknown flow solver type!"));
+            }
+        }
 
       this->attach_initial_condition(initial_condition, "cfd_dem");
     }
@@ -381,10 +469,12 @@ namespace MeltPoolDG::Simulation::CfdDem
                          scenario_data.initial_condition.energy,
                          typename dealii::FunctionParser<dim>::ConstMap());
 
-      ConservativeFunction<dim, number> reference_values(generic_data_out.get_time(),
-                                                         density,
-                                                         velocity,
-                                                         energy);
+      ConservativeFunction<dim, number> reference_values(
+        generic_data_out.get_time(),
+        density,
+        velocity,
+        energy,
+        this->parameters.application.flow_solver_type);
       this->print_relative_norm(generic_data_out, reference_values, "norm");
     }
 
@@ -481,9 +571,10 @@ namespace MeltPoolDG::Simulation::CfdDem
 
   private:
     /**
-     * This function reads boundary condition data for a single boundary from the user input file.
-     * To do this, one provides the name of the subsection in the input file that describes the
-     * boundary condition and a BoundaryCondition object, in which the provided data is stored.
+     * This function reads boundary condition data for a single boundary from the user input
+     * file. To do this, one provides the name of the subsection in the input file that
+     * describes the boundary condition and a BoundaryCondition object, in which the provided
+     * data is stored.
      *
      * @param prm Parameter handler used to read the input file.
      * @param boundary_location Name of the subsection containing the boundary data.
@@ -530,7 +621,8 @@ namespace MeltPoolDG::Simulation::CfdDem
     struct
     {
       /// Array of boundary condition objects describing the type and values of the boundaries.
-      /// The array index corresponds to the boundary ID to which the boundary condition applies.
+      /// The array index corresponds to the boundary ID to which the boundary condition
+      /// applies.
       std::array<BoundaryCondition<dim, number>, 2 * dim> boundary_conditions;
 
       struct
@@ -543,16 +635,17 @@ namespace MeltPoolDG::Simulation::CfdDem
         std::string energy;
       } initial_condition;
 
-      /// Sizes of the domain in each dimension. The x, y, and z sizes are given at indices 0, 1,
-      /// and 2, respectively.
+      /// Sizes of the domain in each dimension. The x, y, and z sizes are given at indices 0,
+      /// 1, and 2, respectively.
       std::vector<number> domain_dimensions;
 
-      /// Discretization of the domain in each dimension. The x, y, and z discretizations are given
-      /// at indices 0, 1, and 2, respectively.
+      /// Discretization of the domain in each dimension. The x, y, and z discretizations are
+      /// given at indices 0, 1, and 2, respectively.
       std::vector<unsigned> domain_base_discretization;
 
-      /// Defines the opposite corners of an axis-aligned box in physical space. The region enclosed
-      /// by these points may be subject to additional refinement, depending on the value of
+      /// Defines the opposite corners of an axis-aligned box in physical space. The region
+      /// enclosed by these points may be subject to additional refinement, depending on the
+      /// value of
       /// @ref region_of_interest_refinement_times.
       std::array<std::vector<number>, 2> region_of_interest_corner;
 
@@ -563,8 +656,8 @@ namespace MeltPoolDG::Simulation::CfdDem
 
     } scenario_data;
 
-    /// Mapping to translate between the enum used to specify boundary conditions in the input file
-    /// and the corresponding string names used in the simulation case.
+    /// Mapping to translate between the enum used to specify boundary conditions in the input
+    /// file and the corresponding string names used in the simulation case.
     const std::map<Flow::CompressibleBoundaryConditionType, std::string>
       boundary_type_to_string_map = {
         {Flow::CompressibleBoundaryConditionType::inflow, "inflow"},

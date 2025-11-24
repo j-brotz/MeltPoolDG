@@ -14,7 +14,8 @@
     },
     "application":
     {
-        "amr strategies": ""
+        "amr strategies": "",
+        "flow type": "compressible"
     },
     "base":
     {
@@ -72,6 +73,85 @@
             }
         }
     },
+    "flow":
+    {
+        "adaflo":
+        {
+            "Navier-Stokes":
+            {
+                "adaptive refinements": "0",
+                "anisotropic refinement": "0",
+                "augmented Taylor-Hood elements": "0",
+                "constitutive type": "newtonian incompressible",
+                "damping": "0",
+                "density": "1",
+                "dimension": "0",
+                "formulation convective term momentum balance": "skew-symmetric",
+                "global refinements": "1",
+                "physical type": "incompressible",
+                "simplex mesh": "0",
+                "velocity degree": "2",
+                "viscosity": "1",
+                "Solver":
+                {
+                    "NL max iterations": "10",
+                    "NL tolerance": "1e-06",
+                    "lin its before inner solvers": "50",
+                    "lin max iterations": "500",
+                    "lin pressure mass preconditioner": "ilu",
+                    "lin relative tolerance": "1",
+                    "lin tolerance": "0.001",
+                    "lin velocity preconditioner": "amg linear",
+                    "linearization scheme": "coupled implicit Newton",
+                    "tau grad div": "0"
+                }
+            },
+            "Output options":
+            {
+                "output filename": "",
+                "output frequency": "1",
+                "output memory": "0",
+                "output verbosity": "2",
+                "output vtk files": "0",
+                "output wall times": "0"
+            },
+            "Time stepping":
+            {
+                "CFL number": "0.8",
+                "CFL number capillary": "10",
+                "end time": "1",
+                "max step size": "1",
+                "min step size": "0.1",
+                "scheme": "bdf_2",
+                "start time": "0",
+                "step size": "0.01",
+                "tolerance": "0.01"
+            },
+            "Two phase":
+            {
+                "Cahn-Hilliard do Newton": "1",
+                "approximate projections": "0",
+                "concentration subdivisions": "2",
+                "contact angle": "0",
+                "convection stabilization": "0",
+                "curvature correction": "0",
+                "density": "-1",
+                "density difference": "0",
+                "diffusion length": "0.1",
+                "epsilon": "1",
+                "full nonlinear iteration": "0",
+                "grad pressure compatible": "0",
+                "gravity": "0",
+                "localize surface tension": "1",
+                "number initial reinit steps": "0",
+                "number reinit steps": "2",
+                "pressure constraint": "1",
+                "surface tension": "1",
+                "viscosity": "-1",
+                "viscosity difference": "0"
+            }
+        }
+    },
     "fluid structure interaction":
     {
         "coupling method": "brinkman_penalization",
@@ -83,14 +163,25 @@
     },
     "material":
     {
+        "boiling temperature": "0",
+        "latent heat of evaporation": "0",
+        "liquidus temperature": "0",
+        "material template": "none",
+        "molar mass": "0",
+        "solid liquid properties transition type": "mushy_zone",
+        "solidus temperature": "0",
+        "specific enthalpy reference temperature": "-1e+100",
+        "two phase fluid properties transition type": "smooth",
         "gas":
         {
-            "dynamic viscosity": "0.000625",
+            "density": "0",
+            "dynamic viscosity": "0",
             "gamma": "1.4",
             "reference density": "1",
             "specific gas constant": "287.1",
+            "specific heat capacity": "0",
             "specific isobaric heat": "1000",
-            "thermal conductivity": "1.79769e+308",
+            "thermal conductivity": "0",
             "equation of state":
             {
                 "b": "1.79769e+308",
@@ -98,6 +189,20 @@
                 "q": "2.22507e-308",
                 "type": "ideal_gas"
             }
+        },
+        "liquid":
+        {
+            "density": "0",
+            "dynamic viscosity": "0",
+            "specific heat capacity": "0",
+            "thermal conductivity": "0"
+        },
+        "solid":
+        {
+            "density": "0",
+            "dynamic viscosity": "0",
+            "specific heat capacity": "0",
+            "thermal conductivity": "0"
         }
     },
     "obstacles":

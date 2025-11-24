@@ -1,6 +1,6 @@
 #pragma once
 
-#include "meltpooldg/flow/dg_compressible_flow_operation.hpp"
+#include <meltpooldg/flow/cfd_dem_flow_operation.hpp>
 #include <meltpooldg/flow/compressible_flow_operation.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
@@ -56,11 +56,9 @@ namespace MeltPoolDG
   private:
     /**
      * @brief Set up all dof related data.
-     *
-     * @param do_reinit If set, the flow solver is reinitialized.
      */
     void
-    setup_dof_system(bool do_reinit = false);
+    setup_dof_system();
 
     /**
      * @brief Sets up the amr indicator used to identify cells which need to be refined/coarsened.
@@ -127,11 +125,9 @@ namespace MeltPoolDG
 
     std::shared_ptr<CaseType> simulation_case;
 
-    dealii::DoFHandler<dim>                                                     dof_handler;
-    dealii::AffineConstraints<number>                                           constraints;
     std::shared_ptr<ScratchData<dim, dim, number>>                              scratch_data;
     std::shared_ptr<TimeIntegration::TimeIterator<number>>                      time_iterator;
-    std::unique_ptr<Flow::DGCompressibleFlowOperation<dim, number>>             comp_flow_operation;
+    Flow::CfdDemFlowOperation<dim, number>                                      flow_operation;
     std::unique_ptr<ObstacleField<dim, number, SphericalParticle<dim, number>>> obstacle_field;
     std::unique_ptr<Profiling::ProfilingMonitor<number>>                        profiling_monitor;
     std::unique_ptr<Restart::RestartMonitor<number>>                            restart_monitor;

@@ -2,6 +2,8 @@
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/vectorization.h>
 
+#include <deal.II/grid/tria.h>
+
 #include <deal.II/matrix_free/operators.h>
 
 #include <deal.II/numerics/data_component_interpretation.h>
@@ -38,6 +40,20 @@ namespace MeltPoolDG::Flow
     setup_operator();
   }
 
+
+  template <int dim, typename number>
+  DGCompressibleFlowOperation<dim, number>::DGCompressibleFlowOperation(
+    const dealii::Triangulation<dim>                 &tria,
+    ScratchData<dim, dim, number>                    &scratch_data,
+    const CompressibleFlowData<number>               &flow_data,
+    const CompressibleFluidMaterialPhaseData<number> &material_data)
+    : flow_scratch_data(flow_data, material_data, scratch_data)
+  {
+    dof_handler.reinit(tria);
+    flow_scratch_data.dof_idx = flow_scratch_data.scratch_data.attach_dof_handler(dof_handler);
+    setup_operator();
+  }
+
   template <int dim, typename number>
   void
   DGCompressibleFlowOperation<dim, number>::reinit()
@@ -49,10 +65,35 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  DGCompressibleFlowOperation<dim, number>::distribute_dofs(DoFHandler<dim> &dof_handler) const
+  DGCompressibleFlowOperation<dim, number>::distribute_dofs(DoFHandler<dim> &dof_handler_in) const
+  {
+    FiniteElementUtils::distribute_dofs<dim, dim + 2>(flow_scratch_data.flow_data.fe,
+                                                      dof_handler_in);
+  }
+
+  template <int dim, typename number>
+  void
+  DGCompressibleFlowOperation<dim, number>::distribute_dofs()
   {
     FiniteElementUtils::distribute_dofs<dim, dim + 2>(flow_scratch_data.flow_data.fe, dof_handler);
   }
+
+  template <int dim, typename number>
+  void
+  DGCompressibleFlowOperation<dim, number>::create_quadrature()
+  {
+    flow_scratch_data.scratch_data.attach_quadrature(
+      FiniteElementUtils::create_quadrature<dim>(flow_scratch_data.flow_data.fe));
+  }
+
+
+  template <int dim, typename number>
+  void
+  DGCompressibleFlowOperation<dim, number>::create_constraints()
+  {
+    flow_scratch_data.scratch_data.attach_constraint_matrix(constraints);
+  }
+
 
   template <int dim, typename number>
   void

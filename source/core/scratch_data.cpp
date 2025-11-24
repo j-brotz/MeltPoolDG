@@ -200,7 +200,9 @@ namespace MeltPoolDG
     AssertThrow(this->constraint.size() == this->dof_handler.size(),
                 dealii::ExcMessage(
                   "The number of DoFHandlers and AffineConstraints attached to ScratchData<dim>"
-                  " must be equal."));
+                  " must be equal but they are " +
+                  std::to_string(this->constraint.size()) + " and " +
+                  std::to_string(this->dof_handler.size()) + " respectively."));
 
     if (do_matrix_free)
       {

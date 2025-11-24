@@ -127,22 +127,22 @@ namespace MeltPoolDG::Simulation::CfdDem
     set_boundary_conditions() override
     {
       // inflow boundary
-      auto inflow_boundary_conditon =
-        std::make_shared<Inflow<dim, number>>(this->parameters.time_stepping.start_time,
-                                              ambient_density,
-                                              ambient_temperature,
-                                              jet_peak_velocity,
-                                              free_jet_profile,
-                                              jet_hole_center,
-                                              jet_hole_diameter,
-                                              this->parameters.material.specific_gas_constant,
-                                              this->parameters.material.gamma);
+      auto inflow_boundary_conditon = std::make_shared<Inflow<dim, number>>(
+        this->parameters.time_stepping.start_time,
+        ambient_density,
+        ambient_temperature,
+        jet_peak_velocity,
+        free_jet_profile,
+        jet_hole_center,
+        jet_hole_diameter,
+        this->parameters.compressible_material.specific_gas_constant,
+        this->parameters.compressible_material.gamma);
       this->attach_boundary_condition({4, inflow_boundary_conditon}, "inflow", "cfd_dem");
 
       // outflow boundaries (all except the floor)
       auto outflow_energy = std::make_shared<dealii::Functions::ConstantFunction<dim, number>>(
-        ambient_density * this->parameters.material.specific_gas_constant /
-        (this->parameters.material.gamma - 1.) * ambient_temperature);
+        ambient_density * this->parameters.compressible_material.specific_gas_constant /
+        (this->parameters.compressible_material.gamma - 1.) * ambient_temperature);
       for (unsigned int i : {0, 1, 2, 3, 5})
         this->attach_boundary_condition({i, outflow_energy}, "outflow_fixed_energy", "cfd_dem");
     }
@@ -151,13 +151,29 @@ namespace MeltPoolDG::Simulation::CfdDem
     set_field_conditions() override
     {
       std::vector<number> initial_condition;
-      initial_condition.reserve(dim + 2);
-      initial_condition.emplace_back(ambient_density);
-      for (int i = 0; i < dim; ++i)
-        initial_condition.emplace_back(0.);
-      initial_condition.emplace_back(ambient_density *
-                                     this->parameters.material.specific_gas_constant /
-                                     (this->parameters.material.gamma - 1.) * ambient_temperature);
+      switch (this->parameters.application.flow_solver_type)
+        {
+            case FlowSolverType::compressible: {
+              initial_condition.reserve(dim + 2);
+              initial_condition.emplace_back(ambient_density);
+              for (int i = 0; i < dim; ++i)
+                initial_condition.emplace_back(0.);
+              initial_condition.emplace_back(
+                ambient_density * this->parameters.compressible_material.specific_gas_constant /
+                (this->parameters.compressible_material.gamma - 1.) * ambient_temperature);
+              break;
+            }
+            case FlowSolverType::incompressible: {
+              initial_condition.reserve(dim);
+              for (int i = 0; i < dim; ++i)
+                initial_condition.emplace_back(0.);
+              break;
+            }
+            default: {
+              AssertThrow(false, dealii::ExcMessage("Unknown flow solver type!"));
+            }
+        }
+
 
       auto initial_condition_function =
         std::make_shared<dealii::Functions::ConstantFunction<dim, number>>(initial_condition);

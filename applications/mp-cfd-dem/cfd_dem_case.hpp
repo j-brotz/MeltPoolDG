@@ -4,8 +4,10 @@
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/core/base_data.hpp>
+#include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_material_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
@@ -22,6 +24,8 @@ namespace MeltPoolDG
   /// Enum for the type of amr strategy used by the application.
   BETTER_ENUM(AMRStrategy, char, indicator, obstacle_surface);
 
+  BETTER_ENUM(FlowSolverType, char, compressible, incompressible);
+
   template <typename number>
   struct CfdDemCaseParameters final : public ParametersBase
   {
@@ -32,12 +36,16 @@ namespace MeltPoolDG
       amr.add_parameters(prm);
       base.add_parameters(prm);
       fluid_structure_interaction_data.add_parameters(prm);
-      flow.add_parameters(prm);
-      material.add_parameters(prm, true /*is_gas*/);
+      compressible_flow.add_parameters(prm);
+      compressible_material.add_parameters(prm, true /*is_gas*/);
+      incompressible_material.add_parameters(prm);
       time_stepping.add_parameters(prm);
       obstacle_data.add_parameters(prm);
       output.add_parameters(prm);
       profiling.add_parameters(prm);
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+      incompressible_flow.add_parameters(prm);
+#endif
       restart.add_parameters(prm);
       add_application_specific_parameters(prm);
     }
@@ -47,9 +55,17 @@ namespace MeltPoolDG
     {
       amr.post(base.global_refinements, false);
       output.post(time_stepping.time_step_size, parameter_filename);
-      flow.post(base.fe, base.verbosity_level);
-      material.post(true /*is_gas*/);
       restart.post(output.directory);
+      if (application.flow_solver_type == FlowSolverType::compressible)
+        {
+          compressible_flow.post(base.fe, base.verbosity_level);
+          compressible_material.post(true /*is_gas*/);
+        }
+
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+      else
+        incompressible_flow.post(incompressible_material, base.fe.type, time_stepping);
+#endif
 
       // check input parameters for validity
       profiling.check_input_parameters(time_stepping.time_step_size);
@@ -66,6 +82,7 @@ namespace MeltPoolDG
           application.amr_strategies,
           "List of comma separated AMR strategies used to determine whether cells should be refined or coarsened. "
           "This parameter is only relevant when AMR is enabled.");
+        prm.add_parameter("flow type", application.flow_solver_type);
       }
       prm.leave_subsection();
     }
@@ -75,13 +92,17 @@ namespace MeltPoolDG
     {
       /// List of AMR strategies used to determine whether cells should be refined or coarsened.
       std::vector<AMRStrategy> amr_strategies;
+
+      FlowSolverType flow_solver_type = FlowSolverType::compressible;
     } application;
 
     AdaptiveMeshingData<number>                      amr;
     BaseData                                         base;
+    Flow::AdafloWrapperParameters<number>            incompressible_flow;
     FluidStructureInteractionData<number>            fluid_structure_interaction_data;
-    Flow::CompressibleFlowData<number>               flow;
-    Flow::CompressibleFluidMaterialPhaseData<number> material;
+    Flow::CompressibleFlowData<number>               compressible_flow;
+    Flow::CompressibleFluidMaterialPhaseData<number> compressible_material;
+    MaterialData<number>                             incompressible_material;
     TimeIntegration::TimeSteppingData<number>        time_stepping;
     ObstacleData<number>                             obstacle_data;
     OutputData<number>                               output;
