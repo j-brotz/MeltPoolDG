@@ -1,3 +1,5 @@
+#include <deal.II/base/exception_macros.h>
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
@@ -8,6 +10,7 @@
 
 #include <deal.II/particles/particle_accessor.h>
 
+#include "meltpooldg/flow/flow_utils.hpp"
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
@@ -25,20 +28,181 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::BrinkmanObstacleFo
   const ObstacleField<dim, number, ObstacleType> &obstacle_field,
   const VectorType                               &solution,
   const MatrixFreeContext<dim, number>           &matrix_free,
-  const BrinkmanPenalizationData<number>         &data)
+  const BrinkmanPenalizationData<number>         &data,
+  FlowSolverType                                  flow_solver_type,
+  const number                                    constant_density)
   : brinkman_penalization_data(data)
   , cell_obstacle_cache(obstacle_field)
   , matrix_free(matrix_free)
   , solution(solution)
+  , flow_solver_type(flow_solver_type)
+  , constant_density(constant_density)
 {}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::local_apply_cell_compressible_flow(
+  const dealii::MatrixFree<dim, number> &,
+  dealii::Tensor<1, dim, number> &,
+  const VectorType                     &solution,
+  const std::pair<unsigned, unsigned>  &cell_range,
+  dealii::Particles::PropertyPool<dim> &global_particle_properties) const
+{
+  FECellIntegrator<dim, dim + 2, number> phi(matrix_free.mf,
+                                             matrix_free.dof_idx,
+                                             matrix_free.quad_idx);
+
+  for (unsigned cell = cell_range.first; cell < cell_range.second; ++cell)
+    {
+      phi.reinit(cell);
+      phi.gather_evaluate(solution, dealii::EvaluationFlags::values);
+
+      for (const unsigned int q : phi.quadrature_point_indices())
+        {
+          const dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>> w_q = phi.get_value(q);
+          dealii::Tensor<1, dim, dealii::VectorizedArray<number>>           fluid_momentum;
+          for (int d = 0; d < dim; ++d)
+            fluid_momentum[d] = w_q[d + 1];
+          for (unsigned int src_handle = 0;
+               src_handle < global_particle_properties.n_registered_slots();
+               ++src_handle)
+            {
+              dealii::Tensor<1, dim, dealii::VectorizedArray<number>>         force;
+              dealii::Tensor<1, torque_size, dealii::VectorizedArray<number>> torque;
+
+              const auto mask = mask_function<dim, dealii::VectorizedArray<number>, ObstacleType>(
+                brinkman_penalization_data.mask_function_type,
+                phi.quadrature_point(q),
+                global_particle_properties,
+                src_handle);
+              force =
+                mask / brinkman_penalization_data.permeability *
+                (fluid_momentum - w_q[0] * ObstacleType::get_velocity(global_particle_properties,
+                                                                      src_handle,
+                                                                      phi.quadrature_point(q))) *
+                phi.JxW(q);
+
+              if constexpr (dim == 2)
+                {
+                  auto vector_to_center_of_gravity =
+                    ObstacleType::vector_to_center_of_gravity(phi.quadrature_point(q),
+                                                              global_particle_properties,
+                                                              src_handle);
+
+                  torque[0] = -vector_to_center_of_gravity[0] * force[1] +
+                              vector_to_center_of_gravity[1] * force[0];
+                }
+              if constexpr (dim == 3)
+                {
+                  torque = -dealii::cross_product_3d(
+                    ObstacleType::vector_to_center_of_gravity(phi.quadrature_point(q),
+                                                              global_particle_properties,
+                                                              src_handle),
+                    force);
+                }
+
+              dealii::Tensor<1, dim, number>         summed_force;
+              dealii::Tensor<1, torque_size, number> summed_torque;
+
+              for (int i = 0; i < dim; ++i)
+                summed_force[i] = force[i].sum();
+              for (unsigned i = 0; i < torque_size; ++i)
+                summed_torque[i] = torque[i].sum();
+
+              ObstacleType::accumulate_force(summed_force, global_particle_properties, src_handle);
+              ObstacleType::accumulate_torque(summed_torque,
+                                              global_particle_properties,
+                                              src_handle);
+            }
+        }
+    }
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::local_apply_cell_incompressible_flow(
+  const dealii::MatrixFree<dim, number> &,
+  dealii::Tensor<1, dim, number> &,
+  const VectorType                     &velocity_solution,
+  const std::pair<unsigned, unsigned>  &cell_range,
+  dealii::Particles::PropertyPool<dim> &global_particle_properties) const
+{
+  FECellIntegrator<dim, dim, number> phi(matrix_free.mf, matrix_free.dof_idx, matrix_free.quad_idx);
+
+  for (unsigned cell = cell_range.first; cell < cell_range.second; ++cell)
+    {
+      phi.reinit(cell);
+      phi.gather_evaluate(velocity_solution, dealii::EvaluationFlags::values);
+
+      for (const unsigned int q : phi.quadrature_point_indices())
+        {
+          dealii::Tensor<1, dim, dealii::VectorizedArray<number>> fluid_velocity;
+
+          // TODO: This is ugly
+          if constexpr (dim == 1)
+            fluid_velocity[0] = phi.get_value(q);
+          else
+            fluid_velocity = phi.get_value(q);
+          for (unsigned int src_handle = 0;
+               src_handle < global_particle_properties.n_registered_slots();
+               ++src_handle)
+            {
+              dealii::Tensor<1, dim, dealii::VectorizedArray<number>>         force;
+              dealii::Tensor<1, torque_size, dealii::VectorizedArray<number>> torque;
+
+              const auto mask = mask_function<dim, dealii::VectorizedArray<number>, ObstacleType>(
+                brinkman_penalization_data.mask_function_type,
+                phi.quadrature_point(q),
+                global_particle_properties,
+                src_handle);
+
+              force = mask / brinkman_penalization_data.permeability * constant_density *
+                      (fluid_velocity - ObstacleType::get_velocity(global_particle_properties,
+                                                                   src_handle,
+                                                                   phi.quadrature_point(q))) *
+                      phi.JxW(q);
+
+              if constexpr (dim == 2)
+                {
+                  auto vector_to_center_of_gravity =
+                    ObstacleType::vector_to_center_of_gravity(phi.quadrature_point(q),
+                                                              global_particle_properties,
+                                                              src_handle);
+
+                  torque[0] = -vector_to_center_of_gravity[0] * force[1] +
+                              vector_to_center_of_gravity[1] * force[0];
+                }
+              if constexpr (dim == 3)
+                {
+                  torque = -dealii::cross_product_3d(
+                    ObstacleType::vector_to_center_of_gravity(phi.quadrature_point(q),
+                                                              global_particle_properties,
+                                                              src_handle),
+                    force);
+                }
+
+              dealii::Tensor<1, dim, number>         summed_force;
+              dealii::Tensor<1, torque_size, number> summed_torque;
+
+              for (int i = 0; i < dim; ++i)
+                summed_force[i] = force[i].sum();
+              for (unsigned i = 0; i < torque_size; ++i)
+                summed_torque[i] = torque[i].sum();
+
+              ObstacleType::accumulate_force(summed_force, global_particle_properties, src_handle);
+              ObstacleType::accumulate_torque(summed_torque,
+                                              global_particle_properties,
+                                              src_handle);
+            }
+        }
+    }
+}
 
 template <int dim, typename number, typename ObstacleType>
 void
 MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstacles(
   ObstacleField<dim, number, ObstacleType> &obstacle_field) const
 {
-  constexpr unsigned torque_size = ObstacleType::size_angular_velocity;
-
   // We need a copy of the global particle properties in order to reset obstacle forces.
   auto global_particle_properties =
     obstacle_field.get_obstacle_data_structure().get_global_particle_properties();
@@ -57,80 +221,17 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
                      const VectorType &,
                      const std::pair<unsigned, unsigned> &)>
     local_apply_cell = [&](const dealii::MatrixFree<dim, number> &,
-                           dealii::Tensor<1, dim, number> &,
+                           dealii::Tensor<1, dim, number>      &force,
                            const VectorType                    &solution,
                            const std::pair<unsigned, unsigned> &cell_range) {
-      FECellIntegrator<dim, dim + 2, number> phi(matrix_free.mf,
-                                                 matrix_free.dof_idx,
-                                                 matrix_free.quad_idx);
-
-      for (unsigned cell = cell_range.first; cell < cell_range.second; ++cell)
+      if (flow_solver_type == FlowSolverType::compressible)
+        local_apply_cell_compressible_flow(
+          matrix_free.mf, force, solution, cell_range, global_particle_properties);
+      else if (flow_solver_type == FlowSolverType::incompressible)
         {
-          phi.reinit(cell);
-          phi.gather_evaluate(solution, dealii::EvaluationFlags::values);
-
-          for (const unsigned int q : phi.quadrature_point_indices())
-            {
-              const auto                                              w_q = phi.get_value(q);
-              dealii::Tensor<1, dim, dealii::VectorizedArray<number>> fluid_momentum;
-              for (int d = 0; d < dim; ++d)
-                fluid_momentum[d] = w_q[d + 1];
-              for (unsigned int src_handle = 0;
-                   src_handle < global_particle_properties.n_registered_slots();
-                   ++src_handle)
-                {
-                  dealii::Tensor<1, dim, dealii::VectorizedArray<number>>         force;
-                  dealii::Tensor<1, torque_size, dealii::VectorizedArray<number>> torque;
-
-                  const auto mask =
-                    mask_function<dim, dealii::VectorizedArray<number>, ObstacleType>(
-                      brinkman_penalization_data.mask_function_type,
-                      phi.quadrature_point(q),
-                      global_particle_properties,
-                      src_handle);
-                  force = mask / brinkman_penalization_data.permeability *
-                          (fluid_momentum -
-                           w_q[0] * ObstacleType::get_velocity(global_particle_properties,
-                                                               src_handle,
-                                                               phi.quadrature_point(q))) *
-                          phi.JxW(q);
-
-                  if constexpr (dim == 2)
-                    {
-                      auto vector_to_center_of_gravity =
-                        ObstacleType::vector_to_center_of_gravity(phi.quadrature_point(q),
-                                                                  global_particle_properties,
-                                                                  src_handle);
-
-                      torque[0] = -vector_to_center_of_gravity[0] * force[1] +
-                                  vector_to_center_of_gravity[1] * force[0];
-                    }
-                  if constexpr (dim == 3)
-                    {
-                      torque = -dealii::cross_product_3d(
-                        ObstacleType::vector_to_center_of_gravity(phi.quadrature_point(q),
-                                                                  global_particle_properties,
-                                                                  src_handle),
-                        force);
-                    }
-
-                  dealii::Tensor<1, dim, number>         summed_force;
-                  dealii::Tensor<1, torque_size, number> summed_torque;
-
-                  for (int i = 0; i < dim; ++i)
-                    summed_force[i] = force[i].sum();
-                  for (unsigned i = 0; i < torque_size; ++i)
-                    summed_torque[i] = torque[i].sum();
-
-                  ObstacleType::accumulate_force(summed_force,
-                                                 global_particle_properties,
-                                                 src_handle);
-                  ObstacleType::accumulate_torque(summed_torque,
-                                                  global_particle_properties,
-                                                  src_handle);
-                }
-            }
         }
+      else
+        AssertThrow(false, dealii::ExcMessage("Flow solver type not supported."));
     };
 
   dealii::Tensor<1, dim, number> particle_force_dummy;

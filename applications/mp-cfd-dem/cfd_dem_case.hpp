@@ -18,13 +18,12 @@
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/profiling_data.hpp>
 #include <meltpooldg/utilities/restart.hpp>
+#include <meltpooldg/flow/flow_utils.hpp>
 
 namespace MeltPoolDG
 {
   /// Enum for the type of amr strategy used by the application.
   BETTER_ENUM(AMRStrategy, char, indicator, obstacle_surface);
-
-  BETTER_ENUM(FlowSolverType, char, compressible, incompressible);
 
   template <typename number>
   struct CfdDemCaseParameters final : public ParametersBase

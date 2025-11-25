@@ -98,10 +98,9 @@ namespace MeltPoolDG
 
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout(1));
-
         flow_operation.solve(time_iterator->get_current_time(),
                              time_iterator->get_current_time_increment());
-
+                             
         if (false && this->simulation_case->parameters.obstacle_data.stationary_obstacles)
           obstacle_field->compute_loads_on_obstacles();
         else
@@ -302,7 +301,9 @@ namespace MeltPoolDG
                   flow_operation.get_solution(),
                   {scratch_data->get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx},
                   simulation_case->parameters.fluid_structure_interaction_data
-                    .brinkman_penalization_data));
+                    .brinkman_penalization_data,
+                  simulation_case->parameters.application.flow_solver_type,
+                  simulation_case->parameters.incompressible_flow.params.density));
             break;
           }
           case FSICouplingMethod::stokes_law: {
@@ -386,6 +387,7 @@ namespace MeltPoolDG
       scratch_data->get_mapping(),
       current_time,
       simulation_case->parameters.output.output_variables);
+
     attach_output_vectors(generic_data_out);
 
     // user-defined postprocessing

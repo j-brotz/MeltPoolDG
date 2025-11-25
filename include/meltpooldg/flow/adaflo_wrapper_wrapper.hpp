@@ -48,6 +48,7 @@ namespace MeltPoolDG::Flow
     {
       dof_index_u = scratch_data.attach_dof_handler(navier_stokes->get_dof_handler_u());
       dof_index_p = scratch_data.attach_dof_handler(navier_stokes->get_dof_handler_p());
+      scratch_data.attach_dof_handler(navier_stokes->get_dof_handler_u());
     }
 
     void
@@ -55,7 +56,7 @@ namespace MeltPoolDG::Flow
     {
       navier_stokes->initialize_data_structures();
       navier_stokes->initialize_matrix_free(
-      &scratch_data.get_matrix_free(), dof_index_u, dof_index_p, quad_index_u, quad_index_p);
+        &scratch_data.get_matrix_free(), dof_index_u, dof_index_p, quad_index_u, quad_index_p);
     }
 
     void
@@ -99,7 +100,8 @@ namespace MeltPoolDG::Flow
     void
     solve(const number dt, const number time)
     {
-      update_penalty_term();
+      // TODO
+      //update_penalty_term();
       navier_stokes->get_constraints_u().set_zero(navier_stokes->user_rhs.block(0));
       navier_stokes->get_constraints_p().set_zero(navier_stokes->user_rhs.block(1));
       navier_stokes->time_stepping.set_time_step(dt);
@@ -273,6 +275,7 @@ namespace MeltPoolDG::Flow
           std::fill(&implicit_penalty[0],
                     &implicit_penalty[fe_evaluation.n_q_points],
                     dealii::VectorizedArray<number>(0.0));
+                    
           for (unsigned int q : fe_evaluation.quadrature_point_indices())
             {
               dealii::Tensor<1, dim, dealii::VectorizedArray<number>> rhs_penalty;

@@ -2,6 +2,7 @@
 
 #include <deal.II/base/exception_macros.h>
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/vectorization.h>
 
@@ -9,6 +10,9 @@
 
 #include <deal.II/matrix_free/matrix_free.h>
 
+#include <deal.II/particles/property_pool.h>
+
+#include <meltpooldg/flow/flow_utils.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_util.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
@@ -34,7 +38,9 @@ namespace MeltPoolDG
     BrinkmanObstacleForce(const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
                           const VectorType                               &solution,
                           const MatrixFreeContext<dim, number>           &matrix_free,
-                          const BrinkmanPenalizationData<number>         &data);
+                          const BrinkmanPenalizationData<number>         &data,
+                          FlowSolverType                                  flow_solver_type,
+                          number constant_density = dealii::numbers::signaling_nan<number>());
 
     /**
      * Compute the force from the fluid on all obstacles in the given obstacle field @param obstacle_field.
@@ -47,6 +53,22 @@ namespace MeltPoolDG
     add_load_to_obstacles(ObstacleField<dim, number, ObstacleType> &obstacle_field) const;
 
   private:
+    void
+    local_apply_cell_compressible_flow(
+      const dealii::MatrixFree<dim, number> &,
+      dealii::Tensor<1, dim, number> &,
+      const VectorType                     &solution,
+      const std::pair<unsigned, unsigned>  &cell_range,
+      dealii::Particles::PropertyPool<dim> &global_particle_properties) const;
+
+    void
+    local_apply_cell_incompressible_flow(
+      const dealii::MatrixFree<dim, number> &,
+      dealii::Tensor<1, dim, number> &,
+      const VectorType                     &solution,
+      const std::pair<unsigned, unsigned>  &cell_range,
+      dealii::Particles::PropertyPool<dim> &global_particle_properties) const;
+
     /// Brinkman penalization data
     const BrinkmanPenalizationData<number> brinkman_penalization_data;
 
@@ -58,6 +80,13 @@ namespace MeltPoolDG
 
     /// Solution of the flow field.
     const VectorType &solution;
+
+    ///
+    const FlowSolverType flow_solver_type;
+
+    const number constant_density;
+
+    static constexpr unsigned torque_size = ObstacleType::size_angular_velocity;
   };
 
 
