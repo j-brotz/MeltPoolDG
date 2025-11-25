@@ -138,7 +138,7 @@ namespace MeltPoolDG::Flow
      */
     virtual void
     cell_operation(const MatrixFreeContext<dim, number> &matrix_free,
-                   unsigned int                          cell_batch_id = 0) = 0;
+                   unsigned int                          cell_batch_id) = 0;
 
     /**
      * @brief Function called once per batch of quadrature points to compute the external force

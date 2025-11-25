@@ -18,15 +18,15 @@
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
+#include <meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
-#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_fluid_to_obstacle.hpp>
-#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_obstacle_to_fluid.hpp>
-#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_util.hpp>
+#include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_util.hpp>
 #include <meltpooldg/particles/obstacle_data.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/matrix_free_util.hpp>
 
 #include <memory>
 #include <sstream>
@@ -49,39 +49,36 @@ using namespace MeltPoolDG;
  */
 template <int dim, typename number, typename ObstacleType>
 void
-add_penalty_vector(
-  const dealii::MatrixFree<dim, number>                    &matrix_free,
-  const dealii::LinearAlgebra::distributed::Vector<number> &flow_solution,
-  dealii::LinearAlgebra::distributed::Vector<number>       &dst,
-  const FluidStructureInteractionData<number>              &data,
-  const typename BrinkmanPenalizationCellScratchData<dim, number, ObstacleType>::MaskFunctionType
-                                                 &mask_function,
-  const ObstacleField<dim, number, ObstacleType> &obstacle_field,
-  const number                                    time_step_size,
-  const unsigned                                  dof_idx  = 0,
-  const unsigned                                  quad_idx = 0)
+add_penalty_vector(const MatrixFreeContext<dim, number>                     &matrix_free,
+                   const dealii::LinearAlgebra::distributed::Vector<number> &flow_solution,
+                   dealii::LinearAlgebra::distributed::Vector<number>       &dst,
+                   const BrinkmanPenalizationData<number>                   &data,
+                   const ObstacleField<dim, number, ObstacleType>           &obstacle_field,
+                   const number                                              time_step_size)
 {
   using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
   BrinkmanPenalizationResidualContribution<dim, number, ObstacleType> brinkman_contribution(
-    obstacle_field, data, mask_function);
+    obstacle_field, data);
 
   std::function<void(const dealii::MatrixFree<dim, number> &,
                      VectorType &,
                      const VectorType &,
                      const std::pair<unsigned int, unsigned int> &)>
-    local_apply_cell = [&](const dealii::MatrixFree<dim, number> &mf,
-                           VectorType                            &dst,
-                           const VectorType                      &src,
-                           const std::pair<unsigned, unsigned>   &cell_range) {
-      FECellIntegrator<dim, dim + 2, number> phi(mf, dof_idx, quad_idx);
+    local_apply_cell = [&](const dealii::MatrixFree<dim, number> &,
+                           VectorType                          &dst,
+                           const VectorType                    &src,
+                           const std::pair<unsigned, unsigned> &cell_range) {
+      FECellIntegrator<dim, dim + 2, number> phi(matrix_free.mf,
+                                                 matrix_free.dof_idx,
+                                                 matrix_free.quad_idx);
 
       for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
         {
           phi.reinit(cell);
           phi.gather_evaluate(src, dealii::EvaluationFlags::values);
 
-          brinkman_contribution.cell_operation(mf, cell);
+          brinkman_contribution.cell_operation(matrix_free, cell);
 
           for (const unsigned int q : phi.quadrature_point_indices())
             {
@@ -95,7 +92,7 @@ add_penalty_vector(
         }
     };
 
-  matrix_free.cell_loop(local_apply_cell, dst, flow_solution, false);
+  matrix_free.mf.cell_loop(local_apply_cell, dst, flow_solution, false);
 }
 
 /**
@@ -345,12 +342,10 @@ public:
 
     obstacle_field->add_load_type(
       BrinkmanObstacleForce<dim, number, SphericalParticle<dim, number>>(
+        *obstacle_field,
         flow_field->get_solution(),
-        scratch_data.get_matrix_free(),
-        comp_flow_dof_idx,
-        comp_flow_quad_idx,
-        BrinkmanPenalizationCellScratchData<dim, number, SphericalParticle<dim, number>>(
-          *obstacle_field, brinkman_penalization_data)));
+        {scratch_data.get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx},
+        brinkman_penalization_data));
   }
 
   /**
@@ -396,16 +391,12 @@ public:
     dealii::LinearAlgebra::distributed::Vector<number> penalty_vec;
     scratch_data.initialize_dof_vector(penalty_vec, comp_flow_dof_idx);
 
-    add_penalty_vector(
-      scratch_data.get_matrix_free(),
-      flow_field->get_solution(),
-      penalty_vec,
-      brinkman_penalization_data,
-      discontinuous_mask_function<dim, dealii::VectorizedArray<number>, ObstacleType>,
-      *obstacle_field,
-      0.1 /* using pseudo time step size */,
-      comp_flow_dof_idx,
-      comp_flow_quad_idx);
+    add_penalty_vector({scratch_data.get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx},
+                       flow_field->get_solution(),
+                       penalty_vec,
+                       brinkman_penalization_data,
+                       *obstacle_field,
+                       0.1 /* using pseudo time step size */);
 
     // print the results to the console
     print_test_results(penalty_vec);
@@ -425,7 +416,7 @@ private:
   Flow::CompressibleFlowData<number>                              flow_data;
   Flow::CompressibleFluidMaterialPhaseData<number>                flow_material;
   dealii::AffineConstraints<number>                               constraints;
-  FluidStructureInteractionData<number>                           brinkman_penalization_data;
+  BrinkmanPenalizationData<number>                                brinkman_penalization_data;
 
   unsigned                      comp_flow_dof_idx;
   unsigned                      comp_flow_quad_idx;

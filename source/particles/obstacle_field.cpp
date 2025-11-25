@@ -93,8 +93,10 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
       obstacle_handler.update_ghost_particles();
     });
 
-  // Temporary: We do not want any particles to go below ground level, for that the current solution
-  // is bruteforcing them to not do so
+  // Temporary workaround: prevent particles from moving below ground level. We check whether the
+  // particle’s vertical coordinate (y in 2D, z in 3D) is less than its radius, i.e., meaning part
+  // of the particle would lie below the ground. If so, we clamp the particle to ground contact by
+  // setting its center height equal to its radius and zeroing its vertical velocity.
   for (auto &particle : obstacle_handler)
     if (particle.get_location()[dim - 1] -
           ObstacleType::get_property(particle, ObstacleType::Properties::radius) <
@@ -105,11 +107,6 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
         auto velocity     = ObstacleType::template get_velocity<number>(particle);
         velocity[dim - 1] = 0;
         ObstacleType::set_velocity(particle, velocity);
-
-
-        auto acceleration = ObstacleType::get_acceleration(particle);
-        velocity[dim - 1] = 0;
-        ObstacleType::set_acceleration(particle, acceleration);
       }
 }
 

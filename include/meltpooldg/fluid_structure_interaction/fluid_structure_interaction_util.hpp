@@ -61,9 +61,10 @@ namespace MeltPoolDG
 
 
   /**
-   * @brief Scratch data structure used for caching cell relevant data when computing the
-   * Brinkman penalization force for a specific cell or cell batch in the case of vectroized
-   * computations.
+   * A cache data structure used to store particle-related data at the cell level
+   * during particle–fluid coupling computations. Its primary purpose is to avoid
+   * recomputing the same cell data for every quadrature point within a
+   * matrix-free loop by caching the relevant information once per cell.
    */
   template <int dim, typename number, typename ObstacleType>
   struct CellObstacleCache

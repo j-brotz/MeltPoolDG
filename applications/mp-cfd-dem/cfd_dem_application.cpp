@@ -10,6 +10,7 @@
 #include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
+#include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_factory.hpp>
 #include <meltpooldg/fluid_structure_interaction/stokes_law.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/obstacle_forces.hpp>
@@ -99,7 +100,7 @@ namespace MeltPoolDG
         comp_flow_operation->solve(time_iterator->get_current_time(),
                                    time_iterator->get_current_time_increment());
 
-        if (false && this->simulation_case->parameters.obstacle_data.stationary_obstacles)
+        if (this->simulation_case->parameters.obstacle_data.stationary_obstacles)
           obstacle_field->compute_loads_on_obstacles();
         else
           {
@@ -265,63 +266,14 @@ namespace MeltPoolDG
     setup_amr_indicator();
 
     // FSI
-    std::shared_ptr<Flow::AdditionalCellAndQuadOperation<dim, number>> fsi_fluid_force_residual;
-    std::shared_ptr<Flow::AdditionalCellAndQuadOperationJacobian<dim, number>>
-      fsi_fluid_force_jacobian;
-    std::unique_ptr<ObstacleLoad<dim, number, SphericalParticle<dim, number>>> fsi_obstacle_load;
+    auto [fsi_fluid_force_residual, fsi_fluid_force_jacobian, fsi_obstacle_load] =
+      setup_fluid_structure_interaction<dim, number, SphericalParticle<dim, number>>(
+        simulation_case->parameters.fluid_structure_interaction_data,
+        *obstacle_field,
+        simulation_case->parameters.material,
+        comp_flow_operation->get_solution(),
+        {scratch_data->get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx});
 
-    switch (simulation_case->parameters.fluid_structure_interaction_data.fsi_coupling_method)
-      {
-          case FSICouplingMethod::brinkman_penalization: {
-            fsi_fluid_force_residual = std::make_shared<
-              BrinkmanPenalizationResidualContribution<dim,
-                                                       number,
-                                                       SphericalParticle<dim, number>>>(
-              *obstacle_field,
-              simulation_case->parameters.fluid_structure_interaction_data
-                .brinkman_penalization_data);
-            fsi_fluid_force_jacobian = std::make_shared<
-              BrinkmanPenalizationJacobianContribution<dim,
-                                                       number,
-                                                       SphericalParticle<dim, number>>>(
-              *obstacle_field,
-              simulation_case->parameters.fluid_structure_interaction_data
-                .brinkman_penalization_data);
-            fsi_obstacle_load =
-              std::make_unique<ObstacleLoad<dim, number, SphericalParticle<dim, number>>>(
-                BrinkmanObstacleForce<dim, number, SphericalParticle<dim, number>>(
-                  *obstacle_field,
-                  comp_flow_operation->get_solution(),
-                  {scratch_data->get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx},
-                  simulation_case->parameters.fluid_structure_interaction_data
-                    .brinkman_penalization_data));
-            break;
-          }
-          case FSICouplingMethod::stokes_law: {
-            fsi_fluid_force_residual =
-              std::make_shared<StokesLawFluidForce<dim, number, SphericalParticle<dim, number>>>(
-                comp_flow_operation->get_solution(),
-                *obstacle_field,
-                simulation_case->parameters.material.dynamic_viscosity);
-            fsi_fluid_force_jacobian = std::make_shared<
-              BrinkmanPenalizationJacobianContribution<dim,
-                                                       number,
-                                                       SphericalParticle<dim, number>>>(
-              *obstacle_field,
-              simulation_case->parameters.fluid_structure_interaction_data
-                .brinkman_penalization_data);
-            fsi_obstacle_load =
-              std::make_unique<ObstacleLoad<dim, number, SphericalParticle<dim, number>>>(
-                StokesLawSphericalParticleForce<dim, number, SphericalParticle<dim, number>>(
-                  comp_flow_operation->get_solution(),
-                  {scratch_data->get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx},
-                  simulation_case->parameters.material.dynamic_viscosity));
-            break;
-          }
-        default:
-          AssertThrow(false,
-                      dealii::ExcMessage("The provided FSI coupling method is not supported."));
-      }
     comp_flow_operation->add_external_force(fsi_fluid_force_residual, fsi_fluid_force_jacobian);
 
     // add relevant obstacle forces to obstacle field
