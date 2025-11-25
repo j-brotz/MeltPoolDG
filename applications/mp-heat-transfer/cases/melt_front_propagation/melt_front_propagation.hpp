@@ -3,13 +3,7 @@
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/parameter_handler.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
-
-#include <memory>
 #include <string>
-
-#include "../heat_transfer_case.hpp"
-
 
 /**
  * This simulation represents simple test examples for heat transfer with melt front propagation.

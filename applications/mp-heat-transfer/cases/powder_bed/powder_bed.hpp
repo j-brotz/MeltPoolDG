@@ -3,20 +3,16 @@
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/parameter_handler.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/utilities/powder_bed.hpp>
 
-#include <memory>
 #include <string>
 #include <vector>
-
-#include "../heat_transfer_case.hpp"
 
 
 namespace MeltPoolDG::Simulation::PowderBed
 {
-  template <int dim, typename number>
-  class SimulationPowderBed : public Heat::HeatTransferCase<dim, number>
+  template <int dim, typename number, typename CaseClass>
+  class SimulationPowderBed : public CaseClass
   {
   private:
     number                          domain_x_min = 0;

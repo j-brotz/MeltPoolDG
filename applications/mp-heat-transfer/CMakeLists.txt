@@ -11,6 +11,3 @@ foreach(subdir ${CHILD_DIRS})
         add_subdirectory(cases/${subdir}/tests)
     endif()
 endforeach()
-
-# Tests TODO remove once all tests are moved into case specific folders
-add_subdirectory(cases/tests)

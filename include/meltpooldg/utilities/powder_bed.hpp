@@ -4,7 +4,7 @@
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/point.h>
 
-#include <meltpooldg/utilities/better_enum.hpp>
+#include <meltpooldg/level_set/level_set_type.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <fstream>
@@ -26,8 +26,6 @@ namespace MeltPoolDG::MeltPool
     add_parameters(dealii::ParameterHandler &prm);
   };
 
-  BETTER_ENUM(LevelSetType, char, level_set, heaviside, signed_distance)
-
   template <int dim, typename number>
   class PowderBedLevelSet : public dealii::Function<dim, number>
   {
@@ -36,7 +34,7 @@ namespace MeltPoolDG::MeltPool
 
   public:
     PowderBedLevelSet(const PowderBedData<number> &powder_bed_data,
-                      const LevelSetType           level_set_type = LevelSetType::level_set,
+                      const LevelSet::LevelSetType level_set_type = LevelSet::LevelSetType::tanh,
                       const number                 eps            = 0.0);
 
     number
@@ -63,9 +61,9 @@ namespace MeltPoolDG::MeltPool
     std::vector<Particle>
     read_particles_from_csv_output(std::ifstream &csv_file_stream) const;
 
-    const PowderBedData<number> data;
-    const std::vector<Particle> particles;
-    const LevelSetType          level_set_type;
-    const number                eps;
+    const PowderBedData<number>  data;
+    const std::vector<Particle>  particles;
+    const LevelSet::LevelSetType level_set_type;
+    const number                 eps;
   };
 } // namespace MeltPoolDG::MeltPool

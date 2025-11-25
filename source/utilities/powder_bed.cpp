@@ -35,7 +35,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim, typename number>
   PowderBedLevelSet<dim, number>::PowderBedLevelSet(const PowderBedData<number> &powder_bed_data,
-                                                    const LevelSetType           level_set_type,
+                                                    const LevelSet::LevelSetType level_set_type,
                                                     const number                 eps)
     : dealii::Function<dim, number>()
     , data(powder_bed_data)
@@ -84,11 +84,11 @@ namespace MeltPoolDG::MeltPool
 
     switch (level_set_type)
       {
-        case LevelSetType::level_set:
+        case LevelSet::LevelSetType::tanh:
           return CharacteristicFunctions::tanh_characteristic_function(signed_distance, eps);
-        case LevelSetType::heaviside:
+        case LevelSet::LevelSetType::smoothed_heaviside:
           return CharacteristicFunctions::smoothed_heaviside(signed_distance, eps);
-        case LevelSetType::signed_distance:
+        case LevelSet::LevelSetType::signed_distance:
           return signed_distance;
         default:
           AssertThrow(false, dealii::ExcNotImplemented());

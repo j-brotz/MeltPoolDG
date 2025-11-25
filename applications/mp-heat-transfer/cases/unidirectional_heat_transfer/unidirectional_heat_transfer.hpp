@@ -8,7 +8,7 @@
 #include <memory>
 #include <string>
 
-#include "../heat_transfer_case.hpp"
+#include "../../heat_transfer_case.hpp"
 
 
 /**

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "melt_front_propagation.hpp"
 //
 #include <deal.II/base/exceptions.h>
@@ -11,61 +13,45 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/tria.h>
 
-#include <meltpooldg/core/case_registration.hpp>
+#include <meltpooldg/level_set/level_set_type.hpp>
 #include <meltpooldg/utilities/characteristic_functions.hpp>
-#include <meltpooldg/utilities/enum.hpp>
 
 #include <cmath>
+#include <memory>
+#include <type_traits>
 #include <vector>
 
-#include "../../mp-melt-pool/melt_pool_case.hpp"
+#include "../../../mp-melt-pool/melt_pool_case.hpp"
+#include "../../heat_transfer_case.hpp"
 
-
-/**
- * This simulation represents simple test examples for heat transfer with melt front propagation.
- * The problem is inspired by the Proell et al. [1] single track scan example.
- *
- * The slab has properties of Ti-6Al-4V, is initially below the solidus temperature and is subjected
- * to a Gusarov laser heat source [2] at x = 0.
- *
- * [1] Proell, S. D., Wall, W. A., & Meier, C. (2019). On phase change and latent heat models in
- * metal additive manufacturing process simulation. Advanced Modeling and Simulation in Engineering
- * Sciences, 7(1), 1-32. http://arxiv.org/abs/1906.06238
- *
- * [2] Gusarov, A. V., Yadroitsev, I., Bertrand, P., & Smurov, I. (2009). Model of Radiation and
- * Heat Transfer in Laser-Powder Interaction Zone at Selective Laser Melting. Journal of Heat
- * Transfer, 131(7), 1-10. https://doi.org/10.1115/1.3109245
- */
 
 namespace MeltPoolDG::Simulation::MeltFrontPropagation
 {
-  using namespace dealii;
-
-  BETTER_ENUM(LevelSetType, char, level_set, heaviside, signed_distance)
-
   template <int dim, typename number>
-  class InitialLevelSet : public Function<dim, number>
+  class InitialLevelSet : public dealii::Function<dim, number>
   {
   public:
-    InitialLevelSet(const number z_level, const LevelSetType level_set_type, const number eps)
-      : Function<dim, number>()
+    InitialLevelSet(const number                 z_level,
+                    const LevelSet::LevelSetType level_set_type,
+                    const number                 eps)
+      : dealii::Function<dim, number>()
       , z_level(z_level)
       , level_set_type(level_set_type)
       , eps(eps)
     {}
 
     number
-    value(const Point<dim, number> &p, const unsigned int /*component*/) const override
+    value(const dealii::Point<dim, number> &p, const unsigned int /*component*/) const override
     {
       const auto signed_distance = z_level - p[dim - 1];
 
       switch (level_set_type)
         {
-          case LevelSetType::level_set:
+          case LevelSet::LevelSetType::tanh:
             return CharacteristicFunctions::tanh_characteristic_function(signed_distance, eps);
-          case LevelSetType::heaviside:
+          case LevelSet::LevelSetType::smoothed_heaviside:
             return CharacteristicFunctions::smoothed_heaviside(signed_distance, eps);
-          case LevelSetType::signed_distance:
+          case LevelSet::LevelSetType::signed_distance:
             return signed_distance;
           default:
             DEAL_II_NOT_IMPLEMENTED();
@@ -75,9 +61,9 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     }
 
   private:
-    const number       z_level;
-    const LevelSetType level_set_type;
-    const number       eps;
+    const number                 z_level;
+    const LevelSet::LevelSetType level_set_type;
+    const number                 eps;
   };
 
 
@@ -120,40 +106,42 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   SimulationMeltFrontPropagation<dim, number, CaseClass>::create_spatial_discretization()
   {
     AssertThrow(dim == 1 || x_min < x_max,
-                ExcMessage(
+                dealii::ExcMessage(
                   "The upper bound of the domain must be greater than the lower bound! Abort..."));
     AssertThrow(z_min < z_max,
-                ExcMessage(
+                dealii::ExcMessage(
                   "The upper bound of the domain must be greater than the lower bound! Abort..."));
     if constexpr (dim == 3)
       AssertThrow(
         y_min < y_max,
-        ExcMessage("The upper bound of the domain must be greater than the lower bound! Abort..."));
+        dealii::ExcMessage(
+          "The upper bound of the domain must be greater than the lower bound! Abort..."));
 
     if constexpr (dim == 1)
       {
 #ifdef DEAL_II_WITH_METIS
-        this->triangulation = std::make_shared<parallel::shared::Triangulation<1>>(
+        this->triangulation = std::make_shared<dealii::parallel::shared::Triangulation<1>>(
           this->mpi_communicator,
-          Triangulation<dim>::none,
+          dealii::Triangulation<dim>::none,
           false,
-          parallel::shared::Triangulation<dim>::Settings::partition_metis);
+          dealii::parallel::shared::Triangulation<dim>::Settings::partition_metis);
 #else
         AssertThrow(
           false,
-          ExcMessage("Missing Metis support of the deal.II installation. "
-                     "Configure deal.II with -D DEAL_II_WITH_METIS='ON' to execute this example."));
+          dealii::ExcMessage(
+            "Missing Metis support of the deal.II installation. "
+            "Configure deal.II with -D DEAL_II_WITH_METIS='ON' to execute this example."));
 #endif
         // create mesh
-        const Point<1> left(z_min);
-        const Point<1> right(z_max);
-        GridGenerator::hyper_rectangle(*this->triangulation, left, right);
+        const dealii::Point<1> left(z_min);
+        const dealii::Point<1> right(z_max);
+        dealii::GridGenerator::hyper_rectangle(*this->triangulation, left, right);
         this->triangulation->refine_global(this->parameters.base.global_refinements);
       }
     else if constexpr (dim == 2)
       {
         this->triangulation =
-          std::make_shared<parallel::distributed::Triangulation<2>>(this->mpi_communicator);
+          std::make_shared<dealii::parallel::distributed::Triangulation<2>>(this->mpi_communicator);
 
         if constexpr (std::is_same_v<CaseClass, Heat::HeatTransferCase<dim, number>>)
           {
@@ -162,12 +150,12 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
                 std::vector<unsigned> refinements(2, 1);
                 refinements[0] = 3;
                 // create mesh
-                const Point<2> left(0, -z_max);
-                const Point<2> right(x_max, 0);
-                GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                          refinements,
-                                                          left,
-                                                          right);
+                const dealii::Point<2> left(0, -z_max);
+                const dealii::Point<2> right(x_max, 0);
+                dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                                  refinements,
+                                                                  left,
+                                                                  right);
                 this->triangulation->refine_global(this->parameters.base.global_refinements);
               }
             else
@@ -176,12 +164,12 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
                 refinements[0] = 3;
                 refinements[1] = 2;
                 // create mesh
-                const Point<2> left(0, -z_max);
-                const Point<2> right(x_max, z_max);
-                GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                          refinements,
-                                                          left,
-                                                          right);
+                const dealii::Point<2> left(0, -z_max);
+                const dealii::Point<2> right(x_max, z_max);
+                dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                                  refinements,
+                                                                  left,
+                                                                  right);
                 this->triangulation->refine_global(this->parameters.base.global_refinements);
               }
           }
@@ -191,19 +179,19 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
             refinements[0] = 3;
             refinements[1] = 2;
             // create mesh
-            const Point<2> left(0, -z_max);
-            const Point<2> right(x_max, z_max);
-            GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                      refinements,
-                                                      left,
-                                                      right);
+            const dealii::Point<2> left(0, -z_max);
+            const dealii::Point<2> right(x_max, z_max);
+            dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                              refinements,
+                                                              left,
+                                                              right);
             this->triangulation->refine_global(this->parameters.base.global_refinements);
           }
       }
     else if constexpr (dim == 3)
       {
         this->triangulation =
-          std::make_shared<parallel::distributed::Triangulation<3>>(this->mpi_communicator);
+          std::make_shared<dealii::parallel::distributed::Triangulation<3>>(this->mpi_communicator);
 
         if constexpr (std::is_same_v<CaseClass, Heat::HeatTransferCase<dim, number>>)
           {
@@ -213,12 +201,12 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
                 refinements[0] = 3;
                 refinements[1] = 3;
                 // create mesh
-                const Point<3> left(0, -y_max, -z_max);
-                const Point<3> right(x_max, y_max, z_max);
-                GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                          refinements,
-                                                          left,
-                                                          right);
+                const dealii::Point<3> left(0, -y_max, -z_max);
+                const dealii::Point<3> right(x_max, y_max, z_max);
+                dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                                  refinements,
+                                                                  left,
+                                                                  right);
                 this->triangulation->refine_global(this->parameters.base.global_refinements);
               }
             else
@@ -228,12 +216,12 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
                 refinements[1] = 3;
                 refinements[2] = 2;
                 // create mesh
-                const Point<3> left(0, 0, z_max);
-                const Point<3> right(x_max, y_max, -z_max);
-                GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                          refinements,
-                                                          left,
-                                                          right);
+                const dealii::Point<3> left(0, 0, z_max);
+                const dealii::Point<3> right(x_max, y_max, -z_max);
+                dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                                  refinements,
+                                                                  left,
+                                                                  right);
                 this->triangulation->refine_global(this->parameters.base.global_refinements);
               }
           }
@@ -244,17 +232,17 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
             refinements[1] = 3;
             refinements[2] = 2;
             // create mesh
-            const Point<3> left(0, 0, z_max);
-            const Point<3> right(x_max, y_max, -z_max);
-            GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                      refinements,
-                                                      left,
-                                                      right);
+            const dealii::Point<3> left(0, 0, z_max);
+            const dealii::Point<3> right(x_max, y_max, -z_max);
+            dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                              refinements,
+                                                              left,
+                                                              right);
             this->triangulation->refine_global(this->parameters.base.global_refinements);
           }
       }
     else
-      AssertThrow(false, ExcMessage("Impossible dimension! Abort ..."));
+      AssertThrow(false, dealii::ExcMessage("Impossible dimension! Abort ..."));
   }
 
 
@@ -264,7 +252,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   {
     if constexpr (std::is_same_v<CaseClass, Heat::HeatTransferCase<dim, number>>)
       {
-        const types::boundary_id right_bc = 10;
+        const dealii::types::boundary_id right_bc = 10;
         for (const auto &cell : this->triangulation->cell_iterators())
           {
             for (auto &face : cell->face_iterators())
@@ -274,19 +262,19 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
                     face->set_boundary_id(right_bc);
                 }
           }
-        this->attach_boundary_condition({right_bc,
-                                         std::make_shared<Functions::ConstantFunction<dim>>(T_0)},
-                                        "dirichlet",
-                                        "heat_transfer");
+        this->attach_boundary_condition(
+          {right_bc, std::make_shared<dealii::Functions::ConstantFunction<dim>>(T_0)},
+          "dirichlet",
+          "heat_transfer");
       }
-    else if constexpr (std::is_same_v<CaseClass, MeltPoolDG::MeltPoolCase<dim, number>>)
+    else if constexpr (std::is_same_v<CaseClass, MeltPoolCase<dim, number>>)
       {
-        const types::boundary_id                  lower_bc = 1;
-        const types::boundary_id                  upper_bc = 2;
-        const types::boundary_id                  left_bc  = 3;
-        const types::boundary_id                  right_bc = 4;
-        [[maybe_unused]] const types::boundary_id front_bc = 5;
-        [[maybe_unused]] const types::boundary_id back_bc  = 6;
+        const dealii::types::boundary_id                  lower_bc = 1;
+        const dealii::types::boundary_id                  upper_bc = 2;
+        const dealii::types::boundary_id                  left_bc  = 3;
+        const dealii::types::boundary_id                  right_bc = 4;
+        [[maybe_unused]] const dealii::types::boundary_id front_bc = 5;
+        [[maybe_unused]] const dealii::types::boundary_id back_bc  = 6;
         for (const auto &cell : this->triangulation->cell_iterators())
           for (auto &face : cell->face_iterators())
             if (face->at_boundary())
@@ -335,10 +323,10 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
             this->attach_boundary_condition(back_bc, "no_slip", "navier_stokes_u");
           }
         this->attach_boundary_condition(lower_bc, "fix_pressure_constant", "navier_stokes_p");
-        this->attach_boundary_condition({lower_bc,
-                                         std::make_shared<Functions::ConstantFunction<dim>>(T_0)},
-                                        "dirichlet",
-                                        "heat_transfer");
+        this->attach_boundary_condition(
+          {lower_bc, std::make_shared<dealii::Functions::ConstantFunction<dim>>(T_0)},
+          "dirichlet",
+          "heat_transfer");
       }
   }
 
@@ -347,7 +335,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   void
   SimulationMeltFrontPropagation<dim, number, CaseClass>::set_field_conditions()
   {
-    this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(T_0),
+    this->attach_initial_condition(std::make_shared<dealii::Functions::ConstantFunction<dim>>(T_0),
                                    "heat_transfer");
 
     if constexpr (std::is_same_v<CaseClass, Heat::HeatTransferCase<dim, number>>)
@@ -356,36 +344,42 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           if (this->parameters.heat.operator_type != Heat::TwoPhaseOperatorType::cut)
             {
               this->attach_initial_condition(std::make_shared<InitialLevelSet<dim, number>>(
-                                               0.0, LevelSetType::heaviside, z_max / 5),
+                                               0.0,
+                                               LevelSet::LevelSetType::smoothed_heaviside,
+                                               z_max / 5),
                                              "prescribed_heaviside");
             }
           else
             {
               const number offset = 6e-6;
               this->attach_initial_condition(std::make_shared<InitialLevelSet<dim, number>>(
-                                               offset, LevelSetType::signed_distance, 0.0),
+                                               offset,
+                                               LevelSet::LevelSetType::signed_distance,
+                                               0.0),
                                              "prescribed_signed_distance");
               if (this->parameters.amr.do_amr and
                   this->parameters.application_specific_parameters.amr_strategy ==
                     Heat::AMRStrategy::generic)
                 this->attach_initial_condition(std::make_shared<InitialLevelSet<dim, number>>(
-                                                 offset, LevelSetType::heaviside, z_max / 4),
+                                                 offset,
+                                                 LevelSet::LevelSetType::smoothed_heaviside,
+                                                 z_max / 4),
                                                "prescribed_heaviside");
             }
         }
 
-    if constexpr (std::is_same_v<CaseClass, MeltPoolDG::MeltPoolCase<dim, number>>)
+    if constexpr (std::is_same_v<CaseClass, MeltPoolCase<dim, number>>)
       {
         const number eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
-          GridTools::minimal_cell_diameter(*this->triangulation) /
+          dealii::GridTools::minimal_cell_diameter(*this->triangulation) /
           this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
         this->attach_initial_condition(
-          std::make_shared<InitialLevelSet<dim, number>>(0.0, LevelSetType::level_set, eps),
+          std::make_shared<InitialLevelSet<dim, number>>(0.0, LevelSet::LevelSetType::tanh, eps),
           "level_set");
-        this->attach_initial_condition(std::shared_ptr<Function<dim, number>>(
-                                         std::make_shared<Functions::ZeroFunction<dim, number>>(
-                                           dim)),
-                                       "navier_stokes_u");
+        this->attach_initial_condition(
+          std::shared_ptr<dealii::Function<dim, number>>(
+            std::make_shared<dealii::Functions::ZeroFunction<dim, number>>(dim)),
+          "navier_stokes_u");
       }
   }
 } // namespace MeltPoolDG::Simulation::MeltFrontPropagation
