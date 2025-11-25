@@ -1,7 +1,9 @@
+#include "../../../mp-heat-transfer/cases/melt_front_propagation/melt_front_propagation.templates.hpp"
+//
 #include <meltpooldg/core/case_registration.hpp>
 
-#include "../../../mp-heat-transfer/cases/melt_front_propagation.templates.hpp"
 #include "../../melt_pool_case.hpp"
+
 
 namespace MeltPoolDG::Simulation::MeltFrontPropagation
 {
