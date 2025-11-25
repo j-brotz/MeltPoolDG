@@ -18,8 +18,8 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/level_set/level_set_type.hpp>
 #include <meltpooldg/utilities/characteristic_functions.hpp>
-#include <meltpooldg/utilities/enum.hpp>
 
 #include <cmath>
 #include <memory>
@@ -29,8 +29,6 @@
 
 namespace MeltPoolDG::Simulation::AdvectionDiffusion
 {
-  BETTER_ENUM(LevelSetType, char, level_set, smooth_heaviside, heaviside, signed_distance)
-
   static bool inflow_outflow_bc = false;
 
   /*
@@ -40,8 +38,9 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
   class InitialLevelSetField : public dealii::Function<dim, number>
   {
   public:
-    InitialLevelSetField(const LevelSetType level_set_type = LevelSetType::level_set,
-                         const number       eps            = 0.0)
+    InitialLevelSetField(
+      const LevelSet::LevelSetType level_set_type = LevelSet::LevelSetType::level_set,
+      const number                 eps            = 0.0)
       : dealii::Function<dim>()
       , distance_sphere(dim == 1   ? dealii::Point<dim, number>(0.0) :
                         (dim == 2) ? dealii::Point<dim, number>(0.0, 0.5) :
@@ -58,13 +57,13 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
 
       switch (level_set_type)
         {
-          case LevelSetType::level_set:
+          case LevelSet::LevelSetType::level_set:
             return CharacteristicFunctions::tanh_characteristic_function(signed_distance, eps);
-          case LevelSetType::smooth_heaviside:
+          case LevelSet::LevelSetType::heaviside:
             return CharacteristicFunctions::smoothed_heaviside(signed_distance, eps);
-          case LevelSetType::heaviside:
+          case LevelSet::LevelSetType::sharp_heaviside:
             return CharacteristicFunctions::sgn(signed_distance);
-          case LevelSetType::signed_distance:
+          case LevelSet::LevelSetType::signed_distance:
             return signed_distance;
           default:
             DEAL_II_NOT_IMPLEMENTED();
@@ -75,7 +74,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
 
   private:
     const dealii::Functions::SignedDistance::Sphere<dim> distance_sphere;
-    const LevelSetType                                   level_set_type;
+    const LevelSet::LevelSetType                         level_set_type;
     const number                                         eps;
   };
 
@@ -269,8 +268,8 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
     }
 
   private:
-    const number left_domain    = -1.0;
-    const number right_domain   = 1.0;
-    LevelSetType level_set_type = LevelSetType::level_set;
+    const number           left_domain    = -1.0;
+    const number           right_domain   = 1.0;
+    LevelSet::LevelSetType level_set_type = LevelSet::LevelSetType::level_set;
   };
 } // namespace MeltPoolDG::Simulation::AdvectionDiffusion

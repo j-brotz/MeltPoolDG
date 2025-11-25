@@ -5,7 +5,7 @@
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/point.h>
 
-#include <meltpooldg/utilities/enum.hpp>
+#include <meltpooldg/level_set/level_set_type.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
 
 #include <string>
@@ -22,8 +22,6 @@
  */
 namespace MeltPoolDG::Simulation::FixedMeltPool
 {
-  BETTER_ENUM(LevelSetType, char, level_set, heaviside, signed_distance)
-
   /**
    * This dealii::Frunction implements the fixed melt pool geometry as any of the LevelSetType
    * representations. LevelSetType::signed_distance corresponds to eq. (37) in [1].
@@ -37,7 +35,7 @@ namespace MeltPoolDG::Simulation::FixedMeltPool
      * @param eps interface thickness parameter epsilon: interface_thickness = 6*eps
      *            only required for level set type level_set or heaviside
      */
-    FixedMeltPoolGeometry(const LevelSetType level_set_type, const number eps = 0.0);
+    FixedMeltPoolGeometry(const LevelSet::LevelSetType level_set_type, const number eps = 0.0);
 
     /**
      * returns value corresponding to Point @param p
@@ -77,8 +75,8 @@ namespace MeltPoolDG::Simulation::FixedMeltPool
     const number melt_pool_radius = centre_radius + bead_radius;
     const number bead_center_x    = centre[0] + melt_pool_radius;
 
-    const LevelSetType level_set_type;
-    const number       eps;
+    const LevelSet::LevelSetType level_set_type;
+    const number                 eps;
   };
 
   /**

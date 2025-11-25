@@ -18,6 +18,7 @@
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_intensity_profiles.hpp>
+#include <meltpooldg/level_set/level_set_type.hpp>
 #include <meltpooldg/level_set/reinitialization_data.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 
@@ -212,7 +213,7 @@ namespace MeltPoolDG::Simulation::PowderBed
         this->attach_initial_condition(
           std::make_shared<MeltPool::PowderBedLevelSet<dim, double>>(
             powder_bed_data,
-            MeltPool::LevelSetType::heaviside,
+            LevelSet::LevelSetType::heaviside,
             reinit_data.compute_interface_thickness_parameter_epsilon(
               dealii::GridTools::minimal_cell_diameter(*this->triangulation) / std::sqrt(dim))),
           "prescribed_heaviside");
@@ -226,7 +227,7 @@ namespace MeltPoolDG::Simulation::PowderBed
         this->attach_initial_condition(
           std::make_shared<MeltPool::PowderBedLevelSet<dim, double>>(
             powder_bed_data,
-            MeltPool::LevelSetType::signed_distance,
+            LevelSet::LevelSetType::signed_distance,
             mp_case->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
               dealii::GridTools::minimal_cell_diameter(*this->triangulation) / std::sqrt(dim))),
           "signed_distance");

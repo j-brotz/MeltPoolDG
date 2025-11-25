@@ -13,8 +13,8 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/tria.h>
 
+#include <meltpooldg/level_set/level_set_type.hpp>
 #include <meltpooldg/utilities/characteristic_functions.hpp>
-#include <meltpooldg/utilities/enum.hpp>
 
 #include <cmath>
 #include <memory>
@@ -27,14 +27,13 @@
 
 namespace MeltPoolDG::Simulation::MeltFrontPropagation
 {
-  // TODO move to a separate file
-  BETTER_ENUM(LevelSetType, char, level_set, heaviside, signed_distance)
-
   template <int dim, typename number>
   class InitialLevelSet : public dealii::Function<dim, number>
   {
   public:
-    InitialLevelSet(const number z_level, const LevelSetType level_set_type, const number eps)
+    InitialLevelSet(const number                 z_level,
+                    const LevelSet::LevelSetType level_set_type,
+                    const number                 eps)
       : dealii::Function<dim, number>()
       , z_level(z_level)
       , level_set_type(level_set_type)
@@ -48,11 +47,11 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
 
       switch (level_set_type)
         {
-          case LevelSetType::level_set:
+          case LevelSet::LevelSetType::level_set:
             return CharacteristicFunctions::tanh_characteristic_function(signed_distance, eps);
-          case LevelSetType::heaviside:
+          case LevelSet::LevelSetType::heaviside:
             return CharacteristicFunctions::smoothed_heaviside(signed_distance, eps);
-          case LevelSetType::signed_distance:
+          case LevelSet::LevelSetType::signed_distance:
             return signed_distance;
           default:
             DEAL_II_NOT_IMPLEMENTED();
@@ -62,9 +61,9 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     }
 
   private:
-    const number       z_level;
-    const LevelSetType level_set_type;
-    const number       eps;
+    const number                 z_level;
+    const LevelSet::LevelSetType level_set_type;
+    const number                 eps;
   };
 
 
@@ -345,21 +344,25 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           if (this->parameters.heat.operator_type != Heat::TwoPhaseOperatorType::cut)
             {
               this->attach_initial_condition(std::make_shared<InitialLevelSet<dim, number>>(
-                                               0.0, LevelSetType::heaviside, z_max / 5),
+                                               0.0, LevelSet::LevelSetType::heaviside, z_max / 5),
                                              "prescribed_heaviside");
             }
           else
             {
               const number offset = 6e-6;
               this->attach_initial_condition(std::make_shared<InitialLevelSet<dim, number>>(
-                                               offset, LevelSetType::signed_distance, 0.0),
+                                               offset,
+                                               LevelSet::LevelSetType::signed_distance,
+                                               0.0),
                                              "prescribed_signed_distance");
               if (this->parameters.amr.do_amr and
                   this->parameters.application_specific_parameters.amr_strategy ==
                     Heat::AMRStrategy::generic)
-                this->attach_initial_condition(std::make_shared<InitialLevelSet<dim, number>>(
-                                                 offset, LevelSetType::heaviside, z_max / 4),
-                                               "prescribed_heaviside");
+                this->attach_initial_condition(
+                  std::make_shared<InitialLevelSet<dim, number>>(offset,
+                                                                 LevelSet::LevelSetType::heaviside,
+                                                                 z_max / 4),
+                  "prescribed_heaviside");
             }
         }
 
@@ -368,9 +371,9 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
         const number eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
           dealii::GridTools::minimal_cell_diameter(*this->triangulation) /
           this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
-        this->attach_initial_condition(
-          std::make_shared<InitialLevelSet<dim, number>>(0.0, LevelSetType::level_set, eps),
-          "level_set");
+        this->attach_initial_condition(std::make_shared<InitialLevelSet<dim, number>>(
+                                         0.0, LevelSet::LevelSetType::level_set, eps),
+                                       "level_set");
         this->attach_initial_condition(
           std::shared_ptr<dealii::Function<dim, number>>(
             std::make_shared<dealii::Functions::ZeroFunction<dim, number>>(dim)),

@@ -21,8 +21,9 @@
 namespace MeltPoolDG::Simulation::FixedMeltPool
 {
   template <int dim, typename number>
-  FixedMeltPoolGeometry<dim, number>::FixedMeltPoolGeometry(const LevelSetType level_set_type,
-                                                            const number       eps)
+  FixedMeltPoolGeometry<dim, number>::FixedMeltPoolGeometry(
+    const LevelSet::LevelSetType level_set_type,
+    const number                 eps)
     : dealii::Function<dim>()
     , level_set_type(level_set_type)
     , eps(eps)
@@ -54,11 +55,11 @@ namespace MeltPoolDG::Simulation::FixedMeltPool
 
     switch (level_set_type)
       {
-        case LevelSetType::level_set:
+        case LevelSet::LevelSetType::level_set:
           return CharacteristicFunctions::tanh_characteristic_function(signed_distance, eps);
-        case LevelSetType::heaviside:
+        case LevelSet::LevelSetType::heaviside:
           return CharacteristicFunctions::smoothed_heaviside(signed_distance, eps);
-        case LevelSetType::signed_distance:
+        case LevelSet::LevelSetType::signed_distance:
           return signed_distance;
         default:
           AssertThrow(false, dealii::ExcNotImplemented());
@@ -177,10 +178,10 @@ namespace MeltPoolDG::Simulation::FixedMeltPool
       }
 
     this->attach_initial_condition(std::make_shared<FixedMeltPoolGeometry<dim, number>>(
-                                     LevelSetType::heaviside, interface_thickness / 6.),
+                                     LevelSet::LevelSetType::heaviside, interface_thickness / 6.),
                                    "prescribed_heaviside");
     this->attach_initial_condition(std::make_shared<FixedMeltPoolGeometry<dim, number>>(
-                                     LevelSetType::signed_distance),
+                                     LevelSet::LevelSetType::signed_distance),
                                    "prescribed_signed_distance");
 
     this->attach_initial_condition(
