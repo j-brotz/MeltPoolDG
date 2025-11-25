@@ -84,9 +84,9 @@ namespace MeltPoolDG::MeltPool
 
     switch (level_set_type)
       {
-        case LevelSet::LevelSetType::level_set:
+        case LevelSet::LevelSetType::tanh:
           return CharacteristicFunctions::tanh_characteristic_function(signed_distance, eps);
-        case LevelSet::LevelSetType::heaviside:
+        case LevelSet::LevelSetType::smoothed_heaviside:
           return CharacteristicFunctions::smoothed_heaviside(signed_distance, eps);
         case LevelSet::LevelSetType::signed_distance:
           return signed_distance;

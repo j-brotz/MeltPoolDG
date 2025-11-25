@@ -8,11 +8,11 @@ namespace MeltPoolDG::LevelSet
   BETTER_ENUM(LevelSetType,
               char,
               // tanh-based level set function
-              level_set,
+              tanh,
               // sine-based smoothed Heaviside function
-              heaviside,
+              smoothed_heaviside,
               // sharp Heaviside function
-              sharp_heaviside,
+              heaviside,
               // signed distance
               signed_distance)
 }

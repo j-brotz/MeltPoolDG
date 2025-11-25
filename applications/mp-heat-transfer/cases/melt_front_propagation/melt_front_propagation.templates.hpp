@@ -47,9 +47,9 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
 
       switch (level_set_type)
         {
-          case LevelSet::LevelSetType::level_set:
+          case LevelSet::LevelSetType::tanh:
             return CharacteristicFunctions::tanh_characteristic_function(signed_distance, eps);
-          case LevelSet::LevelSetType::heaviside:
+          case LevelSet::LevelSetType::smoothed_heaviside:
             return CharacteristicFunctions::smoothed_heaviside(signed_distance, eps);
           case LevelSet::LevelSetType::signed_distance:
             return signed_distance;
@@ -344,7 +344,9 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           if (this->parameters.heat.operator_type != Heat::TwoPhaseOperatorType::cut)
             {
               this->attach_initial_condition(std::make_shared<InitialLevelSet<dim, number>>(
-                                               0.0, LevelSet::LevelSetType::heaviside, z_max / 5),
+                                               0.0,
+                                               LevelSet::LevelSetType::smoothed_heaviside,
+                                               z_max / 5),
                                              "prescribed_heaviside");
             }
           else
@@ -358,11 +360,11 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
               if (this->parameters.amr.do_amr and
                   this->parameters.application_specific_parameters.amr_strategy ==
                     Heat::AMRStrategy::generic)
-                this->attach_initial_condition(
-                  std::make_shared<InitialLevelSet<dim, number>>(offset,
-                                                                 LevelSet::LevelSetType::heaviside,
-                                                                 z_max / 4),
-                  "prescribed_heaviside");
+                this->attach_initial_condition(std::make_shared<InitialLevelSet<dim, number>>(
+                                                 offset,
+                                                 LevelSet::LevelSetType::smoothed_heaviside,
+                                                 z_max / 4),
+                                               "prescribed_heaviside");
             }
         }
 
@@ -371,9 +373,9 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
         const number eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
           dealii::GridTools::minimal_cell_diameter(*this->triangulation) /
           this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
-        this->attach_initial_condition(std::make_shared<InitialLevelSet<dim, number>>(
-                                         0.0, LevelSet::LevelSetType::level_set, eps),
-                                       "level_set");
+        this->attach_initial_condition(
+          std::make_shared<InitialLevelSet<dim, number>>(0.0, LevelSet::LevelSetType::tanh, eps),
+          "level_set");
         this->attach_initial_condition(
           std::shared_ptr<dealii::Function<dim, number>>(
             std::make_shared<dealii::Functions::ZeroFunction<dim, number>>(dim)),

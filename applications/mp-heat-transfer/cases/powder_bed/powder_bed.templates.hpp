@@ -213,7 +213,7 @@ namespace MeltPoolDG::Simulation::PowderBed
         this->attach_initial_condition(
           std::make_shared<MeltPool::PowderBedLevelSet<dim, double>>(
             powder_bed_data,
-            LevelSet::LevelSetType::heaviside,
+            LevelSet::LevelSetType::smoothed_heaviside,
             reinit_data.compute_interface_thickness_parameter_epsilon(
               dealii::GridTools::minimal_cell_diameter(*this->triangulation) / std::sqrt(dim))),
           "prescribed_heaviside");

@@ -33,10 +33,9 @@ namespace MeltPoolDG::MeltPool
     using Particle = std::pair<dealii::Point<3>, number>;
 
   public:
-    PowderBedLevelSet(
-      const PowderBedData<number> &powder_bed_data,
-      const LevelSet::LevelSetType level_set_type = LevelSet::LevelSetType::level_set,
-      const number                 eps            = 0.0);
+    PowderBedLevelSet(const PowderBedData<number> &powder_bed_data,
+                      const LevelSet::LevelSetType level_set_type = LevelSet::LevelSetType::tanh,
+                      const number                 eps            = 0.0);
 
     number
     value(const dealii::Point<dim> &p, const unsigned int /* component */) const override;

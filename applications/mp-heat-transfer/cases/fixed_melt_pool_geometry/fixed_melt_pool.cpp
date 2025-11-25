@@ -55,9 +55,9 @@ namespace MeltPoolDG::Simulation::FixedMeltPool
 
     switch (level_set_type)
       {
-        case LevelSet::LevelSetType::level_set:
+        case LevelSet::LevelSetType::tanh:
           return CharacteristicFunctions::tanh_characteristic_function(signed_distance, eps);
-        case LevelSet::LevelSetType::heaviside:
+        case LevelSet::LevelSetType::smoothed_heaviside:
           return CharacteristicFunctions::smoothed_heaviside(signed_distance, eps);
         case LevelSet::LevelSetType::signed_distance:
           return signed_distance;
@@ -178,7 +178,8 @@ namespace MeltPoolDG::Simulation::FixedMeltPool
       }
 
     this->attach_initial_condition(std::make_shared<FixedMeltPoolGeometry<dim, number>>(
-                                     LevelSet::LevelSetType::heaviside, interface_thickness / 6.),
+                                     LevelSet::LevelSetType::smoothed_heaviside,
+                                     interface_thickness / 6.),
                                    "prescribed_heaviside");
     this->attach_initial_condition(std::make_shared<FixedMeltPoolGeometry<dim, number>>(
                                      LevelSet::LevelSetType::signed_distance),

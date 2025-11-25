@@ -38,9 +38,8 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
   class InitialLevelSetField : public dealii::Function<dim, number>
   {
   public:
-    InitialLevelSetField(
-      const LevelSet::LevelSetType level_set_type = LevelSet::LevelSetType::level_set,
-      const number                 eps            = 0.0)
+    InitialLevelSetField(const LevelSet::LevelSetType level_set_type = LevelSet::LevelSetType::tanh,
+                         const number                 eps            = 0.0)
       : dealii::Function<dim>()
       , distance_sphere(dim == 1   ? dealii::Point<dim, number>(0.0) :
                         (dim == 2) ? dealii::Point<dim, number>(0.0, 0.5) :
@@ -57,11 +56,11 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
 
       switch (level_set_type)
         {
-          case LevelSet::LevelSetType::level_set:
+          case LevelSet::LevelSetType::tanh:
             return CharacteristicFunctions::tanh_characteristic_function(signed_distance, eps);
-          case LevelSet::LevelSetType::heaviside:
+          case LevelSet::LevelSetType::smoothed_heaviside:
             return CharacteristicFunctions::smoothed_heaviside(signed_distance, eps);
-          case LevelSet::LevelSetType::sharp_heaviside:
+          case LevelSet::LevelSetType::heaviside:
             return CharacteristicFunctions::sgn(signed_distance);
           case LevelSet::LevelSetType::signed_distance:
             return signed_distance;
@@ -270,6 +269,6 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
   private:
     const number           left_domain    = -1.0;
     const number           right_domain   = 1.0;
-    LevelSet::LevelSetType level_set_type = LevelSet::LevelSetType::level_set;
+    LevelSet::LevelSetType level_set_type = LevelSet::LevelSetType::tanh;
   };
 } // namespace MeltPoolDG::Simulation::AdvectionDiffusion
