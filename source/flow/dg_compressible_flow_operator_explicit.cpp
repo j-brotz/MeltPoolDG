@@ -123,7 +123,10 @@ namespace MeltPoolDG::Flow
                               (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
 
         for (auto &external_force : external_forces)
-          external_force->cell_operation(flow_scratch_data.scratch_data.get_matrix_free(), cell);
+          external_force->cell_operation({flow_scratch_data.scratch_data.get_matrix_free(),
+                                          flow_scratch_data.dof_idx,
+                                          flow_scratch_data.quad_idx},
+                                         cell);
 
         for (const unsigned int q : phi.quadrature_point_indices())
           {

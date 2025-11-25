@@ -287,7 +287,10 @@ namespace MeltPoolDG::Flow
         phi.gather_evaluate(src, EvaluationFlags::values);
 
         for (auto &external_force : external_forces_explicit_rhs)
-          external_force->cell_operation(flow_scratch_data.scratch_data.get_matrix_free(), cell);
+          external_force->cell_operation({flow_scratch_data.scratch_data.get_matrix_free(),
+                                          flow_scratch_data.dof_idx,
+                                          flow_scratch_data.quad_idx},
+                                         cell);
 
         for (const unsigned int q : phi.quadrature_point_indices())
           {
@@ -453,7 +456,10 @@ namespace MeltPoolDG::Flow
         delta_phi.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
         for (auto &external_force : external_forces_implicit_jacobian)
-          external_force->cell_operation(flow_scratch_data.scratch_data.get_matrix_free(), cell);
+          external_force->cell_operation({flow_scratch_data.scratch_data.get_matrix_free(),
+                                          flow_scratch_data.dof_idx,
+                                          flow_scratch_data.quad_idx},
+                                         cell);
 
         for (const unsigned int q_index : phi.quadrature_point_indices())
           {
@@ -602,7 +608,10 @@ namespace MeltPoolDG::Flow
                                                   dealii::EvaluationFlags::values);
 
         for (auto &external_force : external_forces_implicit_residual)
-          external_force->cell_operation(flow_scratch_data.scratch_data.get_matrix_free(), cell);
+          external_force->cell_operation({flow_scratch_data.scratch_data.get_matrix_free(),
+                                          flow_scratch_data.dof_idx,
+                                          flow_scratch_data.quad_idx},
+                                         cell);
 
         for (const unsigned int q : phi.quadrature_point_indices())
           {

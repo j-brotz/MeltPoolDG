@@ -23,7 +23,7 @@ namespace MeltPoolDG::Simulation::CfdDem
 {
 
   /// Enum for the type of ramp up function used for the velocity at an inflow boundary.
-  BETTER_ENUM(RampUpType, char, linear, exponential, cosine);
+  BETTER_ENUM(RampUpType, char, none, linear, exponential, cosine);
 
   /**
    * A function class that computes the conservative variable values for the compressible
@@ -89,7 +89,8 @@ namespace MeltPoolDG::Simulation::CfdDem
     value(const dealii::Point<dim, number> &loc, const unsigned int component) const override
     {
       const auto inflow_ramp_up_scaling = [&]() -> number {
-        if (this->get_time() > inflow_ramp_up_duration or inflow_ramp_up_duration == 0.)
+        if (this->get_time() > inflow_ramp_up_duration or inflow_ramp_up_duration == 0. or
+            ramp_up_type == RampUpType::none)
           return 1.;
 
         switch (ramp_up_type)

@@ -6,16 +6,18 @@
 
 #include <deal.II/grid/tria.h>
 
-#include "meltpooldg/utilities/amr_regions.hpp"
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
-#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_fluid_to_obstacle.hpp>
-#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_obstacle_to_fluid.hpp>
+#include <meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp>
+#include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
+#include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_factory.hpp>
+#include <meltpooldg/fluid_structure_interaction/stokes_law.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/obstacle_forces.hpp>
 #include <meltpooldg/particles/particle.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/amr_indicators.hpp>
+#include <meltpooldg/utilities/amr_regions.hpp>
 #include <meltpooldg/utilities/attach_vectors.hpp>
 #include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
@@ -74,6 +76,11 @@ namespace MeltPoolDG
                              scratch_data->get_dof_handler(comp_flow_dof_idx));
     Journal::print_decoration_line(scratch_data->get_pcout(1));
 
+    if (simulation_case->parameters.amr.do_amr and
+        simulation_case->parameters.amr.n_initial_refinement_cycles > 0)
+      for (int i = 0; i < simulation_case->parameters.amr.n_initial_refinement_cycles; ++i)
+        refine_mesh();
+
     // output the initial condition
     output_results(time_iterator->get_current_time_step_number(),
                    time_iterator->get_current_time());
@@ -82,8 +89,10 @@ namespace MeltPoolDG
       {
         // use CFL condition to compute time step size if required
         if (simulation_case->parameters.flow.do_cfl_time_stepping)
-          time_iterator->set_current_time_increment(comp_flow_operation->compute_time_step_size(),
-                                                    std::numeric_limits<number>::max());
+          time_iterator->set_current_time_increment(
+            std::min(comp_flow_operation->compute_time_step_size(),
+                     simulation_case->parameters.time_stepping.time_step_size),
+            std::numeric_limits<number>::max());
 
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout(1));
@@ -242,18 +251,6 @@ namespace MeltPoolDG
     // set initial condition for the flow field
     comp_flow_operation->set_initial_condition(*simulation_case->get_initial_condition("cfd_dem"));
 
-    // initialize volume penalization fluid forces
-    auto external_fluid_force_residual = std::make_shared<
-      BrinkmanPenalizationResidualContribution<dim, number, SphericalParticle<dim, number>>>(
-      *obstacle_field, simulation_case->parameters.brinkman_penalization_data);
-
-    auto external_fluid_force_jacobian = std::make_shared<
-      BrinkmanPenalizationJacobianContribution<dim, number, SphericalParticle<dim, number>>>(
-      *obstacle_field, simulation_case->parameters.brinkman_penalization_data);
-
-    comp_flow_operation->add_external_force(external_fluid_force_residual,
-                                            external_fluid_force_jacobian);
-
     // set fluid body force
     if (dim > 1 and simulation_case->parameters.flow.gravity_constant > 0.)
       {
@@ -268,15 +265,19 @@ namespace MeltPoolDG
     // setup amr indicator
     setup_amr_indicator();
 
-    // add relevant obstacle forces to obstacle field
-    obstacle_field->add_load_type(
-      BrinkmanObstacleForce<dim, number, SphericalParticle<dim, number>>(
+    // FSI
+    auto [fsi_fluid_force_residual, fsi_fluid_force_jacobian, fsi_obstacle_load] =
+      setup_fluid_structure_interaction<dim, number, SphericalParticle<dim, number>>(
+        simulation_case->parameters.fluid_structure_interaction_data,
+        *obstacle_field,
+        simulation_case->parameters.material,
         comp_flow_operation->get_solution(),
-        scratch_data->get_matrix_free(),
-        comp_flow_dof_idx,
-        comp_flow_quad_idx,
-        BrinkmanPenalizationCellScratchData<dim, number, SphericalParticle<dim, number>>(
-          *obstacle_field, simulation_case->parameters.brinkman_penalization_data)));
+        {scratch_data->get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx});
+
+    comp_flow_operation->add_external_force(fsi_fluid_force_residual, fsi_fluid_force_jacobian);
+
+    // add relevant obstacle forces to obstacle field
+    obstacle_field->add_load_type(std::move(*fsi_obstacle_load));
 
     obstacle_field->add_load_type(
       ObstacleGravitationalForce<dim, number, SphericalParticle<dim, number>>(

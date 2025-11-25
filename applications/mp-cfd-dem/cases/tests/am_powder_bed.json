@@ -49,8 +49,12 @@
       "type": "FE_DGQ"
     }
   },
-  "brinkman penalization": {
-    "permeability": 1e-10
+  "fluid structure interaction": {
+    "coupling method": "brinkman_penalization",
+    "brinkman penalization": {
+      "mask type": "discontinuous",
+      "permeability": 1e-10
+    }
   },
   "obstacles": {
     "stationary": true,

@@ -12,6 +12,7 @@
 
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
+#include <meltpooldg/utilities/matrix_free_util.hpp>
 
 namespace MeltPoolDG::Flow
 {
@@ -132,12 +133,12 @@ namespace MeltPoolDG::Flow
     /**
      * @brief Function called once per cell batch during the cell loop.
      *
-     * @param matrix_free MatrixFree object providing access to the degrees of freedom and geometry.
+     * @param matrix_free MatrixFree object and corresponding relevant indices.
      * @param cell_batch_id Index of the current cell batch.
      */
     virtual void
-    cell_operation(const dealii::MatrixFree<dim, number> &matrix_free,
-                   unsigned int                           cell_batch_id) = 0;
+    cell_operation(const MatrixFreeContext<dim, number> &matrix_free,
+                   unsigned int                          cell_batch_id) = 0;
 
     /**
      * @brief Function called once per batch of quadrature points to compute the external force
@@ -164,12 +165,12 @@ namespace MeltPoolDG::Flow
     /**
      * @brief Function called once per cell batch during the cell loop.
      *
-     * @param matrix_free MatrixFree object providing access to the degrees of freedom and geometry.
+     * @param matrix_free MatrixFree object and corresponding relevant indices.
      * @param cell_batch_id Index of the current cell batch.
      */
     virtual void
-    cell_operation(const dealii::MatrixFree<dim, number> &matrix_free,
-                   unsigned int                           cell_batch_id) = 0;
+    cell_operation(const MatrixFreeContext<dim, number> &matrix_free,
+                   unsigned int                          cell_batch_id = 0) = 0;
 
     /**
      * @brief Function called once per batch of quadrature points to compute the external force

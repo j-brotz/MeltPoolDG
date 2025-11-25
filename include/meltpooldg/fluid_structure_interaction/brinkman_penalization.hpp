@@ -1,18 +1,68 @@
 #pragma once
 
+#include <deal.II/base/exception_macros.h>
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/vectorization.h>
+
+#include <deal.II/lac/la_parallel_vector.h>
 
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
-#include <meltpooldg/fluid_structure_interaction/brinkman_penalization_util.hpp>
+#include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_util.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
+#include <meltpooldg/utilities/matrix_free_util.hpp>
+
 
 namespace MeltPoolDG
 {
+
+  template <int dim, typename number, typename ObstacleType>
+  struct BrinkmanObstacleForce
+  {
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
+
+    /**
+     * Constructor. Stores all relevant data internally.
+     *
+     * @param obstacle_handler Reference to the obstacle handler managing obstacles in the domain.
+     * @param solution Reference to the solution of the flow field.
+     * @param matrix_free MatrixFree object and corresponding relevant indices.
+     * @param scratch_data Object for caching relevant data for the penalty term computation.
+     */
+    BrinkmanObstacleForce(const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
+                          const VectorType                               &solution,
+                          const MatrixFreeContext<dim, number>           &matrix_free,
+                          const BrinkmanPenalizationData<number>         &data);
+
+    /**
+     * Compute the force from the fluid on all obstacles in the given obstacle field @param obstacle_field.
+     * This is done by evaluating the Brinkman penalization terms at all (fluid) quadrature points
+     * lying in the obstacle volume, multiplying by the corresponding quadrature weight and
+     * computing the sum of the individual contributions. The final result is then added to the
+     * force property of the corresponding obstacle.
+     */
+    void
+    add_load_to_obstacles(ObstacleField<dim, number, ObstacleType> &obstacle_field) const;
+
+  private:
+    /// Brinkman penalization data
+    const BrinkmanPenalizationData<number> brinkman_penalization_data;
+
+    /// Cached cell data for computing Brinkman penalty term.
+    mutable CellObstacleCache<dim, number, ObstacleType> cell_obstacle_cache;
+
+    /// Matrix free object and corresponding relevant indices used by the compressible flow solver.
+    const MatrixFreeContext<dim, number> matrix_free;
+
+    /// Solution of the flow field.
+    const VectorType &solution;
+  };
+
+
   /**
-   * @brief Implementation of the Brinkman penalization force for compressible flows
+   * Implementation of the Brinkman penalization force for compressible flows
    * advanced in time using explicit time integration.
    *
    * The penalization force is computed as
@@ -37,7 +87,7 @@ namespace MeltPoolDG
 
   public:
     /**
-     * @brief Constructor that stores relevant data internally and uses the default mask function
+     * Constructor that stores relevant data internally and uses the default mask function
      * for the penalty term computation. The default mask function returns 1 for points inside
      * the obstacle volume and 0 outside.
      *
@@ -47,30 +97,25 @@ namespace MeltPoolDG
      */
     BrinkmanPenalizationResidualContribution(
       const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-      const BrinkmanPenalizationData<number>         &brinkman_penalization_data,
-      typename BrinkmanPenalizationCellScratchData<dim, number, ObstacleType>::MaskFunctionType
-        mask_function =
-          static_cast<typename BrinkmanPenalizationCellScratchData<dim, number, ObstacleType>::
-                        MaskFunctionType>(
-            discontinuous_mask_function<dim, dealii::VectorizedArray<number>, ObstacleType>));
+      const BrinkmanPenalizationData<number>         &brinkman_penalization_data);
 
     /**
-     * @brief Identifies and stores all relevant particles for the given cell batch, to be used
+     * Identifies and stores all relevant particles for the given cell batch, to be used
      * during the quadrature operation.
      *
      * This function is responsible for locating particles that are relevant to the current cell
      * batch and caching them internally. The cached particles are then accessed during the later
      * quadrature computation.
      *
-     * @param matrix_free The MatrixFree object relevant for the cell batch.
+     * @param matrix_free MatrixFree object and corresponding relevant indices.
      * @param cell_batch_id The index of the cell batch to process.
      */
     void
-    cell_operation(const dealii::MatrixFree<dim, number> &matrix_free,
-                   const unsigned int                     cell_batch_id) override;
+    cell_operation(const MatrixFreeContext<dim, number> &matrix_free,
+                   unsigned int                          cell_batch_id) override;
 
     /**
-     * @brief Computes the Brinkman penalty term at the specified (vectorized) points, typically
+     * Computes the Brinkman penalty term at the specified (vectorized) points, typically
      * quadrature points.
      *
      * The computation considers only those obstacles that have been cached internally, as
@@ -87,12 +132,16 @@ namespace MeltPoolDG
                    const ConservedVariablesType                              &w_q) override;
 
   private:
-    BrinkmanPenalizationCellScratchData<dim, number, ObstacleType> brinkman_cell_scratch_data;
+    /// Brinkman penalization data
+    const BrinkmanPenalizationData<number> brinkman_penalization_data;
+
+    /// Cached cell data for computing Brinkman penalty term.
+    mutable CellObstacleCache<dim, number, ObstacleType> cell_obstacle_cache;
   };
 
 
   /**
-   * @brief Implementation of the Brinkman penalization force Jacobian for compressible flows.
+   * Implementation of the Brinkman penalization force Jacobian for compressible flows.
    *
    * The penalization force is computed as
    * \f[
@@ -116,40 +165,34 @@ namespace MeltPoolDG
 
   public:
     /**
-     * @brief Constructor that stores relevant data internally and uses the default mask function
+     * Constructor that stores relevant data internally and uses the default mask function
      * for the penalty term computation. The default mask function returns 1 for points inside
      * the obstacle volume and 0 outside.
      *
      * @param obstacle_handler Reference to the obstacle handler managing obstacles in the domain.
      * @param brinkman_penalization_data Data required for computing the Brinkman penalization term.
-     * @param mask_function User-defined mask function used in the penalty term evaluation.
      */
     BrinkmanPenalizationJacobianContribution(
       const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-      const BrinkmanPenalizationData<number>         &brinkman_penalization_data,
-      typename BrinkmanPenalizationCellScratchData<dim, number, ObstacleType>::MaskFunctionType
-        mask_function =
-          static_cast<typename BrinkmanPenalizationCellScratchData<dim, number, ObstacleType>::
-                        MaskFunctionType>(
-            discontinuous_mask_function<dim, dealii::VectorizedArray<number>, ObstacleType>));
+      const BrinkmanPenalizationData<number>         &brinkman_penalization_data);
 
     /**
-     * @brief Identifies and stores all relevant particles for the given cell batch, to be used
+     * Identifies and stores all relevant particles for the given cell batch, to be used
      * during the quadrature operation.
      *
      * This function is responsible for locating particles that are relevant to the current cell
      * batch and caching them internally. The cached particles are then accessed during the later
      * quadrature computation.
      *
-     * @param matrix_free The MatrixFree object relevant for the cell batch.
+     * @param matrix_free MatrixFree object and corresponding relevant indices.
      * @param cell_batch_id The index of the cell batch to process.
      */
     void
-    cell_operation(const dealii::MatrixFree<dim, number> &matrix_free,
-                   const unsigned int                     cell_batch_id) override;
+    cell_operation(const MatrixFreeContext<dim, number> &matrix_free,
+                   unsigned int                          cell_batch_id) override;
 
     /**
-     * @brief Computes the Jacobian * delta_w of the Brinkman penalty term at the specified
+     * Computes the Jacobian * delta_w of the Brinkman penalty term at the specified
      * (vectorized) points, typically quadrature points.
      *
      * The computation considers only those obstacles that have been cached internally, as
@@ -168,6 +211,10 @@ namespace MeltPoolDG
                    const ConservedVariablesType                              &delta_w_q) override;
 
   private:
-    BrinkmanPenalizationCellScratchData<dim, number, ObstacleType> brinkman_cell_scratch_data;
+    /// Brinkman penalization data
+    const BrinkmanPenalizationData<number> brinkman_penalization_data;
+
+    /// Cached cell data for computing Brinkman penalty term.
+    mutable CellObstacleCache<dim, number, ObstacleType> cell_obstacle_cache;
   };
 } // namespace MeltPoolDG

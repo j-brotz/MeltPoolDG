@@ -303,6 +303,10 @@ namespace MeltPoolDG
     static dealii::Tensor<1, dim, VectorizedArrayType>
     get_velocity(const dealii::Particles::ParticleAccessor<dim> &particle);
 
+    static void
+    set_velocity(dealii::Particles::ParticleAccessor<dim> &particle,
+                 const dealii::Tensor<1, dim, number>     &velocity);
+
     /**
      * @brief Retrieves the translational velocity of a specific particle from a property pool.
      *
@@ -858,6 +862,17 @@ MeltPoolDG::SphericalParticle<dim, number>::get_velocity(
   for (int dimension = 0; dimension < dim; ++dimension)
     velocity[dimension] = properties[Properties::velocity + dimension];
   return velocity;
+}
+
+template <int dim, typename number>
+void
+MeltPoolDG::SphericalParticle<dim, number>::set_velocity(
+  dealii::Particles::ParticleAccessor<dim> &particle,
+  const dealii::Tensor<1, dim, number>     &velocity)
+{
+  dealii::ArrayView<number> properties = particle.get_properties();
+  for (int dimension = 0; dimension < dim; ++dimension)
+    properties[Properties::velocity + dimension] = velocity[dimension];
 }
 
 template <int dim, typename number>
