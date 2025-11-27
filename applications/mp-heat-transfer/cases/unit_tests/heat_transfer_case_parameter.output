@@ -10,6 +10,7 @@
         "min grid refinement level": "-1",
         "min indicator threshold to refine cell": "0",
         "n initial refinement cycles": "0",
+        "solution transfer average values": "false",
         "upper perc to refine": "0"
     },
     "application specific":

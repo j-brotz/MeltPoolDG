@@ -87,8 +87,8 @@ namespace MeltPoolDG::AMR
               }
           }
 
-        solution_transfers[j] =
-          std::make_unique<dealii::SolutionTransfer<dim, VectorType>>(*data[j].first);
+        solution_transfers[j] = std::make_unique<dealii::SolutionTransfer<dim, VectorType>>(
+          *data[j].first, amr.solution_transfer_average_values);
         solution_transfers[j]->prepare_for_coarsening_and_refinement(old_grid_solutions[j]);
       }
 

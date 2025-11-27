@@ -44,6 +44,10 @@ namespace MeltPoolDG
         "min indicator threshold to refine cell",
         indicator_min_value_to_mark_for_refinement,
         "Minimum indicator value required for a cell to be considered for refinement.");
+      prm.add_parameter(
+        "solution transfer average values",
+        solution_transfer_average_values,
+        "Set this parameter to true to average the contribututions to the same DoF coming from different cells during solution transfer.");
     }
     prm.leave_subsection();
   }
