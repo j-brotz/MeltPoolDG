@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <deal.II/base/config.h>
+
 #include <deal.II/base/aligned_vector.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
@@ -192,7 +194,22 @@ namespace MeltPoolDG::Flow
 
   /********************************************************************************************
    * Inlined function definitions
-   * *************************************************************************************+****/
+   * ******************************************************************************************/
+  template <int dim, typename number>
+  inline DEAL_II_ALWAYS_INLINE std::tuple<dealii::VectorizedArray<number>,
+                                          dealii::Tensor<1, dim, dealii::VectorizedArray<number>>,
+                                          dealii::VectorizedArray<number>>
+  get_conserved_variables(const CompressibleFlowTypes::ConservedVariablesType<dim, number> &w)
+  {
+    dealii::VectorizedArray<number>                         density = w[0];
+    dealii::Tensor<1, dim, dealii::VectorizedArray<number>> momentum;
+    for (int i = 0; i < dim; ++i)
+      momentum[i] = w[i + 1];
+    dealii::VectorizedArray<number> energy = w[dim + 1];
+    return {density, momentum, energy};
+  }
+
+
   template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     dealii::Tensor<1, dim, dealii::VectorizedArray<number>>

@@ -25,7 +25,8 @@ namespace MeltPoolDG
   template <int dim, typename number, typename ObstacleType>
   struct BrinkmanObstacleForce
   {
-    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
+    using VectorType          = dealii::LinearAlgebra::distributed::Vector<number>;
+    using VectorizedArrayType = dealii::VectorizedArray<number>;
 
     /**
      * Constructor. Stores all relevant data internally.
@@ -93,6 +94,8 @@ namespace MeltPoolDG
   class IncompressibleBrinkmanPenalizationFluidForce
     : public Flow::IncompressibleExternalFluidForce<dim, number, n_components>
   {
+    using VectorizedArrayType = dealii::VectorizedArray<number>;
+
   public:
     /**
      * Constructor that stores relevant data internally and uses the default mask function
@@ -129,15 +132,13 @@ namespace MeltPoolDG
                                                                        cell_batch_id);
     }
 
-    dealii::VectorizedArray<number>
-    get_damping_coeff_at_q(
-      number,
-      const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point) override
+    VectorizedArrayType
+    get_damping_coeff_at_q(number, const dealii::Point<dim, VectorizedArrayType> &q_point) override
     {
-      dealii::VectorizedArray<number> damping_coeff(0.);
+      VectorizedArrayType damping_coeff(0.);
       for (auto obstacle_handle : cell_obstacle_cache.relevant_obstacle_handles)
         {
-          auto mask = mask_function<dim, dealii::VectorizedArray<number>, ObstacleType>(
+          auto mask = mask_function<dim, VectorizedArrayType, ObstacleType>(
             brinkman_penalization_data.mask_function_type,
             q_point,
             cell_obstacle_cache.relevant_obstacles,
@@ -149,14 +150,13 @@ namespace MeltPoolDG
       return damping_coeff;
     }
 
-    dealii::Tensor<1, n_components, dealii::VectorizedArray<number>>
-    get_rhs_at_q(number,
-                 const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point) override
+    dealii::Tensor<1, n_components, VectorizedArrayType>
+    get_rhs_at_q(number, const dealii::Point<dim, VectorizedArrayType> &q_point) override
     {
-      dealii::Tensor<1, n_components, dealii::VectorizedArray<number>> rhs;
+      dealii::Tensor<1, n_components, VectorizedArrayType> rhs;
       for (auto obstacle_handle : cell_obstacle_cache.relevant_obstacle_handles)
         {
-          auto mask = mask_function<dim, dealii::VectorizedArray<number>, ObstacleType>(
+          auto mask = mask_function<dim, VectorizedArrayType, ObstacleType>(
             brinkman_penalization_data.mask_function_type,
             q_point,
             cell_obstacle_cache.relevant_obstacles,
@@ -203,6 +203,7 @@ namespace MeltPoolDG
     : public Flow::AdditionalCellAndQuadOperation<dim, number>
   {
     using ConservedVariablesType = Flow::CompressibleFlowTypes::ConservedVariablesType<dim, number>;
+    using VectorizedArrayType    = dealii::VectorizedArray<number>;
 
   public:
     /**
@@ -245,9 +246,9 @@ namespace MeltPoolDG
      * @return The computed Brinkman penalty term at the specified points.
      */
     ConservedVariablesType
-    quad_operation(number                                                     time_step_size,
-                   const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
-                   const ConservedVariablesType                              &w_q) override;
+    quad_operation(number                                         time_step_size,
+                   const dealii::Point<dim, VectorizedArrayType> &q_point,
+                   const ConservedVariablesType                  &w_q) override;
 
   private:
     /// Brinkman penalization data
@@ -280,6 +281,7 @@ namespace MeltPoolDG
     : public Flow::AdditionalCellAndQuadOperationJacobian<dim, number>
   {
     using ConservedVariablesType = Flow::CompressibleFlowTypes::ConservedVariablesType<dim, number>;
+    using VectorizedArrayType    = dealii::VectorizedArray<number>;
 
   public:
     /**
@@ -323,10 +325,10 @@ namespace MeltPoolDG
      * @return The computed Brinkman penalty term at the specified points.
      */
     ConservedVariablesType
-    quad_operation(number                                                     time_step_size,
-                   const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
-                   const ConservedVariablesType                              &w_q,
-                   const ConservedVariablesType                              &delta_w_q) override;
+    quad_operation(number                                         time_step_size,
+                   const dealii::Point<dim, VectorizedArrayType> &q_point,
+                   const ConservedVariablesType                  &w_q,
+                   const ConservedVariablesType                  &delta_w_q) override;
 
   private:
     /// Brinkman penalization data
