@@ -229,6 +229,8 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
           matrix_free.mf, force, solution, cell_range, global_particle_properties);
       else if (flow_solver_type == FlowSolverType::incompressible)
         {
+          local_apply_cell_incompressible_flow(
+          matrix_free.mf, force, solution, cell_range, global_particle_properties);
         }
       else
         AssertThrow(false, dealii::ExcMessage("Flow solver type not supported."));

@@ -1,0 +1,99 @@
+{
+    "application": {
+        "amr strategies": "obstacle_surface",
+        "flow type": "incompressible"
+    },
+    "base": {
+        "problem name": "cfd_dem",
+        "case name": "generic_hyper_rectangle_domain",
+        "dimension": "2",
+        "do print parameters": "false",
+        "verbosity level": 1,
+        "global refinements": 0,
+        "fe": {
+            "type": "FE_Q",
+            "degree": 2
+        }
+    },
+    "case setup": {
+        "boundary x min": {
+            "type": "inflow",
+            "velocity": "150; 0"
+        },
+        "boundary x max": {
+            "type": "subsonic_outflow_fixed_pressure",
+            "pressure": "0"
+        },
+        "boundary y min": {
+            "type": "slip_wall"
+        },
+        "boundary y max": {
+            "type": "slip_wall"
+        },
+        "initial conditions": {
+            "velocity": "150; 0.0"
+        },
+        "domain": {
+            "size": "80e-6, 40e-6",
+            "base grid resolution": "12, 6"
+        }
+    },
+    "time stepping": {
+        "start time": "0.0",
+        "end time": "4e-11",
+        "time step size": "2e-11"
+    },
+    "output": {
+        "write frequency": "1",
+        "do user defined postprocessing": "true"
+    },
+    "material": {
+        "gas": {
+            "density": 1,
+            "dynamic viscosity": 1e-05
+        }
+    },
+    "flow": {
+        "adaflo": {
+            "Navier-Stokes": {
+                "dimension": 2,
+                "physical type": "incompressible",
+                "velocity degree": 2,
+                "Solver": {
+                    "linearization scheme": "coupled implicit Newton",
+                    "NL max iterations": 10,
+                    "NL tolerance": 1e-09,
+                    "lin max iterations": 50,
+                    "lin tolerance": 0.0002,
+                    "lin relative tolerance": 1,
+                    "lin velocity preconditioner": "ilu scalar",
+                    "lin pressure mass preconditioner": "ilu",
+                    "lin its before inner solvers": 50
+                },
+                "Output options": {
+                    "output verbosity": "3",
+                    "output walltimes": "0"
+                },
+                "Time stepping": {
+                    "scheme": "bdf_2"
+                }
+            }
+        }
+    },
+    "fluid structure interaction": {
+        "coupling method": "brinkman_penalization",
+        "brinkman penalization": {
+            "permeability": 5.7e-06,
+            "mask type": "discontinuous"
+        }
+    },
+    "obstacles": {
+        "stationary": true,
+        "obstacle state input file": "../../stationary_particle_2d.csv",
+        "amr": {
+            "do refine": false,
+            "inner surface distance": 0.5,
+            "outer surface distance": 1.5
+        }
+    }
+}

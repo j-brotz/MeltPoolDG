@@ -7,6 +7,7 @@
 #include <deal.II/grid/tria.h>
 
 #include "meltpooldg/flow/cfd_dem_flow_operation.hpp"
+#include "meltpooldg/flow/flow_utils.hpp"
 #include "meltpooldg/phase_change/evaporation_data.hpp"
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/adaflo_wrapper_wrapper.hpp>
@@ -101,8 +102,10 @@ namespace MeltPoolDG
         flow_operation.solve(time_iterator->get_current_time(),
                              time_iterator->get_current_time_increment());
 
-        if (false && this->simulation_case->parameters.obstacle_data.stationary_obstacles)
-          obstacle_field->compute_loads_on_obstacles();
+        if (this->simulation_case->parameters.obstacle_data.stationary_obstacles)
+          {
+            obstacle_field->compute_loads_on_obstacles();
+          }
         else
           {
             // The advance time function internally calls compute_loads_on_obstacles(). Therefore
@@ -405,7 +408,9 @@ namespace MeltPoolDG
     if (simulation_case->parameters.output.do_user_defined_postprocessing and
         post_processor->is_output_timestep(time_step, current_time))
       {
-        simulation_case->do_postprocessing(generic_data_out);
+        if (simulation_case->parameters.application.flow_solver_type ==
+            FlowSolverType::compressible)
+          simulation_case->do_postprocessing(generic_data_out);
         obstacle_field->print_accumulated_obstacle_force_norm(scratch_data->get_pcout(1));
       }
 
