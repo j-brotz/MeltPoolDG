@@ -21,8 +21,9 @@ namespace MeltPoolDG
   class CfdDemApplication
   {
   private:
-    using CaseType   = CfdDemCase<dim, number>;
-    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
+    using CaseType     = CfdDemCase<dim, number>;
+    using VectorType   = dealii::LinearAlgebra::distributed::Vector<number>;
+    using ObstacleType = SphericalParticle<dim, number>;
 
   public:
     explicit CfdDemApplication(std::unique_ptr<CaseType> simulation_case)
