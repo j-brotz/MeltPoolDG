@@ -4,6 +4,7 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
 #include <deal.II/lac/la_parallel_vector.h>
@@ -54,22 +55,6 @@ namespace MeltPoolDG
     add_load_to_obstacles(ObstacleField<dim, number, ObstacleType> &obstacle_field) const;
 
   private:
-    void
-    local_apply_cell_compressible_flow(
-      const dealii::MatrixFree<dim, number> &,
-      dealii::Tensor<1, dim, number> &,
-      const VectorType                     &solution,
-      const std::pair<unsigned, unsigned>  &cell_range,
-      dealii::Particles::PropertyPool<dim> &global_particle_properties) const;
-
-    void
-    local_apply_cell_incompressible_flow(
-      const dealii::MatrixFree<dim, number> &,
-      dealii::Tensor<1, dim, number> &,
-      const VectorType                     &solution,
-      const std::pair<unsigned, unsigned>  &cell_range,
-      dealii::Particles::PropertyPool<dim> &global_particle_properties) const;
-
     /// Brinkman penalization data
     const BrinkmanPenalizationData<number> brinkman_penalization_data;
 
@@ -88,6 +73,100 @@ namespace MeltPoolDG
     const number constant_density;
 
     static constexpr unsigned torque_size = ObstacleType::size_angular_velocity;
+
+    static constexpr int n_components_compressible = dim + 2;
+
+    static constexpr int n_components_incompressible = dim;
+
+    template <int n_components>
+    void
+    local_apply_cell(const dealii::MatrixFree<dim, number> &,
+                     dealii::Tensor<1, dim, number> &,
+                     const VectorType                     &solution,
+                     const std::pair<unsigned, unsigned>  &cell_range,
+                     dealii::Particles::PropertyPool<dim> &global_particle_properties) const
+    {
+      FECellIntegrator<dim, n_components, number> phi(matrix_free.mf,
+                                                      matrix_free.dof_idx,
+                                                      matrix_free.quad_idx);
+
+      for (unsigned cell = cell_range.first; cell < cell_range.second; ++cell)
+        {
+          phi.reinit(cell);
+          phi.gather_evaluate(solution, dealii::EvaluationFlags::values);
+
+          for (const unsigned int q : phi.quadrature_point_indices())
+            {
+              dealii::Tensor<1, n_components, VectorizedArrayType> w;
+
+              // This needs to be done as for dim==1 the solution vector of the incompressible flow
+              // only has a single component. For this case the FeCellIntegrator returns a scalar
+              // type and not a tensor.
+              if constexpr (dim == 1 and n_components == 1)
+                w[0] = phi.get_value(q);
+              else
+                w = phi.get_value(q);
+
+              for (unsigned int src_handle = 0;
+                   src_handle < global_particle_properties.n_registered_slots();
+                   ++src_handle)
+                {
+                  dealii::Tensor<1, dim, VectorizedArrayType>         force;
+                  dealii::Tensor<1, torque_size, VectorizedArrayType> torque;
+
+                  const auto q_point = phi.quadrature_point(q);
+
+                  const auto mask = mask_function<dim, VectorizedArrayType, ObstacleType>(
+                    brinkman_penalization_data.mask_function_type,
+                    q_point,
+                    global_particle_properties,
+                    src_handle);
+
+                  force = compute_penalty_force(w,
+                                                ObstacleType::get_velocity(
+                                                  global_particle_properties, src_handle, q_point),
+                                                mask) *
+                          phi.JxW(q);
+
+                  torque = compute_torque(force,
+                                          ObstacleType::vector_to_center_of_gravity(
+                                            q_point, global_particle_properties, src_handle));
+
+                  dealii::Tensor<1, dim, number>         summed_force;
+                  dealii::Tensor<1, torque_size, number> summed_torque;
+
+                  for (int i = 0; i < dim; ++i)
+                    summed_force[i] = force[i].sum();
+                  for (unsigned i = 0; i < torque_size; ++i)
+                    summed_torque[i] = torque[i].sum();
+
+                  ObstacleType::accumulate_force(summed_force,
+                                                 global_particle_properties,
+                                                 src_handle);
+                  ObstacleType::accumulate_torque(summed_torque,
+                                                  global_particle_properties,
+                                                  src_handle);
+                }
+            }
+        }
+    }
+
+    // compressible
+    dealii::Tensor<1, dim, VectorizedArrayType>
+    compute_penalty_force(const dealii::Tensor<1, dim + 2, VectorizedArrayType> &w,
+                          const dealii::Tensor<1, dim, VectorizedArrayType>     &obstacle_velocity,
+                          const VectorizedArrayType                             &mask) const;
+
+    // incompressible
+    dealii::Tensor<1, dim, VectorizedArrayType>
+    compute_penalty_force(const dealii::Tensor<1, dim, VectorizedArrayType> &w,
+                          const dealii::Tensor<1, dim, VectorizedArrayType> &obstacle_velocity,
+                          const VectorizedArrayType                         &mask) const;
+
+    dealii::Tensor<1, torque_size, VectorizedArrayType>
+    compute_torque(
+      const dealii::Tensor<1, dim, VectorizedArrayType> &force,
+      const dealii::Tensor<1, dim, VectorizedArrayType> &distance_to_center_of_gravity) const;
   };
 
   template <int dim, typename number, int n_components, typename ObstacleType>
@@ -107,10 +186,7 @@ namespace MeltPoolDG
      */
     IncompressibleBrinkmanPenalizationFluidForce(
       const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-      const BrinkmanPenalizationData<number>         &brinkman_penalization_data)
-      : brinkman_penalization_data(brinkman_penalization_data)
-      , cell_obstacle_cache(obstacle_handler)
-    {}
+      const BrinkmanPenalizationData<number>         &brinkman_penalization_data);
 
     /**
      * Identifies and stores all relevant particles for the given cell batch, to be used
@@ -125,51 +201,13 @@ namespace MeltPoolDG
      */
     void
     cell_operation(const MatrixFreeContext<dim, number> &matrix_free,
-                   unsigned int                          cell_batch_id) override
-    {
-      find_relevant_obstacles_in_cell_batch<dim, number, ObstacleType>(cell_obstacle_cache,
-                                                                       matrix_free.mf,
-                                                                       cell_batch_id);
-    }
+                   unsigned int                          cell_batch_id) override;
 
     VectorizedArrayType
-    get_damping_coeff_at_q(number, const dealii::Point<dim, VectorizedArrayType> &q_point) override
-    {
-      VectorizedArrayType damping_coeff(0.);
-      for (auto obstacle_handle : cell_obstacle_cache.relevant_obstacle_handles)
-        {
-          auto mask = mask_function<dim, VectorizedArrayType, ObstacleType>(
-            brinkman_penalization_data.mask_function_type,
-            q_point,
-            cell_obstacle_cache.relevant_obstacles,
-            obstacle_handle);
-
-          damping_coeff -= mask / brinkman_penalization_data.permeability *
-                           brinkman_penalization_data.constant_density;
-        }
-      return damping_coeff;
-    }
+    get_damping_coeff_at_q(number, const dealii::Point<dim, VectorizedArrayType> &q_point) override;
 
     dealii::Tensor<1, n_components, VectorizedArrayType>
-    get_rhs_at_q(number, const dealii::Point<dim, VectorizedArrayType> &q_point) override
-    {
-      dealii::Tensor<1, n_components, VectorizedArrayType> rhs;
-      for (auto obstacle_handle : cell_obstacle_cache.relevant_obstacle_handles)
-        {
-          auto mask = mask_function<dim, VectorizedArrayType, ObstacleType>(
-            brinkman_penalization_data.mask_function_type,
-            q_point,
-            cell_obstacle_cache.relevant_obstacles,
-            obstacle_handle);
-
-          rhs += mask / brinkman_penalization_data.permeability *
-                 brinkman_penalization_data.constant_density *
-                 ObstacleType::get_velocity(cell_obstacle_cache.relevant_obstacles,
-                                            obstacle_handle,
-                                            q_point);
-        }
-      return rhs;
-    }
+    get_rhs_at_q(number, const dealii::Point<dim, VectorizedArrayType> &q_point) override;
 
   private:
     /// Brinkman penalization data
