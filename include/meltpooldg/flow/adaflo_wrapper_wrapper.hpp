@@ -10,6 +10,8 @@
 #include <deal.II/dofs/dof_handler.h>
 
 #include "meltpooldg/core/scratch_data.hpp"
+
+#include <memory>
 #ifdef MELT_POOL_DG_WITH_ADAFLO
 
 #  include <deal.II/base/function_parser.h>
@@ -18,10 +20,12 @@
 #  include <deal.II/matrix_free/matrix_free.h>
 #  include <deal.II/matrix_free/operators.h>
 
+#  include <deal.II/numerics/vector_tools.h>
+
 #  include <meltpooldg/core/simulation_base.hpp>
 #  include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
 #  include <meltpooldg/flow/compressible_flow_boundary_conditions.hpp>
-#  include <meltpooldg/flow/compressible_flow_utils.hpp>
+#  include <meltpooldg/flow/flow_utils.hpp>
 #  include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #  include <meltpooldg/post_processing/generic_data_out.hpp>
 
@@ -41,9 +45,9 @@ namespace MeltPoolDG::Flow
       : navier_stokes(std::make_unique<adaflo::NavierStokes<dim>>(mapping,
                                                                   flow_data.get_parameters(),
                                                                   triangulation))
-      , scratch_data(scratch_data)
       , flow_data(flow_data)
       , fsi_data(fsi_data)
+      , scratch_data(scratch_data)
 
     {
       dof_index_u = scratch_data.attach_dof_handler(navier_stokes->get_dof_handler_u());
@@ -54,7 +58,6 @@ namespace MeltPoolDG::Flow
     void
     reinit()
     {
-      navier_stokes->initialize_data_structures();
       navier_stokes->initialize_matrix_free(
         &scratch_data.get_matrix_free(), dof_index_u, dof_index_p, quad_index_u, quad_index_p);
     }
@@ -87,6 +90,8 @@ namespace MeltPoolDG::Flow
       scratch_data.attach_constraint_matrix(navier_stokes->get_constraints_p());
       dof_index_hanging_nodes_u =
         scratch_data.attach_constraint_matrix(navier_stokes->get_hanging_node_constraints_u());
+
+      navier_stokes->initialize_data_structures();
     }
 
     /**
@@ -98,21 +103,49 @@ namespace MeltPoolDG::Flow
      * @param time Actual time
      */
     void
-    solve(const number dt, const number time)
+    solve(const number, const number dt)
     {
       // TODO
-      //update_penalty_term();
+      update_penalty_term(dt);
       navier_stokes->get_constraints_u().set_zero(navier_stokes->user_rhs.block(0));
       navier_stokes->get_constraints_p().set_zero(navier_stokes->user_rhs.block(1));
+
       navier_stokes->time_stepping.set_time_step(dt);
-      navier_stokes->advance_time_step();
+      navier_stokes->init_time_advance(false);
+
+      navier_stokes->solve_nonlinear_system(navier_stokes->compute_initial_residual(true));
+      // distribute_constraints();
+
+      navier_stokes->get_hanging_node_constraints_u().distribute(navier_stokes->solution.block(0));
+      navier_stokes->get_hanging_node_constraints_u().distribute(
+        navier_stokes->solution_old.block(0));
+      navier_stokes->get_hanging_node_constraints_u().distribute(
+        navier_stokes->solution_old_old.block(0));
+
+      navier_stokes->get_hanging_node_constraints_p().distribute(navier_stokes->solution.block(1));
+      navier_stokes->get_hanging_node_constraints_p().distribute(
+        navier_stokes->solution_old.block(1));
+      navier_stokes->get_hanging_node_constraints_p().distribute(
+        navier_stokes->solution_old_old.block(1));
+
+      navier_stokes->get_constraints_u().distribute(navier_stokes->user_rhs.block(0));
+      navier_stokes->get_constraints_p().distribute(navier_stokes->user_rhs.block(1));
     }
 
+    // Important: The jacobian may only consist of a linear term with respect to the velocity!
+    void
+    add_external_force(std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>,
+                       std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>>)
+    {}
+
+    // Temporary
     void
     add_external_force(
-      std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>         external_force_residuum,
-      std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>> external_force_jacobian)
-    {}
+      const std::shared_ptr<Flow::IncompressibleExternalFluidForce<dim, number, dim>>
+        &external_force)
+    {
+      external_forces.push_back(external_force);
+    }
 
     /**
      * Prepare the Navier-Stokes solver for the coarsening and refinement of the triangulation.
@@ -135,7 +168,21 @@ namespace MeltPoolDG::Flow
     void
     set_initial_condition(const dealii::Function<dim> &function)
     {
-      navier_stokes->setup_problem(function);
+      navier_stokes->solution.zero_out_ghost_values();
+      navier_stokes->solution_old.zero_out_ghost_values();
+      navier_stokes->solution_old_old.zero_out_ghost_values();
+      dealii::VectorTools::interpolate(navier_stokes->mapping,
+                                       navier_stokes->get_dof_handler_u(),
+                                       function,
+                                       navier_stokes->solution.block(0));
+
+      // the hanging node constraints contain the inhomogeneity
+      navier_stokes->get_hanging_node_constraints_u().distribute(navier_stokes->solution.block(0));
+      navier_stokes->get_hanging_node_constraints_p().distribute(navier_stokes->solution.block(1));
+
+      navier_stokes->solution.update_ghost_values();
+      navier_stokes->solution_old.update_ghost_values();
+      navier_stokes->solution_old_old.update_ghost_values();
     }
 
     /**
@@ -163,7 +210,10 @@ namespace MeltPoolDG::Flow
       boundary_conditions =
         simulation_case->get_boundary_condition("outflow_fixed_pressure", operation_name);
       for (const auto &[boundary_id, boundary_function] : boundary_conditions)
-        navier_stokes->set_open_boundary(boundary_id, std::move(boundary_function));
+        navier_stokes->set_open_boundary_with_normal_flux(boundary_id,
+                                                          std::move(boundary_function));
+      // TODO
+      // navier_stokes->set_open_boundary(boundary_id, std::move(boundary_function));
 
       // slip wall
       boundary_conditions = simulation_case->get_boundary_condition("slip_wall", operation_name);
@@ -187,7 +237,7 @@ namespace MeltPoolDG::Flow
      * @return The computed maximum time step size.
      */
     number
-    compute_time_step_size(bool do_print = false) const
+    compute_time_step_size(bool) const
     {
       return 1e8;
     }
@@ -255,14 +305,18 @@ namespace MeltPoolDG::Flow
     }
 
     void
-    update_penalty_term()
+    update_penalty_term(const number time_step_size)
     {
       update_solution_ghost_values();
       dealii::LinearAlgebra::distributed::Vector<number> &navier_stokes_user_rhs =
         navier_stokes->user_rhs.block(0);
+      scratch_data.initialize_dof_vector(navier_stokes_user_rhs, dof_index_u);
       navier_stokes_user_rhs = 0;
 
-      dealii::FEEvaluation<dim, -1, 0, dim> fe_evaluation(*navier_stokes->matrix_free);
+
+      FECellIntegrator<dim, dim, number> fe_evaluation(scratch_data.get_matrix_free(),
+                                                       dof_index_u,
+                                                       dof_index_p);
 
       for (unsigned int cell = 0; cell < navier_stokes->matrix_free->n_cell_batches(); ++cell)
         {
@@ -271,36 +325,28 @@ namespace MeltPoolDG::Flow
                                         dealii::EvaluationFlags::values);
           dealii::VectorizedArray<number> *implicit_penalty =
             navier_stokes->get_matrix().begin_damping_coeff(cell);
+
           // Reset implicit penalty coefficients stored in the Navier-Stokes solver.
           std::fill(&implicit_penalty[0],
                     &implicit_penalty[fe_evaluation.n_q_points],
                     dealii::VectorizedArray<number>(0.0));
-                    
+
+          for (auto &external_force : external_forces)
+            external_force->cell_operation(
+              {scratch_data.get_matrix_free(), dof_index_u, quad_index_u}, cell);
+
           for (unsigned int q : fe_evaluation.quadrature_point_indices())
             {
               dealii::Tensor<1, dim, dealii::VectorizedArray<number>> rhs_penalty;
-              std::vector<dealii::VectorizedArray<number>>            signed_distances =
-                signed_distance_at_point(fe_evaluation.quadrature_point(q));
-              std::vector<dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>
-                solid_velocities = solid_velocity_at_point(fe_evaluation.quadrature_point(q));
 
-              for (unsigned int p = 0; p < signed_distances.size(); ++p)
+              // const rhs contribution
+              for (auto &external_force : external_forces)
                 {
-                  dealii::VectorizedArray<number> mask =
-                    dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than>(
-                      signed_distances[p],
-                      dealii::VectorizedArray<number>(0.0),
-                      dealii::VectorizedArray<number>(0.0),
-                      dealii::VectorizedArray<number>(1.0));
-
-                  for (unsigned int dimension = 0; dimension < dim; ++dimension)
-                    {
-                      rhs_penalty[dimension] +=
-                        (mask / fsi_data.brinkman_penalization_data.permeability) *
-                        flow_data.params.density * solid_velocities[p][dimension];
-                    }
-                  implicit_penalty[q] -= flow_data.params.density * mask /
-                                         fsi_data.brinkman_penalization_data.permeability;
+                  rhs_penalty +=
+                    external_force->get_rhs_at_q(time_step_size, fe_evaluation.quadrature_point(q));
+                  implicit_penalty[q] +=
+                    external_force->get_damping_coeff_at_q(time_step_size,
+                                                           fe_evaluation.quadrature_point(q));
                 }
               fe_evaluation.submit_value(rhs_penalty, q);
             }
@@ -308,6 +354,8 @@ namespace MeltPoolDG::Flow
         }
       navier_stokes_user_rhs.compress(dealii::VectorOperation::add);
       navier_stokes_user_rhs.update_ghost_values();
+      // TODO
+      navier_stokes_user_rhs = 0.;
     }
 
     std::unique_ptr<adaflo::NavierStokes<dim>> navier_stokes;
@@ -324,16 +372,10 @@ namespace MeltPoolDG::Flow
 
     unsigned dof_index_hanging_nodes_u;
 
-
-    //! Returns a list of (fictional) velocities at q of all obstacles in the domain.
-    std::function<std::vector<dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>(
-      const dealii::Point<dim, dealii::VectorizedArray<number>> &)>
-      solid_velocity_at_point;
-
-    //! Returns a list of signed distances at q of all obstacles in the domain.
-    std::function<std::vector<dealii::VectorizedArray<number>>(
-      const dealii::Point<dim, dealii::VectorizedArray<number>> &)>
-      signed_distance_at_point;
+    /// This set of pointers may hold a list of external fluid force contributions to the residuum
+    /// (e.g., gravity, or user-defined source terms)
+    std::vector<std::shared_ptr<Flow::IncompressibleExternalFluidForce<dim, number, dim>>>
+      external_forces;
   };
 
   // Inline functions

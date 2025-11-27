@@ -100,7 +100,7 @@ namespace MeltPoolDG
         time_iterator->print_me(scratch_data->get_pcout(1));
         flow_operation.solve(time_iterator->get_current_time(),
                              time_iterator->get_current_time_increment());
-                             
+
         if (false && this->simulation_case->parameters.obstacle_data.stationary_obstacles)
           obstacle_field->compute_loads_on_obstacles();
         else
@@ -142,9 +142,6 @@ namespace MeltPoolDG
   void
   CfdDemApplication<dim, number>::setup_dof_system()
   {
-    // distribute DoFs
-    flow_operation.distribute_dofs();
-
     scratch_data->create_partitioning();
 
     // TODO: Can we put this somewhere else?
@@ -224,33 +221,49 @@ namespace MeltPoolDG
       *simulation_case->triangulation,
       scratch_data->get_mapping());
 
+
+
     // initialize compressible flow operation
     switch (simulation_case->parameters.application.flow_solver_type)
       {
           case FlowSolverType::compressible: {
-            flow_operation = Flow::CfdDemFlowOperation<dim, number>(
-              std::make_unique<Flow::DGCompressibleFlowOperation<dim, number>>(
-                *simulation_case->triangulation,
-                *scratch_data,
-                simulation_case->parameters.compressible_flow,
-                simulation_case->parameters.compressible_material));
+            auto op = std::make_unique<Flow::DGCompressibleFlowOperation<dim, number>>(
+              *simulation_case->triangulation,
+              *scratch_data,
+              simulation_case->parameters.compressible_flow,
+              simulation_case->parameters.compressible_material);
+            flow_operation = Flow::CfdDemFlowOperation<dim, number>(std::move(op));
             break;
           }
           case FlowSolverType::incompressible: {
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-            flow_operation = Flow::CfdDemFlowOperation<dim, number>(
-              std::make_unique<Flow::IncompressibleFlowSolverWrapper<dim, number>>(
-                simulation_case->parameters.incompressible_flow,
-                simulation_case->parameters.fluid_structure_interaction_data,
-                *simulation_case->triangulation,
-                scratch_data->get_mapping(),
-                *scratch_data));
+            auto op = std::make_unique<Flow::IncompressibleFlowSolverWrapper<dim, number>>(
+              simulation_case->parameters.incompressible_flow,
+              simulation_case->parameters.fluid_structure_interaction_data,
+              *simulation_case->triangulation,
+              scratch_data->get_mapping(),
+              *scratch_data);
+            simulation_case->parameters.fluid_structure_interaction_data.brinkman_penalization_data
+              .constant_density = simulation_case->parameters.incompressible_material.gas.density;
+            op->add_external_force(
+              std::make_shared<
+                IncompressibleBrinkmanPenalizationFluidForce<dim,
+                                                             number,
+                                                             dim,
+                                                             SphericalParticle<dim, number>>>(
+                *obstacle_field,
+                simulation_case->parameters.fluid_structure_interaction_data
+                  .brinkman_penalization_data));
+            flow_operation = Flow::CfdDemFlowOperation<dim, number>(std::move(op));
             break;
 #endif
           }
         default:
           AssertThrow(false, dealii::ExcMessage("The provided flow solver type is not supported."));
       }
+
+    // set boundary conditions
+    flow_operation.set_boundary_conditions(simulation_case, "cfd_dem");
 
     flow_operation.distribute_dofs();
 
@@ -261,9 +274,6 @@ namespace MeltPoolDG
     flow_operation.create_constraints();
 
     setup_dof_system();
-
-    // set boundary conditions
-    flow_operation.set_boundary_conditions(simulation_case, "cfd_dem");
 
     // set initial condition for the flow field
     flow_operation.set_initial_condition(*simulation_case->get_initial_condition("cfd_dem"));
@@ -332,6 +342,7 @@ namespace MeltPoolDG
                       dealii::ExcMessage("The provided FSI coupling method is not supported."));
       }
     flow_operation.add_external_force(fsi_fluid_force_residual, fsi_fluid_force_jacobian);
+
 
     // add relevant obstacle forces to obstacle field
     obstacle_field->add_load_type(std::move(*fsi_obstacle_load));

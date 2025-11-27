@@ -89,6 +89,96 @@ namespace MeltPoolDG
     static constexpr unsigned torque_size = ObstacleType::size_angular_velocity;
   };
 
+  template <int dim, typename number, int n_components, typename ObstacleType>
+  class IncompressibleBrinkmanPenalizationFluidForce
+    : public Flow::IncompressibleExternalFluidForce<dim, number, n_components>
+  {
+  public:
+    /**
+     * Constructor that stores relevant data internally and uses the default mask function
+     * for the penalty term computation. The default mask function returns 1 for points inside
+     * the obstacle volume and 0 outside.
+     *
+     * @param obstacle_handler Reference to the obstacle handler managing obstacles in the domain.
+     * @param brinkman_penalization_data Data required for computing the Brinkman penalization term.
+     */
+    IncompressibleBrinkmanPenalizationFluidForce(
+      const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
+      const BrinkmanPenalizationData<number>         &brinkman_penalization_data)
+      : brinkman_penalization_data(brinkman_penalization_data)
+      , cell_obstacle_cache(obstacle_handler)
+    {}
+
+    /**
+     * Identifies and stores all relevant particles for the given cell batch, to be used
+     * during the quadrature operation.
+     *
+     * This function is responsible for locating particles that are relevant to the current cell
+     * batch and caching them internally. The cached particles are then accessed during the later
+     * quadrature computation.
+     *
+     * @param matrix_free MatrixFree object and corresponding relevant indices.
+     * @param cell_batch_id The index of the cell batch to process.
+     */
+    void
+    cell_operation(const MatrixFreeContext<dim, number> &matrix_free,
+                   unsigned int                          cell_batch_id) override
+    {
+      find_relevant_obstacles_in_cell_batch<dim, number, ObstacleType>(cell_obstacle_cache,
+                                                                       matrix_free.mf,
+                                                                       cell_batch_id);
+    }
+
+    dealii::VectorizedArray<number>
+    get_damping_coeff_at_q(
+      number,
+      const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point) override
+    {
+      dealii::VectorizedArray<number> damping_coeff(0.);
+      for (auto obstacle_handle : cell_obstacle_cache.relevant_obstacle_handles)
+        {
+          auto mask = mask_function<dim, dealii::VectorizedArray<number>, ObstacleType>(
+            brinkman_penalization_data.mask_function_type,
+            q_point,
+            cell_obstacle_cache.relevant_obstacles,
+            obstacle_handle);
+
+          damping_coeff -= mask / brinkman_penalization_data.permeability *
+                           brinkman_penalization_data.constant_density;
+        }
+      return damping_coeff;
+    }
+
+    dealii::Tensor<1, n_components, dealii::VectorizedArray<number>>
+    get_rhs_at_q(number,
+                 const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point) override
+    {
+      dealii::Tensor<1, n_components, dealii::VectorizedArray<number>> rhs;
+      for (auto obstacle_handle : cell_obstacle_cache.relevant_obstacle_handles)
+        {
+          auto mask = mask_function<dim, dealii::VectorizedArray<number>, ObstacleType>(
+            brinkman_penalization_data.mask_function_type,
+            q_point,
+            cell_obstacle_cache.relevant_obstacles,
+            obstacle_handle);
+
+          rhs += mask / brinkman_penalization_data.permeability *
+                 brinkman_penalization_data.constant_density *
+                 ObstacleType::get_velocity(cell_obstacle_cache.relevant_obstacles,
+                                            obstacle_handle,
+                                            q_point);
+        }
+      return rhs;
+    }
+
+  private:
+    /// Brinkman penalization data
+    const BrinkmanPenalizationData<number> brinkman_penalization_data;
+
+    /// Cached cell data for computing Brinkman penalty term.
+    mutable CellObstacleCache<dim, number, ObstacleType> cell_obstacle_cache;
+  };
+
 
   /**
    * Implementation of the Brinkman penalization force for compressible flows
@@ -122,7 +212,6 @@ namespace MeltPoolDG
      *
      * @param obstacle_handler Reference to the obstacle handler managing obstacles in the domain.
      * @param brinkman_penalization_data Data required for computing the Brinkman penalization term.
-     * @param mask_function User-defined mask function used in the penalty term evaluation.
      */
     BrinkmanPenalizationResidualContribution(
       const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
