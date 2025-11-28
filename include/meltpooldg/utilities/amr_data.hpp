@@ -17,6 +17,7 @@ namespace MeltPoolDG
     int          min_grid_refinement_level                  = -1;
     int          min_cells_marked_for_refinement            = 1;
     number       indicator_min_value_to_mark_for_refinement = 0.0;
+    bool         solution_transfer_average_values           = false;
 
     void
     add_parameters(dealii::ParameterHandler &prm);
