@@ -24,6 +24,8 @@
 
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include "meltpooldg/utilities/attach_vectors.hpp"
+#include "meltpooldg/utilities/matrix_free_util.hpp"
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_scratch_data.hpp>
@@ -125,6 +127,14 @@ namespace MeltPoolDG::Flow
     void
     create_constraints();
 
+    void
+    initialize_data_structures()
+    {
+      distribute_dofs();
+      create_quadrature();
+      create_constraints();
+    }
+
 
 
     /**
@@ -205,11 +215,37 @@ namespace MeltPoolDG::Flow
     VectorType &
     get_solution_in_primitive_variables();
 
+    void
+    attach_for_coarsening_and_refinement(
+      DoFHandlerAndVectorDataType<dim, dealii::LinearAlgebra::distributed::Vector<number>> &in)
+    {
+      in.emplace_back(&flow_scratch_data.scratch_data.get_dof_handler(flow_scratch_data.dof_idx),
+                      [&](
+                        std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vec_in) {
+                        for (auto &sol : flow_scratch_data.solution_history.get_all_solutions())
+                          vec_in.push_back(&sol);
+                      });
+    }
+
     /**
      * @brief Constant getter function for the DoFHandler.
      */
     const dealii::DoFHandler<dim> &
     get_dof_handler() const;
+
+    MatrixFreeContext<dim, number>
+    get_matrix_free_context()
+    {
+      return {flow_scratch_data.scratch_data.get_matrix_free(),
+              flow_scratch_data.dof_idx,
+              flow_scratch_data.quad_idx};
+    }
+
+    CompressibleFluidMaterialPhaseData<number>
+    get_phase_material_data()
+    {
+      return flow_scratch_data.material.data;
+    }
 
   private:
     /// Scratch data for compressible flows

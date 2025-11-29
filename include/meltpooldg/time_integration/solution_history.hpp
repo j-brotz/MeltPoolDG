@@ -134,6 +134,12 @@ namespace MeltPoolDG::TimeIntegration
       return solutions;
     }
 
+    std::vector<VectorType> &
+    get_all_solutions()
+    {
+      return solutions;
+    }
+
     unsigned int
     size() const
     {

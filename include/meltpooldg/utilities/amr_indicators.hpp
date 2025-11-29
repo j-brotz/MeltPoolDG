@@ -10,6 +10,7 @@
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/utilities/fe_integrator.hpp>
+#include <meltpooldg/utilities/matrix_free_util.hpp>
 
 #include <memory>
 #include <utility>
@@ -153,11 +154,9 @@ namespace MeltPoolDG::AMR
      * @param fe_index FE index associated with the computation.
      * @param fe_degree Polynomial degree of the finite element shape functions.
      */
-    SSEDIndicator(const dealii::MatrixFree<dim, number>                    &matrix_free,
+    SSEDIndicator(const MatrixFreeContext<dim, number>                     matrix_free_context,
                   const dealii::LinearAlgebra::distributed::Vector<number> &solution,
                   const unsigned                                            dof_idx,
-                  const unsigned                                            quad_idx,
-                  const unsigned                                            fe_index,
                   const unsigned                                            fe_degree);
 
     /**
@@ -182,17 +181,11 @@ namespace MeltPoolDG::AMR
                      const std::pair<unsigned, unsigned>                      &cell_range);
 
   private:
-    /// Matrix free object used to compute the solution.
-    const dealii::MatrixFree<dim, number> &matrix_free;
+    /// Matrix free context used to compute the solution.
+    const MatrixFreeContext<dim, number> matrix_free_context;
 
     /// Reference to the solution of the field of interest.
     const dealii::LinearAlgebra::distributed::Vector<number> &solution;
-
-    /// Relevant dof index in the matrix free object.
-    const unsigned mf_dof_idx;
-
-    /// Relevant quad index in the matrix free object.
-    const unsigned mf_quad_idx;
 
     /// Relevant fe index for the fe object of the dof handler in the matrix free object.
     const unsigned fe_index;
@@ -220,17 +213,13 @@ namespace MeltPoolDG::AMR
      *
      * Initializes the indicator by storing references to the provided data.
      *
-     * @param matrix_free Matrix-free object used to compute the solution field on which the indicator
+     * @param matrix_free Matrix-free context used to compute the solution field on which the indicator
      * is based.
      * @param solution Solution field for which the indicator is evaluated.
      * @param dof_idx Dof index relevant to the matrix-free object.
-     * @param quad_idx Quadrature point index relevant to the matrix-free object.
-     * @param fe_index FE index associated with the computation.
      */
-    JumpIndicator(const dealii::MatrixFree<dim, number>                    &matrix_free,
+    JumpIndicator(const MatrixFreeContext<dim, number>                     matrix_free_context,
                   const dealii::LinearAlgebra::distributed::Vector<number> &solution,
-                  const unsigned                                            dof_idx,
-                  const unsigned                                            quad_idx,
                   const unsigned                                            fe_index);
 
     /**
@@ -256,16 +245,10 @@ namespace MeltPoolDG::AMR
 
   private:
     /// Matrix free object used to compute the solution.
-    const dealii::MatrixFree<dim, number> &matrix_free;
+    const MatrixFreeContext<dim, number> matrix_free_context;
 
     /// Reference to the solution of the field of interest.
     const dealii::LinearAlgebra::distributed::Vector<number> &solution;
-
-    /// Relevant dof index in the matrix free object.
-    const unsigned mf_dof_idx;
-
-    /// Relevant quad index in the matrix free object.
-    const unsigned mf_quad_idx;
 
     /// Relevant fe index for the fe object of the dof handler in the matrix free object.
     const unsigned fe_index;

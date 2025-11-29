@@ -186,7 +186,8 @@ namespace MeltPoolDG
      */
     IncompressibleBrinkmanPenalizationFluidForce(
       const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-      const BrinkmanPenalizationData<number>         &brinkman_penalization_data);
+      const BrinkmanPenalizationData<number>         &brinkman_penalization_data,
+      number                                          constant_density);
 
     /**
      * Identifies and stores all relevant particles for the given cell batch, to be used
@@ -215,6 +216,9 @@ namespace MeltPoolDG
 
     /// Cached cell data for computing Brinkman penalty term.
     mutable CellObstacleCache<dim, number, ObstacleType> cell_obstacle_cache;
+
+    /// Density of the incompressible flow, assumed to be constant over the complete flow domain.
+    const number constant_density;
   };
 
 

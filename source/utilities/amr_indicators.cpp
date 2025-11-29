@@ -14,6 +14,7 @@
 
 #include <meltpooldg/utilities/amr_indicators.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
+#include <meltpooldg/utilities/matrix_free_util.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <functional>
@@ -21,16 +22,12 @@
 
 template <int dim, typename number>
 MeltPoolDG::AMR::SSEDIndicator<dim, number>::SSEDIndicator(
-  const dealii::MatrixFree<dim, number>                    &matrix_free,
+  const MatrixFreeContext<dim, number>                      matrix_free_context,
   const dealii::LinearAlgebra::distributed::Vector<number> &solution,
-  const unsigned                                            dof_idx,
-  const unsigned                                            quad_idx,
   const unsigned                                            fe_index,
   const unsigned                                            fe_degree)
-  : matrix_free(matrix_free)
+  : matrix_free_context(matrix_free_context)
   , solution(solution)
-  , mf_dof_idx(dof_idx)
-  , mf_quad_idx(quad_idx)
   , fe_index(fe_index)
 {
   AssertThrow(fe_degree > 1,
@@ -51,10 +48,11 @@ dealii::Vector<number>
 MeltPoolDG::AMR::SSEDIndicator<dim, number>::compute_indicator(
   const dealii::Triangulation<dim> &tria)
 {
-  const unsigned fe_degree = matrix_free.get_dof_handler().get_fe(fe_index).degree;
+  const unsigned fe_degree =
+    matrix_free_context.mf.get_dof_handler(matrix_free_context.dof_idx).get_fe(fe_index).degree;
 
   dealii::AlignedVector<dealii::VectorizedArray<number>> indicator;
-  matrix_free.initialize_cell_data_vector(indicator);
+  matrix_free_context.mf.initialize_cell_data_vector(indicator);
 
   if (fe_degree > 1)
     {
@@ -69,11 +67,11 @@ MeltPoolDG::AMR::SSEDIndicator<dim, number>::compute_indicator(
           local_apply_cell(mf, indicator, solution, cell_range);
         };
 
-      matrix_free.cell_loop(cell_op, indicator, solution);
+      matrix_free_context.mf.cell_loop(cell_op, indicator, solution);
     }
 
   return VectorTools::convert_matrix_free_cell_aligned_vector_to_vector<dim, number, dim + 2>(
-    matrix_free, indicator, tria, mf_dof_idx, mf_quad_idx);
+    matrix_free_context, indicator, tria);
 }
 
 template <int dim, typename number>
@@ -84,8 +82,12 @@ MeltPoolDG::AMR::SSEDIndicator<dim, number>::local_apply_cell(
   const dealii::LinearAlgebra::distributed::Vector<number> &src,
   const std::pair<unsigned, unsigned>                      &cell_range)
 {
-  FECellIntegrator<dim, dim + 2, number> phi_dgq(matrix_free, mf_dof_idx, mf_quad_idx);
-  FECellIntegrator<dim, dim + 2, number> phi_leg(matrix_free, mf_dof_idx, mf_quad_idx);
+  FECellIntegrator<dim, dim + 2, number> phi_dgq(matrix_free_context.mf,
+                                                 matrix_free_context.dof_idx,
+                                                 matrix_free_context.quad_idx);
+  FECellIntegrator<dim, dim + 2, number> phi_leg(matrix_free_context.mf,
+                                                 matrix_free_context.dof_idx,
+                                                 matrix_free_context.quad_idx);
 
   for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
     {
@@ -96,8 +98,9 @@ MeltPoolDG::AMR::SSEDIndicator<dim, number>::local_apply_cell(
       phi_dgq.read_dof_values(src);
 
       dealii::VectorizedArray<number> cell_volume = 0.;
-      const unsigned                  fe_degree =
-        matrix_free.get_dof_handler().get_fe(phi_dgq.get_active_fe_index()).degree;
+      const unsigned fe_degree = matrix_free_context.mf.get_dof_handler(matrix_free_context.dof_idx)
+                                   .get_fe(phi_dgq.get_active_fe_index())
+                                   .degree;
       // transform cell solution values from modal basis to modal basis
       dealii::internal::FEEvaluationImplBasisChange<
         dealii::internal::evaluate_general,
@@ -136,23 +139,23 @@ MeltPoolDG::AMR::SSEDIndicator<dim, number>::local_apply_cell(
 
 template <int dim, typename number>
 MeltPoolDG::AMR::JumpIndicator<dim, number>::JumpIndicator(
-  const dealii::MatrixFree<dim, number>                    &matrix_free,
+  const MatrixFreeContext<dim, number>                      matrix_free_context,
   const dealii::LinearAlgebra::distributed::Vector<number> &solution,
-  const unsigned                                            dof_idx,
-  const unsigned                                            quad_idx,
   const unsigned                                            fe_index)
-  : matrix_free(matrix_free)
+  : matrix_free_context(matrix_free_context)
   , solution(solution)
-  , mf_dof_idx(dof_idx)
-  , mf_quad_idx(quad_idx)
   , fe_index(fe_index)
 {
   // Jump indicator only works for DG elements.
   for (unsigned int sub_fe_idx = 0;
-       sub_fe_idx < matrix_free.get_dof_handler().get_fe(fe_index).n_components();
+       sub_fe_idx < matrix_free_context.mf.get_dof_handler(matrix_free_context.dof_idx)
+                      .get_fe(fe_index)
+                      .n_components();
        ++sub_fe_idx)
     AssertThrow(dynamic_cast<const dealii::FE_DGQ<dim> *>(
-                  &matrix_free.get_dof_handler().get_fe(fe_index).get_sub_fe(sub_fe_idx, 1)),
+                  &matrix_free_context.mf.get_dof_handler(matrix_free_context.dof_idx)
+                     .get_fe(fe_index)
+                     .get_sub_fe(sub_fe_idx, 1)),
                 dealii::ExcMessage("The jump indicator only works with DG elements."));
 }
 
@@ -168,7 +171,7 @@ MeltPoolDG::AMR::JumpIndicator<dim, number>::compute_indicator(
                        const std::pair<unsigned, unsigned>                      &cell_range)>;
 
   dealii::AlignedVector<dealii::VectorizedArray<number>> indicator;
-  matrix_free.initialize_cell_data_vector(indicator);
+  matrix_free_context.mf.initialize_cell_data_vector(indicator);
 
   LocalOpType cell_op = [](const dealii::MatrixFree<dim, number> &,
                            dealii::AlignedVector<dealii::VectorizedArray<number>> &,
@@ -182,10 +185,10 @@ MeltPoolDG::AMR::JumpIndicator<dim, number>::compute_indicator(
                                     const dealii::LinearAlgebra::distributed::Vector<number> &,
                                     const std::pair<unsigned, unsigned> &) {};
 
-  matrix_free.loop(cell_op, face_op, boundary_face_op, indicator, solution);
+  matrix_free_context.mf.loop(cell_op, face_op, boundary_face_op, indicator, solution);
 
   return VectorTools::convert_matrix_free_cell_aligned_vector_to_vector<dim, number, dim + 2>(
-    matrix_free, indicator, tria, mf_dof_idx, mf_quad_idx);
+    matrix_free_context, indicator, tria);
 }
 
 template <int dim, typename number>
@@ -196,8 +199,14 @@ MeltPoolDG::AMR::JumpIndicator<dim, number>::local_apply_face(
   const dealii::LinearAlgebra::distributed::Vector<number> &src,
   const std::pair<unsigned, unsigned>                      &face_range) const
 {
-  FEFaceIntegrator<dim, dim + 2, number> phi_m(matrix_free, true, mf_dof_idx, mf_quad_idx);
-  FEFaceIntegrator<dim, dim + 2, number> phi_p(matrix_free, false, mf_dof_idx, mf_quad_idx);
+  FEFaceIntegrator<dim, dim + 2, number> phi_m(matrix_free_context.mf,
+                                               true,
+                                               matrix_free_context.dof_idx,
+                                               matrix_free_context.quad_idx);
+  FEFaceIntegrator<dim, dim + 2, number> phi_p(matrix_free_context.mf,
+                                               false,
+                                               matrix_free_context.dof_idx,
+                                               matrix_free_context.quad_idx);
 
   for (unsigned face = face_range.first; face < face_range.second; ++face)
     {

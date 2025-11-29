@@ -14,9 +14,6 @@ namespace MeltPoolDG
 
     MaskFunctionType mask_function_type = MaskFunctionType::discontinuous;
 
-    /// used for incompressible flow solver
-    number constant_density;
-
     void
     add_parameters(dealii::ParameterHandler &prm)
     {

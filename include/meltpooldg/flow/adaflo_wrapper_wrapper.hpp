@@ -9,7 +9,12 @@
 
 #include <deal.II/dofs/dof_handler.h>
 
+#include <deal.II/lac/la_parallel_vector.h>
+
+#include "meltpooldg/core/material_data.hpp"
 #include "meltpooldg/core/scratch_data.hpp"
+#include "meltpooldg/utilities/attach_vectors.hpp"
+#include "meltpooldg/utilities/matrix_free_util.hpp"
 
 #include <memory>
 #ifdef MELT_POOL_DG_WITH_ADAFLO
@@ -37,6 +42,8 @@ namespace MeltPoolDG::Flow
   class IncompressibleFlowSolverWrapper
   {
   public:
+    IncompressibleFlowSolverWrapper() = default;
+
     IncompressibleFlowSolverWrapper(const AdafloWrapperParameters<number>       &flow_data,
                                     const FluidStructureInteractionData<number> &fsi_data,
                                     dealii::Triangulation<dim>                  &triangulation,
@@ -47,8 +54,7 @@ namespace MeltPoolDG::Flow
                                                                   triangulation))
       , flow_data(flow_data)
       , fsi_data(fsi_data)
-      , scratch_data(scratch_data)
-
+      , scratch_data(&scratch_data)
     {
       dof_index_u = scratch_data.attach_dof_handler(navier_stokes->get_dof_handler_u());
       dof_index_p = scratch_data.attach_dof_handler(navier_stokes->get_dof_handler_p());
@@ -59,37 +65,35 @@ namespace MeltPoolDG::Flow
     reinit()
     {
       navier_stokes->initialize_matrix_free(
-        &scratch_data.get_matrix_free(), dof_index_u, dof_index_p, quad_index_u, quad_index_p);
+        &scratch_data->get_matrix_free(), dof_index_u, dof_index_p, quad_index_u, quad_index_p);
     }
 
     void
     distribute_dofs()
     {
-      navier_stokes->distribute_dofs();
+      // navier_stokes->distribute_dofs();
     }
 
     void
-    create_quadrature()
+    initialize_data_structures()
     {
-      quad_index_u =
-        flow_data.params.use_simplex_mesh ?
-          scratch_data.attach_quadrature(
-            dealii::QGaussSimplex<dim>(flow_data.params.velocity_degree + 1)) :
-          scratch_data.attach_quadrature(dealii::QGauss<dim>(flow_data.params.velocity_degree + 1));
+      navier_stokes->distribute_dofs();
+
+      quad_index_u = flow_data.params.use_simplex_mesh ?
+                       scratch_data->attach_quadrature(
+                         dealii::QGaussSimplex<dim>(flow_data.params.velocity_degree + 1)) :
+                       scratch_data->attach_quadrature(
+                         dealii::QGauss<dim>(flow_data.params.velocity_degree + 1));
       quad_index_p =
         flow_data.params.use_simplex_mesh ?
-          scratch_data.attach_quadrature(
+          scratch_data->attach_quadrature(
             dealii::QGaussSimplex<dim>(flow_data.params.velocity_degree)) :
-          scratch_data.attach_quadrature(dealii::QGauss<dim>(flow_data.params.velocity_degree));
-    }
+          scratch_data->attach_quadrature(dealii::QGauss<dim>(flow_data.params.velocity_degree));
 
-    void
-    create_constraints()
-    {
-      scratch_data.attach_constraint_matrix(navier_stokes->get_constraints_u());
-      scratch_data.attach_constraint_matrix(navier_stokes->get_constraints_p());
+      scratch_data->attach_constraint_matrix(navier_stokes->get_constraints_u());
+      scratch_data->attach_constraint_matrix(navier_stokes->get_constraints_p());
       dof_index_hanging_nodes_u =
-        scratch_data.attach_constraint_matrix(navier_stokes->get_hanging_node_constraints_u());
+        scratch_data->attach_constraint_matrix(navier_stokes->get_hanging_node_constraints_u());
 
       navier_stokes->initialize_data_structures();
     }
@@ -132,12 +136,6 @@ namespace MeltPoolDG::Flow
       navier_stokes->get_constraints_p().distribute(navier_stokes->user_rhs.block(1));
     }
 
-    // Important: The jacobian may only consist of a linear term with respect to the velocity!
-    void
-    add_external_force(std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>,
-                       std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>>)
-    {}
-
     // Temporary
     void
     add_external_force(
@@ -159,6 +157,30 @@ namespace MeltPoolDG::Flow
      */
     void
     execute_coarsening_and_refinement();
+
+
+    void
+    attach_for_coarsening_and_refinement(
+      DoFHandlerAndVectorDataType<dim, dealii::LinearAlgebra::distributed::Vector<number>> &in)
+    {
+      /*
+      in.emplace_back(&scratch_data->get_dof_handler(dof_index_u),
+                      [&](
+                        std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vec_in) {
+                        vec_in.push_back(&navier_stokes->solution.block(0));
+                        vec_in.push_back(&navier_stokes->solution_old.block(0));
+                        vec_in.push_back(&navier_stokes->solution_old_old.block(0));
+                      });
+
+      in.emplace_back(&scratch_data->get_dof_handler(dof_index_p),
+                      [&](
+                        std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vec_in) {
+                        vec_in.push_back(&navier_stokes->solution.block(1));
+                        vec_in.push_back(&navier_stokes->solution_old.block(1));
+                        vec_in.push_back(&navier_stokes->solution_old_old.block(1));
+                      });
+                      */
+    }
 
     /**
      * @brief Set the solution vector to the passed initial flow field state.
@@ -237,7 +259,7 @@ namespace MeltPoolDG::Flow
      * @return The computed maximum time step size.
      */
     number
-    compute_time_step_size(bool) const
+    compute_time_step_size() const
     {
       return 1e8;
     }
@@ -278,7 +300,14 @@ namespace MeltPoolDG::Flow
     // Although the solution provided by the Navier-Stokes solver is a BlockVector, we only return
     // the velocity block here.
     inline dealii::LinearAlgebra::distributed::Vector<number> &
-    get_solution();
+    get_velocity_solution();
+    
+    dealii::LinearAlgebra::distributed::Vector<number>&
+    get_solution()
+    {
+      return navier_stokes->solution.block(0);
+    }
+
 
     inline const dealii::DoFHandler<dim> &
     get_dof_handler() const
@@ -293,6 +322,24 @@ namespace MeltPoolDG::Flow
     {
       // TODO
       return navier_stokes->solution.block(0);
+    }
+
+    MatrixFreeContext<dim, number>
+    get_matrix_free_context_u()
+    {
+      return {scratch_data->get_matrix_free(), dof_index_u, quad_index_u};
+    }
+
+    MatrixFreeContext<dim, number>
+    get_matrix_free_context_p()
+    {
+      return {scratch_data->get_matrix_free(), dof_index_p, quad_index_p};
+    }
+
+    Flow::AdafloWrapperParameters<number> &
+    get_flow_params()
+    {
+      return flow_data;
     }
 
   private:
@@ -310,13 +357,13 @@ namespace MeltPoolDG::Flow
       update_solution_ghost_values();
       dealii::LinearAlgebra::distributed::Vector<number> &navier_stokes_user_rhs =
         navier_stokes->user_rhs.block(0);
-      scratch_data.initialize_dof_vector(navier_stokes_user_rhs, dof_index_u);
+      scratch_data->initialize_dof_vector(navier_stokes_user_rhs, dof_index_u);
       navier_stokes_user_rhs = 0;
 
 
-      FECellIntegrator<dim, dim, number> fe_evaluation(scratch_data.get_matrix_free(),
+      FECellIntegrator<dim, dim, number> fe_evaluation(scratch_data->get_matrix_free(),
                                                        dof_index_u,
-                                                       dof_index_p);
+                                                       quad_index_u);
 
       for (unsigned int cell = 0; cell < navier_stokes->matrix_free->n_cell_batches(); ++cell)
         {
@@ -333,7 +380,7 @@ namespace MeltPoolDG::Flow
 
           for (auto &external_force : external_forces)
             external_force->cell_operation(
-              {scratch_data.get_matrix_free(), dof_index_u, quad_index_u}, cell);
+              {scratch_data->get_matrix_free(), dof_index_u, quad_index_u}, cell);
 
           for (unsigned int q : fe_evaluation.quadrature_point_indices())
             {
@@ -364,7 +411,7 @@ namespace MeltPoolDG::Flow
 
     FluidStructureInteractionData<number> fsi_data;
 
-    ScratchData<dim, dim, number> &scratch_data;
+    ScratchData<dim, dim, number> *scratch_data;
 
     unsigned dof_index_u, dof_index_p;
 
@@ -381,7 +428,7 @@ namespace MeltPoolDG::Flow
   // Inline functions
   template <int dim, typename number>
   inline dealii::LinearAlgebra::distributed::Vector<number> &
-  IncompressibleFlowSolverWrapper<dim, number>::get_solution()
+  IncompressibleFlowSolverWrapper<dim, number>::get_velocity_solution()
   {
     return navier_stokes->solution.block(0);
   }

@@ -1,7 +1,9 @@
 #pragma once
 
+#include "meltpooldg/flow/adaflo_wrapper_wrapper.hpp"
 #include <meltpooldg/flow/cfd_dem_flow_operation.hpp>
 #include <meltpooldg/flow/compressible_flow_operation.hpp>
+#include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
@@ -126,9 +128,11 @@ namespace MeltPoolDG
 
     std::shared_ptr<CaseType> simulation_case;
 
-    std::shared_ptr<ScratchData<dim, dim, number>>                              scratch_data;
-    std::shared_ptr<TimeIntegration::TimeIterator<number>>                      time_iterator;
-    Flow::CfdDemFlowOperation<dim, number>                                      flow_operation;
+    std::shared_ptr<ScratchData<dim, dim, number>>         scratch_data;
+    std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
+    std::variant<Flow::IncompressibleFlowSolverWrapper<dim, number>,
+                 Flow::DGCompressibleFlowOperation<dim, number>>
+      flow_operation_variant;
     std::unique_ptr<ObstacleField<dim, number, SphericalParticle<dim, number>>> obstacle_field;
     std::unique_ptr<Profiling::ProfilingMonitor<number>>                        profiling_monitor;
     std::unique_ptr<Restart::RestartMonitor<number>>                            restart_monitor;

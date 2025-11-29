@@ -304,9 +304,11 @@ template <int dim, typename number, int n_components, typename ObstacleType>
 MeltPoolDG::IncompressibleBrinkmanPenalizationFluidForce<dim, number, n_components, ObstacleType>::
   IncompressibleBrinkmanPenalizationFluidForce(
     const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-    const BrinkmanPenalizationData<number>         &brinkman_penalization_data)
+    const BrinkmanPenalizationData<number>         &brinkman_penalization_data,
+    const number                                    constant_density)
   : brinkman_penalization_data(brinkman_penalization_data)
   , cell_obstacle_cache(obstacle_handler)
+  , constant_density(constant_density)
 {}
 
 template <int dim, typename number, int n_components, typename ObstacleType>
@@ -334,8 +336,7 @@ MeltPoolDG::IncompressibleBrinkmanPenalizationFluidForce<dim, number, n_componen
         cell_obstacle_cache.relevant_obstacles,
         obstacle_handle);
 
-      damping_coeff -= mask / brinkman_penalization_data.permeability *
-                       brinkman_penalization_data.constant_density;
+      damping_coeff -= mask / brinkman_penalization_data.permeability * constant_density;
     }
   return damping_coeff;
 }
@@ -355,8 +356,7 @@ MeltPoolDG::IncompressibleBrinkmanPenalizationFluidForce<dim, number, n_componen
         cell_obstacle_cache.relevant_obstacles,
         obstacle_handle);
 
-      rhs += mask / brinkman_penalization_data.permeability *
-             brinkman_penalization_data.constant_density *
+      rhs += mask / brinkman_penalization_data.permeability * constant_density *
              ObstacleType::get_velocity(cell_obstacle_cache.relevant_obstacles,
                                         obstacle_handle,
                                         q_point);

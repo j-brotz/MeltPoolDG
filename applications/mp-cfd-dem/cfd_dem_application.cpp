@@ -6,14 +6,14 @@
 
 #include <deal.II/grid/tria.h>
 
-#include "meltpooldg/flow/cfd_dem_flow_operation.hpp"
-#include "meltpooldg/flow/flow_utils.hpp"
-#include "meltpooldg/phase_change/evaporation_data.hpp"
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/adaflo_wrapper_wrapper.hpp>
+#include <meltpooldg/flow/cfd_dem_flow_operation.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
+#include <meltpooldg/flow/flow_utils.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
+#include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_factory.hpp>
 #include <meltpooldg/fluid_structure_interaction/stokes_law.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/obstacle_forces.hpp>
@@ -35,11 +35,49 @@
 
 #include <functional>
 #include <memory>
+#include <variant>
 
 #include "cfd_dem_case.hpp"
 
 namespace MeltPoolDG
 {
+  // TODO
+  template <int dim, typename number, template <typename> class BinaryOp>
+  struct AMRIndicatorVisitor
+  {
+    AMR::BinaryOpIndicatorComposite<dim, number, BinaryOp> &amr_indicator;
+    const unsigned                                          pol_degree;
+    const unsigned                                          fe_index;
+
+    void
+    operator()(Flow::DGCompressibleFlowOperation<dim, number> &operation)
+    {
+      if (pol_degree < 2)
+        amr_indicator.add_indicator(std::make_unique<AMR::JumpIndicator<dim, number>>(
+          operation.get_matrix_free_context(), operation.get_solution(), fe_index));
+      else
+        {
+          amr_indicator.add_indicator(
+            std::make_unique<AMR::JumpIndicator<dim, number>>(operation.get_matrix_free_context(),
+                                                              operation.get_solution(),
+                                                              fe_index),
+            1. / pol_degree);
+          amr_indicator.add_indicator(
+            std::make_unique<AMR::SSEDIndicator<dim, number>>(
+              operation.get_matrix_free_context(), operation.get_solution(), fe_index, pol_degree),
+            1);
+        }
+    }
+
+    void
+    operator()(Flow::IncompressibleFlowSolverWrapper<dim, number> &)
+    {
+      // for now nothing is done here
+    }
+  };
+
+
+
   /**
    * Internal helper function to print # cells and # dofs to the console.
    *
@@ -93,14 +131,19 @@ namespace MeltPoolDG
         // use CFL condition to compute time step size if required
         if (simulation_case->parameters.compressible_flow.do_cfl_time_stepping)
           time_iterator->set_current_time_increment(
-            std::min(flow_operation.compute_time_step_size(),
+            std::min(std::visit([](const auto &operation)
+                                  -> number { return operation.compute_time_step_size(); },
+                                flow_operation_variant),
                      simulation_case->parameters.time_stepping.time_step_size),
             std::numeric_limits<number>::max());
 
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout(1));
-        flow_operation.solve(time_iterator->get_current_time(),
-                             time_iterator->get_current_time_increment());
+
+        std::visit([time = time_iterator->get_current_time(),
+                    dt   = time_iterator->get_current_time_increment()](
+                     auto &operation) { operation.solve(time, dt); },
+                   flow_operation_variant);
 
         if (this->simulation_case->parameters.obstacle_data.stationary_obstacles)
           {
@@ -154,7 +197,7 @@ namespace MeltPoolDG
     // create the matrix-free object
     scratch_data->build(true, true, false, false);
 
-    flow_operation.reinit();
+    std::visit([](auto &operation) { operation.reinit(); }, flow_operation_variant);
 
     // print mesh information
     {
@@ -173,31 +216,11 @@ namespace MeltPoolDG
     if (not this->simulation_case->parameters.amr.do_amr)
       return;
 
-    if (scratch_data->get_degree(comp_flow_dof_idx) < 2)
-      amr_indicator.add_indicator(
-        std::make_unique<AMR::JumpIndicator<dim, number>>(scratch_data->get_matrix_free(),
-                                                          flow_operation.get_solution(),
-                                                          comp_flow_dof_idx,
-                                                          comp_flow_quad_idx,
-                                                          0));
-    else
-      {
-        amr_indicator.add_indicator(
-          std::make_unique<AMR::JumpIndicator<dim, number>>(scratch_data->get_matrix_free(),
-                                                            flow_operation.get_solution(),
-                                                            comp_flow_dof_idx,
-                                                            comp_flow_quad_idx,
-                                                            0),
-          1. / scratch_data->get_degree(0));
-        amr_indicator.add_indicator(std::make_unique<AMR::SSEDIndicator<dim, number>>(
-                                      scratch_data->get_matrix_free(),
-                                      flow_operation.get_solution(),
-                                      comp_flow_dof_idx,
-                                      comp_flow_quad_idx,
-                                      0,
-                                      scratch_data->get_degree(comp_flow_dof_idx)),
-                                    1);
-      }
+    // TODO: Indices
+    std::visit(AMRIndicatorVisitor<dim, number, std::plus>{amr_indicator,
+                                                           scratch_data->get_degree(0),
+                                                           0},
+               flow_operation_variant);
   }
 
   template <int dim, typename number>
@@ -224,120 +247,58 @@ namespace MeltPoolDG
       *simulation_case->triangulation,
       scratch_data->get_mapping());
 
-
-
-    // initialize compressible flow operation
     switch (simulation_case->parameters.application.flow_solver_type)
       {
           case FlowSolverType::compressible: {
-            auto op = std::make_unique<Flow::DGCompressibleFlowOperation<dim, number>>(
+            flow_operation_variant.template emplace<Flow::DGCompressibleFlowOperation<dim, number>>(
               *simulation_case->triangulation,
               *scratch_data,
               simulation_case->parameters.compressible_flow,
               simulation_case->parameters.compressible_material);
-            flow_operation = Flow::CfdDemFlowOperation<dim, number>(std::move(op));
             break;
           }
           case FlowSolverType::incompressible: {
-#ifdef MELT_POOL_DG_WITH_ADAFLO
-            auto op = std::make_unique<Flow::IncompressibleFlowSolverWrapper<dim, number>>(
-              simulation_case->parameters.incompressible_flow,
-              simulation_case->parameters.fluid_structure_interaction_data,
-              *simulation_case->triangulation,
-              scratch_data->get_mapping(),
-              *scratch_data);
-            simulation_case->parameters.fluid_structure_interaction_data.brinkman_penalization_data
-              .constant_density = simulation_case->parameters.incompressible_material.gas.density;
-            op->add_external_force(
-              std::make_shared<
-                IncompressibleBrinkmanPenalizationFluidForce<dim, number, dim, ObstacleType>>(
-                *obstacle_field,
-                simulation_case->parameters.fluid_structure_interaction_data
-                  .brinkman_penalization_data));
-            flow_operation = Flow::CfdDemFlowOperation<dim, number>(std::move(op));
+            flow_operation_variant
+              .template emplace<Flow::IncompressibleFlowSolverWrapper<dim, number>>(
+                simulation_case->parameters.incompressible_flow,
+                simulation_case->parameters.fluid_structure_interaction_data,
+                *simulation_case->triangulation,
+                scratch_data->get_mapping(),
+                *scratch_data);
             break;
-#endif
           }
         default:
-          AssertThrow(false, dealii::ExcMessage("The provided flow solver type is not supported."));
+          AssertThrow(false, dealii::ExcMessage("The provided flow solver type is not supported!"));
       }
 
     // set boundary conditions
-    flow_operation.set_boundary_conditions(simulation_case, "cfd_dem");
+    std::visit(
+      [&](auto &operation) { operation.set_boundary_conditions(simulation_case, "cfd_dem"); },
+      flow_operation_variant);
 
-    flow_operation.distribute_dofs();
-
-    // create quadrature rule
-    flow_operation.create_quadrature();
-
-    // create constraints
-    flow_operation.create_constraints();
+    std::visit([](auto &operation) { operation.initialize_data_structures(); },
+               flow_operation_variant);
 
     setup_dof_system();
 
     // set initial condition for the flow field
-    flow_operation.set_initial_condition(*simulation_case->get_initial_condition("cfd_dem"));
+    std::visit(
+      [&](auto &operation) {
+        operation.set_initial_condition(*simulation_case->get_initial_condition("cfd_dem"));
+      },
+      flow_operation_variant);
 
     // setup amr indicator
     setup_amr_indicator();
 
     // FSI
-    std::shared_ptr<Flow::AdditionalCellAndQuadOperation<dim, number>> fsi_fluid_force_residual;
-    std::shared_ptr<Flow::AdditionalCellAndQuadOperationJacobian<dim, number>>
-                                                             fsi_fluid_force_jacobian;
-    std::unique_ptr<ObstacleLoad<dim, number, ObstacleType>> fsi_obstacle_load;
-
-    switch (simulation_case->parameters.fluid_structure_interaction_data.fsi_coupling_method)
-      {
-          case FSICouplingMethod::brinkman_penalization: {
-            fsi_fluid_force_residual =
-              std::make_shared<BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>>(
-                *obstacle_field,
-                simulation_case->parameters.fluid_structure_interaction_data
-                  .brinkman_penalization_data);
-            fsi_fluid_force_jacobian =
-              std::make_shared<BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>>(
-                *obstacle_field,
-                simulation_case->parameters.fluid_structure_interaction_data
-                  .brinkman_penalization_data);
-            fsi_obstacle_load = std::make_unique<ObstacleLoad<dim, number, ObstacleType>>(
-              BrinkmanObstacleForce<dim, number, ObstacleType>(
-                *obstacle_field,
-                flow_operation.get_solution(),
-                {scratch_data->get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx},
-                simulation_case->parameters.fluid_structure_interaction_data
-                  .brinkman_penalization_data,
-                simulation_case->parameters.application.flow_solver_type,
-                simulation_case->parameters.incompressible_flow.params.density));
-            break;
-          }
-          case FSICouplingMethod::stokes_law: {
-            fsi_fluid_force_residual =
-              std::make_shared<StokesLawFluidForce<dim, number, ObstacleType>>(
-                flow_operation.get_solution(),
-                *obstacle_field,
-                simulation_case->parameters.compressible_material.dynamic_viscosity);
-            fsi_fluid_force_jacobian =
-              std::make_shared<BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>>(
-                *obstacle_field,
-                simulation_case->parameters.fluid_structure_interaction_data
-                  .brinkman_penalization_data);
-            fsi_obstacle_load = std::make_unique<ObstacleLoad<dim, number, ObstacleType>>(
-              StokesLawSphericalParticleForce<dim, number, ObstacleType>(
-                flow_operation.get_solution(),
-                {scratch_data->get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx},
-                simulation_case->parameters.compressible_material.dynamic_viscosity));
-            break;
-          }
-        default:
-          AssertThrow(false,
-                      dealii::ExcMessage("The provided FSI coupling method is not supported."));
-      }
-    flow_operation.add_external_force(fsi_fluid_force_residual, fsi_fluid_force_jacobian);
-
+    auto fsi_obstacle_load = std::visit(
+      AddFSIForceVisitor<dim, number, ObstacleType>{
+        simulation_case->parameters.fluid_structure_interaction_data, *obstacle_field},
+      flow_operation_variant);
 
     // add relevant obstacle forces to obstacle field
-    obstacle_field->add_load_type(std::move(*fsi_obstacle_load));
+    obstacle_field->add_load_type(*fsi_obstacle_load);
 
     obstacle_field->add_load_type(ObstacleGravitationalForce<dim, number, ObstacleType>(
       this->simulation_case->parameters.compressible_flow.gravity_constant));
@@ -382,7 +343,8 @@ namespace MeltPoolDG
       return;
 
     const auto attach_output_vectors = [&](GenericDataOut<dim, number> &data_out) {
-      flow_operation.attach_output_vectors(data_out);
+      std::visit([&data_out](const auto &operation) { operation.attach_output_vectors(data_out); },
+                 flow_operation_variant);
     };
 
     GenericDataOut<dim, number> generic_data_out(
@@ -437,8 +399,12 @@ namespace MeltPoolDG
         return do_amr;
       };
 
-    const std::function<void(std::vector<VectorType *> &)> attach_vectors =
-      [&](std::vector<VectorType *> &in) { in.push_back(&flow_operation.get_solution()); };
+    const std::function<void(DoFHandlerAndVectorDataType<dim, VectorType> &)> attach_vectors =
+      [&](DoFHandlerAndVectorDataType<dim, VectorType> &in) {
+        std::visit([&in](auto &operation) { operation.attach_for_coarsening_and_refinement(in); },
+                   flow_operation_variant);
+      };
+
 
     std::function<void()> pre = [&] {
       obstacle_field->get_particle_handler().prepare_for_coarsening_and_refinement();
@@ -464,17 +430,17 @@ namespace MeltPoolDG
     };
 
     std::function<void()> setup_dofs = [&] {
-      flow_operation.distribute_dofs();
+      std::visit([](auto &operation) { operation.distribute_dofs(); }, flow_operation_variant);
       scratch_data->create_partitioning();
       scratch_data->build(true, true, false, false);
-      flow_operation.reinit();
+      std::visit([](auto &operation) { operation.reinit(); }, flow_operation_variant);
     };
 
     AMR::refine_grid(mark_cells_for_refinement,
                      attach_vectors,
                      setup_dofs,
                      this->simulation_case->parameters.amr,
-                     scratch_data->get_dof_handler(comp_flow_dof_idx),
+                     *simulation_case->triangulation,
                      time_iterator->get_current_time_step_number(),
                      post,
                      pre);
@@ -497,10 +463,8 @@ namespace MeltPoolDG
 
     const std::function<void(DoFHandlerAndVectorDataType<dim, VectorType> &)> attach_vectors =
       [&](DoFHandlerAndVectorDataType<dim, VectorType> &in) {
-        in.emplace_back(&scratch_data->get_dof_handler(comp_flow_dof_idx),
-                        [&](std::vector<VectorType *> &vec_in) {
-                          vec_in.push_back(&flow_operation.get_solution());
-                        });
+        std::visit([&in](auto &operation) { operation.attach_for_coarsening_and_refinement(in); },
+                   flow_operation_variant);
       };
 
     std::function<void()> setup_dof_system = [&]() { this->setup_dof_system(); };
@@ -527,10 +491,8 @@ namespace MeltPoolDG
 
     const std::function<void(DoFHandlerAndVectorDataType<dim, VectorType> &)> attach_vectors =
       [&](DoFHandlerAndVectorDataType<dim, VectorType> &in) {
-        in.emplace_back(&scratch_data->get_dof_handler(comp_flow_dof_idx),
-                        [&](std::vector<VectorType *> &vec_in) {
-                          vec_in.push_back(&flow_operation.get_solution());
-                        });
+        std::visit([&in](auto &operation) { operation.attach_for_coarsening_and_refinement(in); },
+                   flow_operation_variant);
       };
 
     const std::string save_prefix = this->simulation_case->parameters.restart.prefix + "_0";

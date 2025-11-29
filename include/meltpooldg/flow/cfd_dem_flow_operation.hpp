@@ -61,21 +61,12 @@ namespace MeltPoolDG::Flow
     }
 
     /**
-     * @brief Create the quadrature object and attach it to scratch data.
-     */
-    void
-    create_quadrature()
-    {
-      operation_pimpl->create_quadrature();
-    }
-
-    /**
      * @brief Create the required constraints and attach it to scratch data.
      */
     void
-    create_constraints()
+    initialize_data_structures()
     {
-      operation_pimpl->create_constraints();
+      operation_pimpl->initialize_data_structures();
     }
 
     /**
@@ -240,10 +231,7 @@ namespace MeltPoolDG::Flow
       distribute_dofs() = 0;
 
       virtual void
-      create_quadrature() = 0;
-
-      virtual void
-      create_constraints() = 0;
+      initialize_data_structures() = 0;
 
       virtual void
       attach_output_vectors(GenericDataOut<dim, number> &data_out) const = 0;
@@ -312,16 +300,10 @@ namespace MeltPoolDG::Flow
         operation->distribute_dofs();
       }
 
-      void
-      create_quadrature() override
-      {
-        operation->create_quadrature();
-      }
-
       virtual void
-      create_constraints() override
+      initialize_data_structures() override
       {
-        operation->create_constraints();
+        operation->initialize_data_structures();
       }
 
       void
