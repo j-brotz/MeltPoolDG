@@ -136,7 +136,6 @@ namespace MeltPoolDG::Flow
       navier_stokes->get_constraints_p().distribute(navier_stokes->user_rhs.block(1));
     }
 
-    // Temporary
     void
     add_external_force(
       const std::shared_ptr<Flow::IncompressibleExternalFluidForce<dim, number, dim>>
@@ -163,7 +162,6 @@ namespace MeltPoolDG::Flow
     attach_for_coarsening_and_refinement(
       DoFHandlerAndVectorDataType<dim, dealii::LinearAlgebra::distributed::Vector<number>> &in)
     {
-      /*
       in.emplace_back(&scratch_data->get_dof_handler(dof_index_u),
                       [&](
                         std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vec_in) {
@@ -179,7 +177,6 @@ namespace MeltPoolDG::Flow
                         vec_in.push_back(&navier_stokes->solution_old.block(1));
                         vec_in.push_back(&navier_stokes->solution_old_old.block(1));
                       });
-                      */
     }
 
     /**
@@ -301,28 +298,6 @@ namespace MeltPoolDG::Flow
     // the velocity block here.
     inline dealii::LinearAlgebra::distributed::Vector<number> &
     get_velocity_solution();
-    
-    dealii::LinearAlgebra::distributed::Vector<number>&
-    get_solution()
-    {
-      return navier_stokes->solution.block(0);
-    }
-
-
-    inline const dealii::DoFHandler<dim> &
-    get_dof_handler() const
-    {
-      // TODO
-      return navier_stokes->get_dof_handler_u();
-    }
-
-
-    inline dealii::LinearAlgebra::distributed::Vector<number> &
-    get_solution_in_primitive_variables()
-    {
-      // TODO
-      return navier_stokes->solution.block(0);
-    }
 
     MatrixFreeContext<dim, number>
     get_matrix_free_context_u()
@@ -401,8 +376,6 @@ namespace MeltPoolDG::Flow
         }
       navier_stokes_user_rhs.compress(dealii::VectorOperation::add);
       navier_stokes_user_rhs.update_ghost_values();
-      // TODO
-      navier_stokes_user_rhs = 0.;
     }
 
     std::unique_ptr<adaflo::NavierStokes<dim>> navier_stokes;
