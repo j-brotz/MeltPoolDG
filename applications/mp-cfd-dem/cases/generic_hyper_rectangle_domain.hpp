@@ -26,6 +26,116 @@ namespace MeltPoolDG::Simulation::CfdDem
   /// Enum for the type of ramp up function used for the velocity at an inflow boundary.
   BETTER_ENUM(RampUpType, char, none, linear, exponential, cosine);
 
+  template <int dim, typename number>
+  class VelocityFunction : public dealii::Function<dim, number>
+  {
+  public:
+    VelocityFunction(const number                                         initial_time,
+                     const std::shared_ptr<dealii::Function<dim, number>> velocity,
+                     const FlowSolverType                                 flow_solver_type,
+                     const number     inflow_ramp_up_duration = 0.,
+                     const RampUpType ramp_up_type            = RampUpType::linear)
+      : dealii::Function<dim, number>(flow_solver_type == FlowSolverType::compressible ? dim + 2 :
+                                                                                         dim,
+                                      initial_time)
+      , velocity(velocity)
+      , inflow_ramp_up_duration(inflow_ramp_up_duration)
+      , ramp_up_type(ramp_up_type)
+      , flow_solver_type(flow_solver_type)
+    {
+      AssertThrow(
+        flow_solver_type == FlowSolverType::incompressible,
+        dealii::ExcMessage(
+          "Density and energy functions must be provided for compressible flow solver type."));
+    }
+
+    /**
+     * Set the time for the function.
+     *
+     * @param new_time Time to be set.
+     */
+    void
+    set_time(const number new_time) override
+    {
+      dealii::Function<dim>::set_time(new_time);
+      velocity->set_time(new_time);
+    }
+
+    /**
+     * @brief Evaluates the conservative variable value for a given component at a specified location.
+     *
+     * This function returns the value of the conservative variable corresponding to the specified
+     * component at the given spatial location @p loc. The value is computed using the density,
+     * velocity, and energy functions provided to the object during construction.
+     *
+     * If a ramp-up duration is defined, the velocity components are scaled according to the
+     * selected ramp-up function depending on the current time.
+     *
+     * If no inflow ramp-up duration is specified (i.e., @p inflow_ramp_up_duration = 0),
+     * the returned value corresponds directly to the fully developed flow field.
+     *
+     * @param loc Coordinates at which the function value is evaluated.
+     * @param component  The index of the conservative variable component to evaluate.
+     *
+     * @return The value of the specified conservative variable component at @p loc.
+     */
+    number
+    value(const dealii::Point<dim, number> &loc, const unsigned int component) const override
+    {
+      const auto inflow_ramp_up_scaling = [&]() -> number {
+        if (this->get_time() > inflow_ramp_up_duration or inflow_ramp_up_duration == 0. or
+            ramp_up_type == RampUpType::none)
+          return 1.;
+
+        switch (ramp_up_type)
+          {
+            case RampUpType::linear:
+              return this->get_time() / inflow_ramp_up_duration;
+              break;
+            case RampUpType::exponential:
+              return (std::exp(this->get_time() / inflow_ramp_up_duration) - 1) /
+                     (std::numbers::e - 1);
+              break;
+            case RampUpType::cosine:
+              return 0.5 *
+                     (1 - std::cos(std::numbers::pi * this->get_time() / inflow_ramp_up_duration));
+              break;
+            default:
+              AssertThrow(false, dealii::ExcInternalError());
+          }
+      };
+
+      switch (flow_solver_type)
+        {
+          case FlowSolverType::compressible:
+            AssertThrow(false, dealii::ExcMessage("VelocityFunction not supported for compressible flow."));
+            break;
+          case FlowSolverType::incompressible:
+            AssertThrow(component < dim,
+                        dealii::ExcMessage(
+                          "For incompressible flow, only velocity components are defined."));
+            return inflow_ramp_up_scaling() * velocity->value(loc, component);
+            break;
+          default:
+            AssertThrow(false, dealii::ExcMessage("Unknown flow solver type!"));
+        }
+    }
+
+  private:
+    /// Vectorial function describing the velocity field.
+    const std::shared_ptr<dealii::Function<dim, number>> velocity;
+
+    /// In the case of an inflow boundary the time for which the inflow velocity is ramped-up.
+    const number inflow_ramp_up_duration;
+
+    /// In the case of an inflow boundary the type of ramp-up function for the velocity.
+    const RampUpType ramp_up_type;
+
+    const FlowSolverType flow_solver_type;
+  };
+
+
+
   /**
    * A function class that computes the conservative variable values for the compressible
    * Navier–Stokes equations based on provided functions for the primitive variables:
@@ -288,7 +398,12 @@ namespace MeltPoolDG::Simulation::CfdDem
                       break;
                     }
                     case FlowSolverType::incompressible: {
-                      return velocity_boundary_function;
+                      return std::make_shared<VelocityFunction<dim, number>>(
+                        start_time,
+                        velocity_boundary_function,
+                        flow_solver_type,
+                        inflow_ramp_up_duration,
+                        inflow_ramp_up_type);
                       break;
                     }
                     default: {
