@@ -1,6 +1,7 @@
 #include "cfd_dem_application.hpp"
 
 #include <deal.II/base/mpi.h>
+#include <deal.II/base/vectorization.h>
 
 #include <deal.II/dofs/dof_handler.h>
 
@@ -52,19 +53,36 @@ namespace MeltPoolDG
     void
     operator()(Flow::DGCompressibleFlowOperation<dim, number> &operation)
     {
+      auto get_relevant_dof_values =
+        [](const dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>> &w)
+        -> dealii::Tensor<1, dim, dealii::VectorizedArray<number>> {
+        dealii::Tensor<1, dim, dealii::VectorizedArray<number>> relevant_dofs;
+        for (int i = 0; i < dim; ++i)
+          relevant_dofs[i] = w[i + 1];
+        return relevant_dofs;
+      };
       if (pol_degree < 2)
-        amr_indicator.add_indicator(std::make_unique<AMR::JumpIndicator<dim, number>>(
-          operation.get_matrix_free_context(), operation.get_solution(), fe_index));
+        amr_indicator.add_indicator(std::make_unique<AMR::JumpIndicator<dim, number, dim + 2, dim>>(
+          operation.get_matrix_free_context(),
+          operation.get_solution(),
+          get_relevant_dof_values,
+          fe_index));
       else
         {
           amr_indicator.add_indicator(
-            std::make_unique<AMR::JumpIndicator<dim, number>>(operation.get_matrix_free_context(),
-                                                              operation.get_solution(),
-                                                              fe_index),
+            std::make_unique<AMR::JumpIndicator<dim, number, dim + 2, dim>>(
+              operation.get_matrix_free_context(),
+              operation.get_solution(),
+              get_relevant_dof_values,
+              fe_index),
             1. / pol_degree);
           amr_indicator.add_indicator(
-            std::make_unique<AMR::SSEDIndicator<dim, number>>(
-              operation.get_matrix_free_context(), operation.get_solution(), fe_index, pol_degree),
+            std::make_unique<AMR::SSEDIndicator<dim, number, dim + 2, dim>>(
+              operation.get_matrix_free_context(),
+              operation.get_solution(),
+              get_relevant_dof_values,
+              fe_index,
+              pol_degree),
             1);
         }
     }

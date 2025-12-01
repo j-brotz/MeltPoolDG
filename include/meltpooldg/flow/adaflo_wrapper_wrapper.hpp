@@ -222,17 +222,27 @@ namespace MeltPoolDG::Flow
 
       // inflow
       boundary_conditions = simulation_case->get_boundary_condition("inflow", operation_name);
-      for (const auto &[boundary_id, boundary_function] : boundary_conditions)
-        navier_stokes->set_velocity_dirichlet_boundary(boundary_id, std::move(boundary_function));
+      for (const auto &[boundary_id, inflow_velocity_function] : boundary_conditions)
+        navier_stokes->set_velocity_dirichlet_boundary(boundary_id,
+                                                       std::move(inflow_velocity_function));
+
+      // neumann outflow
+      boundary_conditions =
+        simulation_case->get_boundary_condition("neumann_outflow", operation_name);
+      for (const auto &[boundary_id, pressure_function] : boundary_conditions)
+        navier_stokes->set_open_boundary_with_normal_flux(boundary_id,
+                                                          std::move(pressure_function));
+                                                          
+      // open boundary (requires pressure)
+      boundary_conditions =
+        simulation_case->get_boundary_condition("open_boundary", operation_name);
+      for (const auto &[boundary_id, pressure_function] : boundary_conditions)
+        navier_stokes->set_open_boundary(boundary_id, pressure_function);
 
       // constant pressure outflow
-      boundary_conditions =
-        simulation_case->get_boundary_condition("outflow_fixed_pressure", operation_name);
+      boundary_conditions = simulation_case->get_boundary_condition("pressure", operation_name);
       for (const auto &[boundary_id, boundary_function] : boundary_conditions)
-        navier_stokes->set_open_boundary_with_normal_flux(boundary_id,
-                                                          std::move(boundary_function));
-      // TODO
-      // navier_stokes->set_open_boundary(boundary_id, std::move(boundary_function));
+        navier_stokes->fix_pressure_constant(boundary_id);
 
       // slip wall
       boundary_conditions = simulation_case->get_boundary_condition("slip_wall", operation_name);

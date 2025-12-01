@@ -96,7 +96,7 @@ namespace
     {
       /**
        * @brief Constructor that sets up all necessary components required for finally setting up
-       * the flow oeprator. Initializes the scratch data, including triangulation, DoF handler, and
+       * the flow operator. Initializes the scratch data, including triangulation, DoF handler, and
        * other required components. Also sets the initial and boundary conditions.
        *
        * @param state Google Benchmark state object used to determine the number of cells in each
@@ -215,14 +215,14 @@ namespace
         std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim, number>>> bottom{
           {3, func}};
         flow_scratch_data->boundary_conditions.set_boundary_condition(
-          MeltPoolDG::Flow::CompressibleBoundaryConditionType::inflow, inflow);
+          MeltPoolDG::Flow::BoundaryConditionType::inflow, inflow);
         flow_scratch_data->boundary_conditions.set_boundary_condition(
-          MeltPoolDG::Flow::CompressibleBoundaryConditionType::subsonic_outflow_fixed_energy,
+          MeltPoolDG::Flow::BoundaryConditionType::subsonic_outflow_fixed_energy,
           outflow);
         flow_scratch_data->boundary_conditions.set_boundary_condition(
-          MeltPoolDG::Flow::CompressibleBoundaryConditionType::no_slip_wall, top);
+          MeltPoolDG::Flow::BoundaryConditionType::no_slip_wall, top);
         flow_scratch_data->boundary_conditions.set_boundary_condition(
-          MeltPoolDG::Flow::CompressibleBoundaryConditionType::no_slip_wall, bottom);
+          MeltPoolDG::Flow::BoundaryConditionType::no_slip_wall, bottom);
       }
     };
 

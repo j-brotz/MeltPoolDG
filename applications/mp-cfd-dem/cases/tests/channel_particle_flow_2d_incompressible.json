@@ -21,7 +21,7 @@
             "velocity": "150; 0"
         },
         "boundary x max": {
-            "type": "subsonic_outflow_fixed_pressure",
+            "type": "neumann_outflow",
             "pressure": "0"
         },
         "boundary y min": {

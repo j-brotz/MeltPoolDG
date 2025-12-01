@@ -11,6 +11,21 @@ namespace MeltPoolDG
 
   namespace Flow
   {
+
+    /**
+     * An enum for the various boundary conditions supported by the compressible flow solver.
+     */
+    BETTER_ENUM(BoundaryConditionType,
+                char,
+                inflow,
+                slip_wall,
+                no_slip_wall,
+                subsonic_outflow_fixed_energy,
+                subsonic_outflow_fixed_pressure,
+                neumann_outflow,
+                pressure,
+                open_boundary);
+
     // Only linear external force supported
     template <int dim, typename number, int n_components>
     class IncompressibleExternalFluidForce
