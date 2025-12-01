@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/vectorization.h>
 
 #include <deal.II/grid/tria.h>
 
@@ -10,6 +11,7 @@
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/utilities/fe_integrator.hpp>
+#include <meltpooldg/utilities/matrix_free_util.hpp>
 
 #include <memory>
 #include <utility>
@@ -59,10 +61,7 @@ namespace MeltPoolDG::AMR
      * @param weight Optional weighting factor for the indicator during the reduction.
      */
     void
-    add_indicator(std::unique_ptr<AMRIndicatorBase<dim, number>> &&indicator, number weight = 1.)
-    {
-      indicators_and_weights.emplace_back(std::move(indicator), weight);
-    }
+    add_indicator(std::unique_ptr<AMRIndicatorBase<dim, number>> &&indicator, number weight = 1.);
 
     /**
      * Computes the composition of the internally stored indicators weighted with the corresponding
@@ -72,43 +71,13 @@ namespace MeltPoolDG::AMR
      * @param tria Triangulation for which the indicator is computed.
      */
     VectorType
-    compute_indicator(const dealii::Triangulation<dim> &tria) override
-    {
-      AssertThrow(not indicators_and_weights.empty(),
-                  dealii::ExcMessage(
-                    "No AMR indicator has been added to the indicator composite."));
-
-      auto check_partitioning = [&tria](const VectorType &indicator) {
-        Assert(
-          tria.n_active_cells() == indicator.size(),
-          dealii::ExcMessage(
-            "The indicator has returned a vector which does not has the same number of elements as the triangulation has local active cells."));
-      };
-
-      VectorType indicator = indicators_and_weights[0].indicator->compute_indicator(tria);
-      indicator *= indicators_and_weights[0].weight;
-
-      check_partitioning(indicator);
-      for (unsigned i = 1; i < this->indicators_and_weights.size(); ++i)
-        {
-          VectorType temp_indicator = indicators_and_weights[i].indicator->compute_indicator(tria);
-          check_partitioning(temp_indicator);
-          for (unsigned j = 0; j < indicator.size(); ++j)
-            indicator[j] = BinaryOp<number>()(indicator[j],
-                                              indicators_and_weights[i].weight * temp_indicator[j]);
-        }
-
-      return indicator;
-    }
+    compute_indicator(const dealii::Triangulation<dim> &tria) override;
 
     /**
      * Returns true if no indicator is stored in the object.
      */
     bool
-    empty() const
-    {
-      return indicators_and_weights.empty();
-    }
+    empty() const;
 
   private:
     struct IndicatorAndWeight
@@ -133,32 +102,53 @@ namespace MeltPoolDG::AMR
    * The idea is that one estimates the error with the largest mode in the solution. The largest
    * mode is isolated and used as an error indicator normalized by the volume of the cell.
    *
+   * @tparam dim Spatial dimension of the problem.
+   * @tparam number Scalar type of the solution vector and underlying matrix-free data structures
+   * (e.g., float, double).
+   * @tparam n_dof_components Number of field components provided by the finite element at each
+   * point. This must match the number of components returned by dealii::FEEvaluation::get_value()
+   * for the matrix-free object passed to the constructor.
+   * @tparam n_indicator_components Number of components (out of the @p n_dof_components available)
+   * that are used in the indicator computation. A custom extraction function maps the full set of
+   * DoF values to these selected components.
+   *
    * @note Indicator can only be used for fe degree > 1.
    */
-  template <int dim, typename number>
+  template <int dim, typename number, int n_dof_components, int n_indicator_components>
   class SSEDIndicator : public AMRIndicatorBase<dim, number>
   {
+    using VectorizedArrayType = dealii::VectorizedArray<number>;
+
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
+
+    using ExtractIndicatorDofValuesFunction =
+      std::function<dealii::Tensor<1, n_indicator_components, VectorizedArrayType>(
+        const dealii::Tensor<1, n_dof_components, VectorizedArrayType> &)>;
+
   public:
     /**
      * Constructor.
      *
-     * Initializes the indicator by storing references to the provided data and
-     * setting up the element transformation matrix.
+     * Sets up the SSED indicator by storing references to the matrix-free context and solution
+     * vector, as well as the extraction function that specifies which components of the solution
+     * should be considered in the indicator calculation. Also initializes the internal element
+     * transformation matrix.
      *
-     * @param matrix_free Matrix-free object used to compute the solution field on which the indicator
-     * is based.
-     * @param solution Solution field for which the indicator is evaluated.
-     * @param dof_idx Dof index relevant to the matrix-free object.
-     * @param quad_idx Quadrature point index relevant to the matrix-free object.
-     * @param fe_index FE index associated with the computation.
+     * @param matrix_free_context Matrix-free context associated with the provided solution vector.
+     * @param solution Solution vector from which the indicator is computed.
+     * @param extract_indicator_dof_values A function object used to extract the subset of DoF
+     * values relevant for the indicator. The function receives, for each vectorized set of
+     * quadrature points, the full @p n_dof_components tensor of values from
+     * dealii::FEEvaluation::get_value(), and must return the @p n_indicator_components values to be
+     * used by the indicator. The function may also modify or combine the values if needed.
+     * @param fe_index Index of the finite element associated with the matrix-free context.
      * @param fe_degree Polynomial degree of the finite element shape functions.
      */
-    SSEDIndicator(const dealii::MatrixFree<dim, number>                    &matrix_free,
-                  const dealii::LinearAlgebra::distributed::Vector<number> &solution,
-                  const unsigned                                            dof_idx,
-                  const unsigned                                            quad_idx,
-                  const unsigned                                            fe_index,
-                  const unsigned                                            fe_degree);
+    SSEDIndicator(const MatrixFreeContext<dim, number>    matrix_free_context,
+                  const VectorType                       &solution,
+                  const ExtractIndicatorDofValuesFunction extract_indicator_dof_values,
+                  const unsigned                          fe_index,
+                  const unsigned                          fe_degree);
 
     /**
      * Computes the indicator as discussed in the class description.
@@ -177,27 +167,25 @@ namespace MeltPoolDG::AMR
      */
     void
     local_apply_cell(const dealii::MatrixFree<dim, number> &,
-                     dealii::AlignedVector<dealii::VectorizedArray<number>>   &dst,
-                     const dealii::LinearAlgebra::distributed::Vector<number> &src,
-                     const std::pair<unsigned, unsigned>                      &cell_range);
+                     dealii::AlignedVector<VectorizedArrayType> &dst,
+                     const VectorType                           &src,
+                     const std::pair<unsigned, unsigned>        &cell_range);
 
   private:
-    /// Matrix free object used to compute the solution.
-    const dealii::MatrixFree<dim, number> &matrix_free;
+    /// Matrix free context used to compute the solution.
+    const MatrixFreeContext<dim, number> matrix_free_context;
 
     /// Reference to the solution of the field of interest.
-    const dealii::LinearAlgebra::distributed::Vector<number> &solution;
+    const VectorType &solution;
 
-    /// Relevant dof index in the matrix free object.
-    const unsigned mf_dof_idx;
-
-    /// Relevant quad index in the matrix free object.
-    const unsigned mf_quad_idx;
+    /// Function type used to extract or manipulate the subset of DoF values needed by the
+    /// indicator. This function needs to be provided by the user.
+    ExtractIndicatorDofValuesFunction extract_indicator_dof_values;
 
     /// Relevant fe index for the fe object of the dof handler in the matrix free object.
     const unsigned fe_index;
 
-    dealii::AlignedVector<dealii::VectorizedArray<number>> linearized_matrix;
+    dealii::AlignedVector<VectorizedArrayType> linearized_matrix;
   };
 
   /**
@@ -209,29 +197,48 @@ namespace MeltPoolDG::AMR
    * Assuming a continuous exact solution, the idea is to express the error in terms of the jump
    * between elements normalized by the corresponding face area.
    *
+   * @tparam dim Spatial dimension of the problem.
+   * @tparam number Scalar type of the solution vector and underlying matrix-free data structures
+   * (e.g., float, double).
+   * @tparam n_dof_components Number of field components provided by the finite element at each
+   * point. This must match the number of components returned by dealii::FEEvaluation::get_value()
+   * for the matrix-free object passed to the constructor.
+   * @tparam n_indicator_components Number of components (out of the @p n_dof_components available)
+   * that are used in the indicator computation. A custom extraction function maps the full set of
+   * DoF values to these selected components.
+   *
    * @note Indicator can only be used for DG.
    */
-  template <int dim, typename number>
+  template <int dim, typename number, int n_mf_components = dim, int n_relevant_components = dim>
   class JumpIndicator : public AMRIndicatorBase<dim, number>
   {
   public:
+    using VectorizedArrayType = dealii::VectorizedArray<number>;
+
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
+    using ExtractIndicatorDofValuesFunction =
+      std::function<dealii::Tensor<1, n_relevant_components, VectorizedArrayType>(
+        const dealii::Tensor<1, n_mf_components, VectorizedArrayType> &)>;
+
     /**
      * Constructor.
      *
      * Initializes the indicator by storing references to the provided data.
      *
-     * @param matrix_free Matrix-free object used to compute the solution field on which the indicator
-     * is based.
-     * @param solution Solution field for which the indicator is evaluated.
-     * @param dof_idx Dof index relevant to the matrix-free object.
-     * @param quad_idx Quadrature point index relevant to the matrix-free object.
-     * @param fe_index FE index associated with the computation.
+     * @param matrix_free_context Matrix-free context associated with the provided solution vector.
+     * @param solution Solution vector from which the indicator is computed.
+     * @param extract_indicator_dof_values A function object used to extract the subset of DoF
+     * values relevant for the indicator. The function receives, for each vectorized set of
+     * quadrature points, the full @p n_dof_components tensor of values from
+     * dealii::FEEvaluation::get_value(), and must return the @p n_indicator_components values to be
+     * used by the indicator. The function may also modify or combine the values if needed.
+     * @param fe_index Index of the finite element associated with the matrix-free context.
+     * @param fe_degree Polynomial degree of the finite element shape functions.
      */
-    JumpIndicator(const dealii::MatrixFree<dim, number>                    &matrix_free,
-                  const dealii::LinearAlgebra::distributed::Vector<number> &solution,
-                  const unsigned                                            dof_idx,
-                  const unsigned                                            quad_idx,
-                  const unsigned                                            fe_index);
+    JumpIndicator(const MatrixFreeContext<dim, number>    matrix_free_context,
+                  const VectorType                       &solution,
+                  const ExtractIndicatorDofValuesFunction extract_indicator_dof_values,
+                  const unsigned                          fe_index = 0);
 
     /**
      * Computes the indicator as discussed in the class description.
@@ -250,22 +257,20 @@ namespace MeltPoolDG::AMR
      */
     void
     local_apply_face(const dealii::MatrixFree<dim, number> &,
-                     dealii::AlignedVector<dealii::VectorizedArray<number>>   &dst,
-                     const dealii::LinearAlgebra::distributed::Vector<number> &src,
-                     const std::pair<unsigned, unsigned>                      &face_range) const;
+                     dealii::AlignedVector<VectorizedArrayType> &dst,
+                     const VectorType                           &src,
+                     const std::pair<unsigned, unsigned>        &face_range) const;
 
   private:
     /// Matrix free object used to compute the solution.
-    const dealii::MatrixFree<dim, number> &matrix_free;
+    const MatrixFreeContext<dim, number> matrix_free_context;
 
     /// Reference to the solution of the field of interest.
-    const dealii::LinearAlgebra::distributed::Vector<number> &solution;
+    const VectorType &solution;
 
-    /// Relevant dof index in the matrix free object.
-    const unsigned mf_dof_idx;
-
-    /// Relevant quad index in the matrix free object.
-    const unsigned mf_quad_idx;
+    /// Function type used to extract or manipulate the subset of DoF values needed by the
+    /// indicator. This function needs to be provided by the user.
+    ExtractIndicatorDofValuesFunction extract_indicator_dof_values;
 
     /// Relevant fe index for the fe object of the dof handler in the matrix free object.
     const unsigned fe_index;

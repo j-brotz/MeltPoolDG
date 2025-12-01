@@ -1,7 +1,7 @@
 +--------------------------------------------------------------------------------------------------+
 |                                                 MeltPoolDG                                       |
 +--------------------------------------------------------------------------------------------------+
-| Initial flow grid:    # cells: 288, # dofs: 4608                                                 |
+| Initial flow grid:    # cells: 288, # dofs: 4608                               compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 | norm rho: 7.5364e-15, rho * u: 9.6466e-13, rho * energy: 3.9513e-09            compressible_flow |
 | accumulated norm: 0.0000e+00                                                      obstacle_force |
@@ -12,8 +12,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 288, # dofs: 4608                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 288, # dofs: 4608                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 5.0000e-12 to 1.0000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -22,8 +22,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 1.0000e-11 to 1.5000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -32,8 +32,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 1.5000e-11 to 2.0000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -42,8 +42,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 2.0000e-11 to 2.5000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -52,8 +52,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 6      t = 2.5000e-11 to 3.0000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -62,8 +62,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 7      t = 3.0000e-11 to 3.5000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -72,8 +72,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 8      t = 3.5000e-11 to 4.0000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -82,8 +82,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 9      t = 4.0000e-11 to 4.5000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -92,8 +92,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 10     t = 4.5000e-11 to 5.0000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -102,8 +102,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 11     t = 5.0000e-11 to 5.5000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -112,8 +112,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 12     t = 5.5000e-11 to 6.0000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -122,8 +122,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 13     t = 6.0000e-11 to 6.5000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -132,8 +132,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 14     t = 6.5000e-11 to 7.0000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -142,8 +142,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 15     t = 7.0000e-11 to 7.5000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -152,8 +152,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 16     t = 7.5000e-11 to 8.0000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -162,8 +162,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 17     t = 8.0000e-11 to 8.5000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -172,8 +172,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 18     t = 8.5000e-11 to 9.0000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -182,8 +182,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 19     t = 9.0000e-11 to 9.5000e-11 ( dt = 5.0000e-12 )          time_iterator |
@@ -192,8 +192,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 20     t = 9.5000e-11 to 1.0000e-10 ( dt = 5.0000e-12 )          time_iterator |
@@ -202,8 +202,8 @@
 | accumulated norm: 8.8357e-06                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
-| Flow grid before refinement:    # cells: 348, # dofs: 5568                                       |
-| Flow grid after refinement :    # cells: 348, # dofs: 5568                                       |
+| Flow grid before refinement:    # cells: 348, # dofs: 5568                     compressible_flow |
+| Flow grid after refinement :    # cells: 348, # dofs: 5568                     compressible_flow |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
