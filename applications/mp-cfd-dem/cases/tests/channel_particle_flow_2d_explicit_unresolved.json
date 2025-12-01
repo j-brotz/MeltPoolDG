@@ -8,7 +8,7 @@
     "dimension": "2",
     "do print parameters": "false",
     "verbosity level": 1,
-    "global refinements": 2
+    "global refinements": 1
   },
   "case setup": {
     "boundary x min": {
@@ -71,5 +71,14 @@
   "obstacles": {
     "stationary": true,
     "obstacle state input file": "../../stationary_particle_2d.csv"
+  },
+  "adaptive meshing": {
+    "do amr": true,
+    "max grid refinement level": 2,
+    "min grid refinement level": 1,
+    "upper perc to refine": 0.8,
+    "lower perc to coarsen": 0,
+    "every n step": 1,
+    "min indicator threshold to refine cell": 0.001
   }
 }

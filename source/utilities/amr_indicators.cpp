@@ -214,7 +214,7 @@ MeltPoolDG::AMR::JumpIndicator<dim, number>::local_apply_face(
           dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>> w_minus = phi_m.get_value(q);
 
           for (int i = 1; i <= dim; ++i)
-            face_jump_error += phi_m.JxW(q) * (w_minus - w_plus) * (w_minus - w_plus);
+            face_jump_error += phi_m.JxW(q) * (w_minus[i] - w_plus[i]) * (w_minus[i] - w_plus[i]);
 
           face_area += phi_m.JxW(q);
         }
