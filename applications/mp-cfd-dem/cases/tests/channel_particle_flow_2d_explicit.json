@@ -41,7 +41,7 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "1e-10",
+    "end time": "4e-11",
     "time step size": "5e-12"
   },
   "output": {

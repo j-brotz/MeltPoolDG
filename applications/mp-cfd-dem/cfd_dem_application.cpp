@@ -22,6 +22,7 @@
 #include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/matrix_free_util.hpp>
 #include <meltpooldg/utilities/restart.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 
@@ -56,7 +57,7 @@ namespace MeltPoolDG
     str << tria_name << ": " << std::setw(12) << std::right
         << "# cells: " << tria.n_global_active_cells() << ", "
         << "# dofs: " << dof_handler.n_dofs();
-    Journal::print_line(pcout, str.str(), "");
+    Journal::print_line(pcout, str.str(), "compressible_flow");
   }
 
   template <int dim, typename number>
@@ -172,27 +173,34 @@ namespace MeltPoolDG
     if (not this->simulation_case->parameters.amr.do_amr)
       return;
 
-    if (scratch_data->get_degree(comp_flow_dof_idx) < 2)
-      amr_indicator.add_indicator(
-        std::make_unique<AMR::JumpIndicator<dim, number>>(scratch_data->get_matrix_free(),
-                                                          comp_flow_operation->get_solution(),
+    std::function<dealii::Tensor<1, dim, dealii::VectorizedArray<number>>(
+      const dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>> &)>
+      get_relevant_dof_values =
+        [](const dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>> &w)
+      -> dealii::Tensor<1, dim, dealii::VectorizedArray<number>> {
+      dealii::Tensor<1, dim, dealii::VectorizedArray<number>> relevant_dofs;
+      for (int i = 0; i < dim; ++i)
+        relevant_dofs[i] = w[i + 1];
+      return relevant_dofs;
+    };
+
+    MatrixFreeContext<dim, number> matrix_free_context = {scratch_data->get_matrix_free(),
                                                           comp_flow_dof_idx,
-                                                          comp_flow_quad_idx,
-                                                          0));
+                                                          comp_flow_quad_idx};
+
+    if (scratch_data->get_degree(comp_flow_dof_idx) < 2)
+      amr_indicator.add_indicator(std::make_unique<AMR::JumpIndicator<dim, number, dim + 2, dim>>(
+        matrix_free_context, comp_flow_operation->get_solution(), get_relevant_dof_values, 0));
     else
       {
         amr_indicator.add_indicator(
-          std::make_unique<AMR::JumpIndicator<dim, number>>(scratch_data->get_matrix_free(),
-                                                            comp_flow_operation->get_solution(),
-                                                            comp_flow_dof_idx,
-                                                            comp_flow_quad_idx,
-                                                            0),
-          1. / scratch_data->get_degree(0));
-        amr_indicator.add_indicator(std::make_unique<AMR::SSEDIndicator<dim, number>>(
-                                      scratch_data->get_matrix_free(),
+          std::make_unique<AMR::JumpIndicator<dim, number, dim + 2, dim>>(
+            matrix_free_context, comp_flow_operation->get_solution(), get_relevant_dof_values, 0),
+          1. / scratch_data->get_degree(comp_flow_dof_idx) < 2);
+        amr_indicator.add_indicator(std::make_unique<AMR::SSEDIndicator<dim, number, dim + 2, dim>>(
+                                      matrix_free_context,
                                       comp_flow_operation->get_solution(),
-                                      comp_flow_dof_idx,
-                                      comp_flow_quad_idx,
+                                      get_relevant_dof_values,
                                       0,
                                       scratch_data->get_degree(comp_flow_dof_idx)),
                                     1);
