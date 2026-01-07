@@ -10,7 +10,10 @@
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_material_data.hpp>
+#include <meltpooldg/flow/flow_utils.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
+#include <meltpooldg/particles/adhesive_forces.hpp>
+#include <meltpooldg/particles/contact_forces.hpp>
 #include <meltpooldg/particles/obstacle_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/time_integration/time_stepping_data.hpp>
@@ -18,7 +21,6 @@
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/profiling_data.hpp>
 #include <meltpooldg/utilities/restart.hpp>
-#include <meltpooldg/flow/flow_utils.hpp>
 
 namespace MeltPoolDG
 {
@@ -35,8 +37,10 @@ namespace MeltPoolDG
       amr.add_parameters(prm);
       base.add_parameters(prm);
       fluid_structure_interaction_data.add_parameters(prm);
+      adhesive_force.add_parameters(prm);
       compressible_flow.add_parameters(prm);
       compressible_material.add_parameters(prm, true /*is_gas*/);
+      obstacle_contact.add_parameters(prm);
       incompressible_material.add_parameters(prm);
       time_stepping.add_parameters(prm);
       obstacle_data.add_parameters(prm);
@@ -100,7 +104,9 @@ namespace MeltPoolDG
     Flow::AdafloWrapperParameters<number>            incompressible_flow;
     FluidStructureInteractionData<number>            fluid_structure_interaction_data;
     Flow::CompressibleFlowData<number>               compressible_flow;
+    SphericalParticleAdhesiveForceData<number>       adhesive_force;
     Flow::CompressibleFluidMaterialPhaseData<number> compressible_material;
+    SphericalParticleContactData<number>             obstacle_contact;
     MaterialData<number>                             incompressible_material;
     TimeIntegration::TimeSteppingData<number>        time_stepping;
     ObstacleData<number>                             obstacle_data;

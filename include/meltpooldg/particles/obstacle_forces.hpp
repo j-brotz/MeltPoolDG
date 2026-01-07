@@ -4,6 +4,7 @@
 #include <deal.II/base/tensor.h>
 
 #include <deal.II/particles/particle_accessor.h>
+#include <deal.II/particles/property_pool.h>
 
 #include <memory>
 #include <utility>

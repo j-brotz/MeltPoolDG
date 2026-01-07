@@ -72,8 +72,6 @@ namespace MeltPoolDG
 
     const number constant_density;
 
-    static constexpr unsigned torque_size = ObstacleType::size_angular_velocity;
-
     static constexpr int n_components_compressible = dim + 2;
 
     static constexpr int n_components_incompressible = dim;
@@ -112,7 +110,7 @@ namespace MeltPoolDG
                    ++src_handle)
                 {
                   dealii::Tensor<1, dim, VectorizedArrayType>         force;
-                  dealii::Tensor<1, torque_size, VectorizedArrayType> torque;
+                  dealii::Tensor<1, axial_dim<dim>, VectorizedArrayType> torque;
 
                   const auto q_point = phi.quadrature_point(q);
 
@@ -133,11 +131,11 @@ namespace MeltPoolDG
                                             q_point, global_particle_properties, src_handle));
 
                   dealii::Tensor<1, dim, number>         summed_force;
-                  dealii::Tensor<1, torque_size, number> summed_torque;
+                  dealii::Tensor<1, axial_dim<dim>, number> summed_torque;
 
                   for (int i = 0; i < dim; ++i)
                     summed_force[i] = force[i].sum();
-                  for (unsigned i = 0; i < torque_size; ++i)
+                  for (unsigned i = 0; i < axial_dim<dim>; ++i)
                     summed_torque[i] = torque[i].sum();
 
                   ObstacleType::accumulate_force(summed_force,
@@ -163,7 +161,7 @@ namespace MeltPoolDG
                           const dealii::Tensor<1, dim, VectorizedArrayType> &obstacle_velocity,
                           const VectorizedArrayType                         &mask) const;
 
-    dealii::Tensor<1, torque_size, VectorizedArrayType>
+    dealii::Tensor<1, axial_dim<dim>, VectorizedArrayType>
     compute_torque(
       const dealii::Tensor<1, dim, VectorizedArrayType> &force,
       const dealii::Tensor<1, dim, VectorizedArrayType> &distance_to_center_of_gravity) const;

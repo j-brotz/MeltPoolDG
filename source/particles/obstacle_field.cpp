@@ -7,6 +7,7 @@
 
 #include <deal.II/particles/particle_handler.h>
 
+#include <meltpooldg/particles/dem_util.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
 #include <meltpooldg/utilities/amr_regions.hpp>
@@ -62,7 +63,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
 {
   compute_loads_on_obstacles();
 
-  symplectic_euler_advance_time_step<dim, double, ParticleHandlerBlockVectorView<dim, number>>(
+  symplectic_euler_advance_time_step<dim, number, ParticleHandlerBlockVectorView<dim, number>>(
     current_time,
     time_step,
     obstacle_handler_vector_views.location,
@@ -73,6 +74,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
     [&](number, ParticleHandlerBlockVectorView<dim, number> &) {
       for (auto &obstacle : obstacle_handler)
         {
+          //compute_loads_on_obstacles();
           ObstacleType::set_acceleration(
             obstacle,
             ObstacleType::get_force(obstacle) /
@@ -93,8 +95,11 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
       obstacle_handler.update_ghost_particles();
     });
 
-  // Temporary: We do not want any particles to go below ground level, for that the current solution
-  // is bruteforcing them to not do so
+  // Temporary workaround: prevent particles from moving below ground level. We check whether the
+  // particle’s vertical coordinate (y in 2D, z in 3D) is less than its radius, i.e., meaning part
+  // of the particle would lie below the ground. If so, we clamp the particle to ground contact by
+  // setting its center height equal to its radius and zeroing its vertical velocity.
+  /*
   for (auto &particle : obstacle_handler)
     if (particle.get_location()[dim - 1] -
           ObstacleType::get_property(particle, ObstacleType::Properties::radius) <
@@ -105,12 +110,8 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
         auto velocity     = ObstacleType::template get_velocity<number>(particle);
         velocity[dim - 1] = 0;
         ObstacleType::set_velocity(particle, velocity);
-
-
-        auto acceleration = ObstacleType::get_acceleration(particle);
-        velocity[dim - 1] = 0;
-        ObstacleType::set_acceleration(particle, acceleration);
       }
+        */
 }
 
 
@@ -179,8 +180,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compute_loads_on_obstacles
   for (dealii::Particles::ParticleAccessor<dim> obstacle : obstacle_handler)
     {
       ObstacleType::set_force(dealii::Tensor<1, dim, number>(), obstacle);
-      ObstacleType::set_torque(dealii::Tensor<1, ObstacleType::size_angular_velocity, number>(),
-                               obstacle);
+      ObstacleType::set_torque(dealii::Tensor<1, axial_dim<dim>, number>(), obstacle);
     }
 
   // Update global particle property pool in case any of the loads needs an up-to-date version.
@@ -189,6 +189,17 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compute_loads_on_obstacles
   // Accumulate all forces acting on the particles
   for (const auto &load_type : loads)
     load_type.add_load_to_obstacles(*this);
+  /*
+  int i = 1;
+  for (auto &obstacle : get_particle_handler())
+    {
+      std::cout << "Obstacle Force " << i << ": " << ObstacleType::get_force(obstacle) << std::endl;
+      std::cout << "Obstacle Velocity " << i << ": "
+                << ObstacleType::template get_velocity<number>(obstacle) << std::endl;
+      std::cout << "Obstacle Location " << i << ": " << obstacle.get_location() << std::endl;
+      ++i;
+    }
+      */
 }
 
 template <int dim, typename number, typename ObstacleType>

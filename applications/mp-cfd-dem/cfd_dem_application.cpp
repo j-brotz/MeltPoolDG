@@ -16,6 +16,8 @@
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_factory.hpp>
 #include <meltpooldg/fluid_structure_interaction/stokes_law.hpp>
+#include <meltpooldg/particles/adhesive_forces.hpp>
+#include <meltpooldg/particles/contact_forces.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/obstacle_forces.hpp>
 #include <meltpooldg/particles/particle.hpp>
@@ -320,6 +322,20 @@ namespace MeltPoolDG
 
     obstacle_field->add_load_type(ObstacleGravitationalForce<dim, number, ObstacleType>(
       this->simulation_case->parameters.compressible_flow.gravity_constant));
+
+    dealii::Tensor<1, dim, number> ground_normal;
+    ground_normal[dim - 1] = 1;
+    obstacle_field->add_load_type(
+      SphericalParticleContactForce<dim, number, SphericalParticle<dim, number>>(
+        simulation_case->parameters.obstacle_contact,
+        *time_iterator,
+        {{{dealii::Point<dim, number>(), ground_normal}, ground_normal}}));
+
+    obstacle_field->add_load_type(
+      SphericalParticleAdhesiveForce<dim, number, SphericalParticle<dim, number>>(
+        simulation_case->parameters.adhesive_force));
+
+
 
     // initialize postprocessor
     post_processor =

@@ -1,11 +1,91 @@
 #pragma once
 
+#include "meltpooldg/particles/dem_util.hpp"
 #include <meltpooldg/time_integration/solution_history.hpp>
 
 #include <functional>
 
 namespace MeltPoolDG
 {
+
+
+  template <int dim, typename number, typename BlockVectorType>
+  void
+  leapfrog_scheme(
+    const number                                       current_time,
+    const number                                       time_step,
+    TimeIntegration::SolutionHistory<BlockVectorType> &location,
+    TimeIntegration::SolutionHistory<BlockVectorType> &translational_velocity,
+    TimeIntegration::SolutionHistory<BlockVectorType> &translational_acceleration,
+    TimeIntegration::SolutionHistory<BlockVectorType> &angular_velocity,
+    TimeIntegration::SolutionHistory<BlockVectorType> &angular_acceleration,
+    const std::function<void(number time, BlockVectorType &dst)>
+      &compute_translational_acceleration,
+    const std::function<void(number time, BlockVectorType &dst)> &compute_angular_acceleration,
+    const std::function<void()> &update_ghost_values = std::function<void()>())
+  {
+    for (unsigned i = 0; i < location.get_current_solution().block(0).locally_owned_size(); ++i)
+      {
+        for (unsigned j : std::views::iota(0, dim))
+          {
+            translational_velocity.get_current_solution().block(j).local_element(i) +=
+              0.5 * time_step *
+              translational_acceleration.get_current_solution().block(j).local_element(i);
+
+
+
+            location.get_current_solution().block(j).local_element(i) +=
+              time_step * translational_velocity.get_current_solution().block(j).local_element(i);
+          }
+        for (unsigned j = 0; j < axial_dim<dim>; ++j)
+          angular_velocity.get_current_solution().block(j).local_element(i) +=
+            0.5 * time_step * angular_acceleration.get_current_solution().block(j).local_element(i);
+      }
+
+    if (update_ghost_values)
+      update_ghost_values();
+    else
+      {
+        location.update_ghost_values();
+        translational_velocity.update_ghost_values();
+        angular_velocity.update_ghost_values();
+      }
+
+    compute_translational_acceleration(current_time,
+                                       translational_acceleration.get_current_solution());
+    compute_angular_acceleration(current_time, angular_acceleration.get_current_solution());
+
+    if (update_ghost_values)
+      update_ghost_values();
+    else
+      {
+        translational_acceleration.update_ghost_values();
+        angular_acceleration.update_ghost_values();
+      }
+
+    for (unsigned i = 0; i < location.get_current_solution().block(0).locally_owned_size(); ++i)
+      {
+        for (unsigned j : std::views::iota(0, dim))
+          {
+            translational_velocity.get_current_solution().block(j).local_element(i) +=
+              0.5 * time_step *
+              translational_acceleration.get_current_solution().block(j).local_element(i);
+          }
+        for (unsigned j = 0; j < axial_dim<dim>; ++j)
+          angular_velocity.get_current_solution().block(j).local_element(i) +=
+            0.5 * time_step * angular_acceleration.get_current_solution().block(j).local_element(i);
+      }
+
+    if (update_ghost_values)
+      update_ghost_values();
+    else
+      {
+        translational_acceleration.update_ghost_values();
+        angular_acceleration.update_ghost_values();
+      }
+  }
+
+
   /**
    * @brief Advances particle states by one time step using the symplectic Euler scheme.
    *
@@ -63,7 +143,6 @@ namespace MeltPoolDG
     const std::function<void(number time, BlockVectorType &dst)> &compute_angular_acceleration,
     const std::function<void()> &update_ghost_values = std::function<void()>())
   {
-    constexpr unsigned size_angular_velocity = dim - 3 % dim;
     for (unsigned i = 0; i < location.get_current_solution().block(0).locally_owned_size(); ++i)
       {
         for (unsigned j = 0; j < dim; ++j)
@@ -74,7 +153,7 @@ namespace MeltPoolDG
             location.get_current_solution().block(j).local_element(i) +=
               time_step * translational_velocity.get_current_solution().block(j).local_element(i);
           }
-        for (unsigned j = 0; j < size_angular_velocity; ++j)
+        for (unsigned j = 0; j < axial_dim<dim>; ++j)
           angular_velocity.get_current_solution().block(j).local_element(i) +=
             time_step * angular_acceleration.get_current_solution().block(j).local_element(i);
       }
@@ -100,4 +179,7 @@ namespace MeltPoolDG
         angular_acceleration.update_ghost_values();
       }
   }
+
+
+
 } // namespace MeltPoolDG

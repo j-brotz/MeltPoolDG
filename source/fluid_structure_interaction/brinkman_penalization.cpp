@@ -44,11 +44,11 @@ auto
 MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::compute_torque(
   const dealii::Tensor<1, dim, VectorizedArrayType> &force,
   const dealii::Tensor<1, dim, VectorizedArrayType> &distance_to_center_of_gravity) const
-  -> dealii::Tensor<1, torque_size, VectorizedArrayType>
+  -> dealii::Tensor<1, axial_dim<dim>, VectorizedArrayType>
 {
   if constexpr (dim == 2)
     {
-      dealii::Tensor<1, torque_size, VectorizedArrayType> torque;
+      dealii::Tensor<1, axial_dim<dim>, VectorizedArrayType> torque;
       torque[0] =
         -distance_to_center_of_gravity[0] * force[1] + distance_to_center_of_gravity[1] * force[0];
       return torque;
@@ -56,7 +56,7 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::compute_torque(
   if constexpr (dim == 3)
     return -dealii::cross_product_3d(distance_to_center_of_gravity, force);
 
-  return dealii::Tensor<1, torque_size, VectorizedArrayType>();
+  return dealii::Tensor<1, axial_dim<dim>, VectorizedArrayType>();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -130,15 +130,15 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
     {
       dealii::Tensor<1, dim, number> local_force =
         ObstacleType::get_force(global_particle_properties, src_handle);
-      dealii::Tensor<1, torque_size, number> local_torque =
+      dealii::Tensor<1, axial_dim<dim>, number> local_torque =
         ObstacleType::get_torque(global_particle_properties, src_handle);
 
       dealii::Tensor<1, dim, number>         new_force;
-      dealii::Tensor<1, torque_size, number> new_torque;
+      dealii::Tensor<1, axial_dim<dim>, number> new_torque;
 
       for (int i = 0; i < dim; ++i)
         MPI_Allreduce(&local_force[i], &new_force[i], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-      for (unsigned i = 0; i < torque_size; ++i)
+      for (unsigned i = 0; i < axial_dim<dim>; ++i)
         MPI_Allreduce(&local_torque[i], &new_torque[i], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
       ObstacleType::set_force(new_force, global_particle_properties, src_handle);

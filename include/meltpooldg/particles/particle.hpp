@@ -12,7 +12,9 @@
 
 #include <deal.II/particles/particle.h>
 #include <deal.II/particles/particle_accessor.h>
+#include <deal.II/particles/property_pool.h>
 
+#include <meltpooldg/particles/dem_util.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <string>
@@ -33,18 +35,15 @@ namespace MeltPoolDG
   class SphericalParticle
   {
   public:
-    // Number of components of the angular velocity: one in 2D, three in 3D.
-    static constexpr unsigned int size_angular_velocity = dim - 3 % dim;
-
     // Total number of scalar properties associated with each obstacle particle.
     // Breakdown:
-    // - 2 * size_angular_velocity: angular velocity and angular acceleration
+    // - 2 * axial_dim<dim>: angular velocity and angular acceleration
     // - 2 * dim: velocity and acceleration
     // - dim: (directional) force acting on the particle
-    // - size_angular_velocity: torque acting on the particle
+    // - axial_dim<dim>: torque acting on the particle
     // - 5: radius, volume, density, mass, moment of inertia, particle id
     static constexpr unsigned int n_obstacle_properties =
-      2 * size_angular_velocity + 2 * dim + dim + size_angular_velocity + 6;
+      2 * axial_dim<dim> + 2 * dim + dim + axial_dim<dim> + 6;
 
     /**
      * @brief Enum to define the index of each property in the particle's property vector.
@@ -54,10 +53,10 @@ namespace MeltPoolDG
       velocity             = 0,
       acceleration         = dim,
       angular_velocity     = acceleration + dim,
-      angular_acceleration = angular_velocity + size_angular_velocity,
-      force                = angular_acceleration + size_angular_velocity,
+      angular_acceleration = angular_velocity + axial_dim<dim>,
+      force                = angular_acceleration + axial_dim<dim>,
       torque               = force + dim,
-      radius               = torque + size_angular_velocity,
+      radius               = torque + axial_dim<dim>,
       volume,
       density,
       mass,
@@ -165,6 +164,11 @@ namespace MeltPoolDG
                                 dealii::Particles::PropertyPool<dim>          &property_pool,
                                 const typename dealii::Particles::PropertyPool<dim>::Handle handle);
 
+    template <typename VectorizedArrayType>
+    static dealii::Tensor<1, dim, VectorizedArrayType>
+    vector_to_center_of_gravity(const dealii::Point<dim, VectorizedArrayType> &loc,
+                                dealii::Particles::ParticleAccessor<dim>      &particle_accessor);
+
     /**
      * This function returns a vector from the given point, towards the nearest point on the
      * particles surface.
@@ -184,14 +188,14 @@ namespace MeltPoolDG
      * @param particle The particle of interest.
      * @return A dealii::Tensor representing the torque vector acting on the particle.
      */
-    static dealii::Tensor<1, size_angular_velocity, number>
+    static dealii::Tensor<1, axial_dim<dim>, number>
     get_torque(const dealii::Particles::ParticleAccessor<dim> &particle);
 
     /**
      * As above but operates on a property pool with a specified handle to identify where to get
      * torque from.
      */
-    static dealii::Tensor<1, size_angular_velocity, number>
+    static dealii::Tensor<1, axial_dim<dim>, number>
     get_torque(dealii::Particles::PropertyPool<dim>                 &property_pool,
                typename dealii::Particles::PropertyPool<dim>::Handle handle);
 
@@ -203,17 +207,17 @@ namespace MeltPoolDG
      * @param particle The particle to which the torque will be applied.
      */
     static void
-    set_torque(const dealii::Tensor<1, size_angular_velocity, number> &torque,
-               dealii::Particles::ParticleAccessor<dim>               &particle);
+    set_torque(const dealii::Tensor<1, axial_dim<dim>, number> &torque,
+               dealii::Particles::ParticleAccessor<dim>        &particle);
 
     /**
      * As above but operates on a property pool with a specified handle to identify where to set
      * the corresponding torque.
      */
     static void
-    set_torque(const dealii::Tensor<1, size_angular_velocity, number> &torque,
-               dealii::Particles::PropertyPool<dim>                   &property_pool,
-               typename dealii::Particles::PropertyPool<dim>::Handle   handle);
+    set_torque(const dealii::Tensor<1, axial_dim<dim>, number>      &torque,
+               dealii::Particles::PropertyPool<dim>                 &property_pool,
+               typename dealii::Particles::PropertyPool<dim>::Handle handle);
 
     /**
      * @brief Accumulates the specified torque vector to the particle by adding its components into the
@@ -223,17 +227,17 @@ namespace MeltPoolDG
      * @param particle The particle to which the torque will be applied.
      */
     static void
-    accumulate_torque(const dealii::Tensor<1, size_angular_velocity, number> &torque,
-                      dealii::Particles::ParticleAccessor<dim>               &particle);
+    accumulate_torque(const dealii::Tensor<1, axial_dim<dim>, number> &torque,
+                      dealii::Particles::ParticleAccessor<dim>        &particle);
 
     /**
      * As above but operates on a property pool with a specified handle to identify where to add the
      * torque to.
      */
     static void
-    accumulate_torque(const dealii::Tensor<1, size_angular_velocity, number> &torque,
-                      dealii::Particles::PropertyPool<dim>                   &property_pool,
-                      typename dealii::Particles::PropertyPool<dim>::Handle   handle);
+    accumulate_torque(const dealii::Tensor<1, axial_dim<dim>, number>      &torque,
+                      dealii::Particles::PropertyPool<dim>                 &property_pool,
+                      typename dealii::Particles::PropertyPool<dim>::Handle handle);
 
     /**
      * @brief Returns the force vector acting on the given particle.
@@ -321,7 +325,7 @@ namespace MeltPoolDG
      */
     template <typename VectorizedArrayType>
     static dealii::Tensor<1, dim, VectorizedArrayType>
-    get_velocity(dealii::Particles::PropertyPool<dim>                 &property_pool,
+    get_velocity(const dealii::Particles::PropertyPool<dim>           &property_pool,
                  typename dealii::Particles::PropertyPool<dim>::Handle handle);
 
     /**
@@ -371,7 +375,7 @@ namespace MeltPoolDG
      */
     template <typename VectorizedArrayType>
     static dealii::Tensor<1, dim, VectorizedArrayType>
-    get_velocity(dealii::Particles::PropertyPool<dim>                 &property_pool,
+    get_velocity(const dealii::Particles::PropertyPool<dim>           &property_pool,
                  typename dealii::Particles::PropertyPool<dim>::Handle handle,
                  const dealii::Point<dim, VectorizedArrayType>        &location);
 
@@ -425,7 +429,7 @@ namespace MeltPoolDG
      * @param particle The particle whose angular velocity is to be returned.
      * @return A tensor representing the angular velocity of the particle.
      */
-    static dealii::Tensor<1, size_angular_velocity, number>
+    static dealii::Tensor<1, axial_dim<dim>, number>
     get_angular_velocity(const dealii::Particles::ParticleAccessor<dim> &particle);
 
 
@@ -436,8 +440,8 @@ namespace MeltPoolDG
      * @param handle The handle identifying the specific particle within the property pool.
      * @return A tensor representing the angular velocity of the specified particle.
      */
-    static dealii::Tensor<1, size_angular_velocity, number>
-    get_angular_velocity(dealii::Particles::PropertyPool<dim>                 &property_pool,
+    static dealii::Tensor<1, axial_dim<dim>, number>
+    get_angular_velocity(const dealii::Particles::PropertyPool<dim>           &property_pool,
                          typename dealii::Particles::PropertyPool<dim>::Handle handle);
 
     /**
@@ -446,7 +450,7 @@ namespace MeltPoolDG
      * @param particle The particle whose angular acceleration is to be returned.
      * @return A tensor representing the angular acceleration of the particle.
      */
-    static dealii::Tensor<1, size_angular_velocity, number>
+    static dealii::Tensor<1, axial_dim<dim>, number>
     get_angular_acceleration(const dealii::Particles::ParticleAccessor<dim> &particle);
 
     /**
@@ -456,8 +460,8 @@ namespace MeltPoolDG
      * @param acceleration The angular acceleration vector to assign to the particle.
      */
     static void
-    set_angular_acceleration(dealii::Particles::ParticleAccessor<dim>               &particle,
-                             const dealii::Tensor<1, size_angular_velocity, number> &acceleration);
+    set_angular_acceleration(dealii::Particles::ParticleAccessor<dim>        &particle,
+                             const dealii::Tensor<1, axial_dim<dim>, number> &acceleration);
 
     /**
      * @brief Provides access to a specific single-valued property of a given particle.
@@ -494,7 +498,7 @@ namespace MeltPoolDG
      * @p get_angular_velocity(). The same applies to translational and angular acceleration.
      */
     static number
-    get_property(dealii::Particles::PropertyPool<dim>                 &property_pool,
+    get_property(const dealii::Particles::PropertyPool<dim>           &property_pool,
                  typename dealii::Particles::PropertyPool<dim>::Handle handle,
                  const Properties                                      property);
 
@@ -622,25 +626,31 @@ MeltPoolDG::SphericalParticle<dim, number>::get_property(
 template <int dim, typename number>
 number
 MeltPoolDG::SphericalParticle<dim, number>::get_property(
-  dealii::Particles::PropertyPool<dim>                 &property_pool,
+  const dealii::Particles::PropertyPool<dim>           &property_pool,
   typename dealii::Particles::PropertyPool<dim>::Handle handle,
   const Properties                                      property)
 {
   Assert(property >= Properties::radius,
          dealii::ExcMessage(
            "For access of particle velocities use the specific velocity getters!"));
-  return property_pool.get_properties(handle)[property];
+
+  // we use a const cast here as the property pool does not provide a const call to
+  // get_properties(). As we do not modify any properties here and only return a copy of the desired
+  // property this can be safely done here.
+  dealii::ArrayView<const number> properties =
+    const_cast<dealii::Particles::PropertyPool<dim> &>(property_pool).get_properties(handle);
+  return properties[property];
 }
 
 template <int dim, typename number>
 auto
 MeltPoolDG::SphericalParticle<dim, number>::get_angular_velocity(
   const dealii::Particles::ParticleAccessor<dim> &particle)
-  -> dealii::Tensor<1, size_angular_velocity, number>
+  -> dealii::Tensor<1, axial_dim<dim>, number>
 {
-  dealii::ArrayView<const number>                  properties = particle.get_properties();
-  dealii::Tensor<1, size_angular_velocity, number> angular_velocity;
-  for (unsigned int dimension = 0; dimension < size_angular_velocity; ++dimension)
+  dealii::ArrayView<const number>           properties = particle.get_properties();
+  dealii::Tensor<1, axial_dim<dim>, number> angular_velocity;
+  for (unsigned int dimension = 0; dimension < axial_dim<dim>; ++dimension)
     angular_velocity[dimension] = properties[Properties::angular_velocity + dimension];
   return angular_velocity;
 }
@@ -648,13 +658,17 @@ MeltPoolDG::SphericalParticle<dim, number>::get_angular_velocity(
 template <int dim, typename number>
 auto
 MeltPoolDG::SphericalParticle<dim, number>::get_angular_velocity(
-  dealii::Particles::PropertyPool<dim>                 &property_pool,
+  const dealii::Particles::PropertyPool<dim>           &property_pool,
   typename dealii::Particles::PropertyPool<dim>::Handle handle)
-  -> dealii::Tensor<1, size_angular_velocity, number>
+  -> dealii::Tensor<1, axial_dim<dim>, number>
 {
-  dealii::ArrayView<const number> properties = property_pool.get_properties(handle);
-  dealii::Tensor<1, size_angular_velocity, number> angular_velocity;
-  for (unsigned int dimension = 0; dimension < size_angular_velocity; ++dimension)
+  // we use a const cast here as the property pool does not provide a const call to
+  // get_properties(). As we do not modify any properties here and only return a copy of the desired
+  // property this can be safely done here.
+  dealii::ArrayView<const number> properties =
+    const_cast<dealii::Particles::PropertyPool<dim> &>(property_pool).get_properties(handle);
+  dealii::Tensor<1, axial_dim<dim>, number> angular_velocity;
+  for (unsigned int dimension = 0; dimension < axial_dim<dim>; ++dimension)
     angular_velocity[dimension] = properties[Properties::angular_velocity + dimension];
   return angular_velocity;
 }
@@ -663,11 +677,11 @@ template <int dim, typename number>
 auto
 MeltPoolDG::SphericalParticle<dim, number>::get_angular_acceleration(
   const dealii::Particles::ParticleAccessor<dim> &particle)
-  -> dealii::Tensor<1, size_angular_velocity, number>
+  -> dealii::Tensor<1, axial_dim<dim>, number>
 {
-  dealii::ArrayView<const number>                  properties = particle.get_properties();
-  dealii::Tensor<1, size_angular_velocity, number> angular_acceleration;
-  for (int dimension = 0; dimension < size_angular_velocity; ++dimension)
+  dealii::ArrayView<const number>           properties = particle.get_properties();
+  dealii::Tensor<1, axial_dim<dim>, number> angular_acceleration;
+  for (int dimension = 0; dimension < axial_dim<dim>; ++dimension)
     angular_acceleration[dimension] = properties[Properties::angular_acceleration + dimension];
   return angular_acceleration;
 }
@@ -675,11 +689,11 @@ MeltPoolDG::SphericalParticle<dim, number>::get_angular_acceleration(
 template <int dim, typename number>
 void
 MeltPoolDG::SphericalParticle<dim, number>::set_angular_acceleration(
-  dealii::Particles::ParticleAccessor<dim>               &particle,
-  const dealii::Tensor<1, size_angular_velocity, number> &angular_acceleration)
+  dealii::Particles::ParticleAccessor<dim>        &particle,
+  const dealii::Tensor<1, axial_dim<dim>, number> &angular_acceleration)
 {
   dealii::ArrayView<number> properties = particle.get_properties();
-  for (unsigned dimension = 0; dimension < size_angular_velocity; ++dimension)
+  for (unsigned dimension = 0; dimension < axial_dim<dim>; ++dimension)
     properties[Properties::angular_acceleration + dimension] = angular_acceleration[dimension];
 }
 
@@ -710,11 +724,11 @@ template <int dim, typename number>
 auto
 MeltPoolDG::SphericalParticle<dim, number>::get_torque(
   const dealii::Particles::ParticleAccessor<dim> &particle)
-  -> dealii::Tensor<1, size_angular_velocity, number>
+  -> dealii::Tensor<1, axial_dim<dim>, number>
 {
-  dealii::ArrayView<const number>                  properties = particle.get_properties();
-  dealii::Tensor<1, size_angular_velocity, number> torque;
-  for (unsigned i = 0; i < size_angular_velocity; ++i)
+  dealii::ArrayView<const number>           properties = particle.get_properties();
+  dealii::Tensor<1, axial_dim<dim>, number> torque;
+  for (unsigned i = 0; i < axial_dim<dim>; ++i)
     torque[i] = properties[Properties::torque + i];
   return torque;
 }
@@ -724,11 +738,11 @@ auto
 MeltPoolDG::SphericalParticle<dim, number>::get_torque(
   dealii::Particles::PropertyPool<dim>                 &property_pool,
   typename dealii::Particles::PropertyPool<dim>::Handle handle)
-  -> dealii::Tensor<1, size_angular_velocity, number>
+  -> dealii::Tensor<1, axial_dim<dim>, number>
 {
-  dealii::ArrayView<const number> properties = property_pool.get_properties(handle);
-  dealii::Tensor<1, size_angular_velocity, number> torque;
-  for (unsigned i = 0; i < size_angular_velocity; ++i)
+  dealii::ArrayView<const number>           properties = property_pool.get_properties(handle);
+  dealii::Tensor<1, axial_dim<dim>, number> torque;
+  for (unsigned i = 0; i < axial_dim<dim>; ++i)
     torque[i] = properties[Properties::torque + i];
   return torque;
 }
@@ -736,34 +750,34 @@ MeltPoolDG::SphericalParticle<dim, number>::get_torque(
 template <int dim, typename number>
 void
 MeltPoolDG::SphericalParticle<dim, number>::set_torque(
-  const dealii::Tensor<1, size_angular_velocity, number> &torque,
-  dealii::Particles::ParticleAccessor<dim>               &particle)
+  const dealii::Tensor<1, axial_dim<dim>, number> &torque,
+  dealii::Particles::ParticleAccessor<dim>        &particle)
 {
   dealii::ArrayView<number> properties = particle.get_properties();
-  for (unsigned i = 0; i < size_angular_velocity; ++i)
+  for (unsigned i = 0; i < axial_dim<dim>; ++i)
     properties[Properties::torque + i] = torque[i];
 }
 
 template <int dim, typename number>
 void
 MeltPoolDG::SphericalParticle<dim, number>::set_torque(
-  const dealii::Tensor<1, size_angular_velocity, number> &torque,
-  dealii::Particles::PropertyPool<dim>                   &property_pool,
-  typename dealii::Particles::PropertyPool<dim>::Handle   handle)
+  const dealii::Tensor<1, axial_dim<dim>, number>      &torque,
+  dealii::Particles::PropertyPool<dim>                 &property_pool,
+  typename dealii::Particles::PropertyPool<dim>::Handle handle)
 {
   dealii::ArrayView<number> properties = property_pool.get_properties(handle);
-  for (unsigned i = 0; i < size_angular_velocity; ++i)
+  for (unsigned i = 0; i < axial_dim<dim>; ++i)
     properties[Properties::torque + i] = torque[i];
 }
 
 template <int dim, typename number>
 void
 MeltPoolDG::SphericalParticle<dim, number>::accumulate_torque(
-  const dealii::Tensor<1, size_angular_velocity, number> &torque,
-  dealii::Particles::ParticleAccessor<dim>               &particle)
+  const dealii::Tensor<1, axial_dim<dim>, number> &torque,
+  dealii::Particles::ParticleAccessor<dim>        &particle)
 {
   dealii::ArrayView<number> properties = particle.get_properties();
-  for (unsigned i = 0; i < size_angular_velocity; ++i)
+  for (unsigned i = 0; i < axial_dim<dim>; ++i)
     properties[Properties::torque + i] += torque[i];
 }
 
@@ -771,12 +785,12 @@ MeltPoolDG::SphericalParticle<dim, number>::accumulate_torque(
 template <int dim, typename number>
 void
 MeltPoolDG::SphericalParticle<dim, number>::accumulate_torque(
-  const dealii::Tensor<1, size_angular_velocity, number> &torque,
-  dealii::Particles::PropertyPool<dim>                   &property_pool,
-  typename dealii::Particles::PropertyPool<dim>::Handle   handle)
+  const dealii::Tensor<1, axial_dim<dim>, number>      &torque,
+  dealii::Particles::PropertyPool<dim>                 &property_pool,
+  typename dealii::Particles::PropertyPool<dim>::Handle handle)
 {
   dealii::ArrayView<number> properties = property_pool.get_properties(handle);
-  for (unsigned i = 0; i < size_angular_velocity; ++i)
+  for (unsigned i = 0; i < axial_dim<dim>; ++i)
     properties[Properties::torque + i] += torque[i];
 }
 
@@ -879,10 +893,14 @@ template <int dim, typename number>
 template <typename VectorizedArrayType>
 dealii::Tensor<1, dim, VectorizedArrayType>
 MeltPoolDG::SphericalParticle<dim, number>::get_velocity(
-  dealii::Particles::PropertyPool<dim>                 &property_pool,
+  const dealii::Particles::PropertyPool<dim>           &property_pool,
   typename dealii::Particles::PropertyPool<dim>::Handle handle)
 {
-  const dealii::ArrayView<const number> properties = property_pool.get_properties(handle);
+  // we use a const cast here as the property pool does not provide a const call to
+  // get_properties(). As we do not modify any properties here and only return a copy of the desired
+  // property this can be safely done here.
+  dealii::ArrayView<const number> properties =
+    const_cast<dealii::Particles::PropertyPool<dim> &>(property_pool).get_properties(handle);
   dealii::Tensor<1, dim, number>        velocity;
   for (int dimension = 0; dimension < dim; ++dimension)
     velocity[dimension] = properties[Properties::velocity + dimension];
@@ -921,7 +939,7 @@ template <int dim, typename number>
 template <typename VectorizedArrayType>
 dealii::Tensor<1, dim, VectorizedArrayType>
 MeltPoolDG::SphericalParticle<dim, number>::get_velocity(
-  dealii::Particles::PropertyPool<dim>                 &property_pool,
+  const dealii::Particles::PropertyPool<dim>           &property_pool,
   typename dealii::Particles::PropertyPool<dim>::Handle handle,
   const dealii::Point<dim, VectorizedArrayType>        &location)
 {

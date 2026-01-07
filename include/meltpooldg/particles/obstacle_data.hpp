@@ -14,6 +14,9 @@ namespace MeltPoolDG
     /// Path to the input file containing the initial obstacle state.
     std::string obstacle_state_input_file;
 
+    /// Gravity constant
+    number gravity_constant = 9.81;
+
     struct
     {
       /// If true and AMR is enabled, regions around obstacles are adaptively refined according to
@@ -40,6 +43,7 @@ namespace MeltPoolDG
         prm.add_parameter("obstacle state input file",
                           obstacle_state_input_file,
                           "File in which the obstacle initial state data is stored.");
+        prm.add_parameter("gravity constant", gravity_constant);
         prm.enter_subsection("amr");
         {
           prm.add_parameter(
