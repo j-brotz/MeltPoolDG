@@ -4,6 +4,10 @@
 
 #include <deal.II/distributed/grid_refinement.h>
 
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/grid/tria.h>
+
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <deal.II/numerics/solution_transfer.h>
@@ -15,14 +19,14 @@ namespace MeltPoolDG::AMR
 {
   template <int dim, typename VectorType, typename number>
   void
-  refine_grid(const MarkCellsForRefinementType<dim>                 &mark_cells_for_refinement,
-              const AttachDoFHandlerAndVectorsType<dim, VectorType> &attach_vectors,
-              const std::function<void()>                           &setup_dof_system,
-              const AdaptiveMeshingData<number>                     &amr,
-              dealii::Triangulation<dim>                            &tria,
-              const int                                              n_time_step,
-              const std::function<void()>                           &post,
-              const std::function<void()>                           &pre)
+  refine_grid(const MarkCellsForRefinementType<dim>       &mark_cells_for_refinement,
+              const DoFHandlerAndVectors<dim, VectorType> &attach_vectors,
+              const std::function<void()>                 &setup_dof_system,
+              const AdaptiveMeshingData<number>           &amr,
+              dealii::Triangulation<dim>                  &tria,
+              const int                                    n_time_step,
+              const std::function<void()>                 &post,
+              const std::function<void()>                 &pre)
   {
     if (not now(amr, n_time_step))
       return;
@@ -32,7 +36,7 @@ namespace MeltPoolDG::AMR
 
     internal::limit_amr(tria, amr);
 
-    if (not attach_vectors)
+    if (attach_vectors.empty())
       {
         // short circuit this function
         if (pre)
@@ -48,12 +52,7 @@ namespace MeltPoolDG::AMR
     // the following is very similar to the code in
     // CutUtil::SolutionTransferOperator::transfer_solution_constant_dofs()
 
-    DoFHandlerAndVectorDataType<dim, VectorType> data;
-
-    attach_vectors(data);
-    data.shrink_to_fit();
-
-    const unsigned int n_dof_handlers = data.size();
+    const unsigned int n_dof_handlers = attach_vectors.size();
 
     Assert(n_dof_handlers > 0, dealii::ExcNotImplemented());
 
@@ -73,7 +72,14 @@ namespace MeltPoolDG::AMR
     for (unsigned int j = 0; j < n_dof_handlers; ++j)
       {
         // collect pointers to the DoF vectors for the current DoFHandler
-        data[j].second(new_grid_solutions[j]);
+        for (VectorType *vec : attach_vectors[j].second)
+          {
+            Assert(
+              vec,
+              dealii::ExcMessage(
+                "A nullptr has been detected in a function which is not able to handle this nullptr."));
+            new_grid_solutions[j].push_back(vec);
+          }
 
         old_grid_solutions[j].resize(new_grid_solutions[j].size());
         update_ghost_values[j].resize(new_grid_solutions[j].size(), true);
@@ -88,7 +94,7 @@ namespace MeltPoolDG::AMR
           }
 
         solution_transfers[j] =
-          std::make_unique<dealii::SolutionTransfer<dim, VectorType>>(*data[j].first);
+          std::make_unique<dealii::SolutionTransfer<dim, VectorType>>(*attach_vectors[j].first);
         solution_transfers[j]->prepare_for_coarsening_and_refinement(old_grid_solutions[j]);
       }
 
@@ -117,26 +123,24 @@ namespace MeltPoolDG::AMR
 
   template <int dim, typename VectorType, typename number>
   void
-  refine_grid(const MarkCellsForRefinementType<dim>                  &mark_cells_for_refinement,
-              const std::function<void(std::vector<VectorType *> &)> &attach_vectors,
-              const std::function<void()>                            &setup_dof_system,
-              const AdaptiveMeshingData<number>                      &amr,
-              dealii::DoFHandler<dim>                                &dof_handler,
-              const int                                               n_time_step,
-              const std::function<void()>                            &post,
-              const std::function<void()>                            &pre)
+  refine_grid(const MarkCellsForRefinementType<dim> &mark_cells_for_refinement,
+              dealii::Triangulation<dim>            &tria,
+              dealii::DoFHandler<dim>               &dof_handler,
+              const std::vector<VectorType *>       &dof_vectors,
+              const std::function<void()>           &setup_dof_system,
+              const AdaptiveMeshingData<number>     &amr,
+              const int                              n_time_step,
+              const std::function<void()>           &post,
+              const std::function<void()>           &pre)
   {
-    refine_grid<dim, VectorType>(
-      mark_cells_for_refinement,
-      [&](DoFHandlerAndVectorDataType<dim, VectorType> &data) {
-        data.emplace_back(&dof_handler, attach_vectors);
-      },
-      setup_dof_system,
-      amr,
-      const_cast<dealii::Triangulation<dim> &>(dof_handler.get_triangulation()),
-      n_time_step,
-      post,
-      pre);
+    refine_grid<dim, VectorType>(mark_cells_for_refinement,
+                                 {{&dof_handler, dof_vectors}},
+                                 setup_dof_system,
+                                 amr,
+                                 tria,
+                                 n_time_step,
+                                 post,
+                                 pre);
   }
 
   template <int dim, typename number>
@@ -179,71 +183,65 @@ namespace MeltPoolDG::AMR
   }
 
   template void
-  refine_grid(
-    const MarkCellsForRefinementType<1> &,
-    const AttachDoFHandlerAndVectorsType<1, dealii::LinearAlgebra::distributed::Vector<double>> &,
-    const std::function<void()> &,
-    const AdaptiveMeshingData<double> &,
-    dealii::Triangulation<1> &,
-    const int,
-    const std::function<void()> &,
-    const std::function<void()> &);
+  refine_grid(const MarkCellsForRefinementType<1> &,
+              const DoFHandlerAndVectors<1, dealii::LinearAlgebra::distributed::Vector<double>> &,
+              const std::function<void()> &,
+              const AdaptiveMeshingData<double> &,
+              dealii::Triangulation<1> &,
+              const int,
+              const std::function<void()> &,
+              const std::function<void()> &);
   template void
-  refine_grid(
-    const MarkCellsForRefinementType<2> &,
-    const AttachDoFHandlerAndVectorsType<2, dealii::LinearAlgebra::distributed::Vector<double>> &,
-    const std::function<void()> &,
-    const AdaptiveMeshingData<double> &,
-    dealii::Triangulation<2> &,
-    const int,
-    const std::function<void()> &,
-    const std::function<void()> &);
+  refine_grid(const MarkCellsForRefinementType<2> &,
+              const DoFHandlerAndVectors<2, dealii::LinearAlgebra::distributed::Vector<double>> &,
+              const std::function<void()> &,
+              const AdaptiveMeshingData<double> &,
+              dealii::Triangulation<2> &,
+              const int,
+              const std::function<void()> &,
+              const std::function<void()> &);
   template void
-  refine_grid(
-    const MarkCellsForRefinementType<3> &,
-    const AttachDoFHandlerAndVectorsType<3, dealii::LinearAlgebra::distributed::Vector<double>> &,
-    const std::function<void()> &,
-    const AdaptiveMeshingData<double> &,
-    dealii::Triangulation<3> &,
-    const int,
-    const std::function<void()> &,
-    const std::function<void()> &);
+  refine_grid(const MarkCellsForRefinementType<3> &,
+              const DoFHandlerAndVectors<3, dealii::LinearAlgebra::distributed::Vector<double>> &,
+              const std::function<void()> &,
+              const AdaptiveMeshingData<double> &,
+              dealii::Triangulation<3> &,
+              const int,
+              const std::function<void()> &,
+              const std::function<void()> &);
 
 
 
   template void
-  refine_grid(
-    const MarkCellsForRefinementType<1> &,
-    const std::function<void(std::vector<dealii::LinearAlgebra::distributed::Vector<double> *> &)>
-      &,
-    const std::function<void()> &,
-    const AdaptiveMeshingData<double> &,
-    dealii::DoFHandler<1> &,
-    const int,
-    const std::function<void()> &,
-    const std::function<void()> &);
+  refine_grid(const MarkCellsForRefinementType<1> &,
+              dealii::Triangulation<1> &,
+              dealii::DoFHandler<1> &,
+              const std::vector<dealii::LinearAlgebra::distributed::Vector<double> *> &,
+              const std::function<void()> &,
+              const AdaptiveMeshingData<double> &,
+              const int,
+              const std::function<void()> &,
+              const std::function<void()> &);
   template void
-  refine_grid(
-    const MarkCellsForRefinementType<2> &,
-    const std::function<void(std::vector<dealii::LinearAlgebra::distributed::Vector<double> *> &)>
-      &,
-    const std::function<void()> &,
-    const AdaptiveMeshingData<double> &,
-    dealii::DoFHandler<2> &,
-    const int,
-    const std::function<void()> &,
-    const std::function<void()> &);
+  refine_grid(const MarkCellsForRefinementType<2> &,
+              dealii::Triangulation<2> &,
+              dealii::DoFHandler<2> &,
+              const std::vector<dealii::LinearAlgebra::distributed::Vector<double> *> &,
+              const std::function<void()> &,
+              const AdaptiveMeshingData<double> &,
+              const int,
+              const std::function<void()> &,
+              const std::function<void()> &);
   template void
-  refine_grid(
-    const MarkCellsForRefinementType<3> &,
-    const std::function<void(std::vector<dealii::LinearAlgebra::distributed::Vector<double> *> &)>
-      &,
-    const std::function<void()> &,
-    const AdaptiveMeshingData<double> &,
-    dealii::DoFHandler<3> &,
-    const int,
-    const std::function<void()> &,
-    const std::function<void()> &);
+  refine_grid(const MarkCellsForRefinementType<3> &,
+              dealii::Triangulation<3> &,
+              dealii::DoFHandler<3> &,
+              const std::vector<dealii::LinearAlgebra::distributed::Vector<double> *> &,
+              const std::function<void()> &,
+              const AdaptiveMeshingData<double> &,
+              const int,
+              const std::function<void()> &,
+              const std::function<void()> &);
 
   template bool
   mark_fixed_number(dealii::Triangulation<1>          &tria,

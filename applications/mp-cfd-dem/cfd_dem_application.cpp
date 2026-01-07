@@ -417,11 +417,11 @@ namespace MeltPoolDG
         return do_amr;
       };
 
-    const std::function<void(DoFHandlerAndVectorDataType<dim, VectorType> &)> attach_vectors =
-      [&](DoFHandlerAndVectorDataType<dim, VectorType> &in) {
-        std::visit([&in](auto &operation) { operation.attach_for_coarsening_and_refinement(in); },
-                   flow_operation_variant);
-      };
+    const DoFHandlerAndVectors<dim, VectorType> dof_handlers_and_vectors_to_refine = std::visit(
+      [](auto &operation) -> DoFHandlerAndVectors<dim, VectorType> {
+        return operation.attach_for_coarsening_and_refinement();
+      },
+      flow_operation_variant);
 
 
     std::function<void()> pre = [&] {
@@ -455,7 +455,7 @@ namespace MeltPoolDG
     };
 
     AMR::refine_grid(mark_cells_for_refinement,
-                     attach_vectors,
+                     dof_handlers_and_vectors_to_refine,
                      setup_dofs,
                      this->simulation_case->parameters.amr,
                      *simulation_case->triangulation,
@@ -468,6 +468,7 @@ namespace MeltPoolDG
   void
   CfdDemApplication<dim, number>::load_state_from_restart_file()
   {
+    /*
     Journal::print_line(scratch_data->get_pcout(1), "Loading state from restart file.");
 
     const std::string load_prefix = this->simulation_case->parameters.restart.prefix + "_" +
@@ -490,12 +491,14 @@ namespace MeltPoolDG
     std::function<void()> post = [&]() { obstacle_field->deserialize(); };
 
     Restart::deserialize_internal(attach_vectors, post, setup_dof_system, load_prefix);
+    */
   }
 
   template <int dim, typename number>
   void
   CfdDemApplication<dim, number>::save_state_to_restart_file()
   {
+    /*
     Journal::print_line(scratch_data->get_pcout(1), "Saving state to restart file.");
 
     restart_monitor->prepare_save();
@@ -516,6 +519,7 @@ namespace MeltPoolDG
     const std::string save_prefix = this->simulation_case->parameters.restart.prefix + "_0";
 
     Restart::serialize_internal(attach_vectors, save_prefix);
+    */
   }
 
   template class CfdDemApplication<2, double>;

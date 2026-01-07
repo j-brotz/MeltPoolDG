@@ -2,6 +2,7 @@
 #include <deal.II/lac/la_parallel_block_vector.h>
 
 #include <meltpooldg/core/periodic_boundary_conditions.hpp>
+#include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/level_set/advection_diffusion_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 

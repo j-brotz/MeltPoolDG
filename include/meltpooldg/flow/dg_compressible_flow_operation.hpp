@@ -215,16 +215,18 @@ namespace MeltPoolDG::Flow
     VectorType &
     get_solution_in_primitive_variables();
 
-    void
-    attach_for_coarsening_and_refinement(
-      DoFHandlerAndVectorDataType<dim, dealii::LinearAlgebra::distributed::Vector<number>> &in)
+    DoFHandlerAndVectors<dim, VectorType>
+    attach_for_coarsening_and_refinement()
     {
-      in.emplace_back(&flow_scratch_data.scratch_data.get_dof_handler(flow_scratch_data.dof_idx),
-                      [&](
-                        std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vec_in) {
-                        for (auto &sol : flow_scratch_data.solution_history.get_all_solutions())
-                          vec_in.push_back(&sol);
-                      });
+      std::vector<VectorType *> solutions;
+      solutions.reserve(flow_scratch_data.solution_history.size());
+      for (auto &sol : flow_scratch_data.solution_history.get_all_solutions())
+          solutions.push_back(&sol);
+        
+      DoFHandlerAndVectors<dim, VectorType> vec;
+      vec.emplace_back(&flow_scratch_data.scratch_data.get_dof_handler(flow_scratch_data.dof_idx),
+                       solutions);
+      return vec;
     }
 
     /**

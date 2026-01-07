@@ -8,6 +8,10 @@
 
 namespace MeltPoolDG
 {
+  template <int dim, typename VectorType>
+  using DoFHandlerAndVectors =
+    std::vector<std::pair<const dealii::DoFHandler<dim> *, std::vector<VectorType *>>>;
+
   /**
    * Type alias definitions that are used to collect pointers to DoFHandlers and their respective
    * DoF-Vectors.

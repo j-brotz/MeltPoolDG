@@ -158,25 +158,22 @@ namespace MeltPoolDG::Flow
     execute_coarsening_and_refinement();
 
 
-    void
-    attach_for_coarsening_and_refinement(
-      DoFHandlerAndVectorDataType<dim, dealii::LinearAlgebra::distributed::Vector<number>> &in)
+    DoFHandlerAndVectors<dim, dealii::LinearAlgebra::distributed::Vector<number>>
+    attach_for_coarsening_and_refinement()
     {
-      in.emplace_back(&scratch_data->get_dof_handler(dof_index_u),
-                      [&](
-                        std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vec_in) {
-                        vec_in.push_back(&navier_stokes->solution.block(0));
-                        vec_in.push_back(&navier_stokes->solution_old.block(0));
-                        vec_in.push_back(&navier_stokes->solution_old_old.block(0));
-                      });
+      DoFHandlerAndVectors<dim, dealii::LinearAlgebra::distributed::Vector<number>> vec;
+      vec.emplace_back(&scratch_data->get_dof_handler(dof_index_u),
+                       std::vector<dealii::LinearAlgebra::distributed::Vector<number> *>{
+                         &navier_stokes->solution.block(0),
+                         &navier_stokes->solution_old.block(0),
+                         &navier_stokes->solution_old_old.block(0)});
 
-      in.emplace_back(&scratch_data->get_dof_handler(dof_index_p),
-                      [&](
-                        std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vec_in) {
-                        vec_in.push_back(&navier_stokes->solution.block(1));
-                        vec_in.push_back(&navier_stokes->solution_old.block(1));
-                        vec_in.push_back(&navier_stokes->solution_old_old.block(1));
-                      });
+      vec.emplace_back(&scratch_data->get_dof_handler(dof_index_p),
+                       std::vector<dealii::LinearAlgebra::distributed::Vector<number> *>{
+                         &navier_stokes->solution.block(1),
+                         &navier_stokes->solution_old.block(1),
+                         &navier_stokes->solution_old_old.block(1)});
+      return vec;
     }
 
     /**
@@ -232,7 +229,7 @@ namespace MeltPoolDG::Flow
       for (const auto &[boundary_id, pressure_function] : boundary_conditions)
         navier_stokes->set_open_boundary_with_normal_flux(boundary_id,
                                                           std::move(pressure_function));
-                                                          
+
       // open boundary (requires pressure)
       boundary_conditions =
         simulation_case->get_boundary_condition("open_boundary", operation_name);
