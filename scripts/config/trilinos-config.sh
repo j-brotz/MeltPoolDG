@@ -16,6 +16,7 @@ cmake                                            \
     -DTrilinos_ENABLE_COMPLEX_DOUBLE=OFF             \
     -DTrilinos_ENABLE_COMPLEX_FLOAT=OFF              \
     -DTrilinos_ENABLE_Zoltan=ON                      \
+    -DTrilinos_ENABLE_Gtest=OFF                      \
     -DTrilinos_VERBOSE_CONFIGURE=OFF                 \
     -DTpetra_INST_FLOAT=OFF                          \
     -DTpetra_INST_COMPLEX_FLOAT=OFF                  \

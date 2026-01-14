@@ -32,7 +32,7 @@ function(setup_application)
 
         deal_ii_setup_target(${exec})
 
-        # Link additional libraries (libName is assumed to be defined elsewhere)
-        target_link_libraries(${exec} ${libName})
+        # Link additional libraries (meltpooldg_lib is assumed to be defined elsewhere)
+        target_link_libraries(${exec} ${meltpooldg_lib})
     endforeach (source_file ${SOURCE_FILES})
 endfunction()
