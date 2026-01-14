@@ -64,6 +64,12 @@ FixNamespaceComments: true
 
 IncludeBlocks: Regroup
 IncludeCategories:
+# gtest and gmock must be before deal.II to avoid problems with Assert 
+# macros (defined by both gtest and deal.II):
+  - Regex: "gtest/gtest.h"
+    Priority: -3
+  - Regex: "gmock/gmock.h"
+    Priority: -2
 # config.h must always be first:
   - Regex:    "deal.II/base/config.h"
     Priority: -1
