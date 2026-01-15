@@ -133,6 +133,7 @@ namespace
         EXPECT_EQ(expected_particle_ids, computed_particle_id);
       }
   }
+  
 
   TEST_F(ObstacleDataStructureFixture, GetParticlesInCellSingleDistributedParticleOnCellEdge)
   {

@@ -216,6 +216,9 @@ namespace MeltPoolDG
      * @param cell The cell of interest.
      *
      * @return Vector containing the handles of the newly registered obstacles in @p dst.
+     *
+     * @note While this function technically does the same as @p get_obstacles_in_cell_batch(), it
+     * is significantly slower. Therefore whenever possible, prefer using the batch version.
      */
     std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
     get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
@@ -286,5 +289,17 @@ namespace MeltPoolDG
      */
     void
     deregister_property_pool() const;
+
+    /**
+     * Checks if the particle with the given handle is relevant for the specified cell. If yes, it will be added to @p properties_global_obstacles.
+
+     * @return True if the particle is in the cell, false otherwise.
+     */
+    bool
+    process_particle_in_cell(
+      const typename dealii::Particles::PropertyPool<dim>::Handle        &src_handle,
+      const dealii::CellAccessor<dim>                                    &cell,
+      dealii::Particles::PropertyPool<dim>                               &dst,
+      std::vector<typename dealii::Particles::PropertyPool<dim>::Handle> &target_handles) const;
   };
 } // namespace MeltPoolDG

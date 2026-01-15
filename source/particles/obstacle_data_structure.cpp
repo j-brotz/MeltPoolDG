@@ -101,6 +101,32 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::reinit()
 }
 
 template <int dim, typename number, typename ObstacleType>
+bool
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::process_particle_in_cell(
+  const typename dealii::Particles::PropertyPool<dim>::Handle        &src_handle,
+  const dealii::CellAccessor<dim>                                    &cell,
+  dealii::Particles::PropertyPool<dim>                               &dst,
+  std::vector<typename dealii::Particles::PropertyPool<dim>::Handle> &target_handles) const
+{
+  if (ObstacleType::is_in_cell(properties_global_obstacles, src_handle, cell))
+    {
+      auto dst_handle = dst.register_particle();
+      target_handles.emplace_back(dst_handle);
+      dst.set_location(dst_handle, properties_global_obstacles.get_location(src_handle));
+      auto dst_properties = dst.get_properties(dst_handle);
+      auto src_properties = properties_global_obstacles.get_properties(src_handle);
+
+      for (unsigned int n_property = 0; n_property < ObstacleType::n_obstacle_properties;
+           ++n_property)
+        {
+          dst_properties[n_property] = src_properties[n_property];
+        }
+      return true;
+    }
+  return false;
+}
+
+template <int dim, typename number, typename ObstacleType>
 std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::get_obstacles_in_cell(
   dealii::Particles::PropertyPool<dim> &dst,
@@ -110,20 +136,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::get_obstacl
   for (unsigned int src_handle = 0; src_handle < properties_global_obstacles.n_registered_slots();
        ++src_handle)
     {
-      if (ObstacleType::is_in_cell(properties_global_obstacles, src_handle, cell))
-        {
-          auto dst_handle = dst.register_particle();
-          handles.emplace_back(dst_handle);
-          dst.set_location(dst_handle, properties_global_obstacles.get_location(src_handle));
-          auto dst_properties = dst.get_properties(dst_handle);
-          auto src_properties = properties_global_obstacles.get_properties(src_handle);
-
-          for (unsigned int n_property = 0; n_property < ObstacleType::n_obstacle_properties;
-               ++n_property)
-            {
-              dst_properties[n_property] = src_properties[n_property];
-            }
-        }
+      process_particle_in_cell(src_handle, cell, dst, handles);
     }
   return handles;
 }
@@ -143,21 +156,11 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::get_obstacl
            batch_lane < matrix_free.n_active_entries_per_cell_batch(cell_batch_id);
            ++batch_lane)
         {
-          if (ObstacleType::is_in_cell(properties_global_obstacles,
-                                       src_handle,
-                                       *matrix_free.get_cell_iterator(cell_batch_id, batch_lane)))
+          if (process_particle_in_cell(src_handle,
+                                       *matrix_free.get_cell_iterator(cell_batch_id, batch_lane),
+                                       dst,
+                                       handles))
             {
-              auto dst_handle = dst.register_particle();
-              handles.emplace_back(dst_handle);
-              dst.set_location(dst_handle, properties_global_obstacles.get_location(src_handle));
-              auto dst_properties = dst.get_properties(dst_handle);
-              auto src_properties = properties_global_obstacles.get_properties(src_handle);
-
-              for (unsigned int n_property = 0; n_property < ObstacleType::n_obstacle_properties;
-                   ++n_property)
-                {
-                  dst_properties[n_property] = src_properties[n_property];
-                }
               break;
             }
         }
