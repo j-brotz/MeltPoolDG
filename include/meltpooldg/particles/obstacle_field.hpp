@@ -55,11 +55,11 @@ namespace MeltPoolDG
      * @param obstacle_locations Vector of obstacle center locations.
      * @param obstacle_properties Vector of obstacle properties corresponding to each location.
      */
-    ObstacleField(const ObstacleData<number>              &data,
-                  const dealii::Triangulation<dim>        &triangulation,
-                  const dealii::Mapping<dim>              &mapping,
-                  std::vector<dealii::Point<dim, number>> &obstacle_locations,
-                  std::vector<std::vector<number>>        &obstacle_properties);
+    ObstacleField(const ObstacleData<number>                   &data,
+                  const dealii::Triangulation<dim>             &triangulation,
+                  const dealii::Mapping<dim>                   &mapping,
+                  const std::vector<dealii::Point<dim, number>> &obstacle_locations,
+                  const std::vector<std::vector<number>>       &obstacle_properties);
 
     /**
      * @brief Advances the state of all obstacles in time by a single time step.
@@ -215,6 +215,23 @@ namespace MeltPoolDG
       return obstacle_data_structure;
     }
 
+    /**
+     * @brief Insert obstacles into the particle handler based on provided locations and properties.
+     *
+     * This function takes a set of obstacle locations and their corresponding properties, and
+     * inserts them into the internal particle handler. It ensures that the obstacles are properly
+     * initialized and ready for simulation.
+     *
+     * @param triangulation The triangulation on which the obstacles are placed.
+     * @param obstacle_locations A vector of points representing the locations of the obstacles.
+     * @param obstacle_properties A vector of vectors, where each inner vector contains the
+     * properties associated with the corresponding obstacle location.
+     */
+    void
+    insert_obstacles(const dealii::Triangulation<dim>              &triangulation,
+                     const std::vector<dealii::Point<dim, number>> &obstacle_locations,
+                     const std::vector<std::vector<number>>        &obstacle_properties);
+
   private:
     /**
      * @brief Reads the obstacle state input file and returns obstacle locations and properties.
@@ -229,23 +246,6 @@ namespace MeltPoolDG
      */
     std::pair<std::vector<dealii::Point<dim, number>>, std::vector<std::vector<number>>>
     read_obstacle_state_input_file();
-
-    /**
-     * @brief Insert obstacles into the particle handler based on provided locations and properties.
-     *
-     * This function takes a set of obstacle locations and their corresponding properties, and
-     * inserts them into the internal particle handler. It ensures that the obstacles are properly
-     * initialized and ready for simulation.
-     *
-     * @param triangulation The triangulation on which the obstacles are placed.
-     * @param obstacle_locations A vector of points representing the locations of the obstacles.
-     * @param obstacle_properties A vector of vectors, where each inner vector contains the
-     * properties associated with the corresponding obstacle location.
-     */
-    void
-    insert_obstacles(const dealii::Triangulation<dim>        &triangulation,
-                     std::vector<dealii::Point<dim, number>> &obstacle_locations,
-                     std::vector<std::vector<number>>        &obstacle_properties);
 
     /// Struct holding configuration data for obstacles.
     const ObstacleData<number> &data;

@@ -37,11 +37,11 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
 
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
-  const ObstacleData<number>              &data,
-  const dealii::Triangulation<dim>        &triangulation,
-  const dealii::Mapping<dim>              &mapping,
-  std::vector<dealii::Point<dim, number>> &obstacle_locations,
-  std::vector<std::vector<number>>        &obstacle_properties)
+  const ObstacleData<number>                    &data,
+  const dealii::Triangulation<dim>              &triangulation,
+  const dealii::Mapping<dim>                    &mapping,
+  const std::vector<dealii::Point<dim, number>> &obstacle_locations,
+  const std::vector<std::vector<number>>        &obstacle_properties)
   : data(data)
   , obstacle_handler(triangulation, mapping, ObstacleType::n_obstacle_properties)
   , obstacle_handler_vector_views(
@@ -243,9 +243,9 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::read_obstacle_state_input_
 template <int dim, typename number, typename ObstacleType>
 void
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::insert_obstacles(
-  const dealii::Triangulation<dim>        &triangulation,
-  std::vector<dealii::Point<dim, number>> &obstacle_locations,
-  std::vector<std::vector<number>>        &obstacle_properties)
+  const dealii::Triangulation<dim>              &triangulation,
+  const std::vector<dealii::Point<dim, number>> &obstacle_locations,
+  const std::vector<std::vector<number>>        &obstacle_properties)
 {
   std::vector<dealii::BoundingBox<dim>> local_bounding_box =
     dealii::GridTools::compute_mesh_predicate_bounding_box(

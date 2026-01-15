@@ -26,6 +26,7 @@ function(mpdg_setup_serial_unit_tests)
         string(REPLACE ".cpp" "" test_target ${test_name})
 
         add_executable(${test_target} ${test_src})
+        target_include_directories(${test_target} PRIVATE ${CMAKE_SOURCE_DIR}/unit_tests/test_utils)
         target_link_libraries(${test_target} GTest::gtest_main GTest::gmock)
         deal_ii_setup_target(${test_target})
         target_link_libraries(${test_target} ${meltpooldg_lib})
