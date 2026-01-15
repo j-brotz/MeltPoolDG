@@ -9,6 +9,21 @@
 namespace MeltPoolDG
 {
   /**
+   * Spatial dimension of an axial quantity in a dim-dimensional space. This can be used, for
+   * example, as the size of torque, angular velocity, or other axial/pseudo-vector quantities.
+   *
+   * @note dim = 1 is allowed for compatibility or generic code, although from a physical
+   * perspective it does not make sense.
+   */
+  template <int dim>
+  inline constexpr int axial_dim = [] {
+    if constexpr (dim == 3)
+      return 3;
+    else
+      return 1;
+  }();
+
+  /**
    * @brief A vector-like view into a specific property of all particles managed by a
    * dealii::Particles::ParticleHandler.
    *
