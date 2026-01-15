@@ -123,7 +123,6 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::get_obstacl
             {
               dst_properties[n_property] = src_properties[n_property];
             }
-          break;
         }
     }
   return handles;
