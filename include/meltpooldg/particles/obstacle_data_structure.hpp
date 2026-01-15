@@ -270,6 +270,12 @@ namespace MeltPoolDG
       return properties_global_obstacles;
     }
 
+    dealii::Particles::PropertyPool<dim> &
+    get_global_particle_properties()
+    {
+      return properties_global_obstacles;
+    }
+
   private:
     /// Handler managing the locally owned obstacles in the domain.
     const dealii::Particles::ParticleHandler<dim> &obstacle_handler;

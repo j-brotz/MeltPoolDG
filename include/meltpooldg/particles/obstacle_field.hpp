@@ -1,10 +1,12 @@
 #pragma once
 
 #include <deal.II/base/conditional_ostream.h>
+#include <deal.II/base/iterator_range.h>
 
 #include <deal.II/fe/mapping.h>
 
 #include <deal.II/grid/tria.h>
+#include <deal.II/grid/tria_accessor.h>
 
 #include <deal.II/particles/particle_accessor.h>
 #include <deal.II/particles/particle_handler.h>
@@ -14,8 +16,11 @@
 #include <meltpooldg/particles/obstacle_data.hpp>
 #include <meltpooldg/particles/obstacle_data_structure.hpp>
 #include <meltpooldg/particles/obstacle_forces.hpp>
+#include <meltpooldg/particles/particle_accessor.hpp>
+#include <meltpooldg/particles/particle_iterator.hpp>
 #include <meltpooldg/utilities/amr_regions.hpp>
 
+#include <ranges>
 #include <vector>
 
 namespace MeltPoolDG
@@ -215,21 +220,6 @@ namespace MeltPoolDG
       return obstacle_data_structure;
     }
 
-  private:
-    /**
-     * @brief Reads the obstacle state input file and returns obstacle locations and properties.
-     *
-     * This function reads the obstacle data file specified in the configuration and generates
-     * obstacle representations accordingly. The resulting vectors for the obstacle properties and
-     * locations are returned. It populates the internal particle handler with the parsed obstacle
-     * positions and properties, preparing the obstacle field for use in subsequent computations.
-     *
-     * @return A pair consisting of a vector of obstacle locations and a vector of  corresponding
-     * properties.
-     */
-    std::pair<std::vector<dealii::Point<dim, number>>, std::vector<std::vector<number>>>
-    read_obstacle_state_input_file();
-
     /**
      * @brief Insert obstacles into the particle handler based on provided locations and properties.
      *
@@ -246,6 +236,38 @@ namespace MeltPoolDG
     insert_obstacles(const dealii::Triangulation<dim>        &triangulation,
                      std::vector<dealii::Point<dim, number>> &obstacle_locations,
                      std::vector<std::vector<number>>        &obstacle_properties);
+
+    /**
+     * Returns a subrange for iterating over particles that are owned locally.
+     *
+     * @return An iterable subrange representing the local particles.
+     */
+    std::ranges::subrange<ParticleIterator<dim, number>>
+    locally_owned_particle_range();
+
+    /**
+     * Returns a range over all global obstacle particles for iterating over all particles in the
+     * global particle data structure.
+     *
+     * @return An iterable subrange representing all global particles.
+     */
+    std::ranges::subrange<ParticleIterator<dim, number>>
+    global_particle_range();
+
+  private:
+    /**
+     * @brief Reads the obstacle state input file and returns obstacle locations and properties.
+     *
+     * This function reads the obstacle data file specified in the configuration and generates
+     * obstacle representations accordingly. The resulting vectors for the obstacle properties and
+     * locations are returned. It populates the internal particle handler with the parsed obstacle
+     * positions and properties, preparing the obstacle field for use in subsequent computations.
+     *
+     * @return A pair consisting of a vector of obstacle locations and a vector of  corresponding
+     * properties.
+     */
+    std::pair<std::vector<dealii::Point<dim, number>>, std::vector<std::vector<number>>>
+    read_obstacle_state_input_file();
 
     /// Struct holding configuration data for obstacles.
     const ObstacleData<number> &data;
