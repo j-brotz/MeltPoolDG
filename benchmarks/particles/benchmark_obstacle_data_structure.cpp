@@ -10,13 +10,11 @@
 
 #include <meltpooldg/particles/obstacle_data.hpp>
 #include <meltpooldg/particles/obstacle_data_structure.hpp>
-#include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
 
 #include <benchmark/benchmark.h>
 #include <benchmark_util.hpp>
 
-#include <iterator>
 #include <memory>
 #include <random>
 #include <vector>
@@ -93,12 +91,11 @@ namespace
                                                        min_particle_radius,
                                                        max_particle_radius);
 
-        obstacle_field = std::make_unique<MeltPoolDG::ObstacleField<dim, double, ObstacleType>>(
-          obstacle_data, tria, mapping, particle_locations, particle_properties);
-
         obstacle_data_structure =
           std::make_unique<MeltPoolDG::ObstacleCompleteDomainSearch<dim, double, ObstacleType>>(
-            obstacle_field->get_particle_handler());
+            tria, mapping);
+
+        obstacle_data_structure->insert_obstacles(tria, particle_locations, particle_properties);
 
         obstacle_data_structure->reinit();
       }
@@ -106,8 +103,7 @@ namespace
       dealii::parallel::distributed::Triangulation<dim> tria;
       dealii::MappingQ<dim>                             mapping;
 
-      MeltPoolDG::ObstacleData<double>                                      obstacle_data;
-      std::unique_ptr<MeltPoolDG::ObstacleField<dim, double, ObstacleType>> obstacle_field;
+      MeltPoolDG::ObstacleData<double> obstacle_data;
       std::unique_ptr<MeltPoolDG::ObstacleCompleteDomainSearch<dim, double, ObstacleType>>
         obstacle_data_structure;
     };
@@ -142,7 +138,7 @@ namespace
         for (const auto &cell : locally_owned_active_cells)
           {
             benchmark::DoNotOptimize(data->obstacle_data_structure->get_obstacles_in_cell(
-              data->obstacle_field->get_particle_handler().get_property_pool(), *cell));
+              data->obstacle_data_structure->get_particle_handler().get_property_pool(), *cell));
           }
       }
   }
@@ -165,7 +161,7 @@ namespace
              ++cell_batch_id)
           {
             benchmark::DoNotOptimize(data->obstacle_data_structure->get_obstacles_in_cell_batch(
-              data->obstacle_field->get_particle_handler().get_property_pool(),
+              data->obstacle_data_structure->get_particle_handler().get_property_pool(),
               matrix_free,
               cell_batch_id));
           }

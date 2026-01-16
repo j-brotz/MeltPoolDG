@@ -79,8 +79,9 @@ MeltPoolDG::ObstacleDataStructure<dim, number>::get_obstacles_in_cell_batch(
 
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::ObstacleCompleteDomainSearch(
-  const dealii::Particles::ParticleHandler<dim> &obstacle_handler)
-  : obstacle_handler(obstacle_handler)
+  const dealii::Triangulation<dim> &triangulation,
+  const dealii::Mapping<dim>       &mapping)
+  : obstacle_handler(triangulation, mapping, ObstacleType::n_obstacle_properties)
   , properties_global_obstacles(ObstacleType::n_obstacle_properties)
 {}
 

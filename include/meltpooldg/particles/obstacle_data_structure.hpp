@@ -1,6 +1,8 @@
 #pragma once
 
 #include <deal.II/base/array_view.h>
+#include <deal.II/grid/filtered_iterator.h>
+#include <deal.II/grid/grid_tools.h>
 
 #include <deal.II/matrix_free/matrix_free.h>
 
@@ -37,7 +39,7 @@ namespace MeltPoolDG
   {
   public:
     /**
-     * Constructor. Store the passed oobstacle data structure internally.
+     * Constructor. Store the passed obstacle data structure internally.
      *
      * @param obstacle_data_structure Concrete obstacle data structure used in the class.
      */
@@ -178,8 +180,8 @@ namespace MeltPoolDG
   struct ObstacleCompleteDomainSearch
   {
   public:
-    explicit ObstacleCompleteDomainSearch(
-      const dealii::Particles::ParticleHandler<dim> &obstacle_handler);
+    ObstacleCompleteDomainSearch(const dealii::Triangulation<dim> &triangulation,
+                                 const dealii::Mapping<dim>       &mapping);
 
     /**
      * @brief Destructor. Explicitly deregisters all particles from the global obstacle property
@@ -198,6 +200,30 @@ namespace MeltPoolDG
      */
     void
     reinit();
+
+    dealii::Particles::ParticleIterator<dim>
+    begin() const
+    {
+      return obstacle_handler.begin();
+    }
+
+    dealii::Particles::ParticleIterator<dim>
+    end() const
+    {
+      return obstacle_handler.end();
+    }
+
+    dealii::Particles::ParticleIterator<dim>
+    begin()
+    {
+      return obstacle_handler.begin();
+    }
+
+    dealii::Particles::ParticleIterator<dim>
+    end()
+    {
+      return obstacle_handler.end();
+    }
 
     /**
      * @brief Identify obstacles that partially or fully occupy the specified cell, and store their
@@ -273,9 +299,88 @@ namespace MeltPoolDG
       return properties_global_obstacles;
     }
 
+    /**
+     * @brief Serializes the internal state of the class.
+     *
+     * This function forwards the call to dealii::ParticleHandler::serialize(). See the
+     * documentation of that function for further details.
+     *
+     * @param ar       The archive used for serialization or deserialization.
+     * @param version  The serialization version.
+     */
+    template <class Archive>
+    void
+    serialize(Archive &ar, const unsigned int version)
+    {
+      obstacle_handler.serialize(ar, version);
+    }
+
+    /**
+     * @brief Prepares this object for serialization.
+     *
+     * This function forwards the call to dealii::ParticleHandler::prepare_for_serialization(). See
+     * the documentation of that function for further details.
+     */
+    void
+    prepare_for_serialization()
+    {
+      obstacle_handler.prepare_for_serialization();
+    }
+
+    /**
+     * @brief Performs the objects deserialization.
+     *
+     * This function forwards the call to dealii::ParticleHandler::deserialize(). See the
+     * documentation of that function for further details.
+     */
+    void
+    deserialize()
+    {
+      // Assumes that triangulation.load() has already been called!
+      obstacle_handler.deserialize();
+    }
+
+    /**
+     * @brief Return a reference to the underlying particle handler of this object.
+     *
+     * @return The used particle handler of the current object.
+     */
+    dealii::Particles::ParticleHandler<dim> &
+    get_particle_handler()
+    {
+      return obstacle_handler;
+    }
+
+    const dealii::Particles::ParticleHandler<dim> &
+    get_particle_handler() const
+    {
+      return obstacle_handler;
+    }
+
+    void
+    insert_obstacles(const dealii::Triangulation<dim>              &triangulation,
+                     const std::vector<dealii::Point<dim, number>> &obstacle_locations,
+                     const std::vector<std::vector<number>>        &obstacle_properties)
+    {
+      std::vector<dealii::BoundingBox<dim>> local_bounding_box =
+        dealii::GridTools::compute_mesh_predicate_bounding_box(
+          triangulation, dealii::IteratorFilters::LocallyOwnedCell());
+      std::vector<std::vector<dealii::BoundingBox<dim>>> global_bounding_box =
+        dealii::Utilities::MPI::all_gather(mpi_communicator, local_bounding_box);
+
+      obstacle_handler.insert_global_particles(
+        dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 ?
+          obstacle_locations :
+          std::vector<dealii::Point<dim, number>>{},
+        global_bounding_box,
+        dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 ?
+          obstacle_properties :
+          std::vector<std::vector<number>>{});
+    }
+
   private:
-    /// Handler managing the locally owned obstacles in the domain.
-    const dealii::Particles::ParticleHandler<dim> &obstacle_handler;
+    /// Handler responsible for managing obstacle particles within the computational domain.
+    dealii::Particles::ParticleHandler<dim> obstacle_handler;
 
     /// Property pool containing the properties of all global obstacles, stored locally on each
     /// MPI rank.

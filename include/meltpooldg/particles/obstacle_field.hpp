@@ -55,11 +55,11 @@ namespace MeltPoolDG
      * @param obstacle_locations Vector of obstacle center locations.
      * @param obstacle_properties Vector of obstacle properties corresponding to each location.
      */
-    ObstacleField(const ObstacleData<number>                   &data,
-                  const dealii::Triangulation<dim>             &triangulation,
-                  const dealii::Mapping<dim>                   &mapping,
+    ObstacleField(const ObstacleData<number>                    &data,
+                  const dealii::Triangulation<dim>              &triangulation,
+                  const dealii::Mapping<dim>                    &mapping,
                   const std::vector<dealii::Point<dim, number>> &obstacle_locations,
-                  const std::vector<std::vector<number>>       &obstacle_properties);
+                  const std::vector<std::vector<number>>        &obstacle_properties);
 
     /**
      * @brief Advances the state of all obstacles in time by a single time step.
@@ -201,7 +201,7 @@ namespace MeltPoolDG
     dealii::Particles::ParticleHandler<dim> &
     get_particle_handler()
     {
-      return obstacle_handler;
+      return obstacle_data_structure.get_particle_handler();
     }
 
     /**
@@ -250,19 +250,16 @@ namespace MeltPoolDG
     /// Struct holding configuration data for obstacles.
     const ObstacleData<number> &data;
 
+    /// Obstacle search utility for locating relevant obstacles within a given cell or batch.
+    /// TODO: Extend to support nearest-neighbor searches and other spatial queries.
+    ObstacleCompleteDomainSearch<dim, number, ObstacleType> obstacle_data_structure;
+
     /// Vector of load objects representing all loads acting on the obstacles.
     std::vector<ObstacleLoad<dim, number, ObstacleType>> loads;
-
-    /// Handler responsible for managing obstacle particles within the computational domain.
-    dealii::Particles::ParticleHandler<dim> obstacle_handler;
 
     /// Vector views into the particle handler for easy access to obstacle properties during
     /// time integration.
     DemTimeIntegratorVectorViews<dim, number, ObstacleType> obstacle_handler_vector_views;
-
-    /// Obstacle search utility for locating relevant obstacles within a given cell or batch.
-    /// TODO: Extend to support nearest-neighbor searches and other spatial queries.
-    ObstacleCompleteDomainSearch<dim, number, ObstacleType> obstacle_data_structure;
 
     /// MPI communicator used for parallel operations on the obstacle field.
     MPI_Comm mpi_communicator;
@@ -273,6 +270,6 @@ namespace MeltPoolDG
   void
   ObstacleField<dim, number, ObstacleType>::serialize(Archive &ar, const unsigned int version)
   {
-    obstacle_handler.serialize(ar, version);
+    obstacle_data_structure.serialize(ar, version);
   }
 } // namespace MeltPoolDG

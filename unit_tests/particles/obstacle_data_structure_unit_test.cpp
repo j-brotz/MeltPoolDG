@@ -21,7 +21,6 @@
 
 #include <meltpooldg/particles/obstacle_data.hpp>
 #include <meltpooldg/particles/obstacle_data_structure.hpp>
-#include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/obstacle_forces.hpp>
 #include <meltpooldg/particles/particle.hpp>
 
@@ -53,15 +52,10 @@ namespace
       , mapping(1)
     {
       create_parallel_triangulation_with_specific_partitioning();
-      obstacle_field = std::make_unique<MeltPoolDG::ObstacleField<dim, double, ObstacleType>>(
-        obstacle_data,
-        triangulation,
-        mapping,
-        std::vector<dealii::Point<dim, double>>{},
-        std::vector<std::vector<double>>{});
+
       obstacle_data_structure =
         std::make_unique<MeltPoolDG::ObstacleCompleteDomainSearch<dim, double, ObstacleType>>(
-          obstacle_field->get_particle_handler());
+          triangulation, mapping);
     }
 
     void
@@ -70,7 +64,7 @@ namespace
       std::vector<double> properties(ObstacleType::n_obstacle_properties, 0);
       properties[ObstacleType::Properties::radius]      = spec.radius;
       properties[ObstacleType::Properties::particle_id] = spec.id;
-      obstacle_field->insert_obstacles(triangulation,
+      obstacle_data_structure->insert_obstacles(triangulation,
                                        std::vector<dealii::Point<dim, double>>{spec.location},
                                        std::vector<std::vector<double>>{properties});
     }
@@ -83,7 +77,7 @@ namespace
       ids.reserve(handles.size());
       for (const auto &h : handles)
         ids.push_back(static_cast<int>(
-          ObstacleType::get_property(obstacle_field->get_particle_handler().get_property_pool(),
+          ObstacleType::get_property(obstacle_data_structure->get_particle_handler().get_property_pool(),
                                      h,
                                      ObstacleType::Properties::particle_id)));
 
@@ -93,7 +87,6 @@ namespace
     dealii::parallel::distributed::Triangulation<dim>                     triangulation;
     dealii::MappingQ<dim>                                                 mapping;
     MeltPoolDG::ObstacleData<double>                                      obstacle_data;
-    std::unique_ptr<MeltPoolDG::ObstacleField<dim, double, ObstacleType>> obstacle_field;
     std::unique_ptr<MeltPoolDG::ObstacleCompleteDomainSearch<dim, double, ObstacleType>>
       obstacle_data_structure;
 
@@ -123,7 +116,7 @@ namespace
 
         std::vector<typename dealii::Particles::PropertyPool<dim>::Handle> relevant_particles =
           obstacle_data_structure->get_obstacles_in_cell(
-            obstacle_field->get_particle_handler().get_property_pool(),
+            obstacle_data_structure->get_particle_handler().get_property_pool(),
             *triangulation.create_cell_iterator(cell_id_to_test));
 
         std::vector<int> expected_particle_ids{0};
@@ -133,7 +126,7 @@ namespace
         EXPECT_EQ(expected_particle_ids, computed_particle_id);
       }
   }
-  
+
 
   TEST_F(ObstacleDataStructureFixture, GetParticlesInCellSingleDistributedParticleOnCellEdge)
   {
@@ -150,7 +143,7 @@ namespace
 
         std::vector<typename dealii::Particles::PropertyPool<dim>::Handle> relevant_particles =
           obstacle_data_structure->get_obstacles_in_cell(
-            obstacle_field->get_particle_handler().get_property_pool(),
+            obstacle_data_structure->get_particle_handler().get_property_pool(),
             *triangulation.create_cell_iterator(cell_id_to_test));
 
         std::vector<int> expected_particle_ids{0};
@@ -178,7 +171,7 @@ namespace
 
         std::vector<typename dealii::Particles::PropertyPool<dim>::Handle> relevant_particles =
           obstacle_data_structure->get_obstacles_in_cell(
-            obstacle_field->get_particle_handler().get_property_pool(),
+            obstacle_data_structure->get_particle_handler().get_property_pool(),
             *triangulation.create_cell_iterator(cell_id_to_test));
 
         std::vector<int> expected_particle_ids{0, 1};
@@ -257,9 +250,7 @@ namespace
 #else
     constexpr unsigned cell_batch_of_interest = 1;
     std::vector<int>   expected_particle_ids{0};
-    check_for_expected_cells_in_batch(cell_batch_of_interest,
-                                      {dealii::CellId("0_2:01")},
-                                      0);
+    check_for_expected_cells_in_batch(cell_batch_of_interest, {dealii::CellId("0_2:01")}, 0);
 #endif
 
     insert_particle({.location = {0.1875, 0.1875}, .radius = 0.1875, .id = 0});
@@ -273,7 +264,7 @@ namespace
       {
         std::vector<typename dealii::Particles::PropertyPool<dim>::Handle> relevant_particles =
           obstacle_data_structure->get_obstacles_in_cell_batch(
-            obstacle_field->get_particle_handler().get_property_pool(),
+            obstacle_data_structure->get_particle_handler().get_property_pool(),
             matrix_free,
             cell_batch_of_interest);
 
