@@ -105,38 +105,23 @@ file(GLOB_RECURSE sources
         "${CMAKE_SOURCE_DIR}/simulations/*.cpp")
 
 
-set(libName "meltpooldg")
+set(meltpooldg_lib "meltpooldg")
 
-add_library(${libName} ${sources})
+add_library(${meltpooldg_lib} ${sources})
 
 if (ADAFLO)
-    target_compile_definitions(${libName} PUBLIC MELT_POOL_DG_WITH_ADAFLO)
-    target_include_directories(${libName} PUBLIC ${ADAFLO_INCLUDE})
-    target_link_libraries(${libName} ${ADAFLO})
+    target_compile_definitions(${meltpooldg_lib} PUBLIC MELT_POOL_DG_WITH_ADAFLO)
+    target_include_directories(${meltpooldg_lib} PUBLIC ${ADAFLO_INCLUDE})
+    target_link_libraries(${meltpooldg_lib} ${ADAFLO})
 endif ()
 
-TARGET_COMPILE_DEFINITIONS(${libName} PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+TARGET_COMPILE_DEFINITIONS(${meltpooldg_lib} PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
-deal_ii_setup_target(${libName})
+deal_ii_setup_target(${meltpooldg_lib})
 
 if (${DEAL_II_VERSION_MAJOR} GREATER_EQUAL 10)
     message("-- Enabling early deprecation via #define PUBLIC DEAL_II_DEPRECATED_EARLY=[[deprecated]]")
-    add_compile_definitions(${libName} PUBLIC DEAL_II_DEPRECATED_EARLY=[[deprecated]])
-endif ()
-
-# ##############################################################################
-# unit tests of the library
-# ##############################################################################
-option(MPDG_ENABLE_TESTING "Configure tests" ON)
-
-if (MPDG_ENABLE_TESTING)
-    message(STATUS "Tests: enabled")
-    set(DEAL_II_HAVE_TESTS_DIRECTORY ON)
-    set(_n_tests "0")
-    enable_testing()
-    add_subdirectory(unit_tests)
-else ()
-    message(STATUS "Tests: disabled")
+    add_compile_definitions(${meltpooldg_lib} PUBLIC DEAL_II_DEPRECATED_EARLY=[[deprecated]])
 endif ()
 
 # ##############################################################################
@@ -160,6 +145,31 @@ if (MPDG_EANBLE_BENCHMARKING)
 else ()
     message(STATUS "Benchmarks: disabled")
 endif ()
+
+# ##############################################################################
+# unit tests of the library
+# ##############################################################################
+option(MPDG_ENABLE_TESTING "Configure tests" ON)
+
+if (MPDG_ENABLE_TESTING)
+    message(STATUS "Tests: enabled")
+
+    fetchcontent_declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.17.0
+    )
+    fetchcontent_makeavailable(googletest)
+    include(GoogleTest)
+
+    set(DEAL_II_HAVE_TESTS_DIRECTORY ON)
+    set(_n_tests "0")
+    enable_testing()
+    add_subdirectory(unit_tests)
+else ()
+    message(STATUS "Tests: disabled")
+endif ()
+
 
 # ##############################################################################
 # Applications
@@ -222,7 +232,7 @@ else ()
     message(STATUS "Application: radiative-transport disabled")
     set(MELT_POOL_DG_WITH_RTE FALSE)
 endif ()
-target_compile_definitions(${libName} PUBLIC MELT_POOL_DG_WITH_RTE)
+target_compile_definitions(${meltpooldg_lib} PUBLIC MELT_POOL_DG_WITH_RTE)
 
 if (MPDG_ENABLE_REINIT)
     message(STATUS "Application: reinitialization enabled")
