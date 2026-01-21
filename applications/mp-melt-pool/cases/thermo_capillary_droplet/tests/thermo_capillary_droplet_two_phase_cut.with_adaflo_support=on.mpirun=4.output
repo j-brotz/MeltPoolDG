@@ -19,8 +19,9 @@
 | || normal_0 ||L2 = 3.23651647568e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.23651647568e+00                                               normal_vector |
 | || curvature ||L2 = 4.52795362473e+00                                                  curvature |
+| Number of new DoFs:              12                                        cut solution transfer |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
-| || velocity ||L2 = 3.714329696794105e-06                                    navier_stokes_adaflo |
+| || velocity ||L2 = 3.714334755872478e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.328107984259570e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 2.0000e-03 to 4.0000e-03 ( dt = 2.0000e-03 )          time_iterator |
@@ -30,16 +31,16 @@
 |  τ = 0.00018                                                                    reinitialization |
 | || normal_0 ||L2 = 2.8707303948e+00                                         normal_vector_adaflo |
 | || normal_1 ||L2 = 2.8707312267e+00                                         normal_vector_adaflo |
-| || delta phi ||L2 = 2.2274885245e-06                                     reinitialization_adaflo |
+| || delta phi ||L2 = 2.2274885351e-06                                     reinitialization_adaflo |
 |  τ = 0.00036                                                                    reinitialization |
-| || delta phi ||L2 = 2.0195170566e-06                                     reinitialization_adaflo |
+| || delta phi ||L2 = 2.0195170217e-06                                     reinitialization_adaflo |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.23972887112e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.23972982404e+00                                               normal_vector |
 | || curvature ||L2 = 4.52977174674e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
-| || velocity ||L2 = 6.561176082356155e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.328002682767128e-02                                    navier_stokes_adaflo |
+| || velocity ||L2 = 6.561182335102390e-06                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.328002660034288e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 4.0000e-03 to 6.0000e-03 ( dt = 2.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -48,16 +49,16 @@
 |  τ = 0.00018                                                                    reinitialization |
 | || normal_0 ||L2 = 2.8731246417e+00                                         normal_vector_adaflo |
 | || normal_1 ||L2 = 2.8731331348e+00                                         normal_vector_adaflo |
-| || delta phi ||L2 = 1.9461065558e-06                                     reinitialization_adaflo |
+| || delta phi ||L2 = 1.9461067367e-06                                     reinitialization_adaflo |
 |  τ = 0.00036                                                                    reinitialization |
-| || delta phi ||L2 = 1.7818528240e-06                                     reinitialization_adaflo |
+| || delta phi ||L2 = 1.7818529424e-06                                     reinitialization_adaflo |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.24253461162e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.24254267173e+00                                               normal_vector |
+| || normal_0 ||L2 = 3.24253467135e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.24254261206e+00                                               normal_vector |
 | || curvature ||L2 = 4.53049393862e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
-| || velocity ||L2 = 8.659790871287824e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.327883663445419e-02                                    navier_stokes_adaflo |
+| || velocity ||L2 = 8.659797010150106e-06                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.327883640673740e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 6.0000e-03 to 8.0000e-03 ( dt = 2.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -66,15 +67,15 @@
 |  τ = 0.00018                                                                    reinitialization |
 | || normal_0 ||L2 = 2.8751884301e+00                                         normal_vector_adaflo |
 | || normal_1 ||L2 = 2.8752179121e+00                                         normal_vector_adaflo |
-| || delta phi ||L2 = 1.8677657589e-06                                     reinitialization_adaflo |
+| || delta phi ||L2 = 1.8677662307e-06                                     reinitialization_adaflo |
 |  τ = 0.00036                                                                    reinitialization |
-| || delta phi ||L2 = 1.6951914533e-06                                     reinitialization_adaflo |
+| || delta phi ||L2 = 1.6951918404e-06                                     reinitialization_adaflo |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.24494620765e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.24497453523e+00                                               normal_vector |
 | || curvature ||L2 = 4.53117261430e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
-| || velocity ||L2 = 1.022137200896530e-05                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.022137769360963e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.327717414778194e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 8.0000e-03 to 1.0000e-02 ( dt = 2.0000e-03 )          time_iterator |
@@ -84,16 +85,16 @@
 |  τ = 0.00018                                                                    reinitialization |
 | || normal_0 ||L2 = 2.8769441778e+00                                         normal_vector_adaflo |
 | || normal_1 ||L2 = 2.8770136260e+00                                         normal_vector_adaflo |
-| || delta phi ||L2 = 1.9300098178e-06                                     reinitialization_adaflo |
+| || delta phi ||L2 = 1.9300104328e-06                                     reinitialization_adaflo |
 |  τ = 0.00036                                                                    reinitialization |
-| || delta phi ||L2 = 1.7316795950e-06                                     reinitialization_adaflo |
+| || delta phi ||L2 = 1.7316801423e-06                                     reinitialization_adaflo |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.24699547569e+00                                               normal_vector |
+| || normal_0 ||L2 = 3.24699541644e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.24706384040e+00                                               normal_vector |
 | || curvature ||L2 = 4.53179897372e+00                                                  curvature |
 | Number of new DoFs:               2                                        cut solution transfer |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
-| || velocity ||L2 = 1.141764288372561e-05                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.141764788574957e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.327508635210574e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 6      t = 1.0000e-02 to 1.2000e-02 ( dt = 2.0000e-03 )          time_iterator |
@@ -102,17 +103,17 @@
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00018                                                                    reinitialization |
 | || normal_0 ||L2 = 2.8784232599e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 2.8785541970e+00                                         normal_vector_adaflo |
-| || delta phi ||L2 = 2.0821818384e-06                                     reinitialization_adaflo |
+| || normal_1 ||L2 = 2.8785543166e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 2.0821827010e-06                                     reinitialization_adaflo |
 |  τ = 0.00036                                                                    reinitialization |
-| || delta phi ||L2 = 1.8533064962e-06                                     reinitialization_adaflo |
+| || delta phi ||L2 = 1.8533073160e-06                                     reinitialization_adaflo |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.24872100146e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.24885227442e+00                                               normal_vector |
 | || curvature ||L2 = 4.53236857695e+00                                                  curvature |
 | Number of new DoFs:               2                                        cut solution transfer |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
-| || velocity ||L2 = 1.236171594561605e-05                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.236172049304969e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.327272805777544e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
