@@ -1,81 +1,6 @@
 #include <meltpooldg/particles/obstacle_data_structure.hpp>
 #include <meltpooldg/particles/particle.hpp>
 
-template <int dim, typename number>
-template <typename ObstacleDataStructureType>
-MeltPoolDG::ObstacleDataStructure<dim, number>::ObstacleDataStructureModel<
-  ObstacleDataStructureType>::ObstacleDataStructureModel(ObstacleDataStructureType
-                                                           &&obstacle_data_structure)
-  : obstacle_data_structure(std::move(obstacle_data_structure))
-{}
-
-template <int dim, typename number>
-template <typename ObstacleDataStructureType>
-void
-MeltPoolDG::ObstacleDataStructure<dim, number>::ObstacleDataStructureModel<
-  ObstacleDataStructureType>::reinit()
-{
-  obstacle_data_structure.reinit();
-}
-
-template <int dim, typename number>
-template <typename ObstacleDataStructureType>
-std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-MeltPoolDG::ObstacleDataStructure<dim, number>::ObstacleDataStructureModel<
-  ObstacleDataStructureType>::get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
-                                                    const dealii::CellAccessor<dim> &cell) const
-{
-  return obstacle_data_structure.get_obstacles_in_cell(dst, cell);
-}
-
-template <int dim, typename number>
-template <typename ObstacleDataStructureType>
-std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-MeltPoolDG::ObstacleDataStructure<dim, number>::ObstacleDataStructureModel<
-  ObstacleDataStructureType>::get_obstacles_in_cell_batch(dealii::Particles::PropertyPool<dim> &dst,
-                                                          const dealii::MatrixFree<dim, number>
-                                                                            &matrix_free,
-                                                          const unsigned int cell_batch_id) const
-{
-  return obstacle_data_structure.get_obstacles_in_cell_batch(dst, matrix_free, cell_batch_id);
-}
-
-template <int dim, typename number>
-template <typename ObstacleDataStructureType>
-MeltPoolDG::ObstacleDataStructure<dim, number>::ObstacleDataStructure(
-  ObstacleDataStructureType &&obstacle_data_structure)
-  : obstacle_data_structure_pimpl(
-      std::make_unique<ObstacleDataStructureModel<ObstacleDataStructureType>>(
-        std::move(obstacle_data_structure)))
-{}
-
-template <int dim, typename number>
-void
-MeltPoolDG::ObstacleDataStructure<dim, number>::reinit()
-{
-  obstacle_data_structure_pimpl->reinit();
-}
-
-template <int dim, typename number>
-std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-MeltPoolDG::ObstacleDataStructure<dim, number>::get_obstacles_in_cell(
-  dealii::Particles::PropertyPool<dim> &dst,
-  const dealii::CellAccessor<dim>      &cell) const
-{
-  return obstacle_data_structure_pimpl->get_obstacles_in_cell(dst, cell);
-}
-
-template <int dim, typename number>
-std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-MeltPoolDG::ObstacleDataStructure<dim, number>::get_obstacles_in_cell_batch(
-  dealii::Particles::PropertyPool<dim>  &dst,
-  const dealii::MatrixFree<dim, number> &matrix_free,
-  const unsigned int                     cell_batch_id) const
-{
-  return obstacle_data_structure_pimpl->get_obstacles_in_cell_batch(dst,
-                                                                    matrix_free,
-                                                                    cell_batch_id);
-}
 
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::ObstacleCompleteDomainSearch(
@@ -228,11 +153,6 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::deregister_
   for (unsigned int i = 0; i < properties_global_obstacles.n_registered_slots(); ++i)
     properties_global_obstacles.deregister_particle(i);
 }
-
-
-template struct MeltPoolDG::ObstacleDataStructure<1, double>;
-template struct MeltPoolDG::ObstacleDataStructure<2, double>;
-template struct MeltPoolDG::ObstacleDataStructure<3, double>;
 
 template struct MeltPoolDG::
   ObstacleCompleteDomainSearch<1, double, MeltPoolDG::SphericalParticle<1, double>>;
