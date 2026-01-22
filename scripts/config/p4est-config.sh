@@ -1,5 +1,7 @@
 #! /bin/bash
 #
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # This file is part of p4est [1].
 # p4est is a C library to manage a collection (a forest) of multiple
 # connected adaptive quadtrees or octrees in parallel.
@@ -15,7 +17,7 @@
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
-# [1] http://www.p4est.org
+# [1] https://www.p4est.org
 #
 
 # This program comes with ABSOLUTELY NO WARRANTY.
@@ -115,14 +117,15 @@ echo "Build FAST version in $BUILD_FAST"
 mkdir -p "$BUILD_FAST"
 cd "$BUILD_FAST"
 "$SRCDIR/configure" --enable-mpi --enable-shared \
-        --disable-vtk-binary --without-blas \
+        --disable-vtk-binary \
         --prefix="$INSTALL_FAST" CFLAGS="$CFLAGS_FAST" \
         CPPFLAGS="-DSC_LOG_PRIORITY=SC_LP_ESSENTIAL" \
         "$@" > config.output || bdie "Error in configure"
 make -C sc -j 8 > make.output || bdie "Error in make sc"
 make -j 8 >> make.output || bdie "Error in make p4est"
 # ensure that we built p4est with zlib
-grep -q 'P4EST_HAVE_ZLIB *1' "$BUILD_FAST/src/p4est_config.h" \
+find "$BUILD_FAST" -name "p4est_config.h" -type f -exec \
+    grep -q "P4EST_HAVE_ZLIB *1" {} \; \
     || bdie "$MISSING_ZLIB_MESSAGE"
 make install >> make.output || bdie "Error in make install"
 echo "FAST version installed in $INSTALL_FAST"
@@ -132,14 +135,15 @@ echo "Build DEBUG version in $BUILD_DEBUG"
 mkdir -p "$BUILD_DEBUG"
 cd "$BUILD_DEBUG"
 "$SRCDIR/configure" --enable-debug --enable-mpi --enable-shared \
-        --disable-vtk-binary --without-blas \
+        --disable-vtk-binary \
         --prefix="$INSTALL_DEBUG" CFLAGS="$CFLAGS_DEBUG" \
         CPPFLAGS="-DSC_LOG_PRIORITY=SC_LP_ESSENTIAL" \
         "$@" > config.output || bdie "Error in configure"
 make -C sc -j 8 > make.output || bdie "Error in make sc"
 make -j 8 >> make.output || bdie "Error in make p4est"
 # ensure that we built p4est with zlib
-grep -q 'P4EST_HAVE_ZLIB *1' "$BUILD_DEBUG/src/p4est_config.h" \
+find "$BUILD_DEBUG" -name "p4est_config.h" -type f -exec \
+    grep -q "P4EST_HAVE_ZLIB *1" {} \; \
     || bdie "$MISSING_ZLIB_MESSAGE"
 make install >> make.output || bdie "Error in make install"
 echo "DEBUG version installed in $INSTALL_DEBUG"

@@ -26,10 +26,11 @@ read -p "Install adaflo? [y/n]: " install_adaflo
 # install p4est
 ##############################################################
 if [[ "$install_p4est" == "y" ]]; then
-    wget http://p4est.github.io/release/p4est-2.2.tar.gz
+    VERSION=2.3.6
+    wget http://p4est.github.io/release/p4est-${VERSION}.tar.gz
     mkdir -p "$(pwd)/p4est-build"
-    $configDir/p4est-config.sh p4est-2.2.tar.gz "$(pwd)/p4est-build"
-    rm p4est-2.2.tar.gz
+    $configDir/p4est-config.sh p4est-${VERSION}.tar.gz "$(pwd)/p4est-build"
+    rm p4est-${VERSION}.tar.gz
 fi
 
 #############################################################
@@ -37,15 +38,16 @@ fi
 #############################################################
 if [[ "$install_trilinos" == "y" ]]; then
     mkdir -p trilinos-build
+    VERSION=16-2-0
     
-    log "Use Trilinos version 14.4.0."
-    wget https://github.com/trilinos/Trilinos/archive/trilinos-release-14-4-0.tar.gz
-    mv trilinos-release-14-4-0.tar.gz trilinos-release-14-4-0.tar
-    tar -xvf trilinos-release-14-4-0.tar
+    log "Use Trilinos version ${VERSION}."
+    wget https://github.com/trilinos/Trilinos/archive/trilinos-release-${VERSION}.tar.gz
+    mv trilinos-release-${VERSION}.tar.gz trilinos-release-${VERSION}.tar
+    tar -xvf trilinos-release-${VERSION}.tar
     cd trilinos-build
     rm -rf *
-    $configDir/trilinos-config.sh ../Trilinos-trilinos-release-14-4-0
-    rm ../trilinos-release-14-4-0.tar
+    $configDir/trilinos-config.sh ../Trilinos-trilinos-release-${VERSION}
+    rm ../trilinos-release-${VERSION}.tar
     
     make -j$np install
     cd ..
@@ -55,15 +57,20 @@ fi
 # install Arborx
 #############################################################
 if [[ "$install_arborx" == "y" ]]; then
-    wget https://github.com/arborx/ArborX/archive/refs/tags/v1.5.tar.gz
-    mv v1.5.tar.gz v1.5.tar
-    tar -xvf v1.5.tar
+    VERSION=2.0.1
+    #VERSION=1.7
+    wget https://github.com/arborx/ArborX/archive/refs/tags/v${VERSION}.tar.gz
+    mv v${VERSION}.tar.gz v${VERSION}.tar
+    tar -xvf v${VERSION}.tar
+    TRILINOS_DIR="$(pwd)/trilinos-install/lib/cmake/Kokkos"
+    echo ${TRILINOS_DIR}
     ARBOX_OPTIONS=(
        -D CMAKE_INSTALL_PREFIX="./ArborX-install"
        -D ARBORX_ENABLE_MPI=ON
-       -D Kokkos_ROOT="./trilinos-install/lib/cmake/Kokkos/"
+       -D Kokkos_DIR=${TRILINOS_DIR}
+      # --debug-find-pkg=Kokkos
        )
-    cmake "${ARBOX_OPTIONS[@]}" "${ARBORX_DIR:-./ArborX-1.5/}"
+    cmake "${ARBOX_OPTIONS[@]}" "${ARBORX_DIR:-./ArborX-${VERSION}/}"
     make install
 fi
 

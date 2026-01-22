@@ -73,7 +73,7 @@ check_mpi() {
   mpi_version=$(mpirun --version 2>/dev/null | head -n 1 | grep -oP '[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+)?')
 
   # Required version
-  required_version="4.1.2-2"
+  required_version="4.1.2"
 
   # Function to normalize versions (convert to numeric comparison-friendly format)
   normalize_version() {
@@ -91,8 +91,8 @@ check_mpi() {
   required_version_norm=$(normalize_version "$required_version")
 
   # Compare versions
-  if [[ "$mpi_version_norm" -gt "$required_version_norm" ]]; then
-      log "MPI version ($mpi_version) is greater than $required_version."
+  if [[ "$mpi_version_norm" -ge "$required_version_norm" ]]; then
+      log "MPI version ($mpi_version) is greater than or equal to $required_version."
   else
       log "MPI version ($mpi_version) is NOT greater than $required_version."
       exit 1
