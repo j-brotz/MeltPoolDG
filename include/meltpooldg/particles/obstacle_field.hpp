@@ -28,6 +28,8 @@ namespace MeltPoolDG
   template <int dim, typename number, typename ObstacleType>
   class ObstacleField
   {
+    using ParticleDataStructure = ObstacleCompleteDomainSearch<dim, number, ObstacleType>;
+
   public:
     /**
      * @brief Constructor. Initializes the obstacle field and supporting data structures.

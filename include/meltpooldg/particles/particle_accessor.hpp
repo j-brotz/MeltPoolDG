@@ -100,6 +100,23 @@ namespace MeltPoolDG
     dealii::Tensor<1, dim, number>
     get_force() const;
 
+    dealii::Tensor<1, axial_dim<dim>, number>
+    get_torque() const;
+
+    void
+    set_velocity(const dealii::Tensor<1, dim, number> &velocity);
+
+    void
+    set_linear_acceleration(const dealii::Tensor<1, dim, number> &acceleration);
+
+    void
+    set_angular_acceleration(const dealii::Tensor<1, axial_dim<dim>, number> &angular_acceleration);
+
+    void
+    set_force(const dealii::Tensor<1, dim, number> &force);
+
+    void
+    set_torque(const dealii::Tensor<1, axial_dim<dim>, number> &torque);
 
     /**
      * Accumulates the specified force vector to the particle by adding its components into the
@@ -146,6 +163,12 @@ namespace MeltPoolDG
      */
     const number &
     get_property(const typename SphericalParticle<dim, number>::Properties property) const;
+
+    dealii::ArrayView<number>
+    get_properties()
+    {
+      return properties;
+    }
 
   private:
     /// Reference to the particle location.
@@ -224,6 +247,70 @@ namespace MeltPoolDG
       velocity[dimension] =
         properties[SphericalParticle<dim, number>::Properties::force + dimension];
     return velocity;
+  }
+
+  template <int dim, typename number>
+  dealii::Tensor<1, axial_dim<dim>, number>
+  DEMParticleAccessor<dim, number>::get_torque() const
+  {
+    Assert(!properties.empty(), dealii::ExcInternalError());
+    dealii::Tensor<1, axial_dim<dim>, number> torque;
+    for (int dimension = 0; dimension < axial_dim<dim>; ++dimension)
+      torque[dimension] =
+        properties[SphericalParticle<dim, number>::Properties::torque + dimension];
+    return torque;
+  }
+
+  template <int dim, typename number>
+  void
+  DEMParticleAccessor<dim, number>::set_velocity(const dealii::Tensor<1, dim, number> &velocity)
+  {
+    Assert(!properties.empty(), dealii::ExcInternalError());
+    for (int dimension = 0; dimension < dim; ++dimension)
+      properties[SphericalParticle<dim, number>::Properties::velocity + dimension] =
+        velocity[dimension];
+  }
+
+  template <int dim, typename number>
+  void
+  DEMParticleAccessor<dim, number>::set_linear_acceleration(
+    const dealii::Tensor<1, dim, number> &acceleration)
+  {
+    Assert(!properties.empty(), dealii::ExcInternalError());
+    for (int dimension = 0; dimension < dim; ++dimension)
+      properties[SphericalParticle<dim, number>::Properties::acceleration + dimension] =
+        acceleration[dimension];
+  }
+
+  template <int dim, typename number>
+  void
+  DEMParticleAccessor<dim, number>::set_angular_acceleration(
+    const dealii::Tensor<1, axial_dim<dim>, number> &acceleration)
+  {
+    Assert(!properties.empty(), dealii::ExcInternalError());
+    for (int dimension = 0; dimension < axial_dim<dim>; ++dimension)
+      properties[SphericalParticle<dim, number>::Properties::angular_acceleration + dimension] =
+        acceleration[dimension];
+  }
+
+  template <int dim, typename number>
+  void
+  DEMParticleAccessor<dim, number>::set_force(const dealii::Tensor<1, dim, number> &force)
+  {
+    Assert(!properties.empty(), dealii::ExcInternalError());
+    for (int dimension = 0; dimension < dim; ++dimension)
+      properties[SphericalParticle<dim, number>::Properties::force + dimension] = force[dimension];
+  }
+
+  template <int dim, typename number>
+  void
+  DEMParticleAccessor<dim, number>::set_torque(
+    const dealii::Tensor<1, axial_dim<dim>, number> &torque)
+  {
+    Assert(!properties.empty(), dealii::ExcInternalError());
+    for (int dimension = 0; dimension < axial_dim<dim>; ++dimension)
+      properties[SphericalParticle<dim, number>::Properties::torque + dimension] =
+        torque[dimension];
   }
 
   template <int dim, typename number>

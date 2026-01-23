@@ -69,16 +69,12 @@ namespace
     }
 
     std::vector<int>
-    extract_particle_ids(
-      const std::vector<typename dealii::Particles::PropertyPool<dim>::Handle> &handles) const
+    extract_particle_ids(const auto &particles) const
     {
       std::vector<int> ids;
-      ids.reserve(handles.size());
-      for (const auto &h : handles)
-        ids.push_back(static_cast<int>(ObstacleType::get_property(
-          obstacle_data_structure->get_particle_handler().get_property_pool(),
-          h,
-          ObstacleType::Properties::particle_id)));
+      ids.reserve(particles.size());
+      for (const auto &p : particles)
+        ids.push_back(static_cast<int>(p.id()));
 
       return ids;
     }
@@ -112,10 +108,8 @@ namespace
       {
         dealii::CellId cell_id_to_test("3_2:00");
 
-        std::vector<typename dealii::Particles::PropertyPool<dim>::Handle> relevant_particles =
-          obstacle_data_structure->get_obstacles_in_cell(
-            obstacle_data_structure->get_particle_handler().get_property_pool(),
-            *triangulation.create_cell_iterator(cell_id_to_test));
+        auto relevant_particles = obstacle_data_structure->get_obstacles_in_cell(
+          *triangulation.create_cell_iterator(cell_id_to_test));
 
         std::vector<int> expected_particle_ids{0};
 
@@ -139,10 +133,8 @@ namespace
       {
         dealii::CellId cell_id_to_test("3_2:02");
 
-        std::vector<typename dealii::Particles::PropertyPool<dim>::Handle> relevant_particles =
-          obstacle_data_structure->get_obstacles_in_cell(
-            obstacle_data_structure->get_particle_handler().get_property_pool(),
-            *triangulation.create_cell_iterator(cell_id_to_test));
+        auto relevant_particles = obstacle_data_structure->get_obstacles_in_cell(
+          *triangulation.create_cell_iterator(cell_id_to_test));
 
         std::vector<int> expected_particle_ids{0};
 
@@ -167,10 +159,8 @@ namespace
       {
         dealii::CellId cell_id_to_test("0_2:12");
 
-        std::vector<typename dealii::Particles::PropertyPool<dim>::Handle> relevant_particles =
-          obstacle_data_structure->get_obstacles_in_cell(
-            obstacle_data_structure->get_particle_handler().get_property_pool(),
-            *triangulation.create_cell_iterator(cell_id_to_test));
+        auto relevant_particles = obstacle_data_structure->get_obstacles_in_cell(
+          *triangulation.create_cell_iterator(cell_id_to_test));
 
         std::vector<int> expected_particle_ids{0, 1};
 
@@ -260,11 +250,8 @@ namespace
     // We only search for the particles on the rank that actually owns the cell batch
     if (dealii::Utilities::MPI::this_mpi_process(triangulation.get_mpi_communicator()) == 0)
       {
-        std::vector<typename dealii::Particles::PropertyPool<dim>::Handle> relevant_particles =
-          obstacle_data_structure->get_obstacles_in_cell_batch(
-            obstacle_data_structure->get_particle_handler().get_property_pool(),
-            matrix_free,
-            cell_batch_of_interest);
+        auto relevant_particles =
+          obstacle_data_structure->get_obstacles_in_cell_batch(matrix_free, cell_batch_of_interest);
 
         std::vector<int> expected_particle_ids{0, 1};
 

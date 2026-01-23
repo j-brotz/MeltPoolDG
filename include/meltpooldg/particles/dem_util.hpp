@@ -76,7 +76,7 @@ namespace MeltPoolDG
    * all of its properties consecutively, and the next particle’s properties follow. Consequently,
    * accessing a specific property across all particles involves a strided memory access pattern.
    */
-  template <int dim, typename number>
+  template <int dim, typename number, typename DemDataStructure>
   class ParticleHandlerVectorView
   {
   public:
@@ -92,9 +92,9 @@ namespace MeltPoolDG
      * @param index_describes_location Flag indicating whether @p property_index refers to a particle
      * location component (true) or a generic property (false).
      */
-    ParticleHandlerVectorView(dealii::Particles::ParticleHandler<dim> &particle_handler,
-                              unsigned                                 property_index,
-                              bool index_describes_location = false);
+    ParticleHandlerVectorView(DemDataStructure &particle_handler,
+                              unsigned          property_index,
+                              bool              index_describes_location = false);
 
     /**
      * @brief Scales all elements of the vector view by a given factor.
@@ -102,7 +102,7 @@ namespace MeltPoolDG
      * @param factor Scalar multiplier.
      * @return Reference to this vector view.
      */
-    ParticleHandlerVectorView<dim, number> &
+    ParticleHandlerVectorView<dim, number, DemDataStructure> &
     operator*=(const number factor);
 
     /**
@@ -111,7 +111,7 @@ namespace MeltPoolDG
      * @param factor Scalar divisor.
      * @return Reference to this vector view.
      */
-    ParticleHandlerVectorView<dim, number> &
+    ParticleHandlerVectorView<dim, number, DemDataStructure> &
     operator/=(const number factor);
 
     /**
@@ -120,8 +120,8 @@ namespace MeltPoolDG
      * @param v The vector view to subtract.
      * @return Reference to this vector view.
      */
-    ParticleHandlerVectorView<dim, number> &
-    operator-=(const ParticleHandlerVectorView<dim, number> &v);
+    ParticleHandlerVectorView<dim, number, DemDataStructure> &
+    operator-=(const ParticleHandlerVectorView<dim, number, DemDataStructure> &v);
 
 
     /**
@@ -130,8 +130,8 @@ namespace MeltPoolDG
      * @param v The vector view to add.
      * @return Reference to this vector view.
      */
-    ParticleHandlerVectorView<dim, number> &
-    operator+=(const ParticleHandlerVectorView<dim, number> &v);
+    ParticleHandlerVectorView<dim, number, DemDataStructure> &
+    operator+=(const ParticleHandlerVectorView<dim, number, DemDataStructure> &v);
 
     /**
      * This function is only available to make the interface consistent with deal.II vectors. It
@@ -150,15 +150,11 @@ namespace MeltPoolDG
     /**
      * @brief Updates ghost particle values.
      *
-     * Synchronizes ghost particles across MPI ranks. If @p exchange_particles is true,
-     * particles are also exchanged between ranks as needed, potentially changing ownership.
-     * In all cases, the properties of ghost particles are updated.
-     *
-     * @param exchange_particles Whether to exchange ghost particles (true) or only update
-     * their properties (false).
+     * Synchronizes ghost particles across MPI ranks. Particles are also exchanged between ranks as
+     * needed, potentially changing ownership.
      */
     void
-    update_ghost_values(const bool exchange_particles = true) const;
+    update_ghost_values();
 
     /**
      * @brief Adds a scaled version of another vector view to this one.
@@ -167,7 +163,7 @@ namespace MeltPoolDG
      * @param v The vector view to be scaled and added.
      */
     void
-    add(const number a, const ParticleHandlerVectorView<dim, number> &v);
+    add(const number a, const ParticleHandlerVectorView<dim, number, DemDataStructure> &v);
 
 
     /**
@@ -178,7 +174,9 @@ namespace MeltPoolDG
      * @param v The vector view to combine with this one.
      */
     void
-    sadd(const number s, const number a, const ParticleHandlerVectorView<dim, number> &v);
+    sadd(const number                                                    s,
+         const number                                                    a,
+         const ParticleHandlerVectorView<dim, number, DemDataStructure> &v);
 
     /**
      * @brief Returns the number of particles owned by the current MPI process.
@@ -213,7 +211,7 @@ namespace MeltPoolDG
 
   private:
     /// The particle handler that provides access to the actual particle data.
-    dealii::Particles::ParticleHandler<dim> &particle_handler;
+    DemDataStructure &particle_handler;
 
     /// The property index in the particle property array to which this vector view provides
     /// access.
@@ -243,7 +241,7 @@ namespace MeltPoolDG
    * existing particle data and does not own or allocate any memory. The underlying
    * particle properties are stored in a strided memory layout.
    */
-  template <int dim, typename number>
+  template <int dim, typename number, typename DemDataStructure>
   class ParticleHandlerBlockVectorView
   {
   public:
@@ -267,7 +265,7 @@ namespace MeltPoolDG
      * access to the particle data.
      */
     void
-    reinit(dealii::Particles::ParticleHandler<dim> &particle_handler);
+    reinit(DemDataStructure &particle_handler);
 
     /**
      * @brief Reinitialize the block vector view for a specific set of particle
@@ -282,8 +280,7 @@ namespace MeltPoolDG
      * to be exposed as individual blocks.
      */
     void
-    reinit(dealii::Particles::ParticleHandler<dim> &particle_handler,
-           const std::vector<unsigned>             &property_indices);
+    reinit(DemDataStructure &particle_handler, const std::vector<unsigned> &property_indices);
 
     /**
      * @brief Reinitialize the block vector view for a contiguous range of particle
@@ -298,9 +295,9 @@ namespace MeltPoolDG
      * @param property_indices_size Number of consecutive properties to include .
      */
     void
-    reinit(dealii::Particles::ParticleHandler<dim> &particle_handler,
-           unsigned                                 property_indices_begin,
-           unsigned                                 property_indices_size = 1);
+    reinit(DemDataStructure &particle_handler,
+           unsigned          property_indices_begin,
+           unsigned          property_indices_size = 1);
 
     /**
      * Calls the corresponding function on all component views. Only returns true if all component
@@ -319,14 +316,10 @@ namespace MeltPoolDG
      * @brief Updates ghost particle values across MPI ranks.
      *
      * Synchronizes ghost particles in all component views of this block vector.
-     * If @p exchange_particles is true, particle ownership is also updated via MPI
-     * exchange as necessary. In all cases, ghost particle properties are refreshed.
-     *
-     * @param exchange_particles Whether to exchange ghost particles (true)
-     * or only update their properties (false). Default is true.
+     * Particle ownership is also updated via MPI exchange as necessary.
      */
     void
-    update_ghost_values(const bool exchange_particles = true) const;
+    update_ghost_values();
 
     /**
      * @brief Adds a scaled version of another block vector view to this one.
@@ -338,7 +331,7 @@ namespace MeltPoolDG
      * @param v The block vector view to be scaled and added.
      */
     void
-    add(const number a, const ParticleHandlerBlockVectorView<dim, number> &v);
+    add(const number a, const ParticleHandlerBlockVectorView<dim, number, DemDataStructure> &v);
 
     /**
      * @brief Scales this block vector and adds a scaled version of another block vector.
@@ -350,7 +343,9 @@ namespace MeltPoolDG
      * @param v The block vector view to combine with this one.
      */
     void
-    sadd(const number s, const number a, const ParticleHandlerBlockVectorView<dim, number> &v);
+    sadd(const number                                                         s,
+         const number                                                         a,
+         const ParticleHandlerBlockVectorView<dim, number, DemDataStructure> &v);
 
     /**
      * @brief Returns the number of blocks in this block vector view.
@@ -365,7 +360,7 @@ namespace MeltPoolDG
      *
      * @param i Index of the block to access.
      */
-    const ParticleHandlerVectorView<dim, number> &
+    const ParticleHandlerVectorView<dim, number, DemDataStructure> &
     block(const unsigned i) const;
 
     /**
@@ -373,12 +368,12 @@ namespace MeltPoolDG
      *
      * @param i Index of the block to access.
      */
-    ParticleHandlerVectorView<dim, number> &
+    ParticleHandlerVectorView<dim, number, DemDataStructure> &
     block(const unsigned i);
 
   private:
     /// Collection of vector views representing individual particle properties.
-    std::vector<ParticleHandlerVectorView<dim, number>> vectors;
+    std::vector<ParticleHandlerVectorView<dim, number, DemDataStructure>> vectors;
   };
 
 
@@ -393,7 +388,7 @@ namespace MeltPoolDG
    * @ref dealii::Particles::ParticleHandler, enabling vector-style operations without
    * duplicating storage.
    */
-  template <int dim, typename number, typename ObstacleType>
+  template <int dim, typename number, typename ObstacleType, typename DemDataStructure>
   struct DemTimeIntegratorVectorViews
   {
     /**
@@ -410,9 +405,8 @@ namespace MeltPoolDG
      * TimeIntegration::SolutionHistory container.
      */
     DemTimeIntegratorVectorViews(
-      const std::vector<std::reference_wrapper<dealii::Particles::ParticleHandler<dim>>>
-                    &particle_handlers,
-      const unsigned solution_history_size)
+      const std::vector<std::reference_wrapper<DemDataStructure>> &particle_handlers,
+      const unsigned                                               solution_history_size)
       : location(solution_history_size)
       , translational_velocity(solution_history_size)
       , translational_acceleration(solution_history_size)
@@ -443,21 +437,22 @@ namespace MeltPoolDG
     }
 
     /// Block vector views for the x/y/z components of particle positions.
-    TimeIntegration::SolutionHistory<ParticleHandlerBlockVectorView<dim, number>> location;
+    TimeIntegration::SolutionHistory<ParticleHandlerBlockVectorView<dim, number, DemDataStructure>>
+      location;
 
     /// Block vector views for the x/y/z components of particle translational velocities.
-    TimeIntegration::SolutionHistory<ParticleHandlerBlockVectorView<dim, number>>
+    TimeIntegration::SolutionHistory<ParticleHandlerBlockVectorView<dim, number, DemDataStructure>>
       translational_velocity;
 
     /// Block vector views for the x/y/z components of particle translational acceleration.
-    TimeIntegration::SolutionHistory<ParticleHandlerBlockVectorView<dim, number>>
+    TimeIntegration::SolutionHistory<ParticleHandlerBlockVectorView<dim, number, DemDataStructure>>
       translational_acceleration;
 
     /// Block vector views for the x/y/z components of particle angular velocities.
-    TimeIntegration::SolutionHistory<ParticleHandlerBlockVectorView<dim, number>> angular_velocity;
-
+    TimeIntegration::SolutionHistory<ParticleHandlerBlockVectorView<dim, number, DemDataStructure>>
+      angular_velocity;
     /// Block vector views for the x/y/z components of particle angular acceleration.
-    TimeIntegration::SolutionHistory<ParticleHandlerBlockVectorView<dim, number>>
+    TimeIntegration::SolutionHistory<ParticleHandlerBlockVectorView<dim, number, DemDataStructure>>
       angular_acceleration;
   };
 

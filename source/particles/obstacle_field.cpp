@@ -7,6 +7,7 @@
 
 #include <deal.II/particles/particle_handler.h>
 
+#include "meltpooldg/particles/dem_util.hpp"
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
 #include <meltpooldg/utilities/amr_regions.hpp>
@@ -25,7 +26,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   , obstacle_data_structure(triangulation, mapping)
   , obstacle_handler_vector_views(
       std::vector<std::reference_wrapper<dealii::Particles::ParticleHandler<dim>>>(
-        {obstacle_data_structure.get_particle_handler()}),
+        {obstacle_data_structure}),
       1)
   , mpi_communicator(triangulation.get_mpi_communicator())
 {
@@ -45,7 +46,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   , obstacle_data_structure(triangulation, mapping)
   , obstacle_handler_vector_views(
       std::vector<std::reference_wrapper<dealii::Particles::ParticleHandler<dim>>>(
-        {obstacle_data_structure.get_particle_handler()}),
+        {obstacle_data_structure}),
       1)
   , mpi_communicator(triangulation.get_mpi_communicator())
 {
@@ -60,7 +61,10 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
 {
   compute_loads_on_obstacles();
 
-  symplectic_euler_advance_time_step<dim, double, ParticleHandlerBlockVectorView<dim, number>>(
+  symplectic_euler_advance_time_step<
+    dim,
+    double,
+    ParticleHandlerBlockVectorView<dim, number, ParticleDataStructure>>(
     current_time,
     time_step,
     obstacle_handler_vector_views.location,
@@ -68,43 +72,35 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
     obstacle_handler_vector_views.translational_acceleration,
     obstacle_handler_vector_views.angular_velocity,
     obstacle_handler_vector_views.angular_acceleration,
-    [&](number, ParticleHandlerBlockVectorView<dim, number> &) {
-      for (auto &obstacle : obstacle_data_structure.get_particle_handler())
+    [&](number, ParticleHandlerBlockVectorView<dim, number, ParticleDataStructure> &) {
+      for (auto &obstacle : obstacle_data_structure.locally_owned_particle_range())
         {
-          ObstacleType::set_acceleration(
-            obstacle,
-            ObstacleType::get_force(obstacle) /
-              ObstacleType::get_property(obstacle, ObstacleType::Properties::mass));
+          obstacle.set_linear_acceleration(obstacle.get_force() /
+                                           obstacle.get_property(ObstacleType::Properties::mass));
         }
     },
-    [&](number, ParticleHandlerBlockVectorView<dim, number> &) {
-      for (auto &obstacle : obstacle_data_structure.get_particle_handler())
+    [&](number, ParticleHandlerBlockVectorView<dim, number, ParticleDataStructure> &) {
+      for (auto &obstacle : obstacle_data_structure.locally_owned_particle_range())
         {
-          ObstacleType::set_angular_acceleration(
-            obstacle,
-            ObstacleType::get_torque(obstacle) /
-              ObstacleType::get_property(obstacle, ObstacleType::Properties::moment_of_inertia));
+          obstacle.set_angular_acceleration(
+            obstacle.get_torque() /
+            obstacle.get_property(ObstacleType::Properties::moment_of_inertia));
         }
     },
-    [&]() {
-      obstacle_data_structure.get_particle_handler().exchange_ghost_particles(true);
-      obstacle_data_structure.get_particle_handler().update_ghost_particles();
-    });
+    [&]() { obstacle_data_structure.update_ghost_particles(); });
 
   // Temporary workaround: prevent particles from moving below ground level. We check whether the
   // particle’s vertical coordinate (y in 2D, z in 3D) is less than its radius, i.e., meaning part
   // of the particle would lie below the ground. If so, we clamp the particle to ground contact by
   // setting its center height equal to its radius and zeroing its vertical velocity.
-  for (auto &particle : obstacle_data_structure.get_particle_handler())
-    if (particle.get_location()[dim - 1] -
-          ObstacleType::get_property(particle, ObstacleType::Properties::radius) <
+  for (auto &particle : obstacle_data_structure.locally_owned_particle_range())
+    if (particle.get_location()[dim - 1] - particle.get_property(ObstacleType::Properties::radius) <
         0)
       {
-        particle.get_location()[dim - 1] =
-          ObstacleType::get_property(particle, ObstacleType::Properties::radius);
-        auto velocity     = ObstacleType::template get_velocity<number>(particle);
-        velocity[dim - 1] = 0;
-        ObstacleType::set_velocity(particle, velocity);
+        particle.get_location()[dim - 1] = particle.get_property(ObstacleType::Properties::radius);
+        auto velocity                    = particle.template get_linear_velocity<number>();
+        velocity[dim - 1]                = 0;
+        particle.set_velocity(velocity);
       }
 }
 
@@ -132,7 +128,7 @@ template <int dim, typename number, typename ObstacleType>
 void
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::prepare_for_serialization()
 {
-  obstacle_data_structure.get_particle_handler().prepare_for_serialization();
+  obstacle_data_structure.prepare_for_serialization();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -143,20 +139,19 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_refinement_regions() c
     return std::vector<AMR::AMRRegion<dim, number>>();
 
   std::vector<AMR::SphericalShellAMRRegion<dim, number>> local_ref_regions;
-  local_ref_regions.reserve(
-    obstacle_data_structure.get_particle_handler().n_locally_owned_particles());
-  for (const auto &obstacle : obstacle_data_structure.get_particle_handler())
+  local_ref_regions.reserve(obstacle_data_structure.n_locally_owned_particles());
+  for (const auto &obstacle : obstacle_data_structure.locally_owned_particle_range())
     local_ref_regions.emplace_back(obstacle.get_location(),
                                    data.amr.inner_fractional_distance_to_surface *
-                                     ObstacleType::get_characteristic_length(obstacle),
+                                     obstacle.get_property(ObstacleType::Properties::radius),
                                    data.amr.outer_fractional_distance_to_surface *
-                                     ObstacleType::get_characteristic_length(obstacle));
+                                     obstacle.get_property(ObstacleType::Properties::radius));
 
   std::vector<std::vector<AMR::SphericalShellAMRRegion<dim, number>>> global_ref_regions =
     dealii::Utilities::MPI::all_gather(mpi_communicator, local_ref_regions);
 
   std::vector<AMR::AMRRegion<dim, number>> final_amr_regions;
-  final_amr_regions.reserve(obstacle_data_structure.get_particle_handler().n_global_particles());
+  final_amr_regions.reserve(obstacle_data_structure.n_global_particles());
   for (unsigned i = 0; i < global_ref_regions.size(); ++i)
     for (unsigned j = 0; j < global_ref_regions[i].size(); ++j)
       final_amr_regions.emplace_back(std::move(global_ref_regions[i][j]));
@@ -172,12 +167,10 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compute_loads_on_obstacles
     return;
 
   // Reset current particle forces and torques
-  for (dealii::Particles::ParticleAccessor<dim> obstacle :
-       obstacle_data_structure.get_particle_handler())
+  for (auto &obstacle : obstacle_data_structure.locally_owned_particle_range())
     {
-      ObstacleType::set_force(dealii::Tensor<1, dim, number>(), obstacle);
-      ObstacleType::set_torque(dealii::Tensor<1, ObstacleType::size_angular_velocity, number>(),
-                               obstacle);
+      obstacle.set_force(dealii::Tensor<1, dim, number>());
+      obstacle.set_torque(dealii::Tensor<1, axial_dim<dim>, number>());
     }
 
   // Update global particle property pool in case any of the loads needs an up-to-date version.
@@ -194,9 +187,8 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::print_accumulated_obstacle
   const dealii::ConditionalOStream pout) const
 {
   dealii::Tensor<1, dim, number> accumulated_force;
-  for (dealii::Particles::ParticleAccessor<dim> obstacle :
-       obstacle_data_structure.get_particle_handler())
-    accumulated_force += ObstacleType::get_force(obstacle);
+  for (const auto &obstacle : obstacle_data_structure.locally_owned_particle_range())
+    accumulated_force += obstacle.get_force();
 
   accumulated_force = dealii::Utilities::MPI::sum(accumulated_force, mpi_communicator);
 

@@ -140,6 +140,18 @@ namespace MeltPoolDG
     get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
                           const dealii::CellAccessor<dim>      &cell) const;
 
+    auto
+    get_obstacles_in_cell(const dealii::CellAccessor<dim> &cell) const
+    {
+      const auto filtered =
+        global_particle_range() | std::views::filter([&](const auto &obstacle) {
+          return obstacle.get_location().distance(cell.center()) <
+                 obstacle.get_property(ObstacleType::Properties::radius) + 0.5 * cell.diameter();
+        });
+
+      return filtered;
+    }
+
     /**
      * @brief Identify obstacles that partially or fully occupy any cell in the specified cell batch,
      * and store their properties in the destination property pool.
@@ -163,6 +175,26 @@ namespace MeltPoolDG
     get_obstacles_in_cell_batch(dealii::Particles::PropertyPool<dim>  &dst,
                                 const dealii::MatrixFree<dim, number> &matrix_free,
                                 const unsigned int                     cell_batch_id) const;
+
+
+    auto
+    get_obstacles_in_cell_batch(const dealii::MatrixFree<dim, number> &matrix_free,
+                                const unsigned int                     cell_batch_id) const
+    {
+      const auto filtered =
+        global_particle_range() | std::views::filter([&](const auto &obstacle) {
+          for (unsigned int batch_lane = 0;
+               batch_lane < matrix_free.n_active_entries_per_cell_batch(cell_batch_id);
+               ++batch_lane)
+            {
+              auto cell = *matrix_free.get_cell_iterator(cell_batch_id, batch_lane);
+              if (obstacle.get_location().distance(cell.center()) <
+                  obstacle.get_property(ObstacleType::Properties::radius) + 0.5 * cell.diameter())
+                return true;
+            }
+          return false;
+        });
+    }
 
     /**
      * @brief Broadcasts obstacle properties of all locally owned particles to all MPI processes.
@@ -217,27 +249,24 @@ namespace MeltPoolDG
       reinit();
     }
 
-    /**
-     * @brief Return a reference to the underlying particle handler of this object.
-     *
-     * @return The used particle handler of the current object.
-     */
-    dealii::Particles::ParticleHandler<dim> &
-    get_particle_handler()
+    MeltPoolDG::ParticleIterator<dim, number>
+    begin()
     {
-      return obstacle_handler;
-    }
-
-    const dealii::Particles::ParticleHandler<dim> &
-    get_particle_handler() const
-    {
-      return obstacle_handler;
+      return ParticleIterator<dim, number>(obstacle_handler.begin());
     }
 
     std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
     locally_owned_particle_range()
     {
       return std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>(
+        ParticleIterator<dim, number>(obstacle_handler.begin()),
+        ParticleIterator<dim, number>(obstacle_handler.end()));
+    }
+
+    std::ranges::subrange<const MeltPoolDG::ParticleIterator<dim, number>>
+    locally_owned_particle_range() const
+    {
+      return std::ranges::subrange<const MeltPoolDG::ParticleIterator<dim, number>>(
         ParticleIterator<dim, number>(obstacle_handler.begin()),
         ParticleIterator<dim, number>(obstacle_handler.end()));
     }
@@ -249,6 +278,25 @@ namespace MeltPoolDG
         ParticleIterator<dim, number>(properties_global_obstacles, 0),
         ParticleIterator<dim, number>(properties_global_obstacles,
                                       properties_global_obstacles.n_registered_slots()));
+    }
+
+    number
+    n_locally_owned_particles() const
+    {
+      return obstacle_handler.n_locally_owned_particles();
+    }
+
+    number
+    n_global_particles() const
+    {
+      return obstacle_handler.n_global_particles();
+    }
+
+    void
+    update_ghost_particles()
+    {
+      obstacle_handler.exchange_ghost_particles(true);
+      obstacle_handler.update_ghost_particles();
     }
 
   private:
