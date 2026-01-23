@@ -19,6 +19,7 @@ namespace MeltPoolDG
     prm.enter_subsection("spherical particle contact force");
     {
       prm.add_parameter("restitution coefficient", restitution_coefficient);
+      prm.add_parameter("sliding friction coefficient", sliding_friction_coefficient);
       prm.enter_subsection("particle-particle contact");
       {
         prm.add_parameter("youngs modulus", particle.youngs_modulus);
@@ -32,9 +33,11 @@ namespace MeltPoolDG
 
   template <int dim, typename number, typename ObstacleType>
   SphericalParticleContactForce<dim, number, ObstacleType>::SphericalParticleContactForce(
-    const SphericalParticleContactData<number> &contact_data)
+    const SphericalParticleContactData<number>              &contact_data,
+    const MeltPoolDG::TimeIntegration::TimeIterator<number> &time_iterator)
     : contact_data(contact_data)
     , damping_prefactor(compute_damping_prefactor(contact_data.restitution_coefficient))
+    , time_iterator(time_iterator)
   {}
 
 
@@ -45,6 +48,8 @@ namespace MeltPoolDG
   {
     for (auto &particle : obstacle_field.locally_owned_particle_range())
       {
+        std::map<int, dealii::Tensor<1, dim, number>> &self_tangential_gaps =
+          previous_tangential_gaps[particle.id()];
         for (auto &other : obstacle_field.global_particle_range())
           {
             if (particle.id() == other.id())
@@ -55,11 +60,20 @@ namespace MeltPoolDG
                                                        contact_data.particle.youngs_modulus,
                                                        contact_data.particle.poisson_ratio);
 
-            if (contact_configuration.normal_overlap >= 0)
+            if (contact_configuration.normal_overlap > 0)
               {
                 dealii::Tensor<1, dim, number> normal_force =
                   normal_contact_force(contact_configuration);
-                particle.add_force(normal_force);
+                dealii::Tensor<1, dim, number> tangential_force =
+                  tangential_contact_force(contact_configuration,
+                                           normal_force,
+                                           self_tangential_gaps[other.id()]);
+
+                particle.add_force(normal_force + tangential_force);
+              }
+            else
+              {
+                self_tangential_gaps.erase(other.id());
               }
           }
       }
@@ -81,6 +95,48 @@ namespace MeltPoolDG
                           contact_configuration.normal_vector -
                         normal_damping * contact_configuration.relative_velocity.normal_component;
     return normal_force;
+  }
+
+  template <int dim, typename number, typename ObstacleType>
+  dealii::Tensor<1, dim, number>
+  SphericalParticleContactForce<dim, number, ObstacleType>::tangential_contact_force(
+    const ContactConfiguration           &contact_configuration,
+    const dealii::Tensor<1, dim, number> &normal_force,
+    dealii::Tensor<1, dim, number>       &tangential_gap) const
+  {
+    const number tangential_stiffness =
+      8. * contact_configuration.effective_shear_modulus *
+      std::sqrt(contact_configuration.effective_radius * contact_configuration.normal_overlap);
+
+    const number tangential_damping =
+      damping_prefactor * std::sqrt(tangential_stiffness * contact_configuration.effective_mass);
+
+    const auto compute_tangential_force = [&]() -> dealii::Tensor<1, dim, number> {
+      return -tangential_stiffness * tangential_gap -
+             tangential_damping * contact_configuration.relative_velocity.tangential_component;
+    };
+
+    tangential_gap += contact_configuration.relative_velocity.tangential_component *
+                      time_iterator.get_current_time_increment();
+
+    dealii::Tensor<1, dim, number> tangential_force = compute_tangential_force();
+
+    // Ensure that the tangential force does not exceed the Coulomb limit
+    const number coulomb_friction_force_norm =
+      contact_data.sliding_friction_coefficient * normal_force.norm();
+    const number tangential_force_norm = tangential_force.norm();
+    if (coulomb_friction_force_norm < tangential_force_norm)
+      {
+        dealii::Tensor<1, dim, number> limited_elastic_tangential_force =
+          coulomb_friction_force_norm * tangential_force / tangential_force_norm +
+          tangential_damping * contact_configuration.relative_velocity.tangential_component;
+
+        tangential_gap = -limited_elastic_tangential_force / tangential_stiffness;
+
+        tangential_force = compute_tangential_force();
+      }
+
+    return tangential_force;
   }
 
   template <int dim, typename number, typename ObstacleType>
@@ -111,6 +167,8 @@ namespace MeltPoolDG
                                  other.get_property(ObstacleType::Properties::radius));
 
     effective_youngs_modulus = 0.5 * youngs_modulus / (1 - poisson_ratio * poisson_ratio);
+
+    effective_shear_modulus = 0.25 * youngs_modulus / ((2 - poisson_ratio) * (1 + poisson_ratio));
 
     const number distance = self.get_location().distance(other.get_location());
 
