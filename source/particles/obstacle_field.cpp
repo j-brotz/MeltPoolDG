@@ -261,6 +261,29 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::insert_obstacles(
     dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 ?
       obstacle_properties :
       std::vector<std::vector<number>>{});
+
+  obstacle_data_structure.reinit();
+}
+
+template <int dim, typename number, typename ObstacleType>
+std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::locally_owned_particle_range()
+{
+  return std::ranges::subrange<ParticleIterator<dim, number>>(
+    ParticleIterator<dim, number>(obstacle_handler.begin()),
+    ParticleIterator<dim, number>(obstacle_handler.end()));
+}
+
+
+template <int dim, typename number, typename ObstacleType>
+std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::global_particle_range()
+{
+  return std::ranges::subrange<ParticleIterator<dim, number>>(
+    ParticleIterator<dim, number>(obstacle_data_structure.get_global_particle_properties(), 0),
+    ParticleIterator<dim, number>(
+      obstacle_data_structure.get_global_particle_properties(),
+      obstacle_data_structure.get_global_particle_properties().n_registered_slots()));
 }
 
 template class MeltPoolDG::ObstacleField<1, double, MeltPoolDG::SphericalParticle<1, double>>;
