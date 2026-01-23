@@ -1,5 +1,9 @@
 #pragma once
 
+#include <deal.II/fe/mapping.h>
+
+#include <deal.II/grid/grid_tools.h>
+
 #include <deal.II/particles/particle_accessor.h>
 #include <deal.II/particles/property_pool.h>
 
@@ -72,7 +76,8 @@ namespace MeltPoolDG
      *
      * @return A tensor representing the linear velocity of the particle.
      */
-    dealii::Tensor<1, dim, number>
+    template <typename return_type>
+    dealii::Tensor<1, dim, return_type>
     get_linear_velocity() const;
 
     /**
@@ -84,6 +89,15 @@ namespace MeltPoolDG
     get_angular_velocity() const;
 
     /**
+     * Returns the force of the given particle.
+     *
+     * @return A tensor representing the force of the particle.
+     */
+    dealii::Tensor<1, dim, number>
+    get_force() const;
+
+
+    /**
      * Accumulates the specified force vector to the particle by adding its components into the
      * particle's property array.
      *
@@ -91,6 +105,13 @@ namespace MeltPoolDG
      */
     void
     add_force(const dealii::Tensor<1, dim, number> &force);
+
+    dealii::Triangulation<dim>::cell_iterator
+    get_surrounding_active_cell(const dealii::Triangulation<dim> &tria) const;
+
+    dealii::Triangulation<dim>::cell_iterator
+    get_surrounding_active_cell(const dealii::Triangulation<dim> &tria,
+                                const dealii::Mapping<dim>       &mapping) const;
 
     /**
      * Returns the unique identifier of the particle.
@@ -125,6 +146,9 @@ namespace MeltPoolDG
 
     /// View to the particle properties (velocity, force etc.).
     dealii::ArrayView<number> properties;
+
+    /// Iterator to the surrounding active cell of the particle center location.
+    mutable typename dealii::Triangulation<dim>::cell_iterator surrounding_active_cell;
   };
 
 
@@ -133,6 +157,7 @@ namespace MeltPoolDG
     dealii::Particles::ParticleAccessor<dim> &particle)
     : location(particle.get_location())
     , properties(particle.get_properties())
+    , surrounding_active_cell(particle.get_surrounding_cell())
   {}
 
   template <int dim, typename number>
@@ -151,11 +176,12 @@ namespace MeltPoolDG
   }
 
   template <int dim, typename number>
-  dealii::Tensor<1, dim, number>
+  template <typename return_type>
+  dealii::Tensor<1, dim, return_type>
   DEMParticleAccessor<dim, number>::get_linear_velocity() const
   {
     Assert(!properties.empty(), dealii::ExcInternalError());
-    dealii::Tensor<1, dim, number> velocity;
+    dealii::Tensor<1, dim, return_type> velocity;
     for (int dimension = 0; dimension < dim; ++dimension)
       velocity[dimension] =
         properties[SphericalParticle<dim, number>::Properties::velocity + dimension];
@@ -171,6 +197,18 @@ namespace MeltPoolDG
     for (int dimension = 0; dimension < axial_dim<dim>; ++dimension)
       velocity[dimension] =
         properties[SphericalParticle<dim, number>::Properties::angular_velocity + dimension];
+    return velocity;
+  }
+
+  template <int dim, typename number>
+  dealii::Tensor<1, dim, number>
+  DEMParticleAccessor<dim, number>::get_force() const
+  {
+    Assert(!properties.empty(), dealii::ExcInternalError());
+    dealii::Tensor<1, dim, number> velocity;
+    for (int dimension = 0; dimension < dim; ++dimension)
+      velocity[dimension] =
+        properties[SphericalParticle<dim, number>::Properties::force + dimension];
     return velocity;
   }
 
@@ -207,5 +245,34 @@ namespace MeltPoolDG
   {
     Assert(!properties.empty(), dealii::ExcInternalError());
     return properties[property];
+  }
+
+  template <int dim, typename number>
+  typename dealii::Triangulation<dim>::cell_iterator
+  DEMParticleAccessor<dim, number>::get_surrounding_active_cell(
+    const dealii::Triangulation<dim> &tria) const
+  {
+    Assert(!properties.empty(), dealii::ExcInternalError());
+    if (surrounding_active_cell.state() == dealii::IteratorState::invalid)
+      {
+        std::tie(surrounding_active_cell, std::ignore) =
+          dealii::GridTools::find_active_cell_around_point(tria, location);
+      }
+    return surrounding_active_cell;
+  }
+
+  template <int dim, typename number>
+  typename dealii::Triangulation<dim>::cell_iterator
+  DEMParticleAccessor<dim, number>::get_surrounding_active_cell(
+    const dealii::Triangulation<dim> &tria,
+    const dealii::Mapping<dim>       &mapping) const
+  {
+    Assert(!properties.empty(), dealii::ExcInternalError());
+    if (surrounding_active_cell.state() == dealii::IteratorState::invalid)
+      {
+        std::tie(surrounding_active_cell, std::ignore) =
+          dealii::GridTools::find_active_cell_around_point(mapping, tria, location);
+      }
+    return surrounding_active_cell;
   }
 } // namespace MeltPoolDG

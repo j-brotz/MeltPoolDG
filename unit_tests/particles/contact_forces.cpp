@@ -107,11 +107,10 @@ namespace
       {0, dealii::Tensor<1, dim, double>({-6393.2109, 0.0, 0.0})},
       {1, dealii::Tensor<1, dim, double>({6393.2109, 0.0, 0.0})}};
 
-    for (const auto &particle : this->obstacle_field->get_particle_handler())
+    for (const auto &particle : obstacle_field->locally_owned_particle_range())
       {
-        const particle_id_type particle_id = static_cast<particle_id_type>(
-          ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
-        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+        const particle_id_type particle_id = static_cast<particle_id_type>(particle.id());
+        const dealii::Tensor<1, dim, double> computed_force = particle.get_force();
         const dealii::Tensor<1, dim, double> expected_force = expected_forces_map.at(particle_id);
 
         for (int d = 0; d < dim; ++d)
@@ -143,11 +142,10 @@ namespace
       {0, dealii::Tensor<1, dim, double>({-6377.8522, 0.0, 0.0})},
       {1, dealii::Tensor<1, dim, double>({6377.8522, 0.0, 0.0})}};
 
-    for (const auto &particle : this->obstacle_field->get_particle_handler())
+    for (const auto &particle : obstacle_field->locally_owned_particle_range())
       {
-        const particle_id_type particle_id = static_cast<particle_id_type>(
-          ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
-        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+        const particle_id_type particle_id = static_cast<particle_id_type>(particle.id());
+        const dealii::Tensor<1, dim, double> computed_force = particle.get_force();
         const dealii::Tensor<1, dim, double> expected_force = expected_forces_map.at(particle_id);
 
         for (int d = 0; d < dim; ++d)
@@ -179,11 +177,10 @@ namespace
       {0, dealii::Tensor<1, dim, double>({-5170.7448, 0.0, 0.0})},
       {1, dealii::Tensor<1, dim, double>({5170.7448, 0.0, 0.0})}};
 
-    for (const auto &particle : this->obstacle_field->get_particle_handler())
+    for (const auto &particle : obstacle_field->locally_owned_particle_range())
       {
-        const particle_id_type particle_id = static_cast<particle_id_type>(
-          ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
-        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+        const particle_id_type particle_id = static_cast<particle_id_type>(particle.id());
+        const dealii::Tensor<1, dim, double> computed_force = particle.get_force();
         const dealii::Tensor<1, dim, double> expected_force = expected_forces_map.at(particle_id);
 
         for (int d = 0; d < dim; ++d)
@@ -215,11 +212,10 @@ namespace
       {0, dealii::Tensor<1, dim, double>({-2672.2475, -4421.6790, 0.0})},
       {1, dealii::Tensor<1, dim, double>({2672.2475, 4421.6790, 0.0})}};
 
-    for (const auto &particle : this->obstacle_field->get_particle_handler())
+    for (const auto &particle : obstacle_field->locally_owned_particle_range())
       {
-        const particle_id_type particle_id = static_cast<particle_id_type>(
-          ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
-        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+        const particle_id_type particle_id = static_cast<particle_id_type>(particle.id());
+        const dealii::Tensor<1, dim, double> computed_force = particle.get_force();
         const dealii::Tensor<1, dim, double> expected_force = expected_forces_map.at(particle_id);
 
         for (int d = 0; d < dim; ++d)
@@ -257,11 +253,10 @@ namespace
       {1, dealii::Tensor<1, dim, double>({970.0427, 0.0, 0.0})},
       {2, dealii::Tensor<1, dim, double>({5170.7448, 0.0, 0.0})}};
 
-    for (const auto &particle : this->obstacle_field->get_particle_handler())
+    for (const auto &particle : obstacle_field->locally_owned_particle_range())
       {
-        const particle_id_type particle_id = static_cast<particle_id_type>(
-          ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
-        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+        const particle_id_type particle_id = static_cast<particle_id_type>(particle.id());
+        const dealii::Tensor<1, dim, double> computed_force = particle.get_force();
         const dealii::Tensor<1, dim, double> expected_force = expected_forces_map.at(particle_id);
 
         for (int d = 0; d < dim; ++d)

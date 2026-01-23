@@ -40,7 +40,7 @@ void
 MeltPoolDG::StokesLawSphericalParticleForce<dim, number, ObstacleType>::add_load_to_obstacles(
   ObstacleField<dim, number, ObstacleType> &obstacle_field) const
 {
-  for (auto &particle : obstacle_field.get_particle_handler())
+  for (auto &particle : obstacle_field.locally_owned_particle_range())
     {
       dealii::FEPointEvaluation<dim + 2, dim> fe_point_eval(
         *matrix_free.mf.get_mapping_info().mapping,
@@ -48,12 +48,22 @@ MeltPoolDG::StokesLawSphericalParticleForce<dim, number, ObstacleType>::add_load
         dealii::UpdateFlags::update_values);
       dealii::Point<dim, number> coordinates_on_unit_cell =
         matrix_free.mf.get_mapping_info().mapping->transform_real_to_unit_cell(
-          particle.get_surrounding_cell(), particle.get_location());
+          particle.get_surrounding_active_cell(
+            matrix_free.mf.get_dof_handler(matrix_free.dof_idx).get_triangulation(),
+            *matrix_free.mf.get_mapping_info().mapping),
+          particle.get_location());
 
-      fe_point_eval.reinit(particle.get_surrounding_cell(),
-                           dealii::ArrayView<dealii::Point<dim, number>>(coordinates_on_unit_cell));
-      auto dof_cell = particle.get_surrounding_cell()->as_dof_handler_iterator(
-        matrix_free.mf.get_dof_handler(matrix_free.dof_idx));
+      fe_point_eval.reinit(
+        particle.get_surrounding_active_cell(
+          matrix_free.mf.get_dof_handler(matrix_free.dof_idx).get_triangulation(),
+          *matrix_free.mf.get_mapping_info().mapping),
+        dealii::ArrayView<dealii::Point<dim, number>>(coordinates_on_unit_cell));
+      auto dof_cell =
+        particle
+          .get_surrounding_active_cell(
+            matrix_free.mf.get_dof_handler(matrix_free.dof_idx).get_triangulation(),
+            *matrix_free.mf.get_mapping_info().mapping)
+          ->as_dof_handler_iterator(matrix_free.mf.get_dof_handler(matrix_free.dof_idx));
       dealii::Vector<number> dof_values(dof_cell->get_fe().n_dofs_per_cell());
       dof_cell->get_dof_values(solution, dof_values);
       fe_point_eval.evaluate(dof_values, dealii::EvaluationFlags::values);
@@ -64,11 +74,9 @@ MeltPoolDG::StokesLawSphericalParticleForce<dim, number, ObstacleType>::add_load
         fluid_velocity[i] = w[i + 1] / w[0];
 
       dealii::Tensor<1, dim> particle_force =
-        6. * std::numbers::pi *
-        ObstacleType::get_property(particle, ObstacleType::Properties::radius) *
-        (fluid_velocity - ObstacleType::template get_velocity<number>(particle)) *
-        dynamic_viscosity;
-      ObstacleType::accumulate_force(particle_force, particle);
+        6. * std::numbers::pi * particle.get_property(ObstacleType::Properties::radius) *
+        (fluid_velocity - particle.template get_linear_velocity<number>()) * dynamic_viscosity;
+      particle.add_force(particle_force);
     }
 }
 

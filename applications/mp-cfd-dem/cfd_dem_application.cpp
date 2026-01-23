@@ -387,7 +387,7 @@ namespace MeltPoolDG
       [&](std::vector<VectorType *> &in) { in.push_back(&comp_flow_operation->get_solution()); };
 
     std::function<void()> pre = [&] {
-      obstacle_field->get_particle_handler().prepare_for_coarsening_and_refinement();
+      obstacle_field->prepare_for_coarsening_and_refinement();
 
       // print mesh refinement info to console
       Journal::print_decoration_line(scratch_data->get_pcout(1));
@@ -401,7 +401,7 @@ namespace MeltPoolDG
     };
 
     std::function<void()> post = [&] {
-      obstacle_field->get_particle_handler().unpack_after_coarsening_and_refinement();
+      obstacle_field->execute_coarsening_and_refinement();
       print_triangulation_info(scratch_data->get_pcout(1),
                                "Flow grid after refinement ",
                                *this->simulation_case->triangulation,

@@ -53,6 +53,18 @@ namespace MeltPoolDG
     void
     reinit();
 
+    void
+    prepare_for_coarsening_and_refinement()
+    {
+      obstacle_handler.prepare_for_coarsening_and_refinement();
+    }
+
+    void
+    execute_coarsening_and_refinement()
+    {
+      obstacle_handler.unpack_after_coarsening_and_refinement();
+    }
+
     /**
      * @brief Serializes the internal state of the class.
      *

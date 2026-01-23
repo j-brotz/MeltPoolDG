@@ -198,15 +198,16 @@ namespace MeltPoolDG
     std::vector<AMR::AMRRegion<dim, number>>
     get_refinement_regions() const;
 
-    /**
-     * @brief Return a reference to the underlying particle handler of this object.
-     *
-     * @return The used particle handler of the current object.
-     */
-    dealii::Particles::ParticleHandler<dim> &
-    get_particle_handler()
+    void
+    prepare_for_coarsening_and_refinement()
     {
-      return obstacle_data_structure.get_particle_handler();
+      obstacle_data_structure.prepare_for_coarsening_and_refinement();
+    }
+
+    void
+    execute_coarsening_and_refinement()
+    {
+      obstacle_data_structure.execute_coarsening_and_refinement();
     }
 
     /**
