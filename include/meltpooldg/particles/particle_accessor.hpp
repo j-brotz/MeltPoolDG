@@ -3,6 +3,7 @@
 #include <deal.II/fe/mapping.h>
 
 #include <deal.II/grid/grid_tools.h>
+#include <deal.II/grid/tria.h>
 
 #include <deal.II/particles/particle_accessor.h>
 #include <deal.II/particles/property_pool.h>
@@ -70,13 +71,16 @@ namespace MeltPoolDG
     dealii::Point<dim, number> &
     get_location();
 
+    const dealii::Point<dim, number> &
+    get_location() const;
+
     /**
      * Returns the linear velocity of the given particle, i.e., the translational velocity at the
      * particle center of mass.
      *
      * @return A tensor representing the linear velocity of the particle.
      */
-    template <typename return_type>
+    template <typename return_type = number>
     dealii::Tensor<1, dim, return_type>
     get_linear_velocity() const;
 
@@ -105,6 +109,9 @@ namespace MeltPoolDG
      */
     void
     add_force(const dealii::Tensor<1, dim, number> &force);
+
+    void
+    add_torque(const dealii::Tensor<1, axial_dim<dim>, number> &torque);
 
     dealii::Triangulation<dim>::cell_iterator
     get_surrounding_active_cell(const dealii::Triangulation<dim> &tria) const;
@@ -176,6 +183,13 @@ namespace MeltPoolDG
   }
 
   template <int dim, typename number>
+  const dealii::Point<dim, number> &
+  DEMParticleAccessor<dim, number>::get_location() const
+  {
+    return location;
+  }
+
+  template <int dim, typename number>
   template <typename return_type>
   dealii::Tensor<1, dim, return_type>
   DEMParticleAccessor<dim, number>::get_linear_velocity() const
@@ -222,6 +236,17 @@ namespace MeltPoolDG
   }
 
   template <int dim, typename number>
+  void
+  DEMParticleAccessor<dim, number>::add_torque(
+    const dealii::Tensor<1, axial_dim<dim>, number> &torque)
+  {
+    Assert(!properties.empty(), dealii::ExcInternalError());
+    for (int dimension = 0; dimension < axial_dim<dim>; ++dimension)
+      properties[SphericalParticle<dim, number>::Properties::torque + dimension] +=
+        torque[dimension];
+  }
+
+  template <int dim, typename number>
   const number &
   DEMParticleAccessor<dim, number>::id() const
   {
@@ -256,7 +281,7 @@ namespace MeltPoolDG
     if (surrounding_active_cell.state() == dealii::IteratorState::invalid)
       {
         std::tie(surrounding_active_cell, std::ignore) =
-          dealii::GridTools::find_active_cell_around_point(tria, location);
+          dealii::GridTools::find_active_cell_around_point(tria, location.get());
       }
     return surrounding_active_cell;
   }
@@ -271,7 +296,7 @@ namespace MeltPoolDG
     if (surrounding_active_cell.state() == dealii::IteratorState::invalid)
       {
         std::tie(surrounding_active_cell, std::ignore) =
-          dealii::GridTools::find_active_cell_around_point(mapping, tria, location);
+          dealii::GridTools::find_active_cell_around_point(mapping, tria, location.get());
       }
     return surrounding_active_cell;
   }

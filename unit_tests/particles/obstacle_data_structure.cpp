@@ -63,8 +63,9 @@ namespace
       properties[ObstacleType::Properties::radius]      = spec.radius;
       properties[ObstacleType::Properties::particle_id] = spec.id;
       obstacle_data_structure->insert_obstacles(triangulation,
-                                       std::vector<dealii::Point<dim, double>>{spec.location},
-                                       std::vector<std::vector<double>>{properties});
+                                                std::vector<dealii::Point<dim, double>>{
+                                                  spec.location},
+                                                std::vector<std::vector<double>>{properties});
     }
 
     std::vector<int>
@@ -74,16 +75,16 @@ namespace
       std::vector<int> ids;
       ids.reserve(handles.size());
       for (const auto &h : handles)
-        ids.push_back(static_cast<int>(
-          ObstacleType::get_property(obstacle_data_structure->get_particle_handler().get_property_pool(),
-                                     h,
-                                     ObstacleType::Properties::particle_id)));
+        ids.push_back(static_cast<int>(ObstacleType::get_property(
+          obstacle_data_structure->get_particle_handler().get_property_pool(),
+          h,
+          ObstacleType::Properties::particle_id)));
 
       return ids;
     }
 
-    dealii::parallel::distributed::Triangulation<dim>                     triangulation;
-    dealii::MappingQ<dim>                                                 mapping;
+    dealii::parallel::distributed::Triangulation<dim> triangulation;
+    dealii::MappingQ<dim>                             mapping;
     std::unique_ptr<MeltPoolDG::ObstacleCompleteDomainSearch<dim, double, ObstacleType>>
       obstacle_data_structure;
 

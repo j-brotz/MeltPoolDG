@@ -1,4 +1,5 @@
 #include <deal.II/base/array_view.h>
+#include <deal.II/base/geometry_info.h>
 #include <deal.II/base/mpi_remote_point_evaluation.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
@@ -102,41 +103,43 @@ MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::cell_operation(
       const auto   cell        = matrix_free.mf.get_cell_iterator(cell_batch_id, i);
       const number cell_volume = cell->measure();
 
-      for (const auto &particle : obstacle_handler.get_particle_handler().particles_in_cell(cell))
+      for (const auto &particle : obstacle_handler.locally_owned_particle_range())
         {
-          dealii::FEPointEvaluation<dim + 2, dim> fe_point_eval(
-            *matrix_free.mf.get_mapping_info().mapping,
-            matrix_free.mf.get_dof_handler(matrix_free.dof_idx).get_fe(),
-            dealii::UpdateFlags::update_values);
           dealii::Point<dim, number> coordinates_on_unit_cell =
             matrix_free.mf.get_mapping_info().mapping->transform_real_to_unit_cell(
-              particle.get_surrounding_cell(), particle.get_location());
+              cell, particle.get_location());
 
-          fe_point_eval.reinit(particle.get_surrounding_cell(),
-                               dealii::ArrayView<dealii::Point<dim, number>>(
-                                 coordinates_on_unit_cell));
-          auto dof_cell = particle.get_surrounding_cell()->as_dof_handler_iterator(
-            matrix_free.mf.get_dof_handler(matrix_free.dof_idx));
-          dealii::Vector<number> dof_values(dof_cell->get_fe().n_dofs_per_cell());
-          dof_cell->get_dof_values(solution, dof_values);
-          fe_point_eval.evaluate(dof_values, dealii::EvaluationFlags::values);
+          if (dealii::GeometryInfo<dim>::is_inside_unit_cell(coordinates_on_unit_cell))
+            {
+              dealii::FEPointEvaluation<dim + 2, dim> fe_point_eval(
+                *matrix_free.mf.get_mapping_info().mapping,
+                matrix_free.mf.get_dof_handler(matrix_free.dof_idx).get_fe(),
+                dealii::UpdateFlags::update_values);
 
-          dealii::Tensor<1, dim + 2, number> conserved_variables = fe_point_eval.get_value(0);
+              fe_point_eval.reinit(
+                cell, dealii::ArrayView<dealii::Point<dim, number>>(coordinates_on_unit_cell));
+              auto dof_cell =
+                cell->as_dof_handler_iterator(matrix_free.mf.get_dof_handler(matrix_free.dof_idx));
+              dealii::Vector<number> dof_values(dof_cell->get_fe().n_dofs_per_cell());
+              dof_cell->get_dof_values(solution, dof_values);
+              fe_point_eval.evaluate(dof_values, dealii::EvaluationFlags::values);
 
-          // compute fluid velocity at particle location from corresponding conserved variables
-          dealii::Tensor<1, dim, number> fluid_velocity;
-          for (unsigned i = 0; i < dim; ++i)
-            fluid_velocity[i] = conserved_variables[i + 1] / conserved_variables[0];
+              dealii::Tensor<1, dim + 2, number> conserved_variables = fe_point_eval.get_value(0);
 
-          // compute force contribution according to Stokes' law
-          dealii::Tensor<1, dim, number> individual_particle_force =
-            -6. * std::numbers::pi *
-            ObstacleType::get_property(particle, ObstacleType::Properties::radius) *
-            (fluid_velocity - ObstacleType::template get_velocity<number>(particle)) *
-            dynamic_viscosity;
+              // compute fluid velocity at particle location from corresponding conserved variables
+              dealii::Tensor<1, dim, number> fluid_velocity;
+              for (unsigned i = 0; i < dim; ++i)
+                fluid_velocity[i] = conserved_variables[i + 1] / conserved_variables[0];
 
-          for (int j = 0; j < dim; ++j)
-            cell_penalty_force[j][i] += individual_particle_force[j] / cell_volume;
+              // compute force contribution according to Stokes' law
+              dealii::Tensor<1, dim, number> individual_particle_force =
+                -6. * std::numbers::pi * particle.get_property(ObstacleType::Properties::radius) *
+                (fluid_velocity - particle.template get_linear_velocity<number>()) *
+                dynamic_viscosity;
+
+              for (int j = 0; j < dim; ++j)
+                cell_penalty_force[j][i] += individual_particle_force[j] / cell_volume;
+            }
         }
     }
 }

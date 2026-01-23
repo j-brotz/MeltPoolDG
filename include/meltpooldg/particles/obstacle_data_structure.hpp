@@ -13,8 +13,9 @@
 #include <deal.II/particles/property_pool.h>
 
 #include <meltpooldg/particles/particle_iterator.hpp>
+#include <meltpooldg/post_processing/postprocessor.hpp>
 
-#include <memory>
+#include <ranges>
 #include <vector>
 
 namespace MeltPoolDG
@@ -63,6 +64,17 @@ namespace MeltPoolDG
     execute_coarsening_and_refinement()
     {
       obstacle_handler.unpack_after_coarsening_and_refinement();
+    }
+
+    void
+    attach_to_post_processing(Postprocessor<dim, number> &post_processor)
+    {
+      const auto [property_names, property_component_interpretations] =
+        SphericalParticle<dim, number>::get_property_names_and_component_interpretation();
+
+      post_processor.register_obstacle_output(&obstacle_handler,
+                                              property_names,
+                                              property_component_interpretations);
     }
 
     /**

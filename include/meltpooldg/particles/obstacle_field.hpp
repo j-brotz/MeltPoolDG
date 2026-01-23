@@ -255,6 +255,12 @@ namespace MeltPoolDG
     std::ranges::subrange<ParticleIterator<dim, number>>
     global_particle_range();
 
+    void
+    attach_to_post_processing(Postprocessor<dim, number> &post_processor)
+    {
+      obstacle_data_structure.attach_to_post_processing(post_processor);
+    }
+
   private:
     /**
      * @brief Reads the obstacle state input file and returns obstacle locations and properties.
