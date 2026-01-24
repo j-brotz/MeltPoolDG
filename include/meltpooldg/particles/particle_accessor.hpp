@@ -84,6 +84,15 @@ namespace MeltPoolDG
     get_angular_velocity() const;
 
     /**
+     * Sets the specified force vector to the particle by assigning its components into the
+     * particle's property array.
+     *
+     * @param force The force vector to assign to the particle.
+     */
+    void
+    set_force(const dealii::Tensor<1, dim, number> &force);
+
+    /**
      * Accumulates the specified force vector to the particle by adding its components into the
      * particle's property array.
      *
@@ -172,6 +181,15 @@ namespace MeltPoolDG
       velocity[dimension] =
         properties[SphericalParticle<dim, number>::Properties::angular_velocity + dimension];
     return velocity;
+  }
+
+  template <int dim, typename number>
+  void
+  DEMParticleAccessor<dim, number>::set_force(const dealii::Tensor<1, dim, number> &force)
+  {
+    Assert(!properties.empty(), dealii::ExcInternalError());
+    for (int dimension = 0; dimension < dim; ++dimension)
+      properties[SphericalParticle<dim, number>::Properties::force + dimension] = force[dimension];
   }
 
   template <int dim, typename number>

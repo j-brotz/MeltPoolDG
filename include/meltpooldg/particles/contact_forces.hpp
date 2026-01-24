@@ -6,6 +6,7 @@
 #include <meltpooldg/particles/dem_util.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle_accessor.hpp>
+#include <meltpooldg/time_integration/time_iterator.hpp>
 
 
 namespace MeltPoolDG
@@ -15,6 +16,9 @@ namespace MeltPoolDG
   {
     /// Coefficient of restitution for damping in particle collisions.
     number restitution_coefficient;
+
+    /// Sliding friction coefficient for Coulomb friction model.
+    number sliding_friction_coefficient;
 
     struct MaterialData
     {
@@ -42,8 +46,15 @@ namespace MeltPoolDG
   class SphericalParticleContactForce
   {
   public:
+    /**
+     * Constructor for the spherical particle contact force model.
+     *
+     * @param contact_data Contact data defining the material and contact properties.
+     * @param time_iterator Time iterator used in the DEM simulation for which the contact force is applied.
+     */
     explicit SphericalParticleContactForce(
-      const SphericalParticleContactData<number> &contact_data);
+      const SphericalParticleContactData<number>              &contact_data,
+      const MeltPoolDG::TimeIntegration::TimeIterator<number> &time_iterator);
 
     /**
      * Compute the contact forces and add them to the obstacles in the given obstacle field. This
@@ -70,6 +81,14 @@ namespace MeltPoolDG
 
     /// Damping prefactor computed from the restitution coefficient. This is cached for efficiency.
     const number damping_prefactor;
+
+    /// Normal tangential gap from the last time step. The key is of the outer map identifies the
+    /// particle of consideration (self), the inner map the other particle in contact.
+    mutable std::map<int, std::map<int, dealii::Tensor<1, dim, number>>> previous_tangential_gaps;
+
+    /// Time iterator which is used in the DEM simulation. This is needed to get the current time
+    /// step size.
+    const MeltPoolDG::TimeIntegration::TimeIterator<number> &time_iterator;
 
     /**
      * Struct describing the contact configuration between two particles, i.e., it computes and
@@ -100,6 +119,9 @@ namespace MeltPoolDG
 
       /// Effective youngs modulus of the two contacting particles, i.e., E/(2*(1-nu^2)).
       number effective_youngs_modulus;
+
+      /// Effective shear modulus of the two contacting particles, i.e., G/(4*(2-nu)*(1+nu)).
+      number effective_shear_modulus;
 
       /// Normal vector pointing from self to other.
       dealii::Tensor<1, dim, number> normal_vector;
@@ -153,6 +175,51 @@ namespace MeltPoolDG
 
     dealii::Tensor<1, dim, number>
     normal_contact_force(const ContactConfiguration &contact_configuration) const;
+
+    /**
+     * Computes the tangential contact force for a given particle–particle contact. The formulation
+     * follows Golshan et al. (https://doi.org/10.1007/s40571-022-00478-6).
+     *
+     * The tangential contact force is defined as
+     * \f[
+     * \boldsymbol{F}_t = -k_t \boldsymbol{\delta}_t - \eta_t \boldsymbol{v}_{rt},
+     * \f]
+     * where \f$k_t\f$ is the tangential stiffness, \f$\boldsymbol{\delta}_t\f$ the tangential gap
+     * vector, \f$\eta_t\f$ the tangential damping coefficient, and \f$\boldsymbol{v}_{rt}\f$ the
+     * tangential component of the relative velocity.
+     *
+     * The tangential stiffness is computed as
+     * \f[
+     * k_t = 8 G_e \sqrt{R_e \delta_n},
+     * \f]
+     * with \f$G_e\f$ denoting the effective shear modulus, \f$R_e\f$ the effective radius, and
+     * \f$\delta_n\f$ the normal gap.
+     *
+     * The tangential damping coefficient is given by
+     * \f[
+     * \eta_t = -2 \sqrt{\frac{5}{6}}\frac{\ln(e_r)}{\sqrt{\ln^2(e_r) + \pi^2}} \sqrt{k_t m_e},
+     * \f]
+     * where \f$e_r\f$ is the coefficient of restitution and \f$m_e\f$ the effective mass.
+     *
+     * If the magnitude of the tangential force exceeds the Coulomb friction limit, i.e.,
+     * \f[
+     * |\boldsymbol{F}_t| > \mu |\boldsymbol{F}_n|,
+     *  \f]
+     * with \f$\mu\f$ being the sliding friction coefficient and \f$\boldsymbol{F}_n\f$ the normal
+     * contact force, the tangential gap is adjusted and the tangential force is recomputed such
+     * that the Coulomb limit is exactly satisfied.
+     *
+     * @param contact_configuration  Contact configuration between the two particles.
+     * @param normal_force Normal contact force vector for the contact.
+     * @param tangential_gap Tangential gap vector from the previous time step; updated by this
+     * function.
+     *
+     * @return Tangential contact force vector.
+     */
+    dealii::Tensor<1, dim, number>
+    tangential_contact_force(const ContactConfiguration           &contact_configuration,
+                             const dealii::Tensor<1, dim, number> &normal_force,
+                             dealii::Tensor<1, dim, number>       &tangential_gap) const;
 
     /**
      * Function which computes the damping prefactor from the restitution coefficient
