@@ -40,6 +40,15 @@ namespace MeltPoolDG
     , time_iterator(time_iterator)
   {}
 
+  template <int dim, typename number, typename ObstacleType>
+  void
+  SphericalParticleContactForce<dim, number, ObstacleType>::add_wall(
+    std::unique_ptr<dealii::Function<dim>> &&wall_signed_distance_function)
+  {
+    static int next_wall_id                        = 0;
+    wall_signed_distance_functions[next_wall_id++] = std::move(wall_signed_distance_function);
+  }
+
 
   template <int dim, typename number, typename ObstacleType>
   void
@@ -50,6 +59,8 @@ namespace MeltPoolDG
       {
         std::map<int, dealii::Tensor<1, dim, number>> &self_tangential_gaps =
           previous_tangential_gaps[particle.id()];
+
+
         for (auto &other : obstacle_field.global_particle_range())
           {
             if (particle.id() == other.id())
@@ -74,6 +85,28 @@ namespace MeltPoolDG
             else
               {
                 self_tangential_gaps.erase(other.id());
+              }
+          }
+
+        for (auto &[key, wall_function] : wall_signed_distance_functions)
+          {
+            ContactConfiguration contact_configuration(particle,
+                                                       wall_function.get(),
+                                                       contact_data.particle.youngs_modulus,
+                                                       contact_data.particle.poisson_ratio);
+            if (contact_configuration.normal_overlap > 0)
+              {
+                dealii::Tensor<1, dim, number> normal_force =
+                  normal_contact_force(contact_configuration);
+                dealii::Tensor<1, dim, number> tangential_force =
+                  tangential_contact_force(contact_configuration,
+                                           normal_force,
+                                           previous_tangential_gaps_with_walls[particle.id()][key]);
+                particle.add_force(normal_force + tangential_force);
+              }
+            else
+              {
+                previous_tangential_gaps_with_walls[particle.id()].erase(key);
               }
           }
       }
@@ -151,10 +184,10 @@ namespace MeltPoolDG
 
   template <int dim, typename number, typename ObstacleType>
   SphericalParticleContactForce<dim, number, ObstacleType>::ContactConfiguration::
-    ContactConfiguration(DEMParticleAccessor<dim, number> &self,
-                         DEMParticleAccessor<dim, number> &other,
-                         const number                      youngs_modulus,
-                         const number                      poisson_ratio)
+    ContactConfiguration(const DEMParticleAccessor<dim, number> &self,
+                         const DEMParticleAccessor<dim, number> &other,
+                         const number                            youngs_modulus,
+                         const number                            poisson_ratio)
   {
     auto compute_effective_quantity = [](number t1, number t2) -> number {
       return t1 * t2 / (t1 + t2);
@@ -194,6 +227,53 @@ namespace MeltPoolDG
           (self.get_property(ObstacleType::Properties::radius) * self.get_angular_velocity()[0] +
            other.get_property(ObstacleType::Properties::radius) * other.get_angular_velocity()[0]) *
             dealii::cross_product_2d(normal_vector);
+      }
+    else
+      {
+        AssertThrow(false, dealii::ExcMessage("Dimension not supported!"));
+      }
+
+    relative_velocity.normal_component = (normal_vector * relative_velocity.value) * normal_vector;
+    relative_velocity.tangential_component =
+      relative_velocity.value - relative_velocity.normal_component;
+  }
+
+  template <int dim, typename number, typename ObstacleType>
+  SphericalParticleContactForce<dim, number, ObstacleType>::ContactConfiguration::
+    ContactConfiguration(const DEMParticleAccessor<dim, number> &particle,
+                         const dealii::Function<dim>            *wall,
+                         const number                            youngs_modulus,
+                         const number                            poisson_ratio)
+  {
+    effective_mass   = particle.get_property(ObstacleType::Properties::mass);
+    effective_radius = particle.get_property(ObstacleType::Properties::radius);
+
+    effective_youngs_modulus = youngs_modulus / (1 - poisson_ratio * poisson_ratio);
+
+    effective_shear_modulus = 0.5 * youngs_modulus / ((2 - poisson_ratio) * (1 + poisson_ratio));
+
+    const number distance = std::abs(wall->value(particle.get_location()));
+
+    // Normal vector points from particle to wall. It is assumed that the wall function is
+    // negative inside the wall.
+    normal_vector =
+      -wall->gradient(particle.get_location()) / wall->gradient(particle.get_location()).norm();
+    normal_overlap = particle.get_property(ObstacleType::Properties::radius) - distance;
+
+    if constexpr (dim == 3)
+      {
+        relative_velocity.value =
+          particle.get_linear_velocity() +
+          dealii::cross_product_3d(particle.get_property(ObstacleType::Properties::radius) *
+                                     particle.get_angular_velocity(),
+                                   normal_vector);
+      }
+    else if constexpr (dim == 2)
+      {
+        relative_velocity.value = particle.get_linear_velocity() +
+                                  (particle.get_property(ObstacleType::Properties::radius) *
+                                   particle.get_angular_velocity()[0]) *
+                                    dealii::cross_product_2d(normal_vector);
       }
     else
       {

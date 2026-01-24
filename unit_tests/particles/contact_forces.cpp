@@ -3,6 +3,8 @@
 
 #include <gmock/gmock.h>
 
+#include <deal.II/base/function_signed_distance.h>
+
 #include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/grid/grid_generator.h>
@@ -409,6 +411,143 @@ namespace
           {
             EXPECT_NEAR(computed_force[d], expected_force[d], 1e-4)
               << "Particle id: " << particle_id << ", force component: " << d;
+          }
+      }
+  }
+
+  TEST_F(ContactForceFixture, ParticleWallContact_HorizontalWall)
+  {
+    // This test verifies particle–wall contact behavior under the following conditions:
+    // - A single spherical particle interacts with a planar horizontal wall.
+    // - The particle approaches the wall with a normal and tangential velocity component,
+    //   leading to both normal and tangential contact forces.
+    // - The sliding friction coefficient is set to infinity, enforcing a sticking contact
+    //   condition where tangential relative motion is fully constrained.
+    // - Tangential contact forces are unbounded because the Coulomb friction limit is disabled by
+    //   setting the sliding friction coefficient to infinity.
+    insert_particle({.id               = 0,
+                     .radius           = 0.2,
+                     .density          = 4300,
+                     .angular_velocity = dealii::Tensor<1, dim, double>({0, 10, 0}),
+                     .linear_velocity  = dealii::Tensor<1, dim, double>({0, 0, -3}),
+                     .location         = dealii::Point<dim>(0.5, 0.5, 0.48)});
+
+    contact_data.sliding_friction_coefficient = std::numeric_limits<double>::infinity();
+
+    constexpr dealii::Tensor<1, dim, double> wall_normal({0., 0., 1.});
+    constexpr dealii::Point<dim, double>     wall_point({0., 0., 0.3});
+    contact_force.add_wall(
+      std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(wall_point, wall_normal));
+
+    contact_force.add_load_to_obstacles(*this->obstacle_field);
+
+    const dealii::Tensor<1, dim, double> expected_force =
+      dealii::Tensor<1, dim, double>({21799.5058, 0.0, 85834.0455});
+
+    for (const auto &particle : this->obstacle_field->get_particle_handler())
+      {
+        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+
+        for (int d = 0; d < dim; ++d)
+          {
+            EXPECT_NEAR(computed_force[d], expected_force[d], 1e-4) << "Force component: " << d;
+          }
+      }
+  }
+
+  TEST_F(ContactForceFixture, ParticleWallContact_AngledWall)
+  {
+    // This test verifies particle–wall contact behavior under the following conditions:
+    // - A single spherical particle interacts with a planar wall that is inclined with
+    //   respect to the coordinate axes.
+    // - The particle approaches the wall with a purely vertical velocity, which results
+    //   in both normal and tangential velocity components relative to the wall due to the
+    //   wall’s inclination.
+    // - Tangential contact forces are unbounded because the Coulomb friction limit is disabled by
+    //   setting the sliding friction coefficient to infinity.
+    insert_particle({.id               = 0,
+                     .radius           = 0.2,
+                     .density          = 4300,
+                     .angular_velocity = dealii::Tensor<1, dim, double>({0, 0, 0}),
+                     .linear_velocity  = dealii::Tensor<1, dim, double>({0, 0, -2}),
+                     .location         = dealii::Point<dim>(0.427279, 0.5, 0.427279)});
+
+    contact_data.sliding_friction_coefficient = std::numeric_limits<double>::infinity();
+
+    constexpr dealii::Tensor<1, dim, double> wall_normal =
+      dealii::Tensor<1, dim, double>({1, 0., 1}) / std::numbers::sqrt2;
+    constexpr dealii::Point<dim, double> wall_point({0.3, 0., 0.3});
+    contact_force.add_wall(
+      std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(wall_point, wall_normal));
+
+    contact_force.add_load_to_obstacles(*this->obstacle_field);
+
+    const dealii::Tensor<1, dim, double> expected_force =
+      dealii::Tensor<1, dim, double>({36451.9311, 0.0, 58251.5243});
+
+    for (const auto &particle : this->obstacle_field->get_particle_handler())
+      {
+        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+
+        for (int d = 0; d < dim; ++d)
+          {
+            EXPECT_NEAR(computed_force[d], expected_force[d], 1e-4) << "Force component: " << d;
+          }
+      }
+  }
+
+  TEST_F(ContactForceFixture, ParticleWallContact_TwoWalls_MultiStep)
+  {
+    // This test verifies particle–wall contact behavior under the following conditions:
+    // - A single spherical particle interacts with two planar walls oriented
+    //   perpendicular to each other, creating a corner-like contact scenario.
+    // - The particle approaches the corner formed by the two walls with both normal
+    //   and tangential velocity components.
+    // - Tangential contact forces are unbounded because the Coulomb friction limit is disabled by
+    //   setting the sliding friction coefficient to infinity.
+    // - Two consecutive contact evaluations are performed using a fixed time step.
+    insert_particle({.id               = 0,
+                     .radius           = 0.2,
+                     .density          = 4300,
+                     .angular_velocity = dealii::Tensor<1, dim, double>({0, 10, 0}),
+                     .linear_velocity  = dealii::Tensor<1, dim, double>({-3, 0, -3}),
+                     .location         = dealii::Point<dim>(0.28, 0.5, 0.48)});
+
+    contact_data.sliding_friction_coefficient = std::numeric_limits<double>::infinity();
+
+    constexpr dealii::Tensor<1, dim, double> wall1_normal({0., 0., 1.});
+    constexpr dealii::Point<dim, double>     wall1_point({0., 0., 0.3});
+
+    constexpr dealii::Tensor<1, dim, double> wall2_normal({1., 0., 0.});
+    constexpr dealii::Point<dim, double>     wall2_point({0.1, 0., 0.});
+    contact_force.add_wall(
+      std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(wall1_point, wall1_normal));
+    contact_force.add_wall(
+      std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(wall2_point, wall2_normal));
+
+    time_iterator.set_current_time_increment(1e-4);
+
+    const std::vector<dealii::Tensor<1, dim, double>> expected_force = {
+      dealii::Tensor<1, dim, double>({140332.8101, 0.0, 96733.7985}),
+      dealii::Tensor<1, dim, double>({141825.0968, 0.0, 97032.2558})};
+
+    for (int time_step = 0; time_step < 2; ++time_step)
+      {
+        for (auto &particle : obstacle_field->locally_owned_particle_range())
+          {
+            // Reset forces to zero before each iteration
+            particle.set_force(dealii::Tensor<1, dim, double>({0, 0, 0}));
+          }
+        contact_force.add_load_to_obstacles(*this->obstacle_field);
+        for (const auto &particle : this->obstacle_field->get_particle_handler())
+          {
+            const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+
+            for (int d = 0; d < dim; ++d)
+              {
+                EXPECT_NEAR(computed_force[d], expected_force[time_step][d], 1e-4)
+                  << "Force component: " << d;
+              }
           }
       }
   }

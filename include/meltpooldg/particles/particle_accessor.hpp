@@ -67,6 +67,12 @@ namespace MeltPoolDG
     get_location();
 
     /**
+     * Same as above but for const access.
+     */
+    const dealii::Point<dim, number> &
+    get_location() const;
+
+    /**
      * Returns the linear velocity of the given particle, i.e., the translational velocity at the
      * particle center of mass.
      *
@@ -155,6 +161,13 @@ namespace MeltPoolDG
   template <int dim, typename number>
   dealii::Point<dim, number> &
   DEMParticleAccessor<dim, number>::get_location()
+  {
+    return location;
+  }
+
+  template <int dim, typename number>
+  const dealii::Point<dim, number> &
+  DEMParticleAccessor<dim, number>::get_location() const
   {
     return location;
   }
