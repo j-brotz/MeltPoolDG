@@ -8,6 +8,8 @@
 #include <meltpooldg/particles/particle_accessor.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
 
+#include <memory>
+
 
 namespace MeltPoolDG
 {
@@ -56,6 +58,24 @@ namespace MeltPoolDG
       const SphericalParticleContactData<number>              &contact_data,
       const MeltPoolDG::TimeIntegration::TimeIterator<number> &time_iterator);
 
+
+    /**
+     * This function adds a wall defined by a signed distance function to the contact force
+     * computation. The wall is represented by a function that returns the signed distance from
+     * any point in space to the wall surface. The normal vector at any point on the wall is
+     * obtained from the gradient of this function and must point outward from the wall surface.
+     *
+     * @param wall_signed_distance_function A unique pointer to a function representing the signed
+     * distance to the wall.
+     *
+     * @note The wall function should return negative values inside the wall and positive values
+     * outside the wall. It is not possible to use a single wall function for a two-sided wall; if
+     * both sides of the wall should be considered, two separate wall functions must be added with
+     * different normal orientations.
+     */
+    void
+    attach_wall(std::unique_ptr<dealii::Function<dim>> &&wall_signed_distance_function);
+
     /**
      * Compute the contact forces and add them to the obstacles in the given obstacle field. This
      * algorithm consists of two steps, first finding contacting particles, then computing and
@@ -82,13 +102,23 @@ namespace MeltPoolDG
     /// Damping prefactor computed from the restitution coefficient. This is cached for efficiency.
     const number damping_prefactor;
 
-    /// Normal tangential gap from the last time step. The key is of the outer map identifies the
-    /// particle of consideration (self), the inner map the other particle in contact.
-    mutable std::map<int, std::map<int, dealii::Tensor<1, dim, number>>> previous_tangential_gaps;
+    /// Tangential gap vectors between particles. The key of the outer map identifies the particle
+    /// of consideration (self), the inner map the other particle in contact.
+    mutable std::map<int, std::map<int, dealii::Tensor<1, dim, number>>> tangential_gaps;
+
+    /// Same as above, but for particle–wall contacts. The outer key corresponds to the particle id,
+    /// while the inner key corresponds to the wall id. The stored tangential gap represents the
+    /// tangential displacement between the particle and the wall associated with the respective
+    /// ids.
+    mutable std::map<int, std::map<int, dealii::Tensor<1, dim, number>>> tangential_gaps_with_walls;
 
     /// Time iterator which is used in the DEM simulation. This is needed to get the current time
     /// step size.
     const MeltPoolDG::TimeIntegration::TimeIterator<number> &time_iterator;
+
+    /// Map of wall signed distance functions added to the contact model. The key is a unique wall
+    /// id to identify each wall.
+    std::map<int, std::unique_ptr<dealii::Function<dim>>> wall_signed_distance_functions;
 
     /**
      * Struct describing the contact configuration between two particles, i.e., it computes and
@@ -106,10 +136,24 @@ namespace MeltPoolDG
        * @param youngs_modulus The Young's modulus of the particle material.
        * @param poisson_ratio The Poisson's ratio of the particle material.
        */
-      ContactConfiguration(DEMParticleAccessor<dim, number> &self,
-                           DEMParticleAccessor<dim, number> &other,
-                           const number                      youngs_modulus,
-                           const number                      poisson_ratio);
+      ContactConfiguration(const DEMParticleAccessor<dim, number> &self,
+                           const DEMParticleAccessor<dim, number> &other,
+                           const number                            youngs_modulus,
+                           const number                            poisson_ratio);
+
+      /**
+       * Constructor which computes all relevant input for the particle–wall contact model. The wall
+       * is assumed to have infinite mass and stiffness.
+       *
+       * @param particle The particle involved in the contact.
+       * @param wall Pointer to the signed distance function representing the wall.
+       * @param youngs_modulus The Young's modulus of the particle material.
+       * @param poisson_ratio The Poisson's ratio of the particle material.
+       */
+      ContactConfiguration(const DEMParticleAccessor<dim, number> &particle,
+                           const dealii::Function<dim>            *wall,
+                           const number                            youngs_modulus,
+                           const number                            poisson_ratio);
 
       /// Effective mass of the two contacting particles, i.e., m1*m2/(m1+m2).
       number effective_mass;
