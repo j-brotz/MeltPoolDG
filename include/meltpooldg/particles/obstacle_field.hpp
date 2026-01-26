@@ -237,6 +237,18 @@ namespace MeltPoolDG
                      std::vector<dealii::Point<dim, number>> &obstacle_locations,
                      std::vector<std::vector<number>>        &obstacle_properties);
 
+    ParticleIterator<dim, number>
+    begin()
+    {
+      return ParticleIterator<dim, number>(obstacle_handler.begin());
+    }
+
+    ParticleIterator<dim, number>
+    end()
+    {
+      return ParticleIterator<dim, number>(obstacle_handler.end());
+    }
+
     /**
      * Returns a subrange for iterating over particles that are owned locally.
      *

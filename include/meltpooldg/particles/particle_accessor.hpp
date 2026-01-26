@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deal.II/base/tensor.h>
+
 #include <deal.II/particles/particle_accessor.h>
 #include <deal.II/particles/property_pool.h>
 
@@ -88,6 +90,9 @@ namespace MeltPoolDG
      */
     dealii::Tensor<1, axial_dim<dim>, number>
     get_angular_velocity() const;
+
+    dealii::Tensor<1, dim, number>
+    get_force() const;
 
     /**
      * Sets the specified force vector to the particle by assigning its components into the
@@ -194,6 +199,17 @@ namespace MeltPoolDG
       velocity[dimension] =
         properties[SphericalParticle<dim, number>::Properties::angular_velocity + dimension];
     return velocity;
+  }
+
+  template <int dim, typename number>
+  dealii::Tensor<1, dim, number>
+  DEMParticleAccessor<dim, number>::get_force() const
+  {
+    Assert(!properties.empty(), dealii::ExcInternalError());
+    dealii::Tensor<1,dim,number> force;
+    for (int dimension = 0; dimension < dim; ++dimension)
+      force[dimension] = properties[SphericalParticle<dim, number>::Properties::force + dimension];
+    return force;
   }
 
   template <int dim, typename number>

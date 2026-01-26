@@ -8,6 +8,7 @@
 #include <meltpooldg/particles/particle_accessor.hpp>
 
 #include <cmath>
+#include <iostream>
 #include <numbers>
 
 namespace MeltPoolDG

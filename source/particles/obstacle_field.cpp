@@ -62,7 +62,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
 {
   compute_loads_on_obstacles();
 
-  symplectic_euler_advance_time_step<dim, double, ParticleHandlerBlockVectorView<dim, number>>(
+  symplectic_euler_advance_time_step<dim, number, ParticleHandlerBlockVectorView<dim, number>>(
     current_time,
     time_step,
     obstacle_handler_vector_views.location,
@@ -176,8 +176,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compute_loads_on_obstacles
   for (dealii::Particles::ParticleAccessor<dim> obstacle : obstacle_handler)
     {
       ObstacleType::set_force(dealii::Tensor<1, dim, number>(), obstacle);
-      ObstacleType::set_torque(dealii::Tensor<1, ObstacleType::size_angular_velocity, number>(),
-                               obstacle);
+      ObstacleType::set_torque(dealii::Tensor<1, axial_dim<dim>, number>(), obstacle);
     }
 
   // Update global particle property pool in case any of the loads needs an up-to-date version.
