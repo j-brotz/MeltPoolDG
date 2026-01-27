@@ -288,7 +288,7 @@ namespace
 
     for (const auto &expected_forces : expected_forces_map)
       {
-        for (auto &particle : obstacle_field->locally_owned_particle_range())
+        for (auto particle : obstacle_field->locally_owned_particle_range())
           {
             // Reset forces to zero before each iteration
             particle.set_force(dealii::Tensor<1, dim, double>({0, 0, 0}));
@@ -348,7 +348,7 @@ namespace
 
     for (const auto &expected_forces : expected_forces_map)
       {
-        for (auto &particle : obstacle_field->locally_owned_particle_range())
+        for (auto particle : obstacle_field->locally_owned_particle_range())
           {
             // Reset forces to zero before each iteration
             particle.set_force(dealii::Tensor<1, dim, double>({0, 0, 0}));
@@ -533,7 +533,7 @@ namespace
 
     for (int time_step = 0; time_step < 2; ++time_step)
       {
-        for (auto &particle : obstacle_field->locally_owned_particle_range())
+        for (auto particle : obstacle_field->locally_owned_particle_range())
           {
             // Reset forces to zero before each iteration
             particle.set_force(dealii::Tensor<1, dim, double>({0, 0, 0}));

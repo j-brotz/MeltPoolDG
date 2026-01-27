@@ -14,6 +14,7 @@
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/obstacle_forces.hpp>
 #include <meltpooldg/particles/particle.hpp>
+#include <meltpooldg/particles/particle_iterator.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
 
@@ -118,7 +119,7 @@ namespace
       dealii::MappingQ<dim>                                                 mapping;
       MeltPoolDG::ObstacleData<double>                                      obstacle_data;
       std::unique_ptr<MeltPoolDG::ObstacleField<dim, double, ObstacleType>> obstacle_field;
-      MeltPoolDG::SphericalParticleContactData<double>                      contact_data;
+      const MeltPoolDG::SphericalParticleContactData<double>                contact_data;
       MeltPoolDG::TimeIntegration::TimeIterator<double>                     time_iterator;
     };
 
@@ -325,6 +326,82 @@ namespace
     EXPECT_NEAR(data->contact_data.restitution_coefficient,
                 computed_restitution_coefficient,
                 relative_tolerance * data->contact_data.restitution_coefficient);
+  }
+
+  TEST_F(ContactForceFixture, ParticleWallViscousObliqueImpactSliding)
+  {
+    std::vector<std::unique_ptr<dealii::Function<dim>>> walls;
+    walls.emplace_back(std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(
+      dealii::Point<dim>(0, 0, 0), dealii::Tensor<1, dim>({0, 0, 1})));
+
+    data = std::make_unique<Data>(MeltPoolDG::ObstacleData<double>{},
+                                  MeltPoolDG::SphericalParticleContactData<double>{
+                                    .restitution_coefficient      = 0.5,
+                                    .sliding_friction_coefficient = 0.4,
+                                    .particle = {.youngs_modulus = 2.5e9, .poisson_ratio = 0.4}},
+                                  MeltPoolDG::TimeIntegration::TimeSteppingData<double>{
+                                    .start_time = 0.0, .end_time = 4e-3, .time_step_size = 1e-8},
+                                  std::move(walls));
+
+    constexpr double particle_radius            = 0.1;
+    constexpr double particle_density           = 1000;
+    constexpr double particle_relative_velocity = -0.2;
+    constexpr double particle_angular_velocity  = 10.0;
+
+    data->insert_particle(
+      {.id               = 0,
+       .radius           = particle_radius,
+       .density          = particle_density,
+       .angular_velocity = dealii::Tensor<1, dim, double>({0., particle_angular_velocity, 0.}),
+       .linear_velocity  = dealii::Tensor<1, dim, double>({0, 0, particle_relative_velocity}),
+       .location         = dealii::Point<dim>(0.5, 0.5, 0.10001)});
+
+    std::cout << data->contact_data.particle.youngs_modulus << std::endl;
+
+    const auto compute_tangent_angle =
+      [](MeltPoolDG::ParticleIterator<dim, double> particle) -> double {
+
+      const dealii::Tensor<1, dim, double> velocity         = particle->get_linear_velocity();
+      const dealii::Tensor<1, dim, double> angular_velocity = particle->get_angular_velocity();
+      std::cout << "Angular velocity: " << angular_velocity << std::endl;
+      std::cout << "Linear velocity: " << velocity << std::endl;
+      std::cout << "Location: " << particle->get_location() << std::endl;
+      dealii::Tensor<1, dim, double> contact_normal;
+      contact_normal[dim - 1] = -1;
+      auto contact_velocity =
+        velocity +
+        dealii::cross_product_3d(particle->get_property(ObstacleType::Properties::radius) *
+                                   angular_velocity,
+                                 contact_normal);
+
+      double normal_velocity     = contact_velocity[dim - 1];
+      double tangential_velocity = std::sqrt(contact_velocity[0] * contact_velocity[0] +
+                                             contact_velocity[1] * contact_velocity[1]);
+
+      return std::abs(tangential_velocity / normal_velocity);
+    };
+
+    const double initial_tangent_angle = compute_tangent_angle(data->obstacle_field->begin());
+    std::cout << "Initial tangent angle: " << initial_tangent_angle << std::endl;
+    const double reference_tangent_recoil_angle =
+      -3.5 * data->contact_data.sliding_friction_coefficient *
+        (1 + 1. / data->contact_data.restitution_coefficient) +
+      1. / data->contact_data.restitution_coefficient * initial_tangent_angle;
+
+    std::cout << data->contact_data.particle.youngs_modulus << std::endl;
+    time_loop(data->time_iterator, *(data->obstacle_field));
+    std::cout << "End: " << data->contact_data.particle.youngs_modulus << std::endl;
+
+    const double computed_tangent_recoil_angle =
+      compute_tangent_angle(data->obstacle_field->begin());
+
+    constexpr double relative_tolerance = 1e-4;
+    std::cout << "Computed tangent recoil angle: " << computed_tangent_recoil_angle << std::endl;
+    /*
+    EXPECT_NEAR(reference_tangent_recoil_angle,
+                computed_tangent_recoil_angle,
+                relative_tolerance * reference_tangent_recoil_angle);
+                */
   }
 
 } // namespace

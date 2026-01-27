@@ -113,6 +113,15 @@ namespace MeltPoolDG
     add_force(const dealii::Tensor<1, dim, number> &force);
 
     /**
+     * Accumulates the specified torque vector to the particle by adding its components into the
+     * particle's property array.
+     *
+     * @param torque The torque vector to assign to the particle.
+     */
+    void
+    add_torque(const dealii::Tensor<1, axial_dim<dim>, number> &torque);
+
+    /**
      * Returns the unique identifier of the particle.
      *
      * @return The particle ID.
@@ -206,7 +215,7 @@ namespace MeltPoolDG
   DEMParticleAccessor<dim, number>::get_force() const
   {
     Assert(!properties.empty(), dealii::ExcInternalError());
-    dealii::Tensor<1,dim,number> force;
+    dealii::Tensor<1, dim, number> force;
     for (int dimension = 0; dimension < dim; ++dimension)
       force[dimension] = properties[SphericalParticle<dim, number>::Properties::force + dimension];
     return force;
@@ -228,6 +237,17 @@ namespace MeltPoolDG
     Assert(!properties.empty(), dealii::ExcInternalError());
     for (int dimension = 0; dimension < dim; ++dimension)
       properties[SphericalParticle<dim, number>::Properties::force + dimension] += force[dimension];
+  }
+
+  template <int dim, typename number>
+  void
+  DEMParticleAccessor<dim, number>::add_torque(
+    const dealii::Tensor<1, axial_dim<dim>, number> &torque)
+  {
+    Assert(!properties.empty(), dealii::ExcInternalError());
+    for (int dimension = 0; dimension < axial_dim<dim>; ++dimension)
+      properties[SphericalParticle<dim, number>::Properties::torque + dimension] +=
+        torque[dimension];
   }
 
   template <int dim, typename number>

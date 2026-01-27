@@ -1,3 +1,5 @@
+#include <deal.II/base/exception_macros.h>
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/utilities.h>
@@ -39,7 +41,9 @@ namespace MeltPoolDG
     : contact_data(contact_data)
     , damping_prefactor(compute_damping_prefactor(contact_data.restitution_coefficient))
     , time_iterator(time_iterator)
-  {}
+  {
+    std::cout << "My contact data:" << this->contact_data.particle.youngs_modulus << std::endl;
+  }
 
   template <int dim, typename number, typename ObstacleType>
   void
@@ -56,13 +60,14 @@ namespace MeltPoolDG
   SphericalParticleContactForce<dim, number, ObstacleType>::add_load_to_obstacles(
     ObstacleField<dim, number, ObstacleType> &obstacle_field) const
   {
-    for (auto &particle : obstacle_field.locally_owned_particle_range())
+    // std::cout << "inside: " << contact_data.particle.youngs_modulus << std::endl;
+    for (auto particle : obstacle_field.locally_owned_particle_range())
       {
         std::map<int, dealii::Tensor<1, dim, number>> &self_tangential_gaps =
           tangential_gaps[particle.id()];
 
 
-        for (auto &other : obstacle_field.global_particle_range())
+        for (const auto &other : obstacle_field.global_particle_range())
           {
             if (particle.id() == other.id())
               continue;
@@ -106,6 +111,31 @@ namespace MeltPoolDG
                                            normal_force,
                                            tangential_gaps_with_walls[particle.id()][key]);
                 particle.add_force(normal_force + tangential_force);
+                dealii::Tensor<1, axial_dim<dim>, number> tangential_torque;
+
+                if constexpr (dim == 3)
+                  {
+                    tangential_torque =
+                      dealii::cross_product_3d(particle_wall_contact_configuration.normal_vector,
+                                               tangential_force) *
+                      particle.get_property(ObstacleType::Properties::radius);
+                  }
+                else if constexpr (dim == 2)
+                  {
+                    tangential_torque[0] =
+                      particle_wall_contact_configuration.normal_vector[0] * tangential_force[1] -
+                      particle_wall_contact_configuration.normal_vector[1] * tangential_force[0];
+                    tangential_torque[0] *= particle.get_property(ObstacleType::Properties::radius);
+                  }
+                else
+                  {
+                    AssertThrow(
+                      false,
+                      dealii::ExcMessage(
+                        "Only dimensions 2 and 3 are supported by the contact force implementation."));
+                  }
+
+                particle.add_torque(tangential_torque);
               }
             else
               {
@@ -124,13 +154,12 @@ namespace MeltPoolDG
       4. / 3. * contact_configuration.effective_youngs_modulus *
       std::sqrt(contact_configuration.effective_radius * contact_configuration.normal_overlap);
 
-    // std::cout << "Normal stiffness: " << normal_stiffness << std::endl;
+
+    std::cout << "young's modulus: " << contact_data.particle.youngs_modulus << std::endl;
     // std::cout << "Normal overlap: " << contact_configuration.normal_overlap << std::endl;
 
     const number normal_damping =
       damping_prefactor * std::sqrt(1.5 * normal_stiffness * contact_configuration.effective_mass);
-
-    // std::cout << "Normal damping: " << normal_damping << std::endl;
 
     auto normal_force = -normal_stiffness * contact_configuration.normal_overlap *
                           contact_configuration.normal_vector -
