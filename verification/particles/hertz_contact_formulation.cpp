@@ -265,7 +265,7 @@ namespace
       std::pow(2 * std::abs(particle_relative_velocity), 0.2);
 
     double expected_max_normal_contact_displacement =
-    helper_factor *particle_radius *std::pow(2 * std::abs(particle_relative_velocity), 0.8);
+      helper_factor * particle_radius * std::pow(2 * std::abs(particle_relative_velocity), 0.8);
 
     const double expected_max_normal_contact_force =
       std::sqrt((2. * particle_radius * data->contact_data.particle.youngs_modulus *
@@ -274,7 +274,7 @@ namespace
                                      data->contact_data.particle.poisson_ratio,
                                2))) *
       std::pow(expected_max_normal_contact_displacement, 1.5);
-      expected_max_normal_contact_displacement *= 0.5;
+    expected_max_normal_contact_displacement *= 0.5;
 
 
     constexpr double relative_tolerance = 1e-3;
@@ -287,6 +287,44 @@ namespace
     EXPECT_NEAR(contact_duration,
                 expected_contact_duration,
                 relative_tolerance * expected_contact_duration);
+  }
+
+  TEST_F(ContactForceFixture, ParticleWallViscousNormalImpact)
+  {
+    std::vector<std::unique_ptr<dealii::Function<dim>>> walls;
+    walls.emplace_back(std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(
+      dealii::Point<dim>(0, 0, 0), dealii::Tensor<1, dim>({0, 0, 1})));
+
+    data = std::make_unique<Data>(MeltPoolDG::ObstacleData<double>{},
+                                  MeltPoolDG::SphericalParticleContactData<double>{
+                                    .restitution_coefficient      = 0.4,
+                                    .sliding_friction_coefficient = 0.0,
+                                    .particle = {.youngs_modulus = 7e10, .poisson_ratio = 0.3}},
+                                  MeltPoolDG::TimeIntegration::TimeSteppingData<double>{
+                                    .start_time = 0.0, .end_time = 2e-3, .time_step_size = 1e-8},
+                                  std::move(walls));
+
+    constexpr double particle_radius            = 0.1;
+    constexpr double particle_density           = 2699;
+    constexpr double particle_relative_velocity = -0.2;
+
+    data->insert_particle(
+      {.id               = 0,
+       .radius           = particle_radius,
+       .density          = particle_density,
+       .angular_velocity = dealii::Tensor<1, dim, double>({0., 0., 0.}),
+       .linear_velocity  = dealii::Tensor<1, dim, double>({0, 0, particle_relative_velocity}),
+       .location         = dealii::Point<dim>(0.5, 0.5, 0.10001)});
+
+    time_loop(data->time_iterator, *data->obstacle_field);
+
+    const double computed_restitution_coefficient = std::abs(
+      data->obstacle_field->begin()->get_linear_velocity().norm() / particle_relative_velocity);
+
+    constexpr double relative_tolerance = 1e-4;
+    EXPECT_NEAR(data->contact_data.restitution_coefficient,
+                computed_restitution_coefficient,
+                relative_tolerance * data->contact_data.restitution_coefficient);
   }
 
 } // namespace
