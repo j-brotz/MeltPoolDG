@@ -124,12 +124,18 @@ namespace MeltPoolDG
       4. / 3. * contact_configuration.effective_youngs_modulus *
       std::sqrt(contact_configuration.effective_radius * contact_configuration.normal_overlap);
 
+    // std::cout << "Normal stiffness: " << normal_stiffness << std::endl;
+    // std::cout << "Normal overlap: " << contact_configuration.normal_overlap << std::endl;
+
     const number normal_damping =
       damping_prefactor * std::sqrt(1.5 * normal_stiffness * contact_configuration.effective_mass);
+
+    // std::cout << "Normal damping: " << normal_damping << std::endl;
 
     auto normal_force = -normal_stiffness * contact_configuration.normal_overlap *
                           contact_configuration.normal_vector -
                         normal_damping * contact_configuration.relative_velocity.normal_component;
+    // std::cout << "Normal force: " << normal_force << std::endl;
     return normal_force;
   }
 
