@@ -216,7 +216,6 @@ namespace MeltPoolDG
      * @param contact_configuration  Configuration of the contact between two particles.
      * @return The computed normal contact force vector.
      */
-
     dealii::Tensor<1, dim, number>
     normal_contact_force(const ContactConfiguration &contact_configuration) const;
 
