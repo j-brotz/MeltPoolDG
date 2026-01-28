@@ -266,6 +266,23 @@ namespace MeltPoolDG
                              dealii::Tensor<1, dim, number>       &tangential_gap) const;
 
     /**
+     * Given the tangential contact force at a particle–particle contact, this function
+     * calculates the resulting torque about the particle center as the cross product
+     * of the contact lever arm and the tangential force (M = (r*N) × F) with r being the particle
+     * radius, N is the contact normal vector pointing from the particle center to the point of
+     * contact, and F the tangential contact force acting at the contact point.
+     *
+     * @param contact_configuration Geometric contact configuration between the two particles.
+     * @param tangential_force Tangential contact force vector at the contact point.
+     * @param particle_radius Radius of the particle for which the torque is computed.
+     * @return Tangential contact torque vector acting on the particle.
+     */
+    dealii::Tensor<1, axial_dim<dim>, number>
+    tangential_contact_torque(const ContactConfiguration           &contact_configuration,
+                              const dealii::Tensor<1, dim, number> &tangential_force,
+                              const number                          particle_radius) const;
+
+    /**
      * Function which computes the damping prefactor from the restitution coefficient
      * \f[
      * \eta_t = 2 \sqrt{\frac{5}{6}}\frac{\ln(e_r)}{\sqrt{\ln^2(e_r) + \pi^2}},

@@ -34,7 +34,8 @@
  */
 namespace
 {
-  constexpr int dim = 3;
+  constexpr int dim       = 3;
+  constexpr int axial_dim = MeltPoolDG::axial_dim<dim>;
 
   struct ParticleTestData
   {
@@ -83,7 +84,7 @@ namespace
       std::vector<double> properties(ObstacleType::n_obstacle_properties, 0);
       for (int d = 0; d < dim; ++d)
         properties[ObstacleType::Properties::velocity + d] = particle_data.linear_velocity[d];
-      for (int d = 0; d < MeltPoolDG::axial_dim<dim>; ++d)
+      for (int d = 0; d < axial_dim; ++d)
         properties[ObstacleType::Properties::angular_velocity + d] =
           particle_data.angular_velocity[d];
       properties[ObstacleType::Properties::radius]  = particle_data.radius;
@@ -133,6 +134,9 @@ namespace
     const std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, dim, double>>
       expected_forces_map = {{0, dealii::Tensor<1, dim, double>({-6377.8522, 0.0, 0.0})},
                              {1, dealii::Tensor<1, dim, double>({6377.8522, 0.0, 0.0})}};
+    const std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, axial_dim, double>>
+      expected_torques_map = {{0, dealii::Tensor<1, axial_dim, double>({0.0, 0.0, 0.0})},
+                              {1, dealii::Tensor<1, axial_dim, double>({0.0, 0.0, 0.0})}};
 
     for (const auto &particle : this->obstacle_field->get_particle_handler())
       {
@@ -141,11 +145,20 @@ namespace
             ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
         const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
         const dealii::Tensor<1, dim, double> expected_force = expected_forces_map.at(particle_id);
+        const dealii::Tensor<1, axial_dim, double> computed_torque =
+          ObstacleType::get_torque(particle);
+        const dealii::Tensor<1, axial_dim, double> expected_torque =
+          expected_torques_map.at(particle_id);
 
         for (int d = 0; d < dim; ++d)
           {
             EXPECT_NEAR(computed_force[d], expected_force[d], 1e-4)
               << "Particle id: " << particle_id << ", force component: " << d;
+          }
+        for (int d = 0; d < axial_dim; ++d)
+          {
+            EXPECT_NEAR(computed_torque[d], expected_torque[d], 1e-4)
+              << "Particle id: " << particle_id << ", torque component: " << d;
           }
       }
   }
@@ -180,6 +193,10 @@ namespace
     const std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, dim, double>>
       expected_forces_map = {{0, dealii::Tensor<1, dim, double>({-6393.2109, 0.0, 7645.4767})},
                              {1, dealii::Tensor<1, dim, double>({6393.2109, 0.0, -7645.4767})}};
+    const std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, axial_dim, double>>
+      expected_torques_map = {{0, dealii::Tensor<1, axial_dim, double>({0.0, -1529.0953, 0.0})},
+                              {1, dealii::Tensor<1, axial_dim, double>({0.0, -1529.0953, 0.0})}};
+
 
     for (const auto &particle : this->obstacle_field->get_particle_handler())
       {
@@ -188,11 +205,20 @@ namespace
             ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
         const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
         const dealii::Tensor<1, dim, double> expected_force = expected_forces_map.at(particle_id);
+        const dealii::Tensor<1, axial_dim, double> computed_torque =
+          ObstacleType::get_torque(particle);
+        const dealii::Tensor<1, axial_dim, double> expected_torque =
+          expected_torques_map.at(particle_id);
 
         for (int d = 0; d < dim; ++d)
           {
             EXPECT_NEAR(computed_force[d], expected_force[d], 1e-4)
               << "Particle id: " << particle_id << ", force component: " << d;
+          }
+        for (int d = 0; d < axial_dim; ++d)
+          {
+            EXPECT_NEAR(computed_torque[d], expected_torque[d], 1e-4)
+              << "Particle id: " << particle_id << ", torque component: " << d;
           }
       }
   }
@@ -225,6 +251,9 @@ namespace
     const std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, dim, double>>
       expected_forces_map = {{0, dealii::Tensor<1, dim, double>({-5170.7448, 0.0, 662.9924})},
                              {1, dealii::Tensor<1, dim, double>({5170.7448, 0.0, -662.9924})}};
+    const std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, axial_dim, double>>
+      expected_torques_map = {{0, dealii::Tensor<1, axial_dim, double>({0.0, -132.5985, 0.0})},
+                              {1, dealii::Tensor<1, axial_dim, double>({0.0, -66.2992, 0.0})}};
 
     for (const auto &particle : this->obstacle_field->get_particle_handler())
       {
@@ -233,11 +262,20 @@ namespace
             ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
         const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
         const dealii::Tensor<1, dim, double> expected_force = expected_forces_map.at(particle_id);
+        const dealii::Tensor<1, axial_dim, double> computed_torque =
+          ObstacleType::get_torque(particle);
+        const dealii::Tensor<1, axial_dim, double> expected_torque =
+          expected_torques_map.at(particle_id);
 
         for (int d = 0; d < dim; ++d)
           {
             EXPECT_NEAR(computed_force[d], expected_force[d], 1e-4)
               << "Particle id: " << particle_id << ", force component: " << d;
+          }
+        for (int d = 0; d < axial_dim; ++d)
+          {
+            EXPECT_NEAR(computed_torque[d], expected_torque[d], 1e-4)
+              << "Particle id: " << particle_id << ", torque component: " << d;
           }
       }
   }
@@ -286,12 +324,30 @@ namespace
           {1, dealii::Tensor<1, dim, double>({-43691.6370, 0.0, 6393.2109})},
           {2, dealii::Tensor<1, dim, double>({-31775.7359, 0.0, -6140.7875})}}}};
 
-    for (const auto &expected_forces : expected_forces_map)
+    const std::
+      array<std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, axial_dim, double>>, 3>
+        expected_torques_map = {
+          {{{0, dealii::Tensor<1, axial_dim, double>({0.0, 2293.6430, 0.0})},
+            {1, dealii::Tensor<1, axial_dim, double>({0.0, 8410.0243, 0.0})},
+            {2, dealii::Tensor<1, axial_dim, double>({0.0, -6116.3813, 0.0})}},
+           {{0, dealii::Tensor<1, axial_dim, double>({0.0, 2338.4116, 0.0})},
+            {1, dealii::Tensor<1, axial_dim, double>({0.0, 8574.1759, 0.0})},
+            {2, dealii::Tensor<1, axial_dim, double>({0.0, -6235.7643, 0.0})}},
+           {{0, dealii::Tensor<1, axial_dim, double>({0.0, 2383.1802, 0.0})},
+            {1, dealii::Tensor<1, axial_dim, double>({0.0, 8738.3274, 0.0})},
+            {2, dealii::Tensor<1, axial_dim, double>({0.0, -6355.1472, 0.0})}}}};
+
+    for (unsigned int step = 0; step < 3; ++step)
       {
+        const std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, dim, double>>
+          &expected_forces = expected_forces_map[step];
+        const std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, axial_dim, double>>
+          &expected_torques = expected_torques_map[step];
         for (auto &particle : obstacle_field->locally_owned_particle_range())
           {
-            // Reset forces to zero before each iteration
+            // Reset forces and torques to zero before each iteration
             particle.set_force(dealii::Tensor<1, dim, double>({0, 0, 0}));
+            particle.set_torque(dealii::Tensor<1, axial_dim, double>({0, 0, 0}));
           }
 
         contact_force.add_load_to_obstacles(*this->obstacle_field);
@@ -303,11 +359,20 @@ namespace
                 ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
             const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
             const dealii::Tensor<1, dim, double> expected_force = expected_forces.at(particle_id);
+            const dealii::Tensor<1, axial_dim, double> computed_torque =
+              ObstacleType::get_torque(particle);
+            const dealii::Tensor<1, axial_dim, double> expected_torque =
+              expected_torques.at(particle_id);
 
             for (int d = 0; d < dim; ++d)
               {
                 EXPECT_NEAR(computed_force[d], expected_force[d], 1e-4)
                   << "Particle id: " << particle_id << ", force component: " << d;
+              }
+            for (int d = 0; d < axial_dim; ++d)
+              {
+                EXPECT_NEAR(computed_torque[d], expected_torque[d], 1e-4)
+                  << "Particle id: " << particle_id << ", torque component: " << d;
               }
           }
       }
@@ -346,12 +411,25 @@ namespace
          {{0, dealii::Tensor<1, dim, double>({7668.5956, 0.0, -18888.1665})},
           {1, dealii::Tensor<1, dim, double>({-7668.5956, 0.0, 18888.1665})}}}};
 
-    for (const auto &expected_forces : expected_forces_map)
+    const std::
+      array<std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, axial_dim, double>>, 2>
+        expected_torques_map = {
+          {{{0, dealii::Tensor<1, axial_dim, double>({0.0, 1529.0953, 0.0})},
+            {1, dealii::Tensor<1, axial_dim, double>({0.0, 1529.0953, 0.0})}},
+           {{0, dealii::Tensor<1, axial_dim, double>({0.0, 1533.7191, 0.0})},
+            {1, dealii::Tensor<1, axial_dim, double>({0.0, 1533.7191, 0.0})}}}};
+
+    for (unsigned int step = 0; step < 2; ++step)
       {
+        const std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, dim, double>>
+          &expected_forces = expected_forces_map[step];
+        const std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, axial_dim, double>>
+          &expected_torques = expected_torques_map[step];
         for (auto &particle : obstacle_field->locally_owned_particle_range())
           {
-            // Reset forces to zero before each iteration
+            // Reset forces and torques to zero before each iteration
             particle.set_force(dealii::Tensor<1, dim, double>({0, 0, 0}));
+            particle.set_torque(dealii::Tensor<1, axial_dim, double>({0, 0, 0}));
           }
 
         contact_force.add_load_to_obstacles(*this->obstacle_field);
@@ -363,11 +441,20 @@ namespace
                 ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
             const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
             const dealii::Tensor<1, dim, double> expected_force = expected_forces.at(particle_id);
+            const dealii::Tensor<1, axial_dim, double> computed_torque =
+              ObstacleType::get_torque(particle);
+            const dealii::Tensor<1, axial_dim, double> expected_torque =
+              expected_torques.at(particle_id);
 
             for (int d = 0; d < dim; ++d)
               {
                 EXPECT_NEAR(computed_force[d], expected_force[d], 1e-4)
-                  << "Particle id: " << particle_id;
+                  << "Particle id: " << particle_id << ", force component: " << d;
+              }
+            for (int d = 0; d < axial_dim; ++d)
+              {
+                EXPECT_NEAR(computed_torque[d], expected_torque[d], 1e-4)
+                  << "Particle id: " << particle_id << ", torque component: " << d;
               }
           }
       }
@@ -398,19 +485,29 @@ namespace
     const std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, dim, double>>
       expected_forces_map = {{0, dealii::Tensor<1, dim, double>({-2672.2552, -4421.6744, 0.0})},
                              {1, dealii::Tensor<1, dim, double>({2672.2552, 4421.6744, 0.0})}};
+    const std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, axial_dim, double>>
+      expected_torques_map = {{0, dealii::Tensor<1, axial_dim, double>({0.0, 0.0, 0.0017874999})},
+                              {1, dealii::Tensor<1, axial_dim, double>({0.0, 0.0, 0.0008937499})}};
 
     for (const auto &particle : this->obstacle_field->get_particle_handler())
       {
         const ParticleTestData::particle_id_type particle_id =
           static_cast<ParticleTestData::particle_id_type>(
             ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
-        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
-        const dealii::Tensor<1, dim, double> expected_force = expected_forces_map.at(particle_id);
+        const dealii::Tensor<1, dim, double> computed_force  = ObstacleType::get_force(particle);
+        const dealii::Tensor<1, dim, double> expected_force  = expected_forces_map.at(particle_id);
+        const dealii::Tensor<1, dim, double> computed_torque = ObstacleType::get_torque(particle);
+        const dealii::Tensor<1, dim, double> expected_torque = expected_torques_map.at(particle_id);
 
         for (int d = 0; d < dim; ++d)
           {
             EXPECT_NEAR(computed_force[d], expected_force[d], 1e-4)
               << "Particle id: " << particle_id << ", force component: " << d;
+          }
+        for (int d = 0; d < axial_dim; ++d)
+          {
+            EXPECT_NEAR(computed_torque[d], expected_torque[d], 1e-10)
+              << "Particle id: " << particle_id << ", torque component: " << d;
           }
       }
   }
@@ -443,14 +540,22 @@ namespace
 
     const dealii::Tensor<1, dim, double> expected_force =
       dealii::Tensor<1, dim, double>({21799.5058, 0.0, 85834.0455});
+    const dealii::Tensor<1, axial_dim, double> expected_torque =
+      dealii::Tensor<1, axial_dim, double>({0.0, -4359.9012, 0.0});
 
     for (const auto &particle : this->obstacle_field->get_particle_handler())
       {
         const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+        const dealii::Tensor<1, axial_dim, double> computed_torque =
+          ObstacleType::get_torque(particle);
 
         for (int d = 0; d < dim; ++d)
           {
             EXPECT_NEAR(computed_force[d], expected_force[d], 1e-4) << "Force component: " << d;
+          }
+        for (int d = 0; d < axial_dim; ++d)
+          {
+            EXPECT_NEAR(computed_torque[d], expected_torque[d], 1e-4) << "Torque component: " << d;
           }
       }
   }
@@ -484,14 +589,22 @@ namespace
 
     const dealii::Tensor<1, dim, double> expected_force =
       dealii::Tensor<1, dim, double>({36451.9311, 0.0, 58251.5243});
+    const dealii::Tensor<1, axial_dim, double> expected_torque =
+      dealii::Tensor<1, axial_dim, double>({0.0, 3082.9280, 0.0});
 
     for (const auto &particle : this->obstacle_field->get_particle_handler())
       {
         const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+        const dealii::Tensor<1, axial_dim, double> computed_torque =
+          ObstacleType::get_torque(particle);
 
         for (int d = 0; d < dim; ++d)
           {
             EXPECT_NEAR(computed_force[d], expected_force[d], 1e-4) << "Force component: " << d;
+          }
+        for (int d = 0; d < axial_dim; ++d)
+          {
+            EXPECT_NEAR(computed_torque[d], expected_torque[d], 1e-4) << "Torque component: " << d;
           }
       }
   }
@@ -531,22 +644,34 @@ namespace
       dealii::Tensor<1, dim, double>({140332.8101, 0.0, 96733.7985}),
       dealii::Tensor<1, dim, double>({141825.0968, 0.0, 97032.2558})};
 
+    const std::vector<dealii::Tensor<1, axial_dim, double>> expected_torque = {
+      dealii::Tensor<1, axial_dim, double>({0.0, -8719.8023, 0.0}),
+      dealii::Tensor<1, axial_dim, double>({0.0, -8958.5682, 0.0})};
+
     for (int time_step = 0; time_step < 2; ++time_step)
       {
         for (auto &particle : obstacle_field->locally_owned_particle_range())
           {
-            // Reset forces to zero before each iteration
+            // Reset forces and torques to zero before each iteration
             particle.set_force(dealii::Tensor<1, dim, double>({0, 0, 0}));
+            particle.set_torque(dealii::Tensor<1, axial_dim, double>({0, 0, 0}));
           }
         contact_force.add_load_to_obstacles(*this->obstacle_field);
         for (const auto &particle : this->obstacle_field->get_particle_handler())
           {
             const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+            const dealii::Tensor<1, axial_dim, double> computed_torque =
+              ObstacleType::get_torque(particle);
 
             for (int d = 0; d < dim; ++d)
               {
                 EXPECT_NEAR(computed_force[d], expected_force[time_step][d], 1e-4)
                   << "Force component: " << d;
+              }
+            for (int d = 0; d < axial_dim; ++d)
+              {
+                EXPECT_NEAR(computed_torque[d], expected_torque[time_step][d], 1e-4)
+                  << "Torque component: " << d;
               }
           }
       }

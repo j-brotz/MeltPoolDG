@@ -82,6 +82,13 @@ namespace MeltPoolDG
                                            self_tangential_gaps[other.id()]);
 
                 particle.add_force(normal_force + tangential_force);
+
+                dealii::Tensor<1, axial_dim<dim>, number> tangential_torque =
+                  tangential_contact_torque(particle_particle_contact_configuration,
+                                            tangential_force,
+                                            particle.get_property(
+                                              ObstacleType::Properties::radius));
+                particle.add_torque(tangential_torque);
               }
             else
               {
@@ -105,6 +112,13 @@ namespace MeltPoolDG
                                            normal_force,
                                            tangential_gaps_with_walls[particle.id()][key]);
                 particle.add_force(normal_force + tangential_force);
+
+                dealii::Tensor<1, axial_dim<dim>, number> tangential_torque =
+                  tangential_contact_torque(particle_wall_contact_configuration,
+                                            tangential_force,
+                                            particle.get_property(
+                                              ObstacleType::Properties::radius));
+                particle.add_torque(tangential_torque);
               }
             else
               {
@@ -172,6 +186,36 @@ namespace MeltPoolDG
       }
 
     return tangential_force;
+  }
+
+  template <int dim, typename number, typename ObstacleType>
+  dealii::Tensor<1, axial_dim<dim>, number>
+  SphericalParticleContactForce<dim, number, ObstacleType>::tangential_contact_torque(
+    const ContactConfiguration           &contact_configuration,
+    const dealii::Tensor<1, dim, number> &tangential_force,
+    const number                          particle_radius) const
+  {
+    dealii::Tensor<1, axial_dim<dim>, number> tangential_torque;
+    if constexpr (dim == 3)
+      {
+        tangential_torque =
+          dealii::cross_product_3d(contact_configuration.normal_vector, tangential_force) *
+          particle_radius;
+      }
+    else if constexpr (dim == 2)
+      {
+        tangential_torque[0] = contact_configuration.normal_vector[0] * tangential_force[1] -
+                               contact_configuration.normal_vector[1] * tangential_force[0];
+        tangential_torque[0] *= particle_radius;
+      }
+    else
+      {
+        AssertThrow(
+          false,
+          dealii::ExcMessage(
+            "Only dimensions 2 and 3 are supported by the contact force implementation."));
+      }
+    return tangential_torque;
   }
 
   template <int dim, typename number, typename ObstacleType>
