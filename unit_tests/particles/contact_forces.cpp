@@ -56,8 +56,9 @@ namespace
 
     ContactForceFixture()
       : mapping(1)
-      , contact_data({.restitution_coefficient      = 0.4,
-                      .sliding_friction_coefficient = 0.2,
+      , contact_data({.restitution_coefficient        = 0.4,
+                      .sliding_friction_coefficient   = 0.2,
+                      .rolling_resistance_coefficient = 0.0,
                       .particle = {.youngs_modulus = 26.25e6, .poisson_ratio = 0.342}})
       , time_iterator(MeltPoolDG::TimeIntegration::TimeSteppingData<double>{.start_time     = 0.0,
                                                                             .end_time       = 1.0,
@@ -137,6 +138,66 @@ namespace
     const std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, axial_dim, double>>
       expected_torques_map = {{0, dealii::Tensor<1, axial_dim, double>({0.0, 0.0, 0.0})},
                               {1, dealii::Tensor<1, axial_dim, double>({0.0, 0.0, 0.0})}};
+
+    for (const auto &particle : this->obstacle_field->get_particle_handler())
+      {
+        const ParticleTestData::particle_id_type particle_id =
+          static_cast<ParticleTestData::particle_id_type>(
+            ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
+        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+        const dealii::Tensor<1, dim, double> expected_force = expected_forces_map.at(particle_id);
+        const dealii::Tensor<1, axial_dim, double> computed_torque =
+          ObstacleType::get_torque(particle);
+        const dealii::Tensor<1, axial_dim, double> expected_torque =
+          expected_torques_map.at(particle_id);
+
+        for (int d = 0; d < dim; ++d)
+          {
+            EXPECT_NEAR(computed_force[d], expected_force[d], 1e-4)
+              << "Particle id: " << particle_id << ", force component: " << d;
+          }
+        for (int d = 0; d < axial_dim; ++d)
+          {
+            EXPECT_NEAR(computed_torque[d], expected_torque[d], 1e-4)
+              << "Particle id: " << particle_id << ", torque component: " << d;
+          }
+      }
+  }
+
+  TEST_F(ContactForceFixture,
+         ParticleParticleContact_SingleAngularVelocity_RollingResistance_NoTangentialForce)
+  {
+    // This test verifies particle–particle contact for normal and rolling resistance without taking
+    // into account tangential contact forces. The following conditions are applied:
+    // - Particles have the same radius and density.
+    // - Particles have different normal velocities.
+    // - Only one particle has a non-zero angular velocity, creating tangential relative motion.
+    // - Tangential contact forces do not appear only rolling resistance torque is considered.
+    insert_particle({.id               = 0,
+                     .radius           = 0.2,
+                     .density          = 4300,
+                     .angular_velocity = dealii::Tensor<1, dim, double>({0, 0, 0}),
+                     .linear_velocity  = dealii::Tensor<1, dim, double>({0.05, 0, 0}),
+                     .location         = dealii::Point<dim>(0.4, 0.5, 0.5)});
+    insert_particle({.id               = 1,
+                     .radius           = 0.2,
+                     .density          = 4300,
+                     .angular_velocity = dealii::Tensor<1, dim, double>({0, 10, 0}),
+                     .linear_velocity  = dealii::Tensor<1, dim, double>({0.02, 0, 0}),
+                     .location         = dealii::Point<dim>(0.79, 0.5, 0.5)});
+
+    contact_data.sliding_friction_coefficient   = 0.0;
+    contact_data.rolling_resistance_coefficient = 0.2;
+
+    contact_force.add_load_to_obstacles(*this->obstacle_field);
+
+    const std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, dim, double>>
+      expected_forces_map = {{0, dealii::Tensor<1, dim, double>({-6393.2109, 0.0, 0.0})},
+                             {1, dealii::Tensor<1, dim, double>({6393.2109, 0.0, 0.0})}};
+    const std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, axial_dim, double>>
+      expected_torques_map = {{0, dealii::Tensor<1, axial_dim, double>({0.0, 1278.6422, 0.0})},
+                              {1, dealii::Tensor<1, axial_dim, double>({0.0, -1278.6422, 0.0})}};
+
 
     for (const auto &particle : this->obstacle_field->get_particle_handler())
       {
@@ -542,6 +603,101 @@ namespace
       dealii::Tensor<1, dim, double>({21799.5058, 0.0, 85834.0455});
     const dealii::Tensor<1, axial_dim, double> expected_torque =
       dealii::Tensor<1, axial_dim, double>({0.0, -4359.9012, 0.0});
+
+    for (const auto &particle : this->obstacle_field->get_particle_handler())
+      {
+        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+        const dealii::Tensor<1, axial_dim, double> computed_torque =
+          ObstacleType::get_torque(particle);
+
+        for (int d = 0; d < dim; ++d)
+          {
+            EXPECT_NEAR(computed_force[d], expected_force[d], 1e-4) << "Force component: " << d;
+          }
+        for (int d = 0; d < axial_dim; ++d)
+          {
+            EXPECT_NEAR(computed_torque[d], expected_torque[d], 1e-4) << "Torque component: " << d;
+          }
+      }
+  }
+
+  TEST_F(ContactForceFixture,
+         ParticleWallContact_HorizontalWall_NoTangentialForce_RollingResistance)
+  {
+    // This test verifies particle–wall contact for normal and rolling resistance without taking
+    // into account tangential contact forces. The following conditions are applied:
+    // - A single spherical particle interacts with a planar horizontal wall.
+    // - The particle approaches the wall with a normal velocity component and an angular velocity.
+    // - Tangential contact forces are not considered. These are zero as the sliding friction
+    //   coefficient is set to zero.
+    insert_particle({.id               = 0,
+                     .radius           = 0.2,
+                     .density          = 4300,
+                     .angular_velocity = dealii::Tensor<1, dim, double>({0, 7, 0}),
+                     .linear_velocity  = dealii::Tensor<1, dim, double>({0, 0, -3}),
+                     .location         = dealii::Point<dim>(0.5, 0.5, 0.48)});
+
+    contact_data.sliding_friction_coefficient   = 0.0;
+    contact_data.rolling_resistance_coefficient = 0.2;
+
+    constexpr dealii::Tensor<1, dim, double> wall_normal({0., 0., 1.});
+    constexpr dealii::Point<dim, double>     wall_point({0., 0., 0.3});
+    contact_force.attach_wall(
+      std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(wall_point, wall_normal));
+
+    contact_force.add_load_to_obstacles(*this->obstacle_field);
+
+    const dealii::Tensor<1, dim, double> expected_force =
+      dealii::Tensor<1, dim, double>({0.0, 0.0, 85834.0455});
+    const dealii::Tensor<1, axial_dim, double> expected_torque =
+      dealii::Tensor<1, axial_dim, double>({0.0, -24033.5327, 0.0});
+
+    for (const auto &particle : this->obstacle_field->get_particle_handler())
+      {
+        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+        const dealii::Tensor<1, axial_dim, double> computed_torque =
+          ObstacleType::get_torque(particle);
+
+        for (int d = 0; d < dim; ++d)
+          {
+            EXPECT_NEAR(computed_force[d], expected_force[d], 1e-4) << "Force component: " << d;
+          }
+        for (int d = 0; d < axial_dim; ++d)
+          {
+            EXPECT_NEAR(computed_torque[d], expected_torque[d], 1e-4) << "Torque component: " << d;
+          }
+      }
+  }
+
+  TEST_F(ContactForceFixture, ParticleWallContact_HorizontalWall_RollingResistance)
+  {
+    // This test verifies particle–wall contact for normal and rolling resistance and taking
+    // into account tangential contact forces. The following conditions are applied:
+    // - A single spherical particle interacts with a planar horizontal wall.
+    // - The particle approaches the wall with a normal velocity component and an angular velocity.
+    // - Tangential contact forces are not limited as the sliding friction coefficient is set to
+    //   infinity.
+    insert_particle({.id               = 0,
+                     .radius           = 0.2,
+                     .density          = 4300,
+                     .angular_velocity = dealii::Tensor<1, dim, double>({0, 10, 0}),
+                     .linear_velocity  = dealii::Tensor<1, dim, double>({0, 0, -3}),
+                     .location         = dealii::Point<dim>(0.5, 0.5, 0.48)});
+
+    contact_data.sliding_friction_coefficient   = std::numeric_limits<double>::infinity();
+    contact_data.rolling_resistance_coefficient = 0.2;
+
+    constexpr dealii::Tensor<1, dim, double> wall_normal({0., 0., 1.});
+    constexpr dealii::Point<dim, double>     wall_point({0., 0., 0.3});
+    contact_force.attach_wall(
+      std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(wall_point, wall_normal));
+
+    contact_force.add_load_to_obstacles(*this->obstacle_field);
+
+    const dealii::Tensor<1, dim, double> expected_force =
+      dealii::Tensor<1, dim, double>({21799.5058, 0.0, 85834.0455});
+    const dealii::Tensor<1, axial_dim, double> expected_torque =
+      dealii::Tensor<1, axial_dim, double>({0.0, -38693.5194, 0.0});
 
     for (const auto &particle : this->obstacle_field->get_particle_handler())
       {

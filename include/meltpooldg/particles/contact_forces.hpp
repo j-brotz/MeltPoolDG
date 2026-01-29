@@ -22,6 +22,9 @@ namespace MeltPoolDG
     /// Sliding friction coefficient for Coulomb friction model.
     number sliding_friction_coefficient;
 
+    /// Coefficient of rolling resistance used to compute rolling resistance torques.
+    number rolling_resistance_coefficient;
+
     struct MaterialData
     {
       /// Young's modulus of the particle material.
@@ -173,6 +176,9 @@ namespace MeltPoolDG
       /// Normal overlap between the two particles (positive if in contact).
       number normal_overlap;
 
+      /// Relative angular velocity between the two particles or the particle and the wall.
+      dealii::Tensor<1, axial_dim<dim>, number> relative_angular_velocity;
+
       /**
        * Struct for describing the relative velocity between two particles at the contact point.
        */
@@ -216,7 +222,6 @@ namespace MeltPoolDG
      * @param contact_configuration  Configuration of the contact between two particles.
      * @return The computed normal contact force vector.
      */
-
     dealii::Tensor<1, dim, number>
     normal_contact_force(const ContactConfiguration &contact_configuration) const;
 
@@ -281,6 +286,32 @@ namespace MeltPoolDG
     tangential_contact_torque(const ContactConfiguration           &contact_configuration,
                               const dealii::Tensor<1, dim, number> &tangential_force,
                               const number                          particle_radius) const;
+
+    /**
+     * Computes the rolling resistance torque at a particle–particle or particle-wall contact based
+     * on a viscous rolling resistance model. The model used in this function follows the
+     * formulation presented by Meier et al. (DOI:10.1016/j.powtec.2018.11.072).
+     *
+     * The rolling resistance torque is defined as
+     * \f[
+     * \boldsymbol{M}_r = \mu_r |\boldsymbol{F}_n| R_e \boldsymbol{\omega}_c,
+     * \f]
+     * where \f$\mu_r\f$ is the rolling resistance coefficient, \f$\boldsymbol{F}_n\f$ the normal
+     * contact force, \f$R_e\f$ the effective radius, and \f$\boldsymbol{\omega}_c\f$ the relative
+     * angular velocity projected onto the contact plane.
+     *
+     * The relative angular velocity projected onto the contact plane is computed as
+     * \f[
+     * \boldsymbol{\omega}_c = \boldsymbol{\omega}_r - (\boldsymbol{\omega}_r \cdot \boldsymbol{n})
+     * \boldsymbol{n},
+     *  \f]
+     * where \f$\boldsymbol{\omega}_r\f$ is the relative angular velocity
+     * between the two particles (or particle and wall) and \f$\boldsymbol{n}\f$ the contact normal
+     * vector.
+     */
+    dealii::Tensor<1, axial_dim<dim>, number>
+    rolling_resistance_torque(const ContactConfiguration           &contact_configuration,
+                              const dealii::Tensor<1, dim, number> &contact_normal_force) const;
 
     /**
      * Function which computes the damping prefactor from the restitution coefficient
