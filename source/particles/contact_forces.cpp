@@ -6,6 +6,7 @@
 #include <meltpooldg/particles/dem_util.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle_accessor.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
 
 #include <cmath>
 #include <numbers>
@@ -20,6 +21,7 @@ namespace MeltPoolDG
     {
       prm.add_parameter("restitution coefficient", restitution_coefficient);
       prm.add_parameter("sliding friction coefficient", sliding_friction_coefficient);
+      prm.add_parameter("rolling resistance coefficient", rolling_resistance_coefficient);
       prm.enter_subsection("particle-particle contact");
       {
         prm.add_parameter("youngs modulus", particle.youngs_modulus);
@@ -55,6 +57,27 @@ namespace MeltPoolDG
   SphericalParticleContactForce<dim, number, ObstacleType>::add_load_to_obstacles(
     ObstacleField<dim, number, ObstacleType> &obstacle_field) const
   {
+    auto compute_and_add_contact_loads = [&](const ContactConfiguration &contact_configuration,
+                                             DEMParticleAccessor<dim, number> &particle,
+                                             dealii::Tensor<1, dim, number>   &tangential_gap) {
+      dealii::Tensor<1, dim, number> normal_force = normal_contact_force(contact_configuration);
+      dealii::Tensor<1, dim, number> tangential_force =
+        tangential_contact_force(contact_configuration, normal_force, tangential_gap);
+
+      particle.add_force(normal_force + tangential_force);
+
+      dealii::Tensor<1, axial_dim<dim>, number> tangential_torque =
+        tangential_contact_torque(contact_configuration,
+                                  tangential_force,
+                                  particle.get_property(ObstacleType::Properties::radius));
+
+      dealii::Tensor<1, axial_dim<dim>, number> rolling_torque =
+        rolling_resistance_torque(contact_configuration, normal_force);
+
+      particle.add_torque(tangential_torque + rolling_torque);
+    };
+
+
     for (auto &particle : obstacle_field.locally_owned_particle_range())
       {
         std::map<int, dealii::Tensor<1, dim, number>> &self_tangential_gaps =
@@ -74,21 +97,9 @@ namespace MeltPoolDG
 
             if (particle_particle_contact_configuration.normal_overlap > 0)
               {
-                dealii::Tensor<1, dim, number> normal_force =
-                  normal_contact_force(particle_particle_contact_configuration);
-                dealii::Tensor<1, dim, number> tangential_force =
-                  tangential_contact_force(particle_particle_contact_configuration,
-                                           normal_force,
-                                           self_tangential_gaps[other.id()]);
-
-                particle.add_force(normal_force + tangential_force);
-
-                dealii::Tensor<1, axial_dim<dim>, number> tangential_torque =
-                  tangential_contact_torque(particle_particle_contact_configuration,
-                                            tangential_force,
-                                            particle.get_property(
-                                              ObstacleType::Properties::radius));
-                particle.add_torque(tangential_torque);
+                compute_and_add_contact_loads(particle_particle_contact_configuration,
+                                              particle,
+                                              self_tangential_gaps[other.id()]);
               }
             else
               {
@@ -105,20 +116,9 @@ namespace MeltPoolDG
               contact_data.particle.poisson_ratio);
             if (particle_wall_contact_configuration.normal_overlap > 0)
               {
-                dealii::Tensor<1, dim, number> normal_force =
-                  normal_contact_force(particle_wall_contact_configuration);
-                dealii::Tensor<1, dim, number> tangential_force =
-                  tangential_contact_force(particle_wall_contact_configuration,
-                                           normal_force,
-                                           tangential_gaps_with_walls[particle.id()][key]);
-                particle.add_force(normal_force + tangential_force);
-
-                dealii::Tensor<1, axial_dim<dim>, number> tangential_torque =
-                  tangential_contact_torque(particle_wall_contact_configuration,
-                                            tangential_force,
-                                            particle.get_property(
-                                              ObstacleType::Properties::radius));
-                particle.add_torque(tangential_torque);
+                compute_and_add_contact_loads(particle_wall_contact_configuration,
+                                              particle,
+                                              tangential_gaps_with_walls[particle.id()][key]);
               }
             else
               {
@@ -219,6 +219,36 @@ namespace MeltPoolDG
   }
 
   template <int dim, typename number, typename ObstacleType>
+  dealii::Tensor<1, axial_dim<dim>, number>
+  SphericalParticleContactForce<dim, number, ObstacleType>::rolling_resistance_torque(
+    const ContactConfiguration           &contact_configuration,
+    const dealii::Tensor<1, dim, number> &contact_normal_force) const
+  {
+    dealii::Tensor<1, axial_dim<dim>, number> contact_plane_relative_angular_velocity;
+
+    if constexpr (dim == 3)
+      {
+        contact_plane_relative_angular_velocity =
+          contact_configuration.relative_angular_velocity -
+          (contact_configuration.relative_angular_velocity * contact_configuration.normal_vector) *
+            contact_configuration.normal_vector;
+      }
+    else if constexpr (dim == 2)
+      {
+        contact_plane_relative_angular_velocity = contact_configuration.relative_angular_velocity;
+      }
+    else
+      {
+        AssertThrow(false,
+                    dealii::ExcMessage("Only dimensions 2 and 3 are supported by the "
+                                       "rolling resistance torque computation."));
+      }
+
+    return contact_data.rolling_resistance_coefficient * contact_normal_force.norm() *
+           contact_configuration.effective_radius * contact_plane_relative_angular_velocity;
+  }
+
+  template <int dim, typename number, typename ObstacleType>
   number
   SphericalParticleContactForce<dim, number, ObstacleType>::compute_damping_prefactor(
     const number restitution_coefficient) const
@@ -255,6 +285,8 @@ namespace MeltPoolDG
     normal_overlap = (self.get_property(ObstacleType::Properties::radius) +
                       other.get_property(ObstacleType::Properties::radius)) -
                      distance;
+
+    relative_angular_velocity = other.get_angular_velocity() - self.get_angular_velocity();
 
     if constexpr (dim == 3)
       {
@@ -305,6 +337,8 @@ namespace MeltPoolDG
     normal_vector =
       -wall->gradient(particle.get_location()) / wall->gradient(particle.get_location()).norm();
     normal_overlap = particle.get_property(ObstacleType::Properties::radius) - distance;
+
+    relative_angular_velocity = -particle.get_angular_velocity();
 
     if constexpr (dim == 3)
       {
