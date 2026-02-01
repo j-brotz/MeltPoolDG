@@ -31,13 +31,12 @@ MeltPoolDG::ObstacleDataStructure<dim, number>::ObstacleDataStructureModel<
 template <int dim, typename number>
 template <typename ObstacleDataStructureType>
 std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-MeltPoolDG::ObstacleDataStructure<dim, number>::ObstacleDataStructureModel<
-  ObstacleDataStructureType>::get_obstacles_in_cell_batch(dealii::Particles::PropertyPool<dim> &dst,
-                                                          const dealii::MatrixFree<dim, number>
-                                                                            &matrix_free,
-                                                          const unsigned int cell_batch_id) const
+MeltPoolDG::ObstacleDataStructure<dim, number>::
+  ObstacleDataStructureModel<ObstacleDataStructureType>::get_obstacles_in_cell(
+    dealii::Particles::PropertyPool<dim>                               &dst,
+    const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const
 {
-  return obstacle_data_structure.get_obstacles_in_cell_batch(dst, matrix_free, cell_batch_id);
+  return obstacle_data_structure.get_obstacles_in_cell(dst, cells);
 }
 
 template <int dim, typename number>
@@ -67,14 +66,11 @@ MeltPoolDG::ObstacleDataStructure<dim, number>::get_obstacles_in_cell(
 
 template <int dim, typename number>
 std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-MeltPoolDG::ObstacleDataStructure<dim, number>::get_obstacles_in_cell_batch(
-  dealii::Particles::PropertyPool<dim>  &dst,
-  const dealii::MatrixFree<dim, number> &matrix_free,
-  const unsigned int                     cell_batch_id) const
+MeltPoolDG::ObstacleDataStructure<dim, number>::get_obstacles_in_cell(
+  dealii::Particles::PropertyPool<dim>                               &dst,
+  const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const
 {
-  return obstacle_data_structure_pimpl->get_obstacles_in_cell_batch(dst,
-                                                                    matrix_free,
-                                                                    cell_batch_id);
+  return obstacle_data_structure_pimpl->get_obstacles_in_cell(dst, cells);
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -123,7 +119,6 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::get_obstacl
             {
               dst_properties[n_property] = src_properties[n_property];
             }
-          break;
         }
     }
   return handles;
@@ -131,22 +126,17 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::get_obstacl
 
 template <int dim, typename number, typename ObstacleType>
 std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::get_obstacles_in_cell_batch(
-  dealii::Particles::PropertyPool<dim>  &dst,
-  const dealii::MatrixFree<dim, number> &matrix_free,
-  const unsigned int                     cell_batch_id) const
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::get_obstacles_in_cell(
+  dealii::Particles::PropertyPool<dim>                               &dst,
+  const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const
 {
   std::vector<typename dealii::Particles::PropertyPool<dim>::Handle> handles;
   for (unsigned int src_handle = 0; src_handle < properties_global_obstacles.n_registered_slots();
        ++src_handle)
     {
-      for (unsigned int batch_lane = 0;
-           batch_lane < matrix_free.n_active_entries_per_cell_batch(cell_batch_id);
-           ++batch_lane)
+      for (const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell : cells)
         {
-          if (ObstacleType::is_in_cell(properties_global_obstacles,
-                                       src_handle,
-                                       *matrix_free.get_cell_iterator(cell_batch_id, batch_lane)))
+          if (ObstacleType::is_in_cell(properties_global_obstacles, src_handle, *cell))
             {
               auto dst_handle = dst.register_particle();
               handles.emplace_back(dst_handle);

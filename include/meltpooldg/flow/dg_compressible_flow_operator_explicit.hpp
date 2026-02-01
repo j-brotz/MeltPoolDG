@@ -89,9 +89,8 @@ namespace MeltPoolDG::Flow
                    const std::function<void(unsigned int, unsigned int)> &func) const;
 
     void
-    add_external_force(
-      std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>> external_force,
-      std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>>) override;
+    add_external_force(std::shared_ptr<ExternalFlowForce<dim, number>> external_force,
+                       std::shared_ptr<ExternalFlowForceJacobian<dim, number>>) override;
 
   private:
     /// Scratch data for compressible flows
@@ -108,7 +107,7 @@ namespace MeltPoolDG::Flow
 
     /// This pointer may hold an instance of an external fluid force contribution
     /// (e.g., gravity, body forces, or user - defined source terms)
-    std::vector<std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>> external_forces;
+    std::vector<std::shared_ptr<ExternalFlowForce<dim, number>>> external_forces;
 
     /// Current time step size
     mutable number current_time_step;

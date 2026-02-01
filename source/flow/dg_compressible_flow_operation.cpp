@@ -111,8 +111,8 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   void
   DGCompressibleFlowOperation<dim, number>::add_external_force(
-    std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>         external_force_residuum,
-    std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>> external_force_jacobian)
+    std::shared_ptr<ExternalFlowForce<dim, number>>         external_force_residuum,
+    std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian)
   {
     comp_flow_operator->add_external_force(std::move(external_force_residuum),
                                            std::move(external_force_jacobian));

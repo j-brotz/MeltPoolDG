@@ -45,4 +45,26 @@ namespace MeltPoolDG
     else
       return fe_eval.get_value(q_index);
   }
+
+  /**
+   * This function returns the cell iterators corresponding to the active SIMD
+   * lanes of the specified cell batch.
+   *
+   * @param mf The matrix-free object defining the cell batch of interest.
+   * @param cell_batch_id Index of the cell batch.
+   */
+  template <int dim, typename number>
+  std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>>
+  cells_in_cell_batch(const dealii::MatrixFree<dim, number> &mf, const unsigned int cell_batch_id)
+  {
+    unsigned int n_active_lanes = mf.n_active_entries_per_cell_batch(cell_batch_id);
+
+    std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cells;
+    cells.reserve(n_active_lanes);
+
+    for (unsigned int lane = 0; lane < n_active_lanes; ++lane)
+      cells.push_back(mf.get_cell_iterator(cell_batch_id, lane));
+
+    return cells;
+  }
 } // namespace MeltPoolDG

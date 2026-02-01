@@ -128,9 +128,8 @@ namespace MeltPoolDG::Flow
 
     void
     add_external_force(
-      std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>         external_force_residuum,
-      std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>> external_force_jacobian =
-        nullptr);
+      std::shared_ptr<ExternalFlowForce<dim, number>>         external_force_residuum,
+      std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian = nullptr);
 
     /**
      * @brief Get a constant reference to the DoFHandler used in the current operation.

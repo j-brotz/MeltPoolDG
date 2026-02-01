@@ -81,7 +81,7 @@ namespace MeltPoolDG
    */
   template <int dim, typename number, typename ObstacleType>
   struct BrinkmanPenalizationResidualContribution final
-    : public Flow::AdditionalCellAndQuadOperation<dim, number>
+    : public Flow::ExternalFlowForce<dim, number>
   {
     using ConservedVariablesType = Flow::CompressibleFlowTypes::ConservedVariablesType<dim, number>;
 
@@ -100,36 +100,23 @@ namespace MeltPoolDG
       const BrinkmanPenalizationData<number>         &brinkman_penalization_data);
 
     /**
-     * Identifies and stores all relevant particles for the given cell batch, to be used
-     * during the quadrature operation.
-     *
-     * This function is responsible for locating particles that are relevant to the current cell
-     * batch and caching them internally. The cached particles are then accessed during the later
-     * quadrature computation.
-     *
-     * @param matrix_free MatrixFree object and corresponding relevant indices.
-     * @param cell_batch_id The index of the cell batch to process.
-     */
-    void
-    cell_operation(const MatrixFreeContext<dim, number> &matrix_free,
-                   unsigned int                          cell_batch_id) override;
-
-    /**
-     * Computes the Brinkman penalty term at the specified (vectorized) points, typically
-     * quadrature points.
-     *
-     * The computation considers only those obstacles that have been cached internally, as
-     * determined by the most recent call to @p cell_operation().
+     * This function evaluates the Brinkman penalty term at a set of vectorized points, typically
+     * quadrature points. Since successive calls often operate on the same set of cells, the
+     * function internally caches the obstacles relevant to the provided cells. The cache is updated
+     * automatically if the cell set differs from that used in the previous call.
      *
      * @param time_step_size Current time step size.
+     * @param cell_iterators Container holding an iterator to the cells associated with the provided
+     * points.
      * @param q_point Coordinates at which the penalty term is to be evaluated.
      * @param w_q Conserved variables evaluated at the given coordinates.
      * @return The computed Brinkman penalty term at the specified points.
      */
     ConservedVariablesType
-    quad_operation(number                                                     time_step_size,
-                   const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
-                   const ConservedVariablesType                              &w_q) override;
+    value(number                                                              time_step_size,
+          const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cell_iterators,
+          const dealii::Point<dim, dealii::VectorizedArray<number>>          &q_point,
+          const ConservedVariablesType                                       &w_q) override;
 
   private:
     /// Brinkman penalization data
@@ -159,7 +146,7 @@ namespace MeltPoolDG
    */
   template <int dim, typename number, typename ObstacleType>
   struct BrinkmanPenalizationJacobianContribution final
-    : public Flow::AdditionalCellAndQuadOperationJacobian<dim, number>
+    : public Flow::ExternalFlowForceJacobian<dim, number>
   {
     using ConservedVariablesType = Flow::CompressibleFlowTypes::ConservedVariablesType<dim, number>;
 
@@ -177,38 +164,25 @@ namespace MeltPoolDG
       const BrinkmanPenalizationData<number>         &brinkman_penalization_data);
 
     /**
-     * Identifies and stores all relevant particles for the given cell batch, to be used
-     * during the quadrature operation.
-     *
-     * This function is responsible for locating particles that are relevant to the current cell
-     * batch and caching them internally. The cached particles are then accessed during the later
-     * quadrature computation.
-     *
-     * @param matrix_free MatrixFree object and corresponding relevant indices.
-     * @param cell_batch_id The index of the cell batch to process.
-     */
-    void
-    cell_operation(const MatrixFreeContext<dim, number> &matrix_free,
-                   unsigned int                          cell_batch_id) override;
-
-    /**
-     * Computes the Jacobian * delta_w of the Brinkman penalty term at the specified
-     * (vectorized) points, typically quadrature points.
-     *
-     * The computation considers only those obstacles that have been cached internally, as
-     * determined by the most recent call to @p cell_operation().
+     * This function evaluates the Jacobian of the Brinkman penalty term at a set of vectorized
+     * points, typically quadrature points. Since successive calls often operate on the same set of
+     * cells, the function internally caches the obstacles relevant to the provided cells. The cache
+     * is updated automatically if the cell set differs from that used in the previous call.
      *
      * @param time_step_size Current time step size.
+     * @param cell_iterators Container holding an iterator to the cells associated with the provided
+     * points.
      * @param q_point Coordinates at which the penalty term is to be evaluated.
      * @param w_q Conserved variables evaluated at the given coordinates.
      * @param delta_w_q Change in conserved variables at the given coordinates.
      * @return The computed Brinkman penalty term at the specified points.
      */
     ConservedVariablesType
-    quad_operation(number                                                     time_step_size,
-                   const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
-                   const ConservedVariablesType                              &w_q,
-                   const ConservedVariablesType                              &delta_w_q) override;
+    value(number                                                              time_step_size,
+          const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cell_iterators,
+          const dealii::Point<dim, dealii::VectorizedArray<number>>          &q_point,
+          const ConservedVariablesType                                       &w_q,
+          const ConservedVariablesType                                       &delta_w_q) override;
 
   private:
     /// Brinkman penalization data

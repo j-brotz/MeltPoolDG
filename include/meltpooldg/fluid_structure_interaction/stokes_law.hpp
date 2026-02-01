@@ -66,7 +66,7 @@ namespace MeltPoolDG
    * during metal additive manufacturing.
    */
   template <int dim, typename number, typename ObstacleType>
-  struct StokesLawFluidForce final : public Flow::AdditionalCellAndQuadOperation<dim, number>
+  struct StokesLawFluidForce final : public Flow::ExternalFlowForce<dim, number>
   {
     using ConservedVariablesType = Flow::CompressibleFlowTypes::ConservedVariablesType<dim, number>;
     using VectorType             = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -81,6 +81,7 @@ namespace MeltPoolDG
      */
     StokesLawFluidForce(const VectorType                         &solution,
                         ObstacleField<dim, number, ObstacleType> &obstacle_handler,
+                        const MatrixFreeContext<dim, number>     &matrix_free,
                         const number                              dynamic_viscosity);
 
     /**
@@ -90,36 +91,17 @@ namespace MeltPoolDG
      * the equal and opposite force exerted on the fluid, is evaluated and incorporated as a penalty
      * term in the fluid momentum equations.
      *
-     * The force is given by Stokes' law:
-     * @f[
-     *   \mathbf{F} = 6 \pi \mu R \left( \mathbf{u}_f - \mathbf{u}_p \right).
-     * @f]
-     *
-     * The resulting momentum penalty force is stored internally and used in the subsequent call to
-     * quad_operation().
-     *
-     * @param matrix_free MatrixFree object and corresponding relevant indices.
-     * @param cell_batch_id The index of the cell batch to process.
-     */
-    void
-    cell_operation(const MatrixFreeContext<dim, number> &matrix_free,
-                   unsigned int                          cell_batch_id) override;
-
-    /**
-     * Computes the penalty term at the given points. This function effectively returns the penalty
-     * contribution to the momentum balance that was previously computed during the call to
-     * cell_operation(). The corresponding penalty contributions to the mass and energy balance
-     * equations are zero.
-     *
      * @param time_step_size The current time-step size.
+     * @param cell_iterators Container holding an iterator to the cells associated with the provided points.
      * @param q_point Coordinates at which the penalty term is evaluated.
      * @param w_q Conserved variables evaluated at the given coordinates.
      * @return The computed penalty term at the specified points.
      */
     ConservedVariablesType
-    quad_operation(number                                                     time_step_size,
-                   const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
-                   const ConservedVariablesType                              &w_q) override;
+    value(number                                                              time_step_size,
+          const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cell_iterators,
+          const dealii::Point<dim, dealii::VectorizedArray<number>>          &q_point,
+          const ConservedVariablesType                                       &w_q) override;
 
   private:
     /// Solution of the flow field.
@@ -128,8 +110,9 @@ namespace MeltPoolDG
     /// Dynamic viscosity of the fluid.
     const number dynamic_viscosity;
 
-    /// Momentum penalty force for the current cell batch.
-    dealii::Tensor<1, dim, dealii::VectorizedArray<number>> cell_penalty_force;
+    /// Data on the matrix free context associated with the compressible flow solver for which the
+    /// penalty force is computed.
+    const MatrixFreeContext<dim, number> matrix_free;
 
     /// Reference to the obstacle handler managing obstacles in the domain.
     ObstacleField<dim, number, ObstacleType> &obstacle_handler;

@@ -19,8 +19,8 @@
 namespace MeltPoolDG
 {
   template <int dim, typename number, typename ObstacleType>
-  std::tuple<std::shared_ptr<Flow::AdditionalCellAndQuadOperation<dim, number>>,
-             std::shared_ptr<Flow::AdditionalCellAndQuadOperationJacobian<dim, number>>,
+  std::tuple<std::shared_ptr<Flow::ExternalFlowForce<dim, number>>,
+             std::shared_ptr<Flow::ExternalFlowForceJacobian<dim, number>>,
              std::unique_ptr<ObstacleLoad<dim, number, ObstacleType>>>
   setup_fluid_structure_interaction(
     const FluidStructureInteractionData<number>              &fsi_data,
@@ -29,10 +29,9 @@ namespace MeltPoolDG
     const dealii::LinearAlgebra::distributed::Vector<number> &flow_solution,
     const MatrixFreeContext<dim, number>                      flow_mf_context)
   {
-    std::shared_ptr<Flow::AdditionalCellAndQuadOperation<dim, number>> fsi_fluid_force_residual;
-    std::shared_ptr<Flow::AdditionalCellAndQuadOperationJacobian<dim, number>>
-                                                             fsi_fluid_force_jacobian;
-    std::unique_ptr<ObstacleLoad<dim, number, ObstacleType>> fsi_obstacle_load;
+    std::shared_ptr<Flow::ExternalFlowForce<dim, number>>         fsi_fluid_force_residual;
+    std::shared_ptr<Flow::ExternalFlowForceJacobian<dim, number>> fsi_fluid_force_jacobian;
+    std::unique_ptr<ObstacleLoad<dim, number, ObstacleType>>      fsi_obstacle_load;
 
     switch (fsi_data.fsi_coupling_method)
       {
@@ -54,7 +53,7 @@ namespace MeltPoolDG
           case FSICouplingMethod::stokes_law: {
             fsi_fluid_force_residual =
               std::make_shared<StokesLawFluidForce<dim, number, ObstacleType>>(
-                flow_solution, obstacle_field, flow_material.dynamic_viscosity);
+                flow_solution, obstacle_field, flow_mf_context, flow_material.dynamic_viscosity);
             // TODO: The Stokes law coupling currently only works for explicit methods
             fsi_fluid_force_jacobian =
               std::make_shared<BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>>(

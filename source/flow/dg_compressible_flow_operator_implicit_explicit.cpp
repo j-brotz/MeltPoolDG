@@ -50,8 +50,8 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>::add_external_force(
-    std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>         external_force_residuum,
-    std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>> external_force_jacobian)
+    std::shared_ptr<ExternalFlowForce<dim, number>>         external_force_residuum,
+    std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian)
   {
     Assert(external_force_residuum != nullptr, dealii::ExcInternalError());
 
@@ -171,9 +171,10 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>::local_cell_jacobian_kernel(
-    FECellIntegrator<dim, dim + 2, number>       &delta_phi,
-    const FECellIntegrator<dim, dim + 2, number> &phi,
-    const unsigned int                            q_index) const
+    FECellIntegrator<dim, dim + 2, number>                      &delta_phi,
+    const FECellIntegrator<dim, dim + 2, number>                &phi,
+    const unsigned int                                           q_index,
+    std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators) const
   {
     const auto w_q       = phi.get_value(q_index);
     const auto delta_w_q = delta_phi.get_value(q_index);
@@ -183,10 +184,8 @@ namespace MeltPoolDG::Flow
 
     // external forces
     for (auto &external_force : external_forces_implicit_jacobian)
-      value_q -= external_force->quad_operation(current_time_increment,
-                                                phi.quadrature_point(q_index),
-                                                w_q,
-                                                delta_w_q);
+      value_q -= external_force->value(
+        current_time_increment, cell_iterators, phi.quadrature_point(q_index), w_q, delta_w_q);
 
     delta_phi.submit_value(value_q, q_index);
 
@@ -286,11 +285,8 @@ namespace MeltPoolDG::Flow
         phi.reinit(cell);
         phi.gather_evaluate(src, EvaluationFlags::values);
 
-        for (auto &external_force : external_forces_explicit_rhs)
-          external_force->cell_operation({flow_scratch_data.scratch_data.get_matrix_free(),
-                                          flow_scratch_data.dof_idx,
-                                          flow_scratch_data.quad_idx},
-                                         cell);
+        std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators =
+          cells_in_cell_batch(flow_scratch_data.scratch_data.get_matrix_free(), cell);
 
         for (const unsigned int q : phi.quadrature_point_indices())
           {
@@ -298,9 +294,10 @@ namespace MeltPoolDG::Flow
 
             ConservedVariablesType value_q;
             for (auto &external_force : external_forces_explicit_rhs)
-              value_q += external_force->quad_operation(current_time_increment,
-                                                        phi.quadrature_point(q),
-                                                        phi.get_value(q));
+              value_q += external_force->value(current_time_increment,
+                                               cell_iterators,
+                                               phi.quadrature_point(q),
+                                               phi.get_value(q));
 
             phi.submit_gradient(flux, q);
             if (!external_forces_explicit_rhs.empty())
@@ -447,6 +444,7 @@ namespace MeltPoolDG::Flow
       flow_scratch_data.dof_idx,
       flow_scratch_data.quad_idx);
 
+
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
         phi.reinit(cell);
@@ -455,15 +453,12 @@ namespace MeltPoolDG::Flow
         delta_phi.reinit(cell);
         delta_phi.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
-        for (auto &external_force : external_forces_implicit_jacobian)
-          external_force->cell_operation({flow_scratch_data.scratch_data.get_matrix_free(),
-                                          flow_scratch_data.dof_idx,
-                                          flow_scratch_data.quad_idx},
-                                         cell);
+        std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators =
+          cells_in_cell_batch(flow_scratch_data.scratch_data.get_matrix_free(), cell);
 
         for (const unsigned int q_index : phi.quadrature_point_indices())
           {
-            local_cell_jacobian_kernel(delta_phi, phi, q_index);
+            local_cell_jacobian_kernel(delta_phi, phi, q_index, cell_iterators);
           }
         delta_phi.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
       }
@@ -607,11 +602,8 @@ namespace MeltPoolDG::Flow
         phi_intermediate_explicit.gather_evaluate(*intermediate_explicit_solution,
                                                   dealii::EvaluationFlags::values);
 
-        for (auto &external_force : external_forces_implicit_residual)
-          external_force->cell_operation({flow_scratch_data.scratch_data.get_matrix_free(),
-                                          flow_scratch_data.dof_idx,
-                                          flow_scratch_data.quad_idx},
-                                         cell);
+        std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators =
+          cells_in_cell_batch(flow_scratch_data.scratch_data.get_matrix_free(), cell);
 
         for (const unsigned int q : phi.quadrature_point_indices())
           {
@@ -622,9 +614,10 @@ namespace MeltPoolDG::Flow
               (-phi.get_value(q) + phi_intermediate_explicit.get_value(q));
 
             for (auto &external_force : external_forces_implicit_residual)
-              value_q += external_force->quad_operation(current_time_increment,
-                                                        phi.quadrature_point(q),
-                                                        phi.get_value(q));
+              value_q += external_force->value(current_time_increment,
+                                               cell_iterators,
+                                               phi.quadrature_point(q),
+                                               phi.get_value(q));
 
             phi.submit_gradient(-flux, q);
             phi.submit_value(value_q, q);

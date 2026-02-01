@@ -194,23 +194,15 @@ MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>:
 {}
 
 template <int dim, typename number, typename ObstacleType>
-void
-MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>::cell_operation(
-  const MatrixFreeContext<dim, number> &matrix_free,
-  const unsigned int                    cell_batch_id)
-{
-  find_relevant_obstacles_in_cell_batch<dim, number, ObstacleType>(cell_obstacle_cache,
-                                                                   matrix_free.mf,
-                                                                   cell_batch_id);
-}
-
-template <int dim, typename number, typename ObstacleType>
 auto
-MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>::quad_operation(
+MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>::value(
   const number,
-  const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
-  const ConservedVariablesType                              &w_q) -> ConservedVariablesType
+  const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cell_iterators,
+  const dealii::Point<dim, dealii::VectorizedArray<number>>          &q_point,
+  const ConservedVariablesType                                       &w_q) -> ConservedVariablesType
 {
+  cell_obstacle_cache.update_cache(cell_iterators);
+
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> fluid_momentum;
   for (int d = 0; d < dim; ++d)
     fluid_momentum[d] = w_q[d + 1];
@@ -252,26 +244,19 @@ MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>:
 {}
 
 template <int dim, typename number, typename ObstacleType>
-void
-MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>::cell_operation(
-  const MatrixFreeContext<dim, number> &matrix_free,
-  const unsigned int                    cell_batch_id)
-{
-  find_relevant_obstacles_in_cell_batch<dim, number, ObstacleType>(cell_obstacle_cache,
-                                                                   matrix_free.mf,
-                                                                   cell_batch_id);
-}
-
-template <int dim, typename number, typename ObstacleType>
 auto
-MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>::quad_operation(
+MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>::value(
   const number,
-  const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
-  const ConservedVariablesType                              &w_q,
-  const ConservedVariablesType                              &delta_w_q) -> ConservedVariablesType
+  const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cell_iterators,
+  const dealii::Point<dim, dealii::VectorizedArray<number>>          &q_point,
+  const ConservedVariablesType                                       &w_q,
+  const ConservedVariablesType &delta_w_q) -> ConservedVariablesType
 {
+  cell_obstacle_cache.update_cache(cell_iterators);
+
   if (cell_obstacle_cache.relevant_obstacle_handles.empty())
     return ConservedVariablesType();
+
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> fluid_momentum;
   for (int d = 0; d < dim; ++d)
     fluid_momentum[d] = w_q[d + 1];
