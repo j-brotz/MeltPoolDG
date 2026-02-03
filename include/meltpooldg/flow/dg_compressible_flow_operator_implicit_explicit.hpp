@@ -36,9 +36,8 @@ namespace MeltPoolDG::Flow
 
     void
     add_external_force(
-      std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>         external_force_residuum,
-      std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>> external_force_jacobian)
-      override;
+      std::shared_ptr<ExternalFlowForce<dim, number>>         external_force_residuum,
+      std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian) override;
 
     /**
      * @brief Compute the matrix representation of the Jacobian.
@@ -85,13 +84,15 @@ namespace MeltPoolDG::Flow
      *
      * @param delta_phi Cell integrator for the change in the primary variables. Quadrature point
      * distributions are added to this integrator.
-     * @param phi Cell integrator for the primary varibales.
+     * @param phi Cell integrator for the primary variables.
      * @param q_index Quadrature point index.
      */
     void
-    local_cell_jacobian_kernel(FECellIntegrator<dim, dim + 2, number>       &delta_phi,
-                               const FECellIntegrator<dim, dim + 2, number> &phi,
-                               unsigned int                                  q_index) const;
+    local_cell_jacobian_kernel(
+      FECellIntegrator<dim, dim + 2, number>                      &delta_phi,
+      const FECellIntegrator<dim, dim + 2, number>                &phi,
+      unsigned int                                                 q_index,
+      std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators) const;
 
     /**
      * @brief Local face operations at the given quadrature point for computing the Jacobian.
@@ -100,8 +101,8 @@ namespace MeltPoolDG::Flow
      * Quadrature point distributions are added to this integrator.
      * @param delta_phi_p Face integrator for the change in the primary variables on the outer face.
      * Quadrature point distributions are added to this integrator.
-     * @param phi_m Cell integrator for the primary varibales on the inner face.
-     * @param phi_p Cell integrator for the primary varibales on the outer face.
+     * @param phi_m Cell integrator for the primary variables on the inner face.
+     * @param phi_p Cell integrator for the primary variables on the outer face.
      * @param q_index Quadrature point index.
      */
     void
@@ -135,7 +136,7 @@ namespace MeltPoolDG::Flow
      * @param time_step Current time step size.
      * @param intermediate_explicit_solution_in Intermediate solution obtained by the explicit
      * time step.
-     * @param rhs_scaling_factor Factor used to scle the rhs, i.e. the final residual is given by
+     * @param rhs_scaling_factor Factor used to scale the rhs, i.e. the final residual is given by
      * R=y'-a*f(y), where the variable 'a' is the passed factor.
      */
     void
@@ -167,8 +168,8 @@ namespace MeltPoolDG::Flow
      * The method on how to compute/approximate the jacobian is defined by the user in the
      * compressible flow data.
      *
-     * @param src Source vector x with which the jacobian gets mulitplied.
-     * @param dst Loation at which the result of J*x is stored.
+     * @param src Source vector x with which the jacobian gets multiplied.
+     * @param dst Location at which the result of J*x is stored.
      *
      * @throws Exception if the layout of the two given vectors @p src and @p dst are not identical.
      * @note This function assumes that the function set_stage_constants() has been called in advance.
@@ -178,7 +179,7 @@ namespace MeltPoolDG::Flow
 
     /**
      * @brief Compute the negative residual, i.e. -(y'-F(y)) where y' is the temporal derivative of
-     * the primary variables and F is the sum of all fluxes occuring in the compressible
+     * the primary variables and F is the sum of all fluxes occurring in the compressible
      * Navier-Stokes equations (right-hand side).
      *
      * @param current_time Current physical time.
@@ -221,17 +222,15 @@ namespace MeltPoolDG::Flow
 
     /// This set of pointers may hold a list of external fluid force contributions to the explicitly
     /// treated part of the PDE (e.g., gravity or user-defined source terms)
-    std::vector<std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>>
-      external_forces_explicit_rhs;
+    std::vector<std::shared_ptr<ExternalFlowForce<dim, number>>> external_forces_explicit_rhs;
 
     /// This set of pointers may hold a list of external fluid force contributions to the residuum
     /// (e.g., gravity or user-defined source terms)
-    std::vector<std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>>
-      external_forces_implicit_residual;
+    std::vector<std::shared_ptr<ExternalFlowForce<dim, number>>> external_forces_implicit_residual;
 
     /// This set of pointers may hold a list of external fluid force contributions to the jacobian
     /// (e.g., gravity or user-defined source terms)
-    std::vector<std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>>>
+    std::vector<std::shared_ptr<ExternalFlowForceJacobian<dim, number>>>
       external_forces_implicit_jacobian;
 
     /**

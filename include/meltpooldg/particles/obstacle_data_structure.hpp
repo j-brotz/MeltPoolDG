@@ -78,9 +78,9 @@ namespace MeltPoolDG
      * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
     std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-    get_obstacles_in_cell_batch(dealii::Particles::PropertyPool<dim>  &dst,
-                                const dealii::MatrixFree<dim, number> &matrix_free,
-                                const unsigned int                     cell_batch_id) const;
+    get_obstacles_in_cell(
+      dealii::Particles::PropertyPool<dim>                               &dst,
+      const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const;
 
   private:
     /**
@@ -113,9 +113,9 @@ namespace MeltPoolDG
        * details.
        */
       virtual std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-      get_obstacles_in_cell_batch(dealii::Particles::PropertyPool<dim>  &dst,
-                                  const dealii::MatrixFree<dim, number> &matrix_free,
-                                  const unsigned int                     cell_batch_id) const = 0;
+      get_obstacles_in_cell(
+        dealii::Particles::PropertyPool<dim>                               &dst,
+        const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const = 0;
     };
 
     /**
@@ -152,9 +152,9 @@ namespace MeltPoolDG
        * details.
        */
       std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-      get_obstacles_in_cell_batch(dealii::Particles::PropertyPool<dim>  &dst,
-                                  const dealii::MatrixFree<dim, number> &matrix_free,
-                                  const unsigned int cell_batch_id) const override;
+      get_obstacles_in_cell(
+        dealii::Particles::PropertyPool<dim>                               &dst,
+        const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const override;
 
     private:
       const ObstacleDataStructureType obstacle_data_structure;
@@ -241,9 +241,9 @@ namespace MeltPoolDG
      * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
     std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-    get_obstacles_in_cell_batch(dealii::Particles::PropertyPool<dim>  &dst,
-                                const dealii::MatrixFree<dim, number> &matrix_free,
-                                const unsigned int                     cell_batch_id) const;
+    get_obstacles_in_cell(
+      dealii::Particles::PropertyPool<dim>                               &dst,
+      const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const;
 
     /**
      * @brief Broadcasts obstacle properties of all locally owned particles to all MPI processes.

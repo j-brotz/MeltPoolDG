@@ -64,8 +64,8 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::add_external_force(
-    std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>         external_force_residuum,
-    std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>> external_force_jacobian)
+    std::shared_ptr<ExternalFlowForce<dim, number>>         external_force_residuum,
+    std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian)
   {
     Assert(external_force_residuum != nullptr && external_force_jacobian != nullptr,
            dealii::ExcInternalError());
@@ -260,11 +260,8 @@ namespace MeltPoolDG::Flow
         phi_old.reinit(cell);
         phi_old.gather_evaluate(*time_integrator_old_solution, dealii::EvaluationFlags::values);
 
-        for (auto &external_force : external_forces_residual)
-          external_force->cell_operation({flow_scratch_data.scratch_data.get_matrix_free(),
-                                          flow_scratch_data.dof_idx,
-                                          flow_scratch_data.quad_idx},
-                                         cell);
+        std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators =
+          cells_in_cell_batch(flow_scratch_data.scratch_data.get_matrix_free(), cell);
 
         for (const unsigned int q : phi.quadrature_point_indices())
           {
@@ -281,9 +278,10 @@ namespace MeltPoolDG::Flow
                                                    flow_scratch_data.body_force);
 
             for (auto &external_force : external_forces_residual)
-              value_q += external_force->quad_operation(current_time_step,
-                                                        phi.quadrature_point(q),
-                                                        phi.get_value(q));
+              value_q += external_force->value(current_time_step,
+                                               cell_iterators,
+                                               phi.quadrature_point(q),
+                                               phi.get_value(q));
 
             value_q -= 1. / current_time_step * (phi.get_value(q) - phi_old.get_value(q));
 
@@ -435,15 +433,12 @@ namespace MeltPoolDG::Flow
         delta_phi.reinit(cell);
         delta_phi.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
-        for (auto &external_force : external_forces_jacobian)
-          external_force->cell_operation({flow_scratch_data.scratch_data.get_matrix_free(),
-                                          flow_scratch_data.dof_idx,
-                                          flow_scratch_data.quad_idx},
-                                         cell);
+        std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators =
+          cells_in_cell_batch(flow_scratch_data.scratch_data.get_matrix_free(), cell);
 
         for (const unsigned int q_index : phi.quadrature_point_indices())
           {
-            local_cell_jacobian_kernel(delta_phi, phi, q_index);
+            local_cell_jacobian_kernel(delta_phi, phi, q_index, cell_iterators);
           }
 
         delta_phi.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
@@ -563,19 +558,18 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>::local_cell_jacobian_kernel(
-    FECellIntegrator<dim, dim + 2, number>       &delta_phi,
-    const FECellIntegrator<dim, dim + 2, number> &phi,
-    const unsigned int                            q_index) const
+    FECellIntegrator<dim, dim + 2, number>                      &delta_phi,
+    const FECellIntegrator<dim, dim + 2, number>                &phi,
+    const unsigned int                                           q_index,
+    std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators) const
   {
     const auto w_q       = phi.get_value(q_index);
     const auto delta_w_q = delta_phi.get_value(q_index);
 
     ConservedVariablesType value_q = 1. / current_time_step * delta_w_q;
     for (auto &external_force : external_forces_jacobian)
-      value_q -= external_force->quad_operation(current_time_step,
-                                                phi.quadrature_point(q_index),
-                                                w_q,
-                                                delta_w_q);
+      value_q -= external_force->value(
+        current_time_step, cell_iterators, phi.quadrature_point(q_index), w_q, delta_w_q);
 
     delta_phi.submit_value(value_q, q_index);
 

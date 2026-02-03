@@ -12,6 +12,7 @@
 #include <deal.II/matrix_free/tools.h>
 
 #include <meltpooldg/utilities/fe_integrator.hpp>
+#include <meltpooldg/utilities/matrix_free_util.hpp>
 
 namespace MeltPoolDG::Flow
 {
@@ -34,12 +35,13 @@ namespace MeltPoolDG::Flow
              const dealii::FEEvaluation<dim, -1, 0, dim + 2, number>     &const_fe_evaluator,
              dealii::FEFaceEvaluation<dim, -1, 0, dim + 2, number>       &fe_face_evaluator,
              const dealii::FEFaceEvaluation<dim, -1, 0, dim + 2, number> &const_fe_face_evaluator,
-             unsigned int                                                 q_index) {
+             unsigned int                                                 q_index,
+             std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators) {
       /**
        * Compute the operations for computing the jacobian on the quadrature points for the cell
        * loop.
        */
-      op.local_cell_jacobian_kernel(fe_evaluator, const_fe_evaluator, q_index);
+      op.local_cell_jacobian_kernel(fe_evaluator, const_fe_evaluator, q_index, cell_iterators);
 
       /**
        * Compute the operations for computing the jacobian on the quadrature points for the face
@@ -98,9 +100,12 @@ namespace MeltPoolDG::Flow
                           dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients);
       delta_phi.evaluate(dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients);
 
+      std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators =
+        cells_in_cell_batch(matrix_free, delta_phi.get_cell_or_face_batch_id());
+
       for (const unsigned int q_index : delta_phi.quadrature_point_indices())
         {
-          implicit_operator.local_cell_jacobian_kernel(delta_phi, phi, q_index);
+          implicit_operator.local_cell_jacobian_kernel(delta_phi, phi, q_index, cell_iterators);
         }
 
       delta_phi.integrate(dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients);

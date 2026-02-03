@@ -1,5 +1,10 @@
 #pragma once
 
+#include <deal.II/base/vectorization.h>
+
+#include <deal.II/grid/tria_accessor.h>
+#include <deal.II/grid/tria_iterator.h>
+
 #include <deal.II/particles/particle_accessor.h>
 
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
@@ -80,6 +85,29 @@ namespace MeltPoolDG
         relevant_obstacles.deregister_particle(handle);
     }
 
+    /**
+     * Updates the cache. Checks whether the provided cell iterators differ from the
+     * previously cached ones, and if so, refreshes the stored obstacle data accordingly.
+     *
+     * @param cells Array of cell iterators for which the cache should be updated.
+     */
+    void
+    update_cache(const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells)
+    {
+      // check if cache is still valid
+      if (cells.size() == cached_cells.size() &&
+          std::equal(cells.begin(), cells.end(), cached_cells.begin()))
+        return;
+
+      for (auto handle : relevant_obstacle_handles)
+        relevant_obstacles.deregister_particle(handle);
+
+      relevant_obstacle_handles.clear();
+
+      relevant_obstacle_handles = obstacle_handler.get_obstacles_in_cell(relevant_obstacles, cells);
+      cached_cells              = cells;
+    }
+
     /// Property pool used to cache obstacle properties relevant for the current cell batch.
     dealii::Particles::PropertyPool<dim> relevant_obstacles;
 
@@ -89,24 +117,8 @@ namespace MeltPoolDG
 
     /// Reference to the obstacle handler managing all obstacles in the domain.
     const ObstacleField<dim, number, ObstacleType> &obstacle_handler;
+
+    /// Cells, for which the object cache is currently valid.
+    std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cached_cells;
   };
-
-  /**
-   * Helper function to find all relevant obstacles in the obstacle field stored in @param data for
-   * the given cell batch @param cell_batch and matrix-free object @param mf. The handles of the
-   * relevant obstacles are stored in the @param data struct.
-   */
-  template <int dim, typename number, typename ObstacleType>
-  void
-  find_relevant_obstacles_in_cell_batch(CellObstacleCache<dim, number, ObstacleType> &data,
-                                        const dealii::MatrixFree<dim, number>        &mf,
-                                        const unsigned                                cell_batch)
-  {
-    for (auto handle : data.relevant_obstacle_handles)
-      data.relevant_obstacles.deregister_particle(handle);
-
-    data.relevant_obstacle_handles.clear();
-    data.relevant_obstacle_handles =
-      data.obstacle_handler.get_obstacles_in_cell_batch(data.relevant_obstacles, mf, cell_batch);
-  }
 } // namespace MeltPoolDG

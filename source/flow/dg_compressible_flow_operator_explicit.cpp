@@ -1,3 +1,4 @@
+#include "meltpooldg/utilities/matrix_free_util.hpp"
 #include <meltpooldg/flow/compressible_flow_explicit_utils.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_explicit.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
@@ -88,8 +89,8 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::add_external_force(
-    std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>> external_force,
-    std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>>)
+    std::shared_ptr<ExternalFlowForce<dim, number>> external_force,
+    std::shared_ptr<ExternalFlowForceJacobian<dim, number>>)
   {
     Assert(external_force != nullptr, dealii::ExcInternalError());
     external_forces.push_back(external_force);
@@ -98,7 +99,7 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::local_apply_cell(
-    const MatrixFree<dim, number> &,
+    const MatrixFree<dim, number>                    &mf,
     LinearAlgebra::distributed::Vector<number>       &dst,
     const LinearAlgebra::distributed::Vector<number> &src,
     const std::pair<unsigned, unsigned>              &cell_range) const
@@ -122,11 +123,8 @@ namespace MeltPoolDG::Flow
                             EvaluationFlags::values |
                               (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
 
-        for (auto &external_force : external_forces)
-          external_force->cell_operation({flow_scratch_data.scratch_data.get_matrix_free(),
-                                          flow_scratch_data.dof_idx,
-                                          flow_scratch_data.quad_idx},
-                                         cell);
+        std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators =
+          cells_in_cell_batch(flow_scratch_data.scratch_data.get_matrix_free(), cell);
 
         for (const unsigned int q : phi.quadrature_point_indices())
           {
@@ -143,9 +141,10 @@ namespace MeltPoolDG::Flow
                                                    flow_scratch_data.body_force);
 
             for (auto &external_force : external_forces)
-              flux += external_force->quad_operation(current_time_step,
-                                                     phi.quadrature_point(q),
-                                                     phi.get_value(q));
+              flux += external_force->value(current_time_step,
+                                            cell_iterators,
+                                            phi.quadrature_point(q),
+                                            phi.get_value(q));
 
             if (flow_scratch_data.body_force.get() != nullptr or !external_forces.empty())
               phi.submit_value(flux, q);

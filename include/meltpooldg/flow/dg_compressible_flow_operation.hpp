@@ -112,8 +112,8 @@ namespace MeltPoolDG::Flow
 
     void
     add_external_force(
-      std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>         external_force_residuum,
-      std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>> external_force_jacobian);
+      std::shared_ptr<ExternalFlowForce<dim, number>>         external_force_residuum,
+      std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian);
 
     /**
      * @brief Compute the maximum time step size.

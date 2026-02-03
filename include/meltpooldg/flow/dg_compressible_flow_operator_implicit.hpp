@@ -64,9 +64,8 @@ namespace MeltPoolDG::Flow
 
     void
     add_external_force(
-      std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>         external_force_residuum,
-      std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>> external_force_jacobian)
-      override;
+      std::shared_ptr<ExternalFlowForce<dim, number>>         external_force_residuum,
+      std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian) override;
 
     /**
      * @brief Compute the matrix representation of the Jacobian.
@@ -135,9 +134,11 @@ namespace MeltPoolDG::Flow
      * @param q_index Quadrature point index.
      */
     void
-    local_cell_jacobian_kernel(FECellIntegrator<dim, dim + 2, number>       &delta_phi,
-                               const FECellIntegrator<dim, dim + 2, number> &phi,
-                               unsigned int                                  q_index) const;
+    local_cell_jacobian_kernel(
+      FECellIntegrator<dim, dim + 2, number>                      &delta_phi,
+      const FECellIntegrator<dim, dim + 2, number>                &phi,
+      unsigned int                                                 q_index,
+      std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators) const;
 
     /**
      * @brief Local face operations at the given quadrature point for computing the Jacobian.
@@ -200,13 +201,11 @@ namespace MeltPoolDG::Flow
 
     /// This set of pointers may hold a list of external fluid force contributions to the residuum
     /// (e.g., gravity, or user-defined source terms)
-    std::vector<std::shared_ptr<AdditionalCellAndQuadOperation<dim, number>>>
-      external_forces_residual;
+    std::vector<std::shared_ptr<ExternalFlowForce<dim, number>>> external_forces_residual;
 
     /// This set of pointers may hold a list of external fluid force contributions to the jacobian
     /// (e.g., gravity, or user-defined source terms)
-    std::vector<std::shared_ptr<AdditionalCellAndQuadOperationJacobian<dim, number>>>
-      external_forces_jacobian;
+    std::vector<std::shared_ptr<ExternalFlowForceJacobian<dim, number>>> external_forces_jacobian;
 
     /**
      * @brief Compute the result of J*x, where J is the Jacobian computed analytically.

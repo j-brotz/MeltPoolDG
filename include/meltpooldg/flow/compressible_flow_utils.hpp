@@ -8,6 +8,9 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
+#include <deal.II/grid/tria_accessor.h>
+#include <deal.II/grid/tria_iterator.h>
+
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
@@ -120,74 +123,63 @@ namespace MeltPoolDG::Flow
    * evaluated and incorporated during the cell loop of an explicit time integration scheme.
    *
    * This struct serves as a base for user-defined external fluid force models. Any derived class
-   * must implement the two core functions:
-   * - @p cell_operation(): Invoked once per cell batch to perform any necessary precomputations.
-   * - @p quad_operation(): Invoked at each quadrature point to compute the contribution of the
-   *   external force.
+   * must implement the core functions:
+   * @p value(): Invoked at each quadrature point to compute the contribution of the external force.
    */
   template <int dim, typename number>
-  struct AdditionalCellAndQuadOperation
+  struct ExternalFlowForce
   {
-    virtual ~AdditionalCellAndQuadOperation() = default;
+    virtual ~ExternalFlowForce() = default;
 
     /**
-     * @brief Function called once per cell batch during the cell loop.
+     * This function computes the value of the external force contribution for the balance of mass,
+     * momentum, and energy equations at the given set of points. The returned value then contains
+     * the body force as given in the respective governing equations and can directly be added to
+     * the right-hand side.
      *
-     * @param matrix_free MatrixFree object and corresponding relevant indices.
-     * @param cell_batch_id Index of the current cell batch.
-     */
-    virtual void
-    cell_operation(const MatrixFreeContext<dim, number> &matrix_free,
-                   unsigned int                          cell_batch_id) = 0;
-
-    /**
-     * @brief Function called once per batch of quadrature points to compute the external force
-     * contribution at each point.
-     *
-     * @param q_point Coordinates of the quadrature points.
-     * @param w_q Conserved variables at the corresponding quadrature points.
+     * @param time_step_size Size of the current time step.
+     * @param cells Container holding an iterator to the cells associated with the provided points.
+     * @param points Coordinates of the points at which the external force is evaluated.
+     * @param w Conserved variables at the corresponding points.
      *
      * @return The computed contribution of the external force to be added to the conservation
      * equations.
      */
     virtual CompressibleFlowTypes::ConservedVariablesType<dim, number>
-    quad_operation(number                                                            time_step_size,
-                   const dealii::Point<dim, dealii::VectorizedArray<number>>        &q_point,
-                   const CompressibleFlowTypes::ConservedVariablesType<dim, number> &w_q) = 0;
+    value(number                                                              time_step_size,
+          const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells,
+          const dealii::Point<dim, dealii::VectorizedArray<number>>          &points,
+          const CompressibleFlowTypes::ConservedVariablesType<dim, number>   &w) = 0;
   };
 
 
   template <int dim, typename number>
-  struct AdditionalCellAndQuadOperationJacobian
+  struct ExternalFlowForceJacobian
   {
-    virtual ~AdditionalCellAndQuadOperationJacobian() = default;
+    virtual ~ExternalFlowForceJacobian() = default;
 
     /**
-     * @brief Function called once per cell batch during the cell loop.
+     * This function computes the jacobian of the external force contribution for the balance of
+     * mass, momentum, and energy equations at the given set of points. The returned value then
+     * contains the body force as given in the respective governing equations and can directly be
+     * added to the right-hand side.
      *
-     * @param matrix_free MatrixFree object and corresponding relevant indices.
-     * @param cell_batch_id Index of the current cell batch.
-     */
-    virtual void
-    cell_operation(const MatrixFreeContext<dim, number> &matrix_free,
-                   unsigned int                          cell_batch_id = 0) = 0;
-
-    /**
-     * @brief Function called once per batch of quadrature points to compute the external force
-     * contribution at each point.
-     *
-     * @param q_point Coordinates of the quadrature points.
-     * @param w_q Conserved variables at the corresponding quadrature points.
-     *
+     * @param time_step_size Size of the current time step.
+     * @param cells Container holding an iterator to the cells associated with the provided points.
+     * If required this can also include an iterator with invalid state.
+     * @param points Coordinates of the points at which the external force is evaluated.
+     * @param w Conserved variables at the corresponding points.
+     * @param delta_w Increment in conserved variables at the corresponding points.
      *
      * @return The computed contribution of the external force to be added to the conservation
      * equations.
      */
     virtual CompressibleFlowTypes::ConservedVariablesType<dim, number>
-    quad_operation(number                                                            time_step_size,
-                   const dealii::Point<dim, dealii::VectorizedArray<number>>        &q_point,
-                   const CompressibleFlowTypes::ConservedVariablesType<dim, number> &w_q,
-                   const CompressibleFlowTypes::ConservedVariablesType<dim, number> &delta_w_q) = 0;
+    value(number                                                              time_step_size,
+          const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells,
+          const dealii::Point<dim, dealii::VectorizedArray<number>>          &points,
+          const CompressibleFlowTypes::ConservedVariablesType<dim, number>   &w,
+          const CompressibleFlowTypes::ConservedVariablesType<dim, number>   &delta_w) = 0;
   };
 
   /********************************************************************************************

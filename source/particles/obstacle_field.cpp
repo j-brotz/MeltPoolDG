@@ -1,6 +1,7 @@
 
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/mpi.h>
+#include <deal.II/base/vectorization.h>
 
 #include <deal.II/grid/filtered_iterator.h>
 #include <deal.II/grid/grid_tools.h>
@@ -122,12 +123,11 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell(
 
 template <int dim, typename number, typename ObstacleType>
 std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell_batch(
-  dealii::Particles::PropertyPool<dim>  &dst,
-  const dealii::MatrixFree<dim, number> &matrix_free,
-  const unsigned int                     cell_batch_id) const
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell(
+  dealii::Particles::PropertyPool<dim>                               &dst,
+  const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const
 {
-  return obstacle_data_structure.get_obstacles_in_cell_batch(dst, matrix_free, cell_batch_id);
+  return obstacle_data_structure.get_obstacles_in_cell(dst, cells);
 }
 
 template <int dim, typename number, typename ObstacleType>
