@@ -4,6 +4,7 @@
 #include <deal.II/base/vectorization.h>
 
 #include <cstddef>
+#include <type_traits>
 
 namespace dealii
 {
@@ -147,15 +148,13 @@ namespace MeltPoolDG
    * basis of the tensors and the vector must have the same dimension @p dim_2.
    */
   template <int dim_1, int dim_2, typename number>
-  dealii::Tensor<1, dim_1, dealii::VectorizedArray<number>>
+  dealii::Tensor<1, dim_1, number>
   contract_average_tensor_with_vector(
-    const dealii::Tensor<1, dim_1, dealii::Tensor<1, dim_2, dealii::VectorizedArray<number>>>
-      &tensor_1,
-    const dealii::Tensor<1, dim_1, dealii::Tensor<1, dim_2, dealii::VectorizedArray<number>>>
-                                                                    &tensor_2,
-    const dealii::Tensor<1, dim_2, dealii::VectorizedArray<number>> &vector)
+    const dealii::Tensor<1, dim_1, dealii::Tensor<1, dim_2, number>> &tensor_1,
+    const dealii::Tensor<1, dim_1, dealii::Tensor<1, dim_2, number>> &tensor_2,
+    const dealii::Tensor<1, dim_2, number>                           &vector)
   {
-    dealii::Tensor<1, dim_1, dealii::VectorizedArray<number>> result;
+    dealii::Tensor<1, dim_1, number> result;
 
     for (unsigned int i = 0; i < dim_1; ++i)
       result[i] = (tensor_1[i] + tensor_2[i]) * vector;
@@ -274,4 +273,35 @@ namespace MeltPoolDG
       out[i][i] = number(1.0);
     return out;
   }
+
+  /**
+   * Compute the jump between two tensors.
+   */
+  template <int dim1, int dim2, typename number>
+  dealii::Tensor<1, dim1, dealii::Tensor<1, dim2, number>>
+  jump(const dealii::Tensor<1, dim1, number> &tensor_m,
+       const dealii::Tensor<1, dim1, number> &tensor_p,
+       const dealii::Tensor<1, dim2, number> &normal)
+  {
+    dealii::Tensor<1, dim1, dealii::Tensor<1, dim2, number>> jump;
+    for (unsigned int i = 0; i < dim1; ++i)
+      for (unsigned int j = 0; j < dim2; ++j)
+        jump[i][j] = (tensor_m[i] - tensor_p[i]) * normal[j];
+    return jump;
+  }
+
+  /*
+   * Trait to detect whether a type is a specialization of `dealii::Tensor`. The trait consists of
+   * a primary template defaulting to `false` and a specialized version for `dealii::Tensor` types
+   * inheriting from `std::true_type`.
+   */
+  template <typename>
+  struct is_dealii_tensor : std::false_type
+  {};
+
+  template <int rank, int components, typename number>
+  struct is_dealii_tensor<dealii::Tensor<rank, components, number>> : std::true_type
+  {};
+
+
 } // namespace MeltPoolDG

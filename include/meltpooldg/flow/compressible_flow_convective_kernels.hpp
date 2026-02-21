@@ -202,18 +202,22 @@ namespace MeltPoolDG::Flow
               0.5 * std::sqrt(std::max(velocity_p.norm_square() + sound_speed_p2,
                                        velocity_m.norm_square() + sound_speed_m2));
 
-            return contract_average_tensor_with_vector<dim + 2, dim, number>(flux_m,
-                                                                             flux_p,
-                                                                             normal) +
+            return contract_average_tensor_with_vector<dim + 2,
+                                                       dim,
+                                                       dealii::VectorizedArray<number>>(flux_m,
+                                                                                        flux_p,
+                                                                                        normal) +
                    0.5 * lambda * (u_m - u_p);
           }
           case NumericalFluxType::lax_friedrichs_exact: {
             const auto lambda = std::max(std::abs(velocity_p * normal) + sound_speed_p,
                                          std::abs(velocity_m * normal) + sound_speed_m);
 
-            return contract_average_tensor_with_vector<dim + 2, dim, number>(flux_m,
-                                                                             flux_p,
-                                                                             normal) +
+            return contract_average_tensor_with_vector<dim + 2,
+                                                       dim,
+                                                       dealii::VectorizedArray<number>>(flux_m,
+                                                                                        flux_p,
+                                                                                        normal) +
                    0.5 * lambda * (u_m - u_p);
           }
           case NumericalFluxType::harten_lax_vanleer: {

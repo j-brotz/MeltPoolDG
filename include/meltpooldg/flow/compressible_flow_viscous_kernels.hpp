@@ -258,7 +258,8 @@ namespace MeltPoolDG::Flow
 
     const auto flux_p = calculate_viscous_flux(u_p, grad_u_p);
 
-    return contract_average_tensor_with_vector<dim + 2, dim, number>(flux_m, flux_p, normal) -
+    return contract_average_tensor_with_vector<dim + 2, dim, dealii::VectorizedArray<number>>(
+             flux_m, flux_p, normal) -
            penalty_parameter * material.data.dynamic_viscosity / material.data.reference_density *
              (u_m - u_p);
   }
