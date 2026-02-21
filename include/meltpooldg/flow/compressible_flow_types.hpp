@@ -65,11 +65,9 @@ namespace MeltPoolDG::CompressibleFlow
   /// the type is indexed according to `ConservedVariableIndex<dim>`. However, it is not possible to
   /// enforce this assumption in the concept definition itself.
   template <typename T, int dim>
-  concept IsConservedStateCompatible = requires {
-    is_dealii_tensor<std::remove_cvref_t<T>>::value;
-    T::rank == 1;
+  concept IsConservedStateCompatible =
+    is_dealii_tensor<std::remove_cvref_t<T>>::value and T::rank == 1 and
     T::dimension >= conserved_variables_components<dim>;
-  };
 
   /// Concept ensuring compatibility of a type with the gradient of the conserved variables of the
   /// compressible flow solver in `dim` dimensions.
@@ -78,11 +76,8 @@ namespace MeltPoolDG::CompressibleFlow
   /// the type is indexed according to `ConservedVariableIndex<dim>`. However, it is not possible to
   /// enforce this assumption in the concept definition itself.
   template <typename T, int dim>
-  concept IsConservedGradientCompatible = requires {
-    is_dealii_tensor<std::remove_cvref_t<T>>::value;
-    T::rank == 1;
-    T::dimension >= conserved_variables_components<dim>;
-    T::value_type::rank == 1;
+  concept IsConservedGradientCompatible =
+    is_dealii_tensor<std::remove_cvref_t<T>>::value and T::rank == 1 and
+    T::dimension >= conserved_variables_components<dim> and T::value_type::rank == 1 and
     T::value_type::dimension == dim;
-  };
 } // namespace MeltPoolDG::CompressibleFlow
