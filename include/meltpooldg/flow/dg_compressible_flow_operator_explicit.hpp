@@ -4,7 +4,6 @@
 
 #include <deal.II/matrix_free/matrix_free.h>
 
-#include "meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp"
 #include <meltpooldg/flow/compressible_flow_convective_kernels.hpp>
 #include <meltpooldg/flow/compressible_flow_kernels.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>

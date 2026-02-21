@@ -19,7 +19,7 @@
   "compressible navier stokes": {
     "numerical flux type": "lax_friedrichs_modified",
     "use cfl criteria": "true",
-    "gravity constant": 0.5,
+    "gravity constant": 0.0,
     "time integration": {
       "type": "LSRK_stage_5_order_4"
     },
