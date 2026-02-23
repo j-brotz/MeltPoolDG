@@ -3,6 +3,7 @@
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/tensor.h>
 
+#include <meltpooldg/particles/contact_forces_data.hpp>
 #include <meltpooldg/particles/dem_util.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle_accessor.hpp>
@@ -13,40 +14,6 @@
 
 namespace MeltPoolDG
 {
-  template <typename number>
-  struct SphericalParticleContactData
-  {
-    /// Coefficient of restitution for damping in particle collisions.
-    number restitution_coefficient;
-
-    /// Sliding friction coefficient for Coulomb friction model.
-    number sliding_friction_coefficient;
-
-    /// Coefficient of rolling resistance used to compute rolling resistance torques.
-    number rolling_resistance_coefficient;
-
-    struct MaterialData
-    {
-      /// Young's modulus of the particle material.
-      number youngs_modulus;
-
-      /// Poisson's ratio of the particle material.
-      number poisson_ratio;
-    };
-
-    /// Material data for the particles. Those are assumed to be identical for all particles.
-    MaterialData particle;
-
-    /**
-     * Add the relevant parameters to a parameter handler.
-     *
-     * @param prm The parameter handler to which the parameters are added.
-     */
-    void
-    add_parameters(dealii::ParameterHandler &prm);
-  };
-
-
   template <int dim, typename number, typename ObstacleType>
   class SphericalParticleContactForce
   {

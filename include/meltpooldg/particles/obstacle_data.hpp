@@ -2,6 +2,9 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/particles/cohesive_forces_data.hpp>
+#include <meltpooldg/particles/contact_forces_data.hpp>
+
 
 namespace MeltPoolDG
 {
@@ -28,6 +31,12 @@ namespace MeltPoolDG
       /// from the obstacle surface within which cells outside the obstacles are refined.
       number outer_fractional_distance_to_surface = 1.;
     } amr;
+
+    /// Cohesive force data defining the material and cohesive contact properties for all particles.
+    SphericalParticleCohesiveForceData<number> cohesive_forces;
+
+    /// Contact force data defining the material and contact properties for all particles.
+    SphericalParticleContactData<number> contact_forces;
 
     void
     add_parameters(dealii::ParameterHandler &prm)
@@ -61,6 +70,9 @@ namespace MeltPoolDG
             "are refined.");
         }
         prm.leave_subsection();
+
+        cohesive_forces.add_parameters(prm);
+        contact_forces.add_parameters(prm);
       }
       prm.leave_subsection();
     }

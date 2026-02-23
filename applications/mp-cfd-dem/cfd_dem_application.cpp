@@ -1,5 +1,6 @@
 #include "cfd_dem_application.hpp"
 
+#include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/mpi.h>
 
 #include <deal.II/dofs/dof_handler.h>
@@ -12,6 +13,8 @@
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_factory.hpp>
 #include <meltpooldg/fluid_structure_interaction/stokes_law.hpp>
+#include <meltpooldg/particles/cohesive_forces.hpp>
+#include <meltpooldg/particles/contact_forces.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/obstacle_forces.hpp>
 #include <meltpooldg/particles/particle.hpp>
@@ -290,6 +293,22 @@ namespace MeltPoolDG
     obstacle_field->add_load_type(
       ObstacleGravitationalForce<dim, number, SphericalParticle<dim, number>>(
         this->simulation_case->parameters.flow.gravity_constant));
+
+    SphericalParticleContactForce<dim, number, SphericalParticle<dim, number>> contact_force(
+      simulation_case->parameters.obstacle_data.contact_forces, *time_iterator);
+
+    // TODO: Add option to provide walls in a flexible way, either via the input file or via the
+    // specific case implementation.
+    dealii::Tensor<1, dim, number> ground_wall_normal;
+    ground_wall_normal[dim - 1] = 1.;
+    contact_force.attach_wall(
+      std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(dealii::Point<dim>(),
+                                                                      ground_wall_normal));
+    obstacle_field->add_load_type(std::move(contact_force));
+
+    obstacle_field->add_load_type(
+      SphericalParticleCohesiveForce<dim, number, SphericalParticle<dim, number>>(
+        simulation_case->parameters.obstacle_data.cohesive_forces));
 
     // initialize postprocessor
     post_processor =

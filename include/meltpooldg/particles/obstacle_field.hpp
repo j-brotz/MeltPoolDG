@@ -21,6 +21,7 @@
 #include <meltpooldg/utilities/amr_regions.hpp>
 
 #include <ranges>
+#include <type_traits>
 #include <vector>
 
 namespace MeltPoolDG
@@ -98,10 +99,11 @@ namespace MeltPoolDG
      * erasure.
      */
     template <typename ObstacleLoadType>
+      requires(!std::is_lvalue_reference_v<ObstacleLoadType>) //
     void
     add_load_type(ObstacleLoadType &&obstacle_load)
     {
-      loads.push_back(ObstacleLoad<dim, number, ObstacleType>(std::move(obstacle_load)));
+      loads.emplace_back(std::move(obstacle_load));
     }
 
     /**
