@@ -210,7 +210,7 @@ namespace MeltPoolDG::Flow
     const dealii::Point<dim, dealii::VectorizedArray<number>>     &q_point,
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
     dealii::types::boundary_id                                     boundary_id,
-    CompressibleFlow::DofEvaluator<
+    CompressibleFlow::DofValueAndGradientStateView<
       dim,
       number,
       const CompressibleFlow::ConservedVariablesType<dim, number>,

@@ -12,7 +12,7 @@ namespace MeltPoolDG::CompressibleFlow
   /// Number of independent conserved variables for the compressible Navier-Stokes equations in
   /// `dim` dimensions.
   template <int dim>
-  constexpr unsigned int conserved_variables_components = dim + 2;
+  constexpr unsigned int n_conserved_variables = dim + 2;
 
   /// Compile-time indices for accessing individual conserved variables within a `dealii::Tensor`
   /// storing the state of the compressible flow solver used throughout the codebase.
@@ -28,35 +28,31 @@ namespace MeltPoolDG::CompressibleFlow
   /// set of coordinates.
   template <int dim, typename number>
   using ConservedVariablesType =
-    dealii::Tensor<1, conserved_variables_components<dim>, dealii::VectorizedArray<number>>;
+    dealii::Tensor<1, n_conserved_variables<dim>, dealii::VectorizedArray<number>>;
 
   /// Type alias for the gradient of the conserved variables in the compressible flow solver given
   /// at a vectorized set of coordinates.
   template <int dim, typename number>
-  using ConservedVariablesGradientType =
-    dealii::Tensor<1,
-                   conserved_variables_components<dim>,
-                   dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
+  using ConservedVariablesGradientType = dealii::
+    Tensor<1, n_conserved_variables<dim>, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
 
   /// Type alias for the fluxes in the compressible flow solver given at a vectorized set of
   /// coordinates. This includes both convective and diffusive fluxes.
   template <int dim, typename number>
-  using FluxType = dealii::Tensor<1,
-                                  conserved_variables_components<dim>,
-                                  dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
+  using FluxType = dealii::
+    Tensor<1, n_conserved_variables<dim>, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
 
   /// Type alias for the fluxes at faces in the compressible flow solver given at a vectorized set
   /// of coordinates (contracted with normal vector). This includes both convective and diffusive
   /// fluxes.
   template <int dim, typename number>
   using FaceFluxType =
-    dealii::Tensor<1, conserved_variables_components<dim>, dealii::VectorizedArray<number>>;
+    dealii::Tensor<1, n_conserved_variables<dim>, dealii::VectorizedArray<number>>;
 
   /// Type alias for source terms in the compressible flow solver given at a vectorized set of
   /// coordinates.
   template <int dim, typename number>
-  using SourceType =
-    dealii::Tensor<1, conserved_variables_components<dim>, dealii::VectorizedArray<number>>;
+  using SourceType = dealii::Tensor<1, n_conserved_variables<dim>, dealii::VectorizedArray<number>>;
 
   /// Concept ensuring compatibility of a type with the conserved variables of the compressible
   /// flow solver in `dim` dimensions.
@@ -65,9 +61,8 @@ namespace MeltPoolDG::CompressibleFlow
   /// the type is indexed according to `ConservedVariableIndex<dim>`. However, it is not possible to
   /// enforce this assumption in the concept definition itself.
   template <typename T, int dim>
-  concept IsConservedStateCompatible =
-    is_dealii_tensor<std::remove_cvref_t<T>>::value and T::rank == 1 and
-    T::dimension >= conserved_variables_components<dim>;
+  concept IsConservedStateCompatible = is_dealii_tensor<std::remove_cvref_t<T>>::value and
+                                       T::rank == 1 and T::dimension >= n_conserved_variables<dim>;
 
   /// Concept ensuring compatibility of a type with the gradient of the conserved variables of the
   /// compressible flow solver in `dim` dimensions.
@@ -78,6 +73,6 @@ namespace MeltPoolDG::CompressibleFlow
   template <typename T, int dim>
   concept IsConservedGradientCompatible =
     is_dealii_tensor<std::remove_cvref_t<T>>::value and T::rank == 1 and
-    T::dimension >= conserved_variables_components<dim> and T::value_type::rank == 1 and
+    T::dimension >= n_conserved_variables<dim> and T::value_type::rank == 1 and
     T::value_type::dimension == dim;
 } // namespace MeltPoolDG::CompressibleFlow

@@ -34,6 +34,24 @@ namespace MeltPoolDG::Flow
 {
 
   /**
+   * Concept defining the required interface for a convection kernel used in the
+   * DGConvectionOperator.
+   */
+  template <typename T>
+  concept ConvectionKernelType = requires(const T &kernel) {
+    typename T::ValueType;
+    typename T::FluxType;
+
+    {
+      kernel.flux(std::declval<typename T::ValueType>())
+    } -> std::same_as<typename T::FluxType>;
+
+    {
+      kernel.lambda(std::declval<typename T::ValueType>(), std::declval<typename T::ValueType>())
+    };
+  };
+
+  /**
    * Generic discontinuous Galerkin operator for pure convection problems.
    *
    * The physical convective flux is defined by a user-provided kernel, which specifies how the flux
@@ -42,7 +60,7 @@ namespace MeltPoolDG::Flow
    */
   template <int dim,
             typename number,
-            typename Kernel,
+            ConvectionKernelType Kernel,
             typename VectorizedArrayType = dealii::VectorizedArray<number>>
   struct DGConvectionOperator
   {
@@ -103,6 +121,16 @@ namespace MeltPoolDG::Flow
     }
   };
 
+  template <typename T>
+  concept DiffusionKernelType = requires(const T &kernel) {
+    typename T::ValueType;
+    typename T::GradientType;
+
+    {
+      kernel.flux(std::declval<typename T::ValueType>(), std::declval<typename T::GradientType>())
+    } -> std::same_as<typename T::GradientType>;
+  };
+
   /**
    * Generic discontinuous Galerkin operator for diffusion problems, based on the symmetric
    * interior penalty method. The physical diffusive flux is defined by a user-provided kernel,
@@ -110,7 +138,7 @@ namespace MeltPoolDG::Flow
    */
   template <int dim,
             typename number,
-            typename Kernel,
+            DiffusionKernelType Kernel,
             typename VectorizedArrayType = dealii::VectorizedArray<number>>
   struct DGDiffusionOperator
   {
@@ -196,8 +224,8 @@ namespace MeltPoolDG::Flow
    */
   template <int dim,
             typename number,
-            typename ConvectiveKernel,
-            typename DiffusiveKernel,
+            ConvectionKernelType ConvectiveKernel,
+            DiffusionKernelType  DiffusiveKernel,
             typename VectorizedArrayType = dealii::VectorizedArray<number>>
   struct DGConvectionDiffusionOperator
   {

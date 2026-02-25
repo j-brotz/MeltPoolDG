@@ -20,8 +20,8 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number, CompressibleFlow::IsConservedStateCompatible<dim> value_type>
   inline DEAL_II_ALWAYS_INLINE //
     CompressibleFlow::FluxType<dim, number>
-    convective_flux(const CompressibleFlow::DofValueEvaluatorView<dim, number, const value_type>
-                      &conserved_variables)
+    convective_flux(
+      const CompressibleFlow::DofStateView<dim, number, const value_type> &conserved_variables)
   {
     using FluxType = CompressibleFlow::FluxType<dim, number>;
 
@@ -44,6 +44,9 @@ namespace MeltPoolDG::Flow
 
   /**
    * Calculate the viscous stress tensor for the compressible Navier-Stokes equations.
+   *
+   * @param grad_u Gradient of the velocity field.
+   * @param dynamic_viscosity Dynamic viscosity of the fluid.
    */
   template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
@@ -84,8 +87,9 @@ namespace MeltPoolDG::Flow
   inline DEAL_II_ALWAYS_INLINE //
     CompressibleFlow::FluxType<dim, number>
     diffusive_flux(
-      const CompressibleFlow::DofEvaluator<dim, number, const value_type, const gradient_type>
-        &conserved_variables)
+      const CompressibleFlow::
+        DofValueAndGradientStateView<dim, number, const value_type, const gradient_type>
+          &conserved_variables)
   {
     using FluxType = CompressibleFlow::FluxType<dim, number>;
 
@@ -142,9 +146,7 @@ namespace MeltPoolDG::Flow
     FluxType
     flux(const ValueType &conserved_variables) const
     {
-      CompressibleFlow::DofValueEvaluatorView conserved_variables_view(conserved_variables,
-                                                                       eos,
-                                                                       material);
+      CompressibleFlow::DofStateView conserved_variables_view(conserved_variables, eos, material);
       return convective_flux<dim, number>(conserved_variables_view);
     }
 
@@ -157,8 +159,8 @@ namespace MeltPoolDG::Flow
     dealii::VectorizedArray<number>
     lambda(const ValueType &u_m, const ValueType &u_p) const
     {
-      CompressibleFlow::DofValueEvaluatorView u_m_view(u_m, eos, material);
-      CompressibleFlow::DofValueEvaluatorView u_p_view(u_p, eos, material);
+      CompressibleFlow::DofStateView u_m_view(u_m, eos, material);
+      CompressibleFlow::DofStateView u_p_view(u_p, eos, material);
 
       const auto velocity_m = u_m_view.velocity();
       const auto velocity_p = u_p_view.velocity();
@@ -206,7 +208,10 @@ namespace MeltPoolDG::Flow
     FluxType
     flux(const ValueType &u, const GradientType &grad_u) const
     {
-      CompressibleFlow::DofEvaluator conserved_variables_view(u, grad_u, eos, material);
+      CompressibleFlow::DofValueAndGradientStateView conserved_variables_view(u,
+                                                                              grad_u,
+                                                                              eos,
+                                                                              material);
       return diffusive_flux<dim, number>(conserved_variables_view);
     }
 

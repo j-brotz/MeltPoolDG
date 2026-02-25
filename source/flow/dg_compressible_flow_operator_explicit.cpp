@@ -281,10 +281,11 @@ namespace MeltPoolDG::Flow
                 phi_m.quadrature_point(q),
                 phi_m.normal_vector(q),
                 phi_m.boundary_id(),
-                CompressibleFlow::DofEvaluator(w_m,
-                                               grad_w_m,
-                                               flow_scratch_data.material.eos_utils.get(),
-                                               flow_scratch_data.material.data));
+                CompressibleFlow::DofValueAndGradientStateView(
+                  w_m,
+                  grad_w_m,
+                  flow_scratch_data.material.eos_utils.get(),
+                  flow_scratch_data.material.data));
 
             CompressibleFlow::FaceFluxType<dim, number> flux_m;
             if (is_viscous)

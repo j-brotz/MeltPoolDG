@@ -4,6 +4,7 @@
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/flow/compressible_flow_types.hpp>
+#include <meltpooldg/utilities/concepts.hpp>
 
 namespace MeltPoolDG::CompressibleFlow
 {
@@ -27,8 +28,8 @@ namespace MeltPoolDG::CompressibleFlow
    * @tparam ValueType  Type of a single value in the underlying storage container obtained
    * when using [] on value() of the derived class.
    */
-  template <int dim, typename ValueType, typename Derived>
-  struct StateMixin
+  template <int dim, ArithmeticType ValueType, typename Derived>
+  struct DofValueMixin
   {
     using Idx = ConservedVariableIndex<dim>;
 
@@ -109,8 +110,8 @@ namespace MeltPoolDG::CompressibleFlow
    ** @tparam GradientType  Type of a single value in the underlying storage container obtained when
    * using [] twice on gradient_value() of the derived class.
    */
-  template <int dim, typename ValueType, typename Derived>
-  struct StateGradientMixin
+  template <int dim, ArithmeticType ValueType, typename Derived>
+  struct DofGradientMixin
   {
     using Idx = ConservedVariableIndex<dim>;
 
@@ -187,8 +188,8 @@ namespace MeltPoolDG::CompressibleFlow
    *
    *
    */
-  template <int dim, typename ValueType, typename Derived>
-  struct EOSMixin
+  template <int dim, ArithmeticType ValueType, typename Derived>
+  struct EOSValueMixin
   {
     using Idx = ConservedVariableIndex<dim>;
 
@@ -243,7 +244,7 @@ namespace MeltPoolDG::CompressibleFlow
    * are introduced and no thermodynamic quantities are cached. Every quantity is computed on demand
    * from the conserved state.
    */
-  template <int dim, typename ConservedVariablesType, typename Derived>
+  template <int dim, IsConservedStateCompatible<dim> ConservedVariablesType, typename Derived>
   struct EOSGradientMixin
   {
     decltype(auto)

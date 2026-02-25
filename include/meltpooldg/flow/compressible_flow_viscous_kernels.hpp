@@ -10,6 +10,7 @@
 #include <meltpooldg/flow/compressible_flow_ideal_gas_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_noble_abel_stiffened_gas_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_stiffened_gas_utils.hpp>
+#include <meltpooldg/flow/compressible_flow_types.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 
@@ -258,8 +259,11 @@ namespace MeltPoolDG::Flow
 
     const auto flux_p = calculate_viscous_flux(u_p, grad_u_p);
 
-    return contract_average_tensor_with_vector<dim + 2, dim, dealii::VectorizedArray<number>>(
-             flux_m, flux_p, normal) -
+    return contract_average_tensor_with_vector<CompressibleFlow::n_conserved_variables<dim>,
+                                               dim,
+                                               dealii::VectorizedArray<number>>(flux_m,
+                                                                                flux_p,
+                                                                                normal) -
            penalty_parameter * material.data.dynamic_viscosity / material.data.reference_density *
              (u_m - u_p);
   }
@@ -274,7 +278,7 @@ namespace MeltPoolDG::Flow
     -> std::pair<ConservedVariablesGradType, ConservedVariablesGradType>
   {
     ConservedVariablesGradType jump_u;
-    for (unsigned int e = 0; e < dim + 2; ++e)
+    for (unsigned int e = 0; e < CompressibleFlow::n_conserved_variables<dim>; ++e)
       for (unsigned int d = 0; d < dim; ++d)
         jump_u[e][d] = (u_m[e] - u_p[e]) * normal[d];
 
@@ -307,7 +311,7 @@ namespace MeltPoolDG::Flow
                                                                               grad_delta_w_q.first);
 
     ConservedVariablesGradType flux;
-    for (unsigned int i = 0; i < dim + 2; ++i)
+    for (unsigned int i = 0; i < CompressibleFlow::n_conserved_variables<dim>; ++i)
       flux[i] = (flux_p[i] + flux_m[i]);
 
     flux -=
@@ -443,9 +447,9 @@ namespace MeltPoolDG::Flow
         const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>   &normal,
         dealii::VectorizedArray<number> penalty_parameter) const -> ConservedVariablesGradType
   {
-    return matrix_matrix_product(penalty_parameter * material.data.dynamic_viscosity /
-                                   material.data.reference_density *
-                                   identity<dim + 2, dealii::VectorizedArray<number>>(),
-                                 dyadic_product(delta_w_q.first - delta_w_q.second, normal));
+    return matrix_matrix_product(
+      penalty_parameter * material.data.dynamic_viscosity / material.data.reference_density *
+        identity<CompressibleFlow::n_conserved_variables<dim>, dealii::VectorizedArray<number>>(),
+      dyadic_product(delta_w_q.first - delta_w_q.second, normal));
   }
 } // namespace MeltPoolDG::Flow
