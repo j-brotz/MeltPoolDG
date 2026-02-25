@@ -4,11 +4,12 @@
 
 #include <deal.II/matrix_free/matrix_free.h>
 
-#include "meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp"
 #include <meltpooldg/flow/compressible_flow_convective_kernels.hpp>
+#include <meltpooldg/flow/compressible_flow_kernels.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_base.hpp>
+#include <meltpooldg/flow/dg_generic_convection_diffusion_worker.hpp>
 #include <meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 
@@ -31,10 +32,17 @@ namespace MeltPoolDG::Flow
     : public DGCompressibleFlowOperatorBase<dim, number>
   {
   public:
-    using VectorType             = dealii::LinearAlgebra::distributed::Vector<number>;
-    using ConservedVariablesType = CompressibleFlowTypes::ConservedVariablesType<dim, number>;
-    using ConservedVariablesGradType =
-      CompressibleFlowTypes::ConservedVariablesGradType<dim, number>;
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
+
+    using ConvectionDiffusionOperator =
+      DGConvectionDiffusionOperator<dim,
+                                    number,
+                                    CompressibleConvectiveFlux<dim, number>,
+                                    CompressibleDiffusiveFlux<dim, number>>;
+
+    using ConvectionOperator =
+      DGConvectionOperator<dim, number, CompressibleConvectiveFlux<dim, number>>;
+
     /**
      * @brief Constructor.
      *
@@ -99,12 +107,6 @@ namespace MeltPoolDG::Flow
     /// Time integrator class used for the time integration.
     TimeIntegration::LowStorageExplicitRungeKuttaIntegrator<number> time_integrator;
 
-    /// Object for the convective term evaluations
-    CompressibleFlowConvectiveKernels<dim, number> convective_terms;
-
-    /// Object for the viscous term evaluations
-    CompressibleFlowViscousKernels<dim, number> viscous_terms;
-
     /// This pointer may hold an instance of an external fluid force contribution
     /// (e.g., gravity, body forces, or user - defined source terms)
     std::vector<std::shared_ptr<ExternalFlowForce<dim, number>>> external_forces;
@@ -124,10 +126,10 @@ namespace MeltPoolDG::Flow
      * @param cell_range Cell range which is considered in the applier.
      */
     void
-    local_apply_cell(const dealii::MatrixFree<dim, number>                    &matrix_free,
-                     dealii::LinearAlgebra::distributed::Vector<number>       &dst,
-                     const dealii::LinearAlgebra::distributed::Vector<number> &src,
-                     const std::pair<unsigned int, unsigned int>              &cell_range) const;
+    local_apply_cell(const dealii::MatrixFree<dim, number>       &matrix_free,
+                     VectorType                                  &dst,
+                     const VectorType                            &src,
+                     const std::pair<unsigned int, unsigned int> &cell_range) const;
 
     /**
      * @brief Local face applier.
@@ -141,10 +143,10 @@ namespace MeltPoolDG::Flow
      * @param face_range Face range which is considered in the applier.
      */
     void
-    local_apply_face(const dealii::MatrixFree<dim, number>                    &matrix_free,
-                     dealii::LinearAlgebra::distributed::Vector<number>       &dst,
-                     const dealii::LinearAlgebra::distributed::Vector<number> &src,
-                     const std::pair<unsigned int, unsigned int>              &face_range) const;
+    local_apply_face(const dealii::MatrixFree<dim, number>       &matrix_free,
+                     VectorType                                  &dst,
+                     const VectorType                            &src,
+                     const std::pair<unsigned int, unsigned int> &face_range) const;
 
     /**
      * @brief Local boundary face applier.
@@ -158,9 +160,9 @@ namespace MeltPoolDG::Flow
      * @param face_range Boundary face range which is considered in the applier.
      */
     void
-    local_apply_boundary_face(const dealii::MatrixFree<dim, number>                    &matrix_free,
-                              dealii::LinearAlgebra::distributed::Vector<number>       &dst,
-                              const dealii::LinearAlgebra::distributed::Vector<number> &src,
+    local_apply_boundary_face(const dealii::MatrixFree<dim, number>       &matrix_free,
+                              VectorType                                  &dst,
+                              const VectorType                            &src,
                               const std::pair<unsigned int, unsigned int> &face_range) const;
   };
 } // namespace MeltPoolDG::Flow

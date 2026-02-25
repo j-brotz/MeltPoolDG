@@ -1,8 +1,12 @@
-#include "meltpooldg/utilities/matrix_free_util.hpp"
 #include <meltpooldg/flow/compressible_flow_explicit_utils.hpp>
+#include <meltpooldg/flow/compressible_flow_kernels.hpp>
+#include <meltpooldg/flow/compressible_flow_types.hpp>
+#include <meltpooldg/flow/compressible_flow_views.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_explicit.hpp>
+#include <meltpooldg/flow/dg_generic_convection_diffusion_worker.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
+#include <meltpooldg/utilities/matrix_free_util.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
@@ -10,13 +14,12 @@
 namespace MeltPoolDG::Flow
 {
   using namespace dealii;
+
   template <int dim, typename number, bool is_viscous>
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::DGCompressibleFlowOperatorExplicit(
     CompressibleFlowScratchData<dim, number> &flow_scratch_data)
     : flow_scratch_data(flow_scratch_data)
     , time_integrator(flow_scratch_data.flow_data.time_integrator)
-    , convective_terms(flow_scratch_data.flow_data, flow_scratch_data.material)
-    , viscous_terms(flow_scratch_data.material)
   {
     time_integrator.configure_rhs(
       std::bind_front(&DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::apply_operator,
@@ -99,22 +102,14 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::local_apply_cell(
-    const MatrixFree<dim, number> &,
-    LinearAlgebra::distributed::Vector<number>       &dst,
-    const LinearAlgebra::distributed::Vector<number> &src,
-    const std::pair<unsigned, unsigned>              &cell_range) const
+    const MatrixFree<dim, number>       &mf,
+    VectorType                          &dst,
+    const VectorType                    &src,
+    const std::pair<unsigned, unsigned> &cell_range) const
   {
-    FECellIntegrator<dim, dim + 2, number> phi(flow_scratch_data.scratch_data.get_matrix_free(),
+    FECellIntegrator<dim, dim + 2, number> phi(mf,
                                                flow_scratch_data.dof_idx,
                                                flow_scratch_data.quad_idx);
-
-    dealii::Tensor<1, dim, dealii::VectorizedArray<number>> constant_body_force;
-    const Functions::ConstantFunction<dim>                 *constant_function =
-      dynamic_cast<Functions::ConstantFunction<dim> *>(flow_scratch_data.body_force.get());
-
-    if (constant_function)
-      constant_body_force = VectorTools::evaluate_function_at_vectorized_points(
-        *constant_function, dealii::Point<dim, dealii::VectorizedArray<number>>());
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
@@ -124,37 +119,40 @@ namespace MeltPoolDG::Flow
                               (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
 
         std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators =
-          cells_in_cell_batch(flow_scratch_data.scratch_data.get_matrix_free(), cell);
+          cells_in_cell_batch(mf, cell);
 
         for (const unsigned int q : phi.quadrature_point_indices())
           {
-            auto [flux, grad_flux] =
-              rhs_cell_integral_kernel<dim,
-                                       number,
-                                       FECellIntegrator<dim, dim + 2, number>,
-                                       is_viscous>(phi,
-                                                   q,
-                                                   constant_function ? &constant_body_force :
-                                                                       nullptr,
-                                                   convective_terms,
-                                                   viscous_terms,
-                                                   flow_scratch_data.body_force);
+            CompressibleFlow::SourceType<dim, number> source;
+            CompressibleFlow::FluxType<dim, number>   flux;
+
+            if (is_viscous)
+              flux = ConvectionDiffusionOperator::cell(
+                phi.get_value(q),
+                phi.get_gradient(q),
+                CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                                        flow_scratch_data.material.data),
+                CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                                       flow_scratch_data.material.data));
+            else
+              flux = ConvectionOperator::cell(
+                phi.get_value(q),
+                CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                                        flow_scratch_data.material.data));
 
             for (auto &external_force : external_forces)
-              flux += external_force->value(current_time_step,
-                                            cell_iterators,
-                                            phi.quadrature_point(q),
-                                            phi.get_value(q));
+              source += external_force->value(current_time_step,
+                                              cell_iterators,
+                                              phi.quadrature_point(q),
+                                              phi.get_value(q));
 
-            if (flow_scratch_data.body_force.get() != nullptr or !external_forces.empty())
-              phi.submit_value(flux, q);
-            phi.submit_gradient(grad_flux, q);
+            if (not external_forces.empty())
+              phi.submit_value(source, q);
+            phi.submit_gradient(flux, q);
           }
 
-        phi.integrate_scatter(((flow_scratch_data.body_force.get() != nullptr or
-                                not external_forces.empty()) ?
-                                 EvaluationFlags::values :
-                                 EvaluationFlags::nothing) |
+        phi.integrate_scatter((not external_forces.empty() ? EvaluationFlags::values :
+                                                             EvaluationFlags::nothing) |
                                 EvaluationFlags::gradients,
                               dst);
       }
@@ -163,16 +161,16 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::local_apply_face(
-    const MatrixFree<dim, number> &,
-    LinearAlgebra::distributed::Vector<number>       &dst,
-    const LinearAlgebra::distributed::Vector<number> &src,
-    const std::pair<unsigned int, unsigned int>      &face_range) const
+    const MatrixFree<dim, number>               &mf,
+    VectorType                                  &dst,
+    const VectorType                            &src,
+    const std::pair<unsigned int, unsigned int> &face_range) const
   {
-    FEFaceIntegrator<dim, dim + 2, number> phi_m(flow_scratch_data.scratch_data.get_matrix_free(),
+    FEFaceIntegrator<dim, dim + 2, number> phi_m(mf,
                                                  true,
                                                  flow_scratch_data.dof_idx,
                                                  flow_scratch_data.quad_idx);
-    FEFaceIntegrator<dim, dim + 2, number> phi_p(flow_scratch_data.scratch_data.get_matrix_free(),
+    FEFaceIntegrator<dim, dim + 2, number> phi_p(mf,
                                                  false,
                                                  flow_scratch_data.dof_idx,
                                                  flow_scratch_data.quad_idx);
@@ -191,26 +189,53 @@ namespace MeltPoolDG::Flow
 
         const VectorizedArray<number> interior_penalty_parameter =
           is_viscous ?
-            std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
-                     phi_p.read_cell_data(flow_scratch_data.interior_penalty_parameter)) :
+            flow_scratch_data.material.data.dynamic_viscosity /
+              flow_scratch_data.material.data.reference_density *
+              std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
+                       phi_p.read_cell_data(flow_scratch_data.interior_penalty_parameter)) :
             0.;
 
         for (const unsigned int q : phi_m.quadrature_point_indices())
           {
-            auto [flux_m, flux_p, grad_flux_m, grad_flux_p] =
-              rhs_face_integral_kernel<dim,
-                                       number,
-                                       FEFaceIntegrator<dim, dim + 2, number>,
-                                       is_viscous>(
-                phi_m, phi_p, q, interior_penalty_parameter, convective_terms, viscous_terms);
+            CompressibleFlow::FaceFluxType<dim, number> flux_m;
+            CompressibleFlow::FaceFluxType<dim, number> flux_p;
+
+            if (is_viscous)
+              {
+                const auto flux = ConvectionDiffusionOperator::face(
+                  phi_m.get_value(q),
+                  phi_p.get_value(q),
+                  phi_m.get_gradient(q),
+                  phi_p.get_gradient(q),
+                  phi_m.normal_vector(q),
+                  interior_penalty_parameter,
+                  CompressibleConvectiveFlux<dim, number>(
+                    flow_scratch_data.material.eos_utils.get(), flow_scratch_data.material.data),
+                  CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                                         flow_scratch_data.material.data));
+
+                flux_m = flux.inner_face_value;
+                flux_p = flux.outer_face_value;
+
+                phi_m.submit_gradient(flux.inner_face_gradient, q);
+                phi_p.submit_gradient(flux.outer_face_gradient, q);
+              }
+            else
+              {
+                const auto flux =
+                  ConvectionOperator::face(phi_m.get_value(q),
+                                           phi_p.get_value(q),
+                                           phi_m.normal_vector(q),
+                                           CompressibleConvectiveFlux<dim, number>(
+                                             flow_scratch_data.material.eos_utils.get(),
+                                             flow_scratch_data.material.data));
+
+                flux_m = flux.inner_face_value;
+                flux_p = flux.outer_face_value;
+              }
 
             phi_m.submit_value(flux_m, q);
             phi_p.submit_value(flux_p, q);
-            if (is_viscous)
-              {
-                phi_m.submit_gradient(grad_flux_m, q);
-                phi_p.submit_gradient(grad_flux_p, q);
-              }
           }
 
         phi_p.integrate_scatter(EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
@@ -225,47 +250,81 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number, bool is_viscous>
   void
   DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::local_apply_boundary_face(
-    const MatrixFree<dim, number> &,
-    LinearAlgebra::distributed::Vector<number>       &dst,
-    const LinearAlgebra::distributed::Vector<number> &src,
-    const std::pair<unsigned, unsigned>              &face_range) const
+    const MatrixFree<dim, number>       &mf,
+    VectorType                          &dst,
+    const VectorType                    &src,
+    const std::pair<unsigned, unsigned> &face_range) const
   {
-    FEFaceIntegrator<dim, dim + 2, number> phi(flow_scratch_data.scratch_data.get_matrix_free(),
-                                               true,
-                                               flow_scratch_data.dof_idx,
-                                               flow_scratch_data.quad_idx);
+    FEFaceIntegrator<dim, dim + 2, number> phi_m(mf,
+                                                 true,
+                                                 flow_scratch_data.dof_idx,
+                                                 flow_scratch_data.quad_idx);
 
     for (unsigned int face = face_range.first; face < face_range.second; ++face)
       {
-        phi.reinit(face);
-        phi.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
+        phi_m.reinit(face);
+        phi_m.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
         const VectorizedArray<number> interior_penalty_parameter =
-          is_viscous ? phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) : 0.;
+          is_viscous ? flow_scratch_data.material.data.dynamic_viscosity /
+                         flow_scratch_data.material.data.reference_density *
+                         phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
+                       0.;
 
-        for (const unsigned int q : phi.quadrature_point_indices())
+        for (const unsigned int q : phi_m.quadrature_point_indices())
           {
-            auto [flux_m, grad_flux_m] =
-              rhs_boundary_face_integral_kernel<dim,
-                                                number,
-                                                FEFaceIntegrator<dim, dim + 2, number>,
-                                                is_viscous>(phi,
-                                                            q,
-                                                            phi.boundary_id(),
-                                                            interior_penalty_parameter,
-                                                            convective_terms,
-                                                            viscous_terms,
-                                                            flow_scratch_data.material,
-                                                            flow_scratch_data.boundary_conditions);
+            const auto w_m      = phi_m.get_value(q);
+            const auto grad_w_m = phi_m.get_gradient(q);
 
-            phi.submit_value(flux_m, q);
+            const auto [w_p, grad_w_p] =
+              flow_scratch_data.boundary_conditions.get_boundary_face_value_and_gradient(
+                phi_m.quadrature_point(q),
+                phi_m.normal_vector(q),
+                phi_m.boundary_id(),
+                CompressibleFlow::DofValueAndGradientStateView(
+                  w_m,
+                  grad_w_m,
+                  flow_scratch_data.material.eos_utils.get(),
+                  flow_scratch_data.material.data));
+
+            CompressibleFlow::FaceFluxType<dim, number> flux_m;
             if (is_viscous)
-              phi.submit_gradient(grad_flux_m, q);
+              {
+                const auto flux = ConvectionDiffusionOperator::face(
+                  phi_m.get_value(q),
+                  w_p,
+                  phi_m.get_gradient(q),
+                  grad_w_p,
+                  phi_m.normal_vector(q),
+                  interior_penalty_parameter,
+                  CompressibleConvectiveFlux<dim, number>(
+                    flow_scratch_data.material.eos_utils.get(), flow_scratch_data.material.data),
+                  CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                                         flow_scratch_data.material.data));
+
+                flux_m = flux.inner_face_value;
+
+                phi_m.submit_gradient(flux.inner_face_gradient, q);
+              }
+            else
+              {
+                const auto flux =
+                  ConvectionOperator::face(phi_m.get_value(q),
+                                           w_p,
+                                           phi_m.normal_vector(q),
+                                           CompressibleConvectiveFlux<dim, number>(
+                                             flow_scratch_data.material.eos_utils.get(),
+                                             flow_scratch_data.material.data));
+
+                flux_m = flux.inner_face_value;
+              }
+
+            phi_m.submit_value(flux_m, q);
           }
 
-        phi.integrate_scatter(EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
-                                                                      EvaluationFlags::nothing),
-                              dst);
+        phi_m.integrate_scatter(EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
+                                                                        EvaluationFlags::nothing),
+                                dst);
       }
   }
 

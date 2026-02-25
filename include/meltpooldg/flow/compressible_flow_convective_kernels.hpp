@@ -202,18 +202,22 @@ namespace MeltPoolDG::Flow
               0.5 * std::sqrt(std::max(velocity_p.norm_square() + sound_speed_p2,
                                        velocity_m.norm_square() + sound_speed_m2));
 
-            return contract_average_tensor_with_vector<dim + 2, dim, number>(flux_m,
-                                                                             flux_p,
-                                                                             normal) +
+            return contract_average_tensor_with_vector<CompressibleFlow::n_conserved_variables<dim>,
+                                                       dim,
+                                                       dealii::VectorizedArray<number>>(flux_m,
+                                                                                        flux_p,
+                                                                                        normal) +
                    0.5 * lambda * (u_m - u_p);
           }
           case NumericalFluxType::lax_friedrichs_exact: {
             const auto lambda = std::max(std::abs(velocity_p * normal) + sound_speed_p,
                                          std::abs(velocity_m * normal) + sound_speed_m);
 
-            return contract_average_tensor_with_vector<dim + 2, dim, number>(flux_m,
-                                                                             flux_p,
-                                                                             normal) +
+            return contract_average_tensor_with_vector<CompressibleFlow::n_conserved_variables<dim>,
+                                                       dim,
+                                                       dealii::VectorizedArray<number>>(flux_m,
+                                                                                        flux_p,
+                                                                                        normal) +
                    0.5 * lambda * (u_m - u_p);
           }
           case NumericalFluxType::harten_lax_vanleer: {
@@ -227,8 +231,14 @@ namespace MeltPoolDG::Flow
               dealii::VectorizedArray<number>(1.) / (s_pos - s_neg);
 
             return inverse_s *
-                   (s_pos * contract_tensor_with_vector<dim + 2, dim, number>(flux_m, normal) -
-                    s_neg * contract_tensor_with_vector<dim + 2, dim, number>(flux_p, normal) -
+                   (s_pos *
+                      contract_tensor_with_vector<CompressibleFlow::n_conserved_variables<dim>,
+                                                  dim,
+                                                  number>(flux_m, normal) -
+                    s_neg *
+                      contract_tensor_with_vector<CompressibleFlow::n_conserved_variables<dim>,
+                                                  dim,
+                                                  number>(flux_p, normal) -
                     s_pos * s_neg * (u_m - u_p));
           }
           default: {
@@ -261,7 +271,7 @@ namespace MeltPoolDG::Flow
       calculate_jacobian_convective_flux(w_q.first, delta_w_q.first);
 
     ConservedVariablesGradType flux;
-    for (unsigned int i = 0; i < dim + 2; ++i)
+    for (unsigned int i = 0; i < CompressibleFlow::n_conserved_variables<dim>; ++i)
       flux[i] = 0.5 * (flux_p[i] + flux_m[i]);
 
     flux += calculate_jacobian_convective_numerical_flux_jump_term(w_q, delta_w_q, normal);
@@ -509,7 +519,7 @@ namespace MeltPoolDG::Flow
                 lin_lambda_p,
                 lin_lambda_m);
 
-            for (unsigned int i = 0; i < dim + 2; ++i)
+            for (unsigned int i = 0; i < CompressibleFlow::n_conserved_variables<dim>; ++i)
               flux[i] += 0.5 * lin_lambda * (w_m[i] - w_p[i]) * normal;
 
             break;

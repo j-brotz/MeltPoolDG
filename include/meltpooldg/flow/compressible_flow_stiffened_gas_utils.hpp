@@ -1,7 +1,11 @@
 #pragma once
 
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/vectorization.h>
+
 #include <meltpooldg/flow/compressible_flow_eos_utils_base.hpp>
 #include <meltpooldg/flow/compressible_flow_material_data.hpp>
+#include <meltpooldg/flow/compressible_flow_utils.hpp>
 
 namespace MeltPoolDG::Flow::EOS
 {
@@ -34,7 +38,7 @@ namespace MeltPoolDG::Flow::EOS
       dealii::VectorizedArray<number>
       calculate_thermodynamic_pressure(
         const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables)
-        override
+        const override
     {
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> velocity =
         calculate_velocity<dim, number>(conserved_variables);
@@ -59,7 +63,7 @@ namespace MeltPoolDG::Flow::EOS
       calculate_grad_T(
         const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
         const CompressibleFlowTypes::ConservedVariablesGradType<dim, number>
-          &grad_conserved_variables) override
+          &grad_conserved_variables) const override
     {
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> u =
         calculate_velocity<dim, number>(conserved_variables);
@@ -87,7 +91,7 @@ namespace MeltPoolDG::Flow::EOS
     inline DEAL_II_ALWAYS_INLINE //
       dealii::VectorizedArray<number>
       calculate_speed_of_sound(const CompressibleFlowTypes::ConservedVariablesType<dim, number>
-                                 &conserved_variables) override
+                                 &conserved_variables) const override
     {
       const auto pressure = calculate_thermodynamic_pressure(conserved_variables);
       const auto density  = conserved_variables[0];
@@ -105,7 +109,7 @@ namespace MeltPoolDG::Flow::EOS
     inline DEAL_II_ALWAYS_INLINE //
       dealii::VectorizedArray<number>
       calculate_temperature(const CompressibleFlowTypes::ConservedVariablesType<dim, number>
-                              &conserved_variables) override
+                              &conserved_variables) const override
     {
       const auto pressure = calculate_thermodynamic_pressure(conserved_variables);
       const auto density  = conserved_variables[0];
@@ -125,7 +129,7 @@ namespace MeltPoolDG::Flow::EOS
     inline DEAL_II_ALWAYS_INLINE //
       CompressibleFlowTypes::ConservedVariablesType<dim, number>
       convert_primitive_into_conservative_variables(
-        const CompressibleFlowTypes::ConservedVariablesType<dim, number> &u_prim) override
+        const CompressibleFlowTypes::ConservedVariablesType<dim, number> &u_prim) const override
     {
       CompressibleFlowTypes::ConservedVariablesType<dim, number> u_cons;
 
@@ -157,7 +161,7 @@ namespace MeltPoolDG::Flow::EOS
     inline DEAL_II_ALWAYS_INLINE //
       dealii::VectorizedArray<number>
       compute_inner_energy_from_pressure(const dealii::VectorizedArray<number> &pressure,
-                                         const dealii::VectorizedArray<number> &) override
+                                         const dealii::VectorizedArray<number> &) const override
     {
       return (pressure + material_data.gamma * material_data.eos_data.p_inf) /
              (material_data.gamma - 1.);

@@ -4,6 +4,7 @@
 #include <meltpooldg/flow/compressible_flow_ideal_gas_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_noble_abel_stiffened_gas_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_stiffened_gas_utils.hpp>
+#include <meltpooldg/flow/compressible_flow_views.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
@@ -189,6 +190,133 @@ namespace MeltPoolDG::Flow
                                           q_point,
                                           component_offset);
         grad_w_p[dim + 1]                   = grad_w_m[dim + 1];
+      }
+    else
+      {
+        std::cout << "ID: " << boundary_id << std::endl;
+        std::cout << "Condition:" << boundary_type << std::endl;
+        AssertThrow(false,
+                    dealii::ExcMessage("Unknown boundary id, did "
+                                       "you set a boundary condition for "
+                                       "this part of the domain boundary?"));
+      }
+
+    return {w_p, grad_w_p};
+  }
+
+  template <int dim, typename number>
+  auto
+  CompressibleFlowBoundaryConditions<dim, number>::get_boundary_face_value_and_gradient(
+    const dealii::Point<dim, dealii::VectorizedArray<number>>     &q_point,
+    const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
+    dealii::types::boundary_id                                     boundary_id,
+    CompressibleFlow::DofValueAndGradientStateView<
+      dim,
+      number,
+      const CompressibleFlow::ConservedVariablesType<dim, number>,
+      const CompressibleFlow::ConservedVariablesGradientType<dim, number>> w_m_view) const
+    -> std::tuple<ConservedVariablesType, ConservedVariablesGradType>
+  {
+    CompressibleFlow::ConservedVariablesType<dim, number>         w_p;
+    CompressibleFlow::ConservedVariablesGradientType<dim, number> grad_w_p;
+
+    CompressibleFlow::DofValueView<dim, CompressibleFlow::ConservedVariablesType<dim, number>>
+      w_p_view(w_p);
+    CompressibleFlow::DofGradientView<dim,
+                                      CompressibleFlow::ConservedVariablesGradientType<dim, number>>
+      grad_w_p_view(grad_w_p);
+
+    if (const BoundaryType boundary_type = get_boundary_type(boundary_id);
+        boundary_type == BoundaryType::slip_wall)
+      {
+        // homogeneous Neumann
+        w_p_view.density()           = w_m_view.density();
+        grad_w_p_view.grad_density() = -(w_m_view.grad_density());
+
+        // homogeneous Neumann
+        VectorizedArrayType rho_u_dot_n = 0;
+        for (unsigned int d = 0; d < dim; ++d)
+          rho_u_dot_n += w_m_view.momentum(d) * normal[d];
+        // symmetry
+        for (unsigned int d = 0; d < dim; ++d)
+          {
+            w_p_view.momentum(d) = w_m_view.momentum(d) - 2. * rho_u_dot_n * normal[d];
+            grad_w_p_view.grad_momentum(d) =
+              w_m_view.grad_momentum(d) -
+              2. * scalar_product(w_m_view.grad_momentum(d), normal) * normal;
+          }
+        // homogeneous Neumann
+        grad_w_p_view.grad_total_energy() = -(w_m_view.grad_total_energy());
+        w_p_view.total_energy()           = w_m_view.total_energy();
+      }
+    else if (boundary_type == BoundaryType::no_slip_wall)
+      {
+        // homogeneous Neumann
+        w_p_view.density()           = w_m_view.density();
+        grad_w_p_view.grad_density() = -(w_m_view.grad_density());
+
+        // Dirichlet
+        for (unsigned int d = 0; d < dim; ++d)
+          {
+            w_p_view.momentum(d)           = 0.;
+            grad_w_p_view.grad_momentum(d) = w_m_view.grad_momentum(d);
+          }
+        // homogeneous Neumann
+        grad_w_p_view.grad_total_energy() = -(w_m_view.grad_total_energy());
+        w_p_view.total_energy()           = w_m_view.total_energy();
+      }
+    else if (boundary_type == BoundaryType::inflow)
+      {
+        w_p_view.density() = get_boundary_value(boundary_id, BoundaryType::inflow, q_point, 0);
+        grad_w_p_view.grad_density() = w_m_view.grad_density();
+
+        for (unsigned int d = 0; d < dim; ++d)
+          {
+            w_p_view.momentum(d) =
+              get_boundary_value(boundary_id, BoundaryType::inflow, q_point, d + 1);
+            grad_w_p_view.grad_momentum(d) = w_m_view.grad_momentum(d);
+          }
+
+        w_p_view.total_energy() =
+          get_boundary_value(boundary_id, BoundaryType::inflow, q_point, dim + 1);
+        grad_w_p_view.grad_total_energy() = w_m_view.grad_total_energy();
+      }
+    else if (boundary_type == BoundaryType::subsonic_outflow_fixed_pressure)
+      {
+        // homogeneous Neumann
+        w_p_view.density()           = w_m_view.density();
+        grad_w_p_view.grad_density() = -(w_m_view.grad_density());
+
+        // Dirichlet
+        auto p_dyn = VectorizedArray<number>(0.);
+        for (unsigned int i = 0; i < dim; ++i)
+          p_dyn += w_m_view.momentum(i) * w_m_view.momentum(i);
+
+        p_dyn /= (w_m_view.density() * 2.);
+        const VectorizedArray<number> pressure = get_boundary_value(
+          boundary_id, BoundaryType::subsonic_outflow_fixed_pressure, q_point, 0);
+
+        // consider equation of state for computation of inner energy from given pressure
+        const VectorizedArray<number> inner_energy = w_m_view.inner_energy_from_pressure(pressure);
+
+        w_p_view.total_energy()           = inner_energy + p_dyn;
+        grad_w_p_view.grad_total_energy() = w_m_view.grad_total_energy();
+      }
+    else if (boundary_type == BoundaryType::subsonic_outflow_fixed_energy)
+      {
+        // homogeneous Neumann
+        w_p_view.density()           = w_m_view.density();
+        grad_w_p_view.grad_density() = -(w_m_view.grad_density());
+        for (unsigned int i = 0; i < dim; ++i)
+          {
+            w_p_view.momentum(i)           = w_m_view.momentum(i);
+            grad_w_p_view.grad_momentum(i) = -(w_m_view.grad_momentum(i));
+          }
+
+        // Dirichlet
+        w_p_view.total_energy() =
+          get_boundary_value(boundary_id, BoundaryType::subsonic_outflow_fixed_energy, q_point, 0);
+        grad_w_p_view.grad_total_energy() = w_m_view.grad_total_energy();
       }
     else
       {

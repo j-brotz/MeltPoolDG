@@ -6,9 +6,11 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
+#include "meltpooldg/flow/compressible_flow_types.hpp"
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_material.hpp>
+#include <meltpooldg/flow/compressible_flow_views.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -51,6 +53,8 @@ namespace MeltPoolDG::Flow
     using ConservedVariablesGradType =
       dealii::Tensor<1, dim + 2, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
     using BoundaryType = CompressibleBoundaryConditionType;
+
+    using VectorizedArrayType = dealii::VectorizedArray<number>;
 
     /**
      * @brief Update the boundary conditions.
@@ -195,6 +199,17 @@ namespace MeltPoolDG::Flow
       const ConservedVariablesGradType                              &grad_w_m,
       const CompressibleFlowMaterial<dim, number>                   &material,
       bool                                                           is_gas_phase = true) const;
+
+    std::tuple<ConservedVariablesType, ConservedVariablesGradType>
+    get_boundary_face_value_and_gradient(
+      const dealii::Point<dim, VectorizedArrayType>     &q_point,
+      const dealii::Tensor<1, dim, VectorizedArrayType> &normal,
+      dealii::types::boundary_id                         boundary_id,
+      CompressibleFlow::DofValueAndGradientStateView<
+        dim,
+        number,
+        const CompressibleFlow::ConservedVariablesType<dim, number>,
+        const CompressibleFlow::ConservedVariablesGradientType<dim, number>> w_m) const;
 
     /**
      * @brief Compute boundary values and gradients, as well as their linearizations for the Jacobian.
