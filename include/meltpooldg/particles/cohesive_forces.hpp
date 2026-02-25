@@ -3,33 +3,12 @@
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/tensor.h>
 
+#include <meltpooldg/particles/cohesive_forces_data.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle_accessor.hpp>
 
 namespace MeltPoolDG
 {
-  template <typename number>
-  struct SphericalParticleCohesiveForceData
-  {
-    /// Hamaker constant used in the van der Waals force calculation for all particles.
-    number hamaker_constant;
-
-    /// Surface energy used in the pull-off force calculation for all particles.
-    number surface_energy;
-
-    /// Cut-off relative decline for the van der Waals force calculation at which the force is set
-    /// to zero.
-    number cut_off_relative_decline_van_der_waals;
-
-    /**
-     * Add the relevant parameters to a parameter handler.
-     *
-     * @param prm The parameter handler to which the parameters are added.
-     */
-    void
-    add_parameters(dealii::ParameterHandler &prm);
-  };
-
   template <int dim, typename number, typename ObstacleType>
   class SphericalParticleCohesiveForce
   {

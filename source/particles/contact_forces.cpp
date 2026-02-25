@@ -13,26 +13,6 @@
 
 namespace MeltPoolDG
 {
-  template <typename number>
-  void
-  SphericalParticleContactData<number>::add_parameters(dealii::ParameterHandler &prm)
-  {
-    prm.enter_subsection("spherical particle contact force");
-    {
-      prm.add_parameter("restitution coefficient", restitution_coefficient);
-      prm.add_parameter("sliding friction coefficient", sliding_friction_coefficient);
-      prm.add_parameter("rolling resistance coefficient", rolling_resistance_coefficient);
-      prm.enter_subsection("particle-particle contact");
-      {
-        prm.add_parameter("youngs modulus", particle.youngs_modulus);
-        prm.add_parameter("poisson ratio", particle.poisson_ratio);
-      }
-      prm.leave_subsection();
-    }
-    prm.leave_subsection();
-  }
-
-
   template <int dim, typename number, typename ObstacleType>
   SphericalParticleContactForce<dim, number, ObstacleType>::SphericalParticleContactForce(
     const SphericalParticleContactData<number>              &contact_data,

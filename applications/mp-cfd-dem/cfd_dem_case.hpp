@@ -9,6 +9,8 @@
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_material_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
+#include <meltpooldg/particles/cohesive_forces.hpp>
+#include <meltpooldg/particles/contact_forces.hpp>
 #include <meltpooldg/particles/obstacle_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/time_integration/time_stepping_data.hpp>
