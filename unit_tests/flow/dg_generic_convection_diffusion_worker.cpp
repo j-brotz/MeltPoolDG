@@ -34,7 +34,7 @@ public:
   }
 
   number
-  lambda(const ValueType &u_m, const ValueType &u_p) const
+  lambda(const ValueType &, const ValueType &) const
   {
     return 2.0;
   }
