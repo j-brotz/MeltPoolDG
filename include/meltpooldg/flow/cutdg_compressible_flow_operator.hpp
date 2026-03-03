@@ -2,10 +2,9 @@
 
 #include <deal.II/fe/fe_system.h>
 
-#include <meltpooldg/cut/util.hpp>
-#include <meltpooldg/flow/compressible_flow_convective_kernels.hpp>
-#include <meltpooldg/flow/compressible_flow_utils.hpp>
-#include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
+#include <meltpooldg/flow/compressible_flow_kernels.hpp>
+#include <meltpooldg/flow/compressible_flow_scratch_data.hpp>
+#include <meltpooldg/flow/dg_generic_convection_diffusion_worker.hpp>
 
 namespace MeltPoolDG::Flow
 {
@@ -28,6 +27,15 @@ namespace MeltPoolDG::Flow
     using ConservedVariablesType = dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>>;
     using ConservedVariablesGradType =
       dealii::Tensor<1, dim + 2, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
+
+    using ConvectionDiffusionOperator =
+      DGConvectionDiffusionOperator<dim,
+                                    number,
+                                    CompressibleConvectiveFlux<dim, number>,
+                                    CompressibleDiffusiveFlux<dim, number>>;
+
+    using ConvectionOperator =
+      DGConvectionOperator<dim, number, CompressibleConvectiveFlux<dim, number>>;
 
     /**
      * @brief Constructor.
@@ -67,6 +75,92 @@ namespace MeltPoolDG::Flow
      */
     void
     set_unfitted_object_velocity(std::shared_ptr<dealii::Function<dim>> &velocity_function);
+
+    /**
+     * @brief Evaluate and submit the right-hand side cell integral contributions at a given quadrature point.
+     *
+     * This function can be used for both cut and non-cut elements, depending on the templated @p Integrator type.
+     *
+     * @tparam Integrator Type of the matrix-free cell integrator providing the interface for evaluating
+     * and submitting values at quadrature points.
+     *
+     * @param phi  Cell integrator used to access solution values and to submit
+     * the local integral contributions at quadrature point @p q.
+     * @param flow_scratch_data Flow scratch data object holding all relevant compressible flow data.
+     * @param constant_body_force Value of the body force. If the body force is not constant the
+     * pointer must be set to nullptr.
+     * @param q Index of the quadrature point.
+     */
+    template <typename Integrator>
+    void
+    do_cell_integral_rhs(
+      Integrator                                                    &phi,
+      const CompressibleFlowScratchData<dim, number>                &flow_scratch_data,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> *constant_body_force,
+      const unsigned int                                             q) const;
+
+    /**
+     * @brief Evaluate and submit the right-hand side cut surface integral contributions at a given quadrature point.
+     *
+     * @param phi  Surface integrator used to access solution values and to submit
+     * the local integral contributions at quadrature point @p q.
+     * @param interior_penalty_parameter Interior penalty parameter for symmetric interior penalty flux.
+     * @param flow_scratch_data Flow scratch data object holding all relevant compressible flow data.
+     * @param q Index of the quadrature point.
+     */
+    void
+    do_surface_integral_rhs(
+      dealii::FEPointEvaluation<dim + 2, dim, dim, dealii::VectorizedArray<number>> &phi,
+      const dealii::VectorizedArray<number>          &interior_penalty_parameter,
+      const CompressibleFlowScratchData<dim, number> &flow_scratch_data,
+      const unsigned int                              q) const;
+
+    /**
+     * @brief Evaluate and submit the right-and side face integral contributions at a given quadrature point.
+     *
+     * This function can be used for both cut and non-cut faces, depending on the templated @p Integrator type.
+     *s
+     * @tparam Integrator Type of the matrix-free face integrator providing the interface for evaluating
+     * and submitting values at quadrature points.
+     *
+     * @param phi_m Face integrator used to access solution values and to submit
+     * the local integral contributions at quadrature point @p q at the interior face.
+     * @param phi_p Face integrator used to access solution values and to submit
+     * the local integral contributions at quadrature point @p q at the exterior face.
+     * @param interior_penalty_parameter Interior penalty parameter for symmetric interior penalty flux.
+     * @param flow_scratch_data Flow scratch data object holding all relevant compressible flow data.
+     * @param q Index of the quadrature point.
+     */
+    template <typename Integrator>
+    void
+    do_face_integral_rhs(Integrator                                     &phi_m,
+                         Integrator                                     &phi_p,
+                         const dealii::VectorizedArray<number>          &interior_penalty_parameter,
+                         const CompressibleFlowScratchData<dim, number> &flow_scratch_data,
+                         const unsigned int                              q) const;
+
+    /**
+     * @brief Evaluate and submit the right-hand side boundary face integral contributions at a given quadrature point.
+     *
+     * This function can be used for both cut and non-cut faces, depending on the templated @p Integrator type.
+     *
+     * @tparam Integrator Type of the matrix-free face integrator providing the interface for evaluating
+     * and submitting values at quadrature points.
+     *
+     * @param phi Face integrator used to access solution values and to submit
+     * the local integral contributions at quadrature point @p q at the boundary face.
+     * @param interior_penalty_parameter Interior penalty parameter for symmetric interior penalty flux.
+     * @param flow_scratch_data Flow scratch data object holding all relevant compressible flow data.
+     * @param boundary_id Boundary id of the current face.
+     * @param q Index of the quadrature point.
+     */
+    template <typename Integrator>
+    void
+    do_boundary_face_integral_rhs(Integrator                            &phi,
+                                  const dealii::VectorizedArray<number> &interior_penalty_parameter,
+                                  const CompressibleFlowScratchData<dim, number> &flow_scratch_data,
+                                  const auto                                      boundary_id,
+                                  const unsigned int                              q) const;
 
     /**
      * @brief Local applier for the cell integrals in the right-hand side evaluation.
@@ -180,12 +274,6 @@ namespace MeltPoolDG::Flow
     /// Scratch data for compressible flows
     CompressibleFlowScratchData<dim, number> &flow_scratch_data;
 
-    /// Object for the convective term evaluations
-    const CompressibleFlowConvectiveKernels<dim, number> convective_terms;
-
-    /// Object for the viscous term evaluations
-    const CompressibleFlowViscousKernels<dim, number> viscous_terms;
-
     /// Mapping information for integration over immersed boundaries
     const MappingInfoType &mapping_info_surface;
 
@@ -201,8 +289,11 @@ namespace MeltPoolDG::Flow
     /// Number of DoFs per cell
     const unsigned int n_dofs_per_cell;
 
-    /// Inverse time step size
-    mutable number inv_time_step = 0.;
+    /// Current time step size
+    mutable number current_time_step = 0.;
+
+    /// Current inverse time step size
+    mutable number current_inv_time_step = 0.;
 
     /// Function, which describes the velocity of the unfitted object
     std::shared_ptr<dealii::Function<dim>> unfitted_object_velocity;
