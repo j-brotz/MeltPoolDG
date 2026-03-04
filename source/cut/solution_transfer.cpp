@@ -605,189 +605,195 @@ namespace MeltPoolDG::CutUtil
     // check if DoFs have to be extrapolated, otherwise no gp-extrapolation is required
     const number sum_gp_extrap = flags_dofs_gp_extrapolation.l1_norm();
 
-    // set inhomogeneous Dirichlet constraints for DoFs which do no not require ghost-penalty
-    // extrapolation
-    const dealii::AffineConstraints<number> constraints_gp =
-      create_constraints_gp_extrapolation(cut_dof_handler, flags_dofs_gp_extrapolation);
-
-    // set up sparsity pattern
-    dealii::TrilinosWrappers::SparsityPattern dsp;
-    dsp.reinit(cut_dof_handler.locally_owned_dofs(),
-               cut_dof_handler.locally_owned_dofs(),
-               dealii::DoFTools::extract_locally_relevant_dofs(cut_dof_handler),
-               cut_dof_handler.get_mpi_communicator());
-
-    dealii::DoFTools::make_flux_sparsity_pattern(cut_dof_handler, dsp, constraints_gp, false);
-
-    dsp.compress();
-
-    if (verbosity >= 1 and sum_gp_extrap > 0)
+    if (sum_gp_extrap > 0.)
       {
-        std::ostringstream str;
-        str << "Number of new DoFs: " << std::setw(15) << sum_gp_extrap;
-        Journal::print_line(pcout, str.str(), "cut solution transfer");
-      }
-    if (verbosity >= 3)
-      {
-        std::ostringstream str;
-        str << "Number of nonzero elements: " << std::setw(15) << dsp.n_nonzero_elements();
-        Journal::print_line(pcout, str.str(), "cut solution transfer");
-      }
+        // set inhomogeneous Dirichlet constraints for DoFs which do no not require ghost-penalty
+        // extrapolation
+        const dealii::AffineConstraints<number> constraints_gp =
+          create_constraints_gp_extrapolation(cut_dof_handler, flags_dofs_gp_extrapolation);
 
-    dealii::TrilinosWrappers::SparseMatrix sparse_matrix;
-    sparse_matrix.reinit(dsp);
+        // set up sparsity pattern
+        dealii::TrilinosWrappers::SparsityPattern dsp;
+        dsp.reinit(cut_dof_handler.locally_owned_dofs(),
+                   cut_dof_handler.locally_owned_dofs(),
+                   dealii::DoFTools::extract_locally_relevant_dofs(cut_dof_handler),
+                   cut_dof_handler.get_mpi_communicator());
 
-    VectorType rhs;
-    reinit_cut_vector(rhs);
-    rhs = 0.;
+        dealii::DoFTools::make_flux_sparsity_pattern(cut_dof_handler, dsp, constraints_gp, false);
 
-    dealii::hp::QCollection<dim - 1> face_quadrature;
-    face_quadrature.push_back(dealii::QGauss<dim - 1>(fe_degree + 1));
+        dsp.compress();
 
-    constexpr unsigned int invalid = dealii::numbers::invalid_unsigned_int;
+        if (verbosity >= 1)
+          {
+            std::ostringstream str;
+            str << "Number of new DoFs: " << std::setw(15) << sum_gp_extrap;
+            Journal::print_line(pcout, str.str(), "cut solution transfer");
+          }
+        if (verbosity >= 3)
+          {
+            std::ostringstream str;
+            str << "Number of nonzero elements: " << std::setw(15) << dsp.n_nonzero_elements();
+            Journal::print_line(pcout, str.str(), "cut solution transfer");
+          }
 
-    // fill matrix
-    for (const auto &cell : cut_dof_handler.active_cell_iterators())
-      {
-        if (not cell->is_locally_owned())
-          continue;
+        dealii::TrilinosWrappers::SparseMatrix sparse_matrix;
+        sparse_matrix.reinit(dsp);
 
-        const auto   cell_location    = mesh_classifier.location_to_level_set(cell);
-        const number cell_side_length = cell->minimum_vertex_distance();
+        VectorType rhs;
+        reinit_cut_vector(rhs);
+        rhs = 0.;
 
-        if (cell_location != dealii::NonMatching::LocationToLevelSet::intersected)
-          continue;
+        dealii::hp::QCollection<dim - 1> face_quadrature;
+        face_quadrature.push_back(dealii::QGauss<dim - 1>(fe_degree + 1));
 
-        // definition of lambda-function for ghost-penalty evaluation
-        const auto eval_ghost_penalty =
-          [&](dealii::FEValuesExtractors::Scalar     &u_extractor,
-              dealii::NonMatching::LocationToLevelSet inactive_location) {
-            dealii::UpdateFlags update_flags =
-              dealii::update_gradients | dealii::update_JxW_values | dealii::update_normal_vectors;
-            if (is_dg)
-              update_flags = dealii::update_values | update_flags;
-            if (fe_degree == 2)
-              update_flags = update_flags | dealii::update_hessians;
+        constexpr unsigned int invalid = dealii::numbers::invalid_unsigned_int;
 
-            dealii::FEInterfaceValues<dim> fe_interface_values(cut_dof_handler.get_fe_collection(),
-                                                               face_quadrature,
-                                                               update_flags);
+        // fill matrix
+        for (const auto &cell : cut_dof_handler.active_cell_iterators())
+          {
+            if (not cell->is_locally_owned())
+              continue;
 
-            for (const unsigned int f : cell->face_indices())
-              {
-                // check if current face is a ghost-penalty face
-                if (not face_has_ghost_penalty(mesh_classifier, cell, f, inactive_location))
-                  continue;
+            const auto   cell_location    = mesh_classifier.location_to_level_set(cell);
+            const number cell_side_length = cell->minimum_vertex_distance();
 
-                fe_interface_values.reinit(
-                  cell, f, invalid, cell->neighbor(f), cell->neighbor_of_neighbor(f), invalid);
+            if (cell_location != dealii::NonMatching::LocationToLevelSet::intersected)
+              continue;
 
-                const unsigned int n_interface_dofs =
-                  fe_interface_values.n_current_interface_dofs();
+            // definition of lambda-function for ghost-penalty evaluation
+            const auto eval_ghost_penalty =
+              [&](dealii::FEValuesExtractors::Scalar     &u_extractor,
+                  dealii::NonMatching::LocationToLevelSet inactive_location) {
+                dealii::UpdateFlags update_flags = dealii::update_gradients |
+                                                   dealii::update_JxW_values |
+                                                   dealii::update_normal_vectors;
+                if (is_dg)
+                  update_flags = dealii::update_values | update_flags;
+                if (fe_degree == 2)
+                  update_flags = update_flags | dealii::update_hessians;
 
-                // Determine prefactor, for ghost-penalty face term evaluation.
-                // Prefactor 0.5 is used for faces, which are visited twice.
-                number prefactor = 1.;
-                if (is_new_intersected_face(
-                      mesh_classifier, mesh_classifier_old, cell, f, inactive_location))
-                  prefactor = 0.5;
+                dealii::FEInterfaceValues<dim> fe_interface_values(
+                  cut_dof_handler.get_fe_collection(), face_quadrature, update_flags);
 
-                // initialize local ghost-penalty constraint matrix and local rhs
-                dealii::FullMatrix<number> local_ghost_penalty_matrix(n_interface_dofs,
-                                                                      n_interface_dofs);
-                dealii::Vector<number>     local_rhs(n_interface_dofs);
+                for (const unsigned int f : cell->face_indices())
+                  {
+                    // check if current face is a ghost-penalty face
+                    if (not face_has_ghost_penalty(mesh_classifier, cell, f, inactive_location))
+                      continue;
 
-                // compute entries of local ghost-penalty constraint matrix
-                for (const auto i : fe_interface_values.dof_indices())
-                  for (const auto j : fe_interface_values.dof_indices())
-                    for (unsigned int q = 0; q < fe_interface_values.n_quadrature_points; ++q)
-                      {
-                        const dealii::Tensor<1, dim, number> normal =
-                          fe_interface_values.normal_vector(q);
+                    fe_interface_values.reinit(
+                      cell, f, invalid, cell->neighbor(f), cell->neighbor_of_neighbor(f), invalid);
 
-                        // contributions from 1. normal derivative jump
-                        local_ghost_penalty_matrix(i, j) +=
-                          prefactor * normal *
-                          fe_interface_values[u_extractor].jump_in_gradients(i, q) * normal *
-                          fe_interface_values[u_extractor].jump_in_gradients(j, q) *
-                          cell_side_length * ghost_penalty.gamma_M_degree_1 *
-                          fe_interface_values.JxW(q);
+                    const unsigned int n_interface_dofs =
+                      fe_interface_values.n_current_interface_dofs();
 
-                        if (is_dg)
+                    // Determine prefactor, for ghost-penalty face term evaluation.
+                    // Prefactor 0.5 is used for faces, which are visited twice.
+                    number prefactor = 1.;
+                    if (is_new_intersected_face(
+                          mesh_classifier, mesh_classifier_old, cell, f, inactive_location))
+                      prefactor = 0.5;
+
+                    // initialize local ghost-penalty constraint matrix and local rhs
+                    dealii::FullMatrix<number> local_ghost_penalty_matrix(n_interface_dofs,
+                                                                          n_interface_dofs);
+                    dealii::Vector<number>     local_rhs(n_interface_dofs);
+
+                    // compute entries of local ghost-penalty constraint matrix
+                    for (const auto i : fe_interface_values.dof_indices())
+                      for (const auto j : fe_interface_values.dof_indices())
+                        for (unsigned int q = 0; q < fe_interface_values.n_quadrature_points; ++q)
                           {
-                            // contributions from 0. normal derivative jump
+                            const dealii::Tensor<1, dim, number> normal =
+                              fe_interface_values.normal_vector(q);
+
+                            // contributions from 1. normal derivative jump
                             local_ghost_penalty_matrix(i, j) +=
-                              prefactor * fe_interface_values[u_extractor].jump_in_values(i, q) *
-                              fe_interface_values[u_extractor].jump_in_values(j, q) /
-                              cell_side_length * ghost_penalty.gamma_M_degree_0 *
+                              prefactor * normal *
+                              fe_interface_values[u_extractor].jump_in_gradients(i, q) * normal *
+                              fe_interface_values[u_extractor].jump_in_gradients(j, q) *
+                              cell_side_length * ghost_penalty.gamma_M_degree_1 *
                               fe_interface_values.JxW(q);
+
+                            if (is_dg)
+                              {
+                                // contributions from 0. normal derivative jump
+                                local_ghost_penalty_matrix(i, j) +=
+                                  prefactor *
+                                  fe_interface_values[u_extractor].jump_in_values(i, q) *
+                                  fe_interface_values[u_extractor].jump_in_values(j, q) /
+                                  cell_side_length * ghost_penalty.gamma_M_degree_0 *
+                                  fe_interface_values.JxW(q);
+                              }
+
+                            if (fe_degree == 2)
+                              {
+                                // contributions from 2. normal derivative jump
+                                local_ghost_penalty_matrix(i, j) +=
+                                  prefactor *
+                                  (normal *
+                                   fe_interface_values[u_extractor].jump_in_hessians(i, q) *
+                                   normal /*double contraction*/) *
+                                  (normal *
+                                   fe_interface_values[u_extractor].jump_in_hessians(j, q) *
+                                   normal /*double contraction*/) *
+                                  dealii::Utilities::fixed_power<3>(cell_side_length) *
+                                  ghost_penalty.gamma_M_degree_2 * fe_interface_values.JxW(q);
+                              }
                           }
 
-                        if (fe_degree == 2)
-                          {
-                            // contributions from 2. normal derivative jump
-                            local_ghost_penalty_matrix(i, j) +=
-                              prefactor *
-                              (normal * fe_interface_values[u_extractor].jump_in_hessians(i, q) *
-                               normal /*double contraction*/) *
-                              (normal * fe_interface_values[u_extractor].jump_in_hessians(j, q) *
-                               normal /*double contraction*/) *
-                              dealii::Utilities::fixed_power<3>(cell_side_length) *
-                              ghost_penalty.gamma_M_degree_2 * fe_interface_values.JxW(q);
-                          }
-                      }
+                    // distribute local ghost-penalty constraint matrix and local_rhs to
+                    // global system
+                    const std::vector<dealii::types::global_dof_index> local_interface_dof_indices =
+                      fe_interface_values.get_interface_dof_indices();
 
-                // distribute local ghost-penalty constraint matrix and local_rhs to
-                // global system
-                const std::vector<dealii::types::global_dof_index> local_interface_dof_indices =
-                  fe_interface_values.get_interface_dof_indices();
+                    constraints_gp.distribute_local_to_global(local_ghost_penalty_matrix,
+                                                              local_rhs,
+                                                              local_interface_dof_indices,
+                                                              sparse_matrix,
+                                                              rhs);
+                  }
+              };
 
-                constraints_gp.distribute_local_to_global(local_ghost_penalty_matrix,
-                                                          local_rhs,
-                                                          local_interface_dof_indices,
-                                                          sparse_matrix,
-                                                          rhs);
-              }
-          };
+            const auto cell_location_old = mesh_classifier_old.location_to_level_set(cell);
 
-        const auto cell_location_old = mesh_classifier_old.location_to_level_set(cell);
+            if (cell_location_old == dealii::NonMatching::LocationToLevelSet::inside)
+              for (unsigned int i = 0; i < n_components_per_phase; ++i)
+                {
+                  dealii::FEValuesExtractors::Scalar u(i);
+                  eval_ghost_penalty(u, cell_location_old);
+                }
+            else if (cell_location_old == dealii::NonMatching::LocationToLevelSet::outside and
+                     is_two_phase == true)
+              for (unsigned int i = n_components_per_phase; i < 2 * n_components_per_phase; ++i)
+                {
+                  dealii::FEValuesExtractors::Scalar u(i);
+                  eval_ghost_penalty(u, cell_location_old);
+                }
+          }
 
-        if (cell_location_old == dealii::NonMatching::LocationToLevelSet::inside)
-          for (unsigned int i = 0; i < n_components_per_phase; ++i)
-            {
-              dealii::FEValuesExtractors::Scalar u(i);
-              eval_ghost_penalty(u, cell_location_old);
-            }
-        else if (cell_location_old == dealii::NonMatching::LocationToLevelSet::outside and
-                 is_two_phase == true)
-          for (unsigned int i = n_components_per_phase; i < 2 * n_components_per_phase; ++i)
-            {
-              dealii::FEValuesExtractors::Scalar u(i);
-              eval_ghost_penalty(u, cell_location_old);
-            }
+        sparse_matrix.compress(dealii::VectorOperation::add);
+        rhs.compress(dealii::VectorOperation::add);
+
+        // solve system
+        dealii::ReductionControl solver_control(1000, 1e-10, 1e-10);
+
+        dealii::SolverCG<VectorType> solver(solver_control);
+        for (auto &new_solution : new_solutions)
+          solver.solve(sparse_matrix, new_solution, rhs, dealii::PreconditionIdentity());
+
+        if (verbosity >= 2)
+          {
+            std::ostringstream str;
+            str << "Ghost-penalty extrapolation system solved in " << solver_control.last_step()
+                << " iterations.";
+            Journal::print_line(pcout, str.str(), "cut_solution_transfer");
+          }
+
+        // apply constraints
+        for (auto &new_solution : new_solutions)
+          constraints_gp.distribute(new_solution);
       }
-
-    sparse_matrix.compress(dealii::VectorOperation::add);
-    rhs.compress(dealii::VectorOperation::add);
-
-    // solve system
-    dealii::ReductionControl solver_control(1000, 1e-10, 1e-10);
-
-    dealii::SolverCG<VectorType> solver(solver_control);
-    for (auto &new_solution : new_solutions)
-      solver.solve(sparse_matrix, new_solution, rhs, dealii::PreconditionIdentity());
-
-    if (verbosity >= 2)
-      {
-        std::ostringstream str;
-        str << "Ghost-penalty extrapolation system solved in " << solver_control.last_step()
-            << " iterations.";
-        Journal::print_line(pcout, str.str(), "cut_solution_transfer");
-      }
-
-    // apply constraints
-    for (auto &new_solution : new_solutions)
-      constraints_gp.distribute(new_solution);
   }
 
   template class SolutionTransferOperator<1, double>;
