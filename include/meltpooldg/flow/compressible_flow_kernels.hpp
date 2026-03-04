@@ -45,7 +45,7 @@ namespace MeltPoolDG::Flow
   /**
    * Calculate the viscous stress tensor for the compressible Navier-Stokes equations.
    *
-   * @param grad_u Gradient of the velocity field.
+   * @param grad_velocity Gradient of the velocity field.
    * @param dynamic_viscosity Dynamic viscosity of the fluid.
    */
   template <int dim, typename number>

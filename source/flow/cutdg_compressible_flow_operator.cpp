@@ -4,10 +4,9 @@
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/cut/util.hpp>
-#include <meltpooldg/flow/compressible_flow_explicit_utils.hpp>
-#include <meltpooldg/flow/compressible_flow_utils.hpp>
+#include <meltpooldg/flow/compressible_flow_types.hpp>
+#include <meltpooldg/flow/compressible_flow_views.hpp>
 #include <meltpooldg/flow/cutdg_compressible_flow_operator.hpp>
-#include <meltpooldg/utilities/numbers.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
@@ -22,8 +21,6 @@ namespace MeltPoolDG::Flow
     const MappingInfoVectorType              &mapping_info_cells_in,
     const MappingInfoVectorType              &mapping_info_faces_in)
     : flow_scratch_data(flow_scratch_data)
-    , convective_terms(flow_scratch_data.flow_data, flow_scratch_data.material)
-    , viscous_terms(flow_scratch_data.material)
     , mapping_info_surface(mapping_info_surface_in)
     , mapping_info_cells(mapping_info_cells_in)
     , mapping_info_faces(mapping_info_faces_in)
@@ -63,9 +60,11 @@ namespace MeltPoolDG::Flow
                                                                      VectorType       &dst,
                                                                      const VectorType &src) const
   {
+    current_time_step = time_step;
+
     // compute inverse time step size
     AssertThrow(time_step > 0., dealii::ExcMessage("Time step size must be larger than 0."));
-    inv_time_step = 1. / time_step;
+    current_inv_time_step = 1. / time_step;
 
     using local_applier_type =
       std::function<void(const MatrixFree<dim, number> &,
@@ -107,6 +106,219 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim, typename number, bool is_viscous>
+  template <CellEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
+  void
+  CutDGCompressibleFlowOperator<dim, number, is_viscous>::do_cell_integral_rhs(
+    Integrator                                                    &phi,
+    const CompressibleFlowScratchData<dim, number>                &flow_scratch_data,
+    const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> *constant_body_force,
+    const unsigned int                                             q) const
+  {
+    CompressibleFlow::SourceType<dim, number> source;
+    CompressibleFlow::FluxType<dim, number>   flux;
+
+    if constexpr (is_viscous)
+      flux = ConvectionDiffusionOperator::cell(
+        phi.get_value(q),
+        phi.get_gradient(q),
+        CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                                flow_scratch_data.material.data),
+        CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                               flow_scratch_data.material.data));
+    else
+      flux = ConvectionOperator::cell(
+        phi.get_value(q),
+        CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                                flow_scratch_data.material.data));
+
+    if (flow_scratch_data.body_force.get() != nullptr)
+      {
+        const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> force =
+          constant_body_force ?
+            *constant_body_force :
+            VectorTools::evaluate_function_at_vectorized_points(*flow_scratch_data.body_force,
+                                                                phi.quadrature_point(q));
+
+        const auto w_q = phi.get_value(q);
+
+        for (unsigned int d = 0; d < dim; ++d)
+          source[d + 1] = w_q[0] * force[d];
+        for (unsigned int d = 0; d < dim; ++d)
+          source[dim + 1] += force[d] * w_q[d + 1];
+      }
+
+    // consider mass term
+    if (flow_scratch_data.body_force.get() != nullptr)
+      phi.submit_value(source + phi.get_value(q) * current_inv_time_step, q);
+    else
+      phi.submit_value(phi.get_value(q) * current_inv_time_step, q);
+    phi.submit_gradient(flux, q);
+  }
+
+  template <int dim, typename number, bool is_viscous>
+  void
+  CutDGCompressibleFlowOperator<dim, number, is_viscous>::do_surface_integral_rhs(
+    dealii::FEPointEvaluation<dim + 2, dim, dim, dealii::VectorizedArray<number>> &phi,
+    const dealii::VectorizedArray<number>          &interior_penalty_parameter,
+    const CompressibleFlowScratchData<dim, number> &flow_scratch_data,
+    const unsigned int                              q) const
+  {
+    const auto w_m      = phi.get_value(q);
+    const auto grad_w_m = phi.get_gradient(q);
+
+    // minus sign is required, as we need a normal which points outside the
+    // active region (the orientation of fe_point_surface.normal_vector(q) depends
+    // on the level set sign of the active region!)
+    const auto normal = -phi.normal_vector(q);
+
+    Tensor<1, dim + 2, VectorizedArray<number>>                 w_p;
+    Tensor<1, dim + 2, Tensor<1, dim, VectorizedArray<number>>> grad_w_p;
+
+    get_adjacent_face_values_at_unfitted_boundary(
+      phi.quadrature_point(q), w_m, w_p, grad_w_m, grad_w_p);
+
+    CompressibleFlow::FaceFluxType<dim, number> flux_m;
+    if constexpr (is_viscous)
+      {
+        const auto flux = ConvectionDiffusionOperator::face(
+          w_m,
+          w_p,
+          grad_w_m,
+          grad_w_p,
+          normal,
+          interior_penalty_parameter,
+          CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                                  flow_scratch_data.material.data),
+          CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                                 flow_scratch_data.material.data));
+
+        flux_m = flux.inner_face_value;
+
+        phi.submit_gradient(flux.inner_face_gradient, q);
+      }
+    else
+      {
+        const auto flux = ConvectionOperator::face(
+          w_m,
+          w_p,
+          normal,
+          CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                                  flow_scratch_data.material.data));
+
+        flux_m = flux.inner_face_value;
+      }
+
+    phi.submit_value(flux_m, q);
+  }
+
+  template <int dim, typename number, bool is_viscous>
+  template <FaceEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
+  void
+  CutDGCompressibleFlowOperator<dim, number, is_viscous>::do_face_integral_rhs(
+    Integrator                                     &phi_m,
+    Integrator                                     &phi_p,
+    const dealii::VectorizedArray<number>          &interior_penalty_parameter,
+    const CompressibleFlowScratchData<dim, number> &flow_scratch_data,
+    const unsigned int                              q) const
+  {
+    CompressibleFlow::FaceFluxType<dim, number> flux_m;
+    CompressibleFlow::FaceFluxType<dim, number> flux_p;
+
+    if constexpr (is_viscous)
+      {
+        const auto flux = ConvectionDiffusionOperator::face(
+          phi_m.get_value(q),
+          phi_p.get_value(q),
+          phi_m.get_gradient(q),
+          phi_p.get_gradient(q),
+          phi_m.normal_vector(q),
+          interior_penalty_parameter,
+          CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                                  flow_scratch_data.material.data),
+          CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                                 flow_scratch_data.material.data));
+
+        flux_m = flux.inner_face_value;
+        flux_p = flux.outer_face_value;
+
+        phi_m.submit_gradient(flux.inner_face_gradient, q);
+        phi_p.submit_gradient(flux.outer_face_gradient, q);
+      }
+    else
+      {
+        const auto flux = ConvectionOperator::face(
+          phi_m.get_value(q),
+          phi_p.get_value(q),
+          phi_m.normal_vector(q),
+          CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                                  flow_scratch_data.material.data));
+
+        flux_m = flux.inner_face_value;
+        flux_p = flux.outer_face_value;
+      }
+
+    phi_m.submit_value(flux_m, q);
+    phi_p.submit_value(flux_p, q);
+  }
+
+  template <int dim, typename number, bool is_viscous>
+  template <FaceEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
+  void
+  CutDGCompressibleFlowOperator<dim, number, is_viscous>::do_boundary_face_integral_rhs(
+    Integrator                                     &phi,
+    const dealii::VectorizedArray<number>          &interior_penalty_parameter,
+    const CompressibleFlowScratchData<dim, number> &flow_scratch_data,
+    const auto                                      boundary_id,
+    const unsigned int                              q) const
+  {
+    const auto w_m      = phi.get_value(q);
+    const auto grad_w_m = phi.get_gradient(q);
+
+    const auto [w_p, grad_w_p] =
+      flow_scratch_data.boundary_conditions.get_boundary_face_value_and_gradient(
+        phi.quadrature_point(q),
+        phi.normal_vector(q),
+        boundary_id,
+        CompressibleFlow::DofValueAndGradientStateView(w_m,
+                                                       grad_w_m,
+                                                       flow_scratch_data.material.eos_utils.get(),
+                                                       flow_scratch_data.material.data));
+
+    CompressibleFlow::FaceFluxType<dim, number> flux_m;
+    if constexpr (is_viscous)
+      {
+        const auto flux = ConvectionDiffusionOperator::face(
+          phi.get_value(q),
+          w_p,
+          phi.get_gradient(q),
+          grad_w_p,
+          phi.normal_vector(q),
+          interior_penalty_parameter,
+          CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                                  flow_scratch_data.material.data),
+          CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                                 flow_scratch_data.material.data));
+
+        flux_m = flux.inner_face_value;
+
+        phi.submit_gradient(flux.inner_face_gradient, q);
+      }
+    else
+      {
+        const auto flux = ConvectionOperator::face(
+          phi.get_value(q),
+          w_p,
+          phi.normal_vector(q),
+          CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
+                                                  flow_scratch_data.material.data));
+
+        flux_m = flux.inner_face_value;
+      }
+
+    phi.submit_value(flux_m, q);
+  }
+
+  template <int dim, typename number, bool is_viscous>
   void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::local_apply_cell_rhs(
     const dealii::MatrixFree<dim, number> &,
@@ -140,21 +352,8 @@ namespace MeltPoolDG::Flow
 
             for (const unsigned int q : phi.quadrature_point_indices())
               {
-                auto [flux, grad_flux] =
-                  rhs_cell_integral_kernel<dim, number, FECellIntegrator<dim, dim + 2, number>>(
-                    phi,
-                    q,
-                    constant_function ? &constant_body_force : nullptr,
-                    convective_terms,
-                    viscous_terms,
-                    flow_scratch_data.body_force);
-
-                // consider mass term
-                if (flow_scratch_data.body_force.get() != nullptr)
-                  phi.submit_value(flux + phi.get_value(q) * inv_time_step, q);
-                else
-                  phi.submit_value(phi.get_value(q) * inv_time_step, q);
-                phi.submit_gradient(grad_flux, q);
+                do_cell_integral_rhs<FECellIntegrator<dim, dim + 2, number>>(
+                  phi, flow_scratch_data, constant_function ? &constant_body_force : nullptr, q);
               }
 
             phi.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
@@ -198,24 +397,13 @@ namespace MeltPoolDG::Flow
                 // do domain integral
                 for (const unsigned int q : fe_point_eval.quadrature_point_indices())
                   {
-                    auto [flux, grad_flux] = rhs_cell_integral_kernel<
-                      dim,
-                      number,
-                      dealii::FEPointEvaluation<dim + 2, dim, dim, VectorizedArray<number>>>(
+                    do_cell_integral_rhs<
+                      dealii::
+                        FEPointEvaluation<dim + 2, dim, dim, dealii::VectorizedArray<number>>>(
                       fe_point_eval,
-                      q,
+                      flow_scratch_data,
                       constant_function ? &constant_body_force : nullptr,
-                      convective_terms,
-                      viscous_terms,
-                      flow_scratch_data.body_force);
-
-                    // consider mass term
-                    if (flow_scratch_data.body_force.get() != nullptr)
-                      fe_point_eval.submit_value(flux + fe_point_eval.get_value(q) * inv_time_step,
-                                                 q);
-                    else
-                      fe_point_eval.submit_value(fe_point_eval.get_value(q) * inv_time_step, q);
-                    fe_point_eval.submit_gradient(grad_flux, q);
+                      q);
                   }
 
                 fe_point_eval.integrate(StridedArrayView<number, n_lanes>(
@@ -223,42 +411,18 @@ namespace MeltPoolDG::Flow
                                         EvaluationFlags::values | EvaluationFlags::gradients);
 
                 const auto interior_penalty_parameter =
-                  is_viscous ? phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
+                  is_viscous ? flow_scratch_data.material.data.dynamic_viscosity /
+                                 flow_scratch_data.material.data.reference_density *
+                                 phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
                                0.;
 
                 // do surface integral
                 for (const unsigned int q : fe_point_surface.quadrature_point_indices())
                   {
-                    const auto w_m = fe_point_surface.get_value(q);
-                    // minus sign is required, as we need a normal which points outside the
-                    // active region (the orientation of fe_point_surface.normal_vector(q) depends
-                    // on the level set sign of the active region!)
-                    const auto normal   = -fe_point_surface.normal_vector(q);
-                    const auto grad_w_m = fe_point_surface.get_gradient(q);
-
-                    Tensor<1, dim + 2, VectorizedArray<number>>                 w_p;
-                    Tensor<1, dim + 2, Tensor<1, dim, VectorizedArray<number>>> grad_w_p;
-
-                    get_adjacent_face_values_at_unfitted_boundary(
-                      fe_point_surface.quadrature_point(q), w_m, w_p, grad_w_m, grad_w_p);
-
-                    auto flux =
-                      convective_terms.calculate_convective_numerical_flux(w_m, w_p, normal);
-
-                    if (is_viscous)
-                      flux -= viscous_terms.calculate_viscous_numerical_flux(
-                        w_m, w_p, grad_w_m, grad_w_p, normal, interior_penalty_parameter);
-
-                    fe_point_surface.submit_value(-flux, q);
-
-                    if (is_viscous)
-                      {
-                        auto numerical_flux_gradient =
-                          viscous_terms.calculate_viscous_numerical_flux_gradient(w_m, w_p, normal)
-                            .first;
-
-                        fe_point_surface.submit_gradient(numerical_flux_gradient, q);
-                      }
+                    do_surface_integral_rhs(fe_point_surface,
+                                            interior_penalty_parameter,
+                                            flow_scratch_data,
+                                            q);
                   }
 
                 fe_point_surface.integrate(StridedArrayView<number, n_lanes>(
@@ -316,23 +480,16 @@ namespace MeltPoolDG::Flow
             // factor 0.5 for interior face
             const dealii::VectorizedArray<number> interior_penalty_parameter =
               is_viscous ?
-                0.5 * std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
-                               phi_p.read_cell_data(flow_scratch_data.interior_penalty_parameter)) :
+                0.5 * flow_scratch_data.material.data.dynamic_viscosity /
+                  flow_scratch_data.material.data.reference_density *
+                  std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
+                           phi_p.read_cell_data(flow_scratch_data.interior_penalty_parameter)) :
                 0.;
 
             for (const unsigned int q : phi_m.quadrature_point_indices())
               {
-                auto [flux_m, flux_p, grad_flux_m, grad_flux_p] =
-                  rhs_face_integral_kernel<dim, number, FEFaceIntegrator<dim, dim + 2, number>>(
-                    phi_m, phi_p, q, interior_penalty_parameter, convective_terms, viscous_terms);
-
-                phi_m.submit_value(flux_m, q);
-                phi_p.submit_value(flux_p, q);
-                if (is_viscous)
-                  {
-                    phi_m.submit_gradient(grad_flux_m, q);
-                    phi_p.submit_gradient(grad_flux_p, q);
-                  }
+                do_face_integral_rhs<FEFaceIntegrator<dim, dim + 2, number>>(
+                  phi_m, phi_p, interior_penalty_parameter, flow_scratch_data, q);
               }
 
             phi_p.integrate_scatter(EvaluationFlags::values |
@@ -394,31 +551,21 @@ namespace MeltPoolDG::Flow
                 // factor 0.5 for interior face
                 const dealii::VectorizedArray<number> interior_penalty_parameter =
                   is_viscous ?
-                    0.5 *
+                    0.5 * flow_scratch_data.material.data.dynamic_viscosity /
+                      flow_scratch_data.material.data.reference_density *
                       std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
                                phi_p.read_cell_data(flow_scratch_data.interior_penalty_parameter)) :
                     0.;
 
                 for (const unsigned int q : fe_point_eval_minus.quadrature_point_indices())
                   {
-                    auto [flux_m, flux_p, grad_flux_m, grad_flux_p] = rhs_face_integral_kernel<
-                      dim,
-                      number,
+                    do_face_integral_rhs<
                       FEFacePointEvaluation<dim + 2, dim, dim, VectorizedArray<number>>>(
                       fe_point_eval_minus,
-                      fe_point_eval_minus,
-                      q,
+                      fe_point_eval_plus,
                       interior_penalty_parameter,
-                      convective_terms,
-                      viscous_terms);
-
-                    fe_point_eval_minus.submit_value(flux_m, q);
-                    fe_point_eval_plus.submit_value(flux_p, q);
-                    if (is_viscous)
-                      {
-                        fe_point_eval_minus.submit_gradient(grad_flux_m, q);
-                        fe_point_eval_plus.submit_gradient(grad_flux_p, q);
-                      }
+                      flow_scratch_data,
+                      q);
                   }
 
                 fe_point_eval_minus.integrate_in_face(&phi_m.get_scratch_data().begin()[0][lane],
@@ -473,26 +620,16 @@ namespace MeltPoolDG::Flow
                                 dealii::EvaluationFlags::values |
                                   dealii::EvaluationFlags::gradients);
 
-            const dealii::VectorizedArray<number> interior_penalty_parameter =
-              is_viscous ? phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) : 0.;
+            const VectorizedArray<number> interior_penalty_parameter =
+              is_viscous ? flow_scratch_data.material.data.dynamic_viscosity /
+                             flow_scratch_data.material.data.reference_density *
+                             phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
+                           0.;
 
             for (const unsigned int q : phi.quadrature_point_indices())
               {
-                auto [flux_m, grad_flux_m] =
-                  rhs_boundary_face_integral_kernel<dim,
-                                                    number,
-                                                    FEFaceIntegrator<dim, dim + 2, number>>(
-                    phi,
-                    q,
-                    flow_scratch_data.scratch_data.get_matrix_free().get_boundary_id(face),
-                    interior_penalty_parameter,
-                    convective_terms,
-                    viscous_terms,
-                    flow_scratch_data.material,
-                    flow_scratch_data.boundary_conditions);
-                phi.submit_value(flux_m, q);
-                if (is_viscous)
-                  phi.submit_gradient(grad_flux_m, q);
+                do_boundary_face_integral_rhs<FEFaceIntegrator<dim, dim + 2, number>>(
+                  phi, interior_penalty_parameter, flow_scratch_data, phi.boundary_id(), q);
               }
 
             phi.integrate_scatter(EvaluationFlags::values |
@@ -530,27 +667,20 @@ namespace MeltPoolDG::Flow
                                                        EvaluationFlags::gradients);
 
                 const dealii::VectorizedArray<number> interior_penalty_parameter =
-                  is_viscous ? phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
+                  is_viscous ? flow_scratch_data.material.data.dynamic_viscosity /
+                                 flow_scratch_data.material.data.reference_density *
+                                 phi.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
                                0.;
 
                 for (const unsigned int q : fe_point_eval_minus.quadrature_point_indices())
                   {
-                    auto [flux_m, grad_flux_m] = rhs_boundary_face_integral_kernel<
-                      dim,
-                      number,
+                    do_boundary_face_integral_rhs<
                       FEFacePointEvaluation<dim + 2, dim, dim, VectorizedArray<number>>>(
                       fe_point_eval_minus,
-                      q,
-                      flow_scratch_data.scratch_data.get_matrix_free().get_boundary_id(face),
                       interior_penalty_parameter,
-                      convective_terms,
-                      viscous_terms,
-                      flow_scratch_data.material,
-                      flow_scratch_data.boundary_conditions);
-
-                    fe_point_eval_minus.submit_value(flux_m, q);
-                    if (is_viscous)
-                      fe_point_eval_minus.submit_gradient(grad_flux_m, q);
+                      flow_scratch_data,
+                      flow_scratch_data.scratch_data.get_matrix_free().get_boundary_id(face),
+                      q);
                   }
 
                 fe_point_eval_minus.integrate_in_face(&phi.get_scratch_data().begin()[0][lane],
