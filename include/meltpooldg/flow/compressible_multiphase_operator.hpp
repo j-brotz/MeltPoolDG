@@ -4,7 +4,7 @@
 
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/compressible_flow_convective_kernels.hpp>
-#include <meltpooldg/flow/compressible_flow_utils.hpp>
+#include <meltpooldg/flow/compressible_flow_types.hpp>
 #include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
 #include <meltpooldg/flow/compressible_multiphase_level_set_advection.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -27,9 +27,9 @@ namespace MeltPoolDG::Multiphase
     using MappingInfoType       = CutUtil::MappingInfoType<dim, number>;
     using MappingInfoVectorType = CutUtil::MappingInfoVectorType<dim, number>;
 
-    using ConservedVariablesType = Flow::CompressibleFlowTypes::ConservedVariablesType<dim, number>;
+    using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
     using ConservedVariablesGradType =
-      Flow::CompressibleFlowTypes::ConservedVariablesGradType<dim, number>;
+      CompressibleFlow::ConservedVariablesGradientType<dim, number>;
 
     /**
      * @brief Constructor.

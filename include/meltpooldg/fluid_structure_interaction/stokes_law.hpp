@@ -7,6 +7,7 @@
 
 #include <deal.II/matrix_free/matrix_free.h>
 
+#include <meltpooldg/flow/compressible_flow_types.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
@@ -23,7 +24,7 @@ namespace MeltPoolDG
      *
      * @param solution Reference to the solution of the flow field.
      * @param matrix_free MatrixFree object and corresponding relevant indices.
-     * @param scratch_data Object for caching relevant data for the penalty term computation.
+     * @param dynamic_viscosity Dynamic viscosity.
      */
     StokesLawSphericalParticleForce(const VectorType                     &solution,
                                     const MatrixFreeContext<dim, number> &matrix_free,
@@ -68,7 +69,7 @@ namespace MeltPoolDG
   template <int dim, typename number, typename ObstacleType>
   struct StokesLawFluidForce final : public Flow::ExternalFlowForce<dim, number>
   {
-    using ConservedVariablesType = Flow::CompressibleFlowTypes::ConservedVariablesType<dim, number>;
+    using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
     using VectorType             = dealii::LinearAlgebra::distributed::Vector<number>;
 
   public:

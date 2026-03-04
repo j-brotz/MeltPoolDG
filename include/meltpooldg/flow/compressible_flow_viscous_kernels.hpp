@@ -32,9 +32,9 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   struct CompressibleFlowViscousKernels
   {
-    using ConservedVariablesType = CompressibleFlowTypes::ConservedVariablesType<dim, number>;
+    using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
     using ConservedVariablesGradType =
-      CompressibleFlowTypes::ConservedVariablesGradType<dim, number>;
+      CompressibleFlow::ConservedVariablesGradientType<dim, number>;
 
     explicit CompressibleFlowViscousKernels(
       const CompressibleFlowMaterial<dim, number> &material_in);
