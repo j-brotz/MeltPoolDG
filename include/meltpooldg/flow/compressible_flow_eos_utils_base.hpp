@@ -3,6 +3,7 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
+#include <meltpooldg/flow/compressible_flow_types.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 
 namespace MeltPoolDG::Flow::EOS
@@ -27,8 +28,7 @@ namespace MeltPoolDG::Flow::EOS
     inline DEAL_II_ALWAYS_INLINE //
       virtual dealii::VectorizedArray<number>
       calculate_thermodynamic_pressure(
-        const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables)
-        const = 0;
+        const CompressibleFlow::ConservedVariablesType<dim, number> &conserved_variables) const = 0;
 
     /**
      * @brief Calculate the gradient of the temperature from the conserved variables and their gradients
@@ -42,8 +42,8 @@ namespace MeltPoolDG::Flow::EOS
     inline DEAL_II_ALWAYS_INLINE //
       virtual dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
       calculate_grad_T(
-        const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
-        const CompressibleFlowTypes::ConservedVariablesGradType<dim, number>
+        const CompressibleFlow::ConservedVariablesType<dim, number> &conserved_variables,
+        const CompressibleFlow::ConservedVariablesGradientType<dim, number>
           &grad_conserved_variables) const = 0;
 
     /**
@@ -55,8 +55,8 @@ namespace MeltPoolDG::Flow::EOS
      */
     inline DEAL_II_ALWAYS_INLINE //
       virtual dealii::VectorizedArray<number>
-      calculate_speed_of_sound(const CompressibleFlowTypes::ConservedVariablesType<dim, number>
-                                 &conserved_variables) const = 0;
+      calculate_speed_of_sound(
+        const CompressibleFlow::ConservedVariablesType<dim, number> &conserved_variables) const = 0;
 
     /**
      * @brief Calculate the temperature for a specific equation of state.
@@ -67,8 +67,8 @@ namespace MeltPoolDG::Flow::EOS
      */
     inline DEAL_II_ALWAYS_INLINE //
       virtual dealii::VectorizedArray<number>
-      calculate_temperature(const CompressibleFlowTypes::ConservedVariablesType<dim, number>
-                              &conserved_variables) const = 0;
+      calculate_temperature(
+        const CompressibleFlow::ConservedVariablesType<dim, number> &conserved_variables) const = 0;
 
     /**
      * @brief Calculate the total stress tensor from pressure contribution and viscous stress
@@ -82,7 +82,7 @@ namespace MeltPoolDG::Flow::EOS
     inline DEAL_II_ALWAYS_INLINE //
       dealii::Tensor<2, dim, dealii::VectorizedArray<number>>
       calculate_stress_tensor(
-        const CompressibleFlowTypes::ConservedVariablesType<dim, number> &conserved_variables,
+        const CompressibleFlow::ConservedVariablesType<dim, number>   &conserved_variables,
         const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> &viscous_stress_tensor) const
     {
       const auto pressure_tensor =
@@ -101,11 +101,11 @@ namespace MeltPoolDG::Flow::EOS
      * @return Current values in primitive variables formulation.
      */
     inline DEAL_II_ALWAYS_INLINE //
-      CompressibleFlowTypes::ConservedVariablesType<dim, number>
+      CompressibleFlow::ConservedVariablesType<dim, number>
       convert_conservative_into_primitive_variables(
-        const CompressibleFlowTypes::ConservedVariablesType<dim, number> &u_cons) const
+        const CompressibleFlow::ConservedVariablesType<dim, number> &u_cons) const
     {
-      CompressibleFlowTypes::ConservedVariablesType<dim, number> u_prim;
+      CompressibleFlow::ConservedVariablesType<dim, number> u_prim;
 
       // pressure
       u_prim[0] = calculate_thermodynamic_pressure(u_cons);
@@ -129,9 +129,9 @@ namespace MeltPoolDG::Flow::EOS
      * @return Current values in conservative variables formulation.
      */
     inline DEAL_II_ALWAYS_INLINE //
-      virtual CompressibleFlowTypes::ConservedVariablesType<dim, number>
+      virtual CompressibleFlow::ConservedVariablesType<dim, number>
       convert_primitive_into_conservative_variables(
-        const CompressibleFlowTypes::ConservedVariablesType<dim, number> &u_prim) const = 0;
+        const CompressibleFlow::ConservedVariablesType<dim, number> &u_prim) const = 0;
 
     /**
      * @brief Calculate the inner energy from a given pressure.

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <meltpooldg/flow/compressible_flow_convective_kernels.hpp>
+#include <meltpooldg/flow/compressible_flow_types.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_base.hpp>
@@ -22,9 +23,9 @@ namespace MeltPoolDG::Flow
   {
   public:
     using VectorType             = dealii::LinearAlgebra::distributed::Vector<number>;
-    using ConservedVariablesType = CompressibleFlowTypes::ConservedVariablesType<dim, number>;
+    using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
     using ConservedVariablesGradType =
-      CompressibleFlowTypes::ConservedVariablesGradType<dim, number>;
+      CompressibleFlow::ConservedVariablesGradientType<dim, number>;
 
     /**
      * @brief Constructor.

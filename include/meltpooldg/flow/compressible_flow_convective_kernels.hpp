@@ -13,6 +13,7 @@
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_phase_coupling_data.hpp>
 #include <meltpooldg/flow/compressible_flow_scratch_data.hpp>
+#include <meltpooldg/flow/compressible_flow_types.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 
@@ -36,9 +37,9 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   struct CompressibleFlowConvectiveKernels
   {
-    using ConservedVariablesType = CompressibleFlowTypes::ConservedVariablesType<dim, number>;
+    using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
     using ConservedVariablesGradType =
-      CompressibleFlowTypes::ConservedVariablesGradType<dim, number>;
+      CompressibleFlow::ConservedVariablesGradientType<dim, number>;
 
     /**
      * @brief Constructor initializing the convective kernel with flow and material properties.

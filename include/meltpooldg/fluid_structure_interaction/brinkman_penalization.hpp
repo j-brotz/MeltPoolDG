@@ -9,6 +9,7 @@
 
 #include <deal.II/matrix_free/matrix_free.h>
 
+#include <meltpooldg/flow/compressible_flow_types.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_util.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
@@ -29,7 +30,7 @@ namespace MeltPoolDG
      * @param obstacle_handler Reference to the obstacle handler managing obstacles in the domain.
      * @param solution Reference to the solution of the flow field.
      * @param matrix_free MatrixFree object and corresponding relevant indices.
-     * @param scratch_data Object for caching relevant data for the penalty term computation.
+     * @param data Object for caching relevant data for the penalty term computation.
      */
     BrinkmanObstacleForce(const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
                           const VectorType                               &solution,
@@ -83,7 +84,7 @@ namespace MeltPoolDG
   struct BrinkmanPenalizationResidualContribution final
     : public Flow::ExternalFlowForce<dim, number>
   {
-    using ConservedVariablesType = Flow::CompressibleFlowTypes::ConservedVariablesType<dim, number>;
+    using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
 
   public:
     /**
@@ -93,7 +94,6 @@ namespace MeltPoolDG
      *
      * @param obstacle_handler Reference to the obstacle handler managing obstacles in the domain.
      * @param brinkman_penalization_data Data required for computing the Brinkman penalization term.
-     * @param mask_function User-defined mask function used in the penalty term evaluation.
      */
     BrinkmanPenalizationResidualContribution(
       const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
@@ -148,7 +148,7 @@ namespace MeltPoolDG
   struct BrinkmanPenalizationJacobianContribution final
     : public Flow::ExternalFlowForceJacobian<dim, number>
   {
-    using ConservedVariablesType = Flow::CompressibleFlowTypes::ConservedVariablesType<dim, number>;
+    using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
 
   public:
     /**

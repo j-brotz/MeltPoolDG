@@ -11,6 +11,7 @@
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 
 #include <meltpooldg/flow/compressible_flow_convective_kernels.hpp>
+#include <meltpooldg/flow/compressible_flow_types.hpp>
 #include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
@@ -98,8 +99,8 @@ namespace MeltPoolDG::Flow
             CellEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator,
             bool is_viscous = true>
   inline DEAL_II_ALWAYS_INLINE //
-    std::tuple<CompressibleFlowTypes::ConservedVariablesType<dim, number>,
-               CompressibleFlowTypes::ConservedVariablesGradType<dim, number>>
+    std::tuple<CompressibleFlow::ConservedVariablesType<dim, number>,
+               CompressibleFlow::ConservedVariablesGradientType<dim, number>>
     rhs_cell_integral_kernel(
       const Integrator                                              &evaluator,
       const unsigned int                                             q,
@@ -162,10 +163,10 @@ namespace MeltPoolDG::Flow
             FaceEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator,
             bool is_viscous = true>
   inline DEAL_II_ALWAYS_INLINE //
-    std::tuple<CompressibleFlowTypes::ConservedVariablesType<dim, number>,
-               CompressibleFlowTypes::ConservedVariablesType<dim, number>,
-               CompressibleFlowTypes::ConservedVariablesGradType<dim, number>,
-               CompressibleFlowTypes::ConservedVariablesGradType<dim, number>>
+    std::tuple<CompressibleFlow::ConservedVariablesType<dim, number>,
+               CompressibleFlow::ConservedVariablesType<dim, number>,
+               CompressibleFlow::ConservedVariablesGradientType<dim, number>,
+               CompressibleFlow::ConservedVariablesGradientType<dim, number>>
     rhs_face_integral_kernel(const Integrator               &evaluator_m,
                              const Integrator               &evaluator_p,
                              const unsigned int              q,
@@ -186,8 +187,8 @@ namespace MeltPoolDG::Flow
                                                                        evaluator_m.normal_vector(q),
                                                                        penalty_parameter);
 
-    std::pair<CompressibleFlowTypes::ConservedVariablesGradType<dim, number>,
-              CompressibleFlowTypes::ConservedVariablesGradType<dim, number>>
+    std::pair<CompressibleFlow::ConservedVariablesGradientType<dim, number>,
+              CompressibleFlow::ConservedVariablesGradientType<dim, number>>
       viscous_numerical_flux;
 
     // interior penalty
@@ -233,8 +234,8 @@ namespace MeltPoolDG::Flow
             bool is_viscous   = true,
             bool is_gas_phase = true>
   inline DEAL_II_ALWAYS_INLINE //
-    std::tuple<CompressibleFlowTypes::ConservedVariablesType<dim, number>,
-               CompressibleFlowTypes::ConservedVariablesGradType<dim, number>>
+    std::tuple<CompressibleFlow::ConservedVariablesType<dim, number>,
+               CompressibleFlow::ConservedVariablesGradientType<dim, number>>
     rhs_boundary_face_integral_kernel(
       const Integrator                                      &evaluator_m,
       const unsigned int                                     q,
@@ -258,7 +259,7 @@ namespace MeltPoolDG::Flow
       flux -= viscous_terms.calculate_viscous_numerical_flux(
         w_m, w_p, grad_w_m, grad_w_p, normal, penalty_parameter);
 
-    CompressibleFlowTypes::ConservedVariablesGradType<dim, number> numerical_flux_gradient;
+    CompressibleFlow::ConservedVariablesGradientType<dim, number> numerical_flux_gradient;
 
     if (is_viscous)
       {
