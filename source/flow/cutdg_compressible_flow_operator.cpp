@@ -106,7 +106,7 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim, typename number, bool is_viscous>
-  template <typename Integrator>
+  template <CellEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
   void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::do_cell_integral_rhs(
     Integrator                                                    &phi,
@@ -117,7 +117,7 @@ namespace MeltPoolDG::Flow
     CompressibleFlow::SourceType<dim, number> source;
     CompressibleFlow::FluxType<dim, number>   flux;
 
-    if (is_viscous)
+    if constexpr (is_viscous)
       flux = ConvectionDiffusionOperator::cell(
         phi.get_value(q),
         phi.get_gradient(q),
@@ -178,7 +178,7 @@ namespace MeltPoolDG::Flow
       phi.quadrature_point(q), w_m, w_p, grad_w_m, grad_w_p);
 
     CompressibleFlow::FaceFluxType<dim, number> flux_m;
-    if (is_viscous)
+    if constexpr (is_viscous)
       {
         const auto flux = ConvectionDiffusionOperator::face(
           w_m,
@@ -212,7 +212,7 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim, typename number, bool is_viscous>
-  template <typename Integrator>
+  template <FaceEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
   void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::do_face_integral_rhs(
     Integrator                                     &phi_m,
@@ -224,7 +224,7 @@ namespace MeltPoolDG::Flow
     CompressibleFlow::FaceFluxType<dim, number> flux_m;
     CompressibleFlow::FaceFluxType<dim, number> flux_p;
 
-    if (is_viscous)
+    if constexpr (is_viscous)
       {
         const auto flux = ConvectionDiffusionOperator::face(
           phi_m.get_value(q),
@@ -262,7 +262,7 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim, typename number, bool is_viscous>
-  template <typename Integrator>
+  template <FaceEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
   void
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::do_boundary_face_integral_rhs(
     Integrator                                     &phi,
@@ -285,7 +285,7 @@ namespace MeltPoolDG::Flow
                                                        flow_scratch_data.material.data));
 
     CompressibleFlow::FaceFluxType<dim, number> flux_m;
-    if (is_viscous)
+    if constexpr (is_viscous)
       {
         const auto flux = ConvectionDiffusionOperator::face(
           phi.get_value(q),

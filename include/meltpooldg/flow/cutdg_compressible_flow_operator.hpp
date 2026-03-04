@@ -2,6 +2,7 @@
 
 #include <deal.II/fe/fe_system.h>
 
+#include <meltpooldg/flow/compressible_flow_explicit_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_kernels.hpp>
 #include <meltpooldg/flow/compressible_flow_scratch_data.hpp>
 #include <meltpooldg/flow/dg_generic_convection_diffusion_worker.hpp>
@@ -91,7 +92,7 @@ namespace MeltPoolDG::Flow
      * pointer must be set to nullptr.
      * @param q Index of the quadrature point.
      */
-    template <typename Integrator>
+    template <CellEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
     void
     do_cell_integral_rhs(
       Integrator                                                    &phi,
@@ -131,7 +132,7 @@ namespace MeltPoolDG::Flow
      * @param flow_scratch_data Flow scratch data object holding all relevant compressible flow data.
      * @param q Index of the quadrature point.
      */
-    template <typename Integrator>
+    template <FaceEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
     void
     do_face_integral_rhs(Integrator                                     &phi_m,
                          Integrator                                     &phi_p,
@@ -154,7 +155,7 @@ namespace MeltPoolDG::Flow
      * @param boundary_id Boundary id of the current face.
      * @param q Index of the quadrature point.
      */
-    template <typename Integrator>
+    template <FaceEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
     void
     do_boundary_face_integral_rhs(Integrator                            &phi,
                                   const dealii::VectorizedArray<number> &interior_penalty_parameter,
