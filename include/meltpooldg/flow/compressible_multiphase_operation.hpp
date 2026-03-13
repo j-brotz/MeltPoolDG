@@ -172,6 +172,17 @@ namespace MeltPoolDG::Multiphase
                             const std::string                                      &operation_name);
 
     /**
+     * @brief Attach the solution to the passed data out object.
+     *
+     * The solution is added in conservative variable formulation (density, momentum, energy
+     * density) and primitive variable formulation (pressure, velocity, temperature).
+     *
+     * @param data_out Object to which the solution vector is attached.
+     */
+    void
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
+
+    /**
      * @brief Constant getter function for the current solution vector.
      */
     const VectorType &
@@ -188,7 +199,7 @@ namespace MeltPoolDG::Multiphase
      * velocity, temperature).
      */
     VectorType &
-    get_solution_in_primitive_variables();
+    get_solution_in_primitive_variables() const;
 
     /**
      * @brief Constant getter function for the DoFHandler.
@@ -261,7 +272,7 @@ namespace MeltPoolDG::Multiphase
     VectorType rhs;
 
     /// Solution vector in primitive variable formulation (pressure, velocity, temperature)
-    VectorType solution_primitive_variables;
+    mutable VectorType solution_primitive_variables;
 
     /// Mesh classifier, which contains information if a cell is in the gas phase, liquid phase or
     /// cut. It corresponds to the current level set position.
@@ -360,7 +371,7 @@ namespace MeltPoolDG::Multiphase
 
   template <int dim, typename number>
   dealii::LinearAlgebra::distributed::Vector<number> &
-  CompressibleMultiphaseOperation<dim, number>::get_solution_in_primitive_variables()
+  CompressibleMultiphaseOperation<dim, number>::get_solution_in_primitive_variables() const
   {
     update_primitive_variables_solution<dim, number>(solution_primitive_variables,
                                                      get_solution(),
