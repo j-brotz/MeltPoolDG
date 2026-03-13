@@ -116,7 +116,7 @@ namespace MeltPoolDG
     dealii::DataOut<dim> data_out;
 
     // do search algorithm only once
-    if (idx_req_vars.size() == 0)
+    if (idx_req_vars.size() == 0 and generic_data_out.entries.size() > 0)
       idx_req_vars = generic_data_out.get_indices_data_request(output_data.output_variables);
 
     const std::vector<unsigned int> *used_var_ids = &idx_req_vars;
@@ -162,6 +162,13 @@ namespace MeltPoolDG
                                  std::get<3>(data),
                                  dealii::DataOut_DoFData<dim, dim>::DataVectorType::type_cell_data,
                                  std::get<4>(data));
+      }
+
+    // Data post postprocessor output data
+    for (const auto &i : generic_data_out.data_postprocessor_entries)
+      {
+        const auto &[dof_handler, data, data_postprocessor] = i;
+        data_out.add_data_vector(*dof_handler, *data, *data_postprocessor);
       }
 
     if (output_data.paraview.output_subdomains)
