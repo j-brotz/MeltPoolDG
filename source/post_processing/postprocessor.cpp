@@ -116,7 +116,7 @@ namespace MeltPoolDG
     dealii::DataOut<dim> data_out;
 
     // do search algorithm only once
-    if (idx_req_vars.size() == 0)
+    if (idx_req_vars.size() == 0 and generic_data_out.entries.size() > 0)
       idx_req_vars = generic_data_out.get_indices_data_request(output_data.output_variables);
 
     const std::vector<unsigned int> *used_var_ids = &idx_req_vars;
@@ -164,9 +164,28 @@ namespace MeltPoolDG
                                  std::get<4>(data));
       }
 
+    // Data post postprocessor output data
+    for (const auto &i : generic_data_out.data_postprocessor_entries)
+      {
+        const auto &[dof_handler, data, data_postprocessor] = i;
+        data_out.add_data_vector(*dof_handler, *data, *data_postprocessor);
+      }
+
+    const auto get_tria = [&generic_data_out]() -> const dealii::Triangulation<dim> & {
+      if (not generic_data_out.entries.empty())
+        return std::get<0>(generic_data_out.entries.front())->get_triangulation();
+      if (not generic_data_out.data_postprocessor_entries.empty())
+        return std::get<0>(generic_data_out.data_postprocessor_entries.front())
+          ->get_triangulation();
+
+      AssertThrow(false,
+                  dealii::ExcMessage("No DoFHandler with valid triangulation found in "
+                                     "GenericDataOut entries and data postprocessor entries."));
+    };
+
     if (output_data.paraview.output_subdomains)
       {
-        const auto &tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
+        const auto            &tria = get_tria();
         dealii::Vector<number> subdomains(tria.n_active_cells());
         subdomains = dealii::Utilities::MPI::this_mpi_process(mpi_communicator);
 
@@ -175,7 +194,7 @@ namespace MeltPoolDG
 
     if (output_data.paraview.output_material_id)
       {
-        const auto &tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
+        const auto            &tria = get_tria();
         dealii::Vector<number> material_id(tria.n_active_cells());
 
         for (const auto &cell : tria.active_cell_iterators())
@@ -192,12 +211,19 @@ namespace MeltPoolDG
     unsigned int n_patches = output_data.paraview.n_patches;
 
     if (n_patches == 0)
-      for (const auto &data : generic_data_out.entries)
-        {
-          if (std::get<0>(data) == nullptr)
-            continue;
-          n_patches = std::max(n_patches, std::get<0>(data)->get_fe().degree);
-        }
+      {
+        const auto compute_n_patches = [&n_patches](const auto &data_entries) {
+          for (const auto &data : data_entries)
+            {
+              if (std::get<0>(data) == nullptr)
+                continue;
+              n_patches = std::max(n_patches, std::get<0>(data)->get_fe().degree);
+            }
+        };
+
+        compute_n_patches(generic_data_out.entries);
+        compute_n_patches(generic_data_out.data_postprocessor_entries);
+      }
 
     data_out.build_patches(mapping, n_patches);
 
