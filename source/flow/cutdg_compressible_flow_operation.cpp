@@ -64,6 +64,22 @@ namespace MeltPoolDG::Flow
           mapping_info_surface,
           mapping_info_cells,
           mapping_info_faces))
+    , output_manager(
+        [](CompressibleFlow::ConservedVariablesType<dim, number, number> &value) -> auto {
+          return CompressibleFlow::
+            DofValueView<dim, CompressibleFlow::ConservedVariablesType<dim, number, number>>(value);
+        },
+        [&material_data_in](
+          CompressibleFlow::ConservedVariablesType<dim, number, number> &value) -> auto {
+          return CompressibleFlow::DofStateView<
+            dim,
+            number,
+            CompressibleFlow::ConservedVariablesType<dim, number, number>>(
+            value, material_data_in.eos_data.type, material_data_in);
+        },
+        [&material_data_in](auto &...) -> auto {
+          return CompressibleFlow::MaterialView<dim, number>(material_data_in);
+        })
   {
     // Currently, only explicit Euler time discretization with ghost-penalty stabilized mass matrix
     // is enabled for cutDG
@@ -164,8 +180,6 @@ namespace MeltPoolDG::Flow
     flow_scratch_data.scratch_data.initialize_dof_vector(
       flow_scratch_data.solution_history.get_current_solution(), flow_scratch_data.dof_idx);
     flow_scratch_data.scratch_data.initialize_dof_vector(rhs, flow_scratch_data.dof_idx);
-    flow_scratch_data.scratch_data.initialize_dof_vector(solution_primitive_variables,
-                                                         flow_scratch_data.dof_idx);
     compute_intersected_quadrature();
   }
 
@@ -188,6 +202,18 @@ namespace MeltPoolDG::Flow
 
     CutUtil::set_fe_index<dim>(dof_handler, *mesh_classifier, false /* set_future */);
     dof_handler.distribute_dofs(fe_collection);
+  }
+
+  template <int dim, typename number>
+  void
+  CutDGCompressibleFlowOperation<dim, number>::attach_output_vectors(
+    GenericDataOut<dim, number> &data_out) const
+  {
+    output_manager.attach_to_data_out(data_out,
+                                      flow_scratch_data.scratch_data.get_dof_handler(
+                                        flow_scratch_data.dof_idx),
+                                      flow_scratch_data.solution_history.get_current_solution(),
+                                      flow_scratch_data.flow_data.output_variables);
   }
 
   template <int dim, typename number>

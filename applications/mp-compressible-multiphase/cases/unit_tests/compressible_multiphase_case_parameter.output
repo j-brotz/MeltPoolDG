@@ -50,6 +50,7 @@
         "jacobian type": "exact",
         "linearization jump convective flux": "complete_fd",
         "numerical flux type": "lax_friedrichs_modified",
+        "output types": "conserved_variables",
         "use cfl criteria": "false",
         "verbosity level": "-1",
         "viscous courant number": "1",

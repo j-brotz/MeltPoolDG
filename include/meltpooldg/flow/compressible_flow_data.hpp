@@ -5,8 +5,10 @@
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
+#include <meltpooldg/utilities/better_enum.hpp>
 
 #include <string>
+#include <vector>
 
 namespace MeltPoolDG::Flow
 {
@@ -19,6 +21,12 @@ namespace MeltPoolDG::Flow
   BETTER_ENUM(LinearizedConvectiveFluxJumpType, char, analytic, lambda_fd, complete_fd);
 
   BETTER_ENUM(JacobianType, char, exact, finite_difference);
+
+  BETTER_ENUM(CompressibleFlowOutputType,
+              char,
+              conserved_variables,
+              primitive_variables,
+              material_quantities);
 
   /**
    * @brief Collection of parameters required by the compressible Navier-Stokes operator.
@@ -62,6 +70,10 @@ namespace MeltPoolDG::Flow
     /// Verbosity level
     int verbosity_level = -1;
 
+    /// Type of the variables added to the output
+    std::vector<CompressibleFlowOutputType> output_variables = {
+      CompressibleFlowOutputType::conserved_variables};
+
     /**
      * @brief Add compressible flow parameters in the parameter handler.
      *
@@ -104,6 +116,9 @@ namespace MeltPoolDG::Flow
                           "Domain representation type. Choose between 'fitted' and 'cut'.",
                           dealii::Patterns::Selection("fitted|cut"));
         prm.add_parameter("verbosity level", verbosity_level, "Verbosity level for output.");
+        prm.add_parameter("output types",
+                          output_variables,
+                          "Type of the variables added to the output.");
       }
       prm.leave_subsection();
     }

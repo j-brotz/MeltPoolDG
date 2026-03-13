@@ -3,6 +3,7 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
+#include <meltpooldg/utilities/concepts.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 
 #include <type_traits>
@@ -26,15 +27,18 @@ namespace MeltPoolDG::CompressibleFlow
 
   /// Type alias for the conserved variables in the compressible flow solver given at a vectorized
   /// set of coordinates.
-  template <int dim, typename number>
-  using ConservedVariablesType =
-    dealii::Tensor<1, n_conserved_variables<dim>, dealii::VectorizedArray<number>>;
+  template <int dim,
+            typename number,
+            typename VectorizedArrayType = dealii::VectorizedArray<number>>
+  using ConservedVariablesType = dealii::Tensor<1, n_conserved_variables<dim>, VectorizedArrayType>;
 
   /// Type alias for the gradient of the conserved variables in the compressible flow solver given
   /// at a vectorized set of coordinates.
-  template <int dim, typename number>
-  using ConservedVariablesGradientType = dealii::
-    Tensor<1, n_conserved_variables<dim>, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
+  template <int dim,
+            typename number,
+            typename VectorizedArrayType = dealii::VectorizedArray<number>>
+  using ConservedVariablesGradientType =
+    dealii::Tensor<1, n_conserved_variables<dim>, dealii::Tensor<1, dim, VectorizedArrayType>>;
 
   /// Type alias for the fluxes in the compressible flow solver given at a vectorized set of
   /// coordinates. This includes both convective and diffusive fluxes.
@@ -75,4 +79,103 @@ namespace MeltPoolDG::CompressibleFlow
     is_dealii_tensor<std::remove_cvref_t<T>>::value and T::rank == 1 and
     T::dimension >= n_conserved_variables<dim> and T::value_type::rank == 1 and
     T::value_type::dimension == dim;
+
+  template <typename T>
+  concept IsConservedView = requires(const T &view) {
+    {
+      view.density()
+    };
+    {
+      view.momentum(std::declval<unsigned int>())
+    };
+    {
+      view.total_energy()
+    };
+  };
+
+  template <typename T>
+  concept IsPrimitiveView = requires(const T &view) {
+    {
+      view.velocity(std::declval<unsigned int>())
+    };
+    {
+      view.pressure()
+    };
+    {
+      view.temperature()
+    };
+  };
+
+  template <typename T>
+  concept IsMaterialView = requires(const T &view) {
+    {
+      view.dynamic_viscosity()
+    };
+    {
+      view.thermal_conductivity()
+    };
+    {
+      view.heat_capacity_ratio()
+    };
+    {
+      view.specific_gas_constant()
+    };
+    {
+      view.specific_isobaric_heat()
+    };
+  };
+
+  template <typename T>
+  concept IsValueView = requires(const T &view) {
+    {
+      view.density()
+    };
+
+    {
+      view.momentum(std::declval<unsigned int>())
+    };
+
+    {
+      view.momentum()
+    };
+
+    {
+      view.velocity(std::declval<unsigned int>())
+    };
+
+    {
+      view.velocity()
+    };
+
+    {
+      view.total_energy()
+    };
+  };
+
+  template <typename T>
+  concept IsGradientView = requires(const T &view) {
+    {
+      view.grad_density()
+    };
+
+    {
+      view.grad_momentum(std::declval<unsigned int>())
+    };
+
+    {
+      view.grad_momentum()
+    };
+
+    {
+      view.grad_velocity(std::declval<unsigned int>())
+    };
+
+    {
+      view.grad_velocity()
+    };
+
+    {
+      view.grad_total_energy()
+    };
+  };
 } // namespace MeltPoolDG::CompressibleFlow
