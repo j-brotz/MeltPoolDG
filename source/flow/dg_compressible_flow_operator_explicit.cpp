@@ -130,15 +130,12 @@ namespace MeltPoolDG::Flow
               flux = ConvectionDiffusionOperator::cell(
                 phi.get_value(q),
                 phi.get_gradient(q),
-                CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
-                                                        flow_scratch_data.material.data),
-                CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
-                                                       flow_scratch_data.material.data));
+                CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.data),
+                CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.data));
             else
-              flux = ConvectionOperator::cell(
-                phi.get_value(q),
-                CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
-                                                        flow_scratch_data.material.data));
+              flux = ConvectionOperator::cell(phi.get_value(q),
+                                              CompressibleConvectiveFlux<dim, number>(
+                                                flow_scratch_data.material.data));
 
             for (auto &external_force : external_forces)
               source += external_force->value(current_time_step,
@@ -209,10 +206,8 @@ namespace MeltPoolDG::Flow
                   phi_p.get_gradient(q),
                   phi_m.normal_vector(q),
                   interior_penalty_parameter,
-                  CompressibleConvectiveFlux<dim, number>(
-                    flow_scratch_data.material.eos_utils.get(), flow_scratch_data.material.data),
-                  CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
-                                                         flow_scratch_data.material.data));
+                  CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.data),
+                  CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.data));
 
                 flux_m = flux.inner_face_value;
                 flux_p = flux.outer_face_value;
@@ -222,13 +217,11 @@ namespace MeltPoolDG::Flow
               }
             else
               {
-                const auto flux =
-                  ConvectionOperator::face(phi_m.get_value(q),
-                                           phi_p.get_value(q),
-                                           phi_m.normal_vector(q),
-                                           CompressibleConvectiveFlux<dim, number>(
-                                             flow_scratch_data.material.eos_utils.get(),
-                                             flow_scratch_data.material.data));
+                const auto flux = ConvectionOperator::face(phi_m.get_value(q),
+                                                           phi_p.get_value(q),
+                                                           phi_m.normal_vector(q),
+                                                           CompressibleConvectiveFlux<dim, number>(
+                                                             flow_scratch_data.material.data));
 
                 flux_m = flux.inner_face_value;
                 flux_p = flux.outer_face_value;
@@ -260,6 +253,12 @@ namespace MeltPoolDG::Flow
                                                  flow_scratch_data.dof_idx,
                                                  flow_scratch_data.quad_idx);
 
+    using DofValueAndGradientStateViewType = CompressibleFlow::DofValueAndGradientStateView<
+      dim,
+      number,
+      const CompressibleFlow::ConservedVariablesType<dim, number>,
+      const CompressibleFlow::ConservedVariablesGradientType<dim, number>>;
+
     for (unsigned int face = face_range.first; face < face_range.second; ++face)
       {
         phi_m.reinit(face);
@@ -281,11 +280,10 @@ namespace MeltPoolDG::Flow
                 phi_m.quadrature_point(q),
                 phi_m.normal_vector(q),
                 phi_m.boundary_id(),
-                CompressibleFlow::DofValueAndGradientStateView(
-                  w_m,
-                  grad_w_m,
-                  flow_scratch_data.material.eos_utils.get(),
-                  flow_scratch_data.material.data));
+                DofValueAndGradientStateViewType(w_m,
+                                                 grad_w_m,
+                                                 flow_scratch_data.material.data.eos_data.type,
+                                                 flow_scratch_data.material.data));
 
             CompressibleFlow::FaceFluxType<dim, number> flux_m;
             if (is_viscous)
@@ -297,10 +295,8 @@ namespace MeltPoolDG::Flow
                   grad_w_p,
                   phi_m.normal_vector(q),
                   interior_penalty_parameter,
-                  CompressibleConvectiveFlux<dim, number>(
-                    flow_scratch_data.material.eos_utils.get(), flow_scratch_data.material.data),
-                  CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.eos_utils.get(),
-                                                         flow_scratch_data.material.data));
+                  CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.data),
+                  CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.data));
 
                 flux_m = flux.inner_face_value;
 
@@ -308,13 +304,11 @@ namespace MeltPoolDG::Flow
               }
             else
               {
-                const auto flux =
-                  ConvectionOperator::face(phi_m.get_value(q),
-                                           w_p,
-                                           phi_m.normal_vector(q),
-                                           CompressibleConvectiveFlux<dim, number>(
-                                             flow_scratch_data.material.eos_utils.get(),
-                                             flow_scratch_data.material.data));
+                const auto flux = ConvectionOperator::face(phi_m.get_value(q),
+                                                           w_p,
+                                                           phi_m.normal_vector(q),
+                                                           CompressibleConvectiveFlux<dim, number>(
+                                                             flow_scratch_data.material.data));
 
                 flux_m = flux.inner_face_value;
               }
