@@ -6,16 +6,18 @@
 
 #include <meltpooldg/flow/compressible_flow_convective_kernels.hpp>
 #include <meltpooldg/flow/compressible_flow_kernels.hpp>
+#include <meltpooldg/flow/compressible_flow_types.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_base.hpp>
 #include <meltpooldg/flow/dg_generic_convection_diffusion_worker.hpp>
+#include <meltpooldg/flow/generic_staggered_loop_operator.hpp>
 #include <meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 
 #include <functional>
 #include <memory>
-#include <utility>
+#include <tuple>
 
 namespace MeltPoolDG::Flow
 {
@@ -32,7 +34,8 @@ namespace MeltPoolDG::Flow
     : public DGCompressibleFlowOperatorBase<dim, number>
   {
   public:
-    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
+    using VectorType          = dealii::LinearAlgebra::distributed::Vector<number>;
+    using VectorizedArrayType = dealii::VectorizedArray<number>;
 
     using ConvectionDiffusionOperator =
       DGConvectionDiffusionOperator<dim,
@@ -42,6 +45,8 @@ namespace MeltPoolDG::Flow
 
     using ConvectionOperator =
       DGConvectionOperator<dim, number, CompressibleConvectiveFlux<dim, number>>;
+
+    using TriaIterator = dealii::TriaIterator<dealii::CellAccessor<dim>>;
 
     /**
      * @brief Constructor.
@@ -114,55 +119,39 @@ namespace MeltPoolDG::Flow
     /// Current time step size
     mutable number current_time_step;
 
-    /**
-     * @brief Local cell applier.
-     *
-     * Computes the cell contribution to the rhs if the compressible Navier-Stokes equations are
-     * written in the form y'=rhs(y).
-     *
-     * @param matrix_free Matrix free object on which the applier works on.
-     * @param dst Destination vector to which the result is added.
-     * @param src Current solution.
-     * @param cell_range Cell range which is considered in the applier.
-     */
-    void
-    local_apply_cell(const dealii::MatrixFree<dim, number>       &matrix_free,
-                     VectorType                                  &dst,
-                     const VectorType                            &src,
-                     const std::pair<unsigned int, unsigned int> &cell_range) const;
+    ///
+    GenericStaggeredLoopOperator<dim, CompressibleFlow::n_conserved_variables<dim>, number>
+      generic_operator;
 
-    /**
-     * @brief Local face applier.
-     *
-     * Computes the face contribution to the rhs if the compressible Navier-Stokes equations are
-     * written in the form y'=rhs(y).
-     *
-     * @param matrix_free Matrix free object on which the applier works on.
-     * @param dst Destination vector to which the result is added.
-     * @param src Current solution.
-     * @param face_range Face range which is considered in the applier.
-     */
-    void
-    local_apply_face(const dealii::MatrixFree<dim, number>       &matrix_free,
-                     VectorType                                  &dst,
-                     const VectorType                            &src,
-                     const std::pair<unsigned int, unsigned int> &face_range) const;
+    std::tuple<CompressibleFlow::SourceType<dim, number>, CompressibleFlow::FluxType<dim, number>>
+    cell_quad_operation(
+      const unsigned int                                                   cell_batch_index,
+      const CompressibleFlow::ConservedVariablesType<dim, number>         &w_q,
+      const CompressibleFlow::ConservedVariablesGradientType<dim, number> &grad_w_q,
+      const dealii::Point<dim, VectorizedArrayType>                       &quadrature_point) const;
 
-    /**
-     * @brief Local boundary face applier.
-     *
-     * Computes the boundary face contribution to the rhs if the compressible Navier-Stokes
-     * equations are written in the form y'=rhs(y).
-     *
-     * @param matrix_free Matrix free object on which the applier works on.
-     * @param dst Destination vector to which the result is added.
-     * @param src Current solution.
-     * @param face_range Boundary face range which is considered in the applier.
-     */
-    void
-    local_apply_boundary_face(const dealii::MatrixFree<dim, number>       &matrix_free,
-                              VectorType                                  &dst,
-                              const VectorType                            &src,
-                              const std::pair<unsigned int, unsigned int> &face_range) const;
+    std::tuple<CompressibleFlow::FaceFluxType<dim, number>,
+               CompressibleFlow::FaceGradientFluxType<dim, number>,
+               CompressibleFlow::FaceFluxType<dim, number>,
+               CompressibleFlow::FaceGradientFluxType<dim, number>>
+    face_quad_operation(
+      const std::array<unsigned int, VectorizedArrayType::size()>         &cell_ids_m,
+      const std::array<unsigned int, VectorizedArrayType::size()>         &cell_ids_p,
+      const CompressibleFlow::ConservedVariablesType<dim, number>         &w_m,
+      const CompressibleFlow::ConservedVariablesGradientType<dim, number> &grad_w_m,
+      const CompressibleFlow::ConservedVariablesType<dim, number>         &w_p,
+      const CompressibleFlow::ConservedVariablesGradientType<dim, number> &grad_w_p,
+      const dealii::Tensor<1, dim, VectorizedArrayType>                   &normal,
+      const dealii::Point<dim, VectorizedArrayType>                       &quadrature_point) const;
+
+    std::tuple<CompressibleFlow::FaceFluxType<dim, number>,
+               CompressibleFlow::FaceGradientFluxType<dim, number>>
+    boundary_face_quad_operation(
+      const std::array<unsigned int, VectorizedArrayType::size()>         &cell_ids_m,
+      const CompressibleFlow::ConservedVariablesType<dim, number>         &w_m,
+      const CompressibleFlow::ConservedVariablesGradientType<dim, number> &grad_w_m,
+      const dealii::Tensor<1, dim, VectorizedArrayType>                   &normal,
+      const dealii::Point<dim, VectorizedArrayType>                       &quadrature_point,
+      const dealii::types::boundary_id                                     boundary_id) const;
   };
 } // namespace MeltPoolDG::Flow

@@ -67,4 +67,54 @@ namespace MeltPoolDG
 
     return cells;
   }
+
+  /**
+   * This function returns the face iterators corresponding to the active SIMD
+   * lanes of the specified face batch.
+   *
+   * @param mf The matrix-free object defining the face batch of interest.
+   * @param cell_batch_id Index of the face batch.
+   */
+  template <int dim, typename number>
+  std::vector<std::pair<dealii::TriaIterator<dealii::CellAccessor<dim>>, unsigned int>>
+  faces_in_face_batch(const dealii::MatrixFree<dim, number> &mf,
+                      const unsigned int                     face_batch_id,
+                      const bool                             interior,
+                      const unsigned int                     fe_component = 0)
+  {
+    unsigned int n_active_lanes = mf.n_active_entries_per_face_batch(face_batch_id);
+
+    std::vector<std::pair<dealii::TriaIterator<dealii::CellAccessor<dim>>, unsigned int>> faces;
+    faces.reserve(n_active_lanes);
+
+    for (unsigned int lane = 0; lane < n_active_lanes; ++lane)
+      faces.push_back(mf.get_face_iterator(face_batch_id, lane, interior, fe_component));
+
+    return faces;
+  }
+
+  /**
+   * This function is intended to be used instead of FEEvaluation::read_cell_data() in the case when
+   * only cell ids are available but not the actual FEEvaluation object. The implementation is close
+   * to the deal.II's internal implementation.
+   *
+   * @param indices The array of cell ids corresponding to be read from.
+   * @param array The vector of arrays containing the data to be read.
+   * @param out The output array where the read data will be stored. The size of this array should
+   * match the size of the `indices` array.
+   */
+  template <std::size_t N, typename VectorOfArrayType, typename ArrayType>
+  void
+  matrix_free_read_cell_data(const std::array<unsigned int, N> indices,
+                             VectorOfArrayType                &array,
+                             ArrayType                        &out)
+  {
+    for (unsigned int i = 0; i < N; ++i)
+      if (indices[i] != dealii::numbers::invalid_unsigned_int)
+        {
+          AssertIndexRange(indices[i] / N, array.size());
+          out[i] = array[indices[i] / N][indices[i] % N];
+        }
+  }
+
 } // namespace MeltPoolDG

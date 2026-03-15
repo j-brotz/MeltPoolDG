@@ -49,6 +49,10 @@ namespace MeltPoolDG::CompressibleFlow
   using FaceFluxType =
     dealii::Tensor<1, n_conserved_variables<dim>, dealii::VectorizedArray<number>>;
 
+  template <int dim, typename number>
+  using FaceGradientFluxType = dealii::
+    Tensor<1, n_conserved_variables<dim>, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
+
   /// Type alias for source terms in the compressible flow solver given at a vectorized set of
   /// coordinates.
   template <int dim, typename number>
