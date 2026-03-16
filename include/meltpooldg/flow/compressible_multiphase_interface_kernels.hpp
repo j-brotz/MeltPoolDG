@@ -20,6 +20,7 @@
 #include <meltpooldg/core/material.hpp>
 #include <meltpooldg/flow/compressible_flow_convective_kernels.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
+#include <meltpooldg/phase_change/evaporation_model_knight.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <tuple>
@@ -52,6 +53,8 @@ namespace MeltPoolDG::Multiphase
    * liquid phase.
    * @param viscous_terms_gas Collection of helper functions for viscous term evaluations in the
    * gas phase.
+   * @param m_dot_evap Current evaporation mass flux (kg/(m^2 s)).
+   * @param laser_heat_source Current value of the laser heat source (W/m^2).
    *
    * @return Pair of interface fluxes, considering both convective and viscous jump conditions.
    */
@@ -68,7 +71,9 @@ namespace MeltPoolDG::Multiphase
       const ConservedVariablesGradType                           &grad_u_gas,
       const Flow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
       const auto                                                 &viscous_terms_liquid,
-      const auto                                                 &viscous_terms_gas)
+      const auto                                                 &viscous_terms_gas,
+      const number                                               &m_dot_evap,
+      const number                                               &laser_heat_source)
   {
     AssertThrow(dim == 1,
                 dealii::ExcNotImplemented(
@@ -97,8 +102,7 @@ namespace MeltPoolDG::Multiphase
        u_gas[Idx::density] / u_liquid[Idx::density] * u_liquid[Idx::momentum_x] +
        (u_gas[Idx::density] * u_gas[Idx::density] -
         u_liquid[Idx::density] * u_liquid[Idx::density]) /
-         (u_liquid[Idx::density] * u_gas[Idx::density]) *
-         multiphase_scratch_data.phase_coupling.m_dot_evap);
+         (u_liquid[Idx::density] * u_gas[Idx::density]) * m_dot_evap);
 
     total_flux_liquid[Idx::density] = omega_mass_1 * interface_mass_flux_conservation_term;
     total_flux_gas[Idx::density]    = omega_mass_2 * interface_mass_flux_conservation_term;
@@ -175,7 +179,7 @@ namespace MeltPoolDG::Multiphase
     const dealii::VectorizedArray<number> jump_momentum_term_2 =
       -(u_liquid[Idx::momentum_x] / u_liquid[Idx::density] -
         u_gas[Idx::momentum_x] / u_gas[Idx::density]) *
-      multiphase_scratch_data.phase_coupling.m_dot_evap;
+      m_dot_evap;
 
     const dealii::VectorizedArray<number> average_momentum_term_2 =
       UtilityFunctions::calculate_arithmetic_phase_weighted_average(omega_mom_2_visc,
@@ -222,12 +226,11 @@ namespace MeltPoolDG::Multiphase
       jump_energy_term_1 * omega_energy_1_conv + average_energy_term_1;
     total_flux_gas[Idx::energy] = jump_energy_term_1 * omega_energy_2_conv - average_energy_term_1;
 
-    const dealii::VectorizedArray<number> delta_q = multiphase_scratch_data.phase_coupling.delta_q;
     const dealii::VectorizedArray<number> jump_energy_term_2 =
-      -multiphase_scratch_data.phase_coupling.m_dot_evap *
-        (u_liquid[Idx::energy] / u_liquid[Idx::density] -
-         u_gas[Idx::energy] / u_gas[Idx::density]) +
-      delta_q;
+      -m_dot_evap * (u_liquid[Idx::energy] / u_liquid[Idx::density] -
+                     u_gas[Idx::energy] / u_gas[Idx::density]) -
+      laser_heat_source +
+      m_dot_evap * multiphase_scratch_data.material_liquid.data.latent_heat_of_vaporization;
 
     total_flux_liquid[Idx::energy] += jump_energy_term_2 * omega_energy_1_visc;
     total_flux_gas[Idx::energy] += jump_energy_term_2 * omega_energy_2_visc;
@@ -287,6 +290,7 @@ namespace MeltPoolDG::Multiphase
    * Navier-Stokes equations in the gas phase.
    * @param multiphase_scratch_data Collection of parameters required by the compressible Navier-Stokes
    * multiphase operator.
+   * @param m_dot_evap Current evaporation mass flux (kg/(m^2 s)).
    *
    * @return Tuple, containing the convective fluxes for liquid and gas phase, respectively, and the
    * interface normal velocity.
@@ -307,7 +311,8 @@ namespace MeltPoolDG::Multiphase
         const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
         const auto                                                    &convective_terms_liquid,
         const auto                                                    &convective_terms_gas,
-        const Flow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data)
+        const Flow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data,
+        const number                                                  &m_dot_evap)
   {
     // Note: Variables, that are relevant for both the liquid and the gas phase, are considered as
     // arrays of length 2 in the following. The first element refers to the liquid phase and the
@@ -383,8 +388,8 @@ namespace MeltPoolDG::Multiphase
     std::array<dealii::VectorizedArray<number>, 2> tmp_2;
     for (unsigned int i : {0, 1})
       {
-        tmp_1[i] = multiphase_scratch_data.phase_coupling.m_dot_evap / m_hat[i];
-        tmp_2[i] = multiphase_scratch_data.phase_coupling.m_dot_evap - m_hat[i];
+        tmp_1[i] = m_dot_evap / m_hat[i];
+        tmp_2[i] = m_dot_evap - m_hat[i];
       }
 
     std::array<dealii::VectorizedArray<number>, 2> numerator;
@@ -527,6 +532,8 @@ namespace MeltPoolDG::Multiphase
    * interface.
    * @param multiphase_scratch_data Collection of parameters required by the compressible multiphase
    * Navier-Stokes operator.
+   * @param m_dot_evap Current evaporation mass flux (kg/(m^2 s)).
+   * @param delta_T Current temperature jump at the interface (T^l - T^g) (K)
    *
    * @return Dirichlet jump for conserved quantities in conservative variable formulation.
    */
@@ -538,7 +545,9 @@ namespace MeltPoolDG::Multiphase
     calculate_Dirichlet_jump_in_conservative_variables(
       const ConservedVariablesType                               &u_liquid_cons,
       const ConservedVariablesType                               &u_gas_cons,
-      const Flow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data)
+      const Flow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
+      const number                                               &m_dot_evap,
+      const number                                               &delta_T)
   {
     // enumeration for conserved variables component indices
     using Idx = std::conditional_t<
@@ -556,19 +565,12 @@ namespace MeltPoolDG::Multiphase
     // TODO: consider surface tension here
     const dealii::VectorizedArray<number> delta_p = 0.;
 
-    // TODO: consider temperature jump according to Hertz-Knudsen theory here
-    const dealii::VectorizedArray<number> delta_T =
-      multiphase_scratch_data.phase_coupling.hllp0_and_sipg.delta_T;
-
     // TODO: extend to general case dim>1
     ConservedVariablesType J_Dir;
 
-    // TODO: consider evaporation mass flux from Hertz-Knudsen theory here
-    J_Dir[Idx::density] = delta_p - multiphase_scratch_data.phase_coupling.m_dot_evap *
-                                      (u_liquid_prim[1] - u_gas_prim[1]);
-    J_Dir[Idx::momentum_x] = multiphase_scratch_data.phase_coupling.m_dot_evap *
-                             (1. / u_liquid_cons[0] - 1. / u_gas_cons[0]);
-    J_Dir[Idx::energy] = delta_T;
+    J_Dir[Idx::density]    = delta_p - m_dot_evap * (u_liquid_prim[1] - u_gas_prim[1]);
+    J_Dir[Idx::momentum_x] = m_dot_evap * (1. / u_liquid_cons[0] - 1. / u_gas_cons[0]);
+    J_Dir[Idx::energy]     = delta_T;
 
     const auto u_liquid_prim_tmp = u_liquid_prim;
     u_liquid_prim                = u_gas_prim + J_Dir;
@@ -615,6 +617,9 @@ namespace MeltPoolDG::Multiphase
    * @param multiphase_scratch_data Collection of parameters required by the compressible multiphase
    * Navier-Stokes operator.
    * @param cell_size Cell size.
+   * @param m_dot_evap Current evaporation mass flux (kg/(m^2 s)).
+   * @param delta_T Current temperature jump at the interface (T^l - T^g) (K).
+   * @param laser_heat_source Current value of the laser heat source (W/m^2).
    *
    * @return Pair of interface viscous fluxes for liquid and gas phase, which are weighted with the
    * test functions.
@@ -637,7 +642,10 @@ namespace MeltPoolDG::Multiphase
       const auto                                                    &viscous_terms_liquid,
       const auto                                                    &viscous_terms_gas,
       const Flow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data,
-      const number                                                  &cell_size)
+      const number                                                  &cell_size,
+      const number                                                  &m_dot_evap,
+      const number                                                  &delta_T,
+      const number                                                  &laser_heat_source)
   {
     // enumeration for conserved variables component indices
     using Idx = std::conditional_t<
@@ -666,11 +674,12 @@ namespace MeltPoolDG::Multiphase
     ConservedVariablesType J_Rob;
 
     // TODO: Add entries for case dim>1
-    J_Rob[Idx::energy] = (pressure_liquid * vel_n_liquid - pressure_gas * vel_n_gas) +
-                         multiphase_scratch_data.phase_coupling.m_dot_evap *
-                           (u_liquid[Idx::energy] / u_liquid[Idx::density] -
-                            u_gas[Idx::energy] / u_gas[Idx::density]) -
-                         multiphase_scratch_data.phase_coupling.delta_q;
+    J_Rob[Idx::energy] =
+      (pressure_liquid * vel_n_liquid - pressure_gas * vel_n_gas) +
+      m_dot_evap * (u_liquid[Idx::energy] / u_liquid[Idx::density] -
+                    u_gas[Idx::energy] / u_gas[Idx::density]) +
+      laser_heat_source -
+      m_dot_evap * multiphase_scratch_data.material_liquid.data.latent_heat_of_vaporization;
 
     const ConservedVariablesGradType viscous_flux_liquid =
       viscous_terms_liquid.calculate_viscous_flux(u_liquid, grad_u_liquid);
@@ -693,7 +702,7 @@ namespace MeltPoolDG::Multiphase
 
     const auto J_Dir_cons =
       calculate_Dirichlet_jump_in_conservative_variables<dim, number, ConservedVariablesType>(
-        u_liquid, u_gas, multiphase_scratch_data);
+        u_liquid, u_gas, multiphase_scratch_data, m_dot_evap, delta_T);
 
     const number penalty_parameter =
       std::min(multiphase_scratch_data.material_liquid.data.dynamic_viscosity /
@@ -743,6 +752,8 @@ namespace MeltPoolDG::Multiphase
    * phase.
    * @param multiphase_scratch_data Collection of parameters required by the compressible multiphase
    * Navier-Stokes operator.
+   * @param m_dot_evap Current evaporation mass flux (kg/(m^2 s)).
+   * @param delta_T Current temperature jump at the interface (T^l - T^g) (K).
    *
    * @return Pair of interface viscous fluxes for liquid and gas phase, which are weighted with the
    * gradient of the test functions.
@@ -761,11 +772,13 @@ namespace MeltPoolDG::Multiphase
       const number                                                  &visc_ave_weight_phase_gas,
       const auto                                                    &viscous_terms_liquid,
       const auto                                                    &viscous_terms_gas,
-      const Flow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data)
+      const Flow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data,
+      const number                                                  &m_dot_evap,
+      const number                                                  &delta_T)
   {
     const auto J_Dir_cons =
       calculate_Dirichlet_jump_in_conservative_variables<dim, number, ConservedVariablesType>(
-        u_liquid, u_gas, multiphase_scratch_data);
+        u_liquid, u_gas, multiphase_scratch_data, m_dot_evap, delta_T);
 
     const auto u_liquid_star = UtilityFunctions::calculate_arithmetic_phase_weighted_average(
       visc_ave_weight_phase_gas, u_liquid, visc_ave_weight_phase_liquid, u_gas + J_Dir_cons);
@@ -816,6 +829,9 @@ namespace MeltPoolDG::Multiphase
    * @param multiphase_scratch_data Collection of parameters required by the compressible multiphaes
    * Navier-Stokes operator.
    * @param cell_size Cell size.
+   * @param m_dot_evap Current evaporation mass flux (kg/(m^2 s)).
+   * @param delta_T Current temperature jump at the interface (T^l - T^g) (K).
+   * @param laser_heat_source Current value of the laser heat source (W/m^2).
    *
    * @return Pair of interface viscous fluxes for liquid and gas phase, which are weighted with the
    * test functions.
@@ -837,7 +853,10 @@ namespace MeltPoolDG::Multiphase
       const auto                                                    &viscous_terms_liquid,
       const auto                                                    &viscous_terms_gas,
       const Flow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data,
-      const number                                                  &cell_size)
+      const number                                                  &cell_size,
+      const number                                                  &m_dot_evap,
+      const number                                                  &delta_T,
+      const number                                                  &laser_heat_source)
   {
     // enumeration for conserved variables component indices
     using Idx = std::conditional_t<
@@ -863,11 +882,11 @@ namespace MeltPoolDG::Multiphase
 
     ConservedVariablesType J_Rob;
 
-    J_Rob[Idx::energy] = multiphase_scratch_data.phase_coupling.m_dot_evap *
-                           (u_liquid[Idx::energy] / u_liquid[Idx::density] -
-                            u_gas[Idx::energy] / u_gas[Idx::density]) +
-                         (pressure_liquid * vel_n_liquid - pressure_gas * vel_n_gas) -
-                         multiphase_scratch_data.phase_coupling.delta_q;
+    J_Rob[Idx::energy] =
+      m_dot_evap * (u_liquid[Idx::energy] / u_liquid[Idx::density] -
+                    u_gas[Idx::energy] / u_gas[Idx::density]) +
+      (pressure_liquid * vel_n_liquid - pressure_gas * vel_n_gas) + laser_heat_source -
+      m_dot_evap * multiphase_scratch_data.material_liquid.data.latent_heat_of_vaporization;
 
     const ConservedVariablesGradType viscous_flux_liquid =
       viscous_terms_liquid.calculate_viscous_flux(u_liquid, grad_u_liquid);
@@ -883,7 +902,7 @@ namespace MeltPoolDG::Multiphase
       (2. * cell_size) *
       ((multiphase_scratch_data.material_liquid.eos_utils->calculate_temperature(u_liquid) -
         multiphase_scratch_data.material_gas.eos_utils->calculate_temperature(u_gas)) -
-       multiphase_scratch_data.phase_coupling.hllp0_and_penalty.delta_T);
+       delta_T);
 
     const ConservedVariablesType weighted_viscous_flux =
       UtilityFunctions::calculate_arithmetic_phase_weighted_average(
@@ -899,5 +918,107 @@ namespace MeltPoolDG::Multiphase
       -J_Rob * visc_ave_weight_phase_gas + weighted_viscous_flux - penalty_term_dT;
 
     return {total_viscous_flux_liquid, total_viscous_flux_gas};
+  }
+
+  /**
+   * @brief Compute the current value of the laser heat source.
+   *
+   * @param phase_coupling_data Collection of parameters specific for phase coupling.
+   * @param time Current time.
+   *
+   * @return Current value of the laser heat source.
+   */
+  template <typename number>
+  inline DEAL_II_ALWAYS_INLINE //
+    number
+    update_laser_heat_source(const CompressibleFlowPhaseCouplingData<number> &phase_coupling_data,
+                             const number                                    &time)
+  {
+    const auto &laser = phase_coupling_data.laser_heat_source;
+
+    if (laser.do_ramp and time < laser.ramp_time)
+      {
+        const number factor = 0.5 * (1. - std::cos(std::numbers::pi * time / laser.ramp_time));
+
+        return factor * laser.laser_power_density;
+      }
+
+    return laser.laser_power_density;
+  }
+
+  /**
+   * @brief Compute the current evaporative mass flux and temperature jump across the interface.
+   *
+   * @param u_liquid Conserved variables for liquid phase at quadrature point on the (unfitted)
+   * interface.
+   * @param u_gas Conserved variables for gas phase at quadrature point on the (unfitted)
+   * interface.
+   * @param normal Interface normal vector, pointing outwards the liquid phase.
+   * @param multiphase_scratch_data Collection of parameters required by the compressible multiphase
+   * Navier-Stokes operator.
+   * @param evaporation_model_knight Applied evaporation model.
+   *
+   * @return Tuple, containing the current values of the evaporative mass flux and the interface
+   * temperature jump (T^l - T^g).
+   */
+  template <int dim,
+            typename number,
+            typename ConservedVariablesType>
+  inline DEAL_II_ALWAYS_INLINE //
+    std::tuple<number, number>
+    update_evaporative_mass_flux_and_temperature_jump(
+      const ConservedVariablesType                                  &u_liquid,
+      const ConservedVariablesType                                  &u_gas,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
+      const Flow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data,
+      Evaporation::EvaporationModelKnight<number> *evaporation_model_knight = nullptr)
+  {
+    number m_dot_evap = 0.;
+    number delta_T    = 0.;
+
+    if (evaporation_model_knight)
+      {
+        const dealii::VectorizedArray<number> T_liquid =
+          multiphase_scratch_data.material_liquid.eos_utils->calculate_temperature(u_liquid);
+
+        const dealii::VectorizedArray<number> vel_n_gas =
+          Flow::calculate_velocity<dim>(u_gas) * normal;
+
+        const dealii::VectorizedArray<number> speed_of_sound_g =
+          multiphase_scratch_data.material_gas.eos_utils->calculate_speed_of_sound(u_gas);
+
+        const dealii::VectorizedArray<number> Ma_g = vel_n_gas / speed_of_sound_g;
+
+        // TODO: evaluate vectorized array for dim>1!
+        evaporation_model_knight->reinit(T_liquid[0], Ma_g[0]);
+        m_dot_evap = evaporation_model_knight->get_evaporative_mass_flux();
+        delta_T    = evaporation_model_knight->get_temperature_jump();
+      }
+    else if (multiphase_scratch_data.phase_coupling.evaporation_model ==
+             EvaporationModelType::constant)
+      {
+        m_dot_evap = multiphase_scratch_data.phase_coupling.m_dot_evap;
+
+        switch (multiphase_scratch_data.phase_coupling.type)
+          {
+            case InterfaceNumericalMethod::HLLP0_and_SIPG:
+              delta_T = multiphase_scratch_data.phase_coupling.hllp0_and_sipg.delta_T;
+              break;
+
+            case InterfaceNumericalMethod::HLLP0_and_penalty:
+              delta_T = multiphase_scratch_data.phase_coupling.hllp0_and_penalty.delta_T;
+              break;
+
+            default:
+              break;
+          }
+      }
+    else
+      {
+        AssertThrow(false,
+                    dealii::ExcNotImplemented("The given evaporation model is not implemented."));
+      }
+
+    return {m_dot_evap, delta_T};
   }
 } // namespace MeltPoolDG::Multiphase

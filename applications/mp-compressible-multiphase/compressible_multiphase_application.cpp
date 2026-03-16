@@ -178,6 +178,7 @@ namespace MeltPoolDG::Multiphase
         simulation_case->parameters.material_liquid,
         simulation_case->parameters.cut,
         simulation_case->parameters.phase_coupling,
+        simulation_case->parameters.darcy_damping,
         *time_iterator,
         [this]() { this->setup_dof_system(); },
         level_set,

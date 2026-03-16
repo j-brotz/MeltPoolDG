@@ -101,8 +101,26 @@ namespace MeltPoolDG::Flow
     /// Reference density for interior penalty (SI: kg/m3)
     number reference_density = 1.0;
 
+    /// Boiling temperature at given reference pressure (SI: K)
+    number boiling_temperature = 3133.0;
+
+    /// Reference pressure for boiling temperature (SI: Pa)
+    number reference_pressure = 1.e5;
+
+    /// Latent heat of vaporization (SI: J/kg)
+    number latent_heat_of_vaporization = 8.84e6;
+
     /// Thermal conductivity (SI: W/(m K))
     number thermal_conductivity = std::numeric_limits<number>::max();
+
+    /// Optional darcy damping
+    bool use_darcy_damping = false;
+
+    /// Liquidus temperature (SI: K)
+    number liquidus_temperature = 2200.;
+
+    /// Solidus temperature (SI: K)
+    number solidus_temperature = 1933.;
 
     /// Data for the equation of state
     EOSData<number> eos_data;
@@ -141,9 +159,33 @@ namespace MeltPoolDG::Flow
                           " density. If instabilities occur, the reference density can be "
                           "decreased, so that the symmetric interior penalization is increased.",
                           dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+        prm.add_parameter("boiling temperature",
+                          boiling_temperature,
+                          "Boiling temperature at given reference pressure.",
+                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+        prm.add_parameter("reference pressure",
+                          reference_pressure,
+                          "Reference pressure for boiling temperature.",
+                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+        prm.add_parameter("latent heat of vaporization",
+                          latent_heat_of_vaporization,
+                          "Latent heat of vaporization (J/kg).",
+                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
         prm.add_parameter("thermal conductivity",
                           thermal_conductivity,
                           "Thermal conductivity.",
+                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+        prm.add_parameter("use darcy damping",
+                          use_darcy_damping,
+                          "Use Darcy damping?",
+                          dealii::Patterns::Bool());
+        prm.add_parameter("liquidus temperature",
+                          liquidus_temperature,
+                          "Liquidus temperature.",
+                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+        prm.add_parameter("solidus temperature",
+                          solidus_temperature,
+                          "Solidus temperature.",
                           dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
         eos_data.add_parameters(prm);
       }
@@ -180,6 +222,9 @@ namespace MeltPoolDG::Flow
                     dealii::ExcMessage(
                       "The parameters p_inf, b and q are required for the Noble-Abel stiffened"
                       " gas EOS."));
+
+      AssertThrow(not(is_gas and use_darcy_damping),
+                  dealii::ExcMessage("Darcy damping only makes sense for liquid phase."));
     };
   };
 } // namespace MeltPoolDG::Flow

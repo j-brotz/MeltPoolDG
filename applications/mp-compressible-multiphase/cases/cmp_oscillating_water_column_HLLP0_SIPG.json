@@ -26,24 +26,6 @@
     "use cfl criteria": "true",
     "gravity constant": "0.0",
     "domain representation type": "cut",
-    "interface jump conditions": {
-      "type": "HLLP0_and_SIPG",
-      "evaporation mass flux": "0.0",
-      "delta q": "0.0",
-      "HLLP0 and Nitsche": {
-        "interior penalty parameter interface": "1.0",
-        "delta T": "0.0"
-      }
-    },
-    "cut": {
-      "two phase": "true",
-      "stabilization": {
-        "ghost-penalty": {
-          "gamma M degree 0": "1.0",
-          "gamma M degree 1": "1.0"
-        }
-      }
-    },
     "time integration": {
       "linear solver": {
         "preconditioner type": "Identity",
@@ -53,31 +35,47 @@
         "abs tolerance": "1e-20"
       }
     },
-    "material": {
-      "gas": {
-        "dynamic viscosity": "0.00002",
-        "specific isobaric heat": "1004.85",
-        "specific gas constant": "287.1",
-        "reference density": "0.4",
-        "gamma": "1.4",
-        "equation of state": {
-          "type": "ideal_gas"
-        }
-      },
-      "liquid": {
-        "dynamic viscosity": "0.001",
-        "specific isobaric heat": "4190.0",
-        "reference density": "800.0",
-        "gamma": "2.788103",
-        "equation of state": {
-          "type": "stiffened_gas",
-          "p inf": "7.862511e8"
-        }
-      }
-    },
     "fe": {
       "degree": "1",
       "type": "FE_DGQ"
+    }
+  },
+  "compressible flow phase coupling": {
+    "type": "HLLP0_and_SIPG",
+    "evaporation mass flux": "0.0",
+    "HLLP0 and SIPG": {
+      "interior penalty parameter interface": "1.0",
+      "delta T": "0.0"
+    }
+  },
+  "material": {
+    "gas": {
+      "dynamic viscosity": "0.00002",
+      "specific isobaric heat": "1004.85",
+      "specific gas constant": "287.1",
+      "reference density": "0.4",
+      "gamma": "1.4",
+      "equation of state": {
+        "type": "ideal_gas"
+      }
+    },
+    "liquid": {
+      "dynamic viscosity": "0.001",
+      "specific isobaric heat": "4190.0",
+      "reference density": "800.0",
+      "gamma": "2.788103",
+      "equation of state": {
+        "type": "stiffened_gas",
+        "p inf": "7.862511e8"
+      }
+    },
+    "cut": {
+      "stabilization": {
+        "ghost-penalty": {
+          "gamma M degree 0": "1.0",
+          "gamma M degree 1": "1.0"
+        }
+      }
     }
   }
 }

@@ -75,6 +75,7 @@ namespace MeltPoolDG::Multiphase
      * @param material_data_liquid_in Reference to the material data struct for the liquid phase.
      * @param cut_data_in Reference to the data object with cut-related parameters.
      * @param phase_coupling_data_in Reference to the struct for phase coupling parameters.
+     * @param darcy_damping_data_in Reference to the struct for darcy damping parameters.
      * @param time_iterator_in Reference to the used time stepping.
      * @param setup_dof_system_in Reinit_matrix_free function, which is registered.
      * @param level_set_in level-set dof vector.
@@ -92,6 +93,7 @@ namespace MeltPoolDG::Multiphase
       const Flow::CompressibleFluidMaterialPhaseData<number> &material_data_liquid_in,
       const Flow::CompressibleFlowCutData<number>            &cut_data_in,
       const CompressibleFlowPhaseCouplingData<number>        &phase_coupling_data_in,
+      const Flow::DarcyDampingData<number>                   &darcy_damping_data_in,
       const TimeIntegration::TimeIterator<number>            &time_iterator_in,
       const std::function<void()>                            &setup_dof_system_in,
       const VectorType                                       &level_set_in,

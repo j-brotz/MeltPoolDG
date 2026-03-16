@@ -11,6 +11,9 @@ namespace MeltPoolDG::Multiphase
 {
   BETTER_ENUM(InterfaceNumericalMethod, char, HLLP0_and_SIPG, HLLP0_and_penalty, penalty)
 
+  // TODO: use EvaporationData for evaporation-specific parameters
+  BETTER_ENUM(EvaporationModelType, char, constant, Knight)
+
   /**
    * @brief Data structure, which contains parameters specifically for the phase coupling of
    * compressible multiphase simulations.
@@ -18,13 +21,24 @@ namespace MeltPoolDG::Multiphase
   template <typename number>
   struct CompressibleFlowPhaseCouplingData
   {
-    /// Evaporation mass flux
-    // TODO: use Hertz-Knudsen theory and enable constant evaporation mass flux for testing
+    /// Evaporation mass flux (relevant for EvaporationModelType = "constant") (SI: kg/(m^2 s))
     number m_dot_evap = 0.;
 
-    /// Energy flux jump (q_liquid - q_gas) (sum of evaporative enthalpy loss and laser heat source)
-    // TODO: the parameter is only temporarily relevant
-    number delta_q = 0.;
+    /// Evaporation model (Currently available: "constant" or "Knight")
+    EvaporationModelType evaporation_model = EvaporationModelType::constant;
+
+    /// Parameters for the laser heat source
+    struct LaserHeatSource
+    {
+      /// Apply initial ramp function for laser heat source?
+      bool do_ramp = false;
+
+      /// Time for initial ramp of laser heat source (SI: s)
+      number ramp_time = 0.;
+
+      /// Laser power density (SI: W/m^2)
+      number laser_power_density = 0.;
+    } laser_heat_source;
 
     /// Numerical method for interface jump enforcement
     InterfaceNumericalMethod type = InterfaceNumericalMethod::HLLP0_and_SIPG;
@@ -84,7 +98,6 @@ namespace MeltPoolDG::Multiphase
     {
       prm.enter_subsection("compressible flow phase coupling");
       {
-        // TODO: add parameter "bool const_m_dot_evap" when Hertz-Knudsen theory is enabled
         prm.add_parameter(
           "evaporation mass flux",
           m_dot_evap,
@@ -93,10 +106,25 @@ namespace MeltPoolDG::Multiphase
           "mass flux is considered, i.e. no thermodynamical model (Hertz-Knudsen "
           "theory) is applied.",
           dealii::Patterns::Double());
-        prm.add_parameter("delta q",
-                          delta_q,
-                          "Delta q (sum of evaporative enthalpy loss and laser heat source).",
-                          dealii::Patterns::Double());
+        prm.add_parameter("evaporation model",
+                          evaporation_model,
+                          "Model for the computation of the evaporation mass flux. "
+                          "The options are \"constant\", \"knight\".",
+                          dealii::Patterns::Selection("constant|Knight"));
+        prm.enter_subsection("laser heat source");
+        prm.add_parameter("do ramp",
+                          laser_heat_source.do_ramp,
+                          "Apply initial ramp for laser heat source?",
+                          dealii::Patterns::Bool());
+        prm.add_parameter("ramp time",
+                          laser_heat_source.ramp_time,
+                          "Time for initial ramp of laser heat source [s].",
+                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+        prm.add_parameter("laser power density",
+                          laser_heat_source.laser_power_density,
+                          "Laser power density [W/m²]",
+                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+        prm.leave_subsection();
         prm.add_parameter("type",
                           type,
                           "Numerical method for enforcing interface jump conditions. "
@@ -174,6 +202,12 @@ namespace MeltPoolDG::Multiphase
                         "You have to set the temperature constraint penalty factor for penalty "
                         "method."));
         }
+
+      if (evaporation_model == EvaporationModelType::Knight)
+        AssertThrow(type == InterfaceNumericalMethod::HLLP0_and_penalty,
+                    dealii::ExcMessage(
+                      "Knight's evaporation model is currently only supported for the "
+                      "interface numerical method 'HLLP0_and_penalty'."));
     };
   };
 } // namespace MeltPoolDG::Multiphase

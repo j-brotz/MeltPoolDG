@@ -3,33 +3,36 @@
     "problem name": "compressible_multiphase",
     "case name": "two_phase",
     "dimension": "1",
-    "verbosity level": "1",
+    "verbosity level": "0",
     "do print parameters": "false",
     "global refinements": "0"
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "5e-9"
+    "end time": "3.0e-3",
+    "time step size": "1.0e-10",
+    "max n steps": "100000000"
   },
   "output": {
-    "write frequency": "1",
+    "write time step size": "1.0e-5",
     "do user defined postprocessing": "true",
     "paraview": {
-      "filename": "moving_Ti_air_HLLP0_and_penalty",
-      "enable": "false"
+      "filename": "Ti6Al4V_evaporation_1_bar",
+      "enable": "true"
     }
   },
   "simulation specific parameters": {
-    "left boundary condition": "inflow",
-    "right boundary condition": "outflow_fixed_energy",
+    "left boundary condition": "no_slip_wall",
+    "right boundary condition": "outflow_fixed_pressure",
     "initial conditions": {
-      "gas": "0.097716666666666; 9.7716666666666; 2.108969958333318e5",
-      "liquid": "3622.73659245216946; 362273.659245216946; 1.005318010658175e10"
-    }
+      "gas": "1.14979854471105; 0.0; 1.5e5",
+      "liquid": "4942.52838219827; 0.0; -1.00077284582753e10"
+    },
+    "atmospheric pressure": "1.0e5"
   },
   "compressible navier stokes": {
     "numerical flux type": "lax_friedrichs_modified",
-    "courant number": "0.05",
+    "courant number": "0.02",
     "viscous courant number": "0.02",
     "use cfl criteria": "true",
     "gravity constant": "0.0",
@@ -50,19 +53,24 @@
   },
   "compressible flow phase coupling": {
     "type": "HLLP0_and_penalty",
-    "evaporation mass flux": "0.0",
+    "evaporation model": "Knight",
+    "laser heat source": {
+      "do ramp": "true",
+      "ramp time": "1.0e-4",
+      "laser power density": "2.0e9"
+    },
     "HLLP0 and penalty": {
-      "penalty parameter temperature jump": "0.2",
-      "delta T": "0.0"
+      "penalty parameter temperature jump": "0.5"
     }
   },
   "material": {
     "gas": {
-      "dynamic viscosity": "0.00002",
-      "specific isobaric heat": "1004.85",
-      "specific gas constant": "287.1",
-      "reference density": "1.0",
-      "gamma": "1.4",
+      "dynamic viscosity": "0.000035",
+      "specific isobaric heat": "434.858786610879",
+      "specific gas constant": "173.943514644351",
+      "reference density": "0.15",
+      "gamma": "1.666666666666666",
+      "thermal conductivity": "0.02863",
       "equation of state": {
         "type": "ideal_gas"
       }
@@ -70,13 +78,18 @@
     "liquid": {
       "dynamic viscosity": "0.0035",
       "specific isobaric heat": "1126.0",
-      "reference density": "3622.0",
-      "gamma": "1.4355",
+      "reference density": "3400.0",
+      "gamma": "1.006804865",
+      "thermal conductivity": "28.63",
+      "boiling temperature": "3133.0",
+      "use darcy damping": "true",
+      "liquidus temperature": "2200",
+      "solidus temperature": "1933",
       "equation of state": {
         "type": "noble_abel_stiffened_gas",
-        "p inf": "1.1587e10",
-        "b": "1.8759e-4",
-        "q": "-607968.8"
+        "p inf": "258134879.2",
+        "b": "0.00018759",
+        "q": "-2587818.15"
       }
     }
   },
@@ -87,5 +100,9 @@
         "gamma M degree 1": "1.0"
       }
     }
+  },
+  "darcy damping": {
+    "mushy zone morphology": "1.e9",
+    "avoid div zero constant": "1.0"
   }
 }

@@ -76,12 +76,18 @@
     {
         "gas":
         {
+            "boiling temperature": "3133",
             "dynamic viscosity": "0.000625",
             "gamma": "1.4",
+            "latent heat of vaporization": "8.84e+06",
+            "liquidus temperature": "2200",
             "reference density": "1",
+            "reference pressure": "100000",
+            "solidus temperature": "1933",
             "specific gas constant": "287.1",
             "specific isobaric heat": "1000",
             "thermal conductivity": "1.79769e+308",
+            "use darcy damping": "false",
             "equation of state":
             {
                 "b": "1.79769e+308",

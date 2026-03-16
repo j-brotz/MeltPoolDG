@@ -19,6 +19,7 @@
 #include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_material_data.hpp>
 #include <meltpooldg/flow/compressible_flow_phase_coupling_data.hpp>
+#include <meltpooldg/flow/darcy_damping_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/time_integration/time_stepping_data.hpp>
 #include <meltpooldg/utilities/profiling_data.hpp>
@@ -49,6 +50,7 @@ namespace MeltPoolDG::Multiphase
       material_liquid.add_parameters(prm, false /*is_gas*/);
       cut.add_parameters(prm);
       phase_coupling.add_parameters(prm);
+      darcy_damping.add_parameters(prm);
       time_stepping.add_parameters(prm);
       output.add_parameters(prm);
       profiling.add_parameters(prm);
@@ -97,6 +99,9 @@ namespace MeltPoolDG::Multiphase
 
     /// Data for phase-coupling including interface jump conditions and numerical parameters
     CompressibleFlowPhaseCouplingData<number> phase_coupling;
+
+    /// Data for the darcy damping term in the solid domain and the mushy zone
+    Flow::DarcyDampingData<number> darcy_damping;
 
     /// Data for time stepping
     TimeIntegration::TimeSteppingData<number> time_stepping;

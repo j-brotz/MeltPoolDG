@@ -43,7 +43,6 @@
   "compressible flow phase coupling": {
     "type": "HLLP0_and_penalty",
     "evaporation mass flux": "0.0",
-    "delta q": "0.0",
     "HLLP0 and penalty": {
       "penalty parameter temperature jump": "0.02",
       "delta T": "0.0"

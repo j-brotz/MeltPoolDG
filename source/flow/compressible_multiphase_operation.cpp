@@ -39,6 +39,7 @@ namespace MeltPoolDG::Multiphase
     const Flow::CompressibleFluidMaterialPhaseData<number> &material_data_liquid_in,
     const Flow::CompressibleFlowCutData<number>            &cut_data_in,
     const CompressibleFlowPhaseCouplingData<number>        &phase_coupling_data_in,
+    const Flow::DarcyDampingData<number>                   &darcy_damping_data_in,
     const TimeIntegration::TimeIterator<number>            &time_iterator_in,
     const std::function<void()>                            &setup_dof_system_in,
     const VectorType                                       &level_set_in,
@@ -50,6 +51,7 @@ namespace MeltPoolDG::Multiphase
                               material_data_liquid_in,
                               cut_data_in,
                               phase_coupling_data_in,
+                              darcy_damping_data_in,
                               scratch_data_in,
                               comp_flow_dof_idx_in,
                               comp_flow_quad_idx_in)
@@ -255,6 +257,8 @@ namespace MeltPoolDG::Multiphase
 
     std::visit(
       [&](auto &op) {
+        op.set_current_time(current_time);
+
         // compute rhs
         op.create_rhs(current_time,
                       time_step,
