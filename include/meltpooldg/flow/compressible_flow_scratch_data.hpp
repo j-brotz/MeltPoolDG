@@ -17,6 +17,7 @@
 #include <meltpooldg/flow/compressible_flow_phase_coupling_data.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/darcy_damping_data.hpp>
+#include <meltpooldg/phase_change/phase_change_data.hpp>
 #include <meltpooldg/time_integration/solution_history.hpp>
 
 namespace MeltPoolDG::Flow
@@ -145,6 +146,8 @@ namespace MeltPoolDG::Flow
      * @param flow_data_in Reference to the flow data object.
      * @param material_data_gas_in Reference to the material data object for the gas phase.
      * @param material_data_liquid_in Reference to the material data object for the liquid phase.
+     * @param phase_change_data_in Reference to the phase change data object for liquid-gas and
+     * solid-liquid phase transitions
      * @param cut_data_in Pointer to the cut data object.
      * @param darcy_damping_data_in Reference to the data object for darcy damping parameters.
      * @param phase_coupling_data_in Reference to the data object for phase coupling parameters.
@@ -156,6 +159,7 @@ namespace MeltPoolDG::Flow
       const CompressibleFlowData<number>                          &flow_data_in,
       const CompressibleFluidMaterialPhaseData<number>            &material_data_gas_in,
       const CompressibleFluidMaterialPhaseData<number>            &material_data_liquid_in,
+      const Multiphase::PhaseChangeData<number>                   &phase_change_data_in,
       const CompressibleFlowCutData<number>                       &cut_data_in,
       const Multiphase::CompressibleFlowPhaseCouplingData<number> &phase_coupling_data_in,
       const DarcyDampingData<number>                              &darcy_damping_data_in,
@@ -166,6 +170,7 @@ namespace MeltPoolDG::Flow
       , scratch_data(scratch_data_in)
       , material_gas(material_data_gas_in)
       , material_liquid(material_data_liquid_in)
+      , phase_change(phase_change_data_in)
       , cut(cut_data_in)
       , phase_coupling(phase_coupling_data_in)
       , darcy_damping(darcy_damping_data_in)
@@ -187,6 +192,9 @@ namespace MeltPoolDG::Flow
 
     /// Material parameters and thermodynamic relations for the liquid phase
     const CompressibleFlowMaterial<dim, number> material_liquid;
+
+    /// Parameters related to liquid-gas and solid-liquid phase transitions
+    const Multiphase::PhaseChangeData<number> phase_change;
 
     /// Cut-related parameters
     const CompressibleFlowCutData<number> cut;

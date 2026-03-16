@@ -53,8 +53,8 @@ namespace MeltPoolDG::Multiphase
    * liquid phase.
    * @param viscous_terms_gas Collection of helper functions for viscous term evaluations in the
    * gas phase.
-   * @param m_dot_evap Current evaporation mass flux (kg/(m^2 s)).
-   * @param laser_heat_source Current value of the laser heat source (W/m^2).
+   * @param m_dot_evap Current evaporation mass flux (SI: in kg/(m^2 s)).
+   * @param laser_heat_source Current value of the laser heat source (SI: in W/m^2).
    *
    * @return Pair of interface fluxes, considering both convective and viscous jump conditions.
    */
@@ -230,7 +230,7 @@ namespace MeltPoolDG::Multiphase
       -m_dot_evap * (u_liquid[Idx::energy] / u_liquid[Idx::density] -
                      u_gas[Idx::energy] / u_gas[Idx::density]) -
       laser_heat_source +
-      m_dot_evap * multiphase_scratch_data.material_liquid.data.latent_heat_of_vaporization;
+      m_dot_evap * multiphase_scratch_data.phase_change.liquid_gas.latent_heat_of_vaporization;
 
     total_flux_liquid[Idx::energy] += jump_energy_term_2 * omega_energy_1_visc;
     total_flux_gas[Idx::energy] += jump_energy_term_2 * omega_energy_2_visc;
@@ -290,7 +290,7 @@ namespace MeltPoolDG::Multiphase
    * Navier-Stokes equations in the gas phase.
    * @param multiphase_scratch_data Collection of parameters required by the compressible Navier-Stokes
    * multiphase operator.
-   * @param m_dot_evap Current evaporation mass flux (kg/(m^2 s)).
+   * @param m_dot_evap Current evaporation mass flux (SI: in kg/(m^2 s)).
    *
    * @return Tuple, containing the convective fluxes for liquid and gas phase, respectively, and the
    * interface normal velocity.
@@ -532,8 +532,8 @@ namespace MeltPoolDG::Multiphase
    * interface.
    * @param multiphase_scratch_data Collection of parameters required by the compressible multiphase
    * Navier-Stokes operator.
-   * @param m_dot_evap Current evaporation mass flux (kg/(m^2 s)).
-   * @param delta_T Current temperature jump at the interface (T^l - T^g) (K)
+   * @param m_dot_evap Current evaporation mass flux (SI: in kg/(m^2 s)).
+   * @param delta_T Current temperature jump at the interface (T^l - T^g) (SI: in K)
    *
    * @return Dirichlet jump for conserved quantities in conservative variable formulation.
    */
@@ -617,9 +617,9 @@ namespace MeltPoolDG::Multiphase
    * @param multiphase_scratch_data Collection of parameters required by the compressible multiphase
    * Navier-Stokes operator.
    * @param cell_size Cell size.
-   * @param m_dot_evap Current evaporation mass flux (kg/(m^2 s)).
-   * @param delta_T Current temperature jump at the interface (T^l - T^g) (K).
-   * @param laser_heat_source Current value of the laser heat source (W/m^2).
+   * @param m_dot_evap Current evaporation mass flux (SI: in kg/(m^2 s)).
+   * @param delta_T Current temperature jump at the interface (T^l - T^g) (SI: in K).
+   * @param laser_heat_source Current value of the laser heat source (SI: in W/m^2).
    *
    * @return Pair of interface viscous fluxes for liquid and gas phase, which are weighted with the
    * test functions.
@@ -679,7 +679,7 @@ namespace MeltPoolDG::Multiphase
       m_dot_evap * (u_liquid[Idx::energy] / u_liquid[Idx::density] -
                     u_gas[Idx::energy] / u_gas[Idx::density]) +
       laser_heat_source -
-      m_dot_evap * multiphase_scratch_data.material_liquid.data.latent_heat_of_vaporization;
+      m_dot_evap * multiphase_scratch_data.phase_change.liquid_gas.latent_heat_of_vaporization;
 
     const ConservedVariablesGradType viscous_flux_liquid =
       viscous_terms_liquid.calculate_viscous_flux(u_liquid, grad_u_liquid);
@@ -752,8 +752,8 @@ namespace MeltPoolDG::Multiphase
    * phase.
    * @param multiphase_scratch_data Collection of parameters required by the compressible multiphase
    * Navier-Stokes operator.
-   * @param m_dot_evap Current evaporation mass flux (kg/(m^2 s)).
-   * @param delta_T Current temperature jump at the interface (T^l - T^g) (K).
+   * @param m_dot_evap Current evaporation mass flux (SI: in kg/(m^2 s)).
+   * @param delta_T Current temperature jump at the interface (T^l - T^g) (SI: in K).
    *
    * @return Pair of interface viscous fluxes for liquid and gas phase, which are weighted with the
    * gradient of the test functions.
@@ -829,9 +829,9 @@ namespace MeltPoolDG::Multiphase
    * @param multiphase_scratch_data Collection of parameters required by the compressible multiphaes
    * Navier-Stokes operator.
    * @param cell_size Cell size.
-   * @param m_dot_evap Current evaporation mass flux (kg/(m^2 s)).
-   * @param delta_T Current temperature jump at the interface (T^l - T^g) (K).
-   * @param laser_heat_source Current value of the laser heat source (W/m^2).
+   * @param m_dot_evap Current evaporation mass flux (SI: in kg/(m^2 s)).
+   * @param delta_T Current temperature jump at the interface (T^l - T^g) (SI: in K).
+   * @param laser_heat_source Current value of the laser heat source (SI: in W/m^2).
    *
    * @return Pair of interface viscous fluxes for liquid and gas phase, which are weighted with the
    * test functions.
@@ -886,7 +886,7 @@ namespace MeltPoolDG::Multiphase
       m_dot_evap * (u_liquid[Idx::energy] / u_liquid[Idx::density] -
                     u_gas[Idx::energy] / u_gas[Idx::density]) +
       (pressure_liquid * vel_n_liquid - pressure_gas * vel_n_gas) + laser_heat_source -
-      m_dot_evap * multiphase_scratch_data.material_liquid.data.latent_heat_of_vaporization;
+      m_dot_evap * multiphase_scratch_data.phase_change.liquid_gas.latent_heat_of_vaporization;
 
     const ConservedVariablesGradType viscous_flux_liquid =
       viscous_terms_liquid.calculate_viscous_flux(u_liquid, grad_u_liquid);

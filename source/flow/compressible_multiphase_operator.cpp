@@ -36,8 +36,9 @@ namespace MeltPoolDG::Multiphase
     , fe_point_temp(FE_DGQ<dim>(multiphase_scratch_data.flow_data.fe.degree), dim + 2)
     , n_dofs_per_cell(fe_point_temp.dofs_per_cell)
   {
-    const auto &l = multiphase_scratch_data.material_liquid.data;
-    const auto &g = multiphase_scratch_data.material_gas.data;
+    const auto &l     = multiphase_scratch_data.material_liquid.data;
+    const auto &g     = multiphase_scratch_data.material_gas.data;
+    const auto &pc_lg = multiphase_scratch_data.phase_change.liquid_gas;
 
     const number q_liquid =
       2. * l.dynamic_viscosity + l.thermal_conductivity / (l.specific_isobaric_heat / l.gamma);
@@ -50,12 +51,16 @@ namespace MeltPoolDG::Multiphase
     if (multiphase_scratch_data.phase_coupling.evaporation_model == EvaporationModelType::Knight)
       {
         evaporation_model_knight = std::make_unique<Evaporation::EvaporationModelKnight<number>>(
-          l.reference_pressure,
-          l.boiling_temperature,
-          l.latent_heat_of_vaporization,
+          pc_lg.reference_pressure,
+          pc_lg.boiling_temperature,
+          pc_lg.latent_heat_of_vaporization,
           g.specific_gas_constant,
           g.gamma);
       }
+    else
+      AssertThrow(multiphase_scratch_data.phase_coupling.evaporation_model ==
+                    EvaporationModelType::constant,
+                  dealii::ExcMessage("The given evaporation model is not supported."));
   }
 
   template <int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
@@ -144,7 +149,7 @@ namespace MeltPoolDG::Multiphase
                                                                        const auto &viscous_terms) {
         for (const unsigned int q : eval.quadrature_point_indices())
           {
-            const auto [forcing, grad_flux] =
+            const auto [force, grad_flux] =
               Flow::rhs_cell_integral_kernel<dim, number, IntegratorType, is_viscous>(
                 eval,
                 q,
@@ -156,7 +161,8 @@ namespace MeltPoolDG::Multiphase
             ConservedVariablesType darcy_damping{};
 
             // TODO: use DarcyDampingOperation
-            if (!is_gas_phase and multiphase_scratch_data.material_liquid.data.use_darcy_damping)
+            if (!is_gas_phase and
+                multiphase_scratch_data.phase_change.solid_liquid.use_darcy_damping)
               {
                 const auto w        = eval.get_value(q);
                 const auto velocity = Flow::calculate_velocity<dim, number>(w);
@@ -164,9 +170,9 @@ namespace MeltPoolDG::Multiphase
                   multiphase_scratch_data.material_liquid.eos_utils->calculate_temperature(w);
 
                 const VectorizedArray<number> T_liquidus_vec = dealii::make_vectorized_array(
-                  multiphase_scratch_data.material_liquid.data.liquidus_temperature);
+                  multiphase_scratch_data.phase_change.solid_liquid.liquidus_temperature);
                 const VectorizedArray<number> T_solidus_vec = dealii::make_vectorized_array(
-                  multiphase_scratch_data.material_liquid.data.solidus_temperature);
+                  multiphase_scratch_data.phase_change.solid_liquid.solidus_temperature);
 
                 VectorizedArray<number> liquid_fraction =
                   (temperature - T_solidus_vec) / (T_liquidus_vec - T_solidus_vec);
@@ -195,11 +201,11 @@ namespace MeltPoolDG::Multiphase
             // consider mass term
             ConservedVariablesType flux = eval.get_value(q) * inv_time_step;
 
-            if (multiphase_scratch_data.material_liquid.data.use_darcy_damping)
+            if (multiphase_scratch_data.phase_change.solid_liquid.use_darcy_damping)
               flux += darcy_damping;
 
             if (multiphase_scratch_data.body_force.get() != nullptr)
-              flux += forcing;
+              flux += force;
 
             eval.submit_value(flux, q);
             eval.submit_gradient(grad_flux, q);

@@ -81,16 +81,24 @@
       "reference density": "3400.0",
       "gamma": "1.006804865",
       "thermal conductivity": "28.63",
-      "boiling temperature": "3133.0",
-      "use darcy damping": "true",
-      "liquidus temperature": "2200",
-      "solidus temperature": "1933",
       "equation of state": {
         "type": "noble_abel_stiffened_gas",
         "p inf": "258134879.2",
         "b": "0.00018759",
         "q": "-2587818.15"
       }
+    }
+  },
+  "phase change": {
+    "liquid gas": {
+      "boiling temperature": "3133.0",
+      "reference pressure": "1.0e5",
+      "latent heat of vaporization": "8.84e6"
+    },
+    "solid liquid": {
+      "use darcy damping": "true",
+      "liquidus temperature": "2200",
+      "solidus temperature": "1933"
     }
   },
   "cut": {
