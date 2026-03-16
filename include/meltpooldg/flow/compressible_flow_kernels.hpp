@@ -97,13 +97,12 @@ namespace MeltPoolDG::Flow
       conserved_variables.velocity();
 
     const dealii::Tensor<1, dim, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>
-      viscous_stress = viscous_stress_tensor(
-        conserved_variables.grad_velocity(conserved_variables.density(), velocity),
-        dealii::VectorizedArray<number>(conserved_variables.dynamic_viscosity()));
+      viscous_stress = viscous_stress_tensor(conserved_variables.grad_velocity(),
+                                             dealii::VectorizedArray<number>(
+                                               conserved_variables.dynamic_viscosity()));
 
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> neg_heat_flux =
-      conserved_variables.thermal_conductivity() *
-      conserved_variables.grad_temperature(conserved_variables.value());
+      conserved_variables.thermal_conductivity() * conserved_variables.grad_temperature();
 
     FluxType                                  flux;
     CompressibleFlow::FluxView<dim, FluxType> flux_view(flux);
@@ -132,10 +131,11 @@ namespace MeltPoolDG::Flow
     using ValueType = CompressibleFlow::ConservedVariablesType<dim, number>;
     using FluxType  = CompressibleFlow::FluxType<dim, number>;
 
-    CompressibleConvectiveFlux(const Flow::EOS::EquationOfStateUtils<dim, number>     *eos_in,
-                               const Flow::CompressibleFluidMaterialPhaseData<number> &material)
-      : eos(eos_in)
-      , material(material)
+    using DofStateViewType = CompressibleFlow::DofStateView<dim, number, const ValueType>;
+
+    explicit CompressibleConvectiveFlux(
+      const Flow::CompressibleFluidMaterialPhaseData<number> &material)
+      : material(material)
     {}
 
     /**
@@ -146,7 +146,7 @@ namespace MeltPoolDG::Flow
     FluxType
     flux(const ValueType &conserved_variables) const
     {
-      CompressibleFlow::DofStateView conserved_variables_view(conserved_variables, eos, material);
+      DofStateViewType conserved_variables_view(conserved_variables, material);
       return convective_flux<dim, number>(conserved_variables_view);
     }
 
@@ -159,8 +159,8 @@ namespace MeltPoolDG::Flow
     dealii::VectorizedArray<number>
     lambda(const ValueType &u_m, const ValueType &u_p) const
     {
-      CompressibleFlow::DofStateView u_m_view(u_m, eos, material);
-      CompressibleFlow::DofStateView u_p_view(u_p, eos, material);
+      DofStateViewType u_m_view(u_m, material);
+      DofStateViewType u_p_view(u_p, material);
 
       const auto velocity_m = u_m_view.velocity();
       const auto velocity_p = u_p_view.velocity();
@@ -177,7 +177,6 @@ namespace MeltPoolDG::Flow
     }
 
   private:
-    const Flow::EOS::EquationOfStateUtils<dim, number>     *eos;
     const Flow::CompressibleFluidMaterialPhaseData<number> &material;
   };
 
@@ -189,14 +188,16 @@ namespace MeltPoolDG::Flow
     using GradientType = CompressibleFlow::ConservedVariablesGradientType<dim, number>;
     using FluxType     = CompressibleFlow::FluxType<dim, number>;
 
+    using DofValueAndGradientStateViewType = CompressibleFlow::
+      DofValueAndGradientStateView<dim, number, const ValueType, const GradientType>;
+
     /**
      * Constructor, storing references to the EOS utilities and material data needed for flux
      * calculations.
      */
-    CompressibleDiffusiveFlux(const Flow::EOS::EquationOfStateUtils<dim, number>     *eos_in,
-                              const Flow::CompressibleFluidMaterialPhaseData<number> &material)
-      : eos(eos_in)
-      , material(material)
+    explicit CompressibleDiffusiveFlux(
+      const Flow::CompressibleFluidMaterialPhaseData<number> &material)
+      : material(material)
     {}
 
     /**
@@ -208,15 +209,11 @@ namespace MeltPoolDG::Flow
     FluxType
     flux(const ValueType &u, const GradientType &grad_u) const
     {
-      CompressibleFlow::DofValueAndGradientStateView conserved_variables_view(u,
-                                                                              grad_u,
-                                                                              eos,
-                                                                              material);
+      DofValueAndGradientStateViewType conserved_variables_view(u, grad_u, material);
       return diffusive_flux<dim, number>(conserved_variables_view);
     }
 
   private:
-    const Flow::EOS::EquationOfStateUtils<dim, number>     *eos;
     const Flow::CompressibleFluidMaterialPhaseData<number> &material;
   };
 } // namespace MeltPoolDG::Flow

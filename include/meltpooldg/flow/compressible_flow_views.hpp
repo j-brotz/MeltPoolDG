@@ -3,10 +3,14 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
+#include <meltpooldg/flow/compressible_flow_data.hpp>
 #include <meltpooldg/flow/compressible_flow_eos_utils_base.hpp>
 #include <meltpooldg/flow/compressible_flow_material_data.hpp>
 #include <meltpooldg/flow/compressible_flow_types.hpp>
 #include <meltpooldg/flow/compressible_flow_views_mixins.hpp>
+#include <meltpooldg/flow/equation_of_state.hpp>
+
+#include <type_traits>
 
 /**
  * @file
@@ -51,6 +55,8 @@ namespace MeltPoolDG::CompressibleFlow
   struct DofValueView
     : public DofValueMixin<dim, typename StateType::value_type, DofValueView<dim, StateType>>
   {
+    using state_type = std::remove_cvref_t<StateType>;
+
     DofValueView(StateType &state)
       : flow_state(&state)
     {}
@@ -68,63 +74,6 @@ namespace MeltPoolDG::CompressibleFlow
 
   private:
     mutable StateType *flow_state;
-  };
-
-  /**
-   * View providing access to the conserved variables stored in the underlying data structure.
-   * Besides direct access to the conserved variables, it enables computation of primitive
-   * variables, thermodynamic quantities, and material properties via the provided EOS and material
-   * data.
-   *
-   * The underlying `StateType` must store the conserved variables in a tensor-like container
-   * indexed according to `TensorStorageIndex<dim>`.
-   *
-   * @tparam StateType  Type of the data structure storing the conserved variables.
-   */
-  template <int dim, typename number, IsConservedStateCompatible<dim> StateType>
-  struct DofStateView : public DofValueMixin<dim,
-                                             typename StateType::value_type,
-                                             DofStateView<dim, number, StateType>>,
-                        public EOSValueMixin<dim,
-                                             typename StateType::value_type,
-                                             DofStateView<dim, number, StateType>>,
-                        public MaterialMixin<DofStateView<dim, number, StateType>>
-  {
-    DofStateView(StateType                                              &state,
-                 const Flow::EOS::EquationOfStateUtils<dim, number>     *eos,
-                 const Flow::CompressibleFluidMaterialPhaseData<number> &material_data)
-      : flow_state(&state)
-      , eos_evaluator(eos)
-      , material_data(material_data)
-    {}
-
-    operator DofStateView<dim, number, const StateType>()
-    {
-      return DofStateView<dim, number, const StateType>(*flow_state, eos_evaluator, material_data);
-    }
-
-    StateType &
-    value() const
-    {
-      return *flow_state;
-    }
-
-    const Flow::EOS::EquationOfStateUtils<dim, number> *
-    eos() const
-    {
-      return eos_evaluator;
-    }
-
-    const Flow::CompressibleFluidMaterialPhaseData<number> &
-    material() const
-    {
-      return material_data;
-    }
-
-  private:
-    mutable StateType                                      *flow_state;
-    const Flow::EOS::EquationOfStateUtils<dim, number>     *eos_evaluator;
-    const Flow::CompressibleFluidMaterialPhaseData<number> &material_data;
   };
 
   /**
@@ -162,55 +111,45 @@ namespace MeltPoolDG::CompressibleFlow
   };
 
   /**
-   * View providing access to the gradients of conserved variables stored in the underlying data
-   * structure. Besides direct access to the conserved variables, it enables computation of
-   * gradients of primitive variables (e.g. gradient of the temperature) assuming the provided
-   * equation of state does support this. Further one gets access to material properties via the
-   * provided material data.
+   * View providing access to the conserved variables stored in the underlying data structure.
+   * Besides direct access to the conserved variables, it enables computation of primitive
+   * variables, thermodynamic quantities, and material properties via the provided EOS and material
+   * data.
    *
    * The underlying `StateType` must store the conserved variables in a tensor-like container
    * indexed according to `TensorStorageIndex<dim>`.
    *
    * @tparam StateType  Type of the data structure storing the conserved variables.
    */
-  template <int dim, typename number, IsConservedGradientCompatible<dim> StateType>
-  struct DofGradientStateView
-    : public DofGradientMixin<dim,
-                              typename StateType::value_type::value_type,
-                              DofGradientStateView<dim, number, StateType>>,
-      public EOSGradientMixin<
-        dim,
-        dealii::Tensor<1, StateType::dimension, typename StateType::value_type::value_type>,
-        DofGradientStateView<dim, number, StateType>>,
-      public MaterialMixin<DofGradientStateView<dim, number, StateType>>
+  template <int dim, typename number, IsConservedStateCompatible<dim> Value>
+  struct DofStateView
+    : public Flow::EOSValueMixin<dim, typename Value::value_type, DofStateView<dim, number, Value>>,
+      public DofValueMixin<dim, typename Value::value_type, DofStateView<dim, number, Value>>,
+      public MaterialMixin<DofStateView<dim, number, Value>>
   {
-    using gradient_type = std::remove_cvref_t<StateType>;
+    using state_type = std::remove_cvref_t<Value>;
 
-    DofGradientStateView(StateType                                              &state,
-                         const Flow::EOS::EquationOfStateUtils<dim, number>     *eos,
-                         const Flow::CompressibleFluidMaterialPhaseData<number> &material_data)
-      : flow_state(&state)
-      , eos_evaluator(eos)
+    DofStateView(Value                                                  &value_state,
+                 const Flow::CompressibleFluidMaterialPhaseData<number> &material_data)
+      : flow_state(&value_state)
       , material_data(material_data)
     {}
 
-    operator DofGradientStateView<dim, number, const StateType>()
+    operator DofStateView<dim, number, const Value>()
     {
-      return DofGradientStateView<dim, number, const StateType>(*flow_state,
-                                                                eos_evaluator,
-                                                                material_data);
+      return DofStateView<dim, number, const Value>(*flow_state, material_data);
     }
 
-    StateType &
-    gradient_value() const
+    Flow::EquationOfState
+    eos_type() const
+    {
+      return material_data.eos_data.type;
+    }
+
+    Value &
+    value() const
     {
       return *flow_state;
-    }
-
-    const Flow::EOS::EquationOfStateUtils<dim, number> *
-    eos() const
-    {
-      return eos_evaluator;
     }
 
     const Flow::CompressibleFluidMaterialPhaseData<number> &
@@ -219,10 +158,8 @@ namespace MeltPoolDG::CompressibleFlow
       return material_data;
     }
 
-
   private:
-    mutable StateType                                      *flow_state;
-    const Flow::EOS::EquationOfStateUtils<dim, number>     *eos_evaluator;
+    mutable Value                                          *flow_state;
     const Flow::CompressibleFluidMaterialPhaseData<number> &material_data;
   };
 
@@ -252,12 +189,11 @@ namespace MeltPoolDG::CompressibleFlow
       public DofGradientMixin<dim,
                               typename Gradient::value_type::value_type,
                               DofValueAndGradientStateView<dim, number, Value, Gradient>>,
-      public EOSValueMixin<dim,
-                           typename Value::value_type,
-                           DofValueAndGradientStateView<dim, number, Value, Gradient>>,
-      public EOSGradientMixin<dim,
-                              Value,
-                              DofValueAndGradientStateView<dim, number, Value, Gradient>>,
+      public Flow::EOSValueMixin<dim,
+                                 typename Value::value_type,
+                                 DofValueAndGradientStateView<dim, number, Value, Gradient>>,
+      public Flow::EOSGradientMixin<dim,
+                                    DofValueAndGradientStateView<dim, number, Value, Gradient>>,
       public MaterialMixin<DofValueAndGradientStateView<dim, number, Value, Gradient>>
   {
     using state_type    = std::remove_cvref_t<Value>;
@@ -266,18 +202,16 @@ namespace MeltPoolDG::CompressibleFlow
     DofValueAndGradientStateView(
       Value                                                  &value_state,
       Gradient                                               &gradient_state,
-      const Flow::EOS::EquationOfStateUtils<dim, number>     *eos,
       const Flow::CompressibleFluidMaterialPhaseData<number> &material_data)
       : flow_state(&value_state)
       , flow_gradient_state(&gradient_state)
-      , eos_evaluator(eos)
       , material_data(material_data)
     {}
 
     operator DofValueAndGradientStateView<dim, number, const Value, const Gradient>()
     {
       return DofValueAndGradientStateView<dim, number, const Value, const Gradient>(
-        *flow_state, *flow_gradient_state, eos_evaluator, material_data);
+        *flow_state, *flow_gradient_state, material_data);
     }
 
     Value &
@@ -292,10 +226,10 @@ namespace MeltPoolDG::CompressibleFlow
       return *flow_gradient_state;
     }
 
-    const Flow::EOS::EquationOfStateUtils<dim, number> *
-    eos() const
+    Flow::EquationOfState
+    eos_type() const
     {
-      return eos_evaluator;
+      return material_data.eos_data.type;
     }
 
     const Flow::CompressibleFluidMaterialPhaseData<number> &
@@ -307,7 +241,6 @@ namespace MeltPoolDG::CompressibleFlow
   private:
     mutable Value                                          *flow_state;
     mutable Gradient                                       *flow_gradient_state;
-    const Flow::EOS::EquationOfStateUtils<dim, number>     *eos_evaluator;
     const Flow::CompressibleFluidMaterialPhaseData<number> &material_data;
   };
 

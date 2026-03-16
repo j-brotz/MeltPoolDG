@@ -1,5 +1,6 @@
 #pragma once
 
+#include <deal.II/base/exception_macros.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
@@ -42,12 +43,14 @@ namespace MeltPoolDG::CompressibleFlow
     decltype(auto)
     momentum(const unsigned int component) const
     {
+      AssertIndexRange(component, dim);
       return this->value()[Idx::momentum + component];
     }
 
     decltype(auto)
     velocity(const unsigned int component) const
     {
+      AssertIndexRange(component, dim);
       return this->value()[Idx::momentum + component] / this->value()[Idx::density];
     }
 
@@ -124,6 +127,7 @@ namespace MeltPoolDG::CompressibleFlow
     decltype(auto)
     grad_momentum(const unsigned int component) const
     {
+      AssertIndexRange(component, dim);
       return this->gradient_value()[Idx::momentum + component];
     }
 
@@ -132,17 +136,18 @@ namespace MeltPoolDG::CompressibleFlow
                   const ValueType   &density,
                   const ValueType   &velocity_component) const
     {
+      AssertIndexRange(component, dim);
       return (this->gradient_value()[Idx::momentum + component] -
               velocity_component * this->gradient_value()[Idx::density]) /
              density;
     }
 
     decltype(auto)
-    grad_velocity(const ValueType &density, const dealii::Tensor<1, dim, ValueType> &velocity) const
+    grad_velocity() const
     {
       dealii::Tensor<1, dim, dealii::Tensor<1, dim, ValueType>> grad_velocity;
       for (unsigned int d = 0; d < dim; ++d)
-        grad_velocity[d] = this->grad_velocity(d, density, velocity[d]);
+        grad_velocity[d] = this->grad_velocity(d, derived().density(), derived().velocity(d));
       return grad_velocity;
     }
 
@@ -167,116 +172,22 @@ namespace MeltPoolDG::CompressibleFlow
     {
       return static_cast<const Derived &>(*this).gradient_value();
     }
-  };
-
-  /**
-   * CRTP mixin providing thermodynamic state evaluation via an equation of state.
-   *
-   * This mixin assumes that the derived class fulfills the HasEOS concept and provides a value()
-   * member function returning the conserved variables and an eos() member function returning a
-   * pointer to the equation of state utils.
-   *
-   * The thermodynamic quantities are evaluated directly from the conserved variables
-   *
-   * \f[
-   *   U = \left[ \rho, \rho u_0, \dots, \rho u_{dim-1}, \rho E \right].
-   * \f]
-   *
-   * All member functions are thin inline forwarding calls to the EOS.  No additional data members
-   * are introduced and no thermodynamic quantities are cached. Every quantity is computed on demand
-   * from the conserved state.
-   *
-   *
-   */
-  template <int dim, ArithmeticType ValueType, typename Derived>
-  struct EOSValueMixin
-  {
-    using Idx = ConservedVariableIndex<dim>;
 
     decltype(auto)
-    pressure() const
+    value_view() const
     {
-      return this->eos()->calculate_thermodynamic_pressure(this->value());
+      return static_cast<const Derived &>(*this).value_view();
     }
 
-    decltype(auto)
-    temperature() const
+    const Derived &
+    derived() const
     {
-      return this->eos()->calculate_temperature(this->value());
-    }
-
-    decltype(auto)
-    speed_of_sound() const
-    {
-      return this->eos()->calculate_speed_of_sound(this->value());
-    }
-
-    decltype(auto)
-    inner_energy_from_pressure(const ValueType &pressure) const
-    {
-      return this->eos()->compute_inner_energy_from_pressure(pressure, value()[Idx::density]);
-    }
-
-  private:
-    decltype(auto)
-    value() const
-    {
-      return static_cast<const Derived &>(*this).value();
-    }
-
-    decltype(auto)
-    eos() const
-    {
-      return static_cast<const Derived &>(*this).eos();
+      return static_cast<const Derived &>(*this);
     }
   };
 
   /**
-   * CRTP mixin providing thermodynamic state gradient evaluation via an equation of state.
-   *
-   * The thermodynamic quantities are evaluated directly from the conserved variables
-   *
-   * \f[
-   *   U = \left[ \rho, \rho u_0, \dots, \rho u_{dim-1}, \rho E \right].
-   * \f]
-   *
-   * All member functions are thin inline forwarding calls to the EOS.  No additional data members
-   * are introduced and no thermodynamic quantities are cached. Every quantity is computed on demand
-   * from the conserved state.
-   */
-  template <int dim, IsConservedStateCompatible<dim> ConservedVariablesType, typename Derived>
-  struct EOSGradientMixin
-  {
-    decltype(auto)
-    grad_temperature(const ConservedVariablesType &conserved_variables) const
-    {
-      return this->eos()->calculate_grad_T(conserved_variables, this->gradient_value());
-    }
-
-  private:
-    decltype(auto)
-    gradient_value() const
-    {
-      return static_cast<const Derived &>(*this).gradient_value();
-    }
-
-    decltype(auto)
-    eos() const
-    {
-      return static_cast<const Derived &>(*this).eos();
-    }
-  };
-
-  /**
-   * CRTP mixin providing access to material properties.
-   *
-   * This mixin assumes that the derived class fulfills the HasMaterial concept and provides a
-   * material() member function returning a reference to the material data struct containing the
-   * material properties.
-   *
-   * All accessors are thin wrappers around the underlying storage. No additional data members are
-   * introduced and no quantities are cached. Every property is retrieved on demand from the derived
-   * class.
+   * CRTP mixin providing semantic access to material properties.
    */
   template <typename Derived>
   struct MaterialMixin
