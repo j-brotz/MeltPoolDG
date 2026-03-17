@@ -26,10 +26,10 @@
 namespace MeltPoolDG::Simulation::CompressibleMultiphase
 {
   /**
-   * @brief Initial flow field for single valued function like pressure or energy.
+   * @brief Energy function for the fixed energy outflow boundary condition.
    */
   template <int dim, typename number>
-  class SingleVariableTwoPhaseField : public dealii::Function<dim, number>
+  class FixedEnergyOutflowBoundaryFunction : public dealii::Function<dim, number>
   {
   public:
     /**
@@ -42,12 +42,15 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
      *
      * @throws dealii::ExcNotImplemented If `dim != 1`.
      */
-    explicit SingleVariableTwoPhaseField(std::string ic_gas_phase,
-                                         std::string ic_liquid_phase,
-                                         const bool  gas_phase_is_first = true)
-      : dealii::Function<dim, number>(2)
+    explicit FixedEnergyOutflowBoundaryFunction(std::string ic_gas_phase,
+                                                std::string ic_liquid_phase,
+                                                const bool  gas_phase_is_first = true)
+      : dealii::Function<dim, number>(2 /* liquid and gas phase*/)
       , gas_phase_is_first(gas_phase_is_first)
     {
+      // Currently, only 1D simulations are possible
+      Assert(dim == 1, dealii::ExcNotImplemented());
+
       parsing_function_gas->initialize(dealii::FunctionParser<dim>::default_variable_names(),
                                        ic_gas_phase,
                                        typename dealii::FunctionParser<dim>::ConstMap(),
@@ -56,21 +59,20 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
                                           ic_liquid_phase,
                                           typename dealii::FunctionParser<dim>::ConstMap(),
                                           false);
-
-      // Currently, only 1D simulations are possible
-      Assert(dim == 1, dealii::ExcNotImplemented());
     }
 
     /**
      * @brief Computes the current function value for a specific @p component at a given point @p p.
      *
      * @param p Point at which the function should be evaluated.
-     * @param component Component for which the function value should be returned.
+     * @param component Component for which the function value should be returned. 0 corresponds to
+     * the liquid phase and 1 corresponds to the gas phase.
      */
     number
     value(const dealii::Point<dim, number> &p, const unsigned int component) const final
     {
       Assert(component < 2, dealii::ExcIndexRange(component, 0, 2));
+
       // gas phase
       if (component == not gas_phase_is_first)
         return parsing_function_gas->value(p, dim + 1);
@@ -81,7 +83,7 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
 
   private:
     /// Indicator whether the gas phase is the first phase in the two-phase system
-    bool gas_phase_is_first;
+    const bool gas_phase_is_first;
 
     /// Function parser for initial conditions in gas phase
     std::unique_ptr<dealii::FunctionParser<dim>> parsing_function_gas =
@@ -90,6 +92,55 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
     /// Function parser for initial conditions in liquid phase
     std::unique_ptr<dealii::FunctionParser<dim>> parsing_function_liquid =
       std::make_unique<dealii::FunctionParser<dim>>(dim + 2);
+  };
+
+  /**
+   * @brief Pressure function for the fixed pressure outflow boundary condition.
+   */
+  template <int dim, typename number>
+  class FixedPressureOutflowBoundaryFunction : public dealii::Function<dim, number>
+  {
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param atmospheric_pressure_in Given atmospheric pressure for fixed-pressure outflow boundary
+     * condition.
+     * @param gas_phase_is_first Indicator whether the gas phase is the first phase in the two-phase
+     * system.
+     *
+     * @throws dealii::ExcNotImplemented If `dim != 1`.
+     */
+    explicit FixedPressureOutflowBoundaryFunction(const number &atmospheric_pressure_in,
+                                                  const bool    gas_phase_is_first = true)
+      : dealii::Function<dim, number>(2 /* liquid and gas phase*/)
+      , atmospheric_pressure(atmospheric_pressure_in)
+      , gas_phase_is_first(gas_phase_is_first)
+    {
+      // Currently, only 1D simulations are possible
+      Assert(dim == 1, dealii::ExcNotImplemented());
+    }
+
+    /**
+     * @brief Computes the current function value for a specific @p component at a given point @p p.
+     *
+     * @param component Component for which the function value should be returned. 0 corresponds to
+     * the liquid phase and 1 corresponds to the gas phase.
+     */
+    number
+    value(const dealii::Point<dim, number> &, const unsigned int component) const final
+    {
+      Assert(component < 2, dealii::ExcIndexRange(component, 0, 2));
+
+      return atmospheric_pressure;
+    }
+
+  private:
+    /// Atmospheric pressure (SI: Pa)
+    const number atmospheric_pressure;
+
+    /// Indicator whether the gas phase is the first phase in the two-phase system
+    const bool gas_phase_is_first;
   };
 
   /**
@@ -252,44 +303,46 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
         get_colorized_rectangle_boundary_ids<dim>();
 
-      // left boundary
-      if (left_boundary_condition == "outflow_fixed_energy" or
-          left_boundary_condition == "outflow_fixed_pressure")
-        {
-          auto boundary_condition =
-            std::make_shared<SingleVariableTwoPhaseField<dim, number>>(initial_conditions.gas,
-                                                                       initial_conditions.liquid);
-          this->attach_boundary_condition({lower_bc, boundary_condition},
-                                          left_boundary_condition,
-                                          "compressible_multiphase_flow");
-        }
-      else
-        {
-          auto boundary_condition = std::make_shared<ConservedVariablesInitialField<dim, number>>(
-            initial_conditions.gas, initial_conditions.liquid);
-          this->attach_boundary_condition({lower_bc, boundary_condition},
-                                          left_boundary_condition,
-                                          "compressible_multiphase_flow");
-        }
+      attach_boundary(lower_bc, left_boundary_condition);
+      attach_boundary(upper_bc, right_boundary_condition);
+    }
 
-      // right boundary
-      if (right_boundary_condition == "outflow_fixed_energy" or
-          right_boundary_condition == "outflow_fixed_pressure")
+    /**
+     * @brief Attach the boundary condition function to the current boundary id.
+     *
+     * @param id Boundary id.
+     * @param type Boundary condition type.
+     */
+    void
+    attach_boundary(const dealii::types::boundary_id id, const std::string &type)
+    {
+      auto function = create_boundary_function(type);
+
+      this->attach_boundary_condition({id, function}, type, "compressible_multiphase_flow");
+    }
+
+    /**
+     * @brief Set the boundary value function for a given boundary condition type.
+     *
+     * @param type Given boundary condition type.
+     */
+    std::shared_ptr<dealii::Function<dim, number>>
+    create_boundary_function(const std::string &type)
+    {
+      if (type == "outflow_fixed_energy")
         {
-          auto boundary_condition =
-            std::make_shared<SingleVariableTwoPhaseField<dim, number>>(initial_conditions.gas,
-                                                                       initial_conditions.liquid);
-          this->attach_boundary_condition({upper_bc, boundary_condition},
-                                          right_boundary_condition,
-                                          "compressible_multiphase_flow");
+          return std::make_shared<FixedEnergyOutflowBoundaryFunction<dim, number>>(
+            initial_conditions.gas, initial_conditions.liquid);
+        }
+      else if (type == "outflow_fixed_pressure")
+        {
+          return std::make_shared<FixedPressureOutflowBoundaryFunction<dim, number>>(
+            atmospheric_pressure);
         }
       else
         {
-          auto boundary_condition = std::make_shared<ConservedVariablesInitialField<dim, number>>(
+          return std::make_shared<ConservedVariablesInitialField<dim, number>>(
             initial_conditions.gas, initial_conditions.liquid);
-          this->attach_boundary_condition({upper_bc, boundary_condition},
-                                          right_boundary_condition,
-                                          "compressible_multiphase_flow");
         }
     }
 
@@ -364,6 +417,10 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
                             "Initial condition function for liquid phase.");
         }
         prm.leave_subsection();
+        prm.add_parameter("atmospheric pressure",
+                          atmospheric_pressure,
+                          "Atmospheric pressure (Pa).",
+                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
       }
       prm.leave_subsection();
 
@@ -382,5 +439,9 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
       std::string gas{};
       std::string liquid{};
     } initial_conditions;
+
+    /// Atmospheric pressure in the gas phase (SI: Pa)
+    /// (Required for fixed pressure outflow boundary condition)
+    number atmospheric_pressure{};
   };
 } // namespace MeltPoolDG::Simulation::CompressibleMultiphase

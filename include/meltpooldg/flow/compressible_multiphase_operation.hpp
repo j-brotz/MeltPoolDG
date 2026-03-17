@@ -37,6 +37,7 @@
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/compressible_multiphase_operation.hpp>
 #include <meltpooldg/flow/compressible_multiphase_operator.hpp>
+#include <meltpooldg/phase_change/phase_change_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
 
@@ -73,8 +74,11 @@ namespace MeltPoolDG::Multiphase
      * @param comp_flow_data_in Reference to the compressible flow data struct used.
      * @param material_data_gas_in Reference to the material data struct for the gas phase.
      * @param material_data_liquid_in Reference to the material data struct for the liquid phase.
+     * @param phase_change_data_in Reference to the phase change data struct for liquid-gas and
+     * solid-liquid phase transitions.
      * @param cut_data_in Reference to the data object with cut-related parameters.
      * @param phase_coupling_data_in Reference to the struct for phase coupling parameters.
+     * @param darcy_damping_data_in Reference to the struct for darcy damping parameters.
      * @param time_iterator_in Reference to the used time stepping.
      * @param setup_dof_system_in Reinit_matrix_free function, which is registered.
      * @param level_set_in level-set dof vector.
@@ -90,8 +94,10 @@ namespace MeltPoolDG::Multiphase
       const Flow::CompressibleFlowData<number>               &comp_flow_data_in,
       const Flow::CompressibleFluidMaterialPhaseData<number> &material_data_gas_in,
       const Flow::CompressibleFluidMaterialPhaseData<number> &material_data_liquid_in,
+      const PhaseChangeData<number>                          &phase_change_data_in,
       const Flow::CompressibleFlowCutData<number>            &cut_data_in,
       const CompressibleFlowPhaseCouplingData<number>        &phase_coupling_data_in,
+      const Flow::DarcyDampingData<number>                   &darcy_damping_data_in,
       const TimeIntegration::TimeIterator<number>            &time_iterator_in,
       const std::function<void()>                            &setup_dof_system_in,
       const VectorType                                       &level_set_in,

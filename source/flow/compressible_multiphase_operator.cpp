@@ -1,4 +1,6 @@
 
+#include <deal.II/base/vectorization.h>
+
 #include <deal.II/matrix_free/fe_evaluation.h>
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
@@ -34,8 +36,9 @@ namespace MeltPoolDG::Multiphase
     , fe_point_temp(FE_DGQ<dim>(multiphase_scratch_data.flow_data.fe.degree), dim + 2)
     , n_dofs_per_cell(fe_point_temp.dofs_per_cell)
   {
-    const auto &l = multiphase_scratch_data.material_liquid.data;
-    const auto &g = multiphase_scratch_data.material_gas.data;
+    const auto &l     = multiphase_scratch_data.material_liquid.data;
+    const auto &g     = multiphase_scratch_data.material_gas.data;
+    const auto &pc_lg = multiphase_scratch_data.phase_change.liquid_gas;
 
     const number q_liquid =
       2. * l.dynamic_viscosity + l.thermal_conductivity / (l.specific_isobaric_heat / l.gamma);
@@ -44,6 +47,20 @@ namespace MeltPoolDG::Multiphase
 
     visc_ave_weight_phase_liquid = q_liquid / (q_liquid + q_gas);
     visc_ave_weight_phase_gas    = 1. - visc_ave_weight_phase_liquid;
+
+    if (multiphase_scratch_data.phase_coupling.evaporation_model == EvaporationModelType::Knight)
+      {
+        evaporation_model_knight = std::make_unique<Evaporation::EvaporationModelKnight<number>>(
+          pc_lg.reference_pressure,
+          pc_lg.boiling_temperature,
+          pc_lg.latent_heat_of_vaporization,
+          g.specific_gas_constant,
+          g.gamma);
+      }
+    else
+      AssertThrow(multiphase_scratch_data.phase_coupling.evaporation_model ==
+                    EvaporationModelType::constant,
+                  dealii::ExcMessage("The given evaporation model is not supported."));
   }
 
   template <int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
@@ -132,7 +149,7 @@ namespace MeltPoolDG::Multiphase
                                                                        const auto &viscous_terms) {
         for (const unsigned int q : eval.quadrature_point_indices())
           {
-            const auto [flux, grad_flux] =
+            const auto [force, grad_flux] =
               Flow::rhs_cell_integral_kernel<dim, number, IntegratorType, is_viscous>(
                 eval,
                 q,
@@ -141,11 +158,56 @@ namespace MeltPoolDG::Multiphase
                 viscous_terms,
                 multiphase_scratch_data.body_force);
 
+            ConservedVariablesType darcy_damping{};
+
+            // TODO: use DarcyDampingOperation
+            if (!is_gas_phase and
+                multiphase_scratch_data.phase_change.solid_liquid.use_darcy_damping)
+              {
+                const auto w        = eval.get_value(q);
+                const auto velocity = Flow::calculate_velocity<dim, number>(w);
+                const auto temperature =
+                  multiphase_scratch_data.material_liquid.eos_utils->calculate_temperature(w);
+
+                const VectorizedArray<number> T_liquidus_vec = dealii::make_vectorized_array(
+                  multiphase_scratch_data.phase_change.solid_liquid.liquidus_temperature);
+                const VectorizedArray<number> T_solidus_vec = dealii::make_vectorized_array(
+                  multiphase_scratch_data.phase_change.solid_liquid.solidus_temperature);
+
+                VectorizedArray<number> liquid_fraction =
+                  (temperature - T_solidus_vec) / (T_liquidus_vec - T_solidus_vec);
+
+                // liquid fraction is bounded [0;1]
+                liquid_fraction =
+                  std::min(std::max(liquid_fraction,
+                                    dealii::make_vectorized_array<VectorizedArray<number>>(0.)),
+                           dealii::make_vectorized_array<VectorizedArray<number>>(1.));
+
+                const VectorizedArray<number> solid_fraction = 1. - liquid_fraction;
+
+                const VectorizedArray<number> darcy_damping_coefficient =
+                  -multiphase_scratch_data.darcy_damping.mushy_zone_morphology * solid_fraction *
+                  solid_fraction /
+                  (liquid_fraction * liquid_fraction * liquid_fraction +
+                   multiphase_scratch_data.darcy_damping.avoid_div_zero_constant);
+
+                // contribution to momentum equation
+                darcy_damping[1] = darcy_damping_coefficient * velocity[0];
+
+                // contribution to energy equation
+                darcy_damping[2] = darcy_damping[1] * velocity[0];
+              }
+
             // consider mass term
+            ConservedVariablesType flux = eval.get_value(q) * inv_time_step;
+
+            if (multiphase_scratch_data.phase_change.solid_liquid.use_darcy_damping)
+              flux += darcy_damping;
+
             if (multiphase_scratch_data.body_force.get() != nullptr)
-              eval.submit_value(flux + eval.get_value(q) * inv_time_step, q);
-            else
-              eval.submit_value(eval.get_value(q) * inv_time_step, q);
+              flux += force;
+
+            eval.submit_value(flux, q);
             eval.submit_gradient(grad_flux, q);
           }
       };
@@ -205,6 +267,11 @@ namespace MeltPoolDG::Multiphase
 
             // reset values for interface velocity
             level_set_advection_operator.clear_interface_velocity();
+
+            // update current laser heat source
+            const number laser_heat_source =
+              update_laser_heat_source<number>(multiphase_scratch_data.phase_coupling,
+                                               current_time);
 
             for (unsigned int cell_batch = cell_range.first; cell_batch < cell_range.second;
                  ++cell_batch)
@@ -288,6 +355,16 @@ namespace MeltPoolDG::Multiphase
                             auto w_gas         = eval_point_interface_gas.get_value(q);
                             auto grad_w_liquid = eval_point_interface_liquid.get_gradient(q);
                             auto grad_w_gas    = eval_point_interface_gas.get_gradient(q);
+                            // Outwards pointing normal vector with respect to the liquid domain
+                            const auto normal = -eval_point_interface_liquid.normal_vector(q);
+
+                            const auto [m_dot_evap, delta_T] =
+                              update_evaporative_mass_flux_and_temperature_jump<dim, number>(
+                                w_liquid,
+                                w_gas,
+                                normal,
+                                multiphase_scratch_data,
+                                evaporation_model_knight.get());
 
                             const auto [flux_liquid, flux_gas] =
                               calculate_convective_and_viscous_interface_flux_penalty<
@@ -300,15 +377,14 @@ namespace MeltPoolDG::Multiphase
                                                             grad_w_gas,
                                                             multiphase_scratch_data,
                                                             viscous_terms_liquid,
-                                                            viscous_terms_gas);
+                                                            viscous_terms_gas,
+                                                            m_dot_evap,
+                                                            laser_heat_source);
 
                             // Compute the velocity at the interface using the difference in
                             // momentum and density between the liquid and gas phases
                             // (mass conservation across the interface).
                             // indices: [conserved variables component][vectorization index]
-
-                            // Outwards pointing normal vector with respect to the liquid domain.
-                            const auto normal = -eval_point_interface_liquid.normal_vector(q);
 
                             // TODO: temporal solution for dim=1; revise for dim>1!
                             const number interface_velocity =
@@ -342,6 +418,14 @@ namespace MeltPoolDG::Multiphase
                             // a positive level-set for the liquid phase.)
                             const auto normal = -eval_point_interface_liquid.normal_vector(q);
 
+                            const auto [m_dot_evap, delta_T] =
+                              update_evaporative_mass_flux_and_temperature_jump<dim, number>(
+                                w_liquid,
+                                w_gas,
+                                normal,
+                                multiphase_scratch_data,
+                                evaporation_model_knight.get());
+
                             const auto [riemann_flux_liquid,
                                         riemann_flux_gas,
                                         velocity_interface_vec] =
@@ -354,7 +438,8 @@ namespace MeltPoolDG::Multiphase
                                 normal,
                                 convective_terms_liquid,
                                 convective_terms_gas,
-                                multiphase_scratch_data);
+                                multiphase_scratch_data,
+                                m_dot_evap);
 
                             ConservedVariablesType flux_liquid =
                               contract_tensor_with_vector<dim + 2, dim, number>(riemann_flux_liquid,
@@ -392,7 +477,10 @@ namespace MeltPoolDG::Multiphase
                                         viscous_terms_liquid,
                                         viscous_terms_gas,
                                         multiphase_scratch_data,
-                                        multiphase_scratch_data.scratch_data.get_min_cell_size());
+                                        multiphase_scratch_data.scratch_data.get_min_cell_size(),
+                                        m_dot_evap,
+                                        delta_T,
+                                        laser_heat_source);
 
                                     flux_liquid -= viscous_interface_flux_liquid;
                                     // opposite normal direction for phase 2
@@ -418,7 +506,10 @@ namespace MeltPoolDG::Multiphase
                                         viscous_terms_liquid,
                                         viscous_terms_gas,
                                         multiphase_scratch_data,
-                                        multiphase_scratch_data.scratch_data.get_min_cell_size());
+                                        multiphase_scratch_data.scratch_data.get_min_cell_size(),
+                                        m_dot_evap,
+                                        delta_T,
+                                        laser_heat_source);
 
                                     flux_liquid += viscous_interface_flux_liquid;
                                     flux_gas += viscous_interface_flux_gas;
@@ -445,7 +536,9 @@ namespace MeltPoolDG::Multiphase
                                                                 visc_ave_weight_phase_gas,
                                                                 viscous_terms_liquid,
                                                                 viscous_terms_gas,
-                                                                multiphase_scratch_data);
+                                                                multiphase_scratch_data,
+                                                                m_dot_evap,
+                                                                delta_T);
 
                                 eval_point_interface_liquid.submit_gradient(
                                   -numerical_flux_gradient_liquid, q);

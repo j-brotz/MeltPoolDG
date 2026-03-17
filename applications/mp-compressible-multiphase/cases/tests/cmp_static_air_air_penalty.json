@@ -51,7 +51,6 @@
   "compressible flow phase coupling": {
     "type": "penalty",
     "evaporation mass flux": "0.0",
-    "delta q": "0.0",
     "penalty": {
       "coefficients": {
         "density": "100.0",

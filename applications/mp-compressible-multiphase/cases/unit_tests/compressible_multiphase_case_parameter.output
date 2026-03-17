@@ -15,8 +15,8 @@
     },
     "compressible flow phase coupling":
     {
-        "delta q": "0",
         "evaporation mass flux": "0",
+        "evaporation model": "constant",
         "type": "HLLP0_and_SIPG",
         "HLLP0 and SIPG":
         {
@@ -27,6 +27,12 @@
         {
             "delta T": "0",
             "penalty parameter temperature jump": "1"
+        },
+        "laser heat source":
+        {
+            "do ramp": "false",
+            "laser power density": "0",
+            "ramp time": "0"
         },
         "penalty":
         {
@@ -101,6 +107,12 @@
             }
         }
     },
+    "darcy damping":
+    {
+        "avoid div zero constant": "0.001",
+        "formulation": "implicit_formulation",
+        "mushy zone morphology": "0"
+    },
     "material":
     {
         "gas":
@@ -159,6 +171,21 @@
         {
             "enable": "false",
             "filename": "particle"
+        }
+    },
+    "phase change":
+    {
+        "liquid gas":
+        {
+            "boiling temperature": "3133",
+            "latent heat of vaporization": "8.84e+06",
+            "reference pressure": "100000"
+        },
+        "solid liquid":
+        {
+            "liquidus temperature": "2200",
+            "solidus temperature": "1933",
+            "use darcy damping": "false"
         }
     },
     "profiling":

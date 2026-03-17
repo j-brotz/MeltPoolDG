@@ -7,6 +7,7 @@
 #include <meltpooldg/flow/compressible_flow_types.hpp>
 #include <meltpooldg/flow/compressible_flow_viscous_kernels.hpp>
 #include <meltpooldg/flow/compressible_multiphase_level_set_advection.hpp>
+#include <meltpooldg/phase_change/evaporation_model_knight.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Multiphase
@@ -162,6 +163,17 @@ namespace MeltPoolDG::Multiphase
     void
     vmult(VectorType &dst, const VectorType &src) const;
 
+    /**
+     * @brief Set the current time.
+     *
+     * @param current_time_in Current time.
+     */
+    void
+    set_current_time(const number &current_time_in)
+    {
+      current_time = current_time_in;
+    };
+
   private:
     /// Scratch data for multiphase case
     Flow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data;
@@ -200,8 +212,14 @@ namespace MeltPoolDG::Multiphase
     /// Inverse time step size
     mutable number inv_time_step = 0.;
 
+    /// Current time
+    mutable number current_time = 0.;
+
     /// Object for the analytical advection of the level set field for 1D simulations
     mutable LevelSetAdvection<dim, number> level_set_advection_operator;
+
+    /// Pointer to the object for the evaluation of the Knight evaporation model
+    std::unique_ptr<Evaporation::EvaporationModelKnight<number>> evaporation_model_knight;
 
     /**
      * @brief Wrapper for the generation of a FECellIntegrator object.
