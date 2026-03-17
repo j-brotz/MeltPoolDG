@@ -56,6 +56,19 @@ namespace MeltPoolDG
       entries;
 
     /**
+     * Storage of registered data postprocessor entries.
+     * Each entry contains:
+     *
+     * - a pointer to the DoFHandler (or nullptr if not applicable),
+     * - a pointer to the distributed vector (or nullptr if not applicable),
+     * - a pointer to the data postprocessor defining and computing the output variables.
+     */
+    std::vector<std::tuple<const dealii::DoFHandler<dim> * /*optional*/,
+                           const VectorType *,
+                           const dealii::DataPostprocessor<dim> *>>
+      data_postprocessor_entries;
+
+    /**
      * @brief Constructor.
      * @param mapping Reference to the mapping object used for geometry transformation.
      * @param current_time The time value associated with the output.
@@ -102,6 +115,19 @@ namespace MeltPoolDG
                     const bool                     force_output = false);
 
     /**
+     * Add a data postprocessor with an associated vector and dof handler.
+     *
+     * @param dof_handler The associated DoFHandler.
+     * @param data The distributed vector.
+     * @param data_postprocessor The data postprocessor that defines the output variables.
+     */
+    void
+    add_data_vector(const dealii::DoFHandler<dim>        *dof_handler,
+                    const VectorType                     *data,
+                    const dealii::DataPostprocessor<dim> *data_postprocessor,
+                    const bool                            force_output = false);
+
+    /**
      * @brief Add an element-wise vector.
      *
      * These are typically used for cell-wise scalar quantities not tied to a DoFHandler.
@@ -116,7 +142,8 @@ namespace MeltPoolDG
                                  const bool                   force_output = false);
 
     /**
-     * @brief Retrieve a previously added distributed vector by name.
+     * Retrieve a previously added distributed vector by name. This can also include vectors
+     * associated with a previously added data postprocessor.
      *
      * Throws if the variable name is not found or if it is an element-wise vector.
      *
@@ -125,6 +152,17 @@ namespace MeltPoolDG
      */
     const VectorType &
     get_vector(const std::string &name) const;
+
+    /**
+     * Retrieve the data postprocessor who has the provided name among its output variables.
+     *
+     * @param name The name of the variable.
+     *
+     * @return Reference to the associated data postprocessor.
+     * @throws If no matching data postprocessor is found, an exception is thrown.
+     */
+    const dealii::DataPostprocessor<dim> &
+    get_data_postprocessor(const std::string &name) const;
 
     /**
      * @brief Retrieve the DoFHandler associated with a named distributed vector.

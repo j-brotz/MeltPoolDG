@@ -61,6 +61,29 @@ namespace MeltPoolDG
 
   template <int dim, typename number>
   void
+  GenericDataOut<dim, number>::add_data_vector(
+    const dealii::DoFHandler<dim>        *dof_handler,
+    const VectorType                     *data,
+    const dealii::DataPostprocessor<dim> *data_postprocessor,
+    const bool                            force_output)
+  {
+    Assert(data_postprocessor != nullptr,
+           ExcMessage("The data postprocessor pointer must not be null!"));
+    Assert(data != nullptr, ExcMessage("The data vector pointer must not be null!"));
+    Assert(dof_handler != nullptr, ExcMessage("The DoFHandler pointer must not be null!"));
+
+    if (not(std::ranges::any_of(data_postprocessor->get_names(),
+                                [this](const std::string &entry_name) {
+                                  return this->is_requested(entry_name);
+                                }) or
+            force_output))
+      return;
+
+    data_postprocessor_entries.emplace_back(dof_handler, data, data_postprocessor);
+  }
+
+  template <int dim, typename number>
+  void
   GenericDataOut<dim, number>::add_element_wise_data_vector(const ElementWiseVectorType &data,
                                                             const std::string           &name,
                                                             const bool force_output)
@@ -81,6 +104,16 @@ namespace MeltPoolDG
   const typename GenericDataOut<dim, number>::VectorType &
   GenericDataOut<dim, number>::get_vector(const std::string &name) const
   {
+    std::vector<std::string> available_postprocessor_names;
+    for (const auto &[dof_handler, data, data_postprocessor] : data_postprocessor_entries)
+      {
+        for (const auto &entry_name : data_postprocessor->get_names())
+          {
+            available_postprocessor_names.push_back(entry_name);
+            if (entry_name == name)
+              return *data;
+          }
+      }
     if (not entry_id.contains(name))
       {
         std::ostringstream exc_message;
@@ -90,6 +123,8 @@ namespace MeltPoolDG
                     << std::endl;
         for (const auto &key : entry_id | std::views::keys)
           exc_message << "* " << key << std::endl;
+        for (const auto &entry_name : available_postprocessor_names)
+          exc_message << "* " << entry_name << std::endl;
 
         AssertThrow(false, ExcMessage(exc_message.str()));
       }
@@ -102,9 +137,37 @@ namespace MeltPoolDG
   }
 
   template <int dim, typename number>
+  const dealii::DataPostprocessor<dim> &
+  GenericDataOut<dim, number>::get_data_postprocessor(const std::string &name) const
+  {
+    for (const auto &[dof_handler, data, data_postprocessor] : data_postprocessor_entries)
+      {
+        for (const auto &entry_name : data_postprocessor->get_names())
+          {
+            if (entry_name == name)
+              return *data_postprocessor;
+          }
+      }
+    AssertThrow(false,
+                dealii::ExcMessage("No data postprocessor with the name '" + name +
+                                   "' was found!"));
+  }
+
+  template <int dim, typename number>
   const DoFHandler<dim> &
   GenericDataOut<dim, number>::get_dof_handler(const std::string &name) const
   {
+    std::vector<std::string> available_postprocessor_names;
+    for (const auto &[dof_handler, data, data_postprocessor] : data_postprocessor_entries)
+      {
+        for (const auto &entry_name : data_postprocessor->get_names())
+          {
+            available_postprocessor_names.push_back(entry_name);
+            if (entry_name == name)
+              return *dof_handler;
+          }
+      }
+
     if (not entry_id.contains(name))
       {
         std::ostringstream exc_message;
@@ -114,6 +177,8 @@ namespace MeltPoolDG
                     << std::endl;
         for (const auto &key : entry_id | std::views::keys)
           exc_message << "* " << key << std::endl;
+        for (const auto &entry_name : available_postprocessor_names)
+          exc_message << "* " << entry_name << std::endl;
 
         AssertThrow(false, ExcMessage(exc_message.str()));
       }

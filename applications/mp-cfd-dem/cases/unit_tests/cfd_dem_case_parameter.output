@@ -138,6 +138,7 @@
         "write time step size": "1.79769e+308",
         "paraview":
         {
+            "compressible output types": "conserved_variables",
             "enable": "false",
             "filename": "solution",
             "n digits timestep": "4",

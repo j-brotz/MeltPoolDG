@@ -6,6 +6,8 @@
 
 #include <deal.II/numerics/data_component_interpretation.h>
 
+#include <meltpooldg/flow/compressible_flow_types.hpp>
+#include <meltpooldg/flow/compressible_flow_views.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_explicit.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operator_implicit.hpp>
@@ -20,7 +22,6 @@
 #include <ostream>
 #include <string>
 #include <utility>
-#include <vector>
 
 namespace MeltPoolDG::Flow
 {
@@ -28,12 +29,28 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   DGCompressibleFlowOperation<dim, number>::DGCompressibleFlowOperation(
-    const ScratchData<dim, dim, number>              &scratch_data,
-    const CompressibleFlowData<number>               &flow_data,
-    const CompressibleFluidMaterialPhaseData<number> &material_data,
-    const unsigned int                                flow_dof_idx,
-    const unsigned int                                flow_quad_idx)
+    const ScratchData<dim, dim, number>                    &scratch_data,
+    const Flow::CompressibleFlowData<number>               &flow_data,
+    const Flow::CompressibleFluidMaterialPhaseData<number> &material_data,
+    const unsigned int                                      flow_dof_idx,
+    const unsigned int                                      flow_quad_idx)
     : flow_scratch_data(flow_data, material_data, scratch_data, flow_dof_idx, flow_quad_idx)
+    , output_manager(
+        [](CompressibleFlow::ConservedVariablesType<dim, number, number> &value) -> auto {
+          return CompressibleFlow::
+            DofValueView<dim, CompressibleFlow::ConservedVariablesType<dim, number, number>>(value);
+        },
+        [&material_data](
+          CompressibleFlow::ConservedVariablesType<dim, number, number> &value) -> auto {
+          return CompressibleFlow::DofStateView<
+            dim,
+            number,
+            CompressibleFlow::ConservedVariablesType<dim, number, number>>(value, material_data);
+        },
+        [&material_data](auto &...) -> auto {
+          return CompressibleFlow::MaterialView<dim, number>(material_data);
+        })
+
   {
     setup_operator();
   }
@@ -43,8 +60,6 @@ namespace MeltPoolDG::Flow
   DGCompressibleFlowOperation<dim, number>::reinit()
   {
     comp_flow_operator->reinit();
-    flow_scratch_data.scratch_data.initialize_dof_vector(solution_primitive_variables,
-                                                         flow_scratch_data.dof_idx);
   }
 
   template <int dim, typename number>
@@ -263,26 +278,11 @@ namespace MeltPoolDG::Flow
   DGCompressibleFlowOperation<dim, number>::attach_output_vectors(
     GenericDataOut<dim, number> &data_out) const
   {
-    std::vector<std::string> names;
-    names.emplace_back("density");
-    for (unsigned int d = 0; d < dim; ++d)
-      names.emplace_back("momentum");
-
-    names.emplace_back("energy");
-
-    std::vector<DataComponentInterpretation::DataComponentInterpretation> interpretation;
-    interpretation.push_back(DataComponentInterpretation::component_is_scalar);
-    for (unsigned int d = 0; d < dim; ++d)
-      interpretation.push_back(DataComponentInterpretation::component_is_part_of_vector);
-    interpretation.push_back(DataComponentInterpretation::component_is_scalar);
-
-    data_out.add_data_vector(flow_scratch_data.scratch_data.get_dof_handler(
-                               flow_scratch_data.dof_idx),
-                             flow_scratch_data.solution_history.get_current_solution(),
-                             names,
-                             interpretation);
-
-    // TODO: Output primitive variables
+    output_manager.attach_to_data_out(data_out,
+                                      flow_scratch_data.scratch_data.get_dof_handler(
+                                        flow_scratch_data.dof_idx),
+                                      flow_scratch_data.solution_history.get_current_solution(),
+                                      flow_scratch_data.flow_data.output_variables);
   }
 
   template <int dim, typename number>

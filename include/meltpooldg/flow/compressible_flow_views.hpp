@@ -42,6 +42,29 @@
 namespace MeltPoolDG::CompressibleFlow
 {
   /**
+   * View providing access to the material data. Besides direct access to the material data, no
+   * further functionality is provided.
+   */
+  template <int dim, typename number>
+  struct MaterialView : public MaterialMixin<MaterialView<dim, number>>
+  {
+    using state_type = std::any;
+
+    MaterialView(const Flow::CompressibleFluidMaterialPhaseData<number> &material_data)
+      : material_data(material_data)
+    {}
+
+    const Flow::CompressibleFluidMaterialPhaseData<number> &
+    material() const
+    {
+      return material_data;
+    }
+
+  private:
+    const Flow::CompressibleFluidMaterialPhaseData<number> &material_data;
+  };
+
+  /**
    * View providing access to the conserved variables stored in the underlying data structure.
    * Besides direct access to the conserved variables, it enables computation of directly derived
    * quantities (e.g., velocity or specific total energy) via the corresponding mixin.

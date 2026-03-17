@@ -32,9 +32,11 @@
 #include <meltpooldg/cut/solution_transfer.hpp>
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/compressible_flow_data.hpp>
+#include <meltpooldg/flow/compressible_flow_output.hpp>
 #include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/flow/cutdg_compressible_flow_operator.hpp>
 #include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
+#include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
@@ -175,6 +177,18 @@ namespace MeltPoolDG::Flow
                             const std::string                                      &operation_name);
 
     /**
+     * @brief Attach the solution to the passed data out object.
+     *
+     * All output variables configured in the underlying CompressibleFlowData (via the given input
+     * parameter) are attached, such as density, momentum, total_energy, and any additional derived
+     * quantities that have been selected.
+     *
+     * @param data_out Object to which the solution vector is attached.
+     */
+    void
+    attach_output_vectors(GenericDataOut<dim, number> &data_out) const;
+
+    /**
      * @brief Constant getter function for the current solution vector.
      */
     const VectorType &
@@ -185,13 +199,6 @@ namespace MeltPoolDG::Flow
      */
     VectorType &
     get_solution();
-
-    /**
-     * @brief Getter function for the current solution vector in primitive variables (pressure,
-     * velocity, temperature).
-     */
-    VectorType &
-    get_solution_in_primitive_variables();
 
     /**
      * @brief Constant getter function for the DoFHandler.
@@ -250,9 +257,6 @@ namespace MeltPoolDG::Flow
     /// Right-hand side vector
     VectorType rhs;
 
-    /// Solution vector in primitive variable formulation (pressure, velocity, temperature)
-    VectorType solution_primitive_variables;
-
     /// Mesh classifier, which contains information if a cell is inside or outside the physically
     /// relevant region, or cut by the immersed boundary. It corresponds to the current level set
     /// position.
@@ -290,6 +294,17 @@ namespace MeltPoolDG::Flow
 
     /// Compressible flow operator object
     CutFlowOperatorVariant cut_flow_operator;
+
+    /// Object containing the data post processor for the different output options
+    CompressibleFlow::OutputManager<
+      dim,
+      number,
+      CompressibleFlow::DofValueView<dim,
+                                     CompressibleFlow::ConservedVariablesType<dim, number, number>>,
+      CompressibleFlow::
+        DofStateView<dim, number, CompressibleFlow::ConservedVariablesType<dim, number, number>>,
+      CompressibleFlow::MaterialView<dim, number>>
+      output_manager;
 
     /**
      * @brief Adapt the dof layout and solution vector to a new interface position, which is defined
@@ -348,19 +363,6 @@ namespace MeltPoolDG::Flow
   CutDGCompressibleFlowOperation<dim, number>::get_solution()
   {
     return flow_scratch_data.solution_history.get_current_solution();
-  }
-
-  template <int dim, typename number>
-  dealii::LinearAlgebra::distributed::Vector<number> &
-  CutDGCompressibleFlowOperation<dim, number>::get_solution_in_primitive_variables()
-  {
-    update_primitive_variables_solution<dim, number>(solution_primitive_variables,
-                                                     get_solution(),
-                                                     flow_scratch_data.scratch_data,
-                                                     flow_scratch_data.dof_idx,
-                                                     flow_scratch_data.quad_idx,
-                                                     &flow_scratch_data.material);
-    return solution_primitive_variables;
   }
 
   template <int dim, typename number>

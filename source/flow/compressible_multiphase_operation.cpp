@@ -142,6 +142,77 @@ namespace MeltPoolDG::Multiphase
   }
 
   template <int dim, typename number>
+  void
+  CompressibleMultiphaseOperation<dim, number>::attach_output_vectors(
+    GenericDataOut<dim, number> &data_out) const
+  {
+    // check, if single-phase or two-phase case is considered
+    const auto &dof_handler = get_dof_handler();
+    const bool  two_phase   = dof_handler.get_fe_collection().n_components() / (dim + 2) == 2;
+
+    std::vector<dealii::DataComponentInterpretation::DataComponentInterpretation> interpretation;
+    interpretation.push_back(dealii::DataComponentInterpretation::component_is_scalar);
+    for (unsigned int d = 0; d < dim; ++d)
+      interpretation.push_back(dealii::DataComponentInterpretation::component_is_part_of_vector);
+    interpretation.push_back(dealii::DataComponentInterpretation::component_is_scalar);
+
+    // add entries for two-phase case
+    if (two_phase)
+      {
+        interpretation.push_back(dealii::DataComponentInterpretation::component_is_scalar);
+        for (unsigned int d = 0; d < dim; ++d)
+          interpretation.push_back(
+            dealii::DataComponentInterpretation::component_is_part_of_vector);
+        interpretation.push_back(dealii::DataComponentInterpretation::component_is_scalar);
+      }
+
+    std::vector<std::string> names_conservative;
+    std::vector<std::string> names_primitive;
+
+    if (not two_phase)
+      {
+        names_conservative.emplace_back("density");
+        for (unsigned int d = 0; d < dim; ++d)
+          names_conservative.emplace_back("momentum");
+        names_conservative.emplace_back("energy");
+
+        names_primitive.emplace_back("pressure");
+        for (unsigned int d = 0; d < dim; ++d)
+          names_primitive.emplace_back("velocity");
+        names_primitive.emplace_back("temperature");
+      }
+    else
+      {
+        names_conservative.emplace_back("density_liquid");
+        for (unsigned int d = 0; d < dim; ++d)
+          names_conservative.emplace_back("momentum_liquid");
+        names_conservative.emplace_back("energy_liquid");
+
+        names_conservative.emplace_back("density_gas");
+        for (unsigned int d = 0; d < dim; ++d)
+          names_conservative.emplace_back("momentum_gas");
+        names_conservative.emplace_back("energy_gas");
+
+        names_primitive.emplace_back("pressure_liquid");
+        for (unsigned int d = 0; d < dim; ++d)
+          names_primitive.emplace_back("velocity_liquid");
+        names_primitive.emplace_back("temperature_liquid");
+
+        names_primitive.emplace_back("pressure_gas");
+        for (unsigned int d = 0; d < dim; ++d)
+          names_primitive.emplace_back("velocity_gas");
+        names_primitive.emplace_back("temperature_gas");
+      }
+
+    data_out.add_data_vector(get_dof_handler(), get_solution(), names_conservative, interpretation);
+
+    data_out.add_data_vector(get_dof_handler(),
+                             get_solution_in_primitive_variables(),
+                             names_primitive,
+                             interpretation);
+  }
+
+  template <int dim, typename number>
   number
   CompressibleMultiphaseOperation<dim, number>::compute_time_step_size(const bool do_print) const
   {
