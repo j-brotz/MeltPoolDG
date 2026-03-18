@@ -10,6 +10,7 @@
 #include <deal.II/grid/grid_generator.h>
 
 #include <meltpooldg/flow/compressible_flow_boundary_conditions.hpp>
+#include <meltpooldg/flow/compressible_flow_types.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 
 #include <memory>
@@ -42,7 +43,8 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
                          const std::shared_ptr<dealii::Function<dim, number>> energy,
                          const number     inflow_ramp_up_duration = 0.,
                          const RampUpType ramp_up_type            = RampUpType::linear)
-      : dealii::Function<dim, number>(dim + 2, initial_time)
+      : dealii::Function<dim, number>(MeltPoolDG::CompressibleFlow::n_conserved_variables<dim>,
+                                      initial_time)
       , density(density)
       , velocity(velocity)
       , energy(energy)
@@ -104,7 +106,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
                      (1 - std::cos(std::numbers::pi * this->get_time() / inflow_ramp_up_duration));
               break;
             default:
-              AssertThrow(false, dealii::ExcInternalError());
+              AssertThrow(false, dealii::ExcMessage("The chosen ramp up type is not supported."));
           }
       };
 
@@ -124,22 +126,31 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
             return density->value(loc, 0) * inflow_ramp_up_scaling() * velocity->value(loc, 0);
             break;
           case 2:
-            return density->value(loc, 0) * inflow_ramp_up_scaling() * velocity->value(loc, 1);
+            if constexpr (dim >= 2)
+              return density->value(loc, 0) * inflow_ramp_up_scaling() * velocity->value(loc, 1);
+            else
+              return compute_conserved_energy(loc);
             break;
           case 3:
             if constexpr (dim == 3)
               return density->value(loc, 0) * inflow_ramp_up_scaling() * velocity->value(loc, 2);
-            else
+            else if constexpr (dim == 2)
               return compute_conserved_energy(loc);
+            else
+              AssertThrow(false,
+                          dealii::ExcMessage(
+                            "Component 3 is not valid for dim = " + std::to_string(dim) + "."));
             break;
           case 4:
             if constexpr (dim == 3)
               return compute_conserved_energy(loc);
             else
-              AssertThrow(false, dealii::ExcInternalError());
+              AssertThrow(false,
+                          dealii::ExcMessage(
+                            "Component 4 is not valid for dim = " + std::to_string(dim) + "."));
             break;
           default:
-            AssertThrow(false, dealii::ExcInternalError());
+            AssertThrow(false, dealii::ExcMessage("The given component is not valid."));
         }
     }
 
@@ -276,13 +287,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     SimulationGenericHyperRectangleDomain(std::string    parameter_file,
                                           const MPI_Comm mpi_communicator)
       : Flow::CompressibleFlowCase<dim, number>(parameter_file, mpi_communicator)
-    {
-      AssertThrow(
-        dim > 1,
-        dealii::ExcMessage(
-          "The generic hyper rectangle flow case requires dim > 1 but the dimension is set to dim = " +
-          std::to_string(dim) + "."));
-    }
+    {}
 
     /**
      * @brief Creates the spatial discretization for the simulation setup.
@@ -293,15 +298,22 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       auto create_point_from_container =
         []<typename T>(const T &container) -> dealii::Point<dim, number> {
         dealii::Point<dim, number> point;
-        if constexpr (dim == 2)
+        if constexpr (dim == 1)
+          point = dealii::Point<dim, number>(container[0]);
+        else if constexpr (dim == 2)
           point = dealii::Point<dim, number>(container[0], container[1]);
         else if constexpr (dim == 3)
           point = dealii::Point<dim, number>(container[0], container[1], container[2]);
         return point;
       };
 
-      this->triangulation =
-        std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+      // distributed triangulation is not supported for dim=1 in deal.II
+      if constexpr (dim > 1)
+        this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+          this->mpi_communicator);
+      else
+        this->triangulation =
+          std::make_shared<dealii::parallel::shared::Triangulation<dim>>(this->mpi_communicator);
 
       dealii::Point<dim, number> dimensions =
         create_point_from_container(scenario_data.domain_dimensions);
@@ -400,12 +412,17 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
         add_user_boundary_condition_parameters(prm,
                                                "boundary x max",
                                                scenario_data.boundary_conditions[1]);
-        add_user_boundary_condition_parameters(prm,
-                                               "boundary y min",
-                                               scenario_data.boundary_conditions[2]);
-        add_user_boundary_condition_parameters(prm,
-                                               "boundary y max",
-                                               scenario_data.boundary_conditions[3]);
+
+        if constexpr (dim >= 2)
+          {
+            add_user_boundary_condition_parameters(prm,
+                                                   "boundary y min",
+                                                   scenario_data.boundary_conditions[2]);
+            add_user_boundary_condition_parameters(prm,
+                                                   "boundary y max",
+                                                   scenario_data.boundary_conditions[3]);
+          }
+
         if constexpr (dim == 3)
           {
             add_user_boundary_condition_parameters(prm,
@@ -503,11 +520,17 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       prm.leave_subsection();
     }
 
-    struct
+    /**
+     * Struct for boundary condition and domain data for the current scenario.
+     */
+    struct ScenarioData
     {
+      /// Number of domain boundaries
+      constexpr static int n_domain_boundaries = 2 * dim;
+
       /// Array of boundary condition objects describing the type and values of the boundaries.
       /// The array index corresponds to the boundary ID to which the boundary condition applies.
-      std::array<BoundaryCondition<dim, number>, 2 * dim> boundary_conditions;
+      std::array<BoundaryCondition<dim, number>, n_domain_boundaries> boundary_conditions;
 
       struct
       {

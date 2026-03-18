@@ -8,6 +8,11 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
   MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
                            SimulationGenericHyperRectangleDomain,
                            "generic_hyper_rectangle_domain",
+                           1,
+                           double);
+  MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
+                           SimulationGenericHyperRectangleDomain,
+                           "generic_hyper_rectangle_domain",
                            2,
                            double);
   MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
