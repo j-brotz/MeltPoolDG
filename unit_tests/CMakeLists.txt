@@ -11,4 +11,5 @@ endforeach()
 find_package(MPI REQUIRED)
 
 add_subdirectory(flow)
+add_subdirectory(heat)
 add_subdirectory(particles)

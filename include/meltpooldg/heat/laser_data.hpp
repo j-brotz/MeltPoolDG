@@ -115,7 +115,9 @@ namespace MeltPoolDG::Heat
     check_input_parameters() const;
 
   private:
-    std::vector<number> starting_position; // default value will be set in post()
-    std::vector<number> direction;         // default value will be set in post()
+    std::vector<number> starting_position;  // default value will be set in post()
+    std::vector<number> direction;          // default value will be set in post()
+    std::vector<number> beam_rotation_axis; // default value will be set in post()
+    double              beam_rotation_angle = 0;
   };
 } // namespace MeltPoolDG::Heat
