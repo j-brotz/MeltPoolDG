@@ -10,5 +10,12 @@ endforeach()
 # In order to run tests with MPI, we need to know the MPI executable and its semantics.
 find_package(MPI REQUIRED)
 
+mpdg_setup_mpi_unit_tests(
+   N_MPI_PROCESSES
+   1
+   TEST_SOURCE_FILES
+   material_data.cpp
+)
+
 add_subdirectory(flow)
 add_subdirectory(particles)
