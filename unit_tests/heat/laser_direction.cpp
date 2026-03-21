@@ -1,9 +1,12 @@
 #include <gtest/gtest.h>
 
 #include <deal.II/base/parameter_handler.h>
+#include <deal.II/base/tensor.h>
 
 #include <meltpooldg/heat/laser_data.hpp>
 
+#include <algorithm>
+#include <array>
 #include <cmath>
 
 template <int dim>
@@ -30,16 +33,13 @@ TEST(LaserDataTest, DefaultDirectionRotatedIn2D)
   prm.enter_subsection("laser");
   {
     // Default 2D direction before rotation is (0, -1).
-    prm.set("beam rotation angle", std::to_string(dealii::numbers::PI / 2.0));
+    prm.set("beam rotation angle", dealii::numbers::PI * 0.5);
   }
   prm.leave_subsection();
 
   laser.post(2);
 
   const auto direction = laser.get_direction<2>();
-
-  std::cout << "direction " << direction[0] << std::endl;
-  std::cout << "direction " << direction[1] << std::endl;
 
   // Rotating (0, -1) by +pi/2 gives (1, 0).
   expect_direction_near<2>(direction, {{1.0, 0.0}});
@@ -57,7 +57,7 @@ TEST(LaserDataTest, CustomDirectionRotatedIn2D)
   prm.enter_subsection("laser");
   {
     prm.set("direction", "1, 0");
-    prm.set("beam rotation angle", std::to_string(dealii::numbers::PI / 2.0));
+    prm.set("beam rotation angle", dealii::numbers::PI * 0.5);
   }
   prm.leave_subsection();
 
@@ -82,7 +82,7 @@ TEST(LaserDataTest, DefaultDirectionRotatedIn3DWithDefaultAxis)
   {
     // Default 3D direction before rotation is (0, 0, -1).
     // Default 3D rotation axis is (0, -1, 0).
-    prm.set("beam rotation angle", std::to_string(dealii::numbers::PI / 2.0));
+    prm.set("beam rotation angle", dealii::numbers::PI * 0.5);
   }
   prm.leave_subsection();
 
@@ -107,7 +107,7 @@ TEST(LaserDataTest, CustomDirectionRotatedIn3DWithCustomAxis)
   {
     prm.set("direction", "1, 0, 0");
     prm.set("beam rotation axis", "0, 0, 1");
-    prm.set("beam rotation angle", std::to_string(dealii::numbers::PI / 2.0));
+    prm.set("beam rotation angle", dealii::numbers::PI * 0.5);
   }
   prm.leave_subsection();
 

@@ -69,7 +69,9 @@ namespace MeltPoolDG::Heat
         "Axis around which the initial laser beam direction will be rotated. Relevant only in 3D.");
       prm.add_parameter("beam rotation angle",
                         beam_rotation_angle,
-                        "Laser beam angle around laser beam direction.");
+                        "Rotation angle applied to the laser beam direction (in 3D about "
+                        "'beam rotation axis' following the right-hand rule; in 2D: as "
+                        "defined by the 2D rotation matrix");
       prm.add_parameter("radius", radius, "Laser beam radius.");
       /*
        *   Gusarov
@@ -133,33 +135,12 @@ namespace MeltPoolDG::Heat
       {
         AssertThrow(direction.size() == dim,
                     ExcMessage("There must be dim coordinates of the laser direction given."));
-        AssertThrow(std::any_of(direction.begin(),
-                                direction.end(),
-                                [](double d) { return d != 0.0; }),
+        AssertThrow(std::ranges::any_of(direction, [](double d) { return d != 0.0; }),
                     ExcMessage("The laser direction cannot be a zero vector."));
       }
 
     if (dim == 1 || beam_rotation_angle == 0)
       return;
-
-    // if the laser beam rotation direction is not specified, set it to the negative dim-2
-    // direction
-    if (beam_rotation_axis.size() == 0)
-      {
-        beam_rotation_axis.resize(dim);
-        std::fill(beam_rotation_axis.begin(), std::prev(beam_rotation_axis.end()), 0);
-        beam_rotation_axis[dim - 2] = -1.0;
-      }
-    else
-      {
-        AssertThrow(beam_rotation_axis.size() == dim,
-                    ExcMessage(
-                      "There must be dim coordinates of the laser beam rotation direction given."));
-        AssertThrow(std::any_of(beam_rotation_axis.begin(),
-                                beam_rotation_axis.end(),
-                                [](double d) { return d != 0.0; }),
-                    ExcMessage("The laser direction cannot be a zero vector."));
-      }
 
     if (dim == 2)
       {
@@ -172,6 +153,23 @@ namespace MeltPoolDG::Heat
       }
     else if (dim == 3)
       {
+        // if the laser beam rotation direction is not specified, set it to the negative dim-2
+        // direction
+        if (beam_rotation_axis.size() == 0)
+          {
+            beam_rotation_axis.resize(dim);
+            std::fill(beam_rotation_axis.begin(), beam_rotation_axis.end(), 0);
+            beam_rotation_axis[dim - 2] = -1.0;
+          }
+        else
+          {
+            AssertThrow(
+              beam_rotation_axis.size() == dim,
+              ExcMessage(
+                "There must be dim coordinates of the laser beam rotation direction given."));
+            AssertThrow(std::ranges::any_of(beam_rotation_axis, [](double d) { return d != 0.0; }),
+                        ExcMessage("The beam rotation axis cannot be a zero vector."));
+          }
         Point<3, number> axis(beam_rotation_axis[0], beam_rotation_axis[1], beam_rotation_axis[2]);
         const Tensor<2, 3, number> rotation_matrix =
           dealii::Physics::Transformations::Rotations::rotation_matrix_3d(axis,
