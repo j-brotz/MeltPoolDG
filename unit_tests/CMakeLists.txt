@@ -18,4 +18,5 @@ mpdg_setup_mpi_unit_tests(
 )
 
 add_subdirectory(flow)
+add_subdirectory(heat)
 add_subdirectory(particles)
