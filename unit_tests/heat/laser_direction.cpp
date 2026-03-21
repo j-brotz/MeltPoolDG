@@ -33,7 +33,7 @@ TEST(LaserDataTest, DefaultDirectionRotatedIn2D)
   prm.enter_subsection("laser");
   {
     // Default 2D direction before rotation is (0, -1).
-    prm.set("beam rotation angle", dealii::numbers::PI * 0.5);
+    prm.set("beam rotation angle", 90.);
   }
   prm.leave_subsection();
 
@@ -41,7 +41,7 @@ TEST(LaserDataTest, DefaultDirectionRotatedIn2D)
 
   const auto direction = laser.get_direction<2>();
 
-  // Rotating (0, -1) by +pi/2 gives (1, 0).
+  // Rotating (0, -1) by 90° gives (1, 0).
   expect_direction_near<2>(direction, {{1.0, 0.0}});
 }
 
@@ -57,7 +57,7 @@ TEST(LaserDataTest, CustomDirectionRotatedIn2D)
   prm.enter_subsection("laser");
   {
     prm.set("direction", "1, 0");
-    prm.set("beam rotation angle", dealii::numbers::PI * 0.5);
+    prm.set("beam rotation angle", 90.);
   }
   prm.leave_subsection();
 
@@ -65,7 +65,7 @@ TEST(LaserDataTest, CustomDirectionRotatedIn2D)
 
   const auto direction = laser.get_direction<2>();
 
-  // Rotating (1, 0) by +pi/2 gives (0, 1).
+  // Rotating (1, 0) by 90° gives (0, 1).
   expect_direction_near<2>(direction, {{0.0, 1.0}});
 }
 
@@ -82,7 +82,7 @@ TEST(LaserDataTest, DefaultDirectionRotatedIn3DWithDefaultAxis)
   {
     // Default 3D direction before rotation is (0, 0, -1).
     // Default 3D rotation axis is (0, -1, 0).
-    prm.set("beam rotation angle", dealii::numbers::PI * 0.5);
+    prm.set("beam rotation angle", 90.);
   }
   prm.leave_subsection();
 
@@ -90,7 +90,7 @@ TEST(LaserDataTest, DefaultDirectionRotatedIn3DWithDefaultAxis)
 
   const auto direction = laser.get_direction<3>();
 
-  // Rotating (0, 0, -1) around (0, -1, 0) by +pi/2 gives (1, 0, 0).
+  // Rotating (0, 0, -1) around (0, -1, 0) by 90° gives (1, 0, 0).
   expect_direction_near<3>(direction, {{1.0, 0.0, 0.0}});
 }
 
@@ -107,7 +107,7 @@ TEST(LaserDataTest, CustomDirectionRotatedIn3DWithCustomAxis)
   {
     prm.set("direction", "1, 0, 0");
     prm.set("beam rotation axis", "0, 0, 1");
-    prm.set("beam rotation angle", dealii::numbers::PI * 0.5);
+    prm.set("beam rotation angle", 90.);
   }
   prm.leave_subsection();
 
@@ -115,6 +115,6 @@ TEST(LaserDataTest, CustomDirectionRotatedIn3DWithCustomAxis)
 
   const auto direction = laser.get_direction<3>();
 
-  // Rotating (1, 0, 0) around z by +pi/2 gives (0, 1, 0).
+  // Rotating (1, 0, 0) around z by 90° gives (0, 1, 0).
   expect_direction_near<3>(direction, {{0.0, 1.0, 0.0}});
 }

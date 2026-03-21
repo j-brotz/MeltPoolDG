@@ -4,6 +4,7 @@
 #include <deal.II/physics/transformations.h>
 
 #include <meltpooldg/heat/laser_data.hpp>
+#include <meltpooldg/utilities/numbers.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <algorithm>
@@ -145,7 +146,8 @@ namespace MeltPoolDG::Heat
     if (dim == 2)
       {
         const Tensor<2, 2, number> rotation_matrix =
-          dealii::Physics::Transformations::Rotations::rotation_matrix_2d(beam_rotation_angle);
+          dealii::Physics::Transformations::Rotations::rotation_matrix_2d(
+            MeltPoolDG::numbers::compute_angle_in_radians(beam_rotation_angle));
         Point<2, number> original_direction(direction[0], direction[1]);
         const auto       rotated_direction = rotation_matrix * original_direction;
         direction[0]                       = rotated_direction[0];
@@ -172,8 +174,8 @@ namespace MeltPoolDG::Heat
           }
         Point<3, number> axis(beam_rotation_axis[0], beam_rotation_axis[1], beam_rotation_axis[2]);
         const Tensor<2, 3, number> rotation_matrix =
-          dealii::Physics::Transformations::Rotations::rotation_matrix_3d(axis,
-                                                                          beam_rotation_angle);
+          dealii::Physics::Transformations::Rotations::rotation_matrix_3d(
+            axis, MeltPoolDG::numbers::compute_angle_in_radians(beam_rotation_angle));
         Point<3, number> original_direction(direction[0], direction[1], direction[2]);
         const auto       rotated_direction = rotation_matrix * original_direction;
         direction[0]                       = rotated_direction[0];

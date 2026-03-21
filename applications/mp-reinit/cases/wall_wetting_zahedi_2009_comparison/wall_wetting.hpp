@@ -17,6 +17,7 @@
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 #include <meltpooldg/utilities/characteristic_functions.hpp>
+#include <meltpooldg/utilities/numbers.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
@@ -208,7 +209,8 @@ namespace MeltPoolDG::Simulation::WallWetting
         get_colorized_rectangle_boundary_ids<dim>();
 
       // Wetting boundary condition
-      const number contact_angle_rad = compute_contact_angle_in_radians(contact_angle_deg);
+      const number contact_angle_rad =
+        MeltPoolDG::numbers::compute_angle_in_radians(contact_angle_deg);
 
 
       // Component-wise definition of AffineConstraints objects is required. Therefore, one
@@ -292,19 +294,6 @@ namespace MeltPoolDG::Simulation::WallWetting
               postprocess_table.write_text(output);
             }
         } // End rank 0 scope
-    }
-
-    /**
-     * @brief Compute the static contact angle in radians from degrees.
-     *
-     * @param contact_angle_deg Static contact angle in degrees
-     *
-     * @return Static contact angle in radians
-     */
-    inline number
-    compute_contact_angle_in_radians(const number contact_angle_deg)
-    {
-      return contact_angle_deg * dealii::numbers::PI / 180.0;
     }
 
     /**

@@ -18,4 +18,21 @@ namespace MeltPoolDG::numbers
     return number <= invalid_double;
   }
 
+  /**
+   * @brief Convert an angle from degrees to radians.
+   *
+   * This function takes an angle specified in degrees and converts it
+   * to radians using the relation \f$ \theta_{\mathrm{rad}} = \theta_{\mathrm{deg}} \cdot \pi / 180
+   * \f$.
+   *
+   * @tparam number Numeric type (e.g., float, double).
+   * @param angle_deg Angle in degrees.
+   * @return Angle in radians.
+   */
+  template <typename number>
+  number
+  compute_angle_in_radians(const number angle_deg)
+  {
+    return angle_deg * number(dealii::numbers::PI / 180.0);
+  }
 } // namespace MeltPoolDG::numbers
