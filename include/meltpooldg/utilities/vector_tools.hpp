@@ -143,6 +143,17 @@ namespace MeltPoolDG::VectorTools
 
   template <int dim, typename number, typename VectorType>
   number
+  compute_global_error_norm(const VectorType                    &solution,
+                            const dealii::Triangulation<dim>    &triangulation,
+                            const dealii::Mapping<dim>          &mapping,
+                            const dealii::DoFHandler<dim>       &dof_handler,
+                            const dealii::Quadrature<dim>       &quadrature,
+                            const dealii::VectorTools::NormType  norm_type,
+                            const dealii::Function<dim, number> &reference_solution,
+                            const dealii::Function<dim, number> *weight = nullptr);
+
+  template <int dim, typename number, typename VectorType>
+  number
   compute_norm(const VectorType                   &solution,
                const dealii::Triangulation<dim>   &triangulation,
                const dealii::Mapping<dim>         &mapping,

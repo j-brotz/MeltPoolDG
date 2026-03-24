@@ -8,8 +8,14 @@
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+
+#include <iomanip>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include "compressible_flow_case.hpp"
 
@@ -22,6 +28,63 @@ namespace MeltPoolDG::Flow
   CompressibleFlowApplication<dim, number>::run()
   {
     initialize();
+
+    // Print startup info on the solver and the output the initial condition if output is requested.
+    const auto print_solver_startup_info = [&]() {
+      // helpers
+      auto &pcout = scratch_data->get_pcout(1);
+
+      auto print_decoration = [&]() { Journal::print_decoration_line(pcout); };
+
+      auto print_line = [&](const std::string &text = "") { Journal::print_line(pcout, text); };
+
+      auto print_line_with_decoration = [&](const std::string &text = "") {
+        Journal::print_line_with_decoration(pcout, text);
+      };
+
+      auto print_kv = [&](const std::string &key, const std::string &value) {
+        std::ostringstream oss;
+        oss << " " << std::left << std::setw(16) << key << ": " << value;
+        print_line(oss.str());
+      };
+
+      // header
+      std::ostringstream title;
+      title << std::string(30, ' ') << "MeltPoolDG: Compressible Flow Solver";
+      print_line_with_decoration(title.str());
+
+      // case info
+      print_line();
+      print_kv("Case", simulation_case->parameters.base.case_name);
+      print_kv("Dimension", std::to_string(dim) + "D");
+
+      const bool is_cut = (simulation_case->parameters.flow.domain_representation_type == "cut");
+      print_kv("Method", is_cut ? "cut Discontinuous Galerkin" : "Discontinuous Galerkin");
+
+      print_kv("MPI Processes",
+               std::to_string(
+                 dealii::Utilities::MPI::n_mpi_processes(scratch_data->get_mpi_comm())));
+
+      print_line();
+      print_decoration();
+
+      // initial solution
+      if (simulation_case->parameters.output.do_user_defined_postprocessing)
+        {
+          print_decoration();
+          print_line(" Initialization Summary");
+          print_decoration();
+          output_results(time_iterator->get_current_time_step_number(),
+                         time_iterator->get_current_time(),
+                         true);
+          print_decoration();
+        }
+      pcout << std::endl;
+    };
+
+    print_solver_startup_info();
+
+    Journal::print_line_with_decoration(scratch_data->get_pcout(1), " Starting simulation...");
 
     while (not time_iterator->is_finished())
       {
@@ -40,9 +103,9 @@ namespace MeltPoolDG::Flow
         comp_flow_operation.solve(time_iterator->get_current_time(),
                                   time_iterator->get_current_time_increment());
 
-        // do output if requested
         output_results(time_iterator->get_current_time_step_number(),
-                       time_iterator->get_current_time());
+                       time_iterator->get_current_time(),
+                       time_iterator->is_finished());
 
         if (profiling_monitor and profiling_monitor->now())
           {
@@ -265,10 +328,11 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   void
   CompressibleFlowApplication<dim, number>::output_results(const unsigned int time_step,
-                                                           const number       current_time)
+                                                           const number       current_time,
+                                                           const bool         force_output)
   {
     if (not post_processor->is_output_timestep(time_step, current_time) and
-        not simulation_case->parameters.output.do_user_defined_postprocessing)
+        not simulation_case->parameters.output.do_user_defined_postprocessing and not force_output)
       return;
 
     const auto attach_output_vectors = [&](GenericDataOut<dim, number> &data_out) {
@@ -286,11 +350,11 @@ namespace MeltPoolDG::Flow
 
     // user-defined postprocessing
     if (simulation_case->parameters.output.do_user_defined_postprocessing and
-        post_processor->is_output_timestep(time_step, current_time))
+        (post_processor->is_output_timestep(time_step, current_time) or force_output))
       simulation_case->do_postprocessing(generic_data_out);
 
     // postprocessing
-    post_processor->process(time_step, generic_data_out, current_time);
+    post_processor->process(time_step, generic_data_out, current_time, force_output);
   }
 
   template class CompressibleFlowApplication<1, double>;

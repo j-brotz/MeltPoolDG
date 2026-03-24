@@ -134,12 +134,14 @@ namespace MeltPoolDG::VectorTools
 
   template <int dim, typename number, typename VectorType>
   number
-  compute_norm(const VectorType                   &solution,
-               const dealii::Triangulation<dim>   &triangulation,
-               const dealii::Mapping<dim>         &mapping,
-               const dealii::DoFHandler<dim>      &dof_handler,
-               const dealii::Quadrature<dim>      &quadrature,
-               const dealii::VectorTools::NormType norm_type)
+  compute_global_error_norm(const VectorType                    &solution,
+                            const dealii::Triangulation<dim>    &triangulation,
+                            const dealii::Mapping<dim>          &mapping,
+                            const dealii::DoFHandler<dim>       &dof_handler,
+                            const dealii::Quadrature<dim>       &quadrature,
+                            const dealii::VectorTools::NormType  norm_type,
+                            const dealii::Function<dim, number> &reference_solution,
+                            const dealii::Function<dim, number> *weight)
   {
     const bool is_ghosted = solution.has_ghost_elements();
 
@@ -151,16 +153,35 @@ namespace MeltPoolDG::VectorTools
     dealii::VectorTools::integrate_difference(mapping,
                                               dof_handler,
                                               solution,
-                                              dealii::Functions::ZeroFunction<dim>(
-                                                dof_handler.get_fe().n_components()),
+                                              reference_solution,
                                               difference_per_cell,
                                               quadrature,
-                                              norm_type);
+                                              norm_type,
+                                              weight);
 
     if (not is_ghosted)
       solution.zero_out_ghost_values();
 
     return dealii::VectorTools::compute_global_error(triangulation, difference_per_cell, norm_type);
+  }
+
+  template <int dim, typename number, typename VectorType>
+  number
+  compute_norm(const VectorType                   &solution,
+               const dealii::Triangulation<dim>   &triangulation,
+               const dealii::Mapping<dim>         &mapping,
+               const dealii::DoFHandler<dim>      &dof_handler,
+               const dealii::Quadrature<dim>      &quadrature,
+               const dealii::VectorTools::NormType norm_type)
+  {
+    return compute_global_error_norm(solution,
+                                     triangulation,
+                                     mapping,
+                                     dof_handler,
+                                     quadrature,
+                                     norm_type,
+                                     dealii::Functions::ZeroFunction<dim>(
+                                       dof_handler.get_fe().n_components()));
   }
 
   template <int dim, typename number, typename VectorType>
@@ -284,6 +305,36 @@ namespace MeltPoolDG::VectorTools
     const dealii::DoFHandler<3, 3> &,
     dealii::LinearAlgebra::distributed::Vector<double> &,
     const dealii::DoFHandler<3, 3> &);
+
+  template double
+  compute_global_error_norm(const dealii::LinearAlgebra::distributed::Vector<double> &solution,
+                            const dealii::Triangulation<1>                           &triangulation,
+                            const dealii::Mapping<1>                                 &mapping,
+                            const dealii::DoFHandler<1>                              &dof_handler,
+                            const dealii::Quadrature<1>                              &quadrature,
+                            const dealii::VectorTools::NormType                       norm_type,
+                            const dealii::Function<1, double> &reference_solution,
+                            const dealii::Function<1, double> *weight);
+
+  template double
+  compute_global_error_norm(const dealii::LinearAlgebra::distributed::Vector<double> &solution,
+                            const dealii::Triangulation<2>                           &triangulation,
+                            const dealii::Mapping<2>                                 &mapping,
+                            const dealii::DoFHandler<2>                              &dof_handler,
+                            const dealii::Quadrature<2>                              &quadrature,
+                            const dealii::VectorTools::NormType                       norm_type,
+                            const dealii::Function<2, double> &reference_solution,
+                            const dealii::Function<2, double> *weight);
+
+  template double
+  compute_global_error_norm(const dealii::LinearAlgebra::distributed::Vector<double> &solution,
+                            const dealii::Triangulation<3>                           &triangulation,
+                            const dealii::Mapping<3>                                 &mapping,
+                            const dealii::DoFHandler<3>                              &dof_handler,
+                            const dealii::Quadrature<3>                              &quadrature,
+                            const dealii::VectorTools::NormType                       norm_type,
+                            const dealii::Function<3, double> &reference_solution,
+                            const dealii::Function<3, double> *weight);
 
   template double
   compute_norm(const dealii::LinearAlgebra::distributed::Vector<double> &,

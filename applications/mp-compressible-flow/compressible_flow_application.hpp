@@ -102,13 +102,15 @@ namespace MeltPoolDG::Flow
     initialize();
 
     /**
-     *  @brief Perform the output of the results.
+     * @brief Perform the output of the results.
      *
-     *  @param time_step Current time step size.
-     *  @param current_time Current time at t^n.
+     * @param time_step Current time step size.
+     * @param current_time Current time at t^n.
+     * @param force_output If true, output will be generated regardless of the output frequency
+     * defined in the parameters.
      */
     void
-    output_results(unsigned int time_step, number current_time);
+    output_results(unsigned int time_step, number current_time, const bool force_output = false);
 
     /**
      * @brief Interpolates the values of a (currently) analytically given level-set function to the

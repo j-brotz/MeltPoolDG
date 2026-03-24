@@ -26,6 +26,7 @@
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/time_integration/time_stepping_data.hpp>
 #include <meltpooldg/utilities/profiling_data.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <string>
@@ -168,56 +169,65 @@ namespace MeltPoolDG::Flow
 
       reference_function.set_time(generic_data_out.get_time());
 
-      number errors_squared[3] = {};
+      std::map<std::string, number> component_errors;
 
-      bool is_cut = false;
-      if (dof_handler.get_fe_collection().size() > 1)
-        is_cut = true;
+      std::vector<std::string> labels;
 
-      if (not is_cut)
+      if (parameters.flow.domain_representation_type == "fitted")
         {
-          // in the fitted mesh case, we can use the DoF values for error computation
+          // In the fitted mesh case, we can use dealii vector tools to compute the error norms
+          // based on the DoFHandler and DoFVector of the solution. We loop over the components of
+          // the solution and compute the error norms separately for each component. We also take
+          // into account the case that some components might be part of a vector (e.g. the velocity
+          // components) and compute the error norm for the entire vector instead of the individual
+          // components in that case.
+          const auto &data_postprocessor = generic_data_out.get_data_postprocessor("density");
 
-          std::map<dealii::types::global_dof_index, dealii::Point<dim, number>> support_points =
-            dealii::DoFTools::map_dofs_to_support_points(generic_data_out.get_mapping(),
-                                                         dof_handler);
-          for (const auto &cell : dof_handler.active_cell_iterators())
+          const auto &names          = data_postprocessor.get_names();
+          const auto &interpretation = data_postprocessor.get_data_component_interpretation();
+
+          const unsigned int n_components = names.size();
+
+          // Initialize errors
+          for (const auto &name : names)
+            component_errors[name] = 0.0;
+
+          unsigned int i = 0;
+          while (i < n_components)
             {
-              if (cell->is_artificial() or cell->is_ghost())
-                continue;
-              const unsigned int nodes_per_cell = cell->get_fe().dofs_per_cell / (dim + 2);
-              std::vector<dealii::types::global_dof_index> local_dof_indices(
-                cell->get_fe().dofs_per_cell);
-              cell->get_dof_indices(local_dof_indices);
+              const std::string &component_name = names[i];
+              labels.push_back(component_name);
 
-              for (unsigned int i = 0; i < local_dof_indices.size(); ++i)
+              // Determine component range and create mask
+              unsigned int begin = i;
+              unsigned int end   = i + 1;
+
+              if (interpretation[i] ==
+                  dealii::DataComponentInterpretation::component_is_part_of_vector)
                 {
-                  switch (unsigned int component = i / nodes_per_cell)
+                  while (end < n_components and names[end] == component_name and
+                         interpretation[end] ==
+                           dealii::DataComponentInterpretation::component_is_part_of_vector)
                     {
-                        case 0: {
-                          const number error =
-                            dof_vector[local_dof_indices[i]] -
-                            reference_function.value(support_points[local_dof_indices[i]], 0);
-                          errors_squared[0] += error * error;
-                          break;
-                        }
-                        case dim + 1: {
-                          const number error =
-                            dof_vector[local_dof_indices[i]] -
-                            reference_function.value(support_points[local_dof_indices[i]], dim + 1);
-                          errors_squared[2] += error * error;
-                          break;
-                        }
-                        default: {
-                          Assert(component > 0 and component < dim + 1, dealii::ExcInternalError());
-                          const number error =
-                            dof_vector[local_dof_indices[i]] -
-                            reference_function.value(support_points[local_dof_indices[i]],
-                                                     component);
-                          errors_squared[1] += error * error;
-                        }
+                      ++end;
                     }
                 }
+              dealii::ComponentSelectFunction<dim> component_mask({begin, end}, n_components);
+
+              // Compute global error
+              component_errors[component_name] =
+                VectorTools::compute_global_error_norm(dof_vector,
+                                                       dof_handler.get_triangulation(),
+                                                       generic_data_out.get_mapping(),
+                                                       dof_handler,
+                                                       dealii::QGauss<dim>(
+                                                         dof_handler.get_fe().degree),
+                                                       dealii::VectorTools::NormType::L2_norm,
+                                                       reference_function,
+                                                       &component_mask);
+
+              // Move to next component/group
+              i = end;
             }
         }
       else
@@ -229,6 +239,8 @@ namespace MeltPoolDG::Flow
           // the entries of 'generic_data_out')
           const auto &level_set             = generic_data_out.get_vector("level_set");
           const auto &level_set_dof_handler = generic_data_out.get_dof_handler("level_set");
+
+          number errors_squared[3] = {};
 
           // generate FESystem
           const unsigned int    fe_degree = dof_handler.get_fe_collection().max_degree();
@@ -294,7 +306,7 @@ namespace MeltPoolDG::Flow
               fe_point_eval.reinit(cell->active_cell_index());
               fe_point_eval.evaluate(solution_values_in, dealii::EvaluationFlags::values);
 
-              dealii::VectorizedArray<number> local_errors_squared[3] = {};
+              std::array<dealii::VectorizedArray<number>, 3> local_errors_squared = {};
 
               for (const unsigned int q : fe_point_eval.quadrature_point_indices())
                 {
@@ -317,17 +329,25 @@ namespace MeltPoolDG::Flow
                       errors_squared[d] += local_errors_squared[d][v];
                 }
             }
+
+          dealii::Utilities::MPI::sum(errors_squared, MPI_COMM_WORLD, errors_squared);
+          std::array<number, 3> errors;
+          for (unsigned int d = 0; d < 3; ++d)
+            errors[d] = std::sqrt(errors_squared[d]);
+          labels                           = {"density", "momentum", "total energy"};
+          component_errors["density"]      = errors[0];
+          component_errors["momentum"]     = errors[1];
+          component_errors["total energy"] = errors[2];
         }
 
-      dealii::Utilities::MPI::sum(errors_squared, MPI_COMM_WORLD, errors_squared);
-      std::array<number, 3> errors;
-      for (unsigned int d = 0; d < 3; ++d)
-        errors[d] = std::sqrt(errors_squared[d]);
-
-      std::ostringstream output;
-      output << std::scientific << std::setprecision(4) << norm_name << " rho: " << errors[0]
-             << ", rho * u: " << errors[1] << ", rho * energy: " << errors[2];
-      Journal::print_line(pcout, output.str(), "compressible_flow");
+      Journal::print_line(pcout, " Solution (L2 " + norm_name + ")", "compressible_flow");
+      for (const auto &label : labels)
+        {
+          std::ostringstream oss;
+          oss << "   " << std::left << std::setw(14) << label << ": " << std::scientific
+              << std::setprecision(4) << component_errors[label];
+          Journal::print_line(pcout, oss.str());
+        }
     }
   };
 } // namespace MeltPoolDG::Flow

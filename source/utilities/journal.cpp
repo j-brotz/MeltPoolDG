@@ -20,6 +20,21 @@ namespace MeltPoolDG::Journal
           << str.str() << std::endl;
   }
 
+  void
+  print_line_with_decoration(const ConditionalOStream &pcout,
+                             const std::string        &text,
+                             const std::string        &operation_name,
+                             const unsigned int        extra_size)
+  {
+    print_decoration_line(pcout);
+    std::ostringstream str;
+    str << operation_name << end_line_symbol;
+    pcout << start_line_symbol << text << std::right
+          << std::setw(max_text_width - text.length() - end_line_symbol.length() + extra_size)
+          << str.str() << std::endl;
+    print_decoration_line(pcout);
+  }
+
   template <typename number>
   void
   print_formatted_norm(const ConditionalOStream &pcout,
