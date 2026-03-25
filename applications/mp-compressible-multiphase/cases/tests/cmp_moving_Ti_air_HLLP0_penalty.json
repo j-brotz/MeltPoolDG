@@ -58,22 +58,20 @@
   },
   "material": {
     "gas": {
+      "eos type": "ideal_gas",
       "dynamic viscosity": "0.00002",
       "specific isobaric heat": "1004.85",
       "specific gas constant": "287.1",
       "reference density": "1.0",
-      "gamma": "1.4",
-      "equation of state": {
-        "type": "ideal_gas"
-      }
+      "gamma": "1.4"
     },
     "liquid": {
       "dynamic viscosity": "0.0035",
       "specific isobaric heat": "1126.0",
       "reference density": "3622.0",
       "gamma": "1.4355",
+      "eos type": "noble_abel_stiffened_gas",
       "equation of state": {
-        "type": "noble_abel_stiffened_gas",
         "p inf": "1.1587e10",
         "b": "1.8759e-4",
         "q": "-607968.8"

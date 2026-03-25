@@ -166,7 +166,7 @@ namespace MeltPoolDG::CompressibleFlow
     Flow::EquationOfState
     eos_type() const
     {
-      return material_data.eos_data.type;
+      return material_data.eos_type;
     }
 
     Value &
@@ -252,7 +252,7 @@ namespace MeltPoolDG::CompressibleFlow
     Flow::EquationOfState
     eos_type() const
     {
-      return material_data.eos_data.type;
+      return material_data.eos_type;
     }
 
     const Flow::CompressibleFluidMaterialPhaseData<number> &
