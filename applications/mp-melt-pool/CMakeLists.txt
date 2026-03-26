@@ -8,7 +8,7 @@ setup_application(
 
 if(APP_ENABLED)
   # Unit tests
-  add_subdirectory(cases/unit_tests)
+  add_subdirectory(unit_tests)
 
   # Tests
   file(GLOB CHILD_DIRS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/cases ${CMAKE_CURRENT_SOURCE_DIR}/cases/*)

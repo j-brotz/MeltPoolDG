@@ -7,5 +7,5 @@ setup_application(
 
 if (APP_ENABLED)
     add_subdirectory(cases/tests)
-    add_subdirectory(cases/unit_tests)
+    add_subdirectory(unit_tests)
 endif()
