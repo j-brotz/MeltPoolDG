@@ -318,8 +318,9 @@ namespace MeltPoolDG::Flow
                   const auto JxW          = fe_point_eval.JxW(q);
                   local_errors_squared[0] = error[0] * error[0] * JxW;
 
+                  local_errors_squared[1] = 0.;
                   for (unsigned int d = 0; d < dim; ++d)
-                    local_errors_squared[1] = (error[d + 1] * error[d + 1]) * JxW;
+                    local_errors_squared[1] += (error[d + 1] * error[d + 1]) * JxW;
                   local_errors_squared[2] = (error[dim + 1] * error[dim + 1]) * JxW;
 
                   for (unsigned int v = 0;
