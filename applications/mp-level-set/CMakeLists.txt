@@ -1,5 +1,11 @@
-setup_application()
+setup_application(
+    APP_ENABLED
+    CONFIGURE_OPTION_NAME MPDG_ENABLE_LS
+    APPLICATION_NAME "mp-level-set"
+    DESCRIPTION "Build level-set executables"
+)
 
-# Tests
-add_subdirectory(cases/tests)
-add_subdirectory(cases/unit_tests)
+if (APP_ENABLED)
+    add_subdirectory(cases/tests)
+    add_subdirectory(cases/unit_tests)
+endif()
