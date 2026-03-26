@@ -41,6 +41,15 @@ namespace MeltPoolDG::Journal
              const unsigned int        extra_size     = 0);
 
   /**
+   * As above but in addition prints a decoration line before and after the text.
+   */
+  void
+  print_line_with_decoration(const ConditionalOStream &pcout,
+                             const std::string        &text           = "",
+                             const std::string        &operation_name = "",
+                             const unsigned int        extra_size     = 0);
+
+  /**
    * @brief Prints a formatted header consisting of a centered text surrounded
    * by decorative lines above and below.
    *
