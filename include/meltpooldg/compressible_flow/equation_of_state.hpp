@@ -172,11 +172,11 @@ namespace MeltPoolDG::Flow
   template <typename F>
   inline DEAL_II_ALWAYS_INLINE //
     decltype(auto)
-    dispatch_eos(EquationOfState eos_type, F &&f)
+    dispatch_eos(CompressibleFlow::EquationOfState eos_type, F &&f)
   {
     switch (eos_type)
       {
-        case EquationOfState::ideal_gas:
+        case CompressibleFlow::EquationOfState::ideal_gas:
           return std::forward<F>(f)(IdealGasEOS{});
         default:
           AssertThrow(false,

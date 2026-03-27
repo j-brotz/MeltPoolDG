@@ -8,7 +8,7 @@
 
 #include "compressible_flow_case.hpp"
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   /**
    * @brief Application for the simulation of the compressible Navier-Stokes equations using DG or
@@ -120,4 +120,4 @@ namespace MeltPoolDG::Flow
     compute_level_set();
   };
 
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

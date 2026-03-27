@@ -10,7 +10,7 @@
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   using namespace dealii;
 
@@ -114,8 +114,8 @@ namespace MeltPoolDG::Flow
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> *constant_body_force,
     const unsigned int                                             q) const
   {
-    CompressibleFlow::SourceType<dim, number> source;
-    CompressibleFlow::FluxType<dim, number>   flux;
+    SourceType<dim, number> source;
+    FluxType<dim, number>   flux;
 
     if constexpr (is_viscous)
       flux = ConvectionDiffusionOperator::cell(
@@ -173,7 +173,7 @@ namespace MeltPoolDG::Flow
     get_adjacent_face_values_at_unfitted_boundary(
       phi.quadrature_point(q), w_m, w_p, grad_w_m, grad_w_p);
 
-    CompressibleFlow::FaceFluxType<dim, number> flux_m;
+    FaceFluxType<dim, number> flux_m;
     if constexpr (is_viscous)
       {
         const auto flux = ConvectionDiffusionOperator::face(
@@ -214,8 +214,8 @@ namespace MeltPoolDG::Flow
     const CompressibleFlowScratchData<dim, number> &flow_scratch_data,
     const unsigned int                              q) const
   {
-    CompressibleFlow::FaceFluxType<dim, number> flux_m;
-    CompressibleFlow::FaceFluxType<dim, number> flux_p;
+    FaceFluxType<dim, number> flux_m;
+    FaceFluxType<dim, number> flux_p;
 
     if constexpr (is_viscous)
       {
@@ -261,11 +261,11 @@ namespace MeltPoolDG::Flow
     const auto                                      boundary_id,
     const unsigned int                              q) const
   {
-    using DofValueAndGradientStateViewType = CompressibleFlow::DofValueAndGradientStateView<
-      dim,
-      number,
-      const CompressibleFlow::ConservedVariablesType<dim, number>,
-      const CompressibleFlow::ConservedVariablesGradientType<dim, number>>;
+    using DofValueAndGradientStateViewType =
+      DofValueAndGradientStateView<dim,
+                                   number,
+                                   const ConservedVariables,
+                                   const ConservedVariablesGradient>;
 
     const auto w_m      = phi.get_value(q);
     const auto grad_w_m = phi.get_gradient(q);
@@ -277,7 +277,7 @@ namespace MeltPoolDG::Flow
         boundary_id,
         DofValueAndGradientStateViewType(w_m, grad_w_m, flow_scratch_data.material.data));
 
-    CompressibleFlow::FaceFluxType<dim, number> flux_m;
+    FaceFluxType<dim, number> flux_m;
     if constexpr (is_viscous)
       {
         const auto flux = ConvectionDiffusionOperator::face(
@@ -855,10 +855,10 @@ namespace MeltPoolDG::Flow
   CutDGCompressibleFlowOperator<dim, number, is_viscous>::
     get_adjacent_face_values_at_unfitted_boundary(
       const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
-      const ConservedVariablesType                              &w_m,
-      ConservedVariablesType                                    &w_p,
-      const ConservedVariablesGradType                          &grad_w_m,
-      ConservedVariablesGradType                                &grad_w_p) const
+      const ConservedVariables                                  &w_m,
+      ConservedVariables                                        &w_p,
+      const ConservedVariablesGradient                          &grad_w_m,
+      ConservedVariablesGradient                                &grad_w_p) const
   {
     if (flow_scratch_data.cut->unfitted_flow_boundary_condition == "no_slip_wall")
       {
@@ -898,4 +898,4 @@ namespace MeltPoolDG::Flow
   template class CutDGCompressibleFlowOperator<1, double, false>;
   template class CutDGCompressibleFlowOperator<2, double, false>;
   template class CutDGCompressibleFlowOperator<3, double, false>;
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

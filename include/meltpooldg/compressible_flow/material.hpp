@@ -9,7 +9,7 @@
 #include <limits>
 #include <memory>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   /// Enumeration for the currently supported equations of state to model compressible or (nearly)
   /// incompressible fluids
@@ -213,4 +213,4 @@ namespace MeltPoolDG::Flow
     std::size_t
     get_species_interaction_index(const unsigned int i, const unsigned int j) const;
   };
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

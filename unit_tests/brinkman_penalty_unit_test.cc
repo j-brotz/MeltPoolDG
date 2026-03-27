@@ -356,7 +356,7 @@ public:
   void
   setup_flow_field()
   {
-    flow_field = std::make_unique<MeltPoolDG::Flow::DGCompressibleFlowOperation<dim, number>>(
+    flow_field = std::make_unique<MeltPoolDG::CompressibleFlow::DGCompressibleFlowOperation<dim, number>>(
       scratch_data, flow_data, flow_material, comp_flow_dof_idx, comp_flow_quad_idx);
 
     flow_field->distribute_dofs(dof_handler);
@@ -411,12 +411,12 @@ private:
   std::unique_ptr<dealii::Mapping<dim>>                           mapping;
   ObstacleData<number>                                            obstacle_data;
   std::unique_ptr<ObstacleField<dim, number, ObstacleType>>       obstacle_field;
-  std::unique_ptr<Flow::DGCompressibleFlowOperation<dim, number>> flow_field;
+  std::unique_ptr<CompressibleFlow::DGCompressibleFlowOperation<dim, number>> flow_field;
   dealii::ConditionalOStream                                      pcout;
   dealii::DoFHandler<dim>                                         dof_handler;
   FiniteElementData                                               fe_data;
-  Flow::CompressibleFlowData<number>                              flow_data;
-  Flow::CompressibleFluidMaterialPhaseData<number>                flow_material;
+  CompressibleFlow::CompressibleFlowData<number>                              flow_data;
+  CompressibleFlow::CompressibleFluidMaterialPhaseData<number>                flow_material;
   dealii::AffineConstraints<number>                               constraints;
   BrinkmanPenalizationData<number>                                brinkman_penalization_data;
 

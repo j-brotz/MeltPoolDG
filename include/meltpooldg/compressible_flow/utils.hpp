@@ -18,7 +18,7 @@
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   // Forward declaration
   template <int dim, typename number>
@@ -39,8 +39,7 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
-    calculate_velocity(
-      const CompressibleFlow::ConservedVariablesType<dim, number> &conserved_variables);
+    calculate_velocity(const ConservedVariablesType<dim, number> &conserved_variables);
 
   /**
    * @brief Calculate the velocity gradient.
@@ -57,9 +56,8 @@ namespace MeltPoolDG::Flow
   inline DEAL_II_ALWAYS_INLINE //
     dealii::Tensor<2, dim, dealii::VectorizedArray<number>>
     calculate_grad_velocity(
-      const CompressibleFlow::ConservedVariablesType<dim, number> &conserved_variables,
-      const CompressibleFlow::ConservedVariablesGradientType<dim, number>
-        &grad_conserved_variables);
+      const ConservedVariablesType<dim, number>         &conserved_variables,
+      const ConservedVariablesGradientType<dim, number> &grad_conserved_variables);
 
   /**
    * @brief This function computes the local values of the internal penalty parameter used in the
@@ -130,11 +128,11 @@ namespace MeltPoolDG::Flow
      * @return The computed contribution of the external force to be added to the conservation
      * equations.
      */
-    virtual CompressibleFlow::ConservedVariablesType<dim, number>
+    virtual ConservedVariablesType<dim, number>
     value(number                                                              time_step_size,
           const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells,
           const dealii::Point<dim, dealii::VectorizedArray<number>>          &points,
-          const CompressibleFlow::ConservedVariablesType<dim, number>        &w) = 0;
+          const ConservedVariablesType<dim, number>                          &w) = 0;
   };
 
 
@@ -159,12 +157,12 @@ namespace MeltPoolDG::Flow
      * @return The computed contribution of the external force to be added to the conservation
      * equations.
      */
-    virtual CompressibleFlow::ConservedVariablesType<dim, number>
+    virtual ConservedVariablesType<dim, number>
     value(number                                                              time_step_size,
           const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells,
           const dealii::Point<dim, dealii::VectorizedArray<number>>          &points,
-          const CompressibleFlow::ConservedVariablesType<dim, number>        &w,
-          const CompressibleFlow::ConservedVariablesType<dim, number>        &delta_w) = 0;
+          const ConservedVariablesType<dim, number>                          &w,
+          const ConservedVariablesType<dim, number>                          &delta_w) = 0;
   };
 
   /********************************************************************************************
@@ -173,8 +171,7 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
-    calculate_velocity(
-      const CompressibleFlow::ConservedVariablesType<dim, number> &conserved_variables)
+    calculate_velocity(const ConservedVariablesType<dim, number> &conserved_variables)
   {
     const dealii::VectorizedArray<number> inverse_density =
       dealii::VectorizedArray<number>(1.) / conserved_variables[0];
@@ -190,8 +187,8 @@ namespace MeltPoolDG::Flow
   inline DEAL_II_ALWAYS_INLINE //
     dealii::Tensor<2, dim, dealii::VectorizedArray<number>>
     calculate_grad_velocity(
-      const CompressibleFlow::ConservedVariablesType<dim, number>         &conserved_variables,
-      const CompressibleFlow::ConservedVariablesGradientType<dim, number> &grad_conserved_variables)
+      const ConservedVariablesType<dim, number>         &conserved_variables,
+      const ConservedVariablesGradientType<dim, number> &grad_conserved_variables)
   {
     const dealii::VectorizedArray<number> inverse_density =
       dealii::VectorizedArray<number>(1.) / conserved_variables[0];
@@ -372,4 +369,4 @@ namespace MeltPoolDG::Flow
           }
       }
   }
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

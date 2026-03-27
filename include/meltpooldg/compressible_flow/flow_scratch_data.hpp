@@ -20,7 +20,7 @@
 #include <meltpooldg/phase_change/phase_change_data.hpp>
 #include <meltpooldg/time_integration/solution_history.hpp>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   /**
    * @brief Scratch data structure for compressible single-phase flow solvers.
@@ -162,7 +162,7 @@ namespace MeltPoolDG::Flow
       const Multiphase::PhaseChangeData<number>                   &phase_change_data_in,
       const CompressibleFlowCutData<number>                       &cut_data_in,
       const Multiphase::CompressibleFlowPhaseCouplingData<number> &phase_coupling_data_in,
-      const DarcyDampingData<number>                              &darcy_damping_data_in,
+      const Flow::DarcyDampingData<number>                        &darcy_damping_data_in,
       const ScratchData<dim, dim, number>                         &scratch_data_in,
       const unsigned int                                           dof_idx_in,
       const unsigned int                                           quad_idx_in)
@@ -203,7 +203,7 @@ namespace MeltPoolDG::Flow
     const Multiphase::CompressibleFlowPhaseCouplingData<number> phase_coupling;
 
     /// Parameters for darcy damping in the solid domain and mushy zone
-    const DarcyDampingData<number> darcy_damping;
+    const Flow::DarcyDampingData<number> darcy_damping;
 
     /// DoF index within the matrix-free object
     const unsigned int dof_idx = 0;
@@ -251,4 +251,4 @@ namespace MeltPoolDG::Flow
                                     dof_idx);
     }
   };
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

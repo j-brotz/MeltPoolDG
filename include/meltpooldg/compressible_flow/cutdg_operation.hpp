@@ -43,7 +43,7 @@
 #include <memory>
 #include <variant>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   /**
    * @brief Operation that performs a full time step for the compressible single-phase Navier-Stokes
@@ -372,4 +372,4 @@ namespace MeltPoolDG::Flow
     return flow_scratch_data.scratch_data.get_dof_handler(flow_scratch_data.dof_idx);
   }
 
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

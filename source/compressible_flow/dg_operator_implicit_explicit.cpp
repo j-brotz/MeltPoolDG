@@ -10,7 +10,7 @@
 #include <functional>
 
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   using namespace dealii;
 
@@ -72,10 +72,10 @@ namespace MeltPoolDG::Flow
     compute_system_matrix_from_matrixfree(
       dealii::TrilinosWrappers::SparseMatrix &sparse_matrix) const
   {
-    compute_jacobian_matrix_representation<dim, dim + 2, number>(
+    Flow::compute_jacobian_matrix_representation<dim, dim + 2, number>(
       *this,
       &sparse_matrix,
-      MatrixRepresentationType::SystemMatrix,
+      Flow::MatrixRepresentationType::SystemMatrix,
       flow_scratch_data.solution_history.get_current_solution(),
       flow_scratch_data.scratch_data.get_matrix_free(),
       flow_scratch_data.dof_idx,
@@ -88,10 +88,10 @@ namespace MeltPoolDG::Flow
     compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const
   {
     diagonal = 0.;
-    compute_jacobian_matrix_representation<dim, dim + 2, number>(
+    Flow::compute_jacobian_matrix_representation<dim, dim + 2, number>(
       *this,
       &diagonal,
-      MatrixRepresentationType::DiagonalMatrix,
+      Flow::MatrixRepresentationType::DiagonalMatrix,
       flow_scratch_data.solution_history.get_current_solution(),
       flow_scratch_data.scratch_data.get_matrix_free(),
       flow_scratch_data.dof_idx,
@@ -180,7 +180,7 @@ namespace MeltPoolDG::Flow
     const auto delta_w_q = delta_phi.get_value(q_index);
 
     // time derivative
-    ConservedVariablesType value_q = 1. / current_time_increment * delta_w_q;
+    ConservedVariables value_q = 1. / current_time_increment * delta_w_q;
 
     // external forces
     for (auto &external_force : external_forces_implicit_jacobian)
@@ -192,7 +192,7 @@ namespace MeltPoolDG::Flow
     // viscous flux
     const auto                 grad_w_q       = phi.get_gradient(q_index);
     const auto                 grad_delta_w_q = delta_phi.get_gradient(q_index);
-    ConservedVariablesGradType differential_change_flux =
+    ConservedVariablesGradient differential_change_flux =
       viscous_terms.calculate_jacobian_viscous_flux(w_q, grad_w_q, delta_w_q, grad_delta_w_q);
 
     delta_phi.submit_gradient(differential_change_flux, q_index);
@@ -207,7 +207,7 @@ namespace MeltPoolDG::Flow
     const FEFaceIntegrator<dim, dim + 2, number> &phi_p,
     const unsigned                                q_index) const
   {
-    ConservedVariablesGradType numerical_flux =
+    ConservedVariablesGradient numerical_flux =
       viscous_terms.calculate_jacobian_viscous_numerical_flux(
         {phi_m.get_value(q_index), phi_p.get_value(q_index)},
         {phi_m.get_gradient(q_index), phi_p.get_gradient(q_index)},
@@ -217,7 +217,7 @@ namespace MeltPoolDG::Flow
         std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
                  phi_p.read_cell_data(flow_scratch_data.interior_penalty_parameter)));
 
-    ConservedVariablesType flux;
+    ConservedVariables flux;
     for (unsigned int i = 0; i < dim + 2; ++i)
       {
         flux[i] = numerical_flux[i] * phi_m.normal_vector(q_index);
@@ -251,7 +251,7 @@ namespace MeltPoolDG::Flow
         grad_delta_w_m,
         flow_scratch_data.material.data.gamma);
 
-    ConservedVariablesGradType numerical_flux =
+    ConservedVariablesGradient numerical_flux =
       viscous_terms.calculate_jacobian_viscous_numerical_flux(
         {w_m, w_p},
         {grad_w_m, grad_w_p},
@@ -259,7 +259,7 @@ namespace MeltPoolDG::Flow
         {grad_delta_w_m, grad_delta_w_p},
         phi_m.normal_vector(q_index),
         phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter));
-    ConservedVariablesType flux;
+    ConservedVariables flux;
     for (unsigned int i = 0; i < dim + 2; ++i)
       {
         flux[i] = numerical_flux[i] * phi_m.normal_vector(q_index);
@@ -292,7 +292,7 @@ namespace MeltPoolDG::Flow
           {
             auto flux = convective_terms.calculate_convective_flux(phi.get_value(q));
 
-            ConservedVariablesType value_q;
+            ConservedVariables value_q;
             for (auto &external_force : external_forces_explicit_rhs)
               value_q += external_force->value(current_time_increment,
                                                cell_iterators,
@@ -340,7 +340,7 @@ namespace MeltPoolDG::Flow
                                                                    phi_p.get_value(q),
                                                                    phi_m.normal_vector(q));
 
-            std::pair<ConservedVariablesGradType, ConservedVariablesGradType>
+            std::pair<ConservedVariablesGradient, ConservedVariablesGradient>
               viscous_numerical_flux =
                 viscous_terms.calculate_viscous_numerical_flux_gradient(phi_m.get_value(q),
                                                                         phi_p.get_value(q),
@@ -382,7 +382,7 @@ namespace MeltPoolDG::Flow
           {
             const auto                       w_m    = phi.get_value(q);
             const auto                       normal = phi.normal_vector(q);
-            const ConservedVariablesGradType grad_w_m;
+            const ConservedVariablesGradient grad_w_m;
 
             const auto [w_p, grad_w_p] =
               flow_scratch_data.boundary_conditions.get_boundary_face_value_and_gradient(
@@ -395,7 +395,7 @@ namespace MeltPoolDG::Flow
 
             auto flux = convective_terms.calculate_convective_numerical_flux(w_m, w_p, normal);
 
-            ConservedVariablesGradType numerical_flux_gradient =
+            ConservedVariablesGradient numerical_flux_gradient =
               viscous_terms.calculate_viscous_numerical_flux_gradient(w_m, w_p, normal).first;
             phi.submit_gradient(numerical_flux_gradient, q);
 
@@ -609,7 +609,7 @@ namespace MeltPoolDG::Flow
           {
             auto flux = viscous_terms.calculate_viscous_flux(phi.get_value(q), phi.get_gradient(q));
 
-            ConservedVariablesType value_q =
+            ConservedVariables value_q =
               1. / current_time_increment *
               (-phi.get_value(q) + phi_intermediate_explicit.get_value(q));
 
@@ -657,7 +657,7 @@ namespace MeltPoolDG::Flow
 
         for (const unsigned int q : phi_m.quadrature_point_indices())
           {
-            ConservedVariablesType numerical_flux =
+            ConservedVariables numerical_flux =
               viscous_terms.calculate_viscous_numerical_flux(phi_m.get_value(q),
                                                              phi_p.get_value(q),
                                                              phi_m.get_gradient(q),
@@ -712,7 +712,7 @@ namespace MeltPoolDG::Flow
                 grad_w_m,
                 flow_scratch_data.material);
 
-            ConservedVariablesType flux = viscous_terms.calculate_viscous_numerical_flux(
+            ConservedVariables flux = viscous_terms.calculate_viscous_numerical_flux(
               w_m, w_p, grad_w_m, grad_w_p, normal, interior_penalty_parameter);
 
             phi.submit_value(flux, q);
@@ -727,4 +727,4 @@ namespace MeltPoolDG::Flow
   template class DGCompressibleFlowOperatorImplicitExplicit<1, double, false>;
   template class DGCompressibleFlowOperatorImplicitExplicit<2, double, false>;
   template class DGCompressibleFlowOperatorImplicitExplicit<3, double, false>;
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

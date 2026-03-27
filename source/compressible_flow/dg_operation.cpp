@@ -23,33 +23,27 @@
 #include <string>
 #include <utility>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   using namespace dealii;
 
   template <int dim, typename number>
   DGCompressibleFlowOperation<dim, number>::DGCompressibleFlowOperation(
-    const ScratchData<dim, dim, number>                    &scratch_data,
-    const Flow::CompressibleFlowData<number>               &flow_data,
-    const Flow::CompressibleFluidMaterialPhaseData<number> &material_data,
-    const unsigned int                                      flow_dof_idx,
-    const unsigned int                                      flow_quad_idx)
+    const ScratchData<dim, dim, number>              &scratch_data,
+    const CompressibleFlowData<number>               &flow_data,
+    const CompressibleFluidMaterialPhaseData<number> &material_data,
+    const unsigned int                                flow_dof_idx,
+    const unsigned int                                flow_quad_idx)
     : flow_scratch_data(flow_data, material_data, scratch_data, flow_dof_idx, flow_quad_idx)
     , output_manager(
-        [](CompressibleFlow::ConservedVariablesType<dim, number, number> & value) -> auto{
-          return CompressibleFlow::
-            DofValueView<dim, CompressibleFlow::ConservedVariablesType<dim, number, number>>(value);
+        [](ConservedVariablesType<dim, number, number> & value) -> auto{
+          return DofValueView<dim, ConservedVariablesType<dim, number, number>>(value);
         },
-        [&material_data](
-          CompressibleFlow::ConservedVariablesType<dim, number, number> &value) -> auto{
-          return CompressibleFlow::DofStateView<
-            dim,
-            number,
-            CompressibleFlow::ConservedVariablesType<dim, number, number>>(value, material_data);
+        [&material_data](ConservedVariablesType<dim, number, number> &value) -> auto{
+          return DofStateView<dim, number, ConservedVariablesType<dim, number, number>>(
+            value, material_data);
         },
-        [&material_data](auto &...) -> auto{
-          return CompressibleFlow::MaterialView<dim, number>(material_data);
-        })
+        [&material_data](auto &...) -> auto{ return MaterialView<dim, number>(material_data); })
 
   {
     setup_operator();
@@ -341,4 +335,4 @@ namespace MeltPoolDG::Flow
   template class DGCompressibleFlowOperation<1, double>;
   template class DGCompressibleFlowOperation<2, double>;
   template class DGCompressibleFlowOperation<3, double>;
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

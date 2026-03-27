@@ -4,8 +4,8 @@
 
 #include <meltpooldg/compressible_flow/convective_kernels.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
-#include <meltpooldg/compressible_flow/viscous_kernels.hpp>
 #include <meltpooldg/compressible_flow/multiphase_level_set_advection.hpp>
+#include <meltpooldg/compressible_flow/viscous_kernels.hpp>
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/phase_change/evaporation_model_knight.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -50,10 +50,10 @@ namespace MeltPoolDG::Multiphase
      * inner subdomain and the outer subdomain, respectively.
      */
     explicit CompressibleMultiphaseOperator(
-      Flow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
-      const MappingInfoType                                &mapping_info_interface_in,
-      const MappingInfoVectorType                          &mapping_info_cells_in,
-      const MappingInfoVectorType                          &mapping_info_faces_in);
+      CompressibleFlow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
+      const MappingInfoType                                            &mapping_info_interface_in,
+      const MappingInfoVectorType                                      &mapping_info_cells_in,
+      const MappingInfoVectorType                                      &mapping_info_faces_in);
 
     /**
      * @brief Local applier for the cell integrals in the right-hand side evaluation.
@@ -176,19 +176,19 @@ namespace MeltPoolDG::Multiphase
 
   private:
     /// Scratch data for multiphase case
-    Flow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data;
+    CompressibleFlow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data;
 
     /// Object for the convective term evaluations for the liquid phase
-    const Flow::CompressibleFlowConvectiveKernels<dim, number> convective_terms_liquid;
+    const CompressibleFlow::CompressibleFlowConvectiveKernels<dim, number> convective_terms_liquid;
 
     /// Object for the convective term evaluations for the gas phase
-    const Flow::CompressibleFlowConvectiveKernels<dim, number> convective_terms_gas;
+    const CompressibleFlow::CompressibleFlowConvectiveKernels<dim, number> convective_terms_gas;
 
     /// Object for the viscous term evaluations for the liquid phase
-    const Flow::CompressibleFlowViscousKernels<dim, number> viscous_terms_liquid;
+    const CompressibleFlow::CompressibleFlowViscousKernels<dim, number> viscous_terms_liquid;
 
     /// Object for the viscous term evaluations for the gas phase
-    const Flow::CompressibleFlowViscousKernels<dim, number> viscous_terms_gas;
+    const CompressibleFlow::CompressibleFlowViscousKernels<dim, number> viscous_terms_gas;
 
     /// Mapping information for integration over the phase interface
     const MappingInfoType &mapping_info_interface;

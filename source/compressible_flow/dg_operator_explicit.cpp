@@ -1,9 +1,9 @@
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/dg_generic_convection_diffusion_worker.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_explicit.hpp>
-#include <meltpooldg/compressible_flow/state_views.hpp>
 #include <meltpooldg/compressible_flow/explicit_utils.hpp>
 #include <meltpooldg/compressible_flow/kernels.hpp>
+#include <meltpooldg/compressible_flow/state_views.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
@@ -11,7 +11,7 @@
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   using namespace dealii;
 
@@ -123,8 +123,8 @@ namespace MeltPoolDG::Flow
 
         for (const unsigned int q : phi.quadrature_point_indices())
           {
-            CompressibleFlow::SourceType<dim, number> source;
-            CompressibleFlow::FluxType<dim, number>   flux;
+            SourceType<dim, number> source;
+            FluxType<dim, number>   flux;
 
             if (is_viscous)
               flux = ConvectionDiffusionOperator::cell(
@@ -194,8 +194,8 @@ namespace MeltPoolDG::Flow
 
         for (const unsigned int q : phi_m.quadrature_point_indices())
           {
-            CompressibleFlow::FaceFluxType<dim, number> flux_m;
-            CompressibleFlow::FaceFluxType<dim, number> flux_p;
+            FaceFluxType<dim, number> flux_m;
+            FaceFluxType<dim, number> flux_p;
 
             if (is_viscous)
               {
@@ -253,11 +253,11 @@ namespace MeltPoolDG::Flow
                                                  flow_scratch_data.dof_idx,
                                                  flow_scratch_data.quad_idx);
 
-    using DofValueAndGradientStateViewType = CompressibleFlow::DofValueAndGradientStateView<
-      dim,
-      number,
-      const CompressibleFlow::ConservedVariablesType<dim, number>,
-      const CompressibleFlow::ConservedVariablesGradientType<dim, number>>;
+    using DofValueAndGradientStateViewType =
+      DofValueAndGradientStateView<dim,
+                                   number,
+                                   const ConservedVariablesType<dim, number>,
+                                   const ConservedVariablesGradientType<dim, number>>;
 
     for (unsigned int face = face_range.first; face < face_range.second; ++face)
       {
@@ -282,7 +282,7 @@ namespace MeltPoolDG::Flow
                 phi_m.boundary_id(),
                 DofValueAndGradientStateViewType(w_m, grad_w_m, flow_scratch_data.material.data));
 
-            CompressibleFlow::FaceFluxType<dim, number> flux_m;
+            FaceFluxType<dim, number> flux_m;
             if (is_viscous)
               {
                 const auto flux = ConvectionDiffusionOperator::face(
@@ -325,4 +325,4 @@ namespace MeltPoolDG::Flow
   template class DGCompressibleFlowOperatorExplicit<1, double, false>;
   template class DGCompressibleFlowOperatorExplicit<2, double, false>;
   template class DGCompressibleFlowOperatorExplicit<3, double, false>;
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

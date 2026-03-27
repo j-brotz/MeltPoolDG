@@ -82,7 +82,7 @@ namespace MeltPoolDG
    */
   template <int dim, typename number, typename ObstacleType>
   struct BrinkmanPenalizationResidualContribution final
-    : public Flow::ExternalFlowForce<dim, number>
+    : public CompressibleFlow::ExternalFlowForce<dim, number>
   {
     using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
 
@@ -146,7 +146,7 @@ namespace MeltPoolDG
    */
   template <int dim, typename number, typename ObstacleType>
   struct BrinkmanPenalizationJacobianContribution final
-    : public Flow::ExternalFlowForceJacobian<dim, number>
+    : public CompressibleFlow::ExternalFlowForceJacobian<dim, number>
   {
     using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
 

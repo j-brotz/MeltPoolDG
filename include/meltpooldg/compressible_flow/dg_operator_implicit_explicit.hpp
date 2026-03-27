@@ -2,12 +2,12 @@
 
 #include <meltpooldg/compressible_flow/convective_kernels.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
+#include <meltpooldg/compressible_flow/dg_operator_base.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
-#include <meltpooldg/compressible_flow/dg_operator_base.hpp>
 #include <meltpooldg/time_integration/implicit_explicit_integrator.hpp>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   /**
    * @brief Operator for the matrix-free evaluation of a compressible single-phase flow cutDG
@@ -22,10 +22,9 @@ namespace MeltPoolDG::Flow
     : public DGCompressibleFlowOperatorBase<dim, number>
   {
   public:
-    using VectorType             = dealii::LinearAlgebra::distributed::Vector<number>;
-    using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
-    using ConservedVariablesGradType =
-      CompressibleFlow::ConservedVariablesGradientType<dim, number>;
+    using VectorType                 = dealii::LinearAlgebra::distributed::Vector<number>;
+    using ConservedVariables         = ConservedVariablesType<dim, number>;
+    using ConservedVariablesGradient = ConservedVariablesGradientType<dim, number>;
 
     /**
      * @brief Constructor.
@@ -373,4 +372,4 @@ namespace MeltPoolDG::Flow
                                  const dealii::LinearAlgebra::distributed::Vector<number> &src,
                                  const std::pair<unsigned int, unsigned int> &face_range) const;
   };
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

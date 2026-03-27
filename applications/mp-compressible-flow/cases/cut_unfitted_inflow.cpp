@@ -4,12 +4,12 @@
 
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {
-  MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
+  MELTPOOLDG_REGISTER_CASE(::MeltPoolDG::CompressibleFlow::CompressibleFlowCase,
                            SimulationCutUnfittedInflow,
                            "cut_unfitted_inflow",
                            2,
                            double);
-  MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
+  MELTPOOLDG_REGISTER_CASE(::MeltPoolDG::CompressibleFlow::CompressibleFlowCase,
                            SimulationCutUnfittedInflow,
                            "cut_unfitted_inflow",
                            3,

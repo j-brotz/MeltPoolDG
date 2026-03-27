@@ -11,9 +11,9 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/compressible_flow/phase_coupling_data.hpp>
 #include <meltpooldg/compressible_flow/multiphase_operation.hpp>
 #include <meltpooldg/compressible_flow/multiphase_operator.hpp>
+#include <meltpooldg/compressible_flow/phase_coupling_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -33,20 +33,20 @@ namespace MeltPoolDG::Multiphase
 
   template <int dim, typename number>
   CompressibleMultiphaseOperation<dim, number>::CompressibleMultiphaseOperation(
-    const ScratchData<dim, dim, number>                    &scratch_data_in,
-    const Flow::CompressibleFlowData<number>               &comp_flow_data_in,
-    const Flow::CompressibleFluidMaterialPhaseData<number> &material_data_gas_in,
-    const Flow::CompressibleFluidMaterialPhaseData<number> &material_data_liquid_in,
-    const PhaseChangeData<number>                          &phase_change_data_in,
-    const Flow::CompressibleFlowCutData<number>            &cut_data_in,
-    const CompressibleFlowPhaseCouplingData<number>        &phase_coupling_data_in,
-    const Flow::DarcyDampingData<number>                   &darcy_damping_data_in,
-    const TimeIntegration::TimeIterator<number>            &time_iterator_in,
-    const std::function<void()>                            &setup_dof_system_in,
-    const VectorType                                       &level_set_in,
-    const unsigned int                                      comp_flow_dof_idx_in,
-    const unsigned int                                      level_set_dof_idx_in,
-    const unsigned int                                      comp_flow_quad_idx_in)
+    const ScratchData<dim, dim, number>                                &scratch_data_in,
+    const CompressibleFlow::CompressibleFlowData<number>               &comp_flow_data_in,
+    const CompressibleFlow::CompressibleFluidMaterialPhaseData<number> &material_data_gas_in,
+    const CompressibleFlow::CompressibleFluidMaterialPhaseData<number> &material_data_liquid_in,
+    const PhaseChangeData<number>                                      &phase_change_data_in,
+    const CompressibleFlow::CompressibleFlowCutData<number>            &cut_data_in,
+    const CompressibleFlowPhaseCouplingData<number>                    &phase_coupling_data_in,
+    const Flow::DarcyDampingData<number>                               &darcy_damping_data_in,
+    const TimeIntegration::TimeIterator<number>                        &time_iterator_in,
+    const std::function<void()>                                        &setup_dof_system_in,
+    const VectorType                                                   &level_set_in,
+    const unsigned int                                                  comp_flow_dof_idx_in,
+    const unsigned int                                                  level_set_dof_idx_in,
+    const unsigned int                                                  comp_flow_quad_idx_in)
     : multiphase_scratch_data(comp_flow_data_in,
                               material_data_gas_in,
                               material_data_liquid_in,
@@ -545,7 +545,7 @@ namespace MeltPoolDG::Multiphase
       [&]<bool is_gas_phase>(auto &evaluator, unsigned int q, VectorizedArray<number> &local_max) {
         const auto conserved_variables = evaluator.get_value(q);
         const auto velocity =
-          MeltPoolDG::Flow::calculate_velocity<dim, number>(conserved_variables);
+          MeltPoolDG::CompressibleFlow::calculate_velocity<dim, number>(conserved_variables);
 
         const Tensor<2, dim, VectorizedArray<number>> inverse_jacobian =
           evaluator.inverse_jacobian(q);

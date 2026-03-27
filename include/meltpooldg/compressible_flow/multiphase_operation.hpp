@@ -90,17 +90,17 @@ namespace MeltPoolDG::Multiphase
      * stored in the history, and ghost-penalty stabilization is enabled.
      */
     explicit CompressibleMultiphaseOperation(
-      const ScratchData<dim, dim, number>                    &scratch_data_in,
-      const Flow::CompressibleFlowData<number>               &comp_flow_data_in,
-      const Flow::CompressibleFluidMaterialPhaseData<number> &material_data_gas_in,
-      const Flow::CompressibleFluidMaterialPhaseData<number> &material_data_liquid_in,
-      const PhaseChangeData<number>                          &phase_change_data_in,
-      const Flow::CompressibleFlowCutData<number>            &cut_data_in,
-      const CompressibleFlowPhaseCouplingData<number>        &phase_coupling_data_in,
-      const Flow::DarcyDampingData<number>                   &darcy_damping_data_in,
-      const TimeIntegration::TimeIterator<number>            &time_iterator_in,
-      const std::function<void()>                            &setup_dof_system_in,
-      const VectorType                                       &level_set_in,
+      const ScratchData<dim, dim, number>                                &scratch_data_in,
+      const CompressibleFlow::CompressibleFlowData<number>               &comp_flow_data_in,
+      const CompressibleFlow::CompressibleFluidMaterialPhaseData<number> &material_data_gas_in,
+      const CompressibleFlow::CompressibleFluidMaterialPhaseData<number> &material_data_liquid_in,
+      const PhaseChangeData<number>                                      &phase_change_data_in,
+      const CompressibleFlow::CompressibleFlowCutData<number>            &cut_data_in,
+      const CompressibleFlowPhaseCouplingData<number>                    &phase_coupling_data_in,
+      const Flow::DarcyDampingData<number>                               &darcy_damping_data_in,
+      const TimeIntegration::TimeIterator<number>                        &time_iterator_in,
+      const std::function<void()>                                        &setup_dof_system_in,
+      const VectorType                                                   &level_set_in,
       unsigned int comp_flow_dof_idx_in  = dealii::numbers::invalid_unsigned_int,
       unsigned int level_set_dof_idx_in  = dealii::numbers::invalid_unsigned_int,
       unsigned int comp_flow_quad_idx_in = dealii::numbers::invalid_unsigned_int);
@@ -232,12 +232,12 @@ namespace MeltPoolDG::Multiphase
      * specialization selected based on the viscosity configuration.
      */
     CompMultiphaseOperatorVariant static create_cut_flow_operator_variant(
-      bool                                                  is_viscous_gas,
-      bool                                                  is_viscous_liquid,
-      Flow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
-      const MappingInfoType                                &mapping_info_surface_in,
-      const MappingInfoVectorType                          &mapping_info_cells_in,
-      const MappingInfoVectorType                          &mapping_info_faces_in)
+      bool                                                              is_viscous_gas,
+      bool                                                              is_viscous_liquid,
+      CompressibleFlow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
+      const MappingInfoType                                            &mapping_info_surface_in,
+      const MappingInfoVectorType                                      &mapping_info_cells_in,
+      const MappingInfoVectorType                                      &mapping_info_faces_in)
     {
       if (is_viscous_gas and is_viscous_liquid)
         return CompressibleMultiphaseOperator<dim, number, true, true>(multiphase_scratch_data,
@@ -263,7 +263,7 @@ namespace MeltPoolDG::Multiphase
 
   private:
     /// Scratch data for multiphase case
-    Flow::CompressibleMultiphaseScratchData<dim, number> multiphase_scratch_data;
+    CompressibleFlow::CompressibleMultiphaseScratchData<dim, number> multiphase_scratch_data;
 
     /// Time iterator
     const TimeIntegration::TimeIterator<number> &time_iterator;

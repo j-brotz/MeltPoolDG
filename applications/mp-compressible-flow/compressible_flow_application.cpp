@@ -19,7 +19,7 @@
 
 #include "compressible_flow_case.hpp"
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   using namespace dealii;
 
@@ -369,8 +369,8 @@ main(int argc, char *argv[])
   dealii::Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
   MPI_Comm mpi_comm(MPI_COMM_WORLD);
-  MeltPoolDG::default_main<MeltPoolDG::Flow::CompressibleFlowCaseParameters<double>,
-                           MeltPoolDG::Flow::CompressibleFlowCase,
-                           MeltPoolDG::Flow::CompressibleFlowApplication>(argc, argv, mpi_comm);
+  MeltPoolDG::default_main<MeltPoolDG::CompressibleFlow::CompressibleFlowCaseParameters<double>,
+                           MeltPoolDG::CompressibleFlow::CompressibleFlowCase,
+                           MeltPoolDG::CompressibleFlow::CompressibleFlowApplication>(argc, argv, mpi_comm);
   return 0;
 }

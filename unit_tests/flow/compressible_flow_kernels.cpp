@@ -13,7 +13,7 @@
 constexpr int dim = 3;
 
 void
-set_material_data(MeltPoolDG::Flow::CompressibleFluidMaterialPhaseData<double> &material_data)
+set_material_data(MeltPoolDG::CompressibleFlow::CompressibleFluidMaterialPhaseData<double> &material_data)
 {
   material_data.gamma                 = 1.4;
   material_data.dynamic_viscosity     = 1.8e-5;
@@ -28,11 +28,11 @@ TEST(CompressibleFlowKernelsTest, ConvectiveKernel)
   using FluxType            = MeltPoolDG::CompressibleFlow::FluxType<dim, double>;
   using ValueType           = MeltPoolDG::CompressibleFlow::ConservedVariablesType<dim, double>;
 
-  MeltPoolDG::Flow::CompressibleFluidMaterialPhaseData<double> material_data;
+  MeltPoolDG::CompressibleFlow::CompressibleFluidMaterialPhaseData<double> material_data;
 
   set_material_data(material_data);
 
-  MeltPoolDG::Flow::CompressibleConvectiveFlux<dim, double> convective_flux(material_data);
+  MeltPoolDG::CompressibleFlow::CompressibleConvectiveFlux<dim, double> convective_flux(material_data);
 
   ValueType conserved_variables;
   conserved_variables[0] = VectorizedArrayType(1.293);
@@ -96,11 +96,11 @@ TEST(CompressibleFlowKernelsTest, ViscousKernel)
   using ValueType           = MeltPoolDG::CompressibleFlow::ConservedVariablesType<dim, double>;
   using GradientType = MeltPoolDG::CompressibleFlow::ConservedVariablesGradientType<dim, double>;
 
-  MeltPoolDG::Flow::CompressibleFluidMaterialPhaseData<double> material_data;
+  MeltPoolDG::CompressibleFlow::CompressibleFluidMaterialPhaseData<double> material_data;
 
   set_material_data(material_data);
 
-  MeltPoolDG::Flow::CompressibleDiffusiveFlux<dim, double> viscous_flux(material_data);
+  MeltPoolDG::CompressibleFlow::CompressibleDiffusiveFlux<dim, double> viscous_flux(material_data);
 
   ValueType conserved_variables;
   conserved_variables[0] = VectorizedArrayType(1.293);

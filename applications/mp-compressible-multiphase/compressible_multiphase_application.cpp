@@ -188,7 +188,7 @@ namespace MeltPoolDG::Multiphase
         comp_multiphase_quad_idx);
 
     comp_multiphase_operation =
-      MeltPoolDG::Flow::CompressibleFlowOperation<dim, number>(std::move(operation));
+      MeltPoolDG::CompressibleFlow::CompressibleFlowOperation<dim, number>(std::move(operation));
 
     // set up level-set for cutDG
     // currently, we use a continuous level-set field with same element degree as the flow field

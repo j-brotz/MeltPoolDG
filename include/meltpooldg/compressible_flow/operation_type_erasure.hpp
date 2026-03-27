@@ -11,7 +11,7 @@
 #include <memory>
 #include <utility>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   /**
    * @brief Common interface class for compressible flow operation classes based on the type
@@ -342,4 +342,4 @@ namespace MeltPoolDG::Flow
     /// are forwarded.
     std::unique_ptr<OperationConcept> operation_pimpl;
   };
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

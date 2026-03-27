@@ -5,7 +5,7 @@
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   using namespace dealii;
 
@@ -207,21 +207,17 @@ namespace MeltPoolDG::Flow
     const dealii::Point<dim, dealii::VectorizedArray<number>>     &q_point,
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
     dealii::types::boundary_id                                     boundary_id,
-    CompressibleFlow::DofValueAndGradientStateView<
-      dim,
-      number,
-      const CompressibleFlow::ConservedVariablesType<dim, number>,
-      const CompressibleFlow::ConservedVariablesGradientType<dim, number>> w_m_view) const
+    DofValueAndGradientStateView<dim,
+                                 number,
+                                 const ConservedVariablesType,
+                                 const ConservedVariablesGradType> w_m_view) const
     -> std::tuple<ConservedVariablesType, ConservedVariablesGradType>
   {
-    CompressibleFlow::ConservedVariablesType<dim, number>         w_p;
-    CompressibleFlow::ConservedVariablesGradientType<dim, number> grad_w_p;
+    ConservedVariablesType     w_p;
+    ConservedVariablesGradType grad_w_p;
 
-    CompressibleFlow::DofValueView<dim, CompressibleFlow::ConservedVariablesType<dim, number>>
-      w_p_view(w_p);
-    CompressibleFlow::DofGradientView<dim,
-                                      CompressibleFlow::ConservedVariablesGradientType<dim, number>>
-      grad_w_p_view(grad_w_p);
+    DofValueView<dim, ConservedVariablesType>        w_p_view(w_p);
+    DofGradientView<dim, ConservedVariablesGradType> grad_w_p_view(grad_w_p);
 
     if (const BoundaryType boundary_type = get_boundary_type(boundary_id);
         boundary_type == BoundaryType::slip_wall)
@@ -478,4 +474,4 @@ namespace MeltPoolDG::Flow
   template class CompressibleFlowBoundaryConditions<1, double>;
   template class CompressibleFlowBoundaryConditions<2, double>;
   template class CompressibleFlowBoundaryConditions<3, double>;
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

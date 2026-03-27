@@ -5,7 +5,7 @@
 
 #include <memory>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   /**
    * @brief A class which provides all relevant material properties for a specific phase.
@@ -64,4 +64,4 @@ namespace MeltPoolDG::Flow
         }
     }
   };
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

@@ -20,7 +20,7 @@ namespace MeltPoolDG::Multiphase
   template <int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
   CompressibleMultiphaseOperator<dim, number, is_viscous_gas, is_viscous_liquid>::
     CompressibleMultiphaseOperator(
-      MeltPoolDG::Flow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
+      MeltPoolDG::CompressibleFlow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
       const MappingInfoType                                            &mapping_info_interface_in,
       const MappingInfoVectorType                                      &mapping_info_cells_in,
       const MappingInfoVectorType                                      &mapping_info_faces_in)
@@ -150,7 +150,7 @@ namespace MeltPoolDG::Multiphase
         for (const unsigned int q : eval.quadrature_point_indices())
           {
             const auto [force, grad_flux] =
-              Flow::rhs_cell_integral_kernel<dim, number, IntegratorType, is_viscous>(
+              CompressibleFlow::rhs_cell_integral_kernel<dim, number, IntegratorType, is_viscous>(
                 eval,
                 q,
                 constant_function ? &constant_body_force : nullptr,
@@ -165,7 +165,7 @@ namespace MeltPoolDG::Multiphase
                 multiphase_scratch_data.phase_change.solid_liquid.use_darcy_damping)
               {
                 const auto w        = eval.get_value(q);
-                const auto velocity = Flow::calculate_velocity<dim, number>(w);
+                const auto velocity = CompressibleFlow::calculate_velocity<dim, number>(w);
                 const auto temperature =
                   multiphase_scratch_data.material_liquid.eos_utils->calculate_temperature(w);
 
@@ -343,10 +343,10 @@ namespace MeltPoolDG::Multiphase
                         // enumeration for conserved variables component indices
                         using Idx = std::conditional_t<
                           dim == 1,
-                          Flow::Idx1D,
+                          CompressibleFlow::Idx1D,
                           std::conditional_t<dim == 2,
-                                             Flow::Idx2D,
-                                             std::conditional_t<dim == 3, Flow::Idx3D, void>>>;
+                                             CompressibleFlow::Idx2D,
+                                             std::conditional_t<dim == 3, CompressibleFlow::Idx3D, void>>>;
 
                         for (const unsigned int q :
                              eval_point_interface_liquid.quadrature_point_indices())
@@ -617,7 +617,7 @@ namespace MeltPoolDG::Multiphase
           for (const unsigned int q : eval_m.quadrature_point_indices())
             {
               const auto [flux_m, flux_p, grad_flux_m, grad_flux_p] =
-                MeltPoolDG::Flow::rhs_face_integral_kernel<dim,
+                MeltPoolDG::CompressibleFlow::rhs_face_integral_kernel<dim,
                                                            number,
                                                            FEFaceIntegrator<dim, dim + 2, number>,
                                                            is_viscous>(
@@ -688,7 +688,7 @@ namespace MeltPoolDG::Multiphase
               for (const unsigned int q : eval_point_m.quadrature_point_indices())
                 {
                   const auto [flux_m, flux_p, grad_flux_m, grad_flux_p] =
-                    MeltPoolDG::Flow::rhs_face_integral_kernel<
+                    MeltPoolDG::CompressibleFlow::rhs_face_integral_kernel<
                       dim,
                       number,
                       FEFacePointEvaluation<dim + 2, dim, dim, VectorizedArray<number>>,
@@ -844,7 +844,7 @@ namespace MeltPoolDG::Multiphase
           for (const unsigned int q : eval_m.quadrature_point_indices())
             {
               const auto [flux_m, grad_flux_m] =
-                Flow::rhs_boundary_face_integral_kernel<dim,
+                CompressibleFlow::rhs_boundary_face_integral_kernel<dim,
                                                         number,
                                                         FEFaceIntegrator<dim, dim + 2, number>,
                                                         is_viscous,
@@ -907,7 +907,7 @@ namespace MeltPoolDG::Multiphase
               for (const unsigned int q : eval_point_m_int.quadrature_point_indices())
                 {
                   const auto [flux_m, grad_flux_m] =
-                    MeltPoolDG::Flow::rhs_boundary_face_integral_kernel<
+                    MeltPoolDG::CompressibleFlow::rhs_boundary_face_integral_kernel<
                       dim,
                       number,
                       FEFacePointEvaluation<dim + 2, dim, dim, VectorizedArray<number>>,

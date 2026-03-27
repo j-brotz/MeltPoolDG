@@ -32,7 +32,7 @@
 
 #include <memory>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   /**
    * @brief Operation that performs a full time step for the compressible Navier-Stokes.
@@ -171,14 +171,12 @@ namespace MeltPoolDG::Flow
     std::unique_ptr<DGCompressibleFlowOperatorBase<dim, number>> comp_flow_operator;
 
     /// Object containing the data post processor for the different output options
-    CompressibleFlow::OutputManager<
-      dim,
-      number,
-      CompressibleFlow::DofValueView<dim,
-                                     CompressibleFlow::ConservedVariablesType<dim, number, number>>,
-      CompressibleFlow::
-        DofStateView<dim, number, CompressibleFlow::ConservedVariablesType<dim, number, number>>,
-      CompressibleFlow::MaterialView<dim, number>>
+    OutputManager<dim,
+                  number,
+                  DofValueView<dim, ConservedVariablesType<dim, number, number>>,
+
+                  DofStateView<dim, number, ConservedVariablesType<dim, number, number>>,
+                  MaterialView<dim, number>>
       output_manager;
 
     /**
@@ -229,4 +227,4 @@ namespace MeltPoolDG::Flow
     return flow_scratch_data.scratch_data.get_dof_handler(flow_scratch_data.dof_idx);
   }
 
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

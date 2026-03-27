@@ -23,10 +23,10 @@ using FakeFluxType = dealii::Tensor<1, fake_conserved_components, dealii::Tensor
 class ConvectiveKernelFake
 {
 public:
-  using ValueType = FakeConservedType;
-  using FluxType  = FakeFluxType;
+  using ValueType        = FakeConservedType;
+  using PhysicalFluxType = FakeFluxType;
 
-  FluxType
+  PhysicalFluxType
   flux(const ValueType &conserved_variables) const
   {
     dealii::Tensor<1, dim, number> dummy({1., 2., 3.});

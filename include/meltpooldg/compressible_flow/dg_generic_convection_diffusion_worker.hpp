@@ -40,11 +40,11 @@ namespace MeltPoolDG::Flow
   template <typename T>
   concept ConvectionKernelType = requires(const T &kernel) {
     typename T::ValueType;
-    typename T::FluxType;
+    typename T::PhysicalFluxType;
 
     {
       kernel.flux(std::declval<typename T::ValueType>())
-    } -> std::same_as<typename T::FluxType>;
+    } -> std::same_as<typename T::PhysicalFluxType>;
 
     {
       kernel.lambda(std::declval<typename T::ValueType>(), std::declval<typename T::ValueType>())
@@ -65,7 +65,7 @@ namespace MeltPoolDG::Flow
   struct DGConvectionOperator
   {
     using ValueType = typename Kernel::ValueType;
-    using FluxType  = typename Kernel::FluxType;
+    using FluxType  = typename Kernel::PhysicalFluxType;
 
     struct FaceFlux
     {

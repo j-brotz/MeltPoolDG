@@ -17,7 +17,7 @@
 #include <memory>
 #include <utility>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   /**
    * @brief Operator for the matrix-free evaluation of a compressible single-phase flow cutDG
@@ -35,13 +35,13 @@ namespace MeltPoolDG::Flow
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
     using ConvectionDiffusionOperator =
-      DGConvectionDiffusionOperator<dim,
-                                    number,
-                                    CompressibleConvectiveFlux<dim, number>,
-                                    CompressibleDiffusiveFlux<dim, number>>;
+      Flow::DGConvectionDiffusionOperator<dim,
+                                          number,
+                                          CompressibleConvectiveFlux<dim, number>,
+                                          CompressibleDiffusiveFlux<dim, number>>;
 
     using ConvectionOperator =
-      DGConvectionOperator<dim, number, CompressibleConvectiveFlux<dim, number>>;
+      Flow::DGConvectionOperator<dim, number, CompressibleConvectiveFlux<dim, number>>;
 
     /**
      * @brief Constructor.
@@ -165,4 +165,4 @@ namespace MeltPoolDG::Flow
                               const VectorType                            &src,
                               const std::pair<unsigned int, unsigned int> &face_range) const;
   };
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

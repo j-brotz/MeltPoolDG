@@ -30,7 +30,7 @@
 
 #include <string>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   /**
    * @brief Struct that manages all relevant parameters for compressible flow simulations.
@@ -350,4 +350,4 @@ namespace MeltPoolDG::Flow
         }
     }
   };
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

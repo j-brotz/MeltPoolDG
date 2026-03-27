@@ -67,7 +67,7 @@ namespace MeltPoolDG
    * during metal additive manufacturing.
    */
   template <int dim, typename number, typename ObstacleType>
-  struct StokesLawFluidForce final : public Flow::ExternalFlowForce<dim, number>
+  struct StokesLawFluidForce final : public CompressibleFlow::ExternalFlowForce<dim, number>
   {
     using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
     using VectorType             = dealii::LinearAlgebra::distributed::Vector<number>;

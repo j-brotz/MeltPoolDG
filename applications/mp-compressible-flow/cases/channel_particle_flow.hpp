@@ -53,7 +53,8 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
    * @brief A specific compressible flow simulation setup for channel flow with particles.
    */
   template <int dim, typename number>
-  class SimulationChannelParticleFlow final : public Flow::CompressibleFlowCase<dim, number>
+  class SimulationChannelParticleFlow final
+    : public ::MeltPoolDG::CompressibleFlow::CompressibleFlowCase<dim, number>
   {
   public:
     /**
@@ -65,7 +66,8 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
      * @throw dealii::ExcMessage if `dim <= 1`, since the channel simulation requires at least 2D.
      */
     SimulationChannelParticleFlow(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : Flow::CompressibleFlowCase<dim, number>(parameter_file, mpi_communicator)
+      : ::MeltPoolDG::CompressibleFlow::CompressibleFlowCase<dim, number>(parameter_file,
+                                                                          mpi_communicator)
     {
       AssertThrow(
         dim > 1,

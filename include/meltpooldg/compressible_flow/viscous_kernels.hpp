@@ -14,7 +14,7 @@
 #include <utility>
 
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   /**
    * @brief Viscous kernel operations for compressible flow solvers.
@@ -29,9 +29,8 @@ namespace MeltPoolDG::Flow
   template <int dim, typename number>
   struct CompressibleFlowViscousKernels
   {
-    using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
-    using ConservedVariablesGradType =
-      CompressibleFlow::ConservedVariablesGradientType<dim, number>;
+    using ConservedVariables         = ConservedVariablesType<dim, number>;
+    using ConservedVariablesGradient = ConservedVariablesGradientType<dim, number>;
 
     explicit CompressibleFlowViscousKernels(
       const CompressibleFlowMaterial<dim, number> &material_in);
@@ -59,9 +58,9 @@ namespace MeltPoolDG::Flow
      * @return Viscous flux F_v(u, grad(u)).
      */
     inline DEAL_II_ALWAYS_INLINE //
-      ConservedVariablesGradType
-      calculate_viscous_flux(const ConservedVariablesType     &conserved_variables,
-                             const ConservedVariablesGradType &grad_conserved_variables) const;
+      ConservedVariablesGradient
+      calculate_viscous_flux(const ConservedVariables         &conserved_variables,
+                             const ConservedVariablesGradient &grad_conserved_variables) const;
 
     /**
      * @brief Calculate the viscous numerical flux F_v^* using the symmetric interior penalty
@@ -77,12 +76,12 @@ namespace MeltPoolDG::Flow
      * @return Visocus numerical flux.
      */
     inline DEAL_II_ALWAYS_INLINE //
-      ConservedVariablesType
+      ConservedVariables
       calculate_viscous_numerical_flux(
-        const ConservedVariablesType                                  &u_m,
-        const ConservedVariablesType                                  &u_p,
-        const ConservedVariablesGradType                              &grad_u_m,
-        const ConservedVariablesGradType                              &grad_u_p,
+        const ConservedVariables                                      &u_m,
+        const ConservedVariables                                      &u_p,
+        const ConservedVariablesGradient                              &grad_u_m,
+        const ConservedVariablesGradient                              &grad_u_p,
         const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
         dealii::VectorizedArray<number>                                penalty_parameter) const;
 
@@ -97,10 +96,10 @@ namespace MeltPoolDG::Flow
      * @return Viscous flux F_v(u, jump(u)).
      */
     inline DEAL_II_ALWAYS_INLINE //
-      std::pair<ConservedVariablesGradType, ConservedVariablesGradType>
+      std::pair<ConservedVariablesGradient, ConservedVariablesGradient>
       calculate_viscous_numerical_flux_gradient(
-        const ConservedVariablesType                                  &u_m,
-        const ConservedVariablesType                                  &u_p,
+        const ConservedVariables                                      &u_m,
+        const ConservedVariables                                      &u_p,
         const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const;
 
     /**
@@ -118,12 +117,12 @@ namespace MeltPoolDG::Flow
      *
      * @return Linearized viscous numerical flux.
      */
-    ConservedVariablesGradType
+    ConservedVariablesGradient
     calculate_jacobian_viscous_numerical_flux(
-      const std::pair<ConservedVariablesType, ConservedVariablesType>         &w_q,
-      const std::pair<ConservedVariablesGradType, ConservedVariablesGradType> &grad_w_q,
-      const std::pair<ConservedVariablesType, ConservedVariablesType>         &delta_w_q,
-      const std::pair<ConservedVariablesGradType, ConservedVariablesGradType> &grad_delta_w_q,
+      const std::pair<ConservedVariables, ConservedVariables>                 &w_q,
+      const std::pair<ConservedVariablesGradient, ConservedVariablesGradient> &grad_w_q,
+      const std::pair<ConservedVariables, ConservedVariables>                 &delta_w_q,
+      const std::pair<ConservedVariablesGradient, ConservedVariablesGradient> &grad_delta_w_q,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>           &normal,
       dealii::VectorizedArray<number> penalty_parameter) const;
 
@@ -137,11 +136,11 @@ namespace MeltPoolDG::Flow
      *
      * @return Linearized viscous flux.
      */
-    ConservedVariablesGradType
-    calculate_jacobian_viscous_flux(const ConservedVariablesType     &w_q,
-                                    const ConservedVariablesGradType &grad_w_q,
-                                    const ConservedVariablesType     &delta_w_q,
-                                    const ConservedVariablesGradType &grad_delta_w_q) const;
+    ConservedVariablesGradient
+    calculate_jacobian_viscous_flux(const ConservedVariables         &w_q,
+                                    const ConservedVariablesGradient &grad_w_q,
+                                    const ConservedVariables         &delta_w_q,
+                                    const ConservedVariablesGradient &grad_delta_w_q) const;
 
     /**
      * @brief Compute the linearization of the viscous numerical flux jump term.
@@ -156,11 +155,11 @@ namespace MeltPoolDG::Flow
      *
      * @return Linearized jump term of the viscous numerical flux jump term.
      */
-    ConservedVariablesGradType
+    ConservedVariablesGradient
     calculate_jacobian_viscous_numerical_flux_jump_term(
-      const std::pair<ConservedVariablesType, ConservedVariablesType> &delta_w_q,
-      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>   &normal,
-      dealii::VectorizedArray<number>                                  penalty_parameter) const;
+      const std::pair<ConservedVariables, ConservedVariables>       &delta_w_q,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
+      dealii::VectorizedArray<number>                                penalty_parameter) const;
 
   private:
     /// Object which provides all relevant material properties for a specific phase
@@ -205,9 +204,9 @@ namespace MeltPoolDG::Flow
   inline DEAL_II_ALWAYS_INLINE //
     auto
     CompressibleFlowViscousKernels<dim, number>::calculate_viscous_flux(
-      const ConservedVariablesType     &conserved_variables,
-      const ConservedVariablesGradType &grad_conserved_variables) const
-    -> ConservedVariablesGradType
+      const ConservedVariables         &conserved_variables,
+      const ConservedVariablesGradient &grad_conserved_variables) const
+    -> ConservedVariablesGradient
   {
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> velocity =
       calculate_velocity<dim, number>(conserved_variables);
@@ -221,7 +220,7 @@ namespace MeltPoolDG::Flow
       material.data.thermal_conductivity *
       material.eos_utils->calculate_grad_T(conserved_variables, grad_conserved_variables);
 
-    ConservedVariablesGradType flux;
+    ConservedVariablesGradient flux;
     for (unsigned int d = 0; d < dim; ++d)
       {
         // density
@@ -245,18 +244,18 @@ namespace MeltPoolDG::Flow
   inline DEAL_II_ALWAYS_INLINE //
     auto
     CompressibleFlowViscousKernels<dim, number>::calculate_viscous_numerical_flux(
-      const ConservedVariablesType                                  &u_m,
-      const ConservedVariablesType                                  &u_p,
-      const ConservedVariablesGradType                              &grad_u_m,
-      const ConservedVariablesGradType                              &grad_u_p,
+      const ConservedVariables                                      &u_m,
+      const ConservedVariables                                      &u_p,
+      const ConservedVariablesGradient                              &grad_u_m,
+      const ConservedVariablesGradient                              &grad_u_p,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
-      const dealii::VectorizedArray<number> penalty_parameter) const -> ConservedVariablesType
+      const dealii::VectorizedArray<number> penalty_parameter) const -> ConservedVariables
   {
     const auto flux_m = calculate_viscous_flux(u_m, grad_u_m);
 
     const auto flux_p = calculate_viscous_flux(u_p, grad_u_p);
 
-    return contract_average_tensor_with_vector<CompressibleFlow::n_conserved_variables<dim>,
+    return contract_average_tensor_with_vector<n_conserved_variables<dim>,
                                                dim,
                                                dealii::VectorizedArray<number>>(flux_m,
                                                                                 flux_p,
@@ -269,19 +268,19 @@ namespace MeltPoolDG::Flow
   inline DEAL_II_ALWAYS_INLINE //
     auto
     CompressibleFlowViscousKernels<dim, number>::calculate_viscous_numerical_flux_gradient(
-      const ConservedVariablesType                                  &u_m,
-      const ConservedVariablesType                                  &u_p,
+      const ConservedVariables                                      &u_m,
+      const ConservedVariables                                      &u_p,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const
-    -> std::pair<ConservedVariablesGradType, ConservedVariablesGradType>
+    -> std::pair<ConservedVariablesGradient, ConservedVariablesGradient>
   {
-    ConservedVariablesGradType jump_u;
-    for (unsigned int e = 0; e < CompressibleFlow::n_conserved_variables<dim>; ++e)
+    ConservedVariablesGradient jump_u;
+    for (unsigned int e = 0; e < n_conserved_variables<dim>; ++e)
       for (unsigned int d = 0; d < dim; ++d)
         jump_u[e][d] = (u_m[e] - u_p[e]) * normal[d];
 
     // use jumps instead of gradients for evaluating the viscous flux
-    const ConservedVariablesGradType flux_m = 0.5 * calculate_viscous_flux(u_m, jump_u);
-    const ConservedVariablesGradType flux_p = 0.5 * calculate_viscous_flux(u_p, jump_u);
+    const ConservedVariablesGradient flux_m = 0.5 * calculate_viscous_flux(u_m, jump_u);
+    const ConservedVariablesGradient flux_p = 0.5 * calculate_viscous_flux(u_p, jump_u);
 
     return std::make_pair(flux_m, flux_p);
   }
@@ -290,25 +289,25 @@ namespace MeltPoolDG::Flow
   inline DEAL_II_ALWAYS_INLINE //
     auto
     CompressibleFlowViscousKernels<dim, number>::calculate_jacobian_viscous_numerical_flux(
-      const std::pair<ConservedVariablesType, ConservedVariablesType>         &w_q,
-      const std::pair<ConservedVariablesGradType, ConservedVariablesGradType> &grad_w_q,
-      const std::pair<ConservedVariablesType, ConservedVariablesType>         &delta_w_q,
-      const std::pair<ConservedVariablesGradType, ConservedVariablesGradType> &grad_delta_w_q,
+      const std::pair<ConservedVariables, ConservedVariables>                 &w_q,
+      const std::pair<ConservedVariablesGradient, ConservedVariablesGradient> &grad_w_q,
+      const std::pair<ConservedVariables, ConservedVariables>                 &delta_w_q,
+      const std::pair<ConservedVariablesGradient, ConservedVariablesGradient> &grad_delta_w_q,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>           &normal,
-      dealii::VectorizedArray<number> penalty_parameter) const -> ConservedVariablesGradType
+      dealii::VectorizedArray<number> penalty_parameter) const -> ConservedVariablesGradient
   {
-    ConservedVariablesGradType flux_p =
+    ConservedVariablesGradient flux_p =
       0.5 * calculate_jacobian_viscous_flux(w_q.second,
                                             grad_w_q.second,
                                             delta_w_q.second,
                                             grad_delta_w_q.second);
-    ConservedVariablesGradType flux_m = 0.5 * calculate_jacobian_viscous_flux(w_q.first,
+    ConservedVariablesGradient flux_m = 0.5 * calculate_jacobian_viscous_flux(w_q.first,
                                                                               grad_w_q.first,
                                                                               delta_w_q.first,
                                                                               grad_delta_w_q.first);
 
-    ConservedVariablesGradType flux;
-    for (unsigned int i = 0; i < CompressibleFlow::n_conserved_variables<dim>; ++i)
+    ConservedVariablesGradient flux;
+    for (unsigned int i = 0; i < n_conserved_variables<dim>; ++i)
       flux[i] = (flux_p[i] + flux_m[i]);
 
     flux -=
@@ -320,12 +319,12 @@ namespace MeltPoolDG::Flow
   inline DEAL_II_ALWAYS_INLINE //
     auto
     CompressibleFlowViscousKernels<dim, number>::calculate_jacobian_viscous_flux(
-      const ConservedVariablesType     &w_q,
-      const ConservedVariablesGradType &grad_w_q,
-      const ConservedVariablesType     &delta_w_q,
-      const ConservedVariablesGradType &grad_delta_w_q) const -> ConservedVariablesGradType
+      const ConservedVariables         &w_q,
+      const ConservedVariablesGradient &grad_w_q,
+      const ConservedVariables         &delta_w_q,
+      const ConservedVariablesGradient &grad_delta_w_q) const -> ConservedVariablesGradient
   {
-    ConservedVariablesGradType viscous_differential_change;
+    ConservedVariablesGradient viscous_differential_change;
 
     // precompute values
     dealii::VectorizedArray<number>                         rho_inv = 1.0 / w_q[0];
@@ -440,13 +439,13 @@ namespace MeltPoolDG::Flow
     auto
     CompressibleFlowViscousKernels<dim, number>::
       calculate_jacobian_viscous_numerical_flux_jump_term(
-        const std::pair<ConservedVariablesType, ConservedVariablesType> &delta_w_q,
-        const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>   &normal,
-        dealii::VectorizedArray<number> penalty_parameter) const -> ConservedVariablesGradType
+        const std::pair<ConservedVariables, ConservedVariables>       &delta_w_q,
+        const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
+        dealii::VectorizedArray<number> penalty_parameter) const -> ConservedVariablesGradient
   {
     return matrix_matrix_product(
       penalty_parameter * material.data.dynamic_viscosity / material.data.reference_density *
-        identity<CompressibleFlow::n_conserved_variables<dim>, dealii::VectorizedArray<number>>(),
+        identity<n_conserved_variables<dim>, dealii::VectorizedArray<number>>(),
       dyadic_product(delta_w_q.first - delta_w_q.second, normal));
   }
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

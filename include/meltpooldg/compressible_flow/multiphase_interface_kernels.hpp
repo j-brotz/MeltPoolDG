@@ -69,7 +69,7 @@ namespace MeltPoolDG::Multiphase
       const ConservedVariablesType                               &u_gas,
       const ConservedVariablesGradType                           &grad_u_liquid,
       const ConservedVariablesGradType                           &grad_u_gas,
-      const Flow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
+      const CompressibleFlow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
       const auto                                                 &viscous_terms_liquid,
       const auto                                                 &viscous_terms_gas,
       const number                                               &m_dot_evap,
@@ -83,8 +83,8 @@ namespace MeltPoolDG::Multiphase
     // enumeration for conserved variables component indices
     using Idx = std::conditional_t<
       dim == 1,
-      Flow::Idx1D,
-      std::conditional_t<dim == 2, Flow::Idx2D, std::conditional_t<dim == 3, Flow::Idx3D, void>>>;
+      CompressibleFlow::Idx1D,
+      std::conditional_t<dim == 2, CompressibleFlow::Idx2D, std::conditional_t<dim == 3, CompressibleFlow::Idx3D, void>>>;
 
     ConservedVariablesType total_flux_liquid;
     ConservedVariablesType total_flux_gas;
@@ -142,8 +142,8 @@ namespace MeltPoolDG::Multiphase
     // compute stress tensor (pressure and viscous contributions) and convert to type
     // dealii::VectorizedArray<number>
     const auto grad_vel_liquid =
-      Flow::calculate_grad_velocity<dim, number>(u_liquid, grad_u_liquid);
-    const auto grad_vel_gas = Flow::calculate_grad_velocity<dim, number>(u_gas, grad_u_gas);
+      CompressibleFlow::calculate_grad_velocity<dim, number>(u_liquid, grad_u_liquid);
+    const auto grad_vel_gas = CompressibleFlow::calculate_grad_velocity<dim, number>(u_gas, grad_u_gas);
 
     const dealii::Tensor<2, dim, dealii::VectorizedArray<number>> viscous_stress_tensor_liquid =
       viscous_terms_liquid.calculate_viscous_stress_tensor(grad_vel_liquid);
@@ -208,9 +208,9 @@ namespace MeltPoolDG::Multiphase
 
     // compute velocities and convert to VectorizedArray<number>
     const dealii::VectorizedArray<number> vel_liquid =
-      MeltPoolDG::Flow::calculate_velocity<dim, number>(u_liquid)[0];
+      MeltPoolDG::CompressibleFlow::calculate_velocity<dim, number>(u_liquid)[0];
     const dealii::VectorizedArray<number> vel_gas =
-      MeltPoolDG::Flow::calculate_velocity<dim, number>(u_gas)[0];
+      MeltPoolDG::CompressibleFlow::calculate_velocity<dim, number>(u_gas)[0];
 
     const dealii::VectorizedArray<number> jump_energy_term_1 =
       (u_liquid[Idx::energy] * vel_liquid - u_gas[Idx::energy] * vel_gas);
@@ -311,7 +311,7 @@ namespace MeltPoolDG::Multiphase
         const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
         const auto                                                    &convective_terms_liquid,
         const auto                                                    &convective_terms_gas,
-        const Flow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data,
+        const CompressibleFlow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data,
         const number                                                  &m_dot_evap)
   {
     // Note: Variables, that are relevant for both the liquid and the gas phase, are considered as
@@ -323,8 +323,8 @@ namespace MeltPoolDG::Multiphase
     // enumeration for conserved variables component indices
     using Idx = std::conditional_t<
       dim == 1,
-      Flow::Idx1D,
-      std::conditional_t<dim == 2, Flow::Idx2D, std::conditional_t<dim == 3, Flow::Idx3D, void>>>;
+      CompressibleFlow::Idx1D,
+      std::conditional_t<dim == 2, CompressibleFlow::Idx2D, std::conditional_t<dim == 3, CompressibleFlow::Idx3D, void>>>;
 
     // 0) preliminaries
 
@@ -336,7 +336,7 @@ namespace MeltPoolDG::Multiphase
     std::array<dealii::VectorizedArray<number>, 2>                         speed_of_sound;
     for (unsigned int i : {0, 1})
       {
-        vel[i]   = Flow::calculate_velocity<dim>(u[i]);
+        vel[i]   = CompressibleFlow::calculate_velocity<dim>(u[i]);
         rho[i]   = u[i][Idx::density];
         rho_E[i] = u[i][Idx::energy];
       }
@@ -545,15 +545,15 @@ namespace MeltPoolDG::Multiphase
     calculate_Dirichlet_jump_in_conservative_variables(
       const ConservedVariablesType                               &u_liquid_cons,
       const ConservedVariablesType                               &u_gas_cons,
-      const Flow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
+      const CompressibleFlow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
       const number                                               &m_dot_evap,
       const number                                               &delta_T)
   {
     // enumeration for conserved variables component indices
     using Idx = std::conditional_t<
       dim == 1,
-      Flow::Idx1D,
-      std::conditional_t<dim == 2, Flow::Idx2D, std::conditional_t<dim == 3, Flow::Idx3D, void>>>;
+      CompressibleFlow::Idx1D,
+      std::conditional_t<dim == 2, CompressibleFlow::Idx2D, std::conditional_t<dim == 3, CompressibleFlow::Idx3D, void>>>;
 
     auto u_liquid_prim = multiphase_scratch_data.material_liquid.eos_utils
                            ->convert_conservative_into_primitive_variables(u_liquid_cons);
@@ -641,7 +641,7 @@ namespace MeltPoolDG::Multiphase
       const number                                                  &tau,
       const auto                                                    &viscous_terms_liquid,
       const auto                                                    &viscous_terms_gas,
-      const Flow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data,
+      const CompressibleFlow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data,
       const number                                                  &cell_size,
       const number                                                  &m_dot_evap,
       const number                                                  &delta_T,
@@ -650,16 +650,16 @@ namespace MeltPoolDG::Multiphase
     // enumeration for conserved variables component indices
     using Idx = std::conditional_t<
       dim == 1,
-      Flow::Idx1D,
-      std::conditional_t<dim == 2, Flow::Idx2D, std::conditional_t<dim == 3, Flow::Idx3D, void>>>;
+      CompressibleFlow::Idx1D,
+      std::conditional_t<dim == 2, CompressibleFlow::Idx2D, std::conditional_t<dim == 3, CompressibleFlow::Idx3D, void>>>;
 
     // TODO: add contributions for surface tension, interface heat source (laser energy) and
     // Marangoni forces
 
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> vel_liquid =
-      Flow::calculate_velocity<dim>(u_liquid);
+      CompressibleFlow::calculate_velocity<dim>(u_liquid);
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> vel_gas =
-      Flow::calculate_velocity<dim>(u_gas);
+      CompressibleFlow::calculate_velocity<dim>(u_gas);
 
     const dealii::VectorizedArray<number> vel_n_liquid = vel_liquid * normal;
     const dealii::VectorizedArray<number> vel_n_gas    = vel_gas * normal;
@@ -772,7 +772,7 @@ namespace MeltPoolDG::Multiphase
       const number                                                  &visc_ave_weight_phase_gas,
       const auto                                                    &viscous_terms_liquid,
       const auto                                                    &viscous_terms_gas,
-      const Flow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data,
+      const CompressibleFlow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data,
       const number                                                  &m_dot_evap,
       const number                                                  &delta_T)
   {
@@ -852,7 +852,7 @@ namespace MeltPoolDG::Multiphase
       const number                                                  &visc_ave_weight_phase_gas,
       const auto                                                    &viscous_terms_liquid,
       const auto                                                    &viscous_terms_gas,
-      const Flow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data,
+      const CompressibleFlow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data,
       const number                                                  &cell_size,
       const number                                                  &m_dot_evap,
       const number                                                  &delta_T,
@@ -861,13 +861,13 @@ namespace MeltPoolDG::Multiphase
     // enumeration for conserved variables component indices
     using Idx = std::conditional_t<
       dim == 1,
-      Flow::Idx1D,
-      std::conditional_t<dim == 2, Flow::Idx2D, std::conditional_t<dim == 3, Flow::Idx3D, void>>>;
+      CompressibleFlow::Idx1D,
+      std::conditional_t<dim == 2, CompressibleFlow::Idx2D, std::conditional_t<dim == 3, CompressibleFlow::Idx3D, void>>>;
 
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> vel_liquid =
-      Flow::calculate_velocity<dim>(u_liquid);
+      CompressibleFlow::calculate_velocity<dim>(u_liquid);
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> vel_gas =
-      Flow::calculate_velocity<dim>(u_gas);
+      CompressibleFlow::calculate_velocity<dim>(u_gas);
 
     const dealii::VectorizedArray<number> vel_n_liquid = vel_liquid * normal;
     const dealii::VectorizedArray<number> vel_n_gas    = vel_gas * normal;
@@ -970,7 +970,7 @@ namespace MeltPoolDG::Multiphase
       const ConservedVariablesType                                  &u_liquid,
       const ConservedVariablesType                                  &u_gas,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
-      const Flow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data,
+      const CompressibleFlow::CompressibleMultiphaseScratchData<dim, number>    &multiphase_scratch_data,
       Evaporation::EvaporationModelKnight<number> *evaporation_model_knight = nullptr)
   {
     number m_dot_evap = 0.;
@@ -982,7 +982,7 @@ namespace MeltPoolDG::Multiphase
           multiphase_scratch_data.material_liquid.eos_utils->calculate_temperature(u_liquid);
 
         const dealii::VectorizedArray<number> vel_n_gas =
-          Flow::calculate_velocity<dim>(u_gas) * normal;
+          CompressibleFlow::calculate_velocity<dim>(u_gas) * normal;
 
         const dealii::VectorizedArray<number> speed_of_sound_g =
           multiphase_scratch_data.material_gas.eos_utils->calculate_speed_of_sound(u_gas);

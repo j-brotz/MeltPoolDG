@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   BETTER_ENUM(NumericalFluxType,
               char,
@@ -201,4 +201,4 @@ namespace MeltPoolDG::Flow
       prm.leave_subsection();
     }
   };
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

@@ -23,7 +23,7 @@
 #include <utility>
 #include <vector>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   using namespace dealii;
 
@@ -65,19 +65,15 @@ namespace MeltPoolDG::Flow
           mapping_info_cells,
           mapping_info_faces))
     , output_manager(
-        [](CompressibleFlow::ConservedVariablesType<dim, number, number> & value) -> auto{
-          return CompressibleFlow::
-            DofValueView<dim, CompressibleFlow::ConservedVariablesType<dim, number, number>>(value);
+        [](ConservedVariablesType<dim, number, number> & value) -> auto{
+          return DofValueView<dim, ConservedVariablesType<dim, number, number>>(value);
         },
-        [&material_data_in](
-          CompressibleFlow::ConservedVariablesType<dim, number, number> &value) -> auto{
-          return CompressibleFlow::DofStateView<
-            dim,
-            number,
-            CompressibleFlow::ConservedVariablesType<dim, number, number>>(value, material_data_in);
+        [&material_data_in](ConservedVariablesType<dim, number, number> &value) -> auto{
+          return DofStateView<dim, number, ConservedVariablesType<dim, number, number>>(
+            value, material_data_in);
         },
         [&material_data_in](auto &...) -> auto{
-          return CompressibleFlow::MaterialView<dim, number>(material_data_in);
+          return MaterialView<dim, number>(material_data_in);
         })
   {
     // Currently, only explicit Euler time discretization with ghost-penalty stabilized mass matrix
@@ -573,4 +569,4 @@ namespace MeltPoolDG::Flow
   template class CutDGCompressibleFlowOperation<1, double>;
   template class CutDGCompressibleFlowOperation<2, double>;
   template class CutDGCompressibleFlowOperation<3, double>;
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

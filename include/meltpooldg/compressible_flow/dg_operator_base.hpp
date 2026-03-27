@@ -4,7 +4,7 @@
 
 #include <memory>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   /**
    * @brief Interface of the compressible flow operator interacting with the compressible flow
@@ -40,4 +40,4 @@ namespace MeltPoolDG::Flow
       std::shared_ptr<ExternalFlowForce<dim, number>>         external_force_residuum,
       std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian) = 0;
   };
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

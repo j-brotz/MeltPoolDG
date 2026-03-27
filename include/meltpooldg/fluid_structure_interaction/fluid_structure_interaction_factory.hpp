@@ -19,18 +19,18 @@
 namespace MeltPoolDG
 {
   template <int dim, typename number, typename ObstacleType>
-  std::tuple<std::shared_ptr<Flow::ExternalFlowForce<dim, number>>,
-             std::shared_ptr<Flow::ExternalFlowForceJacobian<dim, number>>,
+  std::tuple<std::shared_ptr<CompressibleFlow::ExternalFlowForce<dim, number>>,
+             std::shared_ptr<CompressibleFlow::ExternalFlowForceJacobian<dim, number>>,
              std::unique_ptr<ObstacleLoad<dim, number, ObstacleType>>>
   setup_fluid_structure_interaction(
     const FluidStructureInteractionData<number>              &fsi_data,
     ObstacleField<dim, number, ObstacleType>                 &obstacle_field,
-    const Flow::CompressibleFluidMaterialPhaseData<number>   &flow_material,
+    const CompressibleFlow::CompressibleFluidMaterialPhaseData<number>   &flow_material,
     const dealii::LinearAlgebra::distributed::Vector<number> &flow_solution,
     const MatrixFreeContext<dim, number>                      flow_mf_context)
   {
-    std::shared_ptr<Flow::ExternalFlowForce<dim, number>>         fsi_fluid_force_residual;
-    std::shared_ptr<Flow::ExternalFlowForceJacobian<dim, number>> fsi_fluid_force_jacobian;
+    std::shared_ptr<CompressibleFlow::ExternalFlowForce<dim, number>>         fsi_fluid_force_residual;
+    std::shared_ptr<CompressibleFlow::ExternalFlowForceJacobian<dim, number>> fsi_fluid_force_jacobian;
     std::unique_ptr<ObstacleLoad<dim, number, ObstacleType>>      fsi_obstacle_load;
 
     switch (fsi_data.fsi_coupling_method)

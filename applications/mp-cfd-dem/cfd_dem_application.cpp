@@ -244,7 +244,7 @@ namespace MeltPoolDG
       scratch_data->get_mapping());
 
     // initialize compressible flow operation
-    comp_flow_operation = std::make_unique<Flow::DGCompressibleFlowOperation<dim, number>>(
+    comp_flow_operation = std::make_unique<CompressibleFlow::DGCompressibleFlowOperation<dim, number>>(
       *scratch_data,
       simulation_case->parameters.flow,
       simulation_case->parameters.material,

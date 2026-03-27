@@ -7,10 +7,10 @@
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/compressible_flow/data_types.hpp>
-#include <meltpooldg/compressible_flow/state_views.hpp>
 #include <meltpooldg/compressible_flow/material.hpp>
 #include <meltpooldg/compressible_flow/material_data.hpp>
 #include <meltpooldg/compressible_flow/solver_data.hpp>
+#include <meltpooldg/compressible_flow/state_views.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -19,7 +19,7 @@
 #include <memory>
 #include <set>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   /**
    * An enum for the various boundary conditions supported by the compressible flow solver.
@@ -81,21 +81,21 @@ namespace MeltPoolDG::Flow
     set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim, number>> &simulation_case,
                             const std::string                                      &operation_name)
     {
-      set_boundary_condition(MeltPoolDG::Flow::CompressibleBoundaryConditionType::inflow,
+      set_boundary_condition(CompressibleBoundaryConditionType::inflow,
                              simulation_case->get_boundary_condition("inflow", operation_name));
 
-      set_boundary_condition(
-        MeltPoolDG::Flow::CompressibleBoundaryConditionType::subsonic_outflow_fixed_pressure,
-        simulation_case->get_boundary_condition("outflow_fixed_pressure", operation_name));
+      set_boundary_condition(CompressibleBoundaryConditionType::subsonic_outflow_fixed_pressure,
+                             simulation_case->get_boundary_condition("outflow_fixed_pressure",
+                                                                     operation_name));
 
-      set_boundary_condition(
-        MeltPoolDG::Flow::CompressibleBoundaryConditionType::subsonic_outflow_fixed_energy,
-        simulation_case->get_boundary_condition("outflow_fixed_energy", operation_name));
+      set_boundary_condition(CompressibleBoundaryConditionType::subsonic_outflow_fixed_energy,
+                             simulation_case->get_boundary_condition("outflow_fixed_energy",
+                                                                     operation_name));
 
-      set_boundary_condition(MeltPoolDG::Flow::CompressibleBoundaryConditionType::slip_wall,
+      set_boundary_condition(CompressibleBoundaryConditionType::slip_wall,
                              simulation_case->get_boundary_condition("slip_wall", operation_name));
 
-      set_boundary_condition(MeltPoolDG::Flow::CompressibleBoundaryConditionType::no_slip_wall,
+      set_boundary_condition(CompressibleBoundaryConditionType::no_slip_wall,
                              simulation_case->get_boundary_condition("no_slip_wall",
                                                                      operation_name));
     }
@@ -203,14 +203,13 @@ namespace MeltPoolDG::Flow
 
     std::tuple<ConservedVariablesType, ConservedVariablesGradType>
     get_boundary_face_value_and_gradient(
-      const dealii::Point<dim, VectorizedArrayType>     &q_point,
-      const dealii::Tensor<1, dim, VectorizedArrayType> &normal,
-      dealii::types::boundary_id                         boundary_id,
-      CompressibleFlow::DofValueAndGradientStateView<
-        dim,
-        number,
-        const CompressibleFlow::ConservedVariablesType<dim, number>,
-        const CompressibleFlow::ConservedVariablesGradientType<dim, number>> w_m) const;
+      const dealii::Point<dim, VectorizedArrayType>                 &q_point,
+      const dealii::Tensor<1, dim, VectorizedArrayType>             &normal,
+      dealii::types::boundary_id                                     boundary_id,
+      DofValueAndGradientStateView<dim,
+                                   number,
+                                   const ConservedVariablesType,
+                                   const ConservedVariablesGradType> w_m) const;
 
     /**
      * @brief Compute boundary values and gradients, as well as their linearizations for the Jacobian.
@@ -259,4 +258,4 @@ namespace MeltPoolDG::Flow
     std::set<dealii::types::boundary_id> slip_wall_boundaries;
     std::set<dealii::types::boundary_id> no_slip_adiabatic_wall_boundaries;
   };
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

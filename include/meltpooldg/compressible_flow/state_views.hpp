@@ -5,9 +5,9 @@
 
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/equation_of_state.hpp>
-#include <meltpooldg/compressible_flow/state_views_mixins.hpp>
 #include <meltpooldg/compressible_flow/material.hpp>
 #include <meltpooldg/compressible_flow/solver_data.hpp>
+#include <meltpooldg/compressible_flow/state_views_mixins.hpp>
 
 #include <type_traits>
 
@@ -49,18 +49,18 @@ namespace MeltPoolDG::CompressibleFlow
   {
     using state_type = std::any;
 
-    MaterialView(const Flow::CompressibleFluidMaterialPhaseData<number> &material_data)
+    MaterialView(const CompressibleFluidMaterialPhaseData<number> &material_data)
       : material_data(material_data)
     {}
 
-    const Flow::CompressibleFluidMaterialPhaseData<number> &
+    const CompressibleFluidMaterialPhaseData<number> &
     material() const
     {
       return material_data;
     }
 
   private:
-    const Flow::CompressibleFluidMaterialPhaseData<number> &material_data;
+    const CompressibleFluidMaterialPhaseData<number> &material_data;
   };
 
   /**
@@ -151,8 +151,8 @@ namespace MeltPoolDG::CompressibleFlow
   {
     using state_type = std::remove_cvref_t<Value>;
 
-    DofStateView(Value                                                  &value_state,
-                 const Flow::CompressibleFluidMaterialPhaseData<number> &material_data)
+    DofStateView(Value                                            &value_state,
+                 const CompressibleFluidMaterialPhaseData<number> &material_data)
       : flow_state(&value_state)
       , material_data(material_data)
     {}
@@ -162,7 +162,7 @@ namespace MeltPoolDG::CompressibleFlow
       return DofStateView<dim, number, const Value>(*flow_state, material_data);
     }
 
-    Flow::EquationOfState
+    EquationOfState
     eos_type() const
     {
       return material_data.eos_type;
@@ -174,15 +174,15 @@ namespace MeltPoolDG::CompressibleFlow
       return *flow_state;
     }
 
-    const Flow::CompressibleFluidMaterialPhaseData<number> &
+    const CompressibleFluidMaterialPhaseData<number> &
     material() const
     {
       return material_data;
     }
 
   private:
-    mutable Value                                          *flow_state;
-    const Flow::CompressibleFluidMaterialPhaseData<number> &material_data;
+    mutable Value                                    *flow_state;
+    const CompressibleFluidMaterialPhaseData<number> &material_data;
   };
 
   /**
@@ -221,10 +221,9 @@ namespace MeltPoolDG::CompressibleFlow
     using state_type    = std::remove_cvref_t<Value>;
     using gradient_type = std::remove_cvref_t<Gradient>;
 
-    DofValueAndGradientStateView(
-      Value                                                  &value_state,
-      Gradient                                               &gradient_state,
-      const Flow::CompressibleFluidMaterialPhaseData<number> &material_data)
+    DofValueAndGradientStateView(Value                                            &value_state,
+                                 Gradient                                         &gradient_state,
+                                 const CompressibleFluidMaterialPhaseData<number> &material_data)
       : flow_state(&value_state)
       , flow_gradient_state(&gradient_state)
       , material_data(material_data)
@@ -248,22 +247,22 @@ namespace MeltPoolDG::CompressibleFlow
       return *flow_gradient_state;
     }
 
-    Flow::EquationOfState
+    EquationOfState
     eos_type() const
     {
       return material_data.eos_type;
     }
 
-    const Flow::CompressibleFluidMaterialPhaseData<number> &
+    const CompressibleFluidMaterialPhaseData<number> &
     material() const
     {
       return material_data;
     }
 
   private:
-    mutable Value                                          *flow_state;
-    mutable Gradient                                       *flow_gradient_state;
-    const Flow::CompressibleFluidMaterialPhaseData<number> &material_data;
+    mutable Value                                    *flow_state;
+    mutable Gradient                                 *flow_gradient_state;
+    const CompressibleFluidMaterialPhaseData<number> &material_data;
   };
 
   /**

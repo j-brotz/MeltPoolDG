@@ -7,8 +7,8 @@
 #include <deal.II/numerics/data_component_interpretation.h>
 #include <deal.II/numerics/data_postprocessor.h>
 
-#include <meltpooldg/compressible_flow/solver_data.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
+#include <meltpooldg/compressible_flow/solver_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 
@@ -26,7 +26,10 @@ namespace MeltPoolDG::CompressibleFlow
    * framework and can be attached to a GenericDataOut object for output generation.
    */
   template <int dim, typename number, IsConservedView View>
-    requires requires { typename View::state_type; }
+  requires requires
+  {
+    typename View::state_type;
+  }
   class ConservedVariablesPostProcessor : public dealii::DataPostprocessor<dim>
   {
   public:
@@ -113,7 +116,10 @@ namespace MeltPoolDG::CompressibleFlow
    * framework and can be attached to a GenericDataOut object for output generation.
    */
   template <int dim, typename number, IsPrimitiveView View>
-    requires requires { typename View::state_type; }
+  requires requires
+  {
+    typename View::state_type;
+  }
   class PrimitiveVariablesPostProcessor : public dealii::DataPostprocessor<dim>
   {
     constexpr static unsigned int n_primitive_variables = dim + 2;
@@ -213,7 +219,10 @@ namespace MeltPoolDG::CompressibleFlow
    * GenericDataOut object for output generation.
    */
   template <int dim, typename number, IsMaterialView View>
-    requires requires { typename View::state_type; }
+  requires requires
+  {
+    typename View::state_type;
+  }
   class MaterialVariablesPostProcessor : public dealii::DataPostprocessor<dim>
   {
     constexpr static unsigned int n_material_variables = 5;
@@ -360,17 +369,17 @@ namespace MeltPoolDG::CompressibleFlow
     attach_to_data_out(GenericDataOut<dim, number>                              &data_out,
                        const dealii::DoFHandler<dim>                            &dof_handler,
                        const dealii::LinearAlgebra::distributed::Vector<number> &solution,
-                       const std::vector<Flow::CompressibleFlowOutputType>      &output_types) const
+                       const std::vector<CompressibleFlowOutputType>            &output_types) const
     {
-      if (Utils::contains(output_types, Flow::CompressibleFlowOutputType::conserved_variables))
+      if (Utils::contains(output_types, CompressibleFlowOutputType::conserved_variables))
         {
           data_out.add_data_vector(&dof_handler, &solution, &conserved_variables_post_processor);
         }
-      if (Utils::contains(output_types, Flow::CompressibleFlowOutputType::primitive_variables))
+      if (Utils::contains(output_types, CompressibleFlowOutputType::primitive_variables))
         {
           data_out.add_data_vector(&dof_handler, &solution, &primitive_variables_post_processor);
         }
-      if (Utils::contains(output_types, Flow::CompressibleFlowOutputType::material_quantities))
+      if (Utils::contains(output_types, CompressibleFlowOutputType::material_quantities))
         {
           data_out.add_data_vector(&dof_handler, &solution, &material_quantities_post_processor);
         }

@@ -120,19 +120,19 @@ namespace
       dealii::parallel::distributed::Triangulation<dim>            triangulation;
       dealii::DoFHandler<dim>                                      dof_handler;
       MeltPoolDG::FiniteElementData                                fe_data;
-      MeltPoolDG::Flow::CompressibleFlowData<number>               flow_data;
-      MeltPoolDG::Flow::CompressibleFluidMaterialPhaseData<number> material;
+      MeltPoolDG::CompressibleFlow::CompressibleFlowData<number>               flow_data;
+      MeltPoolDG::CompressibleFlow::CompressibleFluidMaterialPhaseData<number> material;
       dealii::AffineConstraints<number>                            affine_constraints;
       MeltPoolDG::ScratchData<dim, dim, number>                    scratch_data;
 
-      std::unique_ptr<MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number>> flow_scratch_data;
+      std::unique_ptr<MeltPoolDG::CompressibleFlow::CompressibleFlowScratchData<dim, number>> flow_scratch_data;
 
-      std::unique_ptr<MeltPoolDG::Flow::DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>>
+      std::unique_ptr<MeltPoolDG::CompressibleFlow::DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>>
         explicit_flow_operator;
-      std::unique_ptr<MeltPoolDG::Flow::DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>>
+      std::unique_ptr<MeltPoolDG::CompressibleFlow::DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>>
         implicit_flow_operator;
       std::unique_ptr<
-        MeltPoolDG::Flow::DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>>
+        MeltPoolDG::CompressibleFlow::DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>>
         imex_flow_operator;
 
     private:
@@ -157,7 +157,7 @@ namespace
         scratch_data.build(true, true, false, false);
 
         flow_scratch_data =
-          std::make_unique<MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number>>(
+          std::make_unique<MeltPoolDG::CompressibleFlow::CompressibleFlowScratchData<dim, number>>(
             flow_data, material, scratch_data, dof_index, quad_index);
         flow_scratch_data->reinit(2);
       }
@@ -215,14 +215,14 @@ namespace
         std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim, number>>> bottom{
           {3, func}};
         flow_scratch_data->boundary_conditions.set_boundary_condition(
-          MeltPoolDG::Flow::CompressibleBoundaryConditionType::inflow, inflow);
+          MeltPoolDG::CompressibleFlow::CompressibleBoundaryConditionType::inflow, inflow);
         flow_scratch_data->boundary_conditions.set_boundary_condition(
-          MeltPoolDG::Flow::CompressibleBoundaryConditionType::subsonic_outflow_fixed_energy,
+          MeltPoolDG::CompressibleFlow::CompressibleBoundaryConditionType::subsonic_outflow_fixed_energy,
           outflow);
         flow_scratch_data->boundary_conditions.set_boundary_condition(
-          MeltPoolDG::Flow::CompressibleBoundaryConditionType::no_slip_wall, top);
+          MeltPoolDG::CompressibleFlow::CompressibleBoundaryConditionType::no_slip_wall, top);
         flow_scratch_data->boundary_conditions.set_boundary_condition(
-          MeltPoolDG::Flow::CompressibleBoundaryConditionType::no_slip_wall, bottom);
+          MeltPoolDG::CompressibleFlow::CompressibleBoundaryConditionType::no_slip_wall, bottom);
       }
     };
 
@@ -240,19 +240,19 @@ namespace
         {
             case OperatorType::Explicit: {
               data->explicit_flow_operator = std::make_unique<
-                MeltPoolDG::Flow::DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>>(
+                MeltPoolDG::CompressibleFlow::DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>>(
                 *data->flow_scratch_data);
               break;
             }
             case OperatorType::Implicit: {
               data->implicit_flow_operator = std::make_unique<
-                MeltPoolDG::Flow::DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>>(
+                MeltPoolDG::CompressibleFlow::DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>>(
                 *data->flow_scratch_data);
               break;
             }
             case OperatorType::ImEx: {
               data->imex_flow_operator = std::make_unique<
-                MeltPoolDG::Flow::
+                MeltPoolDG::CompressibleFlow::
                   DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>>(
                 *data->flow_scratch_data);
               break;

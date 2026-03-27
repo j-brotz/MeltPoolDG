@@ -87,19 +87,19 @@ namespace MeltPoolDG::Multiphase
     BaseData base;
 
     /// Data specific for compressible flow simulations
-    Flow::CompressibleFlowData<number> flow;
+    CompressibleFlow::CompressibleFlowData<number> flow;
 
     /// Material parameters for the gas phase
-    Flow::CompressibleFluidMaterialPhaseData<number> material_gas;
+    CompressibleFlow::CompressibleFluidMaterialPhaseData<number> material_gas;
 
     /// Material parameters for the liquid phase
-    Flow::CompressibleFluidMaterialPhaseData<number> material_liquid;
+    CompressibleFlow::CompressibleFluidMaterialPhaseData<number> material_liquid;
 
     /// Parameters related to liquid-gas and solid-liquid phase transitions
     PhaseChangeData<number> phase_change;
 
     /// Cut-related data
-    Flow::CompressibleFlowCutData<number> cut;
+    CompressibleFlow::CompressibleFlowCutData<number> cut;
 
     /// Data for phase-coupling including interface jump conditions and numerical parameters
     CompressibleFlowPhaseCouplingData<number> phase_coupling;
