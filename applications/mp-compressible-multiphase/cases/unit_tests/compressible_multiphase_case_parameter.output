@@ -118,7 +118,11 @@
         "gas":
         {
             "dynamic viscosity": "0.000625",
+            "eos type": "ideal_gas",
             "gamma": "1.4",
+            "molar mass": "1.79769e+308",
+            "name": "species",
+            "number of species": "1",
             "reference density": "1",
             "specific gas constant": "287.1",
             "specific isobaric heat": "1000",
@@ -127,14 +131,58 @@
             {
                 "b": "1.79769e+308",
                 "p inf": "1.79769e+308",
-                "q": "2.22507e-308",
-                "type": "ideal_gas"
+                "q": "2.22507e-308"
+            },
+            "species 1":
+            {
+                "dynamic viscosity": "0.000625",
+                "gamma": "1.4",
+                "molar mass": "1.79769e+308",
+                "name": "species",
+                "specific gas constant": "287.1",
+                "specific isobaric heat": "1000",
+                "thermal conductivity": "1.79769e+308",
+                "equation of state":
+                {
+                    "b": "1.79769e+308",
+                    "p inf": "1.79769e+308",
+                    "q": "2.22507e-308"
+                }
+            },
+            "species 2":
+            {
+                "dynamic viscosity": "0.000625",
+                "gamma": "1.4",
+                "molar mass": "1.79769e+308",
+                "name": "species",
+                "specific gas constant": "287.1",
+                "specific isobaric heat": "1000",
+                "thermal conductivity": "1.79769e+308",
+                "equation of state":
+                {
+                    "b": "1.79769e+308",
+                    "p inf": "1.79769e+308",
+                    "q": "2.22507e-308"
+                }
+            },
+            "species interactions":
+            {
+                "interaction pair1":
+                {
+                    "diffusion coefficient": "0",
+                    "species 1": "1",
+                    "species 2": "2"
+                }
             }
         },
         "liquid":
         {
             "dynamic viscosity": "0.000625",
+            "eos type": "ideal_gas",
             "gamma": "1.4",
+            "molar mass": "1.79769e+308",
+            "name": "species",
+            "number of species": "1",
             "reference density": "1",
             "specific gas constant": "287.1",
             "specific isobaric heat": "1000",
@@ -143,8 +191,48 @@
             {
                 "b": "1.79769e+308",
                 "p inf": "1.79769e+308",
-                "q": "2.22507e-308",
-                "type": "ideal_gas"
+                "q": "2.22507e-308"
+            },
+            "species 1":
+            {
+                "dynamic viscosity": "0.000625",
+                "gamma": "1.4",
+                "molar mass": "1.79769e+308",
+                "name": "species",
+                "specific gas constant": "287.1",
+                "specific isobaric heat": "1000",
+                "thermal conductivity": "1.79769e+308",
+                "equation of state":
+                {
+                    "b": "1.79769e+308",
+                    "p inf": "1.79769e+308",
+                    "q": "2.22507e-308"
+                }
+            },
+            "species 2":
+            {
+                "dynamic viscosity": "0.000625",
+                "gamma": "1.4",
+                "molar mass": "1.79769e+308",
+                "name": "species",
+                "specific gas constant": "287.1",
+                "specific isobaric heat": "1000",
+                "thermal conductivity": "1.79769e+308",
+                "equation of state":
+                {
+                    "b": "1.79769e+308",
+                    "p inf": "1.79769e+308",
+                    "q": "2.22507e-308"
+                }
+            },
+            "species interactions":
+            {
+                "interaction pair1":
+                {
+                    "diffusion coefficient": "0",
+                    "species 1": "1",
+                    "species 2": "2"
+                }
             }
         }
     },

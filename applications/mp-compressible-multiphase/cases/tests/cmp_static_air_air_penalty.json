@@ -70,9 +70,7 @@
       "thermal conductivity": "0.028",
       "reference density": "1.0",
       "gamma": "1.4",
-      "equation of state": {
-        "type": "ideal_gas"
-      }
+      "eos type": "ideal_gas"
     },
     "liquid": {
       "dynamic viscosity": "0.00002",
@@ -81,9 +79,7 @@
       "thermal conductivity": "0.028",
       "reference density": "1.0",
       "gamma": "1.4",
-      "equation of state": {
-        "type": "ideal_gas"
-      }
+      "eos type": "ideal_gas"
     }
   },
   "cut": {

@@ -1,9 +1,12 @@
 #pragma once
 
 #include <deal.II/base/parameter_handler.h>
-#include <deal.II/base/patterns.h>
 
-#include <meltpooldg/utilities/better_enum.hpp>
+#include <meltpooldg/utilities/enum.hpp>
+
+#include <array>
+#include <cstddef>
+#include <limits>
 
 namespace MeltPoolDG::Flow
 {
@@ -18,9 +21,6 @@ namespace MeltPoolDG::Flow
   template <typename number>
   struct EOSData
   {
-    /// Type of equation of state
-    EquationOfState type = EquationOfState::ideal_gas;
-
     /// Parameter to model molecular attraction within condensed matter
     /// (required for stiffened_gas and noble_abel_stiffened_gas)
     number p_inf = std::numeric_limits<number>::max();
@@ -41,49 +41,24 @@ namespace MeltPoolDG::Flow
      * @param prm The parameter handler to which the parameters are added.
      */
     void
-    add_parameters(dealii::ParameterHandler &prm)
-    {
-      prm.enter_subsection("equation of state");
-      {
-        prm.add_parameter(
-          "type",
-          type,
-          "Type of equation of state. "
-          "The options are \"ideal_gas\", \"stiffened_gas\" and \"noble_abel_stiffened_gas\".",
-          dealii::Patterns::Selection("ideal_gas|stiffened_gas|noble_abel_stiffened_gas"));
-        prm.add_parameter(
-          "p inf",
-          p_inf,
-          "Numerical EOS parameter to model the "
-          "molecular attraction within condensed matter. The variable is required for the "
-          "stiffened gas EOS and the Noble-Abel stiffened gas EOS. The minimum value is 0.",
-          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
-        prm.add_parameter(
-          "b",
-          b,
-          "Numerical EOS parameter to model the covolume "
-          "of the fluid, i.e., the exclude volume due to the finite size of the molecules. "
-          "The variable is required for the Noble-Abel stiffened gas EOS. "
-          "The minimum value is 0.",
-          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
-        prm.add_parameter(
-          "q",
-          q,
-          "Numerical EOS parameter to model the "
-          "'heat bound', i.e., the energy due to chemical bounds, hydrogen bondings, "
-          "latent heat,.... The variable is required for the Noble-Abel stiffened gas EOS. The "
-          "maximum value is 0.",
-          dealii::Patterns::Double(std::numeric_limits<number>::min(), 0.));
-      }
-      prm.leave_subsection();
-    };
+    add_parameters(dealii::ParameterHandler &prm);
+
+    /**
+     * Post-process EOS-specific material data parameters. This function essentially checks that the
+     * required parameters for the selected equation of state are set and throws an exception if
+     * this is not the case.
+     *
+     * @param eos_type The type of equation of state for which the parameters should be checked.
+     */
+    void
+    post(const EquationOfState eos_type) const;
   };
 
   /**
-   * @brief Collection of material parameters for a specific fluid phase.
+   * @brief Collection of material parameters for a specific species.
    */
   template <typename number>
-  struct CompressibleFluidMaterialPhaseData
+  struct CompressibleFlowMaterialSpeciesData
   {
     /// Specific isobaric heat (SI: J/(kg K))
     number specific_isobaric_heat = 1000.0;
@@ -98,14 +73,93 @@ namespace MeltPoolDG::Flow
     /// Specific gas constant (SI: J/(kg K))
     number specific_gas_constant = 287.1;
 
-    /// Reference density for interior penalty (SI: kg/m3)
-    number reference_density = 1.0;
-
     /// Thermal conductivity (SI: W/(m K))
     number thermal_conductivity = std::numeric_limits<number>::max();
 
     /// Data for the equation of state
     EOSData<number> eos_data;
+
+    /// Molar mass of the species
+    number molar_mass = std::numeric_limits<number>::max();
+
+    // Name of the species (for output purposes)
+    std::string name = "species";
+
+    /**
+     * Add material parameters for the species in the parameter handler.
+     *
+     * @param prm The parameter handler to which the parameters are added.
+     * @param species_number The number of the species for which the parameters are added. This is
+     * used to read the corresponding subsections for each species in the input file.
+     *
+     * @note For single-species simulations, the parameters can be read in with or without a
+     * subsection. For multi-species simulations, the parameters must be read in with a subsection
+     * for each species. This is done for backward compatibility with previous input files and to
+     * avoid the need to add a subsection for single-species simulations.
+     */
+    void
+    add_parameters(dealii::ParameterHandler &prm, const unsigned species_number);
+
+  private:
+    /**
+     * Add material parameters for the species in the parameter handler without a subsection.
+     *
+     * @param prm The parameter handler to which the parameters are added.
+     */
+    void
+    add_parameters(dealii::ParameterHandler &prm);
+  };
+
+  /**
+   * @brief Collection of material parameters for a specific fluid phase.
+   */
+  template <typename number>
+  struct CompressibleFluidMaterialPhaseData
+  {
+    /// Maximum number of species currently supported by the data structure. We do not use a
+    /// template parameter here as this would require to template at least the cut dg implementation
+    /// for compressible flows on n_species although this is not supported by the implementation.
+    constexpr static std::size_t n_max_species = 2;
+
+    /// Maximum number of species interactions, i.e., diffusion coefficients, currently supported by
+    /// the data structure. This is given by n_max_species * (n_max_species - 1) / 2, i.e., the
+    /// number of unique pairs of species.
+    constexpr static std::size_t n_max_diffusion_coefficients =
+      n_max_species * (n_max_species - 1) / 2;
+
+    /// Type of equation of state
+    EquationOfState eos_type = EquationOfState::ideal_gas;
+
+    /// Number of different species in the fluid phase. For single-component simulations, set to 1.
+    unsigned int number_of_species = 1;
+
+    /// Data for the fluid species. For single-component simulations, only the first entry of the
+    /// vector is relevant.
+    std::array<CompressibleFlowMaterialSpeciesData<number>, n_max_species> species_data;
+
+    /// Reference density for interior penalty (SI: kg/m3)
+    number reference_density = 1.0;
+
+    /// The parameters below are defined for convenience and backward compatibility. For
+    /// single-component materials they are set based on the first entry of the species data. For
+    /// multi-component materials, they are set to invalid numbers. This is done by the post
+    /// function.
+    number          specific_isobaric_heat;
+    number          dynamic_viscosity;
+    number          gamma;
+    number          specific_gas_constant;
+    number          thermal_conductivity;
+    EOSData<number> eos_data;
+
+    /**
+     * @brief Get the diffusion coefficient for the interaction between species i and j.
+     *
+     * @param i The number of the first species in the interaction pair.
+     * @param j The number of the second species in the interaction pair.
+     * @return The diffusion coefficient for the interaction between species i and j.
+     */
+    number
+    get_diffusion_coefficient(const unsigned int i, const unsigned int j) const;
 
     /**
      * @brief Add material parameters in the parameter handler.
@@ -115,41 +169,7 @@ namespace MeltPoolDG::Flow
      * considered.
      */
     void
-    add_parameters(dealii::ParameterHandler &prm, const bool is_gas_phase)
-    {
-      const std::string subsection_name = is_gas_phase ? "gas" : "liquid";
-      prm.enter_subsection("material");
-      prm.enter_subsection(subsection_name);
-      {
-        prm.add_parameter("specific isobaric heat",
-                          specific_isobaric_heat,
-                          "Specific isobaric heat.",
-                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
-        prm.add_parameter("dynamic viscosity",
-                          dynamic_viscosity,
-                          "Dynamic viscosity.",
-                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
-        prm.add_parameter("gamma",
-                          gamma,
-                          "Isentropic exponent, i.e., ratio of specific heat (c_p/c_v).",
-                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
-        prm.add_parameter("specific gas constant", specific_gas_constant, "Specific gas constant.");
-        prm.add_parameter("reference density",
-                          reference_density,
-                          "Reference density for computing the interior penalty factor. "
-                          "A good first guess is to choose a value in the order of the fluid"
-                          " density. If instabilities occur, the reference density can be "
-                          "decreased, so that the symmetric interior penalization is increased.",
-                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
-        prm.add_parameter("thermal conductivity",
-                          thermal_conductivity,
-                          "Thermal conductivity.",
-                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
-        eos_data.add_parameters(prm);
-      }
-      prm.leave_subsection();
-      prm.leave_subsection();
-    };
+    add_parameters(dealii::ParameterHandler &prm, const bool is_gas_phase);
 
     /**
      * @brief Post-process material data parameters.
@@ -157,29 +177,39 @@ namespace MeltPoolDG::Flow
      * @param is_gas Boolean indicator specifying whether a gas or liquid phase is considered.
      */
     void
-    post(const bool is_gas)
-    {
-      // Set thermal conductivity, if not explicitly set by the user.
-      // For physical consistency, set thermal conductivity based on the user-defined dynamic
-      // viscosity, gamma and specific gas constant. The Prandtl number is currently set
-      // constant to Pr=0.71 for the gas phase (air) and to Pr=0.01 for the liquid phase (metal).
-      const number Pr = is_gas ? 0.71 : 0.01;
-      if (thermal_conductivity == std::numeric_limits<number>::max())
-        thermal_conductivity =
-          dynamic_viscosity * gamma * specific_gas_constant / (gamma - 1.) * 1. / Pr;
+    post(const bool is_gas);
 
-      // Ensure that parameters are set for advanced equations of state
-      if (eos_data.type == EquationOfState::stiffened_gas)
-        AssertThrow(eos_data.p_inf != std::numeric_limits<number>::max(),
-                    dealii::ExcMessage(
-                      "The parameter p_inf is required for the stiffened gas EOS."));
-      else if (eos_data.type == EquationOfState::noble_abel_stiffened_gas)
-        AssertThrow(eos_data.p_inf != std::numeric_limits<number>::max() and
-                      eos_data.b != std::numeric_limits<number>::max() and
-                      eos_data.q != std::numeric_limits<number>::min(),
-                    dealii::ExcMessage(
-                      "The parameters p_inf, b and q are required for the Noble-Abel stiffened"
-                      " gas EOS."));
+  private:
+    /// Struct to store the input data for the diffusion coefficient for the interaction between two
+    /// species.
+    struct SpeciesInteraction
+    {
+      unsigned int species_i             = 1;
+      unsigned int species_j             = 2;
+      number       diffusion_coefficient = 0.0;
     };
+
+    /// Input data for the diffusion coefficients for the interaction between different species.
+    /// This is stored separately from the actual diffusion coefficients to allow for a more
+    /// convenient input in the parameter handler.
+    std::array<SpeciesInteraction, n_max_diffusion_coefficients> species_interactions_input{};
+
+    /// Diffusion coefficients for the interaction between different species. For single-component
+    /// simulations, these are not relevant. For multi-component simulations, the diffusion
+    /// coefficient for the interaction between species i and j is given by the entry with index
+    /// get_species_interaction_index(i, j) in the array. This variable is private because the
+    /// diffusion coefficients should only be accessed through the get_diffusion_coefficient
+    /// function, which computes the correct index based on the species numbers.
+    std::array<number, n_max_diffusion_coefficients> species_interactions{};
+
+    /**
+     * @brief Get the index of the diffusion coefficient for the interaction between species i and j.
+     *
+     * @param i The number of the first species in the interaction pair.
+     * @param j The number of the second species in the interaction pair.
+     * @return The index of the diffusion coefficient for the interaction between species i and j.
+     */
+    std::size_t
+    get_species_interaction_index(const unsigned int i, const unsigned int j) const;
   };
 } // namespace MeltPoolDG::Flow

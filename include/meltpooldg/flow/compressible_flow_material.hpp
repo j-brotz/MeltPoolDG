@@ -54,7 +54,7 @@ namespace MeltPoolDG::Flow
     std::shared_ptr<EOS::EquationOfStateUtils<dim, number>>
     make_eos_utils(const CompressibleFluidMaterialPhaseData<number> &material_data)
     {
-      switch (material_data.eos_data.type)
+      switch (material_data.eos_type)
         {
           case EquationOfState::ideal_gas:
             return std::make_shared<EOS::IdealGas<dim, number>>(material_data);

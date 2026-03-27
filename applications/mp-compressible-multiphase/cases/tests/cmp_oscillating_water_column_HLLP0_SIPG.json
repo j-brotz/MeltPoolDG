@@ -55,17 +55,15 @@
       "specific gas constant": "287.1",
       "reference density": "0.4",
       "gamma": "1.4",
-      "equation of state": {
-        "type": "ideal_gas"
-      }
+      "eos type": "ideal_gas"
     },
     "liquid": {
       "dynamic viscosity": "0.001",
       "specific isobaric heat": "4190.0",
       "reference density": "800.0",
       "gamma": "2.788103",
+      "eos type": "stiffened_gas",
       "equation of state": {
-        "type": "stiffened_gas",
         "p inf": "7.862511e8"
       }
     },

@@ -73,7 +73,7 @@ namespace MeltPoolDG::Flow
       profiling.check_input_parameters(time_stepping.time_step_size);
 
       // Advanced EOS are currently only allowed for explicit time integration.
-      if (material.eos_data.type != EquationOfState::ideal_gas)
+      if (material.eos_type != EquationOfState::ideal_gas)
         AssertThrow(not MeltPoolDG::TimeIntegration::time_integrator_scheme_is_explicit(
                       flow.time_integrator.integrator_type),
                     dealii::ExcMessage(
