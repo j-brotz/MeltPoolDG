@@ -9,8 +9,8 @@
 
 #include <deal.II/grid/grid_generator.h>
 
-#include <meltpooldg/flow/compressible_flow_boundary_conditions.hpp>
-#include <meltpooldg/flow/compressible_flow_types.hpp>
+#include <meltpooldg/compressible_flow/boundary_conditions.hpp>
+#include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 
 #include <memory>

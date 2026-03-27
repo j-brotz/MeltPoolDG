@@ -14,10 +14,10 @@
 
 #include <deal.II/lac/la_parallel_vector.h>
 
-#include "meltpooldg/flow/compressible_flow_data.hpp"
+#include <meltpooldg/compressible_flow/dg_operation.hpp>
+#include <meltpooldg/compressible_flow/solver_data.hpp>
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_util.hpp>

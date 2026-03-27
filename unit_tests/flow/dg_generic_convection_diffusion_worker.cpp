@@ -2,8 +2,8 @@
 
 #include <deal.II/base/tensor.h>
 
-#include <meltpooldg/flow/compressible_flow_views.hpp>
-#include <meltpooldg/flow/dg_generic_convection_diffusion_worker.hpp>
+#include <meltpooldg/compressible_flow/dg_generic_convection_diffusion_worker.hpp>
+#include <meltpooldg/compressible_flow/state_views.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 
 #include <numbers>

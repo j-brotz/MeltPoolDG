@@ -15,13 +15,13 @@
 
 #include <deal.II/matrix_free/operators.h>
 
+#include <meltpooldg/compressible_flow/dg_operator_explicit.hpp>
+#include <meltpooldg/compressible_flow/dg_operator_implicit.hpp>
+#include <meltpooldg/compressible_flow/dg_operator_implicit_explicit.hpp>
+#include <meltpooldg/compressible_flow/material.hpp>
+#include <meltpooldg/compressible_flow/solver_data.hpp>
+#include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/flow/compressible_flow_data.hpp>
-#include <meltpooldg/flow/compressible_flow_material_data.hpp>
-#include <meltpooldg/flow/compressible_flow_utils.hpp>
-#include <meltpooldg/flow/dg_compressible_flow_operator_explicit.hpp>
-#include <meltpooldg/flow/dg_compressible_flow_operator_implicit.hpp>
-#include <meltpooldg/flow/dg_compressible_flow_operator_implicit_explicit.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 

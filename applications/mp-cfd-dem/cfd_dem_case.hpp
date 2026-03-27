@@ -3,11 +3,11 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/compressible_flow/material.hpp>
+#include <meltpooldg/compressible_flow/solver_data.hpp>
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/flow/compressible_flow_data.hpp>
-#include <meltpooldg/flow/compressible_flow_material_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/particles/cohesive_forces.hpp>
 #include <meltpooldg/particles/contact_forces.hpp>

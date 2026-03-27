@@ -2,9 +2,9 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/flow/compressible_flow_operation.hpp>
-#include <meltpooldg/flow/cutdg_compressible_flow_operation.hpp>
-#include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
+#include <meltpooldg/compressible_flow/cutdg_operation.hpp>
+#include <meltpooldg/compressible_flow/dg_operation.hpp>
+#include <meltpooldg/compressible_flow/operation_type_erasure.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>

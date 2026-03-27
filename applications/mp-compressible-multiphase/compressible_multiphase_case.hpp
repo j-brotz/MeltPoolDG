@@ -12,13 +12,12 @@
 #include <deal.II/non_matching/mesh_classifier.h>
 #include <deal.II/non_matching/quadrature_generator.h>
 
+#include <meltpooldg/compressible_flow/material.hpp>
+#include <meltpooldg/compressible_flow/phase_coupling_data.hpp>
+#include <meltpooldg/compressible_flow/solver_data.hpp>
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/flow/compressible_flow_cut_data.hpp>
-#include <meltpooldg/flow/compressible_flow_data.hpp>
-#include <meltpooldg/flow/compressible_flow_material_data.hpp>
-#include <meltpooldg/flow/compressible_flow_phase_coupling_data.hpp>
 #include <meltpooldg/flow/darcy_damping_data.hpp>
 #include <meltpooldg/phase_change/phase_change_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>

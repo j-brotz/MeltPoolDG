@@ -2,7 +2,7 @@
 
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
-#include <meltpooldg/flow/compressible_multiphase_operation.hpp>
+#include <meltpooldg/compressible_flow/multiphase_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>

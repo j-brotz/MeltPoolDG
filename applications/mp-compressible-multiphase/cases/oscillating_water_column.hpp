@@ -23,7 +23,7 @@
 
 #include <deal.II/grid/grid_generator.h>
 
-#include <meltpooldg/flow/compressible_flow_material_data.hpp>
+#include <meltpooldg/compressible_flow/material.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 #include <meltpooldg/utilities/functions.hpp>
 

@@ -4,10 +4,9 @@
 
 #include <deal.II/base/vectorization.h>
 
-#include <meltpooldg/flow/compressible_flow_eos_utils_base.hpp>
-#include <meltpooldg/flow/compressible_flow_kernels.hpp>
-#include <meltpooldg/flow/compressible_flow_material_data.hpp>
-#include <meltpooldg/flow/compressible_flow_types.hpp>
+#include <meltpooldg/compressible_flow/data_types.hpp>
+#include <meltpooldg/compressible_flow/kernels.hpp>
+#include <meltpooldg/compressible_flow/material.hpp>
 
 #include "../test_utils/utils.hpp"
 

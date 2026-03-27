@@ -1,7 +1,6 @@
 #pragma once
 
-#include "meltpooldg/flow/dg_compressible_flow_operation.hpp"
-#include <meltpooldg/flow/compressible_flow_operation.hpp>
+#include <meltpooldg/compressible_flow/dg_operation.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
