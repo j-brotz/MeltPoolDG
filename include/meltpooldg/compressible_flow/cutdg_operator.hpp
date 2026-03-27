@@ -3,10 +3,10 @@
 #include <deal.II/fe/fe_system.h>
 
 #include "meltpooldg/compressible_flow/data_types.hpp"
-#include <meltpooldg/compressible_flow/dg_generic_convection_diffusion_worker.hpp>
 #include <meltpooldg/compressible_flow/explicit_utils.hpp>
 #include <meltpooldg/compressible_flow/flow_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/kernels.hpp>
+#include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
 
 namespace MeltPoolDG::CompressibleFlow
 {
@@ -30,12 +30,13 @@ namespace MeltPoolDG::CompressibleFlow
     using ConservedVariablesGradient = ConservedVariablesGradientType<dim, number>;
 
     using ConvectionDiffusionOperator =
-      Flow::DGConvectionDiffusionOperator<dim,
-                                          number,
-                                          ConvectiveFlux<dim, number>,
-                                          DiffusiveFlux<dim, number>>;
+      Utils::DGConvectionDiffusionOperator<dim,
+                                           number,
+                                           ConvectiveFlux<dim, number>,
+                                           DiffusiveFlux<dim, number>>;
 
-    using ConvectionOperator = Flow::DGConvectionOperator<dim, number, ConvectiveFlux<dim, number>>;
+    using ConvectionOperator =
+      Utils::DGConvectionOperator<dim, number, ConvectiveFlux<dim, number>>;
 
     /**
      * @brief Constructor.

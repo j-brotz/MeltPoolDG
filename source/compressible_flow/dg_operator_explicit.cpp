@@ -1,11 +1,11 @@
 #include <meltpooldg/compressible_flow/data_types.hpp>
-#include <meltpooldg/compressible_flow/dg_generic_convection_diffusion_worker.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_explicit.hpp>
 #include <meltpooldg/compressible_flow/explicit_utils.hpp>
 #include <meltpooldg/compressible_flow/kernels.hpp>
 #include <meltpooldg/compressible_flow/state_views.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
+#include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>

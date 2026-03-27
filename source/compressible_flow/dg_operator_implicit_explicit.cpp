@@ -1,9 +1,9 @@
 #include <deal.II/lac/precondition.h>
 
 #include <meltpooldg/compressible_flow/dg_operator_implicit_explicit.hpp>
-#include <meltpooldg/compressible_flow/matrix_generator.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/time_integration/implicit_explicit_integrator.hpp>
+#include <meltpooldg/utilities/matrix_free_util.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
@@ -70,10 +70,10 @@ namespace MeltPoolDG::CompressibleFlow
   DGOperatorImplicitExplicit<dim, number, is_viscous>::compute_system_matrix_from_matrixfree(
     dealii::TrilinosWrappers::SparseMatrix &sparse_matrix) const
   {
-    Flow::compute_jacobian_matrix_representation<dim, dim + 2, number>(
+    compute_jacobian_matrix_representation<dim, dim + 2, number>(
       *this,
       &sparse_matrix,
-      Flow::MatrixRepresentationType::SystemMatrix,
+      MatrixRepresentationType::SystemMatrix,
       flow_scratch_data.solution_history.get_current_solution(),
       flow_scratch_data.scratch_data.get_matrix_free(),
       flow_scratch_data.dof_idx,
@@ -86,10 +86,10 @@ namespace MeltPoolDG::CompressibleFlow
     VectorType &diagonal) const
   {
     diagonal = 0.;
-    Flow::compute_jacobian_matrix_representation<dim, dim + 2, number>(
+    compute_jacobian_matrix_representation<dim, dim + 2, number>(
       *this,
       &diagonal,
-      Flow::MatrixRepresentationType::DiagonalMatrix,
+      MatrixRepresentationType::DiagonalMatrix,
       flow_scratch_data.solution_history.get_current_solution(),
       flow_scratch_data.scratch_data.get_matrix_free(),
       flow_scratch_data.dof_idx,

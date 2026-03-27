@@ -5,13 +5,13 @@
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/compressible_flow/convective_kernels.hpp>
-#include <meltpooldg/compressible_flow/dg_generic_convection_diffusion_worker.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_base.hpp>
 #include <meltpooldg/compressible_flow/kernels.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
 #include <meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
+#include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
 
 #include <functional>
 #include <memory>
@@ -34,12 +34,13 @@ namespace MeltPoolDG::CompressibleFlow
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
     using ConvectionDiffusionOperator =
-      Flow::DGConvectionDiffusionOperator<dim,
-                                          number,
-                                          ConvectiveFlux<dim, number>,
-                                          DiffusiveFlux<dim, number>>;
+      Utils::DGConvectionDiffusionOperator<dim,
+                                           number,
+                                           ConvectiveFlux<dim, number>,
+                                           DiffusiveFlux<dim, number>>;
 
-    using ConvectionOperator = Flow::DGConvectionOperator<dim, number, ConvectiveFlux<dim, number>>;
+    using ConvectionOperator =
+      Utils::DGConvectionOperator<dim, number, ConvectiveFlux<dim, number>>;
 
     /**
      * @brief Constructor.

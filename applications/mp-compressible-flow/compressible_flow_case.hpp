@@ -36,7 +36,7 @@ namespace MeltPoolDG::CompressibleFlow
    * @brief Struct that manages all relevant parameters for compressible flow simulations.
    */
   template <typename number>
-  struct CompressibleFlowCaseParameters final : public ParametersBase
+  struct CaseParameters final : public ParametersBase
   {
   protected:
     /**
@@ -120,7 +120,7 @@ namespace MeltPoolDG::CompressibleFlow
   {
   public:
     /// Case-specific parameters
-    CompressibleFlowCaseParameters<number> parameters;
+    CaseParameters<number> parameters;
 
     /**
      * @brief Constructor.

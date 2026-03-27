@@ -407,18 +407,18 @@ public:
   }
 
 private:
-  std::unique_ptr<dealii::Triangulation<dim>>                  triangulation;
-  std::unique_ptr<dealii::Mapping<dim>>                        mapping;
-  ObstacleData<number>                                         obstacle_data;
-  std::unique_ptr<ObstacleField<dim, number, ObstacleType>>    obstacle_field;
-  std::unique_ptr<CompressibleFlow::DGOperation<dim, number>>  flow_field;
-  dealii::ConditionalOStream                                   pcout;
-  dealii::DoFHandler<dim>                                      dof_handler;
-  FiniteElementData                                            fe_data;
-  CompressibleFlow::SolverData<number>                         flow_data;
-  CompressibleFlow::CompressibleFluidMaterialPhaseData<number> flow_material;
-  dealii::AffineConstraints<number>                            constraints;
-  BrinkmanPenalizationData<number>                             brinkman_penalization_data;
+  std::unique_ptr<dealii::Triangulation<dim>>                 triangulation;
+  std::unique_ptr<dealii::Mapping<dim>>                       mapping;
+  ObstacleData<number>                                        obstacle_data;
+  std::unique_ptr<ObstacleField<dim, number, ObstacleType>>   obstacle_field;
+  std::unique_ptr<CompressibleFlow::DGOperation<dim, number>> flow_field;
+  dealii::ConditionalOStream                                  pcout;
+  dealii::DoFHandler<dim>                                     dof_handler;
+  FiniteElementData                                           fe_data;
+  CompressibleFlow::SolverData<number>                        flow_data;
+  CompressibleFlow::MaterialPhaseData<number>                 flow_material;
+  dealii::AffineConstraints<number>                           constraints;
+  BrinkmanPenalizationData<number>                            brinkman_penalization_data;
 
   unsigned                      comp_flow_dof_idx;
   unsigned                      comp_flow_quad_idx;
