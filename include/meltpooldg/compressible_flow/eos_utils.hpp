@@ -161,7 +161,7 @@ namespace MeltPoolDG::CompressibleFlow::EOS
      * @param material_data_in Reference to a material data object providing all relevant material
      * parameters.
      */
-    explicit IdealGas(const CompressibleFluidMaterialPhaseData<number> &material_data_in)
+    explicit IdealGas(const MaterialPhaseData<number> &material_data_in)
       : material_data(material_data_in)
     {}
 
@@ -298,7 +298,7 @@ namespace MeltPoolDG::CompressibleFlow::EOS
 
   private:
     /// Material data object providing all relevant material parameters
-    const CompressibleFluidMaterialPhaseData<number> &material_data;
+    const MaterialPhaseData<number> &material_data;
   };
 
   /**
@@ -315,8 +315,7 @@ namespace MeltPoolDG::CompressibleFlow::EOS
      * @param material_data_in Reference to a material data object providing all relevant material
      * parameters.
      */
-    explicit NobleAbelStiffenedGas(
-      const CompressibleFluidMaterialPhaseData<number> &material_data_in)
+    explicit NobleAbelStiffenedGas(const MaterialPhaseData<number> &material_data_in)
       : material_data(material_data_in)
     {}
 
@@ -470,7 +469,7 @@ namespace MeltPoolDG::CompressibleFlow::EOS
 
   private:
     /// Material data object providing all relevant material parameters
-    const CompressibleFluidMaterialPhaseData<number> &material_data;
+    const MaterialPhaseData<number> &material_data;
   };
 
   /**
@@ -487,7 +486,7 @@ namespace MeltPoolDG::CompressibleFlow::EOS
      * @param material_data_in Reference to a material data object providing all relevant material
      * parameters.
      */
-    explicit StiffenedGas(const CompressibleFluidMaterialPhaseData<number> &material_data_in)
+    explicit StiffenedGas(const MaterialPhaseData<number> &material_data_in)
       : material_data(material_data_in)
     {}
 
@@ -631,6 +630,6 @@ namespace MeltPoolDG::CompressibleFlow::EOS
 
   private:
     /// Material data object providing all relevant material parameters
-    const CompressibleFluidMaterialPhaseData<number> &material_data;
+    const MaterialPhaseData<number> &material_data;
   };
 } // namespace MeltPoolDG::CompressibleFlow::EOS

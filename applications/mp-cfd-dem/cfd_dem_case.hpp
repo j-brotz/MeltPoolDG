@@ -79,16 +79,16 @@ namespace MeltPoolDG
       std::vector<AMRStrategy> amr_strategies;
     } application;
 
-    AdaptiveMeshingData<number>                                  amr;
-    BaseData                                                     base;
-    FluidStructureInteractionData<number>                        fluid_structure_interaction_data;
-    CompressibleFlow::CompressibleFlowData<number>               flow;
-    CompressibleFlow::CompressibleFluidMaterialPhaseData<number> material;
-    TimeIntegration::TimeSteppingData<number>                    time_stepping;
-    ObstacleData<number>                                         obstacle_data;
-    OutputData<number>                                           output;
-    Profiling::ProfilingData<number>                             profiling;
-    Restart::RestartData<number>                                 restart;
+    AdaptiveMeshingData<number>                 amr;
+    BaseData                                    base;
+    FluidStructureInteractionData<number>       fluid_structure_interaction_data;
+    CompressibleFlow::SolverData<number>        flow;
+    CompressibleFlow::MaterialPhaseData<number> material;
+    TimeIntegration::TimeSteppingData<number>   time_stepping;
+    ObstacleData<number>                        obstacle_data;
+    OutputData<number>                          output;
+    Profiling::ProfilingData<number>            profiling;
+    Restart::RestartData<number>                restart;
   };
 
   template <int dim, typename number>

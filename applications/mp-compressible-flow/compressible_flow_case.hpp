@@ -94,13 +94,13 @@ namespace MeltPoolDG::CompressibleFlow
     BaseData base;
 
     /// Data specific for compressible flow simulations
-    CompressibleFlowData<number> flow;
+    SolverData<number> flow;
 
     /// Material parameters for a compressible (or nearly incompressible) fluid
-    CompressibleFluidMaterialPhaseData<number> material;
+    MaterialPhaseData<number> material;
 
     /// Cut-related data (only relevant for cutDG)
-    CompressibleFlowCutData<number> cut;
+    CutSolverData<number> cut;
 
     /// Data for time stepping
     TimeIntegration::TimeSteppingData<number> time_stepping;

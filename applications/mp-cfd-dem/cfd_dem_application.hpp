@@ -130,7 +130,7 @@ namespace MeltPoolDG
     dealii::AffineConstraints<number>                                           constraints;
     std::shared_ptr<ScratchData<dim, dim, number>>                              scratch_data;
     std::shared_ptr<TimeIntegration::TimeIterator<number>>                      time_iterator;
-    std::unique_ptr<CompressibleFlow::DGCompressibleFlowOperation<dim, number>> comp_flow_operation;
+    std::unique_ptr<CompressibleFlow::DGOperation<dim, number>>                 comp_flow_operation;
     std::unique_ptr<ObstacleField<dim, number, SphericalParticle<dim, number>>> obstacle_field;
     std::unique_ptr<Profiling::ProfilingMonitor<number>>                        profiling_monitor;
     std::unique_ptr<Restart::RestartMonitor<number>>                            restart_monitor;

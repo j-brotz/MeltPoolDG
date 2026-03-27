@@ -16,19 +16,18 @@ namespace MeltPoolDG::CompressibleFlow
   using namespace dealii;
 
   template <int dim, typename number, bool is_viscous>
-  DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::DGCompressibleFlowOperatorExplicit(
-    CompressibleFlowScratchData<dim, number> &flow_scratch_data)
+  DGOperatorExplicit<dim, number, is_viscous>::DGOperatorExplicit(
+    FlowScratchData<dim, number> &flow_scratch_data)
     : flow_scratch_data(flow_scratch_data)
     , time_integrator(flow_scratch_data.flow_data.time_integrator)
   {
     time_integrator.configure_rhs(
-      std::bind_front(&DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::apply_operator,
-                      this));
+      std::bind_front(&DGOperatorExplicit<dim, number, is_viscous>::apply_operator, this));
   }
 
   template <int dim, typename number, bool is_viscous>
   void
-  DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::reinit()
+  DGOperatorExplicit<dim, number, is_viscous>::reinit()
   {
     flow_scratch_data.reinit(time_integrator.required_solution_history_size());
     time_integrator.reinit(flow_scratch_data.solution_history.get_current_solution());
@@ -36,8 +35,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::advance_time_step(number time,
-                                                                                 number time_step)
+  DGOperatorExplicit<dim, number, is_viscous>::advance_time_step(number time, number time_step)
   {
     std::function<void(number, number, VectorType &, const VectorType &)> pre_processing =
       [&](number time, number, VectorType &, const VectorType &) -> void {
@@ -54,7 +52,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::apply_operator(
+  DGOperatorExplicit<dim, number, is_viscous>::apply_operator(
     const number                                           time,
     const number                                           time_step,
     VectorType                                            &dst,
@@ -91,7 +89,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::add_external_force(
+  DGOperatorExplicit<dim, number, is_viscous>::add_external_force(
     std::shared_ptr<ExternalFlowForce<dim, number>> external_force,
     std::shared_ptr<ExternalFlowForceJacobian<dim, number>>)
   {
@@ -101,7 +99,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::local_apply_cell(
+  DGOperatorExplicit<dim, number, is_viscous>::local_apply_cell(
     const MatrixFree<dim, number>       &mf,
     VectorType                          &dst,
     const VectorType                    &src,
@@ -130,12 +128,11 @@ namespace MeltPoolDG::CompressibleFlow
               flux = ConvectionDiffusionOperator::cell(
                 phi.get_value(q),
                 phi.get_gradient(q),
-                CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.data),
-                CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.data));
+                ConvectiveFlux<dim, number>(flow_scratch_data.material.data),
+                DiffusiveFlux<dim, number>(flow_scratch_data.material.data));
             else
-              flux = ConvectionOperator::cell(phi.get_value(q),
-                                              CompressibleConvectiveFlux<dim, number>(
-                                                flow_scratch_data.material.data));
+              flux = ConvectionOperator::cell(
+                phi.get_value(q), ConvectiveFlux<dim, number>(flow_scratch_data.material.data));
 
             for (auto &external_force : external_forces)
               source += external_force->value(current_time_step,
@@ -157,7 +154,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::local_apply_face(
+  DGOperatorExplicit<dim, number, is_viscous>::local_apply_face(
     const MatrixFree<dim, number>               &mf,
     VectorType                                  &dst,
     const VectorType                            &src,
@@ -206,8 +203,8 @@ namespace MeltPoolDG::CompressibleFlow
                   phi_p.get_gradient(q),
                   phi_m.normal_vector(q),
                   interior_penalty_parameter,
-                  CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.data),
-                  CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.data));
+                  ConvectiveFlux<dim, number>(flow_scratch_data.material.data),
+                  DiffusiveFlux<dim, number>(flow_scratch_data.material.data));
 
                 flux_m = flux.inner_face_value;
                 flux_p = flux.outer_face_value;
@@ -220,7 +217,7 @@ namespace MeltPoolDG::CompressibleFlow
                 const auto flux = ConvectionOperator::face(phi_m.get_value(q),
                                                            phi_p.get_value(q),
                                                            phi_m.normal_vector(q),
-                                                           CompressibleConvectiveFlux<dim, number>(
+                                                           ConvectiveFlux<dim, number>(
                                                              flow_scratch_data.material.data));
 
                 flux_m = flux.inner_face_value;
@@ -242,7 +239,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>::local_apply_boundary_face(
+  DGOperatorExplicit<dim, number, is_viscous>::local_apply_boundary_face(
     const MatrixFree<dim, number>       &mf,
     VectorType                          &dst,
     const VectorType                    &src,
@@ -292,8 +289,8 @@ namespace MeltPoolDG::CompressibleFlow
                   grad_w_p,
                   phi_m.normal_vector(q),
                   interior_penalty_parameter,
-                  CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.data),
-                  CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.data));
+                  ConvectiveFlux<dim, number>(flow_scratch_data.material.data),
+                  DiffusiveFlux<dim, number>(flow_scratch_data.material.data));
 
                 flux_m = flux.inner_face_value;
 
@@ -304,7 +301,7 @@ namespace MeltPoolDG::CompressibleFlow
                 const auto flux = ConvectionOperator::face(phi_m.get_value(q),
                                                            w_p,
                                                            phi_m.normal_vector(q),
-                                                           CompressibleConvectiveFlux<dim, number>(
+                                                           ConvectiveFlux<dim, number>(
                                                              flow_scratch_data.material.data));
 
                 flux_m = flux.inner_face_value;
@@ -319,10 +316,10 @@ namespace MeltPoolDG::CompressibleFlow
       }
   }
 
-  template class DGCompressibleFlowOperatorExplicit<1, double, true>;
-  template class DGCompressibleFlowOperatorExplicit<2, double, true>;
-  template class DGCompressibleFlowOperatorExplicit<3, double, true>;
-  template class DGCompressibleFlowOperatorExplicit<1, double, false>;
-  template class DGCompressibleFlowOperatorExplicit<2, double, false>;
-  template class DGCompressibleFlowOperatorExplicit<3, double, false>;
+  template class DGOperatorExplicit<1, double, true>;
+  template class DGOperatorExplicit<2, double, true>;
+  template class DGOperatorExplicit<3, double, true>;
+  template class DGOperatorExplicit<1, double, false>;
+  template class DGOperatorExplicit<2, double, false>;
+  template class DGOperatorExplicit<3, double, false>;
 } // namespace MeltPoolDG::CompressibleFlow

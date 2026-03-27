@@ -18,7 +18,7 @@ namespace MeltPoolDG::CompressibleFlow
    * erasure idiom.
    */
   template <int dim, typename number>
-  class CompressibleFlowOperation
+  class OperationTypeErasure
   {
   public:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -26,7 +26,7 @@ namespace MeltPoolDG::CompressibleFlow
     /**
      * @brief Default constructor.
      */
-    CompressibleFlowOperation() = default;
+    OperationTypeErasure() = default;
 
     /**
      * @brief Constructor, takes ownership of the passed unique pointer.
@@ -35,7 +35,7 @@ namespace MeltPoolDG::CompressibleFlow
      * flow operation.
      */
     template <typename OperationType>
-    explicit CompressibleFlowOperation(std::unique_ptr<OperationType> &&operation)
+    explicit OperationTypeErasure(std::unique_ptr<OperationType> &&operation)
       : operation_pimpl(std::make_unique<OperationModel<OperationType>>(std::move(operation)))
     {}
 

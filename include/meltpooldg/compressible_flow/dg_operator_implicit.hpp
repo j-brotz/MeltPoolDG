@@ -21,8 +21,7 @@ namespace MeltPoolDG::CompressibleFlow
    * @tparam is_viscous Indicates whether the flow is viscous.
    */
   template <int dim, typename number, bool is_viscous = true>
-  class DGCompressibleFlowOperatorImplicit final
-    : public DGCompressibleFlowOperatorBase<dim, number>
+  class DGOperatorImplicit final : public DGOperatorBase<dim, number>
   {
   public:
     using VectorType                 = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -35,8 +34,7 @@ namespace MeltPoolDG::CompressibleFlow
      * @param flow_scratch_data Reference to the flow scratch data object (usually owned by the
      * corresponding operation class).
      */
-    explicit DGCompressibleFlowOperatorImplicit(
-      CompressibleFlowScratchData<dim, number> &flow_scratch_data);
+    explicit DGOperatorImplicit(FlowScratchData<dim, number> &flow_scratch_data);
 
     /**
      * @brief Reinitialize the internal data structures.
@@ -187,16 +185,16 @@ namespace MeltPoolDG::CompressibleFlow
     mutable number current_time_step;
 
     /// Scratch data for compressible flows
-    CompressibleFlowScratchData<dim, number> &flow_scratch_data;
+    FlowScratchData<dim, number> &flow_scratch_data;
 
     /// Time integrator class used for the time integration.
     TimeIntegration::BDFIntegrator<dim, number> time_integrator;
 
     /// Object for the convective term evaluations
-    CompressibleFlowConvectiveKernels<dim, number> convective_terms;
+    ConvectiveKernels<dim, number> convective_terms;
 
     /// Object for the viscous term evaluations
-    CompressibleFlowViscousKernels<dim, number> viscous_terms;
+    ViscousKernels<dim, number> viscous_terms;
 
     /// This set of pointers may hold a list of external fluid force contributions to the residuum
     /// (e.g., gravity, or user-defined source terms)

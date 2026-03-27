@@ -59,7 +59,7 @@ namespace MeltPoolDG::CompressibleFlow
    * @brief Collection of material parameters for a specific species.
    */
   template <typename number>
-  struct CompressibleFlowMaterialSpeciesData
+  struct MaterialSpeciesData
   {
     /// Specific isobaric heat (SI: J/(kg K))
     number specific_isobaric_heat = 1000.0;
@@ -115,7 +115,7 @@ namespace MeltPoolDG::CompressibleFlow
    * @brief Collection of material parameters for a specific fluid phase.
    */
   template <typename number>
-  struct CompressibleFluidMaterialPhaseData
+  struct MaterialPhaseData
   {
     /// Maximum number of species currently supported by the data structure. We do not use a
     /// template parameter here as this would require to template at least the cut dg implementation
@@ -136,7 +136,7 @@ namespace MeltPoolDG::CompressibleFlow
 
     /// Data for the fluid species. For single-component simulations, only the first entry of the
     /// vector is relevant.
-    std::array<CompressibleFlowMaterialSpeciesData<number>, n_max_species> species_data;
+    std::array<MaterialSpeciesData<number>, n_max_species> species_data;
 
     /// Reference density for interior penalty (SI: kg/m3)
     number reference_density = 1.0;

@@ -11,7 +11,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  CompressibleFlowBoundaryConditions<dim, number>::update_boundary_conditions(const number time)
+  BoundaryConditions<dim, number>::update_boundary_conditions(const number time)
   {
     for (auto &i : this->inflow_boundaries)
       i.second->set_time(time);
@@ -23,7 +23,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  CompressibleFlowBoundaryConditions<dim, number>::set_boundary_condition(
+  BoundaryConditions<dim, number>::set_boundary_condition(
     const BoundaryType boundary_condition,
     const std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
       boundary_condition_function)
@@ -50,7 +50,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>>
-  CompressibleFlowBoundaryConditions<dim, number>::get_boundary_value(
+  BoundaryConditions<dim, number>::get_boundary_value(
     const dealii::types::boundary_id                           boundary_id,
     const BoundaryType                                         boundary_condition,
     const dealii::Point<dim, dealii::VectorizedArray<number>> &location) const
@@ -72,7 +72,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   dealii::VectorizedArray<number>
-  CompressibleFlowBoundaryConditions<dim, number>::get_boundary_value(
+  BoundaryConditions<dim, number>::get_boundary_value(
     const dealii::types::boundary_id                           boundary_id,
     const BoundaryType                                         boundary_condition,
     const dealii::Point<dim, dealii::VectorizedArray<number>> &location,
@@ -95,13 +95,13 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   auto
-  CompressibleFlowBoundaryConditions<dim, number>::get_boundary_face_value_and_gradient(
+  BoundaryConditions<dim, number>::get_boundary_face_value_and_gradient(
     const dealii::Point<dim, dealii::VectorizedArray<number>>     &q_point,
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
     const dealii::types::boundary_id                               boundary_id,
     const ConservedVariablesType                                  &w_m,
     const ConservedVariablesGradType                              &grad_w_m,
-    const CompressibleFlowMaterial<dim, number>                   &material,
+    const Material<dim, number>                                   &material,
     const bool is_gas_phase) const -> std::tuple<ConservedVariablesType, ConservedVariablesGradType>
   {
     using namespace dealii;
@@ -203,7 +203,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   auto
-  CompressibleFlowBoundaryConditions<dim, number>::get_boundary_face_value_and_gradient(
+  BoundaryConditions<dim, number>::get_boundary_face_value_and_gradient(
     const dealii::Point<dim, dealii::VectorizedArray<number>>     &q_point,
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
     dealii::types::boundary_id                                     boundary_id,
@@ -326,7 +326,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   auto
-  CompressibleFlowBoundaryConditions<dim, number>::get_jacobian_boundary_face_value_and_gradient(
+  BoundaryConditions<dim, number>::get_jacobian_boundary_face_value_and_gradient(
     const dealii::Point<dim, dealii::VectorizedArray<number>>     &q_point,
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
     const dealii::types::boundary_id                               boundary_id,
@@ -471,7 +471,7 @@ namespace MeltPoolDG::CompressibleFlow
     return {w_p, grad_w_p, delta_w_p, grad_delta_w_p};
   }
 
-  template class CompressibleFlowBoundaryConditions<1, double>;
-  template class CompressibleFlowBoundaryConditions<2, double>;
-  template class CompressibleFlowBoundaryConditions<3, double>;
+  template class BoundaryConditions<1, double>;
+  template class BoundaryConditions<2, double>;
+  template class BoundaryConditions<3, double>;
 } // namespace MeltPoolDG::CompressibleFlow

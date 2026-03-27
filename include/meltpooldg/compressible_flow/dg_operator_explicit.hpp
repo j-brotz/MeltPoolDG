@@ -28,8 +28,7 @@ namespace MeltPoolDG::CompressibleFlow
    * @tparam is_viscous Indicates whether the flow is viscous.
    */
   template <int dim, typename number, bool is_viscous = true>
-  class DGCompressibleFlowOperatorExplicit final
-    : public DGCompressibleFlowOperatorBase<dim, number>
+  class DGOperatorExplicit final : public DGOperatorBase<dim, number>
   {
   public:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -37,11 +36,10 @@ namespace MeltPoolDG::CompressibleFlow
     using ConvectionDiffusionOperator =
       Flow::DGConvectionDiffusionOperator<dim,
                                           number,
-                                          CompressibleConvectiveFlux<dim, number>,
-                                          CompressibleDiffusiveFlux<dim, number>>;
+                                          ConvectiveFlux<dim, number>,
+                                          DiffusiveFlux<dim, number>>;
 
-    using ConvectionOperator =
-      Flow::DGConvectionOperator<dim, number, CompressibleConvectiveFlux<dim, number>>;
+    using ConvectionOperator = Flow::DGConvectionOperator<dim, number, ConvectiveFlux<dim, number>>;
 
     /**
      * @brief Constructor.
@@ -50,8 +48,7 @@ namespace MeltPoolDG::CompressibleFlow
      * corresponding operation class).
      * @param external_forces Pointer to a struct implementing external forces acting on the fluid.
      */
-    explicit DGCompressibleFlowOperatorExplicit(
-      CompressibleFlowScratchData<dim, number> &flow_scratch_data);
+    explicit DGOperatorExplicit(FlowScratchData<dim, number> &flow_scratch_data);
 
     /**
      * @brief Advances solver by a single time step.
@@ -102,7 +99,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   private:
     /// Scratch data for compressible flows
-    CompressibleFlowScratchData<dim, number> &flow_scratch_data;
+    FlowScratchData<dim, number> &flow_scratch_data;
 
     /// Time integrator class used for the time integration.
     TimeIntegration::LowStorageExplicitRungeKuttaIntegrator<number> time_integrator;

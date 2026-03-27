@@ -10,10 +10,10 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
+#include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/flow_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/phase_coupling_data.hpp>
 #include <meltpooldg/compressible_flow/solver_data.hpp>
-#include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 
@@ -35,11 +35,10 @@ namespace MeltPoolDG::CompressibleFlow
    * which is required for implicit schemes.
    */
   template <int dim, typename number>
-  struct CompressibleFlowConvectiveKernels
+  struct ConvectiveKernels
   {
-    using ConservedVariables = ConservedVariablesType<dim, number>;
-    using ConservedVariablesGradient =
-      ConservedVariablesGradientType<dim, number>;
+    using ConservedVariables         = ConservedVariablesType<dim, number>;
+    using ConservedVariablesGradient = ConservedVariablesGradientType<dim, number>;
 
     /**
      * @brief Constructor initializing the convective kernel with flow and material properties.
@@ -47,9 +46,8 @@ namespace MeltPoolDG::CompressibleFlow
      * @param flow_data Reference to the flow data object containing simulation-specific parameters.
      * @param material Reference to the material model providing thermodynamic properties.
      */
-    explicit CompressibleFlowConvectiveKernels(
-      const CompressibleFlowData<number>          &flow_data,
-      const CompressibleFlowMaterial<dim, number> &material);
+    explicit ConvectiveKernels(const SolverData<number>    &flow_data,
+                               const Material<dim, number> &material);
 
     /**
      * @brief Calculate the convective flux F_c.
@@ -74,8 +72,8 @@ namespace MeltPoolDG::CompressibleFlow
     inline DEAL_II_ALWAYS_INLINE //
       ConservedVariables
       calculate_convective_numerical_flux(
-        const ConservedVariables                                  &u_m,
-        const ConservedVariables                                  &u_p,
+        const ConservedVariables                                      &u_m,
+        const ConservedVariables                                      &u_p,
         const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const;
 
     /**
@@ -91,9 +89,9 @@ namespace MeltPoolDG::CompressibleFlow
     inline DEAL_II_ALWAYS_INLINE //
       ConservedVariablesGradient
       calculate_jacobian_convective_numerical_flux(
-        const std::pair<ConservedVariables, ConservedVariables> &w_q,
-        const std::pair<ConservedVariables, ConservedVariables> &delta_w_q,
-        const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>   &normal) const;
+        const std::pair<ConservedVariables, ConservedVariables>       &w_q,
+        const std::pair<ConservedVariables, ConservedVariables>       &delta_w_q,
+        const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const;
 
     /**
      * @brief Compute the linearization of the convective flux with respect to the primary
@@ -111,10 +109,10 @@ namespace MeltPoolDG::CompressibleFlow
 
   private:
     /// Flow-related parameters
-    const CompressibleFlowData<number> &flow_data;
+    const SolverData<number> &flow_data;
 
     /// Material-related parameters
-    const CompressibleFlowMaterial<dim, number> &material;
+    const Material<dim, number> &material;
 
     /// precomputed constant
     number rs_div_c;
@@ -133,18 +131,17 @@ namespace MeltPoolDG::CompressibleFlow
      */
     ConservedVariablesGradient
     calculate_jacobian_convective_numerical_flux_jump_term(
-      const std::pair<ConservedVariables, ConservedVariables> &w_q,
-      const std::pair<ConservedVariables, ConservedVariables> &delta_w_q,
-      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>   &normal) const;
+      const std::pair<ConservedVariables, ConservedVariables>       &w_q,
+      const std::pair<ConservedVariables, ConservedVariables>       &delta_w_q,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const;
   };
 
   /********************************************************************************************
    * Inlined function definitions
    * *************************************************************************************+****/
   template <int dim, typename number>
-  CompressibleFlowConvectiveKernels<dim, number>::CompressibleFlowConvectiveKernels(
-    const CompressibleFlowData<number>          &flow_data_in,
-    const CompressibleFlowMaterial<dim, number> &material_in)
+  ConvectiveKernels<dim, number>::ConvectiveKernels(const SolverData<number>    &flow_data_in,
+                                                    const Material<dim, number> &material_in)
     : flow_data(flow_data_in)
     , material(material_in)
   {
@@ -155,7 +152,7 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     auto
-    CompressibleFlowConvectiveKernels<dim, number>::calculate_convective_flux(
+    ConvectiveKernels<dim, number>::calculate_convective_flux(
       const ConservedVariables &conserved_variables) const -> ConservedVariablesGradient
   {
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> velocity =
@@ -178,9 +175,9 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     auto
-    CompressibleFlowConvectiveKernels<dim, number>::calculate_convective_numerical_flux(
-      const ConservedVariables                                  &u_m,
-      const ConservedVariables                                  &u_p,
+    ConvectiveKernels<dim, number>::calculate_convective_numerical_flux(
+      const ConservedVariables                                      &u_m,
+      const ConservedVariables                                      &u_p,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const
     -> ConservedVariables
   {
@@ -233,13 +230,11 @@ namespace MeltPoolDG::CompressibleFlow
 
             return inverse_s *
                    (s_pos *
-                      contract_tensor_with_vector<n_conserved_variables<dim>,
-                                                  dim,
-                                                  number>(flux_m, normal) -
+                      contract_tensor_with_vector<n_conserved_variables<dim>, dim, number>(flux_m,
+                                                                                           normal) -
                     s_neg *
-                      contract_tensor_with_vector<n_conserved_variables<dim>,
-                                                  dim,
-                                                  number>(flux_p, normal) -
+                      contract_tensor_with_vector<n_conserved_variables<dim>, dim, number>(flux_p,
+                                                                                           normal) -
                     s_pos * s_neg * (u_m - u_p));
           }
           default: {
@@ -252,10 +247,10 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     auto
-    CompressibleFlowConvectiveKernels<dim, number>::calculate_jacobian_convective_numerical_flux(
-      const std::pair<ConservedVariables, ConservedVariables> &w_q,
-      const std::pair<ConservedVariables, ConservedVariables> &delta_w_q,
-      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>   &normal) const
+    ConvectiveKernels<dim, number>::calculate_jacobian_convective_numerical_flux(
+      const std::pair<ConservedVariables, ConservedVariables>       &w_q,
+      const std::pair<ConservedVariables, ConservedVariables>       &delta_w_q,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const
     -> ConservedVariablesGradient
   {
     // For now only the exact and modified Lax-Friedrichs flux are supported
@@ -283,7 +278,7 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     auto
-    CompressibleFlowConvectiveKernels<dim, number>::calculate_jacobian_convective_flux(
+    ConvectiveKernels<dim, number>::calculate_jacobian_convective_flux(
       const ConservedVariables &w_q,
       const ConservedVariables &delta_w_q) const -> ConservedVariablesGradient
   {
@@ -350,11 +345,10 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE //
     auto
-    CompressibleFlowConvectiveKernels<dim, number>::
-      calculate_jacobian_convective_numerical_flux_jump_term(
-        const std::pair<ConservedVariables, ConservedVariables> &w_q,
-        const std::pair<ConservedVariables, ConservedVariables> &delta_w_q,
-        const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>   &normal) const
+    ConvectiveKernels<dim, number>::calculate_jacobian_convective_numerical_flux_jump_term(
+      const std::pair<ConservedVariables, ConservedVariables>       &w_q,
+      const std::pair<ConservedVariables, ConservedVariables>       &delta_w_q,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const
     -> ConservedVariablesGradient
   {
     // define aliases
@@ -365,10 +359,10 @@ namespace MeltPoolDG::CompressibleFlow
     // jump
     std::function<
       ConservedVariables(const ConservedVariables &,
-                             const ConservedVariables &,
-                             const ConservedVariables &,
-                             const ConservedVariables &,
-                             const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &)>
+                         const ConservedVariables &,
+                         const ConservedVariables &,
+                         const ConservedVariables &,
+                         const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &)>
                                compute_lambda_times_jump;
     ConservedVariablesGradient flux;
 
@@ -377,10 +371,10 @@ namespace MeltPoolDG::CompressibleFlow
           case NumericalFluxType::lax_friedrichs_exact: {
             compute_lambda_times_jump =
               [&material =
-                 material](const ConservedVariables                                  &w_p,
-                           const ConservedVariables                                  &w_m,
-                           const ConservedVariables                                  &delta_w_p,
-                           const ConservedVariables                                  &delta_w_m,
+                 material](const ConservedVariables                                      &w_p,
+                           const ConservedVariables                                      &w_m,
+                           const ConservedVariables                                      &delta_w_p,
+                           const ConservedVariables                                      &delta_w_m,
                            const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal)
               -> ConservedVariables {
               const auto velocity_m = calculate_velocity<dim, number>(w_m);
@@ -455,8 +449,8 @@ namespace MeltPoolDG::CompressibleFlow
               0.5 * compute_lambda_times_jump(w_p, w_m, delta_w_p, delta_w_m, normal), normal);
 
             const auto linearize_speed_of_sound =
-              [this](const ConservedVariables          &w_q,
-                     const ConservedVariables          &delta_w_q,
+              [this](const ConservedVariables              &w_q,
+                     const ConservedVariables              &delta_w_q,
                      const dealii::VectorizedArray<number> &c,
                      const dealii::VectorizedArray<number> &) -> dealii::VectorizedArray<number> {
               dealii::Tensor<1, dim, dealii::VectorizedArray<number>> m_q;
@@ -477,8 +471,8 @@ namespace MeltPoolDG::CompressibleFlow
             };
 
             const auto norm_lin_velocity =
-              [this](const ConservedVariables                                  &w_q,
-                     const ConservedVariables                                  &delta_w_q,
+              [this](const ConservedVariables                                      &w_q,
+                     const ConservedVariables                                      &delta_w_q,
                      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal)
               -> dealii::VectorizedArray<number> {
               auto rho_inv = 1. / w_q[dim + 1];

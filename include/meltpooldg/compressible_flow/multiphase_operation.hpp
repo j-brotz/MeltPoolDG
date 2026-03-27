@@ -90,17 +90,17 @@ namespace MeltPoolDG::Multiphase
      * stored in the history, and ghost-penalty stabilization is enabled.
      */
     explicit CompressibleMultiphaseOperation(
-      const ScratchData<dim, dim, number>                                &scratch_data_in,
-      const CompressibleFlow::CompressibleFlowData<number>               &comp_flow_data_in,
-      const CompressibleFlow::CompressibleFluidMaterialPhaseData<number> &material_data_gas_in,
-      const CompressibleFlow::CompressibleFluidMaterialPhaseData<number> &material_data_liquid_in,
-      const PhaseChangeData<number>                                      &phase_change_data_in,
-      const CompressibleFlow::CompressibleFlowCutData<number>            &cut_data_in,
-      const CompressibleFlowPhaseCouplingData<number>                    &phase_coupling_data_in,
-      const Flow::DarcyDampingData<number>                               &darcy_damping_data_in,
-      const TimeIntegration::TimeIterator<number>                        &time_iterator_in,
-      const std::function<void()>                                        &setup_dof_system_in,
-      const VectorType                                                   &level_set_in,
+      const ScratchData<dim, dim, number>               &scratch_data_in,
+      const CompressibleFlow::SolverData<number>        &comp_flow_data_in,
+      const CompressibleFlow::MaterialPhaseData<number> &material_data_gas_in,
+      const CompressibleFlow::MaterialPhaseData<number> &material_data_liquid_in,
+      const PhaseChangeData<number>                     &phase_change_data_in,
+      const CompressibleFlow::CutSolverData<number>     &cut_data_in,
+      const CompressibleFlowPhaseCouplingData<number>   &phase_coupling_data_in,
+      const Flow::DarcyDampingData<number>              &darcy_damping_data_in,
+      const TimeIntegration::TimeIterator<number>       &time_iterator_in,
+      const std::function<void()>                       &setup_dof_system_in,
+      const VectorType                                  &level_set_in,
       unsigned int comp_flow_dof_idx_in  = dealii::numbers::invalid_unsigned_int,
       unsigned int level_set_dof_idx_in  = dealii::numbers::invalid_unsigned_int,
       unsigned int comp_flow_quad_idx_in = dealii::numbers::invalid_unsigned_int);

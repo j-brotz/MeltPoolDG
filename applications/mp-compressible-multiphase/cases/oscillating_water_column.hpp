@@ -138,10 +138,10 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
 
   private:
     /// Material parameters for liquid phase
-    CompressibleFlow::CompressibleFluidMaterialPhaseData<number> liquid_material_data;
+    CompressibleFlow::MaterialPhaseData<number> liquid_material_data;
 
     /// Material parameters for gas phase
-    CompressibleFlow::CompressibleFluidMaterialPhaseData<number> gas_material_data;
+    CompressibleFlow::MaterialPhaseData<number> gas_material_data;
 
     /// Indicator whether the gas phase is the first phase in the two-phase system
     bool gas_phase_is_first;

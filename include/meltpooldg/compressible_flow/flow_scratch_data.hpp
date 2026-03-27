@@ -29,7 +29,7 @@ namespace MeltPoolDG::CompressibleFlow
    * compressible single-phase flow simulations.
    */
   template <int dim, typename number>
-  struct CompressibleFlowScratchData
+  struct FlowScratchData
   {
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
@@ -46,13 +46,12 @@ namespace MeltPoolDG::CompressibleFlow
      * @note The cut data object @param cut_data_in is optional. For non-cut applications, it does not
      * need to be passed to the constructor.
      */
-    explicit CompressibleFlowScratchData(
-      const CompressibleFlowData<number>               &flow_data_in,
-      const CompressibleFluidMaterialPhaseData<number> &material_data_in,
-      const ScratchData<dim, dim, number>              &scratch_data_in,
-      const unsigned int                                dof_idx_in,
-      const unsigned int                                quad_idx_in,
-      const CompressibleFlowCutData<number>            *cut_data_in = nullptr)
+    explicit FlowScratchData(const SolverData<number>            &flow_data_in,
+                             const MaterialPhaseData<number>     &material_data_in,
+                             const ScratchData<dim, dim, number> &scratch_data_in,
+                             const unsigned int                   dof_idx_in,
+                             const unsigned int                   quad_idx_in,
+                             const CutSolverData<number>         *cut_data_in = nullptr)
       : flow_data(flow_data_in)
       , scratch_data(scratch_data_in)
       , material(material_data_in)
@@ -71,16 +70,16 @@ namespace MeltPoolDG::CompressibleFlow
     }
 
     /// General parameters for the compressible Navier-Stokes operators
-    const CompressibleFlowData<number> flow_data;
+    const SolverData<number> flow_data;
 
     /// Mapping-, finite-element-, and quadrature-related parameters
     const ScratchData<dim, dim, number> &scratch_data;
 
     /// Material parameters and thermodynamic relations
-    const CompressibleFlowMaterial<dim, number> material;
+    const Material<dim, number> material;
 
     /// Cut-related parameters (only relevant for cut applications)
-    const CompressibleFlowCutData<number> *cut = nullptr;
+    const CutSolverData<number> *cut = nullptr;
 
     /// DoF index within the matrix-free object
     const unsigned int dof_idx = 0;
@@ -92,7 +91,7 @@ namespace MeltPoolDG::CompressibleFlow
     bool is_viscous = false;
 
     /// Object taking care of all boundary condition related computations
-    CompressibleFlowBoundaryConditions<dim, number> boundary_conditions;
+    BoundaryConditions<dim, number> boundary_conditions;
 
     /// Penalty parameter for the Symmetric Interior Penalty Galerkin (SIPG) method
     dealii::AlignedVector<dealii::VectorizedArray<number>> interior_penalty_parameter;
@@ -156,11 +155,11 @@ namespace MeltPoolDG::CompressibleFlow
      * @param quad_idx_in Relevant quadrature index of the flow solver in the scratch data object.
      */
     explicit CompressibleMultiphaseScratchData(
-      const CompressibleFlowData<number>                          &flow_data_in,
-      const CompressibleFluidMaterialPhaseData<number>            &material_data_gas_in,
-      const CompressibleFluidMaterialPhaseData<number>            &material_data_liquid_in,
+      const SolverData<number>                                    &flow_data_in,
+      const MaterialPhaseData<number>                             &material_data_gas_in,
+      const MaterialPhaseData<number>                             &material_data_liquid_in,
       const Multiphase::PhaseChangeData<number>                   &phase_change_data_in,
-      const CompressibleFlowCutData<number>                       &cut_data_in,
+      const CutSolverData<number>                                 &cut_data_in,
       const Multiphase::CompressibleFlowPhaseCouplingData<number> &phase_coupling_data_in,
       const Flow::DarcyDampingData<number>                        &darcy_damping_data_in,
       const ScratchData<dim, dim, number>                         &scratch_data_in,
@@ -182,22 +181,22 @@ namespace MeltPoolDG::CompressibleFlow
     }
 
     /// General parameters for the compressible Navier-Stokes operators
-    const CompressibleFlowData<number> flow_data;
+    const SolverData<number> flow_data;
 
     /// Mapping-, finite-element-, and quadrature-related parameters
     const ScratchData<dim, dim, number> &scratch_data;
 
     /// Material parameters and thermodynamic relations for the gas phase
-    const CompressibleFlowMaterial<dim, number> material_gas;
+    const Material<dim, number> material_gas;
 
     /// Material parameters and thermodynamic relations for the liquid phase
-    const CompressibleFlowMaterial<dim, number> material_liquid;
+    const Material<dim, number> material_liquid;
 
     /// Parameters related to liquid-gas and solid-liquid phase transitions
     const Multiphase::PhaseChangeData<number> phase_change;
 
     /// Cut-related parameters
-    const CompressibleFlowCutData<number> cut;
+    const CutSolverData<number> cut;
 
     /// Parameters for the coupling of two compressible (or nearly incompressible) phases
     const Multiphase::CompressibleFlowPhaseCouplingData<number> phase_coupling;
@@ -215,7 +214,7 @@ namespace MeltPoolDG::CompressibleFlow
     bool is_viscous = false;
 
     /// Object taking care of all boundary condition related computations
-    CompressibleFlowBoundaryConditions<dim, number> boundary_conditions;
+    BoundaryConditions<dim, number> boundary_conditions;
 
     /// Penalty parameter for the Symmetric Interior Penalty Galerkin (SIPG) method
     dealii::AlignedVector<dealii::VectorizedArray<number>> interior_penalty_parameter;

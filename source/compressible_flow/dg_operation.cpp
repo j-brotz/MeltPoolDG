@@ -28,22 +28,21 @@ namespace MeltPoolDG::CompressibleFlow
   using namespace dealii;
 
   template <int dim, typename number>
-  DGCompressibleFlowOperation<dim, number>::DGCompressibleFlowOperation(
-    const ScratchData<dim, dim, number>              &scratch_data,
-    const CompressibleFlowData<number>               &flow_data,
-    const CompressibleFluidMaterialPhaseData<number> &material_data,
-    const unsigned int                                flow_dof_idx,
-    const unsigned int                                flow_quad_idx)
+  DGOperation<dim, number>::DGOperation(const ScratchData<dim, dim, number> &scratch_data,
+                                        const SolverData<number>            &flow_data,
+                                        const MaterialPhaseData<number>     &material_data,
+                                        const unsigned int                   flow_dof_idx,
+                                        const unsigned int                   flow_quad_idx)
     : flow_scratch_data(flow_data, material_data, scratch_data, flow_dof_idx, flow_quad_idx)
     , output_manager(
-        [](ConservedVariablesType<dim, number, number> & value) -> auto{
+        [](ConservedVariablesType<dim, number, number> &value) -> auto {
           return DofValueView<dim, ConservedVariablesType<dim, number, number>>(value);
         },
-        [&material_data](ConservedVariablesType<dim, number, number> &value) -> auto{
+        [&material_data](ConservedVariablesType<dim, number, number> &value) -> auto {
           return DofStateView<dim, number, ConservedVariablesType<dim, number, number>>(
             value, material_data);
         },
-        [&material_data](auto &...) -> auto{ return MaterialView<dim, number>(material_data); })
+        [&material_data](auto &...) -> auto { return MaterialView<dim, number>(material_data); })
 
   {
     setup_operator();
@@ -51,21 +50,21 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  DGCompressibleFlowOperation<dim, number>::reinit()
+  DGOperation<dim, number>::reinit()
   {
     comp_flow_operator->reinit();
   }
 
   template <int dim, typename number>
   void
-  DGCompressibleFlowOperation<dim, number>::distribute_dofs(DoFHandler<dim> &dof_handler) const
+  DGOperation<dim, number>::distribute_dofs(DoFHandler<dim> &dof_handler) const
   {
     FiniteElementUtils::distribute_dofs<dim, dim + 2>(flow_scratch_data.flow_data.fe, dof_handler);
   }
 
   template <int dim, typename number>
   void
-  DGCompressibleFlowOperation<dim, number>::solve(const number current_time, const number time_step)
+  DGOperation<dim, number>::solve(const number current_time, const number time_step)
   {
     flow_scratch_data.solution_history.commit_old_solutions();
     flow_scratch_data.solution_history.update_ghost_values();
@@ -75,7 +74,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  DGCompressibleFlowOperation<dim, number>::set_boundary_conditions(
+  DGOperation<dim, number>::set_boundary_conditions(
     const std::shared_ptr<SimulationCaseBase<dim, number>> &simulation_case,
     const std::string                                      &operation_name)
   {
@@ -84,8 +83,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  DGCompressibleFlowOperation<dim, number>::set_body_force(
-    std::unique_ptr<Function<dim>> body_force_in)
+  DGOperation<dim, number>::set_body_force(std::unique_ptr<Function<dim>> body_force_in)
   {
     AssertDimension(body_force_in->n_components, dim);
     flow_scratch_data.body_force = std::move(body_force_in);
@@ -93,7 +91,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  DGCompressibleFlowOperation<dim, number>::set_initial_condition(const Function<dim> &function)
+  DGOperation<dim, number>::set_initial_condition(const Function<dim> &function)
   {
     FECellIntegrator<dim, dim + 2, number> phi(flow_scratch_data.scratch_data.get_matrix_free(),
                                                flow_scratch_data.dof_idx,
@@ -119,7 +117,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  DGCompressibleFlowOperation<dim, number>::add_external_force(
+  DGOperation<dim, number>::add_external_force(
     std::shared_ptr<ExternalFlowForce<dim, number>>         external_force_residuum,
     std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian)
   {
@@ -129,7 +127,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   number
-  DGCompressibleFlowOperation<dim, number>::compute_minimum_density() const
+  DGOperation<dim, number>::compute_minimum_density() const
   {
     TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), "compute transport speed");
     // only read density
@@ -166,7 +164,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   number
-  DGCompressibleFlowOperation<dim, number>::compute_convective_time_step_limit() const
+  DGOperation<dim, number>::compute_convective_time_step_limit() const
   {
     TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), "compute transport speed");
     number             max_transport              = 0;
@@ -236,7 +234,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   number
-  DGCompressibleFlowOperation<dim, number>::compute_time_step_size(const bool do_print) const
+  DGOperation<dim, number>::compute_time_step_size(const bool do_print) const
   {
     const number min_density = compute_minimum_density();
 
@@ -269,8 +267,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  DGCompressibleFlowOperation<dim, number>::attach_output_vectors(
-    GenericDataOut<dim, number> &data_out) const
+  DGOperation<dim, number>::attach_output_vectors(GenericDataOut<dim, number> &data_out) const
   {
     output_manager.attach_to_data_out(data_out,
                                       flow_scratch_data.scratch_data.get_dof_handler(
@@ -281,7 +278,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  DGCompressibleFlowOperation<dim, number>::setup_operator()
+  DGOperation<dim, number>::setup_operator()
   {
     // cut operator was already created in the constructor
     if (flow_scratch_data.flow_data.domain_representation_type == "cut")
@@ -292,24 +289,20 @@ namespace MeltPoolDG::CompressibleFlow
       {
         if (is_viscous)
           comp_flow_operator =
-            std::make_unique<DGCompressibleFlowOperatorExplicit<dim, number, true>>(
-              flow_scratch_data);
+            std::make_unique<DGOperatorExplicit<dim, number, true>>(flow_scratch_data);
         else
           comp_flow_operator =
-            std::make_unique<DGCompressibleFlowOperatorExplicit<dim, number, false>>(
-              flow_scratch_data);
+            std::make_unique<DGOperatorExplicit<dim, number, false>>(flow_scratch_data);
       }
     else if (time_integrator_scheme_is_implicit(
                flow_scratch_data.flow_data.time_integrator.integrator_type))
       {
         if (is_viscous)
           comp_flow_operator =
-            std::make_unique<DGCompressibleFlowOperatorImplicit<dim, number, true>>(
-              flow_scratch_data);
+            std::make_unique<DGOperatorImplicit<dim, number, true>>(flow_scratch_data);
         else
           comp_flow_operator =
-            std::make_unique<DGCompressibleFlowOperatorImplicit<dim, number, false>>(
-              flow_scratch_data);
+            std::make_unique<DGOperatorImplicit<dim, number, false>>(flow_scratch_data);
       }
     // TODO
     else if (flow_scratch_data.flow_data.time_integrator.integrator_type ==
@@ -317,12 +310,10 @@ namespace MeltPoolDG::CompressibleFlow
       {
         if (is_viscous)
           comp_flow_operator =
-            std::make_unique<DGCompressibleFlowOperatorImplicitExplicit<dim, number, true>>(
-              flow_scratch_data);
+            std::make_unique<DGOperatorImplicitExplicit<dim, number, true>>(flow_scratch_data);
         else
           comp_flow_operator =
-            std::make_unique<DGCompressibleFlowOperatorImplicitExplicit<dim, number, false>>(
-              flow_scratch_data);
+            std::make_unique<DGOperatorImplicitExplicit<dim, number, false>>(flow_scratch_data);
       }
     else
       AssertThrow(false,
@@ -332,7 +323,7 @@ namespace MeltPoolDG::CompressibleFlow
                     "' is not supported!"));
   }
 
-  template class DGCompressibleFlowOperation<1, double>;
-  template class DGCompressibleFlowOperation<2, double>;
-  template class DGCompressibleFlowOperation<3, double>;
+  template class DGOperation<1, double>;
+  template class DGOperation<2, double>;
+  template class DGOperation<3, double>;
 } // namespace MeltPoolDG::CompressibleFlow

@@ -20,11 +20,16 @@ namespace MeltPoolDG::Flow
    * state.
    */
   template <typename T>
-  concept EOSIsValueView = requires(const T v)
-  {
-    {v.density()};
-    {v.velocity()};
-    {v.total_energy()};
+  concept EOSIsValueView = requires(const T v) {
+    {
+      v.density()
+    };
+    {
+      v.velocity()
+    };
+    {
+      v.total_energy()
+    };
   };
 
   /**
@@ -32,11 +37,16 @@ namespace MeltPoolDG::Flow
    * state.
    */
   template <typename T>
-  concept EOSIsGradientView = requires(const T g)
-  {
-    {g.grad_density()};
-    {g.grad_velocity()};
-    {g.grad_total_energy()};
+  concept EOSIsGradientView = requires(const T g) {
+    {
+      g.grad_density()
+    };
+    {
+      g.grad_velocity()
+    };
+    {
+      g.grad_total_energy()
+    };
   };
 
   /**
@@ -44,10 +54,13 @@ namespace MeltPoolDG::Flow
    * equation of state.
    */
   template <typename T>
-  concept IdealGasIsMaterialView = requires(const T m)
-  {
-    {m.heat_capacity_ratio()};
-    {m.specific_gas_constant()};
+  concept IdealGasIsMaterialView = requires(const T m) {
+    {
+      m.heat_capacity_ratio()
+    };
+    {
+      m.specific_gas_constant()
+    };
   };
 
   struct IdealGasEOS

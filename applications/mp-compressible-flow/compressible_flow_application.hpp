@@ -61,7 +61,7 @@ namespace MeltPoolDG::CompressibleFlow
     std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
 
     /// Compressible flow operation object
-    CompressibleFlowOperation<dim, number> comp_flow_operation;
+    OperationTypeErasure<dim, number> comp_flow_operation;
 
     /// Pointer to the profiling object
     std::unique_ptr<Profiling::ProfilingMonitor<number>> profiling_monitor;

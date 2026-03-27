@@ -2,8 +2,8 @@
 
 #include <deal.II/base/parameter_handler.h>
 
-#include <meltpooldg/cut/cut_data.hpp>
 #include <meltpooldg/core/finite_element_data.hpp>
+#include <meltpooldg/cut/cut_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
@@ -23,17 +23,13 @@ namespace MeltPoolDG::CompressibleFlow
 
   BETTER_ENUM(JacobianType, char, exact, finite_difference);
 
-  BETTER_ENUM(CompressibleFlowOutputType,
-              char,
-              conserved_variables,
-              primitive_variables,
-              material_quantities);
+  BETTER_ENUM(OutputType, char, conserved_variables, primitive_variables, material_quantities);
 
   /**
    * @brief Collection of parameters required by the compressible Navier-Stokes operator.
    */
   template <typename number>
-  struct CompressibleFlowData
+  struct SolverData
   {
     /// Finite element data
     FiniteElementData fe;
@@ -72,8 +68,7 @@ namespace MeltPoolDG::CompressibleFlow
     int verbosity_level = -1;
 
     /// Type of the variables added to the output
-    std::vector<CompressibleFlowOutputType> output_variables = {
-      CompressibleFlowOutputType::conserved_variables};
+    std::vector<OutputType> output_variables = {OutputType::conserved_variables};
 
     /**
      * @brief Add compressible flow parameters in the parameter handler.
@@ -172,7 +167,7 @@ namespace MeltPoolDG::CompressibleFlow
    * compressible Navier-Stokes operators.
    */
   template <typename number>
-  struct CompressibleFlowCutData
+  struct CutSolverData
   {
     /// flow boundary condition at the immersed boundary
     /// (only relevant for single phase flow problem)

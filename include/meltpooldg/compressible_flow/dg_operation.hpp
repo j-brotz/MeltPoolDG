@@ -38,7 +38,7 @@ namespace MeltPoolDG::CompressibleFlow
    * @brief Operation that performs a full time step for the compressible Navier-Stokes.
    */
   template <int dim, typename number>
-  class DGCompressibleFlowOperation
+  class DGOperation
   {
   public:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -56,12 +56,11 @@ namespace MeltPoolDG::CompressibleFlow
      * @param flow_quad_idx Index of the used quadrature object in @p scratch_data_in.
      * @param external_forces Pointer to a struct implementing external forces acting on the fluid.
      */
-    explicit DGCompressibleFlowOperation(
-      const ScratchData<dim, dim, number>              &scratch_data,
-      const CompressibleFlowData<number>               &flow_data,
-      const CompressibleFluidMaterialPhaseData<number> &material_data_in,
-      unsigned int                                      flow_dof_idx  = 0,
-      unsigned int                                      flow_quad_idx = 0);
+    explicit DGOperation(const ScratchData<dim, dim, number> &scratch_data,
+                         const SolverData<number>            &flow_data,
+                         const MaterialPhaseData<number>     &material_data_in,
+                         unsigned int                         flow_dof_idx  = 0,
+                         unsigned int                         flow_quad_idx = 0);
 
     /**
      * @brief Set up the required internal data structures.
@@ -165,10 +164,10 @@ namespace MeltPoolDG::CompressibleFlow
 
   private:
     /// Scratch data for compressible flows
-    CompressibleFlowScratchData<dim, number> flow_scratch_data;
+    FlowScratchData<dim, number> flow_scratch_data;
 
     /// Compressible flow operator object
-    std::unique_ptr<DGCompressibleFlowOperatorBase<dim, number>> comp_flow_operator;
+    std::unique_ptr<DGOperatorBase<dim, number>> comp_flow_operator;
 
     /// Object containing the data post processor for the different output options
     OutputManager<dim,
@@ -208,21 +207,21 @@ namespace MeltPoolDG::CompressibleFlow
   //! inlined functions
   template <int dim, typename number>
   const dealii::LinearAlgebra::distributed::Vector<number> &
-  DGCompressibleFlowOperation<dim, number>::get_solution() const
+  DGOperation<dim, number>::get_solution() const
   {
     return flow_scratch_data.solution_history.get_current_solution();
   }
 
   template <int dim, typename number>
   dealii::LinearAlgebra::distributed::Vector<number> &
-  DGCompressibleFlowOperation<dim, number>::get_solution()
+  DGOperation<dim, number>::get_solution()
   {
     return flow_scratch_data.solution_history.get_current_solution();
   }
 
   template <int dim, typename number>
   const dealii::DoFHandler<dim> &
-  DGCompressibleFlowOperation<dim, number>::get_dof_handler() const
+  DGOperation<dim, number>::get_dof_handler() const
   {
     return flow_scratch_data.scratch_data.get_dof_handler(flow_scratch_data.dof_idx);
   }

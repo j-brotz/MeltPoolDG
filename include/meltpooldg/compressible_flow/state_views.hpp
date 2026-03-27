@@ -49,18 +49,18 @@ namespace MeltPoolDG::CompressibleFlow
   {
     using state_type = std::any;
 
-    MaterialView(const CompressibleFluidMaterialPhaseData<number> &material_data)
+    MaterialView(const MaterialPhaseData<number> &material_data)
       : material_data(material_data)
     {}
 
-    const CompressibleFluidMaterialPhaseData<number> &
+    const MaterialPhaseData<number> &
     material() const
     {
       return material_data;
     }
 
   private:
-    const CompressibleFluidMaterialPhaseData<number> &material_data;
+    const MaterialPhaseData<number> &material_data;
   };
 
   /**
@@ -151,8 +151,7 @@ namespace MeltPoolDG::CompressibleFlow
   {
     using state_type = std::remove_cvref_t<Value>;
 
-    DofStateView(Value                                            &value_state,
-                 const CompressibleFluidMaterialPhaseData<number> &material_data)
+    DofStateView(Value &value_state, const MaterialPhaseData<number> &material_data)
       : flow_state(&value_state)
       , material_data(material_data)
     {}
@@ -174,15 +173,15 @@ namespace MeltPoolDG::CompressibleFlow
       return *flow_state;
     }
 
-    const CompressibleFluidMaterialPhaseData<number> &
+    const MaterialPhaseData<number> &
     material() const
     {
       return material_data;
     }
 
   private:
-    mutable Value                                    *flow_state;
-    const CompressibleFluidMaterialPhaseData<number> &material_data;
+    mutable Value                   *flow_state;
+    const MaterialPhaseData<number> &material_data;
   };
 
   /**
@@ -221,9 +220,9 @@ namespace MeltPoolDG::CompressibleFlow
     using state_type    = std::remove_cvref_t<Value>;
     using gradient_type = std::remove_cvref_t<Gradient>;
 
-    DofValueAndGradientStateView(Value                                            &value_state,
-                                 Gradient                                         &gradient_state,
-                                 const CompressibleFluidMaterialPhaseData<number> &material_data)
+    DofValueAndGradientStateView(Value                           &value_state,
+                                 Gradient                        &gradient_state,
+                                 const MaterialPhaseData<number> &material_data)
       : flow_state(&value_state)
       , flow_gradient_state(&gradient_state)
       , material_data(material_data)
@@ -253,16 +252,16 @@ namespace MeltPoolDG::CompressibleFlow
       return material_data.eos_type;
     }
 
-    const CompressibleFluidMaterialPhaseData<number> &
+    const MaterialPhaseData<number> &
     material() const
     {
       return material_data;
     }
 
   private:
-    mutable Value                                    *flow_state;
-    mutable Gradient                                 *flow_gradient_state;
-    const CompressibleFluidMaterialPhaseData<number> &material_data;
+    mutable Value                   *flow_state;
+    mutable Gradient                *flow_gradient_state;
+    const MaterialPhaseData<number> &material_data;
   };
 
   /**

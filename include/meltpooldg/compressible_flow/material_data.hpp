@@ -14,11 +14,11 @@ namespace MeltPoolDG::CompressibleFlow
    * well as thermodynamic computations related to the specific equation of state.
    */
   template <int dim, typename number>
-  class CompressibleFlowMaterial
+  class Material
   {
   public:
     /// Material data object providing all relevant material parameters
-    const CompressibleFluidMaterialPhaseData<number> &data;
+    const MaterialPhaseData<number> &data;
 
     /// Class specific to an equation of state for thermodynamics-related computations
     std::shared_ptr<EOS::EquationOfStateUtils<dim, number>> eos_utils;
@@ -29,8 +29,7 @@ namespace MeltPoolDG::CompressibleFlow
      * @param material_data_in Reference to a material data object providing all relevant material
      * parameters.
      */
-    explicit CompressibleFlowMaterial(
-      const CompressibleFluidMaterialPhaseData<number> &material_data_in)
+    explicit Material(const MaterialPhaseData<number> &material_data_in)
       : data(material_data_in)
     {
       eos_utils = make_eos_utils(data);
@@ -49,7 +48,7 @@ namespace MeltPoolDG::CompressibleFlow
      * Noble-Abel stiffened gas.
      */
     std::shared_ptr<EOS::EquationOfStateUtils<dim, number>>
-    make_eos_utils(const CompressibleFluidMaterialPhaseData<number> &material_data)
+    make_eos_utils(const MaterialPhaseData<number> &material_data)
     {
       switch (material_data.eos_type)
         {

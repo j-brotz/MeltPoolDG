@@ -122,14 +122,14 @@ namespace MeltPoolDG::CompressibleFlow
 
 
   template <int dim, typename number>
-  struct CompressibleConvectiveFlux
+  struct ConvectiveFlux
   {
     using ValueType        = ConservedVariablesType<dim, number>;
     using PhysicalFluxType = FluxType<dim, number>;
 
     using DofStateViewType = DofStateView<dim, number, const ValueType>;
 
-    explicit CompressibleConvectiveFlux(const CompressibleFluidMaterialPhaseData<number> &material)
+    explicit ConvectiveFlux(const MaterialPhaseData<number> &material)
       : material(material)
     {}
 
@@ -172,12 +172,12 @@ namespace MeltPoolDG::CompressibleFlow
     }
 
   private:
-    const CompressibleFluidMaterialPhaseData<number> &material;
+    const MaterialPhaseData<number> &material;
   };
 
 
   template <int dim, typename number>
-  struct CompressibleDiffusiveFlux
+  struct DiffusiveFlux
   {
     using ValueType        = ConservedVariablesType<dim, number>;
     using GradientType     = ConservedVariablesGradientType<dim, number>;
@@ -190,7 +190,7 @@ namespace MeltPoolDG::CompressibleFlow
      * Constructor, storing references to the EOS utilities and material data needed for flux
      * calculations.
      */
-    explicit CompressibleDiffusiveFlux(const CompressibleFluidMaterialPhaseData<number> &material)
+    explicit DiffusiveFlux(const MaterialPhaseData<number> &material)
       : material(material)
     {}
 
@@ -208,6 +208,6 @@ namespace MeltPoolDG::CompressibleFlow
     }
 
   private:
-    const CompressibleFluidMaterialPhaseData<number> &material;
+    const MaterialPhaseData<number> &material;
   };
 } // namespace MeltPoolDG::CompressibleFlow

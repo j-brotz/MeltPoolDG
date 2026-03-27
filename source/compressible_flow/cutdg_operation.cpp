@@ -28,17 +28,17 @@ namespace MeltPoolDG::CompressibleFlow
   using namespace dealii;
 
   template <int dim, typename number>
-  CutDGCompressibleFlowOperation<dim, number>::CutDGCompressibleFlowOperation(
-    const ScratchData<dim, dim, number>              &scratch_data_in,
-    const CompressibleFlowData<number>               &comp_flow_data_in,
-    const CompressibleFluidMaterialPhaseData<number> &material_data_in,
-    const CompressibleFlowCutData<number>            &cut_data_in,
-    const TimeIntegration::TimeIterator<number>      &time_iterator_in,
-    const std::function<void()>                      &setup_dof_system_in,
-    const VectorType                                 &level_set_in,
-    const unsigned int                                comp_flow_dof_idx_in,
-    const unsigned int                                level_set_dof_idx_in,
-    const unsigned int                                comp_flow_quad_idx_in)
+  CutDGOperation<dim, number>::CutDGOperation(
+    const ScratchData<dim, dim, number>         &scratch_data_in,
+    const SolverData<number>                    &comp_flow_data_in,
+    const MaterialPhaseData<number>             &material_data_in,
+    const CutSolverData<number>                 &cut_data_in,
+    const TimeIntegration::TimeIterator<number> &time_iterator_in,
+    const std::function<void()>                 &setup_dof_system_in,
+    const VectorType                            &level_set_in,
+    const unsigned int                           comp_flow_dof_idx_in,
+    const unsigned int                           level_set_dof_idx_in,
+    const unsigned int                           comp_flow_quad_idx_in)
     : flow_scratch_data(comp_flow_data_in,
                         material_data_in,
                         scratch_data_in,
@@ -57,22 +57,21 @@ namespace MeltPoolDG::CompressibleFlow
     , mapping_info_surface(scratch_data_in.get_mapping(),
                            dealii::update_values | dealii::update_gradients |
                              dealii::update_JxW_values | dealii::update_normal_vectors)
-    , cut_flow_operator(
-        CutDGCompressibleFlowOperation<dim, number>::create_cut_flow_operator_variant(
-          material_data_in.dynamic_viscosity > 0.,
-          flow_scratch_data,
-          mapping_info_surface,
-          mapping_info_cells,
-          mapping_info_faces))
+    , cut_flow_operator(CutDGOperation<dim, number>::create_cut_flow_operator_variant(
+        material_data_in.dynamic_viscosity > 0.,
+        flow_scratch_data,
+        mapping_info_surface,
+        mapping_info_cells,
+        mapping_info_faces))
     , output_manager(
-        [](ConservedVariablesType<dim, number, number> & value) -> auto{
+        [](ConservedVariablesType<dim, number, number> &value) -> auto {
           return DofValueView<dim, ConservedVariablesType<dim, number, number>>(value);
         },
-        [&material_data_in](ConservedVariablesType<dim, number, number> &value) -> auto{
+        [&material_data_in](ConservedVariablesType<dim, number, number> &value) -> auto {
           return DofStateView<dim, number, ConservedVariablesType<dim, number, number>>(
             value, material_data_in);
         },
-        [&material_data_in](auto &...) -> auto{
+        [&material_data_in](auto &...) -> auto {
           return MaterialView<dim, number>(material_data_in);
         })
   {
@@ -110,7 +109,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  CutDGCompressibleFlowOperation<dim, number>::set_boundary_conditions(
+  CutDGOperation<dim, number>::set_boundary_conditions(
     const std::shared_ptr<SimulationCaseBase<dim, number>> &simulation_case,
     const std::string                                      &operation_name)
   {
@@ -119,8 +118,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  CutDGCompressibleFlowOperation<dim, number>::set_body_force(
-    std::unique_ptr<Function<dim>> body_force_in)
+  CutDGOperation<dim, number>::set_body_force(std::unique_ptr<Function<dim>> body_force_in)
   {
     AssertDimension(body_force_in->n_components, dim);
     flow_scratch_data.body_force = std::move(body_force_in);
@@ -128,7 +126,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   number
-  CutDGCompressibleFlowOperation<dim, number>::compute_time_step_size(const bool do_print) const
+  CutDGOperation<dim, number>::compute_time_step_size(const bool do_print) const
   {
     const number min_density = compute_minimum_density();
 
@@ -161,7 +159,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  CutDGCompressibleFlowOperation<dim, number>::reinit()
+  CutDGOperation<dim, number>::reinit()
   {
     // check if fe type is equal to FE_DGQ<dim>
     AssertThrow(
@@ -180,8 +178,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  CutDGCompressibleFlowOperation<dim, number>::distribute_dofs(
-    dealii::DoFHandler<dim> &dof_handler) const
+  CutDGOperation<dim, number>::distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const
   {
     classify_cells();
 
@@ -201,8 +198,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  CutDGCompressibleFlowOperation<dim, number>::attach_output_vectors(
-    GenericDataOut<dim, number> &data_out) const
+  CutDGOperation<dim, number>::attach_output_vectors(GenericDataOut<dim, number> &data_out) const
   {
     output_manager.attach_to_data_out(data_out,
                                       flow_scratch_data.scratch_data.get_dof_handler(
@@ -213,8 +209,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  CutDGCompressibleFlowOperation<dim, number>::solve(const number current_time,
-                                                     const number time_step)
+  CutDGOperation<dim, number>::solve(const number current_time, const number time_step)
   {
     // - setup new dof layout, reinit vectors
     // - compute new quadrature rules for intersected elements, intersected faces and phase surface
@@ -241,7 +236,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  CutDGCompressibleFlowOperation<dim, number>::set_initial_condition(const Function<dim> &function)
+  CutDGOperation<dim, number>::set_initial_condition(const Function<dim> &function)
   {
     FECellIntegrator<dim, dim + 2, number> phi(flow_scratch_data.scratch_data.get_matrix_free(),
                                                flow_scratch_data.dof_idx,
@@ -274,7 +269,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  CutDGCompressibleFlowOperation<dim, number>::set_inflow_field_unfitted_boundary(
+  CutDGOperation<dim, number>::set_inflow_field_unfitted_boundary(
     std::shared_ptr<dealii::Function<dim>> &inflow_function)
   {
     std::visit([&](auto &op) { op.set_inflow_field_unfitted_boundary(inflow_function); },
@@ -283,7 +278,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  CutDGCompressibleFlowOperation<dim, number>::set_unfitted_object_velocity(
+  CutDGOperation<dim, number>::set_unfitted_object_velocity(
     std::shared_ptr<dealii::Function<dim>> &velocity_function)
   {
     std::visit([&](auto &op) { op.set_unfitted_object_velocity(velocity_function); },
@@ -292,14 +287,14 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  CutDGCompressibleFlowOperation<dim, number>::classify_cells() const
+  CutDGOperation<dim, number>::classify_cells() const
   {
     mesh_classifier->reclassify();
   }
 
   template <int dim, typename number>
   void
-  CutDGCompressibleFlowOperation<dim, number>::adapt_to_new_interface_position()
+  CutDGOperation<dim, number>::adapt_to_new_interface_position()
   {
     std::swap(mesh_classifier_old, mesh_classifier);
     classify_cells();
@@ -334,7 +329,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   number
-  CutDGCompressibleFlowOperation<dim, number>::compute_minimum_density() const
+  CutDGOperation<dim, number>::compute_minimum_density() const
   {
     FECellIntegrator<dim, 1, number> phi(flow_scratch_data.scratch_data.get_matrix_free(),
                                          flow_scratch_data.dof_idx,
@@ -408,7 +403,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   void
-  CutDGCompressibleFlowOperation<dim, number>::compute_intersected_quadrature()
+  CutDGOperation<dim, number>::compute_intersected_quadrature()
   {
     level_set.update_ghost_values();
 
@@ -426,7 +421,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   number
-  CutDGCompressibleFlowOperation<dim, number>::compute_convective_time_step_limit() const
+  CutDGOperation<dim, number>::compute_convective_time_step_limit() const
   {
     number                                 max_transport              = 0;
     number                                 convective_time_step_limit = 0.;
@@ -566,7 +561,7 @@ namespace MeltPoolDG::CompressibleFlow
     return convective_time_step_limit;
   }
 
-  template class CutDGCompressibleFlowOperation<1, double>;
-  template class CutDGCompressibleFlowOperation<2, double>;
-  template class CutDGCompressibleFlowOperation<3, double>;
+  template class CutDGOperation<1, double>;
+  template class CutDGOperation<2, double>;
+  template class CutDGOperation<3, double>;
 } // namespace MeltPoolDG::CompressibleFlow

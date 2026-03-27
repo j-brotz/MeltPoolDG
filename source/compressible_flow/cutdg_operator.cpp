@@ -15,11 +15,11 @@ namespace MeltPoolDG::CompressibleFlow
   using namespace dealii;
 
   template <int dim, typename number, bool is_viscous>
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::CutDGCompressibleFlowOperator(
-    CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-    const MappingInfoType                    &mapping_info_surface_in,
-    const MappingInfoVectorType              &mapping_info_cells_in,
-    const MappingInfoVectorType              &mapping_info_faces_in)
+  CutDGOperator<dim, number, is_viscous>::CutDGOperator(
+    FlowScratchData<dim, number> &flow_scratch_data,
+    const MappingInfoType        &mapping_info_surface_in,
+    const MappingInfoVectorType  &mapping_info_cells_in,
+    const MappingInfoVectorType  &mapping_info_faces_in)
     : flow_scratch_data(flow_scratch_data)
     , mapping_info_surface(mapping_info_surface_in)
     , mapping_info_cells(mapping_info_cells_in)
@@ -30,8 +30,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::vmult(VectorType       &dst,
-                                                                const VectorType &src) const
+  CutDGOperator<dim, number, is_viscous>::vmult(VectorType &dst, const VectorType &src) const
   {
     using local_applier_type =
       std::function<void(const dealii::MatrixFree<dim, number> &,
@@ -55,10 +54,10 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::create_rhs(const number     &time,
-                                                                     const number     &time_step,
-                                                                     VectorType       &dst,
-                                                                     const VectorType &src) const
+  CutDGOperator<dim, number, is_viscous>::create_rhs(const number     &time,
+                                                     const number     &time_step,
+                                                     VectorType       &dst,
+                                                     const VectorType &src) const
   {
     current_time_step = time_step;
 
@@ -91,7 +90,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::set_inflow_field_unfitted_boundary(
+  CutDGOperator<dim, number, is_viscous>::set_inflow_field_unfitted_boundary(
     std::shared_ptr<dealii::Function<dim>> &inflow_function)
   {
     unfitted_inflow = inflow_function;
@@ -99,7 +98,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::set_unfitted_object_velocity(
+  CutDGOperator<dim, number, is_viscous>::set_unfitted_object_velocity(
     std::shared_ptr<dealii::Function<dim>> &velocity_function)
   {
     unfitted_object_velocity = velocity_function;
@@ -108,9 +107,9 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number, bool is_viscous>
   template <CellEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::do_cell_integral_rhs(
+  CutDGOperator<dim, number, is_viscous>::do_cell_integral_rhs(
     Integrator                                                    &phi,
-    const CompressibleFlowScratchData<dim, number>                &flow_scratch_data,
+    const FlowScratchData<dim, number>                            &flow_scratch_data,
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> *constant_body_force,
     const unsigned int                                             q) const
   {
@@ -121,11 +120,11 @@ namespace MeltPoolDG::CompressibleFlow
       flux = ConvectionDiffusionOperator::cell(
         phi.get_value(q),
         phi.get_gradient(q),
-        CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.data),
-        CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.data));
+        ConvectiveFlux<dim, number>(flow_scratch_data.material.data),
+        DiffusiveFlux<dim, number>(flow_scratch_data.material.data));
     else
-      flux = ConvectionOperator::cell(
-        phi.get_value(q), CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.data));
+      flux = ConvectionOperator::cell(phi.get_value(q),
+                                      ConvectiveFlux<dim, number>(flow_scratch_data.material.data));
 
     if (flow_scratch_data.body_force.get() != nullptr)
       {
@@ -153,11 +152,11 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::do_surface_integral_rhs(
+  CutDGOperator<dim, number, is_viscous>::do_surface_integral_rhs(
     dealii::FEPointEvaluation<dim + 2, dim, dim, dealii::VectorizedArray<number>> &phi,
-    const dealii::VectorizedArray<number>          &interior_penalty_parameter,
-    const CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-    const unsigned int                              q) const
+    const dealii::VectorizedArray<number> &interior_penalty_parameter,
+    const FlowScratchData<dim, number>    &flow_scratch_data,
+    const unsigned int                     q) const
   {
     const auto w_m      = phi.get_value(q);
     const auto grad_w_m = phi.get_gradient(q);
@@ -183,8 +182,8 @@ namespace MeltPoolDG::CompressibleFlow
           grad_w_p,
           normal,
           interior_penalty_parameter,
-          CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.data),
-          CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.data));
+          ConvectiveFlux<dim, number>(flow_scratch_data.material.data),
+          DiffusiveFlux<dim, number>(flow_scratch_data.material.data));
 
         flux_m = flux.inner_face_value;
 
@@ -192,11 +191,8 @@ namespace MeltPoolDG::CompressibleFlow
       }
     else
       {
-        const auto flux = ConvectionOperator::face(w_m,
-                                                   w_p,
-                                                   normal,
-                                                   CompressibleConvectiveFlux<dim, number>(
-                                                     flow_scratch_data.material.data));
+        const auto flux = ConvectionOperator::face(
+          w_m, w_p, normal, ConvectiveFlux<dim, number>(flow_scratch_data.material.data));
 
         flux_m = flux.inner_face_value;
       }
@@ -207,12 +203,12 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number, bool is_viscous>
   template <FaceEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::do_face_integral_rhs(
-    Integrator                                     &phi_m,
-    Integrator                                     &phi_p,
-    const dealii::VectorizedArray<number>          &interior_penalty_parameter,
-    const CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-    const unsigned int                              q) const
+  CutDGOperator<dim, number, is_viscous>::do_face_integral_rhs(
+    Integrator                            &phi_m,
+    Integrator                            &phi_p,
+    const dealii::VectorizedArray<number> &interior_penalty_parameter,
+    const FlowScratchData<dim, number>    &flow_scratch_data,
+    const unsigned int                     q) const
   {
     FaceFluxType<dim, number> flux_m;
     FaceFluxType<dim, number> flux_p;
@@ -226,8 +222,8 @@ namespace MeltPoolDG::CompressibleFlow
           phi_p.get_gradient(q),
           phi_m.normal_vector(q),
           interior_penalty_parameter,
-          CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.data),
-          CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.data));
+          ConvectiveFlux<dim, number>(flow_scratch_data.material.data),
+          DiffusiveFlux<dim, number>(flow_scratch_data.material.data));
 
         flux_m = flux.inner_face_value;
         flux_p = flux.outer_face_value;
@@ -237,11 +233,11 @@ namespace MeltPoolDG::CompressibleFlow
       }
     else
       {
-        const auto flux = ConvectionOperator::face(phi_m.get_value(q),
-                                                   phi_p.get_value(q),
-                                                   phi_m.normal_vector(q),
-                                                   CompressibleConvectiveFlux<dim, number>(
-                                                     flow_scratch_data.material.data));
+        const auto flux =
+          ConvectionOperator::face(phi_m.get_value(q),
+                                   phi_p.get_value(q),
+                                   phi_m.normal_vector(q),
+                                   ConvectiveFlux<dim, number>(flow_scratch_data.material.data));
 
         flux_m = flux.inner_face_value;
         flux_p = flux.outer_face_value;
@@ -254,12 +250,12 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number, bool is_viscous>
   template <FaceEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::do_boundary_face_integral_rhs(
-    Integrator                                     &phi,
-    const dealii::VectorizedArray<number>          &interior_penalty_parameter,
-    const CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-    const auto                                      boundary_id,
-    const unsigned int                              q) const
+  CutDGOperator<dim, number, is_viscous>::do_boundary_face_integral_rhs(
+    Integrator                            &phi,
+    const dealii::VectorizedArray<number> &interior_penalty_parameter,
+    const FlowScratchData<dim, number>    &flow_scratch_data,
+    const auto                             boundary_id,
+    const unsigned int                     q) const
   {
     using DofValueAndGradientStateViewType =
       DofValueAndGradientStateView<dim,
@@ -287,8 +283,8 @@ namespace MeltPoolDG::CompressibleFlow
           grad_w_p,
           phi.normal_vector(q),
           interior_penalty_parameter,
-          CompressibleConvectiveFlux<dim, number>(flow_scratch_data.material.data),
-          CompressibleDiffusiveFlux<dim, number>(flow_scratch_data.material.data));
+          ConvectiveFlux<dim, number>(flow_scratch_data.material.data),
+          DiffusiveFlux<dim, number>(flow_scratch_data.material.data));
 
         flux_m = flux.inner_face_value;
 
@@ -296,11 +292,11 @@ namespace MeltPoolDG::CompressibleFlow
       }
     else
       {
-        const auto flux = ConvectionOperator::face(phi.get_value(q),
-                                                   w_p,
-                                                   phi.normal_vector(q),
-                                                   CompressibleConvectiveFlux<dim, number>(
-                                                     flow_scratch_data.material.data));
+        const auto flux =
+          ConvectionOperator::face(phi.get_value(q),
+                                   w_p,
+                                   phi.normal_vector(q),
+                                   ConvectiveFlux<dim, number>(flow_scratch_data.material.data));
 
         flux_m = flux.inner_face_value;
       }
@@ -310,7 +306,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::local_apply_cell_rhs(
+  CutDGOperator<dim, number, is_viscous>::local_apply_cell_rhs(
     const dealii::MatrixFree<dim, number> &,
     VectorType                          &dst,
     const VectorType                    &src,
@@ -430,7 +426,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::local_apply_face_rhs(
+  CutDGOperator<dim, number, is_viscous>::local_apply_face_rhs(
     const dealii::MatrixFree<dim, number> &,
     VectorType                                  &dst,
     const VectorType                            &src,
@@ -587,7 +583,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::local_apply_boundary_face_rhs(
+  CutDGOperator<dim, number, is_viscous>::local_apply_boundary_face_rhs(
     const dealii::MatrixFree<dim, number> &,
     VectorType                          &dst,
     const VectorType                    &src,
@@ -689,7 +685,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::local_apply_cell_lhs(
+  CutDGOperator<dim, number, is_viscous>::local_apply_cell_lhs(
     const dealii::MatrixFree<dim, number> &,
     VectorType                          &dst,
     const VectorType                    &src,
@@ -754,7 +750,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::local_apply_face_lhs(
+  CutDGOperator<dim, number, is_viscous>::local_apply_face_lhs(
     const dealii::MatrixFree<dim, number> &,
     VectorType                                  &dst,
     const VectorType                            &src,
@@ -841,7 +837,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::local_apply_boundary_face_lhs(
+  CutDGOperator<dim, number, is_viscous>::local_apply_boundary_face_lhs(
     const dealii::MatrixFree<dim, number> &,
     VectorType &,
     const VectorType &,
@@ -852,13 +848,12 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   void
-  CutDGCompressibleFlowOperator<dim, number, is_viscous>::
-    get_adjacent_face_values_at_unfitted_boundary(
-      const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
-      const ConservedVariables                                  &w_m,
-      ConservedVariables                                        &w_p,
-      const ConservedVariablesGradient                          &grad_w_m,
-      ConservedVariablesGradient                                &grad_w_p) const
+  CutDGOperator<dim, number, is_viscous>::get_adjacent_face_values_at_unfitted_boundary(
+    const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
+    const ConservedVariables                                  &w_m,
+    ConservedVariables                                        &w_p,
+    const ConservedVariablesGradient                          &grad_w_m,
+    ConservedVariablesGradient                                &grad_w_p) const
   {
     if (flow_scratch_data.cut->unfitted_flow_boundary_condition == "no_slip_wall")
       {
@@ -892,10 +887,10 @@ namespace MeltPoolDG::CompressibleFlow
       AssertThrow(false, dealii::ExcMessage("Unknown boundary type for unfitted boundary."));
   }
 
-  template class CutDGCompressibleFlowOperator<1, double, true>;
-  template class CutDGCompressibleFlowOperator<2, double, true>;
-  template class CutDGCompressibleFlowOperator<3, double, true>;
-  template class CutDGCompressibleFlowOperator<1, double, false>;
-  template class CutDGCompressibleFlowOperator<2, double, false>;
-  template class CutDGCompressibleFlowOperator<3, double, false>;
+  template class CutDGOperator<1, double, true>;
+  template class CutDGOperator<2, double, true>;
+  template class CutDGOperator<3, double, true>;
+  template class CutDGOperator<1, double, false>;
+  template class CutDGOperator<2, double, false>;
+  template class CutDGOperator<3, double, false>;
 } // namespace MeltPoolDG::CompressibleFlow

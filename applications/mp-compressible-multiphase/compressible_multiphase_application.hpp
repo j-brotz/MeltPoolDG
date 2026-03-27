@@ -63,7 +63,7 @@ namespace MeltPoolDG::Multiphase
     std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
 
     /// Compressible multiphase operation object
-    CompressibleFlow::CompressibleFlowOperation<dim, number> comp_multiphase_operation;
+    CompressibleFlow::OperationTypeErasure<dim, number> comp_multiphase_operation;
 
     /// Pointer to the profiling object
     std::unique_ptr<Profiling::ProfilingMonitor<number>> profiling_monitor;

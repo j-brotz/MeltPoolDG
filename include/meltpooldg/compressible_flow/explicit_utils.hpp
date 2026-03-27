@@ -99,14 +99,13 @@ namespace MeltPoolDG::CompressibleFlow
             CellEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator,
             bool is_viscous = true>
   inline DEAL_II_ALWAYS_INLINE //
-    std::tuple<ConservedVariablesType<dim, number>,
-               ConservedVariablesGradientType<dim, number>>
+    std::tuple<ConservedVariablesType<dim, number>, ConservedVariablesGradientType<dim, number>>
     rhs_cell_integral_kernel(
       const Integrator                                              &evaluator,
       const unsigned int                                             q,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> *constant_body_force,
-      const CompressibleFlowConvectiveKernels<dim, number>          &convective_terms,
-      const CompressibleFlowViscousKernels<dim, number>             &viscous_terms,
+      const ConvectiveKernels<dim, number>                          &convective_terms,
+      const ViscousKernels<dim, number>                             &viscous_terms,
       const std::unique_ptr<dealii::Function<dim>>                  &body_force)
   {
     const auto w_q = evaluator.get_value(q);
@@ -167,12 +166,12 @@ namespace MeltPoolDG::CompressibleFlow
                ConservedVariablesType<dim, number>,
                ConservedVariablesGradientType<dim, number>,
                ConservedVariablesGradientType<dim, number>>
-    rhs_face_integral_kernel(const Integrator               &evaluator_m,
-                             const Integrator               &evaluator_p,
-                             const unsigned int              q,
-                             dealii::VectorizedArray<number> penalty_parameter,
-                             const CompressibleFlowConvectiveKernels<dim, number> &convective_terms,
-                             const CompressibleFlowViscousKernels<dim, number>    &viscous_terms)
+    rhs_face_integral_kernel(const Integrator                     &evaluator_m,
+                             const Integrator                     &evaluator_p,
+                             const unsigned int                    q,
+                             dealii::VectorizedArray<number>       penalty_parameter,
+                             const ConvectiveKernels<dim, number> &convective_terms,
+                             const ViscousKernels<dim, number>    &viscous_terms)
   {
     auto numerical_flux =
       convective_terms.calculate_convective_numerical_flux(evaluator_m.get_value(q),
@@ -234,17 +233,15 @@ namespace MeltPoolDG::CompressibleFlow
             bool is_viscous   = true,
             bool is_gas_phase = true>
   inline DEAL_II_ALWAYS_INLINE //
-    std::tuple<ConservedVariablesType<dim, number>,
-               ConservedVariablesGradientType<dim, number>>
-    rhs_boundary_face_integral_kernel(
-      const Integrator                                      &evaluator_m,
-      const unsigned int                                     q,
-      const dealii::types::boundary_id                       boundary_id,
-      const dealii::VectorizedArray<number>                  penalty_parameter,
-      const CompressibleFlowConvectiveKernels<dim, number>  &convective_terms,
-      const CompressibleFlowViscousKernels<dim, number>     &viscous_terms,
-      const CompressibleFlowMaterial<dim, number>           &material,
-      const CompressibleFlowBoundaryConditions<dim, number> &boundary_conditions)
+    std::tuple<ConservedVariablesType<dim, number>, ConservedVariablesGradientType<dim, number>>
+    rhs_boundary_face_integral_kernel(const Integrator                      &evaluator_m,
+                                      const unsigned int                     q,
+                                      const dealii::types::boundary_id       boundary_id,
+                                      const dealii::VectorizedArray<number>  penalty_parameter,
+                                      const ConvectiveKernels<dim, number>  &convective_terms,
+                                      const ViscousKernels<dim, number>     &viscous_terms,
+                                      const Material<dim, number>           &material,
+                                      const BoundaryConditions<dim, number> &boundary_conditions)
   {
     const auto w_m      = evaluator_m.get_value(q);
     const auto normal   = evaluator_m.normal_vector(q);

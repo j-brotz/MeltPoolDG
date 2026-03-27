@@ -223,19 +223,18 @@ namespace MeltPoolDG::CompressibleFlow
     // and "cut".
     if (simulation_case->parameters.flow.domain_representation_type == "fitted")
       {
-        std::unique_ptr<DGCompressibleFlowOperation<dim, number>> operation =
-          std::make_unique<DGCompressibleFlowOperation<dim, number>>(
-            *scratch_data,
-            simulation_case->parameters.flow,
-            simulation_case->parameters.material,
-            comp_flow_dof_idx,
-            comp_flow_quad_idx);
-        comp_flow_operation = CompressibleFlowOperation<dim, number>(std::move(operation));
+        std::unique_ptr<DGOperation<dim, number>> operation =
+          std::make_unique<DGOperation<dim, number>>(*scratch_data,
+                                                     simulation_case->parameters.flow,
+                                                     simulation_case->parameters.material,
+                                                     comp_flow_dof_idx,
+                                                     comp_flow_quad_idx);
+        comp_flow_operation = OperationTypeErasure<dim, number>(std::move(operation));
       }
     else if (simulation_case->parameters.flow.domain_representation_type == "cut")
       {
-        std::unique_ptr<CutDGCompressibleFlowOperation<dim, number>> operation =
-          std::make_unique<CutDGCompressibleFlowOperation<dim, number>>(
+        std::unique_ptr<CutDGOperation<dim, number>> operation =
+          std::make_unique<CutDGOperation<dim, number>>(
             *scratch_data,
             simulation_case->parameters.flow,
             simulation_case->parameters.material,
@@ -267,7 +266,7 @@ namespace MeltPoolDG::CompressibleFlow
         if (unfitted_inflow_function)
           operation->set_inflow_field_unfitted_boundary(unfitted_inflow_function);
 
-        comp_flow_operation = CompressibleFlowOperation<dim, number>(std::move(operation));
+        comp_flow_operation = OperationTypeErasure<dim, number>(std::move(operation));
       }
     else
       DEAL_II_NOT_IMPLEMENTED();
@@ -361,7 +360,7 @@ namespace MeltPoolDG::CompressibleFlow
   template class CompressibleFlowApplication<2, double>;
   template class CompressibleFlowApplication<3, double>;
 
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow
 
 int
 main(int argc, char *argv[])
@@ -371,6 +370,8 @@ main(int argc, char *argv[])
   MPI_Comm mpi_comm(MPI_COMM_WORLD);
   MeltPoolDG::default_main<MeltPoolDG::CompressibleFlow::CompressibleFlowCaseParameters<double>,
                            MeltPoolDG::CompressibleFlow::CompressibleFlowCase,
-                           MeltPoolDG::CompressibleFlow::CompressibleFlowApplication>(argc, argv, mpi_comm);
+                           MeltPoolDG::CompressibleFlow::CompressibleFlowApplication>(argc,
+                                                                                      argv,
+                                                                                      mpi_comm);
   return 0;
 }

@@ -63,7 +63,7 @@ MeltPoolDG::CompressibleFlow::EOSData<number>::post(const EquationOfState eos_ty
 
 template <typename number>
 void
-MeltPoolDG::CompressibleFlow::CompressibleFlowMaterialSpeciesData<number>::add_parameters(
+MeltPoolDG::CompressibleFlow::MaterialSpeciesData<number>::add_parameters(
   dealii::ParameterHandler &prm,
   const unsigned            species_number)
 {
@@ -84,7 +84,7 @@ MeltPoolDG::CompressibleFlow::CompressibleFlowMaterialSpeciesData<number>::add_p
 
 template <typename number>
 void
-MeltPoolDG::CompressibleFlow::CompressibleFlowMaterialSpeciesData<number>::add_parameters(
+MeltPoolDG::CompressibleFlow::MaterialSpeciesData<number>::add_parameters(
   dealii::ParameterHandler &prm)
 {
   prm.add_parameter("name", name, "Name of the species used for output purposes.");
@@ -115,7 +115,7 @@ MeltPoolDG::CompressibleFlow::CompressibleFlowMaterialSpeciesData<number>::add_p
 
 template <typename number>
 void
-MeltPoolDG::CompressibleFlow::CompressibleFluidMaterialPhaseData<number>::add_parameters(
+MeltPoolDG::CompressibleFlow::MaterialPhaseData<number>::add_parameters(
   dealii::ParameterHandler &prm,
   const bool                is_gas_phase)
 {
@@ -178,7 +178,7 @@ MeltPoolDG::CompressibleFlow::CompressibleFluidMaterialPhaseData<number>::add_pa
 
 template <typename number>
 void
-MeltPoolDG::CompressibleFlow::CompressibleFluidMaterialPhaseData<number>::post(const bool is_gas)
+MeltPoolDG::CompressibleFlow::MaterialPhaseData<number>::post(const bool is_gas)
 {
   for (unsigned i = 0; i < number_of_species; ++i)
     {
@@ -260,7 +260,7 @@ MeltPoolDG::CompressibleFlow::CompressibleFluidMaterialPhaseData<number>::post(c
 
 template <typename number>
 std::size_t
-MeltPoolDG::CompressibleFlow::CompressibleFluidMaterialPhaseData<number>::get_species_interaction_index(
+MeltPoolDG::CompressibleFlow::MaterialPhaseData<number>::get_species_interaction_index(
   const unsigned int i,
   const unsigned int j) const
 {
@@ -275,7 +275,7 @@ MeltPoolDG::CompressibleFlow::CompressibleFluidMaterialPhaseData<number>::get_sp
 
 template <typename number>
 number
-MeltPoolDG::CompressibleFlow::CompressibleFluidMaterialPhaseData<number>::get_diffusion_coefficient(
+MeltPoolDG::CompressibleFlow::MaterialPhaseData<number>::get_diffusion_coefficient(
   const unsigned int i,
   const unsigned int j) const
 {
@@ -283,5 +283,5 @@ MeltPoolDG::CompressibleFlow::CompressibleFluidMaterialPhaseData<number>::get_di
 }
 
 template struct MeltPoolDG::CompressibleFlow::EOSData<double>;
-template struct MeltPoolDG::CompressibleFlow::CompressibleFlowMaterialSpeciesData<double>;
-template struct MeltPoolDG::CompressibleFlow::CompressibleFluidMaterialPhaseData<double>;
+template struct MeltPoolDG::CompressibleFlow::MaterialSpeciesData<double>;
+template struct MeltPoolDG::CompressibleFlow::MaterialPhaseData<double>;

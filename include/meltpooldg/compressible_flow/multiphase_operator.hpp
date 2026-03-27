@@ -179,16 +179,16 @@ namespace MeltPoolDG::Multiphase
     CompressibleFlow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data;
 
     /// Object for the convective term evaluations for the liquid phase
-    const CompressibleFlow::CompressibleFlowConvectiveKernels<dim, number> convective_terms_liquid;
+    const CompressibleFlow::ConvectiveKernels<dim, number> convective_terms_liquid;
 
     /// Object for the convective term evaluations for the gas phase
-    const CompressibleFlow::CompressibleFlowConvectiveKernels<dim, number> convective_terms_gas;
+    const CompressibleFlow::ConvectiveKernels<dim, number> convective_terms_gas;
 
     /// Object for the viscous term evaluations for the liquid phase
-    const CompressibleFlow::CompressibleFlowViscousKernels<dim, number> viscous_terms_liquid;
+    const CompressibleFlow::ViscousKernels<dim, number> viscous_terms_liquid;
 
     /// Object for the viscous term evaluations for the gas phase
-    const CompressibleFlow::CompressibleFlowViscousKernels<dim, number> viscous_terms_gas;
+    const CompressibleFlow::ViscousKernels<dim, number> viscous_terms_gas;
 
     /// Mapping information for integration over the phase interface
     const MappingInfoType &mapping_info_interface;

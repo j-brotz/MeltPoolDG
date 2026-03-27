@@ -50,15 +50,15 @@ namespace MeltPoolDG::CompressibleFlow
    * equations in a cutDG context.
    */
   template <int dim, typename number>
-  class CutDGCompressibleFlowOperation
+  class CutDGOperation
   {
   public:
     using VectorType            = dealii::LinearAlgebra::distributed::Vector<number>;
     using MappingInfoType       = CutUtil::MappingInfoType<dim, number>;
     using MappingInfoVectorType = CutUtil::MappingInfoVectorType<dim, number>;
 
-    using CutFlowOperatorVariant = std::variant<CutDGCompressibleFlowOperator<dim, number, true>,
-                                                CutDGCompressibleFlowOperator<dim, number, false>>;
+    using CutFlowOperatorVariant =
+      std::variant<CutDGOperator<dim, number, true>, CutDGOperator<dim, number, false>>;
     /**
      * @brief Constructor.
      *
@@ -76,14 +76,14 @@ namespace MeltPoolDG::CompressibleFlow
      * @param level_set_dof_idx_in Index of the used dof handler for level-set in @p scratch_data_in.
      * @param comp_flow_quad_idx_in Index of the used quadrature object in @p scratch_data_in.
      */
-    explicit CutDGCompressibleFlowOperation(
-      const ScratchData<dim, dim, number>              &scratch_data_in,
-      const CompressibleFlowData<number>               &comp_flow_data_in,
-      const CompressibleFluidMaterialPhaseData<number> &material_data_in,
-      const CompressibleFlowCutData<number>            &cut_data_in,
-      const TimeIntegration::TimeIterator<number>      &time_iterator_in,
-      const std::function<void()>                      &setup_dof_system_in,
-      const VectorType                                 &level_set_in,
+    explicit CutDGOperation(
+      const ScratchData<dim, dim, number>         &scratch_data_in,
+      const SolverData<number>                    &comp_flow_data_in,
+      const MaterialPhaseData<number>             &material_data_in,
+      const CutSolverData<number>                 &cut_data_in,
+      const TimeIntegration::TimeIterator<number> &time_iterator_in,
+      const std::function<void()>                 &setup_dof_system_in,
+      const VectorType                            &level_set_in,
       unsigned int comp_flow_dof_idx_in  = dealii::numbers::invalid_unsigned_int,
       unsigned int level_set_dof_idx_in  = dealii::numbers::invalid_unsigned_int,
       unsigned int comp_flow_quad_idx_in = dealii::numbers::invalid_unsigned_int);
@@ -223,27 +223,27 @@ namespace MeltPoolDG::CompressibleFlow
      * @return An instance of the appropriate `CutDGCompressibleFlowOperator` variant.
      */
     CutFlowOperatorVariant static create_cut_flow_operator_variant(
-      bool                                      is_viscous,
-      CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-      const MappingInfoType                    &mapping_info_surface_in,
-      const MappingInfoVectorType              &mapping_info_cells_in,
-      const MappingInfoVectorType              &mapping_info_faces_in)
+      bool                          is_viscous,
+      FlowScratchData<dim, number> &flow_scratch_data,
+      const MappingInfoType        &mapping_info_surface_in,
+      const MappingInfoVectorType  &mapping_info_cells_in,
+      const MappingInfoVectorType  &mapping_info_faces_in)
     {
       if (is_viscous)
-        return CutDGCompressibleFlowOperator<dim, number, true>(flow_scratch_data,
-                                                                mapping_info_surface_in,
-                                                                mapping_info_cells_in,
-                                                                mapping_info_faces_in);
+        return CutDGOperator<dim, number, true>(flow_scratch_data,
+                                                mapping_info_surface_in,
+                                                mapping_info_cells_in,
+                                                mapping_info_faces_in);
       else
-        return CutDGCompressibleFlowOperator<dim, number, false>(flow_scratch_data,
-                                                                 mapping_info_surface_in,
-                                                                 mapping_info_cells_in,
-                                                                 mapping_info_faces_in);
+        return CutDGOperator<dim, number, false>(flow_scratch_data,
+                                                 mapping_info_surface_in,
+                                                 mapping_info_cells_in,
+                                                 mapping_info_faces_in);
     }
 
   private:
     /// Scratch data for compressible flows
-    CompressibleFlowScratchData<dim, number> flow_scratch_data;
+    FlowScratchData<dim, number> flow_scratch_data;
 
     /// Time iterator
     const TimeIntegration::TimeIterator<number> &time_iterator;
@@ -353,21 +353,21 @@ namespace MeltPoolDG::CompressibleFlow
   //! inlined functions
   template <int dim, typename number>
   const dealii::LinearAlgebra::distributed::Vector<number> &
-  CutDGCompressibleFlowOperation<dim, number>::get_solution() const
+  CutDGOperation<dim, number>::get_solution() const
   {
     return flow_scratch_data.solution_history.get_current_solution();
   }
 
   template <int dim, typename number>
   dealii::LinearAlgebra::distributed::Vector<number> &
-  CutDGCompressibleFlowOperation<dim, number>::get_solution()
+  CutDGOperation<dim, number>::get_solution()
   {
     return flow_scratch_data.solution_history.get_current_solution();
   }
 
   template <int dim, typename number>
   const dealii::DoFHandler<dim> &
-  CutDGCompressibleFlowOperation<dim, number>::get_dof_handler() const
+  CutDGOperation<dim, number>::get_dof_handler() const
   {
     return flow_scratch_data.scratch_data.get_dof_handler(flow_scratch_data.dof_idx);
   }

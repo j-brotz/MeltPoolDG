@@ -24,7 +24,7 @@ namespace MeltPoolDG::CompressibleFlow
   /**
    * An enum for the various boundary conditions supported by the compressible flow solver.
    */
-  BETTER_ENUM(CompressibleBoundaryConditionType,
+  BETTER_ENUM(BoundaryConditionType,
               char,
               inflow,
               slip_wall,
@@ -47,13 +47,13 @@ namespace MeltPoolDG::CompressibleFlow
    * - Subsonic outflow with fixed energy
    */
   template <int dim, typename number>
-  class CompressibleFlowBoundaryConditions
+  class BoundaryConditions
   {
   public:
     using ConservedVariablesType = dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>>;
     using ConservedVariablesGradType =
       dealii::Tensor<1, dim + 2, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
-    using BoundaryType = CompressibleBoundaryConditionType;
+    using BoundaryType = BoundaryConditionType;
 
     using VectorizedArrayType = dealii::VectorizedArray<number>;
 
@@ -81,21 +81,21 @@ namespace MeltPoolDG::CompressibleFlow
     set_boundary_conditions(const std::shared_ptr<SimulationCaseBase<dim, number>> &simulation_case,
                             const std::string                                      &operation_name)
     {
-      set_boundary_condition(CompressibleBoundaryConditionType::inflow,
+      set_boundary_condition(BoundaryConditionType::inflow,
                              simulation_case->get_boundary_condition("inflow", operation_name));
 
-      set_boundary_condition(CompressibleBoundaryConditionType::subsonic_outflow_fixed_pressure,
+      set_boundary_condition(BoundaryConditionType::subsonic_outflow_fixed_pressure,
                              simulation_case->get_boundary_condition("outflow_fixed_pressure",
                                                                      operation_name));
 
-      set_boundary_condition(CompressibleBoundaryConditionType::subsonic_outflow_fixed_energy,
+      set_boundary_condition(BoundaryConditionType::subsonic_outflow_fixed_energy,
                              simulation_case->get_boundary_condition("outflow_fixed_energy",
                                                                      operation_name));
 
-      set_boundary_condition(CompressibleBoundaryConditionType::slip_wall,
+      set_boundary_condition(BoundaryConditionType::slip_wall,
                              simulation_case->get_boundary_condition("slip_wall", operation_name));
 
-      set_boundary_condition(CompressibleBoundaryConditionType::no_slip_wall,
+      set_boundary_condition(BoundaryConditionType::no_slip_wall,
                              simulation_case->get_boundary_condition("no_slip_wall",
                                                                      operation_name));
     }
@@ -110,7 +110,7 @@ namespace MeltPoolDG::CompressibleFlow
      */
     void
     set_boundary_condition(
-      CompressibleBoundaryConditionType boundary_condition,
+      BoundaryConditionType boundary_condition,
       std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
         boundary_condition_function = {});
 
@@ -124,19 +124,19 @@ namespace MeltPoolDG::CompressibleFlow
      * @throws Exception if the boundary with the corresponding boundary id has no
      * boundary condition set.
      */
-    CompressibleBoundaryConditionType
+    BoundaryConditionType
     get_boundary_type(const dealii::types::boundary_id boundary_id) const
     {
       if (inflow_boundaries.contains(boundary_id))
-        return CompressibleBoundaryConditionType::inflow;
+        return BoundaryConditionType::inflow;
       if (slip_wall_boundaries.contains(boundary_id))
-        return CompressibleBoundaryConditionType::slip_wall;
+        return BoundaryConditionType::slip_wall;
       if (no_slip_adiabatic_wall_boundaries.contains(boundary_id))
-        return CompressibleBoundaryConditionType::no_slip_wall;
+        return BoundaryConditionType::no_slip_wall;
       if (subsonic_outflow_fixed_energy.contains(boundary_id))
-        return CompressibleBoundaryConditionType::subsonic_outflow_fixed_energy;
+        return BoundaryConditionType::subsonic_outflow_fixed_energy;
       if (subsonic_outflow_fixed_pressure.contains(boundary_id))
-        return CompressibleBoundaryConditionType::subsonic_outflow_fixed_pressure;
+        return BoundaryConditionType::subsonic_outflow_fixed_pressure;
       AssertThrow(false,
                   dealii::ExcMessage(
                     "There is no compressible flow boundary set at the boundary with boundary id " +
@@ -155,8 +155,8 @@ namespace MeltPoolDG::CompressibleFlow
      * @return Prescribed boundary value.
      */
     dealii::VectorizedArray<number>
-    get_boundary_value(dealii::types::boundary_id        boundary_id,
-                       CompressibleBoundaryConditionType boundary_condition,
+    get_boundary_value(dealii::types::boundary_id boundary_id,
+                       BoundaryConditionType      boundary_condition,
                        const dealii::Point<dim, dealii::VectorizedArray<number>> &location,
                        unsigned                                                   component) const;
 
@@ -170,8 +170,8 @@ namespace MeltPoolDG::CompressibleFlow
      * @return Prescribed boundary value.
      */
     dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>>
-    get_boundary_value(const dealii::types::boundary_id        boundary_id,
-                       const CompressibleBoundaryConditionType boundary_condition,
+    get_boundary_value(const dealii::types::boundary_id boundary_id,
+                       const BoundaryConditionType      boundary_condition,
                        const dealii::Point<dim, dealii::VectorizedArray<number>> &location) const;
 
     /**
@@ -198,7 +198,7 @@ namespace MeltPoolDG::CompressibleFlow
       dealii::types::boundary_id                                     boundary_id,
       const ConservedVariablesType                                  &w_m,
       const ConservedVariablesGradType                              &grad_w_m,
-      const CompressibleFlowMaterial<dim, number>                   &material,
+      const Material<dim, number>                                   &material,
       bool                                                           is_gas_phase = true) const;
 
     std::tuple<ConservedVariablesType, ConservedVariablesGradType>

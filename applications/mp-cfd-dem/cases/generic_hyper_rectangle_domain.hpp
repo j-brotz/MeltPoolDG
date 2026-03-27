@@ -172,8 +172,8 @@ namespace MeltPoolDG::Simulation::CfdDem
   struct BoundaryCondition
   {
     /// Type of the boundary condition (default: slip wall)
-    CompressibleFlow::CompressibleBoundaryConditionType type =
-      CompressibleFlow::CompressibleBoundaryConditionType::slip_wall;
+    CompressibleFlow::BoundaryConditionType type =
+      CompressibleFlow::BoundaryConditionType::slip_wall;
 
     /// Prescribed density at the boundary (used if required by the boundary condition type)
     std::string density;
@@ -210,7 +210,7 @@ namespace MeltPoolDG::Simulation::CfdDem
     {
       switch (type)
         {
-            case (CompressibleFlow::CompressibleBoundaryConditionType::inflow): {
+            case (CompressibleFlow::BoundaryConditionType::inflow): {
               auto density_boundary_function =
                 std::make_shared<dealii::FunctionParser<dim>>(1, start_time);
               density_boundary_function->initialize(
@@ -238,7 +238,7 @@ namespace MeltPoolDG::Simulation::CfdDem
                                                                          inflow_ramp_up_duration,
                                                                          inflow_ramp_up_type);
             }
-            case (CompressibleFlow::CompressibleBoundaryConditionType::subsonic_outflow_fixed_energy): {
+            case (CompressibleFlow::BoundaryConditionType::subsonic_outflow_fixed_energy): {
               auto energy_boundary_function =
                 std::make_shared<dealii::FunctionParser<dim>>(1, start_time);
               energy_boundary_function->initialize(
@@ -247,7 +247,7 @@ namespace MeltPoolDG::Simulation::CfdDem
                 typename dealii::FunctionParser<dim>::ConstMap());
               return energy_boundary_function;
             }
-            case (CompressibleFlow::CompressibleBoundaryConditionType::subsonic_outflow_fixed_pressure): {
+            case (CompressibleFlow::BoundaryConditionType::subsonic_outflow_fixed_pressure): {
               auto pressure_boundary_function =
                 std::make_shared<dealii::FunctionParser<dim>>(1, start_time);
               pressure_boundary_function->initialize(
@@ -565,15 +565,15 @@ namespace MeltPoolDG::Simulation::CfdDem
 
     /// Mapping to translate between the enum used to specify boundary conditions in the input file
     /// and the corresponding string names used in the simulation case.
-    const std::map<CompressibleFlow::CompressibleBoundaryConditionType, std::string>
+    const std::map<CompressibleFlow::BoundaryConditionType, std::string>
       boundary_type_to_string_map = {
-        {CompressibleFlow::CompressibleBoundaryConditionType::inflow, "inflow"},
-        {CompressibleFlow::CompressibleBoundaryConditionType::subsonic_outflow_fixed_pressure,
+        {CompressibleFlow::BoundaryConditionType::inflow, "inflow"},
+        {CompressibleFlow::BoundaryConditionType::subsonic_outflow_fixed_pressure,
          "outflow_fixed_pressure"},
-        {CompressibleFlow::CompressibleBoundaryConditionType::subsonic_outflow_fixed_energy,
+        {CompressibleFlow::BoundaryConditionType::subsonic_outflow_fixed_energy,
          "outflow_fixed_energy"},
-        {CompressibleFlow::CompressibleBoundaryConditionType::slip_wall, "slip_wall"},
-        {CompressibleFlow::CompressibleBoundaryConditionType::no_slip_wall, "no_slip_wall"},
+        {CompressibleFlow::BoundaryConditionType::slip_wall, "slip_wall"},
+        {CompressibleFlow::BoundaryConditionType::no_slip_wall, "no_slip_wall"},
       };
   };
 } // namespace MeltPoolDG::Simulation::CfdDem

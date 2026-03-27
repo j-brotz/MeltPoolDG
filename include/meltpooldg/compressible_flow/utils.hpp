@@ -22,7 +22,7 @@ namespace MeltPoolDG::CompressibleFlow
 {
   // Forward declaration
   template <int dim, typename number>
-  class CompressibleFlowMaterial;
+  class Material;
 
   /// Index sets for the components of the compressible Navier-Stokes equations.
   BETTER_ENUM(Idx1D, char, density, momentum_x, energy);
@@ -98,8 +98,8 @@ namespace MeltPoolDG::CompressibleFlow
     const ScratchData<dim, dim, number>                      &scratch_data,
     const unsigned int                                        dof_idx,
     const unsigned int                                        quad_idx,
-    const CompressibleFlowMaterial<dim, number>              *material_liquid,
-    const CompressibleFlowMaterial<dim, number>              *material_gas = nullptr);
+    const Material<dim, number>                              *material_liquid,
+    const Material<dim, number>                              *material_gas = nullptr);
 
   /**
    * @brief An abstract interface for defining external forces acting on the fluid that must be
@@ -310,17 +310,17 @@ namespace MeltPoolDG::CompressibleFlow
     const ScratchData<dim, dim, number>                      &scratch_data,
     const unsigned int                                        dof_idx,
     const unsigned int                                        quad_idx,
-    const CompressibleFlowMaterial<dim, number>              *material_liquid,
-    const CompressibleFlowMaterial<dim, number>              *material_gas)
+    const Material<dim, number>                              *material_liquid,
+    const Material<dim, number>                              *material_gas)
   {
     const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free =
       scratch_data.get_matrix_free();
     unsigned int n_support_points_per_cell = scratch_data.get_n_dofs_per_cell(dof_idx) / (dim + 2);
 
-    auto process_cell = [&](CutUtil::CellCategory                        category,
-                            unsigned int                                 first_component,
-                            const CompressibleFlowMaterial<dim, number> *material,
-                            const unsigned int                           cell_batch) {
+    auto process_cell = [&](CutUtil::CellCategory        category,
+                            unsigned int                 first_component,
+                            const Material<dim, number> *material,
+                            const unsigned int           cell_batch) {
       if (!material)
         return;
       auto eval = FECellIntegrator<dim, dim + 2, number>(

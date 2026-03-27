@@ -11,10 +11,10 @@ namespace MeltPoolDG::CompressibleFlow
    * operation.
    */
   template <int dim, typename number>
-  class DGCompressibleFlowOperatorBase
+  class DGOperatorBase
   {
   public:
-    virtual ~DGCompressibleFlowOperatorBase() = default;
+    virtual ~DGOperatorBase() = default;
 
     /**
      * @brief Advances solver by a single time step.

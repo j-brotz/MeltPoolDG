@@ -19,7 +19,7 @@ namespace MeltPoolDG::CompressibleFlow
    * @tparam is_viscous Indicates whether the flow is viscous.
    */
   template <int dim, typename number, bool is_viscous = true>
-  class CutDGCompressibleFlowOperator
+  class CutDGOperator
   {
   public:
     using VectorType            = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -32,11 +32,10 @@ namespace MeltPoolDG::CompressibleFlow
     using ConvectionDiffusionOperator =
       Flow::DGConvectionDiffusionOperator<dim,
                                           number,
-                                          CompressibleConvectiveFlux<dim, number>,
-                                          CompressibleDiffusiveFlux<dim, number>>;
+                                          ConvectiveFlux<dim, number>,
+                                          DiffusiveFlux<dim, number>>;
 
-    using ConvectionOperator =
-      Flow::DGConvectionOperator<dim, number, CompressibleConvectiveFlux<dim, number>>;
+    using ConvectionOperator = Flow::DGConvectionOperator<dim, number, ConvectiveFlux<dim, number>>;
 
     /**
      * @brief Constructor.
@@ -55,11 +54,10 @@ namespace MeltPoolDG::CompressibleFlow
      * the mapping information computation and mapping data storage of the faces on the
      * inner subdomain and the outer subdomain, respectively.
      */
-    explicit CutDGCompressibleFlowOperator(
-      CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-      const MappingInfoType                    &mapping_info_surface_in,
-      const MappingInfoVectorType              &mapping_info_cells_in,
-      const MappingInfoVectorType              &mapping_info_faces_in);
+    explicit CutDGOperator(FlowScratchData<dim, number> &flow_scratch_data,
+                           const MappingInfoType        &mapping_info_surface_in,
+                           const MappingInfoVectorType  &mapping_info_cells_in,
+                           const MappingInfoVectorType  &mapping_info_faces_in);
 
     /**
      * @brief Set the inflow field function in the case of an unfitted inflow boundary.
@@ -96,7 +94,7 @@ namespace MeltPoolDG::CompressibleFlow
     void
     do_cell_integral_rhs(
       Integrator                                                    &phi,
-      const CompressibleFlowScratchData<dim, number>                &flow_scratch_data,
+      const FlowScratchData<dim, number>                            &flow_scratch_data,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> *constant_body_force,
       const unsigned int                                             q) const;
 
@@ -112,9 +110,9 @@ namespace MeltPoolDG::CompressibleFlow
     void
     do_surface_integral_rhs(
       dealii::FEPointEvaluation<dim + 2, dim, dim, dealii::VectorizedArray<number>> &phi,
-      const dealii::VectorizedArray<number>          &interior_penalty_parameter,
-      const CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-      const unsigned int                              q) const;
+      const dealii::VectorizedArray<number> &interior_penalty_parameter,
+      const FlowScratchData<dim, number>    &flow_scratch_data,
+      const unsigned int                     q) const;
 
     /**
      * @brief Evaluate and submit the right-and side face integral contributions at a given quadrature point.
@@ -134,11 +132,11 @@ namespace MeltPoolDG::CompressibleFlow
      */
     template <FaceEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
     void
-    do_face_integral_rhs(Integrator                                     &phi_m,
-                         Integrator                                     &phi_p,
-                         const dealii::VectorizedArray<number>          &interior_penalty_parameter,
-                         const CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-                         const unsigned int                              q) const;
+    do_face_integral_rhs(Integrator                            &phi_m,
+                         Integrator                            &phi_p,
+                         const dealii::VectorizedArray<number> &interior_penalty_parameter,
+                         const FlowScratchData<dim, number>    &flow_scratch_data,
+                         const unsigned int                     q) const;
 
     /**
      * @brief Evaluate and submit the right-hand side boundary face integral contributions at a given quadrature point.
@@ -159,9 +157,9 @@ namespace MeltPoolDG::CompressibleFlow
     void
     do_boundary_face_integral_rhs(Integrator                            &phi,
                                   const dealii::VectorizedArray<number> &interior_penalty_parameter,
-                                  const CompressibleFlowScratchData<dim, number> &flow_scratch_data,
-                                  const auto                                      boundary_id,
-                                  const unsigned int                              q) const;
+                                  const FlowScratchData<dim, number>    &flow_scratch_data,
+                                  const auto                             boundary_id,
+                                  const unsigned int                     q) const;
 
     /**
      * @brief Local applier for the cell integrals in the right-hand side evaluation.
@@ -273,7 +271,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   private:
     /// Scratch data for compressible flows
-    CompressibleFlowScratchData<dim, number> &flow_scratch_data;
+    FlowScratchData<dim, number> &flow_scratch_data;
 
     /// Mapping information for integration over immersed boundaries
     const MappingInfoType &mapping_info_surface;
