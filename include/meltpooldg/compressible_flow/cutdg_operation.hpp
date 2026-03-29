@@ -30,8 +30,8 @@
 
 #include <meltpooldg/compressible_flow/cutdg_operator.hpp>
 #include <meltpooldg/compressible_flow/material.hpp>
+#include <meltpooldg/compressible_flow/operation_data.hpp>
 #include <meltpooldg/compressible_flow/output_post_processor.hpp>
-#include <meltpooldg/compressible_flow/solver_data.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/cut/solution_transfer.hpp>
@@ -78,7 +78,7 @@ namespace MeltPoolDG::CompressibleFlow
      */
     explicit CutDGOperation(
       const ScratchData<dim, dim, number>         &scratch_data_in,
-      const SolverData<number>                    &comp_flow_data_in,
+      const OperationData<number>                 &comp_flow_data_in,
       const MaterialPhaseData<number>             &material_data_in,
       const CutSolverData<number>                 &cut_data_in,
       const TimeIntegration::TimeIterator<number> &time_iterator_in,
@@ -223,11 +223,11 @@ namespace MeltPoolDG::CompressibleFlow
      * @return An instance of the appropriate `CutDGCompressibleFlowOperator` variant.
      */
     CutFlowOperatorVariant static create_cut_flow_operator_variant(
-      bool                          is_viscous,
-      FlowScratchData<dim, number> &flow_scratch_data,
-      const MappingInfoType        &mapping_info_surface_in,
-      const MappingInfoVectorType  &mapping_info_cells_in,
-      const MappingInfoVectorType  &mapping_info_faces_in)
+      bool                               is_viscous,
+      OperationScratchData<dim, number> &flow_scratch_data,
+      const MappingInfoType             &mapping_info_surface_in,
+      const MappingInfoVectorType       &mapping_info_cells_in,
+      const MappingInfoVectorType       &mapping_info_faces_in)
     {
       if (is_viscous)
         return CutDGOperator<dim, number, true>(flow_scratch_data,
@@ -243,7 +243,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   private:
     /// Scratch data for compressible flows
-    FlowScratchData<dim, number> flow_scratch_data;
+    OperationScratchData<dim, number> flow_scratch_data;
 
     /// Time iterator
     const TimeIntegration::TimeIterator<number> &time_iterator;

@@ -122,8 +122,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
    * cutDG.
    */
   template <int dim, typename number>
-  class SimulationCutMovingCylinder final
-    : public ::MeltPoolDG::CompressibleFlow::CompressibleFlowCase<dim, number>
+  class SimulationCutMovingCylinder final : public ::MeltPoolDG::CompressibleFlow::Case<dim, number>
   {
   public:
     /**
@@ -133,8 +132,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
      * @param mpi_communicator The MPI communicator used to run the simulation in parallel.
      */
     SimulationCutMovingCylinder(std::string parameter_file, const MPI_Comm mpi_communicator)
-      : ::MeltPoolDG::CompressibleFlow::CompressibleFlowCase<dim, number>(parameter_file,
-                                                                          mpi_communicator)
+      : ::MeltPoolDG::CompressibleFlow::Case<dim, number>(parameter_file, mpi_communicator)
     {}
 
     /**

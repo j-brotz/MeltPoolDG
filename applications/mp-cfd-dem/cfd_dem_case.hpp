@@ -4,7 +4,7 @@
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/compressible_flow/material.hpp>
-#include <meltpooldg/compressible_flow/solver_data.hpp>
+#include <meltpooldg/compressible_flow/operation_data.hpp>
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
@@ -82,7 +82,7 @@ namespace MeltPoolDG
     AdaptiveMeshingData<number>                 amr;
     BaseData                                    base;
     FluidStructureInteractionData<number>       fluid_structure_interaction_data;
-    CompressibleFlow::SolverData<number>        flow;
+    CompressibleFlow::OperationData<number>     flow;
     CompressibleFlow::MaterialPhaseData<number> material;
     TimeIntegration::TimeSteppingData<number>   time_stepping;
     ObstacleData<number>                        obstacle_data;

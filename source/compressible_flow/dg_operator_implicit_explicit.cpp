@@ -1,6 +1,7 @@
 #include <deal.II/lac/precondition.h>
 
 #include <meltpooldg/compressible_flow/dg_operator_implicit_explicit.hpp>
+#include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/time_integration/implicit_explicit_integrator.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
@@ -16,7 +17,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   DGOperatorImplicitExplicit<dim, number, is_viscous>::DGOperatorImplicitExplicit(
-    FlowScratchData<dim, number> &flow_scratch_data)
+    OperationScratchData<dim, number> &flow_scratch_data)
     : flow_scratch_data(flow_scratch_data)
     , time_integrator(flow_scratch_data.flow_data.time_integrator)
     , convective_terms(flow_scratch_data.flow_data, flow_scratch_data.material)

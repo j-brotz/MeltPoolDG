@@ -65,16 +65,15 @@ namespace MeltPoolDG::Multiphase
   inline DEAL_II_ALWAYS_INLINE //
     std::pair<ConservedVariablesType, ConservedVariablesType>
     calculate_convective_and_viscous_interface_flux_penalty(
-      const ConservedVariablesType     &u_liquid,
-      const ConservedVariablesType     &u_gas,
-      const ConservedVariablesGradType &grad_u_liquid,
-      const ConservedVariablesGradType &grad_u_gas,
-      const CompressibleFlow::CompressibleMultiphaseScratchData<dim, number>
-                   &multiphase_scratch_data,
-      const auto   &viscous_terms_liquid,
-      const auto   &viscous_terms_gas,
-      const number &m_dot_evap,
-      const number &laser_heat_source)
+      const ConservedVariablesType                                        &u_liquid,
+      const ConservedVariablesType                                        &u_gas,
+      const ConservedVariablesGradType                                    &grad_u_liquid,
+      const ConservedVariablesGradType                                    &grad_u_gas,
+      const CompressibleFlow::MultiphaseOperationScratchData<dim, number> &multiphase_scratch_data,
+      const auto                                                          &viscous_terms_liquid,
+      const auto                                                          &viscous_terms_gas,
+      const number                                                        &m_dot_evap,
+      const number                                                        &laser_heat_source)
   {
     AssertThrow(dim == 1,
                 dealii::ExcNotImplemented(
@@ -307,17 +306,17 @@ namespace MeltPoolDG::Multiphase
             typename ConservedVariablesType,
             typename ConservedVariablesGradType>
   inline DEAL_II_ALWAYS_INLINE //
-    std::
-      tuple<ConservedVariablesGradType, ConservedVariablesGradType, dealii::VectorizedArray<number>>
-      calculate_convective_interface_flux_HLLP0(
-        const ConservedVariablesType                                  &u_liquid,
-        const ConservedVariablesType                                  &u_gas,
-        const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
-        const auto                                                    &convective_terms_liquid,
-        const auto                                                    &convective_terms_gas,
-        const CompressibleFlow::CompressibleMultiphaseScratchData<dim, number>
-                     &multiphase_scratch_data,
-        const number &m_dot_evap)
+    std::tuple<ConservedVariablesGradType,
+               ConservedVariablesGradType,
+               dealii::VectorizedArray<number>>
+    calculate_convective_interface_flux_HLLP0(
+      const ConservedVariablesType                                        &u_liquid,
+      const ConservedVariablesType                                        &u_gas,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>       &normal,
+      const auto                                                          &convective_terms_liquid,
+      const auto                                                          &convective_terms_gas,
+      const CompressibleFlow::MultiphaseOperationScratchData<dim, number> &multiphase_scratch_data,
+      const number                                                        &m_dot_evap)
   {
     // Note: Variables, that are relevant for both the liquid and the gas phase, are considered as
     // arrays of length 2 in the following. The first element refers to the liquid phase and the
@@ -550,12 +549,11 @@ namespace MeltPoolDG::Multiphase
   inline DEAL_II_ALWAYS_INLINE //
     ConservedVariablesType
     calculate_Dirichlet_jump_in_conservative_variables(
-      const ConservedVariablesType &u_liquid_cons,
-      const ConservedVariablesType &u_gas_cons,
-      const CompressibleFlow::CompressibleMultiphaseScratchData<dim, number>
-                   &multiphase_scratch_data,
-      const number &m_dot_evap,
-      const number &delta_T)
+      const ConservedVariablesType                                        &u_liquid_cons,
+      const ConservedVariablesType                                        &u_gas_cons,
+      const CompressibleFlow::MultiphaseOperationScratchData<dim, number> &multiphase_scratch_data,
+      const number                                                        &m_dot_evap,
+      const number                                                        &delta_T)
   {
     // enumeration for conserved variables component indices
     using Idx = std::conditional_t<
@@ -651,12 +649,11 @@ namespace MeltPoolDG::Multiphase
       const number                                                  &tau,
       const auto                                                    &viscous_terms_liquid,
       const auto                                                    &viscous_terms_gas,
-      const CompressibleFlow::CompressibleMultiphaseScratchData<dim, number>
-                   &multiphase_scratch_data,
-      const number &cell_size,
-      const number &m_dot_evap,
-      const number &delta_T,
-      const number &laser_heat_source)
+      const CompressibleFlow::MultiphaseOperationScratchData<dim, number> &multiphase_scratch_data,
+      const number                                                        &cell_size,
+      const number                                                        &m_dot_evap,
+      const number                                                        &delta_T,
+      const number                                                        &laser_heat_source)
   {
     // enumeration for conserved variables component indices
     using Idx = std::conditional_t<
@@ -785,10 +782,9 @@ namespace MeltPoolDG::Multiphase
       const number                                                  &visc_ave_weight_phase_gas,
       const auto                                                    &viscous_terms_liquid,
       const auto                                                    &viscous_terms_gas,
-      const CompressibleFlow::CompressibleMultiphaseScratchData<dim, number>
-                   &multiphase_scratch_data,
-      const number &m_dot_evap,
-      const number &delta_T)
+      const CompressibleFlow::MultiphaseOperationScratchData<dim, number> &multiphase_scratch_data,
+      const number                                                        &m_dot_evap,
+      const number                                                        &delta_T)
   {
     const auto J_Dir_cons =
       calculate_Dirichlet_jump_in_conservative_variables<dim, number, ConservedVariablesType>(
@@ -866,12 +862,11 @@ namespace MeltPoolDG::Multiphase
       const number                                                  &visc_ave_weight_phase_gas,
       const auto                                                    &viscous_terms_liquid,
       const auto                                                    &viscous_terms_gas,
-      const CompressibleFlow::CompressibleMultiphaseScratchData<dim, number>
-                   &multiphase_scratch_data,
-      const number &cell_size,
-      const number &m_dot_evap,
-      const number &delta_T,
-      const number &laser_heat_source)
+      const CompressibleFlow::MultiphaseOperationScratchData<dim, number> &multiphase_scratch_data,
+      const number                                                        &cell_size,
+      const number                                                        &m_dot_evap,
+      const number                                                        &delta_T,
+      const number                                                        &laser_heat_source)
   {
     // enumeration for conserved variables component indices
     using Idx = std::conditional_t<
@@ -984,11 +979,10 @@ namespace MeltPoolDG::Multiphase
   inline DEAL_II_ALWAYS_INLINE //
     std::tuple<number, number>
     update_evaporative_mass_flux_and_temperature_jump(
-      const ConservedVariablesType                                  &u_liquid,
-      const ConservedVariablesType                                  &u_gas,
-      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
-      const CompressibleFlow::CompressibleMultiphaseScratchData<dim, number>
-                                                  &multiphase_scratch_data,
+      const ConservedVariablesType                                        &u_liquid,
+      const ConservedVariablesType                                        &u_gas,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>       &normal,
+      const CompressibleFlow::MultiphaseOperationScratchData<dim, number> &multiphase_scratch_data,
       Evaporation::EvaporationModelKnight<number> *evaporation_model_knight = nullptr)
   {
     number m_dot_evap = 0.;

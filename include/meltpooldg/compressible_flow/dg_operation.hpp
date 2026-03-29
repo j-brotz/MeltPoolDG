@@ -21,9 +21,9 @@
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/compressible_flow/dg_operator_base.hpp>
-#include <meltpooldg/compressible_flow/flow_scratch_data.hpp>
+#include <meltpooldg/compressible_flow/operation_data.hpp>
+#include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/output_post_processor.hpp>
-#include <meltpooldg/compressible_flow/solver_data.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
@@ -57,7 +57,7 @@ namespace MeltPoolDG::CompressibleFlow
      * @param external_forces Pointer to a struct implementing external forces acting on the fluid.
      */
     explicit DGOperation(const ScratchData<dim, dim, number> &scratch_data,
-                         const SolverData<number>            &flow_data,
+                         const OperationData<number>         &flow_data,
                          const MaterialPhaseData<number>     &material_data_in,
                          unsigned int                         flow_dof_idx  = 0,
                          unsigned int                         flow_quad_idx = 0);
@@ -164,7 +164,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   private:
     /// Scratch data for compressible flows
-    FlowScratchData<dim, number> flow_scratch_data;
+    OperationScratchData<dim, number> flow_scratch_data;
 
     /// Compressible flow operator object
     std::unique_ptr<DGOperatorBase<dim, number>> comp_flow_operator;

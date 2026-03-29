@@ -12,8 +12,8 @@
 #include <meltpooldg/compressible_flow/boundary_conditions.hpp>
 #include <meltpooldg/compressible_flow/material.hpp>
 #include <meltpooldg/compressible_flow/material_data.hpp>
+#include <meltpooldg/compressible_flow/operation_data.hpp>
 #include <meltpooldg/compressible_flow/phase_coupling_data.hpp>
-#include <meltpooldg/compressible_flow/solver_data.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/flow/darcy_damping_data.hpp>
@@ -29,7 +29,7 @@ namespace MeltPoolDG::CompressibleFlow
    * compressible single-phase flow simulations.
    */
   template <int dim, typename number>
-  struct FlowScratchData
+  struct OperationScratchData
   {
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
@@ -46,12 +46,12 @@ namespace MeltPoolDG::CompressibleFlow
      * @note The cut data object @param cut_data_in is optional. For non-cut applications, it does not
      * need to be passed to the constructor.
      */
-    explicit FlowScratchData(const SolverData<number>            &flow_data_in,
-                             const MaterialPhaseData<number>     &material_data_in,
-                             const ScratchData<dim, dim, number> &scratch_data_in,
-                             const unsigned int                   dof_idx_in,
-                             const unsigned int                   quad_idx_in,
-                             const CutSolverData<number>         *cut_data_in = nullptr)
+    explicit OperationScratchData(const OperationData<number>         &flow_data_in,
+                                  const MaterialPhaseData<number>     &material_data_in,
+                                  const ScratchData<dim, dim, number> &scratch_data_in,
+                                  const unsigned int                   dof_idx_in,
+                                  const unsigned int                   quad_idx_in,
+                                  const CutSolverData<number>         *cut_data_in = nullptr)
       : flow_data(flow_data_in)
       , scratch_data(scratch_data_in)
       , material(material_data_in)
@@ -70,7 +70,7 @@ namespace MeltPoolDG::CompressibleFlow
     }
 
     /// General parameters for the compressible Navier-Stokes operators
-    const SolverData<number> flow_data;
+    const OperationData<number> flow_data;
 
     /// Mapping-, finite-element-, and quadrature-related parameters
     const ScratchData<dim, dim, number> &scratch_data;
@@ -135,7 +135,7 @@ namespace MeltPoolDG::CompressibleFlow
    * compressible multiphase flow simulations.
    */
   template <int dim, typename number>
-  struct CompressibleMultiphaseScratchData
+  struct MultiphaseOperationScratchData
   {
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
@@ -154,8 +154,8 @@ namespace MeltPoolDG::CompressibleFlow
      * @param dof_idx_in Relevant dof index of the flow solver in the scratch data object.
      * @param quad_idx_in Relevant quadrature index of the flow solver in the scratch data object.
      */
-    explicit CompressibleMultiphaseScratchData(
-      const SolverData<number>                                    &flow_data_in,
+    explicit MultiphaseOperationScratchData(
+      const OperationData<number>                                 &flow_data_in,
       const MaterialPhaseData<number>                             &material_data_gas_in,
       const MaterialPhaseData<number>                             &material_data_liquid_in,
       const Multiphase::PhaseChangeData<number>                   &phase_change_data_in,
@@ -181,7 +181,7 @@ namespace MeltPoolDG::CompressibleFlow
     }
 
     /// General parameters for the compressible Navier-Stokes operators
-    const SolverData<number> flow_data;
+    const OperationData<number> flow_data;
 
     /// Mapping-, finite-element-, and quadrature-related parameters
     const ScratchData<dim, dim, number> &scratch_data;

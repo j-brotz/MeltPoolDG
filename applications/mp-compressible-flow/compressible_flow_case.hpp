@@ -17,7 +17,7 @@
 #include <deal.II/non_matching/quadrature_generator.h>
 
 #include <meltpooldg/compressible_flow/material.hpp>
-#include <meltpooldg/compressible_flow/solver_data.hpp>
+#include <meltpooldg/compressible_flow/operation_data.hpp>
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
@@ -94,7 +94,7 @@ namespace MeltPoolDG::CompressibleFlow
     BaseData base;
 
     /// Data specific for compressible flow simulations
-    SolverData<number> flow;
+    OperationData<number> flow;
 
     /// Material parameters for a compressible (or nearly incompressible) fluid
     MaterialPhaseData<number> material;
@@ -116,7 +116,7 @@ namespace MeltPoolDG::CompressibleFlow
    * @brief Case base class for compressible flow cases.
    */
   template <int dim, typename number>
-  class CompressibleFlowCase : public SimulationCaseBase<dim, number>
+  class Case : public SimulationCaseBase<dim, number>
   {
   public:
     /// Case-specific parameters
@@ -128,8 +128,7 @@ namespace MeltPoolDG::CompressibleFlow
      * @param parameter_file_in Parameter file that contains simulation input settings.
      * @param mpi_communicator_in The MPI communicator used to run the simulation in parallel.
      */
-    explicit CompressibleFlowCase(const std::string &parameter_file_in,
-                                  MPI_Comm           mpi_communicator_in)
+    explicit Case(const std::string &parameter_file_in, MPI_Comm mpi_communicator_in)
       : SimulationCaseBase<dim, number>(parameter_file_in, mpi_communicator_in)
     {
       dealii::ParameterHandler prm;

@@ -13,6 +13,7 @@
 
 #include <meltpooldg/compressible_flow/multiphase_operation.hpp>
 #include <meltpooldg/compressible_flow/multiphase_operator.hpp>
+#include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/phase_coupling_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
@@ -34,7 +35,7 @@ namespace MeltPoolDG::Multiphase
   template <int dim, typename number>
   CompressibleMultiphaseOperation<dim, number>::CompressibleMultiphaseOperation(
     const ScratchData<dim, dim, number>               &scratch_data_in,
-    const CompressibleFlow::SolverData<number>        &comp_flow_data_in,
+    const CompressibleFlow::OperationData<number>     &comp_flow_data_in,
     const CompressibleFlow::MaterialPhaseData<number> &material_data_gas_in,
     const CompressibleFlow::MaterialPhaseData<number> &material_data_liquid_in,
     const PhaseChangeData<number>                     &phase_change_data_in,

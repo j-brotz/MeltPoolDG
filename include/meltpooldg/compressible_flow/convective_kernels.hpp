@@ -11,9 +11,9 @@
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/compressible_flow/data_types.hpp>
-#include <meltpooldg/compressible_flow/flow_scratch_data.hpp>
+#include <meltpooldg/compressible_flow/operation_data.hpp>
+#include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/phase_coupling_data.hpp>
-#include <meltpooldg/compressible_flow/solver_data.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 
@@ -46,7 +46,7 @@ namespace MeltPoolDG::CompressibleFlow
      * @param flow_data Reference to the flow data object containing simulation-specific parameters.
      * @param material Reference to the material model providing thermodynamic properties.
      */
-    explicit ConvectiveKernels(const SolverData<number>    &flow_data,
+    explicit ConvectiveKernels(const OperationData<number> &flow_data,
                                const Material<dim, number> &material);
 
     /**
@@ -109,7 +109,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   private:
     /// Flow-related parameters
-    const SolverData<number> &flow_data;
+    const OperationData<number> &flow_data;
 
     /// Material-related parameters
     const Material<dim, number> &material;
@@ -140,7 +140,7 @@ namespace MeltPoolDG::CompressibleFlow
    * Inlined function definitions
    * *************************************************************************************+****/
   template <int dim, typename number>
-  ConvectiveKernels<dim, number>::ConvectiveKernels(const SolverData<number>    &flow_data_in,
+  ConvectiveKernels<dim, number>::ConvectiveKernels(const OperationData<number> &flow_data_in,
                                                     const Material<dim, number> &material_in)
     : flow_data(flow_data_in)
     , material(material_in)

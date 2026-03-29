@@ -15,7 +15,7 @@
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/compressible_flow/dg_operation.hpp>
-#include <meltpooldg/compressible_flow/solver_data.hpp>
+#include <meltpooldg/compressible_flow/operation_data.hpp>
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp>
@@ -415,7 +415,7 @@ private:
   dealii::ConditionalOStream                                  pcout;
   dealii::DoFHandler<dim>                                     dof_handler;
   FiniteElementData                                           fe_data;
-  CompressibleFlow::SolverData<number>                        flow_data;
+  CompressibleFlow::OperationData<number>                     flow_data;
   CompressibleFlow::MaterialPhaseData<number>                 flow_material;
   dealii::AffineConstraints<number>                           constraints;
   BrinkmanPenalizationData<number>                            brinkman_penalization_data;

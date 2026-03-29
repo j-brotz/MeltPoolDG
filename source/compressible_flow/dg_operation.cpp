@@ -11,6 +11,7 @@
 #include <meltpooldg/compressible_flow/dg_operator_explicit.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_implicit.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_implicit_explicit.hpp>
+#include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/state_views.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
@@ -29,7 +30,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   DGOperation<dim, number>::DGOperation(const ScratchData<dim, dim, number> &scratch_data,
-                                        const SolverData<number>            &flow_data,
+                                        const OperationData<number>         &flow_data,
                                         const MaterialPhaseData<number>     &material_data,
                                         const unsigned int                   flow_dof_idx,
                                         const unsigned int                   flow_quad_idx)

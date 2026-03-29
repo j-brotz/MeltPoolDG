@@ -13,8 +13,8 @@
 #include <deal.II/non_matching/quadrature_generator.h>
 
 #include <meltpooldg/compressible_flow/material.hpp>
+#include <meltpooldg/compressible_flow/operation_data.hpp>
 #include <meltpooldg/compressible_flow/phase_coupling_data.hpp>
-#include <meltpooldg/compressible_flow/solver_data.hpp>
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
@@ -87,7 +87,7 @@ namespace MeltPoolDG::Multiphase
     BaseData base;
 
     /// Data specific for compressible flow simulations
-    CompressibleFlow::SolverData<number> flow;
+    CompressibleFlow::OperationData<number> flow;
 
     /// Material parameters for the gas phase
     CompressibleFlow::MaterialPhaseData<number> material_gas;

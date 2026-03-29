@@ -29,9 +29,9 @@
 #include <deal.II/non_matching/mesh_classifier.h>
 
 #include <meltpooldg/compressible_flow/boundary_conditions.hpp>
-#include <meltpooldg/compressible_flow/flow_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/multiphase_operation.hpp>
 #include <meltpooldg/compressible_flow/multiphase_operator.hpp>
+#include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
@@ -91,7 +91,7 @@ namespace MeltPoolDG::Multiphase
      */
     explicit CompressibleMultiphaseOperation(
       const ScratchData<dim, dim, number>               &scratch_data_in,
-      const CompressibleFlow::SolverData<number>        &comp_flow_data_in,
+      const CompressibleFlow::OperationData<number>     &comp_flow_data_in,
       const CompressibleFlow::MaterialPhaseData<number> &material_data_gas_in,
       const CompressibleFlow::MaterialPhaseData<number> &material_data_liquid_in,
       const PhaseChangeData<number>                     &phase_change_data_in,
@@ -232,12 +232,12 @@ namespace MeltPoolDG::Multiphase
      * specialization selected based on the viscosity configuration.
      */
     CompMultiphaseOperatorVariant static create_cut_flow_operator_variant(
-      bool                                                              is_viscous_gas,
-      bool                                                              is_viscous_liquid,
-      CompressibleFlow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
-      const MappingInfoType                                            &mapping_info_surface_in,
-      const MappingInfoVectorType                                      &mapping_info_cells_in,
-      const MappingInfoVectorType                                      &mapping_info_faces_in)
+      bool                                                           is_viscous_gas,
+      bool                                                           is_viscous_liquid,
+      CompressibleFlow::MultiphaseOperationScratchData<dim, number> &multiphase_scratch_data,
+      const MappingInfoType                                         &mapping_info_surface_in,
+      const MappingInfoVectorType                                   &mapping_info_cells_in,
+      const MappingInfoVectorType                                   &mapping_info_faces_in)
     {
       if (is_viscous_gas and is_viscous_liquid)
         return CompressibleMultiphaseOperator<dim, number, true, true>(multiphase_scratch_data,
@@ -263,7 +263,7 @@ namespace MeltPoolDG::Multiphase
 
   private:
     /// Scratch data for multiphase case
-    CompressibleFlow::CompressibleMultiphaseScratchData<dim, number> multiphase_scratch_data;
+    CompressibleFlow::MultiphaseOperationScratchData<dim, number> multiphase_scratch_data;
 
     /// Time iterator
     const TimeIntegration::TimeIterator<number> &time_iterator;

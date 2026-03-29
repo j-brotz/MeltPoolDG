@@ -5,9 +5,10 @@
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
 
-#include <meltpooldg/compressible_flow/explicit_utils.hpp>
+#include <meltpooldg/compressible_flow/explicit_time_integration_utils.hpp>
 #include <meltpooldg/compressible_flow/multiphase_interface_kernels.hpp>
 #include <meltpooldg/compressible_flow/multiphase_operator.hpp>
+#include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
@@ -20,7 +21,7 @@ namespace MeltPoolDG::Multiphase
   template <int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
   CompressibleMultiphaseOperator<dim, number, is_viscous_gas, is_viscous_liquid>::
     CompressibleMultiphaseOperator(
-      MeltPoolDG::CompressibleFlow::CompressibleMultiphaseScratchData<dim, number>
+      MeltPoolDG::CompressibleFlow::MultiphaseOperationScratchData<dim, number>
                                   &multiphase_scratch_data,
       const MappingInfoType       &mapping_info_interface_in,
       const MappingInfoVectorType &mapping_info_cells_in,

@@ -5,6 +5,7 @@
 #include <meltpooldg/compressible_flow/convective_kernels.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_base.hpp>
+#include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
 #include <meltpooldg/time_integration/bdf_time_integration.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
@@ -34,7 +35,7 @@ namespace MeltPoolDG::CompressibleFlow
      * @param flow_scratch_data Reference to the flow scratch data object (usually owned by the
      * corresponding operation class).
      */
-    explicit DGOperatorImplicit(FlowScratchData<dim, number> &flow_scratch_data);
+    explicit DGOperatorImplicit(OperationScratchData<dim, number> &flow_scratch_data);
 
     /**
      * @brief Reinitialize the internal data structures.
@@ -185,7 +186,7 @@ namespace MeltPoolDG::CompressibleFlow
     mutable number current_time_step;
 
     /// Scratch data for compressible flows
-    FlowScratchData<dim, number> &flow_scratch_data;
+    OperationScratchData<dim, number> &flow_scratch_data;
 
     /// Time integrator class used for the time integration.
     TimeIntegration::BDFIntegrator<dim, number> time_integrator;

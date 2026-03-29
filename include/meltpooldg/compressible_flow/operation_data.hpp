@@ -29,7 +29,7 @@ namespace MeltPoolDG::CompressibleFlow
    * @brief Collection of parameters required by the compressible Navier-Stokes operator.
    */
   template <typename number>
-  struct SolverData
+  struct OperationData
   {
     /// Finite element data
     FiniteElementData fe;

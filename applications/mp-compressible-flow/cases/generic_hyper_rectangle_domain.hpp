@@ -278,7 +278,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
    */
   template <int dim, typename number>
   class SimulationGenericHyperRectangleDomain final
-    : public ::MeltPoolDG::CompressibleFlow::CompressibleFlowCase<dim, number>
+    : public ::MeltPoolDG::CompressibleFlow::Case<dim, number>
   {
   public:
     /**
@@ -289,8 +289,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
      */
     SimulationGenericHyperRectangleDomain(std::string    parameter_file,
                                           const MPI_Comm mpi_communicator)
-      : ::MeltPoolDG::CompressibleFlow::CompressibleFlowCase<dim, number>(parameter_file,
-                                                                          mpi_communicator)
+      : ::MeltPoolDG::CompressibleFlow::Case<dim, number>(parameter_file, mpi_communicator)
     {}
 
     /**

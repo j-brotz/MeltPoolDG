@@ -15,10 +15,10 @@ namespace MeltPoolDG::CompressibleFlow
    * cutDG.
    */
   template <int dim, typename number>
-  class CompressibleFlowApplication
+  class Application
   {
   public:
-    using CaseType   = CompressibleFlowCase<dim, number>;
+    using CaseType   = Case<dim, number>;
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
     /**
@@ -26,7 +26,7 @@ namespace MeltPoolDG::CompressibleFlow
      *
      * @param simulation_case Pointer to the considered simulation case.
      */
-    explicit CompressibleFlowApplication(std::unique_ptr<CaseType> simulation_case)
+    explicit Application(std::unique_ptr<CaseType> simulation_case)
       : simulation_case(std::move(simulation_case))
     {}
 

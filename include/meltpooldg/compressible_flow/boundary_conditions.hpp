@@ -9,7 +9,7 @@
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/material.hpp>
 #include <meltpooldg/compressible_flow/material_data.hpp>
-#include <meltpooldg/compressible_flow/solver_data.hpp>
+#include <meltpooldg/compressible_flow/operation_data.hpp>
 #include <meltpooldg/compressible_flow/state_views.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>

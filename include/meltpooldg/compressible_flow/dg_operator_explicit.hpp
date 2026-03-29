@@ -7,6 +7,7 @@
 #include <meltpooldg/compressible_flow/convective_kernels.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_base.hpp>
 #include <meltpooldg/compressible_flow/kernels.hpp>
+#include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
 #include <meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp>
@@ -49,7 +50,7 @@ namespace MeltPoolDG::CompressibleFlow
      * corresponding operation class).
      * @param external_forces Pointer to a struct implementing external forces acting on the fluid.
      */
-    explicit DGOperatorExplicit(FlowScratchData<dim, number> &flow_scratch_data);
+    explicit DGOperatorExplicit(OperationScratchData<dim, number> &flow_scratch_data);
 
     /**
      * @brief Advances solver by a single time step.
@@ -100,7 +101,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   private:
     /// Scratch data for compressible flows
-    FlowScratchData<dim, number> &flow_scratch_data;
+    OperationScratchData<dim, number> &flow_scratch_data;
 
     /// Time integrator class used for the time integration.
     TimeIntegration::LowStorageExplicitRungeKuttaIntegrator<number> time_integrator;

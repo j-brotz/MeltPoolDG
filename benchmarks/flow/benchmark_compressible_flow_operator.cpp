@@ -19,7 +19,7 @@
 #include <meltpooldg/compressible_flow/dg_operator_implicit.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_implicit_explicit.hpp>
 #include <meltpooldg/compressible_flow/material.hpp>
-#include <meltpooldg/compressible_flow/solver_data.hpp>
+#include <meltpooldg/compressible_flow/operation_data.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
@@ -120,12 +120,13 @@ namespace
       dealii::parallel::distributed::Triangulation<dim>       triangulation;
       dealii::DoFHandler<dim>                                 dof_handler;
       MeltPoolDG::FiniteElementData                           fe_data;
-      MeltPoolDG::CompressibleFlow::SolverData<number>        flow_data;
+      MeltPoolDG::CompressibleFlow::OperationData<number>     flow_data;
       MeltPoolDG::CompressibleFlow::MaterialPhaseData<number> material;
       dealii::AffineConstraints<number>                       affine_constraints;
       MeltPoolDG::ScratchData<dim, dim, number>               scratch_data;
 
-      std::unique_ptr<MeltPoolDG::CompressibleFlow::FlowScratchData<dim, number>> flow_scratch_data;
+      std::unique_ptr<MeltPoolDG::CompressibleFlow::OperationScratchData<dim, number>>
+        flow_scratch_data;
 
       std::unique_ptr<MeltPoolDG::CompressibleFlow::DGOperatorExplicit<dim, number, is_viscous>>
         explicit_flow_operator;
@@ -157,7 +158,7 @@ namespace
         scratch_data.build(true, true, false, false);
 
         flow_scratch_data =
-          std::make_unique<MeltPoolDG::CompressibleFlow::FlowScratchData<dim, number>>(
+          std::make_unique<MeltPoolDG::CompressibleFlow::OperationScratchData<dim, number>>(
             flow_data, material, scratch_data, dof_index, quad_index);
         flow_scratch_data->reinit(2);
       }

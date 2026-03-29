@@ -3,6 +3,7 @@
 #include <meltpooldg/compressible_flow/convective_kernels.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_base.hpp>
+#include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
 #include <meltpooldg/time_integration/implicit_explicit_integrator.hpp>
@@ -30,7 +31,7 @@ namespace MeltPoolDG::CompressibleFlow
      *
      * @param flow_scratch_data Reference to flow scratch data object.
      */
-    explicit DGOperatorImplicitExplicit(FlowScratchData<dim, number> &flow_scratch_data);
+    explicit DGOperatorImplicitExplicit(OperationScratchData<dim, number> &flow_scratch_data);
 
     void
     add_external_force(
@@ -207,7 +208,7 @@ namespace MeltPoolDG::CompressibleFlow
     mutable number current_time_increment;
 
     /// Scratch data for compressible flows
-    FlowScratchData<dim, number> &flow_scratch_data;
+    OperationScratchData<dim, number> &flow_scratch_data;
 
     /// Time integrator class used for the time integration.
     TimeIntegration::ImplicitExplicitIntegrator<dim, number> time_integrator;

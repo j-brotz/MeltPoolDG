@@ -5,12 +5,15 @@
 #pragma once
 
 #include <deal.II/base/aligned_vector.h>
+#include <deal.II/base/quadrature.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
+#include <deal.II/grid/reference_cell.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
 
+#include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/compressible_flow/data_types.hpp>
@@ -234,14 +237,16 @@ namespace MeltPoolDG::CompressibleFlow
     // industrial geometries, PhD thesis, Univ. de Louvain, 2013.
     const Number fac = scaling_factor * (degree + 1.0) * (degree + 1.0);
 
-    auto const reference_cells =
+    const std::vector<dealii::ReferenceCell<dim>> reference_cells =
       matrix_free.get_dof_handler(dof_index).get_triangulation().get_reference_cells();
     AssertThrow(reference_cells.size() == 1, dealii::ExcMessage("No mixed meshes allowed."));
 
-    auto const            quadrature = reference_cells[0].get_gauss_type_quadrature(degree + 1);
+
+    const dealii::Quadrature<dim> quadrature =
+      reference_cells[0].get_gauss_type_quadrature(degree + 1);
     dealii::FEValues<dim> fe_values(mapping, fe, quadrature, dealii::update_JxW_values);
 
-    auto const face_quadrature =
+    const dealii::Quadrature<dim - 1> face_quadrature =
       reference_cells[0].face_reference_cell(0).get_gauss_type_quadrature(degree + 1);
     dealii::FEFaceValues<dim> fe_face_values(mapping,
                                              fe,

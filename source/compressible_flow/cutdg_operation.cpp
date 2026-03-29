@@ -11,6 +11,7 @@
 
 #include <meltpooldg/compressible_flow/cutdg_operation.hpp>
 #include <meltpooldg/compressible_flow/cutdg_operator.hpp>
+#include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
@@ -30,7 +31,7 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number>
   CutDGOperation<dim, number>::CutDGOperation(
     const ScratchData<dim, dim, number>         &scratch_data_in,
-    const SolverData<number>                    &comp_flow_data_in,
+    const OperationData<number>                 &comp_flow_data_in,
     const MaterialPhaseData<number>             &material_data_in,
     const CutSolverData<number>                 &cut_data_in,
     const TimeIntegration::TimeIterator<number> &time_iterator_in,

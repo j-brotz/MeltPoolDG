@@ -50,10 +50,10 @@ namespace MeltPoolDG::Multiphase
      * inner subdomain and the outer subdomain, respectively.
      */
     explicit CompressibleMultiphaseOperator(
-      CompressibleFlow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data,
-      const MappingInfoType                                            &mapping_info_interface_in,
-      const MappingInfoVectorType                                      &mapping_info_cells_in,
-      const MappingInfoVectorType                                      &mapping_info_faces_in);
+      CompressibleFlow::MultiphaseOperationScratchData<dim, number> &multiphase_scratch_data,
+      const MappingInfoType                                         &mapping_info_interface_in,
+      const MappingInfoVectorType                                   &mapping_info_cells_in,
+      const MappingInfoVectorType                                   &mapping_info_faces_in);
 
     /**
      * @brief Local applier for the cell integrals in the right-hand side evaluation.
@@ -176,7 +176,7 @@ namespace MeltPoolDG::Multiphase
 
   private:
     /// Scratch data for multiphase case
-    CompressibleFlow::CompressibleMultiphaseScratchData<dim, number> &multiphase_scratch_data;
+    CompressibleFlow::MultiphaseOperationScratchData<dim, number> &multiphase_scratch_data;
 
     /// Object for the convective term evaluations for the liquid phase
     const CompressibleFlow::ConvectiveKernels<dim, number> convective_terms_liquid;

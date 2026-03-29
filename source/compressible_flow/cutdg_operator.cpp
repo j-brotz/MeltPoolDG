@@ -5,6 +5,7 @@
 
 #include <meltpooldg/compressible_flow/cutdg_operator.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
+#include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/state_views.hpp>
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
@@ -16,10 +17,10 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, bool is_viscous>
   CutDGOperator<dim, number, is_viscous>::CutDGOperator(
-    FlowScratchData<dim, number> &flow_scratch_data,
-    const MappingInfoType        &mapping_info_surface_in,
-    const MappingInfoVectorType  &mapping_info_cells_in,
-    const MappingInfoVectorType  &mapping_info_faces_in)
+    OperationScratchData<dim, number> &flow_scratch_data,
+    const MappingInfoType             &mapping_info_surface_in,
+    const MappingInfoVectorType       &mapping_info_cells_in,
+    const MappingInfoVectorType       &mapping_info_faces_in)
     : flow_scratch_data(flow_scratch_data)
     , mapping_info_surface(mapping_info_surface_in)
     , mapping_info_cells(mapping_info_cells_in)
@@ -109,7 +110,7 @@ namespace MeltPoolDG::CompressibleFlow
   void
   CutDGOperator<dim, number, is_viscous>::do_cell_integral_rhs(
     Integrator                                                    &phi,
-    const FlowScratchData<dim, number>                            &flow_scratch_data,
+    const OperationScratchData<dim, number>                       &flow_scratch_data,
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> *constant_body_force,
     const unsigned int                                             q) const
   {
@@ -154,9 +155,9 @@ namespace MeltPoolDG::CompressibleFlow
   void
   CutDGOperator<dim, number, is_viscous>::do_surface_integral_rhs(
     dealii::FEPointEvaluation<dim + 2, dim, dim, dealii::VectorizedArray<number>> &phi,
-    const dealii::VectorizedArray<number> &interior_penalty_parameter,
-    const FlowScratchData<dim, number>    &flow_scratch_data,
-    const unsigned int                     q) const
+    const dealii::VectorizedArray<number>   &interior_penalty_parameter,
+    const OperationScratchData<dim, number> &flow_scratch_data,
+    const unsigned int                       q) const
   {
     const auto w_m      = phi.get_value(q);
     const auto grad_w_m = phi.get_gradient(q);
@@ -204,11 +205,11 @@ namespace MeltPoolDG::CompressibleFlow
   template <FaceEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
   void
   CutDGOperator<dim, number, is_viscous>::do_face_integral_rhs(
-    Integrator                            &phi_m,
-    Integrator                            &phi_p,
-    const dealii::VectorizedArray<number> &interior_penalty_parameter,
-    const FlowScratchData<dim, number>    &flow_scratch_data,
-    const unsigned int                     q) const
+    Integrator                              &phi_m,
+    Integrator                              &phi_p,
+    const dealii::VectorizedArray<number>   &interior_penalty_parameter,
+    const OperationScratchData<dim, number> &flow_scratch_data,
+    const unsigned int                       q) const
   {
     FaceFluxType<dim, number> flux_m;
     FaceFluxType<dim, number> flux_p;
@@ -251,11 +252,11 @@ namespace MeltPoolDG::CompressibleFlow
   template <FaceEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
   void
   CutDGOperator<dim, number, is_viscous>::do_boundary_face_integral_rhs(
-    Integrator                            &phi,
-    const dealii::VectorizedArray<number> &interior_penalty_parameter,
-    const FlowScratchData<dim, number>    &flow_scratch_data,
-    const auto                             boundary_id,
-    const unsigned int                     q) const
+    Integrator                              &phi,
+    const dealii::VectorizedArray<number>   &interior_penalty_parameter,
+    const OperationScratchData<dim, number> &flow_scratch_data,
+    const auto                               boundary_id,
+    const unsigned int                       q) const
   {
     using DofValueAndGradientStateViewType =
       DofValueAndGradientStateView<dim,
