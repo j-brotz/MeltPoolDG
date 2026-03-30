@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
 
 // for parallelization
 #  include <deal.II/lac/generic_linear_algebra.h>

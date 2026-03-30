@@ -68,7 +68,7 @@ namespace MeltPoolDG
       profiling.add_parameters(prm);
       restart.add_parameters(prm);
       melt_front.add_parameters(prm);
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
       adaflo_params.add_parameters(prm);
 #endif
 
@@ -177,7 +177,7 @@ namespace MeltPoolDG
       flow.post(material);
       output.post(time_stepping.time_step_size, parameter_filename);
       restart.post(output.directory);
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
       adaflo_params.post(material, base.fe.type, time_stepping);
 #endif
       /************************************************************************************
@@ -215,7 +215,7 @@ namespace MeltPoolDG
         dealii::ExcMessage(
           ">>>fraction of melting point refined in solid<<< must be between 0 and 1."));
 
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
       adaflo_params.check_input_parameters(evapor.evaporative_dilation_rate.enable);
 #endif
     }
@@ -235,7 +235,7 @@ namespace MeltPoolDG
     OutputData<number>                                 output;
     Profiling::ProfilingData<number>                   profiling;
     Restart::RestartData<number>                       restart;
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
     Flow::AdafloWrapperParameters<number> adaflo_params;
 #endif
     MeltFrontPropagationData<number> melt_front;

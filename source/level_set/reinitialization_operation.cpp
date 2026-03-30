@@ -56,7 +56,7 @@ namespace MeltPoolDG::LevelSet
                                                                reinit_quad_idx,
                                                                ls_dof_idx);
       }
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
     else if (normal_vec_data.implementation == "adaflo")
       {
         normal_vector_operation = std::make_shared<NormalVectorOperationAdaflo<dim, number>>(

@@ -433,7 +433,7 @@ namespace MeltPoolDG
                         param.melt_front.do_not_reinitialize)
                       {
                         // TODO documentation - what is reinit_3()?
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
                         dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())
                           ->reinit_3();
 #else
@@ -605,7 +605,7 @@ namespace MeltPoolDG
         finalize(OutputNotConvergedOperation::heat_transfer);
         AssertThrow(false, e);
       }
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
     catch (const adaflo::ExcNavierStokesNoConvergence &e)
       {
         Journal::print_line(scratch_data->get_pcout(1));
@@ -685,7 +685,7 @@ namespace MeltPoolDG
         setup_dof_system,
         load_prefix);
 
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
     dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())
       ->synchronize_time_stepping();
 #endif
@@ -780,7 +780,7 @@ namespace MeltPoolDG
                                 TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation);
     material = std::make_shared<Material<number>>(param.material, material_type);
 
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
     auto adaflo_flow_operation =
       std::make_shared<Flow::AdafloWrapper<dim, number>>(*scratch_data,
                                                          simulation_case,
@@ -1057,7 +1057,7 @@ namespace MeltPoolDG
           // Create a modified viscous stress-strain relation in case of an existing evaporation
           // mass source term, such that div(u)!=0. This material law will be only evaluated if the
           // parameter "constitutive type" is set to "user defined" in the Navier-Stokes section.
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
         if (param.adaflo_params.params.constitutive_type ==
             adaflo::FlowParameters::ConstitutiveType::user_defined)
           {
@@ -1268,7 +1268,7 @@ namespace MeltPoolDG
   void
   MeltPoolApplication<dim, number>::set_initial_condition_flow()
   {
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
     dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())
       ->set_initial_condition(*simulation_case->get_initial_condition("navier_stokes_u"));
 #else
@@ -1282,7 +1282,7 @@ namespace MeltPoolDG
           level_set_operation->get_level_set_as_heaviside(), level_set_operation->get_level_set());
         if (simulation_case->parameters.melt_front.set_velocity_to_zero or
             simulation_case->parameters.melt_front.do_not_reinitialize)
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
           dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())->reinit_3();
 #else
           AssertThrow(false, ExcNotImplemented());
@@ -1354,7 +1354,7 @@ namespace MeltPoolDG
       laser_operation->distribute_dofs(param.base.fe);
 
       // initialize the flow operation class
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
     dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())->reinit_1();
     flow_velocity_constraints_no_solid.copy_from(flow_operation->get_constraints_velocity());
 #else
@@ -1475,7 +1475,7 @@ namespace MeltPoolDG
       }
 
       // TODO documentation - what is reinit_2()?
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
     dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())->reinit_2();
 #else
     AssertThrow(false, ExcNotImplemented());
@@ -1612,7 +1612,7 @@ namespace MeltPoolDG
       dummy,
       level_set_operation->get_level_set_as_heaviside());
 
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
     dynamic_cast<Flow::AdafloWrapper<dim, number> *>(flow_operation.get())
       ->set_face_average_density_augmented_taylor_hood(
         *material,

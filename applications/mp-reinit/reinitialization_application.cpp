@@ -182,7 +182,7 @@ namespace MeltPoolDG::LevelSet
           }
         reinit_operation->reinit();
       }
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
     else if (param.reinit.implementation == "adaflo")
       {
         reinit_operation = std::make_unique<ReinitializationOperationAdaflo<dim, number>>(

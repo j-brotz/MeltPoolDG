@@ -76,7 +76,7 @@ namespace MeltPoolDG::LevelSet
                                                                      ls_hanging_nodes_dof_idx_in,
                                                                      ls_quad_idx_in);
       }
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
     else if (ls.advec_diff.implementation == "adaflo")
       {
         advec_diff_operation = std::make_shared<AdvectionDiffusionOperationAdaflo<dim, number>>(
@@ -115,7 +115,7 @@ namespace MeltPoolDG::LevelSet
               normal_dof_indices_per_block_in,
               normal_no_bc_dof_idx_in);
           }
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
         else if (ls.reinit.implementation == "adaflo")
           {
             reinit_operation = std::make_shared<ReinitializationOperationAdaflo<dim, number>>(
@@ -149,7 +149,7 @@ namespace MeltPoolDG::LevelSet
                                                             normal_no_bc_dof_idx_in,
                                                             ls_dof_idx);
       }
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
     else if (ls.curv.implementation == "adaflo")
       {
         curvature_operation = std::make_shared<CurvatureOperationAdaflo<dim, number>>(

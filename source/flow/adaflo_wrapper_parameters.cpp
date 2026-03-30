@@ -2,7 +2,7 @@
 
 namespace MeltPoolDG::Flow
 {
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
   template <typename number>
   void
   AdafloWrapperParameters<number>::add_parameters(dealii::ParameterHandler &prm)
