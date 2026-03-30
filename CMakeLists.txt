@@ -110,7 +110,7 @@ set(meltpooldg_lib "meltpooldg")
 add_library(${meltpooldg_lib} ${sources})
 
 if (ADAFLO)
-    target_compile_definitions(${meltpooldg_lib} PUBLIC MELT_POOL_DG_WITH_ADAFLO)
+    target_compile_definitions(${meltpooldg_lib} PUBLIC MPDG_ENABLE_ADAFLO)
     target_include_directories(${meltpooldg_lib} PUBLIC ${ADAFLO_INCLUDE})
     target_link_libraries(${meltpooldg_lib} ${ADAFLO})
 endif ()
