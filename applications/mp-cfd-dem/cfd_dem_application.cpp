@@ -7,8 +7,8 @@
 
 #include <deal.II/grid/tria.h>
 
+#include <meltpooldg/compressible_flow/dg_operation.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_factory.hpp>
@@ -244,7 +244,7 @@ namespace MeltPoolDG
       scratch_data->get_mapping());
 
     // initialize compressible flow operation
-    comp_flow_operation = std::make_unique<Flow::DGCompressibleFlowOperation<dim, number>>(
+    comp_flow_operation = std::make_unique<CompressibleFlow::DGOperation<dim, number>>(
       *scratch_data,
       simulation_case->parameters.flow,
       simulation_case->parameters.material,

@@ -15,13 +15,13 @@
 
 #include <deal.II/matrix_free/operators.h>
 
+#include <meltpooldg/compressible_flow/dg_operator_explicit.hpp>
+#include <meltpooldg/compressible_flow/dg_operator_implicit.hpp>
+#include <meltpooldg/compressible_flow/dg_operator_implicit_explicit.hpp>
+#include <meltpooldg/compressible_flow/material.hpp>
+#include <meltpooldg/compressible_flow/operation_data.hpp>
+#include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/flow/compressible_flow_data.hpp>
-#include <meltpooldg/flow/compressible_flow_material_data.hpp>
-#include <meltpooldg/flow/compressible_flow_utils.hpp>
-#include <meltpooldg/flow/dg_compressible_flow_operator_explicit.hpp>
-#include <meltpooldg/flow/dg_compressible_flow_operator_implicit.hpp>
-#include <meltpooldg/flow/dg_compressible_flow_operator_implicit_explicit.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
@@ -117,22 +117,23 @@ namespace
         set_initial_and_boundary_conditions();
       }
 
-      dealii::parallel::distributed::Triangulation<dim>            triangulation;
-      dealii::DoFHandler<dim>                                      dof_handler;
-      MeltPoolDG::FiniteElementData                                fe_data;
-      MeltPoolDG::Flow::CompressibleFlowData<number>               flow_data;
-      MeltPoolDG::Flow::CompressibleFluidMaterialPhaseData<number> material;
-      dealii::AffineConstraints<number>                            affine_constraints;
-      MeltPoolDG::ScratchData<dim, dim, number>                    scratch_data;
+      dealii::parallel::distributed::Triangulation<dim>       triangulation;
+      dealii::DoFHandler<dim>                                 dof_handler;
+      MeltPoolDG::FiniteElementData                           fe_data;
+      MeltPoolDG::CompressibleFlow::OperationData<number>     flow_data;
+      MeltPoolDG::CompressibleFlow::MaterialPhaseData<number> material;
+      dealii::AffineConstraints<number>                       affine_constraints;
+      MeltPoolDG::ScratchData<dim, dim, number>               scratch_data;
 
-      std::unique_ptr<MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number>> flow_scratch_data;
+      std::unique_ptr<MeltPoolDG::CompressibleFlow::OperationScratchData<dim, number>>
+        flow_scratch_data;
 
-      std::unique_ptr<MeltPoolDG::Flow::DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>>
+      std::unique_ptr<MeltPoolDG::CompressibleFlow::DGOperatorExplicit<dim, number, is_viscous>>
         explicit_flow_operator;
-      std::unique_ptr<MeltPoolDG::Flow::DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>>
+      std::unique_ptr<MeltPoolDG::CompressibleFlow::DGOperatorImplicit<dim, number, is_viscous>>
         implicit_flow_operator;
       std::unique_ptr<
-        MeltPoolDG::Flow::DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>>
+        MeltPoolDG::CompressibleFlow::DGOperatorImplicitExplicit<dim, number, is_viscous>>
         imex_flow_operator;
 
     private:
@@ -157,7 +158,7 @@ namespace
         scratch_data.build(true, true, false, false);
 
         flow_scratch_data =
-          std::make_unique<MeltPoolDG::Flow::CompressibleFlowScratchData<dim, number>>(
+          std::make_unique<MeltPoolDG::CompressibleFlow::OperationScratchData<dim, number>>(
             flow_data, material, scratch_data, dof_index, quad_index);
         flow_scratch_data->reinit(2);
       }
@@ -215,14 +216,14 @@ namespace
         std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim, number>>> bottom{
           {3, func}};
         flow_scratch_data->boundary_conditions.set_boundary_condition(
-          MeltPoolDG::Flow::CompressibleBoundaryConditionType::inflow, inflow);
+          MeltPoolDG::CompressibleFlow::BoundaryConditionType::inflow, inflow);
         flow_scratch_data->boundary_conditions.set_boundary_condition(
-          MeltPoolDG::Flow::CompressibleBoundaryConditionType::subsonic_outflow_fixed_energy,
+          MeltPoolDG::CompressibleFlow::BoundaryConditionType::subsonic_outflow_fixed_energy,
           outflow);
         flow_scratch_data->boundary_conditions.set_boundary_condition(
-          MeltPoolDG::Flow::CompressibleBoundaryConditionType::no_slip_wall, top);
+          MeltPoolDG::CompressibleFlow::BoundaryConditionType::no_slip_wall, top);
         flow_scratch_data->boundary_conditions.set_boundary_condition(
-          MeltPoolDG::Flow::CompressibleBoundaryConditionType::no_slip_wall, bottom);
+          MeltPoolDG::CompressibleFlow::BoundaryConditionType::no_slip_wall, bottom);
       }
     };
 
@@ -240,20 +241,19 @@ namespace
         {
             case OperatorType::Explicit: {
               data->explicit_flow_operator = std::make_unique<
-                MeltPoolDG::Flow::DGCompressibleFlowOperatorExplicit<dim, number, is_viscous>>(
+                MeltPoolDG::CompressibleFlow::DGOperatorExplicit<dim, number, is_viscous>>(
                 *data->flow_scratch_data);
               break;
             }
             case OperatorType::Implicit: {
               data->implicit_flow_operator = std::make_unique<
-                MeltPoolDG::Flow::DGCompressibleFlowOperatorImplicit<dim, number, is_viscous>>(
+                MeltPoolDG::CompressibleFlow::DGOperatorImplicit<dim, number, is_viscous>>(
                 *data->flow_scratch_data);
               break;
             }
             case OperatorType::ImEx: {
               data->imex_flow_operator = std::make_unique<
-                MeltPoolDG::Flow::
-                  DGCompressibleFlowOperatorImplicitExplicit<dim, number, is_viscous>>(
+                MeltPoolDG::CompressibleFlow::DGOperatorImplicitExplicit<dim, number, is_viscous>>(
                 *data->flow_scratch_data);
               break;
             }

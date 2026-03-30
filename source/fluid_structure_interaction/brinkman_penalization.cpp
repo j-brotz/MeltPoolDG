@@ -8,7 +8,7 @@
 
 #include <deal.II/particles/particle_accessor.h>
 
-#include <meltpooldg/flow/compressible_flow_utils.hpp>
+#include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_util.hpp>

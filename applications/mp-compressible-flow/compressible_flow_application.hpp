@@ -1,24 +1,24 @@
 #pragma once
 
+#include <meltpooldg/compressible_flow/operation_type_erasure.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/flow/compressible_flow_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
 
 #include "compressible_flow_case.hpp"
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   /**
    * @brief Application for the simulation of the compressible Navier-Stokes equations using DG or
    * cutDG.
    */
   template <int dim, typename number>
-  class CompressibleFlowApplication
+  class Application
   {
   public:
-    using CaseType   = CompressibleFlowCase<dim, number>;
+    using CaseType   = Case<dim, number>;
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
     /**
@@ -26,7 +26,7 @@ namespace MeltPoolDG::Flow
      *
      * @param simulation_case Pointer to the considered simulation case.
      */
-    explicit CompressibleFlowApplication(std::unique_ptr<CaseType> simulation_case)
+    explicit Application(std::unique_ptr<CaseType> simulation_case)
       : simulation_case(std::move(simulation_case))
     {}
 
@@ -61,7 +61,7 @@ namespace MeltPoolDG::Flow
     std::shared_ptr<TimeIntegration::TimeIterator<number>> time_iterator;
 
     /// Compressible flow operation object
-    CompressibleFlowOperation<dim, number> comp_flow_operation;
+    OperationTypeErasure<dim, number> comp_flow_operation;
 
     /// Pointer to the profiling object
     std::unique_ptr<Profiling::ProfilingMonitor<number>> profiling_monitor;
@@ -120,4 +120,4 @@ namespace MeltPoolDG::Flow
     compute_level_set();
   };
 
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

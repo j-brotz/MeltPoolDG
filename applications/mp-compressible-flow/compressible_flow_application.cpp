@@ -2,9 +2,9 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/flow/compressible_flow_operation.hpp>
-#include <meltpooldg/flow/cutdg_compressible_flow_operation.hpp>
-#include <meltpooldg/flow/dg_compressible_flow_operation.hpp>
+#include <meltpooldg/compressible_flow/cutdg_operation.hpp>
+#include <meltpooldg/compressible_flow/dg_operation.hpp>
+#include <meltpooldg/compressible_flow/operation_type_erasure.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
@@ -19,13 +19,13 @@
 
 #include "compressible_flow_case.hpp"
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   using namespace dealii;
 
   template <int dim, typename number>
   void
-  CompressibleFlowApplication<dim, number>::run()
+  Application<dim, number>::run()
   {
     initialize();
 
@@ -127,7 +127,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  CompressibleFlowApplication<dim, number>::compute_level_set()
+  Application<dim, number>::compute_level_set()
   {
     // set the current time to the field function
     level_set_field_function->set_time(time_iterator->get_current_time());
@@ -143,7 +143,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  CompressibleFlowApplication<dim, number>::setup_dof_system()
+  Application<dim, number>::setup_dof_system()
   {
     // distribute DoFs
     comp_flow_operation.distribute_dofs(dof_handler);
@@ -181,7 +181,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  CompressibleFlowApplication<dim, number>::initialize()
+  Application<dim, number>::initialize()
   {
     // setup DoFHandler
     dof_handler.reinit(*simulation_case->triangulation);
@@ -223,19 +223,18 @@ namespace MeltPoolDG::Flow
     // and "cut".
     if (simulation_case->parameters.flow.domain_representation_type == "fitted")
       {
-        std::unique_ptr<DGCompressibleFlowOperation<dim, number>> operation =
-          std::make_unique<DGCompressibleFlowOperation<dim, number>>(
-            *scratch_data,
-            simulation_case->parameters.flow,
-            simulation_case->parameters.material,
-            comp_flow_dof_idx,
-            comp_flow_quad_idx);
-        comp_flow_operation = CompressibleFlowOperation<dim, number>(std::move(operation));
+        std::unique_ptr<DGOperation<dim, number>> operation =
+          std::make_unique<DGOperation<dim, number>>(*scratch_data,
+                                                     simulation_case->parameters.flow,
+                                                     simulation_case->parameters.material,
+                                                     comp_flow_dof_idx,
+                                                     comp_flow_quad_idx);
+        comp_flow_operation = OperationTypeErasure<dim, number>(std::move(operation));
       }
     else if (simulation_case->parameters.flow.domain_representation_type == "cut")
       {
-        std::unique_ptr<CutDGCompressibleFlowOperation<dim, number>> operation =
-          std::make_unique<CutDGCompressibleFlowOperation<dim, number>>(
+        std::unique_ptr<CutDGOperation<dim, number>> operation =
+          std::make_unique<CutDGOperation<dim, number>>(
             *scratch_data,
             simulation_case->parameters.flow,
             simulation_case->parameters.material,
@@ -267,7 +266,7 @@ namespace MeltPoolDG::Flow
         if (unfitted_inflow_function)
           operation->set_inflow_field_unfitted_boundary(unfitted_inflow_function);
 
-        comp_flow_operation = CompressibleFlowOperation<dim, number>(std::move(operation));
+        comp_flow_operation = OperationTypeErasure<dim, number>(std::move(operation));
       }
     else
       DEAL_II_NOT_IMPLEMENTED();
@@ -327,9 +326,9 @@ namespace MeltPoolDG::Flow
 
   template <int dim, typename number>
   void
-  CompressibleFlowApplication<dim, number>::output_results(const unsigned int time_step,
-                                                           const number       current_time,
-                                                           const bool         force_output)
+  Application<dim, number>::output_results(const unsigned int time_step,
+                                           const number       current_time,
+                                           const bool         force_output)
   {
     if (not post_processor->is_output_timestep(time_step, current_time) and
         not simulation_case->parameters.output.do_user_defined_postprocessing and not force_output)
@@ -357,11 +356,11 @@ namespace MeltPoolDG::Flow
     post_processor->process(time_step, generic_data_out, current_time, force_output);
   }
 
-  template class CompressibleFlowApplication<1, double>;
-  template class CompressibleFlowApplication<2, double>;
-  template class CompressibleFlowApplication<3, double>;
+  template class Application<1, double>;
+  template class Application<2, double>;
+  template class Application<3, double>;
 
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow
 
 int
 main(int argc, char *argv[])
@@ -369,8 +368,8 @@ main(int argc, char *argv[])
   dealii::Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
   MPI_Comm mpi_comm(MPI_COMM_WORLD);
-  MeltPoolDG::default_main<MeltPoolDG::Flow::CompressibleFlowCaseParameters<double>,
-                           MeltPoolDG::Flow::CompressibleFlowCase,
-                           MeltPoolDG::Flow::CompressibleFlowApplication>(argc, argv, mpi_comm);
+  MeltPoolDG::default_main<MeltPoolDG::CompressibleFlow::CaseParameters<double>,
+                           MeltPoolDG::CompressibleFlow::Case,
+                           MeltPoolDG::CompressibleFlow::Application>(argc, argv, mpi_comm);
   return 0;
 }

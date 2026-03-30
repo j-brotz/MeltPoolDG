@@ -7,8 +7,8 @@
 
 #include <deal.II/matrix_free/matrix_free.h>
 
-#include <meltpooldg/flow/compressible_flow_types.hpp>
-#include <meltpooldg/flow/compressible_flow_utils.hpp>
+#include <meltpooldg/compressible_flow/data_types.hpp>
+#include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 
@@ -67,7 +67,7 @@ namespace MeltPoolDG
    * during metal additive manufacturing.
    */
   template <int dim, typename number, typename ObstacleType>
-  struct StokesLawFluidForce final : public Flow::ExternalFlowForce<dim, number>
+  struct StokesLawFluidForce final : public CompressibleFlow::ExternalFlowForce<dim, number>
   {
     using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
     using VectorType             = dealii::LinearAlgebra::distributed::Vector<number>;

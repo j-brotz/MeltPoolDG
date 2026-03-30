@@ -16,12 +16,11 @@
 #include <deal.II/non_matching/mesh_classifier.h>
 #include <deal.II/non_matching/quadrature_generator.h>
 
+#include <meltpooldg/compressible_flow/material.hpp>
+#include <meltpooldg/compressible_flow/operation_data.hpp>
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/flow/compressible_flow_cut_data.hpp>
-#include <meltpooldg/flow/compressible_flow_data.hpp>
-#include <meltpooldg/flow/compressible_flow_material_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/time_integration/time_stepping_data.hpp>
@@ -31,13 +30,13 @@
 
 #include <string>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::CompressibleFlow
 {
   /**
    * @brief Struct that manages all relevant parameters for compressible flow simulations.
    */
   template <typename number>
-  struct CompressibleFlowCaseParameters final : public ParametersBase
+  struct CaseParameters final : public ParametersBase
   {
   protected:
     /**
@@ -95,13 +94,13 @@ namespace MeltPoolDG::Flow
     BaseData base;
 
     /// Data specific for compressible flow simulations
-    CompressibleFlowData<number> flow;
+    OperationData<number> flow;
 
     /// Material parameters for a compressible (or nearly incompressible) fluid
-    CompressibleFluidMaterialPhaseData<number> material;
+    MaterialPhaseData<number> material;
 
     /// Cut-related data (only relevant for cutDG)
-    CompressibleFlowCutData<number> cut;
+    CutSolverData<number> cut;
 
     /// Data for time stepping
     TimeIntegration::TimeSteppingData<number> time_stepping;
@@ -117,11 +116,11 @@ namespace MeltPoolDG::Flow
    * @brief Case base class for compressible flow cases.
    */
   template <int dim, typename number>
-  class CompressibleFlowCase : public SimulationCaseBase<dim, number>
+  class Case : public SimulationCaseBase<dim, number>
   {
   public:
     /// Case-specific parameters
-    CompressibleFlowCaseParameters<number> parameters;
+    CaseParameters<number> parameters;
 
     /**
      * @brief Constructor.
@@ -129,8 +128,7 @@ namespace MeltPoolDG::Flow
      * @param parameter_file_in Parameter file that contains simulation input settings.
      * @param mpi_communicator_in The MPI communicator used to run the simulation in parallel.
      */
-    explicit CompressibleFlowCase(const std::string &parameter_file_in,
-                                  MPI_Comm           mpi_communicator_in)
+    explicit Case(const std::string &parameter_file_in, MPI_Comm mpi_communicator_in)
       : SimulationCaseBase<dim, number>(parameter_file_in, mpi_communicator_in)
     {
       dealii::ParameterHandler prm;
@@ -351,4 +349,4 @@ namespace MeltPoolDG::Flow
         }
     }
   };
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::CompressibleFlow

@@ -12,13 +12,12 @@
 #include <deal.II/non_matching/mesh_classifier.h>
 #include <deal.II/non_matching/quadrature_generator.h>
 
+#include <meltpooldg/compressible_flow/material.hpp>
+#include <meltpooldg/compressible_flow/operation_data.hpp>
+#include <meltpooldg/compressible_flow/phase_coupling_data.hpp>
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/flow/compressible_flow_cut_data.hpp>
-#include <meltpooldg/flow/compressible_flow_data.hpp>
-#include <meltpooldg/flow/compressible_flow_material_data.hpp>
-#include <meltpooldg/flow/compressible_flow_phase_coupling_data.hpp>
 #include <meltpooldg/flow/darcy_damping_data.hpp>
 #include <meltpooldg/phase_change/phase_change_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>
@@ -88,19 +87,19 @@ namespace MeltPoolDG::Multiphase
     BaseData base;
 
     /// Data specific for compressible flow simulations
-    Flow::CompressibleFlowData<number> flow;
+    CompressibleFlow::OperationData<number> flow;
 
     /// Material parameters for the gas phase
-    Flow::CompressibleFluidMaterialPhaseData<number> material_gas;
+    CompressibleFlow::MaterialPhaseData<number> material_gas;
 
     /// Material parameters for the liquid phase
-    Flow::CompressibleFluidMaterialPhaseData<number> material_liquid;
+    CompressibleFlow::MaterialPhaseData<number> material_liquid;
 
     /// Parameters related to liquid-gas and solid-liquid phase transitions
     PhaseChangeData<number> phase_change;
 
     /// Cut-related data
-    Flow::CompressibleFlowCutData<number> cut;
+    CompressibleFlow::CutSolverData<number> cut;
 
     /// Data for phase-coupling including interface jump conditions and numerical parameters
     CompressibleFlowPhaseCouplingData<number> phase_coupling;

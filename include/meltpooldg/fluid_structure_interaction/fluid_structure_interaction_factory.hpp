@@ -3,9 +3,9 @@
 
 #include <deal.II/lac/la_parallel_vector.h>
 
-#include <meltpooldg/flow/compressible_flow_material.hpp>
-#include <meltpooldg/flow/compressible_flow_material_data.hpp>
-#include <meltpooldg/flow/compressible_flow_utils.hpp>
+#include <meltpooldg/compressible_flow/material.hpp>
+#include <meltpooldg/compressible_flow/material_data.hpp>
+#include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/stokes_law.hpp>
@@ -19,19 +19,20 @@
 namespace MeltPoolDG
 {
   template <int dim, typename number, typename ObstacleType>
-  std::tuple<std::shared_ptr<Flow::ExternalFlowForce<dim, number>>,
-             std::shared_ptr<Flow::ExternalFlowForceJacobian<dim, number>>,
+  std::tuple<std::shared_ptr<CompressibleFlow::ExternalFlowForce<dim, number>>,
+             std::shared_ptr<CompressibleFlow::ExternalFlowForceJacobian<dim, number>>,
              std::unique_ptr<ObstacleLoad<dim, number, ObstacleType>>>
   setup_fluid_structure_interaction(
     const FluidStructureInteractionData<number>              &fsi_data,
     ObstacleField<dim, number, ObstacleType>                 &obstacle_field,
-    const Flow::CompressibleFluidMaterialPhaseData<number>   &flow_material,
+    const CompressibleFlow::MaterialPhaseData<number>        &flow_material,
     const dealii::LinearAlgebra::distributed::Vector<number> &flow_solution,
     const MatrixFreeContext<dim, number>                      flow_mf_context)
   {
-    std::shared_ptr<Flow::ExternalFlowForce<dim, number>>         fsi_fluid_force_residual;
-    std::shared_ptr<Flow::ExternalFlowForceJacobian<dim, number>> fsi_fluid_force_jacobian;
-    std::unique_ptr<ObstacleLoad<dim, number, ObstacleType>>      fsi_obstacle_load;
+    std::shared_ptr<CompressibleFlow::ExternalFlowForce<dim, number>> fsi_fluid_force_residual;
+    std::shared_ptr<CompressibleFlow::ExternalFlowForceJacobian<dim, number>>
+                                                             fsi_fluid_force_jacobian;
+    std::unique_ptr<ObstacleLoad<dim, number, ObstacleType>> fsi_obstacle_load;
 
     switch (fsi_data.fsi_coupling_method)
       {

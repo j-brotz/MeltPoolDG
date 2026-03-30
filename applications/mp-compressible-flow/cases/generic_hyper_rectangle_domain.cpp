@@ -5,17 +5,17 @@
 namespace MeltPoolDG::Simulation::CompressibleFlow
 {
   // Explicit instantiations for the required dimensions and floating point number type
-  MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
+  MELTPOOLDG_REGISTER_CASE(MeltPoolDG::CompressibleFlow::Case,
                            SimulationGenericHyperRectangleDomain,
                            "generic_hyper_rectangle_domain",
                            1,
                            double);
-  MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
+  MELTPOOLDG_REGISTER_CASE(MeltPoolDG::CompressibleFlow::Case,
                            SimulationGenericHyperRectangleDomain,
                            "generic_hyper_rectangle_domain",
                            2,
                            double);
-  MELTPOOLDG_REGISTER_CASE(Flow::CompressibleFlowCase,
+  MELTPOOLDG_REGISTER_CASE(MeltPoolDG::CompressibleFlow::Case,
                            SimulationGenericHyperRectangleDomain,
                            "generic_hyper_rectangle_domain",
                            3,

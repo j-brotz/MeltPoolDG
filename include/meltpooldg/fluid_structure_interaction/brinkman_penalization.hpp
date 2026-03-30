@@ -9,7 +9,7 @@
 
 #include <deal.II/matrix_free/matrix_free.h>
 
-#include <meltpooldg/flow/compressible_flow_types.hpp>
+#include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_util.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
@@ -82,7 +82,7 @@ namespace MeltPoolDG
    */
   template <int dim, typename number, typename ObstacleType>
   struct BrinkmanPenalizationResidualContribution final
-    : public Flow::ExternalFlowForce<dim, number>
+    : public CompressibleFlow::ExternalFlowForce<dim, number>
   {
     using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
 
@@ -146,7 +146,7 @@ namespace MeltPoolDG
    */
   template <int dim, typename number, typename ObstacleType>
   struct BrinkmanPenalizationJacobianContribution final
-    : public Flow::ExternalFlowForceJacobian<dim, number>
+    : public CompressibleFlow::ExternalFlowForceJacobian<dim, number>
   {
     using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
 

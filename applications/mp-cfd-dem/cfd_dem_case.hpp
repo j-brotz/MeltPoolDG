@@ -3,11 +3,11 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/compressible_flow/material.hpp>
+#include <meltpooldg/compressible_flow/operation_data.hpp>
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
 #include <meltpooldg/core/simulation_base.hpp>
-#include <meltpooldg/flow/compressible_flow_data.hpp>
-#include <meltpooldg/flow/compressible_flow_material_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/particles/cohesive_forces.hpp>
 #include <meltpooldg/particles/contact_forces.hpp>
@@ -79,16 +79,16 @@ namespace MeltPoolDG
       std::vector<AMRStrategy> amr_strategies;
     } application;
 
-    AdaptiveMeshingData<number>                      amr;
-    BaseData                                         base;
-    FluidStructureInteractionData<number>            fluid_structure_interaction_data;
-    Flow::CompressibleFlowData<number>               flow;
-    Flow::CompressibleFluidMaterialPhaseData<number> material;
-    TimeIntegration::TimeSteppingData<number>        time_stepping;
-    ObstacleData<number>                             obstacle_data;
-    OutputData<number>                               output;
-    Profiling::ProfilingData<number>                 profiling;
-    Restart::RestartData<number>                     restart;
+    AdaptiveMeshingData<number>                 amr;
+    BaseData                                    base;
+    FluidStructureInteractionData<number>       fluid_structure_interaction_data;
+    CompressibleFlow::OperationData<number>     flow;
+    CompressibleFlow::MaterialPhaseData<number> material;
+    TimeIntegration::TimeSteppingData<number>   time_stepping;
+    ObstacleData<number>                        obstacle_data;
+    OutputData<number>                          output;
+    Profiling::ProfilingData<number>            profiling;
+    Restart::RestartData<number>                restart;
   };
 
   template <int dim, typename number>

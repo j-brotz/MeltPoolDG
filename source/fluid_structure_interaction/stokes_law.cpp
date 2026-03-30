@@ -14,7 +14,7 @@
 
 #include <deal.II/particles/particle_accessor.h>
 
-#include <meltpooldg/flow/compressible_flow_utils.hpp>
+#include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/stokes_law.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>

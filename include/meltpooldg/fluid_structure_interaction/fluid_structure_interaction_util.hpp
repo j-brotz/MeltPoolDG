@@ -7,7 +7,6 @@
 
 #include <deal.II/particles/particle_accessor.h>
 
-#include <meltpooldg/flow/compressible_flow_utils.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 
 #include <functional>

@@ -23,7 +23,7 @@
 
 #include <deal.II/grid/grid_generator.h>
 
-#include <meltpooldg/flow/compressible_flow_material_data.hpp>
+#include <meltpooldg/compressible_flow/material.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 #include <meltpooldg/utilities/functions.hpp>
 
@@ -138,10 +138,10 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
 
   private:
     /// Material parameters for liquid phase
-    Flow::CompressibleFluidMaterialPhaseData<number> liquid_material_data;
+    CompressibleFlow::MaterialPhaseData<number> liquid_material_data;
 
     /// Material parameters for gas phase
-    Flow::CompressibleFluidMaterialPhaseData<number> gas_material_data;
+    CompressibleFlow::MaterialPhaseData<number> gas_material_data;
 
     /// Indicator whether the gas phase is the first phase in the two-phase system
     bool gas_phase_is_first;

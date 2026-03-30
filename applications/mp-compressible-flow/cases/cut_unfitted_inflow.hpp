@@ -59,7 +59,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
    * inflow boundary using cutDG.
    */
   template <int dim, typename number>
-  class SimulationCutUnfittedInflow final : public Flow::CompressibleFlowCase<dim, number>
+  class SimulationCutUnfittedInflow final : public ::MeltPoolDG::CompressibleFlow::Case<dim, number>
   {
   public:
     /**
@@ -70,7 +70,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
      */
     explicit SimulationCutUnfittedInflow(std::string    parameter_file,
                                          const MPI_Comm mpi_communicator)
-      : Flow::CompressibleFlowCase<dim, number>(parameter_file, mpi_communicator)
+      : ::MeltPoolDG::CompressibleFlow::Case<dim, number>(parameter_file, mpi_communicator)
     {}
 
     /**

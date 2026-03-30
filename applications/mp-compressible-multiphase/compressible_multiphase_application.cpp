@@ -2,7 +2,7 @@
 
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
-#include <meltpooldg/flow/compressible_multiphase_operation.hpp>
+#include <meltpooldg/compressible_flow/multiphase_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
@@ -188,7 +188,7 @@ namespace MeltPoolDG::Multiphase
         comp_multiphase_quad_idx);
 
     comp_multiphase_operation =
-      MeltPoolDG::Flow::CompressibleFlowOperation<dim, number>(std::move(operation));
+      MeltPoolDG::CompressibleFlow::OperationTypeErasure<dim, number>(std::move(operation));
 
     // set up level-set for cutDG
     // currently, we use a continuous level-set field with same element degree as the flow field
