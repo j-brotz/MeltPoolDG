@@ -28,7 +28,7 @@ jobs:
             adaflo: "adaflo=off"
 
     container:
-      image: dealii/dealii:${{ matrix.dealii_version }}-jammy
+      image: dealii/dealii:${{ matrix.dealii_version }}-noble
       options: --user root
 
     steps:
