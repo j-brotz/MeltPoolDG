@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
 
 #  include <deal.II/base/function.h>
 #  include <deal.II/base/quadrature.h>

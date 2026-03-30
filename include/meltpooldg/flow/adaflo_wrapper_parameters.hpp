@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
 #  include <adaflo/parameters.h>
 #endif
 
@@ -23,7 +23,7 @@ namespace MeltPoolDG::Flow
      */
     AdafloWrapperParameters() = default;
 
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
     /**
      * @brief Add Adaflo-wrapper-specific parameters in the parameter handler.
      *

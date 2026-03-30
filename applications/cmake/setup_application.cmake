@@ -5,14 +5,61 @@
 # - CONFIGURE_OPTION_NAME: The name of the CMake option that controls whether the application is enabled.
 # - APPLICATION_NAME: A human-readable name for the application, used in status messages.
 # - DESCRIPTION: A description of the application, used in the option description.
+# - DEPENDENCIES: A list of boolean CMake variables that must evaluate to TRUE.
 function(setup_application OUT_APP_ENABLED)
     set(options "")
     set(one_value_args CONFIGURE_OPTION_NAME APPLICATION_NAME DESCRIPTION)
-    set(multi_value_args "")
+    set(multi_value_args DEPENDENCIES)
     set(arg_prefix "ARG")
     cmake_parse_arguments(PARSE_ARGV 0 "${arg_prefix}" "${options}" "${one_value_args}" "${multi_value_args}")
 
-    option(${ARG_CONFIGURE_OPTION_NAME} "${ARG_DESCRIPTION}" ON)
+    # Check whether all dependencies are available
+    set(all_dependencies_found TRUE)
+    set(missing_dependencies "")
+
+    foreach(dep IN LISTS ARG_DEPENDENCIES)
+        if(NOT DEFINED ${dep} OR NOT ${${dep}})
+            set(all_dependencies_found FALSE)
+            list(APPEND missing_dependencies ${dep})
+        endif()
+    endforeach()
+
+    # Detect whether the option was explicitly provided before calling this function
+    if(DEFINED ${ARG_CONFIGURE_OPTION_NAME})
+        set(app_option_was_explicitly_set TRUE)
+    else()
+        set(app_option_was_explicitly_set FALSE)
+    endif()
+
+    # If the option was not explicitly set, choose the default based on dependencies
+    if(NOT app_option_was_explicitly_set)
+        if(all_dependencies_found)
+            set(default_value ON)
+        else()
+            set(default_value OFF)
+        endif()
+        option(${ARG_CONFIGURE_OPTION_NAME} "${ARG_DESCRIPTION}" ${default_value})
+    else()
+        # Preserve the user-provided cache value
+        option(${ARG_CONFIGURE_OPTION_NAME} "${ARG_DESCRIPTION}" "${${ARG_CONFIGURE_OPTION_NAME}}")
+    endif()
+
+    # If explicitly enabled, missing dependencies are a hard error
+    if(${ARG_CONFIGURE_OPTION_NAME} AND NOT all_dependencies_found)
+        if(app_option_was_explicitly_set)
+            message(FATAL_ERROR
+                "Application '${ARG_APPLICATION_NAME}' was explicitly enabled "
+                "(${ARG_CONFIGURE_OPTION_NAME}=ON), but required dependencies are missing: "
+                "${missing_dependencies}")
+        else()
+            message(STATUS
+                "Application: ${ARG_APPLICATION_NAME} disabled "
+                "(missing dependencies: ${missing_dependencies})")
+            set(${OUT_APP_ENABLED} FALSE PARENT_SCOPE)
+            return()
+        endif()
+    endif()
+
 
     if(NOT ${ARG_CONFIGURE_OPTION_NAME})
         message(STATUS "Application: ${ARG_APPLICATION_NAME} disabled")

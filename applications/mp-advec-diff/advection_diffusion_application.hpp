@@ -50,7 +50,7 @@ namespace MeltPoolDG::LevelSet
     unsigned int advec_diff_mesh_constraints_idx = dealii::numbers::invalid_unsigned_int;
     unsigned int velocity_dof_idx                = dealii::numbers::invalid_unsigned_int;
 
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
     unsigned int advec_diff_full_constraints_hom_dirichlet_idx =
       dealii::numbers::invalid_unsigned_int;
 #endif

@@ -1,4 +1,4 @@
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
 
 #  include <deal.II/numerics/vector_tools_interpolate.h>
 

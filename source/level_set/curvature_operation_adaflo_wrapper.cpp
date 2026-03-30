@@ -1,4 +1,4 @@
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
 #  include <meltpooldg/level_set/curvature_operation_adaflo_wrapper.hpp>
 //
 #  include <meltpooldg/utilities/journal.hpp>

@@ -150,7 +150,7 @@ namespace MeltPoolDG::LevelSet
     velocity_dof_idx = scratch_data->attach_dof_handler_and_constraint(dof_handler_velocity,
                                                                        velocity_full_constraints);
 
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
     advec_diff_full_constraints_hom_dirichlet_idx = scratch_data->attach_dof_handler(dof_handler);
     scratch_data->attach_constraint_matrix(advec_diff_full_constraints_hom_dirichlet);
 #endif
@@ -187,7 +187,7 @@ namespace MeltPoolDG::LevelSet
               simulation_case->get_boundary_condition_manager("advection_diffusion"));
           }
       }
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
     else if (simulation_case->parameters.advec_diff.implementation == "adaflo")
       {
         AssertThrow(

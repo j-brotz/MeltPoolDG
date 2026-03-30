@@ -1,4 +1,4 @@
-#ifdef MELT_POOL_DG_WITH_ADAFLO
+#ifdef MPDG_ENABLE_ADAFLO
 
 #  include <deal.II/base/exceptions.h>
 #  include <deal.II/base/geometry_info.h>

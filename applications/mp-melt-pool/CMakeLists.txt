@@ -3,6 +3,7 @@ setup_application(
   CONFIGURE_OPTION_NAME MPDG_ENABLE_MP
   APPLICATION_NAME "mp-melt-pool"
   DESCRIPTION "Build melt-pool executables"
+  DEPENDENCIES "MPDG_ENABLE_ADAFLO"
 )
 
 if(APP_ENABLED)
@@ -18,5 +19,3 @@ if(APP_ENABLED)
     endif()
   endforeach()
 endif()
-
-
