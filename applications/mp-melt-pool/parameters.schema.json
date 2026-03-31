@@ -1,0 +1,3167 @@
+{
+  "type": "object",
+  "properties": {
+    "base": {
+      "type": "object",
+      "properties": {
+        "case name": {
+          "type": "string",
+          "description": "Sets the base name for the application that will be fed to the problem type.",
+          "default": "not_initialized"
+        },
+        "dimension": {
+          "type": "integer",
+          "description": "Defines the dimension of the problem",
+          "default": 2
+        },
+        "number": {
+          "type": "string",
+          "enum": [
+            "double"
+          ],
+          "description": "Floating point number format. Currently, only 'double' is explicitely instantiated.",
+          "default": "double"
+        },
+        "global refinements": {
+          "type": "integer",
+          "description": "Defines the number of initial global refinements",
+          "default": 1
+        },
+        "do print parameters": {
+          "type": "boolean",
+          "description": "Set this parameter to true to list parameters in output",
+          "default": true
+        },
+        "verbosity level": {
+          "type": "integer",
+          "description": "Sets the verbosity level of the console output: 0: silent: for non-robust tests and benchmark runs; 1: minimal: for robust tests; 2: detailed; 3: full",
+          "default": 1
+        },
+        "fe": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "not_initialized",
+                "FE_Q",
+                "FE_SimplexP",
+                "FE_Q_iso_Q1",
+                "FE_DGQ"
+              ],
+              "description": "Finite Element.FE_Q: hexahedral continuous finite element with polynomial degree p; FE_SimplexP: tetrahedral continuous finite element with polynomial degree p; FE_Q_iso_Q1: hexahedral continuous finite element with p subdivisions containing linear elements; FE_DGQ: hexahedral discontinuous finite element with polynomial degree p",
+              "default": "FE_Q"
+            },
+            "degree": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Defines the degree p of the finite element type. If \"type\" is \"FE_Q_iso_Q1\" this parameter defines the number of subdivisions.",
+              "default": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "time stepping": {
+      "type": "object",
+      "properties": {
+        "start time": {
+          "type": "number",
+          "description": "Defines the start time for the solution of the levelset problem",
+          "default": 0.0
+        },
+        "end time": {
+          "type": "number",
+          "description": "Sets the end time for the solution of the levelset problem",
+          "default": 1.0
+        },
+        "time step size": {
+          "type": "number",
+          "description": "Sets the step size for time stepping. For non-uniform time stepping, this parameter determines the size of the first time step.",
+          "default": 0.01
+        },
+        "max n steps": {
+          "type": "integer",
+          "description": "Sets the maximum number of melt_pool steps",
+          "default": 10000000
+        },
+        "time step size function": {
+          "type": "string",
+          "description": "Set an analytical function to determine the time step size. For the prediction of the new time increment, the old time is used.",
+          "default": "0.0*t"
+        }
+      },
+      "additionalProperties": false
+    },
+    "adaptive meshing": {
+      "type": "object",
+      "properties": {
+        "do amr": {
+          "type": "boolean",
+          "description": "Set this parameter to true to activate adaptive meshing",
+          "default": false
+        },
+        "do not modify boundary cells": {
+          "type": "boolean",
+          "description": "Set this parameter to true to not refine/coarsen along boundaries.",
+          "default": false
+        },
+        "upper perc to refine": {
+          "type": "number",
+          "description": "Defines the (upper) percentage of elements that should be refined",
+          "default": 0.0
+        },
+        "lower perc to coarsen": {
+          "type": "number",
+          "description": "Defines the (lower) percentage of elements that should be coarsened",
+          "default": 0.0
+        },
+        "max grid refinement level": {
+          "type": "integer",
+          "description": "Defines the number of maximum refinement steps one grid cell will be undergone.",
+          "default": 12
+        },
+        "min grid refinement level": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647,
+          "description": "Defines the number of minimum refinement steps one grid cell will be undergone.",
+          "default": -1
+        },
+        "n initial refinement cycles": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647,
+          "description": "Defines the number of initial refinements.",
+          "default": 0
+        },
+        "every n step": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647,
+          "description": "Defines at every nth step the amr should be performed.",
+          "default": 1
+        },
+        "min cells marked to refine": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647,
+          "description": "Minimum number of cells that must be marked for refinement/coarsening before the mesh is updated.",
+          "default": 1
+        },
+        "min indicator threshold to refine cell": {
+          "type": "number",
+          "description": "Minimum indicator value required for a cell to be considered for refinement.",
+          "default": 0.0
+        },
+        "solution transfer average values": {
+          "type": "boolean",
+          "description": "Set this parameter to true to average the contribututions to the same DoF coming from different cells during solution transfer.",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "level set": {
+      "type": "object",
+      "properties": {
+        "fe": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "not_initialized",
+                "FE_Q",
+                "FE_SimplexP",
+                "FE_Q_iso_Q1",
+                "FE_DGQ"
+              ],
+              "description": "Finite Element.FE_Q: hexahedral continuous finite element with polynomial degree p; FE_SimplexP: tetrahedral continuous finite element with polynomial degree p; FE_Q_iso_Q1: hexahedral continuous finite element with p subdivisions containing linear elements; FE_DGQ: hexahedral discontinuous finite element with polynomial degree p",
+              "default": "not_initialized"
+            },
+            "degree": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Defines the degree p of the finite element type. If \"type\" is \"FE_Q_iso_Q1\" this parameter defines the number of subdivisions.",
+              "default": -1
+            }
+          },
+          "additionalProperties": false
+        },
+        "do localized heaviside": {
+          "type": "boolean",
+          "description": "Determine if the heaviside representation of the level set should be calculated as a localized function, being exactly 0 and 1 outside of the interface region.",
+          "default": true
+        },
+        "gradient error evaluation distance cell proportion": {
+          "type": "number",
+          "description": "Factor how many cell diameters away the gradient error should be evaluated",
+          "default": 3.0
+        },
+        "nearest point": {
+          "type": "object",
+          "properties": {
+            "max iter": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Maximum number of corrections of the point projection towards the interface.",
+              "default": 20
+            },
+            "rel tol": {
+              "type": "number",
+              "description": "Relative tolerance to be achieved within the projection.",
+              "default": 1e-06
+            },
+            "narrow band threshold": {
+              "type": "number",
+              "description": "Maximum value of the level set for defining narrow band where CPP is performed.",
+              "default": -1.0
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "closest_point_normal",
+                "closest_point_normal_collinear",
+                "closest_point_normal_collinear_coquerelle",
+                "nearest_point",
+                "nearest_point_fast"
+              ],
+              "description": "Choose the type for calculating the nearest point to the interface.",
+              "default": "closest_point_normal"
+            },
+            "verbosity level": {
+              "type": "integer",
+              "description": "Set the verbosity level.",
+              "default": 0
+            },
+            "marching cube": {
+              "type": "object",
+              "properties": {
+                "n subdivisions": {
+                  "type": "integer",
+                  "description": "Specify the number of subdivisions to create a quadrature rule with n_subdivisions+1 equally-positioned quadrature points.",
+                  "default": 3
+                },
+                "tol": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "description": "Absolute tolerance specifying the minimum distance between a vertex and the cut point so that a line is considered cut.",
+                  "default": 1e-10
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "advection diffusion": {
+          "type": "object",
+          "properties": {
+            "fe": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "not_initialized",
+                    "FE_Q",
+                    "FE_SimplexP",
+                    "FE_Q_iso_Q1",
+                    "FE_DGQ"
+                  ],
+                  "description": "Finite Element.FE_Q: hexahedral continuous finite element with polynomial degree p; FE_SimplexP: tetrahedral continuous finite element with polynomial degree p; FE_Q_iso_Q1: hexahedral continuous finite element with p subdivisions containing linear elements; FE_DGQ: hexahedral discontinuous finite element with polynomial degree p",
+                  "default": "not_initialized"
+                },
+                "degree": {
+                  "type": "integer",
+                  "minimum": -2147483648,
+                  "maximum": 2147483647,
+                  "description": "Defines the degree p of the finite element type. If \"type\" is \"FE_Q_iso_Q1\" this parameter defines the number of subdivisions.",
+                  "default": -1
+                }
+              },
+              "additionalProperties": false
+            },
+            "convection stabilization": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "SUPG"
+                  ],
+                  "description": "Defines the type for convection stabilization.",
+                  "default": "none"
+                },
+                "coefficient": {
+                  "type": "number",
+                  "description": "Defines the stabilization coefficient for convection. (default velocity-dependent).",
+                  "default": -1.0
+                }
+              },
+              "additionalProperties": false
+            },
+            "diffusivity": {
+              "type": "number",
+              "description": "Defines the diffusivity for the advection diffusion equation",
+              "default": 0.0
+            },
+            "implementation": {
+              "type": "string",
+              "enum": [
+                "meltpooldg",
+                "adaflo"
+              ],
+              "description": "Choose the corresponding implementation of the advection diffusion operation.",
+              "default": "meltpooldg"
+            },
+            "enable time dependent bc": {
+              "type": "boolean",
+              "description": "Set this parameter to true to enable time-dependent bc.",
+              "default": false
+            },
+            "predictor": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "zero",
+                    "linear_extrapolation",
+                    "least_squares_projection"
+                  ],
+                  "description": "Choose a predictor type: none: use old value as initial guess; zero: se zeros as initial guess; linear_extrapolation: calculate the predictor by a linear combination from the two old solution vectors; least_squares_projection: least squares projection (WIP)",
+                  "default": "none"
+                },
+                "n old solutions": {
+                  "type": "integer",
+                  "description": "Choose the number of old solution vectors considered.This parameter is only relevant for least squares projection.For all other predictors, this parameter will be set appropriately.",
+                  "default": 2
+                }
+              },
+              "additionalProperties": false
+            },
+            "linear solver": {
+              "type": "object",
+              "properties": {
+                "solver type": {
+                  "type": "string",
+                  "enum": [
+                    "CG",
+                    "GMRES"
+                  ],
+                  "description": "Set this parameter for choosing an iterative linear solver type.",
+                  "default": "GMRES"
+                },
+                "preconditioner type": {
+                  "type": "string",
+                  "enum": [
+                    "Identity",
+                    "AMG",
+                    "ILU",
+                    "Diagonal"
+                  ],
+                  "description": "Set this parameter for choosing a preconditioner type.",
+                  "default": "Diagonal"
+                },
+                "max iterations": {
+                  "type": "integer",
+                  "description": "Set the maximum number of iterations for solving the linear system of equations.",
+                  "default": 10000
+                },
+                "rel tolerance": {
+                  "type": "number",
+                  "description": "Set the relative tolerance for a successful solution of the linear system of equations.",
+                  "default": 1e-12
+                },
+                "abs tolerance": {
+                  "type": "number",
+                  "description": "Set the absolute tolerance for a successful solution of the linear system of equations.",
+                  "default": 1e-20
+                },
+                "do matrix free": {
+                  "type": "boolean",
+                  "description": "Set this parameter if a matrix free solution procedure should be performed.",
+                  "default": true
+                },
+                "monitor type": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "reduced",
+                    "all"
+                  ],
+                  "description": "Set the monitor type of the linear solver.",
+                  "default": "none"
+                }
+              },
+              "additionalProperties": false
+            },
+            "time integration": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "not_initialized",
+                    "LSRK_stage_1_order_1",
+                    "LSRK_stage_3_order_3",
+                    "LSRK_stage_5_order_4",
+                    "LSRK_stage_7_order_4",
+                    "LSRK_stage_9_order_5",
+                    "implicit_euler",
+                    "explicit_euler",
+                    "crank_nicolson",
+                    "bdf_1",
+                    "bdf_2",
+                    "bdf_3",
+                    "bdf_4",
+                    "bdf_5",
+                    "bdf_6",
+                    "imex"
+                  ],
+                  "description": "Name of the time integration scheme.",
+                  "default": "crank_nicolson"
+                },
+                "preconditioner update frequency": {
+                  "type": "integer",
+                  "description": "Frequency at which the preconditioner gets updated.",
+                  "default": 100
+                },
+                "nlsolve": {
+                  "type": "object",
+                  "properties": {
+                    "max nonlinear iterations": {
+                      "type": "integer",
+                      "minimum": -2147483648,
+                      "maximum": 2147483647,
+                      "description": "Set the number of maximum nonlinear iterations with standard tolerances.",
+                      "default": 10
+                    },
+                    "field correction tolerance": {
+                      "type": "number",
+                      "description": "Set the tolerance for the maximum allowed correction of the unknown field.",
+                      "default": 1e-10
+                    },
+                    "residual tolerance": {
+                      "type": "number",
+                      "description": "Set the tolerance for the maximum allowed residual of the nonlinear system.",
+                      "default": 1e-09
+                    },
+                    "max nonlinear iterations alt": {
+                      "type": "integer",
+                      "minimum": -2147483648,
+                      "maximum": 2147483647,
+                      "description": "Set the number of maximum nonlinear iterations with alternative tolerances.",
+                      "default": 0
+                    },
+                    "field correction tolerance alt": {
+                      "type": "number",
+                      "description": "Set the alternative tolerance for the maximum allowed correction of the unknown field.",
+                      "default": 1e-09
+                    },
+                    "residual tolerance alt": {
+                      "type": "number",
+                      "description": "Set the alternative tolerance for the maximum allowed residual of the nonlinear system.",
+                      "default": 1e-08
+                    },
+                    "verbosity level": {
+                      "type": "integer",
+                      "minimum": -2147483648,
+                      "maximum": 2147483647,
+                      "description": "Set to one for detailed solver output.",
+                      "default": -1
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "linear solver": {
+                  "type": "object",
+                  "properties": {
+                    "solver type": {
+                      "type": "string",
+                      "enum": [
+                        "CG",
+                        "GMRES"
+                      ],
+                      "description": "Set this parameter for choosing an iterative linear solver type.",
+                      "default": "GMRES"
+                    },
+                    "preconditioner type": {
+                      "type": "string",
+                      "enum": [
+                        "Identity",
+                        "AMG",
+                        "ILU",
+                        "Diagonal"
+                      ],
+                      "description": "Set this parameter for choosing a preconditioner type.",
+                      "default": "Identity"
+                    },
+                    "max iterations": {
+                      "type": "integer",
+                      "description": "Set the maximum number of iterations for solving the linear system of equations.",
+                      "default": 10000
+                    },
+                    "rel tolerance": {
+                      "type": "number",
+                      "description": "Set the relative tolerance for a successful solution of the linear system of equations.",
+                      "default": 1e-12
+                    },
+                    "abs tolerance": {
+                      "type": "number",
+                      "description": "Set the absolute tolerance for a successful solution of the linear system of equations.",
+                      "default": 1e-20
+                    },
+                    "do matrix free": {
+                      "type": "boolean",
+                      "description": "Set this parameter if a matrix free solution procedure should be performed.",
+                      "default": true
+                    },
+                    "monitor type": {
+                      "type": "string",
+                      "enum": [
+                        "none",
+                        "reduced",
+                        "all"
+                      ],
+                      "description": "Set the monitor type of the linear solver.",
+                      "default": "none"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "normal vector": {
+          "type": "object",
+          "properties": {
+            "filter parameter": {
+              "type": "number",
+              "description": "normal vector computation: damping = (cell size)²  * filter parameter",
+              "default": 2.0
+            },
+            "implementation": {
+              "type": "string",
+              "enum": [
+                "meltpooldg",
+                "adaflo"
+              ],
+              "description": "Choose the corresponding implementation of the normal vector operation.",
+              "default": "meltpooldg"
+            },
+            "verbosity level": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Sets the maximum verbosity level of the console output. The maximum level with respect to the  base value is decisive.",
+              "default": -1
+            },
+            "compute normalized vector": {
+              "type": "boolean",
+              "description": "If set to true, the normal vector resulting from the filtering equation will be a unit vector.",
+              "default": false
+            },
+            "narrow band": {
+              "type": "object",
+              "properties": {
+                "enable": {
+                  "type": "boolean",
+                  "description": "Set this parameter to true to compute the normal vector only in the interfacial region.",
+                  "default": false
+                },
+                "level set threshold": {
+                  "type": "number",
+                  "description": "If narrow band is enabled to true this parameter determines the level set treshold for the narrow band.",
+                  "default": 1.0
+                }
+              },
+              "additionalProperties": false
+            },
+            "predictor": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "zero",
+                    "linear_extrapolation",
+                    "least_squares_projection"
+                  ],
+                  "description": "Choose a predictor type: none: use old value as initial guess; zero: se zeros as initial guess; linear_extrapolation: calculate the predictor by a linear combination from the two old solution vectors; least_squares_projection: least squares projection (WIP)",
+                  "default": "none"
+                },
+                "n old solutions": {
+                  "type": "integer",
+                  "description": "Choose the number of old solution vectors considered.This parameter is only relevant for least squares projection.For all other predictors, this parameter will be set appropriately.",
+                  "default": 2
+                }
+              },
+              "additionalProperties": false
+            },
+            "linear solver": {
+              "type": "object",
+              "properties": {
+                "solver type": {
+                  "type": "string",
+                  "enum": [
+                    "CG",
+                    "GMRES"
+                  ],
+                  "description": "Set this parameter for choosing an iterative linear solver type.",
+                  "default": "CG"
+                },
+                "preconditioner type": {
+                  "type": "string",
+                  "enum": [
+                    "Identity",
+                    "AMG",
+                    "ILU",
+                    "Diagonal"
+                  ],
+                  "description": "Set this parameter for choosing a preconditioner type.",
+                  "default": "Diagonal"
+                },
+                "max iterations": {
+                  "type": "integer",
+                  "description": "Set the maximum number of iterations for solving the linear system of equations.",
+                  "default": 10000
+                },
+                "rel tolerance": {
+                  "type": "number",
+                  "description": "Set the relative tolerance for a successful solution of the linear system of equations.",
+                  "default": 1e-12
+                },
+                "abs tolerance": {
+                  "type": "number",
+                  "description": "Set the absolute tolerance for a successful solution of the linear system of equations.",
+                  "default": 1e-20
+                },
+                "do matrix free": {
+                  "type": "boolean",
+                  "description": "Set this parameter if a matrix free solution procedure should be performed.",
+                  "default": true
+                },
+                "monitor type": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "reduced",
+                    "all"
+                  ],
+                  "description": "Set the monitor type of the linear solver.",
+                  "default": "none"
+                }
+              },
+              "additionalProperties": false
+            },
+            "Discontinous Galerkin": {
+              "type": "object",
+              "properties": {
+                "penalty factor": {
+                  "type": "number",
+                  "description": "Set the jump penalty factor of the diffusion term",
+                  "default": 100.0
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "curvature": {
+          "type": "object",
+          "properties": {
+            "enable": {
+              "type": "boolean",
+              "description": "Set this parameter to true if curvature should be computed. This is required in case of surface tension forces.",
+              "default": true
+            },
+            "do curvature correction": {
+              "type": "boolean",
+              "description": "Set this parameter to true if the curvature value at the discrete interface i.e. where the level set is 0, should be extended to the interface region.",
+              "default": false
+            },
+            "filter parameter": {
+              "type": "number",
+              "description": "curvature computation: damping = (cell size)² * filter parameter",
+              "default": 2.0
+            },
+            "implementation": {
+              "type": "string",
+              "enum": [
+                "meltpooldg",
+                "adaflo"
+              ],
+              "description": "Choose the corresponding implementation of the curvature operation.",
+              "default": "meltpooldg"
+            },
+            "verbosity level": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Sets the maximum verbosity level of the console output. The maximum level with respect to the base value is decisive.",
+              "default": -1
+            },
+            "narrow band": {
+              "type": "object",
+              "properties": {
+                "enable": {
+                  "type": "boolean",
+                  "description": "Set this parameter to true to compute the normal vector only in the interfacial region.",
+                  "default": false
+                },
+                "level set threshold": {
+                  "type": "number",
+                  "description": "If narrow band is enabled to true this parameter determines the level set treshold for the narrow band.",
+                  "default": 1.0
+                }
+              },
+              "additionalProperties": false
+            },
+            "Discontinous Galerkin": {
+              "type": "object",
+              "properties": {
+                "penalty factor": {
+                  "type": "number",
+                  "description": "Set the jump penalty factor of the diffusion term",
+                  "default": 100.0
+                }
+              },
+              "additionalProperties": false
+            },
+            "predictor": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "zero",
+                    "linear_extrapolation",
+                    "least_squares_projection"
+                  ],
+                  "description": "Choose a predictor type: none: use old value as initial guess; zero: se zeros as initial guess; linear_extrapolation: calculate the predictor by a linear combination from the two old solution vectors; least_squares_projection: least squares projection (WIP)",
+                  "default": "none"
+                },
+                "n old solutions": {
+                  "type": "integer",
+                  "description": "Choose the number of old solution vectors considered.This parameter is only relevant for least squares projection.For all other predictors, this parameter will be set appropriately.",
+                  "default": 2
+                }
+              },
+              "additionalProperties": false
+            },
+            "linear solver": {
+              "type": "object",
+              "properties": {
+                "solver type": {
+                  "type": "string",
+                  "enum": [
+                    "CG",
+                    "GMRES"
+                  ],
+                  "description": "Set this parameter for choosing an iterative linear solver type.",
+                  "default": "CG"
+                },
+                "preconditioner type": {
+                  "type": "string",
+                  "enum": [
+                    "Identity",
+                    "AMG",
+                    "ILU",
+                    "Diagonal"
+                  ],
+                  "description": "Set this parameter for choosing a preconditioner type.",
+                  "default": "Diagonal"
+                },
+                "max iterations": {
+                  "type": "integer",
+                  "description": "Set the maximum number of iterations for solving the linear system of equations.",
+                  "default": 10000
+                },
+                "rel tolerance": {
+                  "type": "number",
+                  "description": "Set the relative tolerance for a successful solution of the linear system of equations.",
+                  "default": 1e-12
+                },
+                "abs tolerance": {
+                  "type": "number",
+                  "description": "Set the absolute tolerance for a successful solution of the linear system of equations.",
+                  "default": 1e-20
+                },
+                "do matrix free": {
+                  "type": "boolean",
+                  "description": "Set this parameter if a matrix free solution procedure should be performed.",
+                  "default": true
+                },
+                "monitor type": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "reduced",
+                    "all"
+                  ],
+                  "description": "Set the monitor type of the linear solver.",
+                  "default": "none"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "reinitialization": {
+          "type": "object",
+          "properties": {
+            "fe": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "not_initialized",
+                    "FE_Q",
+                    "FE_SimplexP",
+                    "FE_Q_iso_Q1",
+                    "FE_DGQ"
+                  ],
+                  "description": "Finite Element.FE_Q: hexahedral continuous finite element with polynomial degree p; FE_SimplexP: tetrahedral continuous finite element with polynomial degree p; FE_Q_iso_Q1: hexahedral continuous finite element with p subdivisions containing linear elements; FE_DGQ: hexahedral discontinuous finite element with polynomial degree p",
+                  "default": "not_initialized"
+                },
+                "degree": {
+                  "type": "integer",
+                  "minimum": -2147483648,
+                  "maximum": 2147483647,
+                  "description": "Defines the degree p of the finite element type. If \"type\" is \"FE_Q_iso_Q1\" this parameter defines the number of subdivisions.",
+                  "default": -1
+                }
+              },
+              "additionalProperties": false
+            },
+            "enable": {
+              "type": "boolean",
+              "description": "Set to true to activate reinitialization.",
+              "default": true
+            },
+            "n initial steps": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Defines the number of initial reinitialization steps of the level set function. In the default case, the number is set equal to the number of max n steps.",
+              "default": -1
+            },
+            "pseudo time step size": {
+              "type": "number",
+              "description": "Sets the reinitialization time step size. By default its computed from the cell size.",
+              "default": -1.0
+            },
+            "pseudo time step factor": {
+              "type": "number",
+              "description": "Factor on the reinitialization time step size that is computed from the cell size.",
+              "default": 1.0
+            },
+            "max n steps": {
+              "type": "integer",
+              "description": "Sets the maximum number of reinitialization steps",
+              "default": 5
+            },
+            "tolerance": {
+              "type": "number",
+              "description": "Set the tolerance for reinitialization. If the maximum change of the level set field, i.e.  orΔФ or∞, exceeds the tolerance, reinitialization steps will be performed.",
+              "default": 2.22507e-308
+            },
+            "tangential diffusion factor": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "Factor that multiplies the normal diffusion factor (diffusion length) to obtain the diffusion factor in the tangential direction.",
+              "default": 0.0
+            },
+            "type": {
+              "type": "string",
+              "description": "Sets the type of reinitialization model that should be used.",
+              "default": "olsson2007"
+            },
+            "implementation": {
+              "type": "string",
+              "enum": [
+                "meltpooldg",
+                "adaflo"
+              ],
+              "description": "Choose the corresponding implementation of the reinitialization operation.",
+              "default": "meltpooldg"
+            },
+            "Discontinous Galerkin": {
+              "type": "object",
+              "properties": {
+                "factor diffusivity": {
+                  "type": "number",
+                  "description": "Set the factor for diffusivity",
+                  "default": 0.25
+                },
+                "IP diffusion": {
+                  "type": "number",
+                  "description": "Set the internal penalty for diffusivity",
+                  "default": 100.0
+                },
+                "use const gradient in RI": {
+                  "type": "boolean",
+                  "description": "Set if the Godunov gradient should be updated every reinitilization step",
+                  "default": false
+                },
+                "do CFL based time stepping": {
+                  "type": "boolean",
+                  "description": "Sets a flag if the time stepping should be based on the CFL condition",
+                  "default": false
+                },
+                "time integration scheme": {
+                  "type": "string",
+                  "enum": [
+                    "not_initialized",
+                    "LSRK_stage_1_order_1",
+                    "LSRK_stage_3_order_3",
+                    "LSRK_stage_5_order_4",
+                    "LSRK_stage_7_order_4",
+                    "LSRK_stage_9_order_5",
+                    "implicit_euler",
+                    "explicit_euler",
+                    "crank_nicolson",
+                    "bdf_1",
+                    "bdf_2",
+                    "bdf_3",
+                    "bdf_4",
+                    "bdf_5",
+                    "bdf_6",
+                    "imex"
+                  ],
+                  "description": "Determines the general time integration scheme for the pseudo time integration of the reinilization equation.",
+                  "default": "LSRK_stage_5_order_4"
+                },
+                "IMEX integration scheme": {
+                  "type": "string",
+                  "enum": [
+                    "not_initialized",
+                    "LSRK_stage_1_order_1",
+                    "LSRK_stage_3_order_3",
+                    "LSRK_stage_5_order_4",
+                    "LSRK_stage_7_order_4",
+                    "LSRK_stage_9_order_5",
+                    "implicit_euler",
+                    "explicit_euler",
+                    "crank_nicolson",
+                    "bdf_1",
+                    "bdf_2",
+                    "bdf_3",
+                    "bdf_4",
+                    "bdf_5",
+                    "bdf_6",
+                    "imex"
+                  ],
+                  "description": "If a IMEX integration scheme is specifiead, the integration in pseudo time of the reinilization is done with an Implict-Explicit (IMEX) scheme.this means that the diffusion part is treated with the IMEX integration scheme and the hamiltonian is treated with the general time integration scheme.When choosing an implicit scheme with A-stability larger time steps can be chosen only limited by the stability of the hamiltonian part.This is done, since the diffusion part is the most restrictive part for explicit time integration scheme.If a scheme is set, the time step calculation based on a CFL number assumes an A-stable scheme and only calculates the time step based on the hamiltonian.",
+                  "default": "not_initialized"
+                },
+                "CFL": {
+                  "type": "number",
+                  "description": "Set a CFL number for the pseudo time stepping in reinitilization.",
+                  "default": 1.0
+                },
+                "avoid zero division smoothed signum": {
+                  "type": "number",
+                  "description": "Sets a constant to avoid zero division in the computation of the smoothed signum.",
+                  "default": 1e-16
+                },
+                "signum smoothness paramater": {
+                  "type": "number",
+                  "description": "Sets the smoothness parameter for the smoothed signum.",
+                  "default": 2.0
+                },
+                "use directed diffusion stabilization": {
+                  "type": "boolean",
+                  "description": "Sets a flag if directed diffusion stabilization should be used for reinitilization.",
+                  "default": false
+                },
+                "hyperbolic weighting function_type": {
+                  "type": "string",
+                  "enum": [
+                    "smoothed_signum",
+                    "initial_levelset"
+                  ],
+                  "description": "Sets the type of weighting function for the hyperbolic part of the reinit equation.",
+                  "default": "smoothed_signum"
+                },
+                "use spatially constant diffusion": {
+                  "type": "boolean",
+                  "description": "Sets a flag if a spatially constant diffusion should be used for reinitilization.",
+                  "default": true
+                },
+                "use interface movement penalization": {
+                  "type": "boolean",
+                  "description": "Sets a flag if a penalization of the interface movement should be used.",
+                  "default": false
+                },
+                "gradient error time derivative threshold": {
+                  "type": "number",
+                  "description": "Sets the threshold in the time derivative when a reinit procedure reaches a stationary point",
+                  "default": 1e-16
+                }
+              },
+              "additionalProperties": false
+            },
+            "interface thickness parameter": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "proportional_to_cell_size",
+                    "absolute_value",
+                    "number_of_cells_across_interface"
+                  ],
+                  "description": "Choose the value type of the interface thickness parameter.",
+                  "default": "proportional_to_cell_size"
+                },
+                "val": {
+                  "type": "number",
+                  "description": "Defines the value of the chosen interface thickness parameter type",
+                  "default": 0.5
+                }
+              },
+              "additionalProperties": false
+            },
+            "predictor": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "zero",
+                    "linear_extrapolation",
+                    "least_squares_projection"
+                  ],
+                  "description": "Choose a predictor type: none: use old value as initial guess; zero: se zeros as initial guess; linear_extrapolation: calculate the predictor by a linear combination from the two old solution vectors; least_squares_projection: least squares projection (WIP)",
+                  "default": "none"
+                },
+                "n old solutions": {
+                  "type": "integer",
+                  "description": "Choose the number of old solution vectors considered.This parameter is only relevant for least squares projection.For all other predictors, this parameter will be set appropriately.",
+                  "default": 2
+                }
+              },
+              "additionalProperties": false
+            },
+            "linear solver": {
+              "type": "object",
+              "properties": {
+                "solver type": {
+                  "type": "string",
+                  "enum": [
+                    "CG",
+                    "GMRES"
+                  ],
+                  "description": "Set this parameter for choosing an iterative linear solver type.",
+                  "default": "CG"
+                },
+                "preconditioner type": {
+                  "type": "string",
+                  "enum": [
+                    "Identity",
+                    "AMG",
+                    "ILU",
+                    "Diagonal"
+                  ],
+                  "description": "Set this parameter for choosing a preconditioner type.",
+                  "default": "Diagonal"
+                },
+                "max iterations": {
+                  "type": "integer",
+                  "description": "Set the maximum number of iterations for solving the linear system of equations.",
+                  "default": 10000
+                },
+                "rel tolerance": {
+                  "type": "number",
+                  "description": "Set the relative tolerance for a successful solution of the linear system of equations.",
+                  "default": 1e-12
+                },
+                "abs tolerance": {
+                  "type": "number",
+                  "description": "Set the absolute tolerance for a successful solution of the linear system of equations.",
+                  "default": 1e-20
+                },
+                "do matrix free": {
+                  "type": "boolean",
+                  "description": "Set this parameter if a matrix free solution procedure should be performed.",
+                  "default": true
+                },
+                "monitor type": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "reduced",
+                    "all"
+                  ],
+                  "description": "Set the monitor type of the linear solver.",
+                  "default": "none"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "heat": {
+      "type": "object",
+      "properties": {
+        "fe": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "not_initialized",
+                "FE_Q",
+                "FE_SimplexP",
+                "FE_Q_iso_Q1",
+                "FE_DGQ"
+              ],
+              "description": "Finite Element.FE_Q: hexahedral continuous finite element with polynomial degree p; FE_SimplexP: tetrahedral continuous finite element with polynomial degree p; FE_Q_iso_Q1: hexahedral continuous finite element with p subdivisions containing linear elements; FE_DGQ: hexahedral discontinuous finite element with polynomial degree p",
+              "default": "not_initialized"
+            },
+            "degree": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Defines the degree p of the finite element type. If \"type\" is \"FE_Q_iso_Q1\" this parameter defines the number of subdivisions.",
+              "default": -1
+            }
+          },
+          "additionalProperties": false
+        },
+        "operator type": {
+          "type": "string",
+          "enum": [
+            "diffuse",
+            "cut"
+          ],
+          "description": "Choose the heat operator implementation. Options: diffuse, cut",
+          "default": "diffuse"
+        },
+        "cut": {
+          "type": "object",
+          "properties": {
+            "two phase": {
+              "type": "boolean",
+              "description": "Set this parameter to \"false\" to ignore the gas phase.",
+              "default": true
+            },
+            "theta": {
+              "type": "number",
+              "description": "Parameter for one step theta time integration.",
+              "default": 0.5
+            },
+            "do explicit symmetry term": {
+              "type": "boolean",
+              "description": "Set this parameter to true to consider the explicit symmetry term. Note: this parameter only applies if the setup is two-phase.",
+              "default": true
+            },
+            "stabilization": {
+              "type": "object",
+              "properties": {
+                "nitsche parameter": {
+                  "type": "number",
+                  "description": "Nitsche stabilization parameter.",
+                  "default": 1.0
+                },
+                "ghost-penalty": {
+                  "type": "object",
+                  "properties": {
+                    "gamma M degree 0": {
+                      "type": "number",
+                      "description": "Mass matrix ghost-penalty parameter for degree 0.",
+                      "default": 1.0
+                    },
+                    "gamma M degree 1": {
+                      "type": "number",
+                      "description": "Mass matrix ghost-penalty parameter for degree 1.",
+                      "default": 1.0
+                    },
+                    "gamma M degree 2": {
+                      "type": "number",
+                      "description": "Mass matrix ghost-penalty parameter for degree 2.",
+                      "default": 1.0
+                    },
+                    "gamma A degree 0": {
+                      "type": "number",
+                      "description": "Stiffness matrix ghost-penalty parameter for degree 0.",
+                      "default": 1.0
+                    },
+                    "gamma A degree 1": {
+                      "type": "number",
+                      "description": "Stiffness matrix ghost-penalty parameter for degree 1.",
+                      "default": 1.0
+                    },
+                    "gamma A degree 2": {
+                      "type": "number",
+                      "description": "Stiffness matrix ghost-penalty parameter for degree 2.",
+                      "default": 1.0
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "enable time dependent bc": {
+          "type": "boolean",
+          "description": "Set this parameter to true to enable time-dependent bc.",
+          "default": false
+        },
+        "diffuse": {
+          "type": "object",
+          "properties": {
+            "use volume-specific thermal capacity for phase interpolation": {
+              "type": "boolean",
+              "description": "Perform phase interpolation via the volumetric thermal capacity (product of density  and capacity) instead of interpolating density and thermal capacity individually.",
+              "default": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "radiative boundary condition": {
+          "type": "object",
+          "properties": {
+            "emissivity": {
+              "type": "number",
+              "description": "Emissivity.",
+              "default": 0.0
+            },
+            "temperature infinity": {
+              "type": "number",
+              "description": "Infinity temperature.",
+              "default": 0.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "convective boundary condition": {
+          "type": "object",
+          "properties": {
+            "convection coefficient": {
+              "type": "number",
+              "description": "Convection coefficient.",
+              "default": 0.0
+            },
+            "temperature infinity": {
+              "type": "number",
+              "description": "Infinity temperature.",
+              "default": 0.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "verbosity level": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647,
+          "description": "Sets the maximum verbosity level of the console output.",
+          "default": -1
+        },
+        "nlsolve": {
+          "type": "object",
+          "properties": {
+            "max nonlinear iterations": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Set the number of maximum nonlinear iterations with standard tolerances.",
+              "default": 10
+            },
+            "field correction tolerance": {
+              "type": "number",
+              "description": "Set the tolerance for the maximum allowed correction of the unknown field.",
+              "default": 1e-10
+            },
+            "residual tolerance": {
+              "type": "number",
+              "description": "Set the tolerance for the maximum allowed residual of the nonlinear system.",
+              "default": 1e-09
+            },
+            "max nonlinear iterations alt": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Set the number of maximum nonlinear iterations with alternative tolerances.",
+              "default": 0
+            },
+            "field correction tolerance alt": {
+              "type": "number",
+              "description": "Set the alternative tolerance for the maximum allowed correction of the unknown field.",
+              "default": 1e-09
+            },
+            "residual tolerance alt": {
+              "type": "number",
+              "description": "Set the alternative tolerance for the maximum allowed residual of the nonlinear system.",
+              "default": 1e-08
+            },
+            "verbosity level": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Set to one for detailed solver output.",
+              "default": -1
+            }
+          },
+          "additionalProperties": false
+        },
+        "linear solver": {
+          "type": "object",
+          "properties": {
+            "solver type": {
+              "type": "string",
+              "enum": [
+                "CG",
+                "GMRES"
+              ],
+              "description": "Set this parameter for choosing an iterative linear solver type.",
+              "default": "GMRES"
+            },
+            "preconditioner type": {
+              "type": "string",
+              "enum": [
+                "Identity",
+                "AMG",
+                "ILU",
+                "Diagonal"
+              ],
+              "description": "Set this parameter for choosing a preconditioner type.",
+              "default": "Diagonal"
+            },
+            "max iterations": {
+              "type": "integer",
+              "description": "Set the maximum number of iterations for solving the linear system of equations.",
+              "default": 10000
+            },
+            "rel tolerance": {
+              "type": "number",
+              "description": "Set the relative tolerance for a successful solution of the linear system of equations.",
+              "default": 1e-12
+            },
+            "abs tolerance": {
+              "type": "number",
+              "description": "Set the absolute tolerance for a successful solution of the linear system of equations.",
+              "default": 1e-20
+            },
+            "do matrix free": {
+              "type": "boolean",
+              "description": "Set this parameter if a matrix free solution procedure should be performed.",
+              "default": true
+            },
+            "monitor type": {
+              "type": "string",
+              "enum": [
+                "none",
+                "reduced",
+                "all"
+              ],
+              "description": "Set the monitor type of the linear solver.",
+              "default": "none"
+            }
+          },
+          "additionalProperties": false
+        },
+        "predictor": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "none",
+                "zero",
+                "linear_extrapolation",
+                "least_squares_projection"
+              ],
+              "description": "Choose a predictor type: none: use old value as initial guess; zero: se zeros as initial guess; linear_extrapolation: calculate the predictor by a linear combination from the two old solution vectors; least_squares_projection: least squares projection (WIP)",
+              "default": "linear_extrapolation"
+            },
+            "n old solutions": {
+              "type": "integer",
+              "description": "Choose the number of old solution vectors considered.This parameter is only relevant for least squares projection.For all other predictors, this parameter will be set appropriately.",
+              "default": 2
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "laser": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": "string",
+          "enum": [
+            "not_initialized",
+            "analytical_temperature",
+            "volumetric",
+            "interface_projection_regularized",
+            "interface_projection_sharp",
+            "interface_projection_sharp_conforming",
+            "RTE"
+          ],
+          "description": "Laser model. analytical_temperature: see Mirkoohi et al. (2019); volumetric: volumetric heat source, the intensity is defined by \"\"intensity profile\"\"; interface_projection: projection-based regularized continuum surface flux in \"direction\", the intensity is defined by \"\"intensity profile\"\"; interface_projection_sharp: projection-based sharp surface flux in \"direction\", the intensity is defined by \"\"intensity profile\"\"; interface_projection_sharp_conforming: projection-based sharp surface flux in \"direction\" on a conforming mesh, the intensity is defined by \"\"intensity profile\"\"; RTE: continuum surface flux projected using the radiative transport equation in \"direction\", supporting shadowing of undercuts, the intensity is defined by \"\"intensity profile\"\";",
+          "default": "not_initialized"
+        },
+        "intensity profile": {
+          "type": "string",
+          "enum": [
+            "uniform",
+            "Gauss",
+            "Gusarov"
+          ],
+          "description": "Laser intensity profile. uniform: note that the \"power\" input is treated as the uniform power density in the whole domain; Gauss: Gaussian laser intensity shape with \"radius\" that retains the \"power\"; Gusarov: see Gusarov et al. (2009);",
+          "default": "Gauss"
+        },
+        "power": {
+          "type": "number",
+          "description": "Laser power",
+          "default": 0.0
+        },
+        "power over time": {
+          "type": "string",
+          "enum": [
+            "constant",
+            "ramp"
+          ],
+          "description": "Temporal distribution of the laser power",
+          "default": "constant"
+        },
+        "power start time": {
+          "type": "number",
+          "description": "In case of time-dependent laser power: activation time of",
+          "default": 0.0
+        },
+        "power end time": {
+          "type": "number",
+          "description": "In case of time-dependent laser power: end time of",
+          "default": 1.79769e+308
+        },
+        "absorptivity gas": {
+          "type": "number",
+          "description": "Laser energy absorptivity of the gaseous part of the domain.",
+          "default": 1.0
+        },
+        "absorptivity liquid": {
+          "type": "number",
+          "description": "Laser energy absorptivity of the liquid part of the domain.",
+          "default": 1.0
+        },
+        "do move": {
+          "type": "boolean",
+          "description": "Set this parameter to true to move the laser in x-direction with the given parameter scan speed.",
+          "default": false
+        },
+        "starting position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 0,
+          "description": "Center coordinates of the laser beam starting position on the interface melt/gas.",
+          "default": []
+        },
+        "scan speed": {
+          "type": "number",
+          "description": "Scan speed of the laser",
+          "default": 0.0
+        },
+        "direction": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 0,
+          "description": "Laser beam direction.",
+          "default": []
+        },
+        "beam rotation axis": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 0,
+          "description": "Axis around which the initial laser beam direction will be rotated. Relevant only in 3D.",
+          "default": []
+        },
+        "beam rotation angle": {
+          "type": "number",
+          "description": "Rotation angle applied to the laser beam direction (in 3D about 'beam rotation axis' following the right-hand rule; in 2D: as defined by the 2D rotation matrix",
+          "default": 0.0
+        },
+        "radius": {
+          "type": "number",
+          "description": "Laser beam radius.",
+          "default": 0.0
+        },
+        "gusarov": {
+          "type": "object",
+          "properties": {
+            "reflectivity": {
+              "type": "number",
+              "description": "Reflectivity of the material.",
+              "default": 0.0
+            },
+            "extinction coefficient": {
+              "type": "number",
+              "description": "Extinction coefficient in [1/m].",
+              "default": 0.0
+            },
+            "layer thickness": {
+              "type": "number",
+              "description": "Layer thickness",
+              "default": 0.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "analytical": {
+          "type": "object",
+          "properties": {
+            "ambient temperature": {
+              "type": "number",
+              "description": "Ambient temperature in the inert gas.",
+              "default": 0.0
+            },
+            "max temperature": {
+              "type": "number",
+              "description": "Maximum temperature arising in the melt pool. If this temperature is lower than the boiling temperature, this value is corrected to correspond to the boiling temperature + 500 K.",
+              "default": 0.0
+            },
+            "temperature x to y ratio": {
+              "type": "number",
+              "description": "This factor scales the analytical temperature field to be anisotropic.",
+              "default": 1.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "dirac delta function approximation": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "norm_of_indicator_gradient",
+                "heaviside_phase_weighted",
+                "heaviside_times_heaviside_phase_weighted",
+                "reciprocal_phase_weighted",
+                "reciprocal_times_heaviside_phase_weighted",
+                "heavy_phase_only"
+              ],
+              "description": "Choose how to smear a parameter over the interface.",
+              "default": "norm_of_indicator_gradient"
+            },
+            "auto weights": {
+              "type": "boolean",
+              "description": "Choose if weights should be computed automatically.",
+              "default": false
+            },
+            "gas phase weight": {
+              "type": "number",
+              "description": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the gas phase (level set = -1).",
+              "default": 1.0
+            },
+            "heavy phase weight": {
+              "type": "number",
+              "description": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the heavy phase (level set = 1).",
+              "default": 1.0
+            },
+            "gas phase weight 2": {
+              "type": "number",
+              "description": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the gas phase (level set = -1).",
+              "default": 1.0
+            },
+            "heavy phase weight 2": {
+              "type": "number",
+              "description": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the heavy liquid/solid phase (level set = 1).",
+              "default": 1.0
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "rte": {
+      "type": "object",
+      "properties": {
+        "fe": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "not_initialized",
+                "FE_Q",
+                "FE_SimplexP",
+                "FE_Q_iso_Q1",
+                "FE_DGQ"
+              ],
+              "description": "Finite Element.FE_Q: hexahedral continuous finite element with polynomial degree p; FE_SimplexP: tetrahedral continuous finite element with polynomial degree p; FE_Q_iso_Q1: hexahedral continuous finite element with p subdivisions containing linear elements; FE_DGQ: hexahedral discontinuous finite element with polynomial degree p",
+              "default": "not_initialized"
+            },
+            "degree": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Defines the degree p of the finite element type. If \"type\" is \"FE_Q_iso_Q1\" this parameter defines the number of subdivisions.",
+              "default": -1
+            }
+          },
+          "additionalProperties": false
+        },
+        "rte verbosity level": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647,
+          "description": "Sets the maximum verbosity level of the console output. The maximum level with respect to the  base value is decisive.",
+          "default": -1
+        },
+        "predictor type": {
+          "type": "string",
+          "enum": [
+            "none",
+            "pseudo_time_stepping"
+          ],
+          "description": "Choose a predictor type.",
+          "default": "none"
+        },
+        "absorptivity type": {
+          "type": "string",
+          "enum": [
+            "constant",
+            "gradient_based"
+          ],
+          "description": "Chooses the formulation of the absorptivity coefficient",
+          "default": "gradient_based"
+        },
+        "avoid singular matrix absorptivity": {
+          "type": "number",
+          "description": "Minimum value for absorptivity to ensure a non-singular matrix for RTE.",
+          "default": 1e-16
+        },
+        "linear solver": {
+          "type": "object",
+          "properties": {
+            "solver type": {
+              "type": "string",
+              "enum": [
+                "CG",
+                "GMRES"
+              ],
+              "description": "Set this parameter for choosing an iterative linear solver type.",
+              "default": "GMRES"
+            },
+            "preconditioner type": {
+              "type": "string",
+              "enum": [
+                "Identity",
+                "AMG",
+                "ILU",
+                "Diagonal"
+              ],
+              "description": "Set this parameter for choosing a preconditioner type.",
+              "default": "ILU"
+            },
+            "max iterations": {
+              "type": "integer",
+              "description": "Set the maximum number of iterations for solving the linear system of equations.",
+              "default": 10000
+            },
+            "rel tolerance": {
+              "type": "number",
+              "description": "Set the relative tolerance for a successful solution of the linear system of equations.",
+              "default": 1e-12
+            },
+            "abs tolerance": {
+              "type": "number",
+              "description": "Set the absolute tolerance for a successful solution of the linear system of equations.",
+              "default": 1e-20
+            },
+            "do matrix free": {
+              "type": "boolean",
+              "description": "Set this parameter if a matrix free solution procedure should be performed.",
+              "default": true
+            },
+            "monitor type": {
+              "type": "string",
+              "enum": [
+                "none",
+                "reduced",
+                "all"
+              ],
+              "description": "Set the monitor type of the linear solver.",
+              "default": "none"
+            }
+          },
+          "additionalProperties": false
+        },
+        "pseudo time stepping": {
+          "type": "object",
+          "properties": {
+            "diffusion term scaling": {
+              "type": "number",
+              "description": "Scaling parameter of diffusion term.",
+              "default": 1.0
+            },
+            "advection term scaling": {
+              "type": "number",
+              "description": "Scaling parameter of advection term.",
+              "default": 1.0
+            },
+            "pseudo time scaling": {
+              "type": "number",
+              "description": "Determine the pseudo-time step as the product of this scaling and minimum cell size.",
+              "default": 0.01
+            },
+            "rel tolerance": {
+              "type": "number",
+              "description": "Pseudo-time stepping relative tolerance.",
+              "default": 0.001
+            },
+            "time stepping": {
+              "type": "object",
+              "properties": {
+                "start time": {
+                  "type": "number",
+                  "description": "Defines the start time for the solution of the levelset problem",
+                  "default": 0.0
+                },
+                "end time": {
+                  "type": "number",
+                  "description": "Sets the end time for the solution of the levelset problem",
+                  "default": 1.79769e+308
+                },
+                "time step size": {
+                  "type": "number",
+                  "description": "Sets the step size for time stepping. For non-uniform time stepping, this parameter determines the size of the first time step.",
+                  "default": 0.0
+                },
+                "max n steps": {
+                  "type": "integer",
+                  "description": "Sets the maximum number of melt_pool steps",
+                  "default": 1
+                },
+                "time step size function": {
+                  "type": "string",
+                  "description": "Set an analytical function to determine the time step size. For the prediction of the new time increment, the old time is used.",
+                  "default": "0.0*t"
+                }
+              },
+              "additionalProperties": false
+            },
+            "linear solver": {
+              "type": "object",
+              "properties": {
+                "solver type": {
+                  "type": "string",
+                  "enum": [
+                    "CG",
+                    "GMRES"
+                  ],
+                  "description": "Set this parameter for choosing an iterative linear solver type.",
+                  "default": "CG"
+                },
+                "preconditioner type": {
+                  "type": "string",
+                  "enum": [
+                    "Identity",
+                    "AMG",
+                    "ILU",
+                    "Diagonal"
+                  ],
+                  "description": "Set this parameter for choosing a preconditioner type.",
+                  "default": "ILU"
+                },
+                "max iterations": {
+                  "type": "integer",
+                  "description": "Set the maximum number of iterations for solving the linear system of equations.",
+                  "default": 10000
+                },
+                "rel tolerance": {
+                  "type": "number",
+                  "description": "Set the relative tolerance for a successful solution of the linear system of equations.",
+                  "default": 1e-12
+                },
+                "abs tolerance": {
+                  "type": "number",
+                  "description": "Set the absolute tolerance for a successful solution of the linear system of equations.",
+                  "default": 1e-20
+                },
+                "do matrix free": {
+                  "type": "boolean",
+                  "description": "Set this parameter if a matrix free solution procedure should be performed.",
+                  "default": true
+                },
+                "monitor type": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "reduced",
+                    "all"
+                  ],
+                  "description": "Set the monitor type of the linear solver.",
+                  "default": "none"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "absorptivity": {
+          "type": "object",
+          "properties": {
+            "absorptivity gas": {
+              "type": "number",
+              "description": "Sets the absorptivity of the gas phase.",
+              "default": 0.1
+            },
+            "absorptivity liquid": {
+              "type": "number",
+              "description": "Sets the absorptivity of the liquid phase.",
+              "default": 0.9
+            },
+            "avoid div zero constant": {
+              "type": "number",
+              "description": "Sets the absorptivity of the gas phase.",
+              "default": 1e-16
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "flow": {
+      "type": "object",
+      "properties": {
+        "gravity": {
+          "type": "number",
+          "description": "Set the value for the gravity",
+          "default": 0.0
+        },
+        "surface tension": {
+          "type": "object",
+          "properties": {
+            "surface tension coefficient": {
+              "type": "number",
+              "description": "Constant coefficient for calculating surface tension",
+              "default": 0.0
+            },
+            "temperature dependent surface tension coefficient": {
+              "type": "number",
+              "description": "Temperature-dependent coefficient for calculating temperetaure-dependent surface tension (Marangoni convection)",
+              "default": 0.0
+            },
+            "reference temperature": {
+              "type": "number",
+              "description": "Reference temperature for calculating surface tension",
+              "default": -1e+100
+            },
+            "interface temperature evaluation type": {
+              "type": "string",
+              "enum": [
+                "local_value",
+                "interface_value"
+              ],
+              "description": "Type that determines how the temperature-dependent surface tension is computed in the interfacial zone.",
+              "default": "local_value"
+            },
+            "coefficient residual fraction": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0,
+              "description": "Define the minimum fraction of the constant surface tension reference value that can be reached.",
+              "default": 0.0
+            },
+            "zero surface tension in solid": {
+              "type": "boolean",
+              "description": "Set this parameter to true to only apply surface tension if the solid fraction is zero.",
+              "default": false
+            },
+            "dirac delta function approximation": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "norm_of_indicator_gradient",
+                    "heaviside_phase_weighted",
+                    "heaviside_times_heaviside_phase_weighted",
+                    "reciprocal_phase_weighted",
+                    "reciprocal_times_heaviside_phase_weighted",
+                    "heavy_phase_only"
+                  ],
+                  "description": "Choose how to smear a parameter over the interface.",
+                  "default": "norm_of_indicator_gradient"
+                },
+                "auto weights": {
+                  "type": "boolean",
+                  "description": "Choose if weights should be computed automatically.",
+                  "default": false
+                },
+                "gas phase weight": {
+                  "type": "number",
+                  "description": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the gas phase (level set = -1).",
+                  "default": 1.0
+                },
+                "heavy phase weight": {
+                  "type": "number",
+                  "description": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the heavy phase (level set = 1).",
+                  "default": 1.0
+                },
+                "gas phase weight 2": {
+                  "type": "number",
+                  "description": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the gas phase (level set = -1).",
+                  "default": 1.0
+                },
+                "heavy phase weight 2": {
+                  "type": "number",
+                  "description": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the heavy liquid/solid phase (level set = 1).",
+                  "default": 1.0
+                }
+              },
+              "additionalProperties": false
+            },
+            "time step limit": {
+              "type": "object",
+              "properties": {
+                "enable": {
+                  "type": "boolean",
+                  "description": "Set this parameter to true to check whether the time step limit is not exceeded.",
+                  "default": false
+                },
+                "scale factor": {
+                  "type": "number",
+                  "description": "Scale factor between 0 and 1 to compute the time step limit.",
+                  "default": 1.0
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "darcy damping": {
+          "type": "object",
+          "properties": {
+            "mushy zone morphology": {
+              "type": "number",
+              "description": "Mushy zone morphology for Darcy damping",
+              "default": 0.0
+            },
+            "avoid div zero constant": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0,
+              "description": "This parameter exists to avoid division by zero in the Kozeny–Carman equation for the Darcy damping force.",
+              "default": 0.001
+            },
+            "formulation": {
+              "type": "string",
+              "enum": [
+                "implicit_formulation",
+                "explicit_formulation"
+              ],
+              "description": "Set the formulation of the Darcy damping force.",
+              "default": "implicit_formulation"
+            }
+          },
+          "additionalProperties": false
+        },
+        "adaflo": {
+          "type": "object",
+          "properties": {
+            "Navier-Stokes": {
+              "type": "object",
+              "properties": {
+                "dimension": {
+                  "type": "integer",
+                  "description": "Defines the dimension of the problem. Not essential to the Navier-Stokes class, but useful in many applications.",
+                  "default": 0
+                },
+                "global refinements": {
+                  "type": "integer",
+                  "description": "Defines the number of initial global refinements. Not used in the Navier-Stokes class, but useful in many applications.",
+                  "default": 1
+                },
+                "anisotropic refinement": {
+                  "type": "string",
+                  "enum": [
+                    "0",
+                    "1"
+                  ],
+                  "description": "defines whether the mesh should be refined anisotropically in normal direction to the interface, 0 means no anisotropy",
+                  "default": "0"
+                },
+                "simplex mesh": {
+                  "type": "string",
+                  "enum": [
+                    "0",
+                    "1"
+                  ],
+                  "description": "defines whether a simplex mesh has been provided, 0 means mesh with only quadrilaterals (2D) and hexahedra (3D) has been provided",
+                  "default": "0"
+                },
+                "adaptive refinements": {
+                  "type": "integer",
+                  "description": "Defines the number of adaptive refinements. Not used in the Navier-Stokes class, but useful in many applications.",
+                  "default": 0
+                },
+                "velocity degree": {
+                  "type": "integer",
+                  "description": "Sets the degree for velocity. Pressure degree is velocity degree minus one. Currently implemented for orders 2 to 6",
+                  "default": 2
+                },
+                "augmented Taylor-Hood elements": {
+                  "type": "string",
+                  "enum": [
+                    "0",
+                    "1"
+                  ],
+                  "description": "Option to choose the pressure space FE_Q_DG0(p_degree) instead of the standard space FE_Q(p_degree). This adds a constant discontinuous part to the pressure basis and gives element-wise divergence-free solutions. It produces solutions that are in general better but also a bit more expensive to compute.",
+                  "default": "0"
+                },
+                "viscosity": {
+                  "type": "number",
+                  "description": "Defines the fluid dynamic viscosity",
+                  "default": 1.0
+                },
+                "density": {
+                  "type": "number",
+                  "description": "Defines the fluid density",
+                  "default": 1.0
+                },
+                "damping": {
+                  "type": "number",
+                  "description": "Defines the fluid damping",
+                  "default": 0.0
+                },
+                "physical type": {
+                  "type": "string",
+                  "enum": [
+                    "incompressible",
+                    "incompressible stationary",
+                    "stokes"
+                  ],
+                  "description": "Sets the type of equations, Navier-Stokes or Stokes. For Navier-Stokes, one can choose between a stationary and a time-dependent variant. The time-dependent Navier-Stokes equations are the default.",
+                  "default": "incompressible"
+                },
+                "constitutive type": {
+                  "type": "string",
+                  "enum": [
+                    "newtonian incompressible",
+                    "newtonian compressible stokes hypothesis",
+                    "user defined"
+                  ],
+                  "description": "Sets the type of constitutive equations. The incompressible Newtonian fluid assumption is the default case. Alternatively, a compressible Newtonian fluid formulation exploiting the Stokes hypothesis or a user defined type can be chosen.",
+                  "default": "newtonian incompressible"
+                },
+                "formulation convective term momentum balance": {
+                  "type": "string",
+                  "enum": [
+                    "skew-symmetric",
+                    "convective",
+                    "conservative"
+                  ],
+                  "description": "Sets the formulation of the convective term in the momentum balance of the Navier-Stokes equations, i.e. ∇·(u x u) =(u·∇)u + βu(∇·u). The parameter β will be set to 1 for the conservative form, to 0 for the convective form and to 0.5 for the skew-symmetric form (default formulation).",
+                  "default": "skew-symmetric"
+                },
+                "Solver": {
+                  "type": "object",
+                  "properties": {
+                    "NL max iterations": {
+                      "type": "integer",
+                      "description": "Defines the maximum number of nonlinear Newton iterations.",
+                      "default": 10
+                    },
+                    "NL tolerance": {
+                      "type": "number",
+                      "description": "Defines the tolerance in the residual l2 norm in the nonlinear Newton iteration.",
+                      "default": 1e-06
+                    },
+                    "linearization scheme": {
+                      "type": "string",
+                      "enum": [
+                        "coupled implicit Newton",
+                        "coupled implicit Picard",
+                        "coupled velocity semi-implicit",
+                        "coupled velocity explicit",
+                        "projection"
+                      ],
+                      "description": "Sets how to treat the coupled nonlinear Navier-Stokes system. The 'coupled' variants solve for the full block system, whereas 'projection' applies a fractional-step pressure correction method with the solution of a pressure Poisson matrix. The nonlinear convective term can be treated by afull Newton iteration, a Picard iteration (fixed-point like), a semi-implicit approach with the same term as in the fixed-point like iteration but velocity extrapolated from the old time, and an approach where the complete convective term is treated explicitly. For the projection scheme, only the semi-implicit velocity treatment is implemented because iterating out the nonlinearity makes no sense.",
+                      "default": "coupled implicit Newton"
+                    },
+                    "tau grad div": {
+                      "type": "number",
+                      "description": "Adds the term (div(v), tau div(u))to the weak form the momentum equation, which is consistent with the Navier-Stokes equations but penalizes the divergence more. This term is usually referred to as grad-div stabilization. It simplifies the solution of linear systems if tau is on the order of unity but not too large (as the added term is singular).",
+                      "default": 0.0
+                    },
+                    "lin max iterations": {
+                      "type": "integer",
+                      "description": "Maximum number of linear iterations",
+                      "default": 500
+                    },
+                    "lin tolerance": {
+                      "type": "number",
+                      "description": "Tolerance for the linear solver",
+                      "default": 0.001
+                    },
+                    "lin relative tolerance": {
+                      "type": "string",
+                      "enum": [
+                        "0",
+                        "1"
+                      ],
+                      "description": "Sets whether the residual for the linear solver should be measured relative to the nonlinear residual (recommended option).",
+                      "default": "1"
+                    },
+                    "lin velocity preconditioner": {
+                      "type": "string",
+                      "enum": [
+                        "ilu",
+                        "ilu scalar",
+                        "amg linear",
+                        "amg"
+                      ],
+                      "description": "Sets the preconditioner for approximating the inverse of the velocity matrix in the Schur complement preconditioner. 'amg linear' uses a matrix based on subdividing FE_Q into several linear elements to create a matrix hierarchy. This might decrease interpolation quality, but AMG is typically much better for linears, so it is recommended for more complex problems with relatively large time steps or large viscosities, otherwise ILU. The method 'ilu scalar' is a simplified ILU that only constructs the ILU for one velocity block and applies the same operator to all components. It is cheaper to apply but approximates somewhat worse.",
+                      "default": "amg linear"
+                    },
+                    "lin pressure mass preconditioner": {
+                      "type": "string",
+                      "enum": [
+                        "ilu",
+                        "diagonal"
+                      ],
+                      "description": "Sets whether the pressure mass matrix in the Schur complement should be represented by the diagonal only or by an ILU based on the full pressure mass matrix.",
+                      "default": "ilu"
+                    },
+                    "lin its before inner solvers": {
+                      "type": "integer",
+                      "description": "The linear solver comes in two flavors. A simple solver which uses only AMG V-cycles or ILUs as preconditioner components in the Schur complement, or a stronger solver with inner iterations. The variant with inner solves is less efficient when only a few iterations are needed, but much more robust and more efficient for many iterations. This option sets how many linear iterations with the cheap preconditioners should be made before the stronger version with more iterations starts.",
+                      "default": 50
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "Output options": {
+              "type": "object",
+              "properties": {
+                "output filename": {
+                  "type": "string",
+                  "description": "Sets the base name for the file output.",
+                  "default": ""
+                },
+                "output verbosity": {
+                  "type": "integer",
+                  "description": "Sets the amount of information from the Navier-Stokes solver that is printed to screen. 0 means no output at all, and larger numbers mean an increasing amount of output (maximum value: 3). A value of 3 not only includes solver iterations but also details on solution time and some memory statistics.",
+                  "default": 2
+                },
+                "output frequency": {
+                  "type": "number",
+                  "description": "defines at with time interface the solution should be written to file (in supported routines)",
+                  "default": 1.0
+                },
+                "output vtk files": {
+                  "type": "integer",
+                  "description": "defines whether to output vtk files with the whole solution field or just collected point data",
+                  "default": 0
+                },
+                "output wall times": {
+                  "type": "string",
+                  "enum": [
+                    "0",
+                    "1"
+                  ],
+                  "description": "Defines whether to output wall times. 0 means no output.",
+                  "default": "0"
+                },
+                "output memory": {
+                  "type": "string",
+                  "enum": [
+                    "0",
+                    "1"
+                  ],
+                  "description": "Defines whether to output memory. 0 means no output.",
+                  "default": "0"
+                }
+              },
+              "additionalProperties": false
+            },
+            "Two phase": {
+              "type": "object",
+              "properties": {
+                "density": {
+                  "type": "number",
+                  "description": "Density of fluid 1 (negative region of level set function). If given a positive value, overwrites density in Navier-Stokes subsection.",
+                  "default": -1.0
+                },
+                "density difference": {
+                  "type": "number",
+                  "description": "absolute difference in density compared to fluid 1",
+                  "default": 0.0
+                },
+                "viscosity": {
+                  "type": "number",
+                  "description": "Dynamic viscosity of fluid 1 (negative region of level set function). If given a positive value, overwrites density in Navier-Stokes subsection.",
+                  "default": -1.0
+                },
+                "viscosity difference": {
+                  "type": "number",
+                  "description": "absolute difference in viscosity compared to fluid 1",
+                  "default": 0.0
+                },
+                "surface tension": {
+                  "type": "number",
+                  "description": "surface tension coefficient",
+                  "default": 1.0
+                },
+                "epsilon": {
+                  "type": "number",
+                  "description": "Width of diffuse interface, relative to mesh size for Level-Set method, but absolute for Cahn-Hilliard.",
+                  "default": 1.0
+                },
+                "gravity": {
+                  "type": "number",
+                  "description": "Gravity.",
+                  "default": 0.0
+                },
+                "diffusion length": {
+                  "type": "number",
+                  "description": "Diffusion length scale in Cahn-Hilliard. Its square equals the mobility and inverse Peclet number.",
+                  "default": 0.1
+                },
+                "contact angle": {
+                  "type": "number",
+                  "description": "defines the contact angle at solid interfaces, at boundaries with indicator 0 or 2",
+                  "default": 0.0
+                },
+                "pressure constraint": {
+                  "type": "string",
+                  "enum": [
+                    "0",
+                    "1"
+                  ],
+                  "description": "Fixes value of pressure in one point to zero",
+                  "default": "1"
+                },
+                "concentration subdivisions": {
+                  "type": "integer",
+                  "description": "Number of subdivision of Q1 elements in smaller elements to generate higher accuracy in level set/phase field",
+                  "default": 2
+                },
+                "curvature correction": {
+                  "type": "integer",
+                  "description": "if 1, extend the curvature to the value at the interface in normal direction",
+                  "default": 0
+                },
+                "grad pressure compatible": {
+                  "type": "string",
+                  "enum": [
+                    "0",
+                    "1"
+                  ],
+                  "description": "if 1, the gradient in the surface tension force is interpolated from the pressure gradient",
+                  "default": "0"
+                },
+                "localize surface tension": {
+                  "type": "string",
+                  "enum": [
+                    "0",
+                    "1"
+                  ],
+                  "description": "if 1, the surface tension is computed from a gradient that is localized around the interface (from a reconstructed distance function), otherwise it is computed from the tanh profile (i.e., nonzero everywhere)",
+                  "default": "1"
+                },
+                "approximate projections": {
+                  "type": "string",
+                  "enum": [
+                    "0",
+                    "1"
+                  ],
+                  "description": "if 0, the normal and curvature in the level set method are computed by proper projection (full mass matrix and little diffusion), otherwise with diagonal mass matrix and time-dependent diffusion",
+                  "default": "0"
+                },
+                "Cahn-Hilliard do Newton": {
+                  "type": "string",
+                  "enum": [
+                    "0",
+                    "1"
+                  ],
+                  "description": "Sets whether a Newton iteration should be done on the Cahn-Hilliard equation (if on that model). If 0 is selected, use a convexity splitting as proposed by Eyre.",
+                  "default": "1"
+                },
+                "full nonlinear iteration": {
+                  "type": "string",
+                  "enum": [
+                    "0",
+                    "1"
+                  ],
+                  "description": "iterates between Navier-Stokes and concentration if enabled",
+                  "default": "0"
+                },
+                "number reinit steps": {
+                  "type": "integer",
+                  "description": "number of iterations in reinitialization",
+                  "default": 2
+                },
+                "number initial reinit steps": {
+                  "type": "integer",
+                  "description": "reinitialization steps before starting the time loop (for bad initial profiles)",
+                  "default": 0
+                },
+                "convection stabilization": {
+                  "type": "string",
+                  "enum": [
+                    "0",
+                    "1"
+                  ],
+                  "description": "add stabilization terms to advection equation if set to 1 (typically not necessary)",
+                  "default": "0"
+                }
+              },
+              "additionalProperties": false
+            },
+            "Time stepping": {
+              "type": "object",
+              "properties": {
+                "start time": {
+                  "type": "number",
+                  "description": "Sets the start time for the simulation",
+                  "default": 0.0
+                },
+                "end time": {
+                  "type": "number",
+                  "description": "Sets the final time for the simulation",
+                  "default": 1.0
+                },
+                "step size": {
+                  "type": "number",
+                  "description": "Sets the step size for time stepping. For non-uniform time stepping, this sets the size of the first time step.",
+                  "default": 0.01
+                },
+                "CFL number": {
+                  "type": "number",
+                  "description": "Limits the time step size in terms of a condition dt <= CFL * dx / |u|, where u is a characteristic velocity. For two-phase flow, we typically take the velocity of the bubble",
+                  "default": 0.8
+                },
+                "CFL number capillary": {
+                  "type": "number",
+                  "description": "Limits the time step size in terms of a condition dt <= CFL_cap * sqrt(rho/sigma) * dx^1.5, i.e., it represents a capillarity time step limit.",
+                  "default": 10.0
+                },
+                "tolerance": {
+                  "type": "number",
+                  "description": "Sets the tolerance for time step selection in non-uniform time stepping strategies.",
+                  "default": 0.01
+                },
+                "max step size": {
+                  "type": "number",
+                  "description": "Defines the maximum time step size in non-uniform strategies.",
+                  "default": 1.0
+                },
+                "min step size": {
+                  "type": "number",
+                  "description": "Defines the minimum time step size in non-uniform strategies.",
+                  "default": 0.1
+                },
+                "scheme": {
+                  "type": "string",
+                  "enum": [
+                    "explicit_euler",
+                    "implicit_euler",
+                    "crank_nicolson",
+                    "bdf_2"
+                  ],
+                  "description": "Sets the time stepping scheme. Allowed options are explicit_euler, implicit_euler, crank_nicolson fractional0, fractional1, new_variant, and bdf_2.",
+                  "default": "bdf_2"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "evaporation": {
+      "type": "object",
+      "properties": {
+        "evaporative mass flux model": {
+          "type": "string",
+          "enum": [
+            "analytical",
+            "recoil_pressure",
+            "saturated_vapor_pressure",
+            "hardt_wondra"
+          ],
+          "description": "Choose the formulation how the evaporative mass flux mDot (kg/(m2s)) will be calculated.",
+          "default": "analytical"
+        },
+        "interface temperature evaluation type": {
+          "type": "string",
+          "enum": [
+            "local_value",
+            "interface_value"
+          ],
+          "description": "Choose the formulation how the (local) evaporative mass flux will be converted to a DoF vector.will be calculated. When the CutFEM heat transfer operator is used, this input parameter is ignored and the temperature is evaluated at the sharp interface which is equivalent to \"sharp\".",
+          "default": "local_value"
+        },
+        "analytical": {
+          "type": "object",
+          "properties": {
+            "function": {
+              "type": "string",
+              "description": "For evapor evaporation model == analytical, prescribe a spatially constant mass flux due to evaporation (SI unit in kg/m²s), as a function over time t , e.g. min(2.*t,0.01).",
+              "default": "not_initialized"
+            }
+          },
+          "additionalProperties": false
+        },
+        "hardt wondra": {
+          "type": "object",
+          "properties": {
+            "coefficient": {
+              "type": "number",
+              "description": "Evaporation coefficient for the model by Hardt and Wondra.",
+              "default": 0.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "evaporative dilation rate": {
+          "type": "object",
+          "properties": {
+            "enable": {
+              "type": "boolean",
+              "description": "Set this parameter to true to consider the evaporative dilation rate in the Navier-Stokes equation. This results in an evaporation-induced jump in the normal velocity component.",
+              "default": false
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "regularized",
+                "sharp"
+              ],
+              "description": "Select how the additional source term due to evaporation in the continuity equation (=evaporative dilation rate) is computed.",
+              "default": "regularized"
+            }
+          },
+          "additionalProperties": false
+        },
+        "evaporative cooling": {
+          "type": "object",
+          "properties": {
+            "enable": {
+              "type": "boolean",
+              "description": "Set this parameter to true to consider evaporative cooling in the heat equation",
+              "default": false
+            },
+            "consider enthalpy transport vapor mass flux": {
+              "type": "string",
+              "enum": [
+                "default",
+                "true",
+                "false"
+              ],
+              "description": "Set this parameter to true to account for the enthalpy transported by the vapor mass flux in the heat equation. This is only recommended if the vapor mass flux is not considered in the Navier-Stokes equations.",
+              "default": "default"
+            },
+            "activation temperature": {
+              "type": "number",
+              "description": "Activation temperature for the evaporative cooling. It must be smaller than or equal to the boiling temperature. By default, it will be chosen such that the transition from the linear activation ramp is kink-free.",
+              "default": -1e+100
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "none",
+                "regularized",
+                "sharp",
+                "sharp_conforming"
+              ],
+              "description": "Select how the additional source term due to evaporation in the heat equation (evaporative cooling) is computed.",
+              "default": "regularized"
+            },
+            "dirac delta function approximation": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "norm_of_indicator_gradient",
+                    "heaviside_phase_weighted",
+                    "heaviside_times_heaviside_phase_weighted",
+                    "reciprocal_phase_weighted",
+                    "reciprocal_times_heaviside_phase_weighted",
+                    "heavy_phase_only"
+                  ],
+                  "description": "Choose how to smear a parameter over the interface.",
+                  "default": "norm_of_indicator_gradient"
+                },
+                "auto weights": {
+                  "type": "boolean",
+                  "description": "Choose if weights should be computed automatically.",
+                  "default": false
+                },
+                "gas phase weight": {
+                  "type": "number",
+                  "description": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the gas phase (level set = -1).",
+                  "default": 1.0
+                },
+                "heavy phase weight": {
+                  "type": "number",
+                  "description": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the heavy phase (level set = 1).",
+                  "default": 1.0
+                },
+                "gas phase weight 2": {
+                  "type": "number",
+                  "description": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the gas phase (level set = -1).",
+                  "default": 1.0
+                },
+                "heavy phase weight 2": {
+                  "type": "number",
+                  "description": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the heavy liquid/solid phase (level set = 1).",
+                  "default": 1.0
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "recoil pressure": {
+          "type": "object",
+          "properties": {
+            "enable": {
+              "type": "boolean",
+              "description": "Set this parameter to true to prescribe the evaporation-induced jump in the pressure field (i.e. recoil pressure), considered as an interfacial force in the momentum balance equation.If 'evaporative dilation rate' is enabled, this pressure jump will be added to the one resulting from the discontinuous normal velocity field.",
+              "default": false
+            },
+            "ambient gas pressure": {
+              "type": "number",
+              "description": "Ambient gas pressure for the recoil pressure model.",
+              "default": 101300.0
+            },
+            "pressure coefficient": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0,
+              "description": "Pressure coefficient for the recoil pressure model.",
+              "default": 0.55
+            },
+            "temperature constant": {
+              "type": "number",
+              "description": "Temperature constant for the recoil pressure model. If this parameter is not set, the value is computed by latent_heat_evaporation * molar_mass / universal_gas_constant;",
+              "default": -1.0
+            },
+            "sticking constant": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0,
+              "description": "Sticking constant.",
+              "default": 1.0
+            },
+            "interface distributed flux type": {
+              "type": "string",
+              "enum": [
+                "local_value",
+                "interface_value"
+              ],
+              "description": "Type that determines how the recoil pressure force is computed in the interfacial zone.",
+              "default": "local_value"
+            },
+            "activation temperature": {
+              "type": "number",
+              "description": "Activation temperature for the recoil pressure. It must be smaller than or equal to the boiling temperature. As default value, the boiling temperature is chosen.",
+              "default": -1e+100
+            },
+            "dirac delta function approximation": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "norm_of_indicator_gradient",
+                    "heaviside_phase_weighted",
+                    "heaviside_times_heaviside_phase_weighted",
+                    "reciprocal_phase_weighted",
+                    "reciprocal_times_heaviside_phase_weighted",
+                    "heavy_phase_only"
+                  ],
+                  "description": "Choose how to smear a parameter over the interface.",
+                  "default": "norm_of_indicator_gradient"
+                },
+                "auto weights": {
+                  "type": "boolean",
+                  "description": "Choose if weights should be computed automatically.",
+                  "default": false
+                },
+                "gas phase weight": {
+                  "type": "number",
+                  "description": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the gas phase (level set = -1).",
+                  "default": 1.0
+                },
+                "heavy phase weight": {
+                  "type": "number",
+                  "description": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the heavy phase (level set = 1).",
+                  "default": 1.0
+                },
+                "gas phase weight 2": {
+                  "type": "number",
+                  "description": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the gas phase (level set = -1).",
+                  "default": 1.0
+                },
+                "heavy phase weight 2": {
+                  "type": "number",
+                  "description": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the heavy liquid/solid phase (level set = 1).",
+                  "default": 1.0
+                }
+              },
+              "additionalProperties": false
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "phenomenological",
+                "hybrid"
+              ],
+              "description": "Choose the model to compute the recoil pressure coefficient: phenomenological or hybrid, in case there is also an evaporation-induced velocity jump.",
+              "default": "phenomenological"
+            }
+          },
+          "additionalProperties": false
+        },
+        "formulation source term level set": {
+          "type": "string",
+          "enum": [
+            "interface_velocity_sharp",
+            "interface_velocity_sharp_heavy",
+            "interface_velocity_local",
+            "rhs"
+          ],
+          "description": "Select the type how the evaporative mass flux should be considered in the level set equation.",
+          "default": "interface_velocity_local"
+        },
+        "do level set pressure gradient interpolation": {
+          "type": "boolean",
+          "description": "Set if the level set gradient for computing the delta function within the evaporative mass flux source terms should be computed based on an interpolation to the pressure space. This is only implemented for evapor_level_set_source_term_type = rhs.",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "material": {
+      "type": "object",
+      "properties": {
+        "material template": {
+          "type": "string",
+          "enum": [
+            "none",
+            "stainless_steel",
+            "Ti64",
+            "Ti64Cunningham"
+          ],
+          "description": "If this parameter is initialized, the material parameters of the specified material will be used as template. Individual properties can be modified. However, be aware to put <material template> in the first place of the <material> section in these cases.",
+          "default": "none"
+        },
+        "gas": {
+          "type": "object",
+          "properties": {
+            "thermal conductivity": {
+              "type": "number",
+              "description": "thermal conductivity of the gas phase",
+              "default": 0.0
+            },
+            "specific heat capacity": {
+              "type": "number",
+              "description": "specific heat capacity of the gas phase",
+              "default": 0.0
+            },
+            "density": {
+              "type": "number",
+              "description": "density of the gas phase",
+              "default": 0.0
+            },
+            "dynamic viscosity": {
+              "type": "number",
+              "description": "dynamic viscosity of the gas phase",
+              "default": 0.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "liquid": {
+          "type": "object",
+          "properties": {
+            "thermal conductivity": {
+              "type": "number",
+              "description": "thermal conductivity of the liquid phase",
+              "default": 0.0
+            },
+            "specific heat capacity": {
+              "type": "number",
+              "description": "specific heat capacity of the liquid phase",
+              "default": 0.0
+            },
+            "density": {
+              "type": "number",
+              "description": "density of the liquid phase",
+              "default": 0.0
+            },
+            "dynamic viscosity": {
+              "type": "number",
+              "description": "dynamic viscosity of the liquid phase",
+              "default": 0.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "solid": {
+          "type": "object",
+          "properties": {
+            "thermal conductivity": {
+              "type": "number",
+              "description": "thermal conductivity of the solid phase",
+              "default": 0.0
+            },
+            "specific heat capacity": {
+              "type": "number",
+              "description": "specific heat capacity of the solid phase",
+              "default": 0.0
+            },
+            "density": {
+              "type": "number",
+              "description": "density of the solid phase",
+              "default": 0.0
+            },
+            "dynamic viscosity": {
+              "type": "number",
+              "description": "dynamic viscosity of the solid phase",
+              "default": 0.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "solidus temperature": {
+          "type": "number",
+          "description": "Solidus temperature (K).",
+          "default": 0.0
+        },
+        "liquidus temperature": {
+          "type": "number",
+          "description": "Liquidus temperature (K).",
+          "default": 0.0
+        },
+        "boiling temperature": {
+          "type": "number",
+          "description": "Boiling temperature (K).",
+          "default": 0.0
+        },
+        "latent heat of evaporation": {
+          "type": "number",
+          "description": "Latent heat of evaporation (J/kg).",
+          "default": 0.0
+        },
+        "molar mass": {
+          "type": "number",
+          "description": "Molar mass (mol/kg).",
+          "default": 0.0
+        },
+        "specific enthalpy reference temperature": {
+          "type": "number",
+          "description": "Reference temperature of the specific enthalpy",
+          "default": -1e+100
+        },
+        "two phase fluid properties transition type": {
+          "type": "string",
+          "enum": [
+            "sharp",
+            "smooth",
+            "consistent_with_evaporation"
+          ],
+          "description": "Choose how to interpolate the properties over the interface. sharp: properties jump at heaviside = 0.5; smooth: properties are smeared between the phases proportional to the heaviside (default); consistent_with_evaporation: same as \"smooth\", but the density is interpolated proportional by the harmonic mean.",
+          "default": "smooth"
+        },
+        "solid liquid properties transition type": {
+          "type": "string",
+          "enum": [
+            "mushy_zone",
+            "sharp"
+          ],
+          "description": "Choose how to interpolate the properties over between the liquid and the solid phase. mushy_zone: solid and liquid properties are interpolated between the solidus and liquidus temperature (default); sharp: the solid and liquid properties jump at the melting point, which is set via the solidus temperature.",
+          "default": "mushy_zone"
+        }
+      },
+      "additionalProperties": false
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "directory": {
+          "type": "string",
+          "description": "Sets the base directory for all output.",
+          "default": "./"
+        },
+        "write frequency": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647,
+          "description": "Every n timestep that should be written",
+          "default": 1
+        },
+        "write time step size": {
+          "type": "number",
+          "description": "Write output output every given time step. If this parameter is set, the output write frequency is deactivated.",
+          "default": 1.79769e+308
+        },
+        "output variables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0,
+          "description": "Specify variables that you request to output.",
+          "default": [
+            "all"
+          ]
+        },
+        "do user defined postprocessing": {
+          "type": "boolean",
+          "description": "Set this parameter to true to enable user defined postprocessing.",
+          "default": false
+        },
+        "paraview": {
+          "type": "object",
+          "properties": {
+            "enable": {
+              "type": "boolean",
+              "description": "Set this parameter to true to activate paraview output.",
+              "default": false
+            },
+            "filename": {
+              "type": "string",
+              "description": "Sets the base name for paraview output files.",
+              "default": "solution"
+            },
+            "n digits timestep": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Number of digits for the frame number of the vtu-file.",
+              "default": 4
+            },
+            "print boundary id": {
+              "type": "boolean",
+              "description": "Set this parameter to true to output a vtu-file with the boundary id.",
+              "default": false
+            },
+            "output subdomains": {
+              "type": "boolean",
+              "description": "Set this parameter to true to output the subdomain ranks.",
+              "default": false
+            },
+            "output material id": {
+              "type": "boolean",
+              "description": "Set to true to output the material id.",
+              "default": false
+            },
+            "write higher order cells": {
+              "type": "boolean",
+              "description": "Set this parameter to false to write bi- or trilinear data only. Set this parameter to true to write higher order cell data. Note: higher order cell data can only be written for hexahedron meshes and 2 or 3 dimensions.",
+              "default": true
+            },
+            "n groups": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Number of parallel written vtu-files.",
+              "default": 1
+            },
+            "n patches": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Control number of patches to enable high-order.",
+              "default": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "particles": {
+          "type": "object",
+          "properties": {
+            "enable": {
+              "type": "boolean",
+              "description": "Set this parameter to true to activate particle paraview output.",
+              "default": false
+            },
+            "filename": {
+              "type": "string",
+              "description": "Sets the base name for particle output files.",
+              "default": "particle"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "profiling": {
+      "type": "object",
+      "properties": {
+        "enable": {
+          "type": "boolean",
+          "description": "Set this parameter to true if profiling should be enabled. It will be automaticallyenabled for verbosity level >=1.",
+          "default": false
+        },
+        "write time step size": {
+          "type": "number",
+          "description": "Write profiling output every given time step size. If this parameter is set, the specified parameter for write frequency is overwritten.",
+          "default": 10.0
+        },
+        "time type": {
+          "type": "string",
+          "enum": [
+            "real",
+            "simulation"
+          ],
+          "description": "Choose the type of time measure to write profiling information.",
+          "default": "real"
+        }
+      },
+      "additionalProperties": false
+    },
+    "restart": {
+      "type": "object",
+      "properties": {
+        "save": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647,
+          "description": "Set this parameter to any number >= 0 to specify how many restart files should be kept. -1 means no restart save.",
+          "default": -1
+        },
+        "load": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647,
+          "description": "Set this parameter to any number >= 0 to specify which restart file should be loaded. -1 means no restart load.",
+          "default": -1
+        },
+        "write time step size": {
+          "type": "number",
+          "description": "Write restart output every given time step size. If this parameter is set, the specified parameter for write frequency is overwritten.",
+          "default": 0.0
+        },
+        "time type": {
+          "type": "string",
+          "enum": [
+            "real",
+            "simulation"
+          ],
+          "description": "Choose the type of time measure to write",
+          "default": "real"
+        },
+        "directory": {
+          "type": "string",
+          "description": "Write restart directory",
+          "default": ""
+        },
+        "prefix": {
+          "type": "string",
+          "description": "Write restart prefix",
+          "default": "restart"
+        }
+      },
+      "additionalProperties": false
+    },
+    "melt front propagation": {
+      "type": "object",
+      "properties": {
+        "set velocity to zero in solid": {
+          "type": "boolean",
+          "description": "Set this parameter to true to constrain the flow velocity in the solid domain.",
+          "default": false
+        },
+        "do not reinitialize in solid": {
+          "type": "boolean",
+          "description": "Set this parameter to true to forbid reinitialization of the level set field the solid domain.",
+          "default": false
+        },
+        "solid fraction lower limit": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Lower limit of the solid fraction for where the flow velocity / level set is set to zero if \"mp set velocity to zero in solid\" or \"mp set level set to zero in solid\" are enabled.",
+          "default": 1.0
+        }
+      },
+      "additionalProperties": false
+    },
+    "application specific": {
+      "type": "object",
+      "properties": {
+        "do heat transfer": {
+          "type": "boolean",
+          "description": "Set this parameter to true if you want to consider a coupling with heat transfer.",
+          "default": false
+        },
+        "do solidification": {
+          "type": "boolean",
+          "description": "Set this parameter to true if you want to consider melting/solidification effects.",
+          "default": false
+        },
+        "do advect level set": {
+          "type": "boolean",
+          "description": "Set this parameter to true if you want to advect the level set with the fluid velocity.",
+          "default": true
+        },
+        "do extrapolate coupling terms": {
+          "type": "boolean",
+          "description": "Set this parameter to true if you want to extrapolate the solution vectors for semi-explicit treatment of coupling terms.",
+          "default": false
+        },
+        "amr": {
+          "type": "object",
+          "properties": {
+            "strategy": {
+              "type": "string",
+              "enum": [
+                "generic",
+                "adaflo",
+                "KellyErrorEstimator"
+              ],
+              "description": "Select the AMR strategy.",
+              "default": "generic"
+            },
+            "do auto detect frequency": {
+              "type": "boolean",
+              "description": "Automatically determine the frequency of remeshing. If this parameter is set, the parameter `amr: every n step` is ignored.",
+              "default": false
+            },
+            "automatic grid refinement type": {
+              "type": "string",
+              "enum": [
+                "fixed_fraction",
+                "fixed_number"
+              ],
+              "description": "If the cells are refined automatically (strategy generic/KellyErrorEstimator), choose between refine_and_coarsen_fixed_number and refine_and_coarsen_fixed_fraction.",
+              "default": "fixed_number"
+            },
+            "do refine all interface cells": {
+              "type": "boolean",
+              "description": "Enforce all cells with level set values between -0.975 and 0.975 to be refined.",
+              "default": false
+            },
+            "refine gas domain": {
+              "type": "boolean",
+              "description": "Refine the gas domain.",
+              "default": false
+            },
+            "fraction of melting point refined in solid": {
+              "type": "number",
+              "description": "Define a fraction of the melting point. Cells in the solid with a higher temperature are enforced to be refined.",
+              "default": 1.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "coupling ls evapor": {
+          "type": "object",
+          "properties": {
+            "n max iter": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Maximum number of iterations for nonlinear solution.",
+              "default": 1
+            },
+            "tol": {
+              "type": "number",
+              "description": "If the change of the l2-norm of the level set is smaller than 'tol', the iteration is stopped.",
+              "default": 1e-10
+            }
+          },
+          "additionalProperties": false
+        },
+        "mp heat up": {
+          "type": "object",
+          "properties": {
+            "time step size": {
+              "type": "number",
+              "description": "Time step size until heat up is finished.",
+              "default": -1.0
+            },
+            "max change factor time step size": {
+              "type": "number",
+              "description": "Maximum allowed factor of changing the time step size between two time steps.",
+              "default": 1.5
+            },
+            "max temperature": {
+              "type": "number",
+              "description": "Temperature at which heat up is finished.",
+              "default": -1.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "coupling heat evapor": {
+          "type": "object",
+          "properties": {
+            "n max iter": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Maximum number of iterations for nonlinear solution.",
+              "default": 1
+            },
+            "tol": {
+              "type": "number",
+              "description": "If the change of the l2-norm of the level set is smaller than 'tol', the iteration is stopped.",
+              "default": 1e-10
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "detailed_parameters"
+}

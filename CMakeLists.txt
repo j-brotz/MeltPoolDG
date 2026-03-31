@@ -13,6 +13,7 @@ include(FetchContent)
 
 project(MeltPoolDG)
 
+#
 # avoid in-source compilation
 set(DEFAULT_OUT_OF_SOURCE_FOLDER "build")
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})

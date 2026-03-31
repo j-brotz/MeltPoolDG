@@ -1,13 +1,13 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+-   repo: local
     hooks:
-    -   id: trailing-whitespace
-    -   id: end-of-file-fixer
-    -   id: check-yaml
-    -   id: check-added-large-files
+    -   id: create-json-schema
+        name: Generate JSON schema
+        entry: scripts/parameters/create-all-json-schema.sh
+        language: system
+        pass_filenames: false
 -   repo: local
     hooks:
     -   id: format-all
@@ -16,3 +16,10 @@ repos:
         language: system
         types: []
         pass_filenames: false
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-yaml
+    -   id: check-added-large-files
