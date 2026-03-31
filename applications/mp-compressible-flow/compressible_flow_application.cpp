@@ -299,8 +299,8 @@ namespace MeltPoolDG::CompressibleFlow
     // set body force
     if (dim > 1 and simulation_case->parameters.flow.gravity_constant > 0.)
       {
-        std::unique_ptr<Functions::ConstantFunction<dim>> body_force =
-          std::make_unique<Functions::ConstantFunction<dim>>(
+        std::unique_ptr<dealii::Functions::ConstantFunction<dim>> body_force =
+          std::make_unique<dealii::Functions::ConstantFunction<dim>>(
             dim > 2 ?
               std::vector<number>({0., 0., -simulation_case->parameters.flow.gravity_constant}) :
               std::vector<number>({0., -simulation_case->parameters.flow.gravity_constant}));
