@@ -7,8 +7,8 @@
 int
 main()
 {
-  dealii::ParameterHandler                                 prm;
-  MeltPoolDG::Flow::CompressibleFlowCaseParameters<double> parameters;
+  dealii::ParameterHandler                             prm;
+  MeltPoolDG::CompressibleFlow::CaseParameters<double> parameters;
   parameters.print_parameters(prm, std::cout, true /*print_details*/);
   return 0;
 }

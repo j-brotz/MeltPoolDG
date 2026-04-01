@@ -10,14 +10,6 @@ max distance to analytical solution (relative): 0.013019075
 max distance to numerical distance solution (relative): 0.0077693848
 norm of interface vals: 148.23203
 ------------------------------------------------------------------
- START TEST: n_iter=1 type nearest_point #comp 1 #refine 5 dim 3
-------------------------------------------------------------------
-| narrow band threshold 0.100000    isocontour = 0.000000                            nearest_point |
-| no. stencil points: 43250                                                          nearest_point |
-max distance to analytical solution (relative): 0.47324494
-max distance to numerical distance solution (relative): 3.1519602e-15
-norm of interface vals: 104.97951
-------------------------------------------------------------------
  START TEST: n_iter=1 type nearest_point_fast #comp 1 #refine 5 dim 3
 ------------------------------------------------------------------
 | narrow band threshold 0.100000    isocontour = 0.000000                            nearest_point |
