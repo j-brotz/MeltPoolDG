@@ -432,6 +432,116 @@
         "gas": {
           "type": "object",
           "properties": {
+            "number of species": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2,
+              "description": "Number of different species in the fluid phase.",
+              "default": 1
+            },
+            "eos type": {
+              "type": "string",
+              "enum": [
+                "ideal_gas",
+                "stiffened_gas",
+                "noble_abel_stiffened_gas"
+              ],
+              "description": "Type of equation of state. The options are \"ideal_gas\", \"stiffened_gas\" and \"noble_abel_stiffened_gas\".",
+              "default": "ideal_gas"
+            },
+            "reference density": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "Reference density for computing the interior penalty factor. A good first guess is to choose a value in the order of the fluid density. If instabilities occur, the reference density can be decreased, so that the symmetric interior penalization is increased.",
+              "default": 1.0
+            },
+            "species 1": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the species used for output purposes.",
+                  "default": "species"
+                },
+                "specific isobaric heat": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "description": "Specific isobaric heat.",
+                  "default": 1000.0
+                },
+                "dynamic viscosity": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "description": "Dynamic viscosity.",
+                  "default": 0.000625
+                },
+                "gamma": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "description": "Isentropic exponent, i.e., ratio of specific heat (c_p/c_v).",
+                  "default": 1.4
+                },
+                "specific gas constant": {
+                  "type": "number",
+                  "description": "Specific gas constant.",
+                  "default": 287.1
+                },
+                "thermal conductivity": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "description": "Thermal conductivity.",
+                  "default": 1.79769e+308
+                },
+                "molar mass": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "description": "Molar mass.",
+                  "default": 1.79769e+308
+                },
+                "equation of state": {
+                  "type": "object",
+                  "properties": {
+                    "p inf": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "description": "Numerical EOS parameter to model the molecular attraction within condensed matter. The variable is required for the stiffened gas EOS and the Noble-Abel stiffened gas EOS. The minimum value is 0.",
+                      "default": 1.79769e+308
+                    },
+                    "b": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "description": "Numerical EOS parameter to model the covolume of the fluid, i.e., the exclude volume due to the finite size of the molecules. The variable is required for the Noble-Abel stiffened gas EOS. The minimum value is 0.",
+                      "default": 1.79769e+308
+                    },
+                    "q": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "boolean"
+                        }
+                      ],
+                      "description": "Numerical EOS parameter to model the 'heat bound', i.e., the energy due to chemical bounds, hydrogen bondings, latent heat,.... The variable is required for the Noble-Abel stiffened gas EOS. The maximum value is 0.",
+                      "default": "2.22507e-308"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "name": {
+              "type": "string",
+              "description": "Name of the species used for output purposes.",
+              "default": "species"
+            },
             "specific isobaric heat": {
               "type": "number",
               "minimum": 0.0,
@@ -455,31 +565,21 @@
               "description": "Specific gas constant.",
               "default": 287.1
             },
-            "reference density": {
-              "type": "number",
-              "minimum": 0.0,
-              "description": "Reference density for computing the interior penalty factor. A good first guess is to choose a value in the order of the fluid density. If instabilities occur, the reference density can be decreased, so that the symmetric interior penalization is increased.",
-              "default": 1.0
-            },
             "thermal conductivity": {
               "type": "number",
               "minimum": 0.0,
               "description": "Thermal conductivity.",
               "default": 1.79769e+308
             },
+            "molar mass": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "Molar mass.",
+              "default": 1.79769e+308
+            },
             "equation of state": {
               "type": "object",
               "properties": {
-                "type": {
-                  "type": "string",
-                  "enum": [
-                    "ideal_gas",
-                    "stiffened_gas",
-                    "noble_abel_stiffened_gas"
-                  ],
-                  "description": "Type of equation of state. The options are \"ideal_gas\", \"stiffened_gas\" and \"noble_abel_stiffened_gas\".",
-                  "default": "ideal_gas"
-                },
                 "p inf": {
                   "type": "number",
                   "minimum": 0.0,
@@ -509,6 +609,120 @@
                   ],
                   "description": "Numerical EOS parameter to model the 'heat bound', i.e., the energy due to chemical bounds, hydrogen bondings, latent heat,.... The variable is required for the Noble-Abel stiffened gas EOS. The maximum value is 0.",
                   "default": "2.22507e-308"
+                }
+              },
+              "additionalProperties": false
+            },
+            "species 2": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the species used for output purposes.",
+                  "default": "species"
+                },
+                "specific isobaric heat": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "description": "Specific isobaric heat.",
+                  "default": 1000.0
+                },
+                "dynamic viscosity": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "description": "Dynamic viscosity.",
+                  "default": 0.000625
+                },
+                "gamma": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "description": "Isentropic exponent, i.e., ratio of specific heat (c_p/c_v).",
+                  "default": 1.4
+                },
+                "specific gas constant": {
+                  "type": "number",
+                  "description": "Specific gas constant.",
+                  "default": 287.1
+                },
+                "thermal conductivity": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "description": "Thermal conductivity.",
+                  "default": 1.79769e+308
+                },
+                "molar mass": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "description": "Molar mass.",
+                  "default": 1.79769e+308
+                },
+                "equation of state": {
+                  "type": "object",
+                  "properties": {
+                    "p inf": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "description": "Numerical EOS parameter to model the molecular attraction within condensed matter. The variable is required for the stiffened gas EOS and the Noble-Abel stiffened gas EOS. The minimum value is 0.",
+                      "default": 1.79769e+308
+                    },
+                    "b": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "description": "Numerical EOS parameter to model the covolume of the fluid, i.e., the exclude volume due to the finite size of the molecules. The variable is required for the Noble-Abel stiffened gas EOS. The minimum value is 0.",
+                      "default": 1.79769e+308
+                    },
+                    "q": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "boolean"
+                        }
+                      ],
+                      "description": "Numerical EOS parameter to model the 'heat bound', i.e., the energy due to chemical bounds, hydrogen bondings, latent heat,.... The variable is required for the Noble-Abel stiffened gas EOS. The maximum value is 0.",
+                      "default": "2.22507e-308"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "species interactions": {
+              "type": "object",
+              "properties": {
+                "interaction pair1": {
+                  "type": "object",
+                  "properties": {
+                    "species 1": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 2,
+                      "description": "Number of the first species in the interaction pair.",
+                      "default": 1
+                    },
+                    "species 2": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 2,
+                      "description": "Number of the second species in the interaction pair.",
+                      "default": 2
+                    },
+                    "diffusion coefficient": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "description": "Diffusion coefficient for the interaction between the two species.",
+                      "default": 0.0
+                    }
+                  },
+                  "additionalProperties": false
                 }
               },
               "additionalProperties": false
