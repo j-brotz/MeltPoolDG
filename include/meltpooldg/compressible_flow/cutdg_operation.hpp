@@ -296,15 +296,7 @@ namespace MeltPoolDG::CompressibleFlow
     CutFlowOperatorVariant cut_flow_operator;
 
     /// Object containing the data post processor for the different output options
-    CompressibleFlow::OutputManager<
-      dim,
-      number,
-      CompressibleFlow::
-        DofValueView<dim, CompressibleFlow::ConservedVariablesType<dim, number, 1, number>>,
-      CompressibleFlow::
-        DofStateView<dim, number, CompressibleFlow::ConservedVariablesType<dim, number, 1, number>>,
-      CompressibleFlow::MaterialView<dim, number>>
-      output_manager;
+    OutputManager<dim, number> output_manager;
 
     /**
      * @brief Adapt the dof layout and solution vector to a new interface position, which is defined

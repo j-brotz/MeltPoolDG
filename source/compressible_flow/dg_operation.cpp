@@ -36,18 +36,28 @@ namespace MeltPoolDG::CompressibleFlow
     const unsigned int                   flow_dof_idx,
     const unsigned int                   flow_quad_idx)
     : flow_scratch_data(flow_data, material_data, scratch_data, flow_dof_idx, flow_quad_idx)
-    , output_manager(
-        [](ConservedVariablesType<dim, number, n_species, number> &value) -> auto {
-          return DofValueView<dim, ConservedVariablesType<dim, number, n_species, number>>(value);
-        },
-        [&material_data](ConservedVariablesType<dim, number, n_species, number> &value) -> auto {
-          return DofStateView<dim, number, ConservedVariablesType<dim, number, n_species, number>>(
-            value, material_data);
-        },
-        [&material_data](auto &...) -> auto { return MaterialView<dim, number>(material_data); })
 
   {
     setup_operator();
+
+    using OutputView =
+      DofStateView<dim, number, ConservedVariablesType<dim, number, n_species, number>>;
+
+    const auto create_output_view =
+      [&material_data](ConservedVariablesType<dim, number, n_species, number> &value) -> auto {
+      return DofStateView<dim, number, ConservedVariablesType<dim, number, n_species, number>>(
+        value, material_data);
+    };
+
+    output_manager.add_conserved_variables_post_processor(
+      std::make_unique<ConservedVariablesPostProcessor<dim, number, OutputView>>(
+        create_output_view));
+    output_manager.add_primitive_variables_post_processor(
+      std::make_unique<PrimitiveVariablesPostProcessor<dim, number, OutputView>>(
+        create_output_view));
+    output_manager.add_material_quantities_post_processor(
+      std::make_unique<MaterialVariablesPostProcessor<dim, number, OutputView>>(
+        create_output_view));
   }
 
   template <int dim, typename number, int n_species>
@@ -95,10 +105,13 @@ namespace MeltPoolDG::CompressibleFlow
   void
   DGOperation<dim, number, n_species>::set_initial_condition(const Function<dim> &function)
   {
-    FECellIntegrator<dim, dim + 2, number> phi(flow_scratch_data.scratch_data.get_matrix_free(),
-                                               flow_scratch_data.dof_idx,
-                                               flow_scratch_data.quad_idx);
-    MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, dim + 2, number> inverse(phi);
+    FECellIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi(
+      flow_scratch_data.scratch_data.get_matrix_free(),
+      flow_scratch_data.dof_idx,
+      flow_scratch_data.quad_idx);
+    MatrixFreeOperators::
+      CellwiseInverseMassMatrix<dim, -1, n_conserved_variables<dim, n_species>, number>
+        inverse(phi);
     flow_scratch_data.solution_history.get_current_solution().zero_out_ghost_values();
     for (unsigned int cell = 0;
          cell < flow_scratch_data.scratch_data.get_matrix_free().n_cell_batches();
@@ -106,11 +119,14 @@ namespace MeltPoolDG::CompressibleFlow
       {
         phi.reinit(cell);
         for (const unsigned int q : phi.quadrature_point_indices())
-          phi.submit_dof_value(
-            VectorTools::evaluate_function_at_vectorized_points<dim, number, dim + 2>(
-              function, phi.quadrature_point(q)),
-            q);
-        inverse.transform_from_q_points_to_basis(dim + 2,
+          phi.submit_dof_value(VectorTools::evaluate_function_at_vectorized_points<
+                                 dim,
+                                 number,
+                                 n_conserved_variables<dim, n_species>>(function,
+                                                                        phi.quadrature_point(q)),
+                               q);
+
+        inverse.transform_from_q_points_to_basis(n_conserved_variables<dim, n_species>,
                                                  phi.begin_dof_values(),
                                                  phi.begin_dof_values());
         phi.set_dof_values(flow_scratch_data.solution_history.get_current_solution());
@@ -171,9 +187,10 @@ namespace MeltPoolDG::CompressibleFlow
     TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), "compute transport speed");
     number             max_transport              = 0;
     number             convective_time_step_limit = 0.;
-    FECellIntegrator<dim, dim + 2, number> phi(flow_scratch_data.scratch_data.get_matrix_free(),
-                                               flow_scratch_data.dof_idx,
-                                               flow_scratch_data.quad_idx);
+    FECellIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi(
+      flow_scratch_data.scratch_data.get_matrix_free(),
+      flow_scratch_data.dof_idx,
+      flow_scratch_data.quad_idx);
 
     for (unsigned int cell = 0;
          cell < flow_scratch_data.scratch_data.get_matrix_free().n_cell_batches();
@@ -185,17 +202,16 @@ namespace MeltPoolDG::CompressibleFlow
         VectorizedArray<number> local_max = 0.;
         for (const unsigned int q : phi.quadrature_point_indices())
           {
-            const auto conserved_variables = phi.get_value(q);
-            const auto velocity            = calculate_velocity<dim, number>(conserved_variables);
+            const auto w_q = phi.get_value(q);
+
+            DofStateView<dim, number, const ConservedVariablesType<dim, number, n_species>> w_view(
+              w_q, flow_scratch_data.material.data);
 
             const auto              inverse_jacobian = phi.inverse_jacobian(q);
-            const auto              convective_speed = inverse_jacobian * velocity;
+            const auto              convective_speed = inverse_jacobian * w_view.velocity();
             VectorizedArray<number> convective_limit = 0.;
             for (unsigned int d = 0; d < dim; ++d)
               convective_limit = std::max(convective_limit, std::abs(convective_speed[d]));
-
-            const auto speed_of_sound =
-              flow_scratch_data.material.eos_utils->calculate_speed_of_sound(conserved_variables);
 
             Tensor<1, dim, VectorizedArray<number>> eigenvector;
             for (unsigned int d = 0; d < dim; ++d)
@@ -211,7 +227,8 @@ namespace MeltPoolDG::CompressibleFlow
             const auto jac_times_ev = inverse_jacobian * eigenvector;
             const auto max_eigenvalue =
               std::sqrt((jac_times_ev * jac_times_ev) / (eigenvector * eigenvector));
-            local_max = std::max(local_max, max_eigenvalue * speed_of_sound + convective_limit);
+            local_max =
+              std::max(local_max, max_eigenvalue * w_view.speed_of_sound() + convective_limit);
           }
 
         // Similarly to the previous function, we must make sure to accumulate
@@ -307,7 +324,6 @@ namespace MeltPoolDG::CompressibleFlow
                 std::make_unique<DGOperatorImplicit<dim, number, false>>(flow_scratch_data);
             return;
           }
-        // TODO
         else if (flow_scratch_data.flow_data.time_integrator.integrator_type ==
                  TimeIntegration::TimeIntegratorSchemes::imex)
           {
@@ -334,7 +350,11 @@ namespace MeltPoolDG::CompressibleFlow
                   "' is not supported for multi-component flows!"));
   }
 
-  template class DGOperation<1, double>;
-  template class DGOperation<2, double>;
-  template class DGOperation<3, double>;
+  template class DGOperation<1, double, 1>;
+  template class DGOperation<2, double, 1>;
+  template class DGOperation<3, double, 1>;
+
+  template class DGOperation<1, double, 2>;
+  template class DGOperation<2, double, 2>;
+  template class DGOperation<3, double, 2>;
 } // namespace MeltPoolDG::CompressibleFlow

@@ -1,3 +1,4 @@
+#include <meltpooldg/compressible_flow/boundary_conditions.templates.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_explicit.hpp>
 #include <meltpooldg/compressible_flow/explicit_time_integration_utils.hpp>

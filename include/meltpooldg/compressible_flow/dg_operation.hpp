@@ -167,16 +167,10 @@ namespace MeltPoolDG::CompressibleFlow
     OperationScratchData<dim, number> flow_scratch_data;
 
     /// Compressible flow operator object
-    std::unique_ptr<DGOperatorBase<dim, number>> comp_flow_operator;
+    std::unique_ptr<DGOperatorBase<dim, number, n_species>> comp_flow_operator;
 
     /// Object containing the data post processor for the different output options
-    OutputManager<dim,
-                  number,
-                  DofValueView<dim, ConservedVariablesType<dim, number, 1, number>>,
-
-                  DofStateView<dim, number, ConservedVariablesType<dim, number, 1, number>>,
-                  MaterialView<dim, number>>
-      output_manager;
+    OutputManager<dim, number> output_manager;
 
     /**
      * @brief Compute the convective time step limit for the current mesh and flow field.
