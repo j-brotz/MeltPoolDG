@@ -299,10 +299,10 @@ namespace MeltPoolDG::CompressibleFlow
     CompressibleFlow::OutputManager<
       dim,
       number,
-      CompressibleFlow::DofValueView<dim,
-                                     CompressibleFlow::ConservedVariablesType<dim, number, number>>,
       CompressibleFlow::
-        DofStateView<dim, number, CompressibleFlow::ConservedVariablesType<dim, number, number>>,
+        DofValueView<dim, CompressibleFlow::ConservedVariablesType<dim, number, 1, number>>,
+      CompressibleFlow::
+        DofStateView<dim, number, CompressibleFlow::ConservedVariablesType<dim, number, 1, number>>,
       CompressibleFlow::MaterialView<dim, number>>
       output_manager;
 

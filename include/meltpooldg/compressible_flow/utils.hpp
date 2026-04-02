@@ -112,7 +112,7 @@ namespace MeltPoolDG::CompressibleFlow
    * must implement the core functions:
    * @p value(): Invoked at each quadrature point to compute the contribution of the external force.
    */
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species = 1>
   struct ExternalFlowForce
   {
     virtual ~ExternalFlowForce() = default;
@@ -131,15 +131,15 @@ namespace MeltPoolDG::CompressibleFlow
      * @return The computed contribution of the external force to be added to the conservation
      * equations.
      */
-    virtual ConservedVariablesType<dim, number>
+    virtual ConservedVariablesType<dim, number, n_species>
     value(number                                                              time_step_size,
           const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells,
           const dealii::Point<dim, dealii::VectorizedArray<number>>          &points,
-          const ConservedVariablesType<dim, number>                          &w) = 0;
+          const ConservedVariablesType<dim, number, n_species>               &w) = 0;
   };
 
 
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species = 1>
   struct ExternalFlowForceJacobian
   {
     virtual ~ExternalFlowForceJacobian() = default;
@@ -160,12 +160,12 @@ namespace MeltPoolDG::CompressibleFlow
      * @return The computed contribution of the external force to be added to the conservation
      * equations.
      */
-    virtual ConservedVariablesType<dim, number>
+    virtual ConservedVariablesType<dim, number, n_species>
     value(number                                                              time_step_size,
           const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells,
           const dealii::Point<dim, dealii::VectorizedArray<number>>          &points,
-          const ConservedVariablesType<dim, number>                          &w,
-          const ConservedVariablesType<dim, number>                          &delta_w) = 0;
+          const ConservedVariablesType<dim, number, n_species>               &w,
+          const ConservedVariablesType<dim, number, n_species>               &delta_w) = 0;
   };
 
   /********************************************************************************************
@@ -373,5 +373,24 @@ namespace MeltPoolDG::CompressibleFlow
             process_cell(CutUtil::CellCategory::liquid, 0, material_liquid, cell_batch);
           }
       }
+  }
+
+  template <typename DofViewType, typename VectorizedArrayType>
+  inline DEAL_II_ALWAYS_INLINE //
+    VectorizedArrayType
+    maximum_local_wave_speed(const DofViewType &u_m, const DofViewType &u_p)
+  {
+    const auto velocity_m = u_m.velocity();
+    const auto velocity_p = u_p.velocity();
+
+    const auto sound_speed_p = u_p.speed_of_sound();
+    const auto sound_speed_m = u_m.speed_of_sound();
+
+    const auto sound_speed_p2 = sound_speed_p * sound_speed_p;
+    const auto sound_speed_m2 = sound_speed_m * sound_speed_m;
+
+    const auto lambda = 0.5 * std::sqrt(std::max(velocity_p.norm_square() + sound_speed_p2,
+                                                 velocity_m.norm_square() + sound_speed_m2));
+    return lambda;
   }
 } // namespace MeltPoolDG::CompressibleFlow

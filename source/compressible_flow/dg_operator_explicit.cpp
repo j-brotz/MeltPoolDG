@@ -16,27 +16,27 @@ namespace MeltPoolDG::CompressibleFlow
 {
   using namespace dealii;
 
-  template <int dim, typename number, bool is_viscous>
-  DGOperatorExplicit<dim, number, is_viscous>::DGOperatorExplicit(
+  template <int dim, typename number, int n_species>
+  DGOperatorExplicit<dim, number, n_species>::DGOperatorExplicit(
     OperationScratchData<dim, number> &flow_scratch_data)
     : flow_scratch_data(flow_scratch_data)
     , time_integrator(flow_scratch_data.flow_data.time_integrator)
   {
     time_integrator.configure_rhs(
-      std::bind_front(&DGOperatorExplicit<dim, number, is_viscous>::apply_operator, this));
+      std::bind_front(&DGOperatorExplicit<dim, number, n_species>::apply_operator, this));
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number, int n_species>
   void
-  DGOperatorExplicit<dim, number, is_viscous>::reinit()
+  DGOperatorExplicit<dim, number, n_species>::reinit()
   {
     flow_scratch_data.reinit(time_integrator.required_solution_history_size());
     time_integrator.reinit(flow_scratch_data.solution_history.get_current_solution());
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number, int n_species>
   void
-  DGOperatorExplicit<dim, number, is_viscous>::advance_time_step(number time, number time_step)
+  DGOperatorExplicit<dim, number, n_species>::advance_time_step(number time, number time_step)
   {
     std::function<void(number, number, VectorType &, const VectorType &)> pre_processing =
       [&](number time, number, VectorType &, const VectorType &) -> void {
@@ -51,21 +51,30 @@ namespace MeltPoolDG::CompressibleFlow
       std::function<void(number, number, VectorType &, const VectorType &)>());
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number, int n_species>
+  bool
+  DGOperatorExplicit<dim, number, n_species>::is_viscous() const
+  {
+    for (unsigned int species = 0; species < n_species; ++species)
+      if (flow_scratch_data.material.data.species_data[species].dynamic_viscosity > 0.0)
+        return true;
+    return false;
+  }
+
+  template <int dim, typename number, int n_species>
   void
-  DGOperatorExplicit<dim, number, is_viscous>::apply_operator(
+  DGOperatorExplicit<dim, number, n_species>::apply_operator(
     const number                                           time,
     const number                                           time_step,
     VectorType                                            &dst,
     const VectorType                                      &src,
     const std::function<void(unsigned int, unsigned int)> &func) const
   {
-    current_time_step = time_step;
-    using local_applier_type =
-      std::function<void(const dealii::MatrixFree<dim, number> &,
-                         dealii::LinearAlgebra::distributed::Vector<number>       &dst,
-                         const dealii::LinearAlgebra::distributed::Vector<number> &src,
-                         const std::pair<unsigned int, unsigned int> &)>;
+    current_time_step        = time_step;
+    using local_applier_type = std::function<void(const dealii::MatrixFree<dim, number> &,
+                                                  VectorType       &dst,
+                                                  const VectorType &src,
+                                                  const std::pair<unsigned int, unsigned int> &)>;
 
     flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
     local_applier_type cell          = MPDG_LAMBDA_WRAPPER(this->local_apply_cell);
@@ -77,10 +86,10 @@ namespace MeltPoolDG::CompressibleFlow
     local_applier_type inverse =
       [dof_idx = flow_scratch_data.dof_idx,
        quad_idx =
-         flow_scratch_data.quad_idx](const MatrixFree<dim, number>                    &matrix_free,
-                                     LinearAlgebra::distributed::Vector<number>       &dst,
-                                     const LinearAlgebra::distributed::Vector<number> &src,
-                                     const std::pair<unsigned int, unsigned int>      &cell_range) {
+         flow_scratch_data.quad_idx](const MatrixFree<dim, number>               &matrix_free,
+                                     VectorType                                  &dst,
+                                     const VectorType                            &src,
+                                     const std::pair<unsigned int, unsigned int> &cell_range) {
         Utilities::MatrixFree::local_apply_inverse_mass_matrix<dim, dim + 2, number>(
           matrix_free, dst, src, cell_range, dof_idx, quad_idx);
       };
@@ -88,52 +97,51 @@ namespace MeltPoolDG::CompressibleFlow
       inverse, dst, dst, std::function<void(unsigned int, unsigned int)>(), func);
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number, int n_species>
   void
-  DGOperatorExplicit<dim, number, is_viscous>::add_external_force(
-    std::shared_ptr<ExternalFlowForce<dim, number>> external_force,
-    std::shared_ptr<ExternalFlowForceJacobian<dim, number>>)
+  DGOperatorExplicit<dim, number, n_species>::add_external_force(
+    std::shared_ptr<ExternalFlowForce<dim, number, n_species>> external_force,
+    std::shared_ptr<ExternalFlowForceJacobian<dim, number, n_species>>)
   {
     Assert(external_force != nullptr, dealii::ExcInternalError());
     external_forces.push_back(external_force);
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number, int n_species>
   void
-  DGOperatorExplicit<dim, number, is_viscous>::local_apply_cell(
+  DGOperatorExplicit<dim, number, n_species>::local_apply_cell(
     const MatrixFree<dim, number>       &mf,
     VectorType                          &dst,
     const VectorType                    &src,
     const std::pair<unsigned, unsigned> &cell_range) const
   {
-    FECellIntegrator<dim, dim + 2, number> phi(mf,
-                                               flow_scratch_data.dof_idx,
-                                               flow_scratch_data.quad_idx);
+    FECellIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi(
+      mf, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
         phi.reinit(cell);
         phi.gather_evaluate(src,
-                            EvaluationFlags::values |
-                              (is_viscous ? EvaluationFlags::gradients : EvaluationFlags::nothing));
+                            EvaluationFlags::values | (is_viscous() ? EvaluationFlags::gradients :
+                                                                      EvaluationFlags::nothing));
 
         std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators =
           cells_in_cell_batch(mf, cell);
 
         for (const unsigned int q : phi.quadrature_point_indices())
           {
-            SourceType<dim, number> source;
-            FluxType<dim, number>   flux;
+            FlowSourceType source;
+            FlowFluxType   flux;
 
-            if (is_viscous)
-              flux = ConvectionDiffusionOperator::cell(
-                phi.get_value(q),
-                phi.get_gradient(q),
-                ConvectiveFlux<dim, number>(flow_scratch_data.material.data),
-                DiffusiveFlux<dim, number>(flow_scratch_data.material.data));
+            if (is_viscous())
+              flux =
+                ConvectionDiffusionOperator::cell(phi.get_value(q),
+                                                  phi.get_gradient(q),
+                                                  ConvectiveKernel(flow_scratch_data.material.data),
+                                                  DiffusiveKernel(flow_scratch_data.material.data));
             else
-              flux = ConvectionOperator::cell(
-                phi.get_value(q), ConvectiveFlux<dim, number>(flow_scratch_data.material.data));
+              flux = ConvectionOperator::cell(phi.get_value(q),
+                                              ConvectiveKernel(flow_scratch_data.material.data));
 
             for (auto &external_force : external_forces)
               source += external_force->value(current_time_step,
@@ -153,37 +161,33 @@ namespace MeltPoolDG::CompressibleFlow
       }
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number, int n_species>
   void
-  DGOperatorExplicit<dim, number, is_viscous>::local_apply_face(
+  DGOperatorExplicit<dim, number, n_species>::local_apply_face(
     const MatrixFree<dim, number>               &mf,
     VectorType                                  &dst,
     const VectorType                            &src,
     const std::pair<unsigned int, unsigned int> &face_range) const
   {
-    FEFaceIntegrator<dim, dim + 2, number> phi_m(mf,
-                                                 true,
-                                                 flow_scratch_data.dof_idx,
-                                                 flow_scratch_data.quad_idx);
-    FEFaceIntegrator<dim, dim + 2, number> phi_p(mf,
-                                                 false,
-                                                 flow_scratch_data.dof_idx,
-                                                 flow_scratch_data.quad_idx);
+    FEFaceIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi_m(
+      mf, true, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
+    FEFaceIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi_p(
+      mf, false, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
 
     for (unsigned int face = face_range.first; face < face_range.second; ++face)
       {
         phi_p.reinit(face);
         phi_p.gather_evaluate(src,
-                              EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
-                                                                      EvaluationFlags::nothing));
+                              EvaluationFlags::values | (is_viscous() ? EvaluationFlags::gradients :
+                                                                        EvaluationFlags::nothing));
 
         phi_m.reinit(face);
         phi_m.gather_evaluate(src,
-                              EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
-                                                                      EvaluationFlags::nothing));
+                              EvaluationFlags::values | (is_viscous() ? EvaluationFlags::gradients :
+                                                                        EvaluationFlags::nothing));
 
         const VectorizedArray<number> interior_penalty_parameter =
-          is_viscous ?
+          is_viscous() ?
             flow_scratch_data.material.data.dynamic_viscosity /
               flow_scratch_data.material.data.reference_density *
               std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
@@ -192,10 +196,10 @@ namespace MeltPoolDG::CompressibleFlow
 
         for (const unsigned int q : phi_m.quadrature_point_indices())
           {
-            FaceFluxType<dim, number> flux_m;
-            FaceFluxType<dim, number> flux_p;
+            FaceFluxType<dim, number, n_species> flux_m;
+            FaceFluxType<dim, number, n_species> flux_p;
 
-            if (is_viscous)
+            if (is_viscous())
               {
                 const auto flux = ConvectionDiffusionOperator::face(
                   phi_m.get_value(q),
@@ -204,8 +208,8 @@ namespace MeltPoolDG::CompressibleFlow
                   phi_p.get_gradient(q),
                   phi_m.normal_vector(q),
                   interior_penalty_parameter,
-                  ConvectiveFlux<dim, number>(flow_scratch_data.material.data),
-                  DiffusiveFlux<dim, number>(flow_scratch_data.material.data));
+                  ConvectiveKernel(flow_scratch_data.material.data),
+                  DiffusiveKernel(flow_scratch_data.material.data));
 
                 flux_m = flux.inner_face_value;
                 flux_p = flux.outer_face_value;
@@ -215,11 +219,11 @@ namespace MeltPoolDG::CompressibleFlow
               }
             else
               {
-                const auto flux = ConvectionOperator::face(phi_m.get_value(q),
-                                                           phi_p.get_value(q),
-                                                           phi_m.normal_vector(q),
-                                                           ConvectiveFlux<dim, number>(
-                                                             flow_scratch_data.material.data));
+                const auto flux =
+                  ConvectionOperator::face(phi_m.get_value(q),
+                                           phi_p.get_value(q),
+                                           phi_m.normal_vector(q),
+                                           ConvectiveKernel(flow_scratch_data.material.data));
 
                 flux_m = flux.inner_face_value;
                 flux_p = flux.outer_face_value;
@@ -229,33 +233,40 @@ namespace MeltPoolDG::CompressibleFlow
             phi_p.submit_value(flux_p, q);
           }
 
-        phi_p.integrate_scatter(EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
-                                                                        EvaluationFlags::nothing),
+        phi_p.integrate_scatter(EvaluationFlags::values |
+                                  (is_viscous() ? EvaluationFlags::gradients :
+                                                  EvaluationFlags::nothing),
                                 dst);
-        phi_m.integrate_scatter(EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
-                                                                        EvaluationFlags::nothing),
+        phi_m.integrate_scatter(EvaluationFlags::values |
+                                  (is_viscous() ? EvaluationFlags::gradients :
+                                                  EvaluationFlags::nothing),
                                 dst);
       }
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number, int n_species>
   void
-  DGOperatorExplicit<dim, number, is_viscous>::local_apply_boundary_face(
+  DGOperatorExplicit<dim, number, n_species>::local_apply_boundary_face(
     const MatrixFree<dim, number>       &mf,
     VectorType                          &dst,
     const VectorType                    &src,
     const std::pair<unsigned, unsigned> &face_range) const
   {
-    FEFaceIntegrator<dim, dim + 2, number> phi_m(mf,
-                                                 true,
-                                                 flow_scratch_data.dof_idx,
-                                                 flow_scratch_data.quad_idx);
+    FEFaceIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi_m(
+      mf, true, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
 
-    using DofValueAndGradientStateViewType =
+    using DofReaderType =
       DofValueAndGradientStateView<dim,
                                    number,
-                                   const ConservedVariablesType<dim, number>,
-                                   const ConservedVariablesGradientType<dim, number>>;
+                                   const ConservedVariablesType<dim, number, n_species>,
+                                   const ConservedVariablesGradientType<dim, number, n_species>>;
+
+    using DofWriteType =
+      DofValueAndGradientStateView<dim,
+                                   number,
+                                   ConservedVariablesType<dim, number, n_species>,
+                                   ConservedVariablesGradientType<dim, number, n_species>>;
+
 
     for (unsigned int face = face_range.first; face < face_range.second; ++face)
       {
@@ -263,25 +274,29 @@ namespace MeltPoolDG::CompressibleFlow
         phi_m.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
         const VectorizedArray<number> interior_penalty_parameter =
-          is_viscous ? flow_scratch_data.material.data.dynamic_viscosity /
-                         flow_scratch_data.material.data.reference_density *
-                         phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
-                       0.;
+          is_viscous() ? flow_scratch_data.material.data.dynamic_viscosity /
+                           flow_scratch_data.material.data.reference_density *
+                           phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
+                         0.;
 
         for (const unsigned int q : phi_m.quadrature_point_indices())
           {
             const auto w_m      = phi_m.get_value(q);
             const auto grad_w_m = phi_m.get_gradient(q);
 
-            const auto [w_p, grad_w_p] =
-              flow_scratch_data.boundary_conditions.get_boundary_face_value_and_gradient(
+            ConservedVariablesType<dim, number, n_species>         w_p;
+            ConservedVariablesGradientType<dim, number, n_species> grad_w_p;
+
+            flow_scratch_data.boundary_conditions
+              .set_conserved_variables_boundary_value_and_gradient(
                 phi_m.quadrature_point(q),
                 phi_m.normal_vector(q),
                 phi_m.boundary_id(),
-                DofValueAndGradientStateViewType(w_m, grad_w_m, flow_scratch_data.material.data));
+                DofReaderType(w_m, grad_w_m, flow_scratch_data.material.data),
+                DofWriteType(w_p, grad_w_p, flow_scratch_data.material.data));
 
-            FaceFluxType<dim, number> flux_m;
-            if (is_viscous)
+            FaceFluxType<dim, number, n_species> flux_m;
+            if (is_viscous())
               {
                 const auto flux = ConvectionDiffusionOperator::face(
                   phi_m.get_value(q),
@@ -290,8 +305,8 @@ namespace MeltPoolDG::CompressibleFlow
                   grad_w_p,
                   phi_m.normal_vector(q),
                   interior_penalty_parameter,
-                  ConvectiveFlux<dim, number>(flow_scratch_data.material.data),
-                  DiffusiveFlux<dim, number>(flow_scratch_data.material.data));
+                  ConvectiveKernel(flow_scratch_data.material.data),
+                  DiffusiveKernel(flow_scratch_data.material.data));
 
                 flux_m = flux.inner_face_value;
 
@@ -299,11 +314,11 @@ namespace MeltPoolDG::CompressibleFlow
               }
             else
               {
-                const auto flux = ConvectionOperator::face(phi_m.get_value(q),
-                                                           w_p,
-                                                           phi_m.normal_vector(q),
-                                                           ConvectiveFlux<dim, number>(
-                                                             flow_scratch_data.material.data));
+                const auto flux =
+                  ConvectionOperator::face(phi_m.get_value(q),
+                                           w_p,
+                                           phi_m.normal_vector(q),
+                                           ConvectiveKernel(flow_scratch_data.material.data));
 
                 flux_m = flux.inner_face_value;
               }
@@ -311,16 +326,18 @@ namespace MeltPoolDG::CompressibleFlow
             phi_m.submit_value(flux_m, q);
           }
 
-        phi_m.integrate_scatter(EvaluationFlags::values | (is_viscous ? EvaluationFlags::gradients :
-                                                                        EvaluationFlags::nothing),
+        phi_m.integrate_scatter(EvaluationFlags::values |
+                                  (is_viscous() ? EvaluationFlags::gradients :
+                                                  EvaluationFlags::nothing),
                                 dst);
       }
   }
 
-  template class DGOperatorExplicit<1, double, true>;
-  template class DGOperatorExplicit<2, double, true>;
-  template class DGOperatorExplicit<3, double, true>;
-  template class DGOperatorExplicit<1, double, false>;
-  template class DGOperatorExplicit<2, double, false>;
-  template class DGOperatorExplicit<3, double, false>;
+  template class DGOperatorExplicit<1, double, 1>;
+  template class DGOperatorExplicit<2, double, 1>;
+  template class DGOperatorExplicit<3, double, 1>;
+
+  template class DGOperatorExplicit<1, double, 2>;
+  template class DGOperatorExplicit<2, double, 2>;
+  template class DGOperatorExplicit<3, double, 2>;
 } // namespace MeltPoolDG::CompressibleFlow

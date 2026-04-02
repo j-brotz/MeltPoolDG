@@ -65,11 +65,11 @@ namespace MeltPoolDG::CompressibleFlow
         mapping_info_cells,
         mapping_info_faces))
     , output_manager(
-        [](ConservedVariablesType<dim, number, number> &value) -> auto {
-          return DofValueView<dim, ConservedVariablesType<dim, number, number>>(value);
+        [](ConservedVariablesType<dim, number, 1, number> &value) -> auto {
+          return DofValueView<dim, ConservedVariablesType<dim, number, 1, number>>(value);
         },
-        [&material_data_in](ConservedVariablesType<dim, number, number> &value) -> auto {
-          return DofStateView<dim, number, ConservedVariablesType<dim, number, number>>(
+        [&material_data_in](ConservedVariablesType<dim, number, 1, number> &value) -> auto {
+          return DofStateView<dim, number, ConservedVariablesType<dim, number, 1, number>>(
             value, material_data_in);
         },
         [&material_data_in](auto &...) -> auto {

@@ -10,7 +10,7 @@ namespace MeltPoolDG::CompressibleFlow
    * @brief Interface of the compressible flow operator interacting with the compressible flow
    * operation.
    */
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species = 1>
   class DGOperatorBase
   {
   public:
@@ -37,7 +37,8 @@ namespace MeltPoolDG::CompressibleFlow
 
     virtual void
     add_external_force(
-      std::shared_ptr<ExternalFlowForce<dim, number>>         external_force_residuum,
-      std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian) = 0;
+      std::shared_ptr<ExternalFlowForce<dim, number, n_species>> external_force_residuum,
+      std::shared_ptr<ExternalFlowForceJacobian<dim, number, n_species>>
+        external_force_jacobian) = 0;
   };
 } // namespace MeltPoolDG::CompressibleFlow

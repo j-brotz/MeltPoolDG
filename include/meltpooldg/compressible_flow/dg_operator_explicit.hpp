@@ -28,20 +28,26 @@ namespace MeltPoolDG::CompressibleFlow
    * @tparam number Floating point format type.
    * @tparam is_viscous Indicates whether the flow is viscous.
    */
-  template <int dim, typename number, bool is_viscous = true>
-  class DGOperatorExplicit final : public DGOperatorBase<dim, number>
+  template <int dim, typename number, int n_species = 1>
+  class DGOperatorExplicit final : public DGOperatorBase<dim, number, n_species>
   {
   public:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
-    using ConvectionDiffusionOperator =
-      Utils::DGConvectionDiffusionOperator<dim,
-                                           number,
-                                           ConvectiveFlux<dim, number>,
-                                           DiffusiveFlux<dim, number>>;
+    using ConservedVariables         = ConservedVariablesType<dim, number, n_species>;
+    using ConservedVariablesGradient = ConservedVariablesGradientType<dim, number, n_species>;
 
-    using ConvectionOperator =
-      Utils::DGConvectionOperator<dim, number, ConvectiveFlux<dim, number>>;
+    using FlowFluxType   = FluxType<dim, number, n_species>;
+    using FlowSourceType = SourceType<dim, number, n_species>;
+
+    using ConvectiveKernel = ConvectiveFlux<dim, number, ConservedVariables, FlowFluxType>;
+    using DiffusiveKernel =
+      DiffusiveFlux<dim, number, ConservedVariables, ConservedVariablesGradient, FlowFluxType>;
+
+    using ConvectionDiffusionOperator =
+      Utils::DGConvectionDiffusionOperator<dim, number, ConvectiveKernel, DiffusiveKernel>;
+
+    using ConvectionOperator = Utils::DGConvectionOperator<dim, number, ConvectiveKernel>;
 
     /**
      * @brief Constructor.
@@ -96,8 +102,8 @@ namespace MeltPoolDG::CompressibleFlow
                    const std::function<void(unsigned int, unsigned int)> &func) const;
 
     void
-    add_external_force(std::shared_ptr<ExternalFlowForce<dim, number>> external_force,
-                       std::shared_ptr<ExternalFlowForceJacobian<dim, number>>) override;
+    add_external_force(std::shared_ptr<ExternalFlowForce<dim, number, n_species>> external_force,
+                       std::shared_ptr<ExternalFlowForceJacobian<dim, number, n_species>>) override;
 
   private:
     /// Scratch data for compressible flows
@@ -108,10 +114,19 @@ namespace MeltPoolDG::CompressibleFlow
 
     /// This pointer may hold an instance of an external fluid force contribution
     /// (e.g., gravity, body forces, or user - defined source terms)
-    std::vector<std::shared_ptr<ExternalFlowForce<dim, number>>> external_forces;
+    std::vector<std::shared_ptr<ExternalFlowForce<dim, number, n_species>>> external_forces;
 
     /// Current time step size
     mutable number current_time_step;
+
+    /**
+     * Return true if the flow is viscous, false otherwise. In single component flows, this is
+     * determined by the value of the dynamic viscosity in the material data. In multi-component
+     * flows, a flow is considered viscous if the dynamic viscosity is greater than zero for at
+     * least one of the components.
+     */
+    bool
+    is_viscous() const;
 
     /**
      * @brief Local cell applier.

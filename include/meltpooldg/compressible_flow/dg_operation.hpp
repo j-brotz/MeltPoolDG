@@ -37,7 +37,7 @@ namespace MeltPoolDG::CompressibleFlow
   /**
    * @brief Operation that performs a full time step for the compressible Navier-Stokes.
    */
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species = 1>
   class DGOperation
   {
   public:
@@ -112,8 +112,8 @@ namespace MeltPoolDG::CompressibleFlow
 
     void
     add_external_force(
-      std::shared_ptr<ExternalFlowForce<dim, number>>         external_force_residuum,
-      std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian);
+      std::shared_ptr<ExternalFlowForce<dim, number, n_species>>         external_force_residuum,
+      std::shared_ptr<ExternalFlowForceJacobian<dim, number, n_species>> external_force_jacobian);
 
     /**
      * @brief Compute the maximum time step size.
@@ -172,9 +172,9 @@ namespace MeltPoolDG::CompressibleFlow
     /// Object containing the data post processor for the different output options
     OutputManager<dim,
                   number,
-                  DofValueView<dim, ConservedVariablesType<dim, number, number>>,
+                  DofValueView<dim, ConservedVariablesType<dim, number, 1, number>>,
 
-                  DofStateView<dim, number, ConservedVariablesType<dim, number, number>>,
+                  DofStateView<dim, number, ConservedVariablesType<dim, number, 1, number>>,
                   MaterialView<dim, number>>
       output_manager;
 
@@ -205,23 +205,23 @@ namespace MeltPoolDG::CompressibleFlow
 
 
   //! inlined functions
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species>
   const dealii::LinearAlgebra::distributed::Vector<number> &
-  DGOperation<dim, number>::get_solution() const
+  DGOperation<dim, number, n_species>::get_solution() const
   {
     return flow_scratch_data.solution_history.get_current_solution();
   }
 
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species>
   dealii::LinearAlgebra::distributed::Vector<number> &
-  DGOperation<dim, number>::get_solution()
+  DGOperation<dim, number, n_species>::get_solution()
   {
     return flow_scratch_data.solution_history.get_current_solution();
   }
 
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species>
   const dealii::DoFHandler<dim> &
-  DGOperation<dim, number>::get_dof_handler() const
+  DGOperation<dim, number, n_species>::get_dof_handler() const
   {
     return flow_scratch_data.scratch_data.get_dof_handler(flow_scratch_data.dof_idx);
   }

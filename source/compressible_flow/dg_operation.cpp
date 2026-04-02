@@ -28,19 +28,20 @@ namespace MeltPoolDG::CompressibleFlow
 {
   using namespace dealii;
 
-  template <int dim, typename number>
-  DGOperation<dim, number>::DGOperation(const ScratchData<dim, dim, number> &scratch_data,
-                                        const OperationData<number>         &flow_data,
-                                        const MaterialPhaseData<number>     &material_data,
-                                        const unsigned int                   flow_dof_idx,
-                                        const unsigned int                   flow_quad_idx)
+  template <int dim, typename number, int n_species>
+  DGOperation<dim, number, n_species>::DGOperation(
+    const ScratchData<dim, dim, number> &scratch_data,
+    const OperationData<number>         &flow_data,
+    const MaterialPhaseData<number>     &material_data,
+    const unsigned int                   flow_dof_idx,
+    const unsigned int                   flow_quad_idx)
     : flow_scratch_data(flow_data, material_data, scratch_data, flow_dof_idx, flow_quad_idx)
     , output_manager(
-        [](ConservedVariablesType<dim, number, number> &value) -> auto {
-          return DofValueView<dim, ConservedVariablesType<dim, number, number>>(value);
+        [](ConservedVariablesType<dim, number, n_species, number> &value) -> auto {
+          return DofValueView<dim, ConservedVariablesType<dim, number, n_species, number>>(value);
         },
-        [&material_data](ConservedVariablesType<dim, number, number> &value) -> auto {
-          return DofStateView<dim, number, ConservedVariablesType<dim, number, number>>(
+        [&material_data](ConservedVariablesType<dim, number, n_species, number> &value) -> auto {
+          return DofStateView<dim, number, ConservedVariablesType<dim, number, n_species, number>>(
             value, material_data);
         },
         [&material_data](auto &...) -> auto { return MaterialView<dim, number>(material_data); })
@@ -49,23 +50,23 @@ namespace MeltPoolDG::CompressibleFlow
     setup_operator();
   }
 
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species>
   void
-  DGOperation<dim, number>::reinit()
+  DGOperation<dim, number, n_species>::reinit()
   {
     comp_flow_operator->reinit();
   }
 
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species>
   void
-  DGOperation<dim, number>::distribute_dofs(DoFHandler<dim> &dof_handler) const
+  DGOperation<dim, number, n_species>::distribute_dofs(DoFHandler<dim> &dof_handler) const
   {
     FiniteElementUtils::distribute_dofs<dim, dim + 2>(flow_scratch_data.flow_data.fe, dof_handler);
   }
 
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species>
   void
-  DGOperation<dim, number>::solve(const number current_time, const number time_step)
+  DGOperation<dim, number, n_species>::solve(const number current_time, const number time_step)
   {
     flow_scratch_data.solution_history.commit_old_solutions();
     flow_scratch_data.solution_history.update_ghost_values();
@@ -73,26 +74,26 @@ namespace MeltPoolDG::CompressibleFlow
     comp_flow_operator->advance_time_step(current_time, time_step);
   }
 
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species>
   void
-  DGOperation<dim, number>::set_boundary_conditions(
+  DGOperation<dim, number, n_species>::set_boundary_conditions(
     const std::shared_ptr<SimulationCaseBase<dim, number>> &simulation_case,
     const std::string                                      &operation_name)
   {
     flow_scratch_data.boundary_conditions.set_boundary_conditions(simulation_case, operation_name);
   }
 
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species>
   void
-  DGOperation<dim, number>::set_body_force(std::unique_ptr<Function<dim>> body_force_in)
+  DGOperation<dim, number, n_species>::set_body_force(std::unique_ptr<Function<dim>> body_force_in)
   {
     AssertDimension(body_force_in->n_components, dim);
     flow_scratch_data.body_force = std::move(body_force_in);
   }
 
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species>
   void
-  DGOperation<dim, number>::set_initial_condition(const Function<dim> &function)
+  DGOperation<dim, number, n_species>::set_initial_condition(const Function<dim> &function)
   {
     FECellIntegrator<dim, dim + 2, number> phi(flow_scratch_data.scratch_data.get_matrix_free(),
                                                flow_scratch_data.dof_idx,
@@ -116,19 +117,19 @@ namespace MeltPoolDG::CompressibleFlow
       }
   }
 
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species>
   void
-  DGOperation<dim, number>::add_external_force(
-    std::shared_ptr<ExternalFlowForce<dim, number>>         external_force_residuum,
-    std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian)
+  DGOperation<dim, number, n_species>::add_external_force(
+    std::shared_ptr<ExternalFlowForce<dim, number, n_species>>         external_force_residuum,
+    std::shared_ptr<ExternalFlowForceJacobian<dim, number, n_species>> external_force_jacobian)
   {
     comp_flow_operator->add_external_force(std::move(external_force_residuum),
                                            std::move(external_force_jacobian));
   }
 
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species>
   number
-  DGOperation<dim, number>::compute_minimum_density() const
+  DGOperation<dim, number, n_species>::compute_minimum_density() const
   {
     TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), "compute transport speed");
     // only read density
@@ -163,9 +164,9 @@ namespace MeltPoolDG::CompressibleFlow
     return min_density;
   }
 
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species>
   number
-  DGOperation<dim, number>::compute_convective_time_step_limit() const
+  DGOperation<dim, number, n_species>::compute_convective_time_step_limit() const
   {
     TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), "compute transport speed");
     number             max_transport              = 0;
@@ -233,9 +234,9 @@ namespace MeltPoolDG::CompressibleFlow
     return convective_time_step_limit;
   }
 
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species>
   number
-  DGOperation<dim, number>::compute_time_step_size(const bool do_print) const
+  DGOperation<dim, number, n_species>::compute_time_step_size(const bool do_print) const
   {
     const number min_density = compute_minimum_density();
 
@@ -266,9 +267,10 @@ namespace MeltPoolDG::CompressibleFlow
     return time_step;
   }
 
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species>
   void
-  DGOperation<dim, number>::attach_output_vectors(GenericDataOut<dim, number> &data_out) const
+  DGOperation<dim, number, n_species>::attach_output_vectors(
+    GenericDataOut<dim, number> &data_out) const
   {
     output_manager.attach_to_data_out(data_out,
                                       flow_scratch_data.scratch_data.get_dof_handler(
@@ -277,51 +279,59 @@ namespace MeltPoolDG::CompressibleFlow
                                       flow_scratch_data.flow_data.output_variables);
   }
 
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species>
   void
-  DGOperation<dim, number>::setup_operator()
+  DGOperation<dim, number, n_species>::setup_operator()
   {
     // cut operator was already created in the constructor
     if (flow_scratch_data.flow_data.domain_representation_type == "cut")
       return;
-    const bool is_viscous = flow_scratch_data.material.data.dynamic_viscosity > 0.;
     if (time_integrator_scheme_is_explicit(
           flow_scratch_data.flow_data.time_integrator.integrator_type))
       {
-        if (is_viscous)
-          comp_flow_operator =
-            std::make_unique<DGOperatorExplicit<dim, number, true>>(flow_scratch_data);
-        else
-          comp_flow_operator =
-            std::make_unique<DGOperatorExplicit<dim, number, false>>(flow_scratch_data);
+        comp_flow_operator =
+          std::make_unique<DGOperatorExplicit<dim, number, n_species>>(flow_scratch_data);
+        return;
       }
-    else if (time_integrator_scheme_is_implicit(
-               flow_scratch_data.flow_data.time_integrator.integrator_type))
+    if constexpr (n_species == 1)
       {
-        if (is_viscous)
-          comp_flow_operator =
-            std::make_unique<DGOperatorImplicit<dim, number, true>>(flow_scratch_data);
+        const bool is_viscous = flow_scratch_data.material.data.dynamic_viscosity > 0.;
+        if (time_integrator_scheme_is_implicit(
+              flow_scratch_data.flow_data.time_integrator.integrator_type))
+          {
+            if (is_viscous)
+              comp_flow_operator =
+                std::make_unique<DGOperatorImplicit<dim, number, true>>(flow_scratch_data);
+            else
+              comp_flow_operator =
+                std::make_unique<DGOperatorImplicit<dim, number, false>>(flow_scratch_data);
+            return;
+          }
+        // TODO
+        else if (flow_scratch_data.flow_data.time_integrator.integrator_type ==
+                 TimeIntegration::TimeIntegratorSchemes::imex)
+          {
+            if (is_viscous)
+              comp_flow_operator =
+                std::make_unique<DGOperatorImplicitExplicit<dim, number, true>>(flow_scratch_data);
+            else
+              comp_flow_operator =
+                std::make_unique<DGOperatorImplicitExplicit<dim, number, false>>(flow_scratch_data);
+            return;
+          }
         else
-          comp_flow_operator =
-            std::make_unique<DGOperatorImplicit<dim, number, false>>(flow_scratch_data);
+          AssertThrow(false,
+                      dealii::ExcMessage(
+                        "The provided time integration scheme '" +
+                        std::to_string(
+                          flow_scratch_data.flow_data.time_integrator.integrator_type) +
+                        "' is not supported!"));
       }
-    // TODO
-    else if (flow_scratch_data.flow_data.time_integrator.integrator_type ==
-             TimeIntegration::TimeIntegratorSchemes::imex)
-      {
-        if (is_viscous)
-          comp_flow_operator =
-            std::make_unique<DGOperatorImplicitExplicit<dim, number, true>>(flow_scratch_data);
-        else
-          comp_flow_operator =
-            std::make_unique<DGOperatorImplicitExplicit<dim, number, false>>(flow_scratch_data);
-      }
-    else
-      AssertThrow(false,
-                  dealii::ExcMessage(
-                    "The provided time integration scheme '" +
-                    std::to_string(flow_scratch_data.flow_data.time_integrator.integrator_type) +
-                    "' is not supported!"));
+    AssertThrow(false,
+                dealii::ExcMessage(
+                  "The provided time integration scheme '" +
+                  std::to_string(flow_scratch_data.flow_data.time_integrator.integrator_type) +
+                  "' is not supported for multi-component flows!"));
   }
 
   template class DGOperation<1, double>;

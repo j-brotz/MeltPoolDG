@@ -128,7 +128,7 @@ namespace
       std::unique_ptr<MeltPoolDG::CompressibleFlow::OperationScratchData<dim, number>>
         flow_scratch_data;
 
-      std::unique_ptr<MeltPoolDG::CompressibleFlow::DGOperatorExplicit<dim, number, is_viscous>>
+      std::unique_ptr<MeltPoolDG::CompressibleFlow::DGOperatorExplicit<dim, number, 1>>
         explicit_flow_operator;
       std::unique_ptr<MeltPoolDG::CompressibleFlow::DGOperatorImplicit<dim, number, is_viscous>>
         implicit_flow_operator;
@@ -240,9 +240,9 @@ namespace
       switch (type)
         {
             case OperatorType::Explicit: {
-              data->explicit_flow_operator = std::make_unique<
-                MeltPoolDG::CompressibleFlow::DGOperatorExplicit<dim, number, is_viscous>>(
-                *data->flow_scratch_data);
+              data->explicit_flow_operator =
+                std::make_unique<MeltPoolDG::CompressibleFlow::DGOperatorExplicit<dim, number, 1>>(
+                  *data->flow_scratch_data);
               break;
             }
             case OperatorType::Implicit: {
@@ -316,12 +316,6 @@ namespace
                                    std::integral_constant<bool, true>)
     ->DenseRange(10, 20, 10)
     ->Name("explicit operator, viscid");
-
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ExplicitOperator,
-                                   std::integral_constant<bool, false>)
-    ->DenseRange(10, 20, 10)
-    ->Name("explicit operator, in-viscid");
 
 
   BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture, ImplicitOperatorResidual)
