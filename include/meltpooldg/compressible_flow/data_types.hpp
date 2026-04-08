@@ -12,8 +12,8 @@ namespace MeltPoolDG::CompressibleFlow
 {
   /// Number of independent conserved variables for the compressible Navier-Stokes equations in
   /// `dim` dimensions.
-  template <int dim>
-  constexpr unsigned int n_conserved_variables = dim + 2;
+  template <int dim, int n_species = 1>
+  constexpr unsigned int n_conserved_variables = dim + 2 + (n_species - 1);
 
   /// Compile-time indices for accessing individual conserved variables within a `dealii::Tensor`
   /// storing the state of the compressible flow solver used throughout the codebase.
@@ -29,34 +29,45 @@ namespace MeltPoolDG::CompressibleFlow
   /// set of coordinates.
   template <int dim,
             typename number,
+            int n_species                = 1,
             typename VectorizedArrayType = dealii::VectorizedArray<number>>
-  using ConservedVariablesType = dealii::Tensor<1, n_conserved_variables<dim>, VectorizedArrayType>;
+  using ConservedVariablesType =
+    dealii::Tensor<1, n_conserved_variables<dim, n_species>, VectorizedArrayType>;
 
   /// Type alias for the gradient of the conserved variables in the compressible flow solver given
   /// at a vectorized set of coordinates.
   template <int dim,
             typename number,
+            int n_species                = 1,
             typename VectorizedArrayType = dealii::VectorizedArray<number>>
-  using ConservedVariablesGradientType =
-    dealii::Tensor<1, n_conserved_variables<dim>, dealii::Tensor<1, dim, VectorizedArrayType>>;
+  using ConservedVariablesGradientType = dealii::
+    Tensor<1, n_conserved_variables<dim, n_species>, dealii::Tensor<1, dim, VectorizedArrayType>>;
 
   /// Type alias for the fluxes in the compressible flow solver given at a vectorized set of
   /// coordinates. This includes both convective and diffusive fluxes.
-  template <int dim, typename number>
-  using FluxType = dealii::
-    Tensor<1, n_conserved_variables<dim>, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
+  template <int dim, typename number, int n_species = 1>
+  using FluxType = dealii::Tensor<1,
+                                  n_conserved_variables<dim, n_species>,
+                                  dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
 
   /// Type alias for the fluxes at faces in the compressible flow solver given at a vectorized set
   /// of coordinates (contracted with normal vector). This includes both convective and diffusive
   /// fluxes.
-  template <int dim, typename number>
+  template <int dim, typename number, int n_species = 1>
   using FaceFluxType =
-    dealii::Tensor<1, n_conserved_variables<dim>, dealii::VectorizedArray<number>>;
+    dealii::Tensor<1, n_conserved_variables<dim, n_species>, dealii::VectorizedArray<number>>;
+
+  template <int dim, typename number, int n_species = 1>
+  using FaceGradientFluxType =
+    dealii::Tensor<1,
+                   n_conserved_variables<dim, n_species>,
+                   dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>;
 
   /// Type alias for source terms in the compressible flow solver given at a vectorized set of
   /// coordinates.
-  template <int dim, typename number>
-  using SourceType = dealii::Tensor<1, n_conserved_variables<dim>, dealii::VectorizedArray<number>>;
+  template <int dim, typename number, int n_species = 1>
+  using SourceType =
+    dealii::Tensor<1, n_conserved_variables<dim, n_species>, dealii::VectorizedArray<number>>;
 
   /// Concept ensuring compatibility of a type with the conserved variables of the compressible
   /// flow solver in `dim` dimensions.

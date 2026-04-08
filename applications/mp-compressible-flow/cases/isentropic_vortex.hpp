@@ -147,7 +147,28 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     {
       IsentropicVortexExactSolution<dim, number> exact_solution(generic_data_out.get_time(),
                                                                 this->parameters.material.gamma);
-      this->print_relative_norm(generic_data_out, exact_solution, "error");
+
+      using DataToPrint =
+        typename MeltPoolDG::CompressibleFlow::Case<dim, number>::DataPostprocessorData;
+
+      std::vector<DataToPrint> postprocessor_data_vector;
+
+      const auto density =
+        Functions::ExtractedComponentsFunction<dim, number>(exact_solution, 0, 1);
+      postprocessor_data_vector.emplace_back(
+        DataToPrint{.name = "density", .reference_function = density});
+
+      const auto momentum =
+        Functions::ExtractedComponentsFunction<dim, number>(exact_solution, 1, dim);
+      postprocessor_data_vector.emplace_back(
+        DataToPrint{.name = "momentum", .reference_function = momentum});
+
+      const auto total_energy =
+        Functions::ExtractedComponentsFunction<dim, number>(exact_solution, 1 + dim, 1);
+      postprocessor_data_vector.emplace_back(
+        DataToPrint{.name = "total energy", .reference_function = total_energy});
+
+      this->print_relative_norm_fitted(generic_data_out, postprocessor_data_vector, "error");
     }
   };
 } // namespace MeltPoolDG::Simulation::CompressibleFlow

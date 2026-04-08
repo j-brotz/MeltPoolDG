@@ -9,6 +9,7 @@
 
 #include <deal.II/non_matching/mesh_classifier.h>
 
+#include <meltpooldg/compressible_flow/boundary_conditions.templates.hpp>
 #include <meltpooldg/compressible_flow/cutdg_operation.hpp>
 #include <meltpooldg/compressible_flow/cutdg_operator.hpp>
 #include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
@@ -64,17 +65,6 @@ namespace MeltPoolDG::CompressibleFlow
         mapping_info_surface,
         mapping_info_cells,
         mapping_info_faces))
-    , output_manager(
-        [](ConservedVariablesType<dim, number, number> &value) -> auto {
-          return DofValueView<dim, ConservedVariablesType<dim, number, number>>(value);
-        },
-        [&material_data_in](ConservedVariablesType<dim, number, number> &value) -> auto {
-          return DofStateView<dim, number, ConservedVariablesType<dim, number, number>>(
-            value, material_data_in);
-        },
-        [&material_data_in](auto &...) -> auto {
-          return MaterialView<dim, number>(material_data_in);
-        })
   {
     // Currently, only explicit Euler time discretization with ghost-penalty stabilized mass matrix
     // is enabled for cutDG
@@ -106,6 +96,25 @@ namespace MeltPoolDG::CompressibleFlow
     mapping_info_faces.push_back(
       std::make_shared<NonMatching::MappingInfo<dim, dim, VectorizedArray<number>>>(
         flow_scratch_data.scratch_data.get_mapping(), update_flags_faces));
+
+    // configure the output
+    using OutputView = DofStateView<dim, number, ConservedVariablesType<dim, number, 1, number>>;
+
+    const auto create_output_view =
+      [&material_data_in](ConservedVariablesType<dim, number, 1, number> &value) -> auto {
+      return DofStateView<dim, number, ConservedVariablesType<dim, number, 1, number>>(
+        value, material_data_in);
+    };
+
+    output_manager.add_conserved_variables_post_processor(
+      std::make_unique<ConservedVariablesPostProcessor<dim, number, OutputView>>(
+        create_output_view));
+    output_manager.add_primitive_variables_post_processor(
+      std::make_unique<PrimitiveVariablesPostProcessor<dim, number, OutputView>>(
+        create_output_view));
+    output_manager.add_material_quantities_post_processor(
+      std::make_unique<MaterialVariablesPostProcessor<dim, number, OutputView>>(
+        create_output_view));
   }
 
   template <int dim, typename number>

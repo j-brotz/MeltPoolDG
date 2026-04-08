@@ -131,7 +131,27 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
     do_postprocessing(const GenericDataOut<dim, number> &generic_data_out) const override
     {
       InflowFlowField<dim, number> reference_values(generic_data_out.get_time());
-      this->print_relative_norm(generic_data_out, reference_values, "norm");
+
+      using DataToPrint =
+        typename MeltPoolDG::CompressibleFlow::Case<dim, number>::DataPostprocessorData;
+      std::vector<DataToPrint> postprocessor_data_vector;
+
+      const auto density_reference =
+        Functions::ExtractedComponentsFunction<dim, number>(reference_values, 0, 1);
+      postprocessor_data_vector.emplace_back(
+        DataToPrint{.name = "density", .reference_function = density_reference});
+
+      const auto momentum =
+        Functions::ExtractedComponentsFunction<dim, number>(reference_values, 1, dim);
+      postprocessor_data_vector.emplace_back(
+        DataToPrint{.name = "momentum", .reference_function = momentum});
+
+      const auto total_energy =
+        Functions::ExtractedComponentsFunction<dim, number>(reference_values, 1 + dim, 1);
+      postprocessor_data_vector.emplace_back(
+        DataToPrint{.name = "total energy", .reference_function = total_energy});
+
+      this->print_relative_norm_fitted(generic_data_out, postprocessor_data_vector, "norm");
     }
   };
 } // namespace MeltPoolDG::Simulation::CompressibleFlow

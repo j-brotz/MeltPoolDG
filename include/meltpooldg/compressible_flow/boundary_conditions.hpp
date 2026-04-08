@@ -201,15 +201,23 @@ namespace MeltPoolDG::CompressibleFlow
       const Material<dim, number>                                   &material,
       bool                                                           is_gas_phase = true) const;
 
-    std::tuple<ConservedVariablesType, ConservedVariablesGradType>
-    get_boundary_face_value_and_gradient(
-      const dealii::Point<dim, VectorizedArrayType>                 &q_point,
-      const dealii::Tensor<1, dim, VectorizedArrayType>             &normal,
+    /**
+     * As above but based on views.
+     *
+     * @param q_point Location of the quadrature points at which the values shall be computed.
+     * @param normal Outer facing normal vector.
+     * @param boundary_id ID of the boundary.
+     * @param w_m View for the conserved variables on the inner face.
+     * @param w_p View for the conserved variables on the outer face, which shall be set by this function.
+     */
+    template <typename DofReadView, typename DofWriteView>
+    void
+    set_conserved_variables_boundary_value_and_gradient(
+      const dealii::Point<dim, dealii::VectorizedArray<number>>     &q_point,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
       dealii::types::boundary_id                                     boundary_id,
-      DofValueAndGradientStateView<dim,
-                                   number,
-                                   const ConservedVariablesType,
-                                   const ConservedVariablesGradType> w_m) const;
+      const DofReadView                                             &w_m,
+      const DofWriteView                                            &w_p) const;
 
     /**
      * @brief Compute boundary values and gradients, as well as their linearizations for the Jacobian.
