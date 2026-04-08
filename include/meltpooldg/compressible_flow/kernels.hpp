@@ -5,6 +5,7 @@
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/material.hpp>
 #include <meltpooldg/compressible_flow/state_views.hpp>
+#include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 
 namespace MeltPoolDG::CompressibleFlow
@@ -17,28 +18,25 @@ namespace MeltPoolDG::CompressibleFlow
    *
    * @tparam value_type Type of the conserved variables.
    */
-  template <int dim, typename number, IsConservedStateCompatible<dim> value_type>
+  template <int dim,
+            typename ConservedVariablesView,
+            typename WritableFluxView>
   inline DEAL_II_ALWAYS_INLINE //
-    FluxType<dim, number>
-    convective_flux(const DofStateView<dim, number, const value_type> &conserved_variables)
+    void
+    convective_flux(const ConservedVariablesView &conserved_variables, const WritableFluxView &flux)
   {
-    using FluxType = FluxType<dim, number>;
-
-    FluxType                              flux;
-    FluxView<dim, FluxType>               flux_view(flux);
-    const dealii::VectorizedArray<number> pressure = conserved_variables.pressure();
+    const auto pressure = conserved_variables.pressure();
 
     for (unsigned int d = 0; d < dim; ++d)
       {
-        flux_view.density_flux()[d] = conserved_variables.momentum(d);
+        flux.density_flux()[d] = conserved_variables.momentum(d);
         for (unsigned int e = 0; e < dim; ++e)
-          flux_view.momentum_flux(e)[d] =
+          flux.momentum_flux(e)[d] =
             conserved_variables.momentum(e) * conserved_variables.velocity(d);
-        flux_view.momentum_flux(d)[d] += pressure;
-        flux_view.energy_flux()[d] =
+        flux.momentum_flux(d)[d] += pressure;
+        flux.energy_flux()[d] =
           conserved_variables.velocity(d) * (conserved_variables.total_energy() + pressure);
       }
-    return flux;
   }
 
   /**
@@ -80,54 +78,48 @@ namespace MeltPoolDG::CompressibleFlow
    * @tparam gradient_type Type of the gradients of the conserved variables.
    */
   template <int dim,
-            typename number,
-            IsConservedStateCompatible<dim>    value_type,
-            IsConservedGradientCompatible<dim> gradient_type>
+            typename VectorizedArrayType,
+            typename DofStateView,
+            typename WritableFluxView>
   inline DEAL_II_ALWAYS_INLINE //
-    FluxType<dim, number>
-    diffusive_flux(
-      const DofValueAndGradientStateView<dim, number, const value_type, const gradient_type>
-        &conserved_variables)
+    void
+    diffusive_flux(const DofStateView &conserved_variables, const WritableFluxView &flux)
   {
-    dealii::Tensor<1, dim, dealii::VectorizedArray<number>> velocity =
-      conserved_variables.velocity();
+    const auto viscous_stress =
+      viscous_stress_tensor(conserved_variables.grad_velocity(),
+                            VectorizedArrayType(conserved_variables.dynamic_viscosity()));
 
-    const dealii::Tensor<1, dim, dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>
-      viscous_stress = viscous_stress_tensor(conserved_variables.grad_velocity(),
-                                             dealii::VectorizedArray<number>(
-                                               conserved_variables.dynamic_viscosity()));
-
-    const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> neg_heat_flux =
+    const auto neg_heat_flux =
       conserved_variables.thermal_conductivity() * conserved_variables.grad_temperature();
 
-    FluxType<dim, number>                flux;
-    FluxView<dim, FluxType<dim, number>> flux_view(flux);
     for (unsigned int d = 0; d < dim; ++d)
       {
         // density
-        flux_view.density_flux()[d] = 0.0;
+        flux.density_flux()[d] = 0.0;
 
         // momentum
         for (unsigned int e = 0; e < dim; ++e)
-          flux_view.momentum_flux(e)[d] = viscous_stress[e][d];
+          flux.momentum_flux(e)[d] = viscous_stress[e][d];
 
         // energy
-        flux_view.energy_flux()[d] = neg_heat_flux[d];
+        flux.energy_flux()[d] = neg_heat_flux[d];
         for (unsigned int e = 0; e < dim; ++e)
-          flux_view.energy_flux()[d] += velocity[e] * viscous_stress[d][e];
+          flux.energy_flux()[d] += conserved_variables.velocity()[e] * viscous_stress[d][e];
       }
-
-    return flux;
   }
 
 
-  template <int dim, typename number>
+  template <int dim,
+            typename number,
+            typename ValueTypeIn = ConservedVariablesType<dim, number>,
+            typename FluxTypeIn  = FluxType<dim, number>>
   struct ConvectiveFlux
   {
-    using ValueType        = ConservedVariablesType<dim, number>;
-    using PhysicalFluxType = FluxType<dim, number>;
+    using ValueType        = ValueTypeIn;
+    using PhysicalFluxType = FluxTypeIn;
 
-    using DofStateViewType = DofStateView<dim, number, const ValueType>;
+    using DofStateViewType     = DofStateView<dim, number, const ValueType>;
+    using WritableFluxViewType = FluxView<dim, PhysicalFluxType>;
 
     explicit ConvectiveFlux(const MaterialPhaseData<number> &material)
       : material(material)
@@ -141,8 +133,11 @@ namespace MeltPoolDG::CompressibleFlow
     PhysicalFluxType
     flux(const ValueType &conserved_variables) const
     {
+      PhysicalFluxType flux;
       DofStateViewType conserved_variables_view(conserved_variables, material);
-      return convective_flux<dim, number>(conserved_variables_view);
+      convective_flux<dim, DofStateViewType, WritableFluxViewType>(conserved_variables_view,
+                                                                   WritableFluxViewType(flux));
+      return flux;
     }
 
     /**
@@ -154,21 +149,8 @@ namespace MeltPoolDG::CompressibleFlow
     dealii::VectorizedArray<number>
     lambda(const ValueType &u_m, const ValueType &u_p) const
     {
-      DofStateViewType u_m_view(u_m, material);
-      DofStateViewType u_p_view(u_p, material);
-
-      const auto velocity_m = u_m_view.velocity();
-      const auto velocity_p = u_p_view.velocity();
-
-      const auto sound_speed_p = u_p_view.speed_of_sound();
-      const auto sound_speed_m = u_m_view.speed_of_sound();
-
-      const auto sound_speed_p2 = sound_speed_p * sound_speed_p;
-      const auto sound_speed_m2 = sound_speed_m * sound_speed_m;
-
-      const auto lambda = 0.5 * std::sqrt(std::max(velocity_p.norm_square() + sound_speed_p2,
-                                                   velocity_m.norm_square() + sound_speed_m2));
-      return lambda;
+      return maximum_local_wave_speed<DofStateViewType, dealii::VectorizedArray<number>>(
+        DofStateViewType(u_m, material), DofStateViewType(u_p, material));
     }
 
   private:
@@ -176,15 +158,20 @@ namespace MeltPoolDG::CompressibleFlow
   };
 
 
-  template <int dim, typename number>
+  template <int dim,
+            typename number,
+            typename ValueTypeIn    = ConservedVariablesType<dim, number>,
+            typename GradientTypeIn = ConservedVariablesGradientType<dim, number>,
+            typename FluxTypeIn     = FluxType<dim, number>>
   struct DiffusiveFlux
   {
-    using ValueType        = ConservedVariablesType<dim, number>;
-    using GradientType     = ConservedVariablesGradientType<dim, number>;
-    using PhysicalFluxType = FluxType<dim, number>;
+    using ValueType        = ValueTypeIn;
+    using GradientType     = GradientTypeIn;
+    using PhysicalFluxType = FluxTypeIn;
 
-    using DofValueAndGradientStateViewType =
+    using DofStateViewType =
       DofValueAndGradientStateView<dim, number, const ValueType, const GradientType>;
+    using WritableFluxViewType = FluxView<dim, PhysicalFluxType>;
 
     /**
      * Constructor, storing references to the EOS utilities and material data needed for flux
@@ -203,8 +190,10 @@ namespace MeltPoolDG::CompressibleFlow
     PhysicalFluxType
     flux(const ValueType &u, const GradientType &grad_u) const
     {
-      DofValueAndGradientStateViewType conserved_variables_view(u, grad_u, material);
-      return diffusive_flux<dim, number>(conserved_variables_view);
+      PhysicalFluxType flux;
+      diffusive_flux<dim, typename ValueType::value_type, DofStateViewType, WritableFluxViewType>(
+        DofStateViewType(u, grad_u, material), WritableFluxViewType(flux));
+      return flux;
     }
 
   private:

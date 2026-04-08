@@ -308,44 +308,14 @@ namespace MeltPoolDG::CompressibleFlow
   };
 
   /**
-   * A convenient output manager that can be used to attach the compressible flow post-processors
-   * for conserved variables, primitive variables and material variables to a GenericDataOut object.
-   * Its main purpose is to provide a single point of interaction for the compressible flow
-   * post-processors and decide which post-processor to attach based on the provided output options.
-   *
-   * @tparam ConservedView Type of the view used for computing the conserved variables.
-   * @tparam PrimitiveView Type of the view used for computing the primitive variables.
-   * @tparam MaterialView Type of the view used for computing the material variables.
+   * A convenient output manager that can be used to attach post-processors for conserved variables,
+   * primitive variables and material variables to a GenericDataOut object. Its main purpose is to
+   * provide a single point of interaction for post-processors and decide which post-processor to
+   * attach based on the provided output options.
    */
-  template <int dim,
-            typename number,
-            IsConservedView ConservedView,
-            IsPrimitiveView PrimitiveView,
-            IsMaterialView  MaterialView>
+  template <int dim, typename number>
   struct OutputManager
   {
-    /**
-     * Construct the output manager with the provided view creators for conserved variables,
-     * primitive variables and material variables. The view creators are used to create the
-     * corresponding views based on the solution values at the evaluation points during
-     * post-processing.
-     *
-     * @param conserved_view_creator Function creating the view for computing the conserved
-     * variables based on the solution values at a specified node.
-     * @param primitive_view_creator Function creating the view for computing the primitive
-     * variables based on the solution values at a specified node.
-     * @param material_view_creator Function creating the view for computing the material
-     * variables based on the solution values at a specified node.
-     */
-    OutputManager(
-      std::function<ConservedView(typename ConservedView::state_type &)> conserved_view_creator,
-      std::function<PrimitiveView(typename PrimitiveView::state_type &)> primitive_view_creator,
-      std::function<MaterialView(typename MaterialView::state_type &)>   material_view_creator)
-      : conserved_variables_post_processor(conserved_view_creator)
-      , primitive_variables_post_processor(primitive_view_creator)
-      , material_quantities_post_processor(material_view_creator)
-    {}
-
     /**
      * Attach the relevant post-processors to the provided GenericDataOut object based on the
      * provided output options. The post-processors are attached with the provided DoFHandler and
@@ -364,22 +334,66 @@ namespace MeltPoolDG::CompressibleFlow
     {
       if (Utils::contains(output_types, OutputType::conserved_variables))
         {
-          data_out.add_data_vector(&dof_handler, &solution, &conserved_variables_post_processor);
+          for (const auto &post_processor : conserved_post_processors)
+            {
+              data_out.add_data_vector(&dof_handler, &solution, post_processor.get());
+            }
         }
       if (Utils::contains(output_types, OutputType::primitive_variables))
         {
-          data_out.add_data_vector(&dof_handler, &solution, &primitive_variables_post_processor);
+          for (const auto &post_processor : primitive_post_processors)
+            {
+              data_out.add_data_vector(&dof_handler, &solution, post_processor.get());
+            }
         }
       if (Utils::contains(output_types, OutputType::material_quantities))
         {
-          data_out.add_data_vector(&dof_handler, &solution, &material_quantities_post_processor);
+          for (const auto &post_processor : material_post_processors)
+            {
+              data_out.add_data_vector(&dof_handler, &solution, post_processor.get());
+            }
         }
     }
 
-    ConservedVariablesPostProcessor<dim, number, ConservedView> conserved_variables_post_processor;
+    /**
+     * Add a post-processor for conserved variables to the output manager. The post-processor will
+     * be attached to the GenericDataOut object in attach_to_data_out() if the corresponding output
+     * option is provided.
+     */
+    void
+    add_conserved_variables_post_processor(
+      std::unique_ptr<dealii::DataPostprocessor<dim>> &&post_processor)
+    {
+      conserved_post_processors.emplace_back(std::move(post_processor));
+    }
 
-    PrimitiveVariablesPostProcessor<dim, number, PrimitiveView> primitive_variables_post_processor;
+    /**
+     * Add a post-processor for primitive variables to the output manager. The post-processor will
+     * be attached to the GenericDataOut object in attach_to_data_out() if the corresponding output
+     * option is provided.
+     */
+    void
+    add_primitive_variables_post_processor(
+      std::unique_ptr<dealii::DataPostprocessor<dim>> &&post_processor)
+    {
+      primitive_post_processors.emplace_back(std::move(post_processor));
+    }
 
-    MaterialVariablesPostProcessor<dim, number, MaterialView> material_quantities_post_processor;
+    /**
+     * Add a post-processor for material variables to the output manager. The post-processor will
+     * be attached to the GenericDataOut object in attach_to_data_out() if the corresponding output
+     * option is provided.
+     */
+    void
+    add_material_quantities_post_processor(
+      std::unique_ptr<dealii::DataPostprocessor<dim>> &&post_processor)
+    {
+      material_post_processors.emplace_back(std::move(post_processor));
+    }
+
+  private:
+    std::vector<std::unique_ptr<dealii::DataPostprocessor<dim>>> conserved_post_processors;
+    std::vector<std::unique_ptr<dealii::DataPostprocessor<dim>>> primitive_post_processors;
+    std::vector<std::unique_ptr<dealii::DataPostprocessor<dim>>> material_post_processors;
   };
 } // namespace MeltPoolDG::CompressibleFlow

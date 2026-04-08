@@ -258,21 +258,29 @@ namespace MeltPoolDG::CompressibleFlow
     const auto                               boundary_id,
     const unsigned int                       q) const
   {
-    using DofValueAndGradientStateViewType =
+    using DofReaderType =
       DofValueAndGradientStateView<dim,
                                    number,
-                                   const ConservedVariables,
-                                   const ConservedVariablesGradient>;
+                                   const ConservedVariablesType<dim, number>,
+                                   const ConservedVariablesGradientType<dim, number>>;
+
+    using DofWriteType = DofValueAndGradientStateView<dim,
+                                                      number,
+                                                      ConservedVariablesType<dim, number>,
+                                                      ConservedVariablesGradientType<dim, number>>;
 
     const auto w_m      = phi.get_value(q);
     const auto grad_w_m = phi.get_gradient(q);
 
-    const auto [w_p, grad_w_p] =
-      flow_scratch_data.boundary_conditions.get_boundary_face_value_and_gradient(
-        phi.quadrature_point(q),
-        phi.normal_vector(q),
-        boundary_id,
-        DofValueAndGradientStateViewType(w_m, grad_w_m, flow_scratch_data.material.data));
+    ConservedVariablesType<dim, number>         w_p;
+    ConservedVariablesGradientType<dim, number> grad_w_p;
+
+    flow_scratch_data.boundary_conditions.set_conserved_variables_boundary_value_and_gradient(
+      phi.quadrature_point(q),
+      phi.normal_vector(q),
+      boundary_id,
+      DofReaderType(w_m, grad_w_m, flow_scratch_data.material.data),
+      DofWriteType(w_p, grad_w_p, flow_scratch_data.material.data));
 
     FaceFluxType<dim, number> flux_m;
     if constexpr (is_viscous)
