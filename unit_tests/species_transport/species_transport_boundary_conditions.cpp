@@ -6,11 +6,11 @@
 
 namespace
 {
-  template <std::size_t n_species>
+  template <std::size_t n_partial_densities>
   struct MockDofView
   {
-    mutable std::array<double, n_species> values{};
-    mutable std::array<double, n_species> gradients{};
+    mutable std::array<double, n_partial_densities> values{};
+    mutable std::array<double, n_partial_densities> gradients{};
 
     double &
     partial_density(unsigned int i) const
@@ -27,73 +27,65 @@ namespace
 
   TEST(SpeciesTransportBoundaryConditions, DirichletBoundary)
   {
-    constexpr std::size_t n_species = 3;
+    constexpr std::size_t n_partial_densities = 3;
 
-    MockDofView<n_species> w_m;
-    MockDofView<n_species> w_p;
+    MockDofView<n_partial_densities> w_m;
+    MockDofView<n_partial_densities> w_p;
 
     // Initialize inner values (w_m)
-    for (unsigned int i = 0; i < n_species; ++i)
+    for (unsigned int i = 0; i < n_partial_densities; ++i)
       {
         w_m.values[i]    = i + 1.0;
         w_m.gradients[i] = (i + 1.0) * 10.0;
       }
 
-    std::array<double, n_species> dirichlet_values = {{100.0, 200.0, 300.0}};
+    std::array<double, n_partial_densities> dirichlet_values = {{100.0, 200.0, 300.0}};
 
-    set_boundary_value_and_gradient<n_species>(
+    set_boundary_value_and_gradient<n_partial_densities>(
       w_p, w_m, MeltPoolDG::SpeciesTransport::BoundaryConditionType::dirichlet, dirichlet_values);
 
     // Check values -> should match Dirichlet input
-    for (unsigned int i = 0; i < n_species - 1; ++i)
+    for (unsigned int i = 0; i < n_partial_densities; ++i)
       EXPECT_DOUBLE_EQ(w_p.values[i], dirichlet_values[i]);
 
     // Check gradients -> copied from w_m
-    for (unsigned int i = 0; i < n_species - 1; ++i)
+    for (unsigned int i = 0; i < n_partial_densities; ++i)
       EXPECT_DOUBLE_EQ(w_p.gradients[i], w_m.gradients[i]);
-
-    // Last species in w_p should remain untouched
-    EXPECT_DOUBLE_EQ(w_p.values[n_species - 1], 0.0);
-    EXPECT_DOUBLE_EQ(w_p.gradients[n_species - 1], 0.0);
   }
 
   TEST(SpeciesTransportBoundaryConditions, NeumannBoundary)
   {
-    constexpr std::size_t n_species = 3;
+    constexpr std::size_t n_partial_densities = 3;
 
-    MockDofView<n_species> w_m;
-    MockDofView<n_species> w_p;
+    MockDofView<n_partial_densities> w_m;
+    MockDofView<n_partial_densities> w_p;
 
-    for (unsigned int i = 0; i < n_species; ++i)
+    for (unsigned int i = 0; i < n_partial_densities; ++i)
       {
         w_m.values[i]    = i + 1.0;
         w_m.gradients[i] = (i + 1.0) * 10.0;
       }
 
-    set_boundary_value_and_gradient<n_species, double>(
+    set_boundary_value_and_gradient<n_partial_densities, double>(
       w_p, w_m, MeltPoolDG::SpeciesTransport::BoundaryConditionType::neumann);
 
     // Values copied
-    for (unsigned int i = 0; i < n_species - 1; ++i)
+    for (unsigned int i = 0; i < n_partial_densities; ++i)
       EXPECT_DOUBLE_EQ(w_p.values[i], w_m.values[i]);
 
     // Gradients flipped sign
-    for (unsigned int i = 0; i < n_species - 1; ++i)
+    for (unsigned int i = 0; i < n_partial_densities; ++i)
       EXPECT_DOUBLE_EQ(w_p.gradients[i], -w_m.gradients[i]);
-
-    // Last species in w_p should remain untouched
-    EXPECT_DOUBLE_EQ(w_p.values[n_species - 1], 0.0);
-    EXPECT_DOUBLE_EQ(w_p.gradients[n_species - 1], 0.0);
   }
 
   TEST(SpeciesTransportBoundaryConditions, WrongBoundaryType)
   {
-    constexpr std::size_t n_species = 3;
+    constexpr std::size_t n_partial_densities = 3;
 
-    MockDofView<n_species> w_m;
-    MockDofView<n_species> w_p;
+    MockDofView<n_partial_densities> w_m;
+    MockDofView<n_partial_densities> w_p;
 
-    EXPECT_ANY_THROW((set_boundary_value_and_gradient<n_species, double>(
+    EXPECT_ANY_THROW((set_boundary_value_and_gradient<n_partial_densities, double>(
       w_p, w_m, static_cast<MeltPoolDG::SpeciesTransport::BoundaryConditionType>(999))));
   }
 

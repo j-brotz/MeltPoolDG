@@ -19,7 +19,8 @@ namespace MeltPoolDG::SpeciesTransport
   template <int n_species, typename ConservedVariablesView, typename WritableFluxView>
   inline DEAL_II_ALWAYS_INLINE //
     void
-    convective_flux(const ConservedVariablesView &conserved_variables, const WritableFluxView &flux)
+    compute_convective_flux(const ConservedVariablesView &conserved_variables,
+                            const WritableFluxView       &flux)
   {
     for (unsigned int i = 0; i < n_species - 1; ++i)
       {
@@ -67,7 +68,8 @@ namespace MeltPoolDG::SpeciesTransport
   template <int n_species, typename ConservedVariablesView, typename WritableFluxView>
   inline DEAL_II_ALWAYS_INLINE //
     void
-    diffusive_flux(const ConservedVariablesView &conserved_variables, const WritableFluxView &flux)
+    compute_diffusive_flux(const ConservedVariablesView &conserved_variables,
+                           const WritableFluxView       &flux)
   {
     for (unsigned int i = 0; i < n_species - 1; ++i)
       {

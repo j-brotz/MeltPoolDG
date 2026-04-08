@@ -33,7 +33,7 @@ public:
   }
 
   number
-  lambda(const ValueType &, const ValueType &) const
+  local_maximum_wave_speed(const ValueType &, const ValueType &) const
   {
     return 2.0;
   }

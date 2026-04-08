@@ -147,7 +147,7 @@ namespace MeltPoolDG::CompressibleFlow
      * @param u_p Local values of the conserved variables on the outer face.
      */
     dealii::VectorizedArray<number>
-    lambda(const ValueType &u_m, const ValueType &u_p) const
+    local_maximum_wave_speed(const ValueType &u_m, const ValueType &u_p) const
     {
       return maximum_local_wave_speed<DofStateViewType, dealii::VectorizedArray<number>>(
         DofStateViewType(u_m, material), DofStateViewType(u_p, material));

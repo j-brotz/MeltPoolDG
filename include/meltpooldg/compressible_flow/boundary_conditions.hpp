@@ -220,6 +220,23 @@ namespace MeltPoolDG::CompressibleFlow
       const DofWriteView                                            &w_p) const;
 
     /**
+     * @brief This function sets the values of partial density in the case of multi-component flows on the fictional outer face if the face is
+     * located at a boundary.
+     *
+     * @param q_point Location of the quadrature points at which the values shall be computed.
+     * @param boundary_id ID of the boundary.
+     * @param w_m View for the conserved variables on the inner face.
+     * @param w_p View for the conserved variables on the outer face, which shall be set by this function.
+     */
+    template <int n_species, typename DofReadView, typename DofWriteView>
+    void
+    set_partial_density_boundary_value_and_gradient(
+      const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
+      dealii::types::boundary_id                                 boundary_id,
+      const DofReadView                                         &w_m,
+      const DofWriteView                                        &w_p) const;
+
+    /**
      * @brief Compute boundary values and gradients, as well as their linearizations for the Jacobian.
      *
      * This function sets the corresponding values on the fictional outer face if the face is

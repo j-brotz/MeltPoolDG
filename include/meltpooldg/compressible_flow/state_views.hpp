@@ -6,6 +6,7 @@
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/equation_of_state.hpp>
 #include <meltpooldg/compressible_flow/material.hpp>
+#include <meltpooldg/compressible_flow/material_views_mixins.hpp>
 #include <meltpooldg/compressible_flow/operation_data.hpp>
 #include <meltpooldg/compressible_flow/state_views_mixins.hpp>
 

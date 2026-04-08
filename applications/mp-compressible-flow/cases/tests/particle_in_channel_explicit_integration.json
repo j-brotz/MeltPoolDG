@@ -30,9 +30,8 @@
   },
   "material": {
     "gas": {
-      "equation of state": {
-        "type": "ideal_gas"
-      }
+      "eos type": "ideal_gas",
+      "reference dynamic viscosity": 0.000625
     }
   }
 }

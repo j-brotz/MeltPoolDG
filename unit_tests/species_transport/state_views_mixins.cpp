@@ -75,7 +75,7 @@ namespace
     }
 
     double
-    thermodynamic_pressure() const
+    pressure() const
     {
       return 101372;
     }

@@ -93,6 +93,7 @@
             "name": "species",
             "number of species": "1",
             "reference density": "1",
+            "reference dynamic viscosity": "0.000625",
             "specific gas constant": "287.1",
             "specific isobaric heat": "1000",
             "thermal conductivity": "1.79769e+308",
@@ -136,7 +137,7 @@
             },
             "species interactions":
             {
-                "interaction pair1":
+                "interaction pair 1":
                 {
                     "diffusion coefficient": "0",
                     "species 1": "1",

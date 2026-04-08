@@ -81,11 +81,12 @@ TEST(CompressibleFlowKernelsTest, ConvectiveKernel)
   }
 
   {
-    SCOPED_TRACE("Lambda computation");
-    const VectorizedArrayType lambda =
-      convective_flux.lambda(conserved_variables, 2. * conserved_variables);
-    VectorizedArrayType expected_lambda(46.631604881874281);
-    MeltPoolDG::TestUtils::expect_double_eq(lambda, expected_lambda);
+    SCOPED_TRACE("Local maximum wave speed computation");
+    const VectorizedArrayType local_maximum_wave_speed =
+      convective_flux.local_maximum_wave_speed(conserved_variables, 2. * conserved_variables);
+    VectorizedArrayType expected_local_maximum_wave_speed(46.631604881874281);
+    MeltPoolDG::TestUtils::expect_double_eq(local_maximum_wave_speed,
+                                            expected_local_maximum_wave_speed);
   }
 }
 
