@@ -59,7 +59,21 @@ namespace MeltPoolDG::CompressibleFlow
       , dof_idx(dof_idx_in)
       , quad_idx(quad_idx_in)
     {
-      is_viscous = material.data.dynamic_viscosity > 0.;
+      if (material.data.number_of_species == 1)
+        {
+          is_viscous = material.data.dynamic_viscosity > 0.;
+        }
+      else
+        {
+          for (unsigned int species = 0; species < material.data.number_of_species; ++species)
+            {
+              if (material.data.species_data[species].dynamic_viscosity > 0.)
+                {
+                  is_viscous = true;
+                  break;
+                }
+            }
+        }
 
       if (flow_data.domain_representation_type == "cut")
         AssertThrow(

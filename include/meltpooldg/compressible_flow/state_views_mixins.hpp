@@ -187,50 +187,6 @@ namespace MeltPoolDG::CompressibleFlow
   };
 
   /**
-   * CRTP mixin providing semantic access to material properties.
-   */
-  template <typename Derived>
-  struct MaterialMixin
-  {
-    decltype(auto)
-    dynamic_viscosity() const
-    {
-      return this->material().dynamic_viscosity;
-    }
-
-    decltype(auto)
-    thermal_conductivity() const
-    {
-      return this->material().thermal_conductivity;
-    }
-
-    decltype(auto)
-    heat_capacity_ratio() const
-    {
-      return this->material().gamma;
-    }
-
-    decltype(auto)
-    specific_gas_constant() const
-    {
-      return this->material().specific_gas_constant;
-    }
-
-    decltype(auto)
-    specific_isobaric_heat() const
-    {
-      return this->material().specific_isobaric_heat;
-    }
-
-  private:
-    decltype(auto)
-    material() const
-    {
-      return static_cast<const Derived &>(*this).material();
-    }
-  };
-
-  /**
    * CRTP mixin providing semantic access to flux components of the state.
    *
    * This mixin assumes that the derived class fulfills the HasIndexableValue concept and provides a

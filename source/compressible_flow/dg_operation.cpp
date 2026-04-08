@@ -12,7 +12,8 @@
 #include <meltpooldg/compressible_flow/dg_operator_implicit.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_implicit_explicit.hpp>
 #include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
-#include <meltpooldg/compressible_flow/state_views.hpp>
+#include <meltpooldg/compressible_flow/state_views_n_species.hpp>
+#include <meltpooldg/species_transport/output_post_processor.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
@@ -40,13 +41,14 @@ namespace MeltPoolDG::CompressibleFlow
   {
     setup_operator();
 
-    using OutputView =
-      DofStateView<dim, number, ConservedVariablesType<dim, number, n_species, number>>;
+    using OutputView = NSpeciesDofStateView<dim,
+                                            n_species,
+                                            number,
+                                            ConservedVariablesType<dim, number, n_species, number>>;
 
     const auto create_output_view =
       [&material_data](ConservedVariablesType<dim, number, n_species, number> &value) -> auto {
-      return DofStateView<dim, number, ConservedVariablesType<dim, number, n_species, number>>(
-        value, material_data);
+      return OutputView(value, material_data);
     };
 
     output_manager.add_conserved_variables_post_processor(
@@ -58,6 +60,23 @@ namespace MeltPoolDG::CompressibleFlow
     output_manager.add_material_quantities_post_processor(
       std::make_unique<MaterialVariablesPostProcessor<dim, number, OutputView>>(
         create_output_view));
+
+    if constexpr (n_species > 1)
+      {
+        std::vector<std::string> species_names;
+        species_names.reserve(n_species);
+        for (unsigned int species = 0; species < n_species; ++species)
+          species_names.emplace_back(flow_scratch_data.material.data.species_data[species].name);
+
+        output_manager.add_conserved_variables_post_processor(
+          std::make_unique<
+            SpeciesTransport::PartialDensityPostProcessor<dim, n_species, number, OutputView>>(
+            create_output_view, species_names));
+        output_manager.add_primitive_variables_post_processor(
+          std::make_unique<
+            SpeciesTransport::MassFractionPostProcessor<dim, n_species, number, OutputView>>(
+            create_output_view, species_names));
+      }
   }
 
   template <int dim, typename number, int n_species>
@@ -71,7 +90,8 @@ namespace MeltPoolDG::CompressibleFlow
   void
   DGOperation<dim, number, n_species>::distribute_dofs(DoFHandler<dim> &dof_handler) const
   {
-    FiniteElementUtils::distribute_dofs<dim, dim + 2>(flow_scratch_data.flow_data.fe, dof_handler);
+    FiniteElementUtils::distribute_dofs<dim, n_conserved_variables<dim, n_species>>(
+      flow_scratch_data.flow_data.fe, dof_handler);
   }
 
   template <int dim, typename number, int n_species>
@@ -204,8 +224,11 @@ namespace MeltPoolDG::CompressibleFlow
           {
             const auto w_q = phi.get_value(q);
 
-            DofStateView<dim, number, const ConservedVariablesType<dim, number, n_species>> w_view(
-              w_q, flow_scratch_data.material.data);
+            NSpeciesDofStateView<dim,
+                                 n_species,
+                                 number,
+                                 const ConservedVariablesType<dim, number, n_species>>
+              w_view(w_q, flow_scratch_data.material.data);
 
             const auto              inverse_jacobian = phi.inverse_jacobian(q);
             const auto              convective_speed = inverse_jacobian * w_view.velocity();

@@ -140,6 +140,14 @@ MeltPoolDG::CompressibleFlow::MaterialPhaseData<number>::add_parameters(
                       " density. If instabilities occur, the reference density can be "
                       "decreased, so that the symmetric interior penalization is increased.",
                       dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+    prm.add_parameter(
+      "reference dynamic viscosity",
+      reference_dynamic_viscosity,
+      "Reference dynamic viscosity for computing the interior penalty factor. "
+      "A good first guess is to choose a value in the order of the fluid"
+      " dynamic viscosity. If instabilities occur, the reference dynamic viscosity can be "
+      "increased, so that the symmetric interior penalization is increased.",
+      dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
 
     for (unsigned int i = 0; i < n_max_species; ++i)
       {

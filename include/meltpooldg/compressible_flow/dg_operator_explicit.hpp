@@ -6,7 +6,7 @@
 
 #include <meltpooldg/compressible_flow/convective_kernels.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_base.hpp>
-#include <meltpooldg/compressible_flow/kernels.hpp>
+#include <meltpooldg/compressible_flow/kernels_n_species.hpp>
 #include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
@@ -40,9 +40,14 @@ namespace MeltPoolDG::CompressibleFlow
     using FlowFluxType   = FluxType<dim, number, n_species>;
     using FlowSourceType = SourceType<dim, number, n_species>;
 
-    using ConvectiveKernel = ConvectiveFlux<dim, number, ConservedVariables, FlowFluxType>;
-    using DiffusiveKernel =
-      DiffusiveFlux<dim, number, ConservedVariables, ConservedVariablesGradient, FlowFluxType>;
+    using ConvectiveKernel =
+      NSpeciesConvectiveFlux<dim, n_species, number, ConservedVariables, FlowFluxType>;
+    using DiffusiveKernel = NSpeciesDiffusiveFlux<dim,
+                                                  n_species,
+                                                  number,
+                                                  ConservedVariables,
+                                                  ConservedVariablesGradient,
+                                                  FlowFluxType>;
 
     using ConvectionDiffusionOperator =
       Utils::DGConvectionDiffusionOperator<dim, number, ConvectiveKernel, DiffusiveKernel>;

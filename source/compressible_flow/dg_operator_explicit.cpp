@@ -4,7 +4,7 @@
 #include <meltpooldg/compressible_flow/explicit_time_integration_utils.hpp>
 #include <meltpooldg/compressible_flow/kernels.hpp>
 #include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
-#include <meltpooldg/compressible_flow/state_views.hpp>
+#include <meltpooldg/compressible_flow/state_views_n_species.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
@@ -91,8 +91,9 @@ namespace MeltPoolDG::CompressibleFlow
                                      VectorType                                  &dst,
                                      const VectorType                            &src,
                                      const std::pair<unsigned int, unsigned int> &cell_range) {
-        Utilities::MatrixFree::local_apply_inverse_mass_matrix<dim, dim + 2, number>(
-          matrix_free, dst, src, cell_range, dof_idx, quad_idx);
+        Utilities::MatrixFree::
+          local_apply_inverse_mass_matrix<dim, n_conserved_variables<dim, n_species>, number>(
+            matrix_free, dst, src, cell_range, dof_idx, quad_idx);
       };
     flow_scratch_data.scratch_data.get_matrix_free().cell_loop(
       inverse, dst, dst, std::function<void(unsigned int, unsigned int)>(), func);
@@ -189,7 +190,7 @@ namespace MeltPoolDG::CompressibleFlow
 
         const VectorizedArray<number> interior_penalty_parameter =
           is_viscous() ?
-            flow_scratch_data.material.data.dynamic_viscosity /
+            flow_scratch_data.material.data.reference_dynamic_viscosity /
               flow_scratch_data.material.data.reference_density *
               std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
                        phi_p.read_cell_data(flow_scratch_data.interior_penalty_parameter)) :
@@ -256,17 +257,19 @@ namespace MeltPoolDG::CompressibleFlow
     FEFaceIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi_m(
       mf, true, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
 
-    using DofReaderType =
-      DofValueAndGradientStateView<dim,
-                                   number,
-                                   const ConservedVariablesType<dim, number, n_species>,
-                                   const ConservedVariablesGradientType<dim, number, n_species>>;
+    using DofReaderType = NSpeciesDofValueAndGradientStateView<
+      dim,
+      n_species,
+      number,
+      const ConservedVariablesType<dim, number, n_species>,
+      const ConservedVariablesGradientType<dim, number, n_species>>;
 
     using DofWriteType =
-      DofValueAndGradientStateView<dim,
-                                   number,
-                                   ConservedVariablesType<dim, number, n_species>,
-                                   ConservedVariablesGradientType<dim, number, n_species>>;
+      NSpeciesDofValueAndGradientStateView<dim,
+                                           n_species,
+                                           number,
+                                           ConservedVariablesType<dim, number, n_species>,
+                                           ConservedVariablesGradientType<dim, number, n_species>>;
 
 
     for (unsigned int face = face_range.first; face < face_range.second; ++face)
@@ -275,7 +278,7 @@ namespace MeltPoolDG::CompressibleFlow
         phi_m.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
         const VectorizedArray<number> interior_penalty_parameter =
-          is_viscous() ? flow_scratch_data.material.data.dynamic_viscosity /
+          is_viscous() ? flow_scratch_data.material.data.reference_dynamic_viscosity /
                            flow_scratch_data.material.data.reference_density *
                            phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
                          0.;
@@ -295,6 +298,18 @@ namespace MeltPoolDG::CompressibleFlow
                 phi_m.boundary_id(),
                 DofReaderType(w_m, grad_w_m, flow_scratch_data.material.data),
                 DofWriteType(w_p, grad_w_p, flow_scratch_data.material.data));
+
+            if constexpr (n_species > 1)
+              {
+                flow_scratch_data.boundary_conditions
+                  .template set_partial_density_boundary_value_and_gradient<n_species,
+                                                                            DofReaderType,
+                                                                            DofWriteType>(
+                    phi_m.quadrature_point(q),
+                    phi_m.boundary_id(),
+                    DofReaderType(w_m, grad_w_m, flow_scratch_data.material.data),
+                    DofWriteType(w_p, grad_w_p, flow_scratch_data.material.data));
+              }
 
             FaceFluxType<dim, number, n_species> flux_m;
             if (is_viscous())

@@ -1,4 +1,5 @@
 #include <meltpooldg/compressible_flow/boundary_conditions.hpp>
+#include <meltpooldg/species_transport/boundary_conditions.hpp>
 
 namespace MeltPoolDG::CompressibleFlow
 {
@@ -115,4 +116,45 @@ namespace MeltPoolDG::CompressibleFlow
       }
   }
 
+  template <int dim, typename number>
+  template <int n_species, typename DofReadView, typename DofWriteView>
+  void
+  MeltPoolDG::CompressibleFlow::BoundaryConditions<dim, number>::
+    set_partial_density_boundary_value_and_gradient(
+      const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
+      dealii::types::boundary_id                                 boundary_id,
+      const DofReadView                                         &w_m,
+      const DofWriteView                                        &w_p) const
+  {
+    if (const BoundaryType boundary_type = get_boundary_type(boundary_id);
+        boundary_type == BoundaryType::inflow)
+      {
+        // For inflow boundary conditions we assume that the partial densities are given and we set
+        // them as Dirichlet values.
+
+        // Remember for compressible flow we only need to prescribe n_species - 1 partial densities.
+        std::array<dealii::VectorizedArray<number>, n_species - 1> dirichlet_boundary_values;
+
+        for (unsigned int species = 0; species < n_species - 1; ++species)
+          dirichlet_boundary_values[species] =
+            get_boundary_value(boundary_id,
+                               BoundaryType::inflow,
+                               q_point,
+                               CompressibleFlow::n_conserved_variables<dim, 1> + species);
+
+
+        SpeciesTransport::set_boundary_value_and_gradient(
+          w_p, w_m, SpeciesTransport::BoundaryConditionType::dirichlet, dirichlet_boundary_values);
+      }
+    else
+      {
+        // For all other boundary conditions we assume homogeneous Neumann for the partial
+        // densities.
+        SpeciesTransport::set_boundary_value_and_gradient<n_species - 1,
+                                                          dealii::VectorizedArray<number>,
+                                                          DofReadView,
+                                                          DofWriteView>(
+          w_p, w_m, SpeciesTransport::BoundaryConditionType::neumann);
+      }
+  }
 } // namespace MeltPoolDG::CompressibleFlow

@@ -163,6 +163,22 @@ namespace MeltPoolDG::Flow
     {
       return pressure / (material_view.heat_capacity_ratio() - 1.);
     }
+
+    /**
+     * Compute the specific inner energy from a given flow state and material properties for an
+     * ideal gas.
+     *
+     * @param value_view View providing access to the flow state.
+     * @param material_view View providing access to the material properties.
+     */
+    template <typename ValueView, IdealGasIsMaterialView MaterialView>
+    static inline DEAL_II_ALWAYS_INLINE //
+      auto
+      specific_inner_energy(const ValueView &value_view, const MaterialView &material_view)
+    {
+      return thermodynamic_pressure(value_view, material_view) /
+             (value_view.density() * (material_view.heat_capacity_ratio() - 1.));
+    }
   };
 
   /**
@@ -238,6 +254,14 @@ namespace MeltPoolDG::Flow
     {
       return dispatch_eos(eos_type(), [&](auto eos) -> decltype(auto) {
         return eos.inner_energy_from_pressure(pressure, derived());
+      });
+    }
+
+    decltype(auto)
+    specific_inner_energy() const
+    {
+      return dispatch_eos(eos_type(), [&](auto eos) -> decltype(auto) {
+        return eos.specific_inner_energy(derived(), derived());
       });
     }
 
