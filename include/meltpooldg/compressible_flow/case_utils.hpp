@@ -1,6 +1,8 @@
 #pragma once
 
 #include <deal.II/base/function.h>
+#include <deal.II/base/mpi.h>
+#include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/point.h>
 
 #include <deal.II/grid/tria.h>
@@ -8,6 +10,7 @@
 #include <meltpooldg/compressible_flow/boundary_conditions.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
 
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -268,10 +271,10 @@ namespace MeltPoolDG::CompressibleFlow
      * Creates a function object representing the initial condition based on the data stored in this
      * struct.
      *
-     * For multi-component flow cases, this returns a `ConservativeVariablesBoundaryFunction`
-     * initialized with the provided strings for density, velocity, energy, and species mass
-     * fractions. For single-species flow cases, the returned function is initialized with density,
-     * velocity, and energy only; species mass fractions are ignored.
+     * For multi-component flow cases, this returns a `ConservativeVariablesFunction` initialized
+     * with the provided strings for density, velocity, energy, and species mass fractions. For
+     * single-species flow cases, the returned function is initialized with density, velocity, and
+     * energy only; species mass fractions are ignored.
      *
      * @param initial_time Initial time used to initialize the function.
      * @param n_species Total number of species in the simulation. Determines how many species mass

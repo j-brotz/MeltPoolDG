@@ -14,6 +14,9 @@
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/utilities/amr_regions.hpp>
 
+#include <cmath>
+#include <numbers>
+
 namespace MeltPoolDG::CompressibleFlow
 {
   template <int dim, typename number>

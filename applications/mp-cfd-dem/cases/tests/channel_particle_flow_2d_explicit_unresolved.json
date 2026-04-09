@@ -70,7 +70,7 @@
   },
   "obstacles": {
     "stationary": true,
-    "obstacle state input file": "/home/brotz/Development/meltpooldg/meltpooldg/applications/mp-cfd-dem/cases/tests/stationary_particle_2d.csv"
+    "obstacle state input file": "../../stationary_particle_2d.csv"
   },
   "adaptive meshing": {
     "do amr": true,
