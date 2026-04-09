@@ -2,8 +2,8 @@
   "base": {
     "problem name": "compressible_flow",
     "case name": "generic_hyper_rectangle_domain",
-    "dimension": "2",
-    "do print parameters": "false",
+    "dimension": 2,
+    "do print parameters": false,
     "verbosity level": 1,
     "global refinements": 1
   },
@@ -36,48 +36,41 @@
     }
   },
   "time stepping": {
-    "start time": "0.0",
-    "end time": "1e-10"
+    "start time": 0.0,
+    "end time": 1e-10 
   },
   "output": {
-    "write frequency": "1",
-    "do user defined postprocessing": "true",
+    "write frequency": 1,
+    "do user defined postprocessing": true,
+    "directory": "./output",
     "paraview": {
       "filename": "solution_generic_hyper_rectangle_domain",
-      "enable": "true"
+      "enable": true
     }
   },
   "compressible navier stokes": {
     "numerical flux type": "lax_friedrichs_modified",
-    "use cfl criteria": "true",
-    "courant number": "0.01",
-    "viscous courant number": "0.001",
+    "use cfl criteria": true,
+    "courant number": 0.01,
+    "viscous courant number": 0.001,
     "gravity constant": 0,
     "time integration": {
-      "type": "LSRK_stage_1_order_1",
-      "linear solver": {
-        "preconditioner type": "Identity",
-        "solver type": "CG",
-        "max iterations": "10000",
-        "rel tolerance": "1e-20",
-        "abs tolerance": "1e-20"
-      }
+      "type": "LSRK_stage_1_order_1"
     },
     "fe": {
-      "degree": "2",
+      "degree": 2,
       "type": "FE_DGQ"
     }
   },
   "material": {
     "gas": {
-      "reference density": "0.04",
-      "dynamic viscosity": "0.000035",
-      "gamma": "1.6666666666",
-      "specific gas constant": "174",
-      "thermal conductivity": "0.02863",
-      "equation of state": {
-        "type": "ideal_gas"
-      }
+      "eos type": "ideal_gas",
+      "reference density": 0.04,
+      "reference dynamic viscosity": 0.000035,
+      "dynamic viscosity": 0.000035,
+      "gamma": 1.6666666666,
+      "specific gas constant": 174,
+      "thermal conductivity": 0.02863
     }
   }
 }
