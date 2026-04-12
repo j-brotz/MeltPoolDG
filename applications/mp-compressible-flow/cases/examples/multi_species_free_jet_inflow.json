@@ -1,0 +1,109 @@
+{
+  "base": {
+    "problem name": "compressible_flow",
+    "case name": "generic_hyper_rectangle_domain",
+    "dimension": 2,
+    "do print parameters": false,
+    "verbosity level": 1,
+    "global refinements": 1
+  },
+  "case setup": {
+    "boundary x min": {
+      "type": "subsonic_outflow_fixed_energy",
+      "energy": "1244400"
+    },
+    "boundary x max": {
+      "type": "subsonic_outflow_fixed_energy",
+      "energy": "1244400"
+    },
+    "boundary y min": {
+      "type": "combined_inflow_no_slip_wall",
+      "inflow velocity ramp-up duration": 1e-08,
+      "inflow velocity ramp-up type": "linear",
+      "free jet": {
+        "jet hole diameter": 80e-6,
+        "jet hole center": "500e-6, 0",
+        "jet peak velocity": 150,
+        "free jet profile": "cosine",
+        "density": 1.5,
+        "inner energy": "732000",
+        "mass fractions": "0.0"
+      }
+    },
+    "boundary y max": {
+      "type": "subsonic_outflow_fixed_energy",
+      "energy": "1244400"
+    },
+    "initial conditions": {
+      "density": "1.7",
+      "velocity": "0.0; 0.0",
+      "energy": "732000",
+      "species mass fractions": "1.0"
+    },
+    "domain": {
+      "size": "1000e-6, 1000e-6",
+      "base grid resolution": "50, 50"
+    }
+  },
+  "time stepping": {
+    "start time": 0.0,
+    "end time": 1e-5
+  },
+  "output": {
+    "write frequency": 200,
+    "do user defined postprocessing": true,
+    "directory": "./output",
+    "paraview": {
+      "filename": "multi_species_free_jet",
+      "compressible output types": "conserved_variables, primitive_variables",
+      "enable": true
+    }
+  },
+  "compressible navier stokes": {
+    "numerical flux type": "lax_friedrichs_modified",
+    "use cfl criteria": true,
+    "courant number": 0.005,
+    "viscous courant number": 0.0005,
+    "gravity constant": 0,
+    "time integration": {
+      "type": "LSRK_stage_5_order_4"
+    },
+    "fe": {
+      "degree": 1,
+      "type": "FE_DGQ"
+    }
+  },
+  "material": {
+    "gas": {
+      "number of species": 2,
+      "eos type": "ideal_gas",
+      "reference density": 0.4,
+      "reference dynamic viscosity": 1.1e-4,
+      "species 1": {
+        "name": "argon",
+        "dynamic viscosity":2.1e-5,
+        "gamma": 1.6666666666,
+        "specific gas constant": 208,
+        "specific isobaric heat": 520,
+        "thermal conductivity": 0.015,
+        "molar mass": 0.03997
+      },
+      "species 2": {
+        "name": "metal_vapor",
+        "dynamic viscosity": 1.1e-4,
+        "gamma": 1.6666666666,
+        "specific gas constant": 244,
+        "specific isobaric heat": 610,
+        "thermal conductivity": 0.042,
+        "molar mass": 0.03408
+      },
+      "species interactions": {
+        "interaction pair1": {
+          "species 1": 1,
+          "species 2": 2,
+          "diffusion coefficient": 4e-5
+        }
+      }
+    }
+  }
+}
