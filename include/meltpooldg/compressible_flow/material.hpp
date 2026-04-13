@@ -141,6 +141,9 @@ namespace MeltPoolDG::CompressibleFlow
     /// Reference density for interior penalty (SI: kg/m3)
     number reference_density = 1.0;
 
+    /// Reference dynamic viscosity for interior penalty (SI: kg/(m s))
+    number reference_dynamic_viscosity = 1. / 1600.;
+
     /// The parameters below are defined for convenience and backward compatibility. For
     /// single-component materials they are set based on the first entry of the species data. For
     /// multi-component materials, they are set to invalid numbers. This is done by the post

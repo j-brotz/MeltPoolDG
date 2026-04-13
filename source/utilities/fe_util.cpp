@@ -13,68 +13,6 @@
 
 namespace MeltPoolDG::FiniteElementUtils
 {
-  template <int dim, unsigned int n_components>
-  void
-  distribute_dofs(const FiniteElementData &fe_data, dealii::DoFHandler<dim> &dof_handler)
-  {
-    if constexpr (n_components == 1)
-      {
-        switch (fe_data.type)
-          {
-              case FiniteElementType::FE_Q: {
-                dof_handler.distribute_dofs(dealii::FE_Q<dim>(fe_data.degree));
-                break;
-              }
-              case FiniteElementType::FE_SimplexP: {
-                dof_handler.distribute_dofs(dealii::FE_SimplexP<dim>(fe_data.degree));
-                break;
-              }
-              case FiniteElementType::FE_Q_iso_Q1: {
-                dof_handler.distribute_dofs(dealii::FE_Q_iso_Q1<dim>(fe_data.degree));
-                break;
-              }
-              case FiniteElementType::FE_DGQ: {
-                dof_handler.distribute_dofs(dealii::FE_DGQ<dim>(fe_data.degree));
-                break;
-              }
-            case FiniteElementType::not_initialized:
-              DEAL_II_ASSERT_UNREACHABLE();
-            default:
-              DEAL_II_NOT_IMPLEMENTED();
-          }
-      }
-    else
-      {
-        switch (fe_data.type)
-          {
-              case FiniteElementType::FE_Q: {
-                dof_handler.distribute_dofs(
-                  dealii::FESystem<dim>(dealii::FE_Q<dim>(fe_data.degree), n_components));
-                break;
-              }
-              case FiniteElementType::FE_SimplexP: {
-                dof_handler.distribute_dofs(
-                  dealii::FESystem<dim>(dealii::FE_SimplexP<dim>(fe_data.degree), n_components));
-                break;
-              }
-              case FiniteElementType::FE_Q_iso_Q1: {
-                dof_handler.distribute_dofs(
-                  dealii::FESystem<dim>(dealii::FE_Q_iso_Q1<dim>(fe_data.degree), n_components));
-                break;
-              }
-              case FiniteElementType::FE_DGQ: {
-                dof_handler.distribute_dofs(
-                  dealii::FESystem<dim>(dealii::FE_DGQ<dim>(fe_data.degree), n_components));
-                break;
-              }
-            case FiniteElementType::not_initialized:
-              DEAL_II_ASSERT_UNREACHABLE();
-            default:
-              DEAL_II_NOT_IMPLEMENTED();
-          }
-      }
-  }
-
   template <int dim>
   std::shared_ptr<dealii::Mapping<dim>>
   create_mapping(const FiniteElementData &fe_data)
@@ -118,23 +56,6 @@ namespace MeltPoolDG::FiniteElementUtils
       }
     return dealii::Quadrature<dim>();
   }
-
-  template void
-  distribute_dofs<1, 1>(const FiniteElementData &, dealii::DoFHandler<1> &);
-  template void
-  distribute_dofs<1, 3>(const FiniteElementData &, dealii::DoFHandler<1> &);
-  template void
-  distribute_dofs<2, 1>(const FiniteElementData &, dealii::DoFHandler<2> &);
-  template void
-  distribute_dofs<2, 2>(const FiniteElementData &, dealii::DoFHandler<2> &);
-  template void
-  distribute_dofs<2, 4>(const FiniteElementData &, dealii::DoFHandler<2> &);
-  template void
-  distribute_dofs<3, 1>(const FiniteElementData &, dealii::DoFHandler<3> &);
-  template void
-  distribute_dofs<3, 3>(const FiniteElementData &, dealii::DoFHandler<3> &);
-  template void
-  distribute_dofs<3, 5>(const FiniteElementData &, dealii::DoFHandler<3> &);
 
   template std::shared_ptr<dealii::Mapping<1>>
   create_mapping(const FiniteElementData &);

@@ -113,7 +113,7 @@ namespace
     flux.partial_density_fluxes = {
       {1.0, 2.0, 0.0}}; // to check if convective flux modifies them as expected
 
-    convective_flux<n_species>(conserved_variables, flux);
+    compute_convective_flux<n_species>(conserved_variables, flux);
 
     // The last species should be skipped as it is not part of the conserved variables
     std::array<double, n_species> expected_fluxes = {{5.0, 8.0, 0.0}};
@@ -134,7 +134,7 @@ namespace
     MockView<n_species> conserved_variables;
     MockFlux<n_species> flux;
 
-    convective_flux<n_species>(conserved_variables, flux);
+    compute_convective_flux<n_species>(conserved_variables, flux);
     flux.partial_density_fluxes = {{1.0}}; // to check if convective flux modifies them as expected
 
     // With n_species=1, loop should not run, flux remains 0
@@ -161,7 +161,7 @@ namespace
     flux.partial_density_fluxes = {
       {1.0, -2.0, 0.0}}; // to check if convective flux modifies them as expected
 
-    diffusive_flux<n_species>(conserved_variables, flux);
+    compute_diffusive_flux<n_species>(conserved_variables, flux);
 
     // The last species should be skipped as it is not part of the conserved variables
     std::array<double, n_species> expected_fluxes = {{1.0042, -2.00525, 0.0}};

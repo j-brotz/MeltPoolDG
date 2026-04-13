@@ -455,6 +455,12 @@
               "description": "Reference density for computing the interior penalty factor. A good first guess is to choose a value in the order of the fluid density. If instabilities occur, the reference density can be decreased, so that the symmetric interior penalization is increased.",
               "default": 1.0
             },
+            "reference dynamic viscosity": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "Reference dynamic viscosity for computing the interior penalty factor. A good first guess is to choose a value in the order of the fluid dynamic viscosity. If instabilities occur, the reference dynamic viscosity can be increased, so that the symmetric interior penalization is increased.",
+              "default": 0.000625
+            },
             "species 1": {
               "type": "object",
               "properties": {
@@ -698,7 +704,7 @@
             "species interactions": {
               "type": "object",
               "properties": {
-                "interaction pair1": {
+                "interaction pair 1": {
                   "type": "object",
                   "properties": {
                     "species 1": {

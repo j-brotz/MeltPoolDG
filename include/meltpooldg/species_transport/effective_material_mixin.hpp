@@ -87,7 +87,7 @@ namespace MeltPoolDG::SpeciesTransport
 
       // If the denominator is zero, it means that the species does not diffuse with any other
       // available species. In this case, we set the mixture-averaged diffusion coefficient to zero.
-      constexpr ValueType tolerance = ValueType(1e-20);
+      ValueType tolerance = ValueType(1e-20);
       if constexpr (std::is_floating_point_v<ValueType>)
         {
           return denominator < tolerance ?

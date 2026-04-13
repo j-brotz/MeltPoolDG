@@ -140,6 +140,14 @@ MeltPoolDG::CompressibleFlow::MaterialPhaseData<number>::add_parameters(
                       " density. If instabilities occur, the reference density can be "
                       "decreased, so that the symmetric interior penalization is increased.",
                       dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+    prm.add_parameter(
+      "reference dynamic viscosity",
+      reference_dynamic_viscosity,
+      "Reference dynamic viscosity for computing the interior penalty factor. "
+      "A good first guess is to choose a value in the order of the fluid"
+      " dynamic viscosity. If instabilities occur, the reference dynamic viscosity can be "
+      "increased, so that the symmetric interior penalization is increased.",
+      dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
 
     for (unsigned int i = 0; i < n_max_species; ++i)
       {
@@ -151,7 +159,7 @@ MeltPoolDG::CompressibleFlow::MaterialPhaseData<number>::add_parameters(
     {
       for (unsigned int i = 0; i < n_max_diffusion_coefficients; ++i)
         {
-          prm.enter_subsection(std::format("interaction pair{}", i + 1));
+          prm.enter_subsection(std::format("interaction pair {}", i + 1));
           {
             prm.add_parameter("species 1",
                               species_interactions_input[i].species_i,
@@ -196,6 +204,11 @@ MeltPoolDG::CompressibleFlow::MaterialPhaseData<number>::post(const bool is_gas)
         }
 
       species_data[i].eos_data.post(eos_type);
+    }
+
+  if (number_of_species == 1)
+    {
+      reference_dynamic_viscosity = species_data[0].dynamic_viscosity;
     }
 
   /// Set the diffusion coefficients for the interaction between different species based on the

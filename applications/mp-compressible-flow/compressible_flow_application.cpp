@@ -223,13 +223,30 @@ namespace MeltPoolDG::CompressibleFlow
     // and "cut".
     if (simulation_case->parameters.flow.domain_representation_type == "fitted")
       {
-        std::unique_ptr<DGOperation<dim, number>> operation =
-          std::make_unique<DGOperation<dim, number>>(*scratch_data,
-                                                     simulation_case->parameters.flow,
-                                                     simulation_case->parameters.material,
-                                                     comp_flow_dof_idx,
-                                                     comp_flow_quad_idx);
-        comp_flow_operation = OperationTypeErasure<dim, number>(std::move(operation));
+        const auto create_dg_operator = [&]<int n_species>() {
+          std::unique_ptr<DGOperation<dim, number, n_species>> operation =
+            std::make_unique<DGOperation<dim, number, n_species>>(
+              *scratch_data,
+              simulation_case->parameters.flow,
+              simulation_case->parameters.material,
+              comp_flow_dof_idx,
+              comp_flow_quad_idx);
+          comp_flow_operation = OperationTypeErasure<dim, number>(std::move(operation));
+        };
+
+        switch (this->simulation_case->parameters.material.number_of_species)
+          {
+            case 1:
+              create_dg_operator.template operator()<1>();
+              break;
+            case 2:
+              create_dg_operator.template operator()<2>();
+              break;
+            default:
+              AssertThrow(false,
+                          dealii::ExcMessage(
+                            "Only up to two species are supported in the current implementation!"));
+          }
       }
     else if (simulation_case->parameters.flow.domain_representation_type == "cut")
       {

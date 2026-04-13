@@ -143,7 +143,7 @@ namespace MeltPoolDG::SpeciesTransport
     typename ValueType::value_type
     partial_pressure(const unsigned species_component) const
     {
-      return derived().mole_fraction(species_component) * derived().thermodynamic_pressure();
+      return derived().mole_fraction(species_component) * derived().pressure();
     }
 
     /**

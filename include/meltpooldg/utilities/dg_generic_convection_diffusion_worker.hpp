@@ -47,7 +47,8 @@ namespace MeltPoolDG::Utils
     } -> std::same_as<typename T::PhysicalFluxType>;
 
     {
-      kernel.lambda(std::declval<typename T::ValueType>(), std::declval<typename T::ValueType>())
+      kernel.local_maximum_wave_speed(std::declval<typename T::ValueType>(),
+                                      std::declval<typename T::ValueType>())
     };
   };
 
@@ -111,10 +112,10 @@ namespace MeltPoolDG::Utils
       const FluxType flux_m = kernel.flux(u_m);
       const FluxType flux_p = kernel.flux(u_p);
 
-      const auto lambda = kernel.lambda(u_m, u_p);
+      const auto local_maximum_wave_speed = kernel.local_maximum_wave_speed(u_m, u_p);
 
-      const auto lax_friedrichs_flux =
-        contract_average_tensor_with_vector(flux_m, flux_p, normal) + 0.5 * lambda * (u_m - u_p);
+      const auto lax_friedrichs_flux = contract_average_tensor_with_vector(flux_m, flux_p, normal) +
+                                       0.5 * local_maximum_wave_speed * (u_m - u_p);
 
       return FaceFlux{.inner_face_value = -lax_friedrichs_flux,
                       .outer_face_value = lax_friedrichs_flux};
