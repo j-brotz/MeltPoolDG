@@ -18,14 +18,14 @@
     },
     "boundary y min": {
       "type": "combined_inflow_no_slip_wall",
-      "inflow velocity ramp-up duration": 1e-08,
+      "inflow velocity ramp-up duration": 1e-07,
       "inflow velocity ramp-up type": "linear",
       "free jet": {
         "jet hole diameter": 80e-6,
         "jet hole center": "500e-6, 0",
         "jet peak velocity": 150,
         "free jet profile": "cosine",
-        "density": 1.5,
+        "density": 1.0,
         "inner energy": "732000",
         "mass fractions": "0.0"
       }
@@ -66,7 +66,7 @@
     "viscous courant number": 0.0005,
     "gravity constant": 0,
     "time integration": {
-      "type": "LSRK_stage_5_order_4"
+      "type": "LSRK_stage_1_order_1"
     },
     "fe": {
       "degree": 1,
@@ -77,7 +77,7 @@
     "gas": {
       "number of species": 2,
       "eos type": "ideal_gas",
-      "reference density": 0.4,
+      "reference density": 1.0,
       "reference dynamic viscosity": 1.1e-4,
       "species 1": {
         "name": "argon",

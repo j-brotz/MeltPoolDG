@@ -1,3 +1,5 @@
+#include <deal.II/base/vectorization.h>
+
 #include <meltpooldg/compressible_flow/boundary_conditions.templates.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_explicit.hpp>
@@ -44,12 +46,74 @@ namespace MeltPoolDG::CompressibleFlow
       flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
     };
 
+    std::function<void(number, number, VectorType & dst, const VectorType &src)> post_processing =
+      [&](number time, number, VectorType &dst, const VectorType &src) -> void {
+      using local_applier_type = std::function<void(const dealii::MatrixFree<dim, number> &,
+                                                    VectorType &,
+                                                    const VectorType &,
+                                                    const std::pair<unsigned int, unsigned int> &)>;
+
+      local_applier_type check_mass_fractions =
+        [this](const MatrixFree<dim, number>               &matrix_free,
+               VectorType                                  &dst,
+               const VectorType                            &src,
+               const std::pair<unsigned int, unsigned int> &cell_range) {
+          FECellIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi(
+            matrix_free, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
+
+          const unsigned int n_support_points_per_cell =
+            flow_scratch_data.scratch_data.get_n_dofs_per_cell(flow_scratch_data.dof_idx) /
+            n_conserved_variables<dim, n_species>;
+
+          for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+            {
+              phi.reinit(cell);
+              phi.read_dof_values(src);
+
+
+              for (unsigned int i = 0; i < n_support_points_per_cell; ++i)
+                {
+                  ConservedVariables w_i = phi.get_dof_value(i);
+
+                  if constexpr (n_species > 1)
+                    {
+                      NSpeciesDofStateView<dim, n_species, number, ConservedVariables> w_view(
+                        w_i, flow_scratch_data.material.data);
+
+                      for (unsigned int species = 0; species < n_species - 1; ++species)
+                        {
+                          w_view.partial_density(species) =
+                            w_view.density() *
+                            dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than>(
+                              w_view.mass_fraction(species),
+                              dealii::VectorizedArray<number>(1.0),
+                              dealii::VectorizedArray<number>(1.0),
+                              w_view.mass_fraction(species));
+
+                          w_view.partial_density(species) =
+                            w_view.density() *
+                            dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+                              w_view.mass_fraction(species),
+                              dealii::VectorizedArray<number>(0.0),
+                              dealii::VectorizedArray<number>(0.0),
+                              w_view.mass_fraction(species));
+                        }
+                    }
+
+                  phi.submit_dof_value(w_i, i);
+                }
+              phi.set_dof_values(dst);
+            }
+        };
+
+      flow_scratch_data.scratch_data.get_matrix_free().cell_loop(check_mass_fractions, dst, src);
+    };
+
     time_integrator.perform_time_step(
-      time,
-      time_step,
-      flow_scratch_data.solution_history,
-      pre_processing,
-      std::function<void(number, number, VectorType &, const VectorType &)>());
+      time, time_step, flow_scratch_data.solution_history, pre_processing, post_processing);
+
+    post_processing(time + time_step, time_step, flow_scratch_data.solution_history.get_current_solution(),
+                    flow_scratch_data.solution_history.get_current_solution());
   }
 
   template <int dim, typename number, int n_species>
