@@ -2,7 +2,7 @@
 |                               MeltPoolDG: Compressible Flow Solver                               |
 +--------------------------------------------------------------------------------------------------+
 |                                                                                                  |
-|  Case            : multi_component_generic_hyper_rectangle                                       |
+|  Case            : generic_hyper_rectangle_domain                                       |
 |  Dimension       : 1D                                                                            |
 |  Method          : Discontinuous Galerkin                                                        |
 |  MPI Processes   : 4                                                                             |

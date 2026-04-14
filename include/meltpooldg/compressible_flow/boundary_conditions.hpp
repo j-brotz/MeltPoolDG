@@ -57,6 +57,19 @@ namespace MeltPoolDG::CompressibleFlow
 
     using VectorizedArrayType = dealii::VectorizedArray<number>;
 
+    /// Mapping to translate between the enum used to identify boundary conditions and the
+    /// corresponding string names used in the simulation case.
+    inline static const std::map<MeltPoolDG::CompressibleFlow::BoundaryConditionType, std::string>
+      boundary_type_to_string_map = {
+        {MeltPoolDG::CompressibleFlow::BoundaryConditionType::inflow, "inflow"},
+        {MeltPoolDG::CompressibleFlow::BoundaryConditionType::subsonic_outflow_fixed_pressure,
+         "outflow_fixed_pressure"},
+        {MeltPoolDG::CompressibleFlow::BoundaryConditionType::subsonic_outflow_fixed_energy,
+         "outflow_fixed_energy"},
+        {MeltPoolDG::CompressibleFlow::BoundaryConditionType::slip_wall, "slip_wall"},
+        {MeltPoolDG::CompressibleFlow::BoundaryConditionType::no_slip_wall, "no_slip_wall"},
+    };
+
     /**
      * @brief Update the boundary conditions.
      *

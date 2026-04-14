@@ -13,8 +13,8 @@
       "density": "0.4",
       "velocity": "150; 0",
       "energy": "750450",
-      "inflow ramp-up duration": 1e-08,
-      "inflow ramp-up type": "linear"
+      "inflow velocity ramp-up duration": 1e-08,
+      "inflow velocity ramp-up type": "linear"
     },
     "boundary x max": {
       "type": "subsonic_outflow_fixed_energy",

@@ -1,7 +1,7 @@
 {
   "base": {
     "problem name": "compressible_flow",
-    "case name": "multi_component_generic_hyper_rectangle",
+    "case name": "generic_hyper_rectangle_domain",
     "dimension": 1,
     "do print parameters": false,
     "verbosity level": 1,
