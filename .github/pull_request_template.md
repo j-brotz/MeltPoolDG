@@ -18,6 +18,7 @@
 - [ ] The branch is rebased onto master
 - [ ] Code is formatted with format-all
 - [ ] Labels are applied
+- [ ] Co-Pilot review is requested
 - [ ] Reviews are requested
 - [ ] If this PR closes an issue or is related to a project, it is linked in the "Description" section
 - [ ] All in-code documentation related to this PR is up to date (Doxygen format)
