@@ -1,5 +1,16 @@
 # mp-advec-diff: Parameter description
 
+## Contents
+
+- [`base`](#base)
+- [`time stepping`](#time-stepping)
+- [`adaptive meshing`](#adaptive-meshing)
+- [`advection diffusion`](#advection-diffusion)
+- [`output`](#output)
+- [`profiling`](#profiling)
+
+---
+
 <a id="base"></a>
 ## `🔷 base`
 
