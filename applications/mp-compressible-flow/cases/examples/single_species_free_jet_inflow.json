@@ -1,0 +1,84 @@
+{
+  "base": {
+    "problem name": "compressible_flow",
+    "case name": "generic_hyper_rectangle_domain",
+    "dimension": 2,
+    "do print parameters": false,
+    "verbosity level": 1,
+    "global refinements": 3
+  },
+  "case setup": {
+    "boundary x min": {
+      "type": "subsonic_outflow_fixed_energy",
+      "energy": "85320"
+    },
+    "boundary x max": {
+      "type": "subsonic_outflow_fixed_energy",
+      "energy": "85320"
+    },
+    "boundary y min": {
+      "type": "combined_inflow_no_slip_wall",
+      "inflow velocity ramp-up duration": 1e-08,
+      "inflow velocity ramp-up type": "linear",
+      "free jet": {
+        "jet hole diameter": 8e-05,
+        "jet hole center": "500e-06, 0",
+        "jet peak velocity": 100,
+        "free jet profile": "cosine",
+        "density": 0.4,
+        "inner energy": "213300"
+      }
+    },
+    "boundary y max": {
+      "type": "subsonic_outflow_fixed_energy",
+      "energy": "85320"
+    },
+    "initial conditions": {
+      "density": "0.4",
+      "velocity": "0; 0.0",
+      "energy": "213300"
+    },
+    "domain": {
+      "size": "1000e-06, 1000e-06",
+      "base grid resolution": "50, 50"
+    }
+  },
+  "time stepping": {
+    "start time": 0.0,
+    "end time": 0.0001
+  },
+  "output": {
+    "write frequency": 10000,
+    "do user defined postprocessing": true,
+    "directory": "./single-species",
+    "paraview": {
+      "filename": "single_species_free_jet",
+      "compressible output types": "conserved_variables, primitive_variables",
+      "enable": true
+    }
+  },
+  "compressible navier stokes": {
+    "numerical flux type": "lax_friedrichs_modified",
+    "use cfl criteria": true,
+    "courant number": 0.03,
+    "viscous courant number": 0.003,
+    "gravity constant": 0,
+    "time integration": {
+      "type": "LSRK_stage_5_order_4"
+    },
+    "fe": {
+      "degree": 2,
+      "type": "FE_DGQ"
+    }
+  },
+  "material": {
+    "gas": {
+      "eos type": "ideal_gas",
+      "reference density": 0.4,
+      "reference dynamic viscosity": 0.00011,
+      "dynamic viscosity": 0.00011,
+      "gamma": 1.6666666666,
+      "specific gas constant": 244
+    }
+  }
+}
