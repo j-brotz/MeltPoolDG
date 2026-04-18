@@ -1,5 +1,21 @@
 # mp-cfd-dem: Parameter description
 
+## Contents
+
+- [`adaptive meshing`](#adaptive-meshing)
+- [`base`](#base)
+- [`fluid structure interaction`](#fluid-structure-interaction)
+- [`compressible navier stokes`](#compressible-navier-stokes)
+- [`output`](#output)
+- [`material`](#material)
+- [`time stepping`](#time-stepping)
+- [`obstacles`](#obstacles)
+- [`profiling`](#profiling)
+- [`restart`](#restart)
+- [`application`](#application)
+
+---
+
 <a id="adaptive-meshing"></a>
 ## `🔷 adaptive meshing`
 

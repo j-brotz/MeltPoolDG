@@ -1,5 +1,18 @@
 # mp-reinit: Parameter description
 
+## Contents
+
+- [`base`](#base)
+- [`time stepping`](#time-stepping)
+- [`adaptive meshing`](#adaptive-meshing)
+- [`reinitialization`](#reinitialization)
+- [`normal vector`](#normal-vector)
+- [`curvature`](#curvature)
+- [`output`](#output)
+- [`profiling`](#profiling)
+
+---
+
 <a id="base"></a>
 ## `🔷 base`
 

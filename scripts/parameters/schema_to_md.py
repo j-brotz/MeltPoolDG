@@ -124,13 +124,38 @@ def schema_to_markdown(schema, schema_path):
     if not properties:
         return "\n".join(md)
 
+    top_level_nodes = []
+    has_scalar_root_entries = False
+
     for name, prop in properties.items():
         if prop.get("type") == "object":
-            md.append(parse_schema(prop, [name], level=2, is_top_level=True))
+            top_level_nodes.append(name)
         else:
-            root_wrapper = {"properties": properties}
-            md.append(parse_schema(root_wrapper, ["root"], level=2, is_top_level=True))
-            break
+            has_scalar_root_entries = True
+
+    if has_scalar_root_entries:
+        top_level_nodes = ["root"]
+
+    # Inhaltsverzeichnis
+    md.append("## Contents\n")
+    for name in top_level_nodes:
+        anchor = make_anchor([name])
+        md.append(f"- [`{name}`](#{anchor})")
+    md.append("")
+    md.append("---")
+    md.append("")
+
+    # Inhalt
+    if has_scalar_root_entries:
+        root_wrapper = {
+            "properties": properties,
+            "required": schema.get("required", []),
+        }
+        md.append(parse_schema(root_wrapper, ["root"], level=2, is_top_level=True))
+    else:
+        for name in top_level_nodes:
+            prop = properties[name]
+            md.append(parse_schema(prop, [name], level=2, is_top_level=True))
 
     return "\n".join(md)
 

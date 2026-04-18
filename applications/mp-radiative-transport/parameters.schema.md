@@ -1,5 +1,17 @@
 # mp-radiative-transport: Parameter description
 
+## Contents
+
+- [`base`](#base)
+- [`time stepping`](#time-stepping)
+- [`adaptive meshing`](#adaptive-meshing)
+- [`rte`](#rte)
+- [`laser`](#laser)
+- [`output`](#output)
+- [`profiling`](#profiling)
+
+---
+
 <a id="base"></a>
 ## `🔷 base`
 
