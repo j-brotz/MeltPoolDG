@@ -1,4 +1,5 @@
 
+#include "meltpooldg/compressible_flow/data_types.hpp"
 #include <meltpooldg/compressible_flow/boundary_conditions.hpp>
 #include <meltpooldg/compressible_flow/eos_utils.hpp>
 #include <meltpooldg/compressible_flow/state_views.hpp>
@@ -18,6 +19,8 @@ namespace MeltPoolDG::CompressibleFlow
     for (auto &i : this->subsonic_outflow_fixed_pressure)
       i.second->set_time(time);
     for (auto &i : this->subsonic_outflow_fixed_energy)
+      i.second->set_time(time);
+    for (auto &i : this->combined_inflow_no_slip_wall_boundaries)
       i.second->set_time(time);
   }
 
@@ -42,32 +45,12 @@ namespace MeltPoolDG::CompressibleFlow
         else if (boundary_condition == BoundaryType::no_slip_wall)
           for (const auto &boundary : boundary_condition_function)
             no_slip_adiabatic_wall_boundaries.insert(boundary.first);
+        else if (boundary_condition == BoundaryType::combined_inflow_no_slip_wall)
+          combined_inflow_no_slip_wall_boundaries = boundary_condition_function;
         else
           AssertThrow(false,
                       dealii::ExcMessage("The provided boundary condition is not supported."));
       }
-  }
-
-  template <int dim, typename number>
-  dealii::Tensor<1, dim + 2, dealii::VectorizedArray<number>>
-  BoundaryConditions<dim, number>::get_boundary_value(
-    const dealii::types::boundary_id                           boundary_id,
-    const BoundaryType                                         boundary_condition,
-    const dealii::Point<dim, dealii::VectorizedArray<number>> &location) const
-  {
-    if (boundary_condition == BoundaryType::inflow)
-      return VectorTools::evaluate_function_at_vectorized_points<dim, number, dim + 2>(
-        *inflow_boundaries.find(boundary_id)->second, location);
-    if (boundary_condition == BoundaryType::subsonic_outflow_fixed_energy)
-      return VectorTools::evaluate_function_at_vectorized_points<dim, number, dim + 2>(
-        *subsonic_outflow_fixed_energy.find(boundary_id)->second, location);
-    if (boundary_condition == BoundaryType::subsonic_outflow_fixed_pressure)
-      return VectorTools::evaluate_function_at_vectorized_points<dim, number, dim + 2>(
-        *subsonic_outflow_fixed_pressure.find(boundary_id)->second, location);
-
-    AssertThrow(false,
-                dealii::ExcMessage("The boundary condition " + std::to_string(boundary_condition) +
-                                   " does not have a prescribed boundary value."));
   }
 
   template <int dim, typename number>
@@ -87,6 +70,9 @@ namespace MeltPoolDG::CompressibleFlow
     if (boundary_condition == BoundaryType::subsonic_outflow_fixed_pressure)
       return VectorTools::evaluate_function_at_vectorized_points<dim, number>(
         *subsonic_outflow_fixed_pressure.find(boundary_id)->second, location, component);
+    if (boundary_condition == BoundaryType::combined_inflow_no_slip_wall)
+      return VectorTools::evaluate_function_at_vectorized_points<dim, number>(
+        *combined_inflow_no_slip_wall_boundaries.find(boundary_id)->second, location, component);
 
     AssertThrow(false,
                 dealii::ExcMessage("The boundary condition " + std::to_string(boundary_condition) +
@@ -99,15 +85,15 @@ namespace MeltPoolDG::CompressibleFlow
     const dealii::Point<dim, dealii::VectorizedArray<number>>     &q_point,
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
     const dealii::types::boundary_id                               boundary_id,
-    const ConservedVariablesType                                  &w_m,
-    const ConservedVariablesGradType                              &grad_w_m,
+    const ConservedVariables                                      &w_m,
+    const ConservedVariablesGradient                              &grad_w_m,
     const Material<dim, number>                                   &material,
-    const bool is_gas_phase) const -> std::tuple<ConservedVariablesType, ConservedVariablesGradType>
+    const bool is_gas_phase) const -> std::tuple<ConservedVariables, ConservedVariablesGradient>
   {
     using namespace dealii;
 
-    ConservedVariablesType     w_p;
-    ConservedVariablesGradType grad_w_p;
+    ConservedVariables         w_p;
+    ConservedVariablesGradient grad_w_p;
     if (const BoundaryType boundary_type = get_boundary_type(boundary_id);
         boundary_type == BoundaryType::slip_wall)
       {
@@ -207,17 +193,17 @@ namespace MeltPoolDG::CompressibleFlow
     const dealii::Point<dim, dealii::VectorizedArray<number>>     &q_point,
     const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
     const dealii::types::boundary_id                               boundary_id,
-    const ConservedVariablesType                                  &w_m,
-    const ConservedVariablesType                                  &delta_w_m,
-    const ConservedVariablesGradType                              &grad_w_m,
-    const ConservedVariablesGradType                              &grad_delta_w_m,
-    number gamma) const -> std::tuple<ConservedVariablesType,
-                                      ConservedVariablesGradType,
-                                      ConservedVariablesType,
-                                      ConservedVariablesGradType>
+    const ConservedVariables                                      &w_m,
+    const ConservedVariables                                      &delta_w_m,
+    const ConservedVariablesGradient                              &grad_w_m,
+    const ConservedVariablesGradient                              &grad_delta_w_m,
+    number gamma) const -> std::tuple<ConservedVariables,
+                                      ConservedVariablesGradient,
+                                      ConservedVariables,
+                                      ConservedVariablesGradient>
   {
-    ConservedVariablesType     w_p, delta_w_p;
-    ConservedVariablesGradType grad_w_p, grad_delta_w_p;
+    ConservedVariables         w_p, delta_w_p;
+    ConservedVariablesGradient grad_w_p, grad_delta_w_p;
 
     if (const BoundaryType boundary_type = get_boundary_type(boundary_id);
         boundary_type == BoundaryType::slip_wall)
@@ -283,7 +269,10 @@ namespace MeltPoolDG::CompressibleFlow
     else if (boundary_type == BoundaryType::inflow)
       {
         // Dirichlet
-        w_p = get_boundary_value(boundary_id, BoundaryType::inflow, q_point);
+        for (unsigned i = 0; i < n_conserved_variables<dim>; ++i)
+          {
+            w_p[i] = get_boundary_value(boundary_id, BoundaryType::inflow, q_point, i);
+          }
 
         grad_w_p = grad_w_m;
         // delta_w_p is zero at Dirichlet boundaries. Hence, nothing needs to be done here.

@@ -7,8 +7,8 @@
 
 #include <deal.II/grid/tria.h>
 
-#include <meltpooldg/compressible_flow/boundary_conditions.hpp>
 #include <meltpooldg/compressible_flow/boundary_condition_functions.hpp>
+#include <meltpooldg/compressible_flow/boundary_conditions.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
 
 #include <array>
@@ -18,6 +18,61 @@
 
 namespace MeltPoolDG::CompressibleFlow
 {
+  /**
+   * Struct for storing free jet inflow boundary condition information and creating
+   * a corresponding function object for use in simulations. This can be used to provide cases where
+   * via the input file the user is allowed to specify a free jet inflow boundary condition with
+   * user-defined parameters for the free jet inflow.
+   */
+  template <int dim, typename number>
+  struct InputDefinedFreeJetInflow
+  {
+    /**
+     * Creates a FreeJetInflow function object based on the stored parameters for the free jet
+     * inflow which can be used to apply the free jet inflow boundary condition in simulations.
+     *
+     * @param start_time The initial time at which the free jet inflow boundary condition is applied.
+     * @param velocity_ramp_up_duration The duration over which the velocity ramps up.
+     * @param velocity_ramp_up_type The type of ramp up for the velocity.
+     * @param n_species The total number of species in the simulation.
+     */
+    std::shared_ptr<dealii::Function<dim, number>>
+    create_free_jet_inflow_boundary(const number     start_time,
+                                    const number     velocity_ramp_up_duration,
+                                    const RampUpType velocity_ramp_up_type,
+                                    const unsigned   n_species = 1) const;
+    /**
+     * Adds the parameters for the free jet inflow to a given ParameterHandler object.
+     *
+     * @param prm The ParameterHandler object to which the parameters should be added.
+     */
+    void
+    add_parameters(dealii::ParameterHandler &prm);
+
+    /// Jet-hole diameter
+    number jet_hole_diameter{0.};
+
+    /// Jet-hole density at the inflow boundary
+    number jet_hole_density{0.};
+
+    /// Jet-hole specific inner energy at the inflow boundary
+    number jet_hole_inner_energy{0.};
+
+    /// Jet-hole mass fractions at the inflow boundary (only relevant for multi-component flow
+    /// cases)
+    std::vector<number> jet_hole_mass_fractions;
+
+    /// Jet-hole center coordinates
+    dealii::Point<dim, number> jet_hole_center;
+
+    /// Flow jet peak velocity
+    number jet_peak_velocity{0.};
+
+    /// The velocity profile of the free jet
+    FreeJetProfile free_jet_profile{FreeJetProfile::constant};
+  };
+
+
   /**
    * Struct for storing boundary condition information for a specific boundary and creating
    * a corresponding function object for use in simulations. This can be used to provide cases where
@@ -62,6 +117,10 @@ namespace MeltPoolDG::CompressibleFlow
 
     /// Velocity ramp-up parameters, only relevant for inflow boundaries
     RampUpParameters inflow_velocity_ramp_up;
+
+    /// Free jet inflow parameters, only relevant if the boundary condition type is set to a free
+    /// jet inflow via the enum `combined_inflow_no_slip_wall`.
+    InputDefinedFreeJetInflow<dim, number> free_jet_inflow;
 
     /**
      * Creates a function object representing the boundary condition based on the data stored
