@@ -1093,9 +1093,9 @@ namespace MeltPoolDG::Multiphase
     const CutUtil::FaceType face_type = CutUtil::get_face_type(face_category);
 
     const number cell_side_length       = multiphase_scratch_data.scratch_data.get_min_cell_size();
-    const number cell_side_length_pow_3 = Utilities::fixed_power<3>(cell_side_length);
+    const number cell_side_length_pow_3 = dealii::Utilities::fixed_power<3>(cell_side_length);
     const number cell_side_length_pow_5 = (multiphase_scratch_data.flow_data.fe.degree == 2) ?
-                                            Utilities::fixed_power<5>(cell_side_length) :
+                                            dealii::Utilities::fixed_power<5>(cell_side_length) :
                                             0.;
 
     auto apply_ghost_penalty = [&](auto &eval_m, auto &eval_p) {

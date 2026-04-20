@@ -397,6 +397,31 @@
           "maximum": 2147483647,
           "description": "Verbosity level for output.",
           "default": -1
+        },
+        "limiter": {
+          "type": "object",
+          "properties": {
+            "apply": {
+              "type": "boolean",
+              "description": "Whether to apply a limiter.",
+              "default": false
+            },
+            "tvb constant": {
+              "type": "number",
+              "description": "The TVB constant used in the TVB minmod limiter.",
+              "default": 1.0
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "tvd_minmod",
+                "tvb_minmod"
+              ],
+              "description": "The type of limiter to apply.",
+              "default": "tvd_minmod"
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
