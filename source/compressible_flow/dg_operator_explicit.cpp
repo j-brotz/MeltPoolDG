@@ -8,6 +8,7 @@
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
+#include <meltpooldg/utilities/limiters.templates.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
@@ -44,12 +45,19 @@ namespace MeltPoolDG::CompressibleFlow
       flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
     };
 
+    std::function<void(number, number, VectorType &, const VectorType &)> post_processing =
+      [&](number, number, VectorType &dst, const VectorType &src) -> void {
+      Utilities::apply_minmod_type_limiter<dim, n_conserved_variables<dim, n_species>, number>(
+        {flow_scratch_data.scratch_data.get_matrix_free(),
+         flow_scratch_data.dof_idx,
+         flow_scratch_data.quad_idx},
+        dst,
+        src,
+        flow_scratch_data.flow_data.limiter_data);
+    };
+
     time_integrator.perform_time_step(
-      time,
-      time_step,
-      flow_scratch_data.solution_history,
-      pre_processing,
-      std::function<void(number, number, VectorType &, const VectorType &)>());
+      time, time_step, flow_scratch_data.solution_history, pre_processing, post_processing);
   }
 
   template <int dim, typename number, int n_species>

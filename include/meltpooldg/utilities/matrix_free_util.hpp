@@ -1,10 +1,17 @@
 #pragma once
 
+#include <deal.II/base/tensor.h>
+
+#include <deal.II/grid/grid_tools.h>
+#include <deal.II/grid/tria.h>
+
 #include <deal.II/matrix_free/fe_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
 #include <deal.II/matrix_free/tools.h>
 
 #include <meltpooldg/utilities/fe_integrator.hpp>
+
+#include <vector>
 
 namespace MeltPoolDG
 {
@@ -253,5 +260,98 @@ namespace MeltPoolDG
         default:
           DEAL_II_ASSERT_UNREACHABLE();
       }
+  }
+
+  /**
+   * This function computes the cell-average values for a given solution vector by integrating the
+   * solution at quadrature points across each cell and dividing by the cell volume. The resulting
+   * cell-average values are stored in a vector indexed by active cell indices, where each entry is
+   * a tensor containing the component-wise average values for that cell.
+   *
+   * @tparam n_components The number of vector components in the solution quantity.
+   *
+   * @param mf_context Context containing a reference to the matrix-free object and relevant indices
+   * for dofs and quadrature.
+   * @param solution Vector containing the solution values from which to compute the cell averages.
+   *
+   * @return A vector indexed by active cell indices, where each entry is contains the
+   * component-wise average values for that cell.
+   */
+  template <int dim, typename number, int n_components>
+  std::vector<dealii::Tensor<1, n_components, number>>
+  compute_cell_average_quantities(
+    const MatrixFreeContext<dim, number>                     &mf_context,
+    const dealii::LinearAlgebra::distributed::Vector<number> &solution)
+  {
+    using VectorizedArrayType = dealii::VectorizedArray<number>;
+    using ActiveCellIterator  = typename dealii::Triangulation<dim>::active_cell_iterator;
+
+    // A lambda used to exchange the cell average values of ghost cells after they have been
+    // computed for the locally owned cells.
+    const auto exchange_cell_data_to_ghosts =
+      [](const dealii::Triangulation<dim>                     &triangulation,
+         std::vector<dealii::Tensor<1, n_components, number>> &cell_average_values) {
+        std::function<std::optional<dealii::Tensor<1, n_components, number>>(
+          const ActiveCellIterator &)>
+          pack = [&](const ActiveCellIterator &cell)
+          -> std::optional<dealii::Tensor<1, n_components, number>> {
+          return cell_average_values[cell->active_cell_index()];
+        };
+        std::function<void(const ActiveCellIterator &,
+                           const dealii::Tensor<1, n_components, number> &)>
+          unpack = [&](const ActiveCellIterator                      &cell,
+                       const dealii::Tensor<1, n_components, number> &value) {
+            cell_average_values[cell->active_cell_index()] = value;
+          };
+        dealii::GridTools::exchange_cell_data_to_ghosts(triangulation, pack, unpack);
+      };
+
+    // A lambda that computes the cell average values for a given range of cells used in the cell
+    // loop of the matrix free object.
+    const std::function<void(const dealii::MatrixFree<dim, number, VectorizedArrayType> &,
+                             std::vector<dealii::Tensor<1, n_components, number>> &,
+                             const dealii::LinearAlgebra::distributed::Vector<number> &,
+                             const std::pair<unsigned int, unsigned int> &)>
+      cell_loop = [&](const dealii::MatrixFree<dim, number, VectorizedArrayType> &matrix_free,
+                      std::vector<dealii::Tensor<1, n_components, number>> &dst_cell_average_values,
+                      const dealii::LinearAlgebra::distributed::Vector<number> &src,
+                      const std::pair<unsigned int, unsigned int>              &cell_range) {
+        FECellIntegrator<dim, n_components, number> fe_cell_integrator(matrix_free,
+                                                                       mf_context.dof_idx,
+                                                                       mf_context.quad_idx);
+
+        for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+          {
+            fe_cell_integrator.reinit(cell);
+            fe_cell_integrator.gather_evaluate(src, dealii::EvaluationFlags::values);
+
+            dealii::Tensor<1, n_components, VectorizedArrayType> cell_average_value;
+            VectorizedArrayType                                  cell_volume = 0.;
+            for (const unsigned int q : fe_cell_integrator.quadrature_point_indices())
+              {
+                cell_average_value += fe_cell_integrator.get_value(q) * fe_cell_integrator.JxW(q);
+                cell_volume += fe_cell_integrator.JxW(q);
+              }
+            cell_average_value /= cell_volume;
+            const auto cells = cells_in_cell_batch(mf_context.mf, cell);
+
+            for (unsigned int lane = 0; lane < mf_context.mf.n_active_entries_per_cell_batch(cell);
+                 ++lane)
+              {
+                for (unsigned int c = 0; c < n_components; ++c)
+                  dst_cell_average_values[cells[lane]->active_cell_index()][c] =
+                    cell_average_value[c][lane];
+              }
+          }
+      };
+
+    std::vector<dealii::Tensor<1, n_components, number>> cell_average_values(
+      mf_context.mf.get_dof_handler(mf_context.dof_idx).get_triangulation().n_active_cells());
+    mf_context.mf.cell_loop(cell_loop, cell_average_values, solution);
+
+    exchange_cell_data_to_ghosts(
+      mf_context.mf.get_dof_handler(mf_context.dof_idx).get_triangulation(), cell_average_values);
+
+    return cell_average_values;
   }
 } // namespace MeltPoolDG

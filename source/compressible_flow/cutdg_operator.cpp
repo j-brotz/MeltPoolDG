@@ -815,7 +815,7 @@ namespace MeltPoolDG::CompressibleFlow
                 const auto ghost_penalty_term_1 =
                   (u_normal_grad_minus - u_normal_grad_plus) *
                   flow_scratch_data.cut->stabilization.ghost_penalty.gamma_M_degree_1 *
-                  Utilities::fixed_power<3>(cell_side_length);
+                  dealii::Utilities::fixed_power<3>(cell_side_length);
 
                 if (flow_scratch_data.flow_data.fe.degree == 2)
                   {
@@ -825,7 +825,7 @@ namespace MeltPoolDG::CompressibleFlow
                     const auto ghost_penalty_term_2 =
                       (u_normal_hessian_minus - u_normal_hessian_plus) *
                       flow_scratch_data.cut->stabilization.ghost_penalty.gamma_M_degree_2 *
-                      Utilities::fixed_power<5>(cell_side_length);
+                      dealii::Utilities::fixed_power<5>(cell_side_length);
 
                     phi_m.submit_normal_hessian(ghost_penalty_term_2, q);
                     phi_p.submit_normal_hessian(-ghost_penalty_term_2, q);

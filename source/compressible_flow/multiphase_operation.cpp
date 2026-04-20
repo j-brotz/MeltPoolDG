@@ -506,10 +506,10 @@ namespace MeltPoolDG::Multiphase
       }
 
     // compute the minimum density across all MPI processes
-    min_density_liquid = Utilities::MPI::min(
+    min_density_liquid = dealii::Utilities::MPI::min(
       min_density_liquid,
       matrix_free.get_dof_handler(multiphase_scratch_data.dof_idx).get_mpi_communicator());
-    min_density_gas = Utilities::MPI::min(
+    min_density_gas = dealii::Utilities::MPI::min(
       min_density_gas,
       matrix_free.get_dof_handler(multiphase_scratch_data.dof_idx).get_mpi_communicator());
 
@@ -717,7 +717,8 @@ namespace MeltPoolDG::Multiphase
       }
 
     max_transport =
-      Utilities::MPI::max(max_transport, multiphase_scratch_data.scratch_data.get_mpi_comm());
+      dealii::Utilities::MPI::max(max_transport,
+                                  multiphase_scratch_data.scratch_data.get_mpi_comm());
 
     convective_time_step_limit =
       multiphase_scratch_data.flow_data.courant_number /

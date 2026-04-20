@@ -129,6 +129,7 @@ namespace MeltPoolDG::CompressibleFlow
       flow_scratch_data.scratch_data.get_matrix_free(),
       flow_scratch_data.dof_idx,
       flow_scratch_data.quad_idx);
+
     MatrixFreeOperators::
       CellwiseInverseMassMatrix<dim, -1, n_conserved_variables<dim, n_species>, number>
         inverse(phi);
@@ -195,7 +196,8 @@ namespace MeltPoolDG::CompressibleFlow
           }
       }
 
-    min_density = Utilities::MPI::min(min_density, flow_scratch_data.scratch_data.get_mpi_comm());
+    min_density =
+      dealii::Utilities::MPI::min(min_density, flow_scratch_data.scratch_data.get_mpi_comm());
 
     return min_density;
   }
@@ -264,7 +266,7 @@ namespace MeltPoolDG::CompressibleFlow
       }
 
     max_transport =
-      Utilities::MPI::max(max_transport, flow_scratch_data.scratch_data.get_mpi_comm());
+      dealii::Utilities::MPI::max(max_transport, flow_scratch_data.scratch_data.get_mpi_comm());
 
     convective_time_step_limit =
       flow_scratch_data.flow_data.courant_number /

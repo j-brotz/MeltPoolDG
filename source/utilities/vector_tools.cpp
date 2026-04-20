@@ -200,40 +200,6 @@ namespace MeltPoolDG::VectorTools
                                                  norm_type);
   }
 
-  template <int n_components, int dim, typename VectorType>
-  void
-  project_vector(const dealii::Mapping<dim>                                       &mapping,
-                 const dealii::DoFHandler<dim>                                    &dof,
-                 const dealii::AffineConstraints<typename VectorType::value_type> &constraints,
-                 const dealii::Quadrature<dim>                                    &quadrature,
-                 const VectorType                                                 &vec_in,
-                 VectorType                                                       &vec_out)
-  {
-    using number = typename VectorType::value_type;
-
-    typename dealii::MatrixFree<dim, number>::AdditionalData additional_data;
-    additional_data.tasks_parallel_scheme =
-      dealii::MatrixFree<dim, number>::AdditionalData::partition_color;
-    additional_data.mapping_update_flags = dealii::update_values | dealii::update_JxW_values;
-
-    const auto matrix_free = std::make_shared<dealii::MatrixFree<dim, number>>();
-    matrix_free->reinit(mapping, dof, constraints, quadrature, additional_data);
-
-    using MatrixType =
-      dealii::MatrixFreeOperators::MassOperator<dim, -1, 0, n_components, VectorType>;
-    MatrixType mass_matrix;
-    mass_matrix.initialize(matrix_free);
-
-    mass_matrix.compute_diagonal();
-
-    dealii::ReductionControl                  control(6 * vec_in.size(), 0., 1e-12, false, false);
-    dealii::SolverCG<VectorType>              cg(control);
-    const dealii::DiagonalMatrix<VectorType> &preconditioner =
-      *mass_matrix.get_matrix_diagonal_inverse();
-
-    cg.solve(mass_matrix, vec_out, vec_in, preconditioner);
-  }
-
   template <typename number>
   number
   max_element(const dealii::LinearAlgebra::distributed::Vector<number> &vec,
@@ -376,88 +342,6 @@ namespace MeltPoolDG::VectorTools
                const unsigned int,
                const unsigned int,
                const dealii::VectorTools::NormType);
-
-  template void
-  project_vector<1, 1, dealii::LinearAlgebra::distributed::Vector<double>>(
-    const dealii::Mapping<1> &,
-    const dealii::DoFHandler<1> &,
-    const dealii::AffineConstraints<
-      typename dealii::LinearAlgebra::distributed::Vector<double>::value_type> &,
-    const dealii::Quadrature<1> &,
-    const dealii::LinearAlgebra::distributed::Vector<double> &,
-    dealii::LinearAlgebra::distributed::Vector<double> &);
-  template void
-  project_vector<1, 2, dealii::LinearAlgebra::distributed::Vector<double>>(
-    const dealii::Mapping<2> &,
-    const dealii::DoFHandler<2> &,
-    const dealii::AffineConstraints<
-      typename dealii::LinearAlgebra::distributed::Vector<double>::value_type> &,
-    const dealii::Quadrature<2> &,
-    const dealii::LinearAlgebra::distributed::Vector<double> &,
-    dealii::LinearAlgebra::distributed::Vector<double> &);
-  template void
-  project_vector<1, 3, dealii::LinearAlgebra::distributed::Vector<double>>(
-    const dealii::Mapping<3> &,
-    const dealii::DoFHandler<3> &,
-    const dealii::AffineConstraints<
-      typename dealii::LinearAlgebra::distributed::Vector<double>::value_type> &,
-    const dealii::Quadrature<3> &,
-    const dealii::LinearAlgebra::distributed::Vector<double> &,
-    dealii::LinearAlgebra::distributed::Vector<double> &);
-  template void
-  project_vector<2, 1, dealii::LinearAlgebra::distributed::Vector<double>>(
-    const dealii::Mapping<1> &,
-    const dealii::DoFHandler<1> &,
-    const dealii::AffineConstraints<
-      typename dealii::LinearAlgebra::distributed::Vector<double>::value_type> &,
-    const dealii::Quadrature<1> &,
-    const dealii::LinearAlgebra::distributed::Vector<double> &,
-    dealii::LinearAlgebra::distributed::Vector<double> &);
-  template void
-  project_vector<2, 2, dealii::LinearAlgebra::distributed::Vector<double>>(
-    const dealii::Mapping<2> &,
-    const dealii::DoFHandler<2> &,
-    const dealii::AffineConstraints<
-      typename dealii::LinearAlgebra::distributed::Vector<double>::value_type> &,
-    const dealii::Quadrature<2> &,
-    const dealii::LinearAlgebra::distributed::Vector<double> &,
-    dealii::LinearAlgebra::distributed::Vector<double> &);
-  template void
-  project_vector<2, 3, dealii::LinearAlgebra::distributed::Vector<double>>(
-    const dealii::Mapping<3> &,
-    const dealii::DoFHandler<3> &,
-    const dealii::AffineConstraints<
-      typename dealii::LinearAlgebra::distributed::Vector<double>::value_type> &,
-    const dealii::Quadrature<3> &,
-    const dealii::LinearAlgebra::distributed::Vector<double> &,
-    dealii::LinearAlgebra::distributed::Vector<double> &);
-  template void
-  project_vector<3, 1, dealii::LinearAlgebra::distributed::Vector<double>>(
-    const dealii::Mapping<1> &,
-    const dealii::DoFHandler<1> &,
-    const dealii::AffineConstraints<
-      typename dealii::LinearAlgebra::distributed::Vector<double>::value_type> &,
-    const dealii::Quadrature<1> &,
-    const dealii::LinearAlgebra::distributed::Vector<double> &,
-    dealii::LinearAlgebra::distributed::Vector<double> &);
-  template void
-  project_vector<3, 2, dealii::LinearAlgebra::distributed::Vector<double>>(
-    const dealii::Mapping<2> &,
-    const dealii::DoFHandler<2> &,
-    const dealii::AffineConstraints<
-      typename dealii::LinearAlgebra::distributed::Vector<double>::value_type> &,
-    const dealii::Quadrature<2> &,
-    const dealii::LinearAlgebra::distributed::Vector<double> &,
-    dealii::LinearAlgebra::distributed::Vector<double> &);
-  template void
-  project_vector<3, 3, dealii::LinearAlgebra::distributed::Vector<double>>(
-    const dealii::Mapping<3> &,
-    const dealii::DoFHandler<3> &,
-    const dealii::AffineConstraints<
-      typename dealii::LinearAlgebra::distributed::Vector<double>::value_type> &,
-    const dealii::Quadrature<3> &,
-    const dealii::LinearAlgebra::distributed::Vector<double> &,
-    dealii::LinearAlgebra::distributed::Vector<double> &);
 
   template double
   max_element(const dealii::LinearAlgebra::distributed::Vector<double> &, const MPI_Comm &);
