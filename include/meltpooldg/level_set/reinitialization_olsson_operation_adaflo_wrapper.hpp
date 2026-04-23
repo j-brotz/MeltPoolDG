@@ -21,7 +21,7 @@
 namespace MeltPoolDG::LevelSet
 {
   template <int dim, typename number>
-  class ReinitializationOperationAdaflo : public ReinitializationOperationBase<dim, number>
+  class ReinitializationOlssonOperationAdaflo : public ReinitializationOperationBase<dim, number>
   {
   private:
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -31,15 +31,16 @@ namespace MeltPoolDG::LevelSet
     /**
      * Constructor.
      */
-    ReinitializationOperationAdaflo(const ScratchData<dim, dim, number>         &scratch_data,
-                                    const TimeIntegration::TimeIterator<number> &time_iterator,
-                                    const int                                    reinit_dof_idx,
-                                    const int                                    reinit_quad_idx,
-                                    const int                                    normal_dof_idx,
-                                    const TimeIntegration::TimeSteppingData<number> &time_stepping,
-                                    const NormalVectorData<number> &normal_vec_data,
-                                    const number       interface_thickness_parameter_value,
-                                    const unsigned int n_subdivisions);
+    ReinitializationOlssonOperationAdaflo(
+      const ScratchData<dim, dim, number>             &scratch_data,
+      const TimeIntegration::TimeIterator<number>     &time_iterator,
+      const int                                        reinit_dof_idx,
+      const int                                        reinit_quad_idx,
+      const int                                        normal_dof_idx,
+      const TimeIntegration::TimeSteppingData<number> &time_stepping,
+      const NormalVectorData<number>                  &normal_vec_data,
+      const number                                     interface_thickness_parameter_value,
+      const unsigned int                               n_subdivisions);
 
     void
     update_dof_idx(const unsigned int &reinit_dof_idx) override;

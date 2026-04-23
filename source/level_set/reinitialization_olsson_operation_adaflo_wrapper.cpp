@@ -1,6 +1,6 @@
 #include <deal.II/numerics/vector_tools_interpolate.h>
 #ifdef MPDG_ENABLE_ADAFLO
-#  include <meltpooldg/level_set/reinitialization_operation_adaflo_wrapper.hpp>
+#  include <meltpooldg/level_set/reinitialization_olsson_operation_adaflo_wrapper.hpp>
 #  include <meltpooldg/utilities/journal.hpp>
 
 #  include <adaflo/level_set_okz_preconditioner.h>
@@ -11,7 +11,7 @@ namespace MeltPoolDG::LevelSet
   using namespace dealii;
 
   template <int dim, typename number>
-  ReinitializationOperationAdaflo<dim, number>::ReinitializationOperationAdaflo(
+  ReinitializationOlssonOperationAdaflo<dim, number>::ReinitializationOlssonOperationAdaflo(
     const ScratchData<dim, dim, number>             &scratch_data,
     const TimeIntegration::TimeIterator<number>     &time_iterator,
     const int                                        reinit_dof_idx,
@@ -39,7 +39,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationOperationAdaflo<dim, number>::create_operator()
+  ReinitializationOlssonOperationAdaflo<dim, number>::create_operator()
   {
     // std::cout <<
     reinit_operation_adaflo = std::make_shared<adaflo::LevelSetOKZSolverReinitialization<dim>>(
@@ -61,7 +61,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationOperationAdaflo<dim, number>::create_normal_vector_operator()
+  ReinitializationOlssonOperationAdaflo<dim, number>::create_normal_vector_operator()
   {
     normal_vector_operation_adaflo =
       std::make_shared<LevelSet::NormalVectorOperationAdaflo<dim, number>>(
@@ -76,7 +76,8 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationOperationAdaflo<dim, number>::update_dof_idx(const unsigned int &reinit_dof_idx)
+  ReinitializationOlssonOperationAdaflo<dim, number>::update_dof_idx(
+    const unsigned int &reinit_dof_idx)
   {
     reinit_params_adaflo.dof_index_ls = reinit_dof_idx;
 
@@ -85,7 +86,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationOperationAdaflo<dim, number>::reinit()
+  ReinitializationOlssonOperationAdaflo<dim, number>::reinit()
   {
     initialize_vectors();
 
@@ -118,7 +119,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationOperationAdaflo<dim, number>::solve()
+  ReinitializationOlssonOperationAdaflo<dim, number>::solve()
   {
     reinit_operation_adaflo->reinitialize(
       time_iterator.get_current_time_increment(),
@@ -154,42 +155,42 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   number
-  ReinitializationOperationAdaflo<dim, number>::get_max_change_level_set() const
+  ReinitializationOlssonOperationAdaflo<dim, number>::get_max_change_level_set() const
   {
     return max_change_level_set;
   }
 
   template <int dim, typename number>
   const LinearAlgebra::distributed::Vector<number> &
-  ReinitializationOperationAdaflo<dim, number>::get_level_set() const
+  ReinitializationOlssonOperationAdaflo<dim, number>::get_level_set() const
   {
     return level_set;
   }
 
   template <int dim, typename number>
   LinearAlgebra::distributed::Vector<number> &
-  ReinitializationOperationAdaflo<dim, number>::get_level_set()
+  ReinitializationOlssonOperationAdaflo<dim, number>::get_level_set()
   {
     return level_set;
   }
 
   template <int dim, typename number>
   const LinearAlgebra::distributed::BlockVector<number> &
-  ReinitializationOperationAdaflo<dim, number>::get_normal_vector() const
+  ReinitializationOlssonOperationAdaflo<dim, number>::get_normal_vector() const
   {
     return normal_vector_operation_adaflo->get_solution_normal_vector();
   }
 
   template <int dim, typename number>
   LinearAlgebra::distributed::BlockVector<number> &
-  ReinitializationOperationAdaflo<dim, number>::get_normal_vector()
+  ReinitializationOlssonOperationAdaflo<dim, number>::get_normal_vector()
   {
     return normal_vector_operation_adaflo->get_solution_normal_vector();
   }
 
   template <int dim, typename number>
   void
-  ReinitializationOperationAdaflo<dim, number>::attach_vectors(
+  ReinitializationOlssonOperationAdaflo<dim, number>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     vectors.push_back(&level_set);
@@ -197,7 +198,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationOperationAdaflo<dim, number>::attach_output_vectors(
+  ReinitializationOlssonOperationAdaflo<dim, number>::attach_output_vectors(
     GenericDataOut<dim, number> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(reinit_params_adaflo.dof_index_ls),
@@ -213,7 +214,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationOperationAdaflo<dim, number>::set_initial_condition(
+  ReinitializationOlssonOperationAdaflo<dim, number>::set_initial_condition(
     const VectorType &level_set_in)
   {
     /**
@@ -226,7 +227,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationOperationAdaflo<dim, number>::set_initial_condition(
+  ReinitializationOlssonOperationAdaflo<dim, number>::set_initial_condition(
     const Function<dim> &initial_field_function)
   {
     scratch_data.initialize_dof_vector(level_set, reinit_params_adaflo.dof_index_ls);
@@ -243,7 +244,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationOperationAdaflo<dim, number>::set_adaflo_parameters(
+  ReinitializationOlssonOperationAdaflo<dim, number>::set_adaflo_parameters(
     const TimeIntegration::TimeSteppingData<number> &time_stepping,
     const int                                        reinit_dof_idx,
     const int                                        reinit_quad_idx,
@@ -273,7 +274,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationOperationAdaflo<dim, number>::initialize_vectors()
+  ReinitializationOlssonOperationAdaflo<dim, number>::initialize_vectors()
   {
     /**
      * initialize advected field dof vectors
@@ -287,8 +288,8 @@ namespace MeltPoolDG::LevelSet
   }
 
 
-  template class ReinitializationOperationAdaflo<1, double>;
-  template class ReinitializationOperationAdaflo<2, double>;
-  template class ReinitializationOperationAdaflo<3, double>;
+  template class ReinitializationOlssonOperationAdaflo<1, double>;
+  template class ReinitializationOlssonOperationAdaflo<2, double>;
+  template class ReinitializationOlssonOperationAdaflo<3, double>;
 } // namespace MeltPoolDG::LevelSet
 #endif

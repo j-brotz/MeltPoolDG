@@ -14,8 +14,8 @@
 #include <meltpooldg/level_set/curvature_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
-#include <meltpooldg/level_set/reinitialization_operation.hpp>
-#include <meltpooldg/level_set/reinitialization_operation_adaflo_wrapper.hpp>
+#include <meltpooldg/level_set/reinitialization_hyperbolic_CG_operation.hpp>
+#include <meltpooldg/level_set/reinitialization_olsson_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/level_set/utilities.hpp>
 #include <meltpooldg/utilities/characteristic_functions.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
@@ -103,7 +103,7 @@ namespace MeltPoolDG::LevelSet
       {
         if (ls.reinit.implementation == "meltpooldg")
           {
-            reinit_operation = std::make_shared<ReinitializationOperation<dim, number>>(
+            reinit_operation = std::make_shared<ReinitializationHyperbolicCGOperation<dim, number>>(
               scratch_data,
               ls.reinit,
               ls.normal_vec,
@@ -118,7 +118,7 @@ namespace MeltPoolDG::LevelSet
 #ifdef MPDG_ENABLE_ADAFLO
         else if (ls.reinit.implementation == "adaflo")
           {
-            reinit_operation = std::make_shared<ReinitializationOperationAdaflo<dim, number>>(
+            reinit_operation = std::make_shared<ReinitializationOlssonOperationAdaflo<dim, number>>(
               scratch_data,
               reinit_time_iterator,
               reinit_dof_idx_in,

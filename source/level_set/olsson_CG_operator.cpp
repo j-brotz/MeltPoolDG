@@ -1,7 +1,7 @@
 #include <deal.II/matrix_free/tools.h>
 
 #include <meltpooldg/core/exceptions.hpp>
-#include <meltpooldg/level_set/olsson_operator.hpp>
+#include <meltpooldg/level_set/olsson_CG_operator.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 

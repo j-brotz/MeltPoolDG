@@ -1,4 +1,4 @@
-#include <meltpooldg/level_set/reinitialization_DG_operation.hpp>
+#include <meltpooldg/level_set/reinitialization_hyperbolic_DG_operation.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
@@ -9,7 +9,7 @@ namespace MeltPoolDG::LevelSet
   using namespace dealii;
 
   template <int dim, typename number>
-  ReinitializationDGOperation<dim, number>::ReinitializationDGOperation(
+  ReinitializationHyperbolicDGOperation<dim, number>::ReinitializationHyperbolicDGOperation(
     const ScratchData<dim, dim, number>         &scratch_data_in,
     const ReinitializationData<number>          &reinit_data,
     const TimeIntegration::TimeIterator<number> &time_iterator,
@@ -41,7 +41,7 @@ namespace MeltPoolDG::LevelSet
       normal_vector_operation->get_solution_normal_vector(),
       curvature_data);
 
-    reinit_DG_operator = std::make_shared<ReinitilizationDGOperator<dim, number>>(
+    reinit_DG_operator = std::make_shared<OlssonDGOperator<dim, number>>(
       scratch_data_in,
       reinit_data,
       reinit_dof_idx_in,
@@ -58,7 +58,7 @@ namespace MeltPoolDG::LevelSet
   }
 
   template <int dim, typename number>
-  ReinitializationDGOperation<dim, number>::ReinitializationDGOperation(
+  ReinitializationHyperbolicDGOperation<dim, number>::ReinitializationHyperbolicDGOperation(
     const ScratchData<dim, dim, number>                           &scratch_data_in,
     const ReinitializationData<number>                            &reinit_data,
     const TimeIntegration::TimeIterator<number>                   &time_iterator,
@@ -82,7 +82,7 @@ namespace MeltPoolDG::LevelSet
 
     curvature_operation = curvature_operation_in;
 
-    reinit_DG_operator = std::make_shared<ReinitilizationDGOperator<dim, number>>(
+    reinit_DG_operator = std::make_shared<OlssonDGOperator<dim, number>>(
       scratch_data_in,
       reinit_data,
       reinit_dof_idx_in,
@@ -100,7 +100,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim, number>::reinit()
+  ReinitializationHyperbolicDGOperation<dim, number>::reinit()
   {
     solution_history.apply(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, reinit_dof_idx); });
@@ -117,7 +117,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim, number>::set_initial_condition(
+  ReinitializationHyperbolicDGOperation<dim, number>::set_initial_condition(
     const Function<dim> &initial_field_function)
   {
     FECellIntegrator<dim, 1, number> phi(scratch_data.get_matrix_free(),
@@ -182,7 +182,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim, number>::set_initial_condition(
+  ReinitializationHyperbolicDGOperation<dim, number>::set_initial_condition(
     const VectorType &solution_level_set_in)
   {
     /*
@@ -209,14 +209,15 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim, number>::update_dof_idx(const unsigned int &reinit_dof_idx_in)
+  ReinitializationHyperbolicDGOperation<dim, number>::update_dof_idx(
+    const unsigned int &reinit_dof_idx_in)
   {
     reinit_dof_idx = reinit_dof_idx_in;
   }
 
   template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim, number>::init_time_advance()
+  ReinitializationHyperbolicDGOperation<dim, number>::init_time_advance()
   {
     if (solution_history.get_current_solution().has_ghost_elements())
       solution_history.get_current_solution().zero_out_ghost_values();
@@ -224,7 +225,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim, number>::solve()
+  ReinitializationHyperbolicDGOperation<dim, number>::solve()
   {
     ScopedName         sc("reinitialization::solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
@@ -255,42 +256,42 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   number
-  ReinitializationDGOperation<dim, number>::get_max_change_level_set() const
+  ReinitializationHyperbolicDGOperation<dim, number>::get_max_change_level_set() const
   {
     return max_change_level_set;
   }
 
   template <int dim, typename number>
-  const typename ReinitializationDGOperation<dim, number>::VectorType &
-  ReinitializationDGOperation<dim, number>::get_level_set() const
+  const typename ReinitializationHyperbolicDGOperation<dim, number>::VectorType &
+  ReinitializationHyperbolicDGOperation<dim, number>::get_level_set() const
   {
     return solution_history.get_current_solution();
   }
 
   template <int dim, typename number>
-  typename ReinitializationDGOperation<dim, number>::VectorType &
-  ReinitializationDGOperation<dim, number>::get_level_set()
+  typename ReinitializationHyperbolicDGOperation<dim, number>::VectorType &
+  ReinitializationHyperbolicDGOperation<dim, number>::get_level_set()
   {
     return solution_history.get_current_solution();
   }
 
   template <int dim, typename number>
-  const typename ReinitializationDGOperation<dim, number>::BlockVectorType &
-  ReinitializationDGOperation<dim, number>::get_normal_vector() const
+  const typename ReinitializationHyperbolicDGOperation<dim, number>::BlockVectorType &
+  ReinitializationHyperbolicDGOperation<dim, number>::get_normal_vector() const
   {
     return normal_vector_operation->get_solution_normal_vector();
   }
 
   template <int dim, typename number>
-  typename ReinitializationDGOperation<dim, number>::BlockVectorType &
-  ReinitializationDGOperation<dim, number>::get_normal_vector()
+  typename ReinitializationHyperbolicDGOperation<dim, number>::BlockVectorType &
+  ReinitializationHyperbolicDGOperation<dim, number>::get_normal_vector()
   {
     return normal_vector_operation->get_solution_normal_vector();
   }
 
   template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim, number>::attach_vectors(
+  ReinitializationHyperbolicDGOperation<dim, number>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
   {
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
@@ -306,7 +307,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim, number>::attach_output_vectors(
+  ReinitializationHyperbolicDGOperation<dim, number>::attach_output_vectors(
     GenericDataOut<dim, number> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(reinit_dof_idx),
@@ -325,7 +326,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   number
-  ReinitializationDGOperation<dim, number>::compute_CFL_based_timestep() const
+  ReinitializationHyperbolicDGOperation<dim, number>::compute_CFL_based_timestep() const
   {
     const number minimal_vertex_distance = scratch_data.get_min_cell_size();
     const number fe_degree = static_cast<number>(scratch_data.get_degree(reinit_dof_idx));
@@ -348,12 +349,12 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationDGOperation<dim, number>::set_artificial_diffusitivity()
+  ReinitializationHyperbolicDGOperation<dim, number>::set_artificial_diffusitivity()
   {
     reinit_DG_operator->set_artificial_diffusitivity();
   }
 
-  template class ReinitializationDGOperation<1, double>;
-  template class ReinitializationDGOperation<2, double>;
-  template class ReinitializationDGOperation<3, double>;
+  template class ReinitializationHyperbolicDGOperation<1, double>;
+  template class ReinitializationHyperbolicDGOperation<2, double>;
+  template class ReinitializationHyperbolicDGOperation<3, double>;
 } // namespace MeltPoolDG::LevelSet

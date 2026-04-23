@@ -11,9 +11,9 @@
 #include <deal.II/numerics/error_estimator.h>
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
-#include <meltpooldg/level_set/reinitialization_DG_operation.hpp>
-#include <meltpooldg/level_set/reinitialization_operation.hpp>
-#include <meltpooldg/level_set/reinitialization_operation_adaflo_wrapper.hpp>
+#include <meltpooldg/level_set/reinitialization_hyperbolic_CG_operation.hpp>
+#include <meltpooldg/level_set/reinitialization_hyperbolic_DG_operation.hpp>
+#include <meltpooldg/level_set/reinitialization_olsson_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
@@ -156,7 +156,7 @@ namespace MeltPoolDG::LevelSet
       {
         if (param.reinit.fe.type != FiniteElementType::FE_DGQ)
           {
-            reinit_operation = std::make_unique<ReinitializationOperation<dim, number>>(
+            reinit_operation = std::make_unique<ReinitializationHyperbolicCGOperation<dim, number>>(
               *scratch_data,
               param.reinit,
               param.normal_vec,
@@ -171,21 +171,21 @@ namespace MeltPoolDG::LevelSet
         else
           {
             reinit_operation =
-              std::make_unique<ReinitializationDGOperation<dim, number>>(*scratch_data,
-                                                                         param.reinit,
-                                                                         *time_iterator,
-                                                                         reinit_dof_idx,
-                                                                         reinit_quad_idx,
-                                                                         reinit_dof_idx,
-                                                                         param.normal_vec,
-                                                                         param.curv);
+              std::make_unique<ReinitializationHyperbolicDGOperation<dim, number>>(*scratch_data,
+                                                                                   param.reinit,
+                                                                                   *time_iterator,
+                                                                                   reinit_dof_idx,
+                                                                                   reinit_quad_idx,
+                                                                                   reinit_dof_idx,
+                                                                                   param.normal_vec,
+                                                                                   param.curv);
           }
         reinit_operation->reinit();
       }
 #ifdef MPDG_ENABLE_ADAFLO
     else if (param.reinit.implementation == "adaflo")
       {
-        reinit_operation = std::make_unique<ReinitializationOperationAdaflo<dim, number>>(
+        reinit_operation = std::make_unique<ReinitializationOlssonOperationAdaflo<dim, number>>(
           *scratch_data,
           *time_iterator,
           reinit_dof_idx,

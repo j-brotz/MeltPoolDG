@@ -24,18 +24,18 @@ namespace MeltPoolDG::LevelSet
 {
 
   template <int dim, typename number>
-  class ReinitilizationDGOperator
+  class OlssonDGOperator
   {
   public:
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
-    ReinitilizationDGOperator(const MeltPoolDG::ScratchData<dim, dim, number> &scratch_data_in,
-                              const ReinitializationData<number>              &reinit_data_in,
-                              const unsigned int                               reinit_dof_idx_in,
-                              const unsigned int                               reinit_quad_idx_in,
-                              const VectorType                                &curvature_in,
-                              const BlockVectorType                           &normal_vector_in);
+    OlssonDGOperator(const MeltPoolDG::ScratchData<dim, dim, number> &scratch_data_in,
+                     const ReinitializationData<number>              &reinit_data_in,
+                     const unsigned int                               reinit_dof_idx_in,
+                     const unsigned int                               reinit_quad_idx_in,
+                     const VectorType                                &curvature_in,
+                     const BlockVectorType                           &normal_vector_in);
 
 
     /**

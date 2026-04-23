@@ -14,7 +14,7 @@
 #include <meltpooldg/level_set/level_set_data.hpp>
 #include <meltpooldg/level_set/level_set_operation_base.hpp>
 #include <meltpooldg/level_set/normal_vector_DG_operation.hpp>
-#include <meltpooldg/level_set/reinitialization_DG_operation.hpp>
+#include <meltpooldg/level_set/reinitialization_hyperbolic_DG_operation.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
@@ -46,8 +46,8 @@ namespace MeltPoolDG::LevelSet
      *  The following objects are the operations, which are performed for solving the
      *  level set equation.
      */
-    std::shared_ptr<AdvectionDGOperation<dim, number>>        advec_operation;
-    std::shared_ptr<ReinitializationDGOperation<dim, number>> reinit_operation;
+    std::shared_ptr<AdvectionDGOperation<dim, number>>                  advec_operation;
+    std::shared_ptr<ReinitializationHyperbolicDGOperation<dim, number>> reinit_operation;
 
     // Is used to track the unreinitialized interface movement
     std::shared_ptr<AdvectionDGOperation<dim, number>> advec_smoothed_signum_operation;
