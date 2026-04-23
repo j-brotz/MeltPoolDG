@@ -1,4 +1,4 @@
-#include <meltpooldg/level_set/reinitialization_DG_operator.hpp>
+#include <meltpooldg/level_set/reinitialization_olsson_DG_operator.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -9,7 +9,7 @@ namespace MeltPoolDG::LevelSet
   using namespace dealii;
 
   template <int dim, typename number>
-  ReinitilizationDGOperator<dim, number>::ReinitilizationDGOperator(
+  OlssonDGOperator<dim, number>::OlssonDGOperator(
     const MeltPoolDG::ScratchData<dim, dim, number> &scratch_data_in,
     const ReinitializationData<number>              &reinit_data_in,
     const unsigned int                               reinit_dof_idx_in,
@@ -43,7 +43,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, number>::prepare_operator(const VectorType &solution)
+  OlssonDGOperator<dim, number>::prepare_operator(const VectorType &solution)
   {
     number const min_vertex_distance = scratch_data.get_min_cell_size();
     compute_godunov_gradient(solution);
@@ -54,7 +54,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, number>::apply_diffusion_implicit(
+  OlssonDGOperator<dim, number>::apply_diffusion_implicit(
     const number                                  time,
     const number                                  time_step,
     TimeIntegration::SolutionHistory<VectorType> &solution_history) const
@@ -64,7 +64,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, number>::apply_operator(
+  OlssonDGOperator<dim, number>::apply_operator(
     number const                                           time,
     VectorType                                            &dst,
     VectorType const                                      &src,
@@ -73,7 +73,7 @@ namespace MeltPoolDG::LevelSet
     compute_godunov_hamiltonian(src);
 
     scratch_data.get_matrix_free().cell_loop(
-      &ReinitilizationDGOperator<dim, number>::local_apply_domain_num_Hamiltonian,
+      &OlssonDGOperator<dim, number>::local_apply_domain_num_Hamiltonian,
       this,
       dst,
       num_Hamiltonian,
@@ -109,7 +109,7 @@ namespace MeltPoolDG::LevelSet
     if (reinit_data.reinitilization_DG_specific_data.use_interface_movement_penalization)
       {
         scratch_data.get_matrix_free().cell_loop(
-          &ReinitilizationDGOperator<dim, number>::interface_movement_penalty,
+          &OlssonDGOperator<dim, number>::interface_movement_penalty,
           this,
           num_Hamiltonian,
           src,
@@ -124,7 +124,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, number>::reinit()
+  OlssonDGOperator<dim, number>::reinit()
   {
     scratch_data.initialize_dof_vector(num_Hamiltonian, reinit_dof_idx);
     scratch_data.initialize_dof_vector(signum_smoothed, reinit_dof_idx);
@@ -150,8 +150,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, number>::compute_godunov_hamiltonian(
-    const VectorType &solution) const
+  OlssonDGOperator<dim, number>::compute_godunov_hamiltonian(const VectorType &solution) const
   {
     number const gradient_goal = 1.;
 
@@ -167,7 +166,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, number>::local_apply_domain_num_Hamiltonian(
+  OlssonDGOperator<dim, number>::local_apply_domain_num_Hamiltonian(
     const MatrixFree<dim, number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
@@ -195,7 +194,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, number>::interface_movement_penalty(
+  OlssonDGOperator<dim, number>::interface_movement_penalty(
     const MatrixFree<dim, number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
@@ -234,7 +233,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, number>::compute_godunov_gradient(const VectorType &solution) const
+  OlssonDGOperator<dim, number>::compute_godunov_gradient(const VectorType &solution) const
   {
     {
       // compute local upwind and downwind gradients
@@ -314,9 +313,8 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, number>::compute_smoothed_signum(
-    const VectorType &solution,
-    const number      min_vertex_distance) const
+  OlssonDGOperator<dim, number>::compute_smoothed_signum(const VectorType &solution,
+                                                         const number min_vertex_distance) const
   {
     const auto  &data      = scratch_data.get_matrix_free();
     const number fe_degree = ((static_cast<number>(scratch_data.get_degree(reinit_dof_idx))));
@@ -367,20 +365,20 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   number
-  ReinitilizationDGOperator<dim, number>::get_max_diffusitivity() const
+  OlssonDGOperator<dim, number>::get_max_diffusitivity() const
   {
     return RI_DG_diffusion_operator.get_max_diffusitivity();
   }
 
   template <int dim, typename number>
   void
-  ReinitilizationDGOperator<dim, number>::set_artificial_diffusitivity()
+  OlssonDGOperator<dim, number>::set_artificial_diffusitivity()
   {
     RI_DG_diffusion_operator.compute_diffusitivity_value();
     RI_DG_diffusion_operator.compute_penalty_parameter();
   }
 
-  template class ReinitilizationDGOperator<1, double>;
-  template class ReinitilizationDGOperator<2, double>;
-  template class ReinitilizationDGOperator<3, double>;
+  template class OlssonDGOperator<1, double>;
+  template class OlssonDGOperator<2, double>;
+  template class OlssonDGOperator<3, double>;
 } // namespace MeltPoolDG::LevelSet

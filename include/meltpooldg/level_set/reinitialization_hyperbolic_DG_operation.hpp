@@ -3,7 +3,7 @@
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/level_set/curvature_DG_operation.hpp>
 #include <meltpooldg/level_set/normal_vector_DG_operation.hpp>
-#include <meltpooldg/level_set/reinitialization_DG_operator.hpp>
+#include <meltpooldg/level_set/reinitialization_olsson_DG_operator.hpp>
 #include <meltpooldg/level_set/reinitialization_operation_base.hpp>
 #include <meltpooldg/time_integration/solution_history.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
@@ -14,27 +14,28 @@ namespace MeltPoolDG::LevelSet
 {
 
   template <int dim, typename number>
-  class ReinitializationDGOperation : public ReinitializationOperationBase<dim, number>
+  class ReinitializationHyperbolicDGOperation : public ReinitializationOperationBase<dim, number>
   {
   private:
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
     using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
 
   public:
-    ReinitializationDGOperation(const ScratchData<dim, dim, number>         &scratch_data_in,
-                                const ReinitializationData<number>          &reinit_data,
-                                const TimeIntegration::TimeIterator<number> &time_iterator,
-                                const unsigned int                           reinit_dof_idx_in,
-                                const unsigned int                           reinit_quad_idx_in,
-                                const unsigned int                           ls_dof_idx_in,
-                                const NormalVectorData<number>              &normal_vec_data,
-                                const CurvatureData<number>                 &curvature_data);
+    ReinitializationHyperbolicDGOperation(
+      const ScratchData<dim, dim, number>         &scratch_data_in,
+      const ReinitializationData<number>          &reinit_data,
+      const TimeIntegration::TimeIterator<number> &time_iterator,
+      const unsigned int                           reinit_dof_idx_in,
+      const unsigned int                           reinit_quad_idx_in,
+      const unsigned int                           ls_dof_idx_in,
+      const NormalVectorData<number>              &normal_vec_data,
+      const CurvatureData<number>                 &curvature_data);
     /**
      * For advection reinit coupled problems the normal vector and curvature are computed a level
      * higher on the level set operation level. This is because the computation of the normal vector
      * and curvature is very expensive and should only be done once when needed.
      */
-    ReinitializationDGOperation(
+    ReinitializationHyperbolicDGOperation(
       const ScratchData<dim, dim, number>                           &scratch_data_in,
       const ReinitializationData<number>                            &reinit_data,
       const TimeIntegration::TimeIterator<number>                   &time_iterator,
@@ -129,7 +130,7 @@ namespace MeltPoolDG::LevelSet
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 
-    std::shared_ptr<ReinitilizationDGOperator<dim, number>> reinit_DG_operator;
+    std::shared_ptr<OlssonDGOperator<dim, number>> reinit_DG_operator;
 
     std::shared_ptr<TimeIntegration::TimeIntegratorBase<number>> reinitialization_integration;
 

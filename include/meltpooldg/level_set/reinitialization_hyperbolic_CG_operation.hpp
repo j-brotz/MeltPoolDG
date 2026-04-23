@@ -10,7 +10,7 @@
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/level_set/normal_vector_operation.hpp>
 #include <meltpooldg/level_set/normal_vector_operation_adaflo_wrapper.hpp>
-#include <meltpooldg/level_set/olsson_operator.hpp>
+#include <meltpooldg/level_set/olsson_CG_operator.hpp>
 #include <meltpooldg/level_set/reinitialization_data.hpp>
 #include <meltpooldg/level_set/reinitialization_operation_base.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
@@ -32,7 +32,7 @@ namespace MeltPoolDG::LevelSet
    */
 
   template <int dim, typename number>
-  class ReinitializationOperation : public ReinitializationOperationBase<dim, number>
+  class ReinitializationHyperbolicCGOperation : public ReinitializationOperationBase<dim, number>
   {
   private:
     using VectorType       = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -40,16 +40,17 @@ namespace MeltPoolDG::LevelSet
     using SparseMatrixType = dealii::TrilinosWrappers::SparseMatrix;
 
   public:
-    ReinitializationOperation(const ScratchData<dim, dim, number>         &scratch_data_in,
-                              const ReinitializationData<number>          &reinit_data,
-                              const NormalVectorData<number>              &normal_vec_data,
-                              const int                                    ls_n_subdivisions_in,
-                              const TimeIntegration::TimeIterator<number> &time_iterator,
-                              const unsigned int                           reinit_dof_idx_in,
-                              const unsigned int                           reinit_quad_idx_in,
-                              const unsigned int                           ls_dof_idx_in,
-                              const std::array<unsigned int, dim> &normal_dof_indices_per_block_in,
-                              const unsigned int                   normal_no_bc_dof_idx_in);
+    ReinitializationHyperbolicCGOperation(
+      const ScratchData<dim, dim, number>         &scratch_data_in,
+      const ReinitializationData<number>          &reinit_data,
+      const NormalVectorData<number>              &normal_vec_data,
+      const int                                    ls_n_subdivisions_in,
+      const TimeIntegration::TimeIterator<number> &time_iterator,
+      const unsigned int                           reinit_dof_idx_in,
+      const unsigned int                           reinit_quad_idx_in,
+      const unsigned int                           ls_dof_idx_in,
+      const std::array<unsigned int, dim>         &normal_dof_indices_per_block_in,
+      const unsigned int                           normal_no_bc_dof_idx_in);
 
     void
     reinit() override;

@@ -13,8 +13,8 @@
 #include <meltpooldg/level_set/level_set_DG_operation.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
-#include <meltpooldg/level_set/reinitialization_operation.hpp>
-#include <meltpooldg/level_set/reinitialization_operation_adaflo_wrapper.hpp>
+#include <meltpooldg/level_set/reinitialization_hyperbolic_CG_operation.hpp>
+#include <meltpooldg/level_set/reinitialization_olsson_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/level_set/utilities.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
@@ -98,17 +98,17 @@ namespace MeltPoolDG::LevelSet
      */
     if (level_set_data.reinit.enable)
       {
-        reinit_operation =
-          std::make_shared<ReinitializationDGOperation<dim, number>>(scratch_data,
-                                                                     ls_data.reinit,
-                                                                     reinit_time_iterator,
-                                                                     ls_dof_idx,
-                                                                     ls_quad_idx,
-                                                                     ls_dof_idx,
-                                                                     normal_vector_operation,
-                                                                     curvature_operation,
-                                                                     true // if is coupled problem
-          );
+        reinit_operation = std::make_shared<ReinitializationHyperbolicDGOperation<dim, number>>(
+          scratch_data,
+          ls_data.reinit,
+          reinit_time_iterator,
+          ls_dof_idx,
+          ls_quad_idx,
+          ls_dof_idx,
+          normal_vector_operation,
+          curvature_operation,
+          true // if is coupled problem
+        );
       }
   }
 
