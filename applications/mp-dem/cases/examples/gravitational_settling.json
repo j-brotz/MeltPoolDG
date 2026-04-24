@@ -1,0 +1,51 @@
+{
+    "base": {
+        "problem name": "dem",
+        "case name": "generic_hyper_rectangle_domain",
+        "dimension": 3,
+        "do print parameters": true,
+        "number": "double",
+        "verbosity level": 1
+    },
+    "case setup": {
+        "domain size": "40e-4, 40e-4, 60e-5"
+    },
+    "obstacles": {
+        "gravity constant": 9.81,
+        "obstacle state input file": "/home/brotz/Development/meltpooldg/meltpooldg/applications/mp-dem/cases/examples/particles.csv",
+        "stationary": false,
+        "cohesive forces": {
+            "cut off relative decline van der waals": 0.1,
+            "hamaker constant": 4e-19,
+            "surface energy": 35e-5
+        },
+        "spherical particle contact force": {
+            "restitution coefficient": 0.9,
+            "rolling resistance coefficient": 0.10,
+            "sliding friction coefficient": 0.2,
+            "particle-particle contact": {
+                "poisson ratio": 0.342,
+                "youngs modulus": 26.25e6
+            }
+        }
+    },
+    "output": {
+        "directory": "./gravitational_settling_output",
+        "do user defined postprocessing": true,
+        "write frequency": 100,
+        "paraview": {
+            "enable": true,
+            "filename": "gravitational_settling",
+            "output subdomains": true
+        },
+        "particles": {
+            "enable": true,
+            "filename": "gravitational_settling_particles"
+        }
+    },
+    "time stepping": {
+        "end time": 1e-7,
+        "start time": 0,
+        "time step size": 1e-8
+    }
+}
