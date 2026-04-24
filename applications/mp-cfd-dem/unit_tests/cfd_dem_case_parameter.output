@@ -148,6 +148,7 @@
     },
     "obstacles":
     {
+        "gravity constant": "9.81",
         "obstacle state input file": "",
         "stationary": "false",
         "amr":

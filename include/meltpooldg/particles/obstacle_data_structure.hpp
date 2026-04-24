@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deal.II/base/array_view.h>
+#include <deal.II/base/utilities.h>
 
 #include <deal.II/matrix_free/matrix_free.h>
 
@@ -8,6 +9,10 @@
 
 #include <deal.II/particles/particle_handler.h>
 #include <deal.II/particles/property_pool.h>
+
+#include <meltpooldg/particles/particle_iterator.hpp>
+
+#include <boost/container/small_vector.hpp>
 
 #include <memory>
 #include <vector>
@@ -274,6 +279,31 @@ namespace MeltPoolDG
     get_global_particle_properties()
     {
       return properties_global_obstacles;
+    }
+
+    boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>
+    contact_particles(const DEMParticleAccessor<dim, number> &particle,
+                      const number                            relative_tolerance) const
+    {
+      // We assume the max number of contacts per particle to be 3*dim, which is a reasonable
+      // assumption for spherical particles including some tolerance offset for the contact
+      // distance. This allows us to use a small_vector for efficient storage without dynamic memory
+      // allocation in most cases.
+      boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim> contacts;
+
+      for (const auto &other : std::ranges::subrange<ParticleIterator<dim, number>>(
+             ParticleIterator<dim, number>(properties_global_obstacles, 0),
+             ParticleIterator<dim, number>(properties_global_obstacles,
+                                           properties_global_obstacles.n_registered_slots())))
+        {
+          if ((particle.get_location() - other.get_location()).norm_square() <
+                dealii::Utilities::fixed_power<2>((other.radius() + particle.radius()) *
+                                                  (1. + relative_tolerance)) and
+              particle.id() != other.id())
+            contacts.push_back(other);
+        }
+
+      return contacts;
     }
 
   private:

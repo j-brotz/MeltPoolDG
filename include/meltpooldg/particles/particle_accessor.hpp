@@ -134,6 +134,14 @@ namespace MeltPoolDG
     id() const;
 
     /**
+     * Returns the radius the particle.
+     *
+     * @return The particle radius.
+     */
+    const number &
+    radius() const;
+
+    /**
      * This function returns the value of a single-valued property stored in the given particle.
      *
      * @param property The property to retrieve.
@@ -260,6 +268,14 @@ namespace MeltPoolDG
   {
     Assert(!properties.empty(), dealii::ExcInternalError());
     return properties[SphericalParticle<dim, number>::Properties::particle_id];
+  }
+
+  template <int dim, typename number>
+  const number &
+  DEMParticleAccessor<dim, number>::radius() const
+  {
+    Assert(!properties.empty(), dealii::ExcInternalError());
+    return properties[SphericalParticle<dim, number>::Properties::radius];
   }
 
   template <int dim, typename number>

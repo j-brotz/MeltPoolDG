@@ -99,9 +99,8 @@ namespace MeltPoolDG
      * erasure.
      */
     template <typename ObstacleLoadType>
-      requires(!std::is_lvalue_reference_v<ObstacleLoadType>) //
-    void
-    add_load_type(ObstacleLoadType &&obstacle_load)
+    requires(!std::is_lvalue_reference_v<ObstacleLoadType>) //
+      void add_load_type(ObstacleLoadType &&obstacle_load)
     {
       loads.emplace_back(std::move(obstacle_load));
     }
@@ -255,6 +254,15 @@ namespace MeltPoolDG
      */
     std::ranges::subrange<ParticleIterator<dim, number>>
     global_particle_range();
+
+    /**
+     *
+     */
+    boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>
+    contact_particles(const DEMParticleAccessor<dim, number> &particle, const number relative_tolerance) const
+    {
+      return obstacle_data_structure.contact_particles(particle, relative_tolerance);
+    }
 
   private:
     /**

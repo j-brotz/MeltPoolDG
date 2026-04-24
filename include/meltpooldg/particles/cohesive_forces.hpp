@@ -67,6 +67,15 @@ namespace MeltPoolDG
     /// Cohesive force data for the spherical particle cohesive force model.
     SphericalParticleCohesiveForceData<number> cohesive_force_data;
 
+    /// Multiplicative factor applied to the sum of particle radii that defines the cutoff
+    /// distance for evaluating cohesive forces between two particles. If the center-to-center
+    /// distance between two particles is less than (relative_cohesive_cutoff * (r_i +
+    /// r_j)), the cohesive interaction is evaluated. For example, a value of 1.1 includes
+    /// particle pairs whose center-to-center separation is up to 10% larger than the sum of their
+    /// radii. This parameter is used to search for all relevant particle pairs for cohesive
+    /// interactions.
+    number relative_cohesive_cutoff = 0.2;
+
     /**
      * Struct describing the cohesive contact configuration between two particles, i.e., it computes
      * and caches all relevant cohesive contact parameters such as effective radius, cut-off

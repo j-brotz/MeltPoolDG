@@ -273,7 +273,7 @@ namespace MeltPoolDG
   ParticleIterator<dim, number>::operator++(int)
   {
     ParticleIterator tmp(*this);
-    operator++();
+                     operator++();
     return tmp;
   }
 
@@ -291,7 +291,7 @@ namespace MeltPoolDG
   ParticleIterator<dim, number>::operator--(int)
   {
     ParticleIterator tmp(*this);
-    operator--();
+                     operator--();
     return tmp;
   }
 

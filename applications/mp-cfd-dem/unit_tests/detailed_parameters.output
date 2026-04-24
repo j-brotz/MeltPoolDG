@@ -488,81 +488,81 @@
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to activate paraview output.",
-                "pattern": "110",
+                "pattern": "111",
                 "pattern_description": "[Bool]",
-                "actions": "110"
+                "actions": "111"
             },
             "filename":
             {
                 "value": "solution",
                 "default_value": "solution",
                 "documentation": "Sets the base name for paraview output files.",
-                "pattern": "111",
+                "pattern": "112",
                 "pattern_description": "[Anything]",
-                "actions": "111"
+                "actions": "112"
             },
             "n digits timestep":
             {
                 "value": "4",
                 "default_value": "4",
                 "documentation": "Number of digits for the frame number of the vtu-file.",
-                "pattern": "112",
+                "pattern": "113",
                 "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-                "actions": "112"
+                "actions": "113"
             },
             "print boundary id":
             {
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to output a vtu-file with the boundary id.",
-                "pattern": "113",
+                "pattern": "114",
                 "pattern_description": "[Bool]",
-                "actions": "113"
+                "actions": "114"
             },
             "output subdomains":
             {
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to output the subdomain ranks.",
-                "pattern": "114",
+                "pattern": "115",
                 "pattern_description": "[Bool]",
-                "actions": "114"
+                "actions": "115"
             },
             "output material id":
             {
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set to true to output the material id.",
-                "pattern": "115",
+                "pattern": "116",
                 "pattern_description": "[Bool]",
-                "actions": "115"
+                "actions": "116"
             },
             "write higher order cells":
             {
                 "value": "true",
                 "default_value": "true",
                 "documentation": "Set this parameter to false to write bi- or trilinear data only. Set this parameter to true to write higher order cell data. Note: higher order cell data can only be written for hexahedron meshes and 2 or 3 dimensions.",
-                "pattern": "116",
+                "pattern": "117",
                 "pattern_description": "[Bool]",
-                "actions": "116"
+                "actions": "117"
             },
             "n groups":
             {
                 "value": "1",
                 "default_value": "1",
                 "documentation": "Number of parallel written vtu-files.",
-                "pattern": "117",
+                "pattern": "118",
                 "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-                "actions": "117"
+                "actions": "118"
             },
             "n patches":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "Control number of patches to enable high-order.",
-                "pattern": "118",
+                "pattern": "119",
                 "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-                "actions": "118"
+                "actions": "119"
             }
         },
         "directory":
@@ -570,45 +570,45 @@
             "value": ".\/",
             "default_value": ".\/",
             "documentation": "Sets the base directory for all output.",
-            "pattern": "105",
+            "pattern": "106",
             "pattern_description": "[Anything]",
-            "actions": "105"
+            "actions": "106"
         },
         "write frequency":
         {
             "value": "1",
             "default_value": "1",
             "documentation": "Every n timestep that should be written",
-            "pattern": "106",
+            "pattern": "107",
             "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-            "actions": "106"
+            "actions": "107"
         },
         "write time step size":
         {
             "value": "1.79769e+308",
             "default_value": "1.79769e+308",
             "documentation": "Write output output every given time step. If this parameter is set, the output write frequency is deactivated.",
-            "pattern": "107",
+            "pattern": "108",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "107"
+            "actions": "108"
         },
         "output variables":
         {
             "value": "all",
             "default_value": "all",
             "documentation": "Specify variables that you request to output.",
-            "pattern": "108",
+            "pattern": "109",
             "pattern_description": "[List of <[Anything]> of length 0...4294967295 (inclusive)]",
-            "actions": "108"
+            "actions": "109"
         },
         "do user defined postprocessing":
         {
             "value": "false",
             "default_value": "false",
             "documentation": "Set this parameter to true to enable user defined postprocessing.",
-            "pattern": "109",
+            "pattern": "110",
             "pattern_description": "[Bool]",
-            "actions": "109"
+            "actions": "110"
         },
         "particles":
         {
@@ -617,18 +617,18 @@
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to activate particle paraview output.",
-                "pattern": "119",
+                "pattern": "120",
                 "pattern_description": "[Bool]",
-                "actions": "119"
+                "actions": "120"
             },
             "filename":
             {
                 "value": "particle",
                 "default_value": "particle",
                 "documentation": "Sets the base name for particle output files.",
-                "pattern": "120",
+                "pattern": "121",
                 "pattern_description": "[Anything]",
-                "actions": "120"
+                "actions": "121"
             }
         }
     },
@@ -1060,6 +1060,15 @@
             "pattern_description": "[Anything]",
             "actions": "93"
         },
+        "gravity constant":
+        {
+            "value": "9.81",
+            "default_value": "9.81",
+            "documentation": "Gravitational acceleration constant used for computing the gravitational force acting on the obstacles.",
+            "pattern": "94",
+            "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
+            "actions": "94"
+        },
         "amr":
         {
             "do refine":
@@ -1067,27 +1076,27 @@
                 "value": "false",
                 "default_value": "false",
                 "documentation": "If true and AMR is enabled, regions around obstacles are adaptively refined according to the specified refinement parameters.",
-                "pattern": "94",
+                "pattern": "95",
                 "pattern_description": "[Bool]",
-                "actions": "94"
+                "actions": "95"
             },
             "inner surface distance":
             {
                 "value": "1",
                 "default_value": "1",
                 "documentation": "Fraction of a reference length (e.g., particle radius) used to determine the distance from the obstacle surface within which cells inside the obstacles are refined.",
-                "pattern": "95",
+                "pattern": "96",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "95"
+                "actions": "96"
             },
             "outer surface distance":
             {
                 "value": "1",
                 "default_value": "1",
                 "documentation": "Fraction of a reference length (e.g., particle radius) used to determine the distance from the obstacle surface within which cells outside the obstacles are refined.",
-                "pattern": "96",
+                "pattern": "97",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "96"
+                "actions": "97"
             }
         },
         "cohesive forces":
@@ -1097,27 +1106,27 @@
                 "value": "0",
                 "default_value": "0",
                 "documentation": "Hamaker constant used in the van der Waals force calculation for all particles.",
-                "pattern": "97",
+                "pattern": "98",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "97"
+                "actions": "98"
             },
             "surface energy":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "Surface energy used in the pull-off force calculation for all particles.",
-                "pattern": "98",
+                "pattern": "99",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "98"
+                "actions": "99"
             },
             "cut off relative decline van der waals":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "Cut-off relative decline for the van der Waals force calculation at which the force is set to zero.",
-                "pattern": "99",
+                "pattern": "100",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "99"
+                "actions": "100"
             }
         },
         "spherical particle contact force":
@@ -1127,20 +1136,11 @@
                 "value": "0",
                 "default_value": "0",
                 "documentation": "",
-                "pattern": "100",
-                "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "100"
-            },
-            "sliding friction coefficient":
-            {
-                "value": "0",
-                "default_value": "0",
-                "documentation": "",
                 "pattern": "101",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
                 "actions": "101"
             },
-            "rolling resistance coefficient":
+            "sliding friction coefficient":
             {
                 "value": "0",
                 "default_value": "0",
@@ -1149,6 +1149,15 @@
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
                 "actions": "102"
             },
+            "rolling resistance coefficient":
+            {
+                "value": "0",
+                "default_value": "0",
+                "documentation": "",
+                "pattern": "103",
+                "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
+                "actions": "103"
+            },
             "particle-particle contact":
             {
                 "youngs modulus":
@@ -1156,18 +1165,18 @@
                     "value": "0",
                     "default_value": "0",
                     "documentation": "",
-                    "pattern": "103",
+                    "pattern": "104",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "103"
+                    "actions": "104"
                 },
                 "poisson ratio":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "",
-                    "pattern": "104",
+                    "pattern": "105",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "104"
+                    "actions": "105"
                 }
             }
         }
@@ -1179,27 +1188,27 @@
             "value": "false",
             "default_value": "false",
             "documentation": "Set this parameter to true if profiling should be enabled. It will be automaticallyenabled for verbosity level >=1.",
-            "pattern": "121",
+            "pattern": "122",
             "pattern_description": "[Bool]",
-            "actions": "121"
+            "actions": "122"
         },
         "write time step size":
         {
             "value": "10",
             "default_value": "10",
             "documentation": "Write profiling output every given time step size. If this parameter is set, the specified parameter for write frequency is overwritten.",
-            "pattern": "122",
+            "pattern": "123",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "122"
+            "actions": "123"
         },
         "time type":
         {
             "value": "real",
             "default_value": "real",
             "documentation": "Choose the type of time measure to write profiling information.",
-            "pattern": "123",
+            "pattern": "124",
             "pattern_description": "[Selection real|simulation ]",
-            "actions": "123"
+            "actions": "124"
         }
     },
     "restart":
@@ -1209,54 +1218,54 @@
             "value": "-1",
             "default_value": "-1",
             "documentation": "Set this parameter to any number >= 0 to specify how many restart files should be kept. -1 means no restart save.",
-            "pattern": "124",
+            "pattern": "125",
             "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-            "actions": "124"
+            "actions": "125"
         },
         "load":
         {
             "value": "-1",
             "default_value": "-1",
             "documentation": "Set this parameter to any number >= 0 to specify which restart file should be loaded. -1 means no restart load.",
-            "pattern": "125",
+            "pattern": "126",
             "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-            "actions": "125"
+            "actions": "126"
         },
         "write time step size":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Write restart output every given time step size. If this parameter is set, the specified parameter for write frequency is overwritten.",
-            "pattern": "126",
+            "pattern": "127",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "126"
+            "actions": "127"
         },
         "time type":
         {
             "value": "real",
             "default_value": "real",
             "documentation": "Choose the type of time measure to write ",
-            "pattern": "127",
+            "pattern": "128",
             "pattern_description": "[Selection real|simulation ]",
-            "actions": "127"
+            "actions": "128"
         },
         "directory":
         {
             "value": "",
             "default_value": "",
             "documentation": "Write restart directory",
-            "pattern": "128",
+            "pattern": "129",
             "pattern_description": "[Anything]",
-            "actions": "128"
+            "actions": "129"
         },
         "prefix":
         {
             "value": "restart",
             "default_value": "restart",
             "documentation": "Write restart prefix",
-            "pattern": "129",
+            "pattern": "130",
             "pattern_description": "[Anything]",
-            "actions": "129"
+            "actions": "130"
         }
     },
     "application":
@@ -1266,9 +1275,9 @@
             "value": "",
             "default_value": "",
             "documentation": "List of comma separated AMR strategies used to determine whether cells should be refined or coarsened. This parameter is only relevant when AMR is enabled.",
-            "pattern": "130",
+            "pattern": "131",
             "pattern_description": "[List of <[Selection indicator|obstacle_surface ]> of length 0...4294967295 (inclusive)]",
-            "actions": "130"
+            "actions": "131"
         }
     }
 }
