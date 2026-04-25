@@ -43,22 +43,37 @@ namespace MeltPoolDG::Profiling
                                   const dealii::TimerOutput &timer,
                                   const MPI_Comm            &mpi_communicator) const
   {
-    timer.print_wall_time_statistics(mpi_communicator);
-    pcout << std::endl;
+    if (data.enable_wall_time_statistics)
+      {
+        timer.print_summary();
+        pcout << std::endl;
 
-    Journal::print_decoration_line(pcout);
-    Journal::print_line(pcout, "Iteration statistics", "iteration_monitor");
-    IterationMonitor<number>::print(pcout);
-    pcout << std::endl;
+        timer.print_wall_time_statistics(mpi_communicator);
+        pcout << std::endl;
+      }
 
-    Journal::print_decoration_line(pcout);
-    Journal::print_line(pcout, "DoF statistics", "dof_monitor");
-    DoFMonitor<number>::print(pcout);
-    pcout << std::endl;
+    if (data.enable_iteration_statistics)
+      {
+        Journal::print_decoration_line(pcout);
+        Journal::print_line(pcout, "Iteration statistics", "iteration_monitor");
+        IterationMonitor<number>::print(pcout);
+        pcout << std::endl;
+      }
 
-    Journal::print_decoration_line(pcout);
-    Journal::print_line(pcout, "Cell statistics", "cell_monitor");
-    CellMonitor<number>::print(pcout);
+    if (data.enable_dof_statistics)
+      {
+        Journal::print_decoration_line(pcout);
+        Journal::print_line(pcout, "DoF statistics", "dof_monitor");
+        DoFMonitor<number>::print(pcout);
+        pcout << std::endl;
+      }
+
+    if (data.enable_cell_statistics)
+      {
+        Journal::print_decoration_line(pcout);
+        Journal::print_line(pcout, "Cell statistics", "cell_monitor");
+        CellMonitor<number>::print(pcout);
+      }
   }
 
   template <typename number>

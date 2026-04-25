@@ -160,12 +160,26 @@ namespace MeltPoolDG
     const number &
     get_property(const typename SphericalParticle<dim, number>::Properties property) const;
 
+    /**
+     * Return the surrounding cell of the particle center location. This is a wrapper around the
+     * same function in the deal.II ParticleAccessor, which is used internally to keep track of the
+     * cell in which the particle is located.
+     */
+    typename dealii::Triangulation<dim>::cell_iterator
+    get_surrounding_cell() const
+    {
+      return surrounding_cell;
+    }
+
   private:
     /// Reference to the particle location.
     std::reference_wrapper<dealii::Point<dim, number>> location;
 
     /// View to the particle properties (velocity, force etc.).
     dealii::ArrayView<number> properties;
+
+    ///
+    typename dealii::Triangulation<dim>::cell_iterator surrounding_cell;
   };
 
 
@@ -174,6 +188,7 @@ namespace MeltPoolDG
     dealii::Particles::ParticleAccessor<dim> &particle)
     : location(particle.get_location())
     , properties(particle.get_properties())
+    , surrounding_cell(particle.get_surrounding_cell())
   {}
 
   template <int dim, typename number>

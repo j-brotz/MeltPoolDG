@@ -26,6 +26,7 @@ namespace
 
     ObstacleForceFixture()
       : mapping(1)
+      , timer(std::cout, dealii::TimerOutput::never, dealii::TimerOutput::wall_times)
     {}
 
     void
@@ -58,13 +59,14 @@ namespace
       ASSERT_EQ(particle_locations.size(), particle_properties.size());
 
       obstacle_field = std::make_unique<MeltPoolDG::ObstacleField<dim, double, ObstacleType>>(
-        obstacle_data, triangulation, mapping, particle_locations, particle_properties);
+        obstacle_data, triangulation, mapping, particle_locations, particle_properties, timer);
     }
 
     dealii::Triangulation<dim>                                            triangulation;
     dealii::MappingQ<dim>                                                 mapping;
     MeltPoolDG::ObstacleData<double>                                      obstacle_data;
     std::unique_ptr<MeltPoolDG::ObstacleField<dim, double, ObstacleType>> obstacle_field;
+    dealii::TimerOutput                                                   timer;
   };
 
   TEST_F(ObstacleForceFixture, GravityForce)

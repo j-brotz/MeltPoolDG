@@ -10,6 +10,8 @@
 
 #include <deal.II/grid/grid_generator.h>
 
+#include "meltpooldg/particles/particle.hpp"
+#include <meltpooldg/particles/obstacle_data_structure.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 
 #include <memory>
@@ -48,13 +50,17 @@ namespace MeltPoolDG::Simulation::Dem
       dealii::Point<dim, number> dimensions = create_point_from_container(domain_dimensions);
 
       // TODO: How many cells are required
-      dealii::GridGenerator::subdivided_hyper_rectangle(
-        *this->triangulation,
-        std::vector<unsigned int>(
-          dim, 1),
-        dealii::Point<dim, number>(),
-        dimensions,
-        true);
+      dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                        std::vector<unsigned int>(dim, 1),
+                                                        dealii::Point<dim, number>(),
+                                                        dimensions,
+                                                        true);
+
+      ObstacleTriangulationDataStructure<dim, number, SphericalParticle<dim, number>>::
+        setup_hyper_rectangular_triangulation(
+          *this->triangulation,
+          std::make_pair(dealii::Point<dim, number>(), dimensions),
+          60e-6); // TODO
     }
 
     /**

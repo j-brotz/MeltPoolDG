@@ -1,6 +1,7 @@
 
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/mpi.h>
+#include <deal.II/base/timer.h>
 #include <deal.II/base/vectorization.h>
 
 #include <deal.II/grid/filtered_iterator.h>
@@ -8,6 +9,7 @@
 
 #include <deal.II/particles/particle_handler.h>
 
+#include <meltpooldg/particles/obstacle_data_structure.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
 #include <meltpooldg/utilities/amr_regions.hpp>
@@ -21,15 +23,21 @@ template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   const ObstacleData<number>       &data,
   const dealii::Triangulation<dim> &triangulation,
-  const dealii::Mapping<dim>       &mapping)
+  const dealii::Mapping<dim>       &mapping,
+  dealii::TimerOutput              &timer,
+  const ObstacleDataStructureType   obstacle_data_structure_type)
   : data(data)
   , obstacle_handler(triangulation, mapping, ObstacleType::n_obstacle_properties)
   , obstacle_handler_vector_views(
       std::vector<std::reference_wrapper<dealii::Particles::ParticleHandler<dim>>>(
         {obstacle_handler}),
       1)
-  , obstacle_data_structure(obstacle_handler)
+  , obstacle_data_structure(
+      obstacle_data_structure_factory<dim, number, ObstacleType>(obstacle_data_structure_type,
+                                                                 obstacle_handler,
+                                                                 timer))
   , mpi_communicator(triangulation.get_mpi_communicator())
+  , timer(timer)
 {
   auto [obstacle_locations, obstacle_properties] = read_obstacle_state_input_file();
   insert_obstacles(triangulation, obstacle_locations, obstacle_properties);
@@ -42,15 +50,21 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   const dealii::Triangulation<dim>        &triangulation,
   const dealii::Mapping<dim>              &mapping,
   std::vector<dealii::Point<dim, number>> &obstacle_locations,
-  std::vector<std::vector<number>>        &obstacle_properties)
+  std::vector<std::vector<number>>        &obstacle_properties,
+  dealii::TimerOutput                     &timer,
+  const ObstacleDataStructureType          obstacle_data_structure_type)
   : data(data)
   , obstacle_handler(triangulation, mapping, ObstacleType::n_obstacle_properties)
   , obstacle_handler_vector_views(
       std::vector<std::reference_wrapper<dealii::Particles::ParticleHandler<dim>>>(
         {obstacle_handler}),
       1)
-  , obstacle_data_structure(obstacle_handler)
+  , obstacle_data_structure(
+      obstacle_data_structure_factory<dim, number, ObstacleType>(obstacle_data_structure_type,
+                                                                 obstacle_handler,
+                                                                 timer))
   , mpi_communicator(triangulation.get_mpi_communicator())
+  , timer(timer)
 {
   insert_obstacles(triangulation, obstacle_locations, obstacle_properties);
   obstacle_data_structure.reinit();
@@ -61,9 +75,11 @@ void
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number current_time,
                                                                    const number time_step)
 {
+  dealii::TimerOutput::Scope t(timer, "advance obstacle field in time");
   compute_loads_on_obstacles();
 
   symplectic_euler_advance_time_step<dim, double, ParticleHandlerBlockVectorView<dim, number>>(
+    timer,
     current_time,
     time_step,
     obstacle_handler_vector_views.location,
@@ -93,22 +109,6 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
       obstacle_handler.exchange_ghost_particles(true);
       obstacle_handler.update_ghost_particles();
     });
-
-  // Temporary workaround: prevent particles from moving below ground level. We check whether the
-  // particle’s vertical coordinate (y in 2D, z in 3D) is less than its radius, i.e., meaning part
-  // of the particle would lie below the ground. If so, we clamp the particle to ground contact by
-  // setting its center height equal to its radius and zeroing its vertical velocity.
-  for (auto &particle : obstacle_handler)
-    if (particle.get_location()[dim - 1] -
-          ObstacleType::get_property(particle, ObstacleType::Properties::radius) <
-        0)
-      {
-        particle.get_location()[dim - 1] =
-          ObstacleType::get_property(particle, ObstacleType::Properties::radius);
-        auto velocity     = ObstacleType::template get_velocity<number>(particle);
-        velocity[dim - 1] = 0;
-        ObstacleType::set_velocity(particle, velocity);
-      }
 }
 
 
@@ -169,6 +169,7 @@ template <int dim, typename number, typename ObstacleType>
 void
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compute_loads_on_obstacles()
 {
+  dealii::TimerOutput::Scope t(timer, "compute obstacle loads");
   if (loads.empty())
     return;
 

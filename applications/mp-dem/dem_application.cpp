@@ -9,6 +9,7 @@
 
 #include <meltpooldg/core/simulation_base.hpp>
 #include <meltpooldg/particles/contact_forces.hpp>
+#include <meltpooldg/particles/obstacle_data_structure.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/obstacle_forces.hpp>
 #include <meltpooldg/particles/particle.hpp>
@@ -32,6 +33,7 @@
 #include <memory>
 
 #include "dem_case.hpp"
+#include "mpi.h"
 
 namespace MeltPoolDG
 {
@@ -69,7 +71,7 @@ namespace MeltPoolDG
           {
             profiling_monitor->print(scratch_data->get_pcout(1),
                                      scratch_data->get_timer(),
-                                     scratch_data->get_mpi_comm());
+                                     MPI_COMM_WORLD);
           }
 
         if (restart_monitor->do_save())
@@ -81,7 +83,7 @@ namespace MeltPoolDG
       {
         profiling_monitor->print(scratch_data->get_pcout(1),
                                  scratch_data->get_timer(),
-                                 scratch_data->get_mpi_comm());
+                                 MPI_COMM_WORLD);
       }
     Journal::print_end(scratch_data->get_pcout(1));
   }
@@ -107,7 +109,9 @@ namespace MeltPoolDG
     obstacle_field = std::make_unique<ObstacleField<dim, number, ObstacleType>>(
       simulation_case->parameters.obstacle_data,
       *simulation_case->triangulation,
-      scratch_data->get_mapping());
+      scratch_data->get_mapping(),
+      scratch_data->get_timer(),
+      ObstacleDataStructureType::CellBasedSearch);
 
     obstacle_field->add_load_type(ObstacleGravitationalForce<dim, number, ObstacleType>(
       this->simulation_case->parameters.obstacle_data.gravity_constant));

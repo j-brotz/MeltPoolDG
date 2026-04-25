@@ -241,7 +241,8 @@ namespace MeltPoolDG
     obstacle_field = std::make_unique<ObstacleField<dim, number, SphericalParticle<dim, number>>>(
       simulation_case->parameters.obstacle_data,
       scratch_data->get_triangulation(),
-      scratch_data->get_mapping());
+      scratch_data->get_mapping(),
+      scratch_data->get_timer());
 
     // initialize compressible flow operation
     comp_flow_operation = std::make_unique<CompressibleFlow::DGOperation<dim, number>>(

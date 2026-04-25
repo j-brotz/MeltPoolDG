@@ -1,83 +1,27 @@
+#include <deal.II/base/mpi.h>
+#include <deal.II/base/timer.h>
+
+#include <deal.II/grid/tria_accessor.h>
+#include <deal.II/grid/tria_iterator.h>
+
+#include <deal.II/particles/property_pool.h>
+
 #include <meltpooldg/particles/obstacle_data_structure.hpp>
 #include <meltpooldg/particles/particle.hpp>
+#include <meltpooldg/particles/particle_iterator.hpp>
 
-template <int dim, typename number>
-template <typename ObstacleDataStructureType>
-MeltPoolDG::ObstacleDataStructure<dim, number>::ObstacleDataStructureModel<
-  ObstacleDataStructureType>::ObstacleDataStructureModel(ObstacleDataStructureType
-                                                           &&obstacle_data_structure)
-  : obstacle_data_structure(std::move(obstacle_data_structure))
-{}
+#include <boost/container/small_vector.hpp>
 
-template <int dim, typename number>
-template <typename ObstacleDataStructureType>
-void
-MeltPoolDG::ObstacleDataStructure<dim, number>::ObstacleDataStructureModel<
-  ObstacleDataStructureType>::reinit()
-{
-  obstacle_data_structure.reinit();
-}
-
-template <int dim, typename number>
-template <typename ObstacleDataStructureType>
-std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-MeltPoolDG::ObstacleDataStructure<dim, number>::ObstacleDataStructureModel<
-  ObstacleDataStructureType>::get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
-                                                    const dealii::CellAccessor<dim> &cell) const
-{
-  return obstacle_data_structure.get_obstacles_in_cell(dst, cell);
-}
-
-template <int dim, typename number>
-template <typename ObstacleDataStructureType>
-std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-MeltPoolDG::ObstacleDataStructure<dim, number>::
-  ObstacleDataStructureModel<ObstacleDataStructureType>::get_obstacles_in_cell(
-    dealii::Particles::PropertyPool<dim>                               &dst,
-    const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const
-{
-  return obstacle_data_structure.get_obstacles_in_cell(dst, cells);
-}
-
-template <int dim, typename number>
-template <typename ObstacleDataStructureType>
-MeltPoolDG::ObstacleDataStructure<dim, number>::ObstacleDataStructure(
-  ObstacleDataStructureType &&obstacle_data_structure)
-  : obstacle_data_structure_pimpl(
-      std::make_unique<ObstacleDataStructureModel<ObstacleDataStructureType>>(
-        std::move(obstacle_data_structure)))
-{}
-
-template <int dim, typename number>
-void
-MeltPoolDG::ObstacleDataStructure<dim, number>::reinit()
-{
-  obstacle_data_structure_pimpl->reinit();
-}
-
-template <int dim, typename number>
-std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-MeltPoolDG::ObstacleDataStructure<dim, number>::get_obstacles_in_cell(
-  dealii::Particles::PropertyPool<dim> &dst,
-  const dealii::CellAccessor<dim>      &cell) const
-{
-  return obstacle_data_structure_pimpl->get_obstacles_in_cell(dst, cell);
-}
-
-template <int dim, typename number>
-std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-MeltPoolDG::ObstacleDataStructure<dim, number>::get_obstacles_in_cell(
-  dealii::Particles::PropertyPool<dim>                               &dst,
-  const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const
-{
-  return obstacle_data_structure_pimpl->get_obstacles_in_cell(dst, cells);
-}
+#include <memory>
+#include <vector>
 
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::ObstacleCompleteDomainSearch(
-  const dealii::Particles::ParticleHandler<dim> &obstacle_handler)
+  const dealii::Particles::ParticleHandler<dim> &obstacle_handler,
+  dealii::TimerOutput                           &timer)
   : obstacle_handler(obstacle_handler)
   , properties_global_obstacles(ObstacleType::n_obstacle_properties)
+  , timer(timer)
 {}
 
 template <int dim, typename number, typename ObstacleType>
@@ -102,6 +46,8 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::get_obstacl
   dealii::Particles::PropertyPool<dim> &dst,
   const dealii::CellAccessor<dim>      &cell) const
 {
+  dealii::TimerOutput::Scope t(timer, "particles in cell search");
+
   std::vector<typename dealii::Particles::PropertyPool<dim>::Handle> handles;
   for (unsigned int src_handle = 0; src_handle < properties_global_obstacles.n_registered_slots();
        ++src_handle)
@@ -130,6 +76,8 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::get_obstacl
   dealii::Particles::PropertyPool<dim>                               &dst,
   const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const
 {
+  dealii::TimerOutput::Scope t(timer, "particles in cell search");
+
   std::vector<typename dealii::Particles::PropertyPool<dim>::Handle> handles;
   for (unsigned int src_handle = 0; src_handle < properties_global_obstacles.n_registered_slots();
        ++src_handle)
@@ -157,10 +105,41 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::get_obstacl
 }
 
 template <int dim, typename number, typename ObstacleType>
+boost::container::small_vector<MeltPoolDG::DEMParticleAccessor<dim, number>, 3 * dim>
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::contact_particles(
+  const DEMParticleAccessor<dim, number> &particle,
+  const number                            relative_tolerance) const
+{
+  dealii::TimerOutput::Scope t(timer, "contact particle search");
+
+  // We assume the max number of contacts per particle to be 3*dim, which is a reasonable
+  // assumption for spherical particles including some tolerance offset for the contact
+  // distance. This allows us to use a small_vector for efficient storage without dynamic memory
+  // allocation in most cases.
+  boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim> contacts;
+
+  for (const auto &other : std::ranges::subrange<ParticleIterator<dim, number>>(
+         ParticleIterator<dim, number>(properties_global_obstacles, 0),
+         ParticleIterator<dim, number>(properties_global_obstacles,
+                                       properties_global_obstacles.n_registered_slots())))
+    {
+      if ((particle.get_location() - other.get_location()).norm_square() <
+            dealii::Utilities::fixed_power<2>((other.radius() + particle.radius()) *
+                                              (1. + relative_tolerance)) and
+          particle.id() != other.id())
+        contacts.push_back(other);
+    }
+
+  return contacts;
+}
+
+template <int dim, typename number, typename ObstacleType>
 void
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::broadcast_global_particles()
   const
 {
+  dealii::TimerOutput::Scope t(timer, "global particle broadcast");
+
   deregister_property_pool();
   properties_global_obstacles.clear();
   using Handle = typename dealii::Particles::PropertyPool<dim>::Handle;
@@ -218,11 +197,6 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::deregister_
   for (unsigned int i = 0; i < properties_global_obstacles.n_registered_slots(); ++i)
     properties_global_obstacles.deregister_particle(i);
 }
-
-
-template struct MeltPoolDG::ObstacleDataStructure<1, double>;
-template struct MeltPoolDG::ObstacleDataStructure<2, double>;
-template struct MeltPoolDG::ObstacleDataStructure<3, double>;
 
 template struct MeltPoolDG::
   ObstacleCompleteDomainSearch<1, double, MeltPoolDG::SphericalParticle<1, double>>;

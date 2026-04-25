@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deal.II/base/timer.h>
+
 #include <meltpooldg/time_integration/solution_history.hpp>
 
 #include <functional>
@@ -51,6 +53,7 @@ namespace MeltPoolDG
   template <int dim, typename number, typename BlockVectorType>
   void
   symplectic_euler_advance_time_step(
+    dealii::TimerOutput                               &timer,
     const number                                       current_time,
     const number                                       time_step,
     TimeIntegration::SolutionHistory<BlockVectorType> &location,
@@ -63,6 +66,7 @@ namespace MeltPoolDG
     const std::function<void(number time, BlockVectorType &dst)> &compute_angular_acceleration,
     const std::function<void()> &update_ghost_values = std::function<void()>())
   {
+    dealii::TimerOutput::Scope t(timer, "DEM time integrator");
     constexpr unsigned size_angular_velocity = dim - 3 % dim;
     for (unsigned i = 0; i < location.get_current_solution().block(0).locally_owned_size(); ++i)
       {

@@ -11,9 +11,24 @@ namespace MeltPoolDG::Profiling
     prm.enter_subsection("profiling");
     {
       prm.add_parameter(
-        "enable",
-        enable,
-        "Set this parameter to true if profiling should be enabled. It will be automatically"
+        "enable wall time statistics",
+        enable_wall_time_statistics,
+        "Set this parameter to true if profiling of wall time should be enabled. It will be automatically"
+        "enabled for verbosity level >=1.");
+      prm.add_parameter(
+        "enable iteration statistics",
+        enable_iteration_statistics,
+        "Set this parameter to true if profiling of iteration statistics should be enabled. It will be automatically"
+        "enabled for verbosity level >=1.");
+      prm.add_parameter(
+        "enable dof statistics",
+        enable_dof_statistics,
+        "Set this parameter to true if profiling of DoF statistics should be enabled. It will be automatically"
+        "enabled for verbosity level >=1.");
+      prm.add_parameter(
+        "enable cell statistics",
+        enable_cell_statistics,
+        "Set this parameter to true if profiling of cell statistics should be enabled. It will be automatically"
         "enabled for verbosity level >=1.");
       prm.add_parameter("write time step size",
                         write_time_step_size,
@@ -38,6 +53,10 @@ namespace MeltPoolDG::Profiling
                   dealii::ExcMessage(
                     "The time step size for profiling must be equal or larger than the simulation "
                     "time step size."));
+
+    if (enable_wall_time_statistics or enable_iteration_statistics or enable_dof_statistics or
+        enable_cell_statistics)
+      enable = true;
   }
 
   template struct ProfilingData<double>;

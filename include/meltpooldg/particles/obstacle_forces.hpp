@@ -5,6 +5,8 @@
 
 #include <deal.II/particles/particle_accessor.h>
 
+#include <meltpooldg/particles/obstacle_data_structure.hpp>
+
 #include <memory>
 #include <utility>
 

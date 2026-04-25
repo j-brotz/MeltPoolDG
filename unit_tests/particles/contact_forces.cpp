@@ -64,6 +64,7 @@ namespace
                                                                             .end_time       = 1.0,
                                                                             .time_step_size = 1e-4})
       , contact_force(contact_data, time_iterator)
+      , timer(std::cout, dealii::TimerOutput::never, dealii::TimerOutput::wall_times)
     {}
 
     void
@@ -76,7 +77,7 @@ namespace
       std::vector<dealii::Point<dim>>  particle_locations  = {};
 
       obstacle_field = std::make_unique<MeltPoolDG::ObstacleField<dim, double, ObstacleType>>(
-        obstacle_data, triangulation, mapping, particle_locations, particle_properties);
+        obstacle_data, triangulation, mapping, particle_locations, particle_properties, timer);
     }
 
     void
@@ -110,6 +111,7 @@ namespace
     MeltPoolDG::SphericalParticleContactData<double>                      contact_data;
     MeltPoolDG::TimeIntegration::TimeIterator<double>                     time_iterator;
     MeltPoolDG::SphericalParticleContactForce<dim, double, ObstacleType>  contact_force;
+    dealii::TimerOutput                                                   timer;
   };
 
   TEST_F(ContactForceFixture, ParticleParticleContact_SameRadius_DifferentDensity_PureNormalContact)

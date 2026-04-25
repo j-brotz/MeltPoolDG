@@ -46,14 +46,17 @@ namespace MeltPoolDG
      */
     ObstacleField(const ObstacleData<number>       &data,
                   const dealii::Triangulation<dim> &triangulation,
-                  const dealii::Mapping<dim>       &mapping);
+                  const dealii::Mapping<dim>       &mapping,
+                  dealii::TimerOutput              &timer,
+                  const ObstacleDataStructureType   obstacle_data_structure_type =
+                    ObstacleDataStructureType::CompleteDomainSearch);
 
     /**
      * @brief Constructor. Initializes the obstacle field and supporting data structures.
      *
-     * This constructor initializes the internal particle handler with the provided obstacle
-     * locations and properties, preparing the obstacle field for simulation. After
-     * construction, the obstacle field is ready for further computations.
+     * This constructor initializes the internal particle handler with the provided
+     * obstacle locations and properties, preparing the obstacle field for simulation.
+     * After construction, the obstacle field is ready for further computations.
      *
      * @param data Obstacle-related configuration data.
      * @param triangulation The triangulation on which the obstacles are placed.
@@ -65,7 +68,10 @@ namespace MeltPoolDG
                   const dealii::Triangulation<dim>        &triangulation,
                   const dealii::Mapping<dim>              &mapping,
                   std::vector<dealii::Point<dim, number>> &obstacle_locations,
-                  std::vector<std::vector<number>>        &obstacle_properties);
+                  std::vector<std::vector<number>>        &obstacle_properties,
+                  dealii::TimerOutput                     &timer,
+                  const ObstacleDataStructureType   obstacle_data_structure_type =
+                    ObstacleDataStructureType::CompleteDomainSearch);
 
     /**
      * @brief Advances the state of all obstacles in time by a single time step.
@@ -82,8 +88,9 @@ namespace MeltPoolDG
      * includes both forces and torques.
      *
      * This method iterates over all registered loads in the @p loads vector and computes the
-     * cumulative load for each obstacle by summing the contributions of all individual load
-     * models. The resulting total load (force and torque) is then stored in the obstacle’s
+     * cumulative load for each obstacle by summing the contributions of all individual
+     * load models. The resulting total load (force and torque) is then stored in the
+     * obstacle’s
      * properties using the appropriate setter defined by @p ObstacleType.
      */
     void
@@ -92,8 +99,9 @@ namespace MeltPoolDG
     /**
      * @brief Adds a new obstacle load to the list of loads acting on obstacles.
      *
-     * This method appends the given load object to the internal list of load that are applied
-     * when computing the total load on an obstacle -- this includes forces and torques.
+     * This method appends the given load object to the internal list of load that are
+     * applied when computing the total load on an obstacle -- this includes forces and
+     * torques.
      *
      * @param obstacle_load The load object to be added. It is forwarded and stored via type
      * erasure.
@@ -109,8 +117,9 @@ namespace MeltPoolDG
      * @brief Identifies obstacles that partially or fully occupy a given cell, and stores their
      * properties in the destination property pool.
      *
-     * This function inspects the specified cell and collects the properties of any obstacles
-     * located within it. These properties are stored in the provided destination property pool.
+     * This function inspects the specified cell and collects the properties of any
+     * obstacles located within it. These properties are stored in the provided
+     * destination property pool.
      *
      * @param dst Destination property pool where the properties of the identified obstacles will be
      * stored.
@@ -126,8 +135,9 @@ namespace MeltPoolDG
      * @brief Identify obstacles that partially or fully occupy any cell in a given cell batch, and
      * store their properties in the destination property pool.
      *
-     * This function scans the specified cell batch and collects the properties of any obstacles
-     * present in those cells. The properties are stored in the given destination property pool.
+     * This function scans the specified cell batch and collects the properties of any
+     * obstacles present in those cells. The properties are stored in the given
+     * destination property pool.
      *
      * @param dst Destination property pool where the properties of the identified obstacles will be
      * stored.
@@ -145,7 +155,8 @@ namespace MeltPoolDG
 
 
     /**
-     * Computes the sum of all particle forces and prints the corresponding norm to the console.
+     * Computes the sum of all particle forces and prints the corresponding norm to the
+     * console.
      *
      * @note This function is intended to be used for testing purposes.
      */
@@ -155,8 +166,8 @@ namespace MeltPoolDG
     /**
      * @brief Performs the objects deserialization.
      *
-     * This function forwards the call to dealii::ParticleHandler::deserialize(). See the
-     * documentation of that function for further details.
+     * This function forwards the call to dealii::ParticleHandler::deserialize(). See
+     * the documentation of that function for further details.
      */
     void
     deserialize();
@@ -177,8 +188,9 @@ namespace MeltPoolDG
     /**
      * @brief Prepares this object for serialization.
      *
-     * This function forwards the call to dealii::ParticleHandler::prepare_for_serialization(). See
-     * the documentation of that function for further details.
+     * This function forwards the call to
+     * dealii::ParticleHandler::prepare_for_serialization(). See the documentation of
+     * that function for further details.
      */
     void
     prepare_for_serialization();
@@ -186,10 +198,10 @@ namespace MeltPoolDG
     /**
      * @brief Return the AMR regions relevant for the obstacle field in region-based refinement.
      *
-     * This function computes and returns a vector of AMR regions corresponding to all particles
-     * in the obstacle field. Each particle contributes a spherical shell region, with the shell
-     * size determined by the parameters stored in the obstacle data structure associated with
-     * the object's obstacle field.
+     * This function computes and returns a vector of AMR regions corresponding to all
+     * particles in the obstacle field. Each particle contributes a spherical shell
+     * region, with the shell size determined by the parameters stored in the obstacle
+     * data structure associated with the object's obstacle field.
      *
      * @return A vector of AMR regions for all particles in the field.
      *
@@ -215,7 +227,7 @@ namespace MeltPoolDG
      *
      * @return The used obstacle data structure of the current object.
      */
-    const ObstacleCompleteDomainSearch<dim, number, ObstacleType> &
+    const ObstacleDataStructure<dim, number> &
     get_obstacle_data_structure() const
     {
       return obstacle_data_structure;
@@ -224,9 +236,9 @@ namespace MeltPoolDG
     /**
      * @brief Insert obstacles into the particle handler based on provided locations and properties.
      *
-     * This function takes a set of obstacle locations and their corresponding properties, and
-     * inserts them into the internal particle handler. It ensures that the obstacles are properly
-     * initialized and ready for simulation.
+     * This function takes a set of obstacle locations and their corresponding
+     * properties, and inserts them into the internal particle handler. It ensures that
+     * the obstacles are properly initialized and ready for simulation.
      *
      * @param triangulation The triangulation on which the obstacles are placed.
      * @param obstacle_locations A vector of points representing the locations of the obstacles.
@@ -247,8 +259,8 @@ namespace MeltPoolDG
     locally_owned_particle_range();
 
     /**
-     * Returns a range over all global obstacle particles for iterating over all particles in the
-     * global particle data structure.
+     * Returns a range over all global obstacle particles for iterating over all
+     * particles in the global particle data structure.
      *
      * @return An iterable subrange representing all global particles.
      */
@@ -259,7 +271,8 @@ namespace MeltPoolDG
      *
      */
     boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>
-    contact_particles(const DEMParticleAccessor<dim, number> &particle, const number relative_tolerance) const
+    contact_particles(const DEMParticleAccessor<dim, number> &particle,
+                      const number                            relative_tolerance) const
     {
       return obstacle_data_structure.contact_particles(particle, relative_tolerance);
     }
@@ -268,10 +281,11 @@ namespace MeltPoolDG
     /**
      * @brief Reads the obstacle state input file and returns obstacle locations and properties.
      *
-     * This function reads the obstacle data file specified in the configuration and generates
-     * obstacle representations accordingly. The resulting vectors for the obstacle properties and
-     * locations are returned. It populates the internal particle handler with the parsed obstacle
-     * positions and properties, preparing the obstacle field for use in subsequent computations.
+     * This function reads the obstacle data file specified in the configuration and
+     * generates obstacle representations accordingly. The resulting vectors for the
+     * obstacle properties and locations are returned. It populates the internal
+     * particle handler with the parsed obstacle positions and properties, preparing the
+     * obstacle field for use in subsequent computations.
      *
      * @return A pair consisting of a vector of obstacle locations and a vector of  corresponding
      * properties.
@@ -285,19 +299,24 @@ namespace MeltPoolDG
     /// Vector of load objects representing all loads acting on the obstacles.
     std::vector<ObstacleLoad<dim, number, ObstacleType>> loads;
 
-    /// Handler responsible for managing obstacle particles within the computational domain.
+    /// Handler responsible for managing obstacle particles within the computational
+    /// domain.
     dealii::Particles::ParticleHandler<dim> obstacle_handler;
 
-    /// Vector views into the particle handler for easy access to obstacle properties during
-    /// time integration.
+    /// Vector views into the particle handler for easy access to obstacle properties
+    /// during time integration.
     DemTimeIntegratorVectorViews<dim, number, ObstacleType> obstacle_handler_vector_views;
 
-    /// Obstacle search utility for locating relevant obstacles within a given cell or batch.
+    /// Obstacle search utility for locating relevant obstacles within a given cell or
+    /// batch.
     /// TODO: Extend to support nearest-neighbor searches and other spatial queries.
-    ObstacleCompleteDomainSearch<dim, number, ObstacleType> obstacle_data_structure;
+    ObstacleDataStructure<dim, number> obstacle_data_structure;
 
     /// MPI communicator used for parallel operations on the obstacle field.
     MPI_Comm mpi_communicator;
+
+    /// Timer data for profiling the obstacle field operations.
+    dealii::TimerOutput &timer;
   };
 
   template <int dim, typename number, typename ObstacleType>

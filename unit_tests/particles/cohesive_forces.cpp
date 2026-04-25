@@ -3,6 +3,7 @@
 #include <gmock/gmock.h>
 
 #include <deal.II/base/function_signed_distance.h>
+#include <deal.II/base/timer.h>
 
 #include <deal.II/fe/mapping_q.h>
 
@@ -59,6 +60,7 @@ namespace
                              .surface_energy                         = 1e-4,
                              .cut_off_relative_decline_van_der_waals = 1e-2})
       , cohesive_force(cohesive_force_data)
+      , timer(std::cout, dealii::TimerOutput::never, dealii::TimerOutput::wall_times)
     {}
 
     void
@@ -71,7 +73,7 @@ namespace
       std::vector<dealii::Point<dim>>  particle_locations  = {};
 
       obstacle_field = std::make_unique<MeltPoolDG::ObstacleField<dim, double, ObstacleType>>(
-        obstacle_data, triangulation, mapping, particle_locations, particle_properties);
+        obstacle_data, triangulation, mapping, particle_locations, particle_properties, timer);
     }
 
     void
@@ -93,6 +95,7 @@ namespace
     std::unique_ptr<MeltPoolDG::ObstacleField<dim, double, ObstacleType>> obstacle_field;
     MeltPoolDG::SphericalParticleCohesiveForceData<double>                cohesive_force_data;
     MeltPoolDG::SphericalParticleCohesiveForce<dim, double, ObstacleType> cohesive_force;
+    dealii::TimerOutput                                                   timer;
   };
 
   TEST_P(CohesiveForceTest, ParticleParticleCohesiveForce_DifferentRadii)
