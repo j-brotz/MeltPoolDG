@@ -106,7 +106,7 @@ namespace MeltPoolDG
   void
   Postprocessor<dim, number>::process_particles(const int n_time_step, const number time)
   {
-    if (not is_output_timestep(n_time_step, time) or not output_data.paraview.enable)
+    if (not is_output_timestep(n_time_step, time) or not output_data.particle.enable)
       return;
 
     if (obstacle_output.particle_handler != nullptr)

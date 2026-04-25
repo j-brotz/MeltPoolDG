@@ -81,6 +81,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
     obstacle_handler.sort_particles_into_subdomains_and_cells();
     obstacle_handler.exchange_ghost_particles(true);
     obstacle_handler.update_ghost_particles();
+    obstacle_handler.update_cached_numbers();
   }
 }
 

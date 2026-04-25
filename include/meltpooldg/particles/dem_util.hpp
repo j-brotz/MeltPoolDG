@@ -4,9 +4,6 @@
 
 #include <meltpooldg/time_integration/solution_history.hpp>
 
-#include <functional>
-#include <vector>
-
 
 namespace MeltPoolDG
 {

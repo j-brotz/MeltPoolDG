@@ -7,8 +7,6 @@
 #include <meltpooldg/particles/particle_iterator.hpp>
 #include <meltpooldg/time_integration/solution_history.hpp>
 
-#include <functional>
-
 namespace MeltPoolDG
 {
   /**

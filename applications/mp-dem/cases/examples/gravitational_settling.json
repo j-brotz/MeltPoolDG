@@ -17,7 +17,7 @@
     },
     "obstacles": {
         "gravity constant": 9.81,
-        "obstacle state input file": "/home/brotz/Development/meltpooldg/meltpooldg/applications/mp-dem/cases/examples/100_particles.csv",
+        "obstacle state input file": "/home/brotz/Development/meltpooldg/meltpooldg/applications/mp-dem/cases/examples/2_particles.csv",
         "stationary": false,
         "cohesive forces": {
             "cut off relative decline van der waals": 0.1,
@@ -48,8 +48,8 @@
         }
     },
     "time stepping": {
-        "end time": 0.1,
+        "end time": 1e-3,
         "start time": 0,
-        "time step size": 5e-8
+        "time step size": 2e-8
     }
 }

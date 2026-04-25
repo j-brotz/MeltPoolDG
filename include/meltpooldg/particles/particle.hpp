@@ -604,6 +604,9 @@ MeltPoolDG::SphericalParticle<dim, number>::read_state_input(const std::string &
         std::pow(particle_properties[Properties::radius], 2);
     }
 
+  static int id                                = 0;
+  particle_properties[Properties::particle_id] = id++;
+
   return {particle_properties, particle_location};
 }
 

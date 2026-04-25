@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deal.II/base/array_view.h>
+#include <deal.II/base/geometry_info.h>
 #include <deal.II/base/timer.h>
 #include <deal.II/base/utilities.h>
 
@@ -535,7 +536,8 @@ namespace MeltPoolDG
       dealii::TimerOutput::Scope t(timer, "contact particle search");
 
       boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim> contacts;
-      typename dealii::Triangulation<dim>::cell_iterator cell = particle.get_surrounding_cell();
+      typename dealii::Triangulation<dim>::active_cell_iterator                 cell =
+        particle.get_surrounding_cell();
 
       for (auto &other_cell :
            cell_neighbor_cache.get_neighbors_and_cell(cell->level(), cell->index()))
@@ -545,6 +547,7 @@ namespace MeltPoolDG
               DEMParticleAccessor<dim, number> other_accessor(other);
               if (other_accessor.id() != particle.id())
                 {
+      std::cout << "n contacts: " << contacts.size() << std::endl;
                   contacts.emplace_back(other);
                 }
             }
@@ -579,9 +582,10 @@ namespace MeltPoolDG
             const int level = cell->level();
             const int index = cell->index();
             cache_values[level][index] =
-              std::set<typename dealii::Triangulation<dim>::cell_iterator>();
+              std::set<typename dealii::Triangulation<dim>::active_cell_iterator>();
             for (unsigned int f = 0; f < dealii::GeometryInfo<dim>::faces_per_cell; ++f)
               {
+                cache_values[level][index].insert(cell);
                 if (!cell->at_boundary(f))
                   {
                     auto neighbor = cell->neighbor(f);
@@ -593,7 +597,23 @@ namespace MeltPoolDG
                         if (!neighbor->at_boundary(n_face) and
                             neighbor->neighbor(n_face) != cell and n_face != f)
                           {
-                            cache_values[level][index].insert(neighbor->neighbor(n_face));
+                            auto neighbor_of_neighbor = neighbor->neighbor(n_face);
+                            cache_values[level][index].insert(neighbor_of_neighbor);
+                            for (unsigned int nn_face = 0;
+                                 nn_face < dealii::GeometryInfo<dim>::faces_per_cell;
+                                 ++nn_face)
+                              {
+                                if (!neighbor_of_neighbor->at_boundary(nn_face) and
+                                    neighbor_of_neighbor->neighbor(nn_face) != neighbor and
+                                    neighbor_of_neighbor->neighbor(nn_face) != cell and
+                                    nn_face != n_face and nn_face != f and nn_face < 2)
+                                  {
+                                    auto neighbor_of_neighbor_of_neighbor =
+                                      neighbor_of_neighbor->neighbor(nn_face);
+                                    cache_values[level][index].insert(
+                                      neighbor_of_neighbor_of_neighbor);
+                                  }
+                              }
                           }
                       }
                   }
@@ -601,14 +621,14 @@ namespace MeltPoolDG
           }
       }
 
-      const std::set<typename dealii::Triangulation<dim>::cell_iterator> &
+      const std::set<typename dealii::Triangulation<dim>::active_cell_iterator> &
       get_neighbors_and_cell(const int level, const int index) const
       {
         return cache_values[level][index];
       }
 
     private:
-      std::vector<std::vector<std::set<typename dealii::Triangulation<dim>::cell_iterator>>>
+      std::vector<std::vector<std::set<typename dealii::Triangulation<dim>::active_cell_iterator>>>
         cache_values;
     };
 
