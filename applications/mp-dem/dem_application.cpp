@@ -183,6 +183,7 @@ namespace MeltPoolDG
       }
 
     // postprocessing
+    post_processor->process_triangulation_partitioning(time_step, current_time);
     post_processor->process_particles(time_step, current_time);
   }
 

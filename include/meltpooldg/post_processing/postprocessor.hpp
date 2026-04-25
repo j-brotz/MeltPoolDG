@@ -67,10 +67,11 @@ namespace MeltPoolDG
     process_particles(const int n_time_step, const number time);
 
 
-      /**
-       * Determines whether postprocessing should be performed now.
-       */
-      inline bool is_output_timestep(const int n_time_step, const number time) const
+    /**
+     * Determines whether postprocessing should be performed now.
+     */
+    inline bool
+    is_output_timestep(const int n_time_step, const number time) const
     {
       if (n_time_step == 0)
         return true;
@@ -100,6 +101,10 @@ namespace MeltPoolDG
         property_data_component_interpretation;
     }
 
+    void
+    process_triangulation_partitioning(const unsigned int                n_time_step,
+                                       const number                      time);
+
   private:
     const MPI_Comm                    mpi_communicator;
     const OutputData<number>         &output_data;
@@ -123,6 +128,9 @@ namespace MeltPoolDG
 
     /// Times and filenames of previously written vector output
     std::vector<std::pair<number, std::string>> vector_times_and_names;
+
+    /// Times and filenames of previously written partitioning
+    std::vector<std::pair<number, std::string>> partitioning_times_and_names;
 
     /// Times and filenames of previously written particle output
     std::vector<std::pair<number, std::string>> particle_times_and_names;

@@ -78,6 +78,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
 
   {
     dealii::TimerOutput::Scope t(timer, "update ghost particles");
+    obstacle_handler.sort_particles_into_subdomains_and_cells();
     obstacle_handler.exchange_ghost_particles(true);
     obstacle_handler.update_ghost_particles();
   }

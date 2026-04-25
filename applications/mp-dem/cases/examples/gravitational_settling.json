@@ -39,8 +39,7 @@
         "do user defined postprocessing": true,
         "write frequency": 100,
         "paraview": {
-            "enable": true,
-            "filename": "gravitational_settling",
+            "enable": false,
             "output subdomains": true
         },
         "particles": {

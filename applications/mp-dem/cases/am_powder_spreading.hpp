@@ -3,6 +3,7 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_parser.h>
+#include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/point.h>
 
@@ -21,8 +22,40 @@
 namespace MeltPoolDG::Simulation::Dem
 {
   template <int dim, typename number>
-  class SignedDistancePlane : public dealii::Function<dim, number>
+  class SignedDistanceFinitePlane : public dealii::Function<dim, number>
   {
+    SignedDistanceFinitePlane(
+      std::pair<dealii::Point<dim, number>, dealii::Point<dim, number>> plane_bounding_box,
+      dealii::Tensor<1, dim, number>                                    plane_normal)
+      : dealii::Function<dim, number>()
+      , plane_function(plane_bounding_box.first, plane_normal)
+      , plane_bounding_box(plane_bounding_box)
+    {
+      plane_center     = 0.5 * (plane_bounding_box.first + plane_bounding_box.second);
+      plane_axes.first = plane_bounding_box.second - plane_bounding_box.first;
+      plane_axes.first /= plane_axes.first.norm(); // normalize first axis
+      if constexpr (dim == 3)
+        plane_axes.second = dealii::cross_product_3d(plane_normal, plane_axes.first);
+    }
+
+
+
+    number
+    value(const dealii::Point<dim, number> &p, const unsigned int component = 0) const override
+    {
+      if (is_point_in_bounding_box(p, plane_bounding_box))
+        return plane_function.value(p, component);
+      else
+        return std::numeric_limits<number>::max();
+    }
+
+  private:
+    dealii::Functions::SignedDistance::Plane<dim> plane_function;
+
+    std::pair<dealii::Point<dim, number>, dealii::Point<dim, number>> plane_bounding_box;
+
+    dealii::Point<dim, number>                                                plane_center;
+    std::pair<dealii::Tensor<1, dim, number>, dealii::Tensor<1, dim, number>> plane_axes;
   }
 
   template <int dim, typename number>

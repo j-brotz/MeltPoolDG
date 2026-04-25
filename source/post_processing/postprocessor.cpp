@@ -288,6 +288,68 @@ namespace MeltPoolDG
 
   template <int dim, typename number>
   void
+  Postprocessor<dim, number>::process_triangulation_partitioning(
+    const unsigned int                n_time_step,
+    const number                      time)
+  {
+    if (not is_output_timestep(n_time_step, time) or not output_data.paraview.output_subdomains)
+      return;
+
+    Journal::print_line(pcout, "write triangulation partitioning to paraview", "postprocessor");
+
+    namespace fs = std::filesystem;
+    dealii::DataOut<dim>   data_out;
+    data_out.attach_triangulation(triangulation);
+    dealii::Vector<number> subdomains(triangulation.n_active_cells());
+    subdomains = dealii::Utilities::MPI::this_mpi_process(mpi_communicator);
+    data_out.add_data_vector(subdomains, "subdomains");
+
+    unsigned int n_patches = output_data.paraview.n_patches;
+
+    data_out.build_patches(mapping, n_patches);
+
+    std::string pvtu_filename;
+    if (output_data.paraview.n_groups == 1)
+      {
+        pvtu_filename = fs::path("tria_partitioning.vtu");
+
+        data_out.write_vtu_in_parallel(fs::path(output_data.directory) / pvtu_filename,
+                                       mpi_communicator);
+      }
+    else
+      {
+        pvtu_filename = data_out.write_vtu_with_pvtu_record(output_data.directory + "/",
+                                                            "tria_partitioning",
+                                                            n_time_step,
+                                                            mpi_communicator,
+                                                            output_data.paraview.n_digits_timestep,
+                                                            output_data.paraview.n_groups);
+      }
+
+    // write a pvd file relating the pvtu-file to a simulation time
+    // if vector_times_and_names is not empty
+    const unsigned int len = partitioning_times_and_names.size();
+
+    // Only append the *.pvtu-file to the *.pvd file, if the to be appended *.pvtu-file has not
+    // been written before. This might happen in case of a restart, when the time of the last
+    // written simulation output corresponds to the one in the initial state of the restart.
+    if (partitioning_times_and_names.empty() or
+        (partitioning_times_and_names[len - 1].first != time and
+         partitioning_times_and_names[len - 1].second != pvtu_filename))
+      partitioning_times_and_names.emplace_back(time, pvtu_filename);
+
+    if (dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 and time >= 0.0)
+      {
+        clean_pvd(partitioning_times_and_names);
+
+        std::ofstream pvd_output(fs::path(output_data.directory) /
+                                 fs::path("tria_partitioning.pvd"));
+        dealii::DataOutBase::write_pvd_record(pvd_output, partitioning_times_and_names);
+      }
+  }
+
+  template <int dim, typename number>
+  void
   Postprocessor<dim, number>::write_particle_paraview_files(const unsigned int n_time_step,
                                                             const number       time)
   {
