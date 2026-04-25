@@ -547,7 +547,6 @@ namespace MeltPoolDG
               DEMParticleAccessor<dim, number> other_accessor(other);
               if (other_accessor.id() != particle.id())
                 {
-      std::cout << "n contacts: " << contacts.size() << std::endl;
                   contacts.emplace_back(other);
                 }
             }
