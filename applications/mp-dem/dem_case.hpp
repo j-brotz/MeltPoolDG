@@ -58,6 +58,8 @@ namespace MeltPoolDG
   public:
     DemCaseParameters<number> parameters;
 
+    std::vector<std::shared_ptr<dealii::Function<dim, number>>> walls;
+
     DemCase(const std::string &parameter_file_in, MPI_Comm mpi_communicator_in)
       : SimulationCaseBase<dim, number>(parameter_file_in, mpi_communicator_in)
     {

@@ -35,7 +35,7 @@ namespace MeltPoolDG
      * any point in space to the wall surface. The normal vector at any point on the wall is
      * obtained from the gradient of this function and must point outward from the wall surface.
      *
-     * @param wall_signed_distance_function A unique pointer to a function representing the signed
+     * @param wall_signed_distance_function A shared pointer to a function representing the signed
      * distance to the wall.
      *
      * @note The wall function should return negative values inside the wall and positive values
@@ -44,7 +44,7 @@ namespace MeltPoolDG
      * different normal orientations.
      */
     void
-    attach_wall(std::unique_ptr<dealii::Function<dim>> &&wall_signed_distance_function);
+    attach_wall(const std::shared_ptr<dealii::Function<dim>> &wall_signed_distance_function);
 
     /**
      * Compute the contact forces and add them to the obstacles in the given obstacle field. This
@@ -88,7 +88,7 @@ namespace MeltPoolDG
 
     /// Map of wall signed distance functions added to the contact model. The key is a unique wall
     /// id to identify each wall.
-    std::map<int, std::unique_ptr<dealii::Function<dim>>> wall_signed_distance_functions;
+    std::map<int, std::shared_ptr<dealii::Function<dim>>> wall_signed_distance_functions;
 
     /**
      * Struct describing the contact configuration between two particles, i.e., it computes and

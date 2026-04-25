@@ -303,10 +303,6 @@ namespace MeltPoolDG
     /// domain.
     dealii::Particles::ParticleHandler<dim> obstacle_handler;
 
-    /// Vector views into the particle handler for easy access to obstacle properties
-    /// during time integration.
-    DemTimeIntegratorVectorViews<dim, number, ObstacleType> obstacle_handler_vector_views;
-
     /// Obstacle search utility for locating relevant obstacles within a given cell or
     /// batch.
     /// TODO: Extend to support nearest-neighbor searches and other spatial queries.

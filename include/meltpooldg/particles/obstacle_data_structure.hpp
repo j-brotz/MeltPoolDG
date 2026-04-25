@@ -530,8 +530,7 @@ namespace MeltPoolDG
     }
 
     boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>
-    contact_particles(const DEMParticleAccessor<dim, number> &particle,
-                      const number                            relative_tolerance) const
+    contact_particles(const DEMParticleAccessor<dim, number> &particle, const number) const
     {
       dealii::TimerOutput::Scope t(timer, "contact particle search");
 
@@ -574,7 +573,7 @@ namespace MeltPoolDG
           {
             cache_values[level].resize(triangulation.n_cells(level));
           }
-          
+
         for (const auto &cell : triangulation.active_cell_iterators())
           {
             const int level = cell->level();

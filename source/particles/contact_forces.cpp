@@ -25,10 +25,10 @@ namespace MeltPoolDG
   template <int dim, typename number, typename ObstacleType>
   void
   SphericalParticleContactForce<dim, number, ObstacleType>::attach_wall(
-    std::unique_ptr<dealii::Function<dim>> &&wall_signed_distance_function)
+    const std::shared_ptr<dealii::Function<dim>> &wall_signed_distance_function)
   {
     static int next_wall_id                        = 0;
-    wall_signed_distance_functions[next_wall_id++] = std::move(wall_signed_distance_function);
+    wall_signed_distance_functions[next_wall_id++] = wall_signed_distance_function;
   }
 
 
@@ -62,7 +62,8 @@ namespace MeltPoolDG
         std::map<int, dealii::Tensor<1, dim, number>> &self_tangential_gaps =
           tangential_gaps[particle.id()];
 
-        for (DEMParticleAccessor<dim, number> &other : obstacle_field.contact_particles(particle, 0.0))
+        for (DEMParticleAccessor<dim, number> &other :
+             obstacle_field.contact_particles(particle, 0.0))
           {
             Assert(other.id() != particle.id(), dealii::ExcInternalError());
 

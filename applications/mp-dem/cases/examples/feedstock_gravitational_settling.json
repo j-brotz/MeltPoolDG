@@ -8,8 +8,8 @@
         "verbosity level": 4
     },
     "case setup": {
-        "bounding box corner 1": "0, 0, 0",
-        "bounding box corner 2": "40e-4, 40e-4, 60e-5"
+        "bounding box corner 1": "4e-3, 0, 0",
+        "bounding box corner 2": "13.85e-3, 2e-3, 600e-6"
     },
     "profiling": {
         "time type": "real",
@@ -17,7 +17,7 @@
     },
     "obstacles": {
         "gravity constant": 9.81,
-        "obstacle state input file": "/home/brotz/Development/meltpooldg/meltpooldg/applications/mp-dem/cases/examples/100_particles.csv",
+        "obstacle state input file": "/home/brotz/Development/meltpooldg/meltpooldg/applications/mp-dem/cases/examples/feedstock_settling_initial_state.csv",
         "stationary": false,
         "cohesive forces": {
             "cut off relative decline van der waals": 0.1,
@@ -35,22 +35,22 @@
         }
     },
     "output": {
-        "directory": "./gravitational_settling_output",
+        "directory": "./settling_output",
         "do user defined postprocessing": true,
-        "write frequency": 100,
+        "write frequency": 1000,
         "paraview": {
             "enable": true,
-            "filename": "gravitational_settling",
+            "filename": "settling",
             "output subdomains": true
         },
         "particles": {
             "enable": true,
-            "filename": "gravitational_settling_particles"
+            "filename": "settling_particles"
         }
     },
     "time stepping": {
         "end time": 0.1,
         "start time": 0,
-        "time step size": 5e-8
+        "time step size": 1e-7
     }
 }

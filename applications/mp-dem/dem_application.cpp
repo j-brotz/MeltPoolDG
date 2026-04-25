@@ -119,11 +119,8 @@ namespace MeltPoolDG
     SphericalParticleContactForce<dim, number, ObstacleType> contact_force(
       simulation_case->parameters.obstacle_data.contact_forces, *time_iterator);
 
-    dealii::Tensor<1, dim, number> ground_normal;
-    ground_normal[dim - 1] = 1;
-    contact_force.attach_wall(
-      std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(dealii::Point<dim, number>(),
-                                                                      ground_normal));
+    for (const auto &wall : simulation_case->walls)
+      contact_force.attach_wall(wall);
 
     obstacle_field->add_load_type(std::move(contact_force));
 
@@ -179,9 +176,10 @@ namespace MeltPoolDG
       {
         simulation_case->do_postprocessing(generic_data_out);
         obstacle_field->print_accumulated_obstacle_force_norm(scratch_data->get_pcout(1));
-        scratch_data->get_pcout(1)
-          << "N global particles: " << obstacle_field->get_particle_handler().n_global_particles()
-          << std::endl;
+        Journal::print_line(scratch_data->get_pcout(1),
+                            "Number of global particles: " +
+                              std::to_string(
+                                obstacle_field->get_particle_handler().n_global_particles()));
       }
 
     // postprocessing

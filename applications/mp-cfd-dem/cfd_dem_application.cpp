@@ -303,7 +303,7 @@ namespace MeltPoolDG
     dealii::Tensor<1, dim, number> ground_wall_normal;
     ground_wall_normal[dim - 1] = 1.;
     contact_force.attach_wall(
-      std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(dealii::Point<dim>(),
+      std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(dealii::Point<dim>(),
                                                                       ground_wall_normal));
     obstacle_field->add_load_type(std::move(contact_force));
 

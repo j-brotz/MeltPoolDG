@@ -21,11 +21,15 @@
 namespace MeltPoolDG::Simulation::Dem
 {
   template <int dim, typename number>
-  class SimulationGenericHyperRectangleDomain final : public DemCase<dim, number>
+  class SignedDistancePlane : public dealii::Function<dim, number>
+  {
+  }
+
+  template <int dim, typename number>
+  class ParticlesInBox final : public DemCase<dim, number>
   {
   public:
-    SimulationGenericHyperRectangleDomain(std::string    parameter_file,
-                                          const MPI_Comm mpi_communicator)
+    ParticlesInBox(std::string parameter_file, const MPI_Comm mpi_communicator)
       : DemCase<dim, number>(parameter_file, mpi_communicator)
     {
       AssertThrow(dim > 1, dealii::ExcMessage("DEM simulations are only supported for dim > 1"));
@@ -49,18 +53,11 @@ namespace MeltPoolDG::Simulation::Dem
 
       dealii::Point<dim, number> dimensions = create_point_from_container(domain_dimensions);
 
-      // TODO: How many cells are required
-      dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                        std::vector<unsigned int>(dim, 1),
-                                                        dealii::Point<dim, number>(),
-                                                        dimensions,
-                                                        true);
-
       ObstacleTriangulationDataStructure<dim, number, SphericalParticle<dim, number>>::
-        setup_hyper_rectangular_triangulation(
-          *this->triangulation,
-          std::make_pair(dealii::Point<dim, number>(), dimensions),
-          60e-6); // TODO
+        setup_hyper_rectangular_triangulation(*this->triangulation,
+                                              std::make_pair(dealii::Point<dim, number>(),
+                                                             dimensions),
+                                              max_particle_influence_radius); // TODO
     }
 
     /**
@@ -94,6 +91,11 @@ namespace MeltPoolDG::Simulation::Dem
           "Physical dimensions of the computational domain. "
           "Specify comma-separated values: the first for the x-direction, the second for the y-direction, "
           "and optionally the third for the z-direction.");
+
+        prm.add_parameter(
+          "max particle influence radius",
+          max_particle_influence_radius,
+          "Maximum influence radius of particles, used for determining the necessary mesh resolution.");
       }
       prm.leave_subsection();
 
@@ -104,5 +106,7 @@ namespace MeltPoolDG::Simulation::Dem
     /// Sizes of the domain in each dimension. The x, y, and z sizes are given at indices 0, 1,
     /// and 2, respectively.
     std::vector<number> domain_dimensions;
+
+    number max_particle_influence_radius = 60e-6; // TODO
   };
 } // namespace MeltPoolDG::Simulation::Dem

@@ -9,6 +9,7 @@
 
 #include <deal.II/particles/particle_handler.h>
 
+#include "meltpooldg/particles/dem_time_integrators.hpp"
 #include <meltpooldg/particles/obstacle_data_structure.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
@@ -28,10 +29,6 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   const ObstacleDataStructureType   obstacle_data_structure_type)
   : data(data)
   , obstacle_handler(triangulation, mapping, ObstacleType::n_obstacle_properties)
-  , obstacle_handler_vector_views(
-      std::vector<std::reference_wrapper<dealii::Particles::ParticleHandler<dim>>>(
-        {obstacle_handler}),
-      1)
   , obstacle_data_structure(
       obstacle_data_structure_factory<dim, number, ObstacleType>(obstacle_data_structure_type,
                                                                  obstacle_handler,
@@ -55,10 +52,6 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   const ObstacleDataStructureType          obstacle_data_structure_type)
   : data(data)
   , obstacle_handler(triangulation, mapping, ObstacleType::n_obstacle_properties)
-  , obstacle_handler_vector_views(
-      std::vector<std::reference_wrapper<dealii::Particles::ParticleHandler<dim>>>(
-        {obstacle_handler}),
-      1)
   , obstacle_data_structure(
       obstacle_data_structure_factory<dim, number, ObstacleType>(obstacle_data_structure_type,
                                                                  obstacle_handler,
@@ -78,37 +71,16 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
   dealii::TimerOutput::Scope t(timer, "advance obstacle field in time");
   compute_loads_on_obstacles();
 
-  symplectic_euler_advance_time_step<dim, double, ParticleHandlerBlockVectorView<dim, number>>(
-    timer,
-    current_time,
-    time_step,
-    obstacle_handler_vector_views.location,
-    obstacle_handler_vector_views.translational_velocity,
-    obstacle_handler_vector_views.translational_acceleration,
-    obstacle_handler_vector_views.angular_velocity,
-    obstacle_handler_vector_views.angular_acceleration,
-    [&](number, ParticleHandlerBlockVectorView<dim, number> &) {
-      for (auto &obstacle : obstacle_handler)
-        {
-          ObstacleType::set_acceleration(
-            obstacle,
-            ObstacleType::get_force(obstacle) /
-              ObstacleType::get_property(obstacle, ObstacleType::Properties::mass));
-        }
-    },
-    [&](number, ParticleHandlerBlockVectorView<dim, number> &) {
-      for (auto &obstacle : obstacle_handler)
-        {
-          ObstacleType::set_angular_acceleration(
-            obstacle,
-            ObstacleType::get_torque(obstacle) /
-              ObstacleType::get_property(obstacle, ObstacleType::Properties::moment_of_inertia));
-        }
-    },
-    [&]() {
-      obstacle_handler.exchange_ghost_particles(true);
-      obstacle_handler.update_ghost_particles();
-    });
+  symplectic_euler_advance_time_step<dim, number, ObstacleType>(timer,
+                                                                current_time,
+                                                                time_step,
+                                                                locally_owned_particle_range());
+
+  {
+    dealii::TimerOutput::Scope t(timer, "update ghost particles");
+    obstacle_handler.exchange_ghost_particles(true);
+    obstacle_handler.update_ghost_particles();
+  }
 }
 
 

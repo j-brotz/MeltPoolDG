@@ -1,0 +1,128 @@
+#pragma once
+
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/function.h>
+#include <deal.II/base/function_parser.h>
+#include <deal.II/base/function_signed_distance.h>
+#include <deal.II/base/mpi.h>
+#include <deal.II/base/point.h>
+
+#include <deal.II/distributed/tria.h>
+
+#include <deal.II/grid/grid_generator.h>
+
+#include "meltpooldg/particles/particle.hpp"
+#include <meltpooldg/particles/obstacle_data_structure.hpp>
+#include <meltpooldg/utilities/better_enum.hpp>
+
+#include <memory>
+
+#include "../dem_case.hpp"
+
+namespace MeltPoolDG::Simulation::Dem
+{
+  template <int dim, typename number>
+  class ParticlesInBox final : public DemCase<dim, number>
+  {
+  public:
+    ParticlesInBox(std::string parameter_file, const MPI_Comm mpi_communicator)
+      : DemCase<dim, number>(parameter_file, mpi_communicator)
+    {
+      AssertThrow(dim > 1, dealii::ExcMessage("DEM simulations are only supported for dim > 1"));
+    }
+
+    void
+    create_spatial_discretization() override
+    {
+      this->triangulation =
+        std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+
+      ObstacleTriangulationDataStructure<dim, number, SphericalParticle<dim, number>>::
+        setup_hyper_rectangular_triangulation(*this->triangulation,
+                                              {bounding_box_corners.first,
+                                               bounding_box_corners.second},
+                                              max_particle_influence_radius); // TODO
+    }
+
+    /**
+     * Dummy function since boundary conditions are not needed for DEM simulations. The function is
+     * required to be implemented since it is a pure virtual function in the base class.
+     */
+    void
+    set_boundary_conditions() override
+    {
+      if constexpr (dim == 2)
+        {
+          this->walls.push_back(std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(
+            bounding_box_corners.first, dealii::Point<dim>(1, 0)));
+          this->walls.push_back(std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(
+            bounding_box_corners.first, dealii::Point<dim>(0, 1)));
+          this->walls.push_back(std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(
+            bounding_box_corners.second, dealii::Point<dim>(-1, 0)));
+        }
+
+      if constexpr (dim == 3)
+        {
+          this->walls.push_back(std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(
+            bounding_box_corners.first, dealii::Point<dim>(1, 0, 0)));
+          this->walls.push_back(std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(
+            bounding_box_corners.first, dealii::Point<dim>(0, 1, 0)));
+          this->walls.push_back(std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(
+            bounding_box_corners.first, dealii::Point<dim>(0, 0, 1)));
+          this->walls.push_back(std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(
+            bounding_box_corners.second, dealii::Point<dim>(-1, 0, 0)));
+          this->walls.push_back(std::make_shared<dealii::Functions::SignedDistance::Plane<dim>>(
+            bounding_box_corners.second, dealii::Point<dim>(0, -1, 0)));
+        }
+    }
+
+    /**
+     * Dummy function since inital conditions are directly read from the particle input file. The
+     * function is required to be implemented since it is a pure virtual function in the base class.
+     */
+    void
+    set_field_conditions() override
+    {}
+
+    /**
+     * Reads boundary conditions, initial conditions, and domain size parameters from
+     * the user input file.
+     */
+    bool
+    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    {
+      prm.enter_subsection("case setup");
+      {
+        prm.add_parameter(
+          "bounding box corner 1",
+          bounding_box_corners.first,
+          "Phyiscal location of the first corner of the bounding box containing all particles (e.g. the lower left corner). The x, y, and z "
+          "coordinates are given at indices 0, 1, and 2, respectively.");
+
+        prm.add_parameter(
+          "bounding box corner 2",
+          bounding_box_corners.second,
+          "Phyiscal location of the second corner of the bounding box containing all particles (e.g. the upper right corner). The x, y, and z "
+          "coordinates are given at indices 0, 1, and 2, respectively.");
+
+        prm.add_parameter(
+          "max particle influence radius",
+          max_particle_influence_radius,
+          "Maximum influence radius of particles, used for determining the necessary mesh resolution.");
+      }
+      prm.leave_subsection();
+
+      return this->parameters.base.do_print_parameters;
+    }
+
+  private:
+    /// Sizes of the domain in each dimension. The x, y, and z sizes are given at indices 0, 1,
+    /// and 2, respectively.
+    std::pair<dealii::Point<dim, number>, dealii::Point<dim, number>> bounding_box_corners;
+
+    std::array<std::unique_ptr<dealii::Functions::SignedDistance::Plane<dim>>, 2 * dim - 1>
+      box_boundaries;
+
+    number max_particle_influence_radius = 60e-6; // TODO
+  };
+} // namespace MeltPoolDG::Simulation::Dem

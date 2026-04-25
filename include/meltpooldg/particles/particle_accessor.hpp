@@ -81,6 +81,34 @@ namespace MeltPoolDG
     dealii::Tensor<1, dim, number>
     get_linear_velocity() const;
 
+    number&
+    linear_velocity(const unsigned int dimension)
+    {
+      AssertIndexRange(dimension, dim);
+      return properties[SphericalParticle<dim, number>::Properties::velocity + dimension];
+    }
+
+    number& 
+    linear_acceleration(const unsigned int dimension)
+    {
+      AssertIndexRange(dimension, dim);
+      return properties[SphericalParticle<dim, number>::Properties::acceleration + dimension];
+    }
+
+    number& 
+    angular_velocity(const unsigned int dimension)
+    {
+      AssertIndexRange(dimension, axial_dim<dim>);
+      return properties[SphericalParticle<dim, number>::Properties::angular_velocity + dimension];
+    }
+
+    number& 
+    angular_acceleration(const unsigned int dimension)
+    {
+      AssertIndexRange(dimension, axial_dim<dim>);
+      return properties[SphericalParticle<dim, number>::Properties::angular_acceleration + dimension];
+    }
+
     /**
      * Returns the angular velocity of the given particle.
      *
@@ -107,6 +135,13 @@ namespace MeltPoolDG
     void
     add_force(const dealii::Tensor<1, dim, number> &force);
 
+    number& 
+    force(const unsigned int dimension)
+    {
+      AssertIndexRange(dimension, dim);
+      return properties[SphericalParticle<dim, number>::Properties::force + dimension];
+    }
+
     /**
      * Sets the specified torque vector to the particle by assigning its components into the
      * particle's property array.
@@ -115,6 +150,13 @@ namespace MeltPoolDG
      */
     void
     set_torque(const dealii::Tensor<1, axial_dim<dim>, number> &torque);
+
+    number& 
+    torque(const unsigned int dimension)
+    {
+      AssertIndexRange(dimension, axial_dim<dim>);
+      return properties[SphericalParticle<dim, number>::Properties::torque + dimension];
+    }
 
     /**
      * Accumulates the specified torque vector to the particle by adding its components into the
