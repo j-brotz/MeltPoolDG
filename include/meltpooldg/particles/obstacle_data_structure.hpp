@@ -5,6 +5,7 @@
 #include <deal.II/base/timer.h>
 #include <deal.II/base/utilities.h>
 
+#include <deal.II/grid/filtered_iterator.h>
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_tools.h>
 
@@ -171,6 +172,14 @@ namespace MeltPoolDG
       return obstacle_data_structure_pimpl->locally_owned_particle_range();
     }
 
+    void
+    insert_global_particles(const std::vector<dealii::Point<dim, number>> &obstacle_locations,
+                            const std::vector<std::vector<number>>        &obstacle_properties)
+    {
+      obstacle_data_structure_pimpl->insert_global_particles(obstacle_locations,
+                                                             obstacle_properties);
+    }
+
   private:
     /**
      * @brief Concept: Abstract interface for obstacle data structures.
@@ -233,6 +242,10 @@ namespace MeltPoolDG
 
       virtual std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
       locally_owned_particle_range() = 0;
+
+      virtual void
+      insert_global_particles(const std::vector<dealii::Point<dim, number>> &obstacle_locations,
+                              const std::vector<std::vector<number>> &obstacle_properties) = 0;
     };
 
     /**
@@ -337,6 +350,13 @@ namespace MeltPoolDG
       locally_owned_particle_range() override
       {
         return obstacle_data_structure.locally_owned_particle_range();
+      }
+
+      void
+      insert_global_particles(const std::vector<dealii::Point<dim, number>> &obstacle_locations,
+                              const std::vector<std::vector<number>> &obstacle_properties) override
+      {
+        obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
       }
 
     private:
@@ -478,7 +498,7 @@ namespace MeltPoolDG
     unsigned int
     n_global_particles() const
     {
-      return obstacle_handler.n_particles();
+      return obstacle_handler.n_global_particles();
     }
 
     unsigned int
@@ -493,6 +513,28 @@ namespace MeltPoolDG
       return std::ranges::subrange<ParticleIterator<dim, number>>(
         ParticleIterator<dim, number>(obstacle_handler.begin()),
         ParticleIterator<dim, number>(obstacle_handler.end()));
+    }
+
+    void
+    insert_global_particles(const std::vector<dealii::Point<dim, number>> &obstacle_locations,
+                            const std::vector<std::vector<number>>        &obstacle_properties)
+    {
+      std::vector<dealii::BoundingBox<dim>> local_bounding_box =
+        dealii::GridTools::compute_mesh_predicate_bounding_box(
+          obstacle_handler.get_triangulation(), dealii::IteratorFilters::LocallyOwnedCell());
+      std::vector<std::vector<dealii::BoundingBox<dim>>> global_bounding_box =
+        dealii::Utilities::MPI::all_gather(mpi_communicator, local_bounding_box);
+
+      obstacle_handler.insert_global_particles(
+        dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 ?
+          obstacle_locations :
+          std::vector<dealii::Point<dim, number>>{},
+        global_bounding_box,
+        dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 ?
+          obstacle_properties :
+          std::vector<std::vector<number>>{});
+
+      reinit();
     }
 
 
@@ -676,7 +718,7 @@ namespace MeltPoolDG
     unsigned int
     n_global_particles() const
     {
-      return obstacle_handler.n_particles();
+      return obstacle_handler.n_global_particles();
     }
 
     unsigned int
@@ -691,6 +733,26 @@ namespace MeltPoolDG
       return std::ranges::subrange<ParticleIterator<dim, number>>(
         ParticleIterator<dim, number>(obstacle_handler.begin()),
         ParticleIterator<dim, number>(obstacle_handler.end()));
+    }
+
+    void
+    insert_global_particles(const std::vector<dealii::Point<dim, number>> &obstacle_locations,
+                            const std::vector<std::vector<number>>        &obstacle_properties)
+    {
+      std::vector<dealii::BoundingBox<dim>> local_bounding_box =
+        dealii::GridTools::compute_mesh_predicate_bounding_box(
+          obstacle_handler.get_triangulation(), dealii::IteratorFilters::LocallyOwnedCell());
+      std::vector<std::vector<dealii::BoundingBox<dim>>> global_bounding_box =
+        dealii::Utilities::MPI::all_gather(mpi_communicator, local_bounding_box);
+
+      obstacle_handler.insert_global_particles(
+        dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 ?
+          obstacle_locations :
+          std::vector<dealii::Point<dim, number>>{},
+        global_bounding_box,
+        dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 ?
+          obstacle_properties :
+          std::vector<std::vector<number>>{});
     }
 
   private:

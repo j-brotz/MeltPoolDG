@@ -135,6 +135,15 @@ namespace MeltPoolDG
     void
     add_force(const dealii::Tensor<1, dim, number> &force);
 
+    dealii::Tensor<1, dim, number>
+    get_force() const
+    {
+      dealii::Tensor<1, dim, number> force;
+      for (int dimension = 0; dimension < dim; ++dimension)
+        force[dimension] = properties[SphericalParticle<dim, number>::Properties::force + dimension];
+      return force;
+    }
+
     number& 
     force(const unsigned int dimension)
     {

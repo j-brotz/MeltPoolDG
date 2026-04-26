@@ -70,7 +70,7 @@ namespace MeltPoolDG
                   std::vector<dealii::Point<dim, number>> &obstacle_locations,
                   std::vector<std::vector<number>>        &obstacle_properties,
                   dealii::TimerOutput                     &timer,
-                  const ObstacleDataStructureType   obstacle_data_structure_type =
+                  const ObstacleDataStructureType          obstacle_data_structure_type =
                     ObstacleDataStructureType::CompleteDomainSearch);
 
     /**
@@ -107,8 +107,9 @@ namespace MeltPoolDG
      * erasure.
      */
     template <typename ObstacleLoadType>
-    requires(!std::is_lvalue_reference_v<ObstacleLoadType>) //
-      void add_load_type(ObstacleLoadType &&obstacle_load)
+      requires(!std::is_lvalue_reference_v<ObstacleLoadType>) //
+    void
+    add_load_type(ObstacleLoadType &&obstacle_load)
     {
       loads.emplace_back(std::move(obstacle_load));
     }
@@ -161,7 +162,7 @@ namespace MeltPoolDG
      * @note This function is intended to be used for testing purposes.
      */
     void
-    print_accumulated_obstacle_force_norm(const dealii::ConditionalOStream pout) const;
+    print_accumulated_obstacle_force_norm(const dealii::ConditionalOStream pout);
 
     /**
      * @brief Performs the objects deserialization.
@@ -209,7 +210,7 @@ namespace MeltPoolDG
      * local to the current process or subdomain.
      */
     std::vector<AMR::AMRRegion<dim, number>>
-    get_refinement_regions() const;
+    get_refinement_regions();
 
     /**
      * @brief Return a reference to the underlying particle handler of this object.
@@ -240,14 +241,12 @@ namespace MeltPoolDG
      * properties, and inserts them into the internal particle handler. It ensures that
      * the obstacles are properly initialized and ready for simulation.
      *
-     * @param triangulation The triangulation on which the obstacles are placed.
      * @param obstacle_locations A vector of points representing the locations of the obstacles.
      * @param obstacle_properties A vector of vectors, where each inner vector contains the
      * properties associated with the corresponding obstacle location.
      */
     void
-    insert_obstacles(const dealii::Triangulation<dim>        &triangulation,
-                     std::vector<dealii::Point<dim, number>> &obstacle_locations,
+    insert_obstacles(std::vector<dealii::Point<dim, number>> &obstacle_locations,
                      std::vector<std::vector<number>>        &obstacle_properties);
 
     /**
