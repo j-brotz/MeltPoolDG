@@ -101,7 +101,7 @@ namespace
       std::vector<dealii::Point<dim>>  particle_locations  = {particle_data.location};
       std::vector<std::vector<double>> particle_properties = {properties};
 
-      obstacle_field->insert_obstacles(triangulation, particle_locations, particle_properties);
+      obstacle_field->insert_obstacles(particle_locations, particle_properties);
     }
 
     dealii::Triangulation<dim>                                            triangulation;

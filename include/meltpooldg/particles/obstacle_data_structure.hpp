@@ -117,12 +117,6 @@ namespace MeltPoolDG
       return obstacle_data_structure_pimpl->get_obstacles_in_cell(dst, cells);
     }
 
-    void
-    broadcast_global_particles() const
-    {
-      obstacle_data_structure_pimpl->broadcast_global_particles();
-    }
-
     const dealii::Particles::PropertyPool<dim> &
     get_global_particle_properties() const
     {
@@ -180,6 +174,18 @@ namespace MeltPoolDG
                                                              obstacle_properties);
     }
 
+    void
+    update_ghost_particle_properties()
+    {
+      obstacle_data_structure_pimpl->update_ghost_particle_properties();
+    }
+
+    void
+    sort_particles_into_subdomains_and_cells()
+    {
+      obstacle_data_structure_pimpl->sort_particles_into_subdomains_and_cells();
+    }
+
   private:
     /**
      * @brief Concept: Abstract interface for obstacle data structures.
@@ -215,9 +221,6 @@ namespace MeltPoolDG
         dealii::Particles::PropertyPool<dim>                               &dst,
         const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const = 0;
 
-      virtual void
-      broadcast_global_particles() const = 0;
-
       virtual const dealii::Particles::PropertyPool<dim> &
       get_global_particle_properties() const = 0;
 
@@ -246,6 +249,12 @@ namespace MeltPoolDG
       virtual void
       insert_global_particles(const std::vector<dealii::Point<dim, number>> &obstacle_locations,
                               const std::vector<std::vector<number>> &obstacle_properties) = 0;
+
+      virtual void
+      update_ghost_particle_properties() = 0;
+
+      virtual void
+      sort_particles_into_subdomains_and_cells() = 0;
     };
 
     /**
@@ -295,12 +304,6 @@ namespace MeltPoolDG
         const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const override
       {
         return obstacle_data_structure.get_obstacles_in_cell(dst, cells);
-      }
-
-      void
-      broadcast_global_particles() const override
-      {
-        obstacle_data_structure.broadcast_global_particles();
       }
 
       const dealii::Particles::PropertyPool<dim> &
@@ -357,6 +360,18 @@ namespace MeltPoolDG
                               const std::vector<std::vector<number>> &obstacle_properties) override
       {
         obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
+      }
+
+      void
+      update_ghost_particle_properties() override
+      {
+        obstacle_data_structure.update_ghost_particle_properties();
+      }
+
+      void
+      sort_particles_into_subdomains_and_cells() override
+      {
+        obstacle_data_structure.sort_particles_into_subdomains_and_cells();
       }
 
     private:
@@ -449,20 +464,6 @@ namespace MeltPoolDG
       const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const;
 
     /**
-     * @brief Broadcasts obstacle properties of all locally owned particles to all MPI processes.
-     *
-     * This function ensures that each process has access to a complete copy of all obstacles,
-     * regardless of ownership. It enables computations involving obstacles even on processes
-     * that do not originally own them.
-     *
-     * Each process broadcasts its locally owned obstacles in turn, including both their
-     * location and
-     * associated properties. The data is stored in the @p properties_global_obstacles structure.
-     */
-    void
-    broadcast_global_particles() const;
-
-    /**
      * Return a reference to a property pool containing the properties of all globally available
      * particles. The properties stored in the property pool represent those available in the field
      * when broadcast_global_particles() has been called the last time.
@@ -537,6 +538,20 @@ namespace MeltPoolDG
       reinit();
     }
 
+    void
+    update_ghost_particle_properties()
+    {
+      dealii::TimerOutput::Scope t(timer, "update ghost particles");
+      broadcast_global_particles();
+    }
+
+    void
+    sort_particles_into_subdomains_and_cells()
+    {
+      dealii::TimerOutput::Scope t(timer, "update ghost particles");
+      broadcast_global_particles();
+    }
+
 
   private:
     /// Handler managing the locally owned obstacles in the domain.
@@ -557,6 +572,20 @@ namespace MeltPoolDG
      */
     void
     deregister_property_pool() const;
+
+    /**
+     * @brief Broadcasts obstacle properties of all locally owned particles to all MPI processes.
+     *
+     * This function ensures that each process has access to a complete copy of all obstacles,
+     * regardless of ownership. It enables computations involving obstacles even on processes
+     * that do not originally own them.
+     *
+     * Each process broadcasts its locally owned obstacles in turn, including both their
+     * location and
+     * associated properties. The data is stored in the @p properties_global_obstacles structure.
+     */
+    void
+    broadcast_global_particles() const;
   };
 
   template <int dim, typename number, typename ObstacleType>
@@ -754,6 +783,26 @@ namespace MeltPoolDG
           obstacle_properties :
           std::vector<std::vector<number>>{});
     }
+
+
+    void
+    update_ghost_particle_properties()
+    {
+      dealii::TimerOutput::Scope t(timer, "update ghost particles");
+      obstacle_handler.update_ghost_particles();
+    }
+
+    void
+    sort_particles_into_subdomains_and_cells()
+    {
+      dealii::TimerOutput::Scope t(timer, "update ghost particles");
+      obstacle_handler.sort_particles_into_subdomains_and_cells();
+      obstacle_handler.exchange_ghost_particles(true);
+
+      obstacle_handler.update_cached_numbers();
+      update_ghost_particle_properties(); // TODO Is this call really necessary?
+    }
+
 
   private:
     /// Handler managing the locally owned obstacles in the domain.

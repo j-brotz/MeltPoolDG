@@ -78,13 +78,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
                                                                 time_step,
                                                                 locally_owned_particle_range());
 
-  {
-    dealii::TimerOutput::Scope t(timer, "update ghost particles");
-    obstacle_handler.sort_particles_into_subdomains_and_cells();
-    obstacle_handler.exchange_ghost_particles(true);
-    obstacle_handler.update_ghost_particles();
-    obstacle_handler.update_cached_numbers();
-  }
+  obstacle_data_structure.sort_particles_into_subdomains_and_cells();
 }
 
 
@@ -158,8 +152,10 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compute_loads_on_obstacles
       obstacle.set_torque(dealii::Tensor<1, axial_dim<dim>, number>());
     }
 
-  // Update global particle property pool in case any of the loads needs an up-to-date version.
-  obstacle_data_structure.broadcast_global_particles();
+  // Update ghost particle properties to ensure that all particles have the most up-to-date
+  // information available for load computation. This is especially important if any of the loads
+  // depend on interactions between particles, such as contact or cohesive forces.
+  obstacle_data_structure.update_ghost_particle_properties();
 
   // Accumulate all forces acting on the particles
   for (const auto &load_type : loads)
