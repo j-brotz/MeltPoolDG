@@ -141,6 +141,18 @@ namespace MeltPoolDG
       return obstacle_data_structure_pimpl->contact_particles(particle, relative_tolerance);
     }
 
+    void
+    prepare_for_serialization()
+    {
+      obstacle_data_structure_pimpl->prepare_for_serialization();
+    }
+
+    void
+    deserialize()
+    {
+      obstacle_data_structure_pimpl->deserialize();
+    }
+
   private:
     /**
      * @brief Concept: Abstract interface for obstacle data structures.
@@ -188,6 +200,12 @@ namespace MeltPoolDG
       virtual boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>
       contact_particles(const DEMParticleAccessor<dim, number> &particle,
                         const number                            relative_tolerance) const = 0;
+
+      virtual void
+      prepare_for_serialization() = 0;
+
+      virtual void
+      deserialize() = 0;
     };
 
     /**
@@ -264,6 +282,18 @@ namespace MeltPoolDG
         return obstacle_data_structure.contact_particles(particle, relative_tolerance);
       }
 
+      void
+      prepare_for_serialization() override
+      {
+        obstacle_data_structure.prepare_for_serialization();
+      }
+
+      void
+      deserialize() override
+      {
+        obstacle_data_structure.deserialize();
+      }
+
     private:
       ObstacleDataStructureType obstacle_data_structure;
     };
@@ -286,8 +316,8 @@ namespace MeltPoolDG
   struct ObstacleCompleteDomainSearch
   {
   public:
-    ObstacleCompleteDomainSearch(const dealii::Particles::ParticleHandler<dim> &obstacle_handler,
-                                 dealii::TimerOutput                           &timer);
+    ObstacleCompleteDomainSearch(dealii::Particles::ParticleHandler<dim> &obstacle_handler,
+                                 dealii::TimerOutput                     &timer);
 
     /**
      * @brief Destructor. Explicitly deregisters all particles from the global obstacle property
@@ -388,9 +418,21 @@ namespace MeltPoolDG
     contact_particles(const DEMParticleAccessor<dim, number> &particle,
                       const number                            relative_tolerance) const;
 
+    void
+    prepare_for_serialization()
+    {
+      obstacle_handler.prepare_for_serialization();
+    }
+
+    void
+    deserialize()
+    {
+      obstacle_handler.deserialize();
+    }
+
   private:
     /// Handler managing the locally owned obstacles in the domain.
-    const dealii::Particles::ParticleHandler<dim> &obstacle_handler;
+    dealii::Particles::ParticleHandler<dim> &obstacle_handler;
 
     /// Property pool containing the properties of all global obstacles, stored locally on each
     /// MPI rank.
@@ -413,9 +455,8 @@ namespace MeltPoolDG
   struct ObstacleTriangulationDataStructure
   {
   public:
-    ObstacleTriangulationDataStructure(
-      const dealii::Particles::ParticleHandler<dim> &obstacle_handler,
-      dealii::TimerOutput                           &timer)
+    ObstacleTriangulationDataStructure(dealii::Particles::ParticleHandler<dim> &obstacle_handler,
+                                       dealii::TimerOutput                     &timer)
       : obstacle_handler(obstacle_handler)
       , properties_global_obstacles(ObstacleType::n_obstacle_properties)
       , cell_neighbor_cache(obstacle_handler.get_triangulation())
@@ -554,9 +595,21 @@ namespace MeltPoolDG
       return contacts;
     }
 
+    void
+    prepare_for_serialization()
+    {
+      obstacle_handler.prepare_for_serialization();
+    }
+
+    void
+    deserialize()
+    {
+      obstacle_handler.deserialize();
+    }
+
   private:
     /// Handler managing the locally owned obstacles in the domain.
-    const dealii::Particles::ParticleHandler<dim> &obstacle_handler;
+    dealii::Particles::ParticleHandler<dim> &obstacle_handler;
 
     /// Property pool containing the properties of all global obstacles, stored locally on each
     /// MPI rank.
@@ -640,9 +693,9 @@ namespace MeltPoolDG
 
   template <int dim, typename number, typename ObstacleType>
   ObstacleDataStructure<dim, number>
-  obstacle_data_structure_factory(const ObstacleDataStructureType data_structure_type,
-                                  const dealii::Particles::ParticleHandler<dim> &obstacle_handler,
-                                  dealii::TimerOutput                           &timer)
+  obstacle_data_structure_factory(const ObstacleDataStructureType          data_structure_type,
+                                  dealii::Particles::ParticleHandler<dim> &obstacle_handler,
+                                  dealii::TimerOutput                     &timer)
   {
     switch (data_structure_type)
       {

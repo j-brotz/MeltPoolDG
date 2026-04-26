@@ -17,7 +17,7 @@
 
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::ObstacleCompleteDomainSearch(
-  const dealii::Particles::ParticleHandler<dim> &obstacle_handler,
+  dealii::Particles::ParticleHandler<dim> &obstacle_handler,
   dealii::TimerOutput                           &timer)
   : obstacle_handler(obstacle_handler)
   , properties_global_obstacles(ObstacleType::n_obstacle_properties)

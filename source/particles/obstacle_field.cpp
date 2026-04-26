@@ -108,7 +108,7 @@ template <int dim, typename number, typename ObstacleType>
 void
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::prepare_for_serialization()
 {
-  obstacle_handler.prepare_for_serialization();
+  obstacle_data_structure.prepare_for_serialization();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -185,7 +185,7 @@ void
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::deserialize()
 {
   // Assumes that triangulation.load() has already been called!
-  obstacle_handler.deserialize();
+  obstacle_data_structure.deserialize();
 }
 
 template <int dim, typename number, typename ObstacleType>

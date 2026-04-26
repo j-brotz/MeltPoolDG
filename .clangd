@@ -1,0 +1,9 @@
+Style: 
+    AngledHeaders: include/meltpooldg/.*\.hpp
+
+CompileFlags:
+    CompilationDatabase: build/release
+
+Diagnostics:
+  ClangTidy:
+    Remove: modernize-avoid-c-arrays
