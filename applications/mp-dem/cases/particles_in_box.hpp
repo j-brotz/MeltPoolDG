@@ -34,14 +34,26 @@ namespace MeltPoolDG::Simulation::Dem
     void
     create_spatial_discretization() override
     {
-      this->triangulation =
-        std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+      this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+        this->mpi_communicator,
+        dealii::Triangulation<dim>::MeshSmoothing::none,
+        dealii::parallel::distributed::Triangulation<dim>::Settings::construct_multigrid_hierarchy);
 
-      ObstacleTriangulationDataStructure<dim, number, SphericalParticle<dim, number>>::
-        setup_hyper_rectangular_triangulation(*this->triangulation,
-                                              {bounding_box_corners.first,
-                                               bounding_box_corners.second},
-                                              max_particle_influence_radius); // TODO
+      if (n_subdivisions_per_dimension.empty())
+        {
+          ObstacleTriangulationDataStructure<dim, number, SphericalParticle<dim, number>>::
+            setup_hyper_rectangular_triangulation(*this->triangulation,
+                                                  {bounding_box_corners.first,
+                                                   bounding_box_corners.second},
+                                                  max_particle_influence_radius); // TODO
+        }
+      else
+        {
+          dealii::GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                            n_subdivisions_per_dimension,
+                                                            bounding_box_corners.first,
+                                                            bounding_box_corners.second);
+        }
     }
 
     /**
@@ -109,6 +121,11 @@ namespace MeltPoolDG::Simulation::Dem
           "max particle influence radius",
           max_particle_influence_radius,
           "Maximum influence radius of particles, used for determining the necessary mesh resolution.");
+
+        prm.add_parameter(
+          "n subdivisions",
+          n_subdivisions_per_dimension,
+          "Number of subdivisions in each dimension for the initial mesh. If this parameter is not provided, the mesh will be refined uniformly until the cell size is smaller than the maximum particle influence radius which is the optimal case for the particle search data structure. ");
       }
       prm.leave_subsection();
 
@@ -122,6 +139,8 @@ namespace MeltPoolDG::Simulation::Dem
 
     std::array<std::unique_ptr<dealii::Functions::SignedDistance::Plane<dim>>, 2 * dim - 1>
       box_boundaries;
+
+    std::vector<unsigned> n_subdivisions_per_dimension;
 
     number max_particle_influence_radius = 60e-6; // TODO
   };
