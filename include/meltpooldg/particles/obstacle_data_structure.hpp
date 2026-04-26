@@ -153,6 +153,24 @@ namespace MeltPoolDG
       obstacle_data_structure_pimpl->deserialize();
     }
 
+    unsigned int
+    n_global_particles() const
+    {
+      return obstacle_data_structure_pimpl->n_global_particles();
+    }
+
+    unsigned int
+    n_locally_owned_particles() const
+    {
+      return obstacle_data_structure_pimpl->n_locally_owned_particles();
+    }
+
+    std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
+    locally_owned_particle_range()
+    {
+      return obstacle_data_structure_pimpl->locally_owned_particle_range();
+    }
+
   private:
     /**
      * @brief Concept: Abstract interface for obstacle data structures.
@@ -206,6 +224,15 @@ namespace MeltPoolDG
 
       virtual void
       deserialize() = 0;
+
+      virtual unsigned int
+      n_global_particles() const = 0;
+
+      virtual unsigned int
+      n_locally_owned_particles() const = 0;
+
+      virtual std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
+      locally_owned_particle_range() = 0;
     };
 
     /**
@@ -292,6 +319,24 @@ namespace MeltPoolDG
       deserialize() override
       {
         obstacle_data_structure.deserialize();
+      }
+
+      unsigned int
+      n_global_particles() const override
+      {
+        return obstacle_data_structure.n_global_particles();
+      }
+
+      unsigned int
+      n_locally_owned_particles() const override
+      {
+        return obstacle_data_structure.n_locally_owned_particles();
+      }
+
+      std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
+      locally_owned_particle_range() override
+      {
+        return obstacle_data_structure.locally_owned_particle_range();
       }
 
     private:
@@ -429,6 +474,27 @@ namespace MeltPoolDG
     {
       obstacle_handler.deserialize();
     }
+
+    unsigned int
+    n_global_particles() const
+    {
+      return obstacle_handler.n_particles();
+    }
+
+    unsigned int
+    n_locally_owned_particles() const
+    {
+      return obstacle_handler.n_locally_owned_particles();
+    }
+
+    std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
+    locally_owned_particle_range()
+    {
+      return std::ranges::subrange<ParticleIterator<dim, number>>(
+        ParticleIterator<dim, number>(obstacle_handler.begin()),
+        ParticleIterator<dim, number>(obstacle_handler.end()));
+    }
+
 
   private:
     /// Handler managing the locally owned obstacles in the domain.
@@ -605,6 +671,26 @@ namespace MeltPoolDG
     deserialize()
     {
       obstacle_handler.deserialize();
+    }
+
+    unsigned int
+    n_global_particles() const
+    {
+      return obstacle_handler.n_particles();
+    }
+
+    unsigned int
+    n_locally_owned_particles() const
+    {
+      return obstacle_handler.n_locally_owned_particles();
+    }
+
+    std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
+    locally_owned_particle_range()
+    {
+      return std::ranges::subrange<ParticleIterator<dim, number>>(
+        ParticleIterator<dim, number>(obstacle_handler.begin()),
+        ParticleIterator<dim, number>(obstacle_handler.end()));
     }
 
   private:

@@ -119,7 +119,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_refinement_regions() c
     return std::vector<AMR::AMRRegion<dim, number>>();
 
   std::vector<AMR::SphericalShellAMRRegion<dim, number>> local_ref_regions;
-  local_ref_regions.reserve(obstacle_handler.n_locally_owned_particles());
+  local_ref_regions.reserve(obstacle_data_structure.n_locally_owned_particles());
   for (const auto &obstacle : obstacle_handler)
     local_ref_regions.emplace_back(obstacle.get_location(),
                                    data.amr.inner_fractional_distance_to_surface *
@@ -131,7 +131,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_refinement_regions() c
     dealii::Utilities::MPI::all_gather(mpi_communicator, local_ref_regions);
 
   std::vector<AMR::AMRRegion<dim, number>> final_amr_regions;
-  final_amr_regions.reserve(obstacle_handler.n_global_particles());
+  final_amr_regions.reserve(obstacle_data_structure.n_global_particles());
   for (unsigned i = 0; i < global_ref_regions.size(); ++i)
     for (unsigned j = 0; j < global_ref_regions[i].size(); ++j)
       final_amr_regions.emplace_back(std::move(global_ref_regions[i][j]));
@@ -244,9 +244,7 @@ template <int dim, typename number, typename ObstacleType>
 std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::locally_owned_particle_range()
 {
-  return std::ranges::subrange<ParticleIterator<dim, number>>(
-    ParticleIterator<dim, number>(obstacle_handler.begin()),
-    ParticleIterator<dim, number>(obstacle_handler.end()));
+  return obstacle_data_structure.locally_owned_particle_range();
 }
 
 
