@@ -84,11 +84,11 @@ namespace
       {1, dealii::Tensor<1, dim, double>({0.0, 0.0, -2.8e-9})},
       {2, dealii::Tensor<1, dim, double>({0.0, 0.0, -2.2e-8})}};
 
-    for (const auto &particle : this->obstacle_field->get_particle_handler())
+    for (const MeltPoolDG::DEMParticleAccessor<dim, double> &particle :
+         this->obstacle_field->locally_owned_particle_range())
       {
-        const particle_id_type particle_id = static_cast<particle_id_type>(
-          ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
-        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+        const particle_id_type particle_id = static_cast<particle_id_type>(particle.id());
+        const dealii::Tensor<1, dim, double> computed_force = particle.get_force();
         const dealii::Tensor<1, dim, double> expected_force = expected_forces_map.at(particle_id);
 
         for (int d = 0; d < dim; ++d)

@@ -18,6 +18,7 @@
 #include <meltpooldg/particles/obstacle_forces.hpp>
 #include <meltpooldg/particles/particle_accessor.hpp>
 #include <meltpooldg/particles/particle_iterator.hpp>
+#include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/amr_regions.hpp>
 
 #include <ranges>
@@ -154,6 +155,15 @@ namespace MeltPoolDG
       dealii::Particles::PropertyPool<dim>                               &dst,
       const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const;
 
+    std::vector<DEMParticleAccessor<dim, number>>
+    get_obstacles_in_cell(const dealii::CellAccessor<dim> &cell)
+    {
+      return obstacle_data_structure.get_obstacles_in_cell(cell);
+    }
+
+    void
+    register_particle_output(Postprocessor<dim, number> &postprocessor)
+    {}
 
     /**
      * Computes the sum of all particle forces and prints the corresponding norm to the
@@ -163,6 +173,19 @@ namespace MeltPoolDG
      */
     void
     print_accumulated_obstacle_force_norm(const dealii::ConditionalOStream pout);
+
+    void
+    prepare_for_coarsening_and_refinement()
+    {
+      obstacle_data_structure.prepare_for_coarsening_and_refinement();
+    }
+
+    void
+    unpack_after_coarsening_and_refinement()
+    {
+      obstacle_data_structure.unpack_after_coarsening_and_refinement();
+    }
+
 
     /**
      * @brief Performs the objects deserialization.
@@ -211,17 +234,6 @@ namespace MeltPoolDG
      */
     std::vector<AMR::AMRRegion<dim, number>>
     get_refinement_regions();
-
-    /**
-     * @brief Return a reference to the underlying particle handler of this object.
-     *
-     * @return The used particle handler of the current object.
-     */
-    dealii::Particles::ParticleHandler<dim> &
-    get_particle_handler()
-    {
-      return obstacle_handler;
-    }
 
     /**
      * @brief Return a constant reference to the underlying obstacle data structure of this object.
@@ -298,13 +310,8 @@ namespace MeltPoolDG
     /// Vector of load objects representing all loads acting on the obstacles.
     std::vector<ObstacleLoad<dim, number, ObstacleType>> loads;
 
-    /// Handler responsible for managing obstacle particles within the computational
-    /// domain.
-    dealii::Particles::ParticleHandler<dim> obstacle_handler;
-
     /// Obstacle search utility for locating relevant obstacles within a given cell or
     /// batch.
-    /// TODO: Extend to support nearest-neighbor searches and other spatial queries.
     ObstacleDataStructure<dim, number> obstacle_data_structure;
 
     /// MPI communicator used for parallel operations on the obstacle field.
@@ -314,11 +321,12 @@ namespace MeltPoolDG
     dealii::TimerOutput &timer;
   };
 
+  // TODO
   template <int dim, typename number, typename ObstacleType>
   template <class Archive>
   void
   ObstacleField<dim, number, ObstacleType>::serialize(Archive &ar, const unsigned int version)
   {
-    obstacle_handler.serialize(ar, version);
+    //obstacle_handler.serialize(ar, version);
   }
 } // namespace MeltPoolDG

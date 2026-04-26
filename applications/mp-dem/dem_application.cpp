@@ -133,12 +133,7 @@ namespace MeltPoolDG
       *simulation_case->triangulation,
       scratch_data->get_pcout(2));
 
-    const auto [property_names, property_component_interpretations] =
-      ObstacleType::get_property_names_and_component_interpretation();
-
-    post_processor->register_obstacle_output(&obstacle_field->get_particle_handler(),
-                                             property_names,
-                                             property_component_interpretations);
+    obstacle_field->register_particle_output(*post_processor);
 
     // initialize restart monitor
     restart_monitor =
@@ -176,10 +171,6 @@ namespace MeltPoolDG
       {
         simulation_case->do_postprocessing(generic_data_out);
         obstacle_field->print_accumulated_obstacle_force_norm(scratch_data->get_pcout(1));
-        Journal::print_line(scratch_data->get_pcout(1),
-                            "Number of global particles: " +
-                              std::to_string(
-                                obstacle_field->get_particle_handler().n_global_particles()));
       }
 
     // postprocessing

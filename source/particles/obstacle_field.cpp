@@ -19,7 +19,6 @@
 #include <meltpooldg/utilities/journal.hpp>
 
 #include <fstream>
-#include <functional>
 
 
 template <int dim, typename number, typename ObstacleType>
@@ -30,10 +29,10 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   dealii::TimerOutput              &timer,
   const ObstacleDataStructureType   obstacle_data_structure_type)
   : data(data)
-  , obstacle_handler(triangulation, mapping, ObstacleType::n_obstacle_properties)
   , obstacle_data_structure(
       obstacle_data_structure_factory<dim, number, ObstacleType>(obstacle_data_structure_type,
-                                                                 obstacle_handler,
+                                                                 triangulation,
+                                                                 mapping,
                                                                  timer))
   , mpi_communicator(triangulation.get_mpi_communicator())
   , timer(timer)
@@ -53,10 +52,10 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   dealii::TimerOutput                     &timer,
   const ObstacleDataStructureType          obstacle_data_structure_type)
   : data(data)
-  , obstacle_handler(triangulation, mapping, ObstacleType::n_obstacle_properties)
   , obstacle_data_structure(
       obstacle_data_structure_factory<dim, number, ObstacleType>(obstacle_data_structure_type,
-                                                                 obstacle_handler,
+                                                                 triangulation,
+                                                                 mapping,
                                                                  timer))
   , mpi_communicator(triangulation.get_mpi_communicator())
   , timer(timer)

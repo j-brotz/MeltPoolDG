@@ -141,15 +141,14 @@ namespace
       expected_torques_map = {{0, dealii::Tensor<1, axial_dim, double>({0.0, 0.0, 0.0})},
                               {1, dealii::Tensor<1, axial_dim, double>({0.0, 0.0, 0.0})}};
 
-    for (const auto &particle : this->obstacle_field->get_particle_handler())
+    for (const MeltPoolDG::DEMParticleAccessor<dim, double> &particle :
+         this->obstacle_field->locally_owned_particle_range())
       {
         const ParticleTestData::particle_id_type particle_id =
-          static_cast<ParticleTestData::particle_id_type>(
-            ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
-        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+          static_cast<ParticleTestData::particle_id_type>(particle.id());
+        const dealii::Tensor<1, dim, double> computed_force = particle.get_force();
         const dealii::Tensor<1, dim, double> expected_force = expected_forces_map.at(particle_id);
-        const dealii::Tensor<1, axial_dim, double> computed_torque =
-          ObstacleType::get_torque(particle);
+        const dealii::Tensor<1, axial_dim, double> computed_torque = particle.get_torque();
         const dealii::Tensor<1, axial_dim, double> expected_torque =
           expected_torques_map.at(particle_id);
 
@@ -201,15 +200,14 @@ namespace
                               {1, dealii::Tensor<1, axial_dim, double>({0.0, -1278.6422, 0.0})}};
 
 
-    for (const auto &particle : this->obstacle_field->get_particle_handler())
+    for (const MeltPoolDG::DEMParticleAccessor<dim, double> &particle :
+         this->obstacle_field->locally_owned_particle_range())
       {
         const ParticleTestData::particle_id_type particle_id =
-          static_cast<ParticleTestData::particle_id_type>(
-            ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
-        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+          static_cast<ParticleTestData::particle_id_type>(particle.id());
+        const dealii::Tensor<1, dim, double> computed_force = particle.get_force();
         const dealii::Tensor<1, dim, double> expected_force = expected_forces_map.at(particle_id);
-        const dealii::Tensor<1, axial_dim, double> computed_torque =
-          ObstacleType::get_torque(particle);
+        const dealii::Tensor<1, axial_dim, double> computed_torque = particle.get_torque();
         const dealii::Tensor<1, axial_dim, double> expected_torque =
           expected_torques_map.at(particle_id);
 
@@ -261,15 +259,14 @@ namespace
                               {1, dealii::Tensor<1, axial_dim, double>({0.0, -1529.0953, 0.0})}};
 
 
-    for (const auto &particle : this->obstacle_field->get_particle_handler())
+    for (const MeltPoolDG::DEMParticleAccessor<dim, double> &particle :
+         this->obstacle_field->locally_owned_particle_range())
       {
         const ParticleTestData::particle_id_type particle_id =
-          static_cast<ParticleTestData::particle_id_type>(
-            ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
-        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+          static_cast<ParticleTestData::particle_id_type>(particle.id());
+        const dealii::Tensor<1, dim, double> computed_force = particle.get_force();
         const dealii::Tensor<1, dim, double> expected_force = expected_forces_map.at(particle_id);
-        const dealii::Tensor<1, axial_dim, double> computed_torque =
-          ObstacleType::get_torque(particle);
+        const dealii::Tensor<1, axial_dim, double> computed_torque = particle.get_torque();
         const dealii::Tensor<1, axial_dim, double> expected_torque =
           expected_torques_map.at(particle_id);
 
@@ -318,15 +315,14 @@ namespace
       expected_torques_map = {{0, dealii::Tensor<1, axial_dim, double>({0.0, -132.5985, 0.0})},
                               {1, dealii::Tensor<1, axial_dim, double>({0.0, -66.2992, 0.0})}};
 
-    for (const auto &particle : this->obstacle_field->get_particle_handler())
+    for (const MeltPoolDG::DEMParticleAccessor<dim, double> &particle :
+         this->obstacle_field->locally_owned_particle_range())
       {
         const ParticleTestData::particle_id_type particle_id =
-          static_cast<ParticleTestData::particle_id_type>(
-            ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
-        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+          static_cast<ParticleTestData::particle_id_type>(particle.id());
+        const dealii::Tensor<1, dim, double> computed_force = particle.get_force();
         const dealii::Tensor<1, dim, double> expected_force = expected_forces_map.at(particle_id);
-        const dealii::Tensor<1, axial_dim, double> computed_torque =
-          ObstacleType::get_torque(particle);
+        const dealii::Tensor<1, axial_dim, double> computed_torque = particle.get_torque();
         const dealii::Tensor<1, axial_dim, double> expected_torque =
           expected_torques_map.at(particle_id);
 
@@ -415,15 +411,14 @@ namespace
 
         contact_force.add_load_to_obstacles(*this->obstacle_field);
 
-        for (const auto &particle : this->obstacle_field->get_particle_handler())
+        for (const MeltPoolDG::DEMParticleAccessor<dim, double> &particle :
+             this->obstacle_field->locally_owned_particle_range())
           {
             const ParticleTestData::particle_id_type particle_id =
-              static_cast<ParticleTestData::particle_id_type>(
-                ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
-            const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+              static_cast<ParticleTestData::particle_id_type>(particle.id());
+            const dealii::Tensor<1, dim, double> computed_force = particle.get_force();
             const dealii::Tensor<1, dim, double> expected_force = expected_forces.at(particle_id);
-            const dealii::Tensor<1, axial_dim, double> computed_torque =
-              ObstacleType::get_torque(particle);
+            const dealii::Tensor<1, axial_dim, double> computed_torque = particle.get_torque();
             const dealii::Tensor<1, axial_dim, double> expected_torque =
               expected_torques.at(particle_id);
 
@@ -497,15 +492,14 @@ namespace
 
         contact_force.add_load_to_obstacles(*this->obstacle_field);
 
-        for (const auto &particle : this->obstacle_field->get_particle_handler())
+        for (const MeltPoolDG::DEMParticleAccessor<dim, double> &particle :
+             this->obstacle_field->locally_owned_particle_range())
           {
             const ParticleTestData::particle_id_type particle_id =
-              static_cast<ParticleTestData::particle_id_type>(
-                ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
-            const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+              static_cast<ParticleTestData::particle_id_type>(particle.id());
+            const dealii::Tensor<1, dim, double> computed_force = particle.get_force();
             const dealii::Tensor<1, dim, double> expected_force = expected_forces.at(particle_id);
-            const dealii::Tensor<1, axial_dim, double> computed_torque =
-              ObstacleType::get_torque(particle);
+            const dealii::Tensor<1, axial_dim, double> computed_torque = particle.get_torque();
             const dealii::Tensor<1, axial_dim, double> expected_torque =
               expected_torques.at(particle_id);
 
@@ -552,14 +546,14 @@ namespace
       expected_torques_map = {{0, dealii::Tensor<1, axial_dim, double>({0.0, 0.0, 0.0017874999})},
                               {1, dealii::Tensor<1, axial_dim, double>({0.0, 0.0, 0.0008937499})}};
 
-    for (const auto &particle : this->obstacle_field->get_particle_handler())
+    for (const MeltPoolDG::DEMParticleAccessor<dim, double> &particle :
+         this->obstacle_field->locally_owned_particle_range())
       {
         const ParticleTestData::particle_id_type particle_id =
-          static_cast<ParticleTestData::particle_id_type>(
-            ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
-        const dealii::Tensor<1, dim, double> computed_force  = ObstacleType::get_force(particle);
+          static_cast<ParticleTestData::particle_id_type>(particle.id());
+        const dealii::Tensor<1, dim, double> computed_force  = particle.get_force();
         const dealii::Tensor<1, dim, double> expected_force  = expected_forces_map.at(particle_id);
-        const dealii::Tensor<1, dim, double> computed_torque = ObstacleType::get_torque(particle);
+        const dealii::Tensor<1, dim, double> computed_torque = particle.get_torque();
         const dealii::Tensor<1, dim, double> expected_torque = expected_torques_map.at(particle_id);
 
         for (int d = 0; d < dim; ++d)
@@ -606,11 +600,11 @@ namespace
     const dealii::Tensor<1, axial_dim, double> expected_torque =
       dealii::Tensor<1, axial_dim, double>({0.0, -4359.9012, 0.0});
 
-    for (const auto &particle : this->obstacle_field->get_particle_handler())
+    for (const MeltPoolDG::DEMParticleAccessor<dim, double> &particle :
+         this->obstacle_field->locally_owned_particle_range())
       {
-        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
-        const dealii::Tensor<1, axial_dim, double> computed_torque =
-          ObstacleType::get_torque(particle);
+        const dealii::Tensor<1, dim, double>       computed_force  = particle.get_force();
+        const dealii::Tensor<1, axial_dim, double> computed_torque = particle.get_torque();
 
         for (int d = 0; d < dim; ++d)
           {
@@ -654,11 +648,11 @@ namespace
     const dealii::Tensor<1, axial_dim, double> expected_torque =
       dealii::Tensor<1, axial_dim, double>({0.0, -24033.5327, 0.0});
 
-    for (const auto &particle : this->obstacle_field->get_particle_handler())
+    for (const MeltPoolDG::DEMParticleAccessor<dim, double> &particle :
+         this->obstacle_field->locally_owned_particle_range())
       {
-        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
-        const dealii::Tensor<1, axial_dim, double> computed_torque =
-          ObstacleType::get_torque(particle);
+        const dealii::Tensor<1, dim, double>       computed_force  = particle.get_force();
+        const dealii::Tensor<1, axial_dim, double> computed_torque = particle.get_torque();
 
         for (int d = 0; d < dim; ++d)
           {
@@ -701,11 +695,11 @@ namespace
     const dealii::Tensor<1, axial_dim, double> expected_torque =
       dealii::Tensor<1, axial_dim, double>({0.0, -38693.5194, 0.0});
 
-    for (const auto &particle : this->obstacle_field->get_particle_handler())
+    for (const MeltPoolDG::DEMParticleAccessor<dim, double> &particle :
+         this->obstacle_field->locally_owned_particle_range())
       {
-        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
-        const dealii::Tensor<1, axial_dim, double> computed_torque =
-          ObstacleType::get_torque(particle);
+        const dealii::Tensor<1, dim, double>       computed_force  = particle.get_force();
+        const dealii::Tensor<1, axial_dim, double> computed_torque = particle.get_torque();
 
         for (int d = 0; d < dim; ++d)
           {
@@ -750,11 +744,11 @@ namespace
     const dealii::Tensor<1, axial_dim, double> expected_torque =
       dealii::Tensor<1, axial_dim, double>({0.0, 3082.9280, 0.0});
 
-    for (const auto &particle : this->obstacle_field->get_particle_handler())
+    for (const MeltPoolDG::DEMParticleAccessor<dim, double> &particle :
+         this->obstacle_field->locally_owned_particle_range())
       {
-        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
-        const dealii::Tensor<1, axial_dim, double> computed_torque =
-          ObstacleType::get_torque(particle);
+        const dealii::Tensor<1, dim, double>       computed_force  = particle.get_force();
+        const dealii::Tensor<1, axial_dim, double> computed_torque = particle.get_torque();
 
         for (int d = 0; d < dim; ++d)
           {
@@ -815,11 +809,11 @@ namespace
             particle.set_torque(dealii::Tensor<1, axial_dim, double>({0, 0, 0}));
           }
         contact_force.add_load_to_obstacles(*this->obstacle_field);
-        for (const auto &particle : this->obstacle_field->get_particle_handler())
+        for (const MeltPoolDG::DEMParticleAccessor<dim, double> &particle :
+             this->obstacle_field->locally_owned_particle_range())
           {
-            const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
-            const dealii::Tensor<1, axial_dim, double> computed_torque =
-              ObstacleType::get_torque(particle);
+            const dealii::Tensor<1, dim, double>       computed_force  = particle.get_force();
+            const dealii::Tensor<1, axial_dim, double> computed_torque = particle.get_torque();
 
             for (int d = 0; d < dim; ++d)
               {

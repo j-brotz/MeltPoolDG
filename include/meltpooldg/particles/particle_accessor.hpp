@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deal.II/base/tensor.h>
+
 #include <deal.II/particles/particle_accessor.h>
 #include <deal.II/particles/property_pool.h>
 
@@ -81,32 +83,33 @@ namespace MeltPoolDG
     dealii::Tensor<1, dim, number>
     get_linear_velocity() const;
 
-    number&
+    number &
     linear_velocity(const unsigned int dimension)
     {
       AssertIndexRange(dimension, dim);
       return properties[SphericalParticle<dim, number>::Properties::velocity + dimension];
     }
 
-    number& 
+    number &
     linear_acceleration(const unsigned int dimension)
     {
       AssertIndexRange(dimension, dim);
       return properties[SphericalParticle<dim, number>::Properties::acceleration + dimension];
     }
 
-    number& 
+    number &
     angular_velocity(const unsigned int dimension)
     {
       AssertIndexRange(dimension, axial_dim<dim>);
       return properties[SphericalParticle<dim, number>::Properties::angular_velocity + dimension];
     }
 
-    number& 
+    number &
     angular_acceleration(const unsigned int dimension)
     {
       AssertIndexRange(dimension, axial_dim<dim>);
-      return properties[SphericalParticle<dim, number>::Properties::angular_acceleration + dimension];
+      return properties[SphericalParticle<dim, number>::Properties::angular_acceleration +
+                        dimension];
     }
 
     /**
@@ -140,11 +143,12 @@ namespace MeltPoolDG
     {
       dealii::Tensor<1, dim, number> force;
       for (int dimension = 0; dimension < dim; ++dimension)
-        force[dimension] = properties[SphericalParticle<dim, number>::Properties::force + dimension];
+        force[dimension] =
+          properties[SphericalParticle<dim, number>::Properties::force + dimension];
       return force;
     }
 
-    number& 
+    number &
     force(const unsigned int dimension)
     {
       AssertIndexRange(dimension, dim);
@@ -160,7 +164,17 @@ namespace MeltPoolDG
     void
     set_torque(const dealii::Tensor<1, axial_dim<dim>, number> &torque);
 
-    number& 
+    dealii::Tensor<1, axial_dim<dim>, number>
+    get_torque() const
+    {
+      dealii::Tensor<1, axial_dim<dim>, number> torque;
+      for (int dimension = 0; dimension < axial_dim<dim>; ++dimension)
+        torque[dimension] =
+          properties[SphericalParticle<dim, number>::Properties::torque + dimension];
+      return torque;
+    }
+
+    number &
     torque(const unsigned int dimension)
     {
       AssertIndexRange(dimension, axial_dim<dim>);

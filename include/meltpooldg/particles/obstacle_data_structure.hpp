@@ -18,6 +18,7 @@
 
 #include "meltpooldg/particles/particle_accessor.hpp"
 #include <meltpooldg/particles/particle_iterator.hpp>
+#include <meltpooldg/post_processing/postprocessor.hpp>
 
 #include <boost/container/small_vector.hpp>
 
@@ -63,10 +64,10 @@ namespace MeltPoolDG
      * @param obstacle_data_structure Concrete obstacle data structure used in the class.
      */
     template <typename ObstacleDataStructureType>
-    explicit ObstacleDataStructure(ObstacleDataStructureType &&obstacle_data_structure)
+    explicit ObstacleDataStructure(ObstacleDataStructureType &&obstacle_data_structure_in)
       : obstacle_data_structure_pimpl(
           std::make_unique<ObstacleDataStructureModel<ObstacleDataStructureType>>(
-            std::move(obstacle_data_structure)))
+            std::move(obstacle_data_structure_in)))
     {}
 
     /**
@@ -186,6 +187,30 @@ namespace MeltPoolDG
       obstacle_data_structure_pimpl->sort_particles_into_subdomains_and_cells();
     }
 
+    std::vector<DEMParticleAccessor<dim, number>>
+    get_obstacles_in_cell(const dealii::CellAccessor<dim> &cell)
+    {
+      return obstacle_data_structure_pimpl->get_obstacles_in_cell(cell);
+    }
+
+    void
+    register_particle_output(Postprocessor<dim, number> &postprocessor)
+    {
+      obstacle_data_structure_pimpl->register_particle_output(postprocessor);
+    }
+
+    void
+    prepare_for_coarsening_and_refinement()
+    {
+      obstacle_data_structure_pimpl->prepare_for_coarsening_and_refinement();
+    }
+
+    void
+    unpack_after_coarsening_and_refinement()
+    {
+      obstacle_data_structure_pimpl->unpack_after_coarsening_and_refinement();
+    }
+
   private:
     /**
      * @brief Concept: Abstract interface for obstacle data structures.
@@ -255,6 +280,18 @@ namespace MeltPoolDG
 
       virtual void
       sort_particles_into_subdomains_and_cells() = 0;
+
+      virtual std::vector<DEMParticleAccessor<dim, number>>
+      get_obstacles_in_cell(const dealii::CellAccessor<dim> &cell) = 0;
+
+      virtual void
+      register_particle_output(Postprocessor<dim, number> &postprocessor) = 0;
+
+      virtual void
+      prepare_for_coarsening_and_refinement() = 0;
+
+      virtual void
+      unpack_after_coarsening_and_refinement() = 0;
     };
 
     /**
@@ -374,6 +411,31 @@ namespace MeltPoolDG
         obstacle_data_structure.sort_particles_into_subdomains_and_cells();
       }
 
+      std::vector<DEMParticleAccessor<dim, number>>
+      get_obstacles_in_cell(const dealii::CellAccessor<dim> &cell) override
+      {
+        return obstacle_data_structure.get_obstacles_in_cell(cell);
+      }
+
+      void
+      register_particle_output(Postprocessor<dim, number> &postprocessor) override
+      {
+        obstacle_data_structure.register_particle_output(postprocessor);
+      }
+
+      void
+      prepare_for_coarsening_and_refinement() override
+      {
+        obstacle_data_structure.prepare_for_coarsening_and_refinement();
+      }
+
+      void
+      unpack_after_coarsening_and_refinement() override
+      {
+        obstacle_data_structure.unpack_after_coarsening_and_refinement();
+      }
+
+
     private:
       ObstacleDataStructureType obstacle_data_structure;
     };
@@ -396,14 +458,20 @@ namespace MeltPoolDG
   struct ObstacleCompleteDomainSearch
   {
   public:
-    ObstacleCompleteDomainSearch(dealii::Particles::ParticleHandler<dim> &obstacle_handler,
-                                 dealii::TimerOutput                     &timer);
+    ObstacleCompleteDomainSearch(const dealii::Triangulation<dim> &triangulation,
+                                 const dealii::Mapping<dim>       &mapping,
+                                 dealii::TimerOutput              &timer);
 
     /**
      * @brief Destructor. Explicitly deregisters all particles from the global obstacle property
      * pool.
      */
     ~ObstacleCompleteDomainSearch();
+
+    ObstacleCompleteDomainSearch(ObstacleCompleteDomainSearch &&) = default;
+
+    ObstacleCompleteDomainSearch &
+    operator=(ObstacleCompleteDomainSearch &&) = default;
 
     /**
      * @brief Reinitializes the internal data structure by synchronizing obstacle data across all
@@ -463,21 +531,40 @@ namespace MeltPoolDG
       dealii::Particles::PropertyPool<dim>                               &dst,
       const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const;
 
+    std::vector<DEMParticleAccessor<dim, number>>
+    get_obstacles_in_cell(const dealii::CellAccessor<dim> &cell)
+    {
+      dealii::TimerOutput::Scope t(timer, "particles in cell search");
+
+      std::vector<DEMParticleAccessor<dim, number>> particles_in_cell;
+      for (unsigned int src_handle = 0;
+           src_handle < properties_global_obstacles->n_registered_slots();
+           ++src_handle)
+        {
+          if (ObstacleType::is_in_cell(*properties_global_obstacles, src_handle, cell))
+            {
+              particles_in_cell.push_back(
+                DEMParticleAccessor<dim, number>(*properties_global_obstacles, src_handle));
+            }
+        }
+      return particles_in_cell;
+    }
+
     /**
      * Return a reference to a property pool containing the properties of all globally available
-     * particles. The properties stored in the property pool represent those available in the field
-     * when broadcast_global_particles() has been called the last time.
+     * particles. The properties stored in the property pool represent those available in the
+     * field when broadcast_global_particles() has been called the last time.
      */
     const dealii::Particles::PropertyPool<dim> &
     get_global_particle_properties() const
     {
-      return properties_global_obstacles;
+      return *properties_global_obstacles;
     }
 
     dealii::Particles::PropertyPool<dim> &
     get_global_particle_properties()
     {
-      return properties_global_obstacles;
+      return *properties_global_obstacles;
     }
 
     boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>
@@ -487,33 +574,33 @@ namespace MeltPoolDG
     void
     prepare_for_serialization()
     {
-      obstacle_handler.prepare_for_serialization();
+      obstacle_handler->prepare_for_serialization();
     }
 
     void
     deserialize()
     {
-      obstacle_handler.deserialize();
+      obstacle_handler->deserialize();
     }
 
     unsigned int
     n_global_particles() const
     {
-      return obstacle_handler.n_global_particles();
+      return obstacle_handler->n_global_particles();
     }
 
     unsigned int
     n_locally_owned_particles() const
     {
-      return obstacle_handler.n_locally_owned_particles();
+      return obstacle_handler->n_locally_owned_particles();
     }
 
     std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
     locally_owned_particle_range()
     {
       return std::ranges::subrange<ParticleIterator<dim, number>>(
-        ParticleIterator<dim, number>(obstacle_handler.begin()),
-        ParticleIterator<dim, number>(obstacle_handler.end()));
+        ParticleIterator<dim, number>(obstacle_handler->begin()),
+        ParticleIterator<dim, number>(obstacle_handler->end()));
     }
 
     void
@@ -522,11 +609,11 @@ namespace MeltPoolDG
     {
       std::vector<dealii::BoundingBox<dim>> local_bounding_box =
         dealii::GridTools::compute_mesh_predicate_bounding_box(
-          obstacle_handler.get_triangulation(), dealii::IteratorFilters::LocallyOwnedCell());
+          obstacle_handler->get_triangulation(), dealii::IteratorFilters::LocallyOwnedCell());
       std::vector<std::vector<dealii::BoundingBox<dim>>> global_bounding_box =
         dealii::Utilities::MPI::all_gather(mpi_communicator, local_bounding_box);
 
-      obstacle_handler.insert_global_particles(
+      obstacle_handler->insert_global_particles(
         dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 ?
           obstacle_locations :
           std::vector<dealii::Point<dim, number>>{},
@@ -552,14 +639,36 @@ namespace MeltPoolDG
       broadcast_global_particles();
     }
 
+    void
+    register_particle_output(Postprocessor<dim, number> &postprocessor)
+    {
+      const auto [property_names, property_component_interpretations] =
+        ObstacleType::get_property_names_and_component_interpretation();
+
+      postprocessor.register_obstacle_output(obstacle_handler.get(),
+                                             property_names,
+                                             property_component_interpretations);
+    }
+
+    void
+    prepare_for_coarsening_and_refinement()
+    {
+      obstacle_handler->prepare_for_coarsening_and_refinement();
+    }
+
+    void
+    unpack_after_coarsening_and_refinement()
+    {
+      obstacle_handler->unpack_after_coarsening_and_refinement();
+    }
 
   private:
     /// Handler managing the locally owned obstacles in the domain.
-    dealii::Particles::ParticleHandler<dim> &obstacle_handler;
+    std::unique_ptr<dealii::Particles::ParticleHandler<dim>> obstacle_handler;
 
     /// Property pool containing the properties of all global obstacles, stored locally on each
     /// MPI rank.
-    mutable dealii::Particles::PropertyPool<dim> properties_global_obstacles;
+    mutable std::unique_ptr<dealii::Particles::PropertyPool<dim>> properties_global_obstacles;
 
     /// MPI communicator used for synchronizing obstacle data across all ranks.
     MPI_Comm mpi_communicator = MPI_COMM_WORLD;
@@ -592,11 +701,16 @@ namespace MeltPoolDG
   struct ObstacleTriangulationDataStructure
   {
   public:
-    ObstacleTriangulationDataStructure(dealii::Particles::ParticleHandler<dim> &obstacle_handler,
-                                       dealii::TimerOutput                     &timer)
-      : obstacle_handler(obstacle_handler)
-      , properties_global_obstacles(ObstacleType::n_obstacle_properties)
-      , cell_neighbor_cache(obstacle_handler.get_triangulation())
+    ObstacleTriangulationDataStructure(const dealii::Triangulation<dim> &triangulation,
+                                       const dealii::Mapping<dim>       &mapping,
+                                       dealii::TimerOutput              &timer)
+      : obstacle_handler(std::make_unique<dealii::Particles::ParticleHandler<dim>>(
+          triangulation,
+          mapping,
+          ObstacleType::n_obstacle_properties))
+      , properties_global_obstacles(std::make_unique<dealii::Particles::PropertyPool<dim>>(
+          ObstacleType::n_obstacle_properties))
+      , cell_neighbor_cache(obstacle_handler->get_triangulation())
       , timer(timer)
     {}
 
@@ -657,6 +771,12 @@ namespace MeltPoolDG
       return {};
     }
 
+    std::vector<DEMParticleAccessor<dim, number>>
+    get_obstacles_in_cell(const dealii::CellAccessor<dim> &cell)
+    {
+      return {};
+    }
+
     /**
      * @brief Identify obstacles that partially or fully occupy any cell in the specified cell batch,
      * and store their properties in the destination property pool.
@@ -685,27 +805,20 @@ namespace MeltPoolDG
     }
 
     /**
-     * Do nothing in here
-     */
-    void
-    broadcast_global_particles() const
-    {}
-
-    /**
      * Return a reference to a property pool containing the properties of all globally available
-     * particles. The properties stored in the property pool represent those available in the field
-     * when broadcast_global_particles() has been called the last time.
+     * particles. The properties stored in the property pool represent those available in the
+     * field when broadcast_global_particles() has been called the last time.
      */
     const dealii::Particles::PropertyPool<dim> &
     get_global_particle_properties() const
     {
-      return properties_global_obstacles;
+      return *properties_global_obstacles;
     }
 
     dealii::Particles::PropertyPool<dim> &
     get_global_particle_properties()
     {
-      return properties_global_obstacles;
+      return *properties_global_obstacles;
     }
 
     boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>
@@ -719,7 +832,7 @@ namespace MeltPoolDG
       for (auto &other_cell :
            cell_neighbor_cache.get_neighbors_and_cell(cell->level(), cell->index()))
         {
-          for (auto &other : obstacle_handler.particles_in_cell(other_cell))
+          for (auto &other : obstacle_handler->particles_in_cell(other_cell))
             {
               DEMParticleAccessor<dim, number> other_accessor(other);
               if (other_accessor.id() != particle.id())
@@ -735,33 +848,33 @@ namespace MeltPoolDG
     void
     prepare_for_serialization()
     {
-      obstacle_handler.prepare_for_serialization();
+      obstacle_handler->prepare_for_serialization();
     }
 
     void
     deserialize()
     {
-      obstacle_handler.deserialize();
+      obstacle_handler->deserialize();
     }
 
     unsigned int
     n_global_particles() const
     {
-      return obstacle_handler.n_global_particles();
+      return obstacle_handler->n_global_particles();
     }
 
     unsigned int
     n_locally_owned_particles() const
     {
-      return obstacle_handler.n_locally_owned_particles();
+      return obstacle_handler->n_locally_owned_particles();
     }
 
     std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
     locally_owned_particle_range()
     {
       return std::ranges::subrange<ParticleIterator<dim, number>>(
-        ParticleIterator<dim, number>(obstacle_handler.begin()),
-        ParticleIterator<dim, number>(obstacle_handler.end()));
+        ParticleIterator<dim, number>(obstacle_handler->begin()),
+        ParticleIterator<dim, number>(obstacle_handler->end()));
     }
 
     void
@@ -770,11 +883,11 @@ namespace MeltPoolDG
     {
       std::vector<dealii::BoundingBox<dim>> local_bounding_box =
         dealii::GridTools::compute_mesh_predicate_bounding_box(
-          obstacle_handler.get_triangulation(), dealii::IteratorFilters::LocallyOwnedCell());
+          obstacle_handler->get_triangulation(), dealii::IteratorFilters::LocallyOwnedCell());
       std::vector<std::vector<dealii::BoundingBox<dim>>> global_bounding_box =
         dealii::Utilities::MPI::all_gather(mpi_communicator, local_bounding_box);
 
-      obstacle_handler.insert_global_particles(
+      obstacle_handler->insert_global_particles(
         dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 ?
           obstacle_locations :
           std::vector<dealii::Point<dim, number>>{},
@@ -789,28 +902,50 @@ namespace MeltPoolDG
     update_ghost_particle_properties()
     {
       dealii::TimerOutput::Scope t(timer, "update ghost particles");
-      obstacle_handler.update_ghost_particles();
+      obstacle_handler->update_ghost_particles();
     }
 
     void
     sort_particles_into_subdomains_and_cells()
     {
       dealii::TimerOutput::Scope t(timer, "update ghost particles");
-      obstacle_handler.sort_particles_into_subdomains_and_cells();
-      obstacle_handler.exchange_ghost_particles(true);
+      obstacle_handler->sort_particles_into_subdomains_and_cells();
+      obstacle_handler->exchange_ghost_particles(true);
 
-      obstacle_handler.update_cached_numbers();
+      obstacle_handler->update_cached_numbers();
       update_ghost_particle_properties(); // TODO Is this call really necessary?
     }
 
+    void
+    register_particle_output(Postprocessor<dim, number> &postprocessor)
+    {
+      const auto [property_names, property_component_interpretations] =
+        ObstacleType::get_property_names_and_component_interpretation();
+
+      postprocessor.register_obstacle_output(obstacle_handler.get(),
+                                             property_names,
+                                             property_component_interpretations);
+    }
+
+    void
+    prepare_for_coarsening_and_refinement()
+    {
+      obstacle_handler->prepare_for_coarsening_and_refinement();
+    }
+
+    void
+    unpack_after_coarsening_and_refinement()
+    {
+      obstacle_handler->unpack_after_coarsening_and_refinement();
+    }
 
   private:
     /// Handler managing the locally owned obstacles in the domain.
-    dealii::Particles::ParticleHandler<dim> &obstacle_handler;
+    std::unique_ptr<dealii::Particles::ParticleHandler<dim>> obstacle_handler;
 
     /// Property pool containing the properties of all global obstacles, stored locally on each
     /// MPI rank.
-    mutable dealii::Particles::PropertyPool<dim> properties_global_obstacles;
+    mutable std::unique_ptr<dealii::Particles::PropertyPool<dim>> properties_global_obstacles;
 
     /// MPI communicator used for synchronizing obstacle data across all ranks.
     MPI_Comm mpi_communicator = MPI_COMM_WORLD;
@@ -886,22 +1021,23 @@ namespace MeltPoolDG
     dealii::TimerOutput &timer;
   };
 
-
-
   template <int dim, typename number, typename ObstacleType>
   ObstacleDataStructure<dim, number>
-  obstacle_data_structure_factory(const ObstacleDataStructureType          data_structure_type,
-                                  dealii::Particles::ParticleHandler<dim> &obstacle_handler,
-                                  dealii::TimerOutput                     &timer)
+  obstacle_data_structure_factory(const ObstacleDataStructureType   data_structure_type,
+                                  const dealii::Triangulation<dim> &triangulation,
+                                  const dealii::Mapping<dim>       &mapping,
+                                  dealii::TimerOutput              &timer)
   {
     switch (data_structure_type)
       {
         case ObstacleDataStructureType::CompleteDomainSearch:
           return ObstacleDataStructure<dim, number>(
-            ObstacleCompleteDomainSearch<dim, number, ObstacleType>(obstacle_handler, timer));
+            ObstacleCompleteDomainSearch<dim, number, ObstacleType>(triangulation, mapping, timer));
         case ObstacleDataStructureType::CellBasedSearch:
           return ObstacleDataStructure<dim, number>(
-            ObstacleTriangulationDataStructure<dim, number, ObstacleType>(obstacle_handler, timer));
+            ObstacleTriangulationDataStructure<dim, number, ObstacleType>(triangulation,
+                                                                          mapping,
+                                                                          timer));
         default:
           AssertThrow(false, dealii::ExcNotImplemented());
       }

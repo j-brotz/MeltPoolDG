@@ -6,6 +6,9 @@
 
 #include <deal.II/dofs/dof_accessor.h>
 
+#include <deal.II/grid/grid_tools.h>
+#include <deal.II/grid/tria.h>
+
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <deal.II/matrix_free/evaluation_flags.h>
@@ -20,6 +23,7 @@
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/obstacle_forces.hpp>
 #include <meltpooldg/particles/particle.hpp>
+#include <meltpooldg/particles/particle_accessor.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
 #include <numbers>
@@ -40,7 +44,7 @@ void
 MeltPoolDG::StokesLawSphericalParticleForce<dim, number, ObstacleType>::add_load_to_obstacles(
   ObstacleField<dim, number, ObstacleType> &obstacle_field) const
 {
-  for (auto &particle : obstacle_field.get_particle_handler())
+  for (DEMParticleAccessor<dim, number> &particle : obstacle_field.locally_owned_particle_range())
     {
       dealii::FEPointEvaluation<dim + 2, dim> fe_point_eval(
         *matrix_free.mf.get_mapping_info().mapping,
@@ -63,12 +67,10 @@ MeltPoolDG::StokesLawSphericalParticleForce<dim, number, ObstacleType>::add_load
       for (unsigned i = 0; i < dim; ++i)
         fluid_velocity[i] = w[i + 1] / w[0];
 
-      dealii::Tensor<1, dim> particle_force =
-        6. * std::numbers::pi *
-        ObstacleType::get_property(particle, ObstacleType::Properties::radius) *
-        (fluid_velocity - ObstacleType::template get_velocity<number>(particle)) *
-        dynamic_viscosity;
-      ObstacleType::accumulate_force(particle_force, particle);
+      dealii::Tensor<1, dim> particle_force = 6. * std::numbers::pi * particle.radius() *
+                                              (fluid_velocity - particle.get_linear_velocity()) *
+                                              dynamic_viscosity;
+      particle.add_force(particle_force);
     }
 }
 
@@ -100,21 +102,24 @@ MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::value(
         {
           const number cell_volume = cell->measure();
 
-          for (const auto &particle :
-               obstacle_handler.get_particle_handler().particles_in_cell(cell))
+          for (const DEMParticleAccessor<dim, number> &particle :
+               obstacle_handler.get_obstacles_in_cell(*cell))
             {
+              auto [particle_surrounding_active_cell, coordinates_on_unit_cell] =
+                dealii::GridTools::find_active_cell_around_point(
+                  *matrix_free.mf.get_mapping_info().mapping,
+                  matrix_free.mf.get_dof_handler(matrix_free.dof_idx).get_triangulation(),
+                  particle.get_location());
+
               dealii::FEPointEvaluation<dim + 2, dim> fe_point_eval(
                 *matrix_free.mf.get_mapping_info().mapping,
                 matrix_free.mf.get_dof_handler(matrix_free.dof_idx).get_fe(),
                 dealii::UpdateFlags::update_values);
-              dealii::Point<dim, number> coordinates_on_unit_cell =
-                matrix_free.mf.get_mapping_info().mapping->transform_real_to_unit_cell(
-                  particle.get_surrounding_cell(), particle.get_location());
 
-              fe_point_eval.reinit(particle.get_surrounding_cell(),
+              fe_point_eval.reinit(particle_surrounding_active_cell,
                                    dealii::ArrayView<dealii::Point<dim, number>>(
                                      coordinates_on_unit_cell));
-              auto dof_cell = particle.get_surrounding_cell()->as_dof_handler_iterator(
+              auto dof_cell = particle_surrounding_active_cell->as_dof_handler_iterator(
                 matrix_free.mf.get_dof_handler(matrix_free.dof_idx));
               dealii::Vector<number> dof_values(dof_cell->get_fe().n_dofs_per_cell());
               dof_cell->get_dof_values(solution, dof_values);
@@ -129,10 +134,8 @@ MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::value(
 
               // compute force contribution according to Stokes' law
               dealii::Tensor<1, dim, number> individual_particle_force =
-                -6. * std::numbers::pi *
-                ObstacleType::get_property(particle, ObstacleType::Properties::radius) *
-                (fluid_velocity - ObstacleType::template get_velocity<number>(particle)) *
-                dynamic_viscosity;
+                -6. * std::numbers::pi * particle.radius() *
+                (fluid_velocity - particle.get_linear_velocity()) * dynamic_viscosity;
 
               for (int j = 0; j < dim; ++j)
                 cell_penalty_force[j][i] += individual_particle_force[j] / cell_volume;
