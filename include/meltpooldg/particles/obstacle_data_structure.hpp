@@ -536,8 +536,7 @@ namespace MeltPoolDG
       dealii::TimerOutput::Scope t(timer, "contact particle search");
 
       boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim> contacts;
-      typename dealii::Triangulation<dim>::active_cell_iterator                 cell =
-        particle.get_surrounding_cell();
+      typename dealii::Triangulation<dim>::cell_iterator cell = particle.get_surrounding_cell();
 
       for (auto &other_cell :
            cell_neighbor_cache.get_neighbors_and_cell(cell->level(), cell->index()))
@@ -581,7 +580,7 @@ namespace MeltPoolDG
             const int level = cell->level();
             const int index = cell->index();
             cache_values[level][index] =
-              std::set<typename dealii::Triangulation<dim>::active_cell_iterator>();
+              std::set<typename dealii::Triangulation<dim>::cell_iterator>();
             for (unsigned int f = 0; f < dealii::GeometryInfo<dim>::faces_per_cell; ++f)
               {
                 cache_values[level][index].insert(cell);
@@ -620,14 +619,14 @@ namespace MeltPoolDG
           }
       }
 
-      const std::set<typename dealii::Triangulation<dim>::active_cell_iterator> &
+      const std::set<typename dealii::Triangulation<dim>::cell_iterator> &
       get_neighbors_and_cell(const int level, const int index) const
       {
         return cache_values[level][index];
       }
 
     private:
-      std::vector<std::vector<std::set<typename dealii::Triangulation<dim>::active_cell_iterator>>>
+      std::vector<std::vector<std::set<typename dealii::Triangulation<dim>::cell_iterator>>>
         cache_values;
     };
 
