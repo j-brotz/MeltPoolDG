@@ -704,36 +704,35 @@ namespace MeltPoolDG
     ObstacleTriangulationDataStructure(const dealii::Triangulation<dim> &triangulation,
                                        const dealii::Mapping<dim>       &mapping,
                                        dealii::TimerOutput              &timer)
-      : obstacle_handler(std::make_unique<dealii::Particles::ParticleHandler<dim>>(
-          triangulation,
-          mapping,
-          ObstacleType::n_obstacle_properties))
-      , properties_global_obstacles(std::make_unique<dealii::Particles::PropertyPool<dim>>(
-          ObstacleType::n_obstacle_properties))
-      , cell_neighbor_cache(obstacle_handler->get_triangulation())
-      , timer(timer)
-    {}
-
-    ObstacleTriangulationDataStructure(const dealii::Triangulation<dim> &triangulation,
-                                       const dealii::Mapping<dim>       &mapping,
-                                       dealii::TimerOutput              &timer,
-                                       const number max_particle_influence_radius)
       : obstacle_handler(std::make_unique<dealii::Particles::ParticleHandler<dim>>())
       , properties_global_obstacles(std::make_unique<dealii::Particles::PropertyPool<dim>>(
           ObstacleType::n_obstacle_properties))
-      , cell_neighbor_cache(obstacle_handler->get_triangulation())
+      , cell_neighbor_cache(triangulation)
       , timer(timer)
     {
       int          level_to_store_particles = -1; // -1 for active level!
-      const number target_cell_size         = max_particle_influence_radius;
+      const number target_cell_size = 150e-6; // TODO: make this a parameter or compute it based on
+                                              // the maximum particle influence radius
       for (unsigned int level = 0; level < triangulation.n_global_levels(); ++level)
         {
           if (triangulation.begin(level)->minimum_vertex_distance() < target_cell_size)
             {
               level_to_store_particles = (level == 0 ? 0 : level - 1);
+              break;
             }
         }
-      obstacle_handler->initialize(triangulation, mapping, ObstacleType::n_obstacle_properties);
+      if (level_to_store_particles == -1)
+        {
+          obstacle_handler->initialize(triangulation, mapping, ObstacleType::n_obstacle_properties);
+        }
+      else
+        obstacle_handler->initialize(triangulation,
+                                     mapping,
+                                     level_to_store_particles,
+                                     ObstacleType::n_obstacle_properties);
+
+      sort_particles_into_subdomains_and_cells();
+      update_ghost_particle_properties();
     }
 
     /**

@@ -53,6 +53,7 @@ namespace MeltPoolDG::Simulation::Dem
                                                             n_subdivisions_per_dimension,
                                                             bounding_box_corners.first,
                                                             bounding_box_corners.second);
+          this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
     }
 
