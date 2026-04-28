@@ -23,6 +23,9 @@
     },
     "level set type": "tanh"
   },
+  "application specific parameters": {
+    "do update normal vector": "true"
+  },
   "time stepping": {
     "time step size": "7.8125e-07",
     "max n steps": "100000"

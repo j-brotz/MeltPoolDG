@@ -56,7 +56,7 @@ namespace MeltPoolDG::LevelSet
 
         reinit_operation->solve();
 
-        if (true)
+        if (param.application_specific_parameters.do_update_normal_vector)
           reinit_operation->set_initial_condition(reinit_operation->get_level_set());
 
         output_results(time_iterator->get_current_time_step_number(),
