@@ -1,0 +1,55 @@
+{
+    "base":
+    {
+        "case name": "not_initialized",
+        "dimension": "2",
+        "do print parameters": "true",
+        "global refinements": "1",
+        "number": "double",
+        "verbosity level": "1",
+        "fe":
+        {
+            "degree": "1",
+            "type": "FE_Q"
+        }
+    },
+    "output":
+    {
+        "directory": ".\/",
+        "do user defined postprocessing": "false",
+        "output variables": "all",
+        "write frequency": "1",
+        "write time step size": "1.79769e+308",
+        "paraview":
+        {
+            "enable": "false",
+            "filename": "solution",
+            "n digits timestep": "4",
+            "n groups": "1",
+            "n patches": "0",
+            "output material id": "false",
+            "output subdomains": "false",
+            "print boundary id": "false",
+            "write higher order cells": "true"
+        },
+        "particles":
+        {
+            "enable": "false",
+            "filename": "particle"
+        }
+    },
+    "profiling":
+    {
+        "enable": "false",
+        "time type": "real",
+        "write time step size": "10"
+    },
+    "time stepping":
+    {
+        "end time": "1",
+        "max n steps": "10000000",
+        "start time": "0",
+        "time step size": "0.01",
+        "time step size function": "0.0*t"
+    }
+}

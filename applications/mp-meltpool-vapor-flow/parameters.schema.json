@@ -1,0 +1,240 @@
+{
+  "type": "object",
+  "properties": {
+    "base": {
+      "type": "object",
+      "properties": {
+        "case name": {
+          "type": "string",
+          "description": "Sets the base name for the application that will be fed to the problem type.",
+          "default": "not_initialized"
+        },
+        "dimension": {
+          "type": "integer",
+          "description": "Defines the dimension of the problem",
+          "default": 2
+        },
+        "number": {
+          "type": "string",
+          "enum": [
+            "double"
+          ],
+          "description": "Floating point number format. Currently, only 'double' is explicitely instantiated.",
+          "default": "double"
+        },
+        "global refinements": {
+          "type": "integer",
+          "description": "Defines the number of initial global refinements",
+          "default": 1
+        },
+        "do print parameters": {
+          "type": "boolean",
+          "description": "Set this parameter to true to list parameters in output",
+          "default": true
+        },
+        "verbosity level": {
+          "type": "integer",
+          "description": "Sets the verbosity level of the console output: 0: silent: for non-robust tests and benchmark runs; 1: minimal: for robust tests; 2: detailed; 3: full",
+          "default": 1
+        },
+        "fe": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "not_initialized",
+                "FE_Q",
+                "FE_SimplexP",
+                "FE_Q_iso_Q1",
+                "FE_DGQ"
+              ],
+              "description": "Finite Element.FE_Q: hexahedral continuous finite element with polynomial degree p; FE_SimplexP: tetrahedral continuous finite element with polynomial degree p; FE_Q_iso_Q1: hexahedral continuous finite element with p subdivisions containing linear elements; FE_DGQ: hexahedral discontinuous finite element with polynomial degree p",
+              "default": "FE_Q"
+            },
+            "degree": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Defines the degree p of the finite element type. If \"type\" is \"FE_Q_iso_Q1\" this parameter defines the number of subdivisions.",
+              "default": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "time stepping": {
+      "type": "object",
+      "properties": {
+        "start time": {
+          "type": "number",
+          "description": "Defines the start time for the solution of the levelset problem",
+          "default": 0.0
+        },
+        "end time": {
+          "type": "number",
+          "description": "Sets the end time for the solution of the levelset problem",
+          "default": 1.0
+        },
+        "time step size": {
+          "type": "number",
+          "description": "Sets the step size for time stepping. For non-uniform time stepping, this parameter determines the size of the first time step.",
+          "default": 0.01
+        },
+        "max n steps": {
+          "type": "integer",
+          "description": "Sets the maximum number of melt_pool steps",
+          "default": 10000000
+        },
+        "time step size function": {
+          "type": "string",
+          "description": "Set an analytical function to determine the time step size. For the prediction of the new time increment, the old time is used.",
+          "default": "0.0*t"
+        }
+      },
+      "additionalProperties": false
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "directory": {
+          "type": "string",
+          "description": "Sets the base directory for all output.",
+          "default": "./"
+        },
+        "write frequency": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647,
+          "description": "Every n timestep that should be written",
+          "default": 1
+        },
+        "write time step size": {
+          "type": "number",
+          "description": "Write output output every given time step. If this parameter is set, the output write frequency is deactivated.",
+          "default": 1.79769e+308
+        },
+        "output variables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0,
+          "description": "Specify variables that you request to output.",
+          "default": [
+            "all"
+          ]
+        },
+        "do user defined postprocessing": {
+          "type": "boolean",
+          "description": "Set this parameter to true to enable user defined postprocessing.",
+          "default": false
+        },
+        "paraview": {
+          "type": "object",
+          "properties": {
+            "enable": {
+              "type": "boolean",
+              "description": "Set this parameter to true to activate paraview output.",
+              "default": false
+            },
+            "filename": {
+              "type": "string",
+              "description": "Sets the base name for paraview output files.",
+              "default": "solution"
+            },
+            "n digits timestep": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Number of digits for the frame number of the vtu-file.",
+              "default": 4
+            },
+            "print boundary id": {
+              "type": "boolean",
+              "description": "Set this parameter to true to output a vtu-file with the boundary id.",
+              "default": false
+            },
+            "output subdomains": {
+              "type": "boolean",
+              "description": "Set this parameter to true to output the subdomain ranks.",
+              "default": false
+            },
+            "output material id": {
+              "type": "boolean",
+              "description": "Set to true to output the material id.",
+              "default": false
+            },
+            "write higher order cells": {
+              "type": "boolean",
+              "description": "Set this parameter to false to write bi- or trilinear data only. Set this parameter to true to write higher order cell data. Note: higher order cell data can only be written for hexahedron meshes and 2 or 3 dimensions.",
+              "default": true
+            },
+            "n groups": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Number of parallel written vtu-files.",
+              "default": 1
+            },
+            "n patches": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "description": "Control number of patches to enable high-order.",
+              "default": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "particles": {
+          "type": "object",
+          "properties": {
+            "enable": {
+              "type": "boolean",
+              "description": "Set this parameter to true to activate particle paraview output.",
+              "default": false
+            },
+            "filename": {
+              "type": "string",
+              "description": "Sets the base name for particle output files.",
+              "default": "particle"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "profiling": {
+      "type": "object",
+      "properties": {
+        "enable": {
+          "type": "boolean",
+          "description": "Set this parameter to true if profiling should be enabled. It will be automaticallyenabled for verbosity level >=1.",
+          "default": false
+        },
+        "write time step size": {
+          "type": "number",
+          "description": "Write profiling output every given time step size. If this parameter is set, the specified parameter for write frequency is overwritten.",
+          "default": 10.0
+        },
+        "time type": {
+          "type": "string",
+          "enum": [
+            "real",
+            "simulation"
+          ],
+          "description": "Choose the type of time measure to write profiling information.",
+          "default": "real"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "detailed_parameters"
+}
