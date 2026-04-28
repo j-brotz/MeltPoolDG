@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deal.II/base/tensor.h>
+
 #include <deal.II/particles/particle_accessor.h>
 #include <deal.II/particles/property_pool.h>
 
@@ -81,6 +83,35 @@ namespace MeltPoolDG
     dealii::Tensor<1, dim, number>
     get_linear_velocity() const;
 
+    number &
+    linear_velocity(const unsigned int dimension)
+    {
+      AssertIndexRange(dimension, dim);
+      return properties[SphericalParticle<dim, number>::Properties::velocity + dimension];
+    }
+
+    number &
+    linear_acceleration(const unsigned int dimension)
+    {
+      AssertIndexRange(dimension, dim);
+      return properties[SphericalParticle<dim, number>::Properties::acceleration + dimension];
+    }
+
+    number &
+    angular_velocity(const unsigned int dimension)
+    {
+      AssertIndexRange(dimension, axial_dim<dim>);
+      return properties[SphericalParticle<dim, number>::Properties::angular_velocity + dimension];
+    }
+
+    number &
+    angular_acceleration(const unsigned int dimension)
+    {
+      AssertIndexRange(dimension, axial_dim<dim>);
+      return properties[SphericalParticle<dim, number>::Properties::angular_acceleration +
+                        dimension];
+    }
+
     /**
      * Returns the angular velocity of the given particle.
      *
@@ -107,6 +138,23 @@ namespace MeltPoolDG
     void
     add_force(const dealii::Tensor<1, dim, number> &force);
 
+    dealii::Tensor<1, dim, number>
+    get_force() const
+    {
+      dealii::Tensor<1, dim, number> force;
+      for (int dimension = 0; dimension < dim; ++dimension)
+        force[dimension] =
+          properties[SphericalParticle<dim, number>::Properties::force + dimension];
+      return force;
+    }
+
+    number &
+    force(const unsigned int dimension)
+    {
+      AssertIndexRange(dimension, dim);
+      return properties[SphericalParticle<dim, number>::Properties::force + dimension];
+    }
+
     /**
      * Sets the specified torque vector to the particle by assigning its components into the
      * particle's property array.
@@ -115,6 +163,23 @@ namespace MeltPoolDG
      */
     void
     set_torque(const dealii::Tensor<1, axial_dim<dim>, number> &torque);
+
+    dealii::Tensor<1, axial_dim<dim>, number>
+    get_torque() const
+    {
+      dealii::Tensor<1, axial_dim<dim>, number> torque;
+      for (int dimension = 0; dimension < axial_dim<dim>; ++dimension)
+        torque[dimension] =
+          properties[SphericalParticle<dim, number>::Properties::torque + dimension];
+      return torque;
+    }
+
+    number &
+    torque(const unsigned int dimension)
+    {
+      AssertIndexRange(dimension, axial_dim<dim>);
+      return properties[SphericalParticle<dim, number>::Properties::torque + dimension];
+    }
 
     /**
      * Accumulates the specified torque vector to the particle by adding its components into the
@@ -132,6 +197,14 @@ namespace MeltPoolDG
      */
     const number &
     id() const;
+
+    /**
+     * Returns the radius the particle.
+     *
+     * @return The particle radius.
+     */
+    const number &
+    radius() const;
 
     /**
      * This function returns the value of a single-valued property stored in the given particle.
@@ -152,12 +225,26 @@ namespace MeltPoolDG
     const number &
     get_property(const typename SphericalParticle<dim, number>::Properties property) const;
 
+    /**
+     * Return the surrounding cell of the particle center location. This is a wrapper around the
+     * same function in the deal.II ParticleAccessor, which is used internally to keep track of the
+     * cell in which the particle is located.
+     */
+    typename dealii::Triangulation<dim>::cell_iterator
+    get_surrounding_cell() const
+    {
+      return surrounding_cell;
+    }
+
   private:
     /// Reference to the particle location.
     std::reference_wrapper<dealii::Point<dim, number>> location;
 
     /// View to the particle properties (velocity, force etc.).
     dealii::ArrayView<number> properties;
+
+    ///
+    typename dealii::Triangulation<dim>::cell_iterator surrounding_cell;
   };
 
 
@@ -166,6 +253,7 @@ namespace MeltPoolDG
     dealii::Particles::ParticleAccessor<dim> &particle)
     : location(particle.get_location())
     , properties(particle.get_properties())
+    , surrounding_cell(particle.get_surrounding_cell())
   {}
 
   template <int dim, typename number>
@@ -260,6 +348,14 @@ namespace MeltPoolDG
   {
     Assert(!properties.empty(), dealii::ExcInternalError());
     return properties[SphericalParticle<dim, number>::Properties::particle_id];
+  }
+
+  template <int dim, typename number>
+  const number &
+  DEMParticleAccessor<dim, number>::radius() const
+  {
+    Assert(!properties.empty(), dealii::ExcInternalError());
+    return properties[SphericalParticle<dim, number>::Properties::radius];
   }
 
   template <int dim, typename number>
