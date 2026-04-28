@@ -878,6 +878,17 @@
         }
       },
       "additionalProperties": false
+    },
+    "application specific parameters": {
+      "type": "object",
+      "properties": {
+        "do update normal vector": {
+          "type": "boolean",
+          "description": "Set this parameter to true to update the normal vector each pseudo-time step.",
+          "default": false
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,
