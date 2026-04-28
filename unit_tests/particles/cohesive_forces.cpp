@@ -3,6 +3,7 @@
 #include <gmock/gmock.h>
 
 #include <deal.II/base/function_signed_distance.h>
+#include <deal.II/base/timer.h>
 
 #include <deal.II/fe/mapping_q.h>
 
@@ -59,6 +60,7 @@ namespace
                              .surface_energy                         = 1e-4,
                              .cut_off_relative_decline_van_der_waals = 1e-2})
       , cohesive_force(cohesive_force_data)
+      , timer(std::cout, dealii::TimerOutput::never, dealii::TimerOutput::wall_times)
     {}
 
     void
@@ -71,7 +73,7 @@ namespace
       std::vector<dealii::Point<dim>>  particle_locations  = {};
 
       obstacle_field = std::make_unique<MeltPoolDG::ObstacleField<dim, double, ObstacleType>>(
-        obstacle_data, triangulation, mapping, particle_locations, particle_properties);
+        obstacle_data, triangulation, mapping, particle_locations, particle_properties, timer);
     }
 
     void
@@ -84,7 +86,7 @@ namespace
       std::vector<dealii::Point<dim>>  particle_locations  = {particle_data.location};
       std::vector<std::vector<double>> particle_properties = {properties};
 
-      obstacle_field->insert_obstacles(triangulation, {particle_locations}, particle_properties);
+      obstacle_field->insert_obstacles({particle_locations}, particle_properties);
     }
 
     dealii::Triangulation<dim>                                            triangulation;
@@ -93,6 +95,7 @@ namespace
     std::unique_ptr<MeltPoolDG::ObstacleField<dim, double, ObstacleType>> obstacle_field;
     MeltPoolDG::SphericalParticleCohesiveForceData<double>                cohesive_force_data;
     MeltPoolDG::SphericalParticleCohesiveForce<dim, double, ObstacleType> cohesive_force;
+    dealii::TimerOutput                                                   timer;
   };
 
   TEST_P(CohesiveForceTest, ParticleParticleCohesiveForce_DifferentRadii)
@@ -104,22 +107,19 @@ namespace
                      .radius   = 0.1,
                      .location = dealii::Point<dim>(0.7 + test_data.normal_distance, 0.5, 0.5)});
 
-    ASSERT_EQ(obstacle_field->get_particle_handler().n_locally_owned_particles(), 2)
-      << "Test setup error: expected exactly two particles";
-
     cohesive_force.add_load_to_obstacles(*this->obstacle_field);
 
     const std::map<ParticleTestData::particle_id_type, dealii::Tensor<1, dim, double>>
       expected_forces_map = {{0, test_data.expected_force}, {1, {-test_data.expected_force}}};
 
-    for (const auto &particle : this->obstacle_field->get_particle_handler())
+    for (const MeltPoolDG::DEMParticleAccessor<dim, double> &particle :
+         this->obstacle_field->locally_owned_particle_range())
       {
         const ParticleTestData::particle_id_type particle_id =
-          static_cast<ParticleTestData::particle_id_type>(
-            ObstacleType::get_property(particle, ObstacleType::Properties::particle_id));
+          static_cast<ParticleTestData::particle_id_type>(particle.id());
         SCOPED_TRACE("Particle id: " + std::to_string(particle_id));
 
-        const dealii::Tensor<1, dim, double> computed_force = ObstacleType::get_force(particle);
+        const dealii::Tensor<1, dim, double> computed_force = particle.get_force();
         const dealii::Tensor<1, dim, double> expected_force = expected_forces_map.at(particle_id);
 
         for (int d = 0; d < dim; ++d)

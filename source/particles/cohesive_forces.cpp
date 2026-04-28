@@ -23,10 +23,14 @@ namespace MeltPoolDG
   {
     for (DEMParticleAccessor<dim, number> &particle : obstacle_field.locally_owned_particle_range())
       {
-        for (DEMParticleAccessor<dim, number> &other : obstacle_field.global_particle_range())
+        // TODO: Find a better for defining relative cohesive cutoff distance.
+        const number relative_cohesive_cutoff =
+          2 * particle.get_property(ObstacleType::Properties::radius);
+          
+        for (DEMParticleAccessor<dim, number> &other :
+             obstacle_field.contact_particles(particle, relative_cohesive_cutoff))
           {
-            if (particle.id() == other.id())
-              continue;
+            Assert(other.id() != particle.id(), dealii::ExcInternalError());
 
             CohesiveContactConfiguration contact_configuration(particle,
                                                                other,

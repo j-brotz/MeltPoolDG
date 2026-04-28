@@ -90,6 +90,13 @@ namespace MeltPoolDG
       return properties[SphericalParticle<dim, number>::Properties::velocity + dimension];
     }
 
+    const number &
+    linear_velocity(const unsigned int dimension) const
+    {
+      AssertIndexRange(dimension, dim);
+      return properties[SphericalParticle<dim, number>::Properties::velocity + dimension];
+    }
+
     number &
     linear_acceleration(const unsigned int dimension)
     {

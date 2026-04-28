@@ -182,10 +182,10 @@ public:
     constexpr unsigned                                                          root = 0;
     std::vector<dealii::Tensor<1, dim, number>>                                 forces;
     std::vector<dealii::Tensor<1, ObstacleType::size_angular_velocity, number>> torques;
-    for (const auto &particle : obstacle_field->get_particle_handler())
+    for (const auto &particle : obstacle_field->locally_owned_particle_range())
       {
-        forces.push_back(ObstacleType::get_force(particle));
-        torques.push_back(ObstacleType::get_torque(particle));
+        forces.push_back(particle.get_force());
+        torques.push_back(particle.get_torque());
       }
 
     // Step 2: Gather all data on root (printing) process
@@ -340,7 +340,12 @@ public:
     particle_properties.emplace_back(make_particle_property(0.0, 0.3, 1.72));
 
     obstacle_field = std::make_unique<MeltPoolDG::ObstacleField<dim, number, ObstacleType>>(
-      obstacle_data, *triangulation, *mapping, particle_locations, particle_properties);
+      obstacle_data,
+      *triangulation,
+      *mapping,
+      particle_locations,
+      particle_properties,
+      scratch_data.get_timer());
 
     obstacle_field->add_load_type(
       BrinkmanObstacleForce<dim, number, SphericalParticle<dim, number>>(

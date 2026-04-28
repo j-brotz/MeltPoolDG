@@ -57,17 +57,15 @@ namespace MeltPoolDG
       particle.add_torque(tangential_torque + rolling_torque);
     };
 
-
-    for (auto &particle : obstacle_field.locally_owned_particle_range())
+    for (DEMParticleAccessor<dim, number> &particle : obstacle_field.locally_owned_particle_range())
       {
         std::map<int, dealii::Tensor<1, dim, number>> &self_tangential_gaps =
           tangential_gaps[particle.id()];
 
-
-        for (auto &other : obstacle_field.global_particle_range())
+        for (DEMParticleAccessor<dim, number> &other :
+             obstacle_field.contact_particles(particle, 0.0))
           {
-            if (particle.id() == other.id())
-              continue;
+            Assert(other.id() != particle.id(), dealii::ExcInternalError());
 
             ContactConfiguration particle_particle_contact_configuration(
               particle,
