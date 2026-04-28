@@ -10,129 +10,90 @@
 
 #include <deal.II/lac/vector.h>
 
+#include <meltpooldg/compressible_flow/boundary_conditions.hpp>
 #include <meltpooldg/compressible_flow/case_utils.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/utilities/amr_regions.hpp>
 
-#include <cmath>
-#include <numbers>
-
 namespace MeltPoolDG::CompressibleFlow
 {
   template <int dim, typename number>
-  ConservativeVariablesFunction<dim, number>::ConservativeVariablesFunction(
-    const number                                         initial_time,
-    const std::shared_ptr<dealii::Function<dim, number>> density,
-    const std::shared_ptr<dealii::Function<dim, number>> velocity,
-    const std::shared_ptr<dealii::Function<dim, number>> inner_energy,
-    const std::shared_ptr<dealii::Function<dim, number>> mass_fractions)
-    : dealii::Function<dim, number>(n_conserved_variables<dim> + mass_fractions->n_components,
-                                    initial_time)
-    , density(density)
-    , velocity(velocity)
-    , inner_energy(inner_energy)
-    , mass_fractions(mass_fractions)
+  std::shared_ptr<dealii::Function<dim, number>>
+  InputDefinedFreeJetInflow<dim, number>::create_free_jet_inflow_boundary(
+    const number     start_time,
+    const number     velocity_ramp_up_duration,
+    const RampUpType velocity_ramp_up_type,
+    const unsigned   n_species) const
   {
-    set_time(initial_time);
-  }
+    std::shared_ptr<FreeJetInflow<dim, number>> free_jet_inflow_function;
+    if (n_species == 1)
+      {
+        free_jet_inflow_function =
+          std::make_shared<FreeJetInflow<dim, number>>(start_time,
+                                                       jet_hole_density,
+                                                       jet_hole_inner_energy,
+                                                       jet_peak_velocity,
+                                                       free_jet_profile,
+                                                       jet_hole_center,
+                                                       jet_hole_diameter);
+      }
+    else
+      {
+        AssertThrow(
+          jet_hole_mass_fractions.size() == n_species - 1,
+          dealii::ExcMessage(
+            "The number of specified jet hole mass fractions should be one less than the total number of species in the simulation. However, the number of specified jet hole mass fractions is " +
+            std::to_string(jet_hole_mass_fractions.size()) + " while the expected number is " +
+            std::to_string(n_species - 1) + "."));
 
-  template <int dim, typename number>
-  ConservativeVariablesFunction<dim, number>::ConservativeVariablesFunction(
-    const number       initial_time,
-    const std::string &density_function_string,
-    const std::string &velocity_function_string,
-    const std::string &inner_energy_function_string,
-    const std::string &mass_fraction_functions_string,
-    const unsigned     n_mass_fractions)
-    : dealii::Function<dim, number>(n_conserved_variables<dim> + n_mass_fractions, initial_time)
-    , density(std::make_shared<dealii::FunctionParser<dim>>(density_function_string))
-    , velocity(std::make_shared<dealii::FunctionParser<dim>>(velocity_function_string))
-    , inner_energy(std::make_shared<dealii::FunctionParser<dim>>(inner_energy_function_string))
-    , mass_fractions(n_mass_fractions == 0 ? nullptr :
-                                             std::make_shared<dealii::FunctionParser<dim>>(
-                                               mass_fraction_functions_string))
-  {
-    set_time(initial_time);
-  }
+        free_jet_inflow_function =
+          std::make_shared<FreeJetInflow<dim, number>>(start_time,
+                                                       jet_hole_density,
+                                                       jet_hole_inner_energy,
+                                                       jet_hole_mass_fractions,
+                                                       jet_peak_velocity,
+                                                       free_jet_profile,
+                                                       jet_hole_center,
+                                                       jet_hole_diameter);
+      }
 
-  template <int dim, typename number>
-  ConservativeVariablesFunction<dim, number>::ConservativeVariablesFunction(
-    const number       initial_time,
-    const std::string &density_function_string,
-    const std::string &velocity_function_string,
-    const std::string &inner_energy_function_string)
-    : dealii::Function<dim, number>(n_conserved_variables<dim>, initial_time)
-    , density(std::make_shared<dealii::FunctionParser<dim>>(density_function_string))
-    , velocity(std::make_shared<dealii::FunctionParser<dim>>(velocity_function_string))
-    , inner_energy(std::make_shared<dealii::FunctionParser<dim>>(inner_energy_function_string))
-  {
-    set_time(initial_time);
+    free_jet_inflow_function->set_velocity_ramp_up(velocity_ramp_up_duration,
+                                                   velocity_ramp_up_type);
+
+    return free_jet_inflow_function;
   }
 
   template <int dim, typename number>
   void
-  ConservativeVariablesFunction<dim, number>::set_time(const number new_time)
+  InputDefinedFreeJetInflow<dim, number>::add_parameters(dealii::ParameterHandler &prm)
   {
-    dealii::Function<dim>::set_time(new_time);
-    density->set_time(new_time);
-    velocity->set_time(new_time);
-    inner_energy->set_time(new_time);
-
-    // Only set time for species function if it exists, since this function can also be used for
-    // single-species flow cases where no species function is provided.
-    if (mass_fractions)
-      mass_fractions->set_time(new_time);
+    prm.enter_subsection("free jet");
+    {
+      prm.add_parameter("jet hole diameter", jet_hole_diameter, "The diameter of the free jet.");
+      prm.add_parameter("jet hole center", jet_hole_center, "Jet hole center coordinates.");
+      prm.add_parameter("jet peak velocity",
+                        jet_peak_velocity,
+                        "peak velocity of the free jet, measured at the jet hole center.");
+      prm.add_parameter(
+        "free jet profile",
+        free_jet_profile,
+        "The profile of the free jet velocity. There are two options: A 'constant' profile and a 'cosine' profile.");
+      prm.add_parameter(
+        "density",
+        jet_hole_density,
+        "Prescribed density at the free jet inflow boundary. The density is assumed to be constant across the jet hole.");
+      prm.add_parameter(
+        "inner energy",
+        jet_hole_inner_energy,
+        "Prescribed specific inner energy at the free jet inflow boundary. The specific inner energy is assumed to be constant across the jet hole.");
+      prm.add_parameter(
+        "mass fractions",
+        jet_hole_mass_fractions,
+        "Prescribed mass fractions at the free jet inflow boundary. You should provide n_species - 1 mass fractions as a semicolon-separated list, where n_species is the total number of species in the simulation. The mass fraction of the last species is computed from the fact that the mass fractions sum up to one. The mass fractions are assumed to be constant across the jet hole.");
+    }
+    prm.leave_subsection();
   }
 
-  template <int dim, typename number>
-  number
-  ConservativeVariablesFunction<dim, number>::value(const dealii::Point<dim, number> &loc,
-                                                    const unsigned int component) const
-  {
-    const auto ramp_up_scaling = [&](const RampUpParameters param) -> number {
-      if (this->get_time() > param.duration or param.duration == 0. or
-          param.type == RampUpType::none)
-        return 1.;
-
-      switch (param.type)
-        {
-          case RampUpType::linear:
-            return this->get_time() / param.duration;
-            break;
-          case RampUpType::exponential:
-            return (std::exp(this->get_time() / param.duration) - 1) / (std::numbers::e - 1);
-            break;
-          case RampUpType::cosine:
-            return 0.5 * (1 - std::cos(std::numbers::pi * this->get_time() / param.duration));
-            break;
-          default:
-            AssertThrow(false, dealii::ExcInternalError());
-        }
-    };
-
-    const auto compute_conserved_energy = [&](const dealii::Point<dim, number> &loc) -> number {
-      dealii::Vector<number> velocity_vec(dim);
-      velocity->vector_value(loc, velocity_vec);
-      velocity_vec *= ramp_up_scaling(velocity_ramp_up);
-      return density->value(loc, 0) * (inner_energy->value(loc, 0) + 0.5 * velocity_vec.norm_sqr());
-    };
-
-    if (component == 0)
-      return density->value(loc, 0);
-    else if (component > 0 and component <= dim)
-      return density->value(loc, 0) * velocity->value(loc, component - 1) *
-             ramp_up_scaling(velocity_ramp_up);
-    else if (component == dim + 1)
-      return compute_conserved_energy(loc);
-    else if (component < this->n_components)
-      return density->value(loc, 0) * mass_fractions->value(loc, component - dim - 2);
-    else
-      AssertThrow(false,
-                  dealii::ExcMessage("Invalid component for conservative variable function: " +
-                                     std::to_string(component) +
-                                     ". Only components from within the range [0, " +
-                                     std::to_string(this->n_components) + ") are valid."));
-  }
 
   template <int dim, typename number>
   std::shared_ptr<dealii::Function<dim>>
@@ -149,6 +110,12 @@ namespace MeltPoolDG::CompressibleFlow
             inflow_bc->set_velocity_ramp_up(inflow_velocity_ramp_up.duration,
                                             inflow_velocity_ramp_up.type);
             return inflow_bc;
+          }
+          case (BoundaryConditionType::combined_inflow_no_slip_wall): {
+            return free_jet_inflow.create_free_jet_inflow_boundary(start_time,
+                                                                   inflow_velocity_ramp_up.duration,
+                                                                   inflow_velocity_ramp_up.type,
+                                                                   n_species);
           }
           case (BoundaryConditionType::subsonic_outflow_fixed_energy): {
             auto energy_boundary_function =
@@ -212,6 +179,7 @@ namespace MeltPoolDG::CompressibleFlow
         inflow_velocity_ramp_up.type,
         "In the case of an inflow boundary, the ramp-up type of the inflow velocity. "
         "Supported options are 'linear', 'exponential' and 'cosine'.");
+      free_jet_inflow.add_parameters(prm);
     }
     prm.leave_subsection();
   }
@@ -272,8 +240,6 @@ namespace MeltPoolDG::CompressibleFlow
     }
     prm.leave_subsection();
   }
-
-
 
   template <int dim, typename number>
   void
@@ -407,9 +373,9 @@ namespace MeltPoolDG::CompressibleFlow
 
 } // namespace MeltPoolDG::CompressibleFlow
 
-template class MeltPoolDG::CompressibleFlow::ConservativeVariablesFunction<1, double>;
-template class MeltPoolDG::CompressibleFlow::ConservativeVariablesFunction<2, double>;
-template class MeltPoolDG::CompressibleFlow::ConservativeVariablesFunction<3, double>;
+template struct MeltPoolDG::CompressibleFlow::InputDefinedFreeJetInflow<1, double>;
+template struct MeltPoolDG::CompressibleFlow::InputDefinedFreeJetInflow<2, double>;
+template struct MeltPoolDG::CompressibleFlow::InputDefinedFreeJetInflow<3, double>;
 
 template struct MeltPoolDG::CompressibleFlow::InputDefinedBoundaryCondition<1, double>;
 template struct MeltPoolDG::CompressibleFlow::InputDefinedBoundaryCondition<2, double>;

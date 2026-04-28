@@ -48,6 +48,15 @@ namespace MeltPoolDG::CompressibleFlow
     }
 
     decltype(auto)
+    momentum() const
+    {
+      dealii::Tensor<1, dim, ValueType> momentum;
+      for (unsigned int d = 0; d < dim; ++d)
+        momentum[d] = this->momentum(d);
+      return momentum;
+    }
+
+    decltype(auto)
     velocity(const unsigned int component) const
     {
       AssertIndexRange(component, dim);
@@ -129,6 +138,15 @@ namespace MeltPoolDG::CompressibleFlow
     {
       AssertIndexRange(component, dim);
       return this->gradient_value()[Idx::momentum + component];
+    }
+
+    decltype(auto)
+    grad_momentum() const
+    {
+      dealii::Tensor<1, dim, dealii::Tensor<1, dim, ValueType>> grad_momentum;
+      for (unsigned int d = 0; d < dim; ++d)
+        grad_momentum[d] = this->grad_momentum(d);
+      return grad_momentum;
     }
 
     decltype(auto)
