@@ -1,55 +1,55 @@
 {
   "base": {
     "case name": "unidirectional_heat_transfer",
-    "dimension": "2",
-    "do print parameters": "false",
-    "global refinements": "5",
-    "verbosity level": "1",
+    "dimension": 2,
+    "do print parameters": false,
+    "global refinements": 5,
+    "verbosity level": 1,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "time stepping": {
-    "start time": "0.0",
-    "time step size": "0.01",
-    "end time": "1.0",
-    "max n steps": "5"
+    "start time": 0.0,
+    "time step size": 0.01,
+    "end time": 1.0,
+    "max n steps": 5
   },
   "heat": {
     "linear solver": {
-      "rel tolerance": "1e-12",
+      "rel tolerance": 1e-12,
       "preconditioner type": "ILU"
     },
     "nlsolve": {
-      "residual tolerance": "1e-7"
+      "residual tolerance": 1e-07
     }
   },
   "simulation specific": {
-    "do solidification": "true",
-    "do two phase": "false",
-    "velocity": "0.005"
+    "do solidification": true,
+    "do two phase": false,
+    "velocity": 0.005
   },
   "application specific": {
-    "do solidification": "true"
+    "do solidification": true
   },
   "material": {
     "liquid": {
-      "thermal conductivity": "55.563",
-      "specific heat capacity": "460.0",
-      "density": "7850.0"
+      "thermal conductivity": 55.563,
+      "specific heat capacity": 460.0,
+      "density": 7850.0
     },
     "solid": {
-      "thermal conductivity": "17.0",
-      "specific heat capacity": "700.0",
-      "density": "7850.0"
+      "thermal conductivity": 17.0,
+      "specific heat capacity": 700.0,
+      "density": 7850.0
     },
-    "solidus temperature": "1966.0",
-    "liquidus temperature": "1974.0",
+    "solidus temperature": 1966.0,
+    "liquidus temperature": 1974.0,
     "solid liquid properties transition type": "mushy_zone"
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   }
 }

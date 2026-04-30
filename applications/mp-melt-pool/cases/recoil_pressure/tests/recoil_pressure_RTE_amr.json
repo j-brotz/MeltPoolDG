@@ -1,62 +1,62 @@
 {
   "base": {
     "case name": "recoil_pressure",
-    "dimension": "2",
-    "do print parameters": "false",
-    "global refinements": "4",
-    "verbosity level": "1",
+    "dimension": 2,
+    "do print parameters": false,
+    "global refinements": 4,
+    "verbosity level": 1,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "simulation specific domain": {
-    "domain x max": "400e-6",
-    "domain x min": "-400e-6",
-    "domain y max": "300e-6",
-    "domain y min": "-300e-6",
-    "evaporation boundary": "false",
-    "periodic boundary": "true"
+    "domain x max": 0.0004,
+    "domain x min": -0.0004,
+    "domain y max": 0.0003,
+    "domain y min": -0.0003,
+    "evaporation boundary": false,
+    "periodic boundary": true
   },
   "application specific": {
-    "do heat transfer": "true",
-    "do solidification": "true"
+    "do heat transfer": true,
+    "do solidification": true
   },
   "time stepping": {
-    "end time": "5e-5",
-    "start time": "0.0",
-    "time step size": "1e-5"
+    "end time": 5e-05,
+    "start time": 0.0,
+    "time step size": 1e-05
   },
   "material": {
     "material template": "Ti64",
     "gas": {
-      "specific heat capacity": "1130.0",
-      "density": "408.70"
+      "specific heat capacity": 1130.0,
+      "density": 408.7
     },
     "two phase fluid properties transition type": "smooth",
     "solid liquid properties transition type": "mushy_zone"
   },
   "heat": {
     "linear solver": {
-      "rel tolerance": "1e-6",
+      "rel tolerance": 1e-06,
       "preconditioner type": "Diagonal"
     },
     "nlsolve": {
-      "max nonlinear iterations": "20",
-      "field correction tolerance": "1e-10",
-      "residual tolerance": "1e-7"
+      "max nonlinear iterations": 20,
+      "field correction tolerance": 1e-10,
+      "residual tolerance": 1e-07
     },
     "diffuse": {
-      "use volume-specific thermal capacity for phase interpolation": "true"
+      "use volume-specific thermal capacity for phase interpolation": true
     }
   },
   "laser": {
     "model": "RTE",
     "intensity profile": "Gauss",
-    "power": "156",
-    "radius": "120e-6"
+    "power": 156,
+    "radius": 0.00012
   },
   "rte": {
-    "rte verbosity level": "1",
+    "rte verbosity level": 1,
     "laser direction": "0.0,-1.0",
     "absorptivity type": "gradient_based",
     "linear solver": {
@@ -66,83 +66,83 @@
   "evaporation": {
     "evaporative mass flux model": "recoil_pressure",
     "recoil pressure": {
-      "temperature constant": "50700.0",
-      "pressure coefficient": "0.5330700888450149",
-      "enable": "true"
+      "temperature constant": 50700.0,
+      "pressure coefficient": 0.5330700888450149,
+      "enable": true
     },
     "evaporative cooling": {
-      "enable": "true"
+      "enable": true
     },
     "evaporative dilation rate": {
-      "enable": "false"
+      "enable": false
     }
   },
   "adaptive meshing": {
-    "do amr": "true",
-    "upper perc to refine": "0.2",
-    "lower perc to coarsen": "0.1",
-    "max grid refinement level": "5",
-    "n initial refinement cycles": "1"
+    "do amr": true,
+    "upper perc to refine": 0.2,
+    "lower perc to coarsen": 0.1,
+    "max grid refinement level": 5,
+    "n initial refinement cycles": 1
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   },
   "level set": {
     "reinitialization": {
-      "enable": "true",
-      "n initial steps": "1",
-      "max n steps": "1",
+      "enable": true,
+      "n initial steps": 1,
+      "max n steps": 1,
       "type": "olsson2007",
       "interface thickness parameter": {
         "type": "absolute_value",
-        "val": "2e-5"
+        "val": 2e-05
       }
     },
     "curvature": {
-      "filter parameter": "2",
-      "do curvature correction": "false"
+      "filter parameter": 2,
+      "do curvature correction": false
     },
     "normal vector": {
-      "filter parameter": "2"
+      "filter parameter": 2
     }
   },
   "flow": {
     "adaflo": {
       "Navier-Stokes": {
         "Solver": {
-          "NL max iterations": "15",
+          "NL max iterations": 15,
           "NL tolerance": "1.e-8",
-          "lin its before inner solvers": "50",
-          "lin max iterations": "30",
+          "lin its before inner solvers": 50,
+          "lin max iterations": 30,
           "lin pressure mass preconditioner": "ilu",
-          "lin relative tolerance": "1",
+          "lin relative tolerance": 1,
           "lin tolerance": "1.e-4",
           "lin velocity preconditioner": "ilu scalar",
           "linearization scheme": "coupled implicit Newton"
         },
-        "dimension": "2",
+        "dimension": 2,
         "formulation convective term momentum balance": "convective",
-        "global refinements": "0",
+        "global refinements": 0,
         "physical type": "incompressible",
-        "velocity degree": "2"
+        "velocity degree": 2
       },
       "Output options": {
-        "output verbosity": "0",
-        "output walltimes": "0"
+        "output verbosity": 0,
+        "output walltimes": 0
       },
       "Time stepping": {
         "scheme": "bdf_2"
       }
     },
-    "gravity": "0.0",
+    "gravity": 0.0,
     "surface tension": {
-      "surface tension coefficient": "1.493"
+      "surface tension coefficient": 1.493
     },
     "darcy damping": {
-      "avoid div zero constant": "1",
-      "mushy zone morphology": "1e11",
+      "avoid div zero constant": 1,
+      "mushy zone morphology": 100000000000.0,
       "formulation": "implicit_formulation"
     }
   }

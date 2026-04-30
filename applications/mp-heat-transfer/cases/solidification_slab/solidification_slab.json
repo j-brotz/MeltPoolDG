@@ -1,50 +1,50 @@
 {
   "time stepping": {
-    "start time": "0.0",
-    "time step size": "200.0",
-    "end time": "72000.0",
-    "max n steps": "400"
+    "start time": 0.0,
+    "time step size": 200.0,
+    "end time": 72000.0,
+    "max n steps": 400
   },
   "base": {
     "case name": "solidification_slab",
-    "dimension": "1",
-    "do print parameters": "false",
-    "global refinements": "10",
-    "verbosity level": "2",
+    "dimension": 1,
+    "do print parameters": false,
+    "global refinements": 10,
+    "verbosity level": 2,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "heat": {
     "linear solver": {
-      "rel tolerance": "1e-12",
+      "rel tolerance": 1e-12,
       "preconditioner type": "AMG"
     },
     "nlsolve": {
-      "residual tolerance": "1e-8"
+      "residual tolerance": 1e-08
     }
   },
   "application specific": {
-    "do solidification": "true"
+    "do solidification": true
   },
   "material": {
     "liquid": {
-      "thermal conductivity": "0.556",
-      "specific heat capacity": "4226.0",
-      "density": "1000.0"
+      "thermal conductivity": 0.556,
+      "specific heat capacity": 4226.0,
+      "density": 1000.0
     },
     "solid": {
-      "thermal conductivity": "2.22",
-      "specific heat capacity": "1762.0",
-      "density": "1000.0"
+      "thermal conductivity": 2.22,
+      "specific heat capacity": 1762.0,
+      "density": 1000.0
     },
-    "solidus temperature": "270.0",
-    "liquidus temperature": "276.0"
+    "solidus temperature": 270.0,
+    "liquidus temperature": 276.0
   },
   "output": {
     "paraview": {
       "filename": "solution_solidification_slab",
-      "enable": "true"
+      "enable": true
     }
   }
 }

@@ -1,31 +1,31 @@
 {
   "base": {
     "case name": "radiative_transport",
-    "dimension": "2",
-    "global refinements": "5",
-    "do print parameters": "false",
-    "verbosity level": "1",
+    "dimension": 2,
+    "global refinements": 5,
+    "do print parameters": false,
+    "verbosity level": 1,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "time stepping": {
-    "start time": "0.0",
-    "end time": "4.0",
-    "time step size": "1.0"
+    "start time": 0.0,
+    "end time": 4.0,
+    "time step size": 1.0
   },
   "rte": {
-    "rte verbosity level": "2",
+    "rte verbosity level": 2,
     "absorptivity type": "gradient_based",
     "absorptivity": {
-      "absorptivity gas": "-10.",
-      "absorptivity liquid": "3.0 ",
-      "avoid div zero constant": "1e-2"
+      "absorptivity gas": -10,
+      "absorptivity liquid": 3.0,
+      "avoid div zero constant": 0.01
     },
     "predictor type": "pseudo_time_stepping",
     "linear solver": {
-      "do matrix free": "true",
-      "abs tolerance": "1e-16",
+      "do matrix free": true,
+      "abs tolerance": 1e-16,
       "preconditioner type": "AMG"
     }
   },
@@ -33,15 +33,15 @@
     "direction": "0.0,-1.0"
   },
   "simulation specific parameters": {
-    "power": "0.1",
-    "source radius": "0.2",
+    "power": 0.1,
+    "source radius": 0.2,
     "interface case": "single_powder_particle",
-    "offset": "0.35",
-    "droplet radius": "0.06"
+    "offset": 0.35,
+    "droplet radius": 0.06
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   }
 }

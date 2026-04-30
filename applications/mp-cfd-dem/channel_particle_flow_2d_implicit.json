@@ -3,22 +3,22 @@
     "problem name": "cfd_dem",
     "case name": "generic_hyper_rectangle_domain",
     "dimension": 2,
-    "do print parameters": "false",
+    "do print parameters": false,
     "global refinements": 1,
     "verbosity level": 1
   },
   "case setup": {
     "boundary x min": {
       "type": "inflow",
-      "density": "0.4",
+      "density": 0.4,
       "velocity": "150; 0",
-      "energy": "750450",
+      "energy": 750450,
       "inflow ramp-up duration": 1e-08,
       "inflow ramp-up type": "linear"
     },
     "boundary x max": {
       "type": "subsonic_outflow_fixed_energy",
-      "energy": "295680"
+      "energy": 295680
     },
     "boundary y min": {
       "type": "slip_wall"
@@ -27,9 +27,9 @@
       "type": "slip_wall"
     },
     "initial conditions": {
-      "density": "0.4",
+      "density": 0.4,
       "velocity": "0.0; 0.0",
-      "energy": "739200"
+      "energy": 739200
     },
     "domain": {
       "size": "80e-6, 40e-6",

@@ -1,79 +1,79 @@
 {
   "time stepping": {
-    "start time": "0.0",
-    "time step size": "5e-6",
-    "end time": "0.015",
-    "max n steps": "3000"
+    "start time": 0.0,
+    "time step size": 5e-06,
+    "end time": 0.015,
+    "max n steps": 3000
   },
   "base": {
     "case name": "melt_front_propagation",
-    "dimension": "2",
-    "do print parameters": "false",
-    "global refinements": "4",
-    "verbosity level": "2",
+    "dimension": 2,
+    "do print parameters": false,
+    "global refinements": 4,
+    "verbosity level": 2,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "simulation specific parameters": {
-    "domain x min": "0.0",
-    "domain x max": "0.6e-3",
-    "domain z min": "0.0",
-    "domain z max": "0.2e-3",
-    "initial temperature": "1000.0"
+    "domain x min": 0.0,
+    "domain x max": 0.0006,
+    "domain z min": 0.0,
+    "domain z max": 0.0002,
+    "initial temperature": 1000.0
   },
   "heat": {
     "linear solver": {
-      "rel tolerance": "1e-12",
+      "rel tolerance": 1e-12,
       "preconditioner type": "ILU"
     },
     "nlsolve": {
-      "residual tolerance": "1e-8"
+      "residual tolerance": 1e-08
     }
   },
   "application specific": {
-    "do solidification": "true"
+    "do solidification": true
   },
   "laser": {
     "starting position": "0.0,0.0",
-    "radius": "0.06e-3",
+    "radius": 6e-05,
     "model": "volumetric",
     "intensity profile": "Gusarov",
-    "power": "30.",
-    "do move": "false",
+    "power": 30,
+    "do move": false,
     "gusarov": {
-      "reflectivity": "0.7",
-      "extinction coefficient": "60.0e3",
-      "layer thickness": "0.05e-3"
+      "reflectivity": 0.7,
+      "extinction coefficient": 60000.0,
+      "layer thickness": 5e-05
     }
   },
   "material": {
     "liquid": {
-      "thermal conductivity": "55.563",
-      "specific heat capacity": "460.0",
-      "density": "7850.0"
+      "thermal conductivity": 55.563,
+      "specific heat capacity": 460.0,
+      "density": 7850.0
     },
     "solid": {
-      "thermal conductivity": "17.0",
-      "specific heat capacity": "700.0",
-      "density": "7850.0"
+      "thermal conductivity": 17.0,
+      "specific heat capacity": 700.0,
+      "density": 7850.0
     },
-    "solidus temperature": "1966.0",
-    "liquidus temperature": "1974.0"
+    "solidus temperature": 1966.0,
+    "liquidus temperature": 1974.0
   },
   "adaptive meshing": {
-    "do amr": "true",
-    "do not modify boundary cells": "false",
-    "upper perc to refine": " 0.1",
-    "lower perc to coarsen": "0.1",
-    "max grid refinement level": "6",
-    "every n step": "1"
+    "do amr": true,
+    "do not modify boundary cells": false,
+    "upper perc to refine": 0.1,
+    "lower perc to coarsen": 0.1,
+    "max grid refinement level": 6,
+    "every n step": 1
   },
   "output": {
     "directory": "output_amr",
     "paraview": {
       "filename": "melt_front_propagation_static_gusarov",
-      "enable": "true"
+      "enable": true
     }
   }
 }

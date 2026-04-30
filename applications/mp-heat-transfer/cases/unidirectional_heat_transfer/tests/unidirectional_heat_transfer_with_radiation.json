@@ -1,44 +1,44 @@
 {
   "base": {
     "case name": "unidirectional_heat_transfer",
-    "dimension": "2",
-    "do print parameters": "false",
-    "global refinements": "5",
+    "dimension": 2,
+    "do print parameters": false,
+    "global refinements": 5,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "time stepping": {
-    "start time": "0.0",
-    "time step size": "0.01",
-    "end time": "1.0",
-    "max n steps": "5"
+    "start time": 0.0,
+    "time step size": 0.01,
+    "end time": 1.0,
+    "max n steps": 5
   },
   "heat": {
     "linear solver": {
-      "rel tolerance": "1e-12"
+      "rel tolerance": 1e-12
     },
     "nlsolve": {
-      "residual tolerance": "5e-9"
+      "residual tolerance": 5e-09
     },
     "radiative boundary condition": {
-      "emissivity": "0.98",
-      "temperature infinity": "300.0"
+      "emissivity": 0.98,
+      "temperature infinity": 300.0
     },
     "convective boundary condition": {
-      "temperature infinity": "300.0"
+      "temperature infinity": 300.0
     }
   },
   "material": {
     "gas": {
-      "thermal conductivity": "55.563",
-      "specific heat capacity": "460",
-      "density": "7850.0"
+      "thermal conductivity": 55.563,
+      "specific heat capacity": 460,
+      "density": 7850.0
     }
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   }
 }

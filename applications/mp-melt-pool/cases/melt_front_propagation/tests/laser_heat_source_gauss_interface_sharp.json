@@ -1,84 +1,84 @@
 {
   "base": {
     "case name": "melt_front_propagation",
-    "dimension": "2",
-    "global refinements": "4",
-    "verbosity level": "1",
-    "do print parameters": "false",
+    "dimension": 2,
+    "global refinements": 4,
+    "verbosity level": 1,
+    "do print parameters": false,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "time stepping": {
-    "start time": "0.0",
-    "time step size": "1e-3",
-    "max n steps": "1"
+    "start time": 0.0,
+    "time step size": 0.001,
+    "max n steps": 1
   },
   "simulation specific parameters": {
-    "domain x min": "0.0",
-    "domain x max": "0.6e-3",
-    "domain z min": "-0.2e-3",
-    "domain z max": "0.2e-3",
-    "initial temperature": "1000.0"
+    "domain x min": 0.0,
+    "domain x max": 0.0006,
+    "domain z min": -0.0002,
+    "domain z max": 0.0002,
+    "initial temperature": 1000.0
   },
   "heat": {
     "linear solver": {
-      "rel tolerance": "1e-12",
+      "rel tolerance": 1e-12,
       "preconditioner type": "AMG"
     },
     "nlsolve": {
-      "residual tolerance": "1e-7"
+      "residual tolerance": 1e-07
     }
   },
   "laser": {
     "starting position": "3e-4,0.0",
     "model": "interface_projection_sharp",
     "intensity profile": "Gauss",
-    "power": "10.",
-    "absorptivity gas": "0.5",
-    "absorptivity liquid": "0.5",
-    "radius": "0.06e-3"
+    "power": 10,
+    "absorptivity gas": 0.5,
+    "absorptivity liquid": 0.5,
+    "radius": 6e-05
   },
   "material": {
     "gas": {
-      "thermal conductivity": "20.0",
-      "specific heat capacity": "500.0",
-      "density": "3925.0",
-      "dynamic viscosity": "1.0"
+      "thermal conductivity": 20.0,
+      "specific heat capacity": 500.0,
+      "density": 3925.0,
+      "dynamic viscosity": 1.0
     },
     "liquid": {
-      "thermal conductivity": "40.0",
-      "specific heat capacity": "1000.0",
-      "density": "7850.0",
-      "dynamic viscosity": "2.0"
+      "thermal conductivity": 40.0,
+      "specific heat capacity": 1000.0,
+      "density": 7850.0,
+      "dynamic viscosity": 2.0
     },
     "two phase fluid properties transition type": "sharp"
   },
   "application specific": {
-    "do heat transfer": "true",
-    "do solidification": "false"
+    "do heat transfer": true,
+    "do solidification": false
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   },
   "level set": {
     "curvature": {
-      "filter parameter": "0.0"
+      "filter parameter": 0.0
     },
     "normal vector": {
-      "filter parameter": "4"
+      "filter parameter": 4
     },
     "reinitialization": {
-      "n initial steps": "0"
+      "n initial steps": 0
     }
   },
   "flow": {
     "adaflo": {
       "Output options": {
-        "output verbosity": "0",
-        "output wall times": "0"
+        "output verbosity": 0,
+        "output wall times": 0
       }
     }
   }

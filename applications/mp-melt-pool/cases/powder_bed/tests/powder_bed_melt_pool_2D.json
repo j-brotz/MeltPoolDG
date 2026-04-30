@@ -1,55 +1,55 @@
 {
   "base": {
     "case name": "powder_bed",
-    "dimension": "2",
-    "do print parameters": "false",
-    "global refinements": "3",
-    "verbosity level": "1",
+    "dimension": 2,
+    "do print parameters": false,
+    "global refinements": 3,
+    "verbosity level": 1,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "simulation specific parameters": {
-    "domain x min": "-100e-6",
-    "domain x max": "100e-6",
-    "domain y min": "-50e-6",
-    "domain y max": "100e-6",
+    "domain x min": -0.0001,
+    "domain x max": 0.0001,
+    "domain y min": -5e-05,
+    "domain y max": 0.0001,
     "cell repetitions": "4,3",
-    "initial temperature": "500.0",
+    "initial temperature": 500.0,
     "powder bed": {
       "particle list file": "applications/mp-heat-transfer/cases/powder_bed/particles_in_domain.csv",
-      "substrate level": "0.0",
-      "slice location": "50e-6"
+      "substrate level": 0.0,
+      "slice location": 5e-05
     }
   },
   "application specific": {
-    "do heat transfer": "true",
-    "do solidification": "false",
+    "do heat transfer": true,
+    "do solidification": false,
     "amr": {
       "strategy": "generic"
     }
   },
   "adaptive meshing": {
-    "do amr": "true",
-    "max grid refinement level": "5",
-    "upper perc to refine": "0.4",
-    "lower perc to coarsen": "0.1",
-    "every n step": "10",
-    "n initial refinement cycles": "3"
+    "do amr": true,
+    "max grid refinement level": 5,
+    "upper perc to refine": 0.4,
+    "lower perc to coarsen": 0.1,
+    "every n step": 10,
+    "n initial refinement cycles": 3
   },
   "time stepping": {
-    "max n steps": "2",
-    "time step size": "1e-6"
+    "max n steps": 2,
+    "time step size": 1e-06
   },
   "heat": {
     "operator type": "cut",
     "cut": {
-      "two phase": "false",
+      "two phase": false,
       "stabilization": {
-        "nitsche parameter": "50",
+        "nitsche parameter": 50,
         "ghost-penalty": {
-          "gamma A degree 1": "1.5",
-          "gamma M degree 1": "0.75"
+          "gamma A degree 1": 1.5,
+          "gamma M degree 1": 0.75
         }
       }
     }
@@ -58,23 +58,23 @@
     "starting position": "0.0,0.0",
     "model": "interface_projection_sharp",
     "intensity profile": "Gauss",
-    "power": "100",
-    "radius": "70e-6"
+    "power": 100,
+    "radius": 7e-05
   },
   "evaporation": {
     "evaporative mass flux model": "saturated_vapor_pressure",
     "evaporative cooling": {
-      "enable": "true"
+      "enable": true
     },
     "recoil pressure": {
-      "enable": "true",
+      "enable": true,
       "type": "phenomenological",
       "interface distributed flux type": "interface_value",
-      "pressure coefficient": "0.54",
-      "temperature constant": "50700.0",
-      "ambient gas pressure": "1e5",
+      "pressure coefficient": 0.54,
+      "temperature constant": 50700.0,
+      "ambient gas pressure": 100000.0,
       "dirac delta function approximation": {
-        "auto weights": "true",
+        "auto weights": true,
         "type": "heaviside_phase_weighted"
       }
     }
@@ -82,37 +82,37 @@
   "material": {
     "material template": "Ti64",
     "gas": {
-      "density": "4.087"
+      "density": 4.087
     },
     "two phase fluid properties transition type": "smooth"
   },
   "flow": {
     "surface tension": {
       "interface temperature evaluation type": "interface_value",
-      "surface tension coefficient": "1.493"
+      "surface tension coefficient": 1.493
     },
     "adaflo": {
       "Navier-Stokes": {
         "Solver": {
-          "NL max iterations": "15",
-          "NL tolerance": "1e-8",
-          "lin its before inner solvers": "50",
-          "lin max iterations": "50",
+          "NL max iterations": 15,
+          "NL tolerance": 1e-08,
+          "lin its before inner solvers": 50,
+          "lin max iterations": 50,
           "lin pressure mass preconditioner": "ilu",
-          "lin relative tolerance": "1",
-          "lin tolerance": "1e-4",
+          "lin relative tolerance": 1,
+          "lin tolerance": 0.0001,
           "lin velocity preconditioner": "ilu scalar",
           "linearization scheme": "coupled implicit Newton"
         },
-        "dimension": "2",
+        "dimension": 2,
         "formulation convective term momentum balance": "convective",
-        "global refinements": "0",
+        "global refinements": 0,
         "physical type": "incompressible",
-        "velocity degree": "2"
+        "velocity degree": 2
       },
       "Output options": {
-        "output verbosity": "0",
-        "output walltimes": "0"
+        "output verbosity": 0,
+        "output walltimes": 0
       },
       "Time stepping": {
         "scheme": "bdf_2"
@@ -121,11 +121,11 @@
   },
   "level set": {
     "reinitialization": {
-      "max n steps": "0",
-      "n initial steps": "1",
+      "max n steps": 0,
+      "n initial steps": 1,
       "interface thickness parameter": {
         "type": "absolute_value",
-        "val": "1e-5"
+        "val": 1e-05
       }
     },
     "nearest point": {
@@ -134,7 +134,7 @@
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   }
 }

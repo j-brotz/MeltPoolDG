@@ -1,115 +1,115 @@
 {
   "base": {
     "case name": "recoil_pressure",
-    "dimension": "2",
+    "dimension": 2,
     "fe": {
-      "degree": "1"
+      "degree": 1
     },
-    "global refinements": "0",
-    "do print parameters": "false",
-    "verbosity level": "1"
+    "global refinements": 0,
+    "do print parameters": false,
+    "verbosity level": 1
   },
   "simulation specific domain": {
     "cell repetitions": "20,15",
-    "domain x max": "400e-6",
-    "domain x min": "-400e-6",
-    "domain y max": "300e-6",
-    "domain y min": "-299e-6",
-    "evaporation boundary": "false",
-    "periodic boundary": "false"
+    "domain x max": 0.0004,
+    "domain x min": -0.0004,
+    "domain y max": 0.0003,
+    "domain y min": -0.000299,
+    "evaporation boundary": false,
+    "periodic boundary": false
   },
   "time stepping": {
-    "start time": "0.0",
-    "time step size": "5e-6",
-    "max n steps": "15"
+    "start time": 0.0,
+    "time step size": 5e-06,
+    "max n steps": 15
   },
   "adaptive meshing": {
-    "do amr": "true",
-    "do not modify boundary cells": "false",
-    "max grid refinement level": "1",
-    "upper perc to refine": "0.1",
-    "lower perc to coarsen": "0.1",
-    "every n step": "1",
-    "n initial refinement cycles": "1"
+    "do amr": true,
+    "do not modify boundary cells": false,
+    "max grid refinement level": 1,
+    "upper perc to refine": 0.1,
+    "lower perc to coarsen": 0.1,
+    "every n step": 1,
+    "n initial refinement cycles": 1
   },
   "application specific": {
     "amr": {
-      "do refine all interface cells": "true",
+      "do refine all interface cells": true,
       "strategy": "generic"
     },
-    "do advect level set": "true",
-    "do heat transfer": "true",
-    "do solidification": "false",
+    "do advect level set": true,
+    "do heat transfer": true,
+    "do solidification": false,
     "mp heat up": {
-      "max temperature": "3000.0",
-      "time step size": "2e-4",
-      "max change factor time step size": "1e100"
+      "max temperature": 3000.0,
+      "time step size": 0.0002,
+      "max change factor time step size": 1e+100
     }
   },
   "evaporation": {
     "evaporative cooling": {
-      "enable": "true"
+      "enable": true
     },
     "evaporative dilation rate": {
-      "enable": "false"
+      "enable": false
     },
     "evaporative mass flux model": "recoil_pressure",
     "recoil pressure": {
-      "enable": "true",
+      "enable": true,
       "interface distributed flux type": "interface_value",
-      "pressure coefficient": "0.5330700888450149",
-      "temperature constant": "50700.0",
+      "pressure coefficient": 0.5330700888450149,
+      "temperature constant": 50700.0,
       "type": "phenomenological"
     }
   },
   "heat": {
     "operator type": "cut",
     "cut": {
-      "two phase": "true",
-      "theta": "1.0",
-      "do explicit symmetry term": "true",
+      "two phase": true,
+      "theta": 1.0,
+      "do explicit symmetry term": true,
       "stabilization": {
         "ghost-penalty": {
-          "gamma A degree 1": "1.5",
-          "gamma M degree 1": "0.75"
+          "gamma A degree 1": 1.5,
+          "gamma M degree 1": 0.75
         },
-        "nitsche parameter": "500"
+        "nitsche parameter": 500
       }
     },
     "linear solver": {
       "preconditioner type": "Diagonal",
-      "abs tolerance": "1e-12",
-      "rel tolerance": "1e-12"
+      "abs tolerance": 1e-12,
+      "rel tolerance": 1e-12
     },
     "nlsolve": {
-      "field correction tolerance": "1e-10",
-      "max nonlinear iterations": "10",
-      "residual tolerance": "1e-10"
+      "field correction tolerance": 1e-10,
+      "max nonlinear iterations": 10,
+      "residual tolerance": 1e-10
     }
   },
   "laser": {
     "intensity profile": "Gauss",
     "model": "interface_projection_sharp",
-    "power": "156.0",
-    "radius": "200e-6"
+    "power": 156.0,
+    "radius": 0.0002
   },
   "level set": {
     "curvature": {
-      "do curvature correction": "false",
-      "filter parameter": "2"
+      "do curvature correction": false,
+      "filter parameter": 2
     },
     "normal vector": {
-      "filter parameter": "2"
+      "filter parameter": 2
     },
     "reinitialization": {
-      "enable": "true",
+      "enable": true,
       "implementation": "meltpooldg",
       "interface thickness parameter": {
         "type": "absolute_value",
-        "val": "2e-5"
+        "val": 2e-05
       },
-      "max n steps": "1",
-      "n initial steps": "1",
+      "max n steps": 1,
+      "n initial steps": 1,
       "type": "olsson2007"
     },
     "nearest point": {
@@ -119,39 +119,39 @@
   "material": {
     "material template": "Ti64",
     "gas": {
-      "density": "2043.5",
-      "dynamic viscosity": "0.00175"
+      "density": 2043.5,
+      "dynamic viscosity": 0.00175
     },
     "two phase fluid properties transition type": "smooth"
   },
   "flow": {
-    "gravity": "0.0",
+    "gravity": 0.0,
     "surface tension": {
       "interface temperature evaluation type": "interface_value",
-      "surface tension coefficient": "1.493"
+      "surface tension coefficient": 1.493
     },
     "adaflo": {
       "Navier-Stokes": {
         "Solver": {
-          "NL max iterations": "15",
+          "NL max iterations": 15,
           "NL tolerance": "1.e-8",
-          "lin its before inner solvers": "50",
-          "lin max iterations": "30",
+          "lin its before inner solvers": 50,
+          "lin max iterations": 30,
           "lin pressure mass preconditioner": "ilu",
-          "lin relative tolerance": "1",
+          "lin relative tolerance": 1,
           "lin tolerance": "1.e-4",
           "lin velocity preconditioner": "ilu scalar",
           "linearization scheme": "coupled implicit Newton"
         },
-        "dimension": "2",
+        "dimension": 2,
         "formulation convective term momentum balance": "convective",
-        "global refinements": "0",
+        "global refinements": 0,
         "physical type": "incompressible",
-        "velocity degree": "2"
+        "velocity degree": 2
       },
       "Output options": {
-        "output verbosity": "0",
-        "output walltimes": "0"
+        "output verbosity": 0,
+        "output walltimes": 0
       },
       "Time stepping": {
         "scheme": "bdf_2"
@@ -160,7 +160,7 @@
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   }
 }

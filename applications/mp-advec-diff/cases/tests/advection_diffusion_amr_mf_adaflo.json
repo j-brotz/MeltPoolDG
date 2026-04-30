@@ -1,27 +1,27 @@
 {
   "base": {
     "case name": "advection_diffusion",
-    "dimension": "2",
-    "global refinements": "5",
-    "do print parameters": "false",
+    "dimension": 2,
+    "global refinements": 5,
+    "do print parameters": false,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "adaptive meshing": {
-    "do amr": "true",
-    "upper perc to refine": "     0.1",
-    "lower perc to coarsen": "    0.00",
-    "max grid refinement level": "8"
+    "do amr": true,
+    "upper perc to refine": 0.1,
+    "lower perc to coarsen": 0.0,
+    "max grid refinement level": 8
   },
   "time stepping": {
-    "start time": "0.0",
-    "end time": "0.06",
-    "time step size": "0.01"
+    "start time": 0.0,
+    "end time": 0.06,
+    "time step size": 0.01
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   },
   "advection diffusion": {
@@ -29,9 +29,9 @@
       "type": "crank_nicolson"
     },
     "linear solver": {
-      "do matrix free": "true"
+      "do matrix free": true
     },
-    "diffusivity": "0.000000",
+    "diffusivity": 0.0,
     "implementation": "adaflo"
   }
 }

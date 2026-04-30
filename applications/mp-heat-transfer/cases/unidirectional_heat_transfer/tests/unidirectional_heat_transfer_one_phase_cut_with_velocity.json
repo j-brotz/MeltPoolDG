@@ -1,58 +1,58 @@
 {
   "base": {
     "case name": "unidirectional_heat_transfer",
-    "dimension": "2",
-    "do print parameters": "false",
-    "global refinements": "4",
+    "dimension": 2,
+    "do print parameters": false,
+    "global refinements": 4,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "time stepping": {
-    "start time": "0.0",
-    "time step size": "1.0",
-    "end time": "100.0",
-    "max n steps": "5"
+    "start time": 0.0,
+    "time step size": 1.0,
+    "end time": 100.0,
+    "max n steps": 5
   },
   "heat": {
     "operator type": "cut",
     "cut": {
-      "two phase": "false",
+      "two phase": false,
       "stabilization": {
-        "nitsche parameter": "500",
+        "nitsche parameter": 500,
         "ghost-penalty": {
-          "gamma A degree 1": "1.5",
-          "gamma M degree 1": "0.75"
+          "gamma A degree 1": 1.5,
+          "gamma M degree 1": 0.75
         }
       }
     },
     "linear solver": {
       "preconditioner type": "Diagonal",
-      "rel tolerance": "1e-12",
-      "abs tolerance": "1e-10"
+      "rel tolerance": 1e-12,
+      "abs tolerance": 1e-10
     },
     "nlsolve": {
-      "residual tolerance": "1e-9"
+      "residual tolerance": 1e-09
     }
   },
   "simulation specific": {
-    "do solidification": "false",
-    "do two phase": "true",
-    "velocity": "0.001"
+    "do solidification": false,
+    "do two phase": true,
+    "velocity": 0.001
   },
   "application specific": {
-    "do solidification": "false"
+    "do solidification": false
   },
   "material": {
     "liquid": {
-      "thermal conductivity": "40.0",
-      "specific heat capacity": "1000.0",
-      "density": "7850.0"
+      "thermal conductivity": 40.0,
+      "specific heat capacity": 1000.0,
+      "density": 7850.0
     }
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   }
 }

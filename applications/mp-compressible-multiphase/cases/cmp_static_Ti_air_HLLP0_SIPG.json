@@ -2,21 +2,21 @@
   "base": {
     "problem name": "compressible_multiphase",
     "case name": "two_phase",
-    "dimension": "1",
-    "verbosity level": "1",
-    "do print parameters": "false",
-    "global refinements": "0"
+    "dimension": 1,
+    "verbosity level": 1,
+    "do print parameters": false,
+    "global refinements": 0
   },
   "time stepping": {
-    "start time": "0.0",
-    "end time": "1.0e-5"
+    "start time": 0.0,
+    "end time": 1e-05
   },
   "output": {
-    "write frequency": "100",
-    "do user defined postprocessing": "true",
+    "write frequency": 100,
+    "do user defined postprocessing": true,
     "paraview": {
       "filename": "static_Ti_air_HLLP0_SIPG",
-      "enable": "false"
+      "enable": false
     }
   },
   "simulation specific parameters": {
@@ -29,63 +29,63 @@
   },
   "compressible navier stokes": {
     "numerical flux type": "lax_friedrichs_modified",
-    "courant number": "0.05",
-    "viscous courant number": "0.02",
-    "use cfl criteria": "true",
-    "gravity constant": "0.0",
+    "courant number": 0.05,
+    "viscous courant number": 0.02,
+    "use cfl criteria": true,
+    "gravity constant": 0.0,
     "domain representation type": "cut",
     "time integration": {
       "linear solver": {
         "preconditioner type": "Identity",
         "solver type": "CG",
-        "max iterations": "10000",
-        "rel tolerance": "1e-20",
-        "abs tolerance": "1e-20"
+        "max iterations": 10000,
+        "rel tolerance": 1e-20,
+        "abs tolerance": 1e-20
       }
     },
     "fe": {
-      "degree": "1",
+      "degree": 1,
       "type": "FE_DGQ"
     }
   },
   "compressible flow phase coupling": {
     "type": "HLLP0_and_SIPG",
-    "evaporation mass flux": "0.0",
+    "evaporation mass flux": 0.0,
     "HLLP0 and SIPG": {
-      "interior penalty parameter interface": "1.0",
-      "delta T": "0.0"
+      "interior penalty parameter interface": 1.0,
+      "delta T": 0.0
     }
   },
   "material": {
     "gas": {
-      "dynamic viscosity": "0.00002",
-      "specific isobaric heat": "1004.85",
-      "specific gas constant": "287.1",
-      "reference density": "1.0",
-      "gamma": "1.4",
+      "dynamic viscosity": 2e-05,
+      "specific isobaric heat": 1004.85,
+      "specific gas constant": 287.1,
+      "reference density": 1.0,
+      "gamma": 1.4,
       "equation of state": {
         "type": "ideal_gas"
       }
     },
     "liquid": {
-      "dynamic viscosity": "0.0035",
-      "specific isobaric heat": "1126.0",
-      "reference density": "3622.0",
-      "gamma": "1.4355",
+      "dynamic viscosity": 0.0035,
+      "specific isobaric heat": 1126.0,
+      "reference density": 3622.0,
+      "gamma": 1.4355,
       "equation of state": {
         "type": "noble_abel_stiffened_gas",
-        "p inf": "1.1587e10",
-        "b": "1.8759e-4",
-        "q": "-607968.8"
+        "p inf": 11587000000.0,
+        "b": 0.00018759,
+        "q": -607968.8
       }
     }
   },
   "cut": {
-    "two phase": "true",
+    "two phase": true,
     "stabilization": {
       "ghost-penalty": {
-        "gamma M degree 0": "1.0",
-        "gamma M degree 1": "1.0"
+        "gamma M degree 0": 1.0,
+        "gamma M degree 1": 1.0
       }
     }
   }

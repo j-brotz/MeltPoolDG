@@ -1,12 +1,12 @@
 {
   "base": {
     "case name": "recoil_pressure",
-    "dimension": "1",
-    "do print parameters": "false",
-    "global refinements": "6",
-    "verbosity level": "1",
+    "dimension": 1,
+    "do print parameters": false,
+    "global refinements": 6,
+    "verbosity level": 1,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "evaporation": {
@@ -15,118 +15,118 @@
     "formulation source term level set": "rhs",
     "recoil pressure": {
       "interface distributed flux type": "local_value",
-      "activation temperature": "500",
+      "activation temperature": 500,
       "dirac delta function approximation": {
         "type": "heaviside_phase_weighted",
-        "auto weights": "true"
+        "auto weights": true
       },
-      "temperature constant": "1.0",
-      "pressure coefficient": "9.871668311944721e-06",
-      "enable": "true",
+      "temperature constant": 1.0,
+      "pressure coefficient": 9.871668311944721e-06,
+      "enable": true,
       "type": "hybrid"
     },
     "evaporative cooling": {
-      "enable": "false"
+      "enable": false
     },
     "evaporative dilation rate": {
-      "enable": "true"
+      "enable": true
     }
   },
   "heat": {
     "nlsolve": {
-      "max nonlinear iterations": "20",
-      "field correction tolerance": "1e-6",
-      "residual tolerance": "1e-5"
+      "max nonlinear iterations": 20,
+      "field correction tolerance": 1e-06,
+      "residual tolerance": 1e-05
     }
   },
   "material": {
     "material template": "Ti64",
     "gas": {
-      "density": "4.087"
+      "density": 4.087
     },
     "two phase fluid properties transition type": "consistent_with_evaporation"
   },
   "application specific": {
-    "do advect level set": "true",
-    "do heat transfer": "true",
-    "do solidification": "true"
+    "do advect level set": true,
+    "do heat transfer": true,
+    "do solidification": true
   },
   "simulation specific domain": {
-    "domain x max": "400e-6",
-    "domain x min": "-400e-6",
-    "domain y max": "300e-6",
-    "domain y min": "-300e-6",
-    "periodic boundary": "true",
-    "evaporation boundary": "true",
+    "domain x max": 0.0004,
+    "domain x min": -0.0004,
+    "domain y max": 0.0003,
+    "domain y min": -0.0003,
+    "periodic boundary": true,
+    "evaporation boundary": true,
     "initial temperature": {
-      "bottom": "3300",
-      "top": "3300"
+      "bottom": 3300,
+      "top": 3300
     }
   },
   "time stepping": {
-    "end time": "1e-3",
-    "start time": "0.0",
-    "time step size": "1e-10",
-    "max n steps": "5"
+    "end time": 0.001,
+    "start time": 0.0,
+    "time step size": 1e-10,
+    "max n steps": 5
   },
   "output": {
     "directory": "output_hybrid_phase_weighted",
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   },
   "level set": {
     "reinitialization": {
-      "enable": "true",
-      "n initial steps": "0",
-      "max n steps": "3",
+      "enable": true,
+      "n initial steps": 0,
+      "max n steps": 3,
       "interface thickness parameter": {
         "type": "proportional_to_cell_size",
-        "val": "6"
+        "val": 6
       }
     },
     "normal vector": {
-      "filter parameter": "0.1"
+      "filter parameter": 0.1
     },
     "fe": {
       "type": "FE_Q_iso_Q1",
-      "degree": "2"
+      "degree": 2
     }
   },
   "flow": {
     "adaflo": {
       "Navier-Stokes": {
         "Solver": {
-          "NL max iterations": "50",
+          "NL max iterations": 50,
           "NL tolerance": "1.e-10",
-          "lin its before inner solvers": "50",
-          "lin max iterations": "50",
-          "lin relative tolerance": "1",
+          "lin its before inner solvers": 50,
+          "lin max iterations": 50,
+          "lin relative tolerance": 1,
           "lin tolerance": "1.e-5",
           "lin pressure preconditioner": "ilu scalar",
           "lin velocity preconditioner": "ilu",
           "linearization scheme": "coupled implicit Newton"
         },
-        "dimension": "2",
+        "dimension": 2,
         "formulation convective term momentum balance": "convective",
-        "global refinements": "0",
+        "global refinements": 0,
         "physical type": "incompressible",
         "constitutive type": "user defined",
-        "velocity degree": "2"
+        "velocity degree": 2
       },
       "Output options": {
-        "output verbosity": "0",
-        "output walltimes": "0"
+        "output verbosity": 0,
+        "output walltimes": 0
       },
       "Time stepping": {
         "scheme": "bdf_2"
       }
     },
-    "gravity": "0.0",
+    "gravity": 0.0,
     "darcy damping": {
-      "avoid div zero constant": "1.",
+      "avoid div zero constant": 1,
       "formulation": "implicit_formulation",
-      "mushy zone morphology": "1e11"
+      "mushy zone morphology": 100000000000.0
     }
   }
 }

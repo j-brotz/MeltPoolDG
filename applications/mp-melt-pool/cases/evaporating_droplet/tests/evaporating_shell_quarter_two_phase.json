@@ -1,73 +1,73 @@
 {
   "base": {
     "case name": "evaporating_shell",
-    "global refinements": "5",
-    "dimension": "2",
-    "do print parameters": "false",
-    "verbosity level": "1",
+    "global refinements": 5,
+    "dimension": 2,
+    "do print parameters": false,
+    "verbosity level": 1,
     "fe": {
-      "degree": "2"
+      "degree": 2
     }
   },
   "time stepping": {
-    "start time": "0.0",
-    "end time": "1.0",
-    "time step size": "1e-2",
-    "max n steps": "5"
+    "start time": 0.0,
+    "end time": 1.0,
+    "time step size": 0.01,
+    "max n steps": 5
   },
   "material": {
     "gas": {
-      "thermal conductivity": "1e-3",
-      "density": "1.0",
-      "dynamic viscosity": "1e-3"
+      "thermal conductivity": 0.001,
+      "density": 1.0,
+      "dynamic viscosity": 0.001
     },
     "liquid": {
-      "thermal conductivity": "1e-3",
-      "density": "1000.0",
-      "dynamic viscosity": "1e-3"
+      "thermal conductivity": 0.001,
+      "density": 1000.0,
+      "dynamic viscosity": 0.001
     },
     "two phase fluid properties transition type": "consistent_with_evaporation"
   },
   "evaporation": {
     "analytical": {
-      "function": "0.01"
+      "function": 0.01
     },
     "formulation source term level set": "interface_velocity_local",
     "evaporative cooling": {
-      "enable": "false"
+      "enable": false
     },
     "evaporative dilation rate": {
-      "enable": "true"
+      "enable": true
     }
   },
   "simulation specific": {
-    "velocity": "1.998e-5",
+    "velocity": 1.998e-05,
     "shell type": "quarter",
-    "two phase": "true",
-    "inner radius": "0.125",
-    "outer radius": "0.375"
+    "two phase": true,
+    "inner radius": 0.125,
+    "outer radius": 0.375
   },
   "application specific": {
-    "do heat transfer": "true"
+    "do heat transfer": true
   },
   "output": {
     "directory": "evaporating_shell_2d",
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   },
   "level set": {
     "curvature": {
-      "filter parameter": "0.0"
+      "filter parameter": 0.0
     },
     "normal vector": {
-      "filter parameter": "0.5"
+      "filter parameter": 0.5
     },
     "reinitialization": {
-      "max n steps": "5",
+      "max n steps": 5,
       "interface thickness parameter": {
         "type": "absolute_value",
-        "val": "0.02"
+        "val": 0.02
       }
     }
   },
@@ -75,29 +75,29 @@
     "adaflo": {
       "Navier-Stokes": {
         "physical type": "incompressible",
-        "dimension": "2",
-        "global refinements": "0",
-        "velocity degree": "2",
+        "dimension": 2,
+        "global refinements": 0,
+        "velocity degree": 2,
         "formulation convective term momentum balance": "convective",
         "constitutive type": "newtonian incompressible",
         "Solver": {
           "linearization scheme": "coupled implicit Newton",
-          "NL max iterations": "10",
+          "NL max iterations": 10,
           "NL tolerance": "1.e-9",
-          "lin max iterations": "30",
+          "lin max iterations": 30,
           "lin tolerance": "1.e-5",
           "lin velocity preconditioner": "ilu",
-          "lin its before inner solvers": "50"
+          "lin its before inner solvers": 50
         }
       },
       "Output options": {
-        "output verbosity": "0",
-        "output walltimes": "0"
+        "output verbosity": 0,
+        "output walltimes": 0
       },
       "Time stepping": {
         "scheme": "bdf_2"
       }
     },
-    "gravity": "0.00"
+    "gravity": 0.0
   }
 }

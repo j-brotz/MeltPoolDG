@@ -1,22 +1,22 @@
 {
   "base": {
     "case name": "radiative_transport",
-    "dimension": "2",
-    "do print parameters": "false",
-    "global refinements": "6",
-    "verbosity level": "1",
+    "dimension": 2,
+    "do print parameters": false,
+    "global refinements": 6,
+    "verbosity level": 1,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "laser": {
     "model": "RTE",
     "intensity profile": "Gauss",
-    "power": "0.1",
-    "radius": "0.5"
+    "power": 0.1,
+    "radius": 0.5
   },
   "rte": {
-    "rte verbosity level": "2",
+    "rte verbosity level": 2,
     "predictor type": "pseudo_time_stepping",
     "linear solver": {
       "solver type": "GMRES",
@@ -24,28 +24,28 @@
     }
   },
   "simulation specific parameters": {
-    "power": "0.1",
-    "source radius": "0.5",
+    "power": 0.1,
+    "source radius": 0.5,
     "interface case": "straight"
   },
   "material": {
     "gas": {
-      "thermal conductivity": "1.0",
-      "specific heat capacity": "1.0",
-      "density": "1.0"
+      "thermal conductivity": 1.0,
+      "specific heat capacity": 1.0,
+      "density": 1.0
     },
     "liquid": {
-      "thermal conductivity": "1.0",
-      "specific heat capacity": "1.0",
-      "density": "1.0"
+      "thermal conductivity": 1.0,
+      "specific heat capacity": 1.0,
+      "density": 1.0
     }
   },
   "time stepping": {
-    "max n steps": "4"
+    "max n steps": 4
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   }
 }

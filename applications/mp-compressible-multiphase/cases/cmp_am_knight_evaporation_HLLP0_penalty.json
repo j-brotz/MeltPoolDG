@@ -2,23 +2,23 @@
   "base": {
     "problem name": "compressible_multiphase",
     "case name": "two_phase",
-    "dimension": "1",
-    "verbosity level": "0",
-    "do print parameters": "false",
-    "global refinements": "0"
+    "dimension": 1,
+    "verbosity level": 0,
+    "do print parameters": false,
+    "global refinements": 0
   },
   "time stepping": {
-    "start time": "0.0",
-    "end time": "3.0e-3",
-    "time step size": "1.0e-10",
-    "max n steps": "100000000"
+    "start time": 0.0,
+    "end time": 0.003,
+    "time step size": 1e-10,
+    "max n steps": 100000000
   },
   "output": {
-    "write time step size": "1.0e-5",
-    "do user defined postprocessing": "true",
+    "write time step size": 1e-05,
+    "do user defined postprocessing": true,
     "paraview": {
       "filename": "Ti6Al4V_evaporation_1_bar",
-      "enable": "true"
+      "enable": true
     }
   },
   "simulation specific parameters": {
@@ -28,26 +28,26 @@
       "gas": "1.14979854471105; 0.0; 1.5e5",
       "liquid": "4942.52838219827; 0.0; -1.00077284582753e10"
     },
-    "atmospheric pressure": "1.0e5"
+    "atmospheric pressure": 100000.0
   },
   "compressible navier stokes": {
     "numerical flux type": "lax_friedrichs_modified",
-    "courant number": "0.02",
-    "viscous courant number": "0.02",
-    "use cfl criteria": "true",
-    "gravity constant": "0.0",
+    "courant number": 0.02,
+    "viscous courant number": 0.02,
+    "use cfl criteria": true,
+    "gravity constant": 0.0,
     "domain representation type": "cut",
     "time integration": {
       "linear solver": {
         "preconditioner type": "Identity",
         "solver type": "CG",
-        "max iterations": "10000",
-        "rel tolerance": "1e-20",
-        "abs tolerance": "1e-20"
+        "max iterations": 10000,
+        "rel tolerance": 1e-20,
+        "abs tolerance": 1e-20
       }
     },
     "fe": {
-      "degree": "1",
+      "degree": 1,
       "type": "FE_DGQ"
     }
   },
@@ -55,62 +55,62 @@
     "type": "HLLP0_and_penalty",
     "evaporation model": "Knight",
     "laser heat source": {
-      "do ramp": "true",
-      "ramp time": "1.0e-4",
-      "laser power density": "2.0e9"
+      "do ramp": true,
+      "ramp time": 0.0001,
+      "laser power density": 2000000000.0
     },
     "HLLP0 and penalty": {
-      "penalty parameter temperature jump": "0.5"
+      "penalty parameter temperature jump": 0.5
     }
   },
   "material": {
     "gas": {
-      "dynamic viscosity": "0.000035",
-      "specific isobaric heat": "434.858786610879",
-      "specific gas constant": "173.943514644351",
-      "reference density": "0.15",
-      "gamma": "1.666666666666666",
-      "thermal conductivity": "0.02863",
+      "dynamic viscosity": 3.5e-05,
+      "specific isobaric heat": 434.858786610879,
+      "specific gas constant": 173.943514644351,
+      "reference density": 0.15,
+      "gamma": 1.666666666666666,
+      "thermal conductivity": 0.02863,
       "equation of state": {
         "type": "ideal_gas"
       }
     },
     "liquid": {
-      "dynamic viscosity": "0.0035",
-      "specific isobaric heat": "1126.0",
-      "reference density": "3400.0",
-      "gamma": "1.006804865",
-      "thermal conductivity": "28.63",
+      "dynamic viscosity": 0.0035,
+      "specific isobaric heat": 1126.0,
+      "reference density": 3400.0,
+      "gamma": 1.006804865,
+      "thermal conductivity": 28.63,
       "equation of state": {
         "type": "noble_abel_stiffened_gas",
-        "p inf": "258134879.2",
-        "b": "0.00018759",
-        "q": "-2587818.15"
+        "p inf": 258134879.2,
+        "b": 0.00018759,
+        "q": -2587818.15
       }
     }
   },
   "phase change": {
     "liquid gas": {
-      "boiling temperature": "3133.0",
-      "reference pressure": "1.0e5",
-      "latent heat of vaporization": "8.84e6"
+      "boiling temperature": 3133.0,
+      "reference pressure": 100000.0,
+      "latent heat of vaporization": 8840000.0
     },
     "solid liquid": {
-      "use darcy damping": "true",
-      "liquidus temperature": "2200",
-      "solidus temperature": "1933"
+      "use darcy damping": true,
+      "liquidus temperature": 2200,
+      "solidus temperature": 1933
     }
   },
   "cut": {
     "stabilization": {
       "ghost-penalty": {
-        "gamma M degree 0": "1.0",
-        "gamma M degree 1": "1.0"
+        "gamma M degree 0": 1.0,
+        "gamma M degree 1": 1.0
       }
     }
   },
   "darcy damping": {
     "mushy zone morphology": "1.e9",
-    "avoid div zero constant": "1.0"
+    "avoid div zero constant": 1.0
   }
 }

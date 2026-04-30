@@ -1,49 +1,49 @@
 {
   "base": {
     "case name": "solidification_slab",
-    "dimension": "1",
-    "global refinements": "7",
-    "do print parameters": "false",
+    "dimension": 1,
+    "global refinements": 7,
+    "do print parameters": false,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "time stepping": {
-    "start time": "0.0",
-    "time step size": "200.0",
-    "end time": "1000.0",
-    "max n steps": "5"
+    "start time": 0.0,
+    "time step size": 200.0,
+    "end time": 1000.0,
+    "max n steps": 5
   },
   "heat": {
     "linear solver": {
-      "rel tolerance": "1e-12",
+      "rel tolerance": 1e-12,
       "preconditioner type": "ILU"
     },
     "nlsolve": {
-      "residual tolerance": "1e-8"
+      "residual tolerance": 1e-08
     }
   },
   "application specific": {
-    "do solidification": "true"
+    "do solidification": true
   },
   "material": {
     "liquid": {
-      "thermal conductivity": "0.556",
-      "specific heat capacity": "4226.0",
-      "density": "1000.0"
+      "thermal conductivity": 0.556,
+      "specific heat capacity": 4226.0,
+      "density": 1000.0
     },
     "solid": {
-      "thermal conductivity": "2.22",
-      "specific heat capacity": "1762.0",
-      "density": "1000.0"
+      "thermal conductivity": 2.22,
+      "specific heat capacity": 1762.0,
+      "density": 1000.0
     },
-    "solidus temperature": "270.0",
-    "liquidus temperature": "276.0",
+    "solidus temperature": 270.0,
+    "liquidus temperature": 276.0,
     "solid liquid properties transition type": "mushy_zone"
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   }
 }

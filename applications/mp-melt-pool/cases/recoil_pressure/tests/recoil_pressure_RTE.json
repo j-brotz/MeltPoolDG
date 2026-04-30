@@ -1,148 +1,148 @@
 {
   "base": {
     "case name": "recoil_pressure",
-    "dimension": "2",
-    "do print parameters": "false",
-    "global refinements": "5",
-    "verbosity level": "1",
+    "dimension": 2,
+    "do print parameters": false,
+    "global refinements": 5,
+    "verbosity level": 1,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "simulation specific domain": {
-    "domain x max": "400e-6",
-    "domain x min": "-400e-6",
-    "domain y max": "300e-6",
-    "domain y min": "-300e-6",
-    "evaporation boundary": "false",
-    "periodic boundary": "true"
+    "domain x max": 0.0004,
+    "domain x min": -0.0004,
+    "domain y max": 0.0003,
+    "domain y min": -0.0003,
+    "evaporation boundary": false,
+    "periodic boundary": true
   },
   "application specific": {
-    "do heat transfer": "true",
-    "do solidification": "false",
+    "do heat transfer": true,
+    "do solidification": false,
     "mp heat up": {
-      "time step size": "0.001",
-      "max temperature": "700.0"
+      "time step size": 0.001,
+      "max temperature": 700.0
     }
   },
   "time stepping": {
-    "start time": "0.0",
-    "time step size": "0.00005",
-    "max n steps": "4"
+    "start time": 0.0,
+    "time step size": 5e-05,
+    "max n steps": 4
   },
   "material": {
     "gas": {
-      "thermal conductivity": "20.0",
-      "specific heat capacity": "500.0",
-      "density": "3925.0",
-      "dynamic viscosity": "1.0"
+      "thermal conductivity": 20.0,
+      "specific heat capacity": 500.0,
+      "density": 3925.0,
+      "dynamic viscosity": 1.0
     },
     "liquid": {
-      "thermal conductivity": "40.0",
-      "specific heat capacity": "1000.0",
-      "density": "7850.0",
-      "dynamic viscosity": "2.0"
+      "thermal conductivity": 40.0,
+      "specific heat capacity": 1000.0,
+      "density": 7850.0,
+      "dynamic viscosity": 2.0
     },
-    "boiling temperature": "700.0",
-    "latent heat of evaporation": "1e6",
-    "molar mass": "0.05224130936",
-    "specific enthalpy reference temperature": "699.0",
+    "boiling temperature": 700.0,
+    "latent heat of evaporation": 1000000.0,
+    "molar mass": 0.05224130936,
+    "specific enthalpy reference temperature": 699.0,
     "two phase fluid properties transition type": "smooth"
   },
   "heat": {
     "linear solver": {
-      "rel tolerance": "1e-12",
+      "rel tolerance": 1e-12,
       "preconditioner type": "Diagonal"
     },
     "nlsolve": {
-      "max nonlinear iterations": "20",
-      "field correction tolerance": "1e-10",
-      "residual tolerance": "1e-9"
+      "max nonlinear iterations": 20,
+      "field correction tolerance": 1e-10,
+      "residual tolerance": 1e-09
     },
     "diffuse": {
-      "use volume-specific thermal capacity for phase interpolation": "true"
+      "use volume-specific thermal capacity for phase interpolation": true
     }
   },
   "laser": {
     "model": "RTE",
     "intensity profile": "Gauss",
-    "power": "6.5",
-    "radius": "120e-6"
+    "power": 6.5,
+    "radius": 0.00012
   },
   "rte": {
-    "rte verbosity level": "1",
+    "rte verbosity level": 1,
     "laser direction": "0.0,-1.0",
     "absorptivity type": "gradient_based"
   },
   "evaporation": {
     "evaporative mass flux model": "recoil_pressure",
     "recoil pressure": {
-      "temperature constant": "50700.0",
-      "pressure coefficient": "0.5330700888450149",
-      "enable": "true"
+      "temperature constant": 50700.0,
+      "pressure coefficient": 0.5330700888450149,
+      "enable": true
     },
     "evaporative cooling": {
-      "enable": "true"
+      "enable": true
     },
     "evaporative dilation rate": {
-      "enable": "false"
+      "enable": false
     }
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   },
   "level set": {
     "reinitialization": {
-      "enable": "true",
-      "n initial steps": "1",
-      "max n steps": "1",
+      "enable": true,
+      "n initial steps": 1,
+      "max n steps": 1,
       "type": "olsson2007",
       "interface thickness parameter": {
         "type": "absolute_value",
-        "val": "2e-5"
+        "val": 2e-05
       }
     },
     "curvature": {
-      "filter parameter": "2",
-      "do curvature correction": "false"
+      "filter parameter": 2,
+      "do curvature correction": false
     },
     "normal vector": {
-      "filter parameter": "2"
+      "filter parameter": 2
     }
   },
   "flow": {
     "adaflo": {
       "Navier-Stokes": {
         "Solver": {
-          "NL max iterations": "15",
+          "NL max iterations": 15,
           "NL tolerance": "1.e-8",
-          "lin its before inner solvers": "50",
-          "lin max iterations": "30",
+          "lin its before inner solvers": 50,
+          "lin max iterations": 30,
           "lin pressure mass preconditioner": "ilu",
-          "lin relative tolerance": "1",
+          "lin relative tolerance": 1,
           "lin tolerance": "1.e-4",
           "lin velocity preconditioner": "ilu scalar",
           "linearization scheme": "coupled implicit Newton"
         },
-        "dimension": "2",
+        "dimension": 2,
         "formulation convective term momentum balance": "convective",
-        "global refinements": "0",
+        "global refinements": 0,
         "physical type": "incompressible",
-        "velocity degree": "2"
+        "velocity degree": 2
       },
       "Output options": {
-        "output verbosity": "0",
-        "output walltimes": "0"
+        "output verbosity": 0,
+        "output walltimes": 0
       },
       "Time stepping": {
         "scheme": "bdf_2"
       }
     },
-    "gravity": "0.0",
+    "gravity": 0.0,
     "surface tension": {
-      "surface tension coefficient": "1.493"
+      "surface tension coefficient": 1.493
     }
   }
 }

@@ -10,14 +10,14 @@
   "case setup": {
     "boundary x min": {
       "type": "inflow",
-      "density": "0.4",
+      "density": 0.4,
       "velocity": "150; 0",
-      "energy": "213300",
+      "energy": 213300,
       "inflow ramp-up type": "none"
     },
     "boundary x max": {
       "type": "subsonic_outflow_fixed_energy",
-      "energy": "213300"
+      "energy": 213300
     },
     "boundary y min": {
       "type": "no_slip_wall"
@@ -26,9 +26,9 @@
       "type": "no_slip_wall"
     },
     "initial conditions": {
-      "density": "0.4",
+      "density": 0.4,
       "velocity": "150; 0.0",
-      "energy": "213300"
+      "energy": 213300
     },
     "domain": {
       "size": "80e-6, 40e-6",

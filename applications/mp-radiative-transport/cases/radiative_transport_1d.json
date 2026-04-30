@@ -1,37 +1,37 @@
 {
   "base": {
     "case name": "radiative_transport",
-    "dimension": "1",
-    "global refinements": "5",
-    "do print parameters": "false",
-    "verbosity level": "1",
+    "dimension": 1,
+    "global refinements": 5,
+    "do print parameters": false,
+    "verbosity level": 1,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "time stepping": {
-    "start time": "0.0",
-    "end time": "20.0",
-    "time step size": "1."
+    "start time": 0.0,
+    "end time": 20.0,
+    "time step size": 1
   },
   "rte": {
-    "rte verbosity level": "0",
-    "avoid div zero constant": "1e-16",
+    "rte verbosity level": 0,
+    "avoid div zero constant": 1e-16,
     "linear solver": {
       "solver type": "GMRES",
       "monitor type": "reduced",
-      "do matrix free": "true",
-      "abs tolerance": "1e-16",
+      "do matrix free": true,
+      "abs tolerance": 1e-16,
       "preconditioner type": "ILU"
     }
   },
   "simulation specific parameters": {
-    "power": "0.1"
+    "power": 0.1
   },
   "output": {
     "paraview": {
-      "output subdomains": "true",
-      "enable": "true"
+      "output subdomains": true,
+      "enable": true
     }
   }
 }

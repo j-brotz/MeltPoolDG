@@ -10,6 +10,14 @@ repos:
         pass_filenames: false
 -   repo: local
     hooks:
+      - id: clean-json-types
+        name: Clean JSON numbers/booleans from quotation marks
+        entry: scripts/parameters/clean-quotation-marks-json.sh
+        language: system
+        files: ^applications/.*\.json$
+        exclude: parameters\.schema\.json$
+-   repo: local
+    hooks:
     -   id: format-all
         name: Check Code Formatting
         entry: scripts/formatting/format-all

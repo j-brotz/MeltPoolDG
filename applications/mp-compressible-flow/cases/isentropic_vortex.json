@@ -1,21 +1,21 @@
 {
   "base": {
     "case name": "isentropic_vortex",
-    "dimension": "2",
-    "verbosity level": "1",
-    "do print parameters": "false",
-    "global refinements": "4"
+    "dimension": 2,
+    "verbosity level": 1,
+    "do print parameters": false,
+    "global refinements": 4
   },
   "time stepping": {
-    "start time": "0.0",
-    "end time": "0.2",
-    "time step size": "0.01"
+    "start time": 0.0,
+    "end time": 0.2,
+    "time step size": 0.01
   },
   "output": {
-    "write frequency": "1",
-    "do user defined postprocessing": "true",
+    "write frequency": 1,
+    "do user defined postprocessing": true,
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   },
   "compressible navier stokes": {
@@ -24,13 +24,13 @@
       "type": "LSRK_stage_5_order_4"
     },
     "fe": {
-      "degree": "2",
+      "degree": 2,
       "type": "FE_DGQ"
     }
   },
   "material": {
     "gas": {
-      "dynamic viscosity": "0.0",
+      "dynamic viscosity": 0.0,
       "equation of state": {
         "type": "ideal_gas"
       }

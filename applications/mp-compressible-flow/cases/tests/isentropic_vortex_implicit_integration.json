@@ -1,21 +1,21 @@
 {
   "base": {
     "case name": "isentropic_vortex",
-    "dimension": "2",
-    "verbosity level": "1",
-    "global refinements": "3",
-    "do print parameters": "false"
+    "dimension": 2,
+    "verbosity level": 1,
+    "global refinements": 3,
+    "do print parameters": false
   },
   "time stepping": {
-    "start time": "0.0",
-    "end time": "1.0",
-    "time step size": "0.1"
+    "start time": 0.0,
+    "end time": 1.0,
+    "time step size": 0.1
   },
   "output": {
-    "write frequency": "1",
-    "do user defined postprocessing": "true",
+    "write frequency": 1,
+    "do user defined postprocessing": true,
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   },
   "compressible navier stokes": {
@@ -32,7 +32,7 @@
       }
     },
     "fe": {
-      "degree": "2",
+      "degree": 2,
       "type": "FE_DGQ"
     }
   },
