@@ -31,6 +31,15 @@ namespace MeltPoolDG::LevelSet
       curv.add_parameters(prm);
       output.add_parameters(prm);
       profiling.add_parameters(prm);
+
+      prm.enter_subsection("application specific parameters");
+      {
+        prm.add_parameter(
+          "do update normal vector",
+          application_specific_parameters.do_update_normal_vector,
+          "Set this parameter to true to update the normal vector each pseudo-time step.");
+      }
+      prm.leave_subsection();
     }
 
     void
@@ -58,6 +67,11 @@ namespace MeltPoolDG::LevelSet
     CurvatureData<number>                     curv;
     OutputData<number>                        output;
     Profiling::ProfilingData<number>          profiling;
+
+    struct
+    {
+      bool do_update_normal_vector = false;
+    } application_specific_parameters;
   };
 
   template <int dim, typename number>

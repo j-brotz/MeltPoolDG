@@ -13,6 +13,10 @@
         "solution transfer average values": "false",
         "upper perc to refine": "0"
     },
+    "application specific parameters":
+    {
+        "do update normal vector": "false"
+    },
     "base":
     {
         "case name": "not_initialized",
