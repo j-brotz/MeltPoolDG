@@ -321,7 +321,7 @@
 | `max n steps` | `integer` | `5` | Sets the maximum number of reinitialization steps |
 | `tolerance` | `number` | `2.22507e-308` | Set the tolerance for reinitialization. If the maximum change of the level set field, i.e.  orΔФ or∞, exceeds the tolerance, reinitialization steps will be performed. |
 | `tangential diffusion factor` | `number` | `0.0` | Factor that multiplies the normal diffusion factor (diffusion length) to obtain the diffusion factor in the tangential direction. |
-| `type` | `string` | `olsson2007` | Sets the type of reinitialization model that should be used. |
+| `type` | `string` | `olsson2007` | Sets the type of reinitialization model that should be used.<br><br>Allowed values:<br>- `olsson2007`<br>- `elliptic` |
 | `implementation` | `string` | `meltpooldg` | Choose the corresponding implementation of the reinitialization operation.<br><br>Allowed values:<br>- `meltpooldg`<br>- `adaflo` |
 | [`Discontinous Galerkin`](#level-set-reinitialization-discontinous-galerkin) | `object` |  | [See table](#level-set-reinitialization-discontinous-galerkin) |
 | [`interface thickness parameter`](#level-set-reinitialization-interface-thickness-parameter) | `object` |  | [See table](#level-set-reinitialization-interface-thickness-parameter) |

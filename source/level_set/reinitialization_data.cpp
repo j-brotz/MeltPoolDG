@@ -50,7 +50,8 @@ namespace MeltPoolDG::LevelSet
                         dealii::Patterns::Double(0.0));
       prm.add_parameter("type",
                         modeltype,
-                        "Sets the type of reinitialization model that should be used.");
+                        "Sets the type of reinitialization model that should be used.",
+                        dealii::Patterns::Selection("olsson2007|elliptic"));
       prm.add_parameter(
         "implementation",
         implementation,
@@ -161,6 +162,10 @@ namespace MeltPoolDG::LevelSet
 
     predictor.post();
     fe.post(base_fe_data);
+
+    AssertThrow(modeltype != ModelType::elliptic,
+                dealii::ExcMessage(
+                  "The elliptic reinitialization is in development and cannot be used yet."));
   }
 
   template <typename number>

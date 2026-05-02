@@ -27,6 +27,8 @@ namespace MeltPoolDG::LevelSet
 
   BETTER_ENUM(HyperbolicWeightingFunctionType, char, smoothed_signum, initial_levelset)
 
+  BETTER_ENUM(ModelType, char, olsson2007, elliptic)
+
   template <typename number>
   struct ReinitializationData
   {
@@ -82,7 +84,7 @@ namespace MeltPoolDG::LevelSet
       number value = 0.5;
     } interface_thickness_parameter;
 
-    std::string              modeltype      = "olsson2007";
+    ModelType                modeltype      = ModelType::olsson2007;
     std::string              implementation = "meltpooldg";
     PredictorData            predictor;
     LinearSolverData<number> linear_solver;

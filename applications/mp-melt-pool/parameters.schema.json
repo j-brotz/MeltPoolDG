@@ -892,6 +892,10 @@
             },
             "type": {
               "type": "string",
+              "enum": [
+                "olsson2007",
+                "elliptic"
+              ],
               "description": "Sets the type of reinitialization model that should be used.",
               "default": "olsson2007"
             },

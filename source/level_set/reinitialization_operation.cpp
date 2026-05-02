@@ -354,7 +354,7 @@ namespace MeltPoolDG::LevelSet
   void
   ReinitializationHyperbolicCGOperation<dim, number>::create_operator()
   {
-    if (reinit_data.modeltype == "olsson2007")
+    if (reinit_data.modeltype == ModelType::olsson2007)
       {
         reinit_operator = std::make_unique<OlssonOperator<dim, number>>(
           scratch_data,
