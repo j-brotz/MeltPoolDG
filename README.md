@@ -1,7 +1,8 @@
 <img align="left" width="324" src="doc/logo/logo_text_text.png">
 
-[![Indent](https://github.com/MeltPoolDG/MeltPoolDG-dev/workflows/Indent/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions?query=workflow%3AIndent)
-[![GitHub CI](https://github.com/MeltPoolDG/MeltPoolDG-dev/workflows/GitHub%20CI/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions?query=workflow%3A%22GitHub+CI%22)
+[![Indent](https://github.com/MeltPoolDG/MeltPoolDG-dev/workflows/Indent/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/indent.yml)
+[![GitHub CI](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/nightly_tests.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/nightly_tests.yml)
+[![Nightly Install](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/nightly_install.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/nightly_install.yml)
 
 ## (DG)-FEM-based multi-phase flow solvers for high-fidelity metal additive manufacturing process simulations
 
