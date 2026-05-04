@@ -8,19 +8,18 @@ namespace MeltPoolDG::LevelSet
 {
   using namespace dealii;
 
-  template <int dim, typename number, bool is_dg>
-  ReinitializationEllipticOperator<dim, number, is_dg>::ReinitializationEllipticOperator(
-    const MeltPoolDG::ScratchData<dim, dim, number> &scratch_data_in,
-    const ReinitializationData<number>              &reinit_data_in,
-    const unsigned int                               reinit_dof_idx_in,
-    const unsigned int                               reinit_quad_idx_in,
-    const BlockVectorType                           &normal_vector_in)
+  template <int dim, typename number>
+  ReinitializationEllipticOperator<dim, number>::ReinitializationEllipticOperator(
+    const MeltPoolDG::ScratchData<dim, dim, number> & /*scratch_data_in*/,
+    const ReinitializationData<number> & /*reinit_data_in*/,
+    const unsigned int /*reinit_dof_idx_in*/,
+    const unsigned int /*reinit_quad_idx_in*/,
+    const BlockVectorType & /*normal_vector_in*/,
+    const bool is_dg_in)
+    : is_dg(is_dg_in)
   {}
 
-  template class ReinitializationEllipticOperator<1, double, true>;
-  template class ReinitializationEllipticOperator<2, double, true>;
-  template class ReinitializationEllipticOperator<3, double, true>;
-  template class ReinitializationEllipticOperator<1, double, false>;
-  template class ReinitializationEllipticOperator<2, double, false>;
-  template class ReinitializationEllipticOperator<3, double, false>;
+  template class ReinitializationEllipticOperator<1, double>;
+  template class ReinitializationEllipticOperator<2, double>;
+  template class ReinitializationEllipticOperator<3, double>;
 } // namespace MeltPoolDG::LevelSet

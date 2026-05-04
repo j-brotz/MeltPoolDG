@@ -14,10 +14,8 @@ namespace MeltPoolDG::LevelSet
    *
    * @tparam dim Dimension of the considered simulation case.
    * @tparam number Floating point format type.
-   * @tparam is_dg indicates whether DG-FEM or CG-FEM is used. The operation is designed so that
-   * both versions can be solved within it.
    */
-  template <int dim, typename number, bool is_dg>
+  template <int dim, typename number>
   class ReinitializationEllipticOperator
   {
   public:
@@ -35,12 +33,19 @@ namespace MeltPoolDG::LevelSet
      * @param reinit_quad_idx_in Index of the used quadrature object in @p scratch_data_in.
      * @param normal_vector_in Reference to the collection of normal vectors for the individual
      * space dimensions.
+     * @param is_dg_in Boolean indicator whether DG-FEM or CG-FEM is used.
      */
     ReinitializationEllipticOperator(
       const MeltPoolDG::ScratchData<dim, dim, number> &scratch_data_in,
       const ReinitializationData<number>              &reinit_data_in,
       const unsigned int                               reinit_dof_idx_in,
       const unsigned int                               reinit_quad_idx_in,
-      const BlockVectorType                           &normal_vector_in);
+      const BlockVectorType                           &normal_vector_in,
+      const bool                                       is_dg_in);
+
+  private:
+    /// Boolean indicator whether DG-FEM or CG-FEM is used. This indicator is used to evaluate
+    /// the correct terms in the cell and face loops.
+    bool is_dg;
   };
 } // namespace MeltPoolDG::LevelSet

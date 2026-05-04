@@ -26,10 +26,8 @@ namespace MeltPoolDG::LevelSet
    *
    * @tparam dim Dimension of the considered simulation case.
    * @tparam number Floating point format type.
-   * @tparam is_dg indicates whether DG-FEM or CG-FEM is used. The operation is designed so that
-   * both versions can be solved within it.
    */
-  template <int dim, typename number, bool is_dg>
+  template <int dim, typename number>
   class ReinitializationEllipticOperation : public ReinitializationOperationBase<dim, number>
   {
   public:
@@ -178,7 +176,7 @@ namespace MeltPoolDG::LevelSet
     VectorType solution_level_set;
 
     /// Pointer to the elliptic reinitialization operator object
-    std::unique_ptr<ReinitializationEllipticOperator<dim, number, is_dg>> reinit_operator;
+    std::unique_ptr<ReinitializationEllipticOperator<dim, number>> reinit_operator;
 
     /// Pointer to the operation for the normal vector computation
     std::shared_ptr<NormalVectorOperationBase<dim, number>> normal_vector_operation;

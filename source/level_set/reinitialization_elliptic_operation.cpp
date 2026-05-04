@@ -8,8 +8,8 @@ namespace MeltPoolDG::LevelSet
 {
   using namespace dealii;
 
-  template <int dim, typename number, bool is_dg>
-  ReinitializationEllipticOperation<dim, number, is_dg>::ReinitializationEllipticOperation(
+  template <int dim, typename number>
+  ReinitializationEllipticOperation<dim, number>::ReinitializationEllipticOperation(
     const ScratchData<dim, dim, number> &scratch_data_in,
     const ReinitializationData<number>  &reinit_data,
     const unsigned int                   reinit_dof_idx_in,
@@ -26,104 +26,104 @@ namespace MeltPoolDG::LevelSet
     normal_vector_operation = std::make_shared<NormalVectorDGOperation<dim, number>>(
       scratch_data_in, reinit_dof_idx, reinit_quad_idx, solution_level_set, normal_vec_data);
 
-    reinit_operator = std::make_unique<ReinitializationEllipticOperator<dim, number, is_dg>>(
+    reinit_operator = std::make_unique<ReinitializationEllipticOperator<dim, number>>(
       scratch_data_in,
       reinit_data,
       reinit_dof_idx_in,
       reinit_quad_idx_in,
-      normal_vector_operation->get_solution_normal_vector());
+      normal_vector_operation->get_solution_normal_vector(),
+      reinit_data.fe.type == FiniteElementType::FE_DGQ);
   }
 
-  template <int dim, typename number, bool is_dg>
+  template <int dim, typename number>
   void
-  ReinitializationEllipticOperation<dim, number, is_dg>::solve()
+  ReinitializationEllipticOperation<dim, number>::solve()
   {
     // TODO
   }
 
-  template <int dim, typename number, bool is_dg>
+  template <int dim, typename number>
   void
-  ReinitializationEllipticOperation<dim, number, is_dg>::reinit()
+  ReinitializationEllipticOperation<dim, number>::reinit()
   {
     // TODO
   }
 
-  template <int dim, typename number, bool is_dg>
+  template <int dim, typename number>
   void
-  ReinitializationEllipticOperation<dim, number, is_dg>::update_dof_idx(
+  ReinitializationEllipticOperation<dim, number>::update_dof_idx(
     const unsigned int &reinit_dof_idx_in)
   {
     reinit_dof_idx = reinit_dof_idx_in;
   }
 
-  template <int dim, typename number, bool is_dg>
+  template <int dim, typename number>
   void
-  ReinitializationEllipticOperation<dim, number, is_dg>::set_initial_condition(
-    const VectorType &solution_level_set_in)
+  ReinitializationEllipticOperation<dim, number>::set_initial_condition(
+    const VectorType & /*solution_level_set_in*/)
   {
     // TODO
   }
 
-  template <int dim, typename number, bool is_dg>
+  template <int dim, typename number>
   void
-  ReinitializationEllipticOperation<dim, number, is_dg>::set_initial_condition(
-    const Function<dim> &initial_field_function)
+  ReinitializationEllipticOperation<dim, number>::set_initial_condition(
+    const Function<dim> & /*initial_field_function*/)
   {
     // TODO
   }
 
-  template <int dim, typename number, bool is_dg>
-  const typename ReinitializationEllipticOperation<dim, number, is_dg>::VectorType &
-  ReinitializationEllipticOperation<dim, number, is_dg>::get_level_set() const
+  template <int dim, typename number>
+  const typename ReinitializationEllipticOperation<dim, number>::VectorType &
+  ReinitializationEllipticOperation<dim, number>::get_level_set() const
   {
     return solution_level_set;
   }
 
-  template <int dim, typename number, bool is_dg>
-  typename ReinitializationEllipticOperation<dim, number, is_dg>::VectorType &
-  ReinitializationEllipticOperation<dim, number, is_dg>::get_level_set()
+  template <int dim, typename number>
+  typename ReinitializationEllipticOperation<dim, number>::VectorType &
+  ReinitializationEllipticOperation<dim, number>::get_level_set()
   {
     return solution_level_set;
   }
 
-  template <int dim, typename number, bool is_dg>
+  template <int dim, typename number>
   number
-  ReinitializationEllipticOperation<dim, number, is_dg>::get_max_change_level_set() const
+  ReinitializationEllipticOperation<dim, number>::get_max_change_level_set() const
   {
     return max_change_level_set;
   }
 
-  template <int dim, typename number, bool is_dg>
-  const typename ReinitializationEllipticOperation<dim, number, is_dg>::BlockVectorType &
-  ReinitializationEllipticOperation<dim, number, is_dg>::get_normal_vector() const
+  template <int dim, typename number>
+  const typename ReinitializationEllipticOperation<dim, number>::BlockVectorType &
+  ReinitializationEllipticOperation<dim, number>::get_normal_vector() const
   {
     return normal_vector_operation->get_solution_normal_vector();
   }
 
-  template <int dim, typename number, bool is_dg>
-  typename ReinitializationEllipticOperation<dim, number, is_dg>::BlockVectorType &
-  ReinitializationEllipticOperation<dim, number, is_dg>::get_normal_vector()
+  template <int dim, typename number>
+  typename ReinitializationEllipticOperation<dim, number>::BlockVectorType &
+  ReinitializationEllipticOperation<dim, number>::get_normal_vector()
   {
     return normal_vector_operation->get_solution_normal_vector();
   }
 
-  template <int dim, typename number, bool is_dg>
+  template <int dim, typename number>
   void
-  ReinitializationEllipticOperation<dim, number, is_dg>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<number> *> &vectors)
+  ReinitializationEllipticOperation<dim, number>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<number> *> &)
   {
-    vectors.push_back(&solution_level_set);
-    normal_vector_operation->attach_vectors(vectors);
+    //  no need to transfer vectors during AMR
   }
 
-  template <int dim, typename number, bool is_dg>
+  template <int dim, typename number>
   void
-  ReinitializationEllipticOperation<dim, number, is_dg>::attach_output_vectors(
+  ReinitializationEllipticOperation<dim, number>::attach_output_vectors(
     GenericDataOut<dim, number> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(reinit_dof_idx),
                              solution_level_set,
-                             "level_set_");
+                             "level_set");
 
     for (unsigned int d = 0; d < dim; ++d)
       data_out.add_data_vector(scratch_data.get_dof_handler(reinit_dof_idx),
@@ -131,10 +131,7 @@ namespace MeltPoolDG::LevelSet
                                "normal_" + std::to_string(d));
   }
 
-  template class ReinitializationEllipticOperation<1, double, true>;
-  template class ReinitializationEllipticOperation<2, double, true>;
-  template class ReinitializationEllipticOperation<3, double, true>;
-  template class ReinitializationEllipticOperation<1, double, false>;
-  template class ReinitializationEllipticOperation<2, double, false>;
-  template class ReinitializationEllipticOperation<3, double, false>;
+  template class ReinitializationEllipticOperation<1, double>;
+  template class ReinitializationEllipticOperation<2, double>;
+  template class ReinitializationEllipticOperation<3, double>;
 } // namespace MeltPoolDG::LevelSet
