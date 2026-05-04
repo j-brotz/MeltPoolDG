@@ -1,78 +1,78 @@
 {
   "base": {
     "case name": "melt_front_propagation",
-    "dimension": "2",
-    "do print parameters": "false",
-    "global refinements": "5",
-    "verbosity level": "1",
+    "dimension": 2,
+    "do print parameters": false,
+    "global refinements": 5,
+    "verbosity level": 1,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "time stepping": {
-    "start time": "0.0",
-    "time step size": "1e-4",
-    "end time": "0.015",
-    "max n steps": "5"
+    "start time": 0.0,
+    "time step size": 0.0001,
+    "end time": 0.015,
+    "max n steps": 5
   },
   "simulation specific parameters": {
-    "domain x min": "0.0",
-    "domain x max": "0.6e-3",
-    "domain z min": "-0.2e-3",
-    "domain z max": "0.2e-3",
-    "initial temperature": "1000.0",
-    "do two phase": "true"
+    "domain x min": 0.0,
+    "domain x max": 0.0006,
+    "domain z min": -0.0002,
+    "domain z max": 0.0002,
+    "initial temperature": 1000.0,
+    "do two phase": true
   },
   "heat": {
     "linear solver": {
-      "rel tolerance": "1e-12",
+      "rel tolerance": 1e-12,
       "preconditioner type": "ILU"
     },
     "nlsolve": {
-      "residual tolerance": "1e-8"
+      "residual tolerance": 1e-08
     }
   },
   "application specific": {
-    "do solidification": "true"
+    "do solidification": true
   },
   "laser": {
     "starting position": "0.0,0.0",
     "dirac delta function approximation": {
       "type": "heaviside_times_heaviside_phase_weighted",
-      "auto weights": "true"
+      "auto weights": true
     },
     "model": "interface_projection_regularized",
     "intensity profile": "Gauss",
-    "power": "10.",
-    "absorptivity gas": "0.5",
-    "absorptivity liquid": "0.5",
-    "do move": "false",
-    "radius": "0.06e-3"
+    "power": 10,
+    "absorptivity gas": 0.5,
+    "absorptivity liquid": 0.5,
+    "do move": false,
+    "radius": 6e-05
   },
   "material": {
     "gas": {
-      "thermal conductivity": "10",
-      "specific heat capacity": "10",
-      "density": "74.30"
+      "thermal conductivity": 10,
+      "specific heat capacity": 10,
+      "density": 74.3
     },
     "liquid": {
-      "thermal conductivity": "55.563",
-      "specific heat capacity": "460.0",
-      "density": "7850.0"
+      "thermal conductivity": 55.563,
+      "specific heat capacity": 460.0,
+      "density": 7850.0
     },
     "solid": {
-      "thermal conductivity": "17.0",
-      "specific heat capacity": "700.0",
-      "density": "7850.0"
+      "thermal conductivity": 17.0,
+      "specific heat capacity": 700.0,
+      "density": 7850.0
     },
-    "solidus temperature": "1966.0",
-    "liquidus temperature": "1974.0",
+    "solidus temperature": 1966.0,
+    "liquidus temperature": 1974.0,
     "two phase fluid properties transition type": "smooth",
     "solid liquid properties transition type": "mushy_zone"
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   }
 }

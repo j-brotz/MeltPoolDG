@@ -2,18 +2,18 @@
   "base": {
     "problem name": "cfd_dem",
     "case name": "am_powder_bed",
-    "dimension": "3",
-    "do print parameters": "false",
+    "dimension": 3,
+    "do print parameters": false,
     "verbosity level": 1
   },
   "time stepping": {
-    "start time": "0.0",
-    "end time": "4e-10",
-    "time step size": "1e-10"
+    "start time": 0.0,
+    "end time": 4e-10,
+    "time step size": 1e-10
   },
   "output": {
-    "write frequency": "1",
-    "do user defined postprocessing": "true"
+    "write frequency": 1,
+    "do user defined postprocessing": true
   },
   "am simulation specific parameters": {
     "ambient temperature": 273,
@@ -38,14 +38,14 @@
   },
   "compressible navier stokes": {
     "numerical flux type": "lax_friedrichs_modified",
-    "use cfl criteria": "false",
+    "use cfl criteria": false,
     "courant number": 0.001,
     "gravity constant": 0,
     "time integration": {
       "type": "LSRK_stage_5_order_4"
     },
     "fe": {
-      "degree": "2",
+      "degree": 2,
       "type": "FE_DGQ"
     }
   },
@@ -60,17 +60,17 @@
     "stationary": true,
     "obstacle state input file": "../../particles_in_domain.csv",
     "cohesive forces": {
-      "cut off relative decline van der waals": "1e-6",
-      "hamaker constant": "40e-20",
-      "surface energy": "1e-5"
+      "cut off relative decline van der waals": 1e-06,
+      "hamaker constant": 4e-19,
+      "surface energy": 1e-05
     },
     "spherical particle contact force": {
-      "restitution coefficient": "0.6",
-      "rolling resistance coefficient": "0.4",
-      "sliding friction coefficient": "0.5",
+      "restitution coefficient": 0.6,
+      "rolling resistance coefficient": 0.4,
+      "sliding friction coefficient": 0.5,
       "particle-particle contact": {
-        "poisson ratio": "0.8",
-        "youngs modulus": "20e8"
+        "poisson ratio": 0.8,
+        "youngs modulus": 2000000000.0
       }
     }
   }

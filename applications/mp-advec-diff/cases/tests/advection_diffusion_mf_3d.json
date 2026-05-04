@@ -1,29 +1,29 @@
 {
   "base": {
     "case name": "advection_diffusion",
-    "dimension": "3",
-    "global refinements": "3",
-    "do print parameters": "false",
+    "dimension": 3,
+    "global refinements": 3,
+    "do print parameters": false,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "time stepping": {
-    "start time": "0.0",
-    "end time": "0.05",
-    "time step size": "0.01"
+    "start time": 0.0,
+    "end time": 0.05,
+    "time step size": 0.01
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   },
   "advection diffusion": {
     "advec diff integration scheme": "crank_nicolson",
     "linear solver": {
-      "do matrix free": "true"
+      "do matrix free": true
     },
-    "diffusivity": "0.000000",
+    "diffusivity": 0.0,
     "implementation": "meltpooldg"
   }
 }

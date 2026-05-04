@@ -1,157 +1,157 @@
 {
   "base": {
     "case name": "recoil_pressure",
-    "global refinements": "7",
-    "dimension": "1",
-    "do print parameters": "false",
-    "verbosity level": "1",
+    "global refinements": 7,
+    "dimension": 1,
+    "do print parameters": false,
+    "verbosity level": 1,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "time stepping": {
-    "start time": "0.0",
-    "end time": "0.0006",
-    "time step size": "0.000001",
-    "max n steps": "4"
+    "start time": 0.0,
+    "end time": 0.0006,
+    "time step size": 1e-06,
+    "max n steps": 4
   },
   "material": {
     "gas": {
-      "thermal conductivity": "10",
-      "specific heat capacity": "0",
-      "density": "74.30",
-      "dynamic viscosity": "0.0006"
+      "thermal conductivity": 10,
+      "specific heat capacity": 0,
+      "density": 74.3,
+      "dynamic viscosity": 0.0006
     },
     "liquid": {
-      "thermal conductivity": "35.95",
-      "specific heat capacity": "965",
-      "density": "7074.3",
-      "dynamic viscosity": "0.006"
+      "thermal conductivity": 35.95,
+      "specific heat capacity": 965,
+      "density": 7074.3,
+      "dynamic viscosity": 0.006
     },
     "solid": {
-      "thermal conductivity": "35.95",
-      "specific heat capacity": "965",
-      "density": "7430.0",
-      "dynamic viscosity": "0.06"
+      "thermal conductivity": 35.95,
+      "specific heat capacity": 965,
+      "density": 7430.0,
+      "dynamic viscosity": 0.06
     },
-    "solidus temperature": "1000",
-    "liquidus temperature": "1700.0",
-    "specific enthalpy reference temperature": "663.731",
-    "boiling temperature": "2000.",
+    "solidus temperature": 1000,
+    "liquidus temperature": 1700.0,
+    "specific enthalpy reference temperature": 663.731,
+    "boiling temperature": 2000,
     "latent heat of evaporation": "1.e6",
-    "molar mass": "0.05224130936",
+    "molar mass": 0.05224130936,
     "two phase fluid properties transition type": "smooth",
     "solid liquid properties transition type": "mushy_zone"
   },
   "evaporation": {
     "evaporative mass flux model": "recoil_pressure",
     "recoil pressure": {
-      "activation temperature": "0",
-      "temperature constant": "10000.",
-      "pressure coefficient": "0.0987166831194472",
-      "enable": "true",
-      "sticking constant": "1"
+      "activation temperature": 0,
+      "temperature constant": 10000,
+      "pressure coefficient": 0.0987166831194472,
+      "enable": true,
+      "sticking constant": 1
     },
     "evaporative cooling": {
-      "enable": "true"
+      "enable": true
     },
     "evaporative dilation rate": {
-      "enable": "false"
+      "enable": false
     }
   },
   "laser": {
     "model": "interface_projection_regularized",
     "intensity profile": "Gauss",
-    "power": "156.",
-    "absorptivity gas": "0.5",
-    "absorptivity liquid": "0.5",
-    "do move": "false",
-    "scan speed": "0.003",
+    "power": 156,
+    "absorptivity gas": 0.5,
+    "absorptivity liquid": 0.5,
+    "do move": false,
+    "scan speed": 0.003,
     "radius": "70.e-6"
   },
   "simulation specific domain": {
-    "domain x min": "-0.0002",
-    "domain x max": "0.0002",
-    "domain y min": "-0.0001",
-    "domain y max": "0.0002",
-    "evaporation boundary": "true"
+    "domain x min": -0.0002,
+    "domain x max": 0.0002,
+    "domain y min": -0.0001,
+    "domain y max": 0.0002,
+    "evaporation boundary": true
   },
   "heat": {
     "linear solver": {
-      "rel tolerance": "1e-4",
+      "rel tolerance": 0.0001,
       "preconditioner type": "Diagonal"
     },
     "nlsolve": {
-      "max nonlinear iterations": "20",
-      "field correction tolerance": "1e-9",
-      "residual tolerance": "1e-4"
+      "max nonlinear iterations": 20,
+      "field correction tolerance": 1e-09,
+      "residual tolerance": 0.0001
     }
   },
   "application specific": {
-    "do heat transfer": "true",
-    "do solidification": "true",
+    "do heat transfer": true,
+    "do solidification": true,
     "coupling heat evapor": {
-      "n max iter": "3"
+      "n max iter": 3
     }
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   },
   "level set": {
     "reinitialization": {
-      "enable": "true",
-      "max n steps": "2",
+      "enable": true,
+      "max n steps": 2,
       "type": "olsson2007",
       "interface thickness parameter": {
         "type": "proportional_to_cell_size",
-        "val": "1.5"
+        "val": 1.5
       }
     },
     "curvature": {
-      "enable": "false"
+      "enable": false
     },
     "normal vector": {
-      "filter parameter": "0.5"
+      "filter parameter": 0.5
     }
   },
   "flow": {
     "adaflo": {
       "Navier-Stokes": {
         "physical type": "incompressible",
-        "dimension": "2",
-        "global refinements": "0",
-        "velocity degree": "2",
+        "dimension": 2,
+        "global refinements": 0,
+        "velocity degree": 2,
         "formulation convective term momentum balance": "convective",
         "Solver": {
           "linearization scheme": "coupled implicit Newton",
-          "NL max iterations": "10",
+          "NL max iterations": 10,
           "NL tolerance": "1.e-10",
-          "lin max iterations": "30",
+          "lin max iterations": 30,
           "lin tolerance": "1.e-4",
-          "lin relative tolerance": "1",
+          "lin relative tolerance": 1,
           "lin velocity preconditioner": "ilu scalar",
           "lin pressure mass preconditioner": "ilu",
-          "lin its before inner solvers": "50"
+          "lin its before inner solvers": 50
         }
       },
       "Time stepping": {
         "scheme": "bdf_2"
       },
       "Output options": {
-        "output verbosity": "0",
-        "output walltimes": "0"
+        "output verbosity": 0,
+        "output walltimes": 0
       }
     },
-    "gravity": "0.0",
+    "gravity": 0.0,
     "darcy damping": {
-      "avoid div zero constant": "1.",
+      "avoid div zero constant": 1,
       "formulation": "implicit_formulation",
-      "mushy zone morphology": "1e11"
+      "mushy zone morphology": 100000000000.0
     },
     "surface tension": {
-      "surface tension coefficient": "0.0"
+      "surface tension coefficient": 0.0
     }
   }
 }

@@ -1,42 +1,42 @@
 {
   "base": {
     "case name": "recoil_pressure",
-    "dimension": "1",
-    "do print parameters": "false",
-    "global refinements": "5",
-    "verbosity level": "1",
+    "dimension": 1,
+    "do print parameters": false,
+    "global refinements": 5,
+    "verbosity level": 1,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "heat": {
-    "enable time dependent bc": "true",
+    "enable time dependent bc": true,
     "linear solver": {
       "preconditioner type": "Diagonal",
-      "rel tolerance": "1e-4"
+      "rel tolerance": 0.0001
     },
     "nlsolve": {
-      "max nonlinear iterations": "20",
-      "field correction tolerance": "1e-6",
-      "residual tolerance": "1e-1"
+      "max nonlinear iterations": 20,
+      "field correction tolerance": 1e-06,
+      "residual tolerance": 0.1
     }
   },
   "material": {
     "material template": "Ti64"
   },
   "application specific": {
-    "do advect level set": "false",
-    "do heat transfer": "true",
-    "do solidification": "false"
+    "do advect level set": false,
+    "do heat transfer": true,
+    "do solidification": false
   },
   "simulation specific domain": {
-    "domain x max": "400e-6",
-    "domain x min": "-400e-6",
-    "domain y max": "300e-6",
-    "domain y min": "-300e-6",
+    "domain x max": 0.0004,
+    "domain x min": -0.0004,
+    "domain y max": 0.0003,
+    "domain y min": -0.0003,
     "initial temperature": {
-      "top": "500.",
-      "bottom": "500."
+      "top": 500,
+      "bottom": 500
     },
     "bc temperature": {
       "top": "1000 + min(t/1e-9*1300,1300)",
@@ -44,29 +44,29 @@
     }
   },
   "time stepping": {
-    "max n steps": "5",
-    "time step size": "1e-10"
+    "max n steps": 5,
+    "time step size": 1e-10
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   },
   "evaporation": {
     "evaporative cooling": {
-      "enable": "false"
+      "enable": false
     },
     "evaporative dilation rate": {
-      "enable": "false"
+      "enable": false
     }
   },
   "level set": {
     "curvature": {
-      "filter parameter": "8",
-      "verbosity level": "2"
+      "filter parameter": 8,
+      "verbosity level": 2
     },
     "normal vector": {
-      "filter parameter": "0.1",
+      "filter parameter": 0.1,
       "implementation": "meltpooldg"
     }
   },
@@ -74,31 +74,31 @@
     "adaflo": {
       "Navier-Stokes": {
         "Solver": {
-          "NL max iterations": "50",
+          "NL max iterations": 50,
           "NL tolerance": "1.e-9",
-          "lin its before inner solvers": "50",
-          "lin max iterations": "50",
-          "lin relative tolerance": "1",
+          "lin its before inner solvers": 50,
+          "lin max iterations": 50,
+          "lin relative tolerance": 1,
           "lin tolerance": "1.e-5",
           "lin pressure preconditioner": "ilu scalar",
           "lin velocity preconditioner": "ilu",
           "linearization scheme": "coupled implicit Newton"
         },
-        "dimension": "2",
+        "dimension": 2,
         "formulation convective term momentum balance": "convective",
-        "global refinements": "0",
+        "global refinements": 0,
         "physical type": "incompressible",
         "constitutive type": "newtonian incompressible",
-        "velocity degree": "2"
+        "velocity degree": 2
       },
       "Output options": {
-        "output verbosity": "0",
-        "output walltimes": "0"
+        "output verbosity": 0,
+        "output walltimes": 0
       },
       "Time stepping": {
         "scheme": "bdf_2"
       }
     },
-    "gravity": "0.0"
+    "gravity": 0.0
   }
 }

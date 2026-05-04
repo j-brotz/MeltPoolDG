@@ -22,20 +22,20 @@
         "jet peak velocity": 10,
         "free jet profile": "cosine",
         "density": 0.4,
-        "inner energy": "213300"
+        "inner energy": 213300
       },
-      "density": "0.4",
+      "density": 0.4,
       "velocity": "10; 0.0",
-      "energy": "213300"
+      "energy": 213300
     },
     "boundary y max": {
       "type": "subsonic_outflow_fixed_energy",
-      "energy": "85320"
+      "energy": 85320
     },
     "initial conditions": {
-      "density": "0.4",
+      "density": 0.4,
       "velocity": "0; 0.0",
-      "energy": "213300"
+      "energy": 213300
     },
     "domain": {
       "size": "20e-6, 80e-6",

@@ -1,27 +1,27 @@
 {
   "base": {
     "case name": "radiative_transport",
-    "dimension": "2",
-    "global refinements": "7",
-    "do print parameters": "false",
-    "verbosity level": "3",
+    "dimension": 2,
+    "global refinements": 7,
+    "do print parameters": false,
+    "verbosity level": 3,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "profiling": {
-    "enable": "true"
+    "enable": true
   },
   "time stepping": {
-    "start time": "0.0",
-    "end time": "20.0",
-    "time step size": "1.0"
+    "start time": 0.0,
+    "end time": 20.0,
+    "time step size": 1.0
   },
   "rte": {
-    "rte verbosity level": "3",
-    "absorptivity gas": "0",
-    "absorptivity liquid": "10.0 ",
-    "avoid div zero constant": "1e-10",
+    "rte verbosity level": 3,
+    "absorptivity gas": 0,
+    "absorptivity liquid": 10.0,
+    "avoid div zero constant": 1e-10,
     "predictor type": "pseudo_time_stepping",
     "absorptivity type": "gradient_based",
     "pseudo time stepping": {
@@ -32,9 +32,9 @@
     },
     "linear solver": {
       "monitor type": "reduced",
-      "do matrix free": "true",
-      "abs tolerance": "1e-16",
-      "max iterations": "10000",
+      "do matrix free": true,
+      "abs tolerance": 1e-16,
+      "max iterations": 10000,
       "preconditioner type": "ILU"
     }
   },
@@ -42,11 +42,11 @@
     "direction": "0.0,-1.0"
   },
   "simulation specific parameters": {
-    "power": "0.1"
+    "power": 0.1
   },
   "output": {
     "paraview": {
-      "enable": "true"
+      "enable": true
     }
   }
 }

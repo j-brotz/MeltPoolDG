@@ -10,11 +10,11 @@
   "case setup": {
     "boundary x min": {
       "type": "subsonic_outflow_fixed_energy",
-      "energy": "85320"
+      "energy": 85320
     },
     "boundary x max": {
       "type": "subsonic_outflow_fixed_energy",
-      "energy": "85320"
+      "energy": 85320
     },
     "boundary y min": {
       "type": "combined_inflow_no_slip_wall",
@@ -26,17 +26,17 @@
         "jet peak velocity": 100,
         "free jet profile": "cosine",
         "density": 0.4,
-        "inner energy": "213300"
+        "inner energy": 213300
       }
     },
     "boundary y max": {
       "type": "subsonic_outflow_fixed_energy",
-      "energy": "85320"
+      "energy": 85320
     },
     "initial conditions": {
-      "density": "0.4",
+      "density": 0.4,
       "velocity": "0; 0.0",
-      "energy": "213300"
+      "energy": 213300
     },
     "domain": {
       "size": "1000e-06, 1000e-06",

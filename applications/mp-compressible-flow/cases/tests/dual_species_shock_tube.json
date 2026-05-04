@@ -30,7 +30,7 @@
     },
     "initial conditions": {
       "density": "1.0 * (x < 0.5) + 0.125 * (x >= 0.5)",
-      "velocity": "0",
+      "velocity": 0,
       "energy": "2.5 * (x < 0.5) + 4.0 * (x >= 0.5)",
       "species mass fractions": "1.0 * (x < 0.5) + 0.0 * (x >= 0.5)"
     },

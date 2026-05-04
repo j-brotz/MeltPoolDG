@@ -1,62 +1,62 @@
 {
   "base": {
     "case name": "powder_bed",
-    "dimension": "2",
-    "do print parameters": "false",
-    "global refinements": "5",
-    "verbosity level": "1",
+    "dimension": 2,
+    "do print parameters": false,
+    "global refinements": 5,
+    "verbosity level": 1,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "time stepping": {
-    "max n steps": "1",
-    "time step size": "1e-6"
+    "max n steps": 1,
+    "time step size": 1e-06
   },
   "heat": {
     "diffuse": {
-      "use volume-specific thermal capacity for phase interpolation": "true"
+      "use volume-specific thermal capacity for phase interpolation": true
     }
   },
   "laser": {
     "starting position": "0.0,0.0",
     "model": "interface_projection_regularized",
     "intensity profile": "Gauss",
-    "power": "100",
-    "absorptivity gas": "0.5",
-    "absorptivity liquid": "0.5",
-    "radius": "70e-6"
+    "power": 100,
+    "absorptivity gas": 0.5,
+    "absorptivity liquid": 0.5,
+    "radius": 7e-05
   },
   "material": {
     "material template": "Ti64",
     "gas": {
-      "density": "4.087"
+      "density": 4.087
     },
     "two phase fluid properties transition type": "smooth"
   },
   "simulation specific parameters": {
-    "domain x min": "-100e-6",
-    "domain x max": "100e-6",
-    "domain y min": "-50e-6",
-    "domain y max": "100e-6",
+    "domain x min": -0.0001,
+    "domain x max": 0.0001,
+    "domain y min": -5e-05,
+    "domain y max": 0.0001,
     "cell repetitions": "4,3",
-    "initial temperature": "500.0",
+    "initial temperature": 500.0,
     "powder bed": {
       "particle list file": "applications/mp-heat-transfer/cases/powder_bed/particles_in_domain.csv",
-      "substrate level": "0.0",
-      "slice location": "50e-6"
+      "substrate level": 0.0,
+      "slice location": 5e-05
     }
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   },
   "level set": {
     "reinitialization": {
       "interface thickness parameter": {
         "type": "proportional_to_cell_size",
-        "val": "1.5"
+        "val": 1.5
       }
     }
   }

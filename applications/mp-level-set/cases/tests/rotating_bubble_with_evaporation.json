@@ -1,70 +1,70 @@
 {
   "base": {
     "case name": "rotating_bubble",
-    "dimension": "2",
-    "global refinements": "7",
-    "do print parameters": "false",
+    "dimension": 2,
+    "global refinements": 7,
+    "do print parameters": false,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "time stepping": {
-    "start time": "0.0",
-    "end time": "0.01",
-    "time step size": "0.002"
+    "start time": 0.0,
+    "end time": 0.01,
+    "time step size": 0.002
   },
   "evaporation": {
     "analytical": {
-      "function": "1.0e-4"
+      "function": 0.0001
     }
   },
   "material": {
     "gas": {
-      "density": "0.01"
+      "density": 0.01
     },
     "liquid": {
-      "density": "1"
+      "density": 1
     },
     "two phase fluid properties transition type": "sharp"
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   },
   "level set": {
     "reinitialization": {
       "linear solver": {
-        "do matrix free": "true"
+        "do matrix free": true
       },
-      "enable": "true",
-      "n initial steps": "10",
-      "max n steps": "2",
+      "enable": true,
+      "n initial steps": 10,
+      "max n steps": 2,
       "type": "olsson2007",
       "implementation": "meltpooldg",
       "interface thickness parameter": {
         "type": "absolute_value",
-        "val": "0.03"
+        "val": 0.03
       }
     },
     "curvature": {
       "linear solver": {
-        "do matrix free": "true"
+        "do matrix free": true
       },
-      "filter parameter": "32",
+      "filter parameter": 32,
       "implementation": "meltpooldg"
     },
     "normal vector": {
       "linear solver": {
-        "do matrix free": "true"
+        "do matrix free": true
       },
-      "filter parameter": "4.0",
+      "filter parameter": 4.0,
       "implementation": "meltpooldg",
-      "verbosity level": "2"
+      "verbosity level": 2
     },
     "advection diffusion": {
       "linear solver": {
-        "do matrix free": "true"
+        "do matrix free": true
       }
     }
   }

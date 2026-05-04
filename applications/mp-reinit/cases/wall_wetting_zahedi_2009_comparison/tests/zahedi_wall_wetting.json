@@ -1,48 +1,48 @@
 {
   "base": {
     "case name": "wall_wetting",
-    "dimension": "2",
-    "global refinements": "4",
-    "do print parameters": "false",
+    "dimension": 2,
+    "global refinements": 4,
+    "do print parameters": false,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "time stepping": {
-    "start time": "0.0",
-    "max n steps": "5"
+    "start time": 0.0,
+    "max n steps": 5
   },
   "output": {
-    "do user defined postprocessing": "true",
+    "do user defined postprocessing": true,
     "paraview": {
       "filename": "wall_wetting",
-      "enable": "false"
+      "enable": false
     }
   },
   "reinitialization": {
     "linear solver": {
-      "do matrix free": "true",
+      "do matrix free": true,
       "preconditioner type": "ILU",
-      "abs tolerance": "1e-10"
+      "abs tolerance": 1e-10
     },
-    "tolerance": "1e-5",
+    "tolerance": 1e-05,
     "type": "olsson2007",
     "interface thickness parameter": {
       "type": "proportional_to_cell_size",
-      "val": "8"
+      "val": 8
     },
-    "tangential diffusion factor": "3"
+    "tangential diffusion factor": 3
   },
   "normal vector": {
-    "compute normalized vector": "true",
+    "compute normalized vector": true,
     "linear solver": {
-      "do matrix free": "true",
+      "do matrix free": true,
       "preconditioner type": "ILU"
     }
   },
   "simulation specific": {
-    "contact angle": "45",
-    "gamma factor": "2.5",
-    "output contact angle evolution": "false"
+    "contact angle": 45,
+    "gamma factor": 2.5,
+    "output contact angle evolution": false
   }
 }

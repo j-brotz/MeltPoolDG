@@ -1,113 +1,113 @@
 {
   "base": {
     "case name": "recoil_pressure",
-    "dimension": "1",
-    "do print parameters": "false",
-    "global refinements": "0",
-    "verbosity level": "0",
+    "dimension": 1,
+    "do print parameters": false,
+    "global refinements": 0,
+    "verbosity level": 0,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "time stepping": {
     "time step size": "1.e-8",
-    "start time": "0.0",
-    "end time": "2e-05",
-    "max n steps": "120"
+    "start time": 0.0,
+    "end time": 2e-05,
+    "max n steps": 120
   },
   "heat": {
     "nlsolve": {
-      "max nonlinear iterations": "15",
+      "max nonlinear iterations": 15,
       "field correction tolerance": "1.e-9",
-      "residual tolerance": "1e0"
+      "residual tolerance": 1.0
     }
   },
   "laser": {
     "model": "interface_projection_sharp",
     "intensity profile": "uniform",
-    "power": "1000000000.0",
-    "absorptivity gas": "1.0",
-    "absorptivity liquid": "1.0"
+    "power": 1000000000.0,
+    "absorptivity gas": 1.0,
+    "absorptivity liquid": 1.0
   },
   "material": {
     "material template": "Ti64",
-    "boiling temperature": "600",
+    "boiling temperature": 600,
     "two phase fluid properties transition type": "sharp"
   },
   "simulation specific domain": {
-    "domain y max": "0.0001",
-    "domain y min": "-0.0001",
-    "cell repetitions": "500",
-    "evaporation boundary": "true",
-    "periodic boundary": "false",
-    "slip boundary": "true"
+    "domain y max": 0.0001,
+    "domain y min": -0.0001,
+    "cell repetitions": 500,
+    "evaporation boundary": true,
+    "periodic boundary": false,
+    "slip boundary": true
   },
   "application specific": {
-    "do heat transfer": "true",
-    "do advect level set": "true"
+    "do heat transfer": true,
+    "do advect level set": true
   },
   "evaporation": {
     "interface temperature evaluation type": "local_value",
     "evaporative mass flux model": "recoil_pressure",
     "evaporative cooling": {
       "model": "sharp",
-      "enable": "true"
+      "enable": true
     },
     "evaporative dilation rate": {
       "model": "sharp",
-      "enable": "true"
+      "enable": true
     },
     "recoil pressure": {
       "interface distributed flux type": "local_value",
-      "activation temperature": "0",
-      "temperature constant": "2e3",
-      "pressure coefficient": "0.01974333662388944",
-      "enable": "false"
+      "activation temperature": 0,
+      "temperature constant": 2000.0,
+      "pressure coefficient": 0.01974333662388944,
+      "enable": false
     }
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": false
     }
   },
   "level set": {
     "reinitialization": {
-      "n initial steps": "0",
+      "n initial steps": 0,
       "interface thickness parameter": {
         "type": "proportional_to_cell_size",
-        "val": "1.5"
+        "val": 1.5
       }
     },
     "curvature": {
-      "enable": "false"
+      "enable": false
     },
     "normal vector": {
-      "filter parameter": "2"
+      "filter parameter": 2
     }
   },
   "flow": {
     "adaflo": {
       "Navier-Stokes": {
         "Solver": {
-          "NL max iterations": "15",
-          "NL tolerance": "1e-9",
-          "lin relative tolerance": "1",
-          "lin tolerance": "1e-9",
+          "NL max iterations": 15,
+          "NL tolerance": 1e-09,
+          "lin relative tolerance": 1,
+          "lin tolerance": 1e-09,
           "linearization scheme": "coupled implicit Newton"
         },
         "formulation convective term momentum balance": "convective",
-        "global refinements": "0",
+        "global refinements": 0,
         "physical type": "incompressible",
-        "velocity degree": "2"
+        "velocity degree": 2
       },
       "Output options": {
-        "output verbosity": "0",
-        "output walltimes": "0"
+        "output verbosity": 0,
+        "output walltimes": 0
       },
       "Time stepping": {
         "scheme": "bdf_2"
       }
     },
-    "gravity": "0.0"
+    "gravity": 0.0
   }
 }

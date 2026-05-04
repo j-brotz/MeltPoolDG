@@ -1,25 +1,25 @@
 {
   "base": {
     "case name": "radiative_transport",
-    "dimension": "2",
-    "do print parameters": "false",
-    "global refinements": "5",
-    "verbosity level": "1",
+    "dimension": 2,
+    "do print parameters": false,
+    "global refinements": 5,
+    "verbosity level": 1,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "laser": {
     "model": "RTE",
     "intensity profile": "Gauss",
-    "power": "0.1",
-    "radius": "0.25",
+    "power": 0.1,
+    "radius": 0.25,
     "starting position": "-0.5,0",
-    "do move": "true",
-    "scan speed": "1.0"
+    "do move": true,
+    "scan speed": 1.0
   },
   "rte": {
-    "rte verbosity level": "2",
+    "rte verbosity level": 2,
     "predictor type": "pseudo_time_stepping",
     "linear solver": {
       "solver type": "GMRES",
@@ -27,35 +27,35 @@
     }
   },
   "simulation specific parameters": {
-    "domain x min": "-1.0",
-    "domain x max": "1.0",
-    "domain y min": "-0.5",
-    "domain y max": "0.5",
+    "domain x min": -1.0,
+    "domain x max": 1.0,
+    "domain y min": -0.5,
+    "domain y max": 0.5,
     "cell repetitions": "2,1",
     "interface case": "straight",
-    "straight interface upward speed": "0.0"
+    "straight interface upward speed": 0.0
   },
   "material": {
     "gas": {
-      "thermal conductivity": "1.0",
-      "specific heat capacity": "1.0",
-      "density": "1.0"
+      "thermal conductivity": 1.0,
+      "specific heat capacity": 1.0,
+      "density": 1.0
     },
     "liquid": {
-      "thermal conductivity": "1.0",
-      "specific heat capacity": "1.0",
-      "density": "1.0"
+      "thermal conductivity": 1.0,
+      "specific heat capacity": 1.0,
+      "density": 1.0
     }
   },
   "time stepping": {
-    "end time": "1.0",
-    "time step size": "0.1"
+    "end time": 1.0,
+    "time step size": 0.1
   },
   "level set": {
     "reinitialization": {
       "interface thickness parameter": {
         "type": "proportional_to_cell_size",
-        "val": "6.0"
+        "val": 6.0
       }
     }
   }

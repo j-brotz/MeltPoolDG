@@ -1,56 +1,56 @@
 {
   "time stepping": {
-    "start time": "0.0",
-    "time step size": "0.001",
-    "end time": "1.0",
-    "max n steps": "100"
+    "start time": 0.0,
+    "time step size": 0.001,
+    "end time": 1.0,
+    "max n steps": 100
   },
   "base": {
     "case name": "unidirectional_heat_transfer",
-    "dimension": "2",
-    "do print parameters": "false",
-    "global refinements": "7",
+    "dimension": 2,
+    "do print parameters": false,
+    "global refinements": 7,
     "fe": {
-      "degree": "1"
+      "degree": 1
     }
   },
   "heat": {
     "linear solver": {
-      "rel tolerance": "1e-12"
+      "rel tolerance": 1e-12
     },
     "nlsolve": {
-      "residual tolerance": "1e-6"
+      "residual tolerance": 1e-06
     },
     "radiative boundary condition": {
-      "emissivity": "0.98",
-      "temperature infinity": "300.0"
+      "emissivity": 0.98,
+      "temperature infinity": 300.0
     },
     "convective boundary condition": {
-      "convection coefficient": "25",
-      "temperature infinity": "300.0"
+      "convection coefficient": 25,
+      "temperature infinity": 300.0
     }
   },
   "simulation specific": {
-    "do solidification": "false",
-    "do two phase": "false",
-    "velocity": "0.01"
+    "do solidification": false,
+    "do two phase": false,
+    "velocity": 0.01
   },
   "application specific": {
-    "do two phase": "false",
-    "do solidification": "false"
+    "do two phase": false,
+    "do solidification": false
   },
   "material": {
     "gas": {
-      "thermal conductivity": "55.563",
-      "specific heat capacity": "460",
-      "density": "7850.0"
+      "thermal conductivity": 55.563,
+      "specific heat capacity": 460,
+      "density": 7850.0
     }
   },
   "output": {
     "paraview": {
       "filename": "solution_heat_transfer_velocity",
-      "print boundary id": "true",
-      "enable": "true"
+      "print boundary id": true,
+      "enable": true
     }
   }
 }
