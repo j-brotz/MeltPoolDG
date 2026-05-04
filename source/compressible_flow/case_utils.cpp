@@ -298,8 +298,10 @@ namespace MeltPoolDG::CompressibleFlow
       triangulation =
         std::make_shared<dealii::parallel::shared::Triangulation<dim>>(mpi_communicator);
     else
-      triangulation =
-        std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(mpi_communicator);
+      triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+        mpi_communicator,
+        dealii::Triangulation<dim>::MeshSmoothing::none,
+        dealii::parallel::distributed::Triangulation<dim>::Settings::construct_multigrid_hierarchy);
 
     dealii::Point<dim, number> dimensions = create_point_from_container(domain_dimensions);
 

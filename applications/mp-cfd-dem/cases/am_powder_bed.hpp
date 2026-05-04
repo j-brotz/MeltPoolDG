@@ -111,8 +111,10 @@ namespace MeltPoolDG::Simulation::CfdDem
     void
     create_spatial_discretization() override
     {
-      this->triangulation =
-        std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+      this->triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
+        this->mpi_communicator,
+        dealii::Triangulation<dim>::MeshSmoothing::none,
+        dealii::parallel::distributed::Triangulation<dim>::Settings::construct_multigrid_hierarchy);
 
       dealii::Point<dim, number> p1;
       dealii::Point<dim, number> p2;

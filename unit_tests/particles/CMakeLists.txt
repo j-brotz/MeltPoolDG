@@ -6,3 +6,10 @@ mpdg_setup_mpi_unit_tests(
    contact_forces.cpp
    cohesive_forces.cpp
 )
+
+mpdg_setup_mpi_unit_tests(
+   N_MPI_PROCESSES
+   4
+   TEST_SOURCE_FILES
+   data_structure.cpp
+)

@@ -7,6 +7,7 @@
 #include <deal.II/particles/particle_handler.h>
 #include <deal.II/particles/property_pool.h>
 
+#include "meltpooldg/particles/particle_accessor.hpp"
 #include <meltpooldg/particles/obstacle_data_structure.hpp>
 #include <meltpooldg/particles/particle.hpp>
 #include <meltpooldg/particles/particle_iterator.hpp>
@@ -44,6 +45,14 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::reinit()
   deregister_property_pool();
   properties_global_obstacles->clear();
   broadcast_global_particles();
+
+  for (unsigned int src_handle = 0; src_handle < properties_global_obstacles->n_registered_slots();
+       ++src_handle)
+    {
+      DEMParticleAccessor<dim, number> particle(*properties_global_obstacles, src_handle);
+    }
+
+  determine_communication_pattern();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -205,6 +214,268 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::deregister_
 
   for (unsigned int i = 0; i < properties_global_obstacles->n_registered_slots(); ++i)
     properties_global_obstacles->deregister_particle(i);
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
+  sort_particles_into_local_level_cells()
+{
+  cell_to_locally_owned_particle_cache.clear();
+  for (dealii::Particles::ParticleIterator<dim> particle = obstacle_handler->begin();
+       particle != obstacle_handler->end();
+       ++particle)
+    {
+      if (particle->get_surrounding_cell()->is_locally_owned())
+        {
+          typename dealii::Triangulation<dim>::cell_iterator cell =
+            particle->get_surrounding_cell();
+          while (cell->level() > level_to_store_particles)
+            {
+              cell = cell->parent();
+            }
+          cell_to_locally_owned_particle_cache[cell].push_back(particle);
+        }
+    }
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate_ghost_particles()
+{
+  cell_to_ghost_particle_cache.clear();
+
+  // Step 1: Send the number of particles to be sent to each rank
+  std::vector<MPI_Request>          send_requests(n_ranks_to_send_to);
+  unsigned                          request_send_index = 0;
+  std::unordered_map<int, unsigned> n_particles_to_send(n_ranks_to_send_to);
+  for (const auto &[rank, cells] : cell_to_rank_send)
+    {
+      n_particles_to_send[rank] = 0;
+      for (const dealii::CellId &cell_id : cells)
+        {
+          n_particles_to_send[rank] +=
+            cell_to_locally_owned_particle_cache[triangulation->create_cell_iterator(cell_id)]
+              .size();
+        }
+      MPI_Isend(&n_particles_to_send[rank],
+                1,
+                MPI_UNSIGNED,
+                rank,
+                0,
+                mpi_communicator,
+                &send_requests[request_send_index++]);
+    }
+
+  // Step 2: Receive the number of particles to be received from each rank
+  std::vector<MPI_Request> receive_requests(n_ranks_to_receive_from);
+  unsigned                 request_receive_index = 0;
+
+  // First: Rank to receive from; second: number of particles to receive from that rank
+  std::vector<std::pair<int, unsigned>> n_particles_to_receive(n_ranks_to_receive_from);
+  for (const std::pair<int, std::vector<dealii::CellId>> receive_info : cell_to_rank_receive)
+    {
+      n_particles_to_receive[request_receive_index].first = receive_info.first;
+      MPI_Irecv(&n_particles_to_receive[request_receive_index].second,
+                1,
+                MPI_UNSIGNED,
+                receive_info.first,
+                0,
+                mpi_communicator,
+                &receive_requests[request_receive_index]);
+      request_receive_index++;
+    }
+
+  MPI_Waitall(send_requests.size(), send_requests.data(), MPI_STATUSES_IGNORE);
+  MPI_Waitall(receive_requests.size(), receive_requests.data(), MPI_STATUSES_IGNORE);
+
+  // Step 3: Send the particle data to the respective ranks
+  std::vector<dealii::Utilities::MPI::Future<void>> send_futures;
+  for (const auto &[rank, cells] : cell_to_rank_send)
+    {
+      std::vector<char> send_buffer(n_particles_to_send[rank] *
+                                    serialized_size_in_bytes(ObstacleType::n_obstacle_properties));
+
+      unsigned iter = 0;
+      for (const dealii::CellId &cell_id : cells)
+        {
+          for (dealii::Particles::ParticleIterator<dim> particle :
+               cell_to_locally_owned_particle_cache[triangulation->create_cell_iterator(cell_id)])
+            {
+              write_particle_data_to_memory(send_buffer.data() +
+                                              iter * serialized_size_in_bytes(
+                                                       ObstacleType::n_obstacle_properties),
+                                            particle,
+                                            triangulation->create_cell_iterator(cell_id));
+
+              send_futures.push_back(dealii::Utilities::MPI::isend(
+                send_buffer,
+                obstacle_handler->get_triangulation().get_mpi_communicator(),
+                rank,
+                1));
+
+              iter++;
+            }
+        }
+    }
+
+  // Step 4: Receive the particle data from the respective ranks and populate the ghost particle
+  // cache
+  std::vector<dealii::Utilities::MPI::Future<std::vector<char>>> recv_futures;
+  recv_futures.reserve(n_particles_to_receive.size());
+  for (const auto &[rank, n_particles] : n_particles_to_receive)
+    {
+      recv_futures.push_back(dealii::Utilities::MPI::irecv<std::vector<char>>(
+        obstacle_handler->get_triangulation().get_mpi_communicator(), rank, 1));
+    }
+
+  for (auto &future : recv_futures)
+    {
+      future.wait();
+      ReceivedParticleData received_data =
+        read_particle_data_from_memory(future.get().data(),
+                                       *properties_global_obstacles,
+                                       ObstacleType::n_obstacle_properties);
+      typename dealii::Triangulation<dim>::cell_iterator cell(
+        &obstacle_handler->get_triangulation(), received_data.cell_level, received_data.cell_index);
+
+      cell_to_ghost_particle_cache[cell].push_back(received_data.handle);
+    }
+
+  for (auto &future : send_futures)
+    {
+      future.wait();
+    }
+}
+
+template <int dim, typename number, typename ObstacleType>
+void *
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::write_particle_data_to_memory(
+  void                                                     *data_pointer,
+  const dealii::Particles::ParticleIterator<dim>            particle,
+  const typename dealii::Triangulation<dim>::cell_iterator &cell) const
+{
+  // TODO: Do we need to consider memory alignment issues here?
+  dealii::types::particle_index *id_data =
+    static_cast<dealii::types::particle_index *>(data_pointer);
+  *id_data = particle->get_id();
+  ++id_data;
+
+  int *cell_data = reinterpret_cast<int *>(id_data);
+  *cell_data     = cell->level();
+  ++cell_data;
+  *cell_data = cell->index();
+  ++cell_data;
+
+  double *pdata = reinterpret_cast<double *>(cell_data);
+
+  // Write location
+  for (unsigned int i = 0; i < dim; ++i, ++pdata)
+    *pdata = particle->get_location()[i];
+
+  // Write properties
+  if (particle->has_properties())
+    {
+      dealii::ArrayView<const double> particle_properties = particle->get_properties();
+      for (unsigned int i = 0; i < particle_properties.size(); ++i, ++pdata)
+        *pdata = particle_properties[i];
+    }
+
+  return static_cast<void *>(pdata);
+}
+
+template <int dim, typename number, typename ObstacleType>
+auto
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::read_particle_data_from_memory(
+  void                                 *data_pointer,
+  dealii::Particles::PropertyPool<dim> &property_pool,
+  const unsigned                        n_properties) const -> ReceivedParticleData
+{
+  ReceivedParticleData received_data;
+  received_data.handle = property_pool.register_particle();
+
+  const dealii::types::particle_index *id_data =
+    static_cast<const dealii::types::particle_index *>(data_pointer);
+  property_pool.set_id(received_data.handle, *id_data++);
+
+  const int *cell_data     = reinterpret_cast<const int *>(id_data);
+  received_data.cell_level = *cell_data++;
+  received_data.cell_index = *cell_data++;
+
+  const double *pdata = reinterpret_cast<const double *>(id_data);
+
+  dealii::Point<dim> location;
+  for (unsigned int i = 0; i < dim; ++i)
+    location[i] = *pdata++;
+  property_pool.set_location(received_data.handle, location);
+
+  if (n_properties > 0)
+    {
+      const dealii::ArrayView<double> particle_properties =
+        property_pool.get_properties(received_data.handle);
+      for (unsigned int i = 0; i < n_properties; ++i)
+        particle_properties[i] = *pdata++;
+    }
+
+  return received_data;
+}
+
+template <int dim, typename number, typename ObstacleType>
+std::size_t
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::serialized_size_in_bytes(
+  unsigned int n_properties) const
+{
+  return sizeof(dealii::types::particle_index) + 2 * sizeof(int) + dim * sizeof(double) +
+         n_properties * sizeof(double);
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
+  determine_communication_pattern()
+{
+  cell_to_rank_send.clear();
+  cell_to_rank_receive.clear();
+
+  // Determine from whom we need to receive ghost particles
+  for (auto &cell :
+       obstacle_handler->get_triangulation().cell_iterators_on_level(level_to_store_particles))
+    {
+      if (not cell->is_locally_owned_on_level())
+        {
+          cell_to_rank_receive[cell->level_subdomain_id()].push_back(cell->id());
+        }
+    }
+
+  // Determine to whom we need to send locally owned particles from which cells
+  for (unsigned int rank = 0;
+       rank < dealii::Utilities::MPI::n_mpi_processes(
+                obstacle_handler->get_triangulation().get_mpi_communicator());
+       ++rank)
+    {
+      std::map<int, std::vector<dealii::CellId>> requested_cells_buffer =
+        dealii::Utilities::MPI::broadcast(
+          obstacle_handler->get_triangulation().get_mpi_communicator(), cell_to_rank_receive, rank);
+
+      if (rank != dealii::Utilities::MPI::this_mpi_process(
+                    obstacle_handler->get_triangulation().get_mpi_communicator()))
+        {
+          for (auto request : requested_cells_buffer)
+            {
+              if (static_cast<unsigned int>(request.first) ==
+                  dealii::Utilities::MPI::this_mpi_process(
+                    obstacle_handler->get_triangulation().get_mpi_communicator()))
+                {
+                  cell_to_rank_send[rank].insert(cell_to_rank_send[rank].end(),
+                                                 request.second.begin(),
+                                                 request.second.end());
+                }
+            }
+        }
+    }
+
+  n_ranks_to_send_to      = cell_to_rank_send.size();
+  n_ranks_to_receive_from = cell_to_rank_receive.size();
 }
 
 template struct MeltPoolDG::

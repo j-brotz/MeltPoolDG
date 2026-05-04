@@ -2,18 +2,21 @@
 
 #include <deal.II/base/array_view.h>
 #include <deal.II/base/geometry_info.h>
+#include <deal.II/base/mpi.h>
 #include <deal.II/base/timer.h>
 #include <deal.II/base/utilities.h>
 
 #include <deal.II/grid/filtered_iterator.h>
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_tools.h>
+#include <deal.II/grid/tria.h>
 
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <deal.II/numerics/solution_transfer.h>
 
 #include <deal.II/particles/particle_handler.h>
+#include <deal.II/particles/particle_iterator.h>
 #include <deal.II/particles/property_pool.h>
 
 #include "meltpooldg/particles/particle_accessor.hpp"
@@ -24,6 +27,7 @@
 
 #include <cmath>
 #include <memory>
+#include <numeric>
 #include <vector>
 
 namespace MeltPoolDG
@@ -628,6 +632,7 @@ namespace MeltPoolDG
     void
     update_ghost_particle_properties()
     {
+      // TODO
       dealii::TimerOutput::Scope t(timer, "update ghost particles");
       broadcast_global_particles();
     }
@@ -637,6 +642,9 @@ namespace MeltPoolDG
     {
       dealii::TimerOutput::Scope t(timer, "update ghost particles");
       broadcast_global_particles();
+
+      sort_particles_into_local_level_cells();
+      communicate_ghost_particles();
     }
 
     void
@@ -670,17 +678,72 @@ namespace MeltPoolDG
     /// MPI rank.
     mutable std::unique_ptr<dealii::Particles::PropertyPool<dim>> properties_global_obstacles;
 
+    std::map<typename dealii::Triangulation<dim>::cell_iterator,
+             std::vector<dealii::Particles::ParticleIterator<dim>>>
+      cell_to_locally_owned_particle_cache;
+
+    std::map<typename dealii::Triangulation<dim>::cell_iterator,
+             std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
+      cell_to_ghost_particle_cache;
+
     /// MPI communicator used for synchronizing obstacle data across all ranks.
     MPI_Comm mpi_communicator = MPI_COMM_WORLD;
 
     /// Timer data for profiling the obstacle search operations.
     dealii::TimerOutput &timer;
 
+    /// The level of the triangulation at which particles are stored.
+    int level_to_store_particles = 0;
+
     /**
      * @brief Deregisters all particles from the global obstacle property pool.
      */
     void
     deregister_property_pool() const;
+
+    void
+    sort_particles_into_local_level_cells();
+
+    void
+    communicate_ghost_particles();
+
+    // similar to dealii::Particles::Particle functionality but also sends cell information on level
+    // of interest as well as returns the handler in the new property pool when storing the
+    // received particles.
+    void *
+    write_particle_data_to_memory(
+      void                                                     *data_pointer,
+      const dealii::Particles::ParticleIterator<dim>            particle,
+      const typename dealii::Triangulation<dim>::cell_iterator &cell) const;
+
+    struct ReceivedParticleData
+    {
+      typename dealii::Particles::PropertyPool<dim>::Handle handle;
+      int                                                   cell_level;
+      int                                                   cell_index;
+    };
+
+
+    ReceivedParticleData
+    read_particle_data_from_memory(void                                 *data_pointer,
+                                   dealii::Particles::PropertyPool<dim> &property_pool,
+                                   const unsigned                        n_properties) const;
+
+    std::size_t
+    serialized_size_in_bytes(unsigned int n_properties) const;
+
+    void
+    determine_communication_pattern();
+
+    std::map<int, std::vector<dealii::CellId>> cell_to_rank_send;
+
+    unsigned n_ranks_to_send_to;
+
+    std::map<int, std::vector<dealii::CellId>> cell_to_rank_receive;
+
+    unsigned n_ranks_to_receive_from;
+
+    dealii::Triangulation<dim> *triangulation;
 
     /**
      * @brief Broadcasts obstacle properties of all locally owned particles to all MPI processes.
