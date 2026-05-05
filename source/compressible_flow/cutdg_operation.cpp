@@ -100,8 +100,9 @@ namespace MeltPoolDG::CompressibleFlow
     // configure the output
     using OutputView = DofStateView<dim, number, ConservedVariablesType<dim, number, 1, number>>;
 
-    const auto create_output_view =
-      [&material_data_in](ConservedVariablesType<dim, number, 1, number> &value) -> auto {
+    const auto create_output_view = [&material_data_in](
+      ConservedVariablesType<dim, number, 1, number> & value) -> auto
+    {
       return DofStateView<dim, number, ConservedVariablesType<dim, number, 1, number>>(
         value, material_data_in);
     };
@@ -115,6 +116,13 @@ namespace MeltPoolDG::CompressibleFlow
     output_manager.add_material_quantities_post_processor(
       std::make_unique<MaterialVariablesPostProcessor<dim, number, OutputView>>(
         create_output_view));
+  }
+
+  template <int dim, typename number>
+  std::vector<std::complex<number>>
+  CutDGOperation<dim, number>::estimate_jacobian_eigenvalues(const number, const unsigned int) const
+  {
+    AssertThrow(false, dealii::ExcNotImplemented());
   }
 
   template <int dim, typename number>

@@ -351,6 +351,19 @@ namespace MeltPoolDG::CompressibleFlow
         not simulation_case->parameters.output.do_user_defined_postprocessing and not force_output)
       return;
 
+    if (simulation_case->parameters.flow.eigenvalues_data.do_output or
+        simulation_case->parameters.flow.eigenvalues_data.print_summary)
+      {
+        const auto eigenvalues = comp_flow_operation.estimate_jacobian_eigenvalues(
+          time_iterator->get_current_time_increment());
+        post_processor->output_complex_valued_vector_to_csv(
+          time_step,
+          current_time,
+          eigenvalues,
+          simulation_case->parameters.flow.eigenvalues_data.output_filename,
+          force_output);
+      }
+
     const auto attach_output_vectors = [&](GenericDataOut<dim, number> &data_out) {
       comp_flow_operation.attach_output_vectors(data_out);
     };

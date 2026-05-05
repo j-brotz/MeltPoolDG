@@ -33,6 +33,8 @@ namespace MeltPoolDG
    * though, even zero, because we can only get as many eigenvalues as GRMES
    * iterations are performed. It is therefore recommended to check the size of
    * the returned vector before any other operations.
+   *
+   * @note This function is copied from MacroAM.
    */
   template <typename VectorType, typename Operator>
   std::vector<std::complex<double>>

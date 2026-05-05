@@ -46,8 +46,9 @@ namespace MeltPoolDG::CompressibleFlow
                                             number,
                                             ConservedVariablesType<dim, number, n_species, number>>;
 
-    const auto create_output_view =
-      [&material_data](ConservedVariablesType<dim, number, n_species, number> &value) -> auto {
+    const auto create_output_view = [&material_data](
+      ConservedVariablesType<dim, number, n_species, number> & value) -> auto
+    {
       return OutputView(value, material_data);
     };
 
@@ -161,6 +162,27 @@ namespace MeltPoolDG::CompressibleFlow
   {
     comp_flow_operator->add_external_force(std::move(external_force_residuum),
                                            std::move(external_force_jacobian));
+  }
+
+  template <int dim, typename number, int n_species>
+  std::vector<std::complex<number>>
+  DGOperation<dim, number, n_species>::estimate_jacobian_eigenvalues(
+    const number       time_step,
+    const unsigned int max_eigenvalues) const
+  {
+    AssertThrow(flow_scratch_data.material.data.number_of_species == 1,
+                ExcMessage(
+                  "Eigenvalue estimation is currently only implemented for single species flow."));
+    // TODO
+    // The following function classes might be useful for estimating the eigenvalues of the Jacobian
+    // matrix:
+    // - estimate_eigenvalues_gmres from utilities/eigenvalues.hpp
+    // - MatrixTypeObject from utilities/matrix_type_wrapper.hpp
+    // - local_cell_jacobian, local_face_jacobian, local_boundary_face_jacobian including their
+    // respective kernels and apply_jacobian_analytic from dg_operator_implicit.cpp
+
+    std::vector<std::complex<number>> eigenvalues;
+    return eigenvalues;
   }
 
   template <int dim, typename number, int n_species>
