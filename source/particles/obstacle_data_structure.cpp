@@ -30,6 +30,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::ObstacleCom
       std::make_unique<dealii::Particles::PropertyPool<dim>>(ObstacleType::n_obstacle_properties))
   , timer(timer)
   , triangulation(&triangulation)
+  , level_cell_partitioner(triangulation, level_to_store_particles)
 {}
 
 template <int dim, typename number, typename ObstacleType>
@@ -63,7 +64,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::reinit()
       DEMParticleAccessor<dim, number> particle(*properties_global_obstacles, src_handle);
     }
 
-  determine_communication_pattern();
+  level_cell_partitioner.reinit();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -257,10 +258,11 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
   cell_to_ghost_particle_cache.clear();
 
   // Step 1: Send the number of particles to be sent to each rank
-  std::vector<MPI_Request>          send_requests(n_ranks_to_send_to);
+  std::vector<MPI_Request>          send_requests(level_cell_partitioner.n_processes_to_send_to());
   unsigned                          request_send_index = 0;
-  std::unordered_map<int, unsigned> n_particles_to_send(n_ranks_to_send_to);
-  for (const auto &[rank, cells] : cell_to_rank_send)
+  std::unordered_map<int, unsigned> n_particles_to_send(
+    level_cell_partitioner.n_processes_to_send_to());
+  for (const auto &[rank, cells] : level_cell_partitioner.get_cell_to_rank_send())
     {
       n_particles_to_send[rank] = 0;
       for (const dealii::CellId &cell_id : cells)
@@ -279,18 +281,19 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
     }
 
   // Step 2: Receive the number of particles to be received from each rank
-  std::vector<MPI_Request> receive_requests(n_ranks_to_receive_from);
+  std::vector<MPI_Request> receive_requests(level_cell_partitioner.n_processes_to_receive_from());
   unsigned                 request_receive_index = 0;
 
   // First: Rank to receive from; second: number of particles to receive from that rank
-  std::vector<std::pair<int, unsigned>> n_particles_to_receive(n_ranks_to_receive_from);
-  for (const std::pair<int, std::vector<dealii::CellId>> receive_info : cell_to_rank_receive)
+  std::vector<std::pair<int, unsigned>> n_particles_to_receive(
+    level_cell_partitioner.n_processes_to_receive_from());
+  for (const int rank : level_cell_partitioner.get_particle_receiver_ranks())
     {
-      n_particles_to_receive[request_receive_index].first = receive_info.first;
+      n_particles_to_receive[request_receive_index].first = rank;
       MPI_Irecv(&n_particles_to_receive[request_receive_index].second,
                 1,
                 MPI_UNSIGNED,
-                receive_info.first,
+                rank,
                 0,
                 mpi_communicator,
                 &receive_requests[request_receive_index]);
@@ -302,7 +305,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
 
   // Step 3: Send the particle data to the respective ranks
   std::vector<dealii::Utilities::MPI::Future<void>> send_futures;
-  for (const auto &[rank, cells] : cell_to_rank_send)
+  for (const auto &[rank, cells] : level_cell_partitioner.get_cell_to_rank_send())
     {
       std::vector<char> send_buffer(n_particles_to_send[rank] *
                                     serialized_size_in_bytes(ObstacleType::n_obstacle_properties));
@@ -438,55 +441,6 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::serialized_
 {
   return sizeof(dealii::types::particle_index) + 2 * sizeof(int) + dim * sizeof(double) +
          n_properties * sizeof(double);
-}
-
-template <int dim, typename number, typename ObstacleType>
-void
-MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
-  determine_communication_pattern()
-{
-  cell_to_rank_send.clear();
-  cell_to_rank_receive.clear();
-
-  // Determine from whom we need to receive ghost particles
-  for (auto &cell :
-       obstacle_handler->get_triangulation().cell_iterators_on_level(level_to_store_particles))
-    {
-      if (not cell->is_locally_owned_on_level())
-        {
-          cell_to_rank_receive[cell->level_subdomain_id()].push_back(cell->id());
-        }
-    }
-
-  // Determine to whom we need to send locally owned particles from which cells
-  for (unsigned int rank = 0;
-       rank < dealii::Utilities::MPI::n_mpi_processes(
-                obstacle_handler->get_triangulation().get_mpi_communicator());
-       ++rank)
-    {
-      std::map<int, std::vector<dealii::CellId>> requested_cells_buffer =
-        dealii::Utilities::MPI::broadcast(
-          obstacle_handler->get_triangulation().get_mpi_communicator(), cell_to_rank_receive, rank);
-
-      if (rank != dealii::Utilities::MPI::this_mpi_process(
-                    obstacle_handler->get_triangulation().get_mpi_communicator()))
-        {
-          for (auto request : requested_cells_buffer)
-            {
-              if (static_cast<unsigned int>(request.first) ==
-                  dealii::Utilities::MPI::this_mpi_process(
-                    obstacle_handler->get_triangulation().get_mpi_communicator()))
-                {
-                  cell_to_rank_send[rank].insert(cell_to_rank_send[rank].end(),
-                                                 request.second.begin(),
-                                                 request.second.end());
-                }
-            }
-        }
-    }
-
-  n_ranks_to_send_to      = cell_to_rank_send.size();
-  n_ranks_to_receive_from = cell_to_rank_receive.size();
 }
 
 template struct MeltPoolDG::
