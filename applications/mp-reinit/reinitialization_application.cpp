@@ -11,6 +11,7 @@
 #include <deal.II/numerics/error_estimator.h>
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
+#include <meltpooldg/level_set/reinitialization_elliptic_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_hyperbolic_CG_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_hyperbolic_DG_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_olsson_operation_adaflo_wrapper.hpp>
@@ -30,56 +31,69 @@ namespace MeltPoolDG::LevelSet
     initialize();
     bool first_time_step = true;
 
-    while (!time_iterator->is_finished())
+    if (param.reinit.modeltype == ModelType::olsson2007)
       {
-        // Set the first time step size to zero in order to get the initial mass in postprocessing
-        // of the DG case
-        if (first_time_step && param.reinit.fe.type == FiniteElementType::FE_DGQ)
+        while (!time_iterator->is_finished())
           {
-            time_iterator->set_current_time_increment(0.0, std::numeric_limits<number>::max());
-            first_time_step = false;
-          }
-        else
-          {
-            if (param.reinit.reinitilization_DG_specific_data.do_CFL_based_time_stepping)
+            // Set the first time step size to zero in order to get the initial mass in
+            // postprocessing of the DG case
+            if (first_time_step && param.reinit.fe.type == FiniteElementType::FE_DGQ)
               {
-                number const time_step = reinit_operation->compute_CFL_based_timestep();
-
-                time_iterator->set_current_time_increment(time_step,
-                                                          std::numeric_limits<number>::max());
+                time_iterator->set_current_time_increment(0.0, std::numeric_limits<number>::max());
+                first_time_step = false;
               }
+            else
+              {
+                if (param.reinit.reinitilization_DG_specific_data.do_CFL_based_time_stepping)
+                  {
+                    number const time_step = reinit_operation->compute_CFL_based_timestep();
+
+                    time_iterator->set_current_time_increment(time_step,
+                                                              std::numeric_limits<number>::max());
+                  }
+              }
+
+            time_iterator->compute_next_time_increment();
+            time_iterator->print_me(scratch_data->get_pcout(1));
+
+            reinit_operation->solve();
+
+            if (param.application_specific_parameters.do_update_normal_vector)
+              reinit_operation->set_initial_condition(reinit_operation->get_level_set());
+
+            output_results(time_iterator->get_current_time_step_number(),
+                           time_iterator->get_current_time());
+
+            if (profiling_monitor && profiling_monitor->now())
+              {
+                profiling_monitor->print(scratch_data->get_pcout(1),
+                                         scratch_data->get_timer(),
+                                         scratch_data->get_mpi_comm());
+              }
+            // Check if we obtained steady state
+            if (reinit_operation->get_max_change_level_set() < param.reinit.tolerance and
+                time_iterator->get_current_time_step_number() >
+                  1 /*do not check at the initial condition*/)
+              {
+                Journal::print_line(scratch_data->get_pcout(0), "Steady state reached.");
+                break;
+              }
+
+            if (param.amr.do_amr)
+              refine_mesh();
           }
-
-
-        time_iterator->compute_next_time_increment();
-        time_iterator->print_me(scratch_data->get_pcout(1));
-
+      }
+    else if (param.reinit.modeltype == ModelType::elliptic)
+      {
+        // Solve a nonlinear system instead of advancing in pseudo-time
         reinit_operation->solve();
-
-        if (param.application_specific_parameters.do_update_normal_vector)
-          reinit_operation->set_initial_condition(reinit_operation->get_level_set());
 
         output_results(time_iterator->get_current_time_step_number(),
                        time_iterator->get_current_time());
-
-        if (profiling_monitor && profiling_monitor->now())
-          {
-            profiling_monitor->print(scratch_data->get_pcout(1),
-                                     scratch_data->get_timer(),
-                                     scratch_data->get_mpi_comm());
-          }
-        // Check if we obtained steady state
-        if (reinit_operation->get_max_change_level_set() < param.reinit.tolerance and
-            time_iterator->get_current_time_step_number() >
-              1 /*do not check at the initial condition*/)
-          {
-            Journal::print_line(scratch_data->get_pcout(0), "Steady state reached.");
-            break;
-          }
-
-        if (param.amr.do_amr)
-          refine_mesh();
       }
+    else
+      AssertThrow(false, ExcNotImplemented());
+
     //... always print timing statistics
     if (profiling_monitor)
       {
@@ -157,32 +171,55 @@ namespace MeltPoolDG::LevelSet
     // initialize the reinitialization operation class
     if (param.reinit.implementation == "meltpooldg")
       {
-        if (param.reinit.fe.type != FiniteElementType::FE_DGQ)
+        if (param.reinit.modeltype == ModelType::olsson2007)
           {
-            reinit_operation = std::make_unique<ReinitializationHyperbolicCGOperation<dim, number>>(
-              *scratch_data,
-              param.reinit,
-              param.normal_vec,
-              param.reinit.fe.get_n_subdivisions(),
-              *time_iterator,
-              reinit_dof_idx,
-              reinit_quad_idx,
-              reinit_dof_idx,
-              normal_dof_indices_per_block,
-              normal_no_bc_dof_idx);
+            if (param.reinit.fe.type != FiniteElementType::FE_DGQ)
+              {
+                reinit_operation =
+                  std::make_unique<ReinitializationHyperbolicCGOperation<dim, number>>(
+                    *scratch_data,
+                    param.reinit,
+                    param.normal_vec,
+                    param.reinit.fe.get_n_subdivisions(),
+                    *time_iterator,
+                    reinit_dof_idx,
+                    reinit_quad_idx,
+                    reinit_dof_idx,
+                    normal_dof_indices_per_block,
+                    normal_no_bc_dof_idx);
+              }
+            else
+              {
+                reinit_operation =
+                  std::make_unique<ReinitializationHyperbolicDGOperation<dim, number>>(
+                    *scratch_data,
+                    param.reinit,
+                    *time_iterator,
+                    reinit_dof_idx,
+                    reinit_quad_idx,
+                    reinit_dof_idx,
+                    param.normal_vec,
+                    param.curv);
+              }
           }
-        else
+        else if (param.reinit.modeltype == ModelType::elliptic)
           {
             reinit_operation =
-              std::make_unique<ReinitializationHyperbolicDGOperation<dim, number>>(*scratch_data,
-                                                                                   param.reinit,
-                                                                                   *time_iterator,
-                                                                                   reinit_dof_idx,
-                                                                                   reinit_quad_idx,
-                                                                                   reinit_dof_idx,
-                                                                                   param.normal_vec,
-                                                                                   param.curv);
+              std::make_unique<ReinitializationEllipticOperation<dim, number>>(*scratch_data,
+                                                                               param.reinit,
+                                                                               reinit_dof_idx,
+                                                                               reinit_quad_idx,
+                                                                               reinit_dof_idx,
+                                                                               param.normal_vec);
+            // TODO: implement elliptic reinitialization
+            AssertThrow(
+              false,
+              dealii::ExcMessage(
+                "The elliptic reinitialization is in development and cannot be used yet."));
           }
+        else
+          AssertThrow(false, ExcNotImplemented());
+
         reinit_operation->reinit();
       }
 #ifdef MPDG_ENABLE_ADAFLO

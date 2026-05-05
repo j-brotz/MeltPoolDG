@@ -1068,7 +1068,7 @@
                 "default_value": "olsson2007",
                 "documentation": "Sets the type of reinitialization model that should be used.",
                 "pattern": "109",
-                "pattern_description": "[Anything]",
+                "pattern_description": "[Selection olsson2007|elliptic ]",
                 "actions": "109"
             },
             "implementation":

@@ -10,6 +10,7 @@
 - [`curvature`](#curvature)
 - [`output`](#output)
 - [`profiling`](#profiling)
+- [`application specific parameters`](#application-specific-parameters)
 
 ---
 
@@ -84,7 +85,7 @@
 | `max n steps` | `integer` | `5` | Sets the maximum number of reinitialization steps |
 | `tolerance` | `number` | `2.22507e-308` | Set the tolerance for reinitialization. If the maximum change of the level set field, i.e.  orΔФ or∞, exceeds the tolerance, reinitialization steps will be performed. |
 | `tangential diffusion factor` | `number` | `0.0` | Factor that multiplies the normal diffusion factor (diffusion length) to obtain the diffusion factor in the tangential direction. |
-| `type` | `string` | `olsson2007` | Sets the type of reinitialization model that should be used. |
+| `type` | `string` | `olsson2007` | Sets the type of reinitialization model that should be used.<br><br>Allowed values:<br>- `olsson2007`<br>- `elliptic` |
 | `implementation` | `string` | `meltpooldg` | Choose the corresponding implementation of the reinitialization operation.<br><br>Allowed values:<br>- `meltpooldg`<br>- `adaflo` |
 | [`Discontinous Galerkin`](#reinitialization-discontinous-galerkin) | `object` |  | [See table](#reinitialization-discontinous-galerkin) |
 | [`interface thickness parameter`](#reinitialization-interface-thickness-parameter) | `object` |  | [See table](#reinitialization-interface-thickness-parameter) |
@@ -305,6 +306,16 @@
 | `enable` | `boolean` | `False` | Set this parameter to true if profiling should be enabled. It will be automaticallyenabled for verbosity level >=1. |
 | `write time step size` | `number` | `10.0` | Write profiling output every given time step size. If this parameter is set, the specified parameter for write frequency is overwritten. |
 | `time type` | `string` | `real` | Choose the type of time measure to write profiling information.<br><br>Allowed values:<br>- `real`<br>- `simulation` |
+
+
+---
+
+<a id="application-specific-parameters"></a>
+## `🔷 application specific parameters`
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `do update normal vector` | `boolean` | `False` | Set this parameter to true to update the normal vector each pseudo-time step. |
 
 
 ---
