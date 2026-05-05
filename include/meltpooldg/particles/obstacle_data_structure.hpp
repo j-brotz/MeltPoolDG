@@ -28,6 +28,7 @@
 #include <cmath>
 #include <memory>
 #include <numeric>
+#include <ranges>
 #include <vector>
 
 namespace MeltPoolDG
@@ -448,6 +449,44 @@ namespace MeltPoolDG
     std::unique_ptr<ObstacleDataStructureConcept> obstacle_data_structure_pimpl;
   };
 
+  // TODO: Find a better name for this class
+  template <int dim>
+  class LevelCellPartitioner
+  {
+  public:
+    LevelCellPartitioner(dealii::Triangulation<dim> &tria, const unsigned int level)
+    {
+      setup_communication_pattern();
+    }
+
+    std::vector<int>
+    get_particle_receiver_ranks()
+    {
+      // TODO: Make this more efficient
+      std::vector<int> received_ranks;
+      received_ranks.reserve(cell_to_rank_receive.size());
+      for (const auto &rank : std::views::keys(cell_to_rank_receive))
+        {
+          received_ranks.push_back(rank);
+        }
+      return received_ranks;
+    }
+
+  private:
+    void
+    setup_communication_pattern();
+
+    std::map<int, std::vector<dealii::CellId>> cell_to_rank_send;
+
+    unsigned n_ranks_to_send_to;
+
+    std::map<int, std::vector<dealii::CellId>> cell_to_rank_receive;
+
+    unsigned n_ranks_to_receive_from;
+
+    dealii::Triangulation<dim> const *triangulation;
+  };
+
 
   /**
    * @brief A simple search utility that performs a linear scan over all particles.
@@ -541,16 +580,7 @@ namespace MeltPoolDG
       dealii::TimerOutput::Scope t(timer, "particles in cell search");
 
       std::vector<DEMParticleAccessor<dim, number>> particles_in_cell;
-      for (unsigned int src_handle = 0;
-           src_handle < properties_global_obstacles->n_registered_slots();
-           ++src_handle)
-        {
-          if (ObstacleType::is_in_cell(*properties_global_obstacles, src_handle, cell))
-            {
-              particles_in_cell.push_back(
-                DEMParticleAccessor<dim, number>(*properties_global_obstacles, src_handle));
-            }
-        }
+
       return particles_in_cell;
     }
 
@@ -607,10 +637,22 @@ namespace MeltPoolDG
         ParticleIterator<dim, number>(obstacle_handler->end()));
     }
 
+
+
     void
     insert_global_particles(const std::vector<dealii::Point<dim, number>> &obstacle_locations,
                             const std::vector<std::vector<number>>        &obstacle_properties)
     {
+      // Update the maximum particle radius based on the received particles. As this function is a
+      // collective operation, we can be sure that all processes receive the same particles and thus
+      // have the same maximum radius after this step. There is no need for an additional global
+      // reduction operation.
+      for (const auto &properties : obstacle_properties)
+        {
+          max_particle_radius =
+            std::max(max_particle_radius, properties[ObstacleType::Properties::radius]);
+        }
+
       std::vector<dealii::BoundingBox<dim>> local_bounding_box =
         dealii::GridTools::compute_mesh_predicate_bounding_box(
           obstacle_handler->get_triangulation(), dealii::IteratorFilters::LocallyOwnedCell());
@@ -626,7 +668,7 @@ namespace MeltPoolDG
           obstacle_properties :
           std::vector<std::vector<number>>{});
 
-      reinit();
+      // reinit();
     }
 
     void
@@ -695,6 +737,10 @@ namespace MeltPoolDG
     /// The level of the triangulation at which particles are stored.
     int level_to_store_particles = 0;
 
+    /// Variable to help keeping track of the maximum radius of the particles in the domain, which
+    /// is relevant for determining the level at which to store particles.
+    number max_particle_radius = 0;
+
     /**
      * @brief Deregisters all particles from the global obstacle property pool.
      */
@@ -743,7 +789,7 @@ namespace MeltPoolDG
 
     unsigned n_ranks_to_receive_from;
 
-    dealii::Triangulation<dim> *triangulation;
+    dealii::Triangulation<dim> const *triangulation;
 
     /**
      * @brief Broadcasts obstacle properties of all locally owned particles to all MPI processes.

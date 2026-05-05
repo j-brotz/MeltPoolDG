@@ -29,6 +29,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::ObstacleCom
   , properties_global_obstacles(
       std::make_unique<dealii::Particles::PropertyPool<dim>>(ObstacleType::n_obstacle_properties))
   , timer(timer)
+  , triangulation(&triangulation)
 {}
 
 template <int dim, typename number, typename ObstacleType>
@@ -42,6 +43,16 @@ template <int dim, typename number, typename ObstacleType>
 void
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::reinit()
 {
+  for (unsigned int level = 0; level < obstacle_handler->get_triangulation().n_global_levels();
+       ++level)
+    {
+      if (triangulation->begin(level)->minimum_vertex_distance() < max_particle_radius)
+        {
+          level_to_store_particles = level == 0 ? 0 : level - 1;
+          break;
+        }
+    }
+
   deregister_property_pool();
   properties_global_obstacles->clear();
   broadcast_global_particles();
