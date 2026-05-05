@@ -62,7 +62,7 @@ namespace MeltPoolDG::Heat
             else
               intensity_profile = std::make_shared<GaussProjectionIntensityProfile<dim, number>>(
                 laser_data.radius,
-                laser_data.template get_direction<dim>(),
+                laser_data.template get_beam_direction<dim>(),
                 [&]() -> const GaussProjectionIntensityProfile<dim, number>::State {
                   return {.power = get_laser_power(), .position = get_laser_position()};
                 });
@@ -146,7 +146,7 @@ namespace MeltPoolDG::Heat
               std::make_unique<RadiativeTransport::RadiativeTransportOperation<dim, number>>(
                 scratch_data,
                 *rad_trans_data_in,
-                laser_data.template get_direction<dim>(),
+                laser_data.template get_beam_direction<dim>(),
                 *heaviside_in,
                 rte_dof_idx,
                 rte_hanging_nodes_dof_idx,
@@ -249,9 +249,10 @@ namespace MeltPoolDG::Heat
     // 0) update current time
     current_time += dt;
     // 1) compute the current center of the laser beam
-    if (laser_data.do_move && laser_data.scan_speed != 0.0)
+    if (laser_data.scan_speed != 0.0 and laser_data.model != LaserModelType::analytical_temperature)
       {
-        laser_position[0] += laser_data.scan_speed * dt;
+        laser_position +=
+          laser_data.template get_scan_direction<dim>() * laser_data.scan_speed * dt;
         intensity_or_laser_position_has_changed = true;
       }
     // 2) compute intensity

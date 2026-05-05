@@ -24,7 +24,6 @@
     "power": 75,
     "starting position": "0.0,0.00004",
     "scan speed": 0.003,
-    "do move": false,
     "model": "analytical_temperature",
     "analytical": {
       "ambient temperature": 500,

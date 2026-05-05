@@ -29,7 +29,7 @@ new_parameter_names = [
 ]
 delete_parameter_names = [
     # ... add parameter names to be deleted
-    ["problem specific", "do melt pool"],
+    ["laser", "do move"],
 ]
 
 new_categories = [
@@ -46,7 +46,7 @@ root_dir = "."
 json_files = [os.path.join(dp, f) for dp, dn, filenames in os.walk(os.path.join(
     root_dir, "tests")) for f in filenames if os.path.splitext(f)[1] == '.json']
 json_files += [os.path.join(dp, f) for dp, dn, filenames in os.walk(os.path.join(
-    root_dir, "simulations")) for f in filenames if os.path.splitext(f)[1] == '.json']
+    root_dir, "applications")) for f in filenames if os.path.splitext(f)[1] == '.json']
 
 
 def update(d, u):

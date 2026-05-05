@@ -46,7 +46,7 @@ namespace MeltPoolDG::Heat
       &delta_approximation_phase_weighted_data)
     : laser_data(laser_data_in)
     , intensity_profile(intensity_profile_in)
-    , laser_direction(laser_data.template get_direction<dim>())
+    , laser_direction(laser_data.template get_beam_direction<dim>())
     , variable_properties_over_interface(variable_properties_over_interface_in)
   {
     delta_phase_weighted =

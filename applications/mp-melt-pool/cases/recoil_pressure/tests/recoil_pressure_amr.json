@@ -48,7 +48,6 @@
     "absorptivity gas": 0,
     "model": "analytical_temperature",
     "power": 75,
-    "do move": false,
     "scan speed": 0.003
   },
   "simulation specific domain": {

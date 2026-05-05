@@ -48,7 +48,6 @@
     },
     "model": "analytical_temperature",
     "power": 75,
-    "do move": false,
     "scan speed": 0.003
   },
   "melt front propagation": {

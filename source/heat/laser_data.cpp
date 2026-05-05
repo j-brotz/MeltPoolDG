@@ -55,15 +55,15 @@ namespace MeltPoolDG::Heat
                         absorptivity_liquid,
                         "Laser energy absorptivity of the liquid part of the domain.");
       prm.add_parameter(
-        "do move",
-        do_move,
-        "Set this parameter to true to move the laser in x-direction with the given parameter scan speed.");
-      prm.add_parameter(
         "starting position",
         starting_position,
         "Center coordinates of the laser beam starting position on the interface melt/gas.");
       prm.add_parameter("scan speed", scan_speed, "Scan speed of the laser");
-      prm.add_parameter("direction", direction, "Laser beam direction.");
+
+      prm.add_parameter("scan direction", scan_direction, "Direction of laser motion as a vector");
+
+      prm.add_parameter("beam direction", beam_direction, "Laser beam direction.");
+
       prm.add_parameter(
         "beam rotation axis",
         beam_rotation_axis,
@@ -125,19 +125,34 @@ namespace MeltPoolDG::Heat
                   ExcMessage(
                     "There must be dim coordinates of the laser starting position given."));
 
-    // if the laser direction is not specified, set it to the negative dim-1 direction
-    if (direction.size() == 0)
+    // if the laser beam direction is not specified, set it to the negative dim-1 direction
+    if (beam_direction.size() == 0)
       {
-        direction.resize(dim);
-        std::fill(direction.begin(), std::prev(direction.end()), 0);
-        direction[dim - 1] = -1.0;
+        beam_direction.resize(dim);
+        std::fill(beam_direction.begin(), std::prev(beam_direction.end()), 0);
+        beam_direction[dim - 1] = -1.0;
       }
     else
       {
-        AssertThrow(direction.size() == dim,
-                    ExcMessage("There must be dim coordinates of the laser direction given."));
-        AssertThrow(std::ranges::any_of(direction, [](double d) { return d != 0.0; }),
-                    ExcMessage("The laser direction cannot be a zero vector."));
+        AssertThrow(beam_direction.size() == dim,
+                    ExcMessage("There must be dim coordinates of the laser beam direction given."));
+        AssertThrow(std::ranges::any_of(beam_direction, [](double d) { return d != 0.0; }),
+                    ExcMessage("The laser beam direction cannot be a zero vector."));
+      }
+
+    // if the scan direction is not specified, set it to the 0 direction
+    if (scan_direction.size() == 0)
+      {
+        scan_direction.resize(dim);
+        std::fill(scan_direction.begin(), std::prev(scan_direction.end()), 0);
+        scan_direction[0] = 1.0;
+      }
+    else
+      {
+        AssertThrow(scan_direction.size() == dim,
+                    ExcMessage("There must be dim coordinates of the laser scan direction given."));
+        AssertThrow(std::ranges::any_of(scan_direction, [](double d) { return d != 0.0; }),
+                    ExcMessage("The laser scan direction cannot be a zero vector."));
       }
 
     if (dim == 1 || beam_rotation_angle == 0)
@@ -148,10 +163,10 @@ namespace MeltPoolDG::Heat
         const Tensor<2, 2, number> rotation_matrix =
           dealii::Physics::Transformations::Rotations::rotation_matrix_2d(
             MeltPoolDG::numbers::compute_angle_in_radians(beam_rotation_angle));
-        Point<2, number> original_direction(direction[0], direction[1]);
+        Point<2, number> original_direction(beam_direction[0], beam_direction[1]);
         const auto       rotated_direction = rotation_matrix * original_direction;
-        direction[0]                       = rotated_direction[0];
-        direction[1]                       = rotated_direction[1];
+        beam_direction[0]                  = rotated_direction[0];
+        beam_direction[1]                  = rotated_direction[1];
       }
     else if (dim == 3)
       {
@@ -176,11 +191,13 @@ namespace MeltPoolDG::Heat
         const Tensor<2, 3, number> rotation_matrix =
           dealii::Physics::Transformations::Rotations::rotation_matrix_3d(
             axis, MeltPoolDG::numbers::compute_angle_in_radians(beam_rotation_angle));
-        Point<3, number> original_direction(direction[0], direction[1], direction[2]);
+        Point<3, number> original_direction(beam_direction[0],
+                                            beam_direction[1],
+                                            beam_direction[2]);
         const auto       rotated_direction = rotation_matrix * original_direction;
-        direction[0]                       = rotated_direction[0];
-        direction[1]                       = rotated_direction[1];
-        direction[2]                       = rotated_direction[2];
+        beam_direction[0]                  = rotated_direction[0];
+        beam_direction[1]                  = rotated_direction[1];
+        beam_direction[2]                  = rotated_direction[2];
       }
   }
 
@@ -229,9 +246,18 @@ namespace MeltPoolDG::Heat
   template <typename number>
   template <int dim>
   Tensor<1, dim, number>
-  LaserData<number>::get_direction() const
+  LaserData<number>::get_beam_direction() const
   {
-    const auto temp = UtilityFunctions::to_point<dim>(direction.begin(), direction.end());
+    const auto temp = UtilityFunctions::to_point<dim>(beam_direction.begin(), beam_direction.end());
+    return temp / temp.norm();
+  }
+
+  template <typename number>
+  template <int dim>
+  Tensor<1, dim, number>
+  LaserData<number>::get_scan_direction() const
+  {
+    const auto temp = UtilityFunctions::to_point<dim>(scan_direction.begin(), scan_direction.end());
     return temp / temp.norm();
   }
 
@@ -244,9 +270,15 @@ namespace MeltPoolDG::Heat
   template Point<3, double>
   LaserData<double>::get_starting_position<3>() const;
   template Tensor<1, 1, double>
-  LaserData<double>::get_direction<1>() const;
+  LaserData<double>::get_beam_direction<1>() const;
   template Tensor<1, 2, double>
-  LaserData<double>::get_direction<2>() const;
+  LaserData<double>::get_beam_direction<2>() const;
   template Tensor<1, 3, double>
-  LaserData<double>::get_direction<3>() const;
+  LaserData<double>::get_beam_direction<3>() const;
+  template Tensor<1, 1, double>
+  LaserData<double>::get_scan_direction<1>() const;
+  template Tensor<1, 2, double>
+  LaserData<double>::get_scan_direction<2>() const;
+  template Tensor<1, 3, double>
+  LaserData<double>::get_scan_direction<3>() const;
 } // namespace MeltPoolDG::Heat

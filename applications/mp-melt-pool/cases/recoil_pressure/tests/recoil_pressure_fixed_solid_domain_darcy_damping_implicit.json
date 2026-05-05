@@ -52,7 +52,6 @@
     "power over time": "constant",
     "power start time": "-1.e-4",
     "power end time": "1.e-5",
-    "do move": false,
     "scan speed": 0.003
   },
   "melt front propagation": {
