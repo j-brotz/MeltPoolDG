@@ -3,6 +3,21 @@
 repos:
 -   repo: local
     hooks:
+    -   id: check-clang-format-version
+        name: Check clang-format version
+        entry: >
+          bash -c '
+          VERSION=$(clang-format --version 2>/dev/null || true);
+          echo "$VERSION";
+          echo "$VERSION" | grep -q "version 16" ||
+          {
+            echo "ERROR: clang-format version 16 is required.";
+            exit 1;
+          }'
+        language: system
+        pass_filenames: false
+-   repo: local
+    hooks:
     -   id: create-json-schema
         name: Generate JSON schema
         entry: scripts/parameters/create-all-json-schema.sh
