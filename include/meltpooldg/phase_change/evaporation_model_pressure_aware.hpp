@@ -9,40 +9,34 @@ namespace MeltPoolDG::Evaporation
    * pressure-aware boundary conditions, as presented in
    * Refined Formulations of Resolved Vapor Flow and Unresolved
    * Recoil Pressure Models for Rapid Evaporation in Metal Additive
-   * Manufacturing under Elevated Pressure
+   * Manufacturing under Elevated Pressure.
    *
    */
   template <typename number>
   class EvaporationModelPressureAware : public EvaporationModelBase<number>
   {
-  private:
-    /**
-     * @param Km  Fitting parameters for empirical correlations in the free-surface model
-     * @param ambient_gas_pressure Ambient gas pressure (build chamber).
-     * @param latent_heat_of_evaporation Latent heat of evaporation.
-     * @param boiling_temperature Boiling temperature at given build chamber pressure level.
-     */
-    const typename EvaporationData<number>::PressureAwareData pressure_aware_data;
-    const number                                              boiling_temperature;
-    const number                                              latent_heat_evaporation;
-
-    std::vector<number> Km;
-    const number        ambient_gas_pressure;
-
   public:
+    /**
+     * @brief Constructor.
+     *
+     * @param pressure_aware_data Data structure holding fitting parameters (Km) and ambient gas pressure.
+     * @param boling_temperature Boiling temperature at given build chamber pressure level.
+     * @param latent_heat_of_evaporation Latent heat of evaporation.
+     */
     EvaporationModelPressureAware(
       const typename EvaporationData<number>::PressureAwareData &pressure_aware_data,
       const number                                               boiling_temperature,
       const number                                               latent_heat_evaporation);
 
     /**
-     * @brief The evaporative mass flux is computed as
+     * @brief Compute evaporative mass flux is computed as
      *
      * .       Nm-1
      * m(T) =   ∑    Kₘ,ᵢ · (T - Tᵥ(pᵍ))ⁱ⁺¹
      *         i=0
      *
      * @param T Melt surface temperature.
+     * @return evaporative mass flux.
      */
     number
     local_compute_evaporative_mass_flux(const number T) const final;
@@ -59,6 +53,7 @@ namespace MeltPoolDG::Evaporation
      *  d T     i=0
      *
      * @param T Melt surface temperature.
+     * @return evaporative mass flux derivative.
      */
     number
     local_compute_evaporative_mass_flux_derivative(const number T) const final;
@@ -66,5 +61,21 @@ namespace MeltPoolDG::Evaporation
     dealii::VectorizedArray<number>
     local_compute_evaporative_mass_flux_vec_derivative(
       const dealii::VectorizedArray<number> &T) const final;
+
+  private:
+    /// Data structure holding fitting parameters (Km) and ambient gas pressure
+    const typename EvaporationData<number>::PressureAwareData pressure_aware_data;
+
+    /// Boiling temperature at given build chamber pressure level
+    const number boiling_temperature;
+
+    /// Latent heat of evaporation
+    const number latent_heat_evaporation;
+
+    /// Fitting parameters for empirical correlations in the free-surface model
+    std::vector<number> Km;
+
+    /// Ambient gas pressure (build chamber pressure)
+    const number ambient_gas_pressure;
   };
 } // namespace MeltPoolDG::Evaporation

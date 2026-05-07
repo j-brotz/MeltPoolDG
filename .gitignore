@@ -1,12 +1,11 @@
 build/
+build_debug/
+build_release/
 *.vtu
 *.pvtu
 *.swp
 *.vtk
 *.a
-build_debug
-build_release
-.clangd
 CMakeCache.txt
 Makefile
 CMakeFiles

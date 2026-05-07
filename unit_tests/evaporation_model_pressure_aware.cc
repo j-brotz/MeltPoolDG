@@ -23,7 +23,7 @@ main()
   Evaporation::EvaporationModelPressureAware<number> evap_model_pressure_aware(
     pressure_aware_data, boiling_temperature, latent_heat_evaporation);
 
-  std::vector<number> T_vec = {3100., 3300., 3500.};
+  std::vector<number> T_vec = {3100., 3500., 3800.};
 
   // Print header
   std::cout << std::left << std::setw(10) << "T" << std::setw(10) << "m_dot" << std::setw(10)

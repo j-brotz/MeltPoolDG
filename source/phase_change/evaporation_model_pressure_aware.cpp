@@ -26,15 +26,16 @@ namespace MeltPoolDG::Evaporation
   number
   EvaporationModelPressureAware<number>::local_compute_evaporative_mass_flux(const number T) const
   {
-    if (T < 1e-12)
+    if (T < boiling_temperature)
       return 0.0;
 
     else
       {
-        number mass_flux = 0.0;
-        for (int i = 0; i < static_cast<int>(Km.size()); ++i)
+        number       mass_flux = 0.0;
+        const number T_diff    = T - boiling_temperature;
+        for (size_t i = 0; i < Km.size(); ++i)
           {
-            mass_flux += Km[i] * std::pow((T - boiling_temperature), i + 1);
+            mass_flux += Km[i] * std::pow(T_diff, i + 1);
           }
         return mass_flux;
       }
@@ -45,15 +46,14 @@ namespace MeltPoolDG::Evaporation
   EvaporationModelPressureAware<number>::local_compute_evaporative_mass_flux_vec(
     const dealii::VectorizedArray<number> &T) const
   {
-    const dealii::VectorizedArray<number> dT        = T - boiling_temperature;
+    const dealii::VectorizedArray<number> T_diff    = T - boiling_temperature;
     dealii::VectorizedArray<number>       mass_flux = dealii::make_vectorized_array<number>(0.0);
-    for (int i = 0; i < static_cast<int>(Km.size()); ++i)
+    for (number i = 0; i < Km.size(); ++i)
       {
-        mass_flux +=
-          dealii::make_vectorized_array<number>(Km[i]) * std::pow(dT, static_cast<number>(i + 1));
+        mass_flux += dealii::make_vectorized_array<number>(Km[i]) * std::pow(T_diff, i + 1);
       }
     return dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(T,
-                                                                             1e-12,
+                                                                             boiling_temperature,
                                                                              0.0,
                                                                              mass_flux);
   }
@@ -63,15 +63,16 @@ namespace MeltPoolDG::Evaporation
   EvaporationModelPressureAware<number>::local_compute_evaporative_mass_flux_derivative(
     const number T) const
   {
-    if (T < 1e-12)
+    if (T < boiling_temperature)
       return 0.0;
 
     else
       {
-        number d_mass_flux = 0.0;
-        for (int i = 0; i < static_cast<int>(Km.size()); ++i)
+        number       d_mass_flux = 0.0;
+        const number T_diff      = T - boiling_temperature;
+        for (size_t i = 0; i < Km.size(); ++i)
           {
-            d_mass_flux += Km[i] * (i + 1) * std::pow((T - boiling_temperature), i);
+            d_mass_flux += Km[i] * (i + 1) * std::pow(T_diff, i);
           }
         return d_mass_flux;
       }
@@ -82,16 +83,15 @@ namespace MeltPoolDG::Evaporation
   EvaporationModelPressureAware<number>::local_compute_evaporative_mass_flux_vec_derivative(
     const dealii::VectorizedArray<number> &T) const
   {
-    const dealii::VectorizedArray<number> dT =
+    const dealii::VectorizedArray<number> T_diff =
       T - dealii::make_vectorized_array<number>(boiling_temperature);
     dealii::VectorizedArray<number> mass_flux = dealii::make_vectorized_array<number>(0.0);
-    for (int i = 0; i < static_cast<int>(Km.size()); ++i)
+    for (number i = 0; i < Km.size(); ++i)
       {
-        mass_flux += dealii::make_vectorized_array<number>(Km[i] * (i + 1)) *
-                     std::pow(dT, static_cast<number>(i));
+        mass_flux += dealii::make_vectorized_array<number>(Km[i] * (i + 1)) * std::pow(T_diff, i);
       }
     return dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(T,
-                                                                             1e-12,
+                                                                             boiling_temperature,
                                                                              0.0,
                                                                              mass_flux);
   }

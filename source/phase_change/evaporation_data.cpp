@@ -46,9 +46,10 @@ namespace MeltPoolDG::Evaporation
 
       prm.enter_subsection("pressure aware");
       {
-        prm.add_parameter("Km",
-                          pressure_aware.Km,
-                          "Fitting parameters for the pressure-aware model.");
+        prm.add_parameter(
+          "Km",
+          pressure_aware.Km,
+          "Fitting parameters for the evaporative mass flux function of the pressure-aware model.");
         prm.add_parameter("ambient_gas_pressure",
                           pressure_aware.ambient_gas_pressure,
                           "Ambient gas pressure for the pressure-aware model.");
