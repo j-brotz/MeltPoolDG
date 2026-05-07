@@ -22,8 +22,8 @@ namespace MeltPoolDG::Simulation::SingleTrackMelt
    * @brief Prescribed gas inlet velocity field for the single-track melt case.
    *
    * The velocity is defined only for three-dimensional simulations and returns
-   * a constant velocity in the z-direction. All other velocity components are
-   * zero.
+   * a constant velocity in the z-direction (=scan direction). All other velocity
+   * components are zero.
    *
    * @tparam dim Spatial dimension.
    */
