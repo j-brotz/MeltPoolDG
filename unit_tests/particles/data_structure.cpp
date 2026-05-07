@@ -87,7 +87,8 @@ TEST_F(ParticleDataStructureTest, PartitionerReceiverRanks)
   // The test is designed to run with 8 MPI processes.
   ASSERT_EQ(dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD), 8);
 
-  constexpr int level_to_store_particles = 1;
+  constexpr int  level_to_store_particles = 1;
+  dealii::CellId coarse_cell_id           = triangulation.begin(0)->id();
 
   MeltPoolDG::LevelCellPartitioner<dim> partitioner(triangulation, level_to_store_particles);
   partitioner.reinit();
@@ -112,6 +113,31 @@ TEST_F(ParticleDataStructureTest, PartitionerReceiverRanks)
     std::ranges::sort(partitioner_receiver_ranks);
 
     EXPECT_EQ(reference_receiver_ranks, partitioner_receiver_ranks);
+  }
+
+  {
+    SCOPED_TRACE("Check that correct cells are received from rank " +
+                 std::to_string(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)));
+    std::map<int, std::vector<dealii::CellId>> partitioner_cell_to_rank_receive =
+      partitioner.get_cell_to_rank_receive();
+
+
+    std::map<int, std::vector<dealii::CellId>> reference_cell_to_rank_receive;
+
+    int i = 0;
+    for (unsigned rank = 0; rank < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); ++rank)
+      {
+        if (rank % 2 == 0 and rank != dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
+          {
+            std::uint8_t child_indices           = i;
+            reference_cell_to_rank_receive[rank] = {
+              dealii::CellId(coarse_cell_id.get_coarse_cell_id(), 1u, &child_indices)};
+          }
+        if (rank % 2 == 0)
+          ++i;
+      }
+
+    EXPECT_EQ(reference_cell_to_rank_receive, partitioner_cell_to_rank_receive);
   }
 }
 
@@ -147,6 +173,33 @@ TEST_F(ParticleDataStructureTest, PartitionerSenderRanks)
     std::ranges::sort(partitioner_sender_ranks);
 
     EXPECT_EQ(reference_sender_ranks, partitioner_sender_ranks);
+  }
+
+  {
+    SCOPED_TRACE("Check that correct cells are sent from rank " +
+                 std::to_string(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)));
+    std::map<int, std::vector<dealii::CellId>> partitioner_cell_to_rank_send =
+      partitioner.get_cell_to_rank_send();
+
+
+    std::map<int, std::vector<dealii::CellId>> reference_cell_to_rank_send;
+    if (dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) % 2 == 0)
+      {
+        for (unsigned rank = 0; rank < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
+             ++rank)
+          {
+            if (rank != dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
+              {
+                reference_cell_to_rank_send[rank] = {};
+                for (typename dealii::Triangulation<dim>::cell_iterator cell :
+                     triangulation.cell_iterators_on_level(level_to_store_particles))
+                  if (cell->is_locally_owned_on_level())
+                    reference_cell_to_rank_send[rank].push_back(cell->id());
+              }
+          }
+      }
+
+    EXPECT_EQ(reference_cell_to_rank_send, partitioner_cell_to_rank_send);
   }
 }
 

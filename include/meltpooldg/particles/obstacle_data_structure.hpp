@@ -498,7 +498,7 @@ namespace MeltPoolDG
     }
 
     std::map<int, std::vector<dealii::CellId>>
-    get_particle_receiver_ranks_and_cells()
+    get_cell_to_rank_receive()
     {
       return cell_to_rank_receive;
     }
