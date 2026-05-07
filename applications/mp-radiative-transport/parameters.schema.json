@@ -477,11 +477,6 @@
           "description": "Laser energy absorptivity of the liquid part of the domain.",
           "default": 1.0
         },
-        "do move": {
-          "type": "boolean",
-          "description": "Set this parameter to true to move the laser in x-direction with the given parameter scan speed.",
-          "default": false
-        },
         "starting position": {
           "type": "array",
           "items": {
@@ -496,7 +491,16 @@
           "description": "Scan speed of the laser",
           "default": 0.0
         },
-        "direction": {
+        "scan direction": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 0,
+          "description": "Direction of laser motion as a vector",
+          "default": []
+        },
+        "beam direction": {
           "type": "array",
           "items": {
             "type": "number"

@@ -1,0 +1,389 @@
+{
+    "adaptive meshing":
+    {
+        "do amr": "false",
+        "do not modify boundary cells": "false",
+        "every n step": "1",
+        "lower perc to coarsen": "0",
+        "max grid refinement level": "12",
+        "min cells marked to refine": "1",
+        "min grid refinement level": "4",
+        "min indicator threshold to refine cell": "0",
+        "n initial refinement cycles": "0",
+        "solution transfer average values": "false",
+        "upper perc to refine": "0"
+    },
+    "application specific":
+    {
+        "amr strategy": "KellyErrorEstimator",
+        "do solidification": "true"
+    },
+    "base":
+    {
+        "case name": "single_track_melt",
+        "dimension": "3",
+        "do print parameters": "true",
+        "global refinements": "4",
+        "number": "double",
+        "verbosity level": "1",
+        "fe":
+        {
+            "degree": "1",
+            "type": "FE_Q"
+        }
+    },
+    "evaporation":
+    {
+        "do level set pressure gradient interpolation": "false",
+        "evaporative mass flux model": "analytical",
+        "formulation source term level set": "interface_velocity_local",
+        "interface temperature evaluation type": "local_value",
+        "analytical":
+        {
+            "function": "not_initialized"
+        },
+        "evaporative cooling":
+        {
+            "activation temperature": "-1e+100",
+            "consider enthalpy transport vapor mass flux": "false",
+            "enable": "false",
+            "model": "regularized",
+            "dirac delta function approximation":
+            {
+                "auto weights": "false",
+                "gas phase weight": "1",
+                "gas phase weight 2": "1",
+                "heavy phase weight": "1",
+                "heavy phase weight 2": "1",
+                "type": "norm_of_indicator_gradient"
+            }
+        },
+        "evaporative dilation rate":
+        {
+            "enable": "false",
+            "model": "regularized"
+        },
+        "hardt wondra":
+        {
+            "coefficient": "0"
+        },
+        "recoil pressure":
+        {
+            "activation temperature": "3134",
+            "ambient gas pressure": "101300",
+            "enable": "false",
+            "interface distributed flux type": "local_value",
+            "pressure coefficient": "0.55",
+            "sticking constant": "1",
+            "temperature constant": "42610.8",
+            "type": "phenomenological",
+            "dirac delta function approximation":
+            {
+                "auto weights": "false",
+                "gas phase weight": "1",
+                "gas phase weight 2": "1",
+                "heavy phase weight": "1",
+                "heavy phase weight 2": "1",
+                "type": "norm_of_indicator_gradient"
+            }
+        }
+    },
+    "heat":
+    {
+        "enable time dependent bc": "false",
+        "operator type": "cut",
+        "verbosity level": "1",
+        "convective boundary condition":
+        {
+            "convection coefficient": "0",
+            "temperature infinity": "0"
+        },
+        "cut":
+        {
+            "do explicit symmetry term": "true",
+            "theta": "0.5",
+            "two phase": "false",
+            "stabilization":
+            {
+                "nitsche parameter": "500",
+                "ghost-penalty":
+                {
+                    "gamma A degree 0": "1",
+                    "gamma A degree 1": "1.5",
+                    "gamma A degree 2": "1",
+                    "gamma M degree 0": "1",
+                    "gamma M degree 1": "0.75",
+                    "gamma M degree 2": "1"
+                }
+            }
+        },
+        "diffuse":
+        {
+            "use volume-specific thermal capacity for phase interpolation": "false"
+        },
+        "fe":
+        {
+            "degree": "1",
+            "type": "FE_Q"
+        },
+        "linear solver":
+        {
+            "abs tolerance": "1e-20",
+            "do matrix free": "true",
+            "max iterations": "10000",
+            "monitor type": "none",
+            "preconditioner type": "Diagonal",
+            "rel tolerance": "1e-12",
+            "solver type": "GMRES"
+        },
+        "nlsolve":
+        {
+            "field correction tolerance": "1e-06",
+            "field correction tolerance alt": "1e-09",
+            "max nonlinear iterations": "30",
+            "max nonlinear iterations alt": "0",
+            "residual tolerance": "1e-07",
+            "residual tolerance alt": "1e-08",
+            "verbosity level": "1"
+        },
+        "predictor":
+        {
+            "n old solutions": "2",
+            "type": "linear_extrapolation"
+        },
+        "radiative boundary condition":
+        {
+            "emissivity": "0",
+            "temperature infinity": "0"
+        }
+    },
+    "laser":
+    {
+        "absorptivity gas": "1",
+        "absorptivity liquid": "1",
+        "beam direction": "0, -1, 0",
+        "beam rotation angle": "0",
+        "beam rotation axis": "",
+        "intensity profile": "Gauss",
+        "model": "interface_projection_sharp",
+        "power": "9.6",
+        "power end time": "1.79769e+308",
+        "power over time": "constant",
+        "power start time": "0",
+        "radius": "8.8e-05",
+        "scan direction": "0, 0, 1",
+        "scan speed": "0.75",
+        "starting position": "0, 0, -0.001",
+        "analytical":
+        {
+            "ambient temperature": "0",
+            "max temperature": "0",
+            "temperature x to y ratio": "1"
+        },
+        "dirac delta function approximation":
+        {
+            "auto weights": "false",
+            "gas phase weight": "1",
+            "gas phase weight 2": "1",
+            "heavy phase weight": "1",
+            "heavy phase weight 2": "1",
+            "type": "norm_of_indicator_gradient"
+        },
+        "gusarov":
+        {
+            "extinction coefficient": "0",
+            "layer thickness": "0",
+            "reflectivity": "0"
+        }
+    },
+    "material":
+    {
+        "boiling temperature": "3134",
+        "latent heat of evaporation": "6.3441e+06",
+        "liquidus temperature": "1710",
+        "material template": "none",
+        "molar mass": "0.055845",
+        "solid liquid properties transition type": "mushy_zone",
+        "solidus temperature": "1670",
+        "specific enthalpy reference temperature": "538",
+        "two phase fluid properties transition type": "smooth",
+        "gas":
+        {
+            "density": "1.18",
+            "dynamic viscosity": "0",
+            "specific heat capacity": "477",
+            "thermal conductivity": "0.01023"
+        },
+        "liquid":
+        {
+            "density": "7850",
+            "dynamic viscosity": "0",
+            "specific heat capacity": "824.1",
+            "thermal conductivity": "27"
+        },
+        "solid":
+        {
+            "density": "7850",
+            "dynamic viscosity": "0",
+            "specific heat capacity": "483.5",
+            "thermal conductivity": "16.2"
+        }
+    },
+    "output":
+    {
+        "directory": ".\/",
+        "do user defined postprocessing": "false",
+        "output variables": "all",
+        "write frequency": "1",
+        "write time step size": "1.79769e+308",
+        "paraview":
+        {
+            "enable": "false",
+            "filename": "solution",
+            "n digits timestep": "4",
+            "n groups": "1",
+            "n patches": "0",
+            "output material id": "false",
+            "output subdomains": "false",
+            "print boundary id": "false",
+            "write higher order cells": "true"
+        },
+        "particles":
+        {
+            "enable": "false",
+            "filename": "particle"
+        }
+    },
+    "profiling":
+    {
+        "enable": "false",
+        "time type": "real",
+        "write time step size": "3600"
+    },
+    "rte":
+    {
+        "absorptivity type": "gradient_based",
+        "avoid singular matrix absorptivity": "1e-16",
+        "predictor type": "none",
+        "rte verbosity level": "1",
+        "absorptivity":
+        {
+            "absorptivity gas": "0.1",
+            "absorptivity liquid": "0.9",
+            "avoid div zero constant": "1e-16"
+        },
+        "fe":
+        {
+            "degree": "1",
+            "type": "FE_Q"
+        },
+        "linear solver":
+        {
+            "abs tolerance": "1e-20",
+            "do matrix free": "true",
+            "max iterations": "10000",
+            "monitor type": "none",
+            "preconditioner type": "ILU",
+            "rel tolerance": "1e-12",
+            "solver type": "GMRES"
+        },
+        "pseudo time stepping":
+        {
+            "advection term scaling": "1",
+            "diffusion term scaling": "1",
+            "pseudo time scaling": "0.01",
+            "rel tolerance": "0.001",
+            "linear solver":
+            {
+                "abs tolerance": "1e-20",
+                "do matrix free": "true",
+                "max iterations": "10000",
+                "monitor type": "none",
+                "preconditioner type": "ILU",
+                "rel tolerance": "1e-12",
+                "solver type": "CG"
+            },
+            "time stepping":
+            {
+                "end time": "1.79769e+308",
+                "max n steps": "1",
+                "start time": "0",
+                "time step size": "0",
+                "time step size function": "0.0*t"
+            }
+        }
+    },
+    "time stepping":
+    {
+        "end time": "0.00267",
+        "max n steps": "10",
+        "start time": "0",
+        "time step size": "1e-06",
+        "time step size function": "0.0*t"
+    }
+}
+| current laser position: 0 0 -0.001                                                         laser |
+| current laser intensity: 1                                                                 laser |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 1      t = 0.0000e+00 to 1.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| current laser position: 0 0 -0.00099925                                                    laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 1.93224e-02                newton_raphson_solver |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 2      t = 1.0000e-06 to 2.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| current laser position: 0 0 -0.0009985                                                     laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 1.93224e-02                newton_raphson_solver |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 3      t = 2.0000e-06 to 3.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| current laser position: 0 0 -0.00099775                                                    laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 1.93224e-02                newton_raphson_solver |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 4      t = 3.0000e-06 to 4.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| current laser position: 0 0 -0.000997                                                      laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 1.93225e-02                newton_raphson_solver |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 5      t = 4.0000e-06 to 5.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| current laser position: 0 0 -0.00099625                                                    laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 1.93225e-02                newton_raphson_solver |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 6      t = 5.0000e-06 to 6.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| current laser position: 0 0 -0.0009955                                                     laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 1.93226e-02                newton_raphson_solver |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 7      t = 6.0000e-06 to 7.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| current laser position: 0 0 -0.00099475                                                    laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 1.93226e-02                newton_raphson_solver |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 8      t = 7.0000e-06 to 8.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| current laser position: 0 0 -0.000994                                                      laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 1.93226e-02                newton_raphson_solver |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 9      t = 8.0000e-06 to 9.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| current laser position: 0 0 -0.00099325                                                    laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 1.93227e-02                newton_raphson_solver |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 10     t = 9.0000e-06 to 1.0000e-05 ( dt = 1.0000e-06 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| current laser position: 0 0 -0.0009925                                                     laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 1.93227e-02                newton_raphson_solver |
++--------------------------------------------------------------------------------------------------+
+|  end of simulation                                                                               |
++--------------------------------------------------------------------------------------------------+

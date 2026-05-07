@@ -37,7 +37,6 @@
     },
     "model": "analytical_temperature",
     "power": 10,
-    "do move": false,
     "scan speed": 0.003
   },
   "simulation specific domain": {

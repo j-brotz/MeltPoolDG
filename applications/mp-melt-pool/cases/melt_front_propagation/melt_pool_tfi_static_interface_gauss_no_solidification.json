@@ -22,7 +22,6 @@
     "power": 10,
     "absorptivity gas": 0.5,
     "absorptivity liquid": 0.5,
-    "do move": false,
     "radius": 6e-05
   },
   "simulation specific parameters": {

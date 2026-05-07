@@ -33,7 +33,7 @@
     }
   },
   "laser": {
-    "direction": "0.0,-1.0"
+    "beam direction": "0.0,-1.0"
   },
   "simulation specific parameters": {
     "power": 0.1

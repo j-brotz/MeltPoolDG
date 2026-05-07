@@ -59,17 +59,21 @@ namespace MeltPoolDG::Heat
     number absorptivity_liquid = 1.0;
     number absorptivity_gas    = 1.0;
 
-    bool   do_move    = false;
     number scan_speed = 0.0;
 
     template <int dim>
     dealii::Point<dim, number>
     get_starting_position() const;
 
-    // return unit direction vector
+    // return unit beam direction vector
     template <int dim>
     dealii::Tensor<1, dim, number>
-    get_direction() const;
+    get_beam_direction() const;
+
+    // return unit scan direction vector
+    template <int dim>
+    dealii::Tensor<1, dim, number>
+    get_scan_direction() const;
 
     number radius = 0.0;
 
@@ -97,8 +101,8 @@ namespace MeltPoolDG::Heat
 
     /**
      * Post operation to set up the laser direction and starting position vectors for the dimension @param dim
-     * This function must be called before you can get_direction() or get_starting_position() even
-     * if it's the default value.
+     * This function must be called before you can get_beam_direction(), get_scan_direction() or
+     * get_starting_position() even if it's the default value.
      */
     void
     post(const unsigned int dim);
@@ -116,7 +120,8 @@ namespace MeltPoolDG::Heat
 
   private:
     std::vector<number> starting_position;  // default value will be set in post()
-    std::vector<number> direction;          // default value will be set in post()
+    std::vector<number> beam_direction;     // default value will be set in post()
+    std::vector<number> scan_direction;     // default value will be set in post()
     std::vector<number> beam_rotation_axis; // default value will be set in post()
     number              beam_rotation_angle = 0;
   };

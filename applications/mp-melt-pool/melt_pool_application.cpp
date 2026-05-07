@@ -916,7 +916,7 @@ namespace MeltPoolDG
               if (laser_operation)
                 heat_cut_operation->register_laser_intensity_function_and_direction(
                   laser_operation->get_intensity_profile(),
-                  param.laser.template get_direction<dim>());
+                  param.laser.template get_beam_direction<dim>());
 
               // Register lambda function that reinits the dealii::MatrixFree class. It's required
               // to adapt the cut operator for a new interface position.

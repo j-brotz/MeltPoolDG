@@ -166,10 +166,10 @@
 | `power end time` | `number` | `1.79769e+308` | In case of time-dependent laser power: end time of |
 | `absorptivity gas` | `number` | `1.0` | Laser energy absorptivity of the gaseous part of the domain. |
 | `absorptivity liquid` | `number` | `1.0` | Laser energy absorptivity of the liquid part of the domain. |
-| `do move` | `boolean` | `False` | Set this parameter to true to move the laser in x-direction with the given parameter scan speed. |
 | `starting position` | `array` | `[]` | Center coordinates of the laser beam starting position on the interface melt/gas. |
 | `scan speed` | `number` | `0.0` | Scan speed of the laser |
-| `direction` | `array` | `[]` | Laser beam direction. |
+| `scan direction` | `array` | `[]` | Direction of laser motion as a vector |
+| `beam direction` | `array` | `[]` | Laser beam direction. |
 | `beam rotation axis` | `array` | `[]` | Axis around which the initial laser beam direction will be rotated. Relevant only in 3D. |
 | `beam rotation angle` | `number` | `0.0` | Rotation angle applied to the laser beam direction (in 3D about 'beam rotation axis' following the right-hand rule; in 2D: as defined by the 2D rotation matrix |
 | `radius` | `number` | `0.0` | Laser beam radius. |

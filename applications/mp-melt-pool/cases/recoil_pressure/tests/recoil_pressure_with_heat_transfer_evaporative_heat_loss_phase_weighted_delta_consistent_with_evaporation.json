@@ -56,8 +56,6 @@
     "power": 156,
     "absorptivity gas": 0.25,
     "absorptivity liquid": 0.25,
-    "do move": false,
-    "scan speed": 0.003,
     "radius": "70.e-6"
   },
   "melt front propagation": {

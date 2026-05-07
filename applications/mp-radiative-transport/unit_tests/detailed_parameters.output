@@ -610,34 +610,34 @@
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
             "actions": "63"
         },
-        "do move":
-        {
-            "value": "false",
-            "default_value": "false",
-            "documentation": "Set this parameter to true to move the laser in x-direction with the given parameter scan speed.",
-            "pattern": "64",
-            "pattern_description": "[Bool]",
-            "actions": "64"
-        },
         "starting position":
         {
             "value": "",
             "default_value": "",
             "documentation": "Center coordinates of the laser beam starting position on the interface melt\/gas.",
-            "pattern": "65",
+            "pattern": "64",
             "pattern_description": "[List of <[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]> of length 0...4294967295 (inclusive)]",
-            "actions": "65"
+            "actions": "64"
         },
         "scan speed":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Scan speed of the laser",
-            "pattern": "66",
+            "pattern": "65",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
+            "actions": "65"
+        },
+        "scan direction":
+        {
+            "value": "",
+            "default_value": "",
+            "documentation": "Direction of laser motion as a vector",
+            "pattern": "66",
+            "pattern_description": "[List of <[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]> of length 0...4294967295 (inclusive)]",
             "actions": "66"
         },
-        "direction":
+        "beam direction":
         {
             "value": "",
             "default_value": "",

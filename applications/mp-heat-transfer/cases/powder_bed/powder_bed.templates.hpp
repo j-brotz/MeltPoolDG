@@ -175,7 +175,7 @@ namespace MeltPoolDG::Simulation::PowderBed
              this->parameters.laser.power,
              this->parameters.laser.radius,
              this->parameters.laser.template get_starting_position<dim>(),
-             this->parameters.laser.template get_direction<dim>())},
+             this->parameters.laser.template get_beam_direction<dim>())},
           "dirichlet",
           "intensity");
       }

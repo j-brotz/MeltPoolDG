@@ -15,7 +15,6 @@
     "power": 0.1,
     "radius": 0.25,
     "starting position": "-0.5,0",
-    "do move": true,
     "scan speed": 1.0
   },
   "rte": {

@@ -1,0 +1,104 @@
+{
+  "profiling": {
+    "write time step size": 3600
+  },
+  "base": {
+    "case name": "single_track_melt",
+    "dimension": 3,
+    "do print parameters": true,
+    "global refinements": 5,
+    "verbosity level": 3,
+    "fe": {
+      "degree": 1
+    }
+  },
+  "case specific": {
+    "mesh": {
+      "additional refinement 1": 1,
+      "local refinement 1 bottom left": "-0.25e-3,-0.5e-3,-1.5e-3",
+      "local refinement 1 top right": "0.25e-3,0.1e-3,1.5e-3",
+      "additional refinement 2": 1,
+      "local refinement 2 bottom left": "-0.15e-3,-0.2e-3,-1.5e-3",
+      "local refinement 2 top right": "0.15e-3,0.1e-3,1.5e-3"
+    }
+  },
+  "time stepping": {
+    "end time": 0.00267,
+    "start time": 0.0,
+    "time step size": 1e-06
+  },
+  "laser": {
+    "beam rotation angle": 0,
+    "model": "interface_projection_sharp",
+    "intensity profile": "Gauss",
+    "radius": 8.8e-05,
+    "power": 9.6,
+    "scan speed": 0.75,
+    "scan direction": "0,0,1",
+    "beam direction": "0,-1,0",
+    "starting position": "0,0.0000,-0.001"
+  },
+  "application specific": {
+    "do solidification": true
+  },
+  "material": {
+    "boiling temperature": 3134,
+    "latent heat of evaporation": 6344100.0,
+    "liquidus temperature": 1710,
+    "material template": "none",
+    "molar mass": 0.055845,
+    "solid liquid properties transition type": "mushy_zone",
+    "solidus temperature": 1670,
+    "specific enthalpy reference temperature": 538,
+    "two phase fluid properties transition type": "smooth",
+    "gas": {
+      "density": 1.18,
+      "specific heat capacity": 477,
+      "thermal conductivity": 0.01023
+    },
+    "liquid": {
+      "density": 7850,
+      "specific heat capacity": 824.1,
+      "thermal conductivity": 27
+    },
+    "solid": {
+      "density": 7850,
+      "specific heat capacity": 483.5,
+      "thermal conductivity": 16.2
+    }
+  },
+  "heat": {
+    "operator type": "cut",
+    "cut": {
+      "two phase": false,
+      "theta": 0.5,
+      "do explicit symmetry term": true,
+      "stabilization": {
+        "ghost-penalty": {
+          "gamma A degree 1": 1.5,
+          "gamma M degree 1": 0.75
+        },
+        "nitsche parameter": 500
+      }
+    },
+    "@predictor": {
+      "type": "linear_extrapolation"
+    },
+    "nlsolve": {
+      "max nonlinear iterations": 30,
+      "field correction tolerance": 1e-06,
+      "residual tolerance": 1e-07
+    },
+    "fe": {
+      "type": "FE_Q",
+      "degree": 1
+    }
+  },
+  "output": {
+    "directory": "refine_0_evaporCooling_false_twophase_false_localRefinement2",
+    "write time step size": 1e-05,
+    "paraview": {
+      "enable": true
+    }
+  }
+}

@@ -89,7 +89,7 @@ namespace MeltPoolDG::RadiativeTransport
     rad_trans_operation = std::make_shared<RadiativeTransportOperation<dim, number>>(
       *scratch_data,
       simulation_case->parameters.rad_trans,
-      simulation_case->parameters.laser.template get_direction<dim>(),
+      simulation_case->parameters.laser.template get_beam_direction<dim>(),
       heaviside,
       rte_dof_idx,
       rte_hanging_nodes_dof_idx,

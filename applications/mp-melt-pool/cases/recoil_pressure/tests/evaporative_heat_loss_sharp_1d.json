@@ -60,7 +60,6 @@
     "power": 0,
     "absorptivity gas": 0.0,
     "absorptivity liquid": 0.5,
-    "do move": false,
     "scan speed": 0.003,
     "radius": "70.e-6"
   },

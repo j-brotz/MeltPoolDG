@@ -198,6 +198,7 @@
 | `number of species` | `integer` | `1` | Number of different species in the fluid phase. |
 | `eos type` | `string` | `ideal_gas` | Type of equation of state. The options are "ideal_gas", "stiffened_gas" and "noble_abel_stiffened_gas".<br><br>Allowed values:<br>- `ideal_gas`<br>- `stiffened_gas`<br>- `noble_abel_stiffened_gas` |
 | `reference density` | `number` | `1.0` | Reference density for computing the interior penalty factor. A good first guess is to choose a value in the order of the fluid density. If instabilities occur, the reference density can be decreased, so that the symmetric interior penalization is increased. |
+| `reference dynamic viscosity` | `number` | `0.000625` | Reference dynamic viscosity for computing the interior penalty factor. A good first guess is to choose a value in the order of the fluid dynamic viscosity. If instabilities occur, the reference dynamic viscosity can be increased, so that the symmetric interior penalization is increased. |
 | [`species 1`](#material-gas-species-1) | `object` |  | [See table](#material-gas-species-1) |
 | `name` | `string` | `species` | Name of the species used for output purposes. |
 | `specific isobaric heat` | `number` | `1000.0` | Specific isobaric heat. |
@@ -270,10 +271,10 @@
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| [`interaction pair1`](#material-gas-species-interactions-interaction-pair1) | `object` |  | [See table](#material-gas-species-interactions-interaction-pair1) |
+| [`interaction pair 1`](#material-gas-species-interactions-interaction-pair-1) | `object` |  | [See table](#material-gas-species-interactions-interaction-pair-1) |
 
-<a id="material-gas-species-interactions-interaction-pair1"></a>
-##### `material: gas: species interactions: interaction pair1`
+<a id="material-gas-species-interactions-interaction-pair-1"></a>
+##### `material: gas: species interactions: interaction pair 1`
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
