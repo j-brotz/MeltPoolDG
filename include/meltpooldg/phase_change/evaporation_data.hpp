@@ -25,7 +25,9 @@ namespace MeltPoolDG::Evaporation
     // calculate the evaporative mass flux from the saturated vapor pressure
     saturated_vapor_pressure,
     // calculate the evaporative mass flux according to the model proposed by Hardt & Wondra
-    hardt_wondra)
+    hardt_wondra,
+    // calculate the evaporative mass flux according to the pressure-aware model
+    pressure_aware)
 
   BETTER_ENUM(EvaporationLevelSetSourceTermType,
               char,
@@ -110,6 +112,12 @@ namespace MeltPoolDG::Evaporation
     {
       number coefficient = 0.0;
     } hardt_wondra;
+
+    struct PressureAwareData
+    {
+      std::vector<number> Km;
+      number              ambient_gas_pressure = 0.0;
+    } pressure_aware;
 
     struct AnalyticalModelData
     {

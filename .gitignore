@@ -1,4 +1,6 @@
 build/
+build_release
+build_debug
 *.vtu
 *.pvtu
 *.swp
@@ -7,3 +9,6 @@ build/
 CMakeCache.txt
 Makefile
 CMakeFiles
+# pixi environments
+.pixi/*
+!.pixi/config.toml
