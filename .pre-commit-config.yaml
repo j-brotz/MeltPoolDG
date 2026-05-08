@@ -9,9 +9,9 @@ repos:
           bash -c '
           VERSION=$(clang-format --version 2>/dev/null || true);
           echo "$VERSION";
-          echo "$VERSION" | grep -q "version 16" ||
+          echo "$VERSION" | grep -q "16.0.6" ||
           {
-            echo "ERROR: clang-format version 16 is required.";
+            echo "ERROR: clang-format 16.0.6 is required.";
             exit 1;
           }'
         language: system

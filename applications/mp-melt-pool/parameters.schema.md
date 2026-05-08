@@ -803,10 +803,11 @@
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `evaporative mass flux model` | `string` | `analytical` | Choose the formulation how the evaporative mass flux mDot (kg/(m2s)) will be calculated.<br><br>Allowed values:<br>- `analytical`<br>- `recoil_pressure`<br>- `saturated_vapor_pressure`<br>- `hardt_wondra` |
+| `evaporative mass flux model` | `string` | `analytical` | Choose the formulation how the evaporative mass flux mDot (kg/(m2s)) will be calculated.<br><br>Allowed values:<br>- `analytical`<br>- `recoil_pressure`<br>- `saturated_vapor_pressure`<br>- `hardt_wondra`<br>- `pressure_aware` |
 | `interface temperature evaluation type` | `string` | `local_value` | Choose the formulation how the (local) evaporative mass flux will be converted to a DoF vector.will be calculated. When the CutFEM heat transfer operator is used, this input parameter is ignored and the temperature is evaluated at the sharp interface which is equivalent to "sharp".<br><br>Allowed values:<br>- `local_value`<br>- `interface_value` |
 | [`analytical`](#evaporation-analytical) | `object` |  | [See table](#evaporation-analytical) |
 | [`hardt wondra`](#evaporation-hardt-wondra) | `object` |  | [See table](#evaporation-hardt-wondra) |
+| [`pressure aware`](#evaporation-pressure-aware) | `object` |  | [See table](#evaporation-pressure-aware) |
 | [`evaporative dilation rate`](#evaporation-evaporative-dilation-rate) | `object` |  | [See table](#evaporation-evaporative-dilation-rate) |
 | [`evaporative cooling`](#evaporation-evaporative-cooling) | `object` |  | [See table](#evaporation-evaporative-cooling) |
 | [`recoil pressure`](#evaporation-recoil-pressure) | `object` |  | [See table](#evaporation-recoil-pressure) |
@@ -826,6 +827,14 @@
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `coefficient` | `number` | `0.0` | Evaporation coefficient for the model by Hardt and Wondra. |
+
+<a id="evaporation-pressure-aware"></a>
+### `evaporation: pressure aware`
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `Km` | `array` | `[]` | Fitting parameters for the pressure-aware model. |
+| `ambient_gas_pressure` | `number` | `0.0` | Ambient gas pressure for the pressure-aware model. |
 
 <a id="evaporation-evaporative-dilation-rate"></a>
 ### `evaporation: evaporative dilation rate`

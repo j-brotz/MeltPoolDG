@@ -1275,7 +1275,8 @@
             "analytical",
             "recoil_pressure",
             "saturated_vapor_pressure",
-            "hardt_wondra"
+            "hardt_wondra",
+            "pressure_aware"
           ],
           "description": "Choose the formulation how the evaporative mass flux mDot (kg/(m2s)) will be calculated.",
           "default": "analytical"
@@ -1306,6 +1307,26 @@
             "coefficient": {
               "type": "number",
               "description": "Evaporation coefficient for the model by Hardt and Wondra.",
+              "default": 0.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "pressure aware": {
+          "type": "object",
+          "properties": {
+            "Km": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 0,
+              "description": "Fitting parameters for the pressure-aware model.",
+              "default": []
+            },
+            "ambient_gas_pressure": {
+              "type": "number",
+              "description": "Ambient gas pressure for the pressure-aware model.",
               "default": 0.0
             }
           },

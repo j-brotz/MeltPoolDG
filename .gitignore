@@ -4,6 +4,12 @@ build/
 *.swp
 *.vtk
 *.a
+build_debug
+build_release
+.clangd
 CMakeCache.txt
 Makefile
 CMakeFiles
+# pixi environments
+.pixi/*
+!.pixi/config.toml
