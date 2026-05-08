@@ -1321,7 +1321,7 @@
                 "type": "number"
               },
               "minItems": 0,
-              "description": "Fitting parameters for the pressure-aware model.",
+              "description": "Fitting parameters for the evaporative mass flux function of the pressure-aware model.",
               "default": []
             },
             "ambient_gas_pressure": {

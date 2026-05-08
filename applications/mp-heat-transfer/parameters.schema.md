@@ -415,7 +415,7 @@
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `Km` | `array` | `[]` | Fitting parameters for the pressure-aware model. |
+| `Km` | `array` | `[]` | Fitting parameters for the evaporative mass flux function of the pressure-aware model. |
 | `ambient_gas_pressure` | `number` | `0.0` | Ambient gas pressure for the pressure-aware model. |
 
 <a id="evaporation-evaporative-dilation-rate"></a>

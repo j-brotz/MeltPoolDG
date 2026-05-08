@@ -1552,7 +1552,7 @@
             {
                 "value": "",
                 "default_value": "",
-                "documentation": "Fitting parameters for the pressure-aware model.",
+                "documentation": "Fitting parameters for the evaporative mass flux function of the pressure-aware model.",
                 "pattern": "159",
                 "pattern_description": "[List of <[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]> of length 0...4294967295 (inclusive)]",
                 "actions": "159"
