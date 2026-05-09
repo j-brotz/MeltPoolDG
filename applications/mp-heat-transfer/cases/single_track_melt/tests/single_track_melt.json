@@ -5,7 +5,7 @@
   "base": {
     "case name": "single_track_melt",
     "dimension": 3,
-    "do print parameters": true,
+    "do print parameters": false,
     "global refinements": 4,
     "verbosity level": 1,
     "fe": {
