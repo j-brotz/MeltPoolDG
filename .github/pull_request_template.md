@@ -17,6 +17,7 @@
 
 - [ ] The branch is rebased onto master
 - [ ] Code is formatted with format-all
+- [ ] Prefer a single commit with a meaningful commit message; if multiple commits are necessary, explain why in the PR description
 - [ ] Labels are applied
 - [ ] Co-Pilot review is requested
 - [ ] Reviews are requested
