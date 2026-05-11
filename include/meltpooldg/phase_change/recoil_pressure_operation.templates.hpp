@@ -28,6 +28,13 @@ namespace MeltPoolDG::Evaporation
     // with @p T_ac the activation temperature of the recoil pressure and @p T_v the boiling temperature.
 
     template <typename number>
+    inline number
+    compute_scaling_coeff(const number T, const number T_ac, const number T_v)
+    {
+      return (T < T_ac) ? 0.0 : (T >= T_v) ? 1. : (T - T_ac) / (T_v - T_ac);
+    }
+
+    template <typename number>
     inline dealii::VectorizedArray<number>
     compute_scaling_coeff(const dealii::VectorizedArray<number> &T,
                           const number                           T_ac,
@@ -39,13 +46,6 @@ namespace MeltPoolDG::Evaporation
         0.0,
         compare_and_apply_mask<dealii::SIMDComparison::greater_than_or_equal>(
           T, T_v, 1., (T - T_ac) / (T_v - T_ac)));
-    }
-
-    template <typename number>
-    inline number
-    compute_scaling_coeff(const number T, const number T_ac, const number T_v)
-    {
-      return (T < T_ac) ? 0.0 : (T >= T_v) ? 1. : (T - T_ac) / (T_v - T_ac);
     }
   } // namespace internal
 
@@ -71,6 +71,24 @@ namespace MeltPoolDG::Evaporation
            dealii::Utilities::fixed_power<2>(m_dot) * density_coeff * delta_coefficient;
   }
 
+
+  template <typename number>
+  inline number
+  RecoilPressurePhenomenologicalModel<number>::compute_recoil_pressure_coefficient(
+    const number T) const
+  {
+    const number T_ac = recoil_data.activation_temperature;
+    const number T_v  = boiling_temperature;
+
+    const number scaling_coeff = internal::compute_scaling_coeff(T, T_ac, T_v);
+
+    return scaling_coeff * recoil_data.pressure_coefficient *
+           compute_saturated_gas_pressure(T,
+                                          T_v,
+                                          recoil_data.ambient_gas_pressure,
+                                          recoil_data.temperature_constant);
+  }
+
   template <typename number>
   inline dealii::VectorizedArray<number>
   RecoilPressurePhenomenologicalModel<number>::compute_recoil_pressure_coefficient(
@@ -89,21 +107,46 @@ namespace MeltPoolDG::Evaporation
                                           recoil_data.temperature_constant);
   }
 
+
   template <typename number>
   inline number
-  RecoilPressurePhenomenologicalModel<number>::compute_recoil_pressure_coefficient(
+  RecoilPressureModelPressureAware<number>::compute_recoil_pressure_coefficient(
     const number T) const
   {
-    const number T_ac = recoil_data.activation_temperature;
-    const number T_v  = boiling_temperature;
+    if (T < boiling_temperature)
+      return 0.0;
 
-    const number scaling_coeff = internal::compute_scaling_coeff(T, T_ac, T_v);
+    else
+      {
+        number       recoil_pressure = ambient_gas_pressure;
+        const number T_diff          = T - boiling_temperature;
 
-    return scaling_coeff * recoil_data.pressure_coefficient *
-           compute_saturated_gas_pressure(T,
-                                          T_v,
-                                          recoil_data.ambient_gas_pressure,
-                                          recoil_data.temperature_constant);
+        for (size_t i = 0; i < Kp.size(); ++i)
+          {
+            recoil_pressure += Kp[i] * std::pow(T_diff, i + 2);
+          }
+        return recoil_pressure;
+      }
+  }
+
+  template <typename number>
+  inline dealii::VectorizedArray<number>
+  RecoilPressureModelPressureAware<number>::compute_recoil_pressure_coefficient(
+    const dealii::VectorizedArray<number> &T) const
+  {
+    const dealii::VectorizedArray<number> T_diff =
+      T - dealii::make_vectorized_array<number>(boiling_temperature);
+    dealii::VectorizedArray<number> recoil_pressure =
+      dealii::make_vectorized_array<number>(ambient_gas_pressure);
+
+    for (number i = 0; i < Kp.size(); ++i)
+      {
+        recoil_pressure += dealii::make_vectorized_array<number>(Kp[i]) * std::pow(T_diff, i + 2);
+      }
+    return dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(T,
+                                                                             boiling_temperature,
+                                                                             0.0,
+                                                                             recoil_pressure);
   }
 
 } // namespace MeltPoolDG::Evaporation

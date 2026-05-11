@@ -523,7 +523,7 @@
 | `interface distributed flux type` | `string` | `local_value` | Type that determines how the recoil pressure force is computed in the interfacial zone.<br><br>Allowed values:<br>- `local_value`<br>- `interface_value` |
 | `activation temperature` | `number` | `-1e+100` | Activation temperature for the recoil pressure. It must be smaller than or equal to the boiling temperature. As default value, the boiling temperature is chosen. |
 | [`dirac delta function approximation`](#evaporation-recoil-pressure-dirac-delta-function-approximation) | `object` |  | [See table](#evaporation-recoil-pressure-dirac-delta-function-approximation) |
-| `type` | `string` | `phenomenological` | Choose the model to compute the recoil pressure coefficient: phenomenological or hybrid, in case there is also an evaporation-induced velocity jump.<br><br>Allowed values:<br>- `phenomenological`<br>- `hybrid` |
+| `type` | `string` | `phenomenological` | Choose the model to compute the recoil pressure coefficient: phenomenological or hybrid, in case there is also an evaporation-induced velocity jump.<br><br>Allowed values:<br>- `phenomenological`<br>- `hybrid`<br>- `pressure_aware` |
 
 <a id="evaporation-recoil-pressure-dirac-delta-function-approximation"></a>
 #### `evaporation: recoil pressure: dirac delta function approximation`

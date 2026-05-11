@@ -3279,7 +3279,7 @@
                 "default_value": "phenomenological",
                 "documentation": "Choose the model to compute the recoil pressure coefficient: phenomenological or hybrid, in case there is also an evaporation-induced velocity jump.",
                 "pattern": "281",
-                "pattern_description": "[Selection phenomenological|hybrid ]",
+                "pattern_description": "[Selection phenomenological|hybrid|pressure_aware ]",
                 "actions": "281"
             }
         },

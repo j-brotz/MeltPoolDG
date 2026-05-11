@@ -157,6 +157,77 @@ namespace MeltPoolDG::Evaporation
       const dealii::VectorizedArray<number> &delta_coefficient) const final;
   };
 
+
+  /**
+   * @brief This class implements the recoil pressure model computed with
+   * pressure-aware boundary conditions, as presented according to
+   *
+   * Refined Formulations of Resolved Vapor Flow and Unresolved Recoil Pressure Models for Rapid
+   * Evaporation in Metal Additive Manufacturing under Elevated Pressure.
+   */
+  template <typename number>
+  class RecoilPressureModelPressureAware : public RecoilPressureModelBase<number>
+  {
+    //@todo: to avoid compiler warnings regarding hidden overriden functions
+    using RecoilPressureModelBase<number>::compute_recoil_pressure_coefficient;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param pressure_aware_data Data structure holding data for the pressure-aware recoil pressure calculations.
+     * @param boling_temperature Boiling temperature at given build chamber pressure level.
+     * @param molar_mass Molar mass.
+     * @param latent_heat_of_evaporation Latent heat of evaporation.
+     */
+    RecoilPressureModelPressureAware(
+      const typename RecoilPressureData<number>::PressureAwareData &pressure_aware_data,
+      const number                                                  boiling_temperature,
+      const number                                                  molar_mass,
+      const number                                                  latent_heat_evaporation);
+
+    /**
+     * @brief Compute recoil pressure coefficient as
+     *
+     *             Np-1
+     * p(T) = pᵍ +  ∑  Kₚ,ᵢ · (T - Tᵥ(pᵍ))ⁱ⁺²
+     *             i=0
+     *
+     * @param T Melt surface temperature.
+     * @return Recoil pressure coefficient.
+     */
+    number
+    compute_recoil_pressure_coefficient(const number T) const final;
+
+    /**
+     * Vectorized version of compute_recoil_pressure_coefficient(). See documentation above.
+     * @param T Melt surface temperature.
+     * @return Recoil pressure coefficient.
+     */
+    dealii::VectorizedArray<number>
+    compute_recoil_pressure_coefficient(const dealii::VectorizedArray<number> &T) const final;
+
+  private:
+    /// Data structure holding fitting parameters (Kp) and ambient gas pressure
+    const typename RecoilPressureData<number>::PressureAwareData pressure_aware_data;
+
+    /// Boiling temperature at given build chamber pressure level
+    const number boiling_temperature;
+
+    /// Molat mass
+    const number molar_mass;
+
+    /// Latent heat of evaporation
+    const number latent_heat_evaporation;
+
+    /// Fitting parameters for empirical correlations in the free-surface model
+    std::vector<number> Kp;
+
+    /// Ambient gas pressure (build chamber pressure)
+    const number ambient_gas_pressure;
+  };
+
+
   /**
    * The force contribution of the recoil pressure due to evaporation is computed. The model of
    * S.I. Anisimov and V.A. Khokhlov (1995) is considered. The consideration of any other model
