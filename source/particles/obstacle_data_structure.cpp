@@ -8,6 +8,7 @@
 #include <deal.II/particles/property_pool.h>
 
 #include "meltpooldg/particles/particle_accessor.hpp"
+#include <algorithm>
 #include <meltpooldg/particles/obstacle_data_structure.hpp>
 #include <meltpooldg/particles/particle.hpp>
 #include <meltpooldg/particles/particle_iterator.hpp>
@@ -30,7 +31,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::ObstacleCom
       std::make_unique<dealii::Particles::PropertyPool<dim>>(ObstacleType::n_obstacle_properties))
   , timer(timer)
   , triangulation(&triangulation)
-  , level_cell_partitioner(triangulation, level_to_store_particles)
+  , level_cell_partitioner(triangulation)
 {}
 
 template <int dim, typename number, typename ObstacleType>
@@ -64,7 +65,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::reinit()
       DEMParticleAccessor<dim, number> particle(*properties_global_obstacles, src_handle);
     }
 
-  level_cell_partitioner.reinit();
+  level_cell_partitioner.reinit(level_to_store_particles);
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -321,16 +322,12 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
                                                        ObstacleType::n_obstacle_properties),
                                             particle,
                                             triangulation->create_cell_iterator(cell_id));
-
-              send_futures.push_back(dealii::Utilities::MPI::isend(
-                send_buffer,
-                obstacle_handler->get_triangulation().get_mpi_communicator(),
-                rank,
-                1));
-
               iter++;
             }
         }
+
+      send_futures.push_back(dealii::Utilities::MPI::isend(
+        send_buffer, obstacle_handler->get_triangulation().get_mpi_communicator(), rank, 1));
     }
 
   // Step 4: Receive the particle data from the respective ranks and populate the ghost particle
@@ -343,17 +340,34 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
         obstacle_handler->get_triangulation().get_mpi_communicator(), rank, 1));
     }
 
-  for (auto &future : recv_futures)
+  for (unsigned int i = 0; i < recv_futures.size(); ++i)
     {
+      auto &future = recv_futures[i];
       future.wait();
-      ReceivedParticleData received_data =
-        read_particle_data_from_memory(future.get().data(),
-                                       *properties_global_obstacles,
-                                       ObstacleType::n_obstacle_properties);
-      typename dealii::Triangulation<dim>::cell_iterator cell(
-        &obstacle_handler->get_triangulation(), received_data.cell_level, received_data.cell_index);
+      // Note: recv_futures and n_particles_to_receive have the same order, so we can use the same
+      // index to access both
+      std::vector<char> recv_buffer = future.get();
+      for (unsigned int p = 0; p < n_particles_to_receive[i].second; ++p)
+        {
+          ReceivedParticleData received_data = read_particle_data_from_memory(
+            recv_buffer.data() + p * serialized_size_in_bytes(ObstacleType::n_obstacle_properties),
+            *properties_global_obstacles,
+            ObstacleType::n_obstacle_properties);
 
-      cell_to_ghost_particle_cache[cell].push_back(received_data.handle);
+        typename dealii::Triangulation<dim>::cell_iterator cell;
+        if (triangulation->contains_cell(received_data.cell_id))
+          cell = triangulation->create_cell_iterator(received_data.cell_id);
+        else
+          {
+            auto child_indices = received_data.cell_id.get_child_indices();
+            auto new_cell_id   = dealii::CellId(received_data.cell_id.get_coarse_cell_id(),
+                                              child_indices.size() - 1,
+                                              child_indices.data());
+            cell               = triangulation->create_cell_iterator(new_cell_id);
+          }
+
+        cell_to_ghost_particle_cache[cell].push_back(received_data.handle);
+        }
     }
 
   for (auto &future : send_futures)
@@ -375,11 +389,11 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::write_parti
   *id_data = particle->get_id();
   ++id_data;
 
-  int *cell_data = reinterpret_cast<int *>(id_data);
-  *cell_data     = cell->level();
-  ++cell_data;
-  *cell_data = cell->index();
-  ++cell_data;
+  unsigned int                              *cell_data = reinterpret_cast<unsigned int *>(id_data);
+  const typename dealii::CellId::binary_type cell_id_binary = cell->id().template to_binary<dim>();
+  std::ranges::copy(cell_id_binary, cell_data);
+  *cell_data = *cell->id().template to_binary<dim>().data();
+  cell_data += cell->id().template to_binary<dim>().size();
 
   double *pdata = reinterpret_cast<double *>(cell_data);
 
@@ -412,9 +426,12 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::read_partic
     static_cast<const dealii::types::particle_index *>(data_pointer);
   property_pool.set_id(received_data.handle, *id_data++);
 
-  const int *cell_data     = reinterpret_cast<const int *>(id_data);
-  received_data.cell_level = *cell_data++;
-  received_data.cell_index = *cell_data++;
+  const unsigned int                  *cell_data = reinterpret_cast<const unsigned int *>(id_data);
+  typename dealii::CellId::binary_type cell_id_binary; // same as std::array<unsigned int, 4>
+  std::copy(cell_data, cell_data + cell_id_binary.size(), cell_id_binary.data());
+  dealii::CellId cell_id(cell_id_binary);
+  received_data.cell_id = cell_id;
+  cell_data += cell_id_binary.size();
 
   const double *pdata = reinterpret_cast<const double *>(id_data);
 
@@ -439,7 +456,7 @@ std::size_t
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::serialized_size_in_bytes(
   unsigned int n_properties) const
 {
-  return sizeof(dealii::types::particle_index) + 2 * sizeof(int) + dim * sizeof(double) +
+  return sizeof(dealii::types::particle_index) + 4 * sizeof(unsigned int) + dim * sizeof(double) +
          n_properties * sizeof(double);
 }
 

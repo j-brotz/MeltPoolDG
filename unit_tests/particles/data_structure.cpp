@@ -13,6 +13,8 @@
 #include <meltpooldg/particles/obstacle_data_structure.hpp>
 #include <meltpooldg/particles/particle.hpp>
 
+#include <meltpooldg/utilities/cpp23_functions.h>
+
 #include <algorithm>
 #include <iostream>
 
@@ -46,10 +48,10 @@ protected:
     obstacle_data_structure;
 };
 
-/*
-TEST_F(ParticleDataStructureTest, Reinit)
+TEST_F(ParticleDataStructureTest, GhostParticles)
 {
-  constexpr int level_to_store_particles = 1;
+  // The test is designed to run with 8 MPI processes.
+  ASSERT_EQ(dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD), 8);
 
   std::vector<dealii::Point<dim, number>> obstacle_locations = {
     dealii::Point<dim, number>(0.3, 0.3),
@@ -58,29 +60,83 @@ TEST_F(ParticleDataStructureTest, Reinit)
     dealii::Point<dim, number>(0.8, 0.7)};
 
   std::vector<std::vector<number>> obstacle_properties;
-  obstacle_properties.reserve(obstacle_locations.size());
+  obstacle_properties.resize(obstacle_locations.size());
+  number mass = 1;
   for (std::vector<number> &properties : obstacle_properties)
     {
       properties.resize(MeltPoolDG::SphericalParticle<dim, number>::n_obstacle_properties);
-      properties[MeltPoolDG::SphericalParticle<dim, number>::Properties::radius] = 0.6;
+      properties[MeltPoolDG::SphericalParticle<dim, number>::Properties::radius] = 0.4;
+      properties[MeltPoolDG::SphericalParticle<dim, number>::Properties::mass]   = mass;
+      mass++;
     }
 
-  std::cout << "I am here 0" << std::endl;
-
   obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
-  std::cout << "I am here 1" << std::endl;
   obstacle_data_structure.sort_particles_into_subdomains_and_cells();
 
-  std::cout << "I am here 2" << std::endl;
-  for (typename dealii::Triangulation<dim>::cell_iterator cell :
-       triangulation.cell_iterators_on_level(level_to_store_particles))
-    if (cell->is_locally_owned_on_level())
-      {
-        EXPECT_EQ(obstacle_locations.size(),
-                  obstacle_data_structure.get_obstacles_in_cell(*cell).size());
-      }
+  std::map<typename dealii::Triangulation<dim>::cell_iterator,
+           std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
+    ghost_particles = obstacle_data_structure.get_cell_to_ghost_particle_cache();
+
+  std::cout << "Rank " << dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
+            << ": Locally relevant particles: "
+            << obstacle_data_structure.n_locally_relevant_particles() << std::endl;
+
+  MPI_Barrier(MPI_COMM_WORLD);
+  unsigned int n_ghost_particles = 0;
+  for (const auto &[cell, particles] : ghost_particles)
+    n_ghost_particles += particles.size();
+
+  unsigned n_expected_ghost_particles = obstacle_locations.size();
+
+  // Ranks 1, 2, 3 and 6 own a particle and therefore have 3 ghost particles, while ranks 0, 4, 5
+  // and 7 do not own any particle and therefore have 4 ghost particles.
+  if (MeltPoolDG::Utils::contains<std::vector<unsigned int>>(
+        {{1, 2, 3, 6}}, dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)))
+    {
+      n_expected_ghost_particles -= 1;
+    }
+
+  {
+    SCOPED_TRACE("Check ghost particles on rank " +
+                 std::to_string(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)));
+    EXPECT_EQ(n_expected_ghost_particles, n_ghost_particles);
+  }
 }
-      */
+
+TEST_F(ParticleDataStructureTest, ParticleNumberInfo)
+{
+  std::vector<dealii::Point<dim, number>> obstacle_locations = {
+    dealii::Point<dim, number>(0.3, 0.3),
+    dealii::Point<dim, number>(0.8, 0.2),
+    dealii::Point<dim, number>(0.6, 0.4),
+    dealii::Point<dim, number>(0.8, 0.7)};
+
+  std::vector<std::vector<number>> obstacle_properties;
+  obstacle_properties.resize(obstacle_locations.size());
+  number mass = 1;
+  for (std::vector<number> &properties : obstacle_properties)
+    {
+      properties.resize(MeltPoolDG::SphericalParticle<dim, number>::n_obstacle_properties);
+      properties[MeltPoolDG::SphericalParticle<dim, number>::Properties::radius] = 0.4;
+      properties[MeltPoolDG::SphericalParticle<dim, number>::Properties::mass]   = mass;
+      mass++;
+    }
+
+  obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
+  obstacle_data_structure.sort_particles_into_subdomains_and_cells();
+
+  std::map<typename dealii::Triangulation<dim>::cell_iterator,
+           std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
+    ghost_particles = obstacle_data_structure.get_cell_to_ghost_particle_cache();
+
+  {
+    SCOPED_TRACE("Check particle numbers on rank " +
+                 std::to_string(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)));
+    EXPECT_EQ(obstacle_data_structure.n_locally_relevant_particles(), obstacle_locations.size());
+    EXPECT_EQ(obstacle_data_structure.n_ghost_particles(),
+              obstacle_locations.size() - obstacle_data_structure.n_locally_owned_particles());
+  }
+}
 
 TEST_F(ParticleDataStructureTest, PartitionerReceiverRanks)
 {
@@ -88,56 +144,26 @@ TEST_F(ParticleDataStructureTest, PartitionerReceiverRanks)
   ASSERT_EQ(dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD), 8);
 
   constexpr int  level_to_store_particles = 1;
-  dealii::CellId coarse_cell_id           = triangulation.begin(0)->id();
 
-  MeltPoolDG::LevelCellPartitioner<dim> partitioner(triangulation, level_to_store_particles);
-  partitioner.reinit();
+  MeltPoolDG::LevelCellPartitioner<dim> partitioner(triangulation);
+  partitioner.reinit(level_to_store_particles);
 
   {
     SCOPED_TRACE("Check for correct receiver of data from rank " +
                  std::to_string(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)));
 
     // These are the owner ranks of the cells on level 1.
-    std::vector<int> reference_receiver_ranks = {0, 2, 4, 6};
+    std::vector<int> reference_receiver_ranks(dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD));
+    std::iota(reference_receiver_ranks.begin(), reference_receiver_ranks.end(), 0);
 
-    // If I am one of the owner I do not need to receive data from myself, so I remove myself from
-    // the list of reference ranks.
-    if (dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD) % 2 == 0)
-      {
-        auto range = std::ranges::remove(reference_receiver_ranks,
-                                         dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD));
-        reference_receiver_ranks.erase(range.begin(), range.end());
-      }
+    auto range = std::ranges::remove(reference_receiver_ranks,
+                                     dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD));
+    reference_receiver_ranks.erase(range.begin(), range.end());
 
     std::vector<int> partitioner_receiver_ranks = partitioner.get_particle_receiver_ranks();
     std::ranges::sort(partitioner_receiver_ranks);
 
     EXPECT_EQ(reference_receiver_ranks, partitioner_receiver_ranks);
-  }
-
-  {
-    SCOPED_TRACE("Check that correct cells are received from rank " +
-                 std::to_string(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)));
-    std::map<int, std::vector<dealii::CellId>> partitioner_cell_to_rank_receive =
-      partitioner.get_cell_to_rank_receive();
-
-
-    std::map<int, std::vector<dealii::CellId>> reference_cell_to_rank_receive;
-
-    int i = 0;
-    for (unsigned rank = 0; rank < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); ++rank)
-      {
-        if (rank % 2 == 0 and rank != dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
-          {
-            std::uint8_t child_indices           = i;
-            reference_cell_to_rank_receive[rank] = {
-              dealii::CellId(coarse_cell_id.get_coarse_cell_id(), 1u, &child_indices)};
-          }
-        if (rank % 2 == 0)
-          ++i;
-      }
-
-    EXPECT_EQ(reference_cell_to_rank_receive, partitioner_cell_to_rank_receive);
   }
 }
 
@@ -148,26 +174,19 @@ TEST_F(ParticleDataStructureTest, PartitionerSenderRanks)
 
   constexpr int level_to_store_particles = 1;
 
-  MeltPoolDG::LevelCellPartitioner<dim> partitioner(triangulation, level_to_store_particles);
-  partitioner.reinit();
+  MeltPoolDG::LevelCellPartitioner<dim> partitioner(triangulation);
+  partitioner.reinit(level_to_store_particles);
 
   {
     SCOPED_TRACE("Check for correct sender of data from rank " +
                  std::to_string(dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)));
 
-    // If I am no owner of any cell on the level I do not need to send data to any other rank, so
-    // the list of reference ranks is empty.
     std::vector<int> reference_sender_ranks;
-
-    // If I am one of the owner I need to send my information to all other ranks
-    if (dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) % 2 == 0)
-      {
-        reference_sender_ranks.resize(dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD));
-        std::iota(reference_sender_ranks.begin(), reference_sender_ranks.end(), 0);
-        auto range = std::ranges::remove(reference_sender_ranks,
-                                         dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD));
-        reference_sender_ranks.erase(range.begin(), range.end());
-      }
+    reference_sender_ranks.resize(dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD));
+    std::iota(reference_sender_ranks.begin(), reference_sender_ranks.end(), 0);
+    auto range = std::ranges::remove(reference_sender_ranks,
+                                     dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD));
+    reference_sender_ranks.erase(range.begin(), range.end());
 
     std::vector<int> partitioner_sender_ranks = partitioner.get_particle_sender_ranks();
     std::ranges::sort(partitioner_sender_ranks);
@@ -183,25 +202,41 @@ TEST_F(ParticleDataStructureTest, PartitionerSenderRanks)
 
 
     std::map<int, std::vector<dealii::CellId>> reference_cell_to_rank_send;
-    if (dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) % 2 == 0)
+    for (unsigned rank = 0; rank < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); ++rank)
       {
-        for (unsigned rank = 0; rank < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
-             ++rank)
+        if (rank != dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
           {
-            if (rank != dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
-              {
-                reference_cell_to_rank_send[rank] = {};
-                for (typename dealii::Triangulation<dim>::cell_iterator cell :
-                     triangulation.cell_iterators_on_level(level_to_store_particles))
-                  if (cell->is_locally_owned_on_level())
-                    reference_cell_to_rank_send[rank].push_back(cell->id());
-              }
+            reference_cell_to_rank_send[rank] = {};
+            std::vector<dealii::CellId> cells;
+            for (typename dealii::Triangulation<dim>::cell_iterator cell :
+                 triangulation.active_cell_iterators())
+              if (cell->is_locally_owned())
+                {
+                  while (cell->level() > level_to_store_particles)
+                    cell = cell->parent();
+                  cells.push_back(cell->id());
+                }
+            auto new_end = std::ranges::unique(cells);
+            cells.erase(new_end.begin(), cells.end());
+            reference_cell_to_rank_send[rank] = cells;
           }
       }
 
     EXPECT_EQ(reference_cell_to_rank_send, partitioner_cell_to_rank_send);
   }
 }
+
+/*
+TEST(ParticleDataStructureTest, PartitionerSenderAndReceiverRanks)
+{
+  // The test is designed to run with 8 MPI processes.
+  ASSERT_EQ(dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD), 8);
+
+  constexpr int level_to_store_particles = 1;
+
+
+}
+  */
 
 /*
 TEST_F(ParticleDataStructureTest, ArtificalCellsOnLevelZero)

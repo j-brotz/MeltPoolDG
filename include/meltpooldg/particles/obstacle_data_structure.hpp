@@ -26,6 +26,8 @@
 
 #include <boost/container/small_vector.hpp>
 
+#include <meltpooldg/utilities/cpp23_functions.h>
+
 #include <cmath>
 #include <memory>
 #include <numeric>
@@ -457,15 +459,15 @@ namespace MeltPoolDG
   class LevelCellPartitioner
   {
   public:
-    LevelCellPartitioner(const dealii::Triangulation<dim> &tria, const unsigned int level)
+    LevelCellPartitioner(const dealii::Triangulation<dim> &tria)
       : triangulation(tria)
-      , partition_level(level)
       , mpi_communicator(triangulation.get_mpi_communicator())
     {}
 
     void
-    reinit()
+    reinit(const unsigned int level)
     {
+      partition_level = level;
       setup_communication_pattern();
     }
 
@@ -560,7 +562,8 @@ namespace MeltPoolDG
       std::set<dealii::CellId> parent_cells;
       for (auto &cell : triangulation.active_cell_iterators())
         {
-          parent_cells.insert(level_parent_cell_id(level_parent_cell_id, *cell, partition_level));
+          if (cell->is_locally_owned())
+            parent_cells.insert(level_parent_cell_id(level_parent_cell_id, *cell, partition_level));
         }
 
       return {std::vector<dealii::CellId>(parent_cells.begin(), parent_cells.end())};
@@ -589,8 +592,8 @@ namespace MeltPoolDG
     }
 
     /**
-     * For a specific cell with given cell id find all adjacent cells on the same level which are
-     * locally owned. This includes the cell itself if it is locally owned. We consider two cells to
+     * For a specific cell with given cell id find all adjacent cells (including the cell itself) on
+     * the same level for which the process owns at least one active cell. We consider two cells to
      * be adjacent if they share at least a vertex.
      *
      * @param cell_id Cell id of the cell for which the adjacent cells should be found.
@@ -598,33 +601,37 @@ namespace MeltPoolDG
      * @return Vector of cell ids of the adjacent cells which are locally owned.
      */
     std::vector<dealii::CellId>
-    locally_relevant_cells_for_cell(const dealii::CellId &cell_id)
+    locally_relevant_cells_for_cell(
+      const dealii::CellId              &cell_id,
+      const std::vector<dealii::CellId> &level_parent_cells_of_owned_active_cells)
     {
       std::vector<dealii::CellId> relevant_cells;
 
       typename dealii::Triangulation<dim>::cell_iterator cell =
         triangulation.create_cell_iterator(cell_id);
 
-      // If the cell is locally owned it is relevant
-      if (cell->is_locally_owned_on_level())
+      // If the cell contains a locally owned active cell as descendant, the cell itself is relevant
+      if (Utils::contains(level_parent_cells_of_owned_active_cells, cell_id))
         {
           relevant_cells.push_back(cell_id);
         }
 
-      auto search_neighbors =
-        [&relevant_cells](const auto &search_neighbors,
-                          const typename dealii::Triangulation<dim>::cell_iterator &cell,
-                          std::vector<unsigned> excluded_indices = {},
-                          int                   current_depth    = 1) -> void {
+      // TODO: What if the neighbor is not on the same level but on one level coarser?
+      auto search_neighbors = [&relevant_cells, &level_parent_cells_of_owned_active_cells](
+                                const auto &search_neighbors,
+                                const typename dealii::Triangulation<dim>::cell_iterator &cell,
+                                std::vector<unsigned> excluded_indices = {},
+                                int                   current_depth    = 1) -> void {
         for (unsigned int neighbor_index = 0;
              neighbor_index < dealii::GeometryInfo<dim>::faces_per_cell;
              ++neighbor_index)
           {
             if (std::ranges::find(excluded_indices, neighbor_index) == excluded_indices.end() and
-                not cell->at_boundary(neighbor_index) and
-                cell->neighbor(neighbor_index)->is_locally_owned_on_level())
+                not cell->at_boundary(neighbor_index))
               {
-                relevant_cells.push_back(cell->neighbor(neighbor_index)->id());
+                if (Utils::contains(level_parent_cells_of_owned_active_cells,
+                                    cell->neighbor(neighbor_index)->id()))
+                  relevant_cells.push_back(cell->neighbor(neighbor_index)->id());
                 if (current_depth < dim)
                   {
                     excluded_indices.push_back(neighbor_index);
@@ -659,7 +666,8 @@ namespace MeltPoolDG
     std::vector<std::pair<int, std::vector<dealii::CellId>>>
     locally_owned_relevant_cells_for_ranks(
       const std::vector<std::pair<unsigned, std::vector<dealii::CellId>>>
-        &other_ranks_cell_of_interests)
+                                        &other_ranks_cell_of_interests,
+      const std::vector<dealii::CellId> &level_parent_cells_of_owned_active_cells)
     {
       std::vector<std::pair<int, std::vector<dealii::CellId>>>
         locally_owned_relevant_cells_for_ranks;
@@ -672,7 +680,8 @@ namespace MeltPoolDG
               for (const auto &cell_id : cells)
                 {
                   std::vector<dealii::CellId> relevant_cells =
-                    locally_relevant_cells_for_cell(cell_id);
+                    locally_relevant_cells_for_cell(cell_id,
+                                                    level_parent_cells_of_owned_active_cells);
                   locally_owned_relevant_cells_for_rank.insert(relevant_cells.begin(),
                                                                relevant_cells.end());
                 }
@@ -792,7 +801,7 @@ namespace MeltPoolDG
       // find locally owned cells which are relevant for the ranks which sent parent cells of
       // interest
       std::vector<std::pair<int, std::vector<dealii::CellId>>> local_relevant_cells_for_ranks =
-        locally_owned_relevant_cells_for_ranks(all_parent_cells);
+        locally_owned_relevant_cells_for_ranks(all_parent_cells, locally_relevant_parent_cells);
 
       // inform other processes which own cells are relevant for them and get the information which
       // cells are relevant for us
@@ -810,7 +819,7 @@ namespace MeltPoolDG
 
     const dealii::Triangulation<dim> &triangulation;
 
-    unsigned int partition_level;
+    unsigned int partition_level = 0;
 
     const MPI_Comm mpi_communicator;
   };
@@ -971,6 +980,10 @@ namespace MeltPoolDG
     insert_global_particles(const std::vector<dealii::Point<dim, number>> &obstacle_locations,
                             const std::vector<std::vector<number>>        &obstacle_properties)
     {
+      Assert(obstacle_locations.size() == obstacle_properties.size(),
+             dealii::ExcMessage(
+               "The number of obstacle locations and obstacle properties must be the same."));
+
       // Update the maximum particle radius based on the received particles. As this function is a
       // collective operation, we can be sure that all processes receive the same particles and thus
       // have the same maximum radius after this step. There is no need for an additional global
@@ -996,7 +1009,7 @@ namespace MeltPoolDG
           obstacle_properties :
           std::vector<std::vector<number>>{});
 
-      // reinit();
+      reinit();
     }
 
     void
@@ -1038,6 +1051,41 @@ namespace MeltPoolDG
     unpack_after_coarsening_and_refinement()
     {
       obstacle_handler->unpack_after_coarsening_and_refinement();
+    }
+
+    std::map<typename dealii::Triangulation<dim>::cell_iterator,
+             std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
+    get_cell_to_ghost_particle_cache() const
+    {
+      return cell_to_ghost_particle_cache;
+    }
+
+    unsigned int
+    n_locally_relevant_particles()
+    {
+      unsigned int n_locally_relevant_particles = n_locally_owned_particles();
+      for (const auto &[cell, particles] : cell_to_ghost_particle_cache)
+        {
+          n_locally_relevant_particles += particles.size();
+        }
+      return n_locally_relevant_particles;
+
+      for (const auto &[cell, particles] : cell_to_locally_owned_particle_cache)
+        {
+          n_locally_relevant_particles += particles.size();
+        }
+      return n_locally_relevant_particles;
+    }
+
+    unsigned int
+    n_ghost_particles()
+    {
+      unsigned int n_ghost_particles = 0;
+      for (const auto &[cell, particles] : cell_to_ghost_particle_cache)
+        {
+          n_ghost_particles += particles.size();
+        }
+      return n_ghost_particles;
     }
 
   private:
@@ -1093,8 +1141,7 @@ namespace MeltPoolDG
     struct ReceivedParticleData
     {
       typename dealii::Particles::PropertyPool<dim>::Handle handle;
-      int                                                   cell_level;
-      int                                                   cell_index;
+      dealii::CellId                                        cell_id;
     };
 
 
