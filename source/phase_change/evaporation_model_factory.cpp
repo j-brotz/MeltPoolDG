@@ -4,6 +4,7 @@
 
 #include <meltpooldg/phase_change/evaporation_model_constant.hpp>
 #include <meltpooldg/phase_change/evaporation_model_hardt_wondra.hpp>
+#include <meltpooldg/phase_change/evaporation_model_pressure_aware.hpp>
 #include <meltpooldg/phase_change/evaporation_model_recoil_pressure.hpp>
 #include <meltpooldg/phase_change/evaporation_model_saturated_vapor_pressure.hpp>
 
@@ -47,6 +48,13 @@ namespace MeltPoolDG::Evaporation
           case EvaporationModelType::analytical: {
             evapor_model =
               std::make_unique<EvaporationModelConstant<number>>(evapor_data.analytical.function);
+            break;
+          }
+          case EvaporationModelType::pressure_aware: {
+            evapor_model = std::make_unique<EvaporationModelPressureAware<number>>(
+              evapor_data.pressure_aware,
+              material_data.boiling_temperature,
+              material_data.latent_heat_of_evaporation);
             break;
           }
         default:

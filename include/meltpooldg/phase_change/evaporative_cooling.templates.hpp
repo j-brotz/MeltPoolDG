@@ -4,6 +4,7 @@
 //
 #include <deal.II/base/exceptions.h>
 
+#include <meltpooldg/phase_change/evaporation_model_pressure_aware.hpp>
 #include <meltpooldg/phase_change/evaporation_model_recoil_pressure.hpp>
 #include <meltpooldg/phase_change/evaporation_model_saturated_vapor_pressure.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
@@ -45,6 +46,13 @@ namespace MeltPoolDG::Evaporation
               evapor_data.recoil,
               material_data.boiling_temperature,
               material_data.molar_mass,
+              material_data.latent_heat_of_evaporation);
+          }
+        else if (evapor_data.evaporative_mass_flux_model == EvaporationModelType::pressure_aware)
+          {
+            mass_flux_operator = std::make_unique<EvaporationModelPressureAware<number>>(
+              evapor_data.pressure_aware,
+              material_data.boiling_temperature,
               material_data.latent_heat_of_evaporation);
           }
         else
