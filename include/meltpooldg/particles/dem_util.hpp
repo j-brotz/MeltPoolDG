@@ -4,6 +4,9 @@
 
 #include <meltpooldg/time_integration/solution_history.hpp>
 
+#include <meltpooldg/utilities/cpp23_functions.h>
+
+
 
 namespace MeltPoolDG
 {
@@ -54,5 +57,189 @@ namespace MeltPoolDG
       torque = dealii::cross_product_3d(lever_arm, force);
     return torque;
   }
+
+
+  template <int dim>
+  class LevelCellCommunicationPattern
+  {
+  public:
+    LevelCellCommunicationPattern(const dealii::Triangulation<dim> &tria);
+
+    /**
+     * Build the communication pattern for the given level. This includes determining which cells on
+     * the partition level are relevant for the local process and which other processes need to
+     * receive data from or send data to the local process based on the adjacency of cells on the
+     * partition level. The communication pattern is stored internally in the class and can be
+     * accessed via the provided getter functions.
+     *
+     * @param level The level for which the communication pattern should be built.
+     */
+    void
+    build_pattern(const unsigned int level);
+
+    /**
+     * Get a map that assigns to each MPI rank the cell ids of the locally available cells for which
+     * the current process needs to send data to the corresponding other rank.
+     */
+    std::map<unsigned int, std::vector<dealii::CellId>>
+    cells_to_send() const;
+
+    /**
+     * Get a map that assigns to each MPI rank the cell ids of locally available cells for which
+     * the current process needs to receive data from the corresponding other rank.
+     */
+    std::map<unsigned int, std::vector<dealii::CellId>>
+    cells_to_receive() const;
+
+    /**
+     * Return the number of processes to which the current process needs to send data.
+     */
+    unsigned
+    n_processes_to_send_to() const
+    {
+      return rank_to_cells_send.size();
+    }
+
+    /**
+     * Return the number of processes from which the current process needs to receive data.
+     */
+    unsigned
+    n_processes_to_receive_from() const
+    {
+      return rank_to_cells_receive.size();
+    }
+
+    /**
+     * Number of ranks to which data is sent.
+     */
+    unsigned int
+    n_send_ranks() const;
+
+    /**
+     * Number of ranks from which data is received.
+     */
+    unsigned int
+    n_receive_ranks() const;
+
+    /**
+     * MPI ranks to which data is sent.
+     */
+    std::vector<unsigned int>
+    send_ranks() const;
+
+    /**
+     * MPI ranks from which data is received.
+     */
+    std::vector<unsigned int>
+    receive_ranks() const;
+
+  private:
+    /**
+     * Return the cells on the partition level that contain at least one locally owned active
+     * descendant cell. The returned cells may be locally owned, ghost, or artificial cells.
+     *
+     * @return Cell ids of the relevant cells on the partition level.
+     *
+     * @note This function assumes that the relevant partition-level cells are available at least as
+     * artificial cells on the current MPI rank. This is guaranteed if the triangulation was created
+     * with the multigrid hierarchy enabled.
+     */
+    std::vector<dealii::CellId>
+    owned_active_cells_ancestors() const;
+
+    /**
+     * Gather the relevant partition-level cells from all MPI ranks.
+     *
+     * @param local_ancestor_cells Cell ids of the partition-level cells relevant
+     * to the current MPI rank.
+     *
+     * @return A vector containing, for each MPI rank, the corresponding relevant
+     * partition-level cell ids.
+     */
+    std::vector<std::pair<unsigned, std::vector<dealii::CellId>>>
+    gather_ancestors(const std::vector<dealii::CellId> &local_ancestor_cells) const;
+
+    /**
+     * Return all relevant adjacent cells of a given partition-level cell. Adjacent cells include
+     * the cell itself and all cells on the same level sharing at least one vertex with it. A cell
+     * is considered relevant if it contains at least one locally owned active descendant cell.
+     *
+     * @param cell_id Cell id of the partition-level cell whose adjacent relevant cells should be
+     * determined.
+     *
+     * @param owned_active_cell_ancestors Cell ids of the partition-level cells containing locally
+     * owned active descendant cells.
+     *
+     * @return Cell ids of the adjacent relevant cells.
+     */
+    std::vector<dealii::CellId>
+    adjacent_relevant_cells(const dealii::CellId              &cell_id,
+                            const std::vector<dealii::CellId> &owned_active_cell_ancestors) const;
+
+    /**
+     * For each MPI rank, determine the relevant local cells adjacent to the cells requested by that
+     * rank. In this case adjacent cells include the cell itself and all cells on the same level
+     * sharing at least one vertex with it.
+     *
+     * @param requested_cells_by_rank Vector containing, for each MPI rank, the corresponding
+     * relevant partition-level cells.
+     *
+     * @param owned_active_cell_ancestors Cell ids of the partition-level cells containing locally
+     * owned active descendant cells.
+     *
+     * @return A vector whose entries contain an MPI rank together with the
+     * corresponding adjacent relevant local cells.
+     */
+    std::vector<std::pair<unsigned, std::vector<dealii::CellId>>>
+    relevant_cells_for_ranks(
+      const std::vector<std::pair<unsigned, std::vector<dealii::CellId>>> &requested_cells_by_rank,
+      const std::vector<dealii::CellId> &owned_active_cell_ancestors) const;
+
+    /**
+     * Exchange relevant cells with other MPI processes. Each process sends the relevant cells
+     * adjacent to the requested partition-level cells to the corresponding MPI rank and receives
+     * the relevant cells adjacent to the requested partition-level cells from the other MPI ranks
+     *
+     * @param cells_to_send A vector of pairs with the first element being the MPI rank and the
+     * second element being the corresponding relevant cells for which the corresponding MPI process
+     * will receive data from the current process.
+     *
+     * @return A vector of pairs with the first element being the MPI rank and the second element
+     * being the corresponding relevant cells for which the current MPI process will receive data
+     * from the corresponding MPI process.
+     */
+    std::vector<std::pair<unsigned, std::vector<dealii::CellId>>>
+    exchange_relevant_cells(
+      const std::vector<std::pair<unsigned, std::vector<dealii::CellId>>> &cells_to_send) const;
+
+    /**
+     * Store the computed send and receive communication pattern.
+     */
+    void
+    store_rank_cell_maps(
+      const std::vector<std::pair<unsigned, std::vector<dealii::CellId>>> &data_to_receive,
+      const std::vector<std::pair<unsigned, std::vector<dealii::CellId>>> &data_to_send);
+
+    /**
+     * Build the MPI communication pattern for the current partition level.
+     */
+    void
+    build_communication_pattern();
+
+    std::map<unsigned int, std::vector<dealii::CellId>> rank_to_cells_send;
+
+    std::map<unsigned int, std::vector<dealii::CellId>> rank_to_cells_receive;
+
+    /// Reference to the triangulation for which the communication pattern is built.
+    const dealii::Triangulation<dim> &triangulation;
+
+    /// The cell level on which the communication pattern is built.
+    unsigned int partition_level = 0;
+
+    /// MPI communicator for the communication within the communication pattern. This is typically
+    /// the same as the one of the triangulation, but it is stored here separately for better
+    /// readability.
+    const MPI_Comm mpi_communicator;
+  };
 
 } // namespace MeltPoolDG

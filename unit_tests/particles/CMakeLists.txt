@@ -12,4 +12,5 @@ mpdg_setup_mpi_unit_tests(
    8
    TEST_SOURCE_FILES
    data_structure.cpp
+   level_cell_communication_pattern.cpp
 )

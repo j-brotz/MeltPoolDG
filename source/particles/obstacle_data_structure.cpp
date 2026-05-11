@@ -65,7 +65,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::reinit()
       DEMParticleAccessor<dim, number> particle(*properties_global_obstacles, src_handle);
     }
 
-  level_cell_partitioner.reinit(level_to_store_particles);
+  level_cell_partitioner.build_pattern(level_to_store_particles);
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -257,13 +257,14 @@ void
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate_ghost_particles()
 {
   cell_to_ghost_particle_cache.clear();
+  rank_to_handle.clear();
 
   // Step 1: Send the number of particles to be sent to each rank
   std::vector<MPI_Request>          send_requests(level_cell_partitioner.n_processes_to_send_to());
   unsigned                          request_send_index = 0;
   std::unordered_map<int, unsigned> n_particles_to_send(
     level_cell_partitioner.n_processes_to_send_to());
-  for (const auto &[rank, cells] : level_cell_partitioner.get_cell_to_rank_send())
+  for (const auto &[rank, cells] : level_cell_partitioner.cells_to_send())
     {
       n_particles_to_send[rank] = 0;
       for (const dealii::CellId &cell_id : cells)
@@ -288,7 +289,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
   // First: Rank to receive from; second: number of particles to receive from that rank
   std::vector<std::pair<int, unsigned>> n_particles_to_receive(
     level_cell_partitioner.n_processes_to_receive_from());
-  for (const int rank : level_cell_partitioner.get_particle_receiver_ranks())
+  for (const int rank : level_cell_partitioner.receive_ranks())
     {
       n_particles_to_receive[request_receive_index].first = rank;
       MPI_Irecv(&n_particles_to_receive[request_receive_index].second,
@@ -306,7 +307,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
 
   // Step 3: Send the particle data to the respective ranks
   std::vector<dealii::Utilities::MPI::Future<void>> send_futures;
-  for (const auto &[rank, cells] : level_cell_partitioner.get_cell_to_rank_send())
+  for (const auto &[rank, cells] : level_cell_partitioner.cells_to_send())
     {
       std::vector<char> send_buffer(n_particles_to_send[rank] *
                                     serialized_size_in_bytes(ObstacleType::n_obstacle_properties));
@@ -367,6 +368,11 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
             }
 
           cell_to_ghost_particle_cache[cell].push_back(received_data.handle);
+          // TODO: We assume that the index i is the same for both the recv_futures and the
+          // corresponding rank in the n_particles_to_receive vector, which should be the case since
+          // they are filled in the same order. However, it might be safer to explicitly find the
+          // corresponding rank for the current future to avoid any potential mismatches.
+          rank_to_handle[n_particles_to_receive[i].first].push_back(received_data.handle);
         }
     }
 
