@@ -108,8 +108,9 @@ namespace MeltPoolDG
      * erasure.
      */
     template <typename ObstacleLoadType>
-    requires(!std::is_lvalue_reference_v<ObstacleLoadType>) //
-      void add_load_type(ObstacleLoadType &&obstacle_load)
+      requires(!std::is_lvalue_reference_v<ObstacleLoadType>) //
+    void
+    add_load_type(ObstacleLoadType &&obstacle_load)
     {
       loads.emplace_back(std::move(obstacle_load));
     }
@@ -155,7 +156,7 @@ namespace MeltPoolDG
       const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const;
 
     std::vector<DEMParticleAccessor<dim, number>>
-    get_obstacles_in_cell(const dealii::CellAccessor<dim> &cell)
+    get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell)
     {
       return obstacle_data_structure.get_obstacles_in_cell(cell);
     }

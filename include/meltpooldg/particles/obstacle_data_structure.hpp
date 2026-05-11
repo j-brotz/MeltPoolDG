@@ -11,6 +11,8 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/grid/tria.h>
+#include <deal.II/grid/tria_accessor.h>
+#include <deal.II/grid/tria_iterator.h>
 
 #include <deal.II/matrix_free/matrix_free.h>
 
@@ -198,7 +200,7 @@ namespace MeltPoolDG
     }
 
     std::vector<DEMParticleAccessor<dim, number>>
-    get_obstacles_in_cell(const dealii::CellAccessor<dim> &cell)
+    get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell)
     {
       return obstacle_data_structure_pimpl->get_obstacles_in_cell(cell);
     }
@@ -292,7 +294,7 @@ namespace MeltPoolDG
       sort_particles_into_subdomains_and_cells() = 0;
 
       virtual std::vector<DEMParticleAccessor<dim, number>>
-      get_obstacles_in_cell(const dealii::CellAccessor<dim> &cell) = 0;
+      get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) = 0;
 
       virtual void
       register_particle_output(Postprocessor<dim, number> &postprocessor) = 0;
@@ -422,7 +424,7 @@ namespace MeltPoolDG
       }
 
       std::vector<DEMParticleAccessor<dim, number>>
-      get_obstacles_in_cell(const dealii::CellAccessor<dim> &cell) override
+      get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) override
       {
         return obstacle_data_structure.get_obstacles_in_cell(cell);
       }
@@ -912,13 +914,67 @@ namespace MeltPoolDG
       const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const;
 
     std::vector<DEMParticleAccessor<dim, number>>
-    get_obstacles_in_cell(const dealii::CellAccessor<dim> &cell)
+    get_obstacles_in_cell(const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells)
     {
       dealii::TimerOutput::Scope t(timer, "particles in cell search");
 
       std::vector<DEMParticleAccessor<dim, number>> particles_in_cell;
 
+      for (const auto &cell : cells)
+        {
+          const std::vector<DEMParticleAccessor<dim, number>> relevant_particles =
+            find_relevant_particles(find_particle_storage_cell(cell));
+          particles_in_cell.insert(particles_in_cell.end(),
+                                   relevant_particles.begin(),
+                                   relevant_particles.end());
+        }
+
       return particles_in_cell;
+    }
+
+    std::vector<DEMParticleAccessor<dim, number>>
+    get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell)
+    {
+      dealii::TimerOutput::Scope t(timer, "particles in cell search");
+
+      return find_relevant_particles(find_particle_storage_cell(cell));
+    }
+
+    dealii::TriaIterator<dealii::CellAccessor<dim>>
+    find_particle_storage_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const
+    {
+      Assert(
+        cell->level() >= level_to_store_particles,
+        dealii::ExcMessage(
+          "The current implementation only supports searching for particles in cells on levels finer than or equal to the level on which particles are stored."));
+
+      dealii::TriaIterator<dealii::CellAccessor<dim>> relevant_cell = cell;
+      while (relevant_cell->level() > level_to_store_particles)
+        {
+          relevant_cell = relevant_cell->parent();
+        }
+
+      return relevant_cell;
+    }
+
+    std::vector<DEMParticleAccessor<dim, number>>
+    find_relevant_particles(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const
+    {
+      Assert(cell->level() == level_to_store_particles,
+             dealii::ExcMessage(
+               "You must provide a cell id of a cell on the level on which particles are stored."));
+
+      std::vector<DEMParticleAccessor<dim, number>> relevant_particles;
+
+      for (dealii::Particles::ParticleIterator<dim> &particle :
+           cell_to_locally_owned_particle_cache[cell])
+        relevant_particles.emplace_back(*particle);
+
+      for (const typename dealii::Particles::PropertyPool<dim>::Handle particle_handle :
+           cell_to_ghost_particle_cache[cell])
+        relevant_particles.emplace_back(*properties_global_obstacles, particle_handle);
+
+      return relevant_particles;
     }
 
     /**
@@ -1096,11 +1152,11 @@ namespace MeltPoolDG
     /// MPI rank.
     mutable std::unique_ptr<dealii::Particles::PropertyPool<dim>> properties_global_obstacles;
 
-    std::map<typename dealii::Triangulation<dim>::cell_iterator,
+    mutable std::map<typename dealii::Triangulation<dim>::cell_iterator,
              std::vector<dealii::Particles::ParticleIterator<dim>>>
       cell_to_locally_owned_particle_cache;
 
-    std::map<typename dealii::Triangulation<dim>::cell_iterator,
+    mutable std::map<typename dealii::Triangulation<dim>::cell_iterator,
              std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
       cell_to_ghost_particle_cache;
 

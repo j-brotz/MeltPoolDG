@@ -8,13 +8,13 @@
 #include <deal.II/particles/property_pool.h>
 
 #include "meltpooldg/particles/particle_accessor.hpp"
-#include <algorithm>
 #include <meltpooldg/particles/obstacle_data_structure.hpp>
 #include <meltpooldg/particles/particle.hpp>
 #include <meltpooldg/particles/particle_iterator.hpp>
 
 #include <boost/container/small_vector.hpp>
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -146,10 +146,10 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::contact_par
   // allocation in most cases.
   boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim> contacts;
 
-  for (const auto &other : std::ranges::subrange<ParticleIterator<dim, number>>(
-         ParticleIterator<dim, number>(*properties_global_obstacles, 0),
-         ParticleIterator<dim, number>(*properties_global_obstacles,
-                                       properties_global_obstacles->n_registered_slots())))
+  dealii::TriaIterator<dealii::CellAccessor<dim>> cell =
+    find_particle_storage_cell(particle.get_surrounding_cell());
+
+  for (const auto &other : find_relevant_particles(cell))
     {
       if ((particle.get_location() - other.get_location()).norm_square() <
             dealii::Utilities::fixed_power<2>((other.radius() + particle.radius()) *
@@ -354,19 +354,19 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
             *properties_global_obstacles,
             ObstacleType::n_obstacle_properties);
 
-        typename dealii::Triangulation<dim>::cell_iterator cell;
-        if (triangulation->contains_cell(received_data.cell_id))
-          cell = triangulation->create_cell_iterator(received_data.cell_id);
-        else
-          {
-            auto child_indices = received_data.cell_id.get_child_indices();
-            auto new_cell_id   = dealii::CellId(received_data.cell_id.get_coarse_cell_id(),
-                                              child_indices.size() - 1,
-                                              child_indices.data());
-            cell               = triangulation->create_cell_iterator(new_cell_id);
-          }
+          typename dealii::Triangulation<dim>::cell_iterator cell;
+          if (triangulation->contains_cell(received_data.cell_id))
+            cell = triangulation->create_cell_iterator(received_data.cell_id);
+          else
+            {
+              auto child_indices = received_data.cell_id.get_child_indices();
+              auto new_cell_id   = dealii::CellId(received_data.cell_id.get_coarse_cell_id(),
+                                                child_indices.size() - 1,
+                                                child_indices.data());
+              cell               = triangulation->create_cell_iterator(new_cell_id);
+            }
 
-        cell_to_ghost_particle_cache[cell].push_back(received_data.handle);
+          cell_to_ghost_particle_cache[cell].push_back(received_data.handle);
         }
     }
 
