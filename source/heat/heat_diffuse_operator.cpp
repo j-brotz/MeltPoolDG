@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <bitset>
 #include <cmath>
+#include <memory>
 
 
 namespace MeltPoolDG::Heat
@@ -99,25 +100,28 @@ namespace MeltPoolDG::Heat
     delta_phase_weighted = create_phase_weighted_delta_approximation(
       evapor_data.evaporative_cooling.delta_approximation_phase_weighted);
 
-    mass_flux_type = evapor_data.evaporative_cooling.model;
-    AssertThrow(surface_mesh_info or
-                  mass_flux_type != Evaporation::EvaporCoolingInterfaceFluxType::sharp,
+    evaporative_cooling_interface_flux_type = evapor_data.evaporative_cooling.model;
+    AssertThrow(surface_mesh_info or evaporative_cooling_interface_flux_type !=
+                                       Evaporation::EvaporCoolingInterfaceFluxType::sharp,
                 ExcMessage("If you would like to use a sharp flux model, you first"
                            "need to register the surface mesh."));
 
-    do_level_set_temperature_gradient_interpolation = scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx);
 
-    if (do_level_set_temperature_gradient_interpolation)
-      ls_to_heat_grad_interpolation_matrix = DoFTools::create_dof_interpolation_matrix<dim, number>(
-        scratch_data.get_dof_handler(heat_dof_idx),
-        scratch_data.get_dof_handler(ls_dof_idx),
-        true /* do_matrix_free */);
+    if (evaporative_mass_flux_in)
+      {
+        evaporative_mass_flux = evaporative_mass_flux_in;
+        mass_flux_dof_idx     = mass_flux_dof_idx_in;
+      }
+    else
+      {
+        evaporative_mass_flux = nullptr;
+        mass_flux_dof_idx     = dealii::numbers::invalid_unsigned_int;
+      }
 
-    evaporative_mass_flux = evaporative_mass_flux_in;
-    mass_flux_dof_idx     = mass_flux_dof_idx_in;
-
-    evaporative_cooling = std::make_unique<Evaporation::EvaporativeCooling<number>>(
-      evapor_data, material.get_data(), false /*setup_internal_mass_flux_operator*/);
+    evaporative_cooling =
+      std::make_unique<Evaporation::EvaporativeCooling<number>>(evapor_data,
+                                                                material.get_data(),
+                                                                not evaporative_mass_flux);
 
     if (evapor_data.evaporative_cooling.consider_enthalpy_transport_vapor_mass_flux == "true")
       {
@@ -210,8 +214,8 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number>   T_old_eval(matrix_free, heat_no_bc_dof_idx, heat_quad_idx);
 
     std::unique_ptr<FECellIntegrator<dim, 1, number>> mass_flux_eval;
-    if (evaporative_mass_flux and
-        mass_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::regularized)
+    if (evaporative_mass_flux and evaporative_cooling_interface_flux_type ==
+                                    Evaporation::EvaporCoolingInterfaceFluxType::regularized)
       {
         mass_flux_eval = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
                                                                             mass_flux_dof_idx,
@@ -307,8 +311,8 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number>   T_new_eval(matrix_free, heat_dof_idx, heat_quad_idx);
     FECellIntegrator<dim, 1, number>   T_old_eval(matrix_free, heat_no_bc_dof_idx, heat_quad_idx);
     std::unique_ptr<FECellIntegrator<dim, 1, number>> mass_flux_eval;
-    if (evaporative_mass_flux and
-        mass_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::regularized)
+    if (evaporative_mass_flux and evaporative_cooling_interface_flux_type ==
+                                    Evaporation::EvaporCoolingInterfaceFluxType::regularized)
       {
         mass_flux_eval = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
                                                                             mass_flux_dof_idx,
@@ -411,8 +415,12 @@ namespace MeltPoolDG::Heat
 
     std::unique_ptr<FECellIntegrator<dim, 1, number>> mass_flux_eval;
 
-    if (evaporative_mass_flux and
-        mass_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::regularized)
+    bool is_regularized_evapor_flux =
+      (evaporative_cooling and (evaporative_cooling_interface_flux_type ==
+                                Evaporation::EvaporCoolingInterfaceFluxType::regularized));
+
+    if (evaporative_mass_flux and evaporative_cooling_interface_flux_type ==
+                                    Evaporation::EvaporCoolingInterfaceFluxType::regularized)
       {
         mass_flux_eval = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
                                                                             mass_flux_dof_idx,
@@ -452,7 +460,7 @@ namespace MeltPoolDG::Heat
             heaviside_eval.reinit(cell);
             heaviside_eval.read_dof_values_plain(*level_set_as_heaviside);
 
-            if (evaporative_mass_flux)
+            if (evaporative_cooling and is_regularized_evapor_flux)
               {
                 if (do_level_set_temperature_gradient_interpolation)
                   {
@@ -495,15 +503,17 @@ namespace MeltPoolDG::Heat
             if (velocity)
               val += rho_cp * scalar_product(T_new_eval.get_gradient(q), vel_eval.get_value(q));
 
-            if (mass_flux_eval)
+            if (is_regularized_evapor_flux)
               {
                 VectorizedArray<number> weight(1.0);
                 if (delta_phase_weighted)
                   weight = delta_phase_weighted->compute_weight(heaviside_eval_used.get_value(q));
 
                 const auto cooling =
-                  evaporative_cooling->compute_evaporative_cooling(mass_flux_eval->get_value(q),
-                                                                   T_new_eval.get_value(q));
+                  evaporative_mass_flux ?
+                    evaporative_cooling->compute_evaporative_cooling(mass_flux_eval->get_value(q),
+                                                                     T_new_eval.get_value(q)) :
+                    evaporative_cooling->compute_evaporative_cooling(T_new_eval.get_value(q));
 
                 const auto temp = -cooling * heaviside_eval_used.get_gradient(q).norm() * weight;
 
@@ -527,16 +537,21 @@ namespace MeltPoolDG::Heat
   HeatDiffuseMultiPhaseOperator<dim, number>::rhs_cut_cell_loop(VectorType &dst) const
   {
     // evaluate the evaporative cooling term as surface integral
-    if (mass_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp)
+    if (evaporative_cooling_interface_flux_type ==
+        Evaporation::EvaporCoolingInterfaceFluxType::sharp)
       {
         Assert(evaporative_mass_flux,
                ExcMessage("You need to register the evaporative mass flux."));
 
         evapor_heat_source = 0;
 
-        FEPointEvaluation<1, dim> mass_flux_surface_eval(scratch_data.get_mapping(),
-                                                         scratch_data.get_fe(mass_flux_dof_idx),
-                                                         update_values);
+        std::unique_ptr<FEPointEvaluation<1, dim>> mass_flux_surface_eval;
+
+        if (evaporative_mass_flux)
+          mass_flux_surface_eval =
+            std::make_unique<FEPointEvaluation<1, dim>>(scratch_data.get_mapping(),
+                                                        scratch_data.get_fe(mass_flux_dof_idx),
+                                                        update_values);
 
         FEPointEvaluation<1, dim> T_surface_eval(scratch_data.get_mapping(),
                                                  scratch_data.get_fe(heat_dof_idx),
@@ -545,8 +560,11 @@ namespace MeltPoolDG::Heat
         std::vector<number>                  buffer;
         std::vector<types::global_dof_index> local_dof_indices;
 
-        const int n_dofs_mass_flux = scratch_data.get_fe(mass_flux_dof_idx).n_dofs_per_cell();
-        const int n_dofs_heat      = scratch_data.get_fe(heat_dof_idx).n_dofs_per_cell();
+        int n_dofs_mass_flux = 0;
+        if (evaporative_mass_flux)
+          n_dofs_mass_flux = scratch_data.get_fe(mass_flux_dof_idx).n_dofs_per_cell();
+
+        const int n_dofs_heat = scratch_data.get_fe(heat_dof_idx).n_dofs_per_cell();
 
         if (surface_mesh_info->size() > 0)
           {
@@ -557,7 +575,9 @@ namespace MeltPoolDG::Heat
                 const ArrayView<const Point<dim>> unit_points(quad_points.data(), n_points);
                 const ArrayView<const number>     JxW(weights.data(), n_points);
 
-                mass_flux_surface_eval.reinit(cell, unit_points);
+                if (mass_flux_surface_eval)
+                  mass_flux_surface_eval->reinit(cell, unit_points);
+
                 T_surface_eval.reinit(cell, unit_points);
 
                 const auto T_cell =
@@ -567,23 +587,26 @@ namespace MeltPoolDG::Heat
                                                                  &scratch_data.get_dof_handler(
                                                                    heat_dof_idx));
 
-                const auto mass_flux_cell =
-                  TriaIterator<DoFCellAccessor<dim, dim, false>>(&scratch_data.get_triangulation(),
-                                                                 cell->level(),
-                                                                 cell->index(),
-                                                                 &scratch_data.get_dof_handler(
-                                                                   mass_flux_dof_idx));
 
-                // gather evaluate mass_flux
-                local_dof_indices.resize(n_dofs_mass_flux);
-                buffer.resize(n_dofs_mass_flux);
-                mass_flux_cell->get_dof_indices(local_dof_indices);
-                scratch_data.get_constraint(mass_flux_dof_idx)
-                  .get_dof_values(*evaporative_mass_flux,
-                                  local_dof_indices.begin(),
-                                  buffer.begin(),
-                                  buffer.end());
-                mass_flux_surface_eval.evaluate(buffer, EvaluationFlags::values);
+                if (mass_flux_surface_eval)
+                  {
+                    const auto mass_flux_cell = TriaIterator<DoFCellAccessor<dim, dim, false>>(
+                      &scratch_data.get_triangulation(),
+                      cell->level(),
+                      cell->index(),
+                      &scratch_data.get_dof_handler(mass_flux_dof_idx));
+
+                    // gather evaluate mass_flux
+                    local_dof_indices.resize(n_dofs_mass_flux);
+                    buffer.resize(n_dofs_mass_flux);
+                    mass_flux_cell->get_dof_indices(local_dof_indices);
+                    scratch_data.get_constraint(mass_flux_dof_idx)
+                      .get_dof_values(*evaporative_mass_flux,
+                                      local_dof_indices.begin(),
+                                      buffer.begin(),
+                                      buffer.end());
+                    mass_flux_surface_eval->evaluate(buffer, EvaluationFlags::values);
+                  }
 
                 // gather evaluate temperature
                 buffer.resize(n_dofs_heat);
@@ -598,8 +621,12 @@ namespace MeltPoolDG::Heat
 
                 for (unsigned int q = 0; q < n_points; ++q)
                   {
-                    const number cooling = evaporative_cooling->compute_evaporative_cooling(
-                      mass_flux_surface_eval.get_value(q), T_surface_eval.get_value(q));
+                    const number cooling =
+                      mass_flux_surface_eval ?
+                        evaporative_cooling->compute_evaporative_cooling(
+                          mass_flux_surface_eval->get_value(q), T_surface_eval.get_value(q)) :
+                        evaporative_cooling->compute_evaporative_cooling(
+                          T_surface_eval.get_value(q));
 
                     T_surface_eval.submit_value(cooling * JxW[q],
                                                 q); // *(-1) for the residual
@@ -617,7 +644,8 @@ namespace MeltPoolDG::Heat
 
         dst += evapor_heat_source;
       }
-    else if (mass_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp_conforming)
+    else if (evaporative_cooling_interface_flux_type ==
+             Evaporation::EvaporCoolingInterfaceFluxType::sharp_conforming)
       {
         Assert(evaporative_mass_flux,
                ExcMessage("You need to register the evaporative mass flux."));
@@ -628,14 +656,18 @@ namespace MeltPoolDG::Heat
                                                         *level_set_as_heaviside);
 
         // step 2: evaluate and fill rhs
-        FEFaceIntegrator<dim, 1, number> T_eval(scratch_data.get_matrix_free(),
+        FEFaceIntegrator<dim, 1, number>                  T_eval(scratch_data.get_matrix_free(),
                                                 true /*is_interior_face*/,
                                                 heat_dof_idx,
                                                 heat_quad_idx);
-        FEFaceIntegrator<dim, 1, number> mass_flux_eval(scratch_data.get_matrix_free(),
-                                                        true /*is_interior_face*/,
-                                                        mass_flux_dof_idx,
-                                                        heat_quad_idx);
+        std::unique_ptr<FEFaceIntegrator<dim, 1, number>> mass_flux_eval;
+
+        if (evaporative_mass_flux)
+          mass_flux_eval =
+            std::make_unique<FEFaceIntegrator<dim, 1, number>>(scratch_data.get_matrix_free(),
+                                                               true /*is_interior_face*/,
+                                                               mass_flux_dof_idx,
+                                                               heat_quad_idx);
 
         std::pair<unsigned int, unsigned int> face_range = {
           0, scratch_data.get_matrix_free().n_inner_face_batches()};
@@ -646,8 +678,11 @@ namespace MeltPoolDG::Heat
             if (evaporative_cooling)
               T_eval.gather_evaluate(temperature, EvaluationFlags::values);
 
-            mass_flux_eval.reinit(face);
-            mass_flux_eval.gather_evaluate(*evaporative_mass_flux, EvaluationFlags::values);
+            if (evaporative_mass_flux)
+              {
+                mass_flux_eval->reinit(face);
+                mass_flux_eval->gather_evaluate(*evaporative_mass_flux, EvaluationFlags::values);
+              }
 
             // collect lanes that need to be processed
             std::bitset<VectorizedArray<number>::size()> active_lanes;
@@ -669,8 +704,10 @@ namespace MeltPoolDG::Heat
             for (unsigned int q = 0; q < T_eval.n_q_points; ++q)
               {
                 const auto cooling =
-                  evaporative_cooling->compute_evaporative_cooling(mass_flux_eval.get_value(q),
-                                                                   T_eval.get_value(q));
+                  evaporative_mass_flux ?
+                    evaporative_cooling->compute_evaporative_cooling(mass_flux_eval->get_value(q),
+                                                                     T_eval.get_value(q)) :
+                    evaporative_cooling->compute_evaporative_cooling(T_eval.get_value(q));
                 T_eval.submit_value(cooling,
                                     q); // *(-1) for the residual
               }
@@ -792,9 +829,19 @@ namespace MeltPoolDG::Heat
   HeatDiffuseMultiPhaseOperator<dim, number>::reinit()
   {
     // TODO: only if output variable is requested
-    if (mass_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp or
-        mass_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp_conforming)
+    if (evaporative_cooling_interface_flux_type ==
+          Evaporation::EvaporCoolingInterfaceFluxType::sharp or
+        evaporative_cooling_interface_flux_type ==
+          Evaporation::EvaporCoolingInterfaceFluxType::sharp_conforming)
       scratch_data.initialize_dof_vector(evapor_heat_source, heat_dof_idx);
+
+    do_level_set_temperature_gradient_interpolation = scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx);
+
+    if (do_level_set_temperature_gradient_interpolation)
+      ls_to_heat_grad_interpolation_matrix = DoFTools::create_dof_interpolation_matrix<dim, number>(
+        scratch_data.get_dof_handler(heat_dof_idx),
+        scratch_data.get_dof_handler(ls_dof_idx),
+        true /* do_matrix_free */);
   }
 
   template <int dim, typename number>
@@ -857,8 +904,10 @@ namespace MeltPoolDG::Heat
         if (evaporative_mass_flux)
           {
             scratch_data.initialize_dof_vector(evapor_heat_source_projected, heat_dof_idx);
-            if (mass_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp or
-                mass_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp_conforming)
+            if (evaporative_cooling_interface_flux_type ==
+                  Evaporation::EvaporCoolingInterfaceFluxType::sharp or
+                evaporative_cooling_interface_flux_type ==
+                  Evaporation::EvaporCoolingInterfaceFluxType::sharp_conforming)
               {
                 VectorTools::project_vector<1, dim>(scratch_data.get_mapping(),
                                                     scratch_data.get_dof_handler(heat_dof_idx),
@@ -939,7 +988,7 @@ namespace MeltPoolDG::Heat
             heaviside_eval.reinit(eval.get_current_cell_index());
             heaviside_eval.read_dof_values_plain(*level_set_as_heaviside);
 
-            if (evaporative_mass_flux)
+            if (evaporative_cooling)
               {
                 if (do_level_set_temperature_gradient_interpolation)
                   {
@@ -965,18 +1014,25 @@ namespace MeltPoolDG::Heat
             T_old_eval.reinit(eval.get_current_cell_index());
             T_old_eval.read_dof_values_plain(temperature_old);
             T_old_eval.evaluate(EvaluationFlags::values);
+          }
 
+        if (do_solidification or evaporative_cooling)
+          {
             T_new_eval.reinit(eval.get_current_cell_index());
             T_new_eval.read_dof_values_plain(temperature);
             T_new_eval.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
           }
-        if (mass_flux_eval)
+        if (mass_flux_eval and evaporative_mass_flux)
           {
             mass_flux_eval->reinit(eval.get_current_cell_index());
             mass_flux_eval->read_dof_values_plain(*evaporative_mass_flux);
             mass_flux_eval->evaluate(EvaluationFlags::values);
           }
       }
+
+    bool is_regularized_evapor_flux =
+      (evaporative_cooling and (evaporative_cooling_interface_flux_type ==
+                                Evaporation::EvaporCoolingInterfaceFluxType::regularized));
 
     for (unsigned int q = 0; q < eval.n_q_points; ++q)
       {
@@ -1007,17 +1063,21 @@ namespace MeltPoolDG::Heat
             // todo: add term containing ∇·u  in case of evaporation
           }
 
-        if (mass_flux_eval)
+        if (is_regularized_evapor_flux)
           {
             VectorizedArray<number> weight(1.0);
             if (delta_phase_weighted)
               weight = delta_phase_weighted->compute_weight(heaviside_eval_used.get_value(q));
 
-            const auto cooling_dertivative =
-              evaporative_cooling->compute_evaporative_cooling_derivative_constant_mass_flux(
-                mass_flux_eval->get_value(q));
+            const auto cooling_derivative =
+              evaporative_mass_flux ?
+                evaporative_cooling->compute_evaporative_cooling_derivative_constant_mass_flux(
+                  mass_flux_eval->get_value(q)) :
+                evaporative_cooling
+                  ->compute_evaporative_cooling_derivative_with_temperature_dependent_mass_flux(
+                    T_new_eval.get_value(q));
 
-            val += -cooling_dertivative * heaviside_eval_used.get_gradient(q).norm() * weight *
+            val += -cooling_derivative * heaviside_eval_used.get_gradient(q).norm() * weight *
                    eval.get_value(q);
           }
 
