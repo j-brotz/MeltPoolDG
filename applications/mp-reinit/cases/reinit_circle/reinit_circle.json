@@ -24,18 +24,16 @@
       "enable": true
     }
   },
-  "level set": {
-    "reinitialization": {
-      "linear solver": {
-        "do matrix free": true
-      },
-      "type": "olsson2007"
+  "reinitialization": {
+    "linear solver": {
+      "do matrix free": true
     },
-    "normal vector": {
-      "linear solver": {
-        "do matrix free": true
-      },
-      "filter parameter": 0.5
-    }
+    "type": "olsson2007"
+  },
+  "normal vector": {
+    "linear solver": {
+      "do matrix free": true
+    },
+    "filter parameter": 0.5
   }
 }

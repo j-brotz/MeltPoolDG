@@ -30,21 +30,19 @@
       "enable": true
     }
   },
-  "level set": {
-    "reinitialization": {
-      "linear solver": {
-        "do matrix free": true
-      },
-      "type": "olsson2007",
-      "interface thickness parameter": {
-        "type": "absolute_value",
-        "val": 0.05
-      }
+  "reinitialization": {
+    "linear solver": {
+      "do matrix free": true
     },
-    "normal vector": {
-      "linear solver": {
-        "do matrix free": true
-      }
+    "type": "olsson2007",
+    "interface thickness parameter": {
+      "type": "absolute_value",
+      "val": 0.05
+    }
+  },
+  "normal vector": {
+    "linear solver": {
+      "do matrix free": true
     }
   }
 }
