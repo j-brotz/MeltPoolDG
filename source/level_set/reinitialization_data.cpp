@@ -22,6 +22,36 @@ namespace MeltPoolDG::LevelSet
 
   template <typename number>
   void
+  ReinitializationGeometricData<number>::add_parameters(dealii::ParameterHandler &prm)
+  {
+    prm.enter_subsection("geometric");
+    {
+      prm.enter_subsection("interface thickness parameter");
+      {
+        prm.add_parameter("type",
+                          interface_thickness_parameter.type,
+                          "Choose the value type of the interface thickness parameter.");
+
+        prm.add_parameter("val",
+                          interface_thickness_parameter.value,
+                          "Defines the value of the chosen interface thickness parameter type.");
+      }
+      prm.leave_subsection();
+
+      prm.add_parameter("verbosity",
+                        verbosity,
+                        "Choose the verbosity level. 0 means silent, 1 means verbose.");
+      prm.add_parameter("max distance",
+                        max_distance,
+                        "Maximum distance from the zero-level-set where the signed"
+                        "distance function is reconstructed.",
+                        dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+    }
+    prm.leave_subsection();
+  }
+
+  template <typename number>
+  void
   ReinitializationHyperbolicData<number>::add_parameters(dealii::ParameterHandler &prm)
   {
     prm.enter_subsection("hyperbolic");
@@ -223,8 +253,9 @@ namespace MeltPoolDG::LevelSet
                         modeltype,
                         "Sets the type of reinitialization model that should be used.");
 
-      hyperbolic.add_parameters(prm);
       elliptic.add_parameters(prm);
+      geometric.add_parameters(prm);
+      hyperbolic.add_parameters(prm);
     }
     prm.leave_subsection();
   }

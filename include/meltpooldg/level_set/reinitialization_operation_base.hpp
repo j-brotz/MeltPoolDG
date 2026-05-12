@@ -45,15 +45,6 @@ namespace MeltPoolDG::LevelSet
     virtual dealii::LinearAlgebra::distributed::Vector<number> &
     get_level_set() = 0;
 
-    virtual number
-    get_max_change_level_set() const = 0;
-
-    virtual const dealii::LinearAlgebra::distributed::BlockVector<number> &
-    get_normal_vector() const = 0;
-
-    virtual dealii::LinearAlgebra::distributed::BlockVector<number> &
-    get_normal_vector() = 0;
-
     virtual void
     attach_vectors(std::vector<dealii::LinearAlgebra::distributed::Vector<number> *> &vectors) = 0;
 
@@ -85,4 +76,15 @@ namespace MeltPoolDG::LevelSet
       return nullptr;
     }
   };
+
+  template <int dim, typename number>
+  class ReinitializationHyperbolicOperationCapable
+  {
+  public:
+    virtual ~ReinitializationHyperbolicOperationCapable() = default;
+
+    virtual number
+    get_max_change_level_set() const = 0;
+  };
+
 } // namespace MeltPoolDG::LevelSet

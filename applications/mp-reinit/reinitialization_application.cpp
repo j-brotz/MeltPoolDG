@@ -12,6 +12,7 @@
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
 #include <meltpooldg/level_set/reinitialization_elliptic_operation.hpp>
+#include <meltpooldg/level_set/reinitialization_geometric_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_hyperbolic_CG_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_hyperbolic_DG_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_olsson_operation_adaflo_wrapper.hpp>
@@ -71,23 +72,37 @@ namespace MeltPoolDG::LevelSet
                                          scratch_data->get_mpi_comm());
               }
             // Check if we obtained steady state
-            if (reinit_operation->get_max_change_level_set() <
-                  param.reinit.hyperbolic.pseudo_time_stepping.tolerance and
-                time_iterator->get_current_time_step_number() >
-                  1 /*do not check at the initial condition*/)
+            //
+
+            if (auto *hyperbolic_reinit =
+                  dynamic_cast<ReinitializationHyperbolicOperationCapable<dim, number> *>(
+                    reinit_operation.get()))
               {
-                Journal::print_line(scratch_data->get_pcout(0), "Steady state reached.");
-                break;
+                if (hyperbolic_reinit->get_max_change_level_set() <
+                      param.reinit.hyperbolic.pseudo_time_stepping.tolerance and
+                    time_iterator->get_current_time_step_number() >
+                      1 /*do not check at the initial condition*/)
+                  {
+                    Journal::print_line(scratch_data->get_pcout(0), "Steady state reached.");
+                    break;
+                  }
+              }
+            else
+              {
+                AssertThrow(false, ExcNotImplemented());
               }
 
             if (param.amr.do_amr)
               refine_mesh();
           }
       }
-    else if (param.reinit.modeltype == ModelType::elliptic)
+    else if (param.reinit.modeltype == ModelType::elliptic ||
+             param.reinit.modeltype == ModelType::geometric)
       {
         // Solve a nonlinear system instead of advancing in pseudo-time
         reinit_operation->solve();
+
+        time_iterator->compute_next_time_increment();
 
         output_results(time_iterator->get_current_time_step_number(),
                        time_iterator->get_current_time());
@@ -217,6 +232,11 @@ namespace MeltPoolDG::LevelSet
               false,
               dealii::ExcMessage(
                 "The elliptic reinitialization is in development and cannot be used yet."));
+          }
+        else if (param.reinit.modeltype == ModelType::geometric)
+          {
+            reinit_operation = std::make_unique<ReinitializationGeometricOperation<dim, number>>(
+              *scratch_data, param.reinit, reinit_dof_idx, reinit_quad_idx);
           }
         else
           AssertThrow(false, ExcNotImplemented());

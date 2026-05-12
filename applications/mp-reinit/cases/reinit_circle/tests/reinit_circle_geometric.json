@@ -1,0 +1,32 @@
+{
+  "base": {
+    "case name": "reinit_circle",
+    "dimension": 2,
+    "global refinements": 5,
+    "do print parameters": false,
+    "fe": {
+      "degree": 1
+    }
+  },
+  "simulation specific parameters": {
+    "center point": "0., 0.",
+    "radius": 0.5,
+    "level set type": "signed_distance",
+    "apply initial jump at interface": false,
+    "distortion factor": 0.8
+  },
+  "reinitialization": {
+    "linear solver": {
+      "do matrix free": true
+    },
+    "type": "geometric",
+    "geometric": {
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": 0.05
+      },
+      "max distance": 0.5,
+      "verbosity": 1
+    }
+  }
+}

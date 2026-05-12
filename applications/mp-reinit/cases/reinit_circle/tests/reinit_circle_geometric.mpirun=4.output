@@ -1,0 +1,18 @@
+-----------------------
+Signed Distance Solver
+-----------------------
+Initial volume Volume after redistanciation Remaining error on the volume 
+    3.2167e+00                   3.2167e+00                    4.4409e-16 
+Solving signed distance of layer 0
+Solving signed distance of layer 1
+Solving signed distance of layer 2
+Solving signed distance of layer 3
+Solving signed distance of layer 4
+Solving signed distance of layer 5
+Solving signed distance of layer 6
+Solving signed distance of layer 7
+Solving signed distance of layer 8
+| || level set ||L2 = 1.829107284545898e+00                             reinitialization_geometric |
++--------------------------------------------------------------------------------------------------+
+|  end of simulation                                                                               |
++--------------------------------------------------------------------------------------------------+

@@ -14,7 +14,9 @@ namespace MeltPoolDG::LevelSet
 {
 
   template <int dim, typename number>
-  class ReinitializationHyperbolicDGOperation : public ReinitializationOperationBase<dim, number>
+  class ReinitializationHyperbolicDGOperation
+    : public ReinitializationOperationBase<dim, number>,
+      public ReinitializationHyperbolicOperationCapable<dim, number>
   {
   private:
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -79,7 +81,7 @@ namespace MeltPoolDG::LevelSet
     get_max_change_level_set() const final;
 
     const BlockVectorType &
-    get_normal_vector() const override;
+    get_normal_vector() const;
 
     const VectorType &
     get_level_set() const override;
@@ -88,7 +90,7 @@ namespace MeltPoolDG::LevelSet
     get_level_set() override;
 
     BlockVectorType &
-    get_normal_vector() override;
+    get_normal_vector();
 
     void
     attach_vectors(

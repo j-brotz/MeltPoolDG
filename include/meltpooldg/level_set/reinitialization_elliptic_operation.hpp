@@ -105,30 +105,6 @@ namespace MeltPoolDG::LevelSet
     get_level_set() override;
 
     /**
-     * @brief Get the maximum change in the level-set field.
-     *
-     * @return Maximum change value.
-     */
-    number
-    get_max_change_level_set() const final;
-
-    /**
-     * @brief Access the normal vector field (const version).
-     *
-     * @return Constant reference to the normal vector block.
-     */
-    const BlockVectorType &
-    get_normal_vector() const override;
-
-    /**
-     * @brief Access the normal vector field (mutable version).
-     *
-     * @return Reference to the normal vector block.
-     */
-    BlockVectorType &
-    get_normal_vector() override;
-
-    /**
      * @brief Attach internal vectors to an external container.
      *
      * Adds the @p solution_level_set vector to the provided list and forwards the call to the
@@ -172,8 +148,5 @@ namespace MeltPoolDG::LevelSet
 
     /// Pointer to the operation for the normal vector computation
     std::shared_ptr<NormalVectorOperationBase<dim, number>> normal_vector_operation;
-
-    /// Maximum change of the level set due to the reinitialization procedure
-    number max_change_level_set = std::numeric_limits<number>::max();
   };
 } // namespace MeltPoolDG::LevelSet
