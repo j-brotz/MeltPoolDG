@@ -9,6 +9,12 @@
       "degree": 1
     }
   },
+  "simulation specific parameters": {
+    "center point": "0., 0.5",
+    "radius": "0.25",
+    "level set type": "tanh",
+    "apply initial jump at interface": true
+  },
   "time stepping": {
     "start time": 0.0,
     "time step size": 0.005,

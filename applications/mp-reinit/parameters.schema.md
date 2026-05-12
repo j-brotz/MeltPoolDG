@@ -88,6 +88,7 @@
 | `type` | `string` | `olsson2007` | Sets the type of reinitialization model that should be used.<br><br>Allowed values:<br>- `olsson2007`<br>- `elliptic` |
 | `implementation` | `string` | `meltpooldg` | Choose the corresponding implementation of the reinitialization operation.<br><br>Allowed values:<br>- `meltpooldg`<br>- `adaflo` |
 | [`Discontinous Galerkin`](#reinitialization-discontinous-galerkin) | `object` |  | [See table](#reinitialization-discontinous-galerkin) |
+| [`elliptic`](#reinitialization-elliptic) | `object` |  | [See table](#reinitialization-elliptic) |
 | [`interface thickness parameter`](#reinitialization-interface-thickness-parameter) | `object` |  | [See table](#reinitialization-interface-thickness-parameter) |
 | [`predictor`](#reinitialization-predictor) | `object` |  | [See table](#reinitialization-predictor) |
 | [`linear solver`](#reinitialization-linear-solver) | `object` |  | [See table](#reinitialization-linear-solver) |
@@ -119,6 +120,13 @@
 | `use spatially constant diffusion` | `boolean` | `True` | Sets a flag if a spatially constant diffusion should be used for reinitilization. |
 | `use interface movement penalization` | `boolean` | `False` | Sets a flag if a penalization of the interface movement should be used. |
 | `gradient error time derivative threshold` | `number` | `1e-16` | Sets the threshold in the time derivative when a reinit procedure reaches a stationary point |
+
+<a id="reinitialization-elliptic"></a>
+### `reinitialization: elliptic`
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `penalty parameter` | `number` | `0.0` | Penalty parameter for the enforcement of the initial position of the zero level-set iso-surface during the elliptic reinitialization. |
 
 <a id="reinitialization-interface-thickness-parameter"></a>
 ### `reinitialization: interface thickness parameter`

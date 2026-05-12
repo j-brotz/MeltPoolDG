@@ -132,7 +132,16 @@ namespace MeltPoolDG::LevelSet
       }
       prm.leave_subsection();
 
-
+      prm.enter_subsection("elliptic");
+      {
+        prm.add_parameter(
+          "penalty parameter",
+          reinitialization_elliptic_specific_data.penalty_parameter,
+          "Penalty parameter for the enforcement of the initial position of the zero "
+          "level-set iso-surface during the elliptic reinitialization.",
+          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+      }
+      prm.leave_subsection();
 
       prm.enter_subsection("interface thickness parameter");
       {
