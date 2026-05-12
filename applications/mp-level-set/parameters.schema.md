@@ -318,6 +318,7 @@
 | `type` | `string` | `olsson2007` | Sets the type of reinitialization model that should be used.<br><br>Allowed values:<br>- `olsson2007`<br>- `elliptic` |
 | `implementation` | `string` | `meltpooldg` | Choose the corresponding implementation of the reinitialization operation.<br><br>Allowed values:<br>- `meltpooldg`<br>- `adaflo` |
 | [`Discontinous Galerkin`](#level-set-reinitialization-discontinous-galerkin) | `object` |  | [See table](#level-set-reinitialization-discontinous-galerkin) |
+| [`elliptic`](#level-set-reinitialization-elliptic) | `object` |  | [See table](#level-set-reinitialization-elliptic) |
 | [`interface thickness parameter`](#level-set-reinitialization-interface-thickness-parameter) | `object` |  | [See table](#level-set-reinitialization-interface-thickness-parameter) |
 | [`predictor`](#level-set-reinitialization-predictor) | `object` |  | [See table](#level-set-reinitialization-predictor) |
 | [`linear solver`](#level-set-reinitialization-linear-solver) | `object` |  | [See table](#level-set-reinitialization-linear-solver) |
@@ -349,6 +350,13 @@
 | `use spatially constant diffusion` | `boolean` | `True` | Sets a flag if a spatially constant diffusion should be used for reinitilization. |
 | `use interface movement penalization` | `boolean` | `False` | Sets a flag if a penalization of the interface movement should be used. |
 | `gradient error time derivative threshold` | `number` | `1e-16` | Sets the threshold in the time derivative when a reinit procedure reaches a stationary point |
+
+<a id="level-set-reinitialization-elliptic"></a>
+#### `level set: reinitialization: elliptic`
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `penalty parameter` | `number` | `0.0` | Penalty parameter for the enforcement of the initial position of the zero level-set iso-surface during the elliptic reinitialization. |
 
 <a id="level-set-reinitialization-interface-thickness-parameter"></a>
 #### `level set: reinitialization: interface thickness parameter`

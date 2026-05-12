@@ -76,6 +76,14 @@ namespace MeltPoolDG::LevelSet
       number gradient_error_time_derivative_threshold = 1e-16;
     } reinitilization_DG_specific_data;
 
+    /**
+     * @brief Collection of parameters required for the elliptic reinitialization.
+     */
+    struct ReinitializationEllipticSpecificData
+    {
+      /// Penalty parameter for enforcement of the initial level-set zero iso-surface
+      number penalty_parameter = 0.;
+    } reinitialization_elliptic_specific_data;
 
     struct InterfaceThickness
     {
