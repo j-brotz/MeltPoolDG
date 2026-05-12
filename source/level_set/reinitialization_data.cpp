@@ -50,8 +50,7 @@ namespace MeltPoolDG::LevelSet
                         dealii::Patterns::Double(0.0));
       prm.add_parameter("type",
                         modeltype,
-                        "Sets the type of reinitialization model that should be used.",
-                        dealii::Patterns::Selection("olsson2007|elliptic"));
+                        "Sets the type of reinitialization model that should be used.");
       prm.add_parameter(
         "implementation",
         implementation,
