@@ -28,7 +28,9 @@ namespace MeltPoolDG::Evaporation
               //
               // This ensures that the evaporation-induced pressure jump is the same as
               // in the phenomenological recoil pressure model.
-              hybrid)
+              hybrid,
+              // recoil pressure model computed with pressure-aware boundary conditions
+              pressure_aware)
 
   template <typename number>
   struct RecoilPressureData
@@ -70,6 +72,19 @@ namespace MeltPoolDG::Evaporation
     //   * phenomenological (default)
     //   * hybrid
     RecoilPressureModelType type = RecoilPressureModelType::phenomenological;
+
+    /**
+     * @brief Data structure holding fitting parameters (Kp) and ambient gas pressure for the
+     * pressure-aware recoil pressure model
+     */
+    struct PressureAwareData
+    {
+      /// Fitting parameters for empirical correlations in the free-surface model
+      std::vector<number> Kp;
+
+      /// Ambient gas pressure (build chamber pressure)
+      number ambient_gas_pressure = 0.0;
+    } pressure_aware;
 
     /**
      * Add parameters to the ParameterHandler

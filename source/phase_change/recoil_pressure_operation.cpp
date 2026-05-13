@@ -54,6 +54,23 @@ namespace MeltPoolDG::Evaporation
                               material.latent_heat_of_evaporation)
   {}
 
+  /*******************************************************************
+   * Pressure-aware model
+   *******************************************************************/
+  template <typename number>
+  RecoilPressureModelPressureAware<number>::RecoilPressureModelPressureAware(
+    const typename RecoilPressureData<number>::PressureAwareData &pressure_aware_data,
+    const number                                                  boiling_temperature,
+    const number                                                  molar_mass,
+    const number                                                  latent_heat_evaporation)
+    : pressure_aware_data(pressure_aware_data)
+    , boiling_temperature(boiling_temperature)
+    , molar_mass(molar_mass)
+    , latent_heat_evaporation(latent_heat_evaporation)
+    , Kp(pressure_aware_data.Kp)
+    , ambient_gas_pressure(pressure_aware_data.ambient_gas_pressure)
+  {}
+
   template <int dim, typename number>
   RecoilPressureOperation<dim, number>::RecoilPressureOperation(
     const ScratchData<dim, dim, number> &scratch_data_in,
@@ -293,4 +310,5 @@ namespace MeltPoolDG::Evaporation
 
   template class RecoilPressurePhenomenologicalModel<double>;
   template class RecoilPressureHybridModel<double>;
+  template class RecoilPressureModelPressureAware<double>;
 } // namespace MeltPoolDG::Evaporation
