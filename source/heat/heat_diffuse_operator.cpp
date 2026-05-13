@@ -409,9 +409,7 @@ namespace MeltPoolDG::Heat
                                                                  heat_dof_idx,
                                                                  heat_quad_idx);
 
-    auto &heaviside_eval_used = do_level_set_temperature_gradient_interpolation ?
-                                  heaviside_interpolated_eval :
-                                  heaviside_eval;
+    FECellIntegrator<dim, 1, number> *heaviside_eval_used = &heaviside_eval;
 
     std::unique_ptr<FECellIntegrator<dim, 1, number>> mass_flux_eval;
 
@@ -457,25 +455,24 @@ namespace MeltPoolDG::Heat
 
         if (level_set_as_heaviside)
           {
-            heaviside_eval.reinit(cell);
+            heaviside_eval.reinit(T_new_eval.get_current_cell_index());
             heaviside_eval.read_dof_values_plain(*level_set_as_heaviside);
 
-            if (evaporative_cooling and is_regularized_evapor_flux)
+            if (do_level_set_temperature_gradient_interpolation)
               {
-                if (do_level_set_temperature_gradient_interpolation)
-                  {
-                    heaviside_interpolated_eval.reinit(cell);
+                heaviside_interpolated_eval.reinit(T_new_eval.get_current_cell_index());
 
-                    DoFTools::compute_gradient_at_interpolated_dof_values<dim>(
-                      heaviside_eval,
-                      heaviside_interpolated_eval,
-                      ls_to_heat_grad_interpolation_matrix);
-                  }
+                DoFTools::compute_gradient_at_interpolated_dof_values<dim>(
+                  heaviside_eval,
+                  heaviside_interpolated_eval,
+                  ls_to_heat_grad_interpolation_matrix);
 
-                heaviside_eval_used.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+                heaviside_eval_used = &heaviside_interpolated_eval;
               }
-            else
-              heaviside_eval.evaluate(EvaluationFlags::values);
+
+            heaviside_eval_used->evaluate(evaporative_cooling ?
+                                            EvaluationFlags::values | EvaluationFlags::gradients :
+                                            EvaluationFlags::values);
           }
 
         if (mass_flux_eval)
@@ -489,7 +486,7 @@ namespace MeltPoolDG::Heat
         for (unsigned int q = 0; q < T_new_eval.n_q_points; ++q)
           {
             const auto [rho_cp, conductivity] =
-              get_material_parameters(T_new_eval, heaviside_eval_used, q);
+              get_material_parameters(T_new_eval, *heaviside_eval_used, q);
 
             conductivity_at_q[cell * T_new_eval.n_q_points + q] = conductivity;
             rho_cp_at_q[cell * T_new_eval.n_q_points + q]       = rho_cp;
@@ -507,7 +504,7 @@ namespace MeltPoolDG::Heat
               {
                 VectorizedArray<number> weight(1.0);
                 if (delta_phase_weighted)
-                  weight = delta_phase_weighted->compute_weight(heaviside_eval_used.get_value(q));
+                  weight = delta_phase_weighted->compute_weight(heaviside_eval_used->get_value(q));
 
                 const auto cooling =
                   evaporative_mass_flux ?
@@ -515,7 +512,7 @@ namespace MeltPoolDG::Heat
                                                                      T_new_eval.get_value(q)) :
                     evaporative_cooling->compute_evaporative_cooling(T_new_eval.get_value(q));
 
-                const auto temp = -cooling * heaviside_eval_used.get_gradient(q).norm() * weight;
+                const auto temp = -cooling * heaviside_eval_used->get_gradient(q).norm() * weight;
 
                 // contribution to heat source for output purposes
                 q_vapor[cell * T_new_eval.n_q_points + q] = -temp;
@@ -968,9 +965,7 @@ namespace MeltPoolDG::Heat
     const std::unique_ptr<FECellIntegrator<dim, 1, number>> &mass_flux_eval,
     const bool                                               do_reinit_cells) const
   {
-    auto &heaviside_eval_used = do_level_set_temperature_gradient_interpolation ?
-                                  heaviside_interpolated_eval :
-                                  heaviside_eval;
+    FECellIntegrator<dim, 1, number> *heaviside_eval_used = &heaviside_eval;
 
     eval.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
@@ -988,25 +983,21 @@ namespace MeltPoolDG::Heat
             heaviside_eval.reinit(eval.get_current_cell_index());
             heaviside_eval.read_dof_values_plain(*level_set_as_heaviside);
 
-            if (evaporative_cooling)
+            if (do_level_set_temperature_gradient_interpolation)
               {
-                if (do_level_set_temperature_gradient_interpolation)
-                  {
-                    heaviside_interpolated_eval.reinit(eval.get_current_cell_index());
+                heaviside_interpolated_eval.reinit(eval.get_current_cell_index());
 
-                    DoFTools::compute_gradient_at_interpolated_dof_values<dim>(
-                      heaviside_eval,
-                      heaviside_interpolated_eval,
-                      ls_to_heat_grad_interpolation_matrix);
+                DoFTools::compute_gradient_at_interpolated_dof_values<dim>(
+                  heaviside_eval,
+                  heaviside_interpolated_eval,
+                  ls_to_heat_grad_interpolation_matrix);
 
-                    heaviside_interpolated_eval.evaluate(EvaluationFlags::values |
-                                                         EvaluationFlags::gradients);
-                  }
-                else
-                  heaviside_eval.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+                heaviside_eval_used = &heaviside_interpolated_eval;
               }
-            else
-              heaviside_eval.evaluate(EvaluationFlags::values);
+
+            heaviside_eval_used->evaluate(evaporative_cooling ?
+                                            EvaluationFlags::values | EvaluationFlags::gradients :
+                                            EvaluationFlags::values);
           }
 
         if (do_solidification)
@@ -1037,7 +1028,7 @@ namespace MeltPoolDG::Heat
     for (unsigned int q = 0; q < eval.n_q_points; ++q)
       {
         const auto [rho_cp, conductivity, d_rho_cp_d_T, d_conductivity_d_T] =
-          get_material_parameters_and_derivatives(T_new_eval, heaviside_eval_used, q);
+          get_material_parameters_and_derivatives(T_new_eval, *heaviside_eval_used, q);
 
         auto val = this->time_increment_inv * rho_cp * eval.get_value(q);
 
@@ -1067,7 +1058,7 @@ namespace MeltPoolDG::Heat
           {
             VectorizedArray<number> weight(1.0);
             if (delta_phase_weighted)
-              weight = delta_phase_weighted->compute_weight(heaviside_eval_used.get_value(q));
+              weight = delta_phase_weighted->compute_weight(heaviside_eval_used->get_value(q));
 
             const auto cooling_derivative =
               evaporative_mass_flux ?
@@ -1077,7 +1068,7 @@ namespace MeltPoolDG::Heat
                   ->compute_evaporative_cooling_derivative_with_temperature_dependent_mass_flux(
                     T_new_eval.get_value(q));
 
-            val += -cooling_derivative * heaviside_eval_used.get_gradient(q).norm() * weight *
+            val += -cooling_derivative * heaviside_eval_used->get_gradient(q).norm() * weight *
                    eval.get_value(q);
           }
 
