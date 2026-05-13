@@ -70,6 +70,17 @@ namespace MeltPoolDG
 
       prm.add_parameter("solidus temperature", solidus_temperature, "Solidus temperature (K).");
       prm.add_parameter("liquidus temperature", liquidus_temperature, "Liquidus temperature (K).");
+      prm.add_parameter(
+        "apparent capacity type",
+        apparent_capacity_type,
+        "Function type for the apparent capacity method to model latent heat during solidification. "
+        "constant: apparent capacity is constant between the solidus and liquidus temperature; "
+        "qlq: apparent capacity is given by a quadratic/quadratic function of temperature between the solidus and liquidus temperature (default); "
+        "poly4_bell: apparent capacity is given by a bell-shaped quartic polynomial function of temperature between the solidus and liquidus temperature.");
+      prm.add_parameter("latent heat of fusion",
+                        latent_heat_of_fusion,
+                        "Latent heat of fusion (J/kg)",
+                        dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
       prm.add_parameter("boiling temperature", boiling_temperature, "Boiling temperature (K).");
       prm.add_parameter("latent heat of evaporation",
                         latent_heat_of_evaporation,

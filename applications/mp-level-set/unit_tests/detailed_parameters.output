@@ -1993,59 +1993,77 @@
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
             "actions": "205"
         },
+        "apparent capacity type":
+        {
+            "value": "qlq",
+            "default_value": "qlq",
+            "documentation": "Function type for the apparent capacity method to model latent heat during solidification. constant: apparent capacity is constant between the solidus and liquidus temperature; qlq: apparent capacity is given by a quadratic\/quadratic function of temperature between the solidus and liquidus temperature (default); poly4_bell: apparent capacity is given by a bell-shaped quartic polynomial function of temperature between the solidus and liquidus temperature.",
+            "pattern": "205",
+            "pattern_description": "[Selection poly4_bell|constant|qlq ]",
+            "actions": "206"
+        },
+        "latent heat of fusion":
+        {
+            "value": "0",
+            "default_value": "0",
+            "documentation": "Latent heat of fusion (J\/kg)",
+            "pattern": "206",
+            "pattern_description": "[Double 0...MAX_DOUBLE (inclusive)]",
+            "actions": "207"
+        },
         "boiling temperature":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Boiling temperature (K).",
-            "pattern": "205",
+            "pattern": "207",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "206"
+            "actions": "208"
         },
         "latent heat of evaporation":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Latent heat of evaporation (J\/kg).",
-            "pattern": "206",
+            "pattern": "208",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "207"
+            "actions": "209"
         },
         "molar mass":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Molar mass (mol\/kg).",
-            "pattern": "207",
+            "pattern": "209",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "208"
+            "actions": "210"
         },
         "specific enthalpy reference temperature":
         {
             "value": "-1e+100",
             "default_value": "-1e+100",
             "documentation": "Reference temperature of the specific enthalpy",
-            "pattern": "208",
+            "pattern": "210",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "209"
+            "actions": "211"
         },
         "two phase fluid properties transition type":
         {
             "value": "smooth",
             "default_value": "smooth",
             "documentation": "Choose how to interpolate the properties over the interface. sharp: properties jump at heaviside = 0.5; smooth: properties are smeared between the phases proportional to the heaviside (default); consistent_with_evaporation: same as \"smooth\", but the density is interpolated proportional by the harmonic mean.",
-            "pattern": "209",
+            "pattern": "211",
             "pattern_description": "[Selection sharp|smooth|consistent_with_evaporation ]",
-            "actions": "210"
+            "actions": "212"
         },
         "solid liquid properties transition type":
         {
             "value": "mushy_zone",
             "default_value": "mushy_zone",
             "documentation": "Choose how to interpolate the properties over between the liquid and the solid phase. mushy_zone: solid and liquid properties are interpolated between the solidus and liquidus temperature (default); sharp: the solid and liquid properties jump at the melting point, which is set via the solidus temperature.",
-            "pattern": "210",
+            "pattern": "212",
             "pattern_description": "[Selection mushy_zone|sharp ]",
-            "actions": "211"
+            "actions": "213"
         }
     },
     "amr":
@@ -2055,9 +2073,9 @@
             "value": "generic",
             "default_value": "generic",
             "documentation": "Select the AMR strategy.",
-            "pattern": "211",
+            "pattern": "213",
             "pattern_description": "[Selection generic|refine_all_interface_cells ]",
-            "actions": "212"
+            "actions": "214"
         }
     }
 }

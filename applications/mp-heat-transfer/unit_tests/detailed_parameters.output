@@ -730,59 +730,77 @@
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
             "actions": "75"
         },
+        "apparent capacity type":
+        {
+            "value": "qlq",
+            "default_value": "qlq",
+            "documentation": "Function type for the apparent capacity method to model latent heat during solidification. constant: apparent capacity is constant between the solidus and liquidus temperature; qlq: apparent capacity is given by a quadratic\/quadratic function of temperature between the solidus and liquidus temperature (default); poly4_bell: apparent capacity is given by a bell-shaped quartic polynomial function of temperature between the solidus and liquidus temperature.",
+            "pattern": "75",
+            "pattern_description": "[Selection poly4_bell|constant|qlq ]",
+            "actions": "76"
+        },
+        "latent heat of fusion":
+        {
+            "value": "0",
+            "default_value": "0",
+            "documentation": "Latent heat of fusion (J\/kg)",
+            "pattern": "76",
+            "pattern_description": "[Double 0...MAX_DOUBLE (inclusive)]",
+            "actions": "77"
+        },
         "boiling temperature":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Boiling temperature (K).",
-            "pattern": "75",
+            "pattern": "77",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "76"
+            "actions": "78"
         },
         "latent heat of evaporation":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Latent heat of evaporation (J\/kg).",
-            "pattern": "76",
+            "pattern": "78",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "77"
+            "actions": "79"
         },
         "molar mass":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Molar mass (mol\/kg).",
-            "pattern": "77",
+            "pattern": "79",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "78"
+            "actions": "80"
         },
         "specific enthalpy reference temperature":
         {
             "value": "-1e+100",
             "default_value": "-1e+100",
             "documentation": "Reference temperature of the specific enthalpy",
-            "pattern": "78",
+            "pattern": "80",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "79"
+            "actions": "81"
         },
         "two phase fluid properties transition type":
         {
             "value": "smooth",
             "default_value": "smooth",
             "documentation": "Choose how to interpolate the properties over the interface. sharp: properties jump at heaviside = 0.5; smooth: properties are smeared between the phases proportional to the heaviside (default); consistent_with_evaporation: same as \"smooth\", but the density is interpolated proportional by the harmonic mean.",
-            "pattern": "79",
+            "pattern": "81",
             "pattern_description": "[Selection sharp|smooth|consistent_with_evaporation ]",
-            "actions": "80"
+            "actions": "82"
         },
         "solid liquid properties transition type":
         {
             "value": "mushy_zone",
             "default_value": "mushy_zone",
             "documentation": "Choose how to interpolate the properties over between the liquid and the solid phase. mushy_zone: solid and liquid properties are interpolated between the solidus and liquidus temperature (default); sharp: the solid and liquid properties jump at the melting point, which is set via the solidus temperature.",
-            "pattern": "80",
+            "pattern": "82",
             "pattern_description": "[Selection mushy_zone|sharp ]",
-            "actions": "81"
+            "actions": "83"
         }
     },
     "laser":
@@ -792,135 +810,135 @@
             "value": "not_initialized",
             "default_value": "not_initialized",
             "documentation": "Laser model. analytical_temperature: see Mirkoohi et al. (2019); volumetric: volumetric heat source, the intensity is defined by \"\"intensity profile\"\"; interface_projection: projection-based regularized continuum surface flux in \"direction\", the intensity is defined by \"\"intensity profile\"\"; interface_projection_sharp: projection-based sharp surface flux in \"direction\", the intensity is defined by \"\"intensity profile\"\"; interface_projection_sharp_conforming: projection-based sharp surface flux in \"direction\" on a conforming mesh, the intensity is defined by \"\"intensity profile\"\"; RTE: continuum surface flux projected using the radiative transport equation in \"direction\", supporting shadowing of undercuts, the intensity is defined by \"\"intensity profile\"\"; ",
-            "pattern": "81",
+            "pattern": "83",
             "pattern_description": "[Selection not_initialized|analytical_temperature|volumetric|interface_projection_regularized|interface_projection_sharp|interface_projection_sharp_conforming|RTE ]",
-            "actions": "82"
+            "actions": "84"
         },
         "intensity profile":
         {
             "value": "Gauss",
             "default_value": "Gauss",
             "documentation": "Laser intensity profile. uniform: note that the \"power\" input is treated as the uniform power density in the whole domain; Gauss: Gaussian laser intensity shape with \"radius\" that retains the \"power\"; Gusarov: see Gusarov et al. (2009); ",
-            "pattern": "82",
+            "pattern": "84",
             "pattern_description": "[Selection uniform|Gauss|Gusarov ]",
-            "actions": "83"
+            "actions": "85"
         },
         "power":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Laser power",
-            "pattern": "83",
+            "pattern": "85",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "84"
+            "actions": "86"
         },
         "power over time":
         {
             "value": "constant",
             "default_value": "constant",
             "documentation": "Temporal distribution of the laser power",
-            "pattern": "84",
+            "pattern": "86",
             "pattern_description": "[Selection constant|ramp ]",
-            "actions": "85"
+            "actions": "87"
         },
         "power start time":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "In case of time-dependent laser power: activation time of ",
-            "pattern": "85",
+            "pattern": "87",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "86"
+            "actions": "88"
         },
         "power end time":
         {
             "value": "1.79769e+308",
             "default_value": "1.79769e+308",
             "documentation": "In case of time-dependent laser power: end time of ",
-            "pattern": "86",
+            "pattern": "88",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "87"
+            "actions": "89"
         },
         "absorptivity gas":
         {
             "value": "1",
             "default_value": "1",
             "documentation": "Laser energy absorptivity of the gaseous part of the domain.",
-            "pattern": "87",
+            "pattern": "89",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "88"
+            "actions": "90"
         },
         "absorptivity liquid":
         {
             "value": "1",
             "default_value": "1",
             "documentation": "Laser energy absorptivity of the liquid part of the domain.",
-            "pattern": "88",
+            "pattern": "90",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "89"
+            "actions": "91"
         },
         "starting position":
         {
             "value": "",
             "default_value": "",
             "documentation": "Center coordinates of the laser beam starting position on the interface melt\/gas.",
-            "pattern": "89",
+            "pattern": "91",
             "pattern_description": "[List of <[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]> of length 0...4294967295 (inclusive)]",
-            "actions": "90"
+            "actions": "92"
         },
         "scan speed":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Scan speed of the laser",
-            "pattern": "90",
+            "pattern": "92",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "91"
+            "actions": "93"
         },
         "scan direction":
         {
             "value": "",
             "default_value": "",
             "documentation": "Direction of laser motion as a vector",
-            "pattern": "91",
+            "pattern": "93",
             "pattern_description": "[List of <[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]> of length 0...4294967295 (inclusive)]",
-            "actions": "92"
+            "actions": "94"
         },
         "beam direction":
         {
             "value": "",
             "default_value": "",
             "documentation": "Laser beam direction.",
-            "pattern": "92",
+            "pattern": "94",
             "pattern_description": "[List of <[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]> of length 0...4294967295 (inclusive)]",
-            "actions": "93"
+            "actions": "95"
         },
         "beam rotation axis":
         {
             "value": "",
             "default_value": "",
             "documentation": "Axis around which the initial laser beam direction will be rotated. Relevant only in 3D.",
-            "pattern": "93",
+            "pattern": "95",
             "pattern_description": "[List of <[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]> of length 0...4294967295 (inclusive)]",
-            "actions": "94"
+            "actions": "96"
         },
         "beam rotation angle":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Rotation angle applied to the laser beam direction (in 3D about 'beam rotation axis' following the right-hand rule; in 2D: as defined by the 2D rotation matrix",
-            "pattern": "94",
+            "pattern": "96",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "95"
+            "actions": "97"
         },
         "radius":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Laser beam radius.",
-            "pattern": "95",
+            "pattern": "97",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "96"
+            "actions": "98"
         },
         "gusarov":
         {
@@ -929,27 +947,27 @@
                 "value": "0",
                 "default_value": "0",
                 "documentation": "Reflectivity of the material.",
-                "pattern": "96",
+                "pattern": "98",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "97"
+                "actions": "99"
             },
             "extinction coefficient":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "Extinction coefficient in [1\/m].",
-                "pattern": "97",
+                "pattern": "99",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "98"
+                "actions": "100"
             },
             "layer thickness":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "Layer thickness",
-                "pattern": "98",
+                "pattern": "100",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "99"
+                "actions": "101"
             }
         },
         "analytical":
@@ -959,27 +977,27 @@
                 "value": "0",
                 "default_value": "0",
                 "documentation": "Ambient temperature in the inert gas.",
-                "pattern": "99",
+                "pattern": "101",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "100"
+                "actions": "102"
             },
             "max temperature":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "Maximum temperature arising in the melt pool. If this temperature is lower than the boiling temperature, this value is corrected to correspond to the boiling temperature + 500 K.",
-                "pattern": "100",
+                "pattern": "102",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "101"
+                "actions": "103"
             },
             "temperature x to y ratio":
             {
                 "value": "1",
                 "default_value": "1",
                 "documentation": "This factor scales the analytical temperature field to be anisotropic.",
-                "pattern": "101",
+                "pattern": "103",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "102"
+                "actions": "104"
             }
         },
         "dirac delta function approximation":
@@ -989,54 +1007,54 @@
                 "value": "norm_of_indicator_gradient",
                 "default_value": "norm_of_indicator_gradient",
                 "documentation": "Choose how to smear a parameter over the interface.",
-                "pattern": "102",
+                "pattern": "104",
                 "pattern_description": "[Selection norm_of_indicator_gradient|heaviside_phase_weighted|heaviside_times_heaviside_phase_weighted|reciprocal_phase_weighted|reciprocal_times_heaviside_phase_weighted|heavy_phase_only ]",
-                "actions": "103"
+                "actions": "105"
             },
             "auto weights":
             {
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Choose if weights should be computed automatically.",
-                "pattern": "103",
+                "pattern": "105",
                 "pattern_description": "[Bool]",
-                "actions": "104"
+                "actions": "106"
             },
             "gas phase weight":
             {
                 "value": "1",
                 "default_value": "1",
                 "documentation": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the gas phase (level set = -1).",
-                "pattern": "104",
+                "pattern": "106",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "105"
+                "actions": "107"
             },
             "heavy phase weight":
             {
                 "value": "1",
                 "default_value": "1",
                 "documentation": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the heavy phase (level set = 1).",
-                "pattern": "105",
+                "pattern": "107",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "106"
+                "actions": "108"
             },
             "gas phase weight 2":
             {
                 "value": "1",
                 "default_value": "1",
                 "documentation": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the gas phase (level set = -1).",
-                "pattern": "106",
+                "pattern": "108",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "107"
+                "actions": "109"
             },
             "heavy phase weight 2":
             {
                 "value": "1",
                 "default_value": "1",
                 "documentation": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the heavy liquid\/solid phase (level set = 1).",
-                "pattern": "107",
+                "pattern": "109",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "108"
+                "actions": "110"
             }
         }
     },
@@ -1049,18 +1067,18 @@
                 "value": "not_initialized",
                 "default_value": "not_initialized",
                 "documentation": "Finite Element.FE_Q: hexahedral continuous finite element with polynomial degree p; FE_SimplexP: tetrahedral continuous finite element with polynomial degree p; FE_Q_iso_Q1: hexahedral continuous finite element with p subdivisions containing linear elements; FE_DGQ: hexahedral discontinuous finite element with polynomial degree p",
-                "pattern": "108",
+                "pattern": "110",
                 "pattern_description": "[Selection not_initialized|FE_Q|FE_SimplexP|FE_Q_iso_Q1|FE_DGQ ]",
-                "actions": "109"
+                "actions": "111"
             },
             "degree":
             {
                 "value": "-1",
                 "default_value": "-1",
                 "documentation": "Defines the degree p of the finite element type. If \"type\" is \"FE_Q_iso_Q1\" this parameter defines the number of subdivisions.",
-                "pattern": "109",
+                "pattern": "111",
                 "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-                "actions": "110"
+                "actions": "112"
             }
         },
         "rte verbosity level":
@@ -1068,36 +1086,36 @@
             "value": "-1",
             "default_value": "-1",
             "documentation": "Sets the maximum verbosity level of the console output. The maximum level with respect to the  base value is decisive.",
-            "pattern": "110",
+            "pattern": "112",
             "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-            "actions": "111"
+            "actions": "113"
         },
         "predictor type":
         {
             "value": "none",
             "default_value": "none",
             "documentation": "Choose a predictor type.",
-            "pattern": "111",
+            "pattern": "113",
             "pattern_description": "[Selection none|pseudo_time_stepping ]",
-            "actions": "112"
+            "actions": "114"
         },
         "absorptivity type":
         {
             "value": "gradient_based",
             "default_value": "gradient_based",
             "documentation": "Chooses the formulation of the absorptivity coefficient",
-            "pattern": "112",
+            "pattern": "114",
             "pattern_description": "[Selection constant|gradient_based ]",
-            "actions": "113"
+            "actions": "115"
         },
         "avoid singular matrix absorptivity":
         {
             "value": "1e-16",
             "default_value": "1e-16",
             "documentation": "Minimum value for absorptivity to ensure a non-singular matrix for RTE.",
-            "pattern": "113",
+            "pattern": "115",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "114"
+            "actions": "116"
         },
         "linear solver":
         {
@@ -1106,63 +1124,63 @@
                 "value": "GMRES",
                 "default_value": "GMRES",
                 "documentation": "Set this parameter for choosing an iterative linear solver type.",
-                "pattern": "114",
+                "pattern": "116",
                 "pattern_description": "[Selection CG|GMRES ]",
-                "actions": "115"
+                "actions": "117"
             },
             "preconditioner type":
             {
                 "value": "ILU",
                 "default_value": "ILU",
                 "documentation": "Set this parameter for choosing a preconditioner type.",
-                "pattern": "115",
+                "pattern": "117",
                 "pattern_description": "[Selection Identity|AMG|ILU|Diagonal ]",
-                "actions": "116"
+                "actions": "118"
             },
             "max iterations":
             {
                 "value": "10000",
                 "default_value": "10000",
                 "documentation": "Set the maximum number of iterations for solving the linear system of equations.",
-                "pattern": "116",
+                "pattern": "118",
                 "pattern_description": "[Integer]",
-                "actions": "117"
+                "actions": "119"
             },
             "rel tolerance":
             {
                 "value": "1e-12",
                 "default_value": "1e-12",
                 "documentation": "Set the relative tolerance for a successful solution of the linear system of equations.",
-                "pattern": "117",
+                "pattern": "119",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "118"
+                "actions": "120"
             },
             "abs tolerance":
             {
                 "value": "1e-20",
                 "default_value": "1e-20",
                 "documentation": "Set the absolute tolerance for a successful solution of the linear system of equations.",
-                "pattern": "118",
+                "pattern": "120",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "119"
+                "actions": "121"
             },
             "do matrix free":
             {
                 "value": "true",
                 "default_value": "true",
                 "documentation": "Set this parameter if a matrix free solution procedure should be performed.",
-                "pattern": "119",
+                "pattern": "121",
                 "pattern_description": "[Bool]",
-                "actions": "120"
+                "actions": "122"
             },
             "monitor type":
             {
                 "value": "none",
                 "default_value": "none",
                 "documentation": "Set the monitor type of the linear solver.",
-                "pattern": "120",
+                "pattern": "122",
                 "pattern_description": "[Selection none|reduced|all ]",
-                "actions": "121"
+                "actions": "123"
             }
         },
         "pseudo time stepping":
@@ -1172,36 +1190,36 @@
                 "value": "1",
                 "default_value": "1",
                 "documentation": "Scaling parameter of diffusion term.",
-                "pattern": "121",
+                "pattern": "123",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "122"
+                "actions": "124"
             },
             "advection term scaling":
             {
                 "value": "1",
                 "default_value": "1",
                 "documentation": "Scaling parameter of advection term.",
-                "pattern": "122",
+                "pattern": "124",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "123"
+                "actions": "125"
             },
             "pseudo time scaling":
             {
                 "value": "0.01",
                 "default_value": "0.01",
                 "documentation": "Determine the pseudo-time step as the product of this scaling and minimum cell size.",
-                "pattern": "123",
+                "pattern": "125",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "124"
+                "actions": "126"
             },
             "rel tolerance":
             {
                 "value": "0.001",
                 "default_value": "0.001",
                 "documentation": "Pseudo-time stepping relative tolerance.",
-                "pattern": "124",
+                "pattern": "126",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "125"
+                "actions": "127"
             },
             "time stepping":
             {
@@ -1210,45 +1228,45 @@
                     "value": "0",
                     "default_value": "0",
                     "documentation": "Defines the start time for the solution of the levelset problem",
-                    "pattern": "125",
+                    "pattern": "127",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "126"
+                    "actions": "128"
                 },
                 "end time":
                 {
                     "value": "1.79769e+308",
                     "default_value": "1.79769e+308",
                     "documentation": "Sets the end time for the solution of the levelset problem",
-                    "pattern": "126",
+                    "pattern": "128",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "127"
+                    "actions": "129"
                 },
                 "time step size":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "Sets the step size for time stepping. For non-uniform time stepping, this parameter determines the size of the first time step.",
-                    "pattern": "127",
+                    "pattern": "129",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "128"
+                    "actions": "130"
                 },
                 "max n steps":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "Sets the maximum number of melt_pool steps",
-                    "pattern": "128",
+                    "pattern": "130",
                     "pattern_description": "[Integer]",
-                    "actions": "129"
+                    "actions": "131"
                 },
                 "time step size function":
                 {
                     "value": "0.0*t",
                     "default_value": "0.0*t",
                     "documentation": "Set an analytical function to determine the time step size. For the prediction of the new time increment, the old time is used.",
-                    "pattern": "129",
+                    "pattern": "131",
                     "pattern_description": "[Anything]",
-                    "actions": "130"
+                    "actions": "132"
                 }
             },
             "linear solver":
@@ -1258,63 +1276,63 @@
                     "value": "CG",
                     "default_value": "CG",
                     "documentation": "Set this parameter for choosing an iterative linear solver type.",
-                    "pattern": "130",
+                    "pattern": "132",
                     "pattern_description": "[Selection CG|GMRES ]",
-                    "actions": "131"
+                    "actions": "133"
                 },
                 "preconditioner type":
                 {
                     "value": "ILU",
                     "default_value": "ILU",
                     "documentation": "Set this parameter for choosing a preconditioner type.",
-                    "pattern": "131",
+                    "pattern": "133",
                     "pattern_description": "[Selection Identity|AMG|ILU|Diagonal ]",
-                    "actions": "132"
+                    "actions": "134"
                 },
                 "max iterations":
                 {
                     "value": "10000",
                     "default_value": "10000",
                     "documentation": "Set the maximum number of iterations for solving the linear system of equations.",
-                    "pattern": "132",
+                    "pattern": "134",
                     "pattern_description": "[Integer]",
-                    "actions": "133"
+                    "actions": "135"
                 },
                 "rel tolerance":
                 {
                     "value": "1e-12",
                     "default_value": "1e-12",
                     "documentation": "Set the relative tolerance for a successful solution of the linear system of equations.",
-                    "pattern": "133",
+                    "pattern": "135",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "134"
+                    "actions": "136"
                 },
                 "abs tolerance":
                 {
                     "value": "1e-20",
                     "default_value": "1e-20",
                     "documentation": "Set the absolute tolerance for a successful solution of the linear system of equations.",
-                    "pattern": "134",
+                    "pattern": "136",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "135"
+                    "actions": "137"
                 },
                 "do matrix free":
                 {
                     "value": "true",
                     "default_value": "true",
                     "documentation": "Set this parameter if a matrix free solution procedure should be performed.",
-                    "pattern": "135",
+                    "pattern": "137",
                     "pattern_description": "[Bool]",
-                    "actions": "136"
+                    "actions": "138"
                 },
                 "monitor type":
                 {
                     "value": "none",
                     "default_value": "none",
                     "documentation": "Set the monitor type of the linear solver.",
-                    "pattern": "136",
+                    "pattern": "138",
                     "pattern_description": "[Selection none|reduced|all ]",
-                    "actions": "137"
+                    "actions": "139"
                 }
             }
         },
@@ -1325,27 +1343,27 @@
                 "value": "0.1",
                 "default_value": "0.1",
                 "documentation": "Sets the absorptivity of the gas phase.",
-                "pattern": "137",
+                "pattern": "139",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "138"
+                "actions": "140"
             },
             "absorptivity liquid":
             {
                 "value": "0.9",
                 "default_value": "0.9",
                 "documentation": "Sets the absorptivity of the liquid phase.",
-                "pattern": "138",
+                "pattern": "140",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "139"
+                "actions": "141"
             },
             "avoid div zero constant":
             {
                 "value": "1e-16",
                 "default_value": "1e-16",
                 "documentation": "Sets the absorptivity of the gas phase.",
-                "pattern": "139",
+                "pattern": "141",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "140"
+                "actions": "142"
             }
         }
     },
@@ -1356,18 +1374,18 @@
             "value": "analytical",
             "default_value": "analytical",
             "documentation": "Choose the formulation how the evaporative mass flux mDot (kg\/(m2s)) will be calculated.",
-            "pattern": "140",
+            "pattern": "142",
             "pattern_description": "[Selection analytical|recoil_pressure|saturated_vapor_pressure|hardt_wondra|pressure_aware ]",
-            "actions": "141"
+            "actions": "143"
         },
         "interface temperature evaluation type":
         {
             "value": "local_value",
             "default_value": "local_value",
             "documentation": "Choose the formulation how the (local) evaporative mass flux will be converted to a DoF vector.will be calculated. When the CutFEM heat transfer operator is used, this input parameter is ignored and the temperature is evaluated at the sharp interface which is equivalent to \"sharp\".",
-            "pattern": "141",
+            "pattern": "143",
             "pattern_description": "[Selection local_value|interface_value ]",
-            "actions": "142"
+            "actions": "144"
         },
         "analytical":
         {
@@ -1376,9 +1394,9 @@
                 "value": "not_initialized",
                 "default_value": "not_initialized",
                 "documentation": "For evapor evaporation model == analytical, prescribe a spatially constant mass flux due to evaporation (SI unit in kg\/m²s), as a function over time t , e.g. min(2.*t,0.01).",
-                "pattern": "142",
+                "pattern": "144",
                 "pattern_description": "[Anything]",
-                "actions": "143"
+                "actions": "145"
             }
         },
         "hardt wondra":
@@ -1388,9 +1406,9 @@
                 "value": "0",
                 "default_value": "0",
                 "documentation": "Evaporation coefficient for the model by Hardt and Wondra.",
-                "pattern": "143",
+                "pattern": "145",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "144"
+                "actions": "146"
             }
         },
         "pressure aware":
@@ -1400,18 +1418,18 @@
                 "value": "",
                 "default_value": "",
                 "documentation": "Fitting parameters for the evaporative mass flux function of the pressure-aware model.",
-                "pattern": "144",
+                "pattern": "146",
                 "pattern_description": "[List of <[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]> of length 0...4294967295 (inclusive)]",
-                "actions": "145"
+                "actions": "147"
             },
             "ambient_gas_pressure":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "Ambient gas pressure for the pressure-aware model.",
-                "pattern": "145",
+                "pattern": "147",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "146"
+                "actions": "148"
             }
         },
         "evaporative dilation rate":
@@ -1421,18 +1439,18 @@
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to consider the evaporative dilation rate in the Navier-Stokes equation. This results in an evaporation-induced jump in the normal velocity component. ",
-                "pattern": "146",
+                "pattern": "148",
                 "pattern_description": "[Bool]",
-                "actions": "147"
+                "actions": "149"
             },
             "model":
             {
                 "value": "regularized",
                 "default_value": "regularized",
                 "documentation": "Select how the additional source term due to evaporation in the continuity equation (=evaporative dilation rate) is computed.",
-                "pattern": "147",
+                "pattern": "149",
                 "pattern_description": "[Selection regularized|sharp ]",
-                "actions": "148"
+                "actions": "150"
             }
         },
         "evaporative cooling":
@@ -1442,36 +1460,36 @@
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to consider evaporative cooling in the heat equation",
-                "pattern": "148",
+                "pattern": "150",
                 "pattern_description": "[Bool]",
-                "actions": "149"
+                "actions": "151"
             },
             "consider enthalpy transport vapor mass flux":
             {
                 "value": "default",
                 "default_value": "default",
                 "documentation": "Set this parameter to true to account for the enthalpy transported by the vapor mass flux in the heat equation. This is only recommended if the vapor mass flux is not considered in the Navier-Stokes equations.",
-                "pattern": "149",
+                "pattern": "151",
                 "pattern_description": "[Selection default|true|false ]",
-                "actions": "150"
+                "actions": "152"
             },
             "activation temperature":
             {
                 "value": "-1e+100",
                 "default_value": "-1e+100",
                 "documentation": "Activation temperature for the evaporative cooling. It must be smaller than or equal to the boiling temperature. By default, it will be chosen such that the transition from the linear activation ramp is kink-free.",
-                "pattern": "150",
+                "pattern": "152",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "151"
+                "actions": "153"
             },
             "model":
             {
                 "value": "regularized",
                 "default_value": "regularized",
                 "documentation": "Select how the additional source term due to evaporation in the heat equation (evaporative cooling) is computed.",
-                "pattern": "151",
+                "pattern": "153",
                 "pattern_description": "[Selection none|regularized|sharp|sharp_conforming ]",
-                "actions": "152"
+                "actions": "154"
             },
             "dirac delta function approximation":
             {
@@ -1480,54 +1498,54 @@
                     "value": "norm_of_indicator_gradient",
                     "default_value": "norm_of_indicator_gradient",
                     "documentation": "Choose how to smear a parameter over the interface.",
-                    "pattern": "152",
+                    "pattern": "154",
                     "pattern_description": "[Selection norm_of_indicator_gradient|heaviside_phase_weighted|heaviside_times_heaviside_phase_weighted|reciprocal_phase_weighted|reciprocal_times_heaviside_phase_weighted|heavy_phase_only ]",
-                    "actions": "153"
+                    "actions": "155"
                 },
                 "auto weights":
                 {
                     "value": "false",
                     "default_value": "false",
                     "documentation": "Choose if weights should be computed automatically.",
-                    "pattern": "153",
+                    "pattern": "155",
                     "pattern_description": "[Bool]",
-                    "actions": "154"
+                    "actions": "156"
                 },
                 "gas phase weight":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the gas phase (level set = -1).",
-                    "pattern": "154",
+                    "pattern": "156",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "155"
+                    "actions": "157"
                 },
                 "heavy phase weight":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the heavy phase (level set = 1).",
-                    "pattern": "155",
+                    "pattern": "157",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "156"
+                    "actions": "158"
                 },
                 "gas phase weight 2":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the gas phase (level set = -1).",
-                    "pattern": "156",
+                    "pattern": "158",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "157"
+                    "actions": "159"
                 },
                 "heavy phase weight 2":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the heavy liquid\/solid phase (level set = 1).",
-                    "pattern": "157",
+                    "pattern": "159",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "158"
+                    "actions": "160"
                 }
             }
         },
@@ -1538,63 +1556,63 @@
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to prescribe the evaporation-induced jump in the pressure field (i.e. recoil pressure), considered as an interfacial force in the momentum balance equation.If 'evaporative dilation rate' is enabled, this pressure jump will be added to the one resulting from the discontinuous normal velocity field.",
-                "pattern": "158",
+                "pattern": "160",
                 "pattern_description": "[Bool]",
-                "actions": "159"
+                "actions": "161"
             },
             "ambient gas pressure":
             {
                 "value": "101300",
                 "default_value": "101300",
                 "documentation": "Ambient gas pressure for the recoil pressure model.",
-                "pattern": "159",
+                "pattern": "161",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "160"
+                "actions": "162"
             },
             "pressure coefficient":
             {
                 "value": "0.55",
                 "default_value": "0.55",
                 "documentation": "Pressure coefficient for the recoil pressure model.",
-                "pattern": "160",
+                "pattern": "162",
                 "pattern_description": "[Double 0...1 (inclusive)]",
-                "actions": "161"
+                "actions": "163"
             },
             "temperature constant":
             {
                 "value": "-1",
                 "default_value": "-1",
                 "documentation": "Temperature constant for the recoil pressure model. If this parameter is not set, the value is computed by latent_heat_evaporation * molar_mass \/ universal_gas_constant;",
-                "pattern": "161",
+                "pattern": "163",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "162"
+                "actions": "164"
             },
             "sticking constant":
             {
                 "value": "1",
                 "default_value": "1",
                 "documentation": "Sticking constant.",
-                "pattern": "162",
+                "pattern": "164",
                 "pattern_description": "[Double 0...1 (inclusive)]",
-                "actions": "163"
+                "actions": "165"
             },
             "interface distributed flux type":
             {
                 "value": "local_value",
                 "default_value": "local_value",
                 "documentation": "Type that determines how the recoil pressure force is computed in the interfacial zone.",
-                "pattern": "163",
+                "pattern": "165",
                 "pattern_description": "[Selection local_value|interface_value ]",
-                "actions": "164"
+                "actions": "166"
             },
             "activation temperature":
             {
                 "value": "-1e+100",
                 "default_value": "-1e+100",
                 "documentation": "Activation temperature for the recoil pressure. It must be smaller than or equal to the boiling temperature. As default value, the boiling temperature is chosen.",
-                "pattern": "164",
+                "pattern": "166",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "165"
+                "actions": "167"
             },
             "dirac delta function approximation":
             {
@@ -1603,54 +1621,54 @@
                     "value": "norm_of_indicator_gradient",
                     "default_value": "norm_of_indicator_gradient",
                     "documentation": "Choose how to smear a parameter over the interface.",
-                    "pattern": "165",
+                    "pattern": "167",
                     "pattern_description": "[Selection norm_of_indicator_gradient|heaviside_phase_weighted|heaviside_times_heaviside_phase_weighted|reciprocal_phase_weighted|reciprocal_times_heaviside_phase_weighted|heavy_phase_only ]",
-                    "actions": "166"
+                    "actions": "168"
                 },
                 "auto weights":
                 {
                     "value": "false",
                     "default_value": "false",
                     "documentation": "Choose if weights should be computed automatically.",
-                    "pattern": "166",
+                    "pattern": "168",
                     "pattern_description": "[Bool]",
-                    "actions": "167"
+                    "actions": "169"
                 },
                 "gas phase weight":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the gas phase (level set = -1).",
-                    "pattern": "167",
+                    "pattern": "169",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "168"
+                    "actions": "170"
                 },
                 "heavy phase weight":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the heavy phase (level set = 1).",
-                    "pattern": "168",
+                    "pattern": "170",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "169"
+                    "actions": "171"
                 },
                 "gas phase weight 2":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the gas phase (level set = -1).",
-                    "pattern": "169",
+                    "pattern": "171",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "170"
+                    "actions": "172"
                 },
                 "heavy phase weight 2":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the heavy liquid\/solid phase (level set = 1).",
-                    "pattern": "170",
+                    "pattern": "172",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "171"
+                    "actions": "173"
                 }
             },
             "type":
@@ -1658,9 +1676,9 @@
                 "value": "phenomenological",
                 "default_value": "phenomenological",
                 "documentation": "Choose the model to compute the recoil pressure coefficient: phenomenological or hybrid, in case there is also an evaporation-induced velocity jump.",
-                "pattern": "171",
+                "pattern": "173",
                 "pattern_description": "[Selection phenomenological|hybrid|pressure_aware ]",
-                "actions": "172"
+                "actions": "174"
             }
         },
         "formulation source term level set":
@@ -1668,18 +1686,18 @@
             "value": "interface_velocity_local",
             "default_value": "interface_velocity_local",
             "documentation": "Select the type how the evaporative mass flux should be considered in the level set equation.",
-            "pattern": "172",
+            "pattern": "174",
             "pattern_description": "[Selection interface_velocity_sharp|interface_velocity_sharp_heavy|interface_velocity_local|rhs ]",
-            "actions": "173"
+            "actions": "175"
         },
         "do level set pressure gradient interpolation":
         {
             "value": "false",
             "default_value": "false",
             "documentation": "Set if the level set gradient for computing the delta function within the evaporative mass flux source terms should be computed based on an interpolation to the pressure space. This is only implemented for evapor_level_set_source_term_type = rhs.",
-            "pattern": "173",
+            "pattern": "175",
             "pattern_description": "[Bool]",
-            "actions": "174"
+            "actions": "176"
         }
     },
     "output":
@@ -1689,45 +1707,45 @@
             "value": ".\/",
             "default_value": ".\/",
             "documentation": "Sets the base directory for all output.",
-            "pattern": "174",
+            "pattern": "176",
             "pattern_description": "[Anything]",
-            "actions": "175"
+            "actions": "177"
         },
         "write frequency":
         {
             "value": "1",
             "default_value": "1",
             "documentation": "Every n timestep that should be written",
-            "pattern": "175",
+            "pattern": "177",
             "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-            "actions": "176"
+            "actions": "178"
         },
         "write time step size":
         {
             "value": "1.79769e+308",
             "default_value": "1.79769e+308",
             "documentation": "Write output output every given time step. If this parameter is set, the output write frequency is deactivated.",
-            "pattern": "176",
+            "pattern": "178",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "177"
+            "actions": "179"
         },
         "output variables":
         {
             "value": "all",
             "default_value": "all",
             "documentation": "Specify variables that you request to output.",
-            "pattern": "177",
+            "pattern": "179",
             "pattern_description": "[List of <[Anything]> of length 0...4294967295 (inclusive)]",
-            "actions": "178"
+            "actions": "180"
         },
         "do user defined postprocessing":
         {
             "value": "false",
             "default_value": "false",
             "documentation": "Set this parameter to true to enable user defined postprocessing.",
-            "pattern": "178",
+            "pattern": "180",
             "pattern_description": "[Bool]",
-            "actions": "179"
+            "actions": "181"
         },
         "paraview":
         {
@@ -1736,81 +1754,81 @@
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to activate paraview output.",
-                "pattern": "179",
+                "pattern": "181",
                 "pattern_description": "[Bool]",
-                "actions": "180"
+                "actions": "182"
             },
             "filename":
             {
                 "value": "solution",
                 "default_value": "solution",
                 "documentation": "Sets the base name for paraview output files.",
-                "pattern": "180",
+                "pattern": "182",
                 "pattern_description": "[Anything]",
-                "actions": "181"
+                "actions": "183"
             },
             "n digits timestep":
             {
                 "value": "4",
                 "default_value": "4",
                 "documentation": "Number of digits for the frame number of the vtu-file.",
-                "pattern": "181",
+                "pattern": "183",
                 "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-                "actions": "182"
+                "actions": "184"
             },
             "print boundary id":
             {
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to output a vtu-file with the boundary id.",
-                "pattern": "182",
+                "pattern": "184",
                 "pattern_description": "[Bool]",
-                "actions": "183"
+                "actions": "185"
             },
             "output subdomains":
             {
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to output the subdomain ranks.",
-                "pattern": "183",
+                "pattern": "185",
                 "pattern_description": "[Bool]",
-                "actions": "184"
+                "actions": "186"
             },
             "output material id":
             {
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set to true to output the material id.",
-                "pattern": "184",
+                "pattern": "186",
                 "pattern_description": "[Bool]",
-                "actions": "185"
+                "actions": "187"
             },
             "write higher order cells":
             {
                 "value": "true",
                 "default_value": "true",
                 "documentation": "Set this parameter to false to write bi- or trilinear data only. Set this parameter to true to write higher order cell data. Note: higher order cell data can only be written for hexahedron meshes and 2 or 3 dimensions.",
-                "pattern": "185",
+                "pattern": "187",
                 "pattern_description": "[Bool]",
-                "actions": "186"
+                "actions": "188"
             },
             "n groups":
             {
                 "value": "1",
                 "default_value": "1",
                 "documentation": "Number of parallel written vtu-files.",
-                "pattern": "186",
+                "pattern": "188",
                 "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-                "actions": "187"
+                "actions": "189"
             },
             "n patches":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "Control number of patches to enable high-order.",
-                "pattern": "187",
+                "pattern": "189",
                 "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-                "actions": "188"
+                "actions": "190"
             }
         },
         "particles":
@@ -1820,18 +1838,18 @@
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to activate particle paraview output.",
-                "pattern": "188",
+                "pattern": "190",
                 "pattern_description": "[Bool]",
-                "actions": "189"
+                "actions": "191"
             },
             "filename":
             {
                 "value": "particle",
                 "default_value": "particle",
                 "documentation": "Sets the base name for particle output files.",
-                "pattern": "189",
+                "pattern": "191",
                 "pattern_description": "[Anything]",
-                "actions": "190"
+                "actions": "192"
             }
         }
     },
@@ -1842,27 +1860,27 @@
             "value": "false",
             "default_value": "false",
             "documentation": "Set this parameter to true if profiling should be enabled. It will be automaticallyenabled for verbosity level >=1.",
-            "pattern": "190",
+            "pattern": "192",
             "pattern_description": "[Bool]",
-            "actions": "191"
+            "actions": "193"
         },
         "write time step size":
         {
             "value": "10",
             "default_value": "10",
             "documentation": "Write profiling output every given time step size. If this parameter is set, the specified parameter for write frequency is overwritten.",
-            "pattern": "191",
+            "pattern": "193",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "192"
+            "actions": "194"
         },
         "time type":
         {
             "value": "real",
             "default_value": "real",
             "documentation": "Choose the type of time measure to write profiling information.",
-            "pattern": "192",
+            "pattern": "194",
             "pattern_description": "[Selection real|simulation ]",
-            "actions": "193"
+            "actions": "195"
         }
     },
     "application specific":
@@ -1872,18 +1890,18 @@
             "value": "false",
             "default_value": "false",
             "documentation": "Set this parameter to true if you want to consider melting\/solidification effects.",
-            "pattern": "193",
+            "pattern": "195",
             "pattern_description": "[Bool]",
-            "actions": "194"
+            "actions": "196"
         },
         "amr strategy":
         {
             "value": "KellyErrorEstimator",
             "default_value": "KellyErrorEstimator",
             "documentation": "Select the AMR strategy.",
-            "pattern": "194",
+            "pattern": "196",
             "pattern_description": "[Selection KellyErrorEstimator|generic ]",
-            "actions": "195"
+            "actions": "197"
         }
     }
 }

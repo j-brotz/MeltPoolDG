@@ -200,6 +200,8 @@
 | [`solid`](#material-solid) | `object` |  | [See table](#material-solid) |
 | `solidus temperature` | `number` | `0.0` | Solidus temperature (K). |
 | `liquidus temperature` | `number` | `0.0` | Liquidus temperature (K). |
+| `apparent capacity type` | `string` | `qlq` | Function type for the apparent capacity method to model latent heat during solidification. constant: apparent capacity is constant between the solidus and liquidus temperature; qlq: apparent capacity is given by a quadratic/quadratic function of temperature between the solidus and liquidus temperature (default); poly4_bell: apparent capacity is given by a bell-shaped quartic polynomial function of temperature between the solidus and liquidus temperature.<br><br>Allowed values:<br>- `poly4_bell`<br>- `constant`<br>- `qlq` |
+| `latent heat of fusion` | `number` | `0.0` | Latent heat of fusion (J/kg) |
 | `boiling temperature` | `number` | `0.0` | Boiling temperature (K). |
 | `latent heat of evaporation` | `number` | `0.0` | Latent heat of evaporation (J/kg). |
 | `molar mass` | `number` | `0.0` | Molar mass (mol/kg). |

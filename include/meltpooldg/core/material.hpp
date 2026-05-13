@@ -3,6 +3,7 @@
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/core/material_data.hpp>
+#include <meltpooldg/heat/apparent_capacity.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
 #include <vector>
@@ -385,6 +386,123 @@ namespace MeltPoolDG
       const value_type &solid_value) const;
 
     /**
+     * Compute the effective specific heat capacity for a two-phase
+     * solid-liquid material.
+     *
+     * The solid and liquid phase values are interpolated using the
+     * temperature-dependent solid fraction. If an apparent heat capacity model
+     * is enabled, its latent-heat contribution is added to the interpolated
+     * phase value.
+     *
+     * @tparam value_type Scalar or vectorized value type.
+     *
+     * @param temperature_dependent_solid_fraction Temperature-dependent solid
+     *        fraction used for the solid-liquid interpolation.
+     * @param liquid_value Specific heat capacity of the liquid phase.
+     * @param solid_value Specific heat capacity of the solid phase.
+     *
+     * @return Effective solid-liquid specific heat capacity, including the
+     *         apparent heat capacity contribution if enabled.
+     */
+    template <typename value_type>
+    inline value_type
+    compute_solid_liquid_phases_specific_heat_capacity(
+      const value_type &temperature_dependent_solid_fraction,
+      const value_type &liquid_value,
+      const value_type &solid_value) const;
+
+    /**
+     * Compute the effective specific heat capacity for a three-phase
+     * solid-liquid-gas material.
+     *
+     * The solid and liquid phase values are interpolated using the
+     * temperature-dependent solid fraction. If an apparent heat capacity model
+     * is enabled, its latent-heat contribution is added to the solid-liquid
+     * contribution before blending with the gas phase through the level-set
+     * Heaviside value.
+     *
+     * @tparam value_type Scalar or vectorized value type.
+     *
+     * @param level_set_heaviside Heaviside value used to interpolate between
+     *        the gas phase and the condensed solid-liquid phases.
+     * @param temperature_dependent_solid_fraction Temperature-dependent solid
+     *        fraction used for the solid-liquid interpolation.
+     * @param gas_value Specific heat capacity of the gas phase.
+     * @param liquid_value Specific heat capacity of the liquid phase.
+     * @param solid_value Specific heat capacity of the solid phase.
+     *
+     * @return Effective solid-liquid-gas specific heat capacity, including the
+     *         apparent heat capacity contribution if enabled.
+     */
+    template <typename value_type>
+    inline value_type
+    compute_solid_liquid_gas_phases_specific_heat_capacity(
+      const value_type &level_set_heaviside,
+      const value_type &temperature_dependent_solid_fraction,
+      const value_type &gas_value,
+      const value_type &liquid_value,
+      const value_type &solid_value) const;
+
+    /**
+     * Compute the temperature derivative of the effective specific heat
+     * capacity for a two-phase solid-liquid material.
+     *
+     * The derivative contains the contribution from the temperature-dependent
+     * solid-liquid interpolation. If an apparent heat capacity model is
+     * enabled, the temperature derivative of the apparent heat capacity is
+     * added.
+     *
+     * @tparam value_type Scalar or vectorized value type.
+     *
+     * @param temperature_dependent_solid_fraction Temperature-dependent solid
+     *        fraction used for the solid-liquid interpolation.
+     * @param liquid_value Specific heat capacity of the liquid phase.
+     * @param solid_value Specific heat capacity of the solid phase.
+     *
+     * @return Temperature derivative of the effective solid-liquid specific
+     *         heat capacity, including the apparent heat capacity derivative if
+     *         enabled.
+     */
+    template <typename value_type>
+    inline value_type
+    compute_temperature_derivative_of_solid_liquid_specific_heat_capacity(
+      const value_type &temperature_dependent_solid_fraction,
+      const value_type &liquid_value,
+      const value_type &solid_value) const;
+
+    /**
+     * Compute the temperature derivative of the effective specific heat
+     * capacity for a three-phase solid-liquid-gas material.
+     *
+     * The derivative contains the contribution from the temperature-dependent
+     * solid-liquid interpolation and, if enabled, the temperature derivative of
+     * the apparent heat capacity. The gas phase is assumed to be independent of
+     * temperature in this derivative contribution, while the condensed phase
+     * contribution is blended with the gas phase through the level-set
+     * Heaviside value.
+     *
+     * @tparam value_type Scalar or vectorized value type.
+     *
+     * @param level_set_heaviside Heaviside value used to interpolate between
+     *        the gas phase and the condensed solid-liquid phases.
+     * @param temperature_dependent_solid_fraction Temperature-dependent solid
+     *        fraction used for the solid-liquid interpolation.
+     * @param liquid_value Specific heat capacity of the liquid phase.
+     * @param solid_value Specific heat capacity of the solid phase.
+     *
+     * @return Temperature derivative of the effective solid-liquid-gas specific
+     *         heat capacity, including the apparent heat capacity derivative if
+     *         enabled.
+     */
+    template <typename value_type>
+    inline value_type
+    compute_temperature_derivative_of_solid_liquid_gas_specific_heat_capacity(
+      const value_type &level_set_heaviside,
+      const value_type &temperature_dependent_solid_fraction,
+      const value_type &liquid_value,
+      const value_type &solid_value) const;
+
+    /**
      * Determine the derivative of the density with respect to the temperature for
      * a material containing solid/liquid/gaseous phases consistent with the
      * mass flux due to evaporation. This function returns the temperature derivatives
@@ -461,6 +579,8 @@ namespace MeltPoolDG
     const MaterialTypes material_type;
 
     const number inv_mushy_interval;
+
+    std::unique_ptr<Heat::ApparentCapacity<number>> apparent_capacity = nullptr;
   };
 
 
@@ -531,7 +651,10 @@ namespace MeltPoolDG
                                MaterialTypes::gas_liquid_solid_consistent_with_evaporation ?
                            1.0 / (data.liquidus_temperature - data.solidus_temperature) :
                            0.0)
-  {}
+  {
+    if (material_data.latent_heat_of_fusion > 0)
+      apparent_capacity = std::make_unique<Heat::ApparentCapacity<number>>(material_data);
+  }
 
 
 

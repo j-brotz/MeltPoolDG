@@ -34,6 +34,32 @@ namespace MeltPoolDG
                                           // consistent with the evaporation formulation
   )
 
+  /**
+   * @enum ApparentCapacityType
+   *
+   * Available apparent heat capacity models used to regularize
+   * latent heat release within the mushy zone.
+   */
+  BETTER_ENUM(ApparentCapacityType,
+              char,
+
+              /**
+               * Smooth quartic bell-shaped distribution with compact support
+               * and continuous first derivative at the interval boundaries.
+               */
+              poly4_bell,
+
+              /**
+               * Uniform latent heat distribution across the mushy zone.
+               */
+              constant,
+
+              /**
+               * Piecewise quadratic-linear-quadratic distribution providing
+               * smooth transitions while maintaining compact support.
+               */
+              qlq)
+
   template <typename number>
   struct MaterialPhaseData
   {
@@ -77,11 +103,14 @@ namespace MeltPoolDG
 
     number solidus_temperature        = 0.0;
     number liquidus_temperature       = 0.0;
+    number latent_heat_of_fusion      = 0.0;
     number boiling_temperature        = 0.0;
     number latent_heat_of_evaporation = 0.0;
     number molar_mass                 = 0.0;
 
     number specific_enthalpy_reference_temperature = numbers::invalid_double;
+
+    ApparentCapacityType apparent_capacity_type = ApparentCapacityType::qlq;
 
     SolidLiquidPropertiesTransitionType solid_liquid_properties_transition_type =
       SolidLiquidPropertiesTransitionType::mushy_zone;

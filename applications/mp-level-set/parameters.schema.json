@@ -1669,6 +1669,22 @@
           "description": "Liquidus temperature (K).",
           "default": 0.0
         },
+        "apparent capacity type": {
+          "type": "string",
+          "enum": [
+            "poly4_bell",
+            "constant",
+            "qlq"
+          ],
+          "description": "Function type for the apparent capacity method to model latent heat during solidification. constant: apparent capacity is constant between the solidus and liquidus temperature; qlq: apparent capacity is given by a quadratic/quadratic function of temperature between the solidus and liquidus temperature (default); poly4_bell: apparent capacity is given by a bell-shaped quartic polynomial function of temperature between the solidus and liquidus temperature.",
+          "default": "qlq"
+        },
+        "latent heat of fusion": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Latent heat of fusion (J/kg)",
+          "default": 0.0
+        },
         "boiling temperature": {
           "type": "number",
           "description": "Boiling temperature (K).",
