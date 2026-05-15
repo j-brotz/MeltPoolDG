@@ -141,7 +141,8 @@ namespace MeltPoolDG
           dsp.reinit(scratch_data.get_dof_handler(dof_idx).n_dofs(),
                      scratch_data.get_dof_handler(dof_idx).n_dofs(),
                      scratch_data.get_locally_relevant_dofs(dof_idx));
-          if (scratch_data.is_FE_DGQ(dof_idx))
+          if (scratch_data.is_FE_DGQ(dof_idx) or
+              not scratch_data.get_cut_type(dof_idx) == CutUtil::CutPhaseType::not_cut)
             {
               dealii::DoFTools::make_flux_sparsity_pattern(scratch_data.get_dof_handler(dof_idx),
                                                            dsp,
