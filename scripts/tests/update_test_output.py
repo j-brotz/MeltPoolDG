@@ -1,167 +1,117 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+"""
+Update deal.II/CTest reference output files from a verbose ctest log.
 
-import numpy as np
-import os
+Usage
+-----
+
+1) Run ctest with verbose output and save the log:
+
+    ctest -V | tee ctest.log
+
+2) Update the reference output files:
+
+    python3 update_test_output.py ctest.log
+
+Optional arguments:
+
+    --dry-run   Print copy operations without modifying files
+    --backup    Create *.bak backups before overwriting files
+"""
+
 import argparse
-import glob
-from difflib import SequenceMatcher
+import re
+import shutil
+from pathlib import Path
 
 
-def get_arguments():
-    parser = argparse.ArgumentParser(description='Execute with python!')
-    parser.add_argument('--build-dir', type=str, help='Directory where the build files are located (relative path). \
-                                                       Only needed when no ctest log-file is given.',
-                        required=True)
-    parser.add_argument('--test-root-dir', type=str, help='Root directory to test output files that should be updated',
-                        default=os.getcwd(),
-                        required=False)
-    parser.add_argument('--log-file', type=str, help='Path to the ctest log file (relative path).',
-                        default="none",
-                        required=False)
-    parser.add_argument('--R', type=str, help='Regex for ctest.',
-                        default="none",
-                        required=False)
-    parser.add_argument('--y', action='store_true', help='Set this action to automatically overwrite files.',
-                        required=False)
-    return vars(parser.parse_args())
+SOURCE_RE = re.compile(r"DIFF failed\. ------ Source:\s+(.+)")
+RESULT_RE = re.compile(r"DIFF failed\. ------ Result:\s+(.+)")
 
 
-def run_tests(build_dir, regex_flags, skip_overwrite):
-    print(70 * "-")
-    print("Run all tests")
-    print(70 * "-")
-    cwd = os.getcwd()
-    os.chdir(build_dir)
+def main():
+    parser = argparse.ArgumentParser(
+        description=(
+            "Update deal.II/CTest reference output files from a verbose "
+            "ctest log.\n\n"
+            "Example usage:\n"
+            "  ctest -V | tee ctest.log\n"
+            "  python3 update_test_output.py ctest.log"
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
 
-    if os.path.exists("ctest.log") and not skip_overwrite:
-        Question = input(
-            "Overwrite {:} [Y/N]? ".format(os.path.join(build_dir, "ctest.log")))
-        if Question == ("Y"):
-            print("")
-        else:
-            print("Abort...")
-            exit()
+    parser.add_argument(
+        "ctest_log",
+        type=Path,
+        help="Path to verbose ctest log file",
+    )
 
-    print(os.getcwd())
-    if (regex_flags != "none"):
-        os.system("ctest -R {:} --output-log ctest.log".format(regex_flags))
-    else:
-        os.system("ctest --output-log ctest.log")
-    os.chdir(cwd)
-    return os.path.join(build_dir, "ctest.log")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print copy operations without modifying files",
+    )
 
+    parser.add_argument(
+        "--backup",
+        action="store_true",
+        help="Create *.bak backups before overwriting files",
+    )
 
-def create_output_path(name):
-    folder = name.split("/")[0]
-    output_file = name.split(
-        "/")[-1].replace(".debug", "").replace(".release", "") + ".output"
-    output_file = output_file.replace(".", ".*", 1)
-    output_file = output_file.replace(".output", "*.output", 1)
-    return os.path.join(folder, output_file)
+    args = parser.parse_args()
 
+    text = args.ctest_log.read_text(errors="replace")
 
-def copy_test_output(log_file, test_root_dir, build_dir, do_overwrite):
-    # Record failed tests
-    failed_tests = []
-    failed_tests_path = []
+    # Ensure this is a verbose ctest log
+    if "Test command:" not in text:
+        raise SystemExit(
+            "ctest log does not appear to be generated with verbose output.\n"
+            "Please run:\n\n"
+            "  ctest -V | tee ctest.log\n"
+        )
 
-    print(70 * "-")
-    print("Read log file: {:}".format(os.path.abspath(log_file)))
-    print(70 * "-")
+    lines = text.splitlines()
 
-    # Collect current test output
-    for line in open(log_file, "r").readlines():
-        if "(Failed)" in line:
-            # remove decoration from test output
-            name = line.split(" - ")[-1].split(" (Failed)")[0]
-            failed_tests.append(name)
-            p = name.split(".")[0] + "." + name.split(".")[-1]
+    current_source = None
+    copied = 0
 
-            # check if failing output exists
-            if glob.glob(os.path.join(
-                    build_dir, "**", p, "**/failing_output"), recursive=True):
-                print(
-                    "ERROR: the following test >>> {:} <<< failed. Abort ...".format(name))
-                exit()
+    for line in lines:
+        source_match = SOURCE_RE.search(line)
+        if source_match:
+            current_source = Path(source_match.group(1).strip())
+            continue
 
-            # locate test output
-            output_found = glob.glob(os.path.join(
-                build_dir, "**", p, "**/output"), recursive=True)
-            if not output_found:
-                print(
-                    "ERROR: output to the test >>> {:} <<< not found. Abort ...".format(name))
-                exit()
-            else:
-                failed_tests_path.append(output_found)
+        result_match = RESULT_RE.search(line)
+        if result_match and current_source is not None:
+            generated_output = Path(result_match.group(1).strip())
+            reference_output = current_source
 
-    # copy new test output to test_root_dir
-    print(70 * "-")
-    print("Update test output")
-    print(70 * "-")
-    for f, o in zip(failed_tests, failed_tests_path):
-        n = create_output_path(f)
-        test_found = glob.glob(os.path.join(
-            test_root_dir, "**") + "/" + n, recursive=True)
+            if not generated_output.exists():
+                print(f"[skip] missing generated output: {generated_output}")
+                continue
 
-        if not test_found:
-            print(
-                "ERROR: output to the test >>> {:} <<< not found. Abort ...".format(n))
-            exit()
-        elif len(test_found) > 1:
-            # based on a similarity measure find corresponding files
-            o_idx = []
-            for t in test_found:
-                similarity = 0.0
-                o_idx.append(-1)
-                for j, c in enumerate(o):
-                    curr = SequenceMatcher(None, t, c).ratio()
-                    if (SequenceMatcher(None, t, c).ratio() > similarity):
-                        similarity = SequenceMatcher(None, t, c).ratio()
-                        o_idx[-1] = j
+            if args.backup and reference_output.exists():
+                backup = reference_output.parent / (
+                    reference_output.name + ".bak"
+                )
 
-            # check if list is unique
-            assert len(set(o_idx)) == len(o_idx)
+                print(f"[backup] {reference_output} -> {backup}")
 
-            print(
-                "multiple outputs to the test >>> {:} <<< found. Copy files:".format(n))
+                if not args.dry_run:
+                    shutil.copy2(reference_output, backup)
 
-            # copy files
-            for i in range(len(test_found)):
-                if do_overwrite:
-                    copy_command = "yes | cp -rf {:} {:}".format(
-                        o[o_idx[i]], test_found[i])
-                else:
-                    copy_command = "cp {:} {:}".format(
-                        o[o_idx[i]], test_found[i])
-                print(5 * " " + copy_command)
-                os.system(copy_command)
+            print(f"[copy] {generated_output}")
+            print(f"    -> {reference_output}")
 
-            print("")
-        else:
-            if do_overwrite:
-                copy_command = "yes | cp -rf {:} {:}".format(
-                    o[0], test_found[0])
-            else:
-                copy_command = "cp {:} {:}".format(o[0], test_found[0])
-            print(copy_command)
-            os.system(copy_command)
-            print("")
+            if not args.dry_run:
+                shutil.copy2(generated_output, reference_output)
 
-    print(70 * "-")
-    print("{:} test outputs copied!".format(len(failed_tests)))
-    print(70 * "-")
+            copied += 1
+            current_source = None
+
+    print(f"\nDone. Updated {copied} output file(s).")
 
 
-if __name__ == '__main__':
-    # parse arguments
-    a = get_arguments()
-    # load ctest log file
-    if (a["log_file"] == "none"):
-        log_file = run_tests(a["build_dir"], a["R"], a["y"])
-    else:
-        log_file = a["log_file"]
-
-    assert (log_file != "none")
-
-    # copy test output
-    copy_test_output(log_file, a["test_root_dir"], a["build_dir"], a["y"])
+if __name__ == "__main__":
+    main()
