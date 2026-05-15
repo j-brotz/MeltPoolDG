@@ -1,5 +1,25 @@
 <!-- Please, fill in the description as completely as possible.-->
 
+<!-- Use Conventional Commits format for the commit message:
+     <type>(optional scope): <description>
+
+     Available types:
+     - feat: introduces a new feature
+     - fix: fixes a bug
+     - refactor: code change without changing behavior
+     - test: adds or updates tests
+     - docs: documentation-only changes
+     - style: formatting-only changes
+     - perf: performance improvements
+     - chore: maintenance work
+
+     Example:
+     feat(heat): add apparent capacity method
+     - add apparent capacity formulation for latent heat treatment
+     - add support for constant, poly4_bell, and qlq apparent-capacity models
+     - add temperature derivatives for Newton linearization
+-->
+
 # Description
 <!-- Please include a summary of the changes and the related issue.
      Please also include relevant motivation and context.
