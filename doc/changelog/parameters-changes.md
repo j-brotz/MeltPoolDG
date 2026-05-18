@@ -442,11 +442,11 @@ All notable changes of the input parameters will be documented in this file.
 ```diff
 {
   "heat": {
--    "heat convection coefficient": "",  
+-    "heat convection coefficient": "",
 +    "convection coefficient": "",
--    "heat emissivity": "",  
+-    "heat emissivity": "",
 +    "emissivity": "",
--    "heat temperature infinity": "",  
+-    "heat temperature infinity": "",
 +    "temperature infinity": "",
 -    "heat nlsolve max nonlinear iterations": "",
 -    "heat nlsolve field correction tolerance": "",
@@ -463,7 +463,7 @@ All notable changes of the input parameters will be documented in this file.
 +      "residual tolerance alt": ""
     }
   }
-} 
+}
 ```
 
 ## 2024-02-22
@@ -643,7 +643,7 @@ capacity and remove specific interpolation for thermal conductivity
 {
   "base": {
     "problem name": "level_set"
-    }, 
+    },
 +  "problem specific": {
 +   "amr":
 +     {
@@ -729,7 +729,7 @@ capacity and remove specific interpolation for thermal conductivity
 ```
 
 ## 2023-08-01
-- Remove unused parameters, resolve redundant parameter do melt pool and 
+- Remove unused parameters, resolve redundant parameter do melt pool and
 restructure analytical laser section
 ```diff
 {
@@ -899,7 +899,7 @@ of a level set function
 ```diff
 {
   "evaporation": {
-+   "evapor level set source term type": "interface_velocity_sharp_heavy" 
++   "evapor level set source term type": "interface_velocity_sharp_heavy"
   }
 }
 
@@ -910,7 +910,7 @@ of a level set function
 ```diff
 {
   "evaporation": {
-+   "evapor level set source term type": "interface_velocity_sharp" 
++   "evapor level set source term type": "interface_velocity_sharp"
   }
 }
 
@@ -926,7 +926,7 @@ of a level set function
 ```
 
 ## 2022-12-08
-- Add parameter to the heat operator for individual parameter interpolation 
+- Add parameter to the heat operator for individual parameter interpolation
 of the conductivity (k) and/or the volumetric heat capacity (rho times cp)
 ```diff
 {
@@ -992,7 +992,7 @@ in the heat equation
 {
   "problem type": "melt_pool",
   "problem specific": {
-+    "coupling temp evapor": 
++    "coupling temp evapor":
 +    {
 +      "n max iter": "",
 +      "tol": ""
@@ -1007,7 +1007,7 @@ in the heat equation
 {
   "problem type": "melt_pool",
   "problem specific": {
-+    "mp heat up": 
++    "mp heat up":
 +    {
 +      "max temperature": "",
 +      "time step size": "",
@@ -1049,7 +1049,7 @@ in the level set equation
 {
   "problem type": "melt_pool",
   "problem specific": {
-    "coupling ls evapor": 
+    "coupling ls evapor":
     {
       "n max iter": "",
       "tol"
@@ -1157,7 +1157,7 @@ in the level set equation
 ```
 
 ## 2022-09-12
-- Add parameters to control write frequency of profiling output 
+- Add parameters to control write frequency of profiling output
 ```json
 {
   "profiling": {
@@ -1195,7 +1195,7 @@ in the level set equation
 ```
 
 ## 2022-06-30
-- Add tolerance for activating reinitialization 
+- Add tolerance for activating reinitialization
 ```json
 {
   "levelset": {
@@ -1205,7 +1205,7 @@ in the level set equation
 ```
 
 ## 2022-06-26
-- Add option to determine weights for phase weighted Dirac delta function 
+- Add option to determine weights for phase weighted Dirac delta function
   automatically
 ```json
 {
@@ -1273,7 +1273,7 @@ in the level set equation
 ```
 
 ## 2022-05-26
-- Move parameter 
+- Move parameter
 
 ```diff
 {
@@ -1319,7 +1319,7 @@ the melt pool problem
 ```
 
 ## 2022-05-19
-- Add parameter for determining if the heaviside representation of the level 
+- Add parameter for determining if the heaviside representation of the level
 set function should be calculated localized or not
 
 ```json
@@ -1370,7 +1370,7 @@ set function should be calculated localized or not
 ```
 
 ## 2022-03-11
-- Add parameter to enable interpolation of the level set field to the pressure 
+- Add parameter to enable interpolation of the level set field to the pressure
   space for computing the level set gradient in evaporative mass flux source terms.
 ```json
 {
@@ -1391,12 +1391,12 @@ set function should be calculated localized or not
 ```
 
 ## 2022-03-09
-- Add parameter to distinguish how to consider evaporative mass flux in the 
+- Add parameter to distinguish how to consider evaporative mass flux in the
   level set equation
 ```diff
 {
   "evaporation": {
-+   "evapor level set source term type": "interface_velocity|rhs" 
++   "evapor level set source term type": "interface_velocity|rhs"
   }
 }
 
@@ -1471,7 +1471,7 @@ set function should be calculated localized or not
 ```
 
 ## 2021-12-20
-- Delete ambiguous parameter 
+- Delete ambiguous parameter
 ```json
 {
   "levelset" : {
@@ -1557,7 +1557,7 @@ to
 ```
 
 ## 2021-12-10
-- Add new parameter to distinguish how interfacial forces are calculated: 
+- Add new parameter to distinguish how interfacial forces are calculated:
 ```json
 {
   "recoil pressure" : {

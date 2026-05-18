@@ -9,10 +9,10 @@
   },
   "simulation specific parameters": {
     "center point": "0., 0.",
-    "radius": "0.5",
+    "radius": 0.5,
     "level set type": "signed_distance",
     "apply initial jump at interface": false,
-    "distortion factor": "0.8"
+    "distortion factor": 0.8
   },
   "output": {
     "paraview": {
