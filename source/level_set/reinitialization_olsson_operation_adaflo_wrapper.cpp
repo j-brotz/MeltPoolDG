@@ -76,16 +76,6 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationOlssonOperationAdaflo<dim, number>::update_dof_idx(
-    const unsigned int &reinit_dof_idx)
-  {
-    reinit_params_adaflo.dof_index_ls = reinit_dof_idx;
-
-    create_operator();
-  }
-
-  template <int dim, typename number>
-  void
   ReinitializationOlssonOperationAdaflo<dim, number>::reinit()
   {
     initialize_vectors();

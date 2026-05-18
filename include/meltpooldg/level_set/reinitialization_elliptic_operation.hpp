@@ -69,14 +69,6 @@ namespace MeltPoolDG::LevelSet
     reinit() override;
 
     /**
-     * @brief Updates the current @p reinit_dof_idx.
-     *
-     * @param reinit_dof_idx_in Given DoF index.
-     */
-    void
-    update_dof_idx(const unsigned int &reinit_dof_idx_in) override;
-
-    /**
      * @brief Copies a solution field to @p solution_level_set.
      *
      * @param solution_level_set_in Given DoF vector for the discrete level-set field.

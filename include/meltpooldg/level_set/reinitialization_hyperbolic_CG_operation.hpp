@@ -87,9 +87,6 @@ namespace MeltPoolDG::LevelSet
       std::vector<dealii::types::boundary_id> &&wetting_bc_ids) final;
 
     void
-    update_dof_idx(const unsigned int &reinit_dof_idx_in) override;
-
-    void
     init_time_advance();
 
     void
