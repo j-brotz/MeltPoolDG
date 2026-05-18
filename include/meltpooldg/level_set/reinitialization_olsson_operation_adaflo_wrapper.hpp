@@ -43,9 +43,6 @@ namespace MeltPoolDG::LevelSet
       const unsigned int                               n_subdivisions);
 
     void
-    update_dof_idx(const unsigned int &reinit_dof_idx) override;
-
-    void
     reinit() override;
 
     /**

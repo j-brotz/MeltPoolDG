@@ -148,15 +148,6 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationHyperbolicCGOperation<dim, number>::update_dof_idx(
-    const unsigned int &reinit_dof_idx_in)
-  {
-    reinit_dof_idx = reinit_dof_idx_in;
-    create_operator();
-  }
-
-  template <int dim, typename number>
-  void
   ReinitializationHyperbolicCGOperation<dim, number>::init_time_advance()
   {
     reinit_operator->reset_time_increment(time_iterator.get_current_time_increment());

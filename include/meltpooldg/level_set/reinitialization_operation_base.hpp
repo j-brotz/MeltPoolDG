@@ -16,9 +16,6 @@ namespace MeltPoolDG::LevelSet
     reinit() = 0;
 
     virtual void
-    update_dof_idx(const unsigned int &reinit_dof_idx_in) = 0;
-
-    virtual void
     set_initial_condition(
       const dealii::LinearAlgebra::distributed::Vector<number> &solution_level_set_in) = 0;
 

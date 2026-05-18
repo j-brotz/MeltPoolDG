@@ -51,14 +51,6 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationEllipticOperation<dim, number>::update_dof_idx(
-    const unsigned int &reinit_dof_idx_in)
-  {
-    reinit_dof_idx = reinit_dof_idx_in;
-  }
-
-  template <int dim, typename number>
-  void
   ReinitializationEllipticOperation<dim, number>::set_initial_condition(
     const VectorType & /*solution_level_set_in*/)
   {

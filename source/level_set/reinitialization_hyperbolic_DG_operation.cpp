@@ -209,14 +209,6 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   void
-  ReinitializationHyperbolicDGOperation<dim, number>::update_dof_idx(
-    const unsigned int &reinit_dof_idx_in)
-  {
-    reinit_dof_idx = reinit_dof_idx_in;
-  }
-
-  template <int dim, typename number>
-  void
   ReinitializationHyperbolicDGOperation<dim, number>::init_time_advance()
   {
     if (solution_history.get_current_solution().has_ghost_elements())
