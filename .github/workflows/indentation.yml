@@ -10,35 +10,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: DoozyX/clang-format-lint-action@v0.16.2
+
+    - name: Set up pixi
+      uses: prefix-dev/setup-pixi@v0.8.8
       with:
-        source: '.'
-        exclude: ''
-        extensions: 'hpp,cpp,cc'
-        clangFormatVersion: 16
-        inplace: true
-    - name: code-formatting
-      run: |
-        git diff
-        git diff-files --quiet || exit $?
-    - name: json-formatting
-      run: |
-        scripts/formatting/format-all-json
-        git diff
-        git diff-files --quiet || exit $?
-    - name: json-check-of-test-configuration
-      run: |
-        . ./scripts/sanity_check_ci/check-json || exit $?
-    - name: python-formatting
-      id: autopep8
-      uses: peter-evans/autopep8@v2
-      with:
-        args: --recursive --in-place --ignore E501 --exit-code -v -v -v .
-    - name: python-check
-      if: steps.autopep8.outputs.exit-code == 2
-      run: exit 1
-    - name: parameter-sanity-check
-      run: |
-        scripts/parameters/check-all-json
-        git diff
-        git diff-files --quiet || exit $?
+        pixi-version: latest
+        cache: false
+
+    - name: Run pre-commit hooks
+      run: pixi run pre-commit run --all-files --show-diff-on-failure

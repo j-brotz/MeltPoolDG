@@ -9,7 +9,24 @@ from sphinx.util import docutils
 import os
 import sys
 
+import subprocess
 from pathlib import Path
+
+
+def run_parameter_doc_generation(app):
+    repo_root = Path(__file__).resolve().parents[3]
+    print(repo_root)
+    generator = repo_root / "doc" / "scripts" / "generate_parameter_table.py"
+
+    subprocess.run(
+        ["python3", str(generator)],
+        check=True,
+    )
+
+
+def setup(app):
+    app.connect("builder-inited", run_parameter_doc_generation)
+
 
 # Add the root project directory to sys.path to resolve external files
 sys.path.insert(0, os.path.abspath('..'))  # Adjust this if needed
