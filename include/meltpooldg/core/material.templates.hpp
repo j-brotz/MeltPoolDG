@@ -272,10 +272,18 @@ namespace MeltPoolDG
                                                              g.dynamic_viscosity,
                                                              l.dynamic_viscosity);
             if (flags & MaterialUpdateFlags::volume_specific_heat_capacity)
-              t.volume_specific_heat_capacity =
-                compute_two_phase_fluid_property<value_type>(level_set_heaviside,
-                                                             g.volume_specific_heat_capacity,
-                                                             l.volume_specific_heat_capacity);
+              {
+                AssertThrow(
+                  apparent_capacity == nullptr,
+                  dealii::ExcMessage(
+                    "The apparent capacity type "
+                    " \"apparent_capacity\" is currently not implemented for the volume specific "
+                    " heat capacity! Abort..."));
+                t.volume_specific_heat_capacity =
+                  compute_two_phase_fluid_property<value_type>(level_set_heaviside,
+                                                               g.volume_specific_heat_capacity,
+                                                               l.volume_specific_heat_capacity);
+              }
             // note: For the gas-liquid phase case, the derivatives with respect to temperature
             // are zero.
             if (flags & MaterialUpdateFlags::phase_fractions)
@@ -299,10 +307,11 @@ namespace MeltPoolDG
                 l.thermal_conductivity,
                 s.thermal_conductivity);
             if (flags & MaterialUpdateFlags::specific_heat_capacity)
-              t.specific_heat_capacity = compute_solid_liquid_phases_property<value_type>(
-                temperature_dependent_solid_fraction,
-                l.specific_heat_capacity,
-                s.specific_heat_capacity);
+              t.specific_heat_capacity =
+                compute_solid_liquid_phases_specific_heat_capacity<value_type>(
+                  temperature_dependent_solid_fraction,
+                  l.specific_heat_capacity,
+                  s.specific_heat_capacity);
             if (flags & MaterialUpdateFlags::density)
               t.density = compute_solid_liquid_phases_property<value_type>(
                 temperature_dependent_solid_fraction, l.density, s.density);
@@ -310,10 +319,18 @@ namespace MeltPoolDG
               t.dynamic_viscosity = compute_solid_liquid_phases_property<value_type>(
                 temperature_dependent_solid_fraction, l.dynamic_viscosity, s.dynamic_viscosity);
             if (flags & MaterialUpdateFlags::volume_specific_heat_capacity)
-              t.volume_specific_heat_capacity = compute_solid_liquid_phases_property<value_type>(
-                temperature_dependent_solid_fraction,
-                l.volume_specific_heat_capacity,
-                s.volume_specific_heat_capacity);
+              {
+                AssertThrow(
+                  apparent_capacity == nullptr,
+                  dealii::ExcMessage(
+                    "The apparent capacity type "
+                    " \"apparent_capacity\" is currently not implemented for the volume specific "
+                    " heat capacity! Abort..."));
+                t.volume_specific_heat_capacity = compute_solid_liquid_phases_property<value_type>(
+                  temperature_dependent_solid_fraction,
+                  l.volume_specific_heat_capacity,
+                  s.volume_specific_heat_capacity);
+              }
             if (flags & MaterialUpdateFlags::d_thermal_conductivity_d_T)
               t.d_thermal_conductivity_d_T =
                 compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
@@ -322,7 +339,7 @@ namespace MeltPoolDG
                   s.thermal_conductivity);
             if (flags & MaterialUpdateFlags::d_specific_heat_capacity_d_T)
               t.d_specific_heat_capacity_d_T =
-                compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
+                compute_temperature_derivative_of_solid_liquid_specific_heat_capacity<value_type>(
                   temperature_dependent_solid_fraction,
                   l.specific_heat_capacity,
                   s.specific_heat_capacity);
@@ -331,11 +348,19 @@ namespace MeltPoolDG
                 compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
                   temperature_dependent_solid_fraction, l.density, s.density);
             if (flags & MaterialUpdateFlags::d_volume_specific_heat_capacity_d_T)
-              t.d_volume_specific_heat_capacity_d_T =
-                compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
-                  temperature_dependent_solid_fraction,
-                  l.volume_specific_heat_capacity,
-                  s.volume_specific_heat_capacity);
+              {
+                AssertThrow(
+                  apparent_capacity == nullptr,
+                  dealii::ExcMessage(
+                    "The apparent capacity type "
+                    " \"apparent_capacity\" is currently not implemented for the volume specific "
+                    " heat capacity! Abort..."));
+                t.d_volume_specific_heat_capacity_d_T =
+                  compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
+                    temperature_dependent_solid_fraction,
+                    l.volume_specific_heat_capacity,
+                    s.volume_specific_heat_capacity);
+              }
             if (flags & MaterialUpdateFlags::phase_fractions)
               {
                 const auto hs =
@@ -367,12 +392,13 @@ namespace MeltPoolDG
                 l.thermal_conductivity,
                 s.thermal_conductivity);
             if (flags & MaterialUpdateFlags::specific_heat_capacity)
-              t.specific_heat_capacity = compute_solid_liquid_gas_phases_property<value_type>(
-                level_set_heaviside,
-                temperature_dependent_solid_fraction,
-                g.specific_heat_capacity,
-                l.specific_heat_capacity,
-                s.specific_heat_capacity);
+              t.specific_heat_capacity =
+                compute_solid_liquid_gas_phases_specific_heat_capacity<value_type>(
+                  level_set_heaviside,
+                  temperature_dependent_solid_fraction,
+                  g.specific_heat_capacity,
+                  l.specific_heat_capacity,
+                  s.specific_heat_capacity);
             if (flags & MaterialUpdateFlags::density)
               {
                 if (material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation)
@@ -399,13 +425,21 @@ namespace MeltPoolDG
                 l.dynamic_viscosity,
                 s.dynamic_viscosity);
             if (flags & MaterialUpdateFlags::volume_specific_heat_capacity)
-              t.volume_specific_heat_capacity =
-                compute_solid_liquid_gas_phases_property<value_type>(
-                  level_set_heaviside,
-                  temperature_dependent_solid_fraction,
-                  g.volume_specific_heat_capacity,
-                  l.volume_specific_heat_capacity,
-                  s.volume_specific_heat_capacity);
+              {
+                AssertThrow(
+                  apparent_capacity == nullptr,
+                  dealii::ExcMessage(
+                    "The apparent capacity type "
+                    " \"apparent_capacity\" is currently not implemented for the volume specific "
+                    " heat capacity! Abort..."));
+                t.volume_specific_heat_capacity =
+                  compute_solid_liquid_gas_phases_property<value_type>(
+                    level_set_heaviside,
+                    temperature_dependent_solid_fraction,
+                    g.volume_specific_heat_capacity,
+                    l.volume_specific_heat_capacity,
+                    s.volume_specific_heat_capacity);
+              }
             if (flags & MaterialUpdateFlags::d_thermal_conductivity_d_T)
               t.d_thermal_conductivity_d_T =
                 compute_temperature_derivative_of_solid_liquid_gas_property<value_type>(
@@ -415,11 +449,11 @@ namespace MeltPoolDG
                   s.thermal_conductivity);
             if (flags & MaterialUpdateFlags::d_specific_heat_capacity_d_T)
               t.d_specific_heat_capacity_d_T =
-                compute_temperature_derivative_of_solid_liquid_gas_property<value_type>(
-                  level_set_heaviside,
-                  temperature_dependent_solid_fraction,
-                  l.specific_heat_capacity,
-                  s.specific_heat_capacity);
+                compute_temperature_derivative_of_solid_liquid_gas_specific_heat_capacity<
+                  value_type>(level_set_heaviside,
+                              temperature_dependent_solid_fraction,
+                              l.specific_heat_capacity,
+                              s.specific_heat_capacity);
             if (flags & MaterialUpdateFlags::d_density_d_T)
               {
                 if (material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation)
@@ -439,12 +473,20 @@ namespace MeltPoolDG
                       s.density);
               }
             if (flags & MaterialUpdateFlags::d_volume_specific_heat_capacity_d_T)
-              t.d_volume_specific_heat_capacity_d_T =
-                compute_temperature_derivative_of_solid_liquid_gas_property<value_type>(
-                  level_set_heaviside,
-                  temperature_dependent_solid_fraction,
-                  l.volume_specific_heat_capacity,
-                  s.volume_specific_heat_capacity);
+              {
+                AssertThrow(
+                  apparent_capacity == nullptr,
+                  dealii::ExcMessage(
+                    "The apparent capacity type "
+                    " \"apparent_capacity\" is currently not implemented for the volume specific "
+                    " heat capacity! Abort..."));
+                t.d_volume_specific_heat_capacity_d_T =
+                  compute_temperature_derivative_of_solid_liquid_gas_property<value_type>(
+                    level_set_heaviside,
+                    temperature_dependent_solid_fraction,
+                    l.volume_specific_heat_capacity,
+                    s.volume_specific_heat_capacity);
+              }
             if (flags & MaterialUpdateFlags::phase_fractions)
               {
                 t.gas_fraction = value_type(1.) - level_set_heaviside;
@@ -520,6 +562,26 @@ namespace MeltPoolDG
   template <typename number>
   template <typename value_type>
   inline value_type
+  Material<number>::compute_solid_liquid_phases_specific_heat_capacity(
+    const value_type &temperature_dependent_solid_fraction,
+    const value_type &liquid_value,
+    const value_type &solid_value) const
+  {
+    auto value = compute_solid_liquid_phases_property(temperature_dependent_solid_fraction,
+                                                      liquid_value,
+                                                      solid_value);
+
+    if (apparent_capacity)
+      value += apparent_capacity->evaluate(temperature_dependent_solid_fraction);
+
+    return value;
+  }
+
+
+
+  template <typename number>
+  template <typename value_type>
+  inline value_type
   Material<number>::compute_temperature_derivative_of_solid_liquid_phases_property(
     const value_type &temperature_dependent_solid_fraction,
     const value_type &liquid_value,
@@ -539,6 +601,26 @@ namespace MeltPoolDG
   template <typename number>
   template <typename value_type>
   inline value_type
+  Material<number>::compute_temperature_derivative_of_solid_liquid_specific_heat_capacity(
+    const value_type &temperature_dependent_solid_fraction,
+    const value_type &liquid_value,
+    const value_type &solid_value) const
+  {
+    auto value = compute_temperature_derivative_of_solid_liquid_phases_property(
+      temperature_dependent_solid_fraction, liquid_value, solid_value);
+
+    if (apparent_capacity)
+      value +=
+        apparent_capacity->compute_temperature_derivative(temperature_dependent_solid_fraction);
+
+    return value;
+  }
+
+
+
+  template <typename number>
+  template <typename value_type>
+  inline value_type
   Material<number>::compute_solid_liquid_gas_phases_property(
     const value_type &level_set_heaviside,
     const value_type &temperature_dependent_solid_fraction,
@@ -550,6 +632,26 @@ namespace MeltPoolDG
       compute_solid_liquid_phases_property(temperature_dependent_solid_fraction,
                                            liquid_value,
                                            solid_value);
+    return compute_two_phase_fluid_property(level_set_heaviside, gas_value, liquid_solid_value);
+  }
+
+
+
+  template <typename number>
+  template <typename value_type>
+  inline value_type
+  Material<number>::compute_solid_liquid_gas_phases_specific_heat_capacity(
+    const value_type &level_set_heaviside,
+    const value_type &temperature_dependent_solid_fraction,
+    const value_type &gas_value,
+    const value_type &liquid_value,
+    const value_type &solid_value) const
+  {
+    const auto liquid_solid_value =
+      compute_solid_liquid_phases_specific_heat_capacity(temperature_dependent_solid_fraction,
+                                                         liquid_value,
+                                                         solid_value);
+
     return compute_two_phase_fluid_property(level_set_heaviside, gas_value, liquid_solid_value);
   }
 
@@ -586,6 +688,26 @@ namespace MeltPoolDG
     const value_type &solid_value) const
   {
     const auto temp = compute_temperature_derivative_of_solid_liquid_phases_property(
+      temperature_dependent_solid_fraction, liquid_value, solid_value);
+    const auto weight = data.two_phase_fluid_properties_transition_type !=
+                            TwoPhaseFluidPropertiesTransitionType::sharp ?
+                          level_set_heaviside :
+                          CharacteristicFunctions::heaviside(level_set_heaviside, 0.5);
+    return temp * weight;
+  }
+
+
+
+  template <typename number>
+  template <typename value_type>
+  inline value_type
+  Material<number>::compute_temperature_derivative_of_solid_liquid_gas_specific_heat_capacity(
+    const value_type &level_set_heaviside,
+    const value_type &temperature_dependent_solid_fraction,
+    const value_type &liquid_value,
+    const value_type &solid_value) const
+  {
+    const auto temp = compute_temperature_derivative_of_solid_liquid_specific_heat_capacity(
       temperature_dependent_solid_fraction, liquid_value, solid_value);
     const auto weight = data.two_phase_fluid_properties_transition_type !=
                             TwoPhaseFluidPropertiesTransitionType::sharp ?

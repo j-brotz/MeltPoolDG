@@ -2437,117 +2437,117 @@
                     "value": "0",
                     "default_value": "0",
                     "documentation": "Defines the dimension of the problem. Not essential to the Navier-Stokes class, but useful in many applications.",
-                    "pattern": "333",
+                    "pattern": "335",
                     "pattern_description": "[Integer]",
-                    "actions": "334"
+                    "actions": "336"
                 },
                 "global refinements":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "Defines the number of initial global refinements. Not used in the Navier-Stokes class, but useful in many applications.",
-                    "pattern": "334",
+                    "pattern": "336",
                     "pattern_description": "[Integer]",
-                    "actions": "335"
+                    "actions": "337"
                 },
                 "anisotropic refinement":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "defines whether the mesh should be refined anisotropically in normal direction to the interface, 0 means no anisotropy",
-                    "pattern": "335",
+                    "pattern": "337",
                     "pattern_description": "[Selection 0|1 ]",
-                    "actions": "336"
+                    "actions": "338"
                 },
                 "simplex mesh":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "defines whether a simplex mesh has been provided, 0 means mesh with only quadrilaterals (2D) and hexahedra (3D) has been provided",
-                    "pattern": "336",
+                    "pattern": "338",
                     "pattern_description": "[Selection 0|1 ]",
-                    "actions": "337"
+                    "actions": "339"
                 },
                 "adaptive refinements":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "Defines the number of adaptive refinements. Not used in the Navier-Stokes class, but useful in many applications.",
-                    "pattern": "337",
+                    "pattern": "339",
                     "pattern_description": "[Integer]",
-                    "actions": "338"
+                    "actions": "340"
                 },
                 "velocity degree":
                 {
                     "value": "2",
                     "default_value": "2",
                     "documentation": "Sets the degree for velocity. Pressure degree is velocity degree minus one. Currently implemented for orders 2 to 6",
-                    "pattern": "338",
+                    "pattern": "340",
                     "pattern_description": "[Integer]",
-                    "actions": "339"
+                    "actions": "341"
                 },
                 "augmented Taylor-Hood elements":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "Option to choose the pressure space FE_Q_DG0(p_degree) instead of the standard space FE_Q(p_degree). This adds a constant discontinuous part to the pressure basis and gives element-wise divergence-free solutions. It produces solutions that are in general better but also a bit more expensive to compute.",
-                    "pattern": "339",
+                    "pattern": "341",
                     "pattern_description": "[Selection 0|1 ]",
-                    "actions": "340"
+                    "actions": "342"
                 },
                 "viscosity":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "Defines the fluid dynamic viscosity",
-                    "pattern": "340",
+                    "pattern": "342",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "341"
+                    "actions": "343"
                 },
                 "density":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "Defines the fluid density",
-                    "pattern": "341",
+                    "pattern": "343",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "342"
+                    "actions": "344"
                 },
                 "damping":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "Defines the fluid damping",
-                    "pattern": "342",
+                    "pattern": "344",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "343"
+                    "actions": "345"
                 },
                 "physical type":
                 {
                     "value": "incompressible",
                     "default_value": "incompressible",
                     "documentation": "Sets the type of equations, Navier-Stokes or Stokes. For Navier-Stokes, one can choose between a stationary and a time-dependent variant. The time-dependent Navier-Stokes equations are the default.",
-                    "pattern": "343",
+                    "pattern": "345",
                     "pattern_description": "[Selection incompressible|incompressible stationary|stokes ]",
-                    "actions": "344"
+                    "actions": "346"
                 },
                 "constitutive type":
                 {
                     "value": "newtonian incompressible",
                     "default_value": "newtonian incompressible",
                     "documentation": "Sets the type of constitutive equations. The incompressible Newtonian fluid assumption is the default case. Alternatively, a compressible Newtonian fluid formulation exploiting the Stokes hypothesis or a user defined type can be chosen.",
-                    "pattern": "344",
+                    "pattern": "346",
                     "pattern_description": "[Selection newtonian incompressible|newtonian compressible stokes hypothesis|user defined ]",
-                    "actions": "345"
+                    "actions": "347"
                 },
                 "formulation convective term momentum balance":
                 {
                     "value": "skew-symmetric",
                     "default_value": "skew-symmetric",
                     "documentation": "Sets the formulation of the convective term in the momentum balance of the Navier-Stokes equations, i.e. ∇·(u x u) =(u·∇)u + βu(∇·u). The parameter β will be set to 1 for the conservative form, to 0 for the convective form and to 0.5 for the skew-symmetric form (default formulation).",
-                    "pattern": "345",
+                    "pattern": "347",
                     "pattern_description": "[Selection skew-symmetric|convective|conservative ]",
-                    "actions": "346"
+                    "actions": "348"
                 },
                 "Solver":
                 {
@@ -2556,90 +2556,90 @@
                         "value": "10",
                         "default_value": "10",
                         "documentation": "Defines the maximum number of nonlinear Newton iterations.",
-                        "pattern": "346",
+                        "pattern": "348",
                         "pattern_description": "[Integer]",
-                        "actions": "347"
+                        "actions": "349"
                     },
                     "NL tolerance":
                     {
                         "value": "1e-06",
                         "default_value": "1e-06",
                         "documentation": "Defines the tolerance in the residual l2 norm in the nonlinear Newton iteration.",
-                        "pattern": "347",
+                        "pattern": "349",
                         "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                        "actions": "348"
+                        "actions": "350"
                     },
                     "linearization scheme":
                     {
                         "value": "coupled implicit Newton",
                         "default_value": "coupled implicit Newton",
                         "documentation": "Sets how to treat the coupled nonlinear Navier-Stokes system. The 'coupled' variants solve for the full block system, whereas 'projection' applies a fractional-step pressure correction method with the solution of a pressure Poisson matrix. The nonlinear convective term can be treated by afull Newton iteration, a Picard iteration (fixed-point like), a semi-implicit approach with the same term as in the fixed-point like iteration but velocity extrapolated from the old time, and an approach where the complete convective term is treated explicitly. For the projection scheme, only the semi-implicit velocity treatment is implemented because iterating out the nonlinearity makes no sense.",
-                        "pattern": "348",
+                        "pattern": "350",
                         "pattern_description": "[Selection coupled implicit Newton|coupled implicit Picard|coupled velocity semi-implicit|coupled velocity explicit|projection ]",
-                        "actions": "349"
+                        "actions": "351"
                     },
                     "tau grad div":
                     {
                         "value": "0",
                         "default_value": "0",
                         "documentation": "Adds the term (div(v), tau div(u))to the weak form the momentum equation, which is consistent with the Navier-Stokes equations but penalizes the divergence more. This term is usually referred to as grad-div stabilization. It simplifies the solution of linear systems if tau is on the order of unity but not too large (as the added term is singular).",
-                        "pattern": "349",
+                        "pattern": "351",
                         "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                        "actions": "350"
+                        "actions": "352"
                     },
                     "lin max iterations":
                     {
                         "value": "500",
                         "default_value": "500",
                         "documentation": "Maximum number of linear iterations",
-                        "pattern": "350",
+                        "pattern": "352",
                         "pattern_description": "[Integer]",
-                        "actions": "351"
+                        "actions": "353"
                     },
                     "lin tolerance":
                     {
                         "value": "0.001",
                         "default_value": "0.001",
                         "documentation": "Tolerance for the linear solver",
-                        "pattern": "351",
+                        "pattern": "353",
                         "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                        "actions": "352"
+                        "actions": "354"
                     },
                     "lin relative tolerance":
                     {
                         "value": "1",
                         "default_value": "1",
                         "documentation": "Sets whether the residual for the linear solver should be measured relative to the nonlinear residual (recommended option).",
-                        "pattern": "352",
+                        "pattern": "354",
                         "pattern_description": "[Selection 0|1 ]",
-                        "actions": "353"
+                        "actions": "355"
                     },
                     "lin velocity preconditioner":
                     {
                         "value": "amg linear",
                         "default_value": "amg linear",
                         "documentation": "Sets the preconditioner for approximating the inverse of the velocity matrix in the Schur complement preconditioner. 'amg linear' uses a matrix based on subdividing FE_Q into several linear elements to create a matrix hierarchy. This might decrease interpolation quality, but AMG is typically much better for linears, so it is recommended for more complex problems with relatively large time steps or large viscosities, otherwise ILU. The method 'ilu scalar' is a simplified ILU that only constructs the ILU for one velocity block and applies the same operator to all components. It is cheaper to apply but approximates somewhat worse.",
-                        "pattern": "353",
+                        "pattern": "355",
                         "pattern_description": "[Selection ilu|ilu scalar|amg linear|amg ]",
-                        "actions": "354"
+                        "actions": "356"
                     },
                     "lin pressure mass preconditioner":
                     {
                         "value": "ilu",
                         "default_value": "ilu",
                         "documentation": "Sets whether the pressure mass matrix in the Schur complement should be represented by the diagonal only or by an ILU based on the full pressure mass matrix.",
-                        "pattern": "354",
+                        "pattern": "356",
                         "pattern_description": "[Selection ilu|diagonal ]",
-                        "actions": "355"
+                        "actions": "357"
                     },
                     "lin its before inner solvers":
                     {
                         "value": "50",
                         "default_value": "50",
                         "documentation": "The linear solver comes in two flavors. A simple solver which uses only AMG V-cycles or ILUs as preconditioner components in the Schur complement, or a stronger solver with inner iterations. The variant with inner solves is less efficient when only a few iterations are needed, but much more robust and more efficient for many iterations. This option sets how many linear iterations with the cheap preconditioners should be made before the stronger version with more iterations starts.",
-                        "pattern": "355",
+                        "pattern": "357",
                         "pattern_description": "[Integer]",
-                        "actions": "356"
+                        "actions": "358"
                     }
                 }
             },
@@ -2650,54 +2650,54 @@
                     "value": "",
                     "default_value": "",
                     "documentation": "Sets the base name for the file output.",
-                    "pattern": "356",
+                    "pattern": "358",
                     "pattern_description": "[Anything]",
-                    "actions": "357"
+                    "actions": "359"
                 },
                 "output verbosity":
                 {
                     "value": "2",
                     "default_value": "2",
                     "documentation": "Sets the amount of information from the Navier-Stokes solver that is printed to screen. 0 means no output at all, and larger numbers mean an increasing amount of output (maximum value: 3). A value of 3 not only includes solver iterations but also details on solution time and some memory statistics.",
-                    "pattern": "357",
+                    "pattern": "359",
                     "pattern_description": "[Integer]",
-                    "actions": "358"
+                    "actions": "360"
                 },
                 "output frequency":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "defines at with time interface the solution should be written to file (in supported routines)",
-                    "pattern": "358",
+                    "pattern": "360",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "359"
+                    "actions": "361"
                 },
                 "output vtk files":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "defines whether to output vtk files with the whole solution field or just collected point data",
-                    "pattern": "359",
+                    "pattern": "361",
                     "pattern_description": "[Integer]",
-                    "actions": "360"
+                    "actions": "362"
                 },
                 "output wall times":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "Defines whether to output wall times. 0 means no output.",
-                    "pattern": "360",
+                    "pattern": "362",
                     "pattern_description": "[Selection 0|1 ]",
-                    "actions": "361"
+                    "actions": "363"
                 },
                 "output memory":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "Defines whether to output memory. 0 means no output.",
-                    "pattern": "361",
+                    "pattern": "363",
                     "pattern_description": "[Selection 0|1 ]",
-                    "actions": "362"
+                    "actions": "364"
                 }
             },
             "Two phase":
@@ -2707,180 +2707,180 @@
                     "value": "-1",
                     "default_value": "-1",
                     "documentation": "Density of fluid 1 (negative region of level set function). If given a positive value, overwrites density in Navier-Stokes subsection.",
-                    "pattern": "362",
+                    "pattern": "364",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "363"
+                    "actions": "365"
                 },
                 "density difference":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "absolute difference in density compared to fluid 1",
-                    "pattern": "363",
+                    "pattern": "365",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "364"
+                    "actions": "366"
                 },
                 "viscosity":
                 {
                     "value": "-1",
                     "default_value": "-1",
                     "documentation": "Dynamic viscosity of fluid 1 (negative region of level set function). If given a positive value, overwrites density in Navier-Stokes subsection.",
-                    "pattern": "364",
+                    "pattern": "366",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "365"
+                    "actions": "367"
                 },
                 "viscosity difference":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "absolute difference in viscosity compared to fluid 1",
-                    "pattern": "365",
+                    "pattern": "367",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "366"
+                    "actions": "368"
                 },
                 "surface tension":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "surface tension coefficient",
-                    "pattern": "366",
+                    "pattern": "368",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "367"
+                    "actions": "369"
                 },
                 "epsilon":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "Width of diffuse interface, relative to mesh size for Level-Set method, but absolute for Cahn-Hilliard.",
-                    "pattern": "367",
+                    "pattern": "369",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "368"
+                    "actions": "370"
                 },
                 "gravity":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "Gravity.",
-                    "pattern": "368",
+                    "pattern": "370",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "369"
+                    "actions": "371"
                 },
                 "diffusion length":
                 {
                     "value": "0.1",
                     "default_value": "0.1",
                     "documentation": "Diffusion length scale in Cahn-Hilliard. Its square equals the mobility and inverse Peclet number.",
-                    "pattern": "369",
+                    "pattern": "371",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "370"
+                    "actions": "372"
                 },
                 "contact angle":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "defines the contact angle at solid interfaces, at boundaries with indicator 0 or 2",
-                    "pattern": "370",
+                    "pattern": "372",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "371"
+                    "actions": "373"
                 },
                 "pressure constraint":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "Fixes value of pressure in one point to zero",
-                    "pattern": "371",
+                    "pattern": "373",
                     "pattern_description": "[Selection 0|1 ]",
-                    "actions": "372"
+                    "actions": "374"
                 },
                 "concentration subdivisions":
                 {
                     "value": "2",
                     "default_value": "2",
                     "documentation": "Number of subdivision of Q1 elements in smaller elements to generate higher accuracy in level set\/phase field",
-                    "pattern": "372",
+                    "pattern": "374",
                     "pattern_description": "[Integer]",
-                    "actions": "373"
+                    "actions": "375"
                 },
                 "curvature correction":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "if 1, extend the curvature to the value at the interface in normal direction",
-                    "pattern": "373",
+                    "pattern": "375",
                     "pattern_description": "[Integer]",
-                    "actions": "374"
+                    "actions": "376"
                 },
                 "grad pressure compatible":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "if 1, the gradient in the surface tension force is interpolated from the pressure gradient",
-                    "pattern": "374",
+                    "pattern": "376",
                     "pattern_description": "[Selection 0|1 ]",
-                    "actions": "375"
+                    "actions": "377"
                 },
                 "localize surface tension":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "if 1, the surface tension is computed from a gradient that is localized around the interface (from a reconstructed distance function), otherwise it is computed from the tanh profile (i.e., nonzero everywhere)",
-                    "pattern": "375",
+                    "pattern": "377",
                     "pattern_description": "[Selection 0|1 ]",
-                    "actions": "376"
+                    "actions": "378"
                 },
                 "approximate projections":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "if 0, the normal and curvature in the level set method are computed by proper projection (full mass matrix and little diffusion), otherwise with diagonal mass matrix and time-dependent diffusion",
-                    "pattern": "376",
+                    "pattern": "378",
                     "pattern_description": "[Selection 0|1 ]",
-                    "actions": "377"
+                    "actions": "379"
                 },
                 "Cahn-Hilliard do Newton":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "Sets whether a Newton iteration should be done on the Cahn-Hilliard equation (if on that model). If 0 is selected, use a convexity splitting as proposed by Eyre.",
-                    "pattern": "377",
+                    "pattern": "379",
                     "pattern_description": "[Selection 0|1 ]",
-                    "actions": "378"
+                    "actions": "380"
                 },
                 "full nonlinear iteration":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "iterates between Navier-Stokes and concentration if enabled",
-                    "pattern": "378",
+                    "pattern": "380",
                     "pattern_description": "[Selection 0|1 ]",
-                    "actions": "379"
+                    "actions": "381"
                 },
                 "number reinit steps":
                 {
                     "value": "2",
                     "default_value": "2",
                     "documentation": "number of iterations in reinitialization",
-                    "pattern": "379",
+                    "pattern": "381",
                     "pattern_description": "[Integer]",
-                    "actions": "380"
+                    "actions": "382"
                 },
                 "number initial reinit steps":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "reinitialization steps before starting the time loop (for bad initial profiles)",
-                    "pattern": "380",
+                    "pattern": "382",
                     "pattern_description": "[Integer]",
-                    "actions": "381"
+                    "actions": "383"
                 },
                 "convection stabilization":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "add stabilization terms to advection equation if set to 1 (typically not necessary)",
-                    "pattern": "381",
+                    "pattern": "383",
                     "pattern_description": "[Selection 0|1 ]",
-                    "actions": "382"
+                    "actions": "384"
                 }
             },
             "Time stepping":
@@ -2890,81 +2890,81 @@
                     "value": "0",
                     "default_value": "0",
                     "documentation": "Sets the start time for the simulation",
-                    "pattern": "382",
+                    "pattern": "384",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "383"
+                    "actions": "385"
                 },
                 "end time":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "Sets the final time for the simulation",
-                    "pattern": "383",
+                    "pattern": "385",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "384"
+                    "actions": "386"
                 },
                 "step size":
                 {
                     "value": "0.01",
                     "default_value": "0.01",
                     "documentation": "Sets the step size for time stepping. For non-uniform time stepping, this sets the size of the first time step.",
-                    "pattern": "384",
+                    "pattern": "386",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "385"
+                    "actions": "387"
                 },
                 "CFL number":
                 {
                     "value": "0.8",
                     "default_value": "0.8",
                     "documentation": "Limits the time step size in terms of a condition dt <= CFL * dx \/ |u|, where u is a characteristic velocity. For two-phase flow, we typically take the velocity of the bubble",
-                    "pattern": "385",
+                    "pattern": "387",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "386"
+                    "actions": "388"
                 },
                 "CFL number capillary":
                 {
                     "value": "10",
                     "default_value": "10",
                     "documentation": "Limits the time step size in terms of a condition dt <= CFL_cap * sqrt(rho\/sigma) * dx^1.5, i.e., it represents a capillarity time step limit.",
-                    "pattern": "386",
+                    "pattern": "388",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "387"
+                    "actions": "389"
                 },
                 "tolerance":
                 {
                     "value": "0.01",
                     "default_value": "0.01",
                     "documentation": "Sets the tolerance for time step selection in non-uniform time stepping strategies.",
-                    "pattern": "387",
+                    "pattern": "389",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "388"
+                    "actions": "390"
                 },
                 "max step size":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "Defines the maximum time step size in non-uniform strategies.",
-                    "pattern": "388",
+                    "pattern": "390",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "389"
+                    "actions": "391"
                 },
                 "min step size":
                 {
                     "value": "0.1",
                     "default_value": "0.1",
                     "documentation": "Defines the minimum time step size in non-uniform strategies.",
-                    "pattern": "389",
+                    "pattern": "391",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "390"
+                    "actions": "392"
                 },
                 "scheme":
                 {
                     "value": "bdf_2",
                     "default_value": "bdf_2",
                     "documentation": "Sets the time stepping scheme. Allowed options are explicit_euler, implicit_euler, crank_nicolson fractional0, fractional1, new_variant, and bdf_2.",
-                    "pattern": "390",
+                    "pattern": "392",
                     "pattern_description": "[Selection explicit_euler|implicit_euler|crank_nicolson|bdf_2 ]",
-                    "actions": "391"
+                    "actions": "393"
                 }
             }
         }
@@ -3448,59 +3448,77 @@
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
             "actions": "299"
         },
+        "apparent capacity type":
+        {
+            "value": "qlq",
+            "default_value": "qlq",
+            "documentation": "Function type for the apparent capacity method to model latent heat during solidification. constant: apparent capacity is constant between the solidus and liquidus temperature; qlq: apparent capacity is given by a quadratic\/quadratic function of temperature between the solidus and liquidus temperature (default); poly4_bell: apparent capacity is given by a bell-shaped quartic polynomial function of temperature between the solidus and liquidus temperature.",
+            "pattern": "299",
+            "pattern_description": "[Selection poly4_bell|constant|qlq ]",
+            "actions": "300"
+        },
+        "latent heat of fusion":
+        {
+            "value": "0",
+            "default_value": "0",
+            "documentation": "Latent heat of fusion (J\/kg)",
+            "pattern": "300",
+            "pattern_description": "[Double 0...MAX_DOUBLE (inclusive)]",
+            "actions": "301"
+        },
         "boiling temperature":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Boiling temperature (K).",
-            "pattern": "299",
+            "pattern": "301",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "300"
+            "actions": "302"
         },
         "latent heat of evaporation":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Latent heat of evaporation (J\/kg).",
-            "pattern": "300",
+            "pattern": "302",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "301"
+            "actions": "303"
         },
         "molar mass":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Molar mass (mol\/kg).",
-            "pattern": "301",
+            "pattern": "303",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "302"
+            "actions": "304"
         },
         "specific enthalpy reference temperature":
         {
             "value": "-1e+100",
             "default_value": "-1e+100",
             "documentation": "Reference temperature of the specific enthalpy",
-            "pattern": "302",
+            "pattern": "304",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "303"
+            "actions": "305"
         },
         "two phase fluid properties transition type":
         {
             "value": "smooth",
             "default_value": "smooth",
             "documentation": "Choose how to interpolate the properties over the interface. sharp: properties jump at heaviside = 0.5; smooth: properties are smeared between the phases proportional to the heaviside (default); consistent_with_evaporation: same as \"smooth\", but the density is interpolated proportional by the harmonic mean.",
-            "pattern": "303",
+            "pattern": "305",
             "pattern_description": "[Selection sharp|smooth|consistent_with_evaporation ]",
-            "actions": "304"
+            "actions": "306"
         },
         "solid liquid properties transition type":
         {
             "value": "mushy_zone",
             "default_value": "mushy_zone",
             "documentation": "Choose how to interpolate the properties over between the liquid and the solid phase. mushy_zone: solid and liquid properties are interpolated between the solidus and liquidus temperature (default); sharp: the solid and liquid properties jump at the melting point, which is set via the solidus temperature.",
-            "pattern": "304",
+            "pattern": "306",
             "pattern_description": "[Selection mushy_zone|sharp ]",
-            "actions": "305"
+            "actions": "307"
         }
     },
     "output":
@@ -3510,45 +3528,45 @@
             "value": ".\/",
             "default_value": ".\/",
             "documentation": "Sets the base directory for all output.",
-            "pattern": "305",
+            "pattern": "307",
             "pattern_description": "[Anything]",
-            "actions": "306"
+            "actions": "308"
         },
         "write frequency":
         {
             "value": "1",
             "default_value": "1",
             "documentation": "Every n timestep that should be written",
-            "pattern": "306",
+            "pattern": "308",
             "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-            "actions": "307"
+            "actions": "309"
         },
         "write time step size":
         {
             "value": "1.79769e+308",
             "default_value": "1.79769e+308",
             "documentation": "Write output output every given time step. If this parameter is set, the output write frequency is deactivated.",
-            "pattern": "307",
+            "pattern": "309",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "308"
+            "actions": "310"
         },
         "output variables":
         {
             "value": "all",
             "default_value": "all",
             "documentation": "Specify variables that you request to output.",
-            "pattern": "308",
+            "pattern": "310",
             "pattern_description": "[List of <[Anything]> of length 0...4294967295 (inclusive)]",
-            "actions": "309"
+            "actions": "311"
         },
         "do user defined postprocessing":
         {
             "value": "false",
             "default_value": "false",
             "documentation": "Set this parameter to true to enable user defined postprocessing.",
-            "pattern": "309",
+            "pattern": "311",
             "pattern_description": "[Bool]",
-            "actions": "310"
+            "actions": "312"
         },
         "paraview":
         {
@@ -3557,81 +3575,81 @@
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to activate paraview output.",
-                "pattern": "310",
+                "pattern": "312",
                 "pattern_description": "[Bool]",
-                "actions": "311"
+                "actions": "313"
             },
             "filename":
             {
                 "value": "solution",
                 "default_value": "solution",
                 "documentation": "Sets the base name for paraview output files.",
-                "pattern": "311",
+                "pattern": "313",
                 "pattern_description": "[Anything]",
-                "actions": "312"
+                "actions": "314"
             },
             "n digits timestep":
             {
                 "value": "4",
                 "default_value": "4",
                 "documentation": "Number of digits for the frame number of the vtu-file.",
-                "pattern": "312",
+                "pattern": "314",
                 "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-                "actions": "313"
+                "actions": "315"
             },
             "print boundary id":
             {
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to output a vtu-file with the boundary id.",
-                "pattern": "313",
+                "pattern": "315",
                 "pattern_description": "[Bool]",
-                "actions": "314"
+                "actions": "316"
             },
             "output subdomains":
             {
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to output the subdomain ranks.",
-                "pattern": "314",
+                "pattern": "316",
                 "pattern_description": "[Bool]",
-                "actions": "315"
+                "actions": "317"
             },
             "output material id":
             {
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set to true to output the material id.",
-                "pattern": "315",
+                "pattern": "317",
                 "pattern_description": "[Bool]",
-                "actions": "316"
+                "actions": "318"
             },
             "write higher order cells":
             {
                 "value": "true",
                 "default_value": "true",
                 "documentation": "Set this parameter to false to write bi- or trilinear data only. Set this parameter to true to write higher order cell data. Note: higher order cell data can only be written for hexahedron meshes and 2 or 3 dimensions.",
-                "pattern": "316",
+                "pattern": "318",
                 "pattern_description": "[Bool]",
-                "actions": "317"
+                "actions": "319"
             },
             "n groups":
             {
                 "value": "1",
                 "default_value": "1",
                 "documentation": "Number of parallel written vtu-files.",
-                "pattern": "317",
+                "pattern": "319",
                 "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-                "actions": "318"
+                "actions": "320"
             },
             "n patches":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "Control number of patches to enable high-order.",
-                "pattern": "318",
+                "pattern": "320",
                 "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-                "actions": "319"
+                "actions": "321"
             }
         },
         "particles":
@@ -3641,18 +3659,18 @@
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to activate particle paraview output.",
-                "pattern": "319",
+                "pattern": "321",
                 "pattern_description": "[Bool]",
-                "actions": "320"
+                "actions": "322"
             },
             "filename":
             {
                 "value": "particle",
                 "default_value": "particle",
                 "documentation": "Sets the base name for particle output files.",
-                "pattern": "320",
+                "pattern": "322",
                 "pattern_description": "[Anything]",
-                "actions": "321"
+                "actions": "323"
             }
         }
     },
@@ -3663,27 +3681,27 @@
             "value": "false",
             "default_value": "false",
             "documentation": "Set this parameter to true if profiling should be enabled. It will be automaticallyenabled for verbosity level >=1.",
-            "pattern": "321",
+            "pattern": "323",
             "pattern_description": "[Bool]",
-            "actions": "322"
+            "actions": "324"
         },
         "write time step size":
         {
             "value": "10",
             "default_value": "10",
             "documentation": "Write profiling output every given time step size. If this parameter is set, the specified parameter for write frequency is overwritten.",
-            "pattern": "322",
+            "pattern": "324",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "323"
+            "actions": "325"
         },
         "time type":
         {
             "value": "real",
             "default_value": "real",
             "documentation": "Choose the type of time measure to write profiling information.",
-            "pattern": "323",
+            "pattern": "325",
             "pattern_description": "[Selection real|simulation ]",
-            "actions": "324"
+            "actions": "326"
         }
     },
     "restart":
@@ -3693,54 +3711,54 @@
             "value": "-1",
             "default_value": "-1",
             "documentation": "Set this parameter to any number >= 0 to specify how many restart files should be kept. -1 means no restart save.",
-            "pattern": "324",
+            "pattern": "326",
             "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-            "actions": "325"
+            "actions": "327"
         },
         "load":
         {
             "value": "-1",
             "default_value": "-1",
             "documentation": "Set this parameter to any number >= 0 to specify which restart file should be loaded. -1 means no restart load.",
-            "pattern": "325",
+            "pattern": "327",
             "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-            "actions": "326"
+            "actions": "328"
         },
         "write time step size":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Write restart output every given time step size. If this parameter is set, the specified parameter for write frequency is overwritten.",
-            "pattern": "326",
+            "pattern": "328",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "327"
+            "actions": "329"
         },
         "time type":
         {
             "value": "real",
             "default_value": "real",
             "documentation": "Choose the type of time measure to write ",
-            "pattern": "327",
+            "pattern": "329",
             "pattern_description": "[Selection real|simulation ]",
-            "actions": "328"
+            "actions": "330"
         },
         "directory":
         {
             "value": "",
             "default_value": "",
             "documentation": "Write restart directory",
-            "pattern": "328",
+            "pattern": "330",
             "pattern_description": "[Anything]",
-            "actions": "329"
+            "actions": "331"
         },
         "prefix":
         {
             "value": "restart",
             "default_value": "restart",
             "documentation": "Write restart prefix",
-            "pattern": "329",
+            "pattern": "331",
             "pattern_description": "[Anything]",
-            "actions": "330"
+            "actions": "332"
         }
     },
     "melt front propagation":
@@ -3750,27 +3768,27 @@
             "value": "false",
             "default_value": "false",
             "documentation": "Set this parameter to true to constrain the flow velocity in the solid domain.",
-            "pattern": "330",
+            "pattern": "332",
             "pattern_description": "[Bool]",
-            "actions": "331"
+            "actions": "333"
         },
         "do not reinitialize in solid":
         {
             "value": "false",
             "default_value": "false",
             "documentation": "Set this parameter to true to forbid reinitialization of the level set field the solid domain.",
-            "pattern": "331",
+            "pattern": "333",
             "pattern_description": "[Bool]",
-            "actions": "332"
+            "actions": "334"
         },
         "solid fraction lower limit":
         {
             "value": "1",
             "default_value": "1",
             "documentation": "Lower limit of the solid fraction for where the flow velocity \/ level set is set to zero if \"mp set velocity to zero in solid\" or \"mp set level set to zero in solid\" are enabled.",
-            "pattern": "332",
+            "pattern": "334",
             "pattern_description": "[Double 0...1 (inclusive)]",
-            "actions": "333"
+            "actions": "335"
         }
     },
     "application specific":
@@ -3780,36 +3798,36 @@
             "value": "false",
             "default_value": "false",
             "documentation": "Set this parameter to true if you want to consider a coupling with heat transfer.",
-            "pattern": "391",
+            "pattern": "393",
             "pattern_description": "[Bool]",
-            "actions": "392"
+            "actions": "394"
         },
         "do solidification":
         {
             "value": "false",
             "default_value": "false",
             "documentation": "Set this parameter to true if you want to consider melting\/solidification effects.",
-            "pattern": "392",
+            "pattern": "394",
             "pattern_description": "[Bool]",
-            "actions": "393"
+            "actions": "395"
         },
         "do advect level set":
         {
             "value": "true",
             "default_value": "true",
             "documentation": "Set this parameter to true if you want to advect the level set with the fluid velocity.",
-            "pattern": "393",
+            "pattern": "395",
             "pattern_description": "[Bool]",
-            "actions": "394"
+            "actions": "396"
         },
         "do extrapolate coupling terms":
         {
             "value": "false",
             "default_value": "false",
             "documentation": "Set this parameter to true if you want to extrapolate the solution vectors for semi-explicit treatment of coupling terms.",
-            "pattern": "394",
+            "pattern": "396",
             "pattern_description": "[Bool]",
-            "actions": "395"
+            "actions": "397"
         },
         "amr":
         {
@@ -3818,54 +3836,54 @@
                 "value": "generic",
                 "default_value": "generic",
                 "documentation": "Select the AMR strategy.",
-                "pattern": "395",
+                "pattern": "397",
                 "pattern_description": "[Selection generic|adaflo|KellyErrorEstimator ]",
-                "actions": "396"
+                "actions": "398"
             },
             "do auto detect frequency":
             {
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Automatically determine the frequency of remeshing. If this parameter is set, the parameter `amr: every n step` is ignored.",
-                "pattern": "396",
+                "pattern": "398",
                 "pattern_description": "[Bool]",
-                "actions": "397"
+                "actions": "399"
             },
             "automatic grid refinement type":
             {
                 "value": "fixed_number",
                 "default_value": "fixed_number",
                 "documentation": "If the cells are refined automatically (strategy generic\/KellyErrorEstimator), choose between refine_and_coarsen_fixed_number and refine_and_coarsen_fixed_fraction.",
-                "pattern": "397",
+                "pattern": "399",
                 "pattern_description": "[Selection fixed_fraction|fixed_number ]",
-                "actions": "398"
+                "actions": "400"
             },
             "do refine all interface cells":
             {
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Enforce all cells with level set values between -0.975 and 0.975 to be refined.",
-                "pattern": "398",
+                "pattern": "400",
                 "pattern_description": "[Bool]",
-                "actions": "399"
+                "actions": "401"
             },
             "refine gas domain":
             {
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Refine the gas domain.",
-                "pattern": "399",
+                "pattern": "401",
                 "pattern_description": "[Bool]",
-                "actions": "400"
+                "actions": "402"
             },
             "fraction of melting point refined in solid":
             {
                 "value": "1",
                 "default_value": "1",
                 "documentation": "Define a fraction of the melting point. Cells in the solid with a higher temperature are enforced to be refined.",
-                "pattern": "400",
+                "pattern": "402",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "401"
+                "actions": "403"
             }
         },
         "coupling ls evapor":
@@ -3875,18 +3893,18 @@
                 "value": "1",
                 "default_value": "1",
                 "documentation": "Maximum number of iterations for nonlinear solution.",
-                "pattern": "401",
+                "pattern": "403",
                 "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-                "actions": "402"
+                "actions": "404"
             },
             "tol":
             {
                 "value": "1e-10",
                 "default_value": "1e-10",
                 "documentation": "If the change of the l2-norm of the level set is smaller than 'tol', the iteration is stopped.",
-                "pattern": "402",
+                "pattern": "404",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "403"
+                "actions": "405"
             }
         },
         "mp heat up":
@@ -3896,27 +3914,27 @@
                 "value": "-1",
                 "default_value": "-1",
                 "documentation": "Time step size until heat up is finished.",
-                "pattern": "403",
+                "pattern": "405",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "404"
+                "actions": "406"
             },
             "max change factor time step size":
             {
                 "value": "1.5",
                 "default_value": "1.5",
                 "documentation": "Maximum allowed factor of changing the time step size between two time steps.",
-                "pattern": "404",
+                "pattern": "406",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "405"
+                "actions": "407"
             },
             "max temperature":
             {
                 "value": "-1",
                 "default_value": "-1",
                 "documentation": "Temperature at which heat up is finished.",
-                "pattern": "405",
+                "pattern": "407",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "406"
+                "actions": "408"
             }
         },
         "coupling heat evapor":
@@ -3926,18 +3944,18 @@
                 "value": "1",
                 "default_value": "1",
                 "documentation": "Maximum number of iterations for nonlinear solution.",
-                "pattern": "406",
+                "pattern": "408",
                 "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-                "actions": "407"
+                "actions": "409"
             },
             "tol":
             {
                 "value": "1e-10",
                 "default_value": "1e-10",
                 "documentation": "If the change of the l2-norm of the level set is smaller than 'tol', the iteration is stopped.",
-                "pattern": "407",
+                "pattern": "409",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "408"
+                "actions": "410"
             }
         }
     }
