@@ -193,12 +193,12 @@ namespace MeltPoolDG
     data.gas.thermal_conductivity   = 0.018;                //  W / (m K)
     data.gas.density                = 1.784;                //  kg / m³
     data.gas.dynamic_viscosity      = 0.0001;               //  kg / (m s)
-                                   
+
     data.liquid.specific_heat_capacity = 1126;              //  J / (kg K)
     data.liquid.thermal_conductivity   = 28.8;              //  W / (m K)
     data.liquid.density                = 4420;              //  kg / m³
     data.liquid.dynamic_viscosity      = 0.004;             //  kg / (m s)
-    
+
     data.solid.specific_heat_capacity = 800;                //  J / (kg K)
     data.solid.thermal_conductivity   = 28.8;               //  W / (m K)
     data.solid.density                = 4420;               //  kg / m³

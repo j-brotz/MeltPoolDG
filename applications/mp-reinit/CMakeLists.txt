@@ -18,4 +18,3 @@ if(APP_ENABLED)
         endif()
     endforeach()
 endif()
-

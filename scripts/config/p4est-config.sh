@@ -61,7 +61,7 @@ echo "CFLAGS_DEBUG: $CFLAGS_DEBUG"
 
 TGZ="$1"; shift
 if test -d "$TGZ" ; then
-  SRCDIR="$TGZ"  
+  SRCDIR="$TGZ"
   echo "using existing source dir '$SRCDIR'"
 else
     if test ! -f "$TGZ" ; then

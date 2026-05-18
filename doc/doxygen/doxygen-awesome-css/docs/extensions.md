@@ -37,7 +37,7 @@ Adds a button next to the search bar to manually enable and disable the dark the
         <em>(ONLY required for the sidebar-only theme variant!)</em>
 2. In the `header.html` template, include `doxygen-awesome-darkmode-toggle.js` at the end of the `<head>` and then initialize it:
     ```html
-   <html> 
+   <html>
        <head>
            <!-- ... other metadata & script includes ... -->
            <script type="text/javascript" src="$relpath^doxygen-awesome-darkmode-toggle.js"></script>

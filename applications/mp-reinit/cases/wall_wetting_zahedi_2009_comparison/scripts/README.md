@@ -1,6 +1,6 @@
 # Generating and Launching Cases
 
-Scripts used in the different studies are separated in two main folders, namely `pre_processing` and `post_processing`. 
+Scripts used in the different studies are separated in two main folders, namely `pre_processing` and `post_processing`.
 
 ```
 wall_wetting_zahedi_2009_comparison/scripts/
@@ -26,7 +26,7 @@ wall_wetting_zahedi_2009_comparison/scripts/
    - Bash script to launch cases: `launch_cases.sh`
    - CSV file containing a list of cases and their parameters: `case_parameters.csv`
    - Template JSON parameter file: `zahedi_wall_wetting.tpl`
-   
+
 2. The `post_processing` folder contains scripts and files necessary to post-process the simulation results and generate comparison figures.
    - Bash script to post-process and generate all comparison figures: `post_process_cases.sh`
    - Folder with results from Zahedi *et al.* [^1]\: `zahedi_results_csv_files/`. The folder  contains results extracted from the figures 2-6 of Zahedi *et al.* [^1]. The data is stored in CSV format in subfolders for each figure.

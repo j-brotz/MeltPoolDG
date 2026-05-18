@@ -28,7 +28,7 @@ We gratefully acknowledge the contributions and discussions with Christoph Meier
 
 ## Installation
 
-A description on the installation procedure including the coniguration scripts can be found in [scripts/config](https://github.com/MeltPoolDG/MeltPoolDG-dev/tree/master/scripts/config) directory. 
+A description on the installation procedure including the coniguration scripts can be found in [scripts/config](https://github.com/MeltPoolDG/MeltPoolDG-dev/tree/master/scripts/config) directory.
 
 ## Documentation
 

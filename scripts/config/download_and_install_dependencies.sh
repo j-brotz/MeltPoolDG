@@ -39,7 +39,7 @@ fi
 if [[ "$install_trilinos" == "y" ]]; then
     mkdir -p trilinos-build
     VERSION=16-2-0
-    
+
     log "Use Trilinos version ${VERSION}."
     wget https://github.com/trilinos/Trilinos/archive/trilinos-release-${VERSION}.tar.gz
     mv trilinos-release-${VERSION}.tar.gz trilinos-release-${VERSION}.tar
@@ -48,7 +48,7 @@ if [[ "$install_trilinos" == "y" ]]; then
     rm -rf *
     $configDir/trilinos-config.sh ../Trilinos-trilinos-release-${VERSION}
     rm ../trilinos-release-${VERSION}.tar
-    
+
     make -j$np install
     cd ..
 fi
