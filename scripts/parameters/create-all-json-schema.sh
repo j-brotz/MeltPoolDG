@@ -34,15 +34,7 @@ while IFS= read -r -d '' file; do
 
   if [ ! -f "$out" ] || ! cmp -s "$tmp" "$out"; then
     mv "$tmp" "$out"
-    # generate docs only if schema has changed
-    python3 scripts/parameters/schema_to_md.py "$out"
   else
     rm -f "$tmp"
-    # force generation of markdown
-    if $FORCE_MD; then
-        python3 scripts/parameters/schema_to_md.py "$out"
-    fi
   fi
-
-
 done
