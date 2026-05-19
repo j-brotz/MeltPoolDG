@@ -2492,7 +2492,7 @@
                 "type": "number"
               },
               "minItems": 0,
-              "description": "Fitting parameters for the evaporative mass flux function of the pressure-aware model.",
+              "description": "Fitting parameters for the evaporative mass flux function with pressure-aware boundary conditions.",
               "default": []
             },
             "ambient_gas_pressure": {
@@ -2703,6 +2703,26 @@
               ],
               "description": "Choose the model to compute the recoil pressure coefficient: phenomenological or hybrid, in case there is also an evaporation-induced velocity jump.",
               "default": "phenomenological"
+            },
+            "pressure aware": {
+              "type": "object",
+              "properties": {
+                "Kp": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 0,
+                  "description": "Fitting parameters for the recoil pressure calculation with pressure-aware boundary conditions.",
+                  "default": []
+                },
+                "ambient_gas_pressure": {
+                  "type": "number",
+                  "description": "Ambient gas pressure for the pressure-aware model.",
+                  "default": 0.0
+                }
+              },
+              "additionalProperties": false
             }
           },
           "additionalProperties": false

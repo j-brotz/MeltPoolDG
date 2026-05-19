@@ -214,7 +214,7 @@ namespace MeltPoolDG::Evaporation
     /// Boiling temperature at given build chamber pressure level
     const number boiling_temperature;
 
-    /// Molat mass
+    /// Molar mass
     const number molar_mass;
 
     /// Latent heat of evaporation

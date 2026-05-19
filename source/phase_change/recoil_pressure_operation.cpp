@@ -109,6 +109,13 @@ namespace MeltPoolDG::Evaporation
           recoil_pressure_model =
             std::make_unique<const RecoilPressureHybridModel<number>>(recoil, material);
           break;
+        case RecoilPressureModelType::pressure_aware:
+          recoil_pressure_model = std::make_unique<const RecoilPressureModelPressureAware<number>>(
+            recoil.pressure_aware,
+            material.boiling_temperature,
+            material.molar_mass,
+            material.latent_heat_of_evaporation);
+          break;
       }
 
     if (do_level_set_pressure_gradient_interpolation)
