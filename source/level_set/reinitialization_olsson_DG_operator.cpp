@@ -30,14 +30,13 @@ namespace MeltPoolDG::LevelSet
 
     , RI_grad_operator(scratch_data_in, reinit_dof_idx_in, reinit_quad_idx_in)
   {
-    if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type !=
+    if (reinit_data.hyperbolic.dg.IMEX_integration_data.integrator_type !=
         TimeIntegration::TimeIntegratorSchemes::not_initialized)
       IMEX_integration = std::shared_ptr<TimeIntegration::TimeIntegratorBase<number>>(
-        time_integrator_factory<number>(
-          RI_DG_diffusion_operator,
-          reinit_data_in.reinitilization_DG_specific_data.IMEX_integration_data,
-          reinit_data_in.linear_solver,
-          scratch_data.get_timer()));
+        time_integrator_factory<number>(RI_DG_diffusion_operator,
+                                        reinit_data_in.hyperbolic.dg.IMEX_integration_data,
+                                        reinit_data_in.linear_solver,
+                                        scratch_data.get_timer()));
   }
 
 
@@ -97,7 +96,7 @@ namespace MeltPoolDG::LevelSet
 
     scratch_data.get_matrix_free().cell_loop(inverse, dst, dst);
 
-    if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type ==
+    if (reinit_data.hyperbolic.dg.IMEX_integration_data.integrator_type ==
         TimeIntegration::TimeIntegratorSchemes::not_initialized)
       {
         RI_DG_diffusion_operator.apply_operator(time, num_Hamiltonian, src);
@@ -106,7 +105,7 @@ namespace MeltPoolDG::LevelSet
         dst.add(1.0, num_Hamiltonian);
       }
 
-    if (reinit_data.reinitilization_DG_specific_data.use_interface_movement_penalization)
+    if (reinit_data.hyperbolic.dg.use_interface_movement_penalization)
       {
         scratch_data.get_matrix_free().cell_loop(
           &OlssonDGOperator<dim, number>::interface_movement_penalty,
@@ -140,7 +139,7 @@ namespace MeltPoolDG::LevelSet
         scratch_data.initialize_dof_vector(grad_z_l, reinit_dof_idx);
         scratch_data.initialize_dof_vector(grad_z_r, reinit_dof_idx);
       }
-    if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type !=
+    if (reinit_data.hyperbolic.dg.IMEX_integration_data.integrator_type !=
         TimeIntegration::TimeIntegratorSchemes::not_initialized)
       IMEX_integration->reinit(grad_x_l); // TODO: Pass scratch data to initialize vectors
 
@@ -154,7 +153,7 @@ namespace MeltPoolDG::LevelSet
   {
     number const gradient_goal = 1.;
 
-    if (reinit_data.reinitilization_DG_specific_data.use_const_gradient_in_RI == false)
+    if (reinit_data.hyperbolic.dg.use_const_gradient_in_RI == false)
       {
         compute_godunov_gradient(solution);
       }
@@ -322,8 +321,7 @@ namespace MeltPoolDG::LevelSet
     {
       // Use maximum element size for the calculation of the argument of tanh
       const dealii::VectorizedArray<number> eta_vector =
-        reinit_data.reinitilization_DG_specific_data.signum_smoothness_paramater *
-        min_vertex_distance / fe_degree;
+        reinit_data.hyperbolic.dg.signum_smoothness_paramater * min_vertex_distance / fe_degree;
 
 
       FECellIntegrator<dim, 1, number> source(data, reinit_dof_idx, reinit_quad_idx);
@@ -338,14 +336,14 @@ namespace MeltPoolDG::LevelSet
 
           for (unsigned int q = 0; q < source.dofs_per_cell; ++q)
             {
-              if (reinit_data.reinitilization_DG_specific_data.hyperbolic_weighting_function_type ==
+              if (reinit_data.hyperbolic.dg.hyperbolic_weighting_function_type ==
                   HyperbolicWeightingFunctionType::smoothed_signum)
                 {
                   // calculate argument of tanh: (pi*phi)/(2*grad(phi)*max_cell_size/fe_degree)
                   const auto arg =
                     dealii::numbers::PI * source.get_dof_value(q) /
                     (eta_vector * std::abs(God_grad_p.get_dof_value(q)) +
-                     reinit_data.reinitilization_DG_specific_data
+                     reinit_data.hyperbolic.dg
                        .avoid_zero_division_smoothed_signum); // In case Godunov gradient is zero
 
                   const auto u = std::tanh(arg);

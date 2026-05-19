@@ -54,11 +54,15 @@
   "level set": {
     "reinitialization": {
       "enable": true,
-      "tolerance": 0.01,
-      "max n steps": 5,
-      "interface thickness parameter": {
-        "type": "absolute_value",
-        "val": 0.02
+      "hyperbolic": {
+        "interface thickness parameter": {
+          "type": "absolute_value",
+          "val": 0.02
+        },
+        "pseudo time stepping": {
+          "max n steps": 5,
+          "tolerance": 0.01
+        }
       }
     },
     "curvature": {
@@ -82,9 +86,9 @@
         "Solver": {
           "linearization scheme": "coupled implicit Newton",
           "NL max iterations": 10,
-          "NL tolerance": "1.e-10",
+          "NL tolerance": 1e-10,
           "lin max iterations": 30,
-          "lin tolerance": "1.e-4",
+          "lin tolerance": 0.0001,
           "lin relative tolerance": 1,
           "lin velocity preconditioner": "ilu",
           "lin its before inner solvers": 50

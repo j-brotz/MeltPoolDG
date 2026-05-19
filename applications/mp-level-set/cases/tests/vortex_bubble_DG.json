@@ -25,31 +25,7 @@
     },
     "reinitialization": {
       "enable": true,
-      "implementation": "meltpooldg",
-      "max n steps": 10,
-      "n initial steps": 0,
-      "tolerance": 2.22507e-308,
       "type": "olsson2007",
-      "Discontinous Galerkin": {
-        "CFL": 1,
-        "IMEX integration scheme": "implicit_euler",
-        "avoid zero division smoothed signum": 1e-16,
-        "do CFL based time stepping": true,
-        "factor diffusivity": 0.1,
-        "hyperbolic weighting function_type": "initial_levelset",
-        "signum smoothness paramater": 2,
-        "time integration scheme": "LSRK_stage_5_order_4",
-        "use const gradient in RI": false,
-        "use directed diffusion stabilization": true,
-        "use interface movement penalization": true,
-        "use spatially constant diffusion": false,
-        "IP diffusion": 10,
-        "gradient error time derivative threshold": 0.1
-      },
-      "interface thickness parameter": {
-        "type": "proportional_to_cell_size",
-        "val": 0.5
-      },
       "linear solver": {
         "abs tolerance": 1e-11,
         "do matrix free": true,
@@ -62,6 +38,36 @@
       "predictor": {
         "n old solutions": 1,
         "type": "none"
+      },
+      "hyperbolic": {
+        "interface thickness parameter": {
+          "type": "proportional_to_cell_size",
+          "val": 0.5
+        },
+        "pseudo time stepping": {
+          "n initial steps": 0,
+          "max n steps": 10,
+          "tolerance": 2.22507e-308
+        },
+        "Continuous Galerkin": {
+          "implementation": "meltpooldg"
+        },
+        "Discontinuous Galerkin": {
+          "CFL": 1,
+          "IMEX integration scheme": "implicit_euler",
+          "avoid zero division smoothed signum": 1e-16,
+          "do CFL based time stepping": true,
+          "factor diffusivity": 0.1,
+          "hyperbolic weighting function_type": "initial_levelset",
+          "signum smoothness paramater": 2,
+          "time integration scheme": "LSRK_stage_5_order_4",
+          "use const gradient in RI": false,
+          "use directed diffusion stabilization": true,
+          "use interface movement penalization": true,
+          "use spatially constant diffusion": false,
+          "IP diffusion": 10,
+          "gradient error time derivative threshold": 0.1
+        }
       }
     },
     "normal vector": {

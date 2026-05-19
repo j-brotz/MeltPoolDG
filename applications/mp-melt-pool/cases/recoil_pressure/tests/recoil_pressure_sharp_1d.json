@@ -10,7 +10,7 @@
     }
   },
   "time stepping": {
-    "time step size": "1.e-8",
+    "time step size": 1e-08,
     "start time": 0.0,
     "end time": 2e-05,
     "max n steps": 120
@@ -18,7 +18,7 @@
   "heat": {
     "nlsolve": {
       "max nonlinear iterations": 15,
-      "field correction tolerance": "1.e-9",
+      "field correction tolerance": 1e-09,
       "residual tolerance": 1.0
     }
   },
@@ -72,10 +72,14 @@
   },
   "level set": {
     "reinitialization": {
-      "n initial steps": 0,
-      "interface thickness parameter": {
-        "type": "proportional_to_cell_size",
-        "val": 1.5
+      "hyperbolic": {
+        "interface thickness parameter": {
+          "type": "proportional_to_cell_size",
+          "val": 1.5
+        },
+        "pseudo time stepping": {
+          "n initial steps": 0
+        }
       }
     },
     "curvature": {

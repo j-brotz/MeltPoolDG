@@ -84,11 +84,15 @@
         "do matrix free": true
       },
       "enable": true,
-      "max n steps": 5,
       "type": "olsson2007",
-      "interface thickness parameter": {
-        "type": "proportional_to_cell_size",
-        "val": 1.5
+      "hyperbolic": {
+        "interface thickness parameter": {
+          "type": "proportional_to_cell_size",
+          "val": 1.5
+        },
+        "pseudo time stepping": {
+          "max n steps": 5
+        }
       }
     },
     "curvature": {
@@ -115,10 +119,10 @@
       "Navier-Stokes": {
         "Solver": {
           "NL max iterations": 10,
-          "NL tolerance": "1.e-9",
+          "NL tolerance": 1e-09,
           "lin its before inner solvers": 30,
           "lin max iterations": 30,
-          "lin tolerance": "1.e-5",
+          "lin tolerance": 1e-05,
           "lin velocity preconditioner": "ilu",
           "linearization scheme": "coupled implicit Newton"
         },

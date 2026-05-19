@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "cfd_dem",
     "case name": "am_powder_bed",
     "dimension": 3,
     "do print parameters": false,

@@ -30,7 +30,11 @@
       "do matrix free": true
     },
     "type": "olsson2007",
-    "implementation": "adaflo"
+    "hyperbolic": {
+      "Continuous Galerkin": {
+        "implementation": "adaflo"
+      }
+    }
   },
   "normal vector": {
     "linear solver": {

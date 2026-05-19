@@ -30,81 +30,81 @@ namespace MeltPoolDG::LevelSet
   BETTER_ENUM(ModelType, char, olsson2007, elliptic)
 
   template <typename number>
-  struct ReinitializationData
+  struct ReinitializationEllipticData
   {
-    ReinitializationData();
+    /// Penalty parameter for enforcement of the initial level-set zero iso-surface.
+    number penalty_parameter = 0.;
 
-    bool         enable                      = true;
-    unsigned int max_n_steps                 = 5;
-    number       pseudo_time_step_size       = -1;
-    number       pseudo_time_step_factor     = 1.0;
-    int          n_initial_steps             = -1;
-    number       tolerance                   = std::numeric_limits<number>::min();
-    number       tangential_diffusion_factor = 0.0;
+    void
+    add_parameters(dealii::ParameterHandler &prm);
+  };
 
-    FiniteElementData fe;
-
-    struct ReinitilizationDGSpecificData
+  template <typename number>
+  struct ReinitializationHyperbolicData
+  {
+    struct PseudoTimeSteppingData
     {
-      number factor_diffusivity = 0.25; // Only works combined with a spatially constant diffusion
-      number IP_diffusion       = 100.0;
-      bool   use_const_gradient_in_RI   = false;
-      bool   do_CFL_based_time_stepping = false;
-      TimeIntegration::TimeIntegratorData<number> time_integration_data =
-        TimeIntegration::TimeIntegratorData(
-          TimeIntegration::TimeIntegratorSchemes::LSRK_stage_5_order_4);
-      TimeIntegration::TimeIntegratorData<number> IMEX_integration_data =
-        TimeIntegration::TimeIntegratorData(
-          TimeIntegration::TimeIntegratorSchemes::not_initialized);
-
-      number CFL                                 = 1.0;
-      number avoid_zero_division_smoothed_signum = 1e-16;
-      number signum_smoothness_paramater         = 2.0; // Only used for smoothed signum
-      bool   use_directed_diffusion_stabilization =
-        false; // Reinit is more stable without. Accuracy is better with.
-      HyperbolicWeightingFunctionType hyperbolic_weighting_function_type =
-        HyperbolicWeightingFunctionType::
-          smoothed_signum; // Using an initial levelset as a weighting function usaually has
-                           // better accuaracy with directed diffusion usually has better accuracay
-                           // because shockwaves are less pronounced. This works because in a
-                           // coupled advection reinitalization the initial level set is not far
-                           // away from singed distance function.
-
-      bool use_spatially_constant_diffusion    = true;
-      bool use_interface_movement_penalization = false;
-
-      number gradient_error_time_derivative_threshold = 1e-16;
-    } reinitilization_DG_specific_data;
-
-    /**
-     * @brief Collection of parameters required for the elliptic reinitialization.
-     */
-    struct ReinitializationEllipticSpecificData
-    {
-      /// Penalty parameter for enforcement of the initial level-set zero iso-surface
-      number penalty_parameter = 0.;
-    } reinitialization_elliptic_specific_data;
+      unsigned int max_n_steps             = 5;
+      number       pseudo_time_step_size   = -1;
+      number       pseudo_time_step_factor = 1.0;
+      int          n_initial_steps         = -1;
+      number       tolerance               = std::numeric_limits<number>::min();
+    } pseudo_time_stepping;
 
     struct InterfaceThickness
     {
       InterfaceThicknessParameterType type =
         InterfaceThicknessParameterType::proportional_to_cell_size;
+
       number value = 0.5;
     } interface_thickness_parameter;
 
-    ModelType                modeltype      = ModelType::olsson2007;
-    std::string              implementation = "meltpooldg";
-    PredictorData            predictor;
-    LinearSolverData<number> linear_solver;
+    struct CG
+    {
+      std::string implementation              = "meltpooldg";
+      number      tangential_diffusion_factor = 0.0;
+    } cg;
+
+    struct DG
+    {
+      number factor_diffusivity = 0.25;
+      number IP_diffusion       = 100.0;
+
+      bool use_const_gradient_in_RI   = false;
+      bool do_CFL_based_time_stepping = false;
+
+      TimeIntegration::TimeIntegratorData<number> time_integration_data =
+        TimeIntegration::TimeIntegratorData<number>(
+          TimeIntegration::TimeIntegratorSchemes::LSRK_stage_5_order_4);
+
+      TimeIntegration::TimeIntegratorData<number> IMEX_integration_data =
+        TimeIntegration::TimeIntegratorData<number>(
+          TimeIntegration::TimeIntegratorSchemes::not_initialized);
+
+      number CFL                                 = 1.0;
+      number avoid_zero_division_smoothed_signum = 1e-16;
+      number signum_smoothness_paramater         = 2.0;
+
+      bool use_directed_diffusion_stabilization = false;
+
+      HyperbolicWeightingFunctionType hyperbolic_weighting_function_type =
+        HyperbolicWeightingFunctionType::smoothed_signum;
+
+      bool use_spatially_constant_diffusion    = true;
+      bool use_interface_movement_penalization = false;
+
+      number gradient_error_time_derivative_threshold = 1e-16;
+    } dg;
 
     void
     add_parameters(dealii::ParameterHandler &prm);
 
     void
-    check_input_parameters(const bool normal_vec_do_matrix_free) const;
+    post();
 
     void
-    post(const FiniteElementData &base_fe_data);
+    check_input_parameters(const FiniteElementData        &fe,
+                           const LinearSolverData<number> &linear_solver) const;
 
     template <typename number2>
     number2
@@ -123,5 +123,34 @@ namespace MeltPoolDG::LevelSet
             return 0.0;
         }
     }
+  };
+
+  template <typename number>
+  struct ReinitializationData
+  {
+    ReinitializationData();
+
+    bool enable = true;
+
+    FiniteElementData fe;
+
+    ModelType modeltype = ModelType::olsson2007;
+
+    PredictorData predictor;
+
+    LinearSolverData<number> linear_solver;
+
+    ReinitializationEllipticData<number> elliptic;
+
+    ReinitializationHyperbolicData<number> hyperbolic;
+
+    void
+    add_parameters(dealii::ParameterHandler &prm);
+
+    void
+    check_input_parameters(const bool normal_vec_do_matrix_free) const;
+
+    void
+    post(const FiniteElementData &base_fe_data);
   };
 } // namespace MeltPoolDG::LevelSet

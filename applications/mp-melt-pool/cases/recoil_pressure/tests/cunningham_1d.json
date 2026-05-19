@@ -86,11 +86,15 @@
         "preconditioner type": "ILU"
       },
       "enable": true,
-      "n initial steps": 0,
-      "max n steps": 2,
-      "interface thickness parameter": {
-        "type": "absolute_value",
-        "val": 1.171875e-06
+      "hyperbolic": {
+        "interface thickness parameter": {
+          "type": "absolute_value",
+          "val": 1.171875e-06
+        },
+        "pseudo time stepping": {
+          "n initial steps": 0,
+          "max n steps": 2
+        }
       }
     },
     "fe": {
@@ -103,12 +107,12 @@
       "Navier-Stokes": {
         "Solver": {
           "NL max iterations": 25,
-          "NL tolerance": "1.e-8",
+          "NL tolerance": 1e-08,
           "lin its before inner solvers": 50,
           "lin max iterations": 50,
           "lin pressure mass preconditioner": "ilu",
           "lin relative tolerance": 1,
-          "lin tolerance": "1.e-3",
+          "lin tolerance": 0.001,
           "lin velocity preconditioner": "ilu scalar",
           "linearization scheme": "coupled implicit Newton"
         },

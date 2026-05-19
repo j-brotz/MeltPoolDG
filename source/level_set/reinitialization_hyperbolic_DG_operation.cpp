@@ -49,12 +49,11 @@ namespace MeltPoolDG::LevelSet
       curvature_operation->get_curvature(),
       normal_vector_operation->get_solution_normal_vector());
 
-    reinitialization_integration =
-      std::shared_ptr<TimeIntegration::TimeIntegratorBase<number>>(time_integrator_factory<number>(
-        *reinit_DG_operator,
-        reinit_data.reinitilization_DG_specific_data.time_integration_data,
-        reinit_data.linear_solver,
-        scratch_data_in.get_timer()));
+    reinitialization_integration = std::shared_ptr<TimeIntegration::TimeIntegratorBase<number>>(
+      time_integrator_factory<number>(*reinit_DG_operator,
+                                      reinit_data.hyperbolic.dg.time_integration_data,
+                                      reinit_data.linear_solver,
+                                      scratch_data_in.get_timer()));
   }
 
   template <int dim, typename number>
@@ -90,12 +89,11 @@ namespace MeltPoolDG::LevelSet
       curvature_operation->get_curvature(),
       normal_vector_operation->get_solution_normal_vector());
 
-    reinitialization_integration =
-      std::shared_ptr<TimeIntegration::TimeIntegratorBase<number>>(time_integrator_factory<number>(
-        *reinit_DG_operator,
-        reinit_data.reinitilization_DG_specific_data.time_integration_data,
-        reinit_data.linear_solver,
-        scratch_data_in.get_timer()));
+    reinitialization_integration = std::shared_ptr<TimeIntegration::TimeIntegratorBase<number>>(
+      time_integrator_factory<number>(*reinit_DG_operator,
+                                      reinit_data.hyperbolic.dg.time_integration_data,
+                                      reinit_data.linear_solver,
+                                      scratch_data_in.get_timer()));
   }
 
   template <int dim, typename number>
@@ -226,7 +224,7 @@ namespace MeltPoolDG::LevelSet
 
     if (reinit_data.linear_solver.do_matrix_free)
       {
-        if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type !=
+        if (reinit_data.hyperbolic.dg.IMEX_integration_data.integrator_type !=
             TimeIntegration::TimeIntegratorSchemes::not_initialized)
           {
             reinit_DG_operator->apply_diffusion_implicit(time_iterator.get_old_time(),
@@ -323,16 +321,15 @@ namespace MeltPoolDG::LevelSet
     const number minimal_vertex_distance = scratch_data.get_min_cell_size();
     const number fe_degree = static_cast<number>(scratch_data.get_degree(reinit_dof_idx));
 
-    if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_data.integrator_type !=
+    if (reinit_data.hyperbolic.dg.IMEX_integration_data.integrator_type !=
         TimeIntegration::TimeIntegratorSchemes::not_initialized)
       {
-        return reinit_data.reinitilization_DG_specific_data.CFL * minimal_vertex_distance /
+        return reinit_data.hyperbolic.dg.CFL * minimal_vertex_distance /
                (fe_degree * fe_degree * reinit_DG_operator->get_signum_smoothed().linfty_norm());
       }
     else
       {
-        return reinit_data.reinitilization_DG_specific_data.CFL /
-               reinit_data.reinitilization_DG_specific_data.IP_diffusion /
+        return reinit_data.hyperbolic.dg.CFL / reinit_data.hyperbolic.dg.IP_diffusion /
                (std::pow(fe_degree, 2.0) / minimal_vertex_distance +
                 reinit_DG_operator->get_max_diffusitivity() * std::pow(fe_degree, 4.0) /
                   (minimal_vertex_distance * minimal_vertex_distance));

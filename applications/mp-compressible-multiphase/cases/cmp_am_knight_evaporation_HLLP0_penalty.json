@@ -1,6 +1,5 @@
 {
   "base": {
-    "problem name": "compressible_multiphase",
     "case name": "two_phase",
     "dimension": 1,
     "verbosity level": 0,
@@ -110,7 +109,7 @@
     }
   },
   "darcy damping": {
-    "mushy zone morphology": "1.e9",
+    "mushy zone morphology": 1000000000.0,
     "avoid div zero constant": 1.0
   }
 }

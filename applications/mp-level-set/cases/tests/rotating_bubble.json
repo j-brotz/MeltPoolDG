@@ -26,8 +26,12 @@
         "do matrix free": false
       },
       "enable": true,
-      "max n steps": 5,
-      "type": "olsson2007"
+      "type": "olsson2007",
+      "hyperbolic": {
+        "pseudo time stepping": {
+          "max n steps": 5
+        }
+      }
     },
     "curvature": {
       "filter parameter": 16

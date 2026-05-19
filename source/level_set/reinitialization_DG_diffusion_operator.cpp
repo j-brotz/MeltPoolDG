@@ -51,15 +51,14 @@ namespace MeltPoolDG::LevelSet
 
           for (unsigned int q = 0; q < eval_diffusitivity.dofs_per_cell; ++q)
             {
-              if (reinit_data.reinitilization_DG_specific_data.use_spatially_constant_diffusion)
+              if (reinit_data.hyperbolic.dg.use_spatially_constant_diffusion)
                 {
                   /**
                    * The value for the artificial diffusitivity is determined by the smallest
                    * enabled element size.
                    */
                   const VectorizedArray<number> diffusitivity_value =
-                    reinit_data.reinitilization_DG_specific_data.factor_diffusivity *
-                    diffusion_const_factor;
+                    reinit_data.hyperbolic.dg.factor_diffusivity * diffusion_const_factor;
                   eval_diffusitivity.submit_dof_value(diffusitivity_value, q);
                 }
               else
@@ -99,9 +98,9 @@ namespace MeltPoolDG::LevelSet
         for (unsigned int lane = 0; lane < n_lanes_filled; ++lane)
           {
             auto cell = scratch_data.get_matrix_free().get_cell_iterator(macro_cells, lane);
-            array_penalty_parameter[macro_cells][lane] =
-              1. / cell->minimum_vertex_distance() * (fe_degree + 1.0) * (fe_degree + 1.0) *
-              reinit_data.reinitilization_DG_specific_data.IP_diffusion;
+            array_penalty_parameter[macro_cells][lane] = 1. / cell->minimum_vertex_distance() *
+                                                         (fe_degree + 1.0) * (fe_degree + 1.0) *
+                                                         reinit_data.hyperbolic.dg.IP_diffusion;
           }
       }
   }
@@ -128,7 +127,7 @@ namespace MeltPoolDG::LevelSet
         eval_diffusitivity.gather_evaluate(diffusitivity,
                                            EvaluationFlags::values | EvaluationFlags::gradients);
 
-        if (reinit_data.reinitilization_DG_specific_data.use_directed_diffusion_stabilization)
+        if (reinit_data.hyperbolic.dg.use_directed_diffusion_stabilization)
           {
             eval_curvature.reinit(cell);
             eval_normal.reinit(cell);
@@ -146,7 +145,7 @@ namespace MeltPoolDG::LevelSet
 
             const auto flux = diffusitivity_value * u_gradient;
 
-            if (reinit_data.reinitilization_DG_specific_data.use_directed_diffusion_stabilization)
+            if (reinit_data.hyperbolic.dg.use_directed_diffusion_stabilization)
               {
                 const Tensor<1, dim, VectorizedArray<number>> n_phi =
                   normalize<dim>(eval_normal.get_value(q), 1.0e-16);
@@ -159,7 +158,7 @@ namespace MeltPoolDG::LevelSet
 
             eval.submit_gradient(-flux, q);
           }
-        if (reinit_data.reinitilization_DG_specific_data.use_directed_diffusion_stabilization)
+        if (reinit_data.hyperbolic.dg.use_directed_diffusion_stabilization)
           {
             eval.integrate_scatter(EvaluationFlags::gradients | EvaluationFlags::values, dst);
           }

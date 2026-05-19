@@ -25,9 +25,15 @@
         "do matrix free": true
       },
       "enable": true,
-      "max n steps": 5,
       "type": "olsson2007",
-      "implementation": "adaflo"
+      "hyperbolic": {
+        "pseudo time stepping": {
+          "max n steps": 5
+        },
+        "Continuous Galerkin": {
+          "implementation": "adaflo"
+        }
+      }
     },
     "curvature": {
       "filter parameter": 0.0

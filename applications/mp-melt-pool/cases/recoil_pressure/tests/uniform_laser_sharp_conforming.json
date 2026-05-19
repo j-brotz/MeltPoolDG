@@ -72,10 +72,14 @@
         "preconditioner type": "Diagonal",
         "do matrix free": true
       },
-      "n initial steps": 0,
-      "interface thickness parameter": {
-        "type": "absolute_value",
-        "val": 5e-06
+      "hyperbolic": {
+        "interface thickness parameter": {
+          "type": "absolute_value",
+          "val": 5e-06
+        },
+        "pseudo time stepping": {
+          "n initial steps": 0
+        }
       }
     },
     "curvature": {

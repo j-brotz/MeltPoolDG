@@ -44,7 +44,7 @@ namespace MeltPoolDG::LevelSet
               }
             else
               {
-                if (param.reinit.reinitilization_DG_specific_data.do_CFL_based_time_stepping)
+                if (param.reinit.hyperbolic.dg.do_CFL_based_time_stepping)
                   {
                     number const time_step = reinit_operation->compute_CFL_based_timestep();
 
@@ -71,7 +71,8 @@ namespace MeltPoolDG::LevelSet
                                          scratch_data->get_mpi_comm());
               }
             // Check if we obtained steady state
-            if (reinit_operation->get_max_change_level_set() < param.reinit.tolerance and
+            if (reinit_operation->get_max_change_level_set() <
+                  param.reinit.hyperbolic.pseudo_time_stepping.tolerance and
                 time_iterator->get_current_time_step_number() >
                   1 /*do not check at the initial condition*/)
               {
@@ -169,7 +170,7 @@ namespace MeltPoolDG::LevelSet
     }();
 
     // initialize the reinitialization operation class
-    if (param.reinit.implementation == "meltpooldg")
+    if (param.reinit.hyperbolic.cg.implementation == "meltpooldg")
       {
         if (param.reinit.modeltype == ModelType::olsson2007)
           {
@@ -223,7 +224,7 @@ namespace MeltPoolDG::LevelSet
         reinit_operation->reinit();
       }
 #ifdef MPDG_ENABLE_ADAFLO
-    else if (param.reinit.implementation == "adaflo")
+    else if (param.reinit.hyperbolic.cg.implementation == "adaflo")
       {
         reinit_operation = std::make_unique<ReinitializationOlssonOperationAdaflo<dim, number>>(
           *scratch_data,
@@ -233,7 +234,7 @@ namespace MeltPoolDG::LevelSet
           normal_dof_indices_per_block[0], // normal vec @todo
           param.time_stepping,
           param.normal_vec,
-          param.reinit.interface_thickness_parameter.value,
+          param.reinit.hyperbolic.interface_thickness_parameter.value,
           param.reinit.fe.get_n_subdivisions());
         reinit_operation->reinit();
       }

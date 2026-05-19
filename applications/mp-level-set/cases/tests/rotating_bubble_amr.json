@@ -33,11 +33,15 @@
         "do matrix free": false
       },
       "enable": true,
-      "max n steps": 5,
       "type": "olsson2007",
-      "interface thickness parameter": {
-        "type": "absolute_value",
-        "val": 0.01
+      "hyperbolic": {
+        "interface thickness parameter": {
+          "type": "absolute_value",
+          "val": 0.01
+        },
+        "pseudo time stepping": {
+          "max n steps": 5
+        }
       }
     },
     "curvature": {

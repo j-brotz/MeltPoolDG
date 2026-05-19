@@ -39,12 +39,18 @@
         "do matrix free": true
       },
       "enable": true,
-      "max n steps": 5,
       "type": "olsson2007",
-      "implementation": "meltpooldg",
-      "interface thickness parameter": {
-        "type": "absolute_value",
-        "val": 0.01
+      "hyperbolic": {
+        "interface thickness parameter": {
+          "type": "absolute_value",
+          "val": 0.01
+        },
+        "pseudo time stepping": {
+          "max n steps": 5
+        },
+        "Continuous Galerkin": {
+          "implementation": "meltpooldg"
+        }
       }
     },
     "curvature": {
