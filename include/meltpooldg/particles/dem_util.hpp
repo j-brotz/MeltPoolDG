@@ -1,5 +1,10 @@
 #pragma once
 
+#include <deal.II/base/config.h>
+
+#include <deal.II/grid/tria_accessor.h>
+#include <deal.II/grid/tria_iterator.h>
+
 #include <deal.II/particles/particle_handler.h>
 
 #include <meltpooldg/time_integration/solution_history.hpp>
@@ -56,6 +61,49 @@ namespace MeltPoolDG
     if constexpr (dim == 3)
       torque = dealii::cross_product_3d(lever_arm, force);
     return torque;
+  }
+
+
+  template <int dim>
+  inline DEAL_II_ALWAYS_INLINE std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>>
+  get_neighboring_cells(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell)
+  {
+    // TODO: Use boost vector
+    std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> relevant_cells;
+
+    // TODO: What if the neighbor is not on the same level but on one level coarser?
+    auto search_neighbors =
+      [&relevant_cells](const auto                                               &search_neighbors,
+                        const typename dealii::Triangulation<dim>::cell_iterator &cell,
+                        std::vector<unsigned> excluded_indices = {},
+                        int                   current_depth    = 1) -> void {
+      for (unsigned int neighbor_index = 0;
+           neighbor_index < dealii::GeometryInfo<dim>::faces_per_cell;
+           ++neighbor_index)
+        {
+          if (std::ranges::find(excluded_indices, neighbor_index) == excluded_indices.end() and
+              not cell->at_boundary(neighbor_index))
+            {
+              relevant_cells.push_back(cell->neighbor(neighbor_index));
+              if (current_depth < dim)
+                {
+                  excluded_indices.push_back(neighbor_index);
+                  search_neighbors(search_neighbors,
+                                   cell->neighbor(neighbor_index),
+                                   excluded_indices,
+                                   current_depth + 1);
+                }
+            }
+        }
+    };
+
+    search_neighbors(search_neighbors, cell);
+
+    std::sort(relevant_cells.begin(), relevant_cells.end());
+    relevant_cells.erase(std::unique(relevant_cells.begin(), relevant_cells.end()),
+                         relevant_cells.end());
+
+    return relevant_cells;
   }
 
 

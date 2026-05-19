@@ -15,7 +15,6 @@
 
 #include <meltpooldg/utilities/cpp23_functions.h>
 
-
 #include <iostream>
 
 #include "mpi.h"
@@ -47,6 +46,71 @@ protected:
   MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, MeltPoolDG::SphericalParticle<dim, number>>
     obstacle_data_structure;
 };
+
+TEST_F(ParticleDataStructureTest, CompressParticleData)
+{
+  std::vector<dealii::Point<dim, number>> obstacle_locations = {
+    dealii::Point<dim, number>(0.3, 0.3)};
+
+  std::vector<std::vector<number>> obstacle_properties;
+  obstacle_properties.resize(obstacle_locations.size());
+  for (std::vector<number> &properties : obstacle_properties)
+    {
+      properties.resize(MeltPoolDG::SphericalParticle<dim, number>::n_obstacle_properties);
+      properties[MeltPoolDG::SphericalParticle<dim, number>::Properties::radius] = 0.2;
+    }
+
+  obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
+
+  unsigned int rank = dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
+
+  for (auto &particle : obstacle_data_structure.locally_owned_particle_range())
+    {
+      for (int d = 0; d < dim; ++d)
+        particle.force(d) = (d + 1) * (rank);
+      for (int d = 0; d < MeltPoolDG::axial_dim<dim>; ++d)
+        particle.torque(d) = (d + 1) * (rank + 1);
+    }
+
+  for (auto &particle : obstacle_data_structure.ghost_particle_range())
+    {
+      for (int d = 0; d < dim; ++d)
+        particle.force(d) = (d + 1) * (rank);
+      for (int d = 0; d < MeltPoolDG::axial_dim<dim>; ++d)
+        particle.torque(d) = (d + 1) * (rank + 1);
+    }
+
+  obstacle_data_structure.compress();
+
+  // Compute expected values
+  dealii::Tensor<1, dim>                        expected_force;
+  dealii::Tensor<1, MeltPoolDG::axial_dim<dim>> expected_torque;
+  for (unsigned int r = 0; r < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); ++r)
+    {
+      for (int d = 0; d < dim; ++d)
+        expected_force[d] += (d + 1) * r;
+      for (int d = 0; d < MeltPoolDG::axial_dim<dim>; ++d)
+        expected_torque[d] += (d + 1) * (r + 1);
+    }
+
+  // Check for validity of test. It must only exist one global particle in the domain.
+  ASSERT_EQ(obstacle_data_structure.n_global_particles(), 1);
+
+  // Compare the values
+  for (auto &particle : obstacle_data_structure.locally_owned_particle_range())
+    {
+      {
+        SCOPED_TRACE("Compressed particle force");
+        for (int d = 0; d < dim; ++d)
+          EXPECT_DOUBLE_EQ(particle.force(d), expected_force[d]);
+      }
+      {
+        SCOPED_TRACE("Compressed particle torque");
+        for (int d = 0; d < MeltPoolDG::axial_dim<dim>; ++d)
+          EXPECT_DOUBLE_EQ(particle.torque(d), expected_torque[d]);
+      }
+    }
+}
 
 TEST_F(ParticleDataStructureTest, GhostParticles)
 {

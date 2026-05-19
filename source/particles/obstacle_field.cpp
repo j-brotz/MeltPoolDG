@@ -66,14 +66,13 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
 
 template <int dim, typename number, typename ObstacleType>
 void
-MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number current_time,
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number,
                                                                    const number time_step)
 {
   dealii::TimerOutput::Scope t(timer, "advance obstacle field in time");
   compute_loads_on_obstacles();
 
   symplectic_euler_advance_time_step<dim, number, ObstacleType>(timer,
-                                                                current_time,
                                                                 time_step,
                                                                 locally_owned_particle_range());
 
@@ -82,21 +81,19 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
 
 
 template <int dim, typename number, typename ObstacleType>
-std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
+std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>>
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell(
-  dealii::Particles::PropertyPool<dim> &dst,
-  const dealii::CellAccessor<dim>      &cell) const
+  const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const
 {
-  return obstacle_data_structure.get_obstacles_in_cell(dst, cell);
+  return obstacle_data_structure.get_obstacles_in_cell(cell);
 }
 
 template <int dim, typename number, typename ObstacleType>
-std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
+std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>>
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell(
-  dealii::Particles::PropertyPool<dim>                               &dst,
   const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const
 {
-  return obstacle_data_structure.get_obstacles_in_cell(dst, cells);
+  return obstacle_data_structure.get_obstacles_in_cell(cells);
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -228,6 +225,13 @@ std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::locally_owned_particle_range()
 {
   return obstacle_data_structure.locally_owned_particle_range();
+}
+
+template <int dim, typename number, typename ObstacleType>
+std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ghost_particle_range()
+{
+  return obstacle_data_structure.ghost_particle_range();
 }
 
 

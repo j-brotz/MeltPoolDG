@@ -5,6 +5,7 @@ mpdg_setup_mpi_unit_tests(
    obstacle_forces.cpp
    contact_forces.cpp
    cohesive_forces.cpp
+   data_structure_serial.cpp
 )
 
 mpdg_setup_mpi_unit_tests(

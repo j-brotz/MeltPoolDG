@@ -304,9 +304,9 @@ namespace MeltPoolDG
         using T = std::decay_t<decltype(it)>;
 
         if constexpr (std::is_same_v<T, dealii::Particles::ParticleIterator<dim>>)
-          particle_accessor.emplace(*it);
+          particle_accessor.emplace(*it, false);
         else if constexpr (std::is_same_v<T, PropertyPoolIteratorData>)
-          particle_accessor.emplace(*it.dealii_property_pool, it.handle);
+          particle_accessor.emplace(*it.dealii_property_pool, it.handle, false);
         else
           AssertThrow(false, dealii::ExcInternalError());
       },

@@ -116,24 +116,6 @@ namespace MeltPoolDG
     }
 
     /**
-     * @brief Identifies obstacles that partially or fully occupy a given cell, and stores their
-     * properties in the destination property pool.
-     *
-     * This function inspects the specified cell and collects the properties of any
-     * obstacles located within it. These properties are stored in the provided
-     * destination property pool.
-     *
-     * @param dst Destination property pool where the properties of the identified obstacles will be
-     * stored.
-     * @param cell The cell to be investigated.
-     *
-     * @return Vector containing the handles of the newly registered obstacles in @p dst.
-     */
-    std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-    get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
-                          const dealii::CellAccessor<dim>      &cell) const;
-
-    /**
      * @brief Identify obstacles that partially or fully occupy any cell in a given cell batch, and
      * store their properties in the destination property pool.
      *
@@ -141,25 +123,16 @@ namespace MeltPoolDG
      * obstacles present in those cells. The properties are stored in the given
      * destination property pool.
      *
-     * @param dst Destination property pool where the properties of the identified obstacles will be
-     * stored.
-     * @param matrix_free MatrixFree object associated with the current cell batch.
-     * @param cell_batch_id Index of the cell batch to be examined.
-     * @param n_lanes Number of vectorization lanes in the cell batch, i.e., the number of cells
-     * present in the cell batch.
+     * @param cells Vector of cells to be examined.
      *
      * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
-    std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
+    std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>>
     get_obstacles_in_cell(
-      dealii::Particles::PropertyPool<dim>                               &dst,
       const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const;
 
-    std::vector<DEMParticleAccessor<dim, number>>
-    get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell)
-    {
-      return obstacle_data_structure.get_obstacles_in_cell(cell);
-    }
+    std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>>
+    get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const;
 
     void
     register_particle_output(Postprocessor<dim, number> &postprocessor)
@@ -270,6 +243,15 @@ namespace MeltPoolDG
      */
     std::ranges::subrange<ParticleIterator<dim, number>>
     locally_owned_particle_range();
+
+    std::ranges::subrange<ParticleIterator<dim, number>>
+    ghost_particle_range();
+
+    void 
+    compress()
+    {
+      obstacle_data_structure.compress();
+    }
 
     /**
      * Returns a range over all global obstacle particles for iterating over all

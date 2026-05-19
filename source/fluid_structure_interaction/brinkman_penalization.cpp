@@ -8,6 +8,7 @@
 
 #include <deal.II/particles/particle_accessor.h>
 
+#include "meltpooldg/particles/dem_util.hpp"
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
@@ -38,21 +39,6 @@ void
 MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstacles(
   ObstacleField<dim, number, ObstacleType> &obstacle_field) const
 {
-  constexpr unsigned torque_size = ObstacleType::size_angular_velocity;
-
-  // We need a copy of the global particle properties in order to reset obstacle forces.
-  auto global_particle_properties =
-    obstacle_field.get_obstacle_data_structure().get_global_particle_properties();
-
-  for (unsigned int src_handle = 0; src_handle < global_particle_properties.n_registered_slots();
-       ++src_handle)
-    ObstacleType::set_force(dealii::Tensor<1, dim, number>(),
-                            global_particle_properties,
-                            src_handle);
-
-  // Step 1: Cell loop locally on each process to compute the local force and torque contribution to
-  // each global particle for each MPI rank. The local force and torque results are accumulated in
-  // the global_particle_properties variable.
   std::function<void(const dealii::MatrixFree<dim, number> &,
                      dealii::Tensor<1, dim, number> &,
                      const VectorType &,
@@ -76,32 +62,29 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
               dealii::Tensor<1, dim, dealii::VectorizedArray<number>> fluid_momentum;
               for (int d = 0; d < dim; ++d)
                 fluid_momentum[d] = w_q[d + 1];
-              for (unsigned int src_handle = 0;
-                   src_handle < global_particle_properties.n_registered_slots();
-                   ++src_handle)
-                {
-                  dealii::Tensor<1, dim, dealii::VectorizedArray<number>>         force;
-                  dealii::Tensor<1, torque_size, dealii::VectorizedArray<number>> torque;
+
+
+              auto add_force_and_torque_to_particle =
+                [&](DEMParticleAccessor<dim, number> &obstacle) {
+                  dealii::Tensor<1, dim, dealii::VectorizedArray<number>>            force;
+                  dealii::Tensor<1, axial_dim<dim>, dealii::VectorizedArray<number>> torque;
 
                   const auto mask =
-                    mask_function<dim, dealii::VectorizedArray<number>, ObstacleType>(
+                    mask_function<dim, number, dealii::VectorizedArray<number>, ObstacleType>(
                       brinkman_penalization_data.mask_function_type,
                       phi.quadrature_point(q),
-                      global_particle_properties,
-                      src_handle);
+                      obstacle);
                   force = mask / brinkman_penalization_data.permeability *
                           (fluid_momentum -
-                           w_q[0] * ObstacleType::get_velocity(global_particle_properties,
-                                                               src_handle,
-                                                               phi.quadrature_point(q))) *
+                           w_q[0] * obstacle.get_local_velocity(phi.quadrature_point(q))) *
                           phi.JxW(q);
 
                   if constexpr (dim == 2)
                     {
                       auto vector_to_center_of_gravity =
-                        ObstacleType::vector_to_center_of_gravity(phi.quadrature_point(q),
-                                                                  global_particle_properties,
-                                                                  src_handle);
+                        obstacle
+                          .template vector_to_center_of_gravity<dealii::VectorizedArray<number>>(
+                            phi.quadrature_point(q));
 
                       torque[0] = -vector_to_center_of_gravity[0] * force[1] +
                                   vector_to_center_of_gravity[1] * force[0];
@@ -109,27 +92,31 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
                   if constexpr (dim == 3)
                     {
                       torque = -dealii::cross_product_3d(
-                        ObstacleType::vector_to_center_of_gravity(phi.quadrature_point(q),
-                                                                  global_particle_properties,
-                                                                  src_handle),
+                        obstacle
+                          .template vector_to_center_of_gravity<dealii::VectorizedArray<number>>(
+                            phi.quadrature_point(q)),
                         force);
                     }
 
-                  dealii::Tensor<1, dim, number>         summed_force;
-                  dealii::Tensor<1, torque_size, number> summed_torque;
+                  dealii::Tensor<1, dim, number>            summed_force;
+                  dealii::Tensor<1, axial_dim<dim>, number> summed_torque;
 
                   for (int i = 0; i < dim; ++i)
                     summed_force[i] = force[i].sum();
-                  for (unsigned i = 0; i < torque_size; ++i)
+                  for (unsigned i = 0; i < axial_dim<dim>; ++i)
                     summed_torque[i] = torque[i].sum();
 
-                  ObstacleType::accumulate_force(summed_force,
-                                                 global_particle_properties,
-                                                 src_handle);
-                  ObstacleType::accumulate_torque(summed_torque,
-                                                  global_particle_properties,
-                                                  src_handle);
-                }
+                  obstacle.add_force(summed_force);
+                  obstacle.add_torque(summed_torque);
+                };
+
+              for (DEMParticleAccessor<dim, number> &obstacle :
+                   obstacle_field.locally_owned_particle_range())
+                add_force_and_torque_to_particle(obstacle);
+
+              for (DEMParticleAccessor<dim, number> &obstacle :
+                   obstacle_field.ghost_particle_range())
+                add_force_and_torque_to_particle(obstacle);
             }
         }
     };
@@ -137,48 +124,7 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
   dealii::Tensor<1, dim, number> particle_force_dummy;
   matrix_free.mf.cell_loop(local_apply_cell, particle_force_dummy, solution);
 
-  // Step 3: Broadcast local force and torque results and accumulate them on all processes. This
-  // results in the final fluid force and torque acting on the particles.
-  for (unsigned int src_handle = 0; src_handle < global_particle_properties.n_registered_slots();
-       ++src_handle)
-    {
-      dealii::Tensor<1, dim, number> local_force =
-        ObstacleType::get_force(global_particle_properties, src_handle);
-      dealii::Tensor<1, torque_size, number> local_torque =
-        ObstacleType::get_torque(global_particle_properties, src_handle);
-
-      dealii::Tensor<1, dim, number>         new_force;
-      dealii::Tensor<1, torque_size, number> new_torque;
-
-      for (int i = 0; i < dim; ++i)
-        MPI_Allreduce(&local_force[i], &new_force[i], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-      for (unsigned i = 0; i < torque_size; ++i)
-        MPI_Allreduce(&local_torque[i], &new_torque[i], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-      ObstacleType::set_force(new_force, global_particle_properties, src_handle);
-      ObstacleType::set_torque(new_torque, global_particle_properties, src_handle);
-    }
-
-  // Step 4: Return result to actual local particles in obstacle field.
-  for (DEMParticleAccessor<dim, number> &particle : obstacle_field.locally_owned_particle_range())
-    {
-      for (unsigned int src_handle = 0;
-           src_handle < global_particle_properties.n_registered_slots();
-           ++src_handle)
-        {
-          if (particle.id() == global_particle_properties.get_properties(
-                                 src_handle)[ObstacleType::Properties::particle_id])
-            {
-              particle.add_force(ObstacleType::get_force(global_particle_properties, src_handle));
-              particle.add_torque(ObstacleType::get_torque(global_particle_properties, src_handle));
-            }
-        }
-    }
-
-  // We need to deregister all particles before the destructor of global_particle_properties is
-  // called.
-  for (unsigned int i = 0; i < global_particle_properties.n_registered_slots(); ++i)
-    global_particle_properties.deregister_particle(i);
+  obstacle_field.compress();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -206,20 +152,15 @@ MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>:
 
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> momentum_penalty;
   dealii::VectorizedArray<number>                         energy_penalty = 0.;
-  for (auto obstacle_handle : cell_obstacle_cache.relevant_obstacle_handles)
+  for (const DEMParticleAccessor<dim, number> &obstacle : cell_obstacle_cache.obstacle_cache)
     {
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> local_obstacle_velocity =
-        ObstacleType::get_velocity(cell_obstacle_cache.relevant_obstacles,
-                                   obstacle_handle,
-                                   q_point);
-      auto mask = mask_function<dim, dealii::VectorizedArray<number>, ObstacleType>(
-        brinkman_penalization_data.mask_function_type,
-        q_point,
-        cell_obstacle_cache.relevant_obstacles,
-        obstacle_handle);
+        obstacle.get_local_velocity(q_point);
+      auto mask = mask_function<dim, number, dealii::VectorizedArray<number>, ObstacleType>(
+        brinkman_penalization_data.mask_function_type, q_point, obstacle);
       momentum_penalty -= mask / brinkman_penalization_data.permeability *
                           (fluid_momentum - w_q[0] * local_obstacle_velocity);
-      energy_penalty = mask / brinkman_penalization_data.permeability *
+      energy_penalty += mask / brinkman_penalization_data.permeability *
                        (fluid_momentum - w_q[0] * local_obstacle_velocity) * fluid_momentum /
                        w_q[0];
     }
@@ -251,7 +192,7 @@ MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>:
 {
   cell_obstacle_cache.update_cache(cell_iterators);
 
-  if (cell_obstacle_cache.relevant_obstacle_handles.empty())
+  if (cell_obstacle_cache.obstacle_cache.empty())
     return ConservedVariablesType();
 
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> fluid_momentum;
@@ -264,18 +205,13 @@ MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>:
 
   dealii::VectorizedArray<number>                         energy_penalty_differential_change(0.);
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> momentum_penalty_differential_change;
-  for (auto obstacle_handle : cell_obstacle_cache.relevant_obstacle_handles)
+  for (const DEMParticleAccessor<dim, number> &obstacle : cell_obstacle_cache.obstacle_cache)
     {
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> local_obstacle_velocity =
-        ObstacleType::get_velocity(cell_obstacle_cache.relevant_obstacles,
-                                   obstacle_handle,
-                                   q_point);
+        obstacle.get_local_velocity(q_point);
 
-      auto mask = mask_function<dim, dealii::VectorizedArray<number>, ObstacleType>(
-        brinkman_penalization_data.mask_function_type,
-        q_point,
-        cell_obstacle_cache.relevant_obstacles,
-        obstacle_handle);
+      auto mask = mask_function<dim, number, dealii::VectorizedArray<number>, ObstacleType>(
+        brinkman_penalization_data.mask_function_type, q_point, obstacle);
 
       energy_penalty_differential_change +=
         mask / brinkman_penalization_data.permeability *
@@ -316,4 +252,3 @@ template struct MeltPoolDG::
   BrinkmanObstacleForce<2, double, MeltPoolDG::SphericalParticle<2, double>>;
 template struct MeltPoolDG::
   BrinkmanObstacleForce<3, double, MeltPoolDG::SphericalParticle<3, double>>;
-  

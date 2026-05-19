@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deal.II/base/tensor.h>
+#include <deal.II/base/vectorization.h>
 
 #include <deal.II/particles/particle_accessor.h>
 #include <deal.II/particles/property_pool.h>
@@ -26,7 +27,7 @@ namespace MeltPoolDG
      *
      * @param particle Reference to a deal.II particle accessor.
      */
-    DEMParticleAccessor(dealii::Particles::ParticleAccessor<dim> &particle);
+    DEMParticleAccessor(dealii::Particles::ParticleAccessor<dim> &particle, const bool is_ghosted);
 
     /**
      * @brief Construct accessor from a PropertyPool handle.
@@ -34,9 +35,9 @@ namespace MeltPoolDG
      * @param property_pool Reference to the deal.II property pool.
      * @param handle Handle/index of the particle within the property pool.
      */
-    DEMParticleAccessor(
-      dealii::Particles::PropertyPool<dim>                       &property_pool,
-      const typename dealii::Particles::PropertyPool<dim>::Handle handle) noexcept;
+    DEMParticleAccessor(dealii::Particles::PropertyPool<dim>                       &property_pool,
+                        const typename dealii::Particles::PropertyPool<dim>::Handle handle,
+                        const bool is_ghosted) noexcept;
 
     /**
      * Copy constructor.
@@ -74,6 +75,36 @@ namespace MeltPoolDG
     const dealii::Point<dim, number> &
     get_location() const;
 
+    dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
+    get_local_velocity(
+      dealii::Point<dim, dealii::VectorizedArray<number>> location_of_interest) const
+    {
+      Assert(dim == 2 or dim == 3, dealii::ExcMessage("Invalid dimension!"));
+
+      dealii::Point<dim, dealii::VectorizedArray<number>> vectorized_particle_location;
+      for (auto i = 0; i < dim; ++i)
+        vectorized_particle_location[i] = get_location()[i];
+
+      dealii::Tensor<1, dim, dealii::VectorizedArray<number>> distance_to_center =
+        location_of_interest - vectorized_particle_location;
+
+      dealii::Tensor<1, dim, dealii::VectorizedArray<number>> vectorized_linear_velocity;
+      for (auto i = 0; i < dim; ++i)
+        vectorized_linear_velocity[i] = dealii::VectorizedArray<number>(get_linear_velocity()[i]);
+
+      if constexpr (dim == 2)
+        {
+          return dealii::cross_product_2d(get_angular_velocity()[0] * distance_to_center) +
+                 vectorized_linear_velocity;
+        }
+      if constexpr (dim == 3)
+        {
+          return vectorized_linear_velocity +
+                 dealii::cross_product_3d(get_angular_velocity(), distance_to_center);
+        }
+      AssertThrow(false, dealii::ExcInternalError());
+    }
+
     /**
      * Returns the linear velocity of the given particle, i.e., the translational velocity at the
      * particle center of mass.
@@ -82,6 +113,24 @@ namespace MeltPoolDG
      */
     dealii::Tensor<1, dim, number>
     get_linear_velocity() const;
+
+    bool
+    is_ghosted() const
+    {
+      return particle_is_ghosted;
+    }
+
+    template <typename VectorizedArrayType>
+    dealii::Tensor<1, dim, VectorizedArrayType>
+    vector_to_center_of_gravity(const dealii::Point<dim, VectorizedArrayType> &loc)
+    {
+      dealii::Point<dim, VectorizedArrayType> particle_loc;
+
+      for (int i = 0; i < dim; ++i)
+        particle_loc[i] = VectorizedArrayType(get_location()[i]);
+
+      return particle_loc - loc;
+    }
 
     number &
     linear_velocity(const unsigned int dimension)
@@ -202,7 +251,7 @@ namespace MeltPoolDG
      *
      * @return The particle ID.
      */
-    const number &
+    dealii::types::particle_index
     id() const;
 
     /**
@@ -252,23 +301,33 @@ namespace MeltPoolDG
 
     ///
     typename dealii::Triangulation<dim>::cell_iterator surrounding_cell;
+
+    bool particle_is_ghosted;
+
+    dealii::types::particle_index particle_id;
   };
 
 
   template <int dim, typename number>
   DEMParticleAccessor<dim, number>::DEMParticleAccessor(
-    dealii::Particles::ParticleAccessor<dim> &particle)
+    dealii::Particles::ParticleAccessor<dim> &particle,
+    const bool                                is_ghosted)
     : location(particle.get_location())
     , properties(particle.get_properties())
     , surrounding_cell(particle.get_surrounding_cell())
+    , particle_is_ghosted(is_ghosted)
+    , particle_id(particle.get_id())
   {}
 
   template <int dim, typename number>
   DEMParticleAccessor<dim, number>::DEMParticleAccessor(
     dealii::Particles::PropertyPool<dim>                       &property_pool,
-    const typename dealii::Particles::PropertyPool<dim>::Handle handle) noexcept
+    const typename dealii::Particles::PropertyPool<dim>::Handle handle,
+    const bool                                                  is_ghosted) noexcept
     : location(property_pool.get_location(handle))
     , properties(property_pool.get_properties(handle))
+    , particle_is_ghosted(is_ghosted)
+    , particle_id(property_pool.get_id(handle))
   {}
 
   template <int dim, typename number>
@@ -350,11 +409,10 @@ namespace MeltPoolDG
   }
 
   template <int dim, typename number>
-  const number &
+  dealii::types::particle_index
   DEMParticleAccessor<dim, number>::id() const
   {
-    Assert(!properties.empty(), dealii::ExcInternalError());
-    return properties[SphericalParticle<dim, number>::Properties::particle_id];
+    return particle_id;
   }
 
   template <int dim, typename number>

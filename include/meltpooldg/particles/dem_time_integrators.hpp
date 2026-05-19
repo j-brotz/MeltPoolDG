@@ -43,7 +43,6 @@ namespace MeltPoolDG
   void
   symplectic_euler_advance_time_step(
     dealii::TimerOutput                                 &timer,
-    const number                                         current_time,
     const number                                         time_step,
     std::ranges::subrange<ParticleIterator<dim, number>> particle_range)
   {
