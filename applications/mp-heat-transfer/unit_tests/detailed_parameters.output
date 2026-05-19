@@ -1417,7 +1417,7 @@
             {
                 "value": "",
                 "default_value": "",
-                "documentation": "Fitting parameters for the evaporative mass flux function of the pressure-aware model.",
+                "documentation": "Fitting parameters for the evaporative mass flux function with pressure-aware boundary conditions.",
                 "pattern": "146",
                 "pattern_description": "[List of <[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]> of length 0...4294967295 (inclusive)]",
                 "actions": "147"
@@ -1679,6 +1679,27 @@
                 "pattern": "173",
                 "pattern_description": "[Selection phenomenological|hybrid|pressure_aware ]",
                 "actions": "174"
+            },
+            "pressure aware":
+            {
+                "Kp":
+                {
+                    "value": "",
+                    "default_value": "",
+                    "documentation": "Fitting parameters for the recoil pressure calculation with pressure-aware boundary conditions.",
+                    "pattern": "174",
+                    "pattern_description": "[List of <[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]> of length 0...4294967295 (inclusive)]",
+                    "actions": "175"
+                },
+                "ambient_gas_pressure":
+                {
+                    "value": "0",
+                    "default_value": "0",
+                    "documentation": "Ambient gas pressure for the pressure-aware model.",
+                    "pattern": "175",
+                    "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
+                    "actions": "176"
+                }
             }
         },
         "formulation source term level set":
@@ -1686,18 +1707,18 @@
             "value": "interface_velocity_local",
             "default_value": "interface_velocity_local",
             "documentation": "Select the type how the evaporative mass flux should be considered in the level set equation.",
-            "pattern": "174",
+            "pattern": "176",
             "pattern_description": "[Selection interface_velocity_sharp|interface_velocity_sharp_heavy|interface_velocity_local|rhs ]",
-            "actions": "175"
+            "actions": "177"
         },
         "do level set pressure gradient interpolation":
         {
             "value": "false",
             "default_value": "false",
             "documentation": "Set if the level set gradient for computing the delta function within the evaporative mass flux source terms should be computed based on an interpolation to the pressure space. This is only implemented for evapor_level_set_source_term_type = rhs.",
-            "pattern": "175",
+            "pattern": "177",
             "pattern_description": "[Bool]",
-            "actions": "176"
+            "actions": "178"
         }
     },
     "output":
@@ -1707,45 +1728,45 @@
             "value": ".\/",
             "default_value": ".\/",
             "documentation": "Sets the base directory for all output.",
-            "pattern": "176",
+            "pattern": "178",
             "pattern_description": "[Anything]",
-            "actions": "177"
+            "actions": "179"
         },
         "write frequency":
         {
             "value": "1",
             "default_value": "1",
             "documentation": "Every n timestep that should be written",
-            "pattern": "177",
+            "pattern": "179",
             "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-            "actions": "178"
+            "actions": "180"
         },
         "write time step size":
         {
             "value": "1.79769e+308",
             "default_value": "1.79769e+308",
             "documentation": "Write output output every given time step. If this parameter is set, the output write frequency is deactivated.",
-            "pattern": "178",
+            "pattern": "180",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "179"
+            "actions": "181"
         },
         "output variables":
         {
             "value": "all",
             "default_value": "all",
             "documentation": "Specify variables that you request to output.",
-            "pattern": "179",
+            "pattern": "181",
             "pattern_description": "[List of <[Anything]> of length 0...4294967295 (inclusive)]",
-            "actions": "180"
+            "actions": "182"
         },
         "do user defined postprocessing":
         {
             "value": "false",
             "default_value": "false",
             "documentation": "Set this parameter to true to enable user defined postprocessing.",
-            "pattern": "180",
+            "pattern": "182",
             "pattern_description": "[Bool]",
-            "actions": "181"
+            "actions": "183"
         },
         "paraview":
         {
@@ -1754,81 +1775,81 @@
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to activate paraview output.",
-                "pattern": "181",
+                "pattern": "183",
                 "pattern_description": "[Bool]",
-                "actions": "182"
+                "actions": "184"
             },
             "filename":
             {
                 "value": "solution",
                 "default_value": "solution",
                 "documentation": "Sets the base name for paraview output files.",
-                "pattern": "182",
+                "pattern": "184",
                 "pattern_description": "[Anything]",
-                "actions": "183"
+                "actions": "185"
             },
             "n digits timestep":
             {
                 "value": "4",
                 "default_value": "4",
                 "documentation": "Number of digits for the frame number of the vtu-file.",
-                "pattern": "183",
+                "pattern": "185",
                 "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-                "actions": "184"
+                "actions": "186"
             },
             "print boundary id":
             {
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to output a vtu-file with the boundary id.",
-                "pattern": "184",
+                "pattern": "186",
                 "pattern_description": "[Bool]",
-                "actions": "185"
+                "actions": "187"
             },
             "output subdomains":
             {
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to output the subdomain ranks.",
-                "pattern": "185",
+                "pattern": "187",
                 "pattern_description": "[Bool]",
-                "actions": "186"
+                "actions": "188"
             },
             "output material id":
             {
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set to true to output the material id.",
-                "pattern": "186",
+                "pattern": "188",
                 "pattern_description": "[Bool]",
-                "actions": "187"
+                "actions": "189"
             },
             "write higher order cells":
             {
                 "value": "true",
                 "default_value": "true",
                 "documentation": "Set this parameter to false to write bi- or trilinear data only. Set this parameter to true to write higher order cell data. Note: higher order cell data can only be written for hexahedron meshes and 2 or 3 dimensions.",
-                "pattern": "187",
+                "pattern": "189",
                 "pattern_description": "[Bool]",
-                "actions": "188"
+                "actions": "190"
             },
             "n groups":
             {
                 "value": "1",
                 "default_value": "1",
                 "documentation": "Number of parallel written vtu-files.",
-                "pattern": "188",
+                "pattern": "190",
                 "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-                "actions": "189"
+                "actions": "191"
             },
             "n patches":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "Control number of patches to enable high-order.",
-                "pattern": "189",
+                "pattern": "191",
                 "pattern_description": "[Integer range -2147483648...2147483647 (inclusive)]",
-                "actions": "190"
+                "actions": "192"
             }
         },
         "particles":
@@ -1838,18 +1859,18 @@
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to activate particle paraview output.",
-                "pattern": "190",
+                "pattern": "192",
                 "pattern_description": "[Bool]",
-                "actions": "191"
+                "actions": "193"
             },
             "filename":
             {
                 "value": "particle",
                 "default_value": "particle",
                 "documentation": "Sets the base name for particle output files.",
-                "pattern": "191",
+                "pattern": "193",
                 "pattern_description": "[Anything]",
-                "actions": "192"
+                "actions": "194"
             }
         }
     },
@@ -1860,27 +1881,27 @@
             "value": "false",
             "default_value": "false",
             "documentation": "Set this parameter to true if profiling should be enabled. It will be automaticallyenabled for verbosity level >=1.",
-            "pattern": "192",
+            "pattern": "194",
             "pattern_description": "[Bool]",
-            "actions": "193"
+            "actions": "195"
         },
         "write time step size":
         {
             "value": "10",
             "default_value": "10",
             "documentation": "Write profiling output every given time step size. If this parameter is set, the specified parameter for write frequency is overwritten.",
-            "pattern": "193",
+            "pattern": "195",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "194"
+            "actions": "196"
         },
         "time type":
         {
             "value": "real",
             "default_value": "real",
             "documentation": "Choose the type of time measure to write profiling information.",
-            "pattern": "194",
+            "pattern": "196",
             "pattern_description": "[Selection real|simulation ]",
-            "actions": "195"
+            "actions": "197"
         }
     },
     "application specific":
@@ -1890,18 +1911,18 @@
             "value": "false",
             "default_value": "false",
             "documentation": "Set this parameter to true if you want to consider melting\/solidification effects.",
-            "pattern": "195",
+            "pattern": "197",
             "pattern_description": "[Bool]",
-            "actions": "196"
+            "actions": "198"
         },
         "amr strategy":
         {
             "value": "KellyErrorEstimator",
             "default_value": "KellyErrorEstimator",
             "documentation": "Select the AMR strategy.",
-            "pattern": "196",
+            "pattern": "198",
             "pattern_description": "[Selection KellyErrorEstimator|generic ]",
-            "actions": "197"
+            "actions": "199"
         }
     }
 }

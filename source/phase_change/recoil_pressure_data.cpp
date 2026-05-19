@@ -50,6 +50,18 @@ namespace MeltPoolDG::Evaporation
         type,
         "Choose the model to compute the recoil pressure coefficient: phenomenological "
         "or hybrid, in case there is also an evaporation-induced velocity jump.");
+
+      prm.enter_subsection("pressure aware");
+      {
+        prm.add_parameter(
+          "Kp",
+          pressure_aware.Kp,
+          "Fitting parameters for the recoil pressure calculation with pressure-aware boundary conditions.");
+        prm.add_parameter("ambient_gas_pressure",
+                          pressure_aware.ambient_gas_pressure,
+                          "Ambient gas pressure for the pressure-aware model.");
+      }
+      prm.leave_subsection();
     }
     prm.leave_subsection();
   }

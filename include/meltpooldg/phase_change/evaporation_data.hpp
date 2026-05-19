@@ -26,7 +26,8 @@ namespace MeltPoolDG::Evaporation
     saturated_vapor_pressure,
     // calculate the evaporative mass flux according to the model proposed by Hardt & Wondra
     hardt_wondra,
-    // calculate the evaporative mass flux according to the pressure-aware model
+    // calculate the evaporative mass flux according to the model with pressure-aware boundary
+    // conditions
     pressure_aware)
 
   BETTER_ENUM(EvaporationLevelSetSourceTermType,
