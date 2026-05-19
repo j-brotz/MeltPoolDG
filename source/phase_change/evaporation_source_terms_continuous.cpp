@@ -102,10 +102,9 @@ namespace MeltPoolDG::Evaporation
               {
                 interpolated_level_set_to_pressure_space.reinit(cell);
 
-                DoFTools::compute_gradient_at_interpolated_dof_values<dim>(
-                  ls,
-                  interpolated_level_set_to_pressure_space,
-                  ls_to_pressure_grad_interpolation_matrix);
+                DoFTools::interpolate_dof_values<dim>(ls,
+                                                      interpolated_level_set_to_pressure_space,
+                                                      ls_to_pressure_grad_interpolation_matrix);
               }
 
             used_level_set.evaluate(EvaluationFlags::gradients);
@@ -309,10 +308,9 @@ namespace MeltPoolDG::Evaporation
               {
                 interpolated_level_set_to_pressure_space.reinit(cell);
 
-                DoFTools::compute_gradient_at_interpolated_dof_values<dim>(
-                  heaviside,
-                  interpolated_level_set_to_pressure_space,
-                  ls_to_pressure_grad_interpolation_matrix);
+                DoFTools::interpolate_dof_values<dim>(heaviside,
+                                                      interpolated_level_set_to_pressure_space,
+                                                      ls_to_pressure_grad_interpolation_matrix);
               }
 
             used_level_set.evaluate(EvaluationFlags::gradients);
