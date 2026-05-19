@@ -462,10 +462,9 @@ namespace MeltPoolDG::Heat
               {
                 heaviside_interpolated_eval.reinit(T_new_eval.get_current_cell_index());
 
-                DoFTools::compute_gradient_at_interpolated_dof_values<dim>(
-                  heaviside_eval,
-                  heaviside_interpolated_eval,
-                  ls_to_heat_grad_interpolation_matrix);
+                DoFTools::interpolate_dof_values<dim>(heaviside_eval,
+                                                      heaviside_interpolated_eval,
+                                                      ls_to_heat_grad_interpolation_matrix);
 
                 heaviside_eval_used = &heaviside_interpolated_eval;
               }
@@ -965,7 +964,9 @@ namespace MeltPoolDG::Heat
     const std::unique_ptr<FECellIntegrator<dim, 1, number>> &mass_flux_eval,
     const bool                                               do_reinit_cells) const
   {
-    FECellIntegrator<dim, 1, number> *heaviside_eval_used = &heaviside_eval;
+    FECellIntegrator<dim, 1, number> *heaviside_eval_used =
+      do_level_set_temperature_gradient_interpolation ? &heaviside_interpolated_eval :
+                                                        &heaviside_eval;
 
     eval.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
@@ -987,17 +988,17 @@ namespace MeltPoolDG::Heat
               {
                 heaviside_interpolated_eval.reinit(eval.get_current_cell_index());
 
-                DoFTools::compute_gradient_at_interpolated_dof_values<dim>(
-                  heaviside_eval,
-                  heaviside_interpolated_eval,
-                  ls_to_heat_grad_interpolation_matrix);
-
-                heaviside_eval_used = &heaviside_interpolated_eval;
+                DoFTools::interpolate_dof_values<dim>(heaviside_eval,
+                                                      heaviside_interpolated_eval,
+                                                      ls_to_heat_grad_interpolation_matrix);
               }
 
-            heaviside_eval_used->evaluate(evaporative_cooling ?
-                                            EvaluationFlags::values | EvaluationFlags::gradients :
-                                            EvaluationFlags::values);
+            auto heaviside_eval_flags = EvaluationFlags::values;
+
+            if (evaporative_cooling)
+              heaviside_eval_flags = EvaluationFlags::values | EvaluationFlags::gradients;
+
+            heaviside_eval_used->evaluate(heaviside_eval_flags);
           }
 
         if (do_solidification)

@@ -76,10 +76,9 @@ namespace MeltPoolDG::DoFTools
 
   template <int dim, typename number>
   void
-  compute_gradient_at_interpolated_dof_values(
-    FECellIntegrator<dim, 1, number> &values,
-    FECellIntegrator<dim, 1, number> &interpolated_values,
-    const dealii::FullMatrix<number> &interpolation_matrix)
+  interpolate_dof_values(FECellIntegrator<dim, 1, number> &values,
+                         FECellIntegrator<dim, 1, number> &interpolated_values,
+                         const dealii::FullMatrix<number> &interpolation_matrix)
   {
     // Evaluate the field Φ at the support points of its space j
     values.evaluate(dealii::EvaluationFlags::values);
@@ -98,15 +97,9 @@ namespace MeltPoolDG::DoFTools
         for (unsigned int j = 0; j < values.dofs_per_cell; ++j)
           interpolated_value += interpolation_matrix(i, j) * values.get_dof_value(j);
 
-        // Store the interpolated values at the support points of the pressure space
+        // Store the interpolated values at the support points of the target space
         interpolated_values.submit_dof_value(interpolated_value, i);
       }
-
-    // Evaluate the gradient from the interpolated field
-    //                       _
-    //                     ∇ Φ
-    //
-    interpolated_values.evaluate(dealii::EvaluationFlags::gradients);
   }
 
 
@@ -124,15 +117,15 @@ namespace MeltPoolDG::DoFTools
                                   const bool);
 
   template void
-  compute_gradient_at_interpolated_dof_values(FECellIntegrator<1, 1, double> &,
-                                              FECellIntegrator<1, 1, double> &,
-                                              const dealii::FullMatrix<double> &);
+  interpolate_dof_values(FECellIntegrator<1, 1, double> &,
+                         FECellIntegrator<1, 1, double> &,
+                         const dealii::FullMatrix<double> &);
   template void
-  compute_gradient_at_interpolated_dof_values(FECellIntegrator<2, 1, double> &,
-                                              FECellIntegrator<2, 1, double> &,
-                                              const dealii::FullMatrix<double> &);
+  interpolate_dof_values(FECellIntegrator<2, 1, double> &,
+                         FECellIntegrator<2, 1, double> &,
+                         const dealii::FullMatrix<double> &);
   template void
-  compute_gradient_at_interpolated_dof_values(FECellIntegrator<3, 1, double> &,
-                                              FECellIntegrator<3, 1, double> &,
-                                              const dealii::FullMatrix<double> &);
+  interpolate_dof_values(FECellIntegrator<3, 1, double> &,
+                         FECellIntegrator<3, 1, double> &,
+                         const dealii::FullMatrix<double> &);
 } // namespace MeltPoolDG::DoFTools

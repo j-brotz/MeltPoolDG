@@ -43,17 +43,38 @@ namespace MeltPoolDG::DoFTools
                                   const bool                     do_sort_lexicographically);
 
   /**
-   * Compute from @param values of a given field, @param interpolated_values by
-   * means of a given @param interpolation_matrix. Finally, from the interpolated_values
-   * the gradients are evaluated.
+   * Interpolate DoF values from one finite element space to another.
    *
-   * @note The interpolation_matrix should be computed using create_dof_interpolation_matrix().
+   * The function evaluates the values stored in @p source at the support points
+   * of its finite element space and interpolates them to the support points of
+   * the finite element space represented by @p target. The interpolation is
+   * performed by applying @p interpolation_matrix to the DoF values of
+   * @p source.
    *
+   * After the interpolation, the resulting values are submitted as DoF values to
+   * @p target using FECellIntegrator::submit_dof_value(). The function does not
+   * call FECellIntegrator::evaluate() on @p target afterwards; this must be done
+   * by the caller if values or gradients at quadrature points are required.
+   *
+   * @param source
+   *   FECellIntegrator containing the DoF values in the source finite element
+   *   space. The function calls FECellIntegrator::evaluate() with
+   *   EvaluationFlags::values on this object before accessing its DoF values.
+   *
+   * @param target
+   *   FECellIntegrator into which the interpolated DoF values are submitted.
+   *   This object must already be reinitialized for the same cell as @p source.
+   *
+   * @param interpolation_matrix
+   *   Matrix mapping DoF values from the source finite element space to the
+   *   target finite element space. Its number of rows must match
+   *   @p target.dofs_per_cell and its number of columns must match
+   *   @p source.dofs_per_cell. The interpolation_matrix can be computed
+   *   using create_dof_interpolation_matrix().
    */
   template <int dim, typename number>
   void
-  compute_gradient_at_interpolated_dof_values(
-    FECellIntegrator<dim, 1, number> &values,
-    FECellIntegrator<dim, 1, number> &interpolated_values,
-    const dealii::FullMatrix<number> &interpolation_matrix);
+  interpolate_dof_values(FECellIntegrator<dim, 1, number> &source,
+                         FECellIntegrator<dim, 1, number> &target,
+                         const dealii::FullMatrix<number> &interpolation_matrix);
 } // namespace MeltPoolDG::DoFTools

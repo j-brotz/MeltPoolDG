@@ -199,10 +199,9 @@ namespace MeltPoolDG::Evaporation
               {
                 heaviside_interpolated_to_pressure_space_eval.reinit(cell);
 
-                DoFTools::compute_gradient_at_interpolated_dof_values<dim>(
-                  heaviside_eval,
-                  heaviside_interpolated_to_pressure_space_eval,
-                  ls_to_pressure_grad_interpolation_matrix);
+                DoFTools::interpolate_dof_values<dim>(heaviside_eval,
+                                                      heaviside_interpolated_to_pressure_space_eval,
+                                                      ls_to_pressure_grad_interpolation_matrix);
               }
 
             if (delta_phase_weighted or (cut_type != CutUtil::CutPhaseType::not_cut and
