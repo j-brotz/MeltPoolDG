@@ -146,10 +146,14 @@ namespace MeltPoolDG::CompressibleFlow
                                               ConvectiveKernel(flow_scratch_data.material.data));
 
             for (auto &external_force : external_forces)
-              source += external_force->value(current_time_step,
-                                              cell_iterators,
-                                              phi.quadrature_point(q),
-                                              phi.get_value(q));
+              {
+                dealii::TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(),
+                                             "apply external force");
+                source += external_force->value(current_time_step,
+                                                cell_iterators,
+                                                phi.quadrature_point(q),
+                                                phi.get_value(q));
+              }
 
             if (not external_forces.empty())
               phi.submit_value(source, q);

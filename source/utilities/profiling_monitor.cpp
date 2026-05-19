@@ -46,6 +46,9 @@ namespace MeltPoolDG::Profiling
     timer.print_wall_time_statistics(mpi_communicator);
     pcout << std::endl;
 
+    timer.print_summary();
+    pcout << std::endl;
+
     Journal::print_decoration_line(pcout);
     Journal::print_line(pcout, "Iteration statistics", "iteration_monitor");
     IterationMonitor<number>::print(pcout);

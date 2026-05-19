@@ -98,6 +98,7 @@ namespace MeltPoolDG::CompressibleFlow
   void
   DGOperation<dim, number, n_species>::solve(const number current_time, const number time_step)
   {
+    dealii::TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), "solve flow field");
     flow_scratch_data.solution_history.commit_old_solutions();
     flow_scratch_data.solution_history.update_ghost_values();
 
