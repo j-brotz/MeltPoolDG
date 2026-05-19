@@ -1,3 +1,4 @@
+#include <deal.II/base/exception_macros.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/timer.h>
 
@@ -45,26 +46,37 @@ template <int dim, typename number, typename ObstacleType>
 void
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::reinit()
 {
-  // Determine the appropriate level to store particles based on the maximum particle radius and
-  // the minimum vertex distance of cells on each level. We want to ensure that particles are
-  // stored in cells that are sufficiently large to contain them, which typically means that the
-  // minimum vertex distance should be at least twice the maximum particle radius.
-  // For the case of contact search, this guarantees that all potential contact partners of a
-  // particle are located in the same cell or in the neighboring cells. If we are only interested in
-  // getting the active cells occupied by a particle, a cell size a cell size of the maximum
-  // particle radius would be sufficient. However, to keep things simple we use the same level for
-  // both purposes for now.
-  for (unsigned int level = 0; level < obstacle_handler->get_triangulation().n_global_levels();
-       ++level)
+  Assert(triangulation != nullptr, dealii::ExcMessage("Triangulation pointer is null."));
+
+  if (max_particle_radius == 0)
     {
-      if (triangulation->begin(level)->minimum_vertex_distance() < 2 * max_particle_radius)
+      // If there are only particles with zero radius, we can store them on the finest level.
+      level_to_store_particles = triangulation->n_global_levels() - 1;
+    }
+  else
+    {
+      // Determine the appropriate level to store particles based on the maximum particle radius and
+      // the minimum vertex distance of cells on each level. We want to ensure that particles are
+      // stored in cells that are sufficiently large to contain them, which typically means that the
+      // minimum vertex distance should be at least twice the maximum particle radius.
+      // For the case of contact search, this guarantees that all potential contact partners of a
+      // particle are located in the same cell or in the neighboring cells. If we are only
+      // interested in getting the active cells occupied by a particle, a cell size a cell size of
+      // the maximum particle radius would be sufficient. However, to keep things simple we use the
+      // same level for both purposes for now.
+      for (unsigned int level = 0; level < obstacle_handler->get_triangulation().n_global_levels();
+           ++level)
         {
-          level_to_store_particles = level == 0 ? 0 : level - 1;
-          break;
+          if (triangulation->begin(level)->minimum_vertex_distance() < 2 * max_particle_radius)
+            {
+              level_to_store_particles = level == 0 ? 0 : level - 1;
+              break;
+            }
         }
     }
 
-  level_to_store_particles = 0;
+  MPI_Allreduce(
+    &level_to_store_particles, &level_to_store_particles, 1, MPI_INT, MPI_MIN, mpi_communicator);
 
   deregister_property_pool();
   properties_global_obstacles->clear();

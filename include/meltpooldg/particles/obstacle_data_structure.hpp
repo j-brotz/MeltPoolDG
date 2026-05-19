@@ -770,6 +770,8 @@ namespace MeltPoolDG
     unpack_after_coarsening_and_refinement()
     {
       obstacle_handler->unpack_after_coarsening_and_refinement();
+      level_cell_partitioner.build_pattern(level_to_store_particles);
+      sort_particles_into_subdomains_and_cells();
     }
 
     std::map<typename dealii::Triangulation<dim>::cell_iterator,

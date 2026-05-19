@@ -278,9 +278,11 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number>
   void
   InputDefinedSubdividedHyperRectangleDomain<dim, number>::create_triangulation(
-    std::shared_ptr<dealii::Triangulation<dim>> &triangulation,
-    const MPI_Comm                              &mpi_communicator,
-    const unsigned                               n_global_refinements)
+    std::shared_ptr<dealii::Triangulation<dim>>                         &triangulation,
+    const MPI_Comm                                                      &mpi_communicator,
+    const unsigned                                                       n_global_refinements,
+    typename dealii::Triangulation<dim>::MeshSmoothing                   mesh_smoothing,
+    typename dealii::parallel::distributed::Triangulation<dim>::Settings distributed_tria_settings)
   {
     auto create_point_from_container =
       []<typename T>(const T &container) -> dealii::Point<dim, number> {
@@ -299,9 +301,7 @@ namespace MeltPoolDG::CompressibleFlow
         std::make_shared<dealii::parallel::shared::Triangulation<dim>>(mpi_communicator);
     else
       triangulation = std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(
-        mpi_communicator,
-        dealii::Triangulation<dim>::MeshSmoothing::none,
-        dealii::parallel::distributed::Triangulation<dim>::Settings::construct_multigrid_hierarchy);
+        mpi_communicator, mesh_smoothing, distributed_tria_settings);
 
     dealii::Point<dim, number> dimensions = create_point_from_container(domain_dimensions);
 

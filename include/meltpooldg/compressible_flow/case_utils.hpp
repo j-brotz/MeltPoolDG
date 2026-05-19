@@ -317,9 +317,15 @@ namespace MeltPoolDG::CompressibleFlow
      * region_of_interest_refinement_times`.
      */
     void
-    create_triangulation(std::shared_ptr<dealii::Triangulation<dim>> &triangulation,
-                         const MPI_Comm                              &mpi_communicator,
-                         const unsigned                               n_global_refinements);
+    create_triangulation(
+      std::shared_ptr<dealii::Triangulation<dim>>       &triangulation,
+      const MPI_Comm                                    &mpi_communicator,
+      const unsigned                                     n_global_refinements,
+      typename dealii::Triangulation<dim>::MeshSmoothing mesh_smoothing =
+        dealii::Triangulation<dim>::MeshSmoothing::none,
+      typename dealii::parallel::distributed::Triangulation<dim>::Settings
+        distributed_tria_settings =
+          dealii::parallel::distributed::Triangulation<dim>::Settings::default_setting);
 
     /**
      * Adds all required parameters describing domain size and discretization relevant for creating

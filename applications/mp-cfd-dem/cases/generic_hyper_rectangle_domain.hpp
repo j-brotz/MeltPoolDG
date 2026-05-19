@@ -39,9 +39,12 @@ namespace MeltPoolDG::Simulation::CfdDem
     void
     create_spatial_discretization() override
     {
-      triangulation_creator.create_triangulation(this->triangulation,
-                                                 this->mpi_communicator,
-                                                 this->parameters.base.global_refinements);
+      triangulation_creator.create_triangulation(
+        this->triangulation,
+        this->mpi_communicator,
+        this->parameters.base.global_refinements,
+        dealii::Triangulation<dim>::MeshSmoothing::none,
+        dealii::parallel::distributed::Triangulation<dim>::Settings::construct_multigrid_hierarchy);
     }
 
     void
