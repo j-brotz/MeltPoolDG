@@ -1123,7 +1123,7 @@
               "description": "Fitting parameters for the evaporative mass flux function with pressure-aware boundary conditions.",
               "default": []
             },
-            "ambient_gas_pressure": {
+            "ambient gas pressure": {
               "type": "number",
               "description": "Ambient gas pressure for the pressure-aware model.",
               "default": 0.0
@@ -1344,7 +1344,7 @@
                   "description": "Fitting parameters for the recoil pressure calculation with pressure-aware boundary conditions.",
                   "default": []
                 },
-                "ambient_gas_pressure": {
+                "ambient gas pressure": {
                   "type": "number",
                   "description": "Ambient gas pressure for the pressure-aware model.",
                   "default": 0.0
