@@ -121,11 +121,15 @@
   },
   "level set": {
     "reinitialization": {
-      "max n steps": 0,
-      "n initial steps": 1,
-      "interface thickness parameter": {
-        "type": "absolute_value",
-        "val": 1e-05
+      "hyperbolic": {
+        "interface thickness parameter": {
+          "type": "absolute_value",
+          "val": 1e-05
+        },
+        "pseudo time stepping": {
+          "n initial steps": 1,
+          "max n steps": 0
+        }
       }
     },
     "nearest point": {

@@ -33,18 +33,24 @@
   "reinitialization": {
     "enable": true,
     "type": "olsson2007",
-    "implementation": "meltpooldg",
-    "tangential diffusion factor": 0.005,
-    "tolerance": 2.22507e-308,
-    "interface thickness parameter": {
-      "type": "absolute_value",
-      "val": 1e-06
-    },
     "linear solver": {
       "abs tolerance": 1e-20,
       "rel tolerance": 1e-12,
       "preconditioner type": "Diagonal",
       "do matrix free": true
+    },
+    "hyperbolic": {
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": 1e-06
+      },
+      "pseudo time stepping": {
+        "tolerance": 2.22507e-308
+      },
+      "Continuous Galerkin": {
+        "implementation": "meltpooldg",
+        "tangential diffusion factor": 0.005
+      }
     }
   },
   "normal vector": {

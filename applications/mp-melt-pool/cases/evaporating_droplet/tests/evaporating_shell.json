@@ -61,9 +61,9 @@
         "Solver": {
           "linearization scheme": "coupled implicit Newton",
           "NL max iterations": 10,
-          "NL tolerance": "1.e-12",
+          "NL tolerance": 1e-12,
           "lin max iterations": 30,
-          "lin tolerance": "1.e-5",
+          "lin tolerance": 1e-05,
           "lin velocity preconditioner": "ilu",
           "lin its before inner solvers": 50
         }

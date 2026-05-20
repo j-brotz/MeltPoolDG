@@ -23,8 +23,12 @@
       "reinit constant epsilon": -1,
       "reinit scale factor epsilon": 2,
       "enable": true,
-      "max n steps": 5,
-      "type": "olsson2007"
+      "type": "olsson2007",
+      "hyperbolic": {
+        "pseudo time stepping": {
+          "max n steps": 5
+        }
+      }
     },
     "normal vector": {
       "filter parameter": 0.5

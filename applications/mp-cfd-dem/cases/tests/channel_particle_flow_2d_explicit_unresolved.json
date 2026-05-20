@@ -3,7 +3,6 @@
     "amr strategies": "indicator"
   },
   "base": {
-    "problem name": "cfd_dem",
     "case name": "generic_hyper_rectangle_domain",
     "dimension": 2,
     "do print parameters": false,

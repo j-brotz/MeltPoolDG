@@ -103,14 +103,20 @@
     },
     "reinitialization": {
       "enable": true,
-      "implementation": "meltpooldg",
-      "interface thickness parameter": {
-        "type": "absolute_value",
-        "val": 2e-05
-      },
-      "max n steps": 1,
-      "n initial steps": 1,
-      "type": "olsson2007"
+      "type": "olsson2007",
+      "hyperbolic": {
+        "interface thickness parameter": {
+          "type": "absolute_value",
+          "val": 2e-05
+        },
+        "pseudo time stepping": {
+          "n initial steps": 1,
+          "max n steps": 1
+        },
+        "Continuous Galerkin": {
+          "implementation": "meltpooldg"
+        }
+      }
     },
     "nearest point": {
       "type": "nearest_point"
@@ -134,12 +140,12 @@
       "Navier-Stokes": {
         "Solver": {
           "NL max iterations": 15,
-          "NL tolerance": "1.e-8",
+          "NL tolerance": 1e-08,
           "lin its before inner solvers": 50,
           "lin max iterations": 30,
           "lin pressure mass preconditioner": "ilu",
           "lin relative tolerance": 1,
-          "lin tolerance": "1.e-4",
+          "lin tolerance": 0.0001,
           "lin velocity preconditioner": "ilu scalar",
           "linearization scheme": "coupled implicit Newton"
         },

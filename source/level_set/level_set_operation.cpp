@@ -54,11 +54,11 @@ namespace MeltPoolDG::LevelSet
     , reinit_dof_idx(reinit_dof_idx_in)
     , normal_no_bc_dof_idx(normal_no_bc_dof_idx_in)
     , normal_dof_indices_per_block(normal_dof_indices_per_block_in)
-    , reinit_time_iterator(
-        TimeIntegration::TimeSteppingData<number>{0.0 /*start_time*/,
-                                                  std::numeric_limits<number>::max() /*end_time*/,
-                                                  level_set_data.reinit.pseudo_time_step_size,
-                                                  level_set_data.reinit.max_n_steps})
+    , reinit_time_iterator(TimeIntegration::TimeSteppingData<number>{
+        0.0 /*start_time*/,
+        std::numeric_limits<number>::max() /*end_time*/,
+        level_set_data.reinit.hyperbolic.pseudo_time_stepping.pseudo_time_step_size,
+        level_set_data.reinit.hyperbolic.pseudo_time_stepping.max_n_steps})
   {
     /*
      *    initialize the advection diffusion operation
@@ -101,7 +101,7 @@ namespace MeltPoolDG::LevelSet
      */
     if (level_set_data.reinit.enable)
       {
-        if (ls.reinit.implementation == "meltpooldg")
+        if (ls.reinit.hyperbolic.cg.implementation == "meltpooldg")
           {
             reinit_operation = std::make_shared<ReinitializationHyperbolicCGOperation<dim, number>>(
               scratch_data,
@@ -116,7 +116,7 @@ namespace MeltPoolDG::LevelSet
               normal_no_bc_dof_idx_in);
           }
 #ifdef MPDG_ENABLE_ADAFLO
-        else if (ls.reinit.implementation == "adaflo")
+        else if (ls.reinit.hyperbolic.cg.implementation == "adaflo")
           {
             reinit_operation = std::make_shared<ReinitializationOlssonOperationAdaflo<dim, number>>(
               scratch_data,
@@ -126,7 +126,7 @@ namespace MeltPoolDG::LevelSet
               normal_dof_indices_per_block_in[0],
               time_stepping_data,
               ls.normal_vec,
-              ls.reinit.interface_thickness_parameter.value,
+              ls.reinit.hyperbolic.interface_thickness_parameter.value,
               ls.get_n_subdivisions());
           }
 #endif
@@ -243,9 +243,11 @@ namespace MeltPoolDG::LevelSet
       {
         if (reinit_operation)
           {
-            reinit_time_iterator.reset_max_n_time_steps(level_set_data.reinit.n_initial_steps);
+            reinit_time_iterator.reset_max_n_time_steps(
+              level_set_data.reinit.hyperbolic.pseudo_time_stepping.n_initial_steps);
             do_reinitialization(true /*update normal vector in every cycle*/);
-            reinit_time_iterator.reset_max_n_time_steps(level_set_data.reinit.max_n_steps);
+            reinit_time_iterator.reset_max_n_time_steps(
+              level_set_data.reinit.hyperbolic.pseudo_time_stepping.max_n_steps);
           }
       }
 
@@ -527,13 +529,14 @@ namespace MeltPoolDG::LevelSet
     max_d_level_set_since_last_reinit = temp.linfty_norm();
 
     // do reinitialization only if the level set has changed more than a certain tolerance
-    if (max_d_level_set_since_last_reinit > level_set_data.reinit.tolerance)
+    if (max_d_level_set_since_last_reinit >
+        level_set_data.reinit.hyperbolic.pseudo_time_stepping.tolerance)
       {
-        if (level_set_data.reinit.pseudo_time_step_size <= 0.0)
+        if (level_set_data.reinit.hyperbolic.pseudo_time_stepping.pseudo_time_step_size <= 0.0)
           // Compute time increment for reinitialization from epsilon
           reinit_time_iterator.set_current_time_increment(
-            level_set_data.reinit.pseudo_time_step_factor *
-            level_set_data.reinit.compute_interface_thickness_parameter_epsilon(
+            level_set_data.reinit.hyperbolic.pseudo_time_stepping.pseudo_time_step_factor *
+            level_set_data.reinit.hyperbolic.compute_interface_thickness_parameter_epsilon(
               scratch_data.get_min_cell_size() / level_set_data.get_n_subdivisions()));
 
         reinit_operation->set_initial_condition(get_level_set());
@@ -550,7 +553,8 @@ namespace MeltPoolDG::LevelSet
             reinit_operation->solve();
 
             // Check how much the level set changed due to reinitialization
-            if (reinit_operation->get_max_change_level_set() < level_set_data.reinit.tolerance)
+            if (reinit_operation->get_max_change_level_set() <
+                level_set_data.reinit.hyperbolic.pseudo_time_stepping.tolerance)
               break;
 
             /*
@@ -628,7 +632,7 @@ namespace MeltPoolDG::LevelSet
             distance_eval.get_function_values(distance_to_level_set, distance_at_q);
 
             const number epsilon_cell =
-              level_set_data.reinit.compute_interface_thickness_parameter_epsilon(
+              level_set_data.reinit.hyperbolic.compute_interface_thickness_parameter_epsilon(
                 cell->diameter() / std::sqrt(dim) / level_set_data.get_n_subdivisions());
 
             Vector<number> level_set_local(dofs_per_cell);
@@ -681,7 +685,7 @@ namespace MeltPoolDG::LevelSet
           cell->get_dof_indices(local_dof_indices);
 
           const number epsilon_cell =
-            level_set_data.reinit.compute_interface_thickness_parameter_epsilon(
+            level_set_data.reinit.hyperbolic.compute_interface_thickness_parameter_epsilon(
               cell->diameter() / std::sqrt(dim) / level_set_data.get_n_subdivisions());
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)

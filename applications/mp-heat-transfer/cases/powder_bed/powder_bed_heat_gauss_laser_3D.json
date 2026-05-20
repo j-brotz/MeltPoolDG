@@ -57,9 +57,11 @@
   },
   "level set": {
     "reinitialization": {
-      "interface thickness parameter": {
-        "type": "proportional_to_cell_size",
-        "val": 1.5
+      "hyperbolic": {
+        "interface thickness parameter": {
+          "type": "proportional_to_cell_size",
+          "val": 1.5
+        }
       }
     }
   }

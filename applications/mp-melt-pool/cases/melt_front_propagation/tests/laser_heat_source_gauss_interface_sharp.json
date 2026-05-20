@@ -71,7 +71,11 @@
       "filter parameter": 4
     },
     "reinitialization": {
-      "n initial steps": 0
+      "hyperbolic": {
+        "pseudo time stepping": {
+          "n initial steps": 0
+        }
+      }
     }
   },
   "flow": {

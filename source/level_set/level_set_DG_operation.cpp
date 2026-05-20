@@ -46,7 +46,7 @@ namespace MeltPoolDG::LevelSet
         0.0 /*start_time*/,
         std::numeric_limits<number>::max() /*end_time*/,
         -1.0 /*time step size --> will be set before each cycle*/,
-        level_set_data.reinit.max_n_steps})
+        level_set_data.reinit.hyperbolic.pseudo_time_stepping.max_n_steps})
     , prescribed_velocity_function(prescribed_velocity_function_in)
   {
     advec_operation = std::make_shared<AdvectionDGOperation<dim, number>>(scratch_data,
@@ -141,9 +141,11 @@ namespace MeltPoolDG::LevelSet
 
         if (reinit_operation)
           {
-            reinit_time_iterator.reset_max_n_time_steps(level_set_data.reinit.n_initial_steps);
+            reinit_time_iterator.reset_max_n_time_steps(
+              level_set_data.reinit.hyperbolic.pseudo_time_stepping.n_initial_steps);
             do_reinitialization(true /*update normal vector in every cycle*/);
-            reinit_time_iterator.reset_max_n_time_steps(level_set_data.reinit.max_n_steps);
+            reinit_time_iterator.reset_max_n_time_steps(
+              level_set_data.reinit.hyperbolic.pseudo_time_stepping.max_n_steps);
           }
 
         /*
@@ -388,7 +390,7 @@ namespace MeltPoolDG::LevelSet
 
     // A reinitialization is only performed if the error of the gradient surpasses a user defined
     // threshold
-    if (gradient_error > level_set_data.reinit.tolerance)
+    if (gradient_error > level_set_data.reinit.hyperbolic.pseudo_time_stepping.tolerance)
       {
         reinit_operation->set_initial_condition(get_level_set());
         const number time_step_size = reinit_operation->compute_CFL_based_timestep();
@@ -419,9 +421,9 @@ namespace MeltPoolDG::LevelSet
             // If the reinit has reached a stationary point or the error is low enough the reinit is
             // done.
             if ((std::abs((new_gradient_error - gradient_error) / time_step_size) <
-                 level_set_data.reinit.reinitilization_DG_specific_data
-                   .gradient_error_time_derivative_threshold) ||
-                (new_gradient_error < level_set_data.reinit.tolerance))
+                 level_set_data.reinit.hyperbolic.dg.gradient_error_time_derivative_threshold) ||
+                (new_gradient_error <
+                 level_set_data.reinit.hyperbolic.pseudo_time_stepping.tolerance))
               {
                 get_level_set().copy_locally_owned_data_from(reinit_operation->get_level_set());
                 break;
@@ -478,7 +480,7 @@ namespace MeltPoolDG::LevelSet
           cell->get_dof_indices(local_dof_indices);
 
           const number epsilon_cell =
-            level_set_data.reinit.compute_interface_thickness_parameter_epsilon(
+            level_set_data.reinit.hyperbolic.compute_interface_thickness_parameter_epsilon(
               cell->diameter() / std::sqrt(dim) / level_set_data.get_n_subdivisions());
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)

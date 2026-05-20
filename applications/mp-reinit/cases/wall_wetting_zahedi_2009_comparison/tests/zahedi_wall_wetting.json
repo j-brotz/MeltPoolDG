@@ -25,13 +25,19 @@
       "preconditioner type": "ILU",
       "abs tolerance": 1e-10
     },
-    "tolerance": 1e-05,
     "type": "olsson2007",
-    "interface thickness parameter": {
-      "type": "proportional_to_cell_size",
-      "val": 8
-    },
-    "tangential diffusion factor": 3
+    "hyperbolic": {
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": 8
+      },
+      "pseudo time stepping": {
+        "tolerance": 1e-05
+      },
+      "Continuous Galerkin": {
+        "tangential diffusion factor": 3
+      }
+    }
   },
   "normal vector": {
     "compute normalized vector": true,

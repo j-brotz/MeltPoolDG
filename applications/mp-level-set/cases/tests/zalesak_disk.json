@@ -21,10 +21,14 @@
   "level set": {
     "reinitialization": {
       "enable": true,
-      "max n steps": 2,
-      "interface thickness parameter": {
-        "type": "proportional_to_cell_size",
-        "val": 1
+      "hyperbolic": {
+        "interface thickness parameter": {
+          "type": "proportional_to_cell_size",
+          "val": 1
+        },
+        "pseudo time stepping": {
+          "max n steps": 2
+        }
       }
     },
     "curvature": {

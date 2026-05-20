@@ -55,11 +55,15 @@
   "level set": {
     "reinitialization": {
       "enable": true,
-      "n initial steps": 0,
-      "max n steps": 0,
-      "interface thickness parameter": {
-        "type": "proportional_to_cell_size",
-        "val": 2
+      "hyperbolic": {
+        "interface thickness parameter": {
+          "type": "proportional_to_cell_size",
+          "val": 2
+        },
+        "pseudo time stepping": {
+          "n initial steps": 0,
+          "max n steps": 0
+        }
       }
     },
     "curvature": {
@@ -79,10 +83,10 @@
       "Navier-Stokes": {
         "Solver": {
           "NL max iterations": 10,
-          "NL tolerance": "1.e-9",
+          "NL tolerance": 1e-09,
           "lin its before inner solvers": 30,
           "lin max iterations": 30,
-          "lin tolerance": "1.e-5",
+          "lin tolerance": 1e-05,
           "lin velocity preconditioner": "ilu",
           "linearization scheme": "coupled implicit Newton"
         },

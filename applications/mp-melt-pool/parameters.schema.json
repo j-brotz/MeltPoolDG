@@ -852,211 +852,6 @@
               },
               "additionalProperties": false
             },
-            "enable": {
-              "type": "boolean",
-              "description": "Set to true to activate reinitialization.",
-              "default": true
-            },
-            "n initial steps": {
-              "type": "integer",
-              "minimum": -2147483648,
-              "maximum": 2147483647,
-              "description": "Defines the number of initial reinitialization steps of the level set function. In the default case, the number is set equal to the number of max n steps.",
-              "default": -1
-            },
-            "pseudo time step size": {
-              "type": "number",
-              "description": "Sets the reinitialization time step size. By default its computed from the cell size.",
-              "default": -1.0
-            },
-            "pseudo time step factor": {
-              "type": "number",
-              "description": "Factor on the reinitialization time step size that is computed from the cell size.",
-              "default": 1.0
-            },
-            "max n steps": {
-              "type": "integer",
-              "description": "Sets the maximum number of reinitialization steps",
-              "default": 5
-            },
-            "tolerance": {
-              "type": "number",
-              "description": "Set the tolerance for reinitialization. If the maximum change of the level set field, i.e.  orΔФ or∞, exceeds the tolerance, reinitialization steps will be performed.",
-              "default": 2.22507e-308
-            },
-            "tangential diffusion factor": {
-              "type": "number",
-              "minimum": 0.0,
-              "description": "Factor that multiplies the normal diffusion factor (diffusion length) to obtain the diffusion factor in the tangential direction.",
-              "default": 0.0
-            },
-            "type": {
-              "type": "string",
-              "enum": [
-                "olsson2007",
-                "elliptic"
-              ],
-              "description": "Sets the type of reinitialization model that should be used.",
-              "default": "olsson2007"
-            },
-            "implementation": {
-              "type": "string",
-              "enum": [
-                "meltpooldg",
-                "adaflo"
-              ],
-              "description": "Choose the corresponding implementation of the reinitialization operation.",
-              "default": "meltpooldg"
-            },
-            "Discontinous Galerkin": {
-              "type": "object",
-              "properties": {
-                "factor diffusivity": {
-                  "type": "number",
-                  "description": "Set the factor for diffusivity",
-                  "default": 0.25
-                },
-                "IP diffusion": {
-                  "type": "number",
-                  "description": "Set the internal penalty for diffusivity",
-                  "default": 100.0
-                },
-                "use const gradient in RI": {
-                  "type": "boolean",
-                  "description": "Set if the Godunov gradient should be updated every reinitilization step",
-                  "default": false
-                },
-                "do CFL based time stepping": {
-                  "type": "boolean",
-                  "description": "Sets a flag if the time stepping should be based on the CFL condition",
-                  "default": false
-                },
-                "time integration scheme": {
-                  "type": "string",
-                  "enum": [
-                    "not_initialized",
-                    "LSRK_stage_1_order_1",
-                    "LSRK_stage_3_order_3",
-                    "LSRK_stage_5_order_4",
-                    "LSRK_stage_7_order_4",
-                    "LSRK_stage_9_order_5",
-                    "implicit_euler",
-                    "explicit_euler",
-                    "crank_nicolson",
-                    "bdf_1",
-                    "bdf_2",
-                    "bdf_3",
-                    "bdf_4",
-                    "bdf_5",
-                    "bdf_6",
-                    "imex"
-                  ],
-                  "description": "Determines the general time integration scheme for the pseudo time integration of the reinilization equation.",
-                  "default": "LSRK_stage_5_order_4"
-                },
-                "IMEX integration scheme": {
-                  "type": "string",
-                  "enum": [
-                    "not_initialized",
-                    "LSRK_stage_1_order_1",
-                    "LSRK_stage_3_order_3",
-                    "LSRK_stage_5_order_4",
-                    "LSRK_stage_7_order_4",
-                    "LSRK_stage_9_order_5",
-                    "implicit_euler",
-                    "explicit_euler",
-                    "crank_nicolson",
-                    "bdf_1",
-                    "bdf_2",
-                    "bdf_3",
-                    "bdf_4",
-                    "bdf_5",
-                    "bdf_6",
-                    "imex"
-                  ],
-                  "description": "If a IMEX integration scheme is specifiead, the integration in pseudo time of the reinilization is done with an Implict-Explicit (IMEX) scheme.this means that the diffusion part is treated with the IMEX integration scheme and the hamiltonian is treated with the general time integration scheme.When choosing an implicit scheme with A-stability larger time steps can be chosen only limited by the stability of the hamiltonian part.This is done, since the diffusion part is the most restrictive part for explicit time integration scheme.If a scheme is set, the time step calculation based on a CFL number assumes an A-stable scheme and only calculates the time step based on the hamiltonian.",
-                  "default": "not_initialized"
-                },
-                "CFL": {
-                  "type": "number",
-                  "description": "Set a CFL number for the pseudo time stepping in reinitilization.",
-                  "default": 1.0
-                },
-                "avoid zero division smoothed signum": {
-                  "type": "number",
-                  "description": "Sets a constant to avoid zero division in the computation of the smoothed signum.",
-                  "default": 1e-16
-                },
-                "signum smoothness paramater": {
-                  "type": "number",
-                  "description": "Sets the smoothness parameter for the smoothed signum.",
-                  "default": 2.0
-                },
-                "use directed diffusion stabilization": {
-                  "type": "boolean",
-                  "description": "Sets a flag if directed diffusion stabilization should be used for reinitilization.",
-                  "default": false
-                },
-                "hyperbolic weighting function_type": {
-                  "type": "string",
-                  "enum": [
-                    "smoothed_signum",
-                    "initial_levelset"
-                  ],
-                  "description": "Sets the type of weighting function for the hyperbolic part of the reinit equation.",
-                  "default": "smoothed_signum"
-                },
-                "use spatially constant diffusion": {
-                  "type": "boolean",
-                  "description": "Sets a flag if a spatially constant diffusion should be used for reinitilization.",
-                  "default": true
-                },
-                "use interface movement penalization": {
-                  "type": "boolean",
-                  "description": "Sets a flag if a penalization of the interface movement should be used.",
-                  "default": false
-                },
-                "gradient error time derivative threshold": {
-                  "type": "number",
-                  "description": "Sets the threshold in the time derivative when a reinit procedure reaches a stationary point",
-                  "default": 1e-16
-                }
-              },
-              "additionalProperties": false
-            },
-            "elliptic": {
-              "type": "object",
-              "properties": {
-                "penalty parameter": {
-                  "type": "number",
-                  "minimum": 0.0,
-                  "description": "Penalty parameter for the enforcement of the initial position of the zero level-set iso-surface during the elliptic reinitialization.",
-                  "default": 0.0
-                }
-              },
-              "additionalProperties": false
-            },
-            "interface thickness parameter": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "enum": [
-                    "proportional_to_cell_size",
-                    "absolute_value",
-                    "number_of_cells_across_interface"
-                  ],
-                  "description": "Choose the value type of the interface thickness parameter.",
-                  "default": "proportional_to_cell_size"
-                },
-                "val": {
-                  "type": "number",
-                  "description": "Defines the value of the chosen interface thickness parameter type",
-                  "default": 0.5
-                }
-              },
-              "additionalProperties": false
-            },
             "predictor": {
               "type": "object",
               "properties": {
@@ -1131,6 +926,229 @@
                   ],
                   "description": "Set the monitor type of the linear solver.",
                   "default": "none"
+                }
+              },
+              "additionalProperties": false
+            },
+            "enable": {
+              "type": "boolean",
+              "description": "Set to true to activate reinitialization.",
+              "default": true
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "olsson2007",
+                "elliptic"
+              ],
+              "description": "Sets the type of reinitialization model that should be used.",
+              "default": "olsson2007"
+            },
+            "hyperbolic": {
+              "type": "object",
+              "properties": {
+                "interface thickness parameter": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "proportional_to_cell_size",
+                        "absolute_value",
+                        "number_of_cells_across_interface"
+                      ],
+                      "description": "Choose the value type of the interface thickness parameter.",
+                      "default": "proportional_to_cell_size"
+                    },
+                    "val": {
+                      "type": "number",
+                      "description": "Defines the value of the chosen interface thickness parameter type.",
+                      "default": 0.5
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "pseudo time stepping": {
+                  "type": "object",
+                  "properties": {
+                    "n initial steps": {
+                      "type": "integer",
+                      "minimum": -2147483648,
+                      "maximum": 2147483647,
+                      "description": "Defines the number of initial reinitialization steps of the level set function. In the default case, the number is set equal to the number of max n steps.",
+                      "default": -1
+                    },
+                    "pseudo time step size": {
+                      "type": "number",
+                      "description": "Sets the reinitialization time step size. By default, it is computed from the cell size.",
+                      "default": -1.0
+                    },
+                    "pseudo time step factor": {
+                      "type": "number",
+                      "description": "Factor on the reinitialization time step size that is computed from the cell size.",
+                      "default": 1.0
+                    },
+                    "max n steps": {
+                      "type": "integer",
+                      "description": "Sets the maximum number of reinitialization steps.",
+                      "default": 5
+                    },
+                    "tolerance": {
+                      "type": "number",
+                      "description": "Set the tolerance for reinitialization. If the maximum change of the level set field exceeds the tolerance, reinitialization steps will be performed.",
+                      "default": 2.22507e-308
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "Continuous Galerkin": {
+                  "type": "object",
+                  "properties": {
+                    "implementation": {
+                      "type": "string",
+                      "enum": [
+                        "meltpooldg",
+                        "adaflo"
+                      ],
+                      "description": "Choose the corresponding implementation of the reinitialization operation.",
+                      "default": "meltpooldg"
+                    },
+                    "tangential diffusion factor": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "description": "Factor that multiplies the normal diffusion factor, i.e., the diffusion length, to obtain the diffusion factor in the tangential direction.",
+                      "default": 0.0
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "Discontinuous Galerkin": {
+                  "type": "object",
+                  "properties": {
+                    "factor diffusivity": {
+                      "type": "number",
+                      "description": "Set the factor for diffusivity.",
+                      "default": 0.25
+                    },
+                    "IP diffusion": {
+                      "type": "number",
+                      "description": "Set the internal penalty for diffusivity.",
+                      "default": 100.0
+                    },
+                    "use const gradient in RI": {
+                      "type": "boolean",
+                      "description": "Set if the Godunov gradient should be updated every reinitialization step.",
+                      "default": false
+                    },
+                    "do CFL based time stepping": {
+                      "type": "boolean",
+                      "description": "Sets a flag if the time stepping should be based on the CFL condition.",
+                      "default": false
+                    },
+                    "time integration scheme": {
+                      "type": "string",
+                      "enum": [
+                        "not_initialized",
+                        "LSRK_stage_1_order_1",
+                        "LSRK_stage_3_order_3",
+                        "LSRK_stage_5_order_4",
+                        "LSRK_stage_7_order_4",
+                        "LSRK_stage_9_order_5",
+                        "implicit_euler",
+                        "explicit_euler",
+                        "crank_nicolson",
+                        "bdf_1",
+                        "bdf_2",
+                        "bdf_3",
+                        "bdf_4",
+                        "bdf_5",
+                        "bdf_6",
+                        "imex"
+                      ],
+                      "description": "Determines the general time integration scheme for the pseudo-time integration of the reinitialization equation.",
+                      "default": "LSRK_stage_5_order_4"
+                    },
+                    "IMEX integration scheme": {
+                      "type": "string",
+                      "enum": [
+                        "not_initialized",
+                        "LSRK_stage_1_order_1",
+                        "LSRK_stage_3_order_3",
+                        "LSRK_stage_5_order_4",
+                        "LSRK_stage_7_order_4",
+                        "LSRK_stage_9_order_5",
+                        "implicit_euler",
+                        "explicit_euler",
+                        "crank_nicolson",
+                        "bdf_1",
+                        "bdf_2",
+                        "bdf_3",
+                        "bdf_4",
+                        "bdf_5",
+                        "bdf_6",
+                        "imex"
+                      ],
+                      "description": "If an IMEX integration scheme is specified, the integration in pseudo time of the reinitialization is done with an implicit-explicit scheme. This means that the diffusion part is treated with the IMEX integration scheme and the Hamiltonian is treated with the general time integration scheme. When choosing an implicit scheme with A-stability, larger time steps can be chosen, only limited by the stability of the Hamiltonian part. This is done since the diffusion part is the most restrictive part for explicit time integration schemes. If a scheme is set, the time step calculation based on a CFL number assumes an A-stable scheme and only calculates the time step based on the Hamiltonian.",
+                      "default": "not_initialized"
+                    },
+                    "CFL": {
+                      "type": "number",
+                      "description": "Set a CFL number for the pseudo-time stepping in reinitialization.",
+                      "default": 1.0
+                    },
+                    "avoid zero division smoothed signum": {
+                      "type": "number",
+                      "description": "Sets a constant to avoid zero division in the computation of the smoothed signum.",
+                      "default": 1e-16
+                    },
+                    "signum smoothness paramater": {
+                      "type": "number",
+                      "description": "Sets the smoothness parameter for the smoothed signum.",
+                      "default": 2.0
+                    },
+                    "use directed diffusion stabilization": {
+                      "type": "boolean",
+                      "description": "Sets a flag if directed diffusion stabilization should be used for reinitialization.",
+                      "default": false
+                    },
+                    "hyperbolic weighting function_type": {
+                      "type": "string",
+                      "enum": [
+                        "smoothed_signum",
+                        "initial_levelset"
+                      ],
+                      "description": "Sets the type of weighting function for the hyperbolic part of the reinitialization equation.",
+                      "default": "smoothed_signum"
+                    },
+                    "use spatially constant diffusion": {
+                      "type": "boolean",
+                      "description": "Sets a flag if a spatially constant diffusion should be used for reinitialization.",
+                      "default": true
+                    },
+                    "use interface movement penalization": {
+                      "type": "boolean",
+                      "description": "Sets a flag if a penalization of the interface movement should be used.",
+                      "default": false
+                    },
+                    "gradient error time derivative threshold": {
+                      "type": "number",
+                      "description": "Sets the threshold in the time derivative when a reinitialization procedure reaches a stationary point.",
+                      "default": 1e-16
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "elliptic": {
+              "type": "object",
+              "properties": {
+                "penalty parameter": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "description": "Penalty parameter for the enforcement of the initial position of the zero level-set iso-surface during the elliptic reinitialization.",
+                  "default": 0.0
                 }
               },
               "additionalProperties": false

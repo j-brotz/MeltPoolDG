@@ -29,7 +29,7 @@
   },
   "evaporation": {
     "analytical": {
-      "function": "1.e-2"
+      "function": 0.01
     },
     "evaporative cooling": {
       "enable": false
@@ -63,10 +63,14 @@
   "level set": {
     "reinitialization": {
       "enable": true,
-      "max n steps": 3,
-      "interface thickness parameter": {
-        "type": "absolute_value",
-        "val": 0.01
+      "hyperbolic": {
+        "interface thickness parameter": {
+          "type": "absolute_value",
+          "val": 0.01
+        },
+        "pseudo time stepping": {
+          "max n steps": 3
+        }
       }
     },
     "curvature": {
@@ -84,9 +88,9 @@
         "Solver": {
           "linearization scheme": "coupled implicit Newton",
           "NL max iterations": 10,
-          "NL tolerance": "1.e-9",
+          "NL tolerance": 1e-09,
           "lin max iterations": 30,
-          "lin tolerance": "1.e-4",
+          "lin tolerance": 0.0001,
           "lin velocity preconditioner": "ilu",
           "lin its before inner solvers": 50
         }

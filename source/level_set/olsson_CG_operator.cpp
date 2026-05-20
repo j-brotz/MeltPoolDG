@@ -95,8 +95,9 @@ namespace MeltPoolDG::LevelSet
           cell_rhs    = 0.0;
           fe_values.reinit(cell);
 
-          const number epsilon_cell = reinit_data.compute_interface_thickness_parameter_epsilon(
-            cell->diameter() / std::sqrt(dim) / ls_n_subdivisions);
+          const number epsilon_cell =
+            reinit_data.hyperbolic.compute_interface_thickness_parameter_epsilon(
+              cell->diameter() / std::sqrt(dim) / ls_n_subdivisions);
 
           Assert(
             epsilon_cell > 0.0,
@@ -605,10 +606,10 @@ namespace MeltPoolDG::LevelSet
         for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
           {
             normal_diffusion_length[cell] =
-              reinit_data.compute_interface_thickness_parameter_epsilon(
+              reinit_data.hyperbolic.compute_interface_thickness_parameter_epsilon(
                 scratch_data.get_cell_sizes()[cell] / ls_n_subdivisions);
             tangential_diffusion_length[cell] =
-              normal_diffusion_length[cell] * reinit_data.tangential_diffusion_factor;
+              normal_diffusion_length[cell] * reinit_data.hyperbolic.cg.tangential_diffusion_factor;
           }
       }
     else
