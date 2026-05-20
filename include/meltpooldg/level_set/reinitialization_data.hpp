@@ -9,6 +9,7 @@
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 
+#include <limits>
 #include <string>
 
 namespace MeltPoolDG::LevelSet
@@ -27,7 +28,7 @@ namespace MeltPoolDG::LevelSet
 
   BETTER_ENUM(HyperbolicWeightingFunctionType, char, smoothed_signum, initial_levelset)
 
-  BETTER_ENUM(ModelType, char, olsson2007, elliptic)
+  BETTER_ENUM(ModelType, char, olsson2007, elliptic, geometric)
 
   template <typename number>
   struct ReinitializationEllipticData
@@ -38,6 +39,46 @@ namespace MeltPoolDG::LevelSet
     void
     add_parameters(dealii::ParameterHandler &prm);
   };
+
+  template <typename number>
+  struct ReinitializationGeometricData
+  {
+    number max_distance = std::numeric_limits<number>::max();
+
+    bool transform_to_tanh = true;
+
+    unsigned int verbosity = 0;
+
+    struct InterfaceThickness
+    {
+      InterfaceThicknessParameterType type =
+        InterfaceThicknessParameterType::proportional_to_cell_size;
+
+      number value = 0.5;
+    } interface_thickness_parameter;
+
+    void
+    add_parameters(dealii::ParameterHandler &prm);
+
+    template <typename number2>
+    number2
+    compute_interface_thickness_parameter_epsilon(const number2 cell_size) const
+    {
+      switch (interface_thickness_parameter.type)
+        {
+          case InterfaceThicknessParameterType::proportional_to_cell_size:
+            return cell_size * interface_thickness_parameter.value;
+          case InterfaceThicknessParameterType::absolute_value:
+            return interface_thickness_parameter.value;
+          case InterfaceThicknessParameterType::number_of_cells_across_interface:
+            return interface_thickness_parameter.value * cell_size / 6.;
+          default:
+            AssertThrow(false, dealii::ExcNotImplemented());
+            return 0.0;
+        }
+    }
+  };
+
 
   template <typename number>
   struct ReinitializationHyperbolicData
@@ -143,6 +184,8 @@ namespace MeltPoolDG::LevelSet
     ReinitializationEllipticData<number> elliptic;
 
     ReinitializationHyperbolicData<number> hyperbolic;
+
+    ReinitializationGeometricData<number> geometric;
 
     void
     add_parameters(dealii::ParameterHandler &prm);

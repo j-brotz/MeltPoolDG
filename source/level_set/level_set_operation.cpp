@@ -1,5 +1,7 @@
 #include <meltpooldg/level_set/level_set_operation.hpp>
 //
+#include <deal.II/base/exception_macros.h>
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/mpi.h>
 
 #include <deal.II/dofs/dof_tools.h>
@@ -553,9 +555,18 @@ namespace MeltPoolDG::LevelSet
             reinit_operation->solve();
 
             // Check how much the level set changed due to reinitialization
-            if (reinit_operation->get_max_change_level_set() <
-                level_set_data.reinit.hyperbolic.pseudo_time_stepping.tolerance)
-              break;
+            if (auto *hyperbolic_reinit =
+                  dynamic_cast<ReinitializationHyperbolicOperationCapable<dim, number> *>(
+                    reinit_operation.get()))
+              {
+                if (hyperbolic_reinit->get_max_change_level_set() <
+                    level_set_data.reinit.hyperbolic.pseudo_time_stepping.tolerance)
+                  break;
+              }
+            else
+              {
+                AssertThrow(false, ExcNotImplemented());
+              }
 
             /*
              *  reset the solution of the level set field to the reinitialized solution ...
@@ -691,16 +702,17 @@ namespace MeltPoolDG::LevelSet
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
               distance_to_level_set(local_dof_indices[i]) =
-                approximate_distance_from_level_set(get_level_set()[local_dof_indices[i]],
-                                                    epsilon_cell,
-                                                    std::tanh(4) /*cut off value*/);
+                LevelSet::Tools::approximate_distance_from_tanh_level_set(
+                  get_level_set()[local_dof_indices[i]],
+                  epsilon_cell,
+                  std::tanh(4) /*cut off value*/);
 
               if (level_set_data.do_localized_heaviside)
                 {
-                  const number distance =
-                    approximate_distance_from_level_set(get_level_set()[local_dof_indices[i]],
-                                                        epsilon_cell,
-                                                        std::tanh(2) /*cut off value*/);
+                  const number distance = LevelSet::Tools::approximate_distance_from_tanh_level_set(
+                    get_level_set()[local_dof_indices[i]],
+                    epsilon_cell,
+                    std::tanh(2) /*cut off value*/);
 
                   level_set_as_heaviside(local_dof_indices[i]) =
                     smooth_heaviside_from_distance_value(2 * distance / (3 * epsilon_cell));

@@ -80,27 +80,6 @@ namespace MeltPoolDG::LevelSet
   }
 
   template <int dim, typename number>
-  number
-  ReinitializationEllipticOperation<dim, number>::get_max_change_level_set() const
-  {
-    return max_change_level_set;
-  }
-
-  template <int dim, typename number>
-  const typename ReinitializationEllipticOperation<dim, number>::BlockVectorType &
-  ReinitializationEllipticOperation<dim, number>::get_normal_vector() const
-  {
-    return normal_vector_operation->get_solution_normal_vector();
-  }
-
-  template <int dim, typename number>
-  typename ReinitializationEllipticOperation<dim, number>::BlockVectorType &
-  ReinitializationEllipticOperation<dim, number>::get_normal_vector()
-  {
-    return normal_vector_operation->get_solution_normal_vector();
-  }
-
-  template <int dim, typename number>
   void
   ReinitializationEllipticOperation<dim, number>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<number> *> &)
@@ -116,11 +95,6 @@ namespace MeltPoolDG::LevelSet
     data_out.add_data_vector(scratch_data.get_dof_handler(reinit_dof_idx),
                              solution_level_set,
                              "level_set");
-
-    for (unsigned int d = 0; d < dim; ++d)
-      data_out.add_data_vector(scratch_data.get_dof_handler(reinit_dof_idx),
-                               get_normal_vector().block(d),
-                               "normal_" + std::to_string(d));
   }
 
   template class ReinitializationEllipticOperation<1, double>;

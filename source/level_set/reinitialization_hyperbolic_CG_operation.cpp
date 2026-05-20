@@ -213,14 +213,6 @@ namespace MeltPoolDG::LevelSet
                                                reinit_data.linear_solver,
                                                preconditioner,
                                                "reinitialization_operation");
-
-        Journal::print_formatted_norm<number>(
-          scratch_data.get_pcout(1),
-          [&]() -> number { return reinit_operator->get_system_matrix().frobenius_norm(); },
-          "matrix",
-          "reinitialization",
-          15 /*precision*/,
-          "F");
       }
     scratch_data.get_constraint(reinit_dof_idx).distribute(solution_history.get_current_solution());
 

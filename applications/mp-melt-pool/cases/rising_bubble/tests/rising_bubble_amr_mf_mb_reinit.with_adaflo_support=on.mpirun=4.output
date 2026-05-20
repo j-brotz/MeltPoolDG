@@ -9,10 +9,8 @@
 | || normal_1 ||L2 = 3.15253727683e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.03                                                                       reinitialization |
-| || matrix ||F = 7.254539570777056e-02                                           reinitialization |
 | || delta phi ||L2 = 9.950283567037232e-04                                       reinitialization |
 |  τ = 0.06                                                                       reinitialization |
-| || matrix ||F = 7.254539570777056e-02                                           reinitialization |
 | || delta phi ||L2 = 7.740910544892768e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.16041946042e+00                                               normal_vector |
@@ -28,10 +26,8 @@
 | || normal_1 ||L2 = 3.49637514593e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.03                                                                       reinitialization |
-| || matrix ||F = 8.585884745098224e-02                                           reinitialization |
 | || delta phi ||L2 = 2.116370651112525e-03                                       reinitialization |
 |  τ = 0.06                                                                       reinitialization |
-| || matrix ||F = 8.585884745098224e-02                                           reinitialization |
 | || delta phi ||L2 = 7.080143740352102e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.51059472436e+00                                               normal_vector |
@@ -47,10 +43,8 @@
 | || normal_1 ||L2 = 3.55370490092e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.03                                                                       reinitialization |
-| || matrix ||F = 1.010598876028468e-01                                           reinitialization |
 | || delta phi ||L2 = 4.886425235149467e-04                                       reinitialization |
 |  τ = 0.06                                                                       reinitialization |
-| || matrix ||F = 1.010598876028468e-01                                           reinitialization |
 | || delta phi ||L2 = 2.617051503473887e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.55964256163e+00                                               normal_vector |
@@ -66,10 +60,8 @@
 | || normal_1 ||L2 = 3.75928311545e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.03                                                                       reinitialization |
-| || matrix ||F = 1.167641662990155e-01                                           reinitialization |
 | || delta phi ||L2 = 1.020662661732617e-03                                       reinitialization |
 |  τ = 0.06                                                                       reinitialization |
-| || matrix ||F = 1.167641662990155e-01                                           reinitialization |
 | || delta phi ||L2 = 3.314858054706873e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.76561628198e+00                                               normal_vector |
@@ -85,10 +77,8 @@
 | || normal_1 ||L2 = 3.83258087889e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.03                                                                       reinitialization |
-| || matrix ||F = 1.219017784479619e-01                                           reinitialization |
 | || delta phi ||L2 = 7.509412034490337e-04                                       reinitialization |
 |  τ = 0.06                                                                       reinitialization |
-| || matrix ||F = 1.219017784479619e-01                                           reinitialization |
 | || delta phi ||L2 = 3.083667530672405e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.83416007064e+00                                               normal_vector |

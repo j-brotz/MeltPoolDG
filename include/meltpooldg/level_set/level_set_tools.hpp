@@ -88,6 +88,43 @@ namespace MeltPoolDG::LevelSet::Tools
     return (val2 - val1) * (-6. * ls * ls + 6. * ls);
   }
 
+  /**
+   * @brief Computes an approximate signed distance from a hyperbolic tangent level-set value.
+   *
+   * This function converts a phase-field value \p phi, typically originating from
+   * a hyperbolic tangent profile, into an approximate signed distance. The relation
+   * is based on the inverse transformation
+   * \f[
+   * d = \varepsilon \log\left(\frac{1+\phi}{1-\phi}\right),
+   * \f]
+   * where \f$\varepsilon\f$ controls the interface thickness.
+   *
+   * To avoid numerical instability near \f$\phi = \pm 1\f$, the value is clamped
+   * using the parameter \p cutoff. For values outside the interval
+   * \f$(-\text{cutoff}, \text{cutoff})\f$, the returned distance is saturated at
+   * the corresponding cutoff distance.
+   *
+   * @tparam number Numeric type used for computations (e.g., float, double).
+   *
+   * @param phi    Level-set value, typically in the range [-1,1].
+   * @param eps    Interface thickness parameter \f$\varepsilon\f$.
+   * @param cutoff Cutoff value used to limit the logarithm argument away from
+   *               singularities at \f$\phi = \pm 1\f$.
+   *
+   * @return Approximate signed distance corresponding to the phase-field value.
+   */
+  template <typename number>
+  inline number
+  approximate_distance_from_tanh_level_set(const number phi, const number eps, const number cutoff)
+  {
+    if (std::abs(phi) < cutoff)
+      return eps * std::log((1. + phi) / (1. - phi));
+    else if (phi >= cutoff)
+      return eps * std::log((1. + cutoff) / (1. - cutoff));
+    else /*( phi <= -cutoff )*/
+      return -eps * std::log((1. + cutoff) / (1. - cutoff));
+  }
+
 
   /**
    * For two indicator vectors, representing e.g. implicit geometries, this function computes a
