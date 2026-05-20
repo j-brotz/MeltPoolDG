@@ -2,21 +2,21 @@
   "base": {
     "case name": "generic_hyper_rectangle_domain",
     "dimension": 2,
-    "do print parameters": false,
+    "do print parameters": true,
     "verbosity level": 1,
-    "global refinements": 1
+    "global refinements": 0
   },
   "case setup": {
     "boundary x min": {
       "type": "inflow",
-      "density": 0.4,
+      "density": 1.177,
       "velocity": "150; 0",
-      "energy": 213300,
+      "energy": 212404,
       "inflow ramp-up type": "none"
     },
     "boundary x max": {
       "type": "subsonic_outflow_fixed_energy",
-      "energy": 213300
+      "energy": 212404
     },
     "boundary y min": {
       "type": "no_slip_wall"
@@ -25,51 +25,56 @@
       "type": "no_slip_wall"
     },
     "initial conditions": {
-      "density": 0.4,
+      "density": 1.177,
       "velocity": "150; 0.0",
-      "energy": 213300
+      "energy": 212404
     },
     "domain": {
-      "size": "80e-6, 40e-6",
-      "base grid resolution": "20, 10"
+      "size": "250, 50",
+      "base grid resolution": "250, 50"
     }
   },
   "time stepping": {
     "start time": 0.0,
-    "end time": 1e-10
+    "end time": 3
   },
   "output": {
-    "write frequency": 1,
+    "write frequency": 10000,
     "do user defined postprocessing": true,
     "directory": "./output",
     "paraview": {
       "filename": "solution_generic_hyper_rectangle_domain",
       "enable": true
+    },
+    "eigenvalues":
+    {
+      "enable": true,
+      "file name": "eigenvalues_cfl2.csv"
     }
   },
   "compressible navier stokes": {
     "numerical flux type": "lax_friedrichs_modified",
     "use cfl criteria": true,
-    "courant number": 0.01,
-    "viscous courant number": 0.001,
+    "courant number": 0.3,
+    "viscous courant number": 1,
     "gravity constant": 0,
     "time integration": {
       "type": "LSRK_stage_1_order_1"
     },
     "fe": {
-      "degree": 2,
+      "degree": 1,
       "type": "FE_DGQ"
     }
   },
   "material": {
     "gas": {
+      "dynamic viscosity": 2e-05,
+      "specific isobaric heat": 1004.85,
+      "specific gas constant": 287.1,
+      "reference density": 1.0,
+      "gamma": 1.4,
       "eos type": "ideal_gas",
-      "reference density": 0.04,
-      "reference dynamic viscosity": 3.5e-05,
-      "dynamic viscosity": 3.5e-05,
-      "gamma": 1.6666666666,
-      "specific gas constant": 174,
-      "thermal conductivity": 0.02863
+      "reference dynamic viscosity": 2e-5
     }
   }
 }

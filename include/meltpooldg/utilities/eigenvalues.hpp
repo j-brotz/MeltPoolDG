@@ -43,7 +43,6 @@ namespace MeltPoolDG
                              const unsigned    max_eigenvalues = 100);
 
   // --- template and inline functions --- //
-
   template <typename VectorType, typename Operator>
   std::vector<std::complex<double>>
   estimate_eigenvalues_gmres(const Operator    &op,
