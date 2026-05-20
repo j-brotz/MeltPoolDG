@@ -1422,7 +1422,7 @@
                 "pattern_description": "[List of <[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]> of length 0...4294967295 (inclusive)]",
                 "actions": "147"
             },
-            "ambient_gas_pressure":
+            "ambient gas pressure":
             {
                 "value": "0",
                 "default_value": "0",
@@ -1691,7 +1691,7 @@
                     "pattern_description": "[List of <[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]> of length 0...4294967295 (inclusive)]",
                     "actions": "175"
                 },
-                "ambient_gas_pressure":
+                "ambient gas pressure":
                 {
                     "value": "0",
                     "default_value": "0",
