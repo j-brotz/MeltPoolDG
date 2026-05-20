@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
+#include "mpi.h"
 
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::ObstacleCompleteDomainSearch(
@@ -76,7 +77,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::reinit()
     }
 
   MPI_Allreduce(
-    &level_to_store_particles, &level_to_store_particles, 1, MPI_INT, MPI_MIN, mpi_communicator);
+    MPI_IN_PLACE, &level_to_store_particles, 1, MPI_INT, MPI_MIN, mpi_communicator);
 
   deregister_property_pool();
   properties_global_obstacles->clear();
