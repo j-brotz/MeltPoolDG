@@ -1,4 +1,17 @@
+#include <deal.II/base/geometry_info.h>
+#include <deal.II/base/mpi.h>
+
+#include <deal.II/grid/cell_id.h>
+#include <deal.II/grid/tria.h>
+#include <deal.II/grid/tria_accessor.h>
+
 #include <meltpooldg/particles/dem_util.hpp>
+
+#include <algorithm>
+#include <map>
+#include <ranges>
+#include <utility>
+#include <vector>
 
 template <int dim>
 MeltPoolDG::LevelCellCommunicationPattern<dim>::LevelCellCommunicationPattern(
@@ -154,9 +167,8 @@ MeltPoolDG::LevelCellCommunicationPattern<dim>::adjacent_relevant_cells(
 
   search_neighbors(search_neighbors, cell);
 
-  std::sort(relevant_cells.begin(), relevant_cells.end());
-  relevant_cells.erase(std::unique(relevant_cells.begin(), relevant_cells.end()),
-                       relevant_cells.end());
+  std::ranges::sort(relevant_cells, [](const auto &a, const auto &b) { return a < b; });
+  relevant_cells.erase(std::ranges::unique(relevant_cells).begin(), relevant_cells.end());
 
   return relevant_cells;
 }
@@ -167,7 +179,8 @@ MeltPoolDG::LevelCellCommunicationPattern<dim>::relevant_cells_for_ranks(
   const std::vector<std::pair<unsigned, std::vector<dealii::CellId>>> &requested_cells_by_rank,
   const std::vector<dealii::CellId> &owned_active_cell_ancestors) const
 {
-  std::vector<std::pair<unsigned, std::vector<dealii::CellId>>> locally_owned_relevant_cells_for_ranks;
+  std::vector<std::pair<unsigned, std::vector<dealii::CellId>>>
+    locally_owned_relevant_cells_for_ranks;
 
   for (const auto &[rank, cells] : requested_cells_by_rank)
     {
@@ -212,7 +225,8 @@ MeltPoolDG::LevelCellCommunicationPattern<dim>::exchange_relevant_cells(
     }
 
   // receive
-  std::vector<dealii::Utilities::MPI::Future<std::pair<unsigned, std::vector<dealii::CellId>>>> receive_futures;
+  std::vector<dealii::Utilities::MPI::Future<std::pair<unsigned, std::vector<dealii::CellId>>>>
+    receive_futures;
   for (unsigned int rank = 0; rank < dealii::Utilities::MPI::n_mpi_processes(mpi_communicator);
        ++rank)
     {

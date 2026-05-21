@@ -1,16 +1,22 @@
 #pragma once
 
-#include <deal.II/base/config.h>
+#include <deal.II/base/geometry_info.h>
+#include <deal.II/base/tensor.h>
 
+#include <deal.II/grid/cell_id.h>
+#include <deal.II/grid/tria.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
 
 #include <deal.II/particles/particle_handler.h>
 
-#include <meltpooldg/time_integration/solution_history.hpp>
-
 #include <meltpooldg/utilities/cpp23_functions.h>
+#include <mpi.h>
 
+#include <algorithm>
+#include <map>
+#include <vector>
+#include <utility>
 
 
 namespace MeltPoolDG
