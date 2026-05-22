@@ -29,7 +29,7 @@ namespace MeltPoolDG
    * @return Value of mask function at given coordinates.
    */
   template <int dim, typename number, typename VectorizedArrayType, typename ObstacleType>
-  VectorizedArrayType
+  inline DEAL_II_ALWAYS_INLINE VectorizedArrayType
   discontinuous_mask_function(const dealii::Point<dim, VectorizedArrayType> &location,
                               const DEMParticleAccessor<dim, number>        &particle)
   {
@@ -45,7 +45,7 @@ namespace MeltPoolDG
   }
 
   template <int dim, typename number, typename VectorizedArrayType, typename ObstacleType>
-  VectorizedArrayType
+  inline DEAL_II_ALWAYS_INLINE VectorizedArrayType
   mask_function(const MaskFunctionType                         mask_function_type,
                 const dealii::Point<dim, VectorizedArrayType> &location,
                 const DEMParticleAccessor<dim, number>        &particle)
@@ -81,11 +81,11 @@ namespace MeltPoolDG
      *
      * @param cells Array of cell iterators for which the cache should be updated.
      */
-    void
+    inline DEAL_II_ALWAYS_INLINE void
     update_cache(const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells)
     {
       // check if cache is still valid
-      if (cells.size() == cached_cells.size() &&
+      if (cells.size() == cached_cells.size() and
           std::equal(cells.begin(), cells.end(), cached_cells.begin()))
         return;
 

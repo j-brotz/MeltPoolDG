@@ -162,7 +162,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
             {
               cell = cell->parent();
             }
-          cell_to_locally_owned_particle_cache[cell].push_back(particle);
+          cell_to_locally_owned_particle_cache[cell->global_level_cell_index()].push_back(particle);
         }
     }
 }
@@ -187,7 +187,8 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
       for (const dealii::CellId &cell_id : cells)
         {
           n_particles_to_send[rank] +=
-            cell_to_locally_owned_particle_cache[triangulation->create_cell_iterator(cell_id)]
+            cell_to_locally_owned_particle_cache[triangulation->create_cell_iterator(cell_id)
+                                                   ->global_level_cell_index()]
               .size();
         }
       MPI_Isend(&n_particles_to_send[rank],
@@ -239,7 +240,8 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
       for (const dealii::CellId &cell_id : cells)
         {
           for (dealii::Particles::ParticleIterator<dim> particle :
-               cell_to_locally_owned_particle_cache[triangulation->create_cell_iterator(cell_id)])
+               cell_to_locally_owned_particle_cache[triangulation->create_cell_iterator(cell_id)
+                                                      ->global_level_cell_index()])
             {
               write_particle_data_to_memory(send_buffer.data() +
                                               iter * serialized_size_in_bytes(
@@ -290,7 +292,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
               cell               = triangulation->create_cell_iterator(new_cell_id);
             }
 
-          cell_to_ghost_particle_cache[cell].push_back(received_data.handle);
+          cell_to_ghost_particle_cache[cell->global_level_cell_index()].push_back(received_data.handle);
 
           // TODO: We assume that the index i is the same for both the recv_futures and the
           // corresponding rank in the n_particles_to_receive vector, which should be the case since

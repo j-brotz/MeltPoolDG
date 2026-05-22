@@ -137,13 +137,9 @@ TEST_F(ParticleDataStructureTest, GhostParticles)
   obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
   obstacle_data_structure.sort_particles_into_subdomains_and_cells();
 
-  std::map<typename dealii::Triangulation<dim>::cell_iterator,
-           std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
+  std::unordered_map<dealii::types::global_cell_index,
+                     std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
     ghost_particles = obstacle_data_structure.get_cell_to_ghost_particle_cache();
-
-  std::cout << "Rank " << dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
-            << ": Locally relevant particles: "
-            << obstacle_data_structure.n_locally_relevant_particles() << std::endl;
 
   MPI_Barrier(MPI_COMM_WORLD);
   unsigned int n_ghost_particles = 0;
@@ -189,8 +185,8 @@ TEST_F(ParticleDataStructureTest, ParticleNumberInfo)
   obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
   obstacle_data_structure.sort_particles_into_subdomains_and_cells();
 
-  std::map<typename dealii::Triangulation<dim>::cell_iterator,
-           std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
+  std::unordered_map<dealii::types::global_cell_index,
+                     std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
     ghost_particles = obstacle_data_structure.get_cell_to_ghost_particle_cache();
 
   {
@@ -201,18 +197,6 @@ TEST_F(ParticleDataStructureTest, ParticleNumberInfo)
               obstacle_locations.size() - obstacle_data_structure.n_locally_owned_particles());
   }
 }
-
-/*
-TEST(ParticleDataStructureTest, PartitionerSenderAndReceiverRanks)
-{
-  // The test is designed to run with 8 MPI processes.
-  ASSERT_EQ(dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD), 8);
-
-  constexpr int level_to_store_particles = 1;
-
-
-}
-  */
 
 /*
 TEST_F(ParticleDataStructureTest, ArtificalCellsOnLevelZero)
