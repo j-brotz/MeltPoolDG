@@ -120,6 +120,18 @@ namespace MeltPoolDG
                 }
             }
         }
+
+
+
+      // Compute the global numbers of cells on the specified level
+      n_global_cells_on_level = 0;
+      for (auto cell : tria.cell_iterators_on_level(level))
+        {
+          if (cell->is_locally_owned_on_level())
+            n_global_cells_on_level += 1;
+        }
+      n_global_cells_on_level =
+        dealii::Utilities::MPI::sum(n_global_cells_on_level, tria.get_mpi_communicator());
     }
 
     std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>>
@@ -133,10 +145,18 @@ namespace MeltPoolDG
         cell_to_neighbors.find(cell)->second.begin(), cell_to_neighbors.find(cell)->second.end());
     }
 
+    unsigned int
+    n_global_cells() const
+    {
+      return n_global_cells_on_level;
+    }
+
   private:
     std::map<dealii::TriaIterator<dealii::CellAccessor<dim>>,
              std::set<dealii::TriaIterator<dealii::CellAccessor<dim>>>>
       cell_to_neighbors;
+
+    unsigned int n_global_cells_on_level = 0;
   };
 
 

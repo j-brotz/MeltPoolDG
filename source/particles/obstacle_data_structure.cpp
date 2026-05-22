@@ -1,4 +1,5 @@
 #include <deal.II/base/exception_macros.h>
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/timer.h>
 
@@ -150,7 +151,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
 {
   obstacle_handler->sort_particles_into_subdomains_and_cells();
   cell_to_locally_owned_particle_cache.clear();
-  cell_to_locally_owned_particle_cache.resize(triangulation->n_cells(level_to_store_particles));
+  cell_to_locally_owned_particle_cache.resize(level_cell_cache.n_global_cells());
   for (dealii::Particles::ParticleIterator<dim> particle = obstacle_handler->begin();
        particle != obstacle_handler->end();
        ++particle)
@@ -173,7 +174,7 @@ void
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate_ghost_particles()
 {
   cell_to_ghost_particle_cache.clear();
-  cell_to_ghost_particle_cache.resize(triangulation->n_cells(level_to_store_particles));
+  cell_to_ghost_particle_cache.resize(level_cell_cache.n_global_cells());
   rank_to_handle.clear();
   rank_to_handle.resize(dealii::Utilities::MPI::n_mpi_processes(mpi_communicator));
   rank_to_n_ghost_particles.clear();
@@ -416,13 +417,16 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::compress()
   std::vector<dealii::Utilities::MPI::Future<void>> send_futures;
   send_futures.reserve(rank_to_handle.size());
 
-  for (unsigned int target_rank = 0; target_rank < dealii::Utilities::MPI::n_mpi_processes(mpi_communicator); ++target_rank)
+  for (unsigned int target_rank = 0;
+       target_rank < dealii::Utilities::MPI::n_mpi_processes(mpi_communicator);
+       ++target_rank)
     {
       if (rank_to_handle[target_rank].empty())
         continue;
 
       MPIExchangeType ghost_properties_to_send;
-      ghost_properties_to_send.reserve(rank_to_handle[target_rank].size() * property_indices_to_compress.size());
+      ghost_properties_to_send.reserve(rank_to_handle[target_rank].size() *
+                                       property_indices_to_compress.size());
       for (const auto &handle : rank_to_handle[target_rank])
         {
           dealii::ArrayView<double> property_values =
@@ -445,7 +449,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::compress()
   // property pool accordingly.
   std::vector<dealii::Utilities::MPI::Future<MPIExchangeType>> receive_futures;
 
-  
+
   for (unsigned int rank = 0; rank < rank_to_n_ghost_particles.size(); ++rank)
     {
       if (rank_to_n_ghost_particles[rank] > 0)

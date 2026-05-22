@@ -104,18 +104,15 @@ namespace MeltPoolDG
         comp_flow_operation->solve(time_iterator->get_current_time(),
                                    time_iterator->get_current_time_increment());
 
-        {
-          dealii::TimerOutput::Scope t(scratch_data->get_timer(), "advance obstacles");
-          if (this->simulation_case->parameters.obstacle_data.stationary_obstacles)
-            obstacle_field->compute_loads_on_obstacles();
-          else
-            {
-              // The advance time function internally calls compute_loads_on_obstacles(). Therefore
-              // this is not done explicitly here.
-              obstacle_field->advance_time(time_iterator->get_current_time(),
-                                           time_iterator->get_current_time_increment());
-            }
-        }
+        if (this->simulation_case->parameters.obstacle_data.stationary_obstacles)
+          obstacle_field->compute_loads_on_obstacles();
+        else
+          {
+            // The advance time function internally calls compute_loads_on_obstacles(). Therefore
+            // this is not done explicitly here.
+            obstacle_field->advance_time(time_iterator->get_current_time(),
+                                         time_iterator->get_current_time_increment());
+          }
 
         // do output if requested
         output_results(time_iterator->get_current_time_step_number(),
