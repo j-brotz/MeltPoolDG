@@ -609,18 +609,13 @@ namespace MeltPoolDG
 
       for (const dealii::TriaIterator<dealii::CellAccessor<dim>> &current_cell : relevant_cells)
         {
-          if (cell_to_locally_owned_particle_cache.contains(
-                current_cell->global_level_cell_index()))
-            {
-              for (dealii::Particles::ParticleIterator<dim> &particle :
-                   cell_to_locally_owned_particle_cache[current_cell->global_level_cell_index()])
-                relevant_particles.emplace_back(*particle, false);
-            }
+          for (dealii::Particles::ParticleIterator<dim> &particle :
+               cell_to_locally_owned_particle_cache[current_cell->index()])
+            relevant_particles.emplace_back(*particle, false);
 
-          if (cell_to_ghost_particle_cache.contains(current_cell->global_level_cell_index()))
-            for (const typename dealii::Particles::PropertyPool<dim>::Handle particle_handle :
-                 cell_to_ghost_particle_cache[current_cell->global_level_cell_index()])
-              relevant_particles.emplace_back(*properties_global_obstacles, particle_handle, true);
+          for (const typename dealii::Particles::PropertyPool<dim>::Handle particle_handle :
+               cell_to_ghost_particle_cache[current_cell->index()])
+            relevant_particles.emplace_back(*properties_global_obstacles, particle_handle, true);
         }
 
       return relevant_particles;
@@ -770,8 +765,7 @@ namespace MeltPoolDG
       sort_particles_into_subdomains_and_cells();
     }
 
-    std::unordered_map<dealii::types::global_cell_index,
-                       std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
+    std::vector<std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
     get_cell_to_ghost_particle_cache() const
     {
       return cell_to_ghost_particle_cache;
@@ -781,13 +775,13 @@ namespace MeltPoolDG
     n_locally_relevant_particles()
     {
       unsigned int n_locally_relevant_particles = n_locally_owned_particles();
-      for (const auto &[cell, particles] : cell_to_ghost_particle_cache)
+      for (const auto &particles : cell_to_ghost_particle_cache)
         {
           n_locally_relevant_particles += particles.size();
         }
       return n_locally_relevant_particles;
 
-      for (const auto &[cell, particles] : cell_to_locally_owned_particle_cache)
+      for (const auto &particles : cell_to_locally_owned_particle_cache)
         {
           n_locally_relevant_particles += particles.size();
         }
@@ -798,7 +792,7 @@ namespace MeltPoolDG
     n_ghost_particles() const
     {
       unsigned int n_ghost_particles = 0;
-      for (const auto &[cell, particles] : cell_to_ghost_particle_cache)
+      for (const auto &particles : cell_to_ghost_particle_cache)
         {
           n_ghost_particles += particles.size();
         }
@@ -822,8 +816,7 @@ namespace MeltPoolDG
     /// is used to efficiently retrieve locally owned particles for a given cell without having to
     /// search through all particles.
     /// The key is the global level cell index
-    mutable std::unordered_map<dealii::types::global_cell_index,
-                               std::vector<dealii::Particles::ParticleIterator<dim>>>
+    mutable std::vector<std::vector<dealii::Particles::ParticleIterator<dim>>>
       cell_to_locally_owned_particle_cache;
 
     /// Same as above but for ghost particles. As ghost particles are stored in a separate property
@@ -831,18 +824,16 @@ namespace MeltPoolDG
     /// particle is associated with might be on a lower (coarser) than the one the particles should
     /// be stored on, as it is not guaranteed that the cell on the specified level in which the
     /// ghost particle lives is available on the current rank.
-    mutable std::unordered_map<dealii::types::global_cell_index,
-                               std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
+    mutable std::vector<std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
       cell_to_ghost_particle_cache;
 
     /// A map that associates each MPI rank with the handles in the property pool of the ghost
     /// particles storing those particles which are owned by the corresponding rank.
-    mutable std::unordered_map<unsigned int,
-                               std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
+    mutable std::vector<std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
       rank_to_handle;
 
     /// A map that associates each neighbor rank with the currently stored number of ghost particles
-    mutable std::unordered_map<unsigned int, unsigned int> rank_to_n_ghost_particles;
+    mutable std::vector<unsigned int> rank_to_n_ghost_particles;
 
     // Cache mapping particle ids to their corresponding particle iterators in the property pool.
     // This is used to efficiently compress particle properties

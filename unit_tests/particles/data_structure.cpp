@@ -137,13 +137,12 @@ TEST_F(ParticleDataStructureTest, GhostParticles)
   obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
   obstacle_data_structure.sort_particles_into_subdomains_and_cells();
 
-  std::unordered_map<dealii::types::global_cell_index,
-                     std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
-    ghost_particles = obstacle_data_structure.get_cell_to_ghost_particle_cache();
+  std::vector<std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>> ghost_particles =
+    obstacle_data_structure.get_cell_to_ghost_particle_cache();
 
   MPI_Barrier(MPI_COMM_WORLD);
   unsigned int n_ghost_particles = 0;
-  for (const auto &[cell, particles] : ghost_particles)
+  for (const auto &particles : ghost_particles)
     n_ghost_particles += particles.size();
 
   unsigned n_expected_ghost_particles = obstacle_locations.size();
@@ -184,10 +183,6 @@ TEST_F(ParticleDataStructureTest, ParticleNumberInfo)
 
   obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
   obstacle_data_structure.sort_particles_into_subdomains_and_cells();
-
-  std::unordered_map<dealii::types::global_cell_index,
-                     std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
-    ghost_particles = obstacle_data_structure.get_cell_to_ghost_particle_cache();
 
   {
     SCOPED_TRACE("Check particle numbers on rank " +

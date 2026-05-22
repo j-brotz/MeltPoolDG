@@ -150,6 +150,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
 {
   obstacle_handler->sort_particles_into_subdomains_and_cells();
   cell_to_locally_owned_particle_cache.clear();
+  cell_to_locally_owned_particle_cache.resize(triangulation->n_cells(level_to_store_particles));
   for (dealii::Particles::ParticleIterator<dim> particle = obstacle_handler->begin();
        particle != obstacle_handler->end();
        ++particle)
@@ -162,7 +163,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
             {
               cell = cell->parent();
             }
-          cell_to_locally_owned_particle_cache[cell->global_level_cell_index()].push_back(particle);
+          cell_to_locally_owned_particle_cache[cell->index()].push_back(particle);
         }
     }
 }
@@ -172,8 +173,11 @@ void
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate_ghost_particles()
 {
   cell_to_ghost_particle_cache.clear();
+  cell_to_ghost_particle_cache.resize(triangulation->n_cells(level_to_store_particles));
   rank_to_handle.clear();
+  rank_to_handle.resize(dealii::Utilities::MPI::n_mpi_processes(mpi_communicator));
   rank_to_n_ghost_particles.clear();
+  rank_to_n_ghost_particles.resize(dealii::Utilities::MPI::n_mpi_processes(mpi_communicator), 0);
   deregister_property_pool();
 
   // Step 1: Send the number of particles to be sent to each rank
@@ -188,7 +192,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
         {
           n_particles_to_send[rank] +=
             cell_to_locally_owned_particle_cache[triangulation->create_cell_iterator(cell_id)
-                                                   ->global_level_cell_index()]
+                                                   ->index()]
               .size();
         }
       MPI_Isend(&n_particles_to_send[rank],
@@ -241,7 +245,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
         {
           for (dealii::Particles::ParticleIterator<dim> particle :
                cell_to_locally_owned_particle_cache[triangulation->create_cell_iterator(cell_id)
-                                                      ->global_level_cell_index()])
+                                                      ->index()])
             {
               write_particle_data_to_memory(send_buffer.data() +
                                               iter * serialized_size_in_bytes(
@@ -292,7 +296,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
               cell               = triangulation->create_cell_iterator(new_cell_id);
             }
 
-          cell_to_ghost_particle_cache[cell->global_level_cell_index()].push_back(received_data.handle);
+          cell_to_ghost_particle_cache[cell->index()].push_back(received_data.handle);
 
           // TODO: We assume that the index i is the same for both the recv_futures and the
           // corresponding rank in the n_particles_to_receive vector, which should be the case since
@@ -412,11 +416,14 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::compress()
   std::vector<dealii::Utilities::MPI::Future<void>> send_futures;
   send_futures.reserve(rank_to_handle.size());
 
-  for (auto &[rank, handles] : rank_to_handle)
+  for (unsigned int target_rank = 0; target_rank < dealii::Utilities::MPI::n_mpi_processes(mpi_communicator); ++target_rank)
     {
+      if (rank_to_handle[target_rank].empty())
+        continue;
+
       MPIExchangeType ghost_properties_to_send;
-      ghost_properties_to_send.reserve(handles.size() * property_indices_to_compress.size());
-      for (const auto &handle : handles)
+      ghost_properties_to_send.reserve(rank_to_handle[target_rank].size() * property_indices_to_compress.size());
+      for (const auto &handle : rank_to_handle[target_rank])
         {
           dealii::ArrayView<double> property_values =
             properties_global_obstacles->get_properties(handle);
@@ -431,16 +438,17 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::compress()
                                                                     send_view.end()));
         }
       send_futures.emplace_back(
-        dealii::Utilities::MPI::isend(ghost_properties_to_send, mpi_communicator, rank, 0));
+        dealii::Utilities::MPI::isend(ghost_properties_to_send, mpi_communicator, target_rank, 0));
     }
 
   // Receive compressed properties for ghost particles from other ranks and update the local
   // property pool accordingly.
   std::vector<dealii::Utilities::MPI::Future<MPIExchangeType>> receive_futures;
 
-  for (const auto [rank, n_ghost_particles] : rank_to_n_ghost_particles)
+  
+  for (unsigned int rank = 0; rank < rank_to_n_ghost_particles.size(); ++rank)
     {
-      if (n_ghost_particles > 0)
+      if (rank_to_n_ghost_particles[rank] > 0)
         {
           receive_futures.emplace_back(
             dealii::Utilities::MPI::irecv<MPIExchangeType>(mpi_communicator, rank, 0));
