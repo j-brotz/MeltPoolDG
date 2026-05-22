@@ -126,6 +126,9 @@ MeltPoolDG::LevelCellCommunicationPattern<dim>::adjacent_relevant_cells(
   const dealii::CellId              &cell_id,
   const std::vector<dealii::CellId> &owned_active_cell_ancestors) const
 {
+  Assert(triangulation.contains_cell(cell_id),
+         dealii::ExcMessage("The triangulation does not contain the cell with the given cell id."));
+
   std::vector<dealii::CellId> relevant_cells;
 
   typename dealii::Triangulation<dim>::cell_iterator cell =
@@ -189,9 +192,9 @@ MeltPoolDG::LevelCellCommunicationPattern<dim>::relevant_cells_for_ranks(
           std::set<dealii::CellId> locally_owned_relevant_cells_for_rank;
           for (const auto &cell_id : cells)
             {
-              if (Utils::contains(owned_active_cell_ancestors, cell_id))
+              // TODO: What if the cell is not available but the parent cell is available?
+              if (triangulation.contains_cell(cell_id))
                 {
-                  locally_owned_relevant_cells_for_rank.insert(cell_id);
                   std::vector<dealii::CellId> relevant_cells =
                     adjacent_relevant_cells(cell_id, owned_active_cell_ancestors);
                   locally_owned_relevant_cells_for_rank.insert(relevant_cells.begin(),

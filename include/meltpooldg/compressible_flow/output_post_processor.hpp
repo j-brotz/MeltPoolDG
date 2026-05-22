@@ -49,7 +49,7 @@ namespace MeltPoolDG::CompressibleFlow
       names.reserve(n_conserved_variables<dim>);
       names.emplace_back("density");
       names.insert(names.end(), dim, "momentum");
-      names.emplace_back("total energy");
+      names.emplace_back("total_energy");
       return names;
     }
 

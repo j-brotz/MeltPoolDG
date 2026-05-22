@@ -544,8 +544,6 @@ namespace MeltPoolDG
     get_obstacles_in_cell(
       const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const
     {
-      dealii::TimerOutput::Scope t(timer, "particles in cell search");
-
       std::vector<DEMParticleAccessor<dim, number>> particles_in_cell;
 
       for (const auto &cell : cells)
@@ -574,7 +572,6 @@ namespace MeltPoolDG
     std::vector<DEMParticleAccessor<dim, number>>
     get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const
     {
-      dealii::TimerOutput::Scope t(timer, "particles in cell search");
       return find_relevant_particles(find_particle_storage_cell(cell));
     }
 
@@ -737,7 +734,6 @@ namespace MeltPoolDG
     void
     sort_particles_into_subdomains_and_cells()
     {
-      dealii::TimerOutput::Scope t(timer, "update ghost particles");
       // broadcast_global_particles();
 
       sort_particles_into_local_level_cells();

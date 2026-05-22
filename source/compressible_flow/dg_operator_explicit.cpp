@@ -147,8 +147,6 @@ namespace MeltPoolDG::CompressibleFlow
 
             for (auto &external_force : external_forces)
               {
-                dealii::TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(),
-                                             "apply external force");
                 source += external_force->value(current_time_step,
                                                 cell_iterators,
                                                 phi.quadrature_point(q),

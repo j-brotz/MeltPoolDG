@@ -99,8 +99,6 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::contact_par
   const DEMParticleAccessor<dim, number> &particle,
   const number                            relative_tolerance) const
 {
-  dealii::TimerOutput::Scope t(timer, "contact particle search");
-
   // We assume the max number of contacts per particle to be 3*dim, which is a reasonable
   // assumption for spherical particles including some tolerance offset for the contact
   // distance. This allows us to use a small_vector for efficient storage without dynamic memory
