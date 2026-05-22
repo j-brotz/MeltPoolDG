@@ -148,6 +148,7 @@ void
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
   sort_particles_into_local_level_cells()
 {
+  obstacle_handler->sort_particles_into_subdomains_and_cells();
   cell_to_locally_owned_particle_cache.clear();
   for (dealii::Particles::ParticleIterator<dim> particle = obstacle_handler->begin();
        particle != obstacle_handler->end();

@@ -734,8 +734,6 @@ namespace MeltPoolDG
     void
     sort_particles_into_subdomains_and_cells()
     {
-      // broadcast_global_particles();
-
       sort_particles_into_local_level_cells();
       communicate_ghost_particles();
 
