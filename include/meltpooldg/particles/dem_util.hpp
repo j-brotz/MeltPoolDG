@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deal.II/base/config.h>
+
 #include <deal.II/base/geometry_info.h>
 #include <deal.II/base/tensor.h>
 
@@ -13,10 +15,9 @@
 #include <meltpooldg/utilities/cpp23_functions.h>
 #include <mpi.h>
 
-#include <algorithm>
 #include <map>
-#include <vector>
 #include <utility>
+#include <vector>
 
 
 namespace MeltPoolDG
@@ -69,48 +70,74 @@ namespace MeltPoolDG
     return torque;
   }
 
-
   template <int dim>
-  inline DEAL_II_ALWAYS_INLINE std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>>
-  get_neighboring_cells(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell)
+  struct LevelCellCache
   {
-    // TODO: Use boost vector
-    std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> relevant_cells;
+    void
+    reinit(const dealii::Triangulation<dim> &tria, int level)
+    {
+      using TriaIterator = dealii::TriaIterator<dealii::CellAccessor<dim>>;
+      std::map<unsigned int, std::vector<TriaIterator>> vertex_to_cells_map;
 
-    // TODO: What if the neighbor is not on the same level but on one level coarser?
-    auto search_neighbors =
-      [&relevant_cells](const auto                                               &search_neighbors,
-                        const typename dealii::Triangulation<dim>::cell_iterator &cell,
-                        std::vector<unsigned> excluded_indices = {},
-                        int                   current_depth    = 1) -> void {
-      for (unsigned int neighbor_index = 0;
-           neighbor_index < dealii::GeometryInfo<dim>::faces_per_cell;
-           ++neighbor_index)
+      for (auto cell : tria.cell_iterators_on_level(level))
         {
-          if (std::ranges::find(excluded_indices, neighbor_index) == excluded_indices.end() and
-              not cell->at_boundary(neighbor_index))
+          for (unsigned int vertex_index = 0;
+               vertex_index < dealii::GeometryInfo<dim>::vertices_per_cell;
+               ++vertex_index)
             {
-              relevant_cells.push_back(cell->neighbor(neighbor_index));
-              if (current_depth < dim)
+              vertex_to_cells_map[cell->vertex_index(vertex_index)].push_back(cell);
+            }
+        }
+
+      if (level > 0)
+        {
+          for (auto cell : tria.cell_iterators_on_level(level - 1))
+            {
+              if (!cell->has_children())
                 {
-                  excluded_indices.push_back(neighbor_index);
-                  search_neighbors(search_neighbors,
-                                   cell->neighbor(neighbor_index),
-                                   excluded_indices,
-                                   current_depth + 1);
+                  for (unsigned int vertex_index = 0;
+                       vertex_index < dealii::GeometryInfo<dim>::vertices_per_cell;
+                       ++vertex_index)
+                    {
+                      vertex_to_cells_map[cell->vertex_index(vertex_index)].push_back(cell);
+                    }
                 }
             }
         }
-    };
 
-    search_neighbors(search_neighbors, cell);
 
-    std::sort(relevant_cells.begin(), relevant_cells.end());
-    relevant_cells.erase(std::unique(relevant_cells.begin(), relevant_cells.end()),
-                         relevant_cells.end());
+      // First we add all face neighbors
+      for (auto cell : tria.cell_iterators_on_level(level))
+        {
+          // First we add all face neighbors
+          for (unsigned int vertex_index = 0;
+               vertex_index < dealii::GeometryInfo<dim>::vertices_per_cell;
+               ++vertex_index)
+            {
+              for (const auto &neighbor : vertex_to_cells_map[cell->vertex_index(vertex_index)])
+                {
+                  cell_to_neighbors[cell].insert(neighbor);
+                }
+            }
+        }
+    }
 
-    return relevant_cells;
-  }
+    std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>>
+    get_neighboring_cells(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const
+    {
+      Assert(cell_to_neighbors.contains(cell),
+             dealii::ExcMessage(
+               "The neighboring cells for the given cell have not been computed yet."));
+
+      return std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>>(
+        cell_to_neighbors.find(cell)->second.begin(), cell_to_neighbors.find(cell)->second.end());
+    }
+
+  private:
+    std::map<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+             std::set<dealii::TriaIterator<dealii::CellAccessor<dim>>>>
+      cell_to_neighbors;
+  };
 
 
   template <int dim>

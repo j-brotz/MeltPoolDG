@@ -10,6 +10,13 @@ mpdg_setup_mpi_unit_tests(
 
 mpdg_setup_mpi_unit_tests(
    N_MPI_PROCESSES
+   4
+   TEST_SOURCE_FILES
+   dem_util.cpp
+)
+
+mpdg_setup_mpi_unit_tests(
+   N_MPI_PROCESSES
    8
    TEST_SOURCE_FILES
    data_structure.cpp

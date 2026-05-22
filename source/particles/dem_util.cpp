@@ -189,10 +189,14 @@ MeltPoolDG::LevelCellCommunicationPattern<dim>::relevant_cells_for_ranks(
           std::set<dealii::CellId> locally_owned_relevant_cells_for_rank;
           for (const auto &cell_id : cells)
             {
-              std::vector<dealii::CellId> relevant_cells =
-                adjacent_relevant_cells(cell_id, owned_active_cell_ancestors);
-              locally_owned_relevant_cells_for_rank.insert(relevant_cells.begin(),
-                                                           relevant_cells.end());
+              if (Utils::contains(owned_active_cell_ancestors, cell_id))
+                {
+                  locally_owned_relevant_cells_for_rank.insert(cell_id);
+                  std::vector<dealii::CellId> relevant_cells =
+                    adjacent_relevant_cells(cell_id, owned_active_cell_ancestors);
+                  locally_owned_relevant_cells_for_rank.insert(relevant_cells.begin(),
+                                                               relevant_cells.end());
+                }
             }
           locally_owned_relevant_cells_for_ranks.emplace_back(
             rank,

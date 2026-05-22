@@ -607,7 +607,7 @@ namespace MeltPoolDG
       std::vector<DEMParticleAccessor<dim, number>> relevant_particles;
 
       std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> relevant_cells =
-        get_neighboring_cells(cell);
+        level_cell_cache.get_neighboring_cells(cell);
 
       for (const dealii::TriaIterator<dealii::CellAccessor<dim>> &current_cell : relevant_cells)
         {
@@ -903,6 +903,8 @@ namespace MeltPoolDG
     dealii::Triangulation<dim> const *triangulation;
 
     LevelCellCommunicationPattern<dim> level_cell_partitioner;
+
+    LevelCellCache<dim> level_cell_cache;
 
     /**
      * @brief Broadcasts obstacle properties of all locally owned particles to all MPI processes.
