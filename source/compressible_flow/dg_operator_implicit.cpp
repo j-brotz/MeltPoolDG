@@ -258,8 +258,10 @@ namespace MeltPoolDG::CompressibleFlow
         phi_old.reinit(cell);
         phi_old.gather_evaluate(*time_integrator_old_solution, dealii::EvaluationFlags::values);
 
-        std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators =
-          cells_in_cell_batch(flow_scratch_data.scratch_data.get_matrix_free(), cell);
+        boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                       dealii::VectorizedArray<double>::size()>
+          cell_iterators =
+            cells_in_cell_batch(flow_scratch_data.scratch_data.get_matrix_free(), cell);
 
         for (const unsigned int q : phi.quadrature_point_indices())
           {
@@ -431,8 +433,10 @@ namespace MeltPoolDG::CompressibleFlow
         delta_phi.reinit(cell);
         delta_phi.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
-        std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators =
-          cells_in_cell_batch(flow_scratch_data.scratch_data.get_matrix_free(), cell);
+        boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                       dealii::VectorizedArray<double>::size()>
+          cell_iterators =
+            cells_in_cell_batch(flow_scratch_data.scratch_data.get_matrix_free(), cell);
 
         for (const unsigned int q_index : phi.quadrature_point_indices())
           {
@@ -556,10 +560,11 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number, bool is_viscous>
   void
   DGOperatorImplicit<dim, number, is_viscous>::local_cell_jacobian_kernel(
-    FECellIntegrator<dim, dim + 2, number>                      &delta_phi,
-    const FECellIntegrator<dim, dim + 2, number>                &phi,
-    const unsigned int                                           q_index,
-    std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators) const
+    FECellIntegrator<dim, dim + 2, number>                                 &delta_phi,
+    const FECellIntegrator<dim, dim + 2, number>                           &phi,
+    const unsigned int                                                      q_index,
+    boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                   dealii::VectorizedArray<double>::size()> cell_iterators) const
   {
     const auto w_q       = phi.get_value(q_index);
     const auto delta_w_q = delta_phi.get_value(q_index);

@@ -22,7 +22,6 @@
 
 #include <utility>
 
-
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::BrinkmanObstacleForce(
   const ObstacleField<dim, number, ObstacleType> &obstacle_field,
@@ -55,9 +54,8 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
       for (unsigned cell = cell_range.first; cell < cell_range.second; ++cell)
         {
           phi.reinit(cell);
-          std::vector<DEMParticleAccessor<dim, number>> relevant_obstacle =
-            obstacle_field.get_obstacles_in_cell(
-              MeltPoolDG::cells_in_cell_batch(matrix_free.mf, cell));
+          auto relevant_obstacle =
+            obstacle_field.get_obstacles_in_cell(cells_in_cell_batch(matrix_free.mf, cell));
           if (not relevant_obstacle.empty())
             {
               phi.gather_evaluate(solution, dealii::EvaluationFlags::values);
@@ -141,9 +139,10 @@ template <int dim, typename number, typename ObstacleType>
 auto
 MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>::value(
   const number,
-  const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cell_iterators,
-  const dealii::Point<dim, dealii::VectorizedArray<number>>          &q_point,
-  const ConservedVariablesType                                       &w_q) -> ConservedVariablesType
+  const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                       dealii::VectorizedArray<double>::size()> &cell_iterators,
+  const dealii::Point<dim, dealii::VectorizedArray<number>>                     &q_point,
+  const ConservedVariablesType &w_q) -> ConservedVariablesType
 {
   cell_obstacle_cache.update_cache(cell_iterators);
 
@@ -186,9 +185,10 @@ template <int dim, typename number, typename ObstacleType>
 auto
 MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>::value(
   const number,
-  const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cell_iterators,
-  const dealii::Point<dim, dealii::VectorizedArray<number>>          &q_point,
-  const ConservedVariablesType                                       &w_q,
+  const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                       dealii::VectorizedArray<double>::size()> &cell_iterators,
+  const dealii::Point<dim, dealii::VectorizedArray<number>>                     &q_point,
+  const ConservedVariablesType                                                  &w_q,
   const ConservedVariablesType &delta_w_q) -> ConservedVariablesType
 {
   cell_obstacle_cache.update_cache(cell_iterators);

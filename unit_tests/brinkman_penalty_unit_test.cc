@@ -78,8 +78,7 @@ add_penalty_vector(const MatrixFreeContext<dim, number>                     &mat
           phi.reinit(cell);
           phi.gather_evaluate(src, dealii::EvaluationFlags::values);
 
-          std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators =
-            cells_in_cell_batch(matrix_free.mf, cell);
+          auto cell_iterators = cells_in_cell_batch(matrix_free.mf, cell);
 
           for (const unsigned int q : phi.quadrature_point_indices())
             {

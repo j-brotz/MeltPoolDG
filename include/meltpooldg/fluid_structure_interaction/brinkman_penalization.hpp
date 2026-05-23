@@ -114,10 +114,12 @@ namespace MeltPoolDG
      * @return The computed Brinkman penalty term at the specified points.
      */
     ConservedVariablesType
-    value(number                                                              time_step_size,
-          const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cell_iterators,
-          const dealii::Point<dim, dealii::VectorizedArray<number>>          &q_point,
-          const ConservedVariablesType                                       &w_q) override;
+    value(
+      number                                                                         time_step_size,
+      const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                           dealii::VectorizedArray<double>::size()> &cell_iterators,
+      const dealii::Point<dim, dealii::VectorizedArray<number>>                     &q_point,
+      const ConservedVariablesType                                                  &w_q) override;
 
   private:
     /// Brinkman penalization data
@@ -179,11 +181,13 @@ namespace MeltPoolDG
      * @return The computed Brinkman penalty term at the specified points.
      */
     ConservedVariablesType
-    value(number                                                              time_step_size,
-          const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cell_iterators,
-          const dealii::Point<dim, dealii::VectorizedArray<number>>          &q_point,
-          const ConservedVariablesType                                       &w_q,
-          const ConservedVariablesType                                       &delta_w_q) override;
+    value(
+      number                                                                         time_step_size,
+      const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                           dealii::VectorizedArray<double>::size()> &cell_iterators,
+      const dealii::Point<dim, dealii::VectorizedArray<number>>                     &q_point,
+      const ConservedVariablesType                                                  &w_q,
+      const ConservedVariablesType &delta_w_q) override;
 
   private:
     /// Brinkman penalization data

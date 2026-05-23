@@ -30,6 +30,8 @@ namespace MeltPoolDG
   template <int dim, typename number, typename ObstacleType>
   class ObstacleField
   {
+    using DataStructureType = ObstacleCompleteDomainSearch<dim, number, ObstacleType>;
+
   public:
     /**
      * @brief Constructor. Initializes the obstacle field and supporting data structures.
@@ -127,11 +129,14 @@ namespace MeltPoolDG
      *
      * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
-    std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>>
+    boost::container::small_vector<DEMParticleAccessor<dim, number>,
+                                   DataStructureType::max_particles_per_active_cell * 8>
     get_obstacles_in_cell(
-      const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const;
+      const boost::container::small_vector_base<dealii::TriaIterator<dealii::CellAccessor<dim>>>
+        &cells) const;
 
-    std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>>
+    boost::container::small_vector<DEMParticleAccessor<dim, number>,
+                                   DataStructureType::max_particles_per_active_cell>
     get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const;
 
     void
@@ -211,17 +216,6 @@ namespace MeltPoolDG
     get_refinement_regions();
 
     /**
-     * @brief Return a constant reference to the underlying obstacle data structure of this object.
-     *
-     * @return The used obstacle data structure of the current object.
-     */
-    const ObstacleDataStructure<dim, number> &
-    get_obstacle_data_structure() const
-    {
-      return obstacle_data_structure;
-    }
-
-    /**
      * @brief Insert obstacles into the particle handler based on provided locations and properties.
      *
      * This function takes a set of obstacle locations and their corresponding
@@ -247,7 +241,7 @@ namespace MeltPoolDG
     std::ranges::subrange<ParticleIterator<dim, number>>
     ghost_particle_range();
 
-    void 
+    void
     compress()
     {
       obstacle_data_structure.compress();
@@ -287,7 +281,7 @@ namespace MeltPoolDG
 
     /// Obstacle search utility for locating relevant obstacles within a given cell or
     /// batch.
-    ObstacleDataStructure<dim, number> obstacle_data_structure;
+    ObstacleCompleteDomainSearch<dim, number, ObstacleType> obstacle_data_structure;
 
     /// MPI communicator used for parallel operations on the obstacle field.
     MPI_Comm mpi_communicator;

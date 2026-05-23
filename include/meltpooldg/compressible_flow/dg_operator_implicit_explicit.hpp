@@ -88,10 +88,11 @@ namespace MeltPoolDG::CompressibleFlow
      */
     void
     local_cell_jacobian_kernel(
-      FECellIntegrator<dim, dim + 2, number>                      &delta_phi,
-      const FECellIntegrator<dim, dim + 2, number>                &phi,
-      unsigned int                                                 q_index,
-      std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators) const;
+      FECellIntegrator<dim, dim + 2, number>                                 &delta_phi,
+      const FECellIntegrator<dim, dim + 2, number>                           &phi,
+      unsigned int                                                            q_index,
+      boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                     dealii::VectorizedArray<double>::size()> cell_iterators) const;
 
     /**
      * @brief Local face operations at the given quadrature point for computing the Jacobian.

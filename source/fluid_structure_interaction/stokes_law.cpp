@@ -90,7 +90,8 @@ template <int dim, typename number, typename ObstacleType>
 auto
 MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::value(
   const number,
-  const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cell_iterators,
+  const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                       dealii::VectorizedArray<double>::size()> &cell_iterators,
   const dealii::Point<dim, dealii::VectorizedArray<number>> &,
   const ConservedVariablesType &) -> ConservedVariablesType
 {
@@ -163,4 +164,3 @@ template struct MeltPoolDG::
   StokesLawFluidForce<2, double, MeltPoolDG::SphericalParticle<2, double>>;
 template struct MeltPoolDG::
   StokesLawFluidForce<3, double, MeltPoolDG::SphericalParticle<3, double>>;
-  

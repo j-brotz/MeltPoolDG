@@ -132,10 +132,11 @@ namespace MeltPoolDG::CompressibleFlow
      * equations.
      */
     virtual ConservedVariablesType<dim, number, n_species>
-    value(number                                                              time_step_size,
-          const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells,
-          const dealii::Point<dim, dealii::VectorizedArray<number>>          &points,
-          const ConservedVariablesType<dim, number, n_species>               &w) = 0;
+    value(number time_step_size,
+          const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                               dealii::VectorizedArray<double>::size()> &cells,
+          const dealii::Point<dim, dealii::VectorizedArray<number>>                     &points,
+          const ConservedVariablesType<dim, number, n_species>                          &w) = 0;
   };
 
 
@@ -161,11 +162,12 @@ namespace MeltPoolDG::CompressibleFlow
      * equations.
      */
     virtual ConservedVariablesType<dim, number, n_species>
-    value(number                                                              time_step_size,
-          const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells,
-          const dealii::Point<dim, dealii::VectorizedArray<number>>          &points,
-          const ConservedVariablesType<dim, number, n_species>               &w,
-          const ConservedVariablesType<dim, number, n_species>               &delta_w) = 0;
+    value(number time_step_size,
+          const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                               dealii::VectorizedArray<double>::size()> &cells,
+          const dealii::Point<dim, dealii::VectorizedArray<number>>                     &points,
+          const ConservedVariablesType<dim, number, n_species>                          &w,
+          const ConservedVariablesType<dim, number, n_species> &delta_w) = 0;
   };
 
   /********************************************************************************************

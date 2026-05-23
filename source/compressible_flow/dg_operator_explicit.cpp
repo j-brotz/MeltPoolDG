@@ -1,3 +1,5 @@
+#include <deal.II/base/vectorization.h>
+
 #include <meltpooldg/compressible_flow/boundary_conditions.templates.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_explicit.hpp>
@@ -127,8 +129,9 @@ namespace MeltPoolDG::CompressibleFlow
                             EvaluationFlags::values | (is_viscous() ? EvaluationFlags::gradients :
                                                                       EvaluationFlags::nothing));
 
-        std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators =
-          cells_in_cell_batch(mf, cell);
+        boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                       dealii::VectorizedArray<double>::size()>
+          cell_iterators = cells_in_cell_batch(mf, cell);
 
         for (const unsigned int q : phi.quadrature_point_indices())
           {

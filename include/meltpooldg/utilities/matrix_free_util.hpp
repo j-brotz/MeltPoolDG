@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deal.II/base/vectorization.h>
+
 #include <deal.II/matrix_free/fe_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
 #include <deal.II/matrix_free/tools.h>
@@ -58,13 +60,15 @@ namespace MeltPoolDG
    * @param cell_batch_id Index of the cell batch.
    */
   template <int dim, typename number>
-  std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>>
+  boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                 dealii::VectorizedArray<number>::size()>
   cells_in_cell_batch(const dealii::MatrixFree<dim, number> &mf, const unsigned int cell_batch_id)
   {
     unsigned int n_active_lanes = mf.n_active_entries_per_cell_batch(cell_batch_id);
 
-    std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cells;
-    cells.reserve(n_active_lanes);
+    boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                   dealii::VectorizedArray<number>::size()>
+      cells;
 
     for (unsigned int lane = 0; lane < n_active_lanes; ++lane)
       cells.push_back(mf.get_cell_iterator(cell_batch_id, lane));
@@ -86,36 +90,37 @@ namespace MeltPoolDG
    * compute_jacobian_matrix_representation().
    */
   template <typename OperatorType, int dim, typename number>
-  concept HasJacobianQuadraturePointKernels =
-    requires(OperatorType                                                 op,
-             dealii::FEEvaluation<dim, -1, 0, dim + 2, number>           &fe_evaluator,
-             const dealii::FEEvaluation<dim, -1, 0, dim + 2, number>     &const_fe_evaluator,
-             dealii::FEFaceEvaluation<dim, -1, 0, dim + 2, number>       &fe_face_evaluator,
-             const dealii::FEFaceEvaluation<dim, -1, 0, dim + 2, number> &const_fe_face_evaluator,
-             unsigned int                                                 q_index,
-             std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators) {
-      /**
-       * Compute the operations for computing the jacobian on the quadrature points for the cell
-       * loop.
-       */
-      op.local_cell_jacobian_kernel(fe_evaluator, const_fe_evaluator, q_index, cell_iterators);
+  concept HasJacobianQuadraturePointKernels = requires(
+    OperatorType                                                            op,
+    dealii::FEEvaluation<dim, -1, 0, dim + 2, number>                      &fe_evaluator,
+    const dealii::FEEvaluation<dim, -1, 0, dim + 2, number>                &const_fe_evaluator,
+    dealii::FEFaceEvaluation<dim, -1, 0, dim + 2, number>                  &fe_face_evaluator,
+    const dealii::FEFaceEvaluation<dim, -1, 0, dim + 2, number>            &const_fe_face_evaluator,
+    unsigned int                                                            q_index,
+    boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                   dealii::VectorizedArray<double>::size()> cell_iterators) {
+    /**
+     * Compute the operations for computing the jacobian on the quadrature points for the cell
+     * loop.
+     */
+    op.local_cell_jacobian_kernel(fe_evaluator, const_fe_evaluator, q_index, cell_iterators);
 
-      /**
-       * Compute the operations for computing the jacobian on the quadrature points for the face
-       * loop.
-       */
-      op.local_face_jacobian_kernel(fe_face_evaluator,
-                                    fe_face_evaluator,
-                                    const_fe_face_evaluator,
-                                    const_fe_face_evaluator,
-                                    q_index);
+    /**
+     * Compute the operations for computing the jacobian on the quadrature points for the face
+     * loop.
+     */
+    op.local_face_jacobian_kernel(fe_face_evaluator,
+                                  fe_face_evaluator,
+                                  const_fe_face_evaluator,
+                                  const_fe_face_evaluator,
+                                  q_index);
 
-      /**
-       * Compute the operations for computing the jacobian on the quadrature points for the boundary
-       * face loop.
-       */
-      op.local_boundary_face_jacobian_kernel(fe_face_evaluator, const_fe_face_evaluator, q_index);
-    };
+    /**
+     * Compute the operations for computing the jacobian on the quadrature points for the boundary
+     * face loop.
+     */
+    op.local_boundary_face_jacobian_kernel(fe_face_evaluator, const_fe_face_evaluator, q_index);
+  };
 
   /**
    * Given a matrix-free object, computes the matrix based representation of a Jacobian.
@@ -157,8 +162,9 @@ namespace MeltPoolDG
                           dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients);
       delta_phi.evaluate(dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients);
 
-      std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators =
-        cells_in_cell_batch(matrix_free, delta_phi.get_cell_or_face_batch_id());
+      boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                     dealii::VectorizedArray<double>::size()>
+        cell_iterators = cells_in_cell_batch(matrix_free, delta_phi.get_cell_or_face_batch_id());
 
       for (const unsigned int q_index : delta_phi.quadrature_point_indices())
         {

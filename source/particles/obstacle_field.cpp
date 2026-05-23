@@ -29,11 +29,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   dealii::TimerOutput              &timer,
   const ObstacleDataStructureType   obstacle_data_structure_type)
   : data(data)
-  , obstacle_data_structure(
-      obstacle_data_structure_factory<dim, number, ObstacleType>(obstacle_data_structure_type,
-                                                                 triangulation,
-                                                                 mapping,
-                                                                 timer))
+  , obstacle_data_structure(triangulation, mapping, timer)
   , mpi_communicator(triangulation.get_mpi_communicator())
   , timer(timer)
 {
@@ -52,11 +48,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   dealii::TimerOutput                     &timer,
   const ObstacleDataStructureType          obstacle_data_structure_type)
   : data(data)
-  , obstacle_data_structure(
-      obstacle_data_structure_factory<dim, number, ObstacleType>(obstacle_data_structure_type,
-                                                                 triangulation,
-                                                                 mapping,
-                                                                 timer))
+  , obstacle_data_structure(triangulation, mapping, timer)
   , mpi_communicator(triangulation.get_mpi_communicator())
   , timer(timer)
 {
@@ -81,7 +73,9 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number,
 
 
 template <int dim, typename number, typename ObstacleType>
-std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>>
+boost::container::small_vector<MeltPoolDG::DEMParticleAccessor<dim, number>,
+                               MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
+                                 max_particles_per_active_cell>
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell(
   const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const
 {
@@ -89,9 +83,13 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell(
 }
 
 template <int dim, typename number, typename ObstacleType>
-std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>>
+boost::container::small_vector<MeltPoolDG::DEMParticleAccessor<dim, number>,
+                               MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
+                                   max_particles_per_active_cell *
+                                 8>
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell(
-  const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const
+  const boost::container::small_vector_base<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells)
+  const
 {
   return obstacle_data_structure.get_obstacles_in_cell(cells);
 }

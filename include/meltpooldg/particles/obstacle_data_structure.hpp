@@ -103,7 +103,7 @@ namespace MeltPoolDG
      *
      * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
-    std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>>
+    boost::container::small_vector<DEMParticleAccessor<dim, number>, 12>
     get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const
     {
       return obstacle_data_structure_pimpl->get_obstacles_in_cell(cell);
@@ -245,7 +245,7 @@ namespace MeltPoolDG
        * Part of the type erasure interface. Refer to the public interface documentation for more
        * details.
        */
-      virtual std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>>
+      virtual boost::container::small_vector<DEMParticleAccessor<dim, number>, 12>
       get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const = 0;
 
       /**
@@ -334,7 +334,7 @@ namespace MeltPoolDG
        * Part of the type erasure interface. Refer to the public interface documentation for more
        * details.
        */
-      std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>>
+      boost::container::small_vector<DEMParticleAccessor<dim, number>, 12>
       get_obstacles_in_cell(
         const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const override
       {
@@ -466,6 +466,9 @@ namespace MeltPoolDG
   struct ObstacleCompleteDomainSearch
   {
   public:
+    static constexpr std::size_t max_particles_per_active_cell = 6;
+    using particle_accessor                                    = DEMParticleAccessor<dim, number>;
+
     ObstacleCompleteDomainSearch(const dealii::Triangulation<dim> &triangulation,
                                  const dealii::Mapping<dim>       &mapping,
                                  dealii::TimerOutput              &timer);
@@ -511,16 +514,20 @@ namespace MeltPoolDG
      *
      * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
-    std::vector<DEMParticleAccessor<dim, number>>
+    boost::container::small_vector<DEMParticleAccessor<dim, number>,
+                                   max_particles_per_active_cell * 8>
     get_obstacles_in_cell(
-      const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const
+      const boost::container::small_vector_base<dealii::TriaIterator<dealii::CellAccessor<dim>>>
+        &cells) const
     {
-      std::vector<DEMParticleAccessor<dim, number>> particles_in_cell;
+      boost::container::small_vector<DEMParticleAccessor<dim, number>,
+                                     max_particles_per_active_cell * 8>
+        particles_in_cell;
 
       for (const auto &cell : cells)
         {
-          const std::vector<DEMParticleAccessor<dim, number>> relevant_particles =
-            find_relevant_particles(find_particle_storage_cell(cell));
+          const boost::container::small_vector<particle_accessor, max_particles_per_active_cell>
+            relevant_particles = find_relevant_particles(find_particle_storage_cell(cell));
           particles_in_cell.insert(particles_in_cell.end(),
                                    relevant_particles.begin(),
                                    relevant_particles.end());
@@ -540,7 +547,7 @@ namespace MeltPoolDG
       return particles_in_cell;
     }
 
-    std::vector<DEMParticleAccessor<dim, number>>
+    boost::container::small_vector<DEMParticleAccessor<dim, number>, max_particles_per_active_cell>
     get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const
     {
       return find_relevant_particles(find_particle_storage_cell(cell));
@@ -563,8 +570,7 @@ namespace MeltPoolDG
       return relevant_cell;
     }
 
-
-    std::vector<DEMParticleAccessor<dim, number>>
+    boost::container::small_vector<particle_accessor, max_particles_per_active_cell>
     find_relevant_particles(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const
     {
       // TODO: This function currently assumes that the neighbor cells are on the same level
@@ -572,7 +578,8 @@ namespace MeltPoolDG
              dealii::ExcMessage(
                "You must provide a cell id of a cell on the level on which particles are stored."));
 
-      std::vector<DEMParticleAccessor<dim, number>> relevant_particles;
+      boost::container::small_vector<particle_accessor, max_particles_per_active_cell>
+        relevant_particles;
 
       std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> relevant_cells =
         level_cell_cache.get_neighboring_cells(cell);

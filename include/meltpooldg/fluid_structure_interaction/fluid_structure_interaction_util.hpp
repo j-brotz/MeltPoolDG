@@ -82,7 +82,9 @@ namespace MeltPoolDG
      * @param cells Array of cell iterators for which the cache should be updated.
      */
     inline DEAL_II_ALWAYS_INLINE void
-    update_cache(const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells)
+    update_cache(
+      const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                           dealii::VectorizedArray<double>::size()> &cells)
     {
       // check if cache is still valid
       if (cells.size() == cached_cells.size() and
@@ -96,12 +98,19 @@ namespace MeltPoolDG
     }
     /// Handles of the particles which properties are stored in the @p relevant_obstacles
     /// property pool.
-    std::vector<DEMParticleAccessor<dim, number>> obstacle_cache;
+    boost::container::small_vector<
+      MeltPoolDG::DEMParticleAccessor<dim, number>,
+      MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
+          max_particles_per_active_cell *
+        8>
+      obstacle_cache;
 
     /// Reference to the obstacle handler managing all obstacles in the domain.
     const ObstacleField<dim, number, ObstacleType> &obstacle_handler;
 
     /// Cells, for which the object cache is currently valid.
-    std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cached_cells;
+    boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                   dealii::VectorizedArray<double>::size()>
+      cached_cells;
   };
 } // namespace MeltPoolDG

@@ -203,6 +203,7 @@ public:
 BENCHMARK_F(CompressibleFlowOperatorFixture, Test)
 (benchmark::State &state)
 {
+  boost::container::small_vector<double, 12> vec;
   for (auto _ : state)
     {
       this->data->brinkman_obstacle_force->add_load_to_obstacles(*this->data->obstacle_field);
