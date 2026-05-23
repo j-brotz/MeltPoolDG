@@ -44,7 +44,7 @@ TEST(GetNeighborCells, TwoDimensionalInnerCell)
           expected_neighbors.emplace_back("0_2:31");
 
           // Compute the neighbors using the function
-          std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> neighbors =
+          const std::set<dealii::TriaIterator<dealii::CellAccessor<dim>>> &neighbors =
             level_cell_cache.get_neighboring_cells(cell_to_check_it);
 
           // Cast the neighbors to CellIds
@@ -123,7 +123,7 @@ TEST(GetNeighborCells, ThreeDimensionalInnerCell)
 
 
           // Compute the neighbors using the function
-          std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> neighbors =
+          const std::set<dealii::TriaIterator<dealii::CellAccessor<dim>>> &neighbors =
             level_cell_cache.get_neighboring_cells(cell_to_check_it);
 
           // Cast the neighbors to CellIds
@@ -180,7 +180,7 @@ TEST(GetNeighborCells, ThreeDimensionalBoundaryCell)
           expected_neighbors.emplace_back("0_2:07");
 
           // Compute the neighbors using the function
-          std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> neighbors =
+          const std::set<dealii::TriaIterator<dealii::CellAccessor<dim>>> &neighbors =
             level_cell_cache.get_neighboring_cells(cell_to_check_it);
 
           // Cast the neighbors to CellIds
@@ -231,7 +231,7 @@ TEST(GetNeighborCells, TwoDimensionalBoundaryCell)
           expected_neighbors.emplace_back("0_2:13");
 
           // Compute the neighbors using the function
-          std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> neighbors =
+          const std::set<dealii::TriaIterator<dealii::CellAccessor<dim>>> &neighbors =
             level_cell_cache.get_neighboring_cells(cell_to_check_it);
 
           // Cast the neighbors to CellIds
@@ -293,7 +293,7 @@ TEST(GetNeighborCells, TwoDimensionalInnerCellAtRefinementBoundary)
           expected_neighbors.emplace_back("0_1:3");
 
           // Compute the neighbors using the function
-          std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> neighbors =
+          const std::set<dealii::TriaIterator<dealii::CellAccessor<dim>>> &neighbors =
             level_cell_cache.get_neighboring_cells(cell_to_check_it);
 
           // Cast the neighbors to CellIds

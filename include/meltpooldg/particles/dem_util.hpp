@@ -134,15 +134,14 @@ namespace MeltPoolDG
         dealii::Utilities::MPI::sum(n_global_cells_on_level, tria.get_mpi_communicator());
     }
 
-    std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>>
+    const std::set<dealii::TriaIterator<dealii::CellAccessor<dim>>> &
     get_neighboring_cells(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const
     {
       Assert(cell_to_neighbors.contains(cell),
              dealii::ExcMessage(
                "The neighboring cells for the given cell have not been computed yet."));
 
-      return std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>>(
-        cell_to_neighbors.find(cell)->second.begin(), cell_to_neighbors.find(cell)->second.end());
+      return cell_to_neighbors.find(cell)->second;
     }
 
     unsigned int

@@ -91,8 +91,6 @@ namespace MeltPoolDG
           std::equal(cells.begin(), cells.end(), cached_cells.begin()))
         return;
 
-      obstacle_cache.clear();
-
       obstacle_cache = obstacle_handler.get_obstacles_in_cell(cells);
       cached_cells   = cells;
     }

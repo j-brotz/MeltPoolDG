@@ -466,7 +466,7 @@ namespace MeltPoolDG
   struct ObstacleCompleteDomainSearch
   {
   public:
-    static constexpr std::size_t max_particles_per_active_cell = 6;
+    static constexpr std::size_t max_particles_per_active_cell = 20;
     using particle_accessor                                    = DEMParticleAccessor<dim, number>;
 
     ObstacleCompleteDomainSearch(const dealii::Triangulation<dim> &triangulation,
@@ -581,10 +581,8 @@ namespace MeltPoolDG
       boost::container::small_vector<particle_accessor, max_particles_per_active_cell>
         relevant_particles;
 
-      std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> relevant_cells =
-        level_cell_cache.get_neighboring_cells(cell);
-
-      for (const dealii::TriaIterator<dealii::CellAccessor<dim>> &current_cell : relevant_cells)
+      for (const dealii::TriaIterator<dealii::CellAccessor<dim>> &current_cell :
+           level_cell_cache.get_neighboring_cells(cell))
         {
           for (dealii::Particles::ParticleIterator<dim> &particle :
                cell_to_locally_owned_particle_cache[current_cell->index()])
@@ -594,6 +592,10 @@ namespace MeltPoolDG
                cell_to_ghost_particle_cache[current_cell->index()])
             relevant_particles.emplace_back(*properties_global_obstacles, particle_handle, true);
         }
+
+      AssertThrow(relevant_particles.size() <= max_particles_per_active_cell,
+                  dealii::ExcMessage(
+                    "The number of particles relevant to the given cell exceeds the maximum allowed. This likely indicates that the level on which particles are stored is too coarse, leading to too many particles being associated with each cell. Consider storing particles on a finer level to reduce the number of relevant particles per cell."));
 
       return relevant_particles;
     }
