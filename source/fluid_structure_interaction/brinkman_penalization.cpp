@@ -9,6 +9,7 @@
 #include <deal.II/particles/particle_accessor.h>
 
 #include "meltpooldg/particles/dem_util.hpp"
+#include "meltpooldg/utilities/matrix_free_util.hpp"
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
@@ -54,69 +55,69 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
       for (unsigned cell = cell_range.first; cell < cell_range.second; ++cell)
         {
           phi.reinit(cell);
-          phi.gather_evaluate(solution, dealii::EvaluationFlags::values);
-
-          for (const unsigned int q : phi.quadrature_point_indices())
+          std::vector<DEMParticleAccessor<dim, number>> relevant_obstacle =
+            obstacle_field.get_obstacles_in_cell(
+              MeltPoolDG::cells_in_cell_batch(matrix_free.mf, cell));
+          if (not relevant_obstacle.empty())
             {
-              const auto                                              w_q = phi.get_value(q);
-              dealii::Tensor<1, dim, dealii::VectorizedArray<number>> fluid_momentum;
-              for (int d = 0; d < dim; ++d)
-                fluid_momentum[d] = w_q[d + 1];
+              phi.gather_evaluate(solution, dealii::EvaluationFlags::values);
 
+              for (const unsigned int q : phi.quadrature_point_indices())
+                {
+                  const auto                                              w_q = phi.get_value(q);
+                  dealii::Tensor<1, dim, dealii::VectorizedArray<number>> fluid_momentum;
+                  for (int d = 0; d < dim; ++d)
+                    fluid_momentum[d] = w_q[d + 1];
 
-              auto add_force_and_torque_to_particle =
-                [&](DEMParticleAccessor<dim, number> &obstacle) {
-                  dealii::Tensor<1, dim, dealii::VectorizedArray<number>>            force;
-                  dealii::Tensor<1, axial_dim<dim>, dealii::VectorizedArray<number>> torque;
+                  auto add_force_and_torque_to_particle = [&](DEMParticleAccessor<dim, number>
+                                                                &obstacle) {
+                    dealii::Tensor<1, dim, dealii::VectorizedArray<number>>            force;
+                    dealii::Tensor<1, axial_dim<dim>, dealii::VectorizedArray<number>> torque;
 
-                  const auto mask =
-                    mask_function<dim, number, dealii::VectorizedArray<number>, ObstacleType>(
-                      brinkman_penalization_data.mask_function_type,
-                      phi.quadrature_point(q),
-                      obstacle);
-                  force = mask / brinkman_penalization_data.permeability *
-                          (fluid_momentum -
-                           w_q[0] * obstacle.get_local_velocity(phi.quadrature_point(q))) *
-                          phi.JxW(q);
+                    const dealii::VectorizedArray<number> mask =
+                      mask_function<dim, number, dealii::VectorizedArray<number>, ObstacleType>(
+                        brinkman_penalization_data.mask_function_type,
+                        phi.quadrature_point(q),
+                        obstacle);
+                    force = mask / brinkman_penalization_data.permeability *
+                            (fluid_momentum -
+                             w_q[0] * obstacle.get_local_velocity(phi.quadrature_point(q))) *
+                            phi.JxW(q);
 
-                  if constexpr (dim == 2)
-                    {
-                      auto vector_to_center_of_gravity =
-                        obstacle
-                          .template vector_to_center_of_gravity<dealii::VectorizedArray<number>>(
-                            phi.quadrature_point(q));
+                    if constexpr (dim == 2)
+                      {
+                        auto vector_to_center_of_gravity =
+                          obstacle
+                            .template vector_to_center_of_gravity<dealii::VectorizedArray<number>>(
+                              phi.quadrature_point(q));
 
-                      torque[0] = -vector_to_center_of_gravity[0] * force[1] +
-                                  vector_to_center_of_gravity[1] * force[0];
-                    }
-                  if constexpr (dim == 3)
-                    {
-                      torque = -dealii::cross_product_3d(
-                        obstacle
-                          .template vector_to_center_of_gravity<dealii::VectorizedArray<number>>(
-                            phi.quadrature_point(q)),
-                        force);
-                    }
+                        torque[0] = -vector_to_center_of_gravity[0] * force[1] +
+                                    vector_to_center_of_gravity[1] * force[0];
+                      }
+                    if constexpr (dim == 3)
+                      {
+                        torque = -dealii::cross_product_3d(
+                          obstacle
+                            .template vector_to_center_of_gravity<dealii::VectorizedArray<number>>(
+                              phi.quadrature_point(q)),
+                          force);
+                      }
 
-                  dealii::Tensor<1, dim, number>            summed_force;
-                  dealii::Tensor<1, axial_dim<dim>, number> summed_torque;
+                    dealii::Tensor<1, dim, number>            summed_force;
+                    dealii::Tensor<1, axial_dim<dim>, number> summed_torque;
 
-                  for (int i = 0; i < dim; ++i)
-                    summed_force[i] = force[i].sum();
-                  for (unsigned i = 0; i < axial_dim<dim>; ++i)
-                    summed_torque[i] = torque[i].sum();
+                    for (int i = 0; i < dim; ++i)
+                      summed_force[i] = force[i].sum();
+                    for (unsigned i = 0; i < axial_dim<dim>; ++i)
+                      summed_torque[i] = torque[i].sum();
 
-                  obstacle.add_force(summed_force);
-                  obstacle.add_torque(summed_torque);
-                };
+                    obstacle.add_force(summed_force);
+                    obstacle.add_torque(summed_torque);
+                  };
 
-              for (DEMParticleAccessor<dim, number> &obstacle :
-                   obstacle_field.locally_owned_particle_range())
-                add_force_and_torque_to_particle(obstacle);
-
-              for (DEMParticleAccessor<dim, number> &obstacle :
-                   obstacle_field.ghost_particle_range())
-                add_force_and_torque_to_particle(obstacle);
+                  for (DEMParticleAccessor<dim, number> &obstacle : relevant_obstacle)
+                    add_force_and_torque_to_particle(obstacle);
+                }
             }
         }
     };
@@ -161,8 +162,8 @@ MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>:
       momentum_penalty -= mask / brinkman_penalization_data.permeability *
                           (fluid_momentum - w_q[0] * local_obstacle_velocity);
       energy_penalty += mask / brinkman_penalization_data.permeability *
-                       (fluid_momentum - w_q[0] * local_obstacle_velocity) * fluid_momentum /
-                       w_q[0];
+                        (fluid_momentum - w_q[0] * local_obstacle_velocity) * fluid_momentum /
+                        w_q[0];
     }
 
   ConservedVariablesType fluid_force;
