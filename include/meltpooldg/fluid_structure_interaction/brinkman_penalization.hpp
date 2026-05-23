@@ -10,6 +10,7 @@
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/compressible_flow/data_types.hpp>
+#include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_util.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
