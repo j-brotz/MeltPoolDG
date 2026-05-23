@@ -123,12 +123,6 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::contact_par
 
 template <int dim, typename number, typename ObstacleType>
 void
-MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::broadcast_global_particles()
-  const
-{}
-
-template <int dim, typename number, typename ObstacleType>
-void
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::deregister_property_pool()
   const
 {

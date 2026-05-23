@@ -234,18 +234,6 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ghost_particle_range()
   return obstacle_data_structure.ghost_particle_range();
 }
 
-
-template <int dim, typename number, typename ObstacleType>
-std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
-MeltPoolDG::ObstacleField<dim, number, ObstacleType>::global_particle_range()
-{
-  return std::ranges::subrange<ParticleIterator<dim, number>>(
-    ParticleIterator<dim, number>(obstacle_data_structure.get_global_particle_properties(), 0),
-    ParticleIterator<dim, number>(
-      obstacle_data_structure.get_global_particle_properties(),
-      obstacle_data_structure.get_global_particle_properties().n_registered_slots()));
-}
-
 template class MeltPoolDG::ObstacleField<1, double, MeltPoolDG::SphericalParticle<1, double>>;
 template class MeltPoolDG::ObstacleField<2, double, MeltPoolDG::SphericalParticle<2, double>>;
 template class MeltPoolDG::ObstacleField<3, double, MeltPoolDG::SphericalParticle<3, double>>;

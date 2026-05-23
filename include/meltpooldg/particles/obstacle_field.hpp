@@ -254,15 +254,6 @@ namespace MeltPoolDG
     }
 
     /**
-     * Returns a range over all global obstacle particles for iterating over all
-     * particles in the global particle data structure.
-     *
-     * @return An iterable subrange representing all global particles.
-     */
-    std::ranges::subrange<ParticleIterator<dim, number>>
-    global_particle_range();
-
-    /**
      *
      */
     boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>

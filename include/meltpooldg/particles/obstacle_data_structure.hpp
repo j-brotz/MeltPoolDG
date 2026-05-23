@@ -130,18 +130,6 @@ namespace MeltPoolDG
       return obstacle_data_structure_pimpl->get_obstacles_in_cell(cells);
     }
 
-    const dealii::Particles::PropertyPool<dim> &
-    get_global_particle_properties() const
-    {
-      return obstacle_data_structure_pimpl->get_global_particle_properties();
-    }
-
-    dealii::Particles::PropertyPool<dim> &
-    get_global_particle_properties()
-    {
-      return obstacle_data_structure_pimpl->get_global_particle_properties();
-    }
-
     boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>
     contact_particles(const DEMParticleAccessor<dim, number> &particle,
                       const number                            relative_tolerance) const
@@ -268,12 +256,6 @@ namespace MeltPoolDG
       get_obstacles_in_cell(
         const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const = 0;
 
-      virtual const dealii::Particles::PropertyPool<dim> &
-      get_global_particle_properties() const = 0;
-
-      virtual dealii::Particles::PropertyPool<dim> &
-      get_global_particle_properties() = 0;
-
       virtual boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>
       contact_particles(const DEMParticleAccessor<dim, number> &particle,
                         const number                            relative_tolerance) const = 0;
@@ -370,22 +352,10 @@ namespace MeltPoolDG
         return obstacle_data_structure.get_obstacles_in_cell(cells);
       }
 
-      const dealii::Particles::PropertyPool<dim> &
-      get_global_particle_properties() const override
-      {
-        return obstacle_data_structure.get_global_particle_properties();
-      }
-
       void
       compress() override
       {
         obstacle_data_structure.compress();
-      }
-
-      dealii::Particles::PropertyPool<dim> &
-      get_global_particle_properties() override
-      {
-        return obstacle_data_structure.get_global_particle_properties();
       }
 
       boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>
@@ -619,23 +589,6 @@ namespace MeltPoolDG
         }
 
       return relevant_particles;
-    }
-
-    /**
-     * Return a reference to a property pool containing the properties of all globally available
-     * particles. The properties stored in the property pool represent those available in the
-     * field when broadcast_global_particles() has been called the last time.
-     */
-    const dealii::Particles::PropertyPool<dim> &
-    get_global_particle_properties() const
-    {
-      return *properties_global_obstacles;
-    }
-
-    dealii::Particles::PropertyPool<dim> &
-    get_global_particle_properties()
-    {
-      return *properties_global_obstacles;
     }
 
     boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>
@@ -894,20 +847,6 @@ namespace MeltPoolDG
     LevelCellCommunicationPattern<dim> level_cell_partitioner;
 
     LevelCellCache<dim> level_cell_cache;
-
-    /**
-     * @brief Broadcasts obstacle properties of all locally owned particles to all MPI processes.
-     *
-     * This function ensures that each process has access to a complete copy of all obstacles,
-     * regardless of ownership. It enables computations involving obstacles even on processes
-     * that do not originally own them.
-     *
-     * Each process broadcasts its locally owned obstacles in turn, including both their
-     * location and
-     * associated properties. The data is stored in the @p properties_global_obstacles structure.
-     */
-    void
-    broadcast_global_particles() const;
   };
 
   template <int dim, typename number, typename ObstacleType>
