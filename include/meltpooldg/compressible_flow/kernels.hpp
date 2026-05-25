@@ -1,5 +1,6 @@
 #pragma once
 
+#include <deal.II/base/config.h>
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/compressible_flow/data_types.hpp>
@@ -130,7 +131,7 @@ namespace MeltPoolDG::CompressibleFlow
      *
      * @param conserved_variables Local values of the conserved variables.
      */
-    PhysicalFluxType
+    inline DEAL_II_ALWAYS_INLINE PhysicalFluxType
     flux(const ValueType &conserved_variables) const
     {
       PhysicalFluxType flux;
@@ -146,7 +147,7 @@ namespace MeltPoolDG::CompressibleFlow
      * @param u_m Local values of the conserved variables on the inner face.
      * @param u_p Local values of the conserved variables on the outer face.
      */
-    dealii::VectorizedArray<number>
+    inline DEAL_II_ALWAYS_INLINE dealii::VectorizedArray<number>
     local_maximum_wave_speed(const ValueType &u_m, const ValueType &u_p) const
     {
       return maximum_local_wave_speed<DofStateViewType, dealii::VectorizedArray<number>>(
@@ -187,7 +188,7 @@ namespace MeltPoolDG::CompressibleFlow
      * @param u Local values of the conserved variables.
      * @param grad_u Local gradients of the conserved variables.
      */
-    PhysicalFluxType
+    inline DEAL_II_ALWAYS_INLINE PhysicalFluxType
     flux(const ValueType &u, const GradientType &grad_u) const
     {
       PhysicalFluxType flux;

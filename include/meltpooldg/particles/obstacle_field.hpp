@@ -129,15 +129,22 @@ namespace MeltPoolDG
      *
      * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
-    boost::container::small_vector<DEMParticleAccessor<dim, number>,
-                                   DataStructureType::max_particles_per_active_cell * 8>
+    void
     get_obstacles_in_cell(
       const boost::container::small_vector_base<dealii::TriaIterator<dealii::CellAccessor<dim>>>
-        &cells) const;
+                                                                            &cells,
+      boost::container::small_vector_base<DEMParticleAccessor<dim, number>> &obstacles) const
+    {
+      obstacle_data_structure.get_obstacles_in_cell(cells, obstacles);
+    }
 
-    boost::container::small_vector<DEMParticleAccessor<dim, number>,
-                                   DataStructureType::max_particles_per_active_cell>
-    get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const;
+    void
+    get_obstacles_in_cell(
+      const dealii::TriaIterator<dealii::CellAccessor<dim>>                 &cell,
+      boost::container::small_vector_base<DEMParticleAccessor<dim, number>> &obstacles) const
+    {
+      obstacle_data_structure.get_obstacles_in_cell(cell, obstacles);
+    }
 
     void
     register_particle_output(Postprocessor<dim, number> &postprocessor)

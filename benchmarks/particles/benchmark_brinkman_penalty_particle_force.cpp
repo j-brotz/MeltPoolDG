@@ -110,8 +110,9 @@ public:
     void
     setup_particle_field()
     {
-      obstacle_data.obstacle_state_input_file = "./particle_locations/28_particles.csv";
-      obstacle_field                          = std::make_unique<
+      obstacle_data.obstacle_state_input_file =
+        std::string(MPDG_BENCHMARK_DATA_DIR) + "/input_file_28_particles.csv";
+      obstacle_field = std::make_unique<
         MeltPoolDG::ObstacleField<dim, double, MeltPoolDG::SphericalParticle<dim, double>>>(
         obstacle_data, triangulation, dealii::MappingQ1<dim>(), timer);
     }

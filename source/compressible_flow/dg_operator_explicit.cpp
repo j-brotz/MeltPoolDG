@@ -59,8 +59,13 @@ namespace MeltPoolDG::CompressibleFlow
   DGOperatorExplicit<dim, number, n_species>::is_viscous() const
   {
     for (unsigned int species = 0; species < n_species; ++species)
-      if (flow_scratch_data.material.data.species_data[species].dynamic_viscosity > 0.0)
-        return true;
+      {
+        if (flow_scratch_data.material.data.species_data[species].dynamic_viscosity > 0.0 and
+            n_species > 1)
+          return true;
+        else if (flow_scratch_data.material.data.dynamic_viscosity > 0.0 and n_species == 1)
+          return true;
+      }
     return false;
   }
 

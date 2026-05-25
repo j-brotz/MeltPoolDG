@@ -110,7 +110,6 @@ namespace MeltPoolDG::CompressibleFlow
     add_external_force(std::shared_ptr<ExternalFlowForce<dim, number, n_species>> external_force,
                        std::shared_ptr<ExternalFlowForceJacobian<dim, number, n_species>>) override;
 
-  private:
     /// Scratch data for compressible flows
     OperationScratchData<dim, number> &flow_scratch_data;
 

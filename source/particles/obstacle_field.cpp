@@ -71,29 +71,6 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number,
   obstacle_data_structure.sort_particles_into_subdomains_and_cells();
 }
 
-
-template <int dim, typename number, typename ObstacleType>
-boost::container::small_vector<MeltPoolDG::DEMParticleAccessor<dim, number>,
-                               MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
-                                 max_particles_per_active_cell>
-MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell(
-  const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const
-{
-  return obstacle_data_structure.get_obstacles_in_cell(cell);
-}
-
-template <int dim, typename number, typename ObstacleType>
-boost::container::small_vector<MeltPoolDG::DEMParticleAccessor<dim, number>,
-                               MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
-                                   max_particles_per_active_cell *
-                                 8>
-MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell(
-  const boost::container::small_vector_base<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells)
-  const
-{
-  return obstacle_data_structure.get_obstacles_in_cell(cells);
-}
-
 template <int dim, typename number, typename ObstacleType>
 void
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::prepare_for_serialization()

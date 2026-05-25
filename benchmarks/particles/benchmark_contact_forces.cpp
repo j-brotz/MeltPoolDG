@@ -80,7 +80,8 @@ BM_ParticleBedOnGround(benchmark::State &state)
                             dealii::TimerOutput::OutputFrequency::never,
                             dealii::TimerOutput::wall_times);
   MeltPoolDG::ObstacleData<double> obstacle_data;
-  obstacle_data.obstacle_state_input_file = "./particle_locations/28_particles.csv";
+  obstacle_data.obstacle_state_input_file =
+    std::string(MPDG_BENCHMARK_DATA_DIR) + "/input_file_28_particles.csv";
   auto obstacle_field = setup_particle_field(triangulation, obstacle_data, timer);
 
   MeltPoolDG::TimeIntegration::TimeSteppingData<double> time_stepping_data;

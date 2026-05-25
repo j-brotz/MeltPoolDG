@@ -127,6 +127,8 @@ namespace MeltPoolDG
 
     /// Cached cell data for computing Brinkman penalty term.
     mutable CellObstacleCache<dim, number, ObstacleType> cell_obstacle_cache;
+
+    number inverse_permeability;
   };
 
 

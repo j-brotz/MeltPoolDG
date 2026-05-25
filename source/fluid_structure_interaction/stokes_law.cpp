@@ -102,9 +102,15 @@ MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::value(
       if (cell->state() == dealii::IteratorState::valid)
         {
           const number cell_volume = cell->measure();
+          boost::container::small_vector<
+            MeltPoolDG::DEMParticleAccessor<dim, number>,
+            MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
+                max_particles_per_active_cell *
+              8>
+            particles;
+          obstacle_handler.get_obstacles_in_cell(cell, particles);
 
-          for (const DEMParticleAccessor<dim, number> &particle :
-               obstacle_handler.get_obstacles_in_cell(cell))
+          for (const DEMParticleAccessor<dim, number> &particle : particles)
             {
               auto [particle_surrounding_active_cell, coordinates_on_unit_cell] =
                 dealii::GridTools::find_active_cell_around_point(

@@ -36,10 +36,10 @@ namespace MeltPoolDG
     dealii::Point<dim, VectorizedArrayType> vectorized_obstacle_location;
     for (auto i = 0; i < dim; ++i)
       vectorized_obstacle_location[i] = VectorizedArrayType(particle.get_location()[i]);
-    const VectorizedArrayType distance = location.distance(vectorized_obstacle_location);
+    const VectorizedArrayType distance_square = location.distance_square(vectorized_obstacle_location);
     return dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than_or_equal>(
-      distance,
-      VectorizedArrayType(particle.radius()),
+      distance_square,
+      VectorizedArrayType(particle.radius() * particle.radius()),
       VectorizedArrayType(1.),
       VectorizedArrayType(0.));
   }
@@ -90,8 +90,7 @@ namespace MeltPoolDG
       if (cells.size() == cached_cells.size() and
           std::equal(cells.begin(), cells.end(), cached_cells.begin()))
         return;
-
-      obstacle_cache = obstacle_handler.get_obstacles_in_cell(cells);
+      obstacle_handler.get_obstacles_in_cell(cells, obstacle_cache);
       cached_cells   = cells;
     }
     /// Handles of the particles which properties are stored in the @p relevant_obstacles

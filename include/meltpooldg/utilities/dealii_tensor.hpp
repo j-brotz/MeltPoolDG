@@ -1,5 +1,6 @@
 #pragma once
 
+#include <deal.II/base/config.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
@@ -265,7 +266,7 @@ namespace MeltPoolDG
    * Return identity matrix
    */
   template <int dim, typename number>
-  dealii::Tensor<1, dim, dealii::Tensor<1, dim, number>>
+  constexpr dealii::Tensor<1, dim, dealii::Tensor<1, dim, number>>
   identity()
   {
     dealii::Tensor<1, dim, dealii::Tensor<1, dim, number>> out;

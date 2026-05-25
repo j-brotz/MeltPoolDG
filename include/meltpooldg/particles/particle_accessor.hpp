@@ -79,7 +79,7 @@ namespace MeltPoolDG
 
     inline DEAL_II_ALWAYS_INLINE dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
                                  get_local_velocity(
-                                   dealii::Point<dim, dealii::VectorizedArray<number>> location_of_interest) const
+                                   const dealii::Point<dim, dealii::VectorizedArray<number>>& location_of_interest) const
     {
       Assert(dim == 2 or dim == 3, dealii::ExcMessage("Invalid dimension!"));
 
@@ -87,7 +87,7 @@ namespace MeltPoolDG
       for (auto i = 0; i < dim; ++i)
         vectorized_particle_location[i] = get_location()[i];
 
-      dealii::Tensor<1, dim, dealii::VectorizedArray<number>> distance_to_center =
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> distance_to_center =
         location_of_interest - vectorized_particle_location;
 
       dealii::Tensor<1, dim, dealii::VectorizedArray<number>> vectorized_linear_velocity;

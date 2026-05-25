@@ -514,43 +514,42 @@ namespace MeltPoolDG
      *
      * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
-    boost::container::small_vector<DEMParticleAccessor<dim, number>,
-                                   max_particles_per_active_cell * 8>
+    void
     get_obstacles_in_cell(
       const boost::container::small_vector_base<dealii::TriaIterator<dealii::CellAccessor<dim>>>
-        &cells) const
+                                                                            &cells,
+      boost::container::small_vector_base<DEMParticleAccessor<dim, number>> &particles) const
     {
-      boost::container::small_vector<DEMParticleAccessor<dim, number>,
-                                     max_particles_per_active_cell * 8>
-        particles_in_cell;
-
       for (const auto &cell : cells)
         {
-          const boost::container::small_vector<particle_accessor, max_particles_per_active_cell>
-            relevant_particles = find_relevant_particles(find_particle_storage_cell(cell));
-          particles_in_cell.insert(particles_in_cell.end(),
-                                   relevant_particles.begin(),
-                                   relevant_particles.end());
+          std::size_t current_size = particles.size();
+
+          find_relevant_particles(find_particle_storage_cell(cell), particles);
+          auto old_end   = particles.begin() + current_size;
+          auto write_ptr = old_end;
+          for (auto read_ptr = old_end; read_ptr != particles.end(); ++read_ptr)
+            {
+              auto found_it =
+                std::find_if(particles.begin(), old_end, [&read_ptr](const auto &particle) {
+                  return particle.id() == read_ptr->id();
+                });
+              if (found_it == old_end)
+                {
+                  if (write_ptr->id() != read_ptr->id())
+                    *write_ptr = std::move(*read_ptr);
+                  ++write_ptr;
+                }
+            }
+          particles.erase(write_ptr, particles.end());
         }
-
-      std::sort(particles_in_cell.begin(),
-                particles_in_cell.end(),
-                [](const DEMParticleAccessor<dim, number> &a,
-                   const DEMParticleAccessor<dim, number> &b) { return a.id() < b.id(); });
-      const auto new_end =
-        std::unique(particles_in_cell.begin(),
-                    particles_in_cell.end(),
-                    [](const DEMParticleAccessor<dim, number> &a,
-                       const DEMParticleAccessor<dim, number> &b) { return a.id() == b.id(); });
-      particles_in_cell.erase(new_end, particles_in_cell.end());
-
-      return particles_in_cell;
     }
 
-    boost::container::small_vector<DEMParticleAccessor<dim, number>, max_particles_per_active_cell>
-    get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const
+    void
+    get_obstacles_in_cell(
+      const dealii::TriaIterator<dealii::CellAccessor<dim>>                 &cell,
+      boost::container::small_vector_base<DEMParticleAccessor<dim, number>> &particles) const
     {
-      return find_relevant_particles(find_particle_storage_cell(cell));
+      find_relevant_particles(find_particle_storage_cell(cell), particles);
     }
 
     dealii::TriaIterator<dealii::CellAccessor<dim>>
@@ -594,6 +593,29 @@ namespace MeltPoolDG
         }
 
       return relevant_particles;
+    }
+
+    void
+    find_relevant_particles(
+      const dealii::TriaIterator<dealii::CellAccessor<dim>>  &cell,
+      boost::container::small_vector_base<particle_accessor> &relevant_particles) const
+    {
+      // TODO: This function currently assumes that the neighbor cells are on the same level
+      Assert(cell->level() == level_to_store_particles,
+             dealii::ExcMessage(
+               "You must provide a cell id of a cell on the level on which particles are stored."));
+
+      for (const dealii::TriaIterator<dealii::CellAccessor<dim>> &current_cell :
+           level_cell_cache.get_neighboring_cells(cell))
+        {
+          for (dealii::Particles::ParticleIterator<dim> &particle :
+               cell_to_locally_owned_particle_cache[current_cell->index()])
+            relevant_particles.emplace_back(*particle, false);
+
+          for (const typename dealii::Particles::PropertyPool<dim>::Handle particle_handle :
+               cell_to_ghost_particle_cache[current_cell->index()])
+            relevant_particles.emplace_back(*properties_global_obstacles, particle_handle, true);
+        }
     }
 
     boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>

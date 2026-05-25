@@ -15,6 +15,9 @@
 
 #include <deal.II/matrix_free/operators.h>
 
+#include "meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp"
+#include "meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp"
+#include "meltpooldg/time_integration/time_integrator_data.hpp"
 #include <meltpooldg/compressible_flow/dg_operator_explicit.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_implicit.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_implicit_explicit.hpp>
@@ -78,11 +81,8 @@ namespace
    * A fixture class providing everything required to set up the (non-cut) compressible flow
    * operator for explicit, implicit and imex time integration.
    */
-  template <typename is_viscous_bool>
   class CompressibleFlowOperatorFixture : public benchmark::Fixture
   {
-    static const bool is_viscous = is_viscous_bool::value;
-
   public:
     /**
      * @brief Holds all operator-specific objects and functions.
@@ -103,18 +103,22 @@ namespace
        * spatial direction of the cubic domain.
        */
       explicit Data(const benchmark::State &state)
-        : triangulation(MPI_COMM_WORLD)
+        : triangulation(MPI_COMM_WORLD,
+                        dealii::Triangulation<dim>::MeshSmoothing::none,
+                        dealii::parallel::distributed::Triangulation<
+                          dim>::Settings::construct_multigrid_hierarchy)
         , scratch_data(MPI_COMM_WORLD, 0, true)
       {
         set_simulation_parameters();
-        dealii::GridGenerator::subdivided_hyper_cube(triangulation, state.range(0));
+        setup_rectangular_triangulation(std::vector<unsigned int>{2, 2, 4},
+                                        dealii::Point<dim>(0., 0., 0.),
+                                        dealii::Point<dim>(2e-4, 2e-4, 4e-4),
+                                        4);
         dof_handler.reinit(triangulation);
 
         MeltPoolDG::FiniteElementUtils::distribute_dofs<dim, dim + 2>(fe_data, dof_handler);
 
         setup_scratch_data();
-
-        set_initial_and_boundary_conditions();
       }
 
       dealii::parallel::distributed::Triangulation<dim>       triangulation;
@@ -130,11 +134,6 @@ namespace
 
       std::unique_ptr<MeltPoolDG::CompressibleFlow::DGOperatorExplicit<dim, number, 1>>
         explicit_flow_operator;
-      std::unique_ptr<MeltPoolDG::CompressibleFlow::DGOperatorImplicit<dim, number, is_viscous>>
-        implicit_flow_operator;
-      std::unique_ptr<
-        MeltPoolDG::CompressibleFlow::DGOperatorImplicitExplicit<dim, number, is_viscous>>
-        imex_flow_operator;
 
     private:
       /**
@@ -160,7 +159,10 @@ namespace
         flow_scratch_data =
           std::make_unique<MeltPoolDG::CompressibleFlow::OperationScratchData<dim, number>>(
             flow_data, material, scratch_data, dof_index, quad_index);
+        set_boundary_conditions();
         flow_scratch_data->reinit(2);
+
+        set_initial_conditions();
       }
 
       /**
@@ -169,8 +171,32 @@ namespace
       void
       set_simulation_parameters()
       {
+        material.dynamic_viscosity           = 1.1e-4;
+        material.gamma                       = 1.67;
+        material.specific_gas_constant       = 244;
+        material.reference_density           = 0.4;
+        material.reference_dynamic_viscosity = 1.1e-4;
+        material.specific_isobaric_heat      = 1000;
+        material.thermal_conductivity        = 0.042;
+
         fe_data.type   = MeltPoolDG::FiniteElementType::FE_DGQ;
-        fe_data.degree = 2;
+        fe_data.degree = 1;
+        flow_data.time_integrator.integrator_type =
+          MeltPoolDG::TimeIntegration::TimeIntegratorSchemes::LSRK_stage_1_order_1;
+      }
+
+      void
+      setup_rectangular_triangulation(const std::vector<unsigned int> &n_base_cells,
+                                      const dealii::Point<dim>        &bottom_left,
+                                      const dealii::Point<dim>        &top_right,
+                                      unsigned int                     n_global_refinements)
+      {
+        dealii::GridGenerator::subdivided_hyper_rectangle(triangulation,
+                                                          n_base_cells,
+                                                          bottom_left,
+                                                          top_right);
+
+        triangulation.refine_global(n_global_refinements);
       }
 
       /**
@@ -178,7 +204,7 @@ namespace
        * based on the predefined inflow field. All other boundaries use no-slip conditions.
        */
       void
-      set_initial_and_boundary_conditions()
+      set_initial_conditions()
       {
         // set the initial condition
         InflowFlowField<dim, number>                       function(0.);
@@ -204,7 +230,11 @@ namespace
                                                      phi.begin_dof_values());
             phi.set_dof_values(flow_scratch_data->solution_history.get_current_solution());
           }
+      }
 
+      void
+      set_boundary_conditions()
+      {
         // set the boundary conditions
         auto func = std::make_shared<InflowFlowField<dim, number>>(0.);
         std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim, number>>> inflow{
@@ -215,6 +245,10 @@ namespace
           {2, func}};
         std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim, number>>> bottom{
           {3, func}};
+        std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim, number>>> front{
+          {4, func}};
+        std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim, number>>> back{
+          {5, func}};
         flow_scratch_data->boundary_conditions.set_boundary_condition(
           MeltPoolDG::CompressibleFlow::BoundaryConditionType::inflow, inflow);
         flow_scratch_data->boundary_conditions.set_boundary_condition(
@@ -224,6 +258,10 @@ namespace
           MeltPoolDG::CompressibleFlow::BoundaryConditionType::no_slip_wall, top);
         flow_scratch_data->boundary_conditions.set_boundary_condition(
           MeltPoolDG::CompressibleFlow::BoundaryConditionType::no_slip_wall, bottom);
+        flow_scratch_data->boundary_conditions.set_boundary_condition(
+          MeltPoolDG::CompressibleFlow::BoundaryConditionType::no_slip_wall, front);
+        flow_scratch_data->boundary_conditions.set_boundary_condition(
+          MeltPoolDG::CompressibleFlow::BoundaryConditionType::no_slip_wall, back);
       }
     };
 
@@ -237,29 +275,9 @@ namespace
     void
     setup_operator(const OperatorType type)
     {
-      switch (type)
-        {
-            case OperatorType::Explicit: {
-              data->explicit_flow_operator =
-                std::make_unique<MeltPoolDG::CompressibleFlow::DGOperatorExplicit<dim, number, 1>>(
-                  *data->flow_scratch_data);
-              break;
-            }
-            case OperatorType::Implicit: {
-              data->implicit_flow_operator = std::make_unique<
-                MeltPoolDG::CompressibleFlow::DGOperatorImplicit<dim, number, is_viscous>>(
-                *data->flow_scratch_data);
-              break;
-            }
-            case OperatorType::ImEx: {
-              data->imex_flow_operator = std::make_unique<
-                MeltPoolDG::CompressibleFlow::DGOperatorImplicitExplicit<dim, number, is_viscous>>(
-                *data->flow_scratch_data);
-              break;
-            }
-          default:
-            AssertThrow(false, dealii::ExcMessage("The chosen operator type is not supported!"));
-        }
+      data->explicit_flow_operator =
+        std::make_unique<MeltPoolDG::CompressibleFlow::DGOperatorExplicit<dim, number, 1>>(
+          *data->flow_scratch_data);
     }
 
     // Prevent compiler warnings about hiding overloaded virtual functions (-Woverloaded-virtual).
@@ -294,7 +312,95 @@ namespace
     std::unique_ptr<Data> data;
   };
 
-  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture, ExplicitOperator)
+  BENCHMARK_F(CompressibleFlowOperatorFixture, LocalApplyCellNoPenalty)
+  (benchmark::State &state)
+  {
+    this->setup_operator(OperatorType::Explicit);
+
+    std::pair<unsigned int, unsigned int>              cell_range = {0, 4};
+    dealii::LinearAlgebra::distributed::Vector<number> src;
+    dealii::LinearAlgebra::distributed::Vector<number> dst;
+    this->data->flow_scratch_data->scratch_data.get_matrix_free().initialize_dof_vector(src);
+    this->data->flow_scratch_data->scratch_data.get_matrix_free().initialize_dof_vector(dst);
+
+    MeltPoolDG::mpi_benchmark_loop(state, [&]() {
+      this->data->explicit_flow_operator->local_apply_cell(
+        this->data->scratch_data.get_matrix_free(), dst, src, cell_range);
+      state.counters["DoFs"] = this->data->dof_handler.n_dofs();
+    });
+  }
+
+  BENCHMARK_F(CompressibleFlowOperatorFixture, LocalApplyCellBrinkmanPenalty)
+  (benchmark::State &state)
+  {
+    dealii::TimerOutput              timer(std::cout,
+                              dealii::TimerOutput::OutputFrequency::never,
+                              dealii::TimerOutput::wall_times);
+    MeltPoolDG::ObstacleData<double> obstacle_data;
+    obstacle_data.obstacle_state_input_file =
+      std::string(MPDG_BENCHMARK_DATA_DIR) + "/input_file_28_particles.csv";
+    MeltPoolDG::ObstacleField<dim, double, MeltPoolDG::SphericalParticle<dim, double>>
+      obstacle_field(obstacle_data, this->data->triangulation, dealii::MappingQ1<dim>(), timer);
+
+    MeltPoolDG::BrinkmanPenalizationData<double> brinkman_data;
+    MeltPoolDG::BrinkmanObstacleForce<dim, double, MeltPoolDG::SphericalParticle<dim, double>>
+      brinkman_obstacle_force(
+        obstacle_field,
+        this->data->flow_scratch_data->solution_history.get_current_solution(),
+        MeltPoolDG::MatrixFreeContext<dim, double>(this->data->scratch_data.get_matrix_free(),
+                                                   this->data->flow_scratch_data->dof_idx,
+                                                   this->data->flow_scratch_data->quad_idx),
+        brinkman_data);
+
+    auto fsi_fluid_force_residual =
+      std::make_shared<MeltPoolDG::BrinkmanPenalizationResidualContribution<
+        dim,
+        double,
+        typename MeltPoolDG::SphericalParticle<dim, double>>>(obstacle_field, brinkman_data);
+
+    auto fsi_fluid_force_jacobian =
+      std::make_shared<MeltPoolDG::BrinkmanPenalizationJacobianContribution<
+        dim,
+        double,
+        typename MeltPoolDG::SphericalParticle<dim, double>>>(obstacle_field, brinkman_data);
+
+    this->setup_operator(OperatorType::Explicit);
+    this->data->explicit_flow_operator->add_external_force(fsi_fluid_force_residual,
+                                                           fsi_fluid_force_jacobian);
+
+    std::pair<unsigned int, unsigned int>              cell_range = {0, 4};
+    dealii::LinearAlgebra::distributed::Vector<number> src;
+    dealii::LinearAlgebra::distributed::Vector<number> dst;
+    this->data->flow_scratch_data->scratch_data.get_matrix_free().initialize_dof_vector(src);
+    this->data->flow_scratch_data->scratch_data.get_matrix_free().initialize_dof_vector(dst);
+
+    MeltPoolDG::mpi_benchmark_loop(state, [&]() {
+      this->data->explicit_flow_operator->local_apply_cell(
+        this->data->scratch_data.get_matrix_free(), dst, src, cell_range);
+      state.counters["DoFs"] = this->data->dof_handler.n_dofs();
+    });
+  }
+
+  BENCHMARK_F(CompressibleFlowOperatorFixture, LocalApplyFace)
+  (benchmark::State &state)
+  {
+    this->setup_operator(OperatorType::Explicit);
+
+    std::pair<unsigned int, unsigned int>              cell_range = {0, 4};
+    dealii::LinearAlgebra::distributed::Vector<number> src;
+    dealii::LinearAlgebra::distributed::Vector<number> dst;
+    this->data->flow_scratch_data->scratch_data.get_matrix_free().initialize_dof_vector(src);
+    this->data->flow_scratch_data->scratch_data.get_matrix_free().initialize_dof_vector(dst);
+
+    MeltPoolDG::mpi_benchmark_loop(state, [&]() {
+      this->data->explicit_flow_operator->local_apply_face(
+        this->data->scratch_data.get_matrix_free(), dst, src, cell_range);
+      state.counters["DoFs"] = this->data->dof_handler.n_dofs();
+    });
+  }
+
+
+  BENCHMARK_F(CompressibleFlowOperatorFixture, ApplyOperatorNoPenalty)
   (benchmark::State &state)
   {
     constexpr number current_time = 0.1;
@@ -311,146 +417,55 @@ namespace
     });
   }
 
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ExplicitOperator,
-                                   std::integral_constant<bool, true>)
-    ->DenseRange(10, 20, 10)
-    ->Name("explicit operator, viscid");
-
-
-  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture, ImplicitOperatorResidual)
+  BENCHMARK_F(CompressibleFlowOperatorFixture, ApplyOperatorBrinkmanPenalty)
   (benchmark::State &state)
   {
+    dealii::TimerOutput              timer(std::cout,
+                              dealii::TimerOutput::OutputFrequency::never,
+                              dealii::TimerOutput::wall_times);
+    MeltPoolDG::ObstacleData<double> obstacle_data;
+    obstacle_data.obstacle_state_input_file =
+      std::string(MPDG_BENCHMARK_DATA_DIR) + "/input_file_28_particles.csv";
+    MeltPoolDG::ObstacleField<dim, double, MeltPoolDG::SphericalParticle<dim, double>>
+      obstacle_field(obstacle_data, this->data->triangulation, dealii::MappingQ1<dim>(), timer);
+
+    MeltPoolDG::BrinkmanPenalizationData<double> brinkman_data;
+    MeltPoolDG::BrinkmanObstacleForce<dim, double, MeltPoolDG::SphericalParticle<dim, double>>
+      brinkman_obstacle_force(
+        obstacle_field,
+        this->data->flow_scratch_data->solution_history.get_current_solution(),
+        MeltPoolDG::MatrixFreeContext<dim, double>(this->data->scratch_data.get_matrix_free(),
+                                                   this->data->flow_scratch_data->dof_idx,
+                                                   this->data->flow_scratch_data->quad_idx),
+        brinkman_data);
+
+    auto fsi_fluid_force_residual =
+      std::make_shared<MeltPoolDG::BrinkmanPenalizationResidualContribution<
+        dim,
+        double,
+        typename MeltPoolDG::SphericalParticle<dim, double>>>(obstacle_field, brinkman_data);
+
+    auto fsi_fluid_force_jacobian =
+      std::make_shared<MeltPoolDG::BrinkmanPenalizationJacobianContribution<
+        dim,
+        double,
+        typename MeltPoolDG::SphericalParticle<dim, double>>>(obstacle_field, brinkman_data);
+
     constexpr number current_time = 0.1;
     constexpr number time_step    = 1e-4;
-    this->setup_operator(OperatorType::Implicit);
-    this->data->flow_scratch_data->solution_history.commit_old_solutions();
-
+    this->setup_operator(OperatorType::Explicit);
+    this->data->explicit_flow_operator->add_external_force(fsi_fluid_force_residual,
+                                                           fsi_fluid_force_jacobian);
     MeltPoolDG::mpi_benchmark_loop(state, [&]() {
-      this->data->implicit_flow_operator->compute_residual(
-        current_time,
-        time_step,
-        this->data->flow_scratch_data->solution_history.get_solution(1),
-        this->data->flow_scratch_data->solution_history.get_current_solution(),
-        this->data->flow_scratch_data->solution_history.get_recent_old_solution());
-    });
-    state.counters["DoFs"] = this->data->dof_handler.n_dofs();
-  }
-
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ImplicitOperatorResidual,
-                                   std::integral_constant<bool, true>)
-    ->DenseRange(10, 20, 10)
-    ->Name("implicit operator, viscid: residual");
-
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ImplicitOperatorResidual,
-                                   std::integral_constant<bool, false>)
-    ->DenseRange(10, 20, 10)
-    ->Name("implicit operator, in-viscid: residual");
-
-  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture, ImplicitOperatorJacobian)
-  (benchmark::State &state)
-  {
-    constexpr number time_step = 1e-4;
-    this->setup_operator(OperatorType::Implicit);
-    this->data->flow_scratch_data->solution_history.commit_old_solutions();
-
-    MeltPoolDG::mpi_benchmark_loop(state, [&]() {
-      this->data->implicit_flow_operator->apply_jacobian(
-        time_step,
-        this->data->flow_scratch_data->solution_history.get_current_solution(),
-        this->data->flow_scratch_data->solution_history.get_recent_old_solution());
-    });
-    state.counters["DoFs"] = this->data->dof_handler.n_dofs();
-  }
-
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ImplicitOperatorJacobian,
-                                   std::integral_constant<bool, true>)
-    ->DenseRange(10, 20, 10)
-    ->Name("implicit operator, viscid: jacobian");
-
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ImplicitOperatorJacobian,
-                                   std::integral_constant<bool, false>)
-    ->DenseRange(10, 20, 10)
-    ->Name("implicit operator, in-viscid: jacobian");
-
-  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture, ImExOperatorResidual)
-  (benchmark::State &state)
-  {
-    constexpr number current_time = 0.1;
-    constexpr number time_step    = 1e-4;
-    this->setup_operator(OperatorType::ImEx);
-    this->data->flow_scratch_data->solution_history.commit_old_solutions();
-
-    MeltPoolDG::mpi_benchmark_loop(state, [&]() {
-      this->data->imex_flow_operator->compute_residual(
-        current_time,
-        time_step,
-        this->data->flow_scratch_data->solution_history.get_solution(1),
-        this->data->flow_scratch_data->solution_history.get_current_solution(),
-        this->data->flow_scratch_data->solution_history.get_recent_old_solution());
-    });
-    state.counters["DoFs"] = this->data->dof_handler.n_dofs();
-  }
-
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ImExOperatorResidual,
-                                   std::integral_constant<bool, true>)
-    ->DenseRange(10, 20, 10)
-    ->Name("imex operator, viscid: residual");
-
-
-  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture, ImExOperatorJacobian)
-  (benchmark::State &state)
-  {
-    constexpr number current_time = 0.1;
-    constexpr number time_step    = 1e-4;
-    this->setup_operator(OperatorType::ImEx);
-    this->data->flow_scratch_data->solution_history.commit_old_solutions();
-
-    MeltPoolDG::mpi_benchmark_loop(state, [&]() {
-      this->data->imex_flow_operator->apply_jacobian(
-        current_time,
-        time_step,
-        this->data->flow_scratch_data->solution_history.get_current_solution(),
-        this->data->flow_scratch_data->solution_history.get_recent_old_solution());
-    });
-    state.counters["DoFs"] = this->data->dof_handler.n_dofs();
-  }
-
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ImExOperatorJacobian,
-                                   std::integral_constant<bool, true>)
-    ->DenseRange(10, 20, 10)
-    ->Name("imex operator, viscid: jacobian");
-
-  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture, ImExOperatorExplicitStage)
-  (benchmark::State &state)
-  {
-    constexpr number current_time = 0.1;
-    constexpr number time_step    = 1e-4;
-    this->setup_operator(OperatorType::ImEx);
-    this->data->flow_scratch_data->solution_history.commit_old_solutions();
-    MeltPoolDG::mpi_benchmark_loop(state, [&]() {
-      this->data->imex_flow_operator->perform_explicit_stage(
+      this->data->explicit_flow_operator->apply_operator(
         current_time,
         time_step,
         this->data->flow_scratch_data->solution_history.get_current_solution(),
         this->data->flow_scratch_data->solution_history.get_recent_old_solution(),
-        true,
-        std::function<void(unsigned, unsigned)>());
+        std::function<void(unsigned int, unsigned int)>());
+      state.counters["DoFs"] = this->data->dof_handler.n_dofs();
     });
-    state.counters["DoFs"] = this->data->dof_handler.n_dofs();
   }
-
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ImExOperatorExplicitStage,
-                                   std::integral_constant<bool, true>)
-    ->DenseRange(10, 20, 10)
-    ->Name("imex operator, viscid: explicit stage");
 } // namespace
 
 MPDG_BENCHMARK_MPI_MAIN;

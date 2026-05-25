@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deal.II/base/config.h>
+
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
@@ -84,7 +86,7 @@ namespace MeltPoolDG::Utils
      *
      * @return Convective flux contribution for the cell integral.
      */
-    [[nodiscard]] static FluxType
+    [[nodiscard]] inline DEAL_II_ALWAYS_INLINE static FluxType
     cell(const ValueType &u, const Kernel &kernel)
     {
       return kernel.flux(u);
@@ -103,7 +105,7 @@ namespace MeltPoolDG::Utils
      * @return Convective flux contribution for the face integral, including both inner and outer
      * face values.
      */
-    [[nodiscard]] static FaceFlux
+    [[nodiscard]] inline DEAL_II_ALWAYS_INLINE static FaceFlux
     face(const ValueType                                   &u_m,
          const ValueType                                   &u_p,
          const dealii::Tensor<1, dim, VectorizedArrayType> &normal,
