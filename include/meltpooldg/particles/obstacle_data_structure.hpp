@@ -593,10 +593,6 @@ namespace MeltPoolDG
             relevant_particles.emplace_back(*properties_global_obstacles, particle_handle, true);
         }
 
-      AssertThrow(relevant_particles.size() <= max_particles_per_active_cell,
-                  dealii::ExcMessage(
-                    "The number of particles relevant to the given cell exceeds the maximum allowed. This likely indicates that the level on which particles are stored is too coarse, leading to too many particles being associated with each cell. Consider storing particles on a finer level to reduce the number of relevant particles per cell."));
-
       return relevant_particles;
     }
 

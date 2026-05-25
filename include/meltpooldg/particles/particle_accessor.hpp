@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deal.II/base/config.h>
+
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
@@ -66,18 +68,18 @@ namespace MeltPoolDG
      *
      * @return Reference to the particle location.
      */
-    dealii::Point<dim, number> &
+    inline DEAL_II_ALWAYS_INLINE dealii::Point<dim, number>                              &
     get_location();
 
     /**
      * Same as above but for const access.
      */
-    const dealii::Point<dim, number> &
+    inline DEAL_II_ALWAYS_INLINE const dealii::Point<dim, number>                                    &
     get_location() const;
 
-    dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
-    get_local_velocity(
-      dealii::Point<dim, dealii::VectorizedArray<number>> location_of_interest) const
+    inline DEAL_II_ALWAYS_INLINE dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
+                                 get_local_velocity(
+                                   dealii::Point<dim, dealii::VectorizedArray<number>> location_of_interest) const
     {
       Assert(dim == 2 or dim == 3, dealii::ExcMessage("Invalid dimension!"));
 
@@ -111,10 +113,10 @@ namespace MeltPoolDG
      *
      * @return A tensor representing the linear velocity of the particle.
      */
-    dealii::Tensor<1, dim, number>
-    get_linear_velocity() const;
+    inline DEAL_II_ALWAYS_INLINE dealii::Tensor<1, dim, number>
+                                 get_linear_velocity() const;
 
-    bool
+    inline DEAL_II_ALWAYS_INLINE bool
     is_ghosted() const
     {
       return particle_is_ghosted;
@@ -132,35 +134,35 @@ namespace MeltPoolDG
       return particle_loc - loc;
     }
 
-    number &
+    inline DEAL_II_ALWAYS_INLINE number &
     linear_velocity(const unsigned int dimension)
     {
       AssertIndexRange(dimension, dim);
       return properties[SphericalParticle<dim, number>::Properties::velocity + dimension];
     }
 
-    const number &
+    inline DEAL_II_ALWAYS_INLINE const number &
     linear_velocity(const unsigned int dimension) const
     {
       AssertIndexRange(dimension, dim);
       return properties[SphericalParticle<dim, number>::Properties::velocity + dimension];
     }
 
-    number &
+    inline DEAL_II_ALWAYS_INLINE number &
     linear_acceleration(const unsigned int dimension)
     {
       AssertIndexRange(dimension, dim);
       return properties[SphericalParticle<dim, number>::Properties::acceleration + dimension];
     }
 
-    number &
+    inline DEAL_II_ALWAYS_INLINE number &
     angular_velocity(const unsigned int dimension)
     {
       AssertIndexRange(dimension, axial_dim<dim>);
       return properties[SphericalParticle<dim, number>::Properties::angular_velocity + dimension];
     }
 
-    number &
+    inline DEAL_II_ALWAYS_INLINE number &
     angular_acceleration(const unsigned int dimension)
     {
       AssertIndexRange(dimension, axial_dim<dim>);
@@ -173,8 +175,8 @@ namespace MeltPoolDG
      *
      * @return A tensor representing the angular velocity of the particle.
      */
-    dealii::Tensor<1, axial_dim<dim>, number>
-    get_angular_velocity() const;
+    inline DEAL_II_ALWAYS_INLINE dealii::Tensor<1, axial_dim<dim>, number>
+                                 get_angular_velocity() const;
 
     /**
      * Sets the specified force vector to the particle by assigning its components into the
@@ -182,7 +184,7 @@ namespace MeltPoolDG
      *
      * @param force The force vector to assign to the particle.
      */
-    void
+    inline DEAL_II_ALWAYS_INLINE void
     set_force(const dealii::Tensor<1, dim, number> &force);
 
     /**
@@ -191,10 +193,10 @@ namespace MeltPoolDG
      *
      * @param force The force vector to be added.
      */
-    void
+    inline DEAL_II_ALWAYS_INLINE void
     add_force(const dealii::Tensor<1, dim, number> &force);
 
-    dealii::Tensor<1, dim, number>
+    inline DEAL_II_ALWAYS_INLINE dealii::Tensor<1, dim, number>
     get_force() const
     {
       dealii::Tensor<1, dim, number> force;
@@ -204,7 +206,7 @@ namespace MeltPoolDG
       return force;
     }
 
-    number &
+    inline DEAL_II_ALWAYS_INLINE number &
     force(const unsigned int dimension)
     {
       AssertIndexRange(dimension, dim);
@@ -217,10 +219,10 @@ namespace MeltPoolDG
      *
      * @param torque The torque vector to assign to the particle.
      */
-    void
+   inline DEAL_II_ALWAYS_INLINE void
     set_torque(const dealii::Tensor<1, axial_dim<dim>, number> &torque);
 
-    dealii::Tensor<1, axial_dim<dim>, number>
+    inline DEAL_II_ALWAYS_INLINE dealii::Tensor<1, axial_dim<dim>, number>
     get_torque() const
     {
       dealii::Tensor<1, axial_dim<dim>, number> torque;
@@ -230,7 +232,7 @@ namespace MeltPoolDG
       return torque;
     }
 
-    number &
+    inline DEAL_II_ALWAYS_INLINE number &
     torque(const unsigned int dimension)
     {
       AssertIndexRange(dimension, axial_dim<dim>);
@@ -243,7 +245,7 @@ namespace MeltPoolDG
      *
      * @param torque The torque vector to be added.
      */
-    void
+    inline DEAL_II_ALWAYS_INLINE void
     add_torque(const dealii::Tensor<1, axial_dim<dim>, number> &torque);
 
     /**
@@ -251,7 +253,7 @@ namespace MeltPoolDG
      *
      * @return The particle ID.
      */
-    dealii::types::particle_index
+    inline DEAL_II_ALWAYS_INLINE dealii::types::particle_index
     id() const;
 
     /**
@@ -259,7 +261,7 @@ namespace MeltPoolDG
      *
      * @return The particle radius.
      */
-    const number &
+    inline DEAL_II_ALWAYS_INLINE const number &
     radius() const;
 
     /**
@@ -272,13 +274,13 @@ namespace MeltPoolDG
      * such as translational or angular velocity, use the functions @p get_velocity() and
      * @p get_angular_velocity().
      */
-    number &
+    inline DEAL_II_ALWAYS_INLINE number &
     get_property(const typename SphericalParticle<dim, number>::Properties property);
 
     /**
      * Same as above but for const access.
      */
-    const number &
+    inline DEAL_II_ALWAYS_INLINE const number &
     get_property(const typename SphericalParticle<dim, number>::Properties property) const;
 
     /**
@@ -286,7 +288,7 @@ namespace MeltPoolDG
      * same function in the deal.II ParticleAccessor, which is used internally to keep track of the
      * cell in which the particle is located.
      */
-    typename dealii::Triangulation<dim>::cell_iterator
+    inline DEAL_II_ALWAYS_INLINE typename dealii::Triangulation<dim>::cell_iterator
     get_surrounding_cell() const
     {
       return surrounding_cell;
@@ -331,22 +333,22 @@ namespace MeltPoolDG
   {}
 
   template <int dim, typename number>
-  dealii::Point<dim, number> &
+  inline DEAL_II_ALWAYS_INLINE dealii::Point<dim, number>                              &
   DEMParticleAccessor<dim, number>::get_location()
   {
     return location;
   }
 
   template <int dim, typename number>
-  const dealii::Point<dim, number> &
+  inline DEAL_II_ALWAYS_INLINE const dealii::Point<dim, number>                                    &
   DEMParticleAccessor<dim, number>::get_location() const
   {
     return location;
   }
 
   template <int dim, typename number>
-  dealii::Tensor<1, dim, number>
-  DEMParticleAccessor<dim, number>::get_linear_velocity() const
+  inline DEAL_II_ALWAYS_INLINE dealii::Tensor<1, dim, number>
+                               DEMParticleAccessor<dim, number>::get_linear_velocity() const
   {
     Assert(!properties.empty(), dealii::ExcInternalError());
     dealii::Tensor<1, dim, number> velocity;
@@ -357,8 +359,8 @@ namespace MeltPoolDG
   }
 
   template <int dim, typename number>
-  dealii::Tensor<1, axial_dim<dim>, number>
-  DEMParticleAccessor<dim, number>::get_angular_velocity() const
+  inline DEAL_II_ALWAYS_INLINE dealii::Tensor<1, axial_dim<dim>, number>
+                               DEMParticleAccessor<dim, number>::get_angular_velocity() const
   {
     Assert(!properties.empty(), dealii::ExcInternalError());
     dealii::Tensor<1, axial_dim<dim>, number> velocity;
@@ -369,7 +371,7 @@ namespace MeltPoolDG
   }
 
   template <int dim, typename number>
-  void
+  inline DEAL_II_ALWAYS_INLINE void
   DEMParticleAccessor<dim, number>::set_force(const dealii::Tensor<1, dim, number> &force)
   {
     Assert(!properties.empty(), dealii::ExcInternalError());
@@ -378,7 +380,7 @@ namespace MeltPoolDG
   }
 
   template <int dim, typename number>
-  void
+  inline DEAL_II_ALWAYS_INLINE void
   DEMParticleAccessor<dim, number>::add_force(const dealii::Tensor<1, dim, number> &force)
   {
     Assert(!properties.empty(), dealii::ExcInternalError());
@@ -387,7 +389,7 @@ namespace MeltPoolDG
   }
 
   template <int dim, typename number>
-  void
+  inline DEAL_II_ALWAYS_INLINE void
   DEMParticleAccessor<dim, number>::set_torque(
     const dealii::Tensor<1, axial_dim<dim>, number> &torque)
   {
@@ -398,7 +400,7 @@ namespace MeltPoolDG
   }
 
   template <int dim, typename number>
-  void
+  inline DEAL_II_ALWAYS_INLINE void
   DEMParticleAccessor<dim, number>::add_torque(
     const dealii::Tensor<1, axial_dim<dim>, number> &torque)
   {
@@ -409,14 +411,14 @@ namespace MeltPoolDG
   }
 
   template <int dim, typename number>
-  dealii::types::particle_index
+  inline DEAL_II_ALWAYS_INLINE dealii::types::particle_index
   DEMParticleAccessor<dim, number>::id() const
   {
     return particle_id;
   }
 
   template <int dim, typename number>
-  const number &
+  inline DEAL_II_ALWAYS_INLINE const number &
   DEMParticleAccessor<dim, number>::radius() const
   {
     Assert(!properties.empty(), dealii::ExcInternalError());
@@ -424,7 +426,7 @@ namespace MeltPoolDG
   }
 
   template <int dim, typename number>
-  number &
+  inline DEAL_II_ALWAYS_INLINE number &
   DEMParticleAccessor<dim, number>::get_property(
     const typename SphericalParticle<dim, number>::Properties property)
   {
@@ -433,7 +435,7 @@ namespace MeltPoolDG
   }
 
   template <int dim, typename number>
-  const number &
+  inline DEAL_II_ALWAYS_INLINE const number &
   DEMParticleAccessor<dim, number>::get_property(
     const typename SphericalParticle<dim, number>::Properties property) const
   {
