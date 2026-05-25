@@ -53,11 +53,11 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
 
       for (unsigned cell = cell_range.first; cell < cell_range.second; ++cell)
         {
-          phi.reinit(cell);
           auto relevant_obstacle =
             obstacle_field.get_obstacles_in_cell(cells_in_cell_batch(matrix_free.mf, cell));
           if (not relevant_obstacle.empty())
             {
+              phi.reinit(cell);
               phi.gather_evaluate(solution, dealii::EvaluationFlags::values);
 
               for (const unsigned int q : phi.quadrature_point_indices())
