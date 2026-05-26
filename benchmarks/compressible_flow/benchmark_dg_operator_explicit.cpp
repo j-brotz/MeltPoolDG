@@ -316,7 +316,6 @@ namespace
   (benchmark::State &state)
   {
     this->setup_operator(OperatorType::Explicit);
-
     std::pair<unsigned int, unsigned int>              cell_range = {0, 4};
     dealii::LinearAlgebra::distributed::Vector<number> src;
     dealii::LinearAlgebra::distributed::Vector<number> dst;
@@ -333,6 +332,7 @@ namespace
   BENCHMARK_F(CompressibleFlowOperatorFixture, LocalApplyCellBrinkmanPenalty)
   (benchmark::State &state)
   {
+    this->setup_operator(OperatorType::Explicit);
     dealii::TimerOutput              timer(std::cout,
                               dealii::TimerOutput::OutputFrequency::never,
                               dealii::TimerOutput::wall_times);
@@ -340,7 +340,11 @@ namespace
     obstacle_data.obstacle_state_input_file =
       std::string(MPDG_BENCHMARK_DATA_DIR) + "/input_file_28_particles.csv";
     MeltPoolDG::ObstacleField<dim, double, MeltPoolDG::SphericalParticle<dim, double>>
-      obstacle_field(obstacle_data, this->data->triangulation, dealii::MappingQ1<dim>(), timer);
+      obstacle_field(obstacle_data,
+                     this->data->triangulation,
+                     dealii::MappingQ1<dim>(),
+                     timer,
+                     &this->data->scratch_data.get_matrix_free());
 
     MeltPoolDG::BrinkmanPenalizationData<double> brinkman_data;
     MeltPoolDG::BrinkmanObstacleForce<dim, double, MeltPoolDG::SphericalParticle<dim, double>>
@@ -364,7 +368,6 @@ namespace
         double,
         typename MeltPoolDG::SphericalParticle<dim, double>>>(obstacle_field, brinkman_data);
 
-    this->setup_operator(OperatorType::Explicit);
     this->data->explicit_flow_operator->add_external_force(fsi_fluid_force_residual,
                                                            fsi_fluid_force_jacobian);
 
@@ -420,6 +423,7 @@ namespace
   BENCHMARK_F(CompressibleFlowOperatorFixture, ApplyOperatorBrinkmanPenalty)
   (benchmark::State &state)
   {
+    this->setup_operator(OperatorType::Explicit);
     dealii::TimerOutput              timer(std::cout,
                               dealii::TimerOutput::OutputFrequency::never,
                               dealii::TimerOutput::wall_times);
@@ -427,7 +431,11 @@ namespace
     obstacle_data.obstacle_state_input_file =
       std::string(MPDG_BENCHMARK_DATA_DIR) + "/input_file_28_particles.csv";
     MeltPoolDG::ObstacleField<dim, double, MeltPoolDG::SphericalParticle<dim, double>>
-      obstacle_field(obstacle_data, this->data->triangulation, dealii::MappingQ1<dim>(), timer);
+      obstacle_field(obstacle_data,
+                     this->data->triangulation,
+                     dealii::MappingQ1<dim>(),
+                     timer,
+                     &this->data->scratch_data.get_matrix_free());
 
     MeltPoolDG::BrinkmanPenalizationData<double> brinkman_data;
     MeltPoolDG::BrinkmanObstacleForce<dim, double, MeltPoolDG::SphericalParticle<dim, double>>
@@ -453,7 +461,6 @@ namespace
 
     constexpr number current_time = 0.1;
     constexpr number time_step    = 1e-4;
-    this->setup_operator(OperatorType::Explicit);
     this->data->explicit_flow_operator->add_external_force(fsi_fluid_force_residual,
                                                            fsi_fluid_force_jacobian);
     MeltPoolDG::mpi_benchmark_loop(state, [&]() {

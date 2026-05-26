@@ -47,12 +47,11 @@ namespace MeltPoolDG
      * @param triangulation The triangulation on which the obstacles are placed.
      * @param mapping Mapping used to interpret geometry on the given triangulation.
      */
-    ObstacleField(const ObstacleData<number>       &data,
-                  const dealii::Triangulation<dim> &triangulation,
-                  const dealii::Mapping<dim>       &mapping,
-                  dealii::TimerOutput              &timer,
-                  const ObstacleDataStructureType   obstacle_data_structure_type =
-                    ObstacleDataStructureType::CompleteDomainSearch);
+    ObstacleField(const ObstacleData<number>            &data,
+                  const dealii::Triangulation<dim>      &triangulation,
+                  const dealii::Mapping<dim>            &mapping,
+                  dealii::TimerOutput                   &timer,
+                  const dealii::MatrixFree<dim, number> *matrix_free = nullptr);
 
     /**
      * @brief Constructor. Initializes the obstacle field and supporting data structures.
@@ -73,8 +72,7 @@ namespace MeltPoolDG
                   std::vector<dealii::Point<dim, number>> &obstacle_locations,
                   std::vector<std::vector<number>>        &obstacle_properties,
                   dealii::TimerOutput                     &timer,
-                  const ObstacleDataStructureType          obstacle_data_structure_type =
-                    ObstacleDataStructureType::CompleteDomainSearch);
+                  const dealii::MatrixFree<dim, number>   *matrix_free = nullptr);
 
     /**
      * @brief Advances the state of all obstacles in time by a single time step.
@@ -144,6 +142,14 @@ namespace MeltPoolDG
       boost::container::small_vector_base<DEMParticleAccessor<dim, number>> &obstacles) const
     {
       obstacle_data_structure.get_obstacles_in_cell(cell, obstacles);
+    }
+
+    void
+    get_obstacles_in_cell_batch(
+      const unsigned int                                                     cell_batch_id,
+      boost::container::small_vector_base<DEMParticleAccessor<dim, number>> &obstacles) const
+    {
+      obstacle_data_structure.get_obstacles_in_cell_batch(cell_batch_id, obstacles);
     }
 
     void

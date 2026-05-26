@@ -132,7 +132,8 @@ namespace MeltPoolDG::CompressibleFlow
      * equations.
      */
     virtual ConservedVariablesType<dim, number, n_species>
-    value(number time_step_size,
+    value(number             time_step_size,
+          const unsigned int cell_batch_id,
           const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
                                                dealii::VectorizedArray<double>::size()> &cells,
           const dealii::Point<dim, dealii::VectorizedArray<number>>                     &points,
@@ -162,7 +163,8 @@ namespace MeltPoolDG::CompressibleFlow
      * equations.
      */
     virtual ConservedVariablesType<dim, number, n_species>
-    value(number time_step_size,
+    value(number             time_step_size,
+          const unsigned int cell_batch_id,
           const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
                                                dealii::VectorizedArray<double>::size()> &cells,
           const dealii::Point<dim, dealii::VectorizedArray<number>>                     &points,

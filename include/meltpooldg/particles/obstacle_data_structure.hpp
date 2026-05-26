@@ -469,9 +469,10 @@ namespace MeltPoolDG
     static constexpr std::size_t max_particles_per_active_cell = 20;
     using particle_accessor                                    = DEMParticleAccessor<dim, number>;
 
-    ObstacleCompleteDomainSearch(const dealii::Triangulation<dim> &triangulation,
-                                 const dealii::Mapping<dim>       &mapping,
-                                 dealii::TimerOutput              &timer);
+    ObstacleCompleteDomainSearch(const dealii::Triangulation<dim>      &triangulation,
+                                 const dealii::Mapping<dim>            &mapping,
+                                 dealii::TimerOutput                   &timer,
+                                 const dealii::MatrixFree<dim, number> *matrix_free = nullptr);
 
     /**
      * @brief Destructor. Explicitly deregisters all particles from the global obstacle property
@@ -541,6 +542,17 @@ namespace MeltPoolDG
                 }
             }
           particles.erase(write_ptr, particles.end());
+        }
+    }
+
+    void
+    get_obstacles_in_cell_batch(
+      const unsigned int                                                     cell_batch_id,
+      boost::container::small_vector_base<DEMParticleAccessor<dim, number>> &particles) const
+    {
+      for (DEMParticleAccessor<dim, number> &particle : cell_batch_to_particle_cache[cell_batch_id])
+        {
+          particles.emplace_back(particle);
         }
     }
 
@@ -713,6 +725,7 @@ namespace MeltPoolDG
     {
       sort_particles_into_local_level_cells();
       communicate_ghost_particles();
+      update_matrix_free_cache();
 
       for (dealii::Particles::ParticleIterator<dim> particle = obstacle_handler->begin();
            particle != obstacle_handler->end();
@@ -807,6 +820,8 @@ namespace MeltPoolDG
     mutable std::vector<std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
       cell_to_ghost_particle_cache;
 
+    mutable std::vector<std::vector<DEMParticleAccessor<dim, number>>> cell_batch_to_particle_cache;
+
     /// A map that associates each MPI rank with the handles in the property pool of the ghost
     /// particles storing those particles which are owned by the corresponding rank.
     mutable std::vector<std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>>
@@ -833,6 +848,8 @@ namespace MeltPoolDG
     /// is relevant for determining the level at which to store particles.
     number max_particle_radius = 0;
 
+    const dealii::MatrixFree<dim, number> *matrix_free = nullptr;
+
     /**
      * @brief Deregisters all particles from the global obstacle property pool.
      */
@@ -844,6 +861,56 @@ namespace MeltPoolDG
 
     void
     communicate_ghost_particles();
+
+    void
+    update_matrix_free_cache()
+    {
+      if (matrix_free != nullptr)
+        {
+          cell_batch_to_particle_cache.clear();
+          cell_batch_to_particle_cache.resize(matrix_free->n_cell_batches());
+          // dummy vectos for the cell loop, not used in the loop body
+          dealii::Vector<number> dummy;
+
+          std::function<void(const dealii::MatrixFree<dim, number> &,
+                             dealii::Vector<number> &,
+                             const dealii::Vector<number> &,
+                             const std::pair<unsigned int, unsigned int> &)>
+            cell_op = [&](const dealii::MatrixFree<dim, number> &mf,
+                          dealii::Vector<number> &,
+                          const dealii::Vector<number> &,
+                          const std::pair<unsigned int, unsigned int> &cell_range) {
+              for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+                {
+                  for (unsigned int lane = 0;
+                       lane < matrix_free->n_active_entries_per_cell_batch(cell);
+                       ++lane)
+                    {
+                      auto cell_iterator = mf.get_cell_iterator(cell, lane);
+
+
+                      boost::container::small_vector<DEMParticleAccessor<dim, number>, 16>
+                        particles;
+                      find_relevant_particles(find_particle_storage_cell(cell_iterator), particles);
+                      for (DEMParticleAccessor<dim, number> particle : particles)
+                        {
+                          auto it = std::find_if(cell_batch_to_particle_cache[cell].begin(),
+                                                 cell_batch_to_particle_cache[cell].end(),
+                                                 [&](const DEMParticleAccessor<dim, number> &p) {
+                                                   return p.id() == particle.id();
+                                                 });
+                          if (it == cell_batch_to_particle_cache[cell].end())
+                            {
+                              cell_batch_to_particle_cache[cell].push_back(particle);
+                            }
+                        }
+                    }
+                }
+            };
+
+          matrix_free->cell_loop(cell_op, dummy, dummy);
+        }
+    }
 
     // similar to dealii::Particles::Particle functionality but also sends cell information on level
     // of interest as well as returns the handler in the new property pool when storing the

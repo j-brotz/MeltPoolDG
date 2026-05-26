@@ -101,6 +101,7 @@ namespace MeltPoolDG
     ConservedVariablesType
     value(
       number                                                                         time_step_size,
+      const unsigned int                                                             cell_batch_id,
       const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
                                            dealii::VectorizedArray<double>::size()> &cell_iterators,
       const dealii::Point<dim, dealii::VectorizedArray<number>>                     &q_point,

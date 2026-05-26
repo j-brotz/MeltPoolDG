@@ -24,9 +24,10 @@
 
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::ObstacleCompleteDomainSearch(
-  const dealii::Triangulation<dim> &triangulation,
-  const dealii::Mapping<dim>       &mapping,
-  dealii::TimerOutput              &timer)
+  const dealii::Triangulation<dim>      &triangulation,
+  const dealii::Mapping<dim>            &mapping,
+  dealii::TimerOutput                   &timer,
+  const dealii::MatrixFree<dim, number> *matrix_free)
   : obstacle_handler(std::make_unique<dealii::Particles::ParticleHandler<dim>>(
       triangulation,
       mapping,
@@ -34,6 +35,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::ObstacleCom
   , properties_global_obstacles(
       std::make_unique<dealii::Particles::PropertyPool<dim>>(ObstacleType::n_obstacle_properties))
   , timer(timer)
+  , matrix_free(matrix_free)
   , triangulation(&triangulation)
   , level_cell_partitioner(triangulation)
 {}
@@ -294,9 +296,9 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
           cell_to_ghost_particle_cache[cell->index()].push_back(received_data.handle);
 
           // TODO: We assume that the index i is the same for both the recv_futures and the
-          // corresponding rank in the n_particles_to_receive vector, which should be the case since
-          // they are filled in the same order. However, it might be safer to explicitly find the
-          // corresponding rank for the current future to avoid any potential mismatches.
+          // corresponding rank in the n_particles_to_receive vector, which should be the case
+          // since they are filled in the same order. However, it might be safer to explicitly
+          // find the corresponding rank for the current future to avoid any potential mismatches.
           rank_to_handle[n_particles_to_receive[i].first].push_back(received_data.handle);
         }
     }

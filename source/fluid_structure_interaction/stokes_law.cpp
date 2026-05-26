@@ -90,6 +90,7 @@ template <int dim, typename number, typename ObstacleType>
 auto
 MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::value(
   const number,
+  const unsigned int,
   const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
                                        dealii::VectorizedArray<double>::size()> &cell_iterators,
   const dealii::Point<dim, dealii::VectorizedArray<number>> &,

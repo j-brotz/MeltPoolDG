@@ -59,8 +59,7 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
                 max_particles_per_active_cell *
               8>
             relevant_obstacle;
-          obstacle_field.get_obstacles_in_cell(cells_in_cell_batch(matrix_free.mf, cell),
-                                               relevant_obstacle);
+          obstacle_field.get_obstacles_in_cell_batch(cell, relevant_obstacle);
           if (not relevant_obstacle.empty())
             {
               phi.reinit(cell);
@@ -146,12 +145,13 @@ template <int dim, typename number, typename ObstacleType>
 auto
 MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>::value(
   const number,
+  const unsigned int cell_batch_id,
   const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
-                                       dealii::VectorizedArray<double>::size()> &cell_iterators,
-  const dealii::Point<dim, dealii::VectorizedArray<number>>                     &q_point,
-  const ConservedVariablesType &w_q) -> ConservedVariablesType
+                                       dealii::VectorizedArray<double>::size()> &,
+  const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
+  const ConservedVariablesType                              &w_q) -> ConservedVariablesType
 {
-  cell_obstacle_cache.update_cache(cell_iterators);
+  cell_obstacle_cache.update_cache(cell_batch_id);
 
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> fluid_momentum;
   for (int d = 0; d < dim; ++d)
@@ -193,13 +193,14 @@ template <int dim, typename number, typename ObstacleType>
 auto
 MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>::value(
   const number,
+  const unsigned int cell_batch_id,
   const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
-                                       dealii::VectorizedArray<double>::size()> &cell_iterators,
-  const dealii::Point<dim, dealii::VectorizedArray<number>>                     &q_point,
-  const ConservedVariablesType                                                  &w_q,
-  const ConservedVariablesType &delta_w_q) -> ConservedVariablesType
+                                       dealii::VectorizedArray<double>::size()> &,
+  const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
+  const ConservedVariablesType                              &w_q,
+  const ConservedVariablesType                              &delta_w_q) -> ConservedVariablesType
 {
-  cell_obstacle_cache.update_cache(cell_iterators);
+  cell_obstacle_cache.update_cache(cell_batch_id);
 
   if (cell_obstacle_cache.obstacle_cache.empty())
     return ConservedVariablesType();

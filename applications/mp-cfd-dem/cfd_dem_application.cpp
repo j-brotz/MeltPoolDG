@@ -242,7 +242,8 @@ namespace MeltPoolDG
       simulation_case->parameters.obstacle_data,
       scratch_data->get_triangulation(),
       scratch_data->get_mapping(),
-      scratch_data->get_timer());
+      scratch_data->get_timer(),
+      &scratch_data->get_matrix_free());
 
     // initialize compressible flow operation
     comp_flow_operation = std::make_unique<CompressibleFlow::DGOperation<dim, number>>(

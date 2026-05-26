@@ -66,12 +66,13 @@ public:
                                       dealii::Point<dim>(0., 0., 0.),
                                       dealii::Point<dim>(2e-4, 2e-4, 4e-4),
                                       4);
-      setup_particle_field();
 
       dof_handler.reinit(triangulation);
       MeltPoolDG::FiniteElementUtils::distribute_dofs<dim, dim + 2>(fe_data, dof_handler);
 
       setup_scratch_data();
+
+
 
       set_initial_conditions();
     }
@@ -136,6 +137,16 @@ public:
       scratch_data.attach_constraint_matrix(affine_constraints);
       scratch_data.create_partitioning();
       scratch_data.build(true, true, false, false);
+
+      obstacle_data.obstacle_state_input_file =
+        std::string(MPDG_BENCHMARK_DATA_DIR) + "/input_file_28_particles.csv";
+      obstacle_field = std::make_unique<
+        MeltPoolDG::ObstacleField<dim, double, MeltPoolDG::SphericalParticle<dim, double>>>(
+        obstacle_data,
+        triangulation,
+        dealii::MappingQ1<dim>(),
+        timer,
+        &scratch_data.get_matrix_free());
 
       brinkman_obstacle_force = std::make_unique<
         MeltPoolDG::BrinkmanObstacleForce<dim, double, MeltPoolDG::SphericalParticle<dim, double>>>(

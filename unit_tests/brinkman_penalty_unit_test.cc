@@ -82,10 +82,8 @@ add_penalty_vector(const MatrixFreeContext<dim, number>                     &mat
 
           for (const unsigned int q : phi.quadrature_point_indices())
             {
-              auto penalty = brinkman_contribution.value(time_step_size,
-                                                         cell_iterators,
-                                                         phi.quadrature_point(q),
-                                                         phi.get_value(q));
+              auto penalty = brinkman_contribution.value(
+                time_step_size, cell, cell_iterators, phi.quadrature_point(q), phi.get_value(q));
               phi.submit_value(penalty, q);
             }
 
@@ -348,7 +346,8 @@ public:
       *mapping,
       particle_locations,
       particle_properties,
-      scratch_data.get_timer());
+      scratch_data.get_timer(),
+      &scratch_data.get_matrix_free());
 
     obstacle_field->add_load_type(
       BrinkmanObstacleForce<dim, number, SphericalParticle<dim, number>>(

@@ -278,10 +278,8 @@ namespace MeltPoolDG::CompressibleFlow
                                                    flow_scratch_data.body_force);
 
             for (auto &external_force : external_forces_residual)
-              value_q += external_force->value(current_time_step,
-                                               cell_iterators,
-                                               phi.quadrature_point(q),
-                                               phi.get_value(q));
+              value_q += external_force->value(
+                current_time_step, cell, cell_iterators, phi.quadrature_point(q), phi.get_value(q));
 
             value_q -= 1. / current_time_step * (phi.get_value(q) - phi_old.get_value(q));
 
@@ -440,7 +438,7 @@ namespace MeltPoolDG::CompressibleFlow
 
         for (const unsigned int q_index : phi.quadrature_point_indices())
           {
-            local_cell_jacobian_kernel(delta_phi, phi, q_index, cell_iterators);
+            local_cell_jacobian_kernel(delta_phi, phi, q_index, cell, cell_iterators);
           }
 
         delta_phi.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
@@ -563,6 +561,7 @@ namespace MeltPoolDG::CompressibleFlow
     FECellIntegrator<dim, dim + 2, number>                                 &delta_phi,
     const FECellIntegrator<dim, dim + 2, number>                           &phi,
     const unsigned int                                                      q_index,
+    const unsigned int                                                      cell_batch_id,
     boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
                                    dealii::VectorizedArray<double>::size()> cell_iterators) const
   {
@@ -571,8 +570,12 @@ namespace MeltPoolDG::CompressibleFlow
 
     ConservedVariables value_q = 1. / current_time_step * delta_w_q;
     for (auto &external_force : external_forces_jacobian)
-      value_q -= external_force->value(
-        current_time_step, cell_iterators, phi.quadrature_point(q_index), w_q, delta_w_q);
+      value_q -= external_force->value(current_time_step,
+                                       cell_batch_id,
+                                       cell_iterators,
+                                       phi.quadrature_point(q_index),
+                                       w_q,
+                                       delta_w_q);
 
     delta_phi.submit_value(value_q, q_index);
 

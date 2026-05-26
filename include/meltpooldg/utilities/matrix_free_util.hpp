@@ -97,13 +97,15 @@ namespace MeltPoolDG
     dealii::FEFaceEvaluation<dim, -1, 0, dim + 2, number>                  &fe_face_evaluator,
     const dealii::FEFaceEvaluation<dim, -1, 0, dim + 2, number>            &const_fe_face_evaluator,
     unsigned int                                                            q_index,
+    unsigned int                                                            cell_batch_id,
     boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
                                    dealii::VectorizedArray<double>::size()> cell_iterators) {
     /**
      * Compute the operations for computing the jacobian on the quadrature points for the cell
      * loop.
      */
-    op.local_cell_jacobian_kernel(fe_evaluator, const_fe_evaluator, q_index, cell_iterators);
+    op.local_cell_jacobian_kernel(
+      fe_evaluator, const_fe_evaluator, q_index, cell_batch_id, cell_iterators);
 
     /**
      * Compute the operations for computing the jacobian on the quadrature points for the face
@@ -168,7 +170,8 @@ namespace MeltPoolDG
 
       for (const unsigned int q_index : delta_phi.quadrature_point_indices())
         {
-          implicit_operator.local_cell_jacobian_kernel(delta_phi, phi, q_index, cell_iterators);
+          implicit_operator.local_cell_jacobian_kernel(
+            delta_phi, phi, q_index, delta_phi.get_cell_or_face_batch_id(), cell_iterators);
         }
 
       delta_phi.integrate(dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients);

@@ -36,7 +36,8 @@ namespace MeltPoolDG
     dealii::Point<dim, VectorizedArrayType> vectorized_obstacle_location;
     for (auto i = 0; i < dim; ++i)
       vectorized_obstacle_location[i] = VectorizedArrayType(particle.get_location()[i]);
-    const VectorizedArrayType distance_square = location.distance_square(vectorized_obstacle_location);
+    const VectorizedArrayType distance_square =
+      location.distance_square(vectorized_obstacle_location);
     return dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than_or_equal>(
       distance_square,
       VectorizedArrayType(particle.radius() * particle.radius()),
@@ -82,16 +83,13 @@ namespace MeltPoolDG
      * @param cells Array of cell iterators for which the cache should be updated.
      */
     inline DEAL_II_ALWAYS_INLINE void
-    update_cache(
-      const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
-                                           dealii::VectorizedArray<double>::size()> &cells)
+    update_cache(const unsigned int cell_batch_id)
     {
       // check if cache is still valid
-      if (cells.size() == cached_cells.size() and
-          std::equal(cells.begin(), cells.end(), cached_cells.begin()))
+      if (cell_batch_id == cached_cell_batch_id)
         return;
-      obstacle_handler.get_obstacles_in_cell(cells, obstacle_cache);
-      cached_cells   = cells;
+      obstacle_cache.clear();
+      obstacle_handler.get_obstacles_in_cell_batch(cell_batch_id, obstacle_cache);
     }
     /// Handles of the particles which properties are stored in the @p relevant_obstacles
     /// property pool.
@@ -106,8 +104,6 @@ namespace MeltPoolDG
     const ObstacleField<dim, number, ObstacleType> &obstacle_handler;
 
     /// Cells, for which the object cache is currently valid.
-    boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
-                                   dealii::VectorizedArray<double>::size()>
-      cached_cells;
+    const unsigned int cached_cell_batch_id = std::numeric_limits<unsigned int>::max();
   };
 } // namespace MeltPoolDG

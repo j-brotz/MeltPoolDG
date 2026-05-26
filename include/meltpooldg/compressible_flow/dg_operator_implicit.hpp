@@ -136,6 +136,7 @@ namespace MeltPoolDG::CompressibleFlow
       FECellIntegrator<dim, dim + 2, number>                                 &delta_phi,
       const FECellIntegrator<dim, dim + 2, number>                           &phi,
       unsigned int                                                            q_index,
+      unsigned int                                                            cell_batch_id,
       boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
                                      dealii::VectorizedArray<double>::size()> cell_iterators) const;
 

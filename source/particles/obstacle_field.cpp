@@ -23,13 +23,13 @@
 
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
-  const ObstacleData<number>       &data,
-  const dealii::Triangulation<dim> &triangulation,
-  const dealii::Mapping<dim>       &mapping,
-  dealii::TimerOutput              &timer,
-  const ObstacleDataStructureType   obstacle_data_structure_type)
+  const ObstacleData<number>            &data,
+  const dealii::Triangulation<dim>      &triangulation,
+  const dealii::Mapping<dim>            &mapping,
+  dealii::TimerOutput                   &timer,
+  const dealii::MatrixFree<dim, number> *matrix_free)
   : data(data)
-  , obstacle_data_structure(triangulation, mapping, timer)
+  , obstacle_data_structure(triangulation, mapping, timer, matrix_free)
   , mpi_communicator(triangulation.get_mpi_communicator())
   , timer(timer)
 {
@@ -46,9 +46,9 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   std::vector<dealii::Point<dim, number>> &obstacle_locations,
   std::vector<std::vector<number>>        &obstacle_properties,
   dealii::TimerOutput                     &timer,
-  const ObstacleDataStructureType          obstacle_data_structure_type)
+  const dealii::MatrixFree<dim, number>   *matrix_free)
   : data(data)
-  , obstacle_data_structure(triangulation, mapping, timer)
+  , obstacle_data_structure(triangulation, mapping, timer, matrix_free)
   , mpi_communicator(triangulation.get_mpi_communicator())
   , timer(timer)
 {

@@ -156,6 +156,7 @@ namespace MeltPoolDG::CompressibleFlow
             for (auto &external_force : external_forces)
               {
                 source += external_force->value(current_time_step,
+                                                cell,
                                                 cell_iterators,
                                                 phi.quadrature_point(q),
                                                 phi.get_value(q));
