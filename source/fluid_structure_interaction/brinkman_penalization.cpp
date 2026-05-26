@@ -53,14 +53,7 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
 
       for (unsigned cell = cell_range.first; cell < cell_range.second; ++cell)
         {
-          boost::container::small_vector<
-            MeltPoolDG::DEMParticleAccessor<dim, number>,
-            MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
-                max_particles_per_active_cell *
-              8>
-            relevant_obstacle;
-          obstacle_field.get_obstacles_in_cell_batch(cell, relevant_obstacle);
-          if (not relevant_obstacle.empty())
+          if (not cell_obstacle_cache.obstacle_handler.get_obstacles_in_cell_batch(cell).empty())
             {
               phi.reinit(cell);
               phi.gather_evaluate(solution, dealii::EvaluationFlags::values);
@@ -118,7 +111,8 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
                     obstacle.add_torque(summed_torque);
                   };
 
-                  for (DEMParticleAccessor<dim, number> &obstacle : relevant_obstacle)
+                  for (DEMParticleAccessor<dim, number> &obstacle :
+                       cell_obstacle_cache.obstacle_handler.get_obstacles_in_cell_batch(cell))
                     add_force_and_torque_to_particle(obstacle);
                 }
             }
@@ -151,8 +145,6 @@ MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>:
   const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
   const ConservedVariablesType                              &w_q) -> ConservedVariablesType
 {
-  cell_obstacle_cache.update_cache(cell_batch_id);
-
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> fluid_momentum;
   for (int d = 0; d < dim; ++d)
     fluid_momentum[d] = w_q[d + 1];
@@ -161,7 +153,8 @@ MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>:
 
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> momentum_penalty;
   dealii::VectorizedArray<number>                         energy_penalty = 0.;
-  for (const DEMParticleAccessor<dim, number> &obstacle : cell_obstacle_cache.obstacle_cache)
+  for (const DEMParticleAccessor<dim, number> &obstacle :
+       cell_obstacle_cache.obstacle_handler.get_obstacles_in_cell_batch(cell_batch_id))
     {
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> local_obstacle_momentum =
         obstacle.get_local_velocity(q_point) * w_q[0];
@@ -200,9 +193,7 @@ MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>:
   const ConservedVariablesType                              &w_q,
   const ConservedVariablesType                              &delta_w_q) -> ConservedVariablesType
 {
-  cell_obstacle_cache.update_cache(cell_batch_id);
-
-  if (cell_obstacle_cache.obstacle_cache.empty())
+  if (cell_obstacle_cache.obstacle_handler.get_obstacles_in_cell_batch(cell_batch_id).empty())
     return ConservedVariablesType();
 
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> fluid_momentum;
@@ -215,7 +206,8 @@ MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>:
 
   dealii::VectorizedArray<number>                         energy_penalty_differential_change(0.);
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> momentum_penalty_differential_change;
-  for (const DEMParticleAccessor<dim, number> &obstacle : cell_obstacle_cache.obstacle_cache)
+  for (const DEMParticleAccessor<dim, number> &obstacle :
+       cell_obstacle_cache.obstacle_handler.get_obstacles_in_cell_batch(cell_batch_id))
     {
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> local_obstacle_velocity =
         obstacle.get_local_velocity(q_point);

@@ -545,15 +545,10 @@ namespace MeltPoolDG
         }
     }
 
-    void
-    get_obstacles_in_cell_batch(
-      const unsigned int                                                     cell_batch_id,
-      boost::container::small_vector_base<DEMParticleAccessor<dim, number>> &particles) const
+    std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>> &
+    get_obstacles_in_cell_batch(const unsigned int cell_batch_id) const
     {
-      for (DEMParticleAccessor<dim, number> &particle : cell_batch_to_particle_cache[cell_batch_id])
-        {
-          particles.emplace_back(particle);
-        }
+      return cell_batch_to_particle_cache[cell_batch_id];
     }
 
     void

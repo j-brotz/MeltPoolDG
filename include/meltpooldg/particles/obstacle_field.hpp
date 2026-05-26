@@ -144,12 +144,10 @@ namespace MeltPoolDG
       obstacle_data_structure.get_obstacles_in_cell(cell, obstacles);
     }
 
-    void
-    get_obstacles_in_cell_batch(
-      const unsigned int                                                     cell_batch_id,
-      boost::container::small_vector_base<DEMParticleAccessor<dim, number>> &obstacles) const
+    std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>> &
+    get_obstacles_in_cell_batch(const unsigned int cell_batch_id) const
     {
-      obstacle_data_structure.get_obstacles_in_cell_batch(cell_batch_id, obstacles);
+      return obstacle_data_structure.get_obstacles_in_cell_batch(cell_batch_id);
     }
 
     void
