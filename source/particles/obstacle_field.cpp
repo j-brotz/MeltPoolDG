@@ -19,6 +19,7 @@
 #include <meltpooldg/utilities/journal.hpp>
 
 #include <fstream>
+#include <ostream>
 
 
 template <int dim, typename number, typename ObstacleType>
@@ -64,8 +65,10 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
 
 template <int dim, typename number, typename ObstacleType>
 void
-MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number,
-                                                                   const number time_step)
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(
+  const number,
+  const number                      time_step,
+  const dealii::ConditionalOStream &pout)
 {
   dealii::TimerOutput::Scope t(timer, "advance obstacle field in time");
   compute_loads_on_obstacles();
@@ -77,6 +80,9 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number,
   const bool resort_particles = dynamic_update_control.update_required();
   if (resort_particles)
     {
+      Journal::print_line(pout,
+                          "Resorting particles in obstacle field due to particle movement.",
+                          "obstacle_field");
       obstacle_data_structure.sort_particles_into_subdomains_and_cells();
       dynamic_update_control.reinit_after_update();
     }

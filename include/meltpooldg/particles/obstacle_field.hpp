@@ -82,7 +82,9 @@ namespace MeltPoolDG
      * @param n_time_step The current time step number in the simulation.
      */
     void
-    advance_time(const number current_time, const number time_step);
+    advance_time(const number                      current_time,
+                 const number                      time_step,
+                 const dealii::ConditionalOStream &pout);
 
     /**
      * @brief Computes and applies the total load acting on each obstacle in the field. This
