@@ -175,6 +175,7 @@ namespace MeltPoolDG
     unpack_after_coarsening_and_refinement()
     {
       obstacle_data_structure.unpack_after_coarsening_and_refinement();
+      dynamic_update_control.reinit_after_update();
     }
 
 
@@ -299,6 +300,8 @@ namespace MeltPoolDG
 
     /// Timer data for profiling the obstacle field operations.
     dealii::TimerOutput &timer;
+
+    DynamicUpdateController<dim, number> dynamic_update_control;
   };
 
   // TODO

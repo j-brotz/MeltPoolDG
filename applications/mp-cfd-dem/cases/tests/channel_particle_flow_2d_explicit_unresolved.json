@@ -70,7 +70,11 @@
   },
   "obstacles": {
     "stationary": true,
-    "obstacle state input file": "../../stationary_particle_2d.csv"
+    "obstacle state input file": "../../stationary_particle_2d.csv",
+    "obstacle data structure": {
+      "radius max sphere of influence": "5e-6",
+      "skin thickness": "1e-6"
+    }
   },
   "adaptive meshing": {
     "do amr": true,

@@ -32,10 +32,13 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   , obstacle_data_structure(triangulation, mapping, timer, matrix_free)
   , mpi_communicator(triangulation.get_mpi_communicator())
   , timer(timer)
+  , dynamic_update_control(obstacle_data_structure, data.data_structure_data.skin_thickness)
 {
   auto [obstacle_locations, obstacle_properties] = read_obstacle_state_input_file();
   insert_obstacles(obstacle_locations, obstacle_properties);
-  obstacle_data_structure.reinit();
+  obstacle_data_structure.reinit(data.data_structure_data.max_sphere_of_influence_radius +
+                                 data.data_structure_data.skin_thickness);
+  dynamic_update_control.reinit_after_update();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -51,9 +54,12 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   , obstacle_data_structure(triangulation, mapping, timer, matrix_free)
   , mpi_communicator(triangulation.get_mpi_communicator())
   , timer(timer)
+  , dynamic_update_control(obstacle_data_structure, data.data_structure_data.skin_thickness)
 {
   insert_obstacles(obstacle_locations, obstacle_properties);
-  obstacle_data_structure.reinit();
+  obstacle_data_structure.reinit(data.data_structure_data.max_sphere_of_influence_radius +
+                                 data.data_structure_data.skin_thickness);
+  dynamic_update_control.reinit_after_update();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -68,7 +74,14 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number,
                                                                 time_step,
                                                                 locally_owned_particle_range());
 
-  obstacle_data_structure.sort_particles_into_subdomains_and_cells();
+  const bool resort_particles = dynamic_update_control.update_required();
+  if (resort_particles)
+    {
+      obstacle_data_structure.sort_particles_into_subdomains_and_cells();
+      dynamic_update_control.reinit_after_update();
+    }
+  else
+    obstacle_data_structure.update_ghost_particle_properties();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -116,6 +129,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compute_loads_on_obstacles
     return;
 
   // Reset current particle forces and torques
+  // TODO: Is this a job of the obstacle data structure?
   for (DEMParticleAccessor<dim, number> &obstacle :
        obstacle_data_structure.locally_owned_particle_range())
     {
@@ -123,10 +137,11 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compute_loads_on_obstacles
       obstacle.set_torque(dealii::Tensor<1, axial_dim<dim>, number>());
     }
 
-  // Update ghost particle properties to ensure that all particles have the most up-to-date
-  // information available for load computation. This is especially important if any of the loads
-  // depend on interactions between particles, such as contact or cohesive forces.
-  obstacle_data_structure.update_ghost_particle_properties();
+  for (DEMParticleAccessor<dim, number> &obstacle : obstacle_data_structure.ghost_particle_range())
+    {
+      obstacle.set_force(dealii::Tensor<1, dim, number>());
+      obstacle.set_torque(dealii::Tensor<1, axial_dim<dim>, number>());
+    }
 
   // Accumulate all forces acting on the particles
   for (const auto &load_type : loads)
@@ -193,6 +208,8 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::insert_obstacles(
   std::vector<std::vector<number>>        &obstacle_properties)
 {
   obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
+  obstacle_data_structure.reinit(data.data_structure_data.max_sphere_of_influence_radius +
+                                 data.data_structure_data.skin_thickness);
 }
 
 template <int dim, typename number, typename ObstacleType>

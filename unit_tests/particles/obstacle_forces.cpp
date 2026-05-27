@@ -57,6 +57,7 @@ namespace
                                                             dealii::Point<dim>(0.75, 0.75, 0.6)};
 
       ASSERT_EQ(particle_locations.size(), particle_properties.size());
+      obstacle_data.data_structure_data.max_sphere_of_influence_radius = 0.0;
 
       obstacle_field = std::make_unique<MeltPoolDG::ObstacleField<dim, double, ObstacleType>>(
         obstacle_data, triangulation, mapping, particle_locations, particle_properties, timer);

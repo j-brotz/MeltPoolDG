@@ -51,6 +51,8 @@ protected:
 
 TEST_F(ParticleDataStructureTest, ContactParticles)
 {
+  constexpr number particle_radius = 0.2;
+
   std::vector<dealii::Point<dim, number>> obstacle_locations = {
     dealii::Point<dim, number>(0.4, 0.5), dealii::Point<dim, number>(0.79, 0.5)};
 
@@ -60,12 +62,13 @@ TEST_F(ParticleDataStructureTest, ContactParticles)
   for (std::vector<number> &properties : obstacle_properties)
     {
       properties.resize(MeltPoolDG::SphericalParticle<dim, number>::n_obstacle_properties);
-      properties[MeltPoolDG::SphericalParticle<dim, number>::Properties::radius] = 0.2;
+      properties[MeltPoolDG::SphericalParticle<dim, number>::Properties::radius] = particle_radius;
       properties[mass_property]                                                  = mass;
       mass += 1;
     }
 
   obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
+  obstacle_data_structure.reinit(particle_radius);
   obstacle_data_structure.sort_particles_into_subdomains_and_cells();
 
   for (const auto &particle : obstacle_data_structure.locally_owned_particle_range())

@@ -237,14 +237,6 @@ namespace MeltPoolDG
     time_iterator = std::make_shared<TimeIntegration::TimeIterator<number>>(
       simulation_case->parameters.time_stepping);
 
-    // initialize obstacle field
-    obstacle_field = std::make_unique<ObstacleField<dim, number, SphericalParticle<dim, number>>>(
-      simulation_case->parameters.obstacle_data,
-      scratch_data->get_triangulation(),
-      scratch_data->get_mapping(),
-      scratch_data->get_timer(),
-      &scratch_data->get_matrix_free());
-
     // initialize compressible flow operation
     comp_flow_operation = std::make_unique<CompressibleFlow::DGOperation<dim, number>>(
       *scratch_data,
@@ -277,6 +269,14 @@ namespace MeltPoolDG
 
     // setup amr indicator
     setup_amr_indicator();
+
+    // initialize obstacle field
+    obstacle_field = std::make_unique<ObstacleField<dim, number, SphericalParticle<dim, number>>>(
+      simulation_case->parameters.obstacle_data,
+      scratch_data->get_triangulation(),
+      scratch_data->get_mapping(),
+      scratch_data->get_timer(),
+      &scratch_data->get_matrix_free());
 
     // FSI
     auto [fsi_fluid_force_residual, fsi_fluid_force_jacobian, fsi_obstacle_load] =

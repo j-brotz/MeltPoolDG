@@ -105,6 +105,10 @@
       "do refine": true,
       "inner surface distance": 0.3,
       "outer surface distance": 1
+    },
+    "obstacle data structure": {
+      "radius max sphere of influence": "5e-6",
+      "skin thickness": "1e-6"
     }
   },
   "adaptive meshing": {

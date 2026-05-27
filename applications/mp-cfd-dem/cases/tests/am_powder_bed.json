@@ -71,6 +71,10 @@
       "particle-particle contact": {
         "poisson ratio": "0.8",
         "youngs modulus": "20e8"
+      },
+      "obstacle data structure": {
+        "radius max sphere of influence": "3.5e-5",
+        "skin thickness": "5e-6"
       }
     }
   }

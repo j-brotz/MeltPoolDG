@@ -335,6 +335,8 @@ public:
         AssertThrow(false, dealii::ExcInternalError());
       }
 
+    obstacle_data.data_structure_data.max_sphere_of_influence_radius = 0.5;
+
     std::vector<std::vector<number>> particle_properties;
     particle_properties.reserve(2);
     particle_properties.emplace_back(make_particle_property(-0.2, 0.5, 1));

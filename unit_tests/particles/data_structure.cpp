@@ -52,15 +52,18 @@ TEST_F(ParticleDataStructureTest, CompressParticleData)
   std::vector<dealii::Point<dim, number>> obstacle_locations = {
     dealii::Point<dim, number>(0.3, 0.3)};
 
+  constexpr double particle_radius = 0.2;
+
   std::vector<std::vector<number>> obstacle_properties;
   obstacle_properties.resize(obstacle_locations.size());
   for (std::vector<number> &properties : obstacle_properties)
     {
       properties.resize(MeltPoolDG::SphericalParticle<dim, number>::n_obstacle_properties);
-      properties[MeltPoolDG::SphericalParticle<dim, number>::Properties::radius] = 0.2;
+      properties[MeltPoolDG::SphericalParticle<dim, number>::Properties::radius] = particle_radius;
     }
 
   obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
+  obstacle_data_structure.reinit(particle_radius);
 
   unsigned int rank = dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
 
@@ -123,18 +126,21 @@ TEST_F(ParticleDataStructureTest, GhostParticles)
     dealii::Point<dim, number>(0.6, 0.4),
     dealii::Point<dim, number>(0.8, 0.7)};
 
+  constexpr double particle_radius = 0.4;
+
   std::vector<std::vector<number>> obstacle_properties;
   obstacle_properties.resize(obstacle_locations.size());
   number mass = 1;
   for (std::vector<number> &properties : obstacle_properties)
     {
       properties.resize(MeltPoolDG::SphericalParticle<dim, number>::n_obstacle_properties);
-      properties[MeltPoolDG::SphericalParticle<dim, number>::Properties::radius] = 0.4;
+      properties[MeltPoolDG::SphericalParticle<dim, number>::Properties::radius] = particle_radius;
       properties[MeltPoolDG::SphericalParticle<dim, number>::Properties::mass]   = mass;
       mass++;
     }
 
   obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
+  obstacle_data_structure.reinit(particle_radius);
   obstacle_data_structure.sort_particles_into_subdomains_and_cells();
 
   std::vector<std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>> ghost_particles =
@@ -170,18 +176,21 @@ TEST_F(ParticleDataStructureTest, ParticleNumberInfo)
     dealii::Point<dim, number>(0.6, 0.4),
     dealii::Point<dim, number>(0.8, 0.7)};
 
+  constexpr double particle_radius = 0.4;
+
   std::vector<std::vector<number>> obstacle_properties;
   obstacle_properties.resize(obstacle_locations.size());
   number mass = 1;
   for (std::vector<number> &properties : obstacle_properties)
     {
       properties.resize(MeltPoolDG::SphericalParticle<dim, number>::n_obstacle_properties);
-      properties[MeltPoolDG::SphericalParticle<dim, number>::Properties::radius] = 0.4;
+      properties[MeltPoolDG::SphericalParticle<dim, number>::Properties::radius] = particle_radius;
       properties[MeltPoolDG::SphericalParticle<dim, number>::Properties::mass]   = mass;
       mass++;
     }
 
   obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
+  obstacle_data_structure.reinit(particle_radius);
   obstacle_data_structure.sort_particles_into_subdomains_and_cells();
 
   {
@@ -192,70 +201,3 @@ TEST_F(ParticleDataStructureTest, ParticleNumberInfo)
               obstacle_locations.size() - obstacle_data_structure.n_locally_owned_particles());
   }
 }
-
-/*
-TEST_F(ParticleDataStructureTest, ArtificalCellsOnLevelZero)
-{
-  if (triangulation.begin(0)->is_artificial_on_level())
-    {
-      std::cout << "Rank " << dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
-                << " only has ARTIFICIAL cells on level 0." << std::endl;
-    }
-  else if (triangulation.begin(0)->is_ghost_on_level())
-    {
-      std::cout << "Rank " << dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
-                << " only has GHOST cells on level 0." << std::endl;
-    }
-  else if (triangulation.begin(0)->is_locally_owned_on_level())
-    {
-      std::cout << "Rank " << dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
-                << " only has LOCALLY OWNED cells on level 0." << std::endl;
-    }
-  else
-    {
-      std::cout << "Rank " << dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
-                << " has no cells on level 0." << std::endl;
-    }
-
-    MPI_Barrier(MPI_COMM_WORLD);
-}
-
-TEST_F(ParticleDataStructureTest, CellID)
-{
-  std::array<std::uint8_t, 3>                        child_indices = {{0, 0, 0}};
-  dealii::CellId                                     cell_id(0, 3, child_indices.data());
-  typename dealii::Triangulation<dim>::cell_iterator cell;
-  if (triangulation.contains_cell(cell_id))
-    cell = triangulation.create_cell_iterator(cell_id);
-  else
-    {
-      auto child_indices = cell_id.get_child_indices();
-      auto new_cell_id   = dealii::CellId(cell_id.get_coarse_cell_id(),
-                                        child_indices.size() - 1,
-                                        child_indices.data());
-      cell               = triangulation.create_cell_iterator(new_cell_id);
-    }
-  if (cell->is_artificial_on_level())
-    {
-      std::cout << "Rank " << dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
-                << " only has ARTIFICIAL cells on level 0." << std::endl;
-    }
-  else if (cell->is_ghost_on_level())
-    {
-      std::cout << "Rank " << dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
-                << " only has GHOST cells on level 0." << std::endl;
-    }
-  else if (cell->is_locally_owned_on_level())
-    {
-      std::cout << "Rank " << dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
-                << " only has LOCALLY OWNED cells on level 0." << std::endl;
-    }
-  else
-    {
-      std::cout << "Rank " << dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
-                << " has no cells on level 0." << std::endl;
-    }
-
-  MPI_Barrier(MPI_COMM_WORLD);
-}
-  */

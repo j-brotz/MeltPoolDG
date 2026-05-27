@@ -49,11 +49,12 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::ObstacleCom
 
 template <int dim, typename number, typename ObstacleType>
 void
-MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::reinit()
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::reinit(
+  const number max_particle_influence_radius)
 {
   Assert(triangulation != nullptr, dealii::ExcMessage("Triangulation pointer is null."));
 
-  if (max_particle_radius == 0)
+  if (max_particle_influence_radius == 0)
     {
       // If there are only particles with zero radius, we can store them on the finest level.
       level_to_store_particles = triangulation->n_global_levels() - 1;
@@ -72,7 +73,8 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::reinit()
       for (unsigned int level = 0; level < obstacle_handler->get_triangulation().n_global_levels();
            ++level)
         {
-          if (triangulation->begin(level)->minimum_vertex_distance() < 2 * max_particle_radius)
+          if (triangulation->begin(level)->minimum_vertex_distance() <
+              2 * max_particle_influence_radius)
             {
               level_to_store_particles = level == 0 ? 0 : level - 1;
               break;
@@ -175,6 +177,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
   rank_to_handle.resize(dealii::Utilities::MPI::n_mpi_processes(mpi_communicator));
   rank_to_n_ghost_particles.clear();
   rank_to_n_ghost_particles.resize(dealii::Utilities::MPI::n_mpi_processes(mpi_communicator), 0);
+  ghost_particle_update_cache.reset(mpi_communicator);
   deregister_property_pool();
 
   // Step 1: Send the number of particles to be sent to each rank
@@ -249,10 +252,10 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
                                                        ObstacleType::n_obstacle_properties),
                                             particle,
                                             triangulation->create_cell_iterator(cell_id));
-              iter++;
+              ghost_particle_update_cache.particles_to_send[rank].push_back(particle);
+              ++iter;
             }
         }
-
       send_futures.push_back(dealii::Utilities::MPI::isend(
         send_buffer, obstacle_handler->get_triangulation().get_mpi_communicator(), rank, 1));
     }
@@ -263,6 +266,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
   recv_futures.reserve(n_particles_to_receive.size());
   for (const auto &[rank, n_particles] : n_particles_to_receive)
     {
+      ghost_particle_update_cache.n_particles_to_receive[rank] = n_particles;
       recv_futures.push_back(dealii::Utilities::MPI::irecv<std::vector<char>>(
         obstacle_handler->get_triangulation().get_mpi_communicator(), rank, 1));
     }
@@ -300,6 +304,13 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
           // since they are filled in the same order. However, it might be safer to explicitly
           // find the corresponding rank for the current future to avoid any potential mismatches.
           rank_to_handle[n_particles_to_receive[i].first].push_back(received_data.handle);
+
+          if (p == 0)
+            {
+              ghost_particle_update_cache
+                .rank_ghost_particle_start_handle[n_particles_to_receive[i].first] =
+                received_data.handle;
+            }
         }
     }
 

@@ -295,6 +295,7 @@ public:
     particle_properties.emplace_back(make_particle_property(-0.2, 0.5, 1));
     particle_properties.emplace_back(make_particle_property(0.0, 0.3, 1.72));
 
+    obstacle_data.data_structure_data.max_sphere_of_influence_radius = 0.5;
     obstacle_field = std::make_unique<ObstacleField<dim, number, ObstacleType>>(
       obstacle_data, *triangulation, *mapping, particle_locations, particle_properties, timer);
 

@@ -23,6 +23,7 @@
 #include <deal.II/particles/particle_iterator.h>
 #include <deal.II/particles/property_pool.h>
 
+#include "meltpooldg/particles/particle.hpp"
 #include "meltpooldg/particles/particle_accessor.hpp"
 #include <meltpooldg/particles/dem_util.hpp>
 #include <meltpooldg/particles/particle_iterator.hpp>
@@ -33,6 +34,7 @@
 #include <meltpooldg/utilities/cpp23_functions.h>
 
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <numeric>
 #include <ranges>
@@ -304,6 +306,7 @@ namespace MeltPoolDG
       unpack_after_coarsening_and_refinement() = 0;
     };
 
+
     /**
      * @brief Model required for type erasure. See public interface for detailed function
      * descriptions.
@@ -462,7 +465,9 @@ namespace MeltPoolDG
    * @note This approach is not optimized for performance and is intended primarily for
    * debugging, prototyping, or use in small-scale simulations.
    */
-  template <int dim, typename number, typename ObstacleType>
+  template <int dim,
+            typename number,
+            typename ObstacleType = MeltPoolDG::SphericalParticle<dim, number>>
   struct ObstacleCompleteDomainSearch
   {
   public:
@@ -495,7 +500,7 @@ namespace MeltPoolDG
      * during subsequent computations.
      */
     void
-    reinit();
+    reinit(number max_particle_influence_radius);
 
     /**
      * @brief Identify obstacles that partially or fully occupy the specified cell, and store their
@@ -670,8 +675,6 @@ namespace MeltPoolDG
                                       properties_global_obstacles->n_registered_slots()));
     }
 
-
-
     void
     insert_global_particles(const std::vector<dealii::Point<dim, number>> &obstacle_locations,
                             const std::vector<std::vector<number>>        &obstacle_properties)
@@ -704,16 +707,157 @@ namespace MeltPoolDG
         dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 ?
           obstacle_properties :
           std::vector<std::vector<number>>{});
+    }
 
-      reinit();
+    std::size_t
+    properties_serialized_size_in_bytes(unsigned int n_properties) const
+    {
+      // Location + properties
+      return dim * sizeof(double) + n_properties * sizeof(double);
+    }
+
+    void *
+    write_particle_properties_to_memory(
+      void                                           *data_pointer,
+      const dealii::Particles::ParticleIterator<dim> &particle) const
+    {
+      double *pdata = reinterpret_cast<double *>(data_pointer);
+
+      // Write location
+      for (unsigned int i = 0; i < dim; ++i, ++pdata)
+        *pdata = particle->get_location()[i];
+
+      // Write properties
+      if (particle->has_properties())
+        {
+          dealii::ArrayView<const double> particle_properties = particle->get_properties();
+          for (unsigned int i = 0; i < particle_properties.size(); ++i, ++pdata)
+            *pdata = particle_properties[i];
+        }
+
+      return static_cast<void *>(pdata);
+    }
+
+    void
+    read_particle_properties_from_memory(
+      void                                                       *read_data_pointer,
+      dealii::Particles::PropertyPool<dim>                       &write_property_pool,
+      const typename dealii::Particles::PropertyPool<dim>::Handle write_handle,
+      const unsigned                                              n_properties)
+    {
+      const double *pdata = reinterpret_cast<const double *>(read_data_pointer);
+
+      dealii::Point<dim> location;
+      for (unsigned int i = 0; i < dim; ++i)
+        location[i] = *pdata++;
+      write_property_pool.set_location(write_handle, location);
+
+      if (n_properties > 0)
+        {
+          const dealii::ArrayView<double> particle_properties =
+            write_property_pool.get_properties(write_handle);
+          for (unsigned int i = 0; i < n_properties; ++i)
+            particle_properties[i] = *pdata++;
+        }
     }
 
     void
     update_ghost_particle_properties()
     {
-      // TODO
-      sort_particles_into_subdomains_and_cells();
+      std::vector<dealii::Utilities::MPI::Future<void>> send_futures;
+      for (unsigned int rank = 0; rank < dealii::Utilities::MPI::n_mpi_processes(mpi_communicator);
+           ++rank)
+        {
+          if (rank != dealii::Utilities::MPI::this_mpi_process(mpi_communicator) and
+              not ghost_particle_update_cache.particles_to_send[rank].empty())
+            {
+              std::vector<char> send_buffer(
+                not ghost_particle_update_cache.particles_to_send[rank].size() *
+                properties_serialized_size_in_bytes(ObstacleType::n_obstacle_properties));
+
+              unsigned iter = 0;
+              for (dealii::Particles::ParticleIterator<dim> particle :
+                   ghost_particle_update_cache.particles_to_send[rank])
+                {
+                  write_particle_properties_to_memory(send_buffer.data() +
+                                                        iter *
+                                                          properties_serialized_size_in_bytes(
+                                                            ObstacleType::n_obstacle_properties),
+                                                      particle);
+                  iter++;
+                }
+
+              send_futures.push_back(
+                dealii::Utilities::MPI::isend(send_buffer, mpi_communicator, rank, 1));
+            }
+        }
+
+      std::vector<dealii::Utilities::MPI::Future<std::vector<char>>> recv_futures;
+      recv_futures.reserve(ghost_particle_update_cache.n_particles_to_receive.size());
+      for (unsigned int rank = 0; rank < dealii::Utilities::MPI::n_mpi_processes(mpi_communicator);
+           ++rank)
+        {
+          if (rank != dealii::Utilities::MPI::this_mpi_process(mpi_communicator) and
+              ghost_particle_update_cache.n_particles_to_receive[rank] > 0)
+            {
+              recv_futures.push_back(dealii::Utilities::MPI::irecv<std::vector<char>>(
+                obstacle_handler->get_triangulation().get_mpi_communicator(), rank, 1));
+            }
+        }
+
+      unsigned j = 0;
+      for (unsigned int i = 0; i < ghost_particle_update_cache.n_particles_to_receive.size(); ++i)
+        {
+          if (i != dealii::Utilities::MPI::this_mpi_process(mpi_communicator) and
+              ghost_particle_update_cache.n_particles_to_receive[i] > 0)
+            {
+              recv_futures[j].wait();
+              // Note: recv_futures and n_particles_to_receive have the same order, so we can use
+              // the same index to access both
+              std::vector<char> recv_buffer = recv_futures[j].get();
+              for (unsigned int p = 0; p < ghost_particle_update_cache.n_particles_to_receive[i];
+                   ++p)
+                {
+                  read_particle_properties_from_memory(
+                    recv_buffer.data() +
+                      p * properties_serialized_size_in_bytes(ObstacleType::n_obstacle_properties),
+                    *properties_global_obstacles,
+                    ghost_particle_update_cache.rank_ghost_particle_start_handle[i] + p,
+                    ObstacleType::n_obstacle_properties);
+                }
+              ++j;
+            }
+        }
+
+      for (auto &future : send_futures)
+        {
+          future.wait();
+        }
     }
+
+    struct GhostParticleUpdateCache
+    {
+      void
+      reset(MPI_Comm mpi_communicator)
+      {
+        particles_to_send.clear();
+        particles_to_send.resize(dealii::Utilities::MPI::n_mpi_processes(mpi_communicator));
+        n_particles_to_receive.clear();
+        n_particles_to_receive.resize(dealii::Utilities::MPI::n_mpi_processes(mpi_communicator), 0);
+        rank_ghost_particle_start_handle.clear();
+        rank_ghost_particle_start_handle.resize(
+          dealii::Utilities::MPI::n_mpi_processes(mpi_communicator), 0);
+      }
+
+      // index is the rank to whome to send the corresponding particles. Must be sorted with respect
+      // to global particle id.
+      std::vector<std::vector<dealii::Particles::ParticleIterator<dim>>> particles_to_send;
+
+      // index is the rank from which to receive the corresponding particles
+      std::vector<unsigned int> n_particles_to_receive;
+
+      std::vector<unsigned int> rank_ghost_particle_start_handle;
+    } ghost_particle_update_cache;
 
     void
     sort_particles_into_subdomains_and_cells()
@@ -789,6 +933,12 @@ namespace MeltPoolDG
 
     void
     compress();
+
+    MPI_Comm
+    get_mpi_communicator() const
+    {
+      return mpi_communicator;
+    }
 
 
   private:
@@ -954,4 +1104,98 @@ namespace MeltPoolDG
           AssertThrow(false, dealii::ExcNotImplemented());
       }
   }
+
+  template <int dim, typename number>
+  class DynamicUpdateController
+  {
+  public:
+    /**
+     * Controller for dynamic updates of the obstacle data structure.
+     *
+     * @param obstacle_data_structure The obstacle data structure to be monitored for updates.
+     * @param skin_thickness The thickness of the "skin" around the obstacles  that triggers
+     * the update when exceeded by the sum of the two largest particle displacements.
+     */
+    DynamicUpdateController(
+      const ObstacleCompleteDomainSearch<dim, number> &obstacle_data_structure,
+      const number                                     skin_thickness)
+      : obstacle_data_structure(obstacle_data_structure)
+      , skin_thickness(skin_thickness)
+    {}
+
+
+    bool
+    update_required() const
+    {
+      Assert(
+        previous_obstacle_locations.size() == obstacle_data_structure.n_global_particles(),
+        dealii::ExcMessage(
+          "The size of the previous obstacle location cache must be equal to the number of globally "
+          "owned particles in the obstacle data structure but isn't. A common cause for this error "
+          "is that the function reinit_after_update() was not called after the last update of the "
+          "obstacle data structure."));
+
+      // First is largest displacement, second is second largest displacement.
+      std::pair<number, number> max_particle_displacement = std::make_pair(0, 0);
+      for (const auto &particle : obstacle_data_structure.locally_owned_particle_range())
+        {
+          const dealii::Point<dim, number> current_location = particle.get_location();
+          const dealii::Point<dim, number> previous_location =
+            previous_obstacle_locations[particle.id()];
+          const number displacement = current_location.distance(previous_location);
+          if (displacement > max_particle_displacement.first)
+            {
+              max_particle_displacement.first = displacement;
+            }
+          else if (displacement > max_particle_displacement.second)
+            {
+              max_particle_displacement.second = displacement;
+            }
+        }
+
+      // Communicate largest displacements to all ranks
+      const number max_global_displacement =
+        dealii::Utilities::MPI::max(max_particle_displacement.first,
+                                    obstacle_data_structure.get_mpi_communicator());
+
+      // Locally decide whether an update is required
+      bool update = false;
+      if (max_global_displacement == max_particle_displacement.first)
+        {
+          update = (max_global_displacement + max_particle_displacement.second) > skin_thickness;
+        }
+      else
+        {
+          update = (max_global_displacement + max_particle_displacement.first) > skin_thickness;
+        }
+
+      // Communicate the local decisions and decide globally whether an update is required
+      const bool global_update_required =
+        dealii::Utilities::MPI::logical_or(update, obstacle_data_structure.get_mpi_communicator());
+
+      return global_update_required;
+    }
+
+    void
+    reinit_after_update()
+    {
+      auto create_invalid_point = []() {
+        dealii::Point<dim, number> invalid_point;
+        for (unsigned int d = 0; d < dim; ++d)
+          invalid_point[d] = std::numeric_limits<number>::max();
+        return invalid_point;
+      };
+      previous_obstacle_locations.clear();
+      previous_obstacle_locations.resize(obstacle_data_structure.n_global_particles(), create_invalid_point());
+      for (const auto &particle : obstacle_data_structure.locally_owned_particle_range())
+        previous_obstacle_locations[particle.id()] = particle.get_location();
+    }
+
+  private:
+    std::vector<dealii::Point<dim, number>> previous_obstacle_locations;
+
+    const ObstacleCompleteDomainSearch<dim, number> &obstacle_data_structure;
+
+    number skin_thickness;
+  };
 } // namespace MeltPoolDG
