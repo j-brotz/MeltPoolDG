@@ -111,7 +111,8 @@ namespace MeltPoolDG
             // The advance time function internally calls compute_loads_on_obstacles(). Therefore
             // this is not done explicitly here.
             obstacle_field->advance_time(time_iterator->get_current_time(),
-                                         time_iterator->get_current_time_increment());
+                                         time_iterator->get_current_time_increment(),
+                                         scratch_data->get_pcout(1));
           }
 
         // do output if requested

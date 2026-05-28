@@ -772,7 +772,7 @@ namespace MeltPoolDG
               not ghost_particle_update_cache.particles_to_send[rank].empty())
             {
               std::vector<char> send_buffer(
-                not ghost_particle_update_cache.particles_to_send[rank].size() *
+                ghost_particle_update_cache.particles_to_send[rank].size() *
                 properties_serialized_size_in_bytes(ObstacleType::n_obstacle_properties));
 
               unsigned iter = 0;
@@ -1186,7 +1186,8 @@ namespace MeltPoolDG
         return invalid_point;
       };
       previous_obstacle_locations.clear();
-      previous_obstacle_locations.resize(obstacle_data_structure.n_global_particles(), create_invalid_point());
+      previous_obstacle_locations.resize(obstacle_data_structure.n_global_particles(),
+                                         create_invalid_point());
       for (const auto &particle : obstacle_data_structure.locally_owned_particle_range())
         previous_obstacle_locations[particle.id()] = particle.get_location();
     }
