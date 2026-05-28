@@ -30,7 +30,7 @@ namespace MeltPoolDG
   template <int dim, typename number, typename ObstacleType>
   class ObstacleField
   {
-    using DataStructureType = ObstacleCompleteDomainSearch<dim, number, ObstacleType>;
+    using DataStructureType = CellListParticleHandler<dim, number, ObstacleType>;
 
   public:
     /**
@@ -295,7 +295,7 @@ namespace MeltPoolDG
 
     /// Obstacle search utility for locating relevant obstacles within a given cell or
     /// batch.
-    ObstacleCompleteDomainSearch<dim, number, ObstacleType> obstacle_data_structure;
+    CellListParticleHandler<dim, number, ObstacleType> obstacle_data_structure;
 
     /// MPI communicator used for parallel operations on the obstacle field.
     MPI_Comm mpi_communicator;

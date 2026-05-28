@@ -23,7 +23,7 @@
 #include "mpi.h"
 
 template <int dim, typename number, typename ObstacleType>
-MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::ObstacleCompleteDomainSearch(
+MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::CellListParticleHandler(
   const dealii::Triangulation<dim>      &triangulation,
   const dealii::Mapping<dim>            &mapping,
   dealii::TimerOutput                   &timer,
@@ -41,15 +41,15 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::ObstacleCom
 {}
 
 template <int dim, typename number, typename ObstacleType>
-MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::ObstacleCompleteDomainSearch::
-  ~ObstacleCompleteDomainSearch()
+MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::CellListParticleHandler::
+  ~CellListParticleHandler()
 {
   deregister_property_pool();
 }
 
 template <int dim, typename number, typename ObstacleType>
 void
-MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::reinit(
+MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::reinit(
   const number max_particle_influence_radius)
 {
   Assert(triangulation != nullptr, dealii::ExcMessage("Triangulation pointer is null."));
@@ -100,7 +100,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::reinit(
 
 template <int dim, typename number, typename ObstacleType>
 boost::container::small_vector<MeltPoolDG::DEMParticleAccessor<dim, number>, 3 * dim>
-MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::contact_particles(
+MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::contact_particles(
   const DEMParticleAccessor<dim, number> &particle,
   const number                            relative_tolerance) const
 {
@@ -127,8 +127,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::contact_par
 
 template <int dim, typename number, typename ObstacleType>
 void
-MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::deregister_property_pool()
-  const
+MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::deregister_property_pool() const
 {
   // The property pool containing the properties of all global particles is initialized once during
   // the `reinit()` call and remains unchanged thereafter. As a result, we don't need to track
@@ -144,7 +143,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::deregister_
 
 template <int dim, typename number, typename ObstacleType>
 void
-MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
+MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::
   sort_particles_into_local_level_cells()
 {
   obstacle_handler->sort_particles_into_subdomains_and_cells();
@@ -169,7 +168,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
 
 template <int dim, typename number, typename ObstacleType>
 void
-MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate_ghost_particles()
+MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::communicate_ghost_particles()
 {
   cell_to_ghost_particle_cache.clear();
   cell_to_ghost_particle_cache.resize(level_cell_cache.n_global_cells());
@@ -292,8 +291,8 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
             {
               auto child_indices = received_data.cell_id.get_child_indices();
               auto new_cell_id   = dealii::CellId(received_data.cell_id.get_coarse_cell_id(),
-                                                child_indices.size() - 1,
-                                                child_indices.data());
+                                                  child_indices.size() - 1,
+                                                  child_indices.data());
               cell               = triangulation->create_cell_iterator(new_cell_id);
             }
 
@@ -322,7 +321,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::communicate
 
 template <int dim, typename number, typename ObstacleType>
 void *
-MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::write_particle_data_to_memory(
+MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::write_particle_data_to_memory(
   void                                                     *data_pointer,
   const dealii::Particles::ParticleIterator<dim>            particle,
   const typename dealii::Triangulation<dim>::cell_iterator &cell) const
@@ -358,7 +357,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::write_parti
 
 template <int dim, typename number, typename ObstacleType>
 auto
-MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::read_particle_data_from_memory(
+MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::read_particle_data_from_memory(
   void                                 *data_pointer,
   dealii::Particles::PropertyPool<dim> &property_pool,
   const unsigned                        n_properties) const -> ReceivedParticleData
@@ -397,7 +396,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::read_partic
 
 template <int dim, typename number, typename ObstacleType>
 std::size_t
-MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::serialized_size_in_bytes(
+MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::serialized_size_in_bytes(
   unsigned int n_properties) const
 {
   return sizeof(dealii::types::particle_index) + 4 * sizeof(unsigned int) + dim * sizeof(double) +
@@ -406,7 +405,7 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::serialized_
 
 template <int dim, typename number, typename ObstacleType>
 void
-MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::compress()
+MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::compress()
 {
   using MPIExchangeType = std::vector<std::pair<unsigned int, std::vector<number>>>;
 
@@ -497,8 +496,8 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::compress()
 }
 
 template struct MeltPoolDG::
-  ObstacleCompleteDomainSearch<1, double, MeltPoolDG::SphericalParticle<1, double>>;
+  CellListParticleHandler<1, double, MeltPoolDG::SphericalParticle<1, double>>;
 template struct MeltPoolDG::
-  ObstacleCompleteDomainSearch<2, double, MeltPoolDG::SphericalParticle<2, double>>;
+  CellListParticleHandler<2, double, MeltPoolDG::SphericalParticle<2, double>>;
 template struct MeltPoolDG::
-  ObstacleCompleteDomainSearch<3, double, MeltPoolDG::SphericalParticle<3, double>>;
+  CellListParticleHandler<3, double, MeltPoolDG::SphericalParticle<3, double>>;

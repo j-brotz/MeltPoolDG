@@ -44,418 +44,6 @@
 
 namespace MeltPoolDG
 {
-  enum class ObstacleDataStructureType
-  {
-    CompleteDomainSearch,
-    CellBasedSearch
-  };
-
-
-
-  /**
-   * @brief Interface class for obstacle data structures supporting efficient spatial queries,
-   * such as nearest-neighbor searches.
-   *
-   * This interface abstracts different obstacle search algorithms using type erasure, allowing
-   * flexible integration of various implementations. Any obstacle search algorithm must conform
-   * to this interface to be used within the framework.
-   *
-   * The following member functions must be implemented:
-   * - @p reinit(): Reinitializes the internal state. This should be called after obstacle positions
-   *   have changed or the underlying triangulation has been modified.
-   * - @p get_obstacles_in_cell(): Identifies all obstacles that partially or fully occupy a given
-   *   cell and stores their properties in a specified destination.
-   * - @p get_obstacles_in_cell_batch(): Identifies all obstacles that intersect with any cell in a
-   *   given cell batch and stores their properties in a specified destination.
-   *
-   * See below for more details.
-   */
-  template <int dim, typename number>
-  struct ObstacleDataStructure
-  {
-  public:
-    /**
-     * Constructor. Store the passed obstacle data structure internally.
-     *
-     * @param obstacle_data_structure Concrete obstacle data structure used in the class.
-     */
-    template <typename ObstacleDataStructureType>
-    explicit ObstacleDataStructure(ObstacleDataStructureType &&obstacle_data_structure_in)
-      : obstacle_data_structure_pimpl(
-          std::make_unique<ObstacleDataStructureModel<ObstacleDataStructureType>>(
-            std::move(obstacle_data_structure_in)))
-    {}
-
-    /**
-     * @brief Reinitializes the internal data structure.
-     */
-    void
-    reinit()
-    {
-      obstacle_data_structure_pimpl->reinit();
-    }
-
-    /**
-     * @brief Identify obstacles that partially or fully occupy the specified cell, and store their
-     * properties in the destination property pool.
-     *
-     * @param dst Destination property pool where the properties of the identified obstacles will be
-     * stored.
-     * @param cell The cell of interest.
-     *
-     * @return Vector containing the handles of the newly registered obstacles in @p dst.
-     */
-    boost::container::small_vector<DEMParticleAccessor<dim, number>, 12>
-    get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const
-    {
-      return obstacle_data_structure_pimpl->get_obstacles_in_cell(cell);
-    }
-
-
-    /**
-     * @brief Identify obstacles that partially or fully occupy any cell in the specified cell batch,
-     * and store their properties in the destination property pool.
-     *
-     * @param dst Destination property pool where the properties of the identified obstacles will be
-     * stored.
-     * @param matrix_free MatrixFree object associated with the current cell batch.
-     * @param cell_batch_id Index of the cell batch to be examined.
-     * @param n_lanes Number of vectorization lanes in the cell batch (i.e., the number of cells in
-     * the batch).
-     *
-     * @return Vector containing the handles of the newly registered obstacles in @p dst.
-     */
-    std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>>
-    get_obstacles_in_cell(
-      const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const
-    {
-      return obstacle_data_structure_pimpl->get_obstacles_in_cell(cells);
-    }
-
-    boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>
-    contact_particles(const DEMParticleAccessor<dim, number> &particle,
-                      const number                            relative_tolerance) const
-    {
-      return obstacle_data_structure_pimpl->contact_particles(particle, relative_tolerance);
-    }
-
-    void
-    compress()
-    {
-      obstacle_data_structure_pimpl->compress();
-    }
-
-    void
-    prepare_for_serialization()
-    {
-      obstacle_data_structure_pimpl->prepare_for_serialization();
-    }
-
-    void
-    deserialize()
-    {
-      obstacle_data_structure_pimpl->deserialize();
-    }
-
-    unsigned int
-    n_global_particles() const
-    {
-      return obstacle_data_structure_pimpl->n_global_particles();
-    }
-
-    unsigned int
-    n_locally_owned_particles() const
-    {
-      return obstacle_data_structure_pimpl->n_locally_owned_particles();
-    }
-
-    unsigned int
-    n_ghost_particles() const
-    {
-      return obstacle_data_structure_pimpl->n_ghost_particles();
-    }
-
-    std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
-    locally_owned_particle_range()
-    {
-      return obstacle_data_structure_pimpl->locally_owned_particle_range();
-    }
-
-    std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
-    ghost_particle_range()
-    {
-      return obstacle_data_structure_pimpl->ghost_particle_range();
-    }
-
-    void
-    insert_global_particles(const std::vector<dealii::Point<dim, number>> &obstacle_locations,
-                            const std::vector<std::vector<number>>        &obstacle_properties)
-    {
-      obstacle_data_structure_pimpl->insert_global_particles(obstacle_locations,
-                                                             obstacle_properties);
-    }
-
-    void
-    update_ghost_particle_properties()
-    {
-      obstacle_data_structure_pimpl->update_ghost_particle_properties();
-    }
-
-    void
-    sort_particles_into_subdomains_and_cells()
-    {
-      obstacle_data_structure_pimpl->sort_particles_into_subdomains_and_cells();
-    }
-
-    void
-    register_particle_output(Postprocessor<dim, number> &postprocessor)
-    {
-      obstacle_data_structure_pimpl->register_particle_output(postprocessor);
-    }
-
-    void
-    prepare_for_coarsening_and_refinement()
-    {
-      obstacle_data_structure_pimpl->prepare_for_coarsening_and_refinement();
-    }
-
-    void
-    unpack_after_coarsening_and_refinement()
-    {
-      obstacle_data_structure_pimpl->unpack_after_coarsening_and_refinement();
-    }
-
-  private:
-    /**
-     * @brief Concept: Abstract interface for obstacle data structures.
-     *
-     * Implementations must define how to reinitialize the structure, and  how to extract obstacles
-     * from single cells or batches.See public interface for detailed function descriptions.
-     */
-    struct ObstacleDataStructureConcept
-    {
-      virtual ~ObstacleDataStructureConcept() = default;
-
-      /**
-       * Part of the type erasure interface. Refer to the public interface documentation for more
-       * details.
-       */
-      virtual void
-      reinit() = 0;
-
-      /**
-       * Part of the type erasure interface. Refer to the public interface documentation for more
-       * details.
-       */
-      virtual boost::container::small_vector<DEMParticleAccessor<dim, number>, 12>
-      get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const = 0;
-
-      /**
-       * Part of the type erasure interface. Refer to the public interface documentation for more
-       * details.
-       */
-      virtual std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>>
-      get_obstacles_in_cell(
-        const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const = 0;
-
-      virtual boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>
-      contact_particles(const DEMParticleAccessor<dim, number> &particle,
-                        const number                            relative_tolerance) const = 0;
-
-      virtual void
-      prepare_for_serialization() = 0;
-
-      virtual void
-      deserialize() = 0;
-
-      virtual void
-      compress() = 0;
-
-      virtual unsigned int
-      n_global_particles() const = 0;
-
-      virtual unsigned int
-      n_locally_owned_particles() const = 0;
-
-      virtual std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
-      locally_owned_particle_range() = 0;
-
-      virtual std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
-      ghost_particle_range() = 0;
-
-      virtual void
-      insert_global_particles(const std::vector<dealii::Point<dim, number>> &obstacle_locations,
-                              const std::vector<std::vector<number>> &obstacle_properties) = 0;
-
-      virtual unsigned int
-      n_ghost_particles() const = 0;
-
-      virtual void
-      update_ghost_particle_properties() = 0;
-
-      virtual void
-      sort_particles_into_subdomains_and_cells() = 0;
-
-      virtual void
-      register_particle_output(Postprocessor<dim, number> &postprocessor) = 0;
-
-      virtual void
-      prepare_for_coarsening_and_refinement() = 0;
-
-      virtual void
-      unpack_after_coarsening_and_refinement() = 0;
-    };
-
-
-    /**
-     * @brief Model required for type erasure. See public interface for detailed function
-     * descriptions.
-     */
-    template <typename ObstacleDataStructureType>
-    struct ObstacleDataStructureModel final : public ObstacleDataStructureConcept
-    {
-      /**
-       * Constructor. Stores the given obstacle data structure internally.
-       *
-       * @param obstacle_data_structure Data structure of the obstacles.
-       */
-      explicit ObstacleDataStructureModel(ObstacleDataStructureType &&obstacle_data_structure)
-        : obstacle_data_structure(std::move(obstacle_data_structure))
-      {}
-
-      /**
-       * Part of the type erasure interface. Refer to the public interface documentation for more
-       * details.
-       */
-      void
-      reinit() override
-      {
-        obstacle_data_structure.reinit();
-      }
-
-      /**
-       * Part of the type erasure interface. Refer to the public interface documentation for more
-       * details.
-       */
-      boost::container::small_vector<DEMParticleAccessor<dim, number>, 12>
-      get_obstacles_in_cell(
-        const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell) const override
-      {
-        return obstacle_data_structure.get_obstacles_in_cell(cell);
-      }
-
-      /**
-       * Part of the type erasure interface. Refer to the public interface documentation for more
-       * details.
-       */
-      std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>>
-      get_obstacles_in_cell(
-        const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const override
-      {
-        return obstacle_data_structure.get_obstacles_in_cell(cells);
-      }
-
-      void
-      compress() override
-      {
-        obstacle_data_structure.compress();
-      }
-
-      boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>
-      contact_particles(const DEMParticleAccessor<dim, number> &particle,
-                        const number                            relative_tolerance) const override
-      {
-        return obstacle_data_structure.contact_particles(particle, relative_tolerance);
-      }
-
-      void
-      prepare_for_serialization() override
-      {
-        obstacle_data_structure.prepare_for_serialization();
-      }
-
-      void
-      deserialize() override
-      {
-        obstacle_data_structure.deserialize();
-      }
-
-      unsigned int
-      n_global_particles() const override
-      {
-        return obstacle_data_structure.n_global_particles();
-      }
-
-      unsigned int
-      n_locally_owned_particles() const override
-      {
-        return obstacle_data_structure.n_locally_owned_particles();
-      }
-
-      unsigned int
-      n_ghost_particles() const override
-      {
-        return obstacle_data_structure.n_ghost_particles();
-      }
-
-      std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
-      locally_owned_particle_range() override
-      {
-        return obstacle_data_structure.locally_owned_particle_range();
-      }
-
-      std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
-      ghost_particle_range() override
-      {
-        return obstacle_data_structure.ghost_particle_range();
-      }
-
-      void
-      insert_global_particles(const std::vector<dealii::Point<dim, number>> &obstacle_locations,
-                              const std::vector<std::vector<number>> &obstacle_properties) override
-      {
-        obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
-      }
-
-      void
-      update_ghost_particle_properties() override
-      {
-        obstacle_data_structure.update_ghost_particle_properties();
-      }
-
-      void
-      sort_particles_into_subdomains_and_cells() override
-      {
-        obstacle_data_structure.sort_particles_into_subdomains_and_cells();
-      }
-
-      void
-      register_particle_output(Postprocessor<dim, number> &postprocessor) override
-      {
-        obstacle_data_structure.register_particle_output(postprocessor);
-      }
-
-      void
-      prepare_for_coarsening_and_refinement() override
-      {
-        obstacle_data_structure.prepare_for_coarsening_and_refinement();
-      }
-
-      void
-      unpack_after_coarsening_and_refinement() override
-      {
-        obstacle_data_structure.unpack_after_coarsening_and_refinement();
-      }
-
-
-    private:
-      ObstacleDataStructureType obstacle_data_structure;
-    };
-
-    /// Pointer to the concrete obstacle data structure used within this class.
-    std::unique_ptr<ObstacleDataStructureConcept> obstacle_data_structure_pimpl;
-  };
-
   /**
    * @brief A simple search utility that performs a linear scan over all particles.
    *
@@ -468,27 +56,27 @@ namespace MeltPoolDG
   template <int dim,
             typename number,
             typename ObstacleType = MeltPoolDG::SphericalParticle<dim, number>>
-  struct ObstacleCompleteDomainSearch
+  struct CellListParticleHandler
   {
   public:
     static constexpr std::size_t max_particles_per_active_cell = 20;
     using particle_accessor                                    = DEMParticleAccessor<dim, number>;
 
-    ObstacleCompleteDomainSearch(const dealii::Triangulation<dim>      &triangulation,
-                                 const dealii::Mapping<dim>            &mapping,
-                                 dealii::TimerOutput                   &timer,
-                                 const dealii::MatrixFree<dim, number> *matrix_free = nullptr);
+    CellListParticleHandler(const dealii::Triangulation<dim>      &triangulation,
+                            const dealii::Mapping<dim>            &mapping,
+                            dealii::TimerOutput                   &timer,
+                            const dealii::MatrixFree<dim, number> *matrix_free = nullptr);
 
     /**
      * @brief Destructor. Explicitly deregisters all particles from the global obstacle property
      * pool.
      */
-    ~ObstacleCompleteDomainSearch();
+    ~CellListParticleHandler();
 
-    ObstacleCompleteDomainSearch(ObstacleCompleteDomainSearch &&) = default;
+    CellListParticleHandler(CellListParticleHandler &&) = default;
 
-    ObstacleCompleteDomainSearch &
-    operator=(ObstacleCompleteDomainSearch &&) = default;
+    CellListParticleHandler &
+    operator=(CellListParticleHandler &&) = default;
 
     /**
      * @brief Reinitializes the internal data structure by synchronizing obstacle data across all
@@ -1088,23 +676,6 @@ namespace MeltPoolDG
     LevelCellCache<dim> level_cell_cache;
   };
 
-  template <int dim, typename number, typename ObstacleType>
-  ObstacleDataStructure<dim, number>
-  obstacle_data_structure_factory(const ObstacleDataStructureType   data_structure_type,
-                                  const dealii::Triangulation<dim> &triangulation,
-                                  const dealii::Mapping<dim>       &mapping,
-                                  dealii::TimerOutput              &timer)
-  {
-    switch (data_structure_type)
-      {
-        case ObstacleDataStructureType::CompleteDomainSearch:
-          return ObstacleDataStructure<dim, number>(
-            ObstacleCompleteDomainSearch<dim, number, ObstacleType>(triangulation, mapping, timer));
-        default:
-          AssertThrow(false, dealii::ExcNotImplemented());
-      }
-  }
-
   template <int dim, typename number>
   class DynamicUpdateController
   {
@@ -1116,9 +687,8 @@ namespace MeltPoolDG
      * @param skin_thickness The thickness of the "skin" around the obstacles  that triggers
      * the update when exceeded by the sum of the two largest particle displacements.
      */
-    DynamicUpdateController(
-      const ObstacleCompleteDomainSearch<dim, number> &obstacle_data_structure,
-      const number                                     skin_thickness)
+    DynamicUpdateController(const CellListParticleHandler<dim, number> &obstacle_data_structure,
+                            const number                                skin_thickness)
       : obstacle_data_structure(obstacle_data_structure)
       , skin_thickness(skin_thickness)
     {}
@@ -1196,7 +766,7 @@ namespace MeltPoolDG
   private:
     std::vector<dealii::Point<dim, number>> previous_obstacle_locations;
 
-    const ObstacleCompleteDomainSearch<dim, number> &obstacle_data_structure;
+    const CellListParticleHandler<dim, number> &obstacle_data_structure;
 
     number skin_thickness;
   };

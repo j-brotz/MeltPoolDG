@@ -105,7 +105,7 @@ MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::value(
           const number cell_volume = cell->measure();
           boost::container::small_vector<
             MeltPoolDG::DEMParticleAccessor<dim, number>,
-            MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
+            MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::
                 max_particles_per_active_cell *
               8>
             particles;

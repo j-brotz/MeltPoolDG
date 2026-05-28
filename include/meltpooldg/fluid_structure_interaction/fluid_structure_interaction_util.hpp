@@ -93,11 +93,10 @@ namespace MeltPoolDG
     }
     /// Handles of the particles which properties are stored in the @p relevant_obstacles
     /// property pool.
-    boost::container::small_vector<
-      MeltPoolDG::DEMParticleAccessor<dim, number>,
-      MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
-          max_particles_per_active_cell *
-        8>
+    boost::container::small_vector<MeltPoolDG::DEMParticleAccessor<dim, number>,
+                                   MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::
+                                       max_particles_per_active_cell *
+                                     8>
       obstacle_cache;
 
     /// Reference to the obstacle handler managing all obstacles in the domain.

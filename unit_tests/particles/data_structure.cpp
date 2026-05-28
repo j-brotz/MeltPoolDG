@@ -43,7 +43,7 @@ protected:
 
   dealii::TimerOutput timer;
 
-  MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, MeltPoolDG::SphericalParticle<dim, number>>
+  MeltPoolDG::CellListParticleHandler<dim, number, MeltPoolDG::SphericalParticle<dim, number>>
     obstacle_data_structure;
 };
 
