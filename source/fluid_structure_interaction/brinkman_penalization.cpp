@@ -161,7 +161,7 @@ MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>:
       auto mask = mask_function<dim, number, dealii::VectorizedArray<number>, ObstacleType>(
         brinkman_penalization_data.mask_function_type, q_point, obstacle);
       auto temp_momentum_penalty =
-        mask * inverse_permeability * (local_obstacle_momentum - fluid_momentum);
+        mask * inverse_permeability * (fluid_momentum - local_obstacle_momentum);
       momentum_penalty -= temp_momentum_penalty;
       energy_penalty += temp_momentum_penalty * fluid_velocity;
     }

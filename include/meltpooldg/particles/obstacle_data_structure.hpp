@@ -1186,6 +1186,7 @@ namespace MeltPoolDG
         return invalid_point;
       };
       previous_obstacle_locations.clear();
+      // TODO This can be an out of bounds access when particles leave the domain
       previous_obstacle_locations.resize(obstacle_data_structure.n_global_particles(),
                                          create_invalid_point());
       for (const auto &particle : obstacle_data_structure.locally_owned_particle_range())
