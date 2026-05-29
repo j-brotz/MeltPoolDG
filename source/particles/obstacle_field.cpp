@@ -24,13 +24,12 @@
 
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
-  const ObstacleData<number>            &data,
-  const dealii::Triangulation<dim>      &triangulation,
-  const dealii::Mapping<dim>            &mapping,
-  dealii::TimerOutput                   &timer,
-  const dealii::MatrixFree<dim, number> *matrix_free)
+  const ObstacleData<number>       &data,
+  const dealii::Triangulation<dim> &triangulation,
+  const dealii::Mapping<dim>       &mapping,
+  dealii::TimerOutput              &timer)
   : data(data)
-  , obstacle_data_structure(triangulation, mapping, timer, matrix_free)
+  , obstacle_data_structure(triangulation, mapping, timer)
   , mpi_communicator(triangulation.get_mpi_communicator())
   , timer(timer)
   , dynamic_update_control(obstacle_data_structure, data.data_structure_data.skin_thickness)
@@ -49,10 +48,9 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   const dealii::Mapping<dim>              &mapping,
   std::vector<dealii::Point<dim, number>> &obstacle_locations,
   std::vector<std::vector<number>>        &obstacle_properties,
-  dealii::TimerOutput                     &timer,
-  const dealii::MatrixFree<dim, number>   *matrix_free)
+  dealii::TimerOutput                     &timer)
   : data(data)
-  , obstacle_data_structure(triangulation, mapping, timer, matrix_free)
+  , obstacle_data_structure(triangulation, mapping, timer)
   , mpi_communicator(triangulation.get_mpi_communicator())
   , timer(timer)
   , dynamic_update_control(obstacle_data_structure, data.data_structure_data.skin_thickness)
@@ -85,6 +83,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(
                           "obstacle_field");
       obstacle_data_structure.sort_particles_into_subdomains_and_cells();
       dynamic_update_control.reinit_after_update();
+      notify_observers();
     }
   else
     obstacle_data_structure.update_ghost_particle_properties();

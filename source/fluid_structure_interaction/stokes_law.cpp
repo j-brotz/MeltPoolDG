@@ -90,12 +90,14 @@ template <int dim, typename number, typename ObstacleType>
 auto
 MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::value(
   const number,
-  const unsigned int,
-  const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
-                                       dealii::VectorizedArray<double>::size()> &cell_iterators,
+  const unsigned int cell_batch_id,
   const dealii::Point<dim, dealii::VectorizedArray<number>> &,
   const ConservedVariablesType &) -> ConservedVariablesType
 {
+  boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
+                                 dealii::VectorizedArray<number>::size()>
+    cell_iterators = cells_in_cell_batch(matrix_free.mf, cell_batch_id);
+
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> cell_penalty_force;
   for (unsigned int i = 0; i < cell_iterators.size(); ++i)
     {
@@ -109,7 +111,7 @@ MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::value(
                 max_particles_per_active_cell *
               8>
             particles;
-          obstacle_handler.get_obstacles_in_cell({{cell}}, particles);
+          obstacle_handler.get_obstacles_in_cell(cell, particles);
 
           for (const DEMParticleAccessor<dim, number> &particle : particles)
             {

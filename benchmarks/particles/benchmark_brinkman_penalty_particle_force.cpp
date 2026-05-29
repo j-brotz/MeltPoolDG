@@ -16,6 +16,7 @@
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/particles/contact_forces.hpp>
+#include <meltpooldg/particles/matrix_free_particle_cache.hpp>
 #include <meltpooldg/particles/obstacle_data.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
@@ -145,8 +146,11 @@ public:
         obstacle_data,
         triangulation,
         dealii::MappingQ1<dim>(),
-        timer,
-        &scratch_data.get_matrix_free());
+        timer);
+
+      auto matrix_free_cell_batch_particle_cache =
+        std::make_shared<MeltPoolDG::Particles::MatrixFreeCellBatchParticleCache<dim, double>>(
+          MeltPoolDG::MatrixFreeContext<dim, double>(scratch_data.get_matrix_free(), 0, 0));
 
       brinkman_obstacle_force = std::make_unique<
         MeltPoolDG::BrinkmanObstacleForce<dim, double, MeltPoolDG::SphericalParticle<dim, double>>>(
@@ -155,7 +159,8 @@ public:
         MeltPoolDG::MatrixFreeContext<dim, double>(scratch_data.get_matrix_free(),
                                                    dof_index,
                                                    quad_index),
-        brinkman_data);
+        brinkman_data,
+        matrix_free_cell_batch_particle_cache);
     }
 
     /**

@@ -87,13 +87,10 @@ namespace MeltPoolDG::CompressibleFlow
      * @param q_index Quadrature point index.
      */
     void
-    local_cell_jacobian_kernel(
-      FECellIntegrator<dim, dim + 2, number>                                 &delta_phi,
-      const FECellIntegrator<dim, dim + 2, number>                           &phi,
-      unsigned int                                                            q_index,
-      unsigned int                                                            cell_batch_id,
-      boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
-                                     dealii::VectorizedArray<double>::size()> cell_iterators) const;
+    local_cell_jacobian_kernel(FECellIntegrator<dim, dim + 2, number>       &delta_phi,
+                               const FECellIntegrator<dim, dim + 2, number> &phi,
+                               unsigned int                                  q_index,
+                               unsigned int                                  cell_batch_id) const;
 
     /**
      * @brief Local face operations at the given quadrature point for computing the Jacobian.

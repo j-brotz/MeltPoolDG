@@ -134,10 +134,6 @@ namespace MeltPoolDG::CompressibleFlow
                             EvaluationFlags::values | (is_viscous() ? EvaluationFlags::gradients :
                                                                       EvaluationFlags::nothing));
 
-        boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
-                                       dealii::VectorizedArray<double>::size()>
-          cell_iterators = cells_in_cell_batch(mf, cell);
-
         for (const unsigned int q : phi.quadrature_point_indices())
           {
             FlowSourceType source;
@@ -157,7 +153,6 @@ namespace MeltPoolDG::CompressibleFlow
               {
                 source += external_force->value(current_time_step,
                                                 cell,
-                                                cell_iterators,
                                                 phi.quadrature_point(q),
                                                 phi.get_value(q));
               }

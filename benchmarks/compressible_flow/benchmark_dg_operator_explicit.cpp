@@ -25,6 +25,7 @@
 #include <meltpooldg/compressible_flow/operation_data.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/particles/matrix_free_particle_cache.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
@@ -334,8 +335,8 @@ namespace
   {
     this->setup_operator(OperatorType::Explicit);
     dealii::TimerOutput              timer(std::cout,
-                              dealii::TimerOutput::OutputFrequency::never,
-                              dealii::TimerOutput::wall_times);
+                                           dealii::TimerOutput::OutputFrequency::never,
+                                           dealii::TimerOutput::wall_times);
     MeltPoolDG::ObstacleData<double> obstacle_data;
     obstacle_data.obstacle_state_input_file =
       std::string(MPDG_BENCHMARK_DATA_DIR) + "/input_file_28_particles.csv";
@@ -343,10 +344,16 @@ namespace
       obstacle_field(obstacle_data,
                      this->data->triangulation,
                      dealii::MappingQ1<dim>(),
-                     timer,
-                     &this->data->scratch_data.get_matrix_free());
+                     timer);
 
     MeltPoolDG::BrinkmanPenalizationData<double> brinkman_data;
+    auto                                         matrix_free_cell_batch_particle_cache =
+      std::make_shared<MeltPoolDG::Particles::MatrixFreeCellBatchParticleCache<dim, double>>(
+        MeltPoolDG::MatrixFreeContext<dim, double>(this->data->scratch_data.get_matrix_free(),
+                                                   this->data->flow_scratch_data->dof_idx,
+                                                   this->data->flow_scratch_data->quad_idx));
+    matrix_free_cell_batch_particle_cache->update(obstacle_field);
+
     MeltPoolDG::BrinkmanObstacleForce<dim, double, MeltPoolDG::SphericalParticle<dim, double>>
       brinkman_obstacle_force(
         obstacle_field,
@@ -354,19 +361,22 @@ namespace
         MeltPoolDG::MatrixFreeContext<dim, double>(this->data->scratch_data.get_matrix_free(),
                                                    this->data->flow_scratch_data->dof_idx,
                                                    this->data->flow_scratch_data->quad_idx),
-        brinkman_data);
+        brinkman_data,
+        matrix_free_cell_batch_particle_cache);
 
     auto fsi_fluid_force_residual =
       std::make_shared<MeltPoolDG::BrinkmanPenalizationResidualContribution<
         dim,
         double,
-        typename MeltPoolDG::SphericalParticle<dim, double>>>(obstacle_field, brinkman_data);
+        typename MeltPoolDG::SphericalParticle<dim, double>>>(
+        obstacle_field, brinkman_data, matrix_free_cell_batch_particle_cache);
 
     auto fsi_fluid_force_jacobian =
       std::make_shared<MeltPoolDG::BrinkmanPenalizationJacobianContribution<
         dim,
         double,
-        typename MeltPoolDG::SphericalParticle<dim, double>>>(obstacle_field, brinkman_data);
+        typename MeltPoolDG::SphericalParticle<dim, double>>>(
+        obstacle_field, brinkman_data, matrix_free_cell_batch_particle_cache);
 
     this->data->explicit_flow_operator->add_external_force(fsi_fluid_force_residual,
                                                            fsi_fluid_force_jacobian);
@@ -425,8 +435,8 @@ namespace
   {
     this->setup_operator(OperatorType::Explicit);
     dealii::TimerOutput              timer(std::cout,
-                              dealii::TimerOutput::OutputFrequency::never,
-                              dealii::TimerOutput::wall_times);
+                                           dealii::TimerOutput::OutputFrequency::never,
+                                           dealii::TimerOutput::wall_times);
     MeltPoolDG::ObstacleData<double> obstacle_data;
     obstacle_data.obstacle_state_input_file =
       std::string(MPDG_BENCHMARK_DATA_DIR) + "/input_file_28_particles.csv";
@@ -434,10 +444,16 @@ namespace
       obstacle_field(obstacle_data,
                      this->data->triangulation,
                      dealii::MappingQ1<dim>(),
-                     timer,
-                     &this->data->scratch_data.get_matrix_free());
+                     timer);
 
     MeltPoolDG::BrinkmanPenalizationData<double> brinkman_data;
+    auto                                         matrix_free_cell_batch_particle_cache =
+      std::make_shared<MeltPoolDG::Particles::MatrixFreeCellBatchParticleCache<dim, double>>(
+        MeltPoolDG::MatrixFreeContext<dim, double>(this->data->scratch_data.get_matrix_free(),
+                                                   this->data->flow_scratch_data->dof_idx,
+                                                   this->data->flow_scratch_data->quad_idx));
+    matrix_free_cell_batch_particle_cache->update(obstacle_field);
+
     MeltPoolDG::BrinkmanObstacleForce<dim, double, MeltPoolDG::SphericalParticle<dim, double>>
       brinkman_obstacle_force(
         obstacle_field,
@@ -445,19 +461,22 @@ namespace
         MeltPoolDG::MatrixFreeContext<dim, double>(this->data->scratch_data.get_matrix_free(),
                                                    this->data->flow_scratch_data->dof_idx,
                                                    this->data->flow_scratch_data->quad_idx),
-        brinkman_data);
+        brinkman_data,
+        matrix_free_cell_batch_particle_cache);
 
     auto fsi_fluid_force_residual =
       std::make_shared<MeltPoolDG::BrinkmanPenalizationResidualContribution<
         dim,
         double,
-        typename MeltPoolDG::SphericalParticle<dim, double>>>(obstacle_field, brinkman_data);
+        typename MeltPoolDG::SphericalParticle<dim, double>>>(
+        obstacle_field, brinkman_data, matrix_free_cell_batch_particle_cache);
 
     auto fsi_fluid_force_jacobian =
       std::make_shared<MeltPoolDG::BrinkmanPenalizationJacobianContribution<
         dim,
         double,
-        typename MeltPoolDG::SphericalParticle<dim, double>>>(obstacle_field, brinkman_data);
+        typename MeltPoolDG::SphericalParticle<dim, double>>>(
+        obstacle_field, brinkman_data, matrix_free_cell_batch_particle_cache);
 
     constexpr number current_time = 0.1;
     constexpr number time_step    = 1e-4;

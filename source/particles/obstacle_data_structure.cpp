@@ -26,8 +26,7 @@ template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::CellListParticleHandler(
   const dealii::Triangulation<dim>      &triangulation,
   const dealii::Mapping<dim>            &mapping,
-  dealii::TimerOutput                   &timer,
-  const dealii::MatrixFree<dim, number> *matrix_free)
+  dealii::TimerOutput                   &timer)
   : obstacle_handler(std::make_unique<dealii::Particles::ParticleHandler<dim>>(
       triangulation,
       mapping,
@@ -35,7 +34,6 @@ MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::CellListParticle
   , properties_global_obstacles(
       std::make_unique<dealii::Particles::PropertyPool<dim>>(ObstacleType::n_obstacle_properties))
   , timer(timer)
-  , matrix_free(matrix_free)
   , triangulation(&triangulation)
   , level_cell_partitioner(triangulation)
 {}

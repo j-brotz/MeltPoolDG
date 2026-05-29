@@ -15,6 +15,7 @@
 #include <meltpooldg/fluid_structure_interaction/stokes_law.hpp>
 #include <meltpooldg/particles/cohesive_forces.hpp>
 #include <meltpooldg/particles/contact_forces.hpp>
+#include <meltpooldg/particles/matrix_free_particle_cache.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/obstacle_forces.hpp>
 #include <meltpooldg/particles/particle.hpp>
@@ -276,17 +277,26 @@ namespace MeltPoolDG
       simulation_case->parameters.obstacle_data,
       scratch_data->get_triangulation(),
       scratch_data->get_mapping(),
-      scratch_data->get_timer(),
-      &scratch_data->get_matrix_free());
+      scratch_data->get_timer());
 
     // FSI
+    auto matrix_free_cell_batch_particle_cache =
+      std::make_shared<Particles::MatrixFreeCellBatchParticleCache<dim, number>>(
+        MatrixFreeContext<dim, number>(scratch_data->get_matrix_free(),
+                                       comp_flow_dof_idx,
+                                       comp_flow_quad_idx));
+
+    matrix_free_cell_batch_particle_cache->update(*obstacle_field);
+    obstacle_field->add_observer(*matrix_free_cell_batch_particle_cache);
+
     auto [fsi_fluid_force_residual, fsi_fluid_force_jacobian, fsi_obstacle_load] =
       setup_fluid_structure_interaction<dim, number, SphericalParticle<dim, number>>(
         simulation_case->parameters.fluid_structure_interaction_data,
         *obstacle_field,
         simulation_case->parameters.material,
         comp_flow_operation->get_solution(),
-        {scratch_data->get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx});
+        {scratch_data->get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx},
+        matrix_free_cell_batch_particle_cache);
 
     comp_flow_operation->add_external_force(fsi_fluid_force_residual, fsi_fluid_force_jacobian);
 

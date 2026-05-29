@@ -258,11 +258,6 @@ namespace MeltPoolDG::CompressibleFlow
         phi_old.reinit(cell);
         phi_old.gather_evaluate(*time_integrator_old_solution, dealii::EvaluationFlags::values);
 
-        boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
-                                       dealii::VectorizedArray<double>::size()>
-          cell_iterators =
-            cells_in_cell_batch(flow_scratch_data.scratch_data.get_matrix_free(), cell);
-
         for (const unsigned int q : phi.quadrature_point_indices())
           {
             auto [value_q, grad_q] =
@@ -278,8 +273,10 @@ namespace MeltPoolDG::CompressibleFlow
                                                    flow_scratch_data.body_force);
 
             for (auto &external_force : external_forces_residual)
-              value_q += external_force->value(
-                current_time_step, cell, cell_iterators, phi.quadrature_point(q), phi.get_value(q));
+              value_q += external_force->value(current_time_step,
+                                               cell,
+                                               phi.quadrature_point(q),
+                                               phi.get_value(q));
 
             value_q -= 1. / current_time_step * (phi.get_value(q) - phi_old.get_value(q));
 
@@ -431,14 +428,9 @@ namespace MeltPoolDG::CompressibleFlow
         delta_phi.reinit(cell);
         delta_phi.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
-        boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
-                                       dealii::VectorizedArray<double>::size()>
-          cell_iterators =
-            cells_in_cell_batch(flow_scratch_data.scratch_data.get_matrix_free(), cell);
-
         for (const unsigned int q_index : phi.quadrature_point_indices())
           {
-            local_cell_jacobian_kernel(delta_phi, phi, q_index, cell, cell_iterators);
+            local_cell_jacobian_kernel(delta_phi, phi, q_index, cell);
           }
 
         delta_phi.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
@@ -558,24 +550,18 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number, bool is_viscous>
   void
   DGOperatorImplicit<dim, number, is_viscous>::local_cell_jacobian_kernel(
-    FECellIntegrator<dim, dim + 2, number>                                 &delta_phi,
-    const FECellIntegrator<dim, dim + 2, number>                           &phi,
-    const unsigned int                                                      q_index,
-    const unsigned int                                                      cell_batch_id,
-    boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
-                                   dealii::VectorizedArray<double>::size()> cell_iterators) const
+    FECellIntegrator<dim, dim + 2, number>       &delta_phi,
+    const FECellIntegrator<dim, dim + 2, number> &phi,
+    const unsigned int                            q_index,
+    const unsigned int                            cell_batch_id) const
   {
     const auto w_q       = phi.get_value(q_index);
     const auto delta_w_q = delta_phi.get_value(q_index);
 
     ConservedVariables value_q = 1. / current_time_step * delta_w_q;
     for (auto &external_force : external_forces_jacobian)
-      value_q -= external_force->value(current_time_step,
-                                       cell_batch_id,
-                                       cell_iterators,
-                                       phi.quadrature_point(q_index),
-                                       w_q,
-                                       delta_w_q);
+      value_q -= external_force->value(
+        current_time_step, cell_batch_id, phi.quadrature_point(q_index), w_q, delta_w_q);
 
     delta_phi.submit_value(value_q, q_index);
 

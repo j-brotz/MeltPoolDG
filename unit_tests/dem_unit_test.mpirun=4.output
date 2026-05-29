@@ -6,46 +6,55 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 6.0000e-03 ( dt = 6.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 6.9988, Vertical velocity: -0.2, Norm omega: 0                   |
 | Particle #1: Vertical position: 7, Vertical velocity: 0, Norm omega: 0                           |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 6.0000e-03 to 1.2000e-02 ( dt = 6.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 6.99771, Vertical velocity: -0.181206, Norm omega: 0.0122231     |
 | Particle #1: Vertical position: 6.99964, Vertical velocity: -0.06, Norm omega: 0                 |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 1.2000e-02 to 1.8000e-02 ( dt = 6.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 6.99674, Vertical velocity: -0.162411, Norm omega: 0.0244462     |
 | Particle #1: Vertical position: 6.99892, Vertical velocity: -0.12, Norm omega: 0                 |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 1.8000e-02 to 2.4000e-02 ( dt = 6.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 6.99581, Vertical velocity: -0.155265, Norm omega: 0.0355207     |
 | Particle #1: Vertical position: 6.99793, Vertical velocity: -0.165787, Norm omega: 0.0164501     |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 2.4000e-02 to 3.0000e-02 ( dt = 6.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 6.99485, Vertical velocity: -0.159013, Norm omega: 0.0454465     |
 | Particle #1: Vertical position: 6.99682, Vertical velocity: -0.18436, Norm omega: 0.0493504      |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 6      t = 3.0000e-02 to 3.6000e-02 ( dt = 6.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 6.99385, Vertical velocity: -0.1667, Norm omega: 0.0549356       |
 | Particle #1: Vertical position: 6.99577, Vertical velocity: -0.175335, Norm omega: 0.0948041     |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 7      t = 3.6000e-02 to 4.2000e-02 ( dt = 6.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 6.99282, Vertical velocity: -0.172335, Norm omega: 0.0646538     |
 | Particle #1: Vertical position: 6.99485, Vertical velocity: -0.153595, Norm omega: 0.14535       |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 8      t = 4.2000e-02 to 4.8000e-02 ( dt = 6.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 6.99178, Vertical velocity: -0.173665, Norm omega: 0.0748418     |
 | Particle #1: Vertical position: 6.99402, Vertical velocity: -0.13814, Norm omega: 0.193421       |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 9      t = 4.8000e-02 to 5.0000e-02 ( dt = 2.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 6.99143, Vertical velocity: -0.173029, Norm omega: 0.0783526     |
 | Particle #1: Vertical position: 6.99374, Vertical velocity: -0.137759, Norm omega: 0.207458      |
 +--------------------------------------------------------------------------------------------------+
@@ -60,46 +69,55 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 6.0000e-03 ( dt = 6.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 6, Vertical velocity: 0, Norm omega: 0                           |
 | Particle #1: Vertical position: 6.9988, Vertical velocity: -0.2, Norm omega: 0                   |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 6.0000e-03 to 1.2000e-02 ( dt = 6.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 5.99964, Vertical velocity: -0.06, Norm omega: 0                 |
 | Particle #1: Vertical position: 6.9978, Vertical velocity: -0.167173, Norm omega: 0.0229183      |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 1.2000e-02 to 1.8000e-02 ( dt = 6.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 5.99892, Vertical velocity: -0.12, Norm omega: 0                 |
 | Particle #1: Vertical position: 6.99699, Vertical velocity: -0.134345, Norm omega: 0.0458366     |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 1.8000e-02 to 2.4000e-02 ( dt = 6.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 5.99794, Vertical velocity: -0.163256, Norm omega: 0.0514066     |
 | Particle #1: Vertical position: 6.99624, Vertical velocity: -0.124909, Norm omega: 0.0649932     |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 2.4000e-02 to 3.0000e-02 ( dt = 6.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 5.99689, Vertical velocity: -0.17445, Norm omega: 0.15422        |
 | Particle #1: Vertical position: 6.99542, Vertical velocity: -0.136081, Norm omega: 0.080388      |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 6      t = 3.0000e-02 to 3.6000e-02 ( dt = 6.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 5.99596, Vertical velocity: -0.155096, Norm omega: 0.294094      |
 | Particle #1: Vertical position: 6.99451, Vertical velocity: -0.152634, Norm omega: 0.0947016     |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 7      t = 3.6000e-02 to 4.2000e-02 ( dt = 6.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 5.9952, Vertical velocity: -0.126916, Norm omega: 0.443559       |
 | Particle #1: Vertical position: 6.99353, Vertical velocity: -0.162788, Norm omega: 0.110295      |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 8      t = 4.2000e-02 to 4.8000e-02 ( dt = 6.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 5.99452, Vertical velocity: -0.113763, Norm omega: 0.576442      |
 | Particle #1: Vertical position: 6.99256, Vertical velocity: -0.162833, Norm omega: 0.127786      |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 9      t = 4.8000e-02 to 5.0000e-02 ( dt = 2.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| Resorting particles in obstacle field due to particle movement.                   obstacle_field |
 | Particle #0: Vertical position: 5.99429, Vertical velocity: -0.115997, Norm omega: 0.612688      |
 | Particle #1: Vertical position: 6.99223, Vertical velocity: -0.16066, Norm omega: 0.134004       |
 +--------------------------------------------------------------------------------------------------+

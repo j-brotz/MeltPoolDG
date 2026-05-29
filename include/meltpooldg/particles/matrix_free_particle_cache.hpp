@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deal.II/base/exception_macros.h>
+
 #include <deal.II/lac/vector.h>
 
 #include <deal.II/matrix_free/matrix_free.h>
@@ -44,7 +46,8 @@ namespace MeltPoolDG::Particles
                                                    dealii::VectorizedArray<number>::size()>
                 cell_iterators = cells_in_cell_batch(mf, cell);
 
-              obstacle_field.get_obstacles_in_cell(cell, cell_batch_to_particle_cache[cell]);
+              obstacle_field.get_obstacles_in_cell(cell_iterators,
+                                                   cell_batch_to_particle_cache[cell]);
             }
         };
 
@@ -54,12 +57,14 @@ namespace MeltPoolDG::Particles
     const std::vector<DEMParticleAccessor<dim, number>> &
     obstacles_in_cell_batch(const unsigned int cell_batch_id) const
     {
+      AssertIndexRange(cell_batch_id, cell_batch_to_particle_cache.size());
       return cell_batch_to_particle_cache[cell_batch_id];
     }
 
     std::vector<DEMParticleAccessor<dim, number>> &
     obstacles_in_cell_batch(const unsigned int cell_batch_id)
     {
+      AssertIndexRange(cell_batch_id, cell_batch_to_particle_cache.size());
       return cell_batch_to_particle_cache[cell_batch_id];
     }
 

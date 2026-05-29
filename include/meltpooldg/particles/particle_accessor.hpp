@@ -79,7 +79,7 @@ namespace MeltPoolDG
 
     inline DEAL_II_ALWAYS_INLINE dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
                                  get_local_velocity(
-                                   const dealii::Point<dim, dealii::VectorizedArray<number>>& location_of_interest) const
+                                   const dealii::Point<dim, dealii::VectorizedArray<number>> &location_of_interest) const
     {
       Assert(dim == 2 or dim == 3, dealii::ExcMessage("Invalid dimension!"));
 
@@ -124,7 +124,7 @@ namespace MeltPoolDG
 
     template <typename VectorizedArrayType>
     dealii::Tensor<1, dim, VectorizedArrayType>
-    vector_to_center_of_gravity(const dealii::Point<dim, VectorizedArrayType> &loc)
+    vector_to_center_of_gravity(const dealii::Point<dim, VectorizedArrayType> &loc) const
     {
       dealii::Point<dim, VectorizedArrayType> particle_loc;
 
@@ -197,7 +197,7 @@ namespace MeltPoolDG
     add_force(const dealii::Tensor<1, dim, number> &force);
 
     inline DEAL_II_ALWAYS_INLINE dealii::Tensor<1, dim, number>
-    get_force() const
+                                 get_force() const
     {
       dealii::Tensor<1, dim, number> force;
       for (int dimension = 0; dimension < dim; ++dimension)
@@ -219,11 +219,11 @@ namespace MeltPoolDG
      *
      * @param torque The torque vector to assign to the particle.
      */
-   inline DEAL_II_ALWAYS_INLINE void
+    inline DEAL_II_ALWAYS_INLINE void
     set_torque(const dealii::Tensor<1, axial_dim<dim>, number> &torque);
 
     inline DEAL_II_ALWAYS_INLINE dealii::Tensor<1, axial_dim<dim>, number>
-    get_torque() const
+                                 get_torque() const
     {
       dealii::Tensor<1, axial_dim<dim>, number> torque;
       for (int dimension = 0; dimension < axial_dim<dim>; ++dimension)
@@ -254,7 +254,7 @@ namespace MeltPoolDG
      * @return The particle ID.
      */
     inline DEAL_II_ALWAYS_INLINE dealii::types::particle_index
-    id() const;
+                                 id() const;
 
     /**
      * Returns the radius the particle.
@@ -412,7 +412,7 @@ namespace MeltPoolDG
 
   template <int dim, typename number>
   inline DEAL_II_ALWAYS_INLINE dealii::types::particle_index
-  DEMParticleAccessor<dim, number>::id() const
+                               DEMParticleAccessor<dim, number>::id() const
   {
     return particle_id;
   }

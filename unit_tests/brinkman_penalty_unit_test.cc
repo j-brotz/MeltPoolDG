@@ -57,9 +57,13 @@ add_penalty_vector(const MatrixFreeContext<dim, number>                     &mat
                    const number                                              time_step_size)
 {
   using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
+  auto matrix_free_cell_batch_particle_cache =
+    std::make_shared<Particles::MatrixFreeCellBatchParticleCache<dim, number>>(
+      MatrixFreeContext<dim, number>(matrix_free));
+  matrix_free_cell_batch_particle_cache->update(obstacle_field);
 
   BrinkmanPenalizationResidualContribution<dim, number, ObstacleType> brinkman_contribution(
-    obstacle_field, data);
+    obstacle_field, data, matrix_free_cell_batch_particle_cache);
 
   std::function<void(const dealii::MatrixFree<dim, number> &,
                      VectorType &,
@@ -78,12 +82,12 @@ add_penalty_vector(const MatrixFreeContext<dim, number>                     &mat
           phi.reinit(cell);
           phi.gather_evaluate(src, dealii::EvaluationFlags::values);
 
-          auto cell_iterators = cells_in_cell_batch(matrix_free.mf, cell);
-
           for (const unsigned int q : phi.quadrature_point_indices())
             {
-              auto penalty = brinkman_contribution.value(
-                time_step_size, cell, cell_iterators, phi.quadrature_point(q), phi.get_value(q));
+              auto penalty = brinkman_contribution.value(time_step_size,
+                                                         cell,
+                                                         phi.quadrature_point(q),
+                                                         phi.get_value(q));
               phi.submit_value(penalty, q);
             }
 
@@ -348,15 +352,21 @@ public:
       *mapping,
       particle_locations,
       particle_properties,
-      scratch_data.get_timer(),
-      &scratch_data.get_matrix_free());
+      scratch_data.get_timer());
+
+    auto matrix_free_cell_batch_particle_cache =
+      std::make_shared<Particles::MatrixFreeCellBatchParticleCache<dim, number>>(
+        MatrixFreeContext<dim, number>(
+          {scratch_data.get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx}));
+    matrix_free_cell_batch_particle_cache->update(*obstacle_field);
 
     obstacle_field->add_load_type(
       BrinkmanObstacleForce<dim, number, SphericalParticle<dim, number>>(
         *obstacle_field,
         flow_field->get_solution(),
         {scratch_data.get_matrix_free(), comp_flow_dof_idx, comp_flow_quad_idx},
-        brinkman_penalization_data));
+        brinkman_penalization_data,
+        matrix_free_cell_batch_particle_cache));
   }
 
   /**
@@ -438,7 +448,7 @@ int
 main(int argc, char *argv[])
 {
   dealii::Utilities::MPI::MPI_InitFinalize mpi(argc, argv, 1);
-  dealii::ConditionalOStream               pcout(std::cout,
+  dealii::ConditionalOStream pcout(std::cout,
                                    dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0);
 
   Journal::print_header(pcout, "Brinkman Penalty Unit Test 2D");

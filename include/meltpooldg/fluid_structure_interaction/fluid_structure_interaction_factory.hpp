@@ -23,11 +23,12 @@ namespace MeltPoolDG
              std::shared_ptr<CompressibleFlow::ExternalFlowForceJacobian<dim, number>>,
              std::unique_ptr<ObstacleLoad<dim, number, ObstacleType>>>
   setup_fluid_structure_interaction(
-    const FluidStructureInteractionData<number>              &fsi_data,
-    ObstacleField<dim, number, ObstacleType>                 &obstacle_field,
-    const CompressibleFlow::MaterialPhaseData<number>        &flow_material,
-    const dealii::LinearAlgebra::distributed::Vector<number> &flow_solution,
-    const MatrixFreeContext<dim, number>                      flow_mf_context)
+    const FluidStructureInteractionData<number>                              &fsi_data,
+    ObstacleField<dim, number, ObstacleType>                                 &obstacle_field,
+    const CompressibleFlow::MaterialPhaseData<number>                        &flow_material,
+    const dealii::LinearAlgebra::distributed::Vector<number>                 &flow_solution,
+    const MatrixFreeContext<dim, number>                                      flow_mf_context,
+    std::shared_ptr<Particles::MatrixFreeCellBatchParticleCache<dim, number>> particle_cache)
   {
     std::shared_ptr<CompressibleFlow::ExternalFlowForce<dim, number>> fsi_fluid_force_residual;
     std::shared_ptr<CompressibleFlow::ExternalFlowForceJacobian<dim, number>>
@@ -39,16 +40,16 @@ namespace MeltPoolDG
           case FSICouplingMethod::brinkman_penalization: {
             fsi_fluid_force_residual =
               std::make_shared<BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>>(
-                obstacle_field, fsi_data.brinkman_penalization_data);
+                obstacle_field, fsi_data.brinkman_penalization_data, particle_cache);
             fsi_fluid_force_jacobian =
               std::make_shared<BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>>(
-                obstacle_field, fsi_data.brinkman_penalization_data);
+                obstacle_field, fsi_data.brinkman_penalization_data, particle_cache);
             fsi_obstacle_load = std::make_unique<ObstacleLoad<dim, number, ObstacleType>>(
-              BrinkmanObstacleForce<dim, number, ObstacleType>(
-                obstacle_field,
-                flow_solution,
-                flow_mf_context,
-                fsi_data.brinkman_penalization_data));
+              BrinkmanObstacleForce<dim, number, ObstacleType>(obstacle_field,
+                                                               flow_solution,
+                                                               flow_mf_context,
+                                                               fsi_data.brinkman_penalization_data,
+                                                               particle_cache));
             break;
           }
           case FSICouplingMethod::stokes_law: {
@@ -58,7 +59,7 @@ namespace MeltPoolDG
             // TODO: The Stokes law coupling currently only works for explicit methods
             fsi_fluid_force_jacobian =
               std::make_shared<BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>>(
-                obstacle_field, fsi_data.brinkman_penalization_data);
+                obstacle_field, fsi_data.brinkman_penalization_data, particle_cache);
             fsi_obstacle_load = std::make_unique<ObstacleLoad<dim, number, ObstacleType>>(
               StokesLawSphericalParticleForce<dim, number, ObstacleType>(
                 flow_solution, flow_mf_context, flow_material.dynamic_viscosity));

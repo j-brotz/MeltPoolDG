@@ -65,7 +65,7 @@ namespace MeltPoolDG
   public:
     template <typename ObserverType>
     ObstacleFieldObserver(ObserverType &observer)
-      : observer_pimpl(std::make_unique<ObserverModel>(observer))
+      : observer_pimpl(std::make_unique<ObserverModel<ObserverType>>(observer))
     {}
 
     void
@@ -100,11 +100,10 @@ namespace MeltPoolDG
      * @param triangulation The triangulation on which the obstacles are placed.
      * @param mapping Mapping used to interpret geometry on the given triangulation.
      */
-    ObstacleField(const ObstacleData<number>            &data,
-                  const dealii::Triangulation<dim>      &triangulation,
-                  const dealii::Mapping<dim>            &mapping,
-                  dealii::TimerOutput                   &timer,
-                  const dealii::MatrixFree<dim, number> *matrix_free = nullptr);
+    ObstacleField(const ObstacleData<number>       &data,
+                  const dealii::Triangulation<dim> &triangulation,
+                  const dealii::Mapping<dim>       &mapping,
+                  dealii::TimerOutput              &timer);
 
     /**
      * @brief Constructor. Initializes the obstacle field and supporting data structures.
@@ -124,8 +123,7 @@ namespace MeltPoolDG
                   const dealii::Mapping<dim>              &mapping,
                   std::vector<dealii::Point<dim, number>> &obstacle_locations,
                   std::vector<std::vector<number>>        &obstacle_properties,
-                  dealii::TimerOutput                     &timer,
-                  const dealii::MatrixFree<dim, number>   *matrix_free = nullptr);
+                  dealii::TimerOutput                     &timer);
 
     /**
      * @brief Advances the state of all obstacles in time by a single time step.
@@ -172,7 +170,7 @@ namespace MeltPoolDG
 
     template <typename ObserverType>
     void
-    add_observer(ObserverType &observer)
+    add_observer(ObserverType &observer) const
     {
       observers.emplace_back(observer);
     }
@@ -196,18 +194,12 @@ namespace MeltPoolDG
       obstacle_data_structure.get_obstacles_in_cell(cells, obstacles);
     }
 
+    template <typename ObstacleContainer>
     void
-    get_obstacles_in_cell(
-      const dealii::TriaIterator<dealii::CellAccessor<dim>>                 &cell,
-      boost::container::small_vector_base<DEMParticleAccessor<dim, number>> &obstacles) const
+    get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell,
+                          ObstacleContainer                                     &obstacles) const
     {
       obstacle_data_structure.get_obstacles_in_cell(cell, obstacles);
-    }
-
-    std::vector<MeltPoolDG::DEMParticleAccessor<dim, number>> &
-    get_obstacles_in_cell_batch(const unsigned int cell_batch_id) const
-    {
-      return obstacle_data_structure.get_obstacles_in_cell_batch(cell_batch_id);
     }
 
     void
@@ -236,6 +228,7 @@ namespace MeltPoolDG
     {
       obstacle_data_structure.unpack_after_coarsening_and_refinement();
       dynamic_update_control.reinit_after_update();
+      notify_observers();
     }
 
 
@@ -345,7 +338,7 @@ namespace MeltPoolDG
     std::pair<std::vector<dealii::Point<dim, number>>, std::vector<std::vector<number>>>
     read_obstacle_state_input_file();
 
-    void 
+    void
     notify_observers()
     {
       for (auto &observer : observers)
@@ -370,7 +363,7 @@ namespace MeltPoolDG
 
     DynamicUpdateController<dim, number> dynamic_update_control;
 
-    std::vector<ObstacleFieldObserver<dim, number, ObstacleType>> observers;
+    mutable std::vector<ObstacleFieldObserver<dim, number, ObstacleType>> observers;
   };
 
   // TODO

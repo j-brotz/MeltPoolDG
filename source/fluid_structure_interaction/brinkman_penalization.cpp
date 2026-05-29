@@ -24,14 +24,15 @@
 
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::BrinkmanObstacleForce(
-  const ObstacleField<dim, number, ObstacleType> &obstacle_field,
-  const VectorType                               &solution,
-  const MatrixFreeContext<dim, number>           &matrix_free,
-  const BrinkmanPenalizationData<number>         &data)
+  const ObstacleField<dim, number, ObstacleType>                           &obstacle_field,
+  const VectorType                                                         &solution,
+  const MatrixFreeContext<dim, number>                                     &matrix_free,
+  const BrinkmanPenalizationData<number>                                   &data,
+  std::shared_ptr<Particles::MatrixFreeCellBatchParticleCache<dim, number>> particle_cache)
   : brinkman_penalization_data(data)
-  , cell_obstacle_cache(obstacle_field)
   , matrix_free(matrix_free)
   , solution(solution)
+  , particle_cache(std::move(particle_cache))
 {}
 
 template <int dim, typename number, typename ObstacleType>
@@ -53,7 +54,7 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
 
       for (unsigned cell = cell_range.first; cell < cell_range.second; ++cell)
         {
-          if (not cell_obstacle_cache.obstacle_handler.get_obstacles_in_cell_batch(cell).empty())
+          if (not particle_cache->obstacles_in_cell_batch(cell).empty())
             {
               phi.reinit(cell);
               phi.gather_evaluate(solution, dealii::EvaluationFlags::values);
@@ -112,7 +113,7 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
                   };
 
                   for (DEMParticleAccessor<dim, number> &obstacle :
-                       cell_obstacle_cache.obstacle_handler.get_obstacles_in_cell_batch(cell))
+                       particle_cache->obstacles_in_cell_batch(cell))
                     add_force_and_torque_to_particle(obstacle);
                 }
             }
@@ -129,9 +130,10 @@ template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>::
   BrinkmanPenalizationResidualContribution(
     const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-    const BrinkmanPenalizationData<number>         &brinkman_penalization_data)
+    const BrinkmanPenalizationData<number>         &brinkman_penalization_data,
+    std::shared_ptr<Particles::MatrixFreeCellBatchParticleCache<dim, number>> particle_cache)
   : brinkman_penalization_data(brinkman_penalization_data)
-  , cell_obstacle_cache(obstacle_handler)
+  , particle_cache(std::move(particle_cache))
   , inverse_permeability(1. / brinkman_penalization_data.permeability)
 {}
 
@@ -140,8 +142,6 @@ auto
 MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>::value(
   const number,
   const unsigned int cell_batch_id,
-  const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
-                                       dealii::VectorizedArray<double>::size()> &,
   const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
   const ConservedVariablesType                              &w_q) -> ConservedVariablesType
 {
@@ -154,7 +154,7 @@ MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>:
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> momentum_penalty;
   dealii::VectorizedArray<number>                         energy_penalty = 0.;
   for (const DEMParticleAccessor<dim, number> &obstacle :
-       cell_obstacle_cache.obstacle_handler.get_obstacles_in_cell_batch(cell_batch_id))
+       particle_cache->obstacles_in_cell_batch(cell_batch_id))
     {
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> local_obstacle_momentum =
         obstacle.get_local_velocity(q_point) * w_q[0];
@@ -177,9 +177,10 @@ template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>::
   BrinkmanPenalizationJacobianContribution(
     const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-    const BrinkmanPenalizationData<number>         &brinkman_penalization_data)
+    const BrinkmanPenalizationData<number>         &brinkman_penalization_data,
+    std::shared_ptr<Particles::MatrixFreeCellBatchParticleCache<dim, number>> particle_cache)
   : brinkman_penalization_data(brinkman_penalization_data)
-  , cell_obstacle_cache(obstacle_handler)
+  , particle_cache(std::move(particle_cache))
 {}
 
 template <int dim, typename number, typename ObstacleType>
@@ -187,13 +188,11 @@ auto
 MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>::value(
   const number,
   const unsigned int cell_batch_id,
-  const boost::container::small_vector<dealii::TriaIterator<dealii::CellAccessor<dim>>,
-                                       dealii::VectorizedArray<double>::size()> &,
   const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
   const ConservedVariablesType                              &w_q,
   const ConservedVariablesType                              &delta_w_q) -> ConservedVariablesType
 {
-  if (cell_obstacle_cache.obstacle_handler.get_obstacles_in_cell_batch(cell_batch_id).empty())
+  if (particle_cache->obstacles_in_cell_batch(cell_batch_id).empty())
     return ConservedVariablesType();
 
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> fluid_momentum;
@@ -207,7 +206,7 @@ MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>:
   dealii::VectorizedArray<number>                         energy_penalty_differential_change(0.);
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> momentum_penalty_differential_change;
   for (const DEMParticleAccessor<dim, number> &obstacle :
-       cell_obstacle_cache.obstacle_handler.get_obstacles_in_cell_batch(cell_batch_id))
+       particle_cache->obstacles_in_cell_batch(cell_batch_id))
     {
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> local_obstacle_velocity =
         obstacle.get_local_velocity(q_point);
