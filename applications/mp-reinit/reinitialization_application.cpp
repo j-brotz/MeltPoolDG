@@ -220,18 +220,8 @@ namespace MeltPoolDG::LevelSet
           }
         else if (param.reinit.modeltype == ModelType::elliptic)
           {
-            reinit_operation =
-              std::make_unique<ReinitializationEllipticOperation<dim, number>>(*scratch_data,
-                                                                               param.reinit,
-                                                                               reinit_dof_idx,
-                                                                               reinit_quad_idx,
-                                                                               reinit_dof_idx,
-                                                                               param.normal_vec);
-            // TODO: implement elliptic reinitialization
-            AssertThrow(
-              false,
-              dealii::ExcMessage(
-                "The elliptic reinitialization is in development and cannot be used yet."));
+            reinit_operation = std::make_unique<ReinitializationEllipticOperation<dim, number>>(
+              *scratch_data, param.reinit, reinit_dof_idx, reinit_quad_idx, reinit_dof_idx);
           }
         else if (param.reinit.modeltype == ModelType::geometric)
           {

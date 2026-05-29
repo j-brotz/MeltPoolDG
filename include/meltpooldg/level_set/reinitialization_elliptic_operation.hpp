@@ -1,10 +1,13 @@
 #pragma once
 
+#include <deal.II/non_matching/mesh_classifier.h>
+
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/level_set/normal_vector_DG_operation.hpp>
+#include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/level_set/normal_vector_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_elliptic_operator.hpp>
 #include <meltpooldg/level_set/reinitialization_operation_base.hpp>
+#include <meltpooldg/linear_algebra/preconditioner.hpp>
 
 /**
  * @brief This operation solves the reinitialization problem for a CG- or DG-FEM-based discrete
@@ -32,7 +35,7 @@ namespace MeltPoolDG::LevelSet
   {
   public:
     using VectorType      = dealii::LinearAlgebra::distributed::Vector<number>;
-    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<number>;
+    using MappingInfoType = CutUtil::MappingInfoType<dim, number>;
 
     /**
      * @brief Constructor.
@@ -44,14 +47,12 @@ namespace MeltPoolDG::LevelSet
      * @param reinit_dof_idx_in Index of the used dof-handler object in @p scratch_data_in.
      * @param reinit_quad_idx_in Index of the used quadrature object in @p scratch_data_in.
      * @param ls_dof_idx_in Index of the used dof-handler object in @p scratch_data_in for the level-set.
-     * @param normal_vec_data Reference to the data object related to the normal vector computation.
      */
     ReinitializationEllipticOperation(const ScratchData<dim, dim, number> &scratch_data_in,
                                       const ReinitializationData<number>  &reinit_data,
                                       const unsigned int                   reinit_dof_idx_in,
                                       const unsigned int                   reinit_quad_idx_in,
-                                      const unsigned int                   ls_dof_idx_in,
-                                      const NormalVectorData<number>      &normal_vec_data);
+                                      const unsigned int                   ls_dof_idx_in);
 
     /**
      * @brief Solve the nonlinear system of equations of the elliptic reinitialization problem.
@@ -124,7 +125,35 @@ namespace MeltPoolDG::LevelSet
     void
     attach_output_vectors(GenericDataOut<dim, number> &data_out) const override;
 
+    /**
+     * @brief Get the maximum change of the level set due to the reinitialization procedure.
+     *
+     * @return Maximum change of the level set.
+     */
+    number
+    get_max_change_level_set() const;
+
   private:
+    /**
+     * @brief Compute the quadrature rules for the immersed phase boundaries.
+     */
+    void
+    compute_intersected_quadrature();
+
+    /// Mapping information for integration over immersed boundaries
+    MappingInfoType mapping_info_surface;
+
+    /// Mesh classifier, which contains information if a cell is inside or outside the physically
+    /// relevant region, or cut by the immersed boundary. It corresponds to the current level set
+    /// position.
+    std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier;
+
+    /**
+     * @brief Create the elliptic reinitialization operator.
+     */
+    void
+    create_operator();
+
     /// Scratch data object
     const ScratchData<dim, dim, number> &scratch_data;
 
@@ -142,11 +171,17 @@ namespace MeltPoolDG::LevelSet
 
     /// This is the primary solution vector of this class
     VectorType solution_level_set;
+    /// Vector for the right-hand side
+    VectorType rhs;
+    // level set field from the previous step: initial condition
+    VectorType level_set_old;
 
     /// Pointer to the elliptic reinitialization operator object
     std::unique_ptr<ReinitializationEllipticOperator<dim, number>> reinit_operator;
+    /// Preconditioner for the linear solver
+    Preconditioner<dim, VectorType, number> preconditioner;
 
-    /// Pointer to the operation for the normal vector computation
-    std::shared_ptr<NormalVectorOperationBase<dim, number>> normal_vector_operation;
+    /// Maximum change of the level set due to the reinitialization procedure
+    number max_change_level_set = std::numeric_limits<number>::max();
   };
 } // namespace MeltPoolDG::LevelSet

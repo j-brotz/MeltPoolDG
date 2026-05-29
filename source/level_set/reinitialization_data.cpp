@@ -257,10 +257,6 @@ namespace MeltPoolDG::LevelSet
 
     predictor.post();
     fe.post(base_fe_data);
-
-    AssertThrow(modeltype != ModelType::elliptic,
-                dealii::ExcMessage("The elliptic reinitialization is in development and cannot "
-                                   "be used yet."));
   }
 
   template <typename number>
