@@ -108,11 +108,9 @@ namespace MeltPoolDG
      *
      * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
+    template <typename CellContainer, typename ObstacleContainer>
     void
-    get_obstacles_in_cell(
-      const boost::container::small_vector_base<dealii::TriaIterator<dealii::CellAccessor<dim>>>
-                                                                            &cells,
-      boost::container::small_vector_base<DEMParticleAccessor<dim, number>> &particles) const
+    get_obstacles_in_cell(const CellContainer &cells, ObstacleContainer &particles) const
     {
       for (const auto &cell : cells)
         {

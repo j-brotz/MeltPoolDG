@@ -12,6 +12,8 @@
 
 #include <deal.II/particles/particle_handler.h>
 
+#include <meltpooldg/utilities/matrix_free_util.hpp>
+
 #include <meltpooldg/utilities/cpp23_functions.h>
 #include <mpi.h>
 

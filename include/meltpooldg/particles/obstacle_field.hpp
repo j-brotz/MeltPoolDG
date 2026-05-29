@@ -21,12 +21,65 @@
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/amr_regions.hpp>
 
+#include <memory>
 #include <ranges>
 #include <type_traits>
 #include <vector>
 
 namespace MeltPoolDG
 {
+  template <int dim, typename number, typename ObstacleType = SphericalParticle<dim, number>>
+
+  class ObstacleField;
+
+  template <int dim, typename number, typename ObstacleType>
+  class ObstacleFieldObserver
+  {
+    class ObserverConcept
+    {
+    public:
+      virtual ~ObserverConcept() = default;
+
+      virtual void
+      update(const ObstacleField<dim, number, ObstacleType> &obstacle_field) = 0;
+    };
+
+    template <typename ObserverType>
+    class ObserverModel : public ObserverConcept
+    {
+    public:
+      ObserverModel(ObserverType &observer)
+        : observer(&observer)
+      {}
+
+      void
+      update(const ObstacleField<dim, number, ObstacleType> &obstacle_field) override
+      {
+        observer->update(obstacle_field);
+      }
+
+    private:
+      ObserverType *observer;
+    };
+
+  public:
+    template <typename ObserverType>
+    ObstacleFieldObserver(ObserverType &observer)
+      : observer_pimpl(std::make_unique<ObserverModel>(observer))
+    {}
+
+    void
+    update(const ObstacleField<dim, number, ObstacleType> &obstacle_field)
+    {
+      observer_pimpl->update(obstacle_field);
+    }
+
+  private:
+    std::unique_ptr<ObserverConcept> observer_pimpl;
+  };
+
+
+
   template <int dim, typename number, typename ObstacleType>
   class ObstacleField
   {
@@ -117,6 +170,13 @@ namespace MeltPoolDG
       loads.emplace_back(std::move(obstacle_load));
     }
 
+    template <typename ObserverType>
+    void
+    add_observer(ObserverType &observer)
+    {
+      observers.emplace_back(observer);
+    }
+
     /**
      * @brief Identify obstacles that partially or fully occupy any cell in a given cell batch, and
      * store their properties in the destination property pool.
@@ -129,11 +189,9 @@ namespace MeltPoolDG
      *
      * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
+    template <typename CellContainer, typename ObstacleContainer>
     void
-    get_obstacles_in_cell(
-      const boost::container::small_vector_base<dealii::TriaIterator<dealii::CellAccessor<dim>>>
-                                                                            &cells,
-      boost::container::small_vector_base<DEMParticleAccessor<dim, number>> &obstacles) const
+    get_obstacles_in_cell(const CellContainer &cells, ObstacleContainer &obstacles) const
     {
       obstacle_data_structure.get_obstacles_in_cell(cells, obstacles);
     }
@@ -287,6 +345,13 @@ namespace MeltPoolDG
     std::pair<std::vector<dealii::Point<dim, number>>, std::vector<std::vector<number>>>
     read_obstacle_state_input_file();
 
+    void 
+    notify_observers()
+    {
+      for (auto &observer : observers)
+        observer.update(*this);
+    }
+
     /// Struct holding configuration data for obstacles.
     const ObstacleData<number> &data;
 
@@ -304,6 +369,8 @@ namespace MeltPoolDG
     dealii::TimerOutput &timer;
 
     DynamicUpdateController<dim, number> dynamic_update_control;
+
+    std::vector<ObstacleFieldObserver<dim, number, ObstacleType>> observers;
   };
 
   // TODO

@@ -109,7 +109,7 @@ MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::value(
                 max_particles_per_active_cell *
               8>
             particles;
-          obstacle_handler.get_obstacles_in_cell(cell, particles);
+          obstacle_handler.get_obstacles_in_cell({{cell}}, particles);
 
           for (const DEMParticleAccessor<dim, number> &particle : particles)
             {
