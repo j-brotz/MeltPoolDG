@@ -206,7 +206,7 @@ namespace MeltPoolDG
     };
 
     // ## Boundary face ##//
-    FEFaceIntegrator<dim, n_components, number> phi_boundary(matrix_free,
+    FEFaceIntegrator<dim, n_components, number>                        phi_boundary(matrix_free,
                                                              true /*is_interior_face*/,
                                                              dof_idx,
                                                              quad_idx);

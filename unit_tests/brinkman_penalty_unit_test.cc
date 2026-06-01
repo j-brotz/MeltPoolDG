@@ -448,7 +448,7 @@ int
 main(int argc, char *argv[])
 {
   dealii::Utilities::MPI::MPI_InitFinalize mpi(argc, argv, 1);
-  dealii::ConditionalOStream pcout(std::cout,
+  dealii::ConditionalOStream               pcout(std::cout,
                                    dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0);
 
   Journal::print_header(pcout, "Brinkman Penalty Unit Test 2D");

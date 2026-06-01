@@ -73,7 +73,7 @@ TEST_F(ParticleDataStructureTest, ContactParticles)
 
   for (const auto &particle : obstacle_data_structure.locally_owned_particle_range())
     {
-      boost::container::small_vector<MeltPoolDG::DEMParticleAccessor<dim, number>, 3 * dim>
+      boost::container::small_vector<MeltPoolDG::DEMParticleAccessor<dim, number>, 3 *dim>
         contact_particles = obstacle_data_structure.contact_particles(particle, 0.0);
       ASSERT_EQ(contact_particles.size(), 1);
       EXPECT_DOUBLE_EQ(contact_particles[0].get_property(mass_property),

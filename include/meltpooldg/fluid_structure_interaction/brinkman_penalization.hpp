@@ -119,11 +119,10 @@ namespace MeltPoolDG
      * @return The computed Brinkman penalty term at the specified points.
      */
     ConservedVariablesType
-    value(
-      number                                                                         time_step_size,
-      const unsigned int                                                             cell_batch_id,
-      const dealii::Point<dim, dealii::VectorizedArray<number>>                     &q_point,
-      const ConservedVariablesType                                                  &w_q) override;
+    value(number                                                     time_step_size,
+          const unsigned int                                         cell_batch_id,
+          const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
+          const ConservedVariablesType                              &w_q) override;
 
   private:
     /// Brinkman penalization data
@@ -188,12 +187,11 @@ namespace MeltPoolDG
      * @return The computed Brinkman penalty term at the specified points.
      */
     ConservedVariablesType
-    value(
-      number                                                                         time_step_size,
-      const unsigned int                                                             cell_batch_id,
-      const dealii::Point<dim, dealii::VectorizedArray<number>>                     &q_point,
-      const ConservedVariablesType                                                  &w_q,
-      const ConservedVariablesType &delta_w_q) override;
+    value(number                                                     time_step_size,
+          const unsigned int                                         cell_batch_id,
+          const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
+          const ConservedVariablesType                              &w_q,
+          const ConservedVariablesType                              &delta_w_q) override;
 
   private:
     /// Brinkman penalization data

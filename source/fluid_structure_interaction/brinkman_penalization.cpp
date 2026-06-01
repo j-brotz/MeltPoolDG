@@ -141,7 +141,7 @@ template <int dim, typename number, typename ObstacleType>
 auto
 MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>::value(
   const number,
-  const unsigned int cell_batch_id,
+  const unsigned int                                         cell_batch_id,
   const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
   const ConservedVariablesType                              &w_q) -> ConservedVariablesType
 {
@@ -187,7 +187,7 @@ template <int dim, typename number, typename ObstacleType>
 auto
 MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>::value(
   const number,
-  const unsigned int cell_batch_id,
+  const unsigned int                                         cell_batch_id,
   const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
   const ConservedVariablesType                              &w_q,
   const ConservedVariablesType                              &delta_w_q) -> ConservedVariablesType

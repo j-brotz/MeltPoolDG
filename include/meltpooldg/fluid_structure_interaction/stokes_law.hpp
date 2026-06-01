@@ -99,11 +99,10 @@ namespace MeltPoolDG
      * @return The computed penalty term at the specified points.
      */
     ConservedVariablesType
-    value(
-      number                                                                         time_step_size,
-      const unsigned int                                                             cell_batch_id,
-      const dealii::Point<dim, dealii::VectorizedArray<number>>                     &q_point,
-      const ConservedVariablesType                                                  &w_q) override;
+    value(number                                                     time_step_size,
+          const unsigned int                                         cell_batch_id,
+          const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
+          const ConservedVariablesType                              &w_q) override;
 
   private:
     /// Solution of the flow field.

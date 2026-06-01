@@ -72,7 +72,7 @@ namespace
       std::vector<std::vector<double>> particle_properties = {};
       std::vector<dealii::Point<dim>>  particle_locations  = {};
 
-      constexpr double particle_influence_radius = 0.4;
+      constexpr double particle_influence_radius                       = 0.4;
       obstacle_data.data_structure_data.max_sphere_of_influence_radius = particle_influence_radius;
 
       obstacle_field = std::make_unique<MeltPoolDG::ObstacleField<dim, double, ObstacleType>>(

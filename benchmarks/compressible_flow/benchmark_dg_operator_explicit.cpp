@@ -390,8 +390,8 @@ namespace
   (benchmark::State &state)
   {
     dealii::TimerOutput  timer(std::cout,
-                               dealii::TimerOutput::OutputFrequency::never,
-                               dealii::TimerOutput::wall_times);
+                              dealii::TimerOutput::OutputFrequency::never,
+                              dealii::TimerOutput::wall_times);
     ObstacleData<double> obstacle_data;
 
     auto [particle_locations, particle_properties] = define_particles(state.range(0));

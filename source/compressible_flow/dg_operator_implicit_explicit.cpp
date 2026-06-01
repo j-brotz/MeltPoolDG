@@ -169,10 +169,10 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number, bool is_viscous>
   void
   DGOperatorImplicitExplicit<dim, number, is_viscous>::local_cell_jacobian_kernel(
-    FECellIntegrator<dim, dim + 2, number>                                 &delta_phi,
-    const FECellIntegrator<dim, dim + 2, number>                           &phi,
-    const unsigned int                                                      q_index,
-    const unsigned int                                                      cell_batch_id) const
+    FECellIntegrator<dim, dim + 2, number>       &delta_phi,
+    const FECellIntegrator<dim, dim + 2, number> &phi,
+    const unsigned int                            q_index,
+    const unsigned int                            cell_batch_id) const
   {
     const auto w_q       = phi.get_value(q_index);
     const auto delta_w_q = delta_phi.get_value(q_index);
@@ -182,11 +182,8 @@ namespace MeltPoolDG::CompressibleFlow
 
     // external forces
     for (auto &external_force : external_forces_implicit_jacobian)
-      value_q -= external_force->value(current_time_increment,
-                                       cell_batch_id,
-                                       phi.quadrature_point(q_index),
-                                       w_q,
-                                       delta_w_q);
+      value_q -= external_force->value(
+        current_time_increment, cell_batch_id, phi.quadrature_point(q_index), w_q, delta_w_q);
 
     delta_phi.submit_value(value_q, q_index);
 

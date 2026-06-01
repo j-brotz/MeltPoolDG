@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deal.II/base/config.h>
+
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 

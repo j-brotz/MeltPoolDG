@@ -26,7 +26,7 @@ namespace MeltPoolDG
         // TODO: Find a better for defining relative cohesive cutoff distance.
         const number relative_cohesive_cutoff =
           2 * particle.get_property(ObstacleType::Properties::radius);
-          
+
         for (DEMParticleAccessor<dim, number> &other :
              obstacle_field.contact_particles(particle, relative_cohesive_cutoff))
           {

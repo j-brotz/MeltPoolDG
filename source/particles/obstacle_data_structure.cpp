@@ -24,9 +24,9 @@
 
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::CellListParticleHandler(
-  const dealii::Triangulation<dim>      &triangulation,
-  const dealii::Mapping<dim>            &mapping,
-  dealii::TimerOutput                   &timer)
+  const dealii::Triangulation<dim> &triangulation,
+  const dealii::Mapping<dim>       &mapping,
+  dealii::TimerOutput              &timer)
   : obstacle_handler(std::make_unique<dealii::Particles::ParticleHandler<dim>>(
       triangulation,
       mapping,
@@ -289,8 +289,8 @@ MeltPoolDG::CellListParticleHandler<dim, number, ObstacleType>::communicate_ghos
             {
               auto child_indices = received_data.cell_id.get_child_indices();
               auto new_cell_id   = dealii::CellId(received_data.cell_id.get_coarse_cell_id(),
-                                                  child_indices.size() - 1,
-                                                  child_indices.data());
+                                                child_indices.size() - 1,
+                                                child_indices.data());
               cell               = triangulation->create_cell_iterator(new_cell_id);
             }
 
