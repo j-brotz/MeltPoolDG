@@ -1,0 +1,3 @@
+[submodule "applications/mp-compressible-flow"]
+	path = applications/mp-compressible-flow
+	url = https://github.com/MeltPoolDG/modules
