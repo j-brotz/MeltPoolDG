@@ -18,3 +18,4 @@ target_link_libraries(${BENCHMARK_LIBRARY} benchmark::benchmark)
 # add benchmark executables
 # ##############################################################################
 add_subdirectory(flow)
+add_subdirectory(fluid_structure_interaction)
