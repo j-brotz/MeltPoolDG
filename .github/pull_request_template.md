@@ -12,6 +12,7 @@
      - style: formatting-only changes
      - perf: performance improvements
      - chore: maintenance work
+     - bench: adds or updates benchmarks
 
      Example:
      feat(heat): add apparent capacity method
