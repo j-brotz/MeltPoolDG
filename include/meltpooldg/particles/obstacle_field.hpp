@@ -61,11 +61,11 @@ namespace MeltPoolDG
      * @param obstacle_locations Vector of obstacle center locations.
      * @param obstacle_properties Vector of obstacle properties corresponding to each location.
      */
-    ObstacleField(const ObstacleData<number>              &data,
-                  const dealii::Triangulation<dim>        &triangulation,
-                  const dealii::Mapping<dim>              &mapping,
-                  std::vector<dealii::Point<dim, number>> &obstacle_locations,
-                  std::vector<std::vector<number>>        &obstacle_properties);
+    ObstacleField(const ObstacleData<number>                    &data,
+                  const dealii::Triangulation<dim>              &triangulation,
+                  const dealii::Mapping<dim>                    &mapping,
+                  const std::vector<dealii::Point<dim, number>> &obstacle_locations,
+                  const std::vector<std::vector<number>>        &obstacle_properties);
 
     /**
      * @brief Advances the state of all obstacles in time by a single time step.
@@ -235,9 +235,9 @@ namespace MeltPoolDG
      * properties associated with the corresponding obstacle location.
      */
     void
-    insert_obstacles(const dealii::Triangulation<dim>        &triangulation,
-                     std::vector<dealii::Point<dim, number>> &obstacle_locations,
-                     std::vector<std::vector<number>>        &obstacle_properties);
+    insert_obstacles(const dealii::Triangulation<dim>              &triangulation,
+                     const std::vector<dealii::Point<dim, number>> &obstacle_locations,
+                     const std::vector<std::vector<number>>        &obstacle_properties);
 
     /**
      * Returns a subrange for iterating over particles that are owned locally.
