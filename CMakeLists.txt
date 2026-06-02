@@ -128,8 +128,8 @@ endif ()
 # ##############################################################################
 # benchmarks
 # ##############################################################################
-option(MPDG_EANBLE_BENCHMARKING "Configure benchmarks" ON)
-if (MPDG_EANBLE_BENCHMARKING)
+option(MPDG_ENABLE_BENCHMARKING "Configure benchmarks" OFF)
+if (MPDG_ENABLE_BENCHMARKING)
     message(STATUS "Benchmarks: enabled")
     # Deactivate internal google benchmark tests
     set(BENCHMARK_ENABLE_TESTING OFF)

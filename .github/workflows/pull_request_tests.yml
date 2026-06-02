@@ -85,6 +85,7 @@ jobs:
             -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -D ADAFLO_LIB=/__w/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/adaflo-build/ \
             -D ADAFLO_INCLUDE=/__w/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/adaflo/include/ \
+            -D MPDG_ENABLE_BENCHMARKING=ON \
             ..
           make -j${{ env.COMPILE_JOBS }}
 
