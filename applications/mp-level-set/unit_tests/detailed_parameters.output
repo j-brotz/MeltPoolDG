@@ -1150,8 +1150,8 @@
                 },
                 "max distance":
                 {
-                    "value": "1.79769e+308",
-                    "default_value": "1.79769e+308",
+                    "value": "1.61792e+308",
+                    "default_value": "1.61792e+308",
                     "documentation": "Maximum distance from the zero-level-set where the signeddistance function is reconstructed.",
                     "pattern": "117",
                     "pattern_description": "[Double 0...MAX_DOUBLE (inclusive)]",
