@@ -24,6 +24,8 @@ namespace MeltPoolDG::Evaporation
   class RecoilPressureModelBase
   {
   public:
+    virtual ~RecoilPressureModelBase() = default;
+
     virtual number
     compute_recoil_pressure_coefficient(const number /*T*/) const
     {

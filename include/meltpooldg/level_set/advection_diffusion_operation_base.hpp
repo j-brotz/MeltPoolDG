@@ -16,6 +16,8 @@ namespace MeltPoolDG::LevelSet
     bool ready_for_time_advance = false;
 
   public:
+    virtual ~AdvectionDiffusionOperationBase() = default;
+
     AdvectionDiffusionData<number> advec_diff_data;
 
     virtual void

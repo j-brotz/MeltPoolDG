@@ -7,6 +7,8 @@ namespace MeltPoolDG::LevelSet
   class NormalVectorOperationBase
   {
   public:
+    virtual ~NormalVectorOperationBase() = default;
+
     virtual void
     solve() = 0;
 

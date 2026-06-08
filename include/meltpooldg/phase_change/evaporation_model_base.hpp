@@ -12,6 +12,7 @@ namespace MeltPoolDG::Evaporation
   class EvaporationModelBase
   {
   public:
+    virtual ~EvaporationModelBase() = default;
     /**
      *                                                    .
      * Base function to compute the evaporative mass flux m in kg/(m^2 s) for

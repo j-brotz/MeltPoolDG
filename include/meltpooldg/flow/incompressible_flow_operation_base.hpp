@@ -15,6 +15,7 @@ namespace MeltPoolDG::Flow
   class IncompressibleFlowOperationBase
   {
   public:
+    virtual ~IncompressibleFlowOperationBase() = default;
     /**
      * @brief Initialize data structures required before time stepping begins.
      */

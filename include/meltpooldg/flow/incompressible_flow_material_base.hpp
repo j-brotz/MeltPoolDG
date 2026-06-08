@@ -23,6 +23,8 @@ namespace MeltPoolDG::Flow
   class IncompressibleMaterialBase
   {
   public:
+    virtual ~IncompressibleMaterialBase() = default;
+
     /**
      * @brief Reinit function to be used to compute quadrature point variables.
      *

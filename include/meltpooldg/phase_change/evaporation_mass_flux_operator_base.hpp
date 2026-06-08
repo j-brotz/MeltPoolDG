@@ -16,6 +16,8 @@ namespace MeltPoolDG::Evaporation
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
   public:
+    virtual ~EvaporationMassFluxOperatorBase() = default;
+
     virtual void
     compute_evaporative_mass_flux(VectorType       &evaporative_mass_flux,
                                   const VectorType &temperature) const = 0;
