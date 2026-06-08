@@ -114,8 +114,8 @@ namespace MeltPoolDG::CutUtil
    * @brief This function generates the immersed quadrature rules in the case that the
    * domain is described by a discrete level-set function.
    *
-   * The classes NonMatching::DiscreteQuadratureGenerator<dim> and
-   * NonMatching::DiscreteFaceQuadratureGenerator<dim> are used to generate the immersed
+   * The class NonMatching::DiscreteQuadratureGenerator<dim>
+   * is used to generate the immersed
    * quadrature rules, for the immersed geometry described by discrete level-set function
    * via a (@p level_set_dof_handler, @p level_set) pair.
    *
@@ -156,6 +156,46 @@ namespace MeltPoolDG::CutUtil
     const bool                                                              is_two_phase,
     const bool                                                              is_dg = false,
     MappingInfoVectorType<dim, number> mapping_info_faces                         = {});
+
+
+
+  /**
+   * @brief This function generates the immersed quadrature rules in the case that the
+   * domain is described by a discrete level-set function.
+   *
+   * It is an overload of the above function, which is used when the cut quadrature rules are only
+   * needed for the surface integrals.
+   *
+   * The class NonMatching::DiscreteQuadratureGenerator<dim> is used to generate the immersed
+   * quadrature rules, for the immersed geometry described by discrete level-set function
+   * via a (@p level_set_dof_handler, @p level_set) pair.
+   *
+   * @tparam dim Dimension in which this function is to be used.
+   * @tparam number Floating-point value type used for this function.
+   * @tparam VectorType Vector type used for this function.
+   *
+   * @param mapping_info_surface dealii::NonMatching::MappingInfo object, provides the mapping
+   * information computation and mapping data storage of the surface.
+   * @param level_set_dof_handler DoFHandler object of the discrete level-set.
+   * @param level_set Discrete level-set vector.
+   * @param matrix_free Matrix free object, provides the iterators.
+   * @param fe_degree
+   *
+   * @note Currently, the @p fe_degree has to be the same for both subdomains in
+   * the case of a two-domain problem.
+   * @note Keep attention of the definition of the level-set field orientation. Currently, the single-phase region
+   * is assigned to the positive level-set region.
+   *
+   */
+  template <int dim, typename number, typename VectorType>
+  void
+  compute_immersed_surface_quadrature(
+    MappingInfoType<dim, number>                                           &mapping_info_surface,
+    const dealii::DoFHandler<dim>                                          &level_set_dof_handler,
+    const VectorType                                                       &level_set,
+    const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free,
+    const int                                                               fe_degree);
+
 
   /**
    * @brief Evaluates solution values in the intersected domain for a specific SIMD lane within a cell batch.

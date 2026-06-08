@@ -256,6 +256,51 @@ namespace MeltPoolDG::CutUtil
                   const dealii::NonMatching::MeshClassifier<3> &,
                   const bool);
 
+  template <int dim, typename number, typename VectorType>
+  void
+  compute_immersed_surface_quadrature(
+    MappingInfoType<dim, number>                                           &mapping_info_surface,
+    const dealii::DoFHandler<dim>                                          &level_set_dof_handler,
+    const VectorType                                                       &level_set,
+    const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free,
+    const int                                                               fe_degree)
+  {
+    dealii::hp::QCollection<1> q_collection(dealii::QGauss<1>(fe_degree + 1));
+
+    const unsigned int n_lanes = dealii::VectorizedArray<number>::size();
+    const unsigned int n_cell_batches =
+      matrix_free.n_cell_batches() + matrix_free.n_ghost_cell_batches();
+
+    dealii::NonMatching::DiscreteQuadratureGenerator<dim> quadrature_generator(
+      q_collection, level_set_dof_handler, level_set);
+
+    std::vector<dealii::NonMatching::ImmersedSurfaceQuadrature<dim>> quad_vec_surface;
+    std::vector<typename dealii::DoFHandler<dim>::cell_iterator>     vector_cell_iterators;
+    {
+      const unsigned int reserve_size = n_cell_batches * n_lanes;
+      vector_cell_iterators.reserve(reserve_size);
+    }
+
+    for (unsigned int cell_batch = 0; cell_batch < n_cell_batches; ++cell_batch)
+      for (unsigned int lane = 0; lane < n_lanes; ++lane)
+        {
+          if (lane < matrix_free.n_active_entries_per_cell_batch(cell_batch))
+            {
+              vector_cell_iterators.push_back(matrix_free.get_cell_iterator(cell_batch, lane));
+              quadrature_generator.generate(matrix_free.get_cell_iterator(cell_batch, lane));
+            }
+          else
+            {
+              // fill empty lanes with dummy data
+              vector_cell_iterators.push_back(matrix_free.get_cell_iterator(cell_batch, 0));
+              quadrature_generator.generate(matrix_free.get_cell_iterator(cell_batch, 0));
+            }
+          quad_vec_surface.push_back(quadrature_generator.get_surface_quadrature());
+        }
+
+    mapping_info_surface.reinit_surface(vector_cell_iterators, quad_vec_surface);
+  }
+
   template void
   compute_intersected_quadrature(
     std::vector<
@@ -295,4 +340,27 @@ namespace MeltPoolDG::CutUtil
     const bool,
     std::vector<
       std::shared_ptr<dealii::NonMatching::MappingInfo<3, 3, dealii::VectorizedArray<double>>>>);
+
+
+  template void
+  compute_immersed_surface_quadrature(
+    dealii::NonMatching::MappingInfo<1, 1, dealii::VectorizedArray<double>> &,
+    const dealii::DoFHandler<1> &,
+    const dealii::LinearAlgebra::distributed::Vector<double> &,
+    const dealii::MatrixFree<1, double, dealii::VectorizedArray<double>> &,
+    const int);
+  template void
+  compute_immersed_surface_quadrature(
+    dealii::NonMatching::MappingInfo<2, 2, dealii::VectorizedArray<double>> &,
+    const dealii::DoFHandler<2> &,
+    const dealii::LinearAlgebra::distributed::Vector<double> &,
+    const dealii::MatrixFree<2, double, dealii::VectorizedArray<double>> &,
+    const int);
+  template void
+  compute_immersed_surface_quadrature(
+    dealii::NonMatching::MappingInfo<3, 3, dealii::VectorizedArray<double>> &,
+    const dealii::DoFHandler<3> &,
+    const dealii::LinearAlgebra::distributed::Vector<double> &,
+    const dealii::MatrixFree<3, double, dealii::VectorizedArray<double>> &,
+    const int);
 } // namespace MeltPoolDG::CutUtil
