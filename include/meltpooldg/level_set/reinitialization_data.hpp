@@ -43,7 +43,7 @@ namespace MeltPoolDG::LevelSet
   template <typename number>
   struct ReinitializationGeometricData
   {
-    number max_distance = std::numeric_limits<number>::max();
+    number max_distance = 0.9 * std::numeric_limits<number>::max();
 
     bool transform_to_tanh = true;
 

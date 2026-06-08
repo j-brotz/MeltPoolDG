@@ -990,11 +990,5 @@ namespace MeltPoolDG::LevelSet
     std::map<unsigned int, std::vector<unsigned int>> face_opposite_dofs_map;
     /// Map from face ids to local ids of face DoFs.
     std::map<unsigned int, std::vector<unsigned int>> face_dofs_map;
-
-    /// Temporary Hessian matrix used in analytical Jacobian computations.
-    LAPACKFullMatrix<double> hessian_matrix;
-    /// Temporary product of the Hessian and the transformation Jacobian.
-    LAPACKFullMatrix<double> H_x_transformation_jacobian;
   };
-
 } // namespace MeltPoolDG::LevelSet

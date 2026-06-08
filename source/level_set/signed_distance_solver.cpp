@@ -6,6 +6,8 @@ namespace MeltPoolDG::LevelSet
 {
   using namespace dealii;
 
+  static constexpr bool is_debug_mode = false;
+
   template <int dim>
   double
   compute_cell_wise_volume(FEPointEvaluation<1, dim> &fe_point_evaluation,
@@ -184,10 +186,6 @@ namespace MeltPoolDG::LevelSet
     mapping = std::make_shared<MappingQ<dim>>(fe.degree);
     set_face_opposite_dofs_map();
     set_face_dofs_map();
-
-
-    hessian_matrix              = LAPACKFullMatrix<double>(dim, dim);
-    H_x_transformation_jacobian = LAPACKFullMatrix<double>(dim, dim - 1);
   }
 
   template <int dim, typename VectorType>
@@ -212,9 +210,6 @@ namespace MeltPoolDG::LevelSet
     mapping = std::make_shared<MappingQ<dim>>(fe.degree);
     set_face_opposite_dofs_map();
     set_face_dofs_map();
-
-    hessian_matrix              = LAPACKFullMatrix<double>(dim, dim);
-    H_x_transformation_jacobian = LAPACKFullMatrix<double>(dim, dim - 1);
   }
 
   template <int dim, typename VectorType>
@@ -261,6 +256,7 @@ namespace MeltPoolDG::LevelSet
 
     tmp_local_level_set *= scaling;
     level_set = tmp_local_level_set;
+    level_set.update_ghost_values();
   }
 
   template <int dim, typename VectorType>
@@ -526,6 +522,9 @@ namespace MeltPoolDG::LevelSet
     const double norm_inv  = 1.0 / norm;
     const double norm3_inv = norm_inv * norm_inv * norm_inv;
 
+    auto hessian_matrix              = LAPACKFullMatrix<double>(dim, dim);
+    auto H_x_transformation_jacobian = LAPACKFullMatrix<double>(dim, dim - 1);
+
     for (int i = 0; i < dim; ++i)
       {
         hessian_matrix(i, i) =
@@ -648,10 +647,10 @@ namespace MeltPoolDG::LevelSet
     std::map<types::global_dof_index, Point<dim>> dof_support_points =
       DoFTools::map_dofs_to_support_points(*mapping, *dof_handler);
 
-    FEPointEvaluation<1, dim> fe_point_evaluation(*mapping,
-                                                  fe,
-                                                  update_gradients | update_jacobians);
-    FEPointEvaluation<1, dim> fe_point_evaluation_values_only(*mapping, fe, update_values);
+    FEPointEvaluation<1, dim> fe_point_evaluation(
+      *mapping, fe, update_gradients | update_jacobians | update_quadrature_points);
+    FEPointEvaluation<1, dim> fe_point_evaluation_values_only(
+      *mapping, fe, update_values | update_quadrature_points);
 
     bool change = true;
 
@@ -685,6 +684,10 @@ namespace MeltPoolDG::LevelSet
               cell->get_dof_values(distance_with_ghost,
                                    cell_dof_values.begin(),
                                    cell_dof_values.end());
+
+              for (unsigned int k = 0; k < dofs_per_cell; ++k)
+                AssertIsFinite(cell_dof_values[k]);
+
               for (unsigned int i = 0; i < dofs_per_cell; ++i)
                 if (std::abs(cell_dof_values[i]) < max_distance)
                   {
@@ -728,7 +731,63 @@ namespace MeltPoolDG::LevelSet
                   while (*std::max_element(correction_norm.begin(), correction_norm.end()) > tol &&
                          newton_it < static_cast<unsigned int>(newton_max_it))
                     {
+                      // DEBUG
+                      if constexpr (is_debug_mode)
+                        {
+                          for (unsigned int q = 0; q < x_n_ref_vector.size(); ++q)
+                            for (unsigned int d = 0; d < dim; ++d)
+                              {
+                                {
+                                  const double x = x_n_ref_vector[q][d];
+
+                                  if (!std::isfinite(x) || x < -1e-9 || x > 1.0 + 1e-9)
+                                    {
+                                      pcout << std::setprecision(17)
+                                            << "x_n_ref_vector outside reference cell\n"
+                                            << "cell_index = " << cell_index << "\n"
+                                            << "face j     = " << j << "\n"
+                                            << "q          = " << q << "\n"
+                                            << "d          = " << d << "\n"
+                                            << "x          = " << x << "\n"
+                                            << "newton_it  = " << newton_it << "\n";
+
+                                      for (unsigned int qq = 0; qq < x_n_ref_vector.size(); ++qq)
+                                        pcout << "x_n_ref_vector[" << qq
+                                              << "] = " << x_n_ref_vector[qq] << "\n";
+
+                                      std::abort();
+                                    }
+                                }
+
+                                AssertIsFinite(x_n_ref_vector[q][d]);
+                                Assert(x_n_ref_vector[q][d] >= -1e-9 &&
+                                         x_n_ref_vector[q][d] <= 1.0 + 1e-9,
+                                       ExcMessage("x_n_ref_vector outside reference cell"));
+                              }
+                        }
+
                       fe_point_evaluation.reinit(cell, x_n_ref_vector);
+
+                      // DEBUG
+                      if constexpr (is_debug_mode)
+                        {
+                          for (unsigned int i = 0; i < n_opposite_dofs_per_faces; ++i)
+                            {
+                              auto         J    = fe_point_evaluation.jacobian(i);
+                              const double detJ = J.determinant();
+
+                              AssertThrow(std::isfinite(detJ), ExcMessage("detJ is not finite"));
+                              AssertThrow(std::abs(detJ) > 1e-14,
+                                          ExcMessage("degenerate mapping Jacobian"));
+
+                              for (unsigned int r = 0; r < dim; ++r)
+                                for (unsigned int c = 0; c < dim; ++c)
+                                  AssertIsFinite(J[r][c]);
+                            }
+                          for (unsigned int k = 0; k < dofs_per_cell; ++k)
+                            AssertIsFinite(cell_dof_values[k]);
+                        }
+
                       fe_point_evaluation.evaluate(cell_dof_values, EvaluationFlags::gradients);
 
                       for (unsigned int i = 0; i < n_opposite_dofs_per_faces; ++i)
@@ -746,8 +805,15 @@ namespace MeltPoolDG::LevelSet
 
                           x_I_real = dof_support_points.at(dof_indices[local_face_opposite_dof]);
 
-                          x_n_real_vector[i]           = fe_point_evaluation.quadrature_point(i);
-                          distance_gradients           = fe_point_evaluation.get_gradient(i);
+                          x_n_real_vector[i] = fe_point_evaluation.quadrature_point(i);
+
+                          for (unsigned int d = 0; d < dim; ++d)
+                            AssertIsFinite(x_n_real_vector[i][d]);
+
+                          distance_gradients = fe_point_evaluation.get_gradient(i);
+                          for (unsigned int d = 0; d < dim; ++d)
+                            AssertIsFinite(distance_gradients[d]);
+
                           cell_transformation_jacobian = fe_point_evaluation.jacobian(i);
                           get_face_transformation_jacobian(cell_transformation_jacobian,
                                                            j,
@@ -759,8 +825,18 @@ namespace MeltPoolDG::LevelSet
                                                       face_transformation_jacobian,
                                                       face_local_dof_values,
                                                       jacobian_matrix);
+                          for (unsigned int d = 0; d < dim; ++d)
+                            {
+                              AssertIsFinite(x_n_to_x_I_real[d]);
+                            }
+
+                          for (unsigned int r = 0; r < dim; ++r)
+                            for (unsigned int c = 0; c < dim - 1; ++c)
+                              AssertIsFinite(face_transformation_jacobian(r, c));
+
 
                           Tensor<1, dim - 1> residual_n;
+
                           compute_residual(x_n_to_x_I_real,
                                            distance_gradients,
                                            face_transformation_jacobian,
@@ -769,8 +845,25 @@ namespace MeltPoolDG::LevelSet
                           residual_n.unroll(residual_n_vec.begin(), residual_n_vec.end());
                           residual_n_vec *= -1.0;
 
+                          auto check_vec = [](const auto &v, const std::string &name) {
+                            for (unsigned int k = 0; k < v.size(); ++k)
+                              if (!std::isfinite(v[k]))
+                                std::cout << name << "[" << k << "] = " << v[k] << std::endl;
+                          };
+
+                          // DEBUG
+                          if constexpr (is_debug_mode)
+                            check_vec(residual_n_vec, "before solve");
+
                           jacobian_matrix.compute_lu_factorization();
+                          if constexpr (is_debug_mode)
+                            std::cout << "det " << jacobian_matrix.determinant() << std::endl;
+
                           jacobian_matrix.solve(residual_n_vec);
+
+                          if constexpr (is_debug_mode)
+                            check_vec(residual_n_vec, "after solve");
+
                           jacobian_matrix.reinit(dim - 1, dim - 1);
 
                           correction_norm[i] = residual_n_vec.l2_norm();
@@ -787,11 +880,11 @@ namespace MeltPoolDG::LevelSet
                                 check = true;
                                 if (correction[k] > tol)
                                   relaxation =
-                                    std::min((1.0 - x_n_ref_vector[i][k]) / (correction[k] + tol),
+                                    std::min((1.0 - x_n_ref_vector[i][k]) / (correction[k]),
                                              relaxation);
                                 else if (correction[k] < -tol)
                                   relaxation =
-                                    std::min((0.0 - x_n_ref_vector[i][k]) / (correction[k] + tol),
+                                    std::min((0.0 - x_n_ref_vector[i][k]) / (correction[k]),
                                              relaxation);
                               }
 
@@ -835,8 +928,6 @@ namespace MeltPoolDG::LevelSet
                       const auto gdof = dof_indices[local_face_opposite_dof];
 
                       if (distance(gdof) > approx_distance + distance_tol)
-                        // if (distance.locally_owned_elements().is_element(gdof) and
-                        // distance(gdof) > approx_distance + distance_tol)
                         {
                           change                                         = true;
                           distance(dof_indices[local_face_opposite_dof]) = approx_distance;

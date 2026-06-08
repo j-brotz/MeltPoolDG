@@ -990,7 +990,7 @@
                   "type": "number",
                   "minimum": 0.0,
                   "description": "Maximum distance from the zero-level-set where the signeddistance function is reconstructed.",
-                  "default": 1.79769e+308
+                  "default": 1.61792e+308
                 }
               },
               "additionalProperties": false
