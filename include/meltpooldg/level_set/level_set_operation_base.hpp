@@ -30,6 +30,8 @@ namespace MeltPoolDG::LevelSet
                              >>;
 
   public:
+    virtual ~LevelSetOperationBase() = default;
+
     virtual void
     set_initial_condition(const dealii::Function<dim> &initial_field_function_level_set,
                           const bool is_signed_distance_initial_field_function = false) = 0;

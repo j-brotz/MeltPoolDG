@@ -10,6 +10,8 @@ namespace MeltPoolDG::LevelSet
   class DeltaApproximationBase
   {
   public:
+    virtual ~DeltaApproximationBase() = default;
+
     virtual number
     compute_weight(const number ls_heaviside) const = 0;
 

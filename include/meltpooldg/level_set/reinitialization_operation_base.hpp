@@ -9,6 +9,8 @@ namespace MeltPoolDG::LevelSet
   class ReinitializationOperationBase
   {
   public:
+    virtual ~ReinitializationOperationBase() = default;
+
     virtual void
     solve() = 0;
 
