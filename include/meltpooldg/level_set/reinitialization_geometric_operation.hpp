@@ -55,7 +55,6 @@ namespace MeltPoolDG::LevelSet
                                        const ReinitializationData<number>  &reinit_data_in,
                                        const unsigned int                   ls_dof_idx_in,
                                        const unsigned int                   ls_quad_idx_in);
-
     /**
      * @brief Initialize the reinitialization operation.
      *
@@ -143,6 +142,9 @@ namespace MeltPoolDG::LevelSet
     transform_signed_distance_to_tanh_level_set();
 
   private:
+    /// Geometric signed-distance solver.
+    std::unique_ptr<SignedDistanceSolver<dim, VectorType>> signed_distance_solver;
+
     /// Shared scratch data and finite element infrastructure.
     const ScratchData<dim, dim, number> &scratch_data;
 
@@ -157,9 +159,6 @@ namespace MeltPoolDG::LevelSet
 
     /// Reinitialized level-set field.
     VectorType level_set;
-
-    /// Geometric signed-distance solver.
-    std::unique_ptr<SignedDistanceSolver<dim>> signed_distance_solver;
   };
 
 } // namespace MeltPoolDG::LevelSet

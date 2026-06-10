@@ -1,0 +1,20 @@
+-----------------------
+Signed Distance Solver
+-----------------------
+Initial volume Volume after redistanciation Remaining error on the volume 
+    1.8777e-01                   1.8777e-01                    3.8858e-16 
+Solving signed distance of layer 0
+Solving signed distance of layer 1
+Solving signed distance of layer 2
+The L2 norm of the signed distance error in 2D is: 0.00926418
+-----------------------
+Signed Distance Solver
+-----------------------
+Initial volume Volume after redistanciation Remaining error on the volume 
+    5.7126e-02                   5.7126e-02                    0.0000e+00 
+Solving signed distance of layer 0
+Solving signed distance of layer 1
+Solving signed distance of layer 2
+Solving signed distance of layer 3
+Solving signed distance of layer 4
+The L2 norm of the signed distance error in 3D is: 0.0177175

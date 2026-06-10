@@ -53,8 +53,6 @@
 
 namespace MeltPoolDG::LevelSet
 {
-  using namespace dealii;
-
   /**
    * @brief Verbosity levels used to control console output.
    */
@@ -88,9 +86,9 @@ namespace MeltPoolDG::LevelSet
    * @param[in] delimiter Character used to build the delimiter lines.
    */
   inline void
-  announce_string(const ConditionalOStream &pcout,
-                  const std::string        &expression,
-                  const char                delimiter = '-')
+  announce_string(const dealii::ConditionalOStream &pcout,
+                  const std::string                &expression,
+                  const char                        delimiter = '-')
   {
     pcout << std::string(expression.size() + 1, delimiter) << std::endl;
     pcout << expression << std::endl;
@@ -120,7 +118,7 @@ namespace MeltPoolDG::LevelSet
     else if constexpr (dim == 3)
       return std::cbrt(6. * cell_measure / dealii::numbers::PI) / fe_degree;
     else
-      AssertThrow(false, ExcMessage("Only dim=2 and dim=3 are supported."));
+      AssertThrow(false, dealii::ExcMessage("Only dim=2 and dim=3 are supported."));
     return 0.0;
   }
 
@@ -140,14 +138,14 @@ namespace MeltPoolDG::LevelSet
   template <int dim>
   void
   vertices_cell_mapping(
-    const DoFHandler<dim> &dof_handler,
-    std::map<unsigned int, std::set<typename DoFHandler<dim>::active_cell_iterator>>
+    const dealii::DoFHandler<dim> &dof_handler,
+    std::map<unsigned int, std::set<typename dealii::DoFHandler<dim>::active_cell_iterator>>
       &vertices_cell_map)
   {
     vertices_cell_map.clear();
     for (const auto &cell : dof_handler.active_cell_iterators())
       if (cell->is_locally_owned() || cell->is_ghost())
-        for (unsigned int i = 0; i < GeometryInfo<dim>::vertices_per_cell; ++i)
+        for (unsigned int i = 0; i < dealii::GeometryInfo<dim>::vertices_per_cell; ++i)
           vertices_cell_map[cell->vertex_index(i)].insert(cell);
   }
 
@@ -163,14 +161,14 @@ namespace MeltPoolDG::LevelSet
    * @return Vector containing the cells sharing a vertex with @p cell.
    */
   template <int dim>
-  std::vector<typename DoFHandler<dim>::active_cell_iterator>
+  std::vector<typename dealii::DoFHandler<dim>::active_cell_iterator>
   find_cells_around_cell(
-    std::map<unsigned int, std::set<typename DoFHandler<dim>::active_cell_iterator>>
-                                                         &vertices_cell_map,
-    const typename DoFHandler<dim>::active_cell_iterator &cell)
+    std::map<unsigned int, std::set<typename dealii::DoFHandler<dim>::active_cell_iterator>>
+                                                                 &vertices_cell_map,
+    const typename dealii::DoFHandler<dim>::active_cell_iterator &cell)
   {
-    std::set<typename DoFHandler<dim>::active_cell_iterator> neighbors_cells;
-    for (unsigned int i = 0; i < GeometryInfo<dim>::vertices_per_cell; ++i)
+    std::set<typename dealii::DoFHandler<dim>::active_cell_iterator> neighbors_cells;
+    for (unsigned int i = 0; i < dealii::GeometryInfo<dim>::vertices_per_cell; ++i)
       {
         const unsigned int v_index = cell->vertex_index(i);
         neighbors_cells.insert(vertices_cell_map[v_index].begin(),
@@ -191,34 +189,35 @@ namespace MeltPoolDG::LevelSet
    * @tparam dim An integer that denotes the dimension of the space in which
    * the problem is solved.
    *
-   * @param[in] triangle Points describing the segment in 2D or triangle in 3D.
-   * @param[in] point Point from which the distance is computed.
+   * @param[in] triangle dealii::Points describing the segment in 2D or triangle in 3D.
+   * @param[in] point dealii::Point from which the distance is computed.
    *
    * @return Shortest Euclidean distance between @p point and the interface
    * segment or triangle.
    */
   template <int dim>
   double
-  find_point_triangle_distance(const std::vector<Point<dim>> &triangle, const Point<dim> &point)
+  find_point_triangle_distance(const std::vector<dealii::Point<dim>> &triangle,
+                               const dealii::Point<dim>              &point)
   {
     double distance = 0.0;
 
-    const Point<dim> &point_0 = triangle[0];
-    const Point<dim> &point_1 = triangle[1];
+    const dealii::Point<dim> &point_0 = triangle[0];
+    const dealii::Point<dim> &point_1 = triangle[1];
 
     if constexpr (dim == 3)
       {
-        const Point<dim> &point_2 = triangle[2];
+        const dealii::Point<dim> &point_2 = triangle[2];
 
-        const Tensor<1, dim> e_0 = point_1 - point_0;
-        const Tensor<1, dim> e_1 = point_2 - point_0;
+        const dealii::Tensor<1, dim> e_0 = point_1 - point_0;
+        const dealii::Tensor<1, dim> e_1 = point_2 - point_0;
 
         const double a   = e_0.norm_square();
         const double b   = scalar_product(e_0, e_1);
         const double c   = e_1.norm_square();
         const double det = a * c - b * b;
 
-        const Tensor<1, dim> vector_to_plane = point_0 - point;
+        const dealii::Tensor<1, dim> vector_to_plane = point_0 - point;
 
         const double d = scalar_product(e_0, vector_to_plane);
         const double e = scalar_product(e_1, vector_to_plane);
@@ -348,14 +347,14 @@ namespace MeltPoolDG::LevelSet
               }
           }
 
-        const Point<dim> pt_in_triangle = point_0 + s * e_0 + t * e_1;
-        distance                        = pt_in_triangle.distance(point);
+        const dealii::Point<dim> pt_in_triangle = point_0 + s * e_0 + t * e_1;
+        distance                                = pt_in_triangle.distance(point);
       }
 
     if constexpr (dim == 2)
       {
-        const Tensor<1, dim> d     = point_1 - point_0;
-        const double         t_bar = d * (point - point_0) / (d.norm() * d.norm() + 1e-12);
+        const dealii::Tensor<1, dim> d     = point_1 - point_0;
+        const double                 t_bar = d * (point - point_0) / (d.norm() * d.norm() + 1e-12);
 
         if (t_bar <= 0.0)
           distance = (point - point_0).norm();
@@ -378,8 +377,10 @@ namespace MeltPoolDG::LevelSet
    * @tparam VectorType The vector type of the solution vector.
    * @tparam FEType The finite element type used to discretize the problem.
    */
-  template <int dim, typename VectorType = Vector<double>, typename FEType = FE_Q<dim>>
-  class CellWiseFunction : public Function<dim>
+  template <int dim,
+            typename VectorType = dealii::Vector<double>,
+            typename FEType     = dealii::FE_Q<dim>>
+  class CellWiseFunction : public dealii::Function<dim>
   {
   public:
     /**
@@ -413,7 +414,7 @@ namespace MeltPoolDG::LevelSet
      * @return Value of the function, or requested component, at @p point.
      */
     double
-    value(const Point<dim> &point, const unsigned int component = 0) const override
+    value(const dealii::Point<dim> &point, const unsigned int component = 0) const override
     {
       double value = 0.;
       for (unsigned int i = 0; i < n_cell_wise_dofs; ++i)
@@ -431,10 +432,10 @@ namespace MeltPoolDG::LevelSet
      *
      * @return Gradient of the specified component at @p point.
      */
-    Tensor<1, dim>
-    gradient(const Point<dim> &point, const unsigned int component = 0) const override
+    dealii::Tensor<1, dim>
+    gradient(const dealii::Point<dim> &point, const unsigned int component = 0) const override
     {
-      Tensor<1, dim> gradient;
+      dealii::Tensor<1, dim> gradient;
       for (unsigned int i = 0; i < n_cell_wise_dofs; ++i)
         gradient += cell_dof_values[i] * fe.shape_grad_component(i, point, component);
       return gradient;
@@ -450,10 +451,10 @@ namespace MeltPoolDG::LevelSet
      *
      * @return Hessian of the specified component at @p point.
      */
-    SymmetricTensor<2, dim>
-    hessian(const Point<dim> &point, const unsigned int component = 0) const override
+    dealii::SymmetricTensor<2, dim>
+    hessian(const dealii::Point<dim> &point, const unsigned int component = 0) const override
     {
-      Tensor<2, dim> hessian;
+      dealii::Tensor<2, dim> hessian;
       for (unsigned int i = 0; i < n_cell_wise_dofs; ++i)
         hessian += cell_dof_values[i] * fe.shape_grad_grad_component(i, point, component);
       return symmetrize(hessian);
@@ -477,7 +478,7 @@ namespace MeltPoolDG::LevelSet
    * @tparam dim An integer that denotes the dimension of the space in which
    * the problem is solved.
    *
-   * @param[in] fe_point_evaluation FEPointEvaluation used for point-wise
+   * @param[in] fe_point_evaluation dealii::FEPointEvaluation used for point-wise
    * evaluations.
    * @param[in] cell Cell for which the volume is computed.
    * @param[in] cell_dof_level_set_values Cell DoF values of the level-set field.
@@ -489,11 +490,11 @@ namespace MeltPoolDG::LevelSet
    */
   template <int dim>
   double
-  compute_cell_wise_volume(FEPointEvaluation<1, dim> &fe_point_evaluation,
-                           const typename DoFHandler<dim>::active_cell_iterator &cell,
-                           Vector<double>     cell_dof_level_set_values,
-                           const double       corr,
-                           const unsigned int n_quad_points);
+  compute_cell_wise_volume(dealii::FEPointEvaluation<1, dim> &fe_point_evaluation,
+                           const typename dealii::DoFHandler<dim>::active_cell_iterator &cell,
+                           dealii::Vector<double> cell_dof_level_set_values,
+                           const double           corr,
+                           const unsigned int     n_quad_points);
 
   /**
    * @brief Integrate the surface area of the zero level of a level-set field
@@ -515,9 +516,9 @@ namespace MeltPoolDG::LevelSet
    */
   template <int dim, typename VectorType>
   std::pair<double, double>
-  integrate_volume_and_surface(const DoFHandler<dim>    &dof_handler,
-                               const FiniteElement<dim> &fe,
-                               const VectorType         &level_set_vector_relevant_copy);
+  integrate_volume_and_surface(const dealii::DoFHandler<dim>    &dof_handler,
+                               const dealii::FiniteElement<dim> &fe,
+                               const VectorType                 &level_set_vector_relevant_copy);
 
   /**
    * @brief Integrate the surface area of a given level of a level-set field
@@ -542,10 +543,10 @@ namespace MeltPoolDG::LevelSet
    */
   template <int dim, typename VectorType>
   std::pair<double, double>
-  integrate_volume_and_surface(const DoFHandler<dim>    &dof_handler,
-                               const FiniteElement<dim> &fe,
-                               const VectorType         &level_set_vector,
-                               const double              iso_level);
+  integrate_volume_and_surface(const dealii::DoFHandler<dim>    &dof_handler,
+                               const dealii::FiniteElement<dim> &fe,
+                               const VectorType                 &level_set_vector,
+                               const double                      iso_level);
 
   /**
    * @brief Reconstruct the interface defined by a given level of a level-set
@@ -555,7 +556,7 @@ namespace MeltPoolDG::LevelSet
    * the problem is solved.
    * @tparam VectorType The vector type of the solution vector.
    *
-   * @param[in] mapping Mapping of the domain.
+   * @param[in] mapping dealii::Mapping of the domain.
    * @param[in] dof_handler DoFHandler associated with the triangulation for
    * which the interface is reconstructed.
    * @param[in] fe Finite element.
@@ -572,15 +573,17 @@ namespace MeltPoolDG::LevelSet
   template <int dim, typename VectorType>
   void
   reconstruct_interface(
-    const Mapping<dim>                                          &mapping,
-    const DoFHandler<dim>                                       &dof_handler,
-    const FiniteElement<dim>                                    &fe,
-    const VectorType                                            &level_set_vector,
-    const double                                                 iso_level,
-    std::map<types::global_cell_index, std::vector<Point<dim>>> &interface_reconstruction_vertices,
-    std::map<types::global_cell_index, std::vector<CellData<dim == 1 ? 1 : dim - 1>>>
-                                      &interface_reconstruction_cells,
-    std::set<types::global_dof_index> &intersected_dofs);
+    const dealii::Mapping<dim>       &mapping,
+    const dealii::DoFHandler<dim>    &dof_handler,
+    const dealii::FiniteElement<dim> &fe,
+    const VectorType                 &level_set_vector,
+    const double                      iso_level,
+    const int                         mca_n_subdivisions,
+    std::map<dealii::types::global_cell_index, std::vector<dealii::Point<dim>>>
+      &interface_reconstruction_vertices,
+    std::map<dealii::types::global_cell_index,
+             std::vector<dealii::CellData<dim == 1 ? 1 : dim - 1>>> &interface_reconstruction_cells,
+    std::set<dealii::types::global_dof_index>                       &intersected_dofs);
 
   /**
    * @brief Interface to build patches of the interface reconstruction vertices
@@ -602,13 +605,13 @@ namespace MeltPoolDG::LevelSet
      * reconstructed interface vertices.
      */
     void
-    build_patches(const std::map<types::global_cell_index, std::vector<Point<dim>>>
+    build_patches(const std::map<dealii::types::global_cell_index, std::vector<dealii::Point<dim>>>
                     &interface_reconstruction_vertices)
     {
       for (const auto &cell : interface_reconstruction_vertices)
-        for (const Point<dim> &vertex : cell.second)
+        for (const dealii::Point<dim> &vertex : cell.second)
           {
-            DataOutBase::Patch<0, dim> patch;
+            dealii::DataOutBase::Patch<0, dim> patch;
             patch.vertices[0] = vertex;
             patches.push_back(patch);
           }
@@ -618,7 +621,7 @@ namespace MeltPoolDG::LevelSet
     /**
      * @brief Implementation of the corresponding function of the base class.
      */
-    const std::vector<DataOutBase::Patch<0, dim>> &
+    const std::vector<dealii::DataOutBase::Patch<0, dim>> &
     get_patches() const override
     {
       return patches;
@@ -634,7 +637,7 @@ namespace MeltPoolDG::LevelSet
     }
 
     /// Output information filled by build_patches() and written by the base class.
-    std::vector<DataOutBase::Patch<0, dim>> patches;
+    std::vector<dealii::DataOutBase::Patch<0, dim>> patches;
     /// List of field names for all data components stored in patches.
     std::vector<std::string> dataset_names;
   };
@@ -650,7 +653,7 @@ namespace MeltPoolDG::LevelSet
    * the problem is solved.
    * @tparam VectorType The vector type of the level-set vector.
    */
-  template <int dim, typename VectorType = LinearAlgebra::distributed::Vector<double>>
+  template <int dim, typename VectorType = dealii::LinearAlgebra::distributed::Vector<double>>
   class SignedDistanceSolver
   {
   public:
@@ -659,7 +662,7 @@ namespace MeltPoolDG::LevelSet
      *
      * @param[in] background_triangulation Shared pointer to the triangulation
      * of the domain.
-     * @param[in] background_fe Shared pointer to the finite element
+     * @param[in] background_fe Reference to the finite element
      * discretizing the domain.
      * @param[in] p_max_distance Maximum reinitialization distance value.
      * @param[in] p_iso_level Iso-level before scaling from which the signed
@@ -668,17 +671,17 @@ namespace MeltPoolDG::LevelSet
      * @param[in] p_verbosity Verbosity level.
      */
     SignedDistanceSolver(
-      std::shared_ptr<parallel::DistributedTriangulationBase<dim>> background_triangulation,
-      const FiniteElement<dim>                                    &background_fe,
-      const double                                                 p_max_distance,
-      const double                                                 p_iso_level,
-      const double                                                 p_scaling   = 1.0,
-      const Verbosity                                              p_verbosity = Verbosity::quiet);
+      std::shared_ptr<dealii::parallel::DistributedTriangulationBase<dim>> background_triangulation,
+      const dealii::FiniteElement<dim>                                    &background_fe,
+      const double                                                         p_max_distance,
+      const double                                                         p_iso_level,
+      const double                                                         p_scaling = 1.0,
+      const Verbosity p_verbosity = Verbosity::quiet);
 
     /**
      * @brief Constructor.
      *
-     * @param[in] background_dof_handler Shared pointer to the DoFHandler
+     * @param[in] background_dof_handler Reference to the DoFHandler
      * of the domain.
      * @param[in] p_max_distance Maximum reinitialization distance value.
      * @param[in] p_iso_level Iso-level before scaling from which the signed
@@ -686,11 +689,11 @@ namespace MeltPoolDG::LevelSet
      * @param[in] p_scaling Scaling factor applied to the input level-set field.
      * @param[in] p_verbosity Verbosity level.
      */
-    SignedDistanceSolver(std::shared_ptr<DoFHandler<dim>> background_dof_handler,
-                         const double                     p_max_distance,
-                         const double                     p_iso_level,
-                         const double                     p_scaling   = 1.0,
-                         const Verbosity                  p_verbosity = Verbosity::quiet);
+    SignedDistanceSolver(const dealii::DoFHandler<dim> &background_dof_handler,
+                         const double                   p_max_distance,
+                         const double                   p_iso_level,
+                         const double                   p_scaling   = 1.0,
+                         const Verbosity                p_verbosity = Verbosity::quiet);
 
     /**
      * @brief Initialize the degrees of freedom and associated memory.
@@ -707,8 +710,8 @@ namespace MeltPoolDG::LevelSet
      * the background solver.
      */
     void
-    set_level_set_from_background_mesh(const DoFHandler<dim> &background_dof_handler,
-                                       const VectorType      &background_level_set_vector);
+    set_level_set_from_background_mesh(const dealii::DoFHandler<dim> &background_dof_handler,
+                                       const VectorType              &background_level_set_vector);
 
     /**
      * @brief Solve for the signed distance from the given level of the
@@ -740,7 +743,7 @@ namespace MeltPoolDG::LevelSet
      *
      * @return Constant reference to the solver DoFHandler.
      */
-    const DoFHandler<dim> &
+    const dealii::DoFHandler<dim> &
     get_dof_handler() const
     {
       return *dof_handler;
@@ -861,21 +864,22 @@ namespace MeltPoolDG::LevelSet
      * @param[out] face_transformation_jac Face transformation Jacobian.
      */
     inline void
-    get_face_transformation_jacobian(const DerivativeForm<1, dim, dim> &cell_transformation_jac,
-                                     const unsigned int                 local_face_id,
-                                     LAPACKFullMatrix<double> &face_transformation_jac) const;
+    get_face_transformation_jacobian(
+      const dealii::DerivativeForm<1, dim, dim> &cell_transformation_jac,
+      const unsigned int                         local_face_id,
+      dealii::LAPACKFullMatrix<double>          &face_transformation_jac) const;
 
     /**
      * @brief Transform a point from a reference face to the reference cell.
      *
-     * @param[in] x_ref_face Point in the reference face.
+     * @param[in] x_ref_face dealii::Point in the reference face.
      * @param[in] local_face_id Local id of the face.
      *
-     * @return Point in the reference cell.
+     * @return dealii::Point in the reference cell.
      */
-    inline Point<dim>
-    transform_ref_face_point_to_ref_cell(const Point<dim - 1> &x_ref_face,
-                                         const unsigned int    local_face_id) const;
+    inline dealii::Point<dim>
+    transform_ref_face_point_to_ref_cell(const dealii::Point<dim - 1> &x_ref_face,
+                                         const unsigned int            local_face_id) const;
 
     /**
      * @brief Compute the residual of the distance minimization problem in the
@@ -887,10 +891,10 @@ namespace MeltPoolDG::LevelSet
      * @param[out] residual_ref Residual in reference face space.
      */
     inline void
-    compute_residual(const Tensor<1, dim>           &x_n_to_x_I_real,
-                     const Tensor<1, dim>           &distance_gradient,
-                     const LAPACKFullMatrix<double> &transformation_jac,
-                     Tensor<1, dim - 1>             &residual_ref) const;
+    compute_residual(const dealii::Tensor<1, dim>           &x_n_to_x_I_real,
+                     const dealii::Tensor<1, dim>           &distance_gradient,
+                     const dealii::LAPACKFullMatrix<double> &transformation_jac,
+                     dealii::Tensor<1, dim - 1>             &residual_ref) const;
 
     /**
      * @brief Transform a Newton correction from the reference face to the
@@ -901,9 +905,9 @@ namespace MeltPoolDG::LevelSet
      *
      * @return Correction vector in the reference cell.
      */
-    inline Tensor<1, dim>
-    transform_ref_face_correction_to_ref_cell(const Vector<double> &correction_ref_face,
-                                              const unsigned int    local_face_id) const;
+    inline dealii::Tensor<1, dim>
+    transform_ref_face_correction_to_ref_cell(const dealii::Vector<double> &correction_ref_face,
+                                              const unsigned int            local_face_id) const;
 
     /**
      * @brief Compute the analytical Jacobian of the distance minimization
@@ -916,10 +920,10 @@ namespace MeltPoolDG::LevelSet
      * @param[out] jacobian_matrix Jacobian matrix of the minimization problem.
      */
     inline void
-    compute_analytical_jacobian(const Tensor<1, dim>           &x_n_to_x_I_real_p1,
-                                const LAPACKFullMatrix<double> &transformation_jacobian,
-                                const std::vector<double>      &face_local_dof_values,
-                                LAPACKFullMatrix<double>       &jacobian_matrix);
+    compute_analytical_jacobian(const dealii::Tensor<1, dim>           &x_n_to_x_I_real_p1,
+                                const dealii::LAPACKFullMatrix<double> &transformation_jacobian,
+                                const std::vector<double>              &face_local_dof_values,
+                                dealii::LAPACKFullMatrix<double>       &jacobian_matrix);
 
     /**
      * @brief Compute the propagated distance d(x_I) = d(x_n) + ||x_I - x_n||.
@@ -930,19 +934,22 @@ namespace MeltPoolDG::LevelSet
      * @return Distance between x_I and the interface.
      */
     inline double
-    compute_distance(const Tensor<1, dim> &x_n_to_x_I_real, const double distance) const
+    compute_distance(const dealii::Tensor<1, dim> &x_n_to_x_I_real, const double distance) const
     {
       return distance + x_n_to_x_I_real.norm();
     }
     /// Flag to indicate whether the DoFHandler is provided externally or built
     /// by the solver.
     bool is_external_dof_handler = false;
-    /// DoFHandler describing the signed distance problem.
-    std::shared_ptr<DoFHandler<dim>> dof_handler;
     /// Finite element discretizing the signed distance problem.
-    const FiniteElement<dim> &fe;
-    /// Mapping between the real and reference spaces.
-    std::shared_ptr<MappingQ<dim>> mapping;
+    std::unique_ptr<dealii::FiniteElement<dim>> fe;
+    /// DoFHandler describing the signed distance problem.
+    std::unique_ptr<dealii::DoFHandler<dim>> owned_dof_handler;
+
+    /// Pointer to the DoFHandler describing the signed distance problem (can be fed from external)
+    const dealii::DoFHandler<dim> *dof_handler = nullptr;
+    /// dealii::Mapping between the real and reference spaces.
+    std::unique_ptr<dealii::MappingQ<dim>> mapping;
 
     /// Maximum redistancing distance.
     const double max_distance;
@@ -951,44 +958,44 @@ namespace MeltPoolDG::LevelSet
     /// Scaling factor applied to the input level-set field.
     const double scaling;
     /// Verbosity level.
-    const Verbosity verbosity;
+    Verbosity verbosity;
 
     /// Parallel output stream.
-    ConditionalOStream pcout;
-
+    dealii::ConditionalOStream pcout;
     /// Set of locally owned DoFs.
-    IndexSet locally_owned_dofs;
+    dealii::IndexSet locally_owned_dofs;
     /// Set of locally relevant DoFs.
-    IndexSet locally_relevant_dofs;
+    dealii::IndexSet locally_relevant_dofs;
     /// Set of locally active DoFs.
-    IndexSet locally_active_dofs;
+    dealii::IndexSet locally_active_dofs;
 
     /// Level-set field coming from the background solver.
     VectorType level_set;
-
     /// Solution vector of the signed distance without ghost values.
-    LinearAlgebra::distributed::Vector<double> signed_distance;
+    VectorType signed_distance;
     /// Solution vector of the signed distance with ghost values.
-    LinearAlgebra::distributed::Vector<double> signed_distance_with_ghost;
+    VectorType signed_distance_with_ghost;
     /// Solution vector of the unsigned distance without ghost values.
-    LinearAlgebra::distributed::Vector<double> distance;
+    VectorType distance;
     /// Solution vector of the unsigned distance with ghost values.
-    LinearAlgebra::distributed::Vector<double> distance_with_ghost;
+    VectorType distance_with_ghost;
     /// Correction applied to match the cell-wise volume enclosed by the level set.
-    LinearAlgebra::distributed::Vector<double> volume_correction;
+    VectorType volume_correction;
 
-    /// Hanging node constraints.
-    AffineConstraints<double> constraints;
-
-    std::map<types::global_cell_index, std::vector<Point<dim>>> interface_reconstruction_vertices;
-    std::map<types::global_cell_index, std::vector<CellData<dim == 1 ? 1 : dim - 1>>>
+    std::map<dealii::types::global_cell_index, std::vector<dealii::Point<dim>>>
+      interface_reconstruction_vertices;
+    std::map<dealii::types::global_cell_index,
+             std::vector<dealii::CellData<dim == 1 ? 1 : dim - 1>>>
       interface_reconstruction_cells;
     /// Set of DoFs belonging to intersected cells.
-    std::set<types::global_dof_index> intersected_dofs;
+    std::set<dealii::types::global_dof_index> intersected_dofs;
 
     /// Map from face ids to local ids of opposite DoFs.
     std::map<unsigned int, std::vector<unsigned int>> face_opposite_dofs_map;
     /// Map from face ids to local ids of face DoFs.
     std::map<unsigned int, std::vector<unsigned int>> face_dofs_map;
+
+    /// Hanging node constraints.
+    std::unique_ptr<dealii::AffineConstraints<double>> constraints;
   };
 } // namespace MeltPoolDG::LevelSet

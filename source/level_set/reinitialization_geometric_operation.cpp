@@ -30,20 +30,15 @@ namespace MeltPoolDG::LevelSet
   void
   ReinitializationGeometricOperation<dim, number>::create_solver()
   {
-    auto dof_handler_ptr = std::shared_ptr<DoFHandler<dim>>(
-      const_cast<DoFHandler<dim> *>(&scratch_data.get_dof_handler(ls_dof_idx)), [](auto *) {});
-
     // We assume that the input level set is centered around zero
     const double iso_level = 0.0;
 
-    signed_distance_solver =
-      std::make_unique<SignedDistanceSolver<dim>>(dof_handler_ptr,
-                                                  reinit_data.geometric.max_distance,
-                                                  iso_level,
-                                                  1.0 /*scaling to the level set function*/,
-                                                  reinit_data.geometric.verbosity == 0 ?
-                                                    Verbosity::quiet :
-                                                    Verbosity::verbose);
+    signed_distance_solver = std::make_unique<SignedDistanceSolver<dim, VectorType>>(
+      scratch_data.get_dof_handler(ls_dof_idx),
+      reinit_data.geometric.max_distance,
+      iso_level,
+      1.0 /*scaling to the level set function*/,
+      reinit_data.geometric.verbosity == 0 ? Verbosity::quiet : Verbosity::verbose);
   }
 
   template <int dim, typename number>

@@ -5,42 +5,42 @@
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 9.6695061604e-01                                    advection_diffusion |
-| || level set ||L2 = 9.712308741548864e-01                             reinitialization_geometric |
-| || normal_0 ||L2 = 3.55803897924e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.58936811555e+00                                               normal_vector |
-| || curvature ||L2 = 6.70352491224e+00                                                  curvature |
+| || level set ||L2 = 9.670013821253133e-01                             reinitialization_geometric |
+| || normal_0 ||L2 = 3.46720391212e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.46867064084e+00                                               normal_vector |
+| || curvature ||L2 = 6.74186438777e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 1.0000e-02 to 2.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 9.7123087145e-01                                    advection_diffusion |
-| || level set ||L2 = 9.712692642964312e-01                             reinitialization_geometric |
-| || normal_0 ||L2 = 3.55695352505e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.59901842255e+00                                               normal_vector |
-| || curvature ||L2 = 6.72460850177e+00                                                  curvature |
+| || advected field ||L2 = 9.6700137419e-01                                    advection_diffusion |
+| || level set ||L2 = 9.669667511155130e-01                             reinitialization_geometric |
+| || normal_0 ||L2 = 3.46702675865e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.46918517401e+00                                               normal_vector |
+| || curvature ||L2 = 6.73644130473e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 2.0000e-02 to 3.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 9.7126926409e-01                                    advection_diffusion |
-| || level set ||L2 = 9.712285090849304e-01                             reinitialization_geometric |
-| || normal_0 ||L2 = 3.56075742645e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.58829882929e+00                                               normal_vector |
-| || curvature ||L2 = 6.72837215116e+00                                                  curvature |
+| || advected field ||L2 = 9.6696676385e-01                                    advection_diffusion |
+| || level set ||L2 = 9.669448856286770e-01                             reinitialization_geometric |
+| || normal_0 ||L2 = 3.47280731775e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.46396832607e+00                                               normal_vector |
+| || curvature ||L2 = 6.77514653790e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 3.0000e-02 to 4.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 9.7122853683e-01                                    advection_diffusion |
-| || level set ||L2 = 9.717553354101763e-01                             reinitialization_geometric |
-| || normal_0 ||L2 = 3.60980024582e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.57240159688e+00                                               normal_vector |
-| || curvature ||L2 = 6.68765465540e+00                                                  curvature |
+| || advected field ||L2 = 9.6694490239e-01                                    advection_diffusion |
+| || level set ||L2 = 9.669334141347572e-01                             reinitialization_geometric |
+| || normal_0 ||L2 = 3.48646043508e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.44803538617e+00                                               normal_vector |
+| || curvature ||L2 = 6.76536165159e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 4.0000e-02 to 5.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 9.7175534623e-01                                    advection_diffusion |
-| || level set ||L2 = 9.712426948030336e-01                             reinitialization_geometric |
-| || normal_0 ||L2 = 3.63279421080e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.51917511788e+00                                               normal_vector |
-| || curvature ||L2 = 6.76608430772e+00                                                  curvature |
+| || advected field ||L2 = 9.6693344184e-01                                    advection_diffusion |
+| || level set ||L2 = 9.669157814563952e-01                             reinitialization_geometric |
+| || normal_0 ||L2 = 3.50501664170e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.42963468802e+00                                               normal_vector |
+| || curvature ||L2 = 6.80417035017e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+

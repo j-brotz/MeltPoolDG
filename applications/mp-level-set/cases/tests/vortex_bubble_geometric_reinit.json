@@ -24,7 +24,10 @@
         "do matrix free": true
       },
       "enable": true,
-      "type": "geometric"
+      "type": "geometric",
+      "geometric": {
+        "max distance": 10
+      }
     },
     "curvature": {
       "filter parameter": 0.0
