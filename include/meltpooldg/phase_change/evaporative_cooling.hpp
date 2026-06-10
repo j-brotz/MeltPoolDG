@@ -135,7 +135,8 @@ namespace MeltPoolDG::Evaporation
     const number                                  specific_enthalpy_reference_temperature;
     const number                                  boiling_temperature;
     number                                        activation_temperature;
-    number                                        activation_ramp_derivative;
+    bool                                          ramp_enabled;
+    number                                        activation_ramp_derivative = 0;
     std::unique_ptr<EvaporationModelBase<number>> mass_flux_operator;
   };
 } // namespace MeltPoolDG::Evaporation

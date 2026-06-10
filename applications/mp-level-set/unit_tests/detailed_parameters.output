@@ -1641,32 +1641,41 @@
                 "pattern_description": "[Bool]",
                 "actions": "166"
             },
+            "enable linear activation ramp":
+            {
+                "value": "true",
+                "default_value": "true",
+                "documentation": "Enable a linear activation ramp for evaporative cooling between the activation temperature and the boiling temperature. If enabled, the mass flux increases smoothly and linearly within this temperature range. Otherwise, the mass flux is computed directly without applying a ramp.",
+                "pattern": "167",
+                "pattern_description": "[Bool]",
+                "actions": "167"
+            },
             "consider enthalpy transport vapor mass flux":
             {
                 "value": "default",
                 "default_value": "default",
                 "documentation": "Set this parameter to true to account for the enthalpy transported by the vapor mass flux in the heat equation. This is only recommended if the vapor mass flux is not considered in the Navier-Stokes equations.",
-                "pattern": "167",
+                "pattern": "168",
                 "pattern_description": "[Selection default|true|false ]",
-                "actions": "167"
+                "actions": "168"
             },
             "activation temperature":
             {
                 "value": "-1e+100",
                 "default_value": "-1e+100",
                 "documentation": "Activation temperature for the evaporative cooling. It must be smaller than or equal to the boiling temperature. By default, it will be chosen such that the transition from the linear activation ramp is kink-free.",
-                "pattern": "168",
+                "pattern": "169",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "168"
+                "actions": "169"
             },
             "model":
             {
                 "value": "regularized",
                 "default_value": "regularized",
                 "documentation": "Select how the additional source term due to evaporation in the heat equation (evaporative cooling) is computed.",
-                "pattern": "169",
+                "pattern": "170",
                 "pattern_description": "[Selection none|regularized|sharp|sharp_conforming ]",
-                "actions": "169"
+                "actions": "170"
             },
             "dirac delta function approximation":
             {
@@ -1675,54 +1684,54 @@
                     "value": "norm_of_indicator_gradient",
                     "default_value": "norm_of_indicator_gradient",
                     "documentation": "Choose how to smear a parameter over the interface.",
-                    "pattern": "170",
+                    "pattern": "171",
                     "pattern_description": "[Selection norm_of_indicator_gradient|heaviside_phase_weighted|heaviside_times_heaviside_phase_weighted|reciprocal_phase_weighted|reciprocal_times_heaviside_phase_weighted|heavy_phase_only ]",
-                    "actions": "170"
+                    "actions": "171"
                 },
                 "auto weights":
                 {
                     "value": "false",
                     "default_value": "false",
                     "documentation": "Choose if weights should be computed automatically.",
-                    "pattern": "171",
+                    "pattern": "172",
                     "pattern_description": "[Bool]",
-                    "actions": "171"
+                    "actions": "172"
                 },
                 "gas phase weight":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the gas phase (level set = -1).",
-                    "pattern": "172",
+                    "pattern": "173",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "172"
+                    "actions": "173"
                 },
                 "heavy phase weight":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the heavy phase (level set = 1).",
-                    "pattern": "173",
+                    "pattern": "174",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "173"
+                    "actions": "174"
                 },
                 "gas phase weight 2":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the gas phase (level set = -1).",
-                    "pattern": "174",
+                    "pattern": "175",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "174"
+                    "actions": "175"
                 },
                 "heavy phase weight 2":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the heavy liquid\/solid phase (level set = 1).",
-                    "pattern": "175",
+                    "pattern": "176",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "175"
+                    "actions": "176"
                 }
             }
         },
@@ -1733,63 +1742,81 @@
                 "value": "false",
                 "default_value": "false",
                 "documentation": "Set this parameter to true to prescribe the evaporation-induced jump in the pressure field (i.e. recoil pressure), considered as an interfacial force in the momentum balance equation.If 'evaporative dilation rate' is enabled, this pressure jump will be added to the one resulting from the discontinuous normal velocity field.",
-                "pattern": "176",
+                "pattern": "177",
                 "pattern_description": "[Bool]",
-                "actions": "176"
+                "actions": "177"
+            },
+            "enable linear activation ramp":
+            {
+                "value": "true",
+                "default_value": "true",
+                "documentation": "Enable a linear activation ramp for recoil pressure between the activation temperature and the boiling temperature. If enabled, the recoil pressure increases smoothly and linearly within this temperature range. Otherwise, the recoil pressure is computed directly without applying a ramp.",
+                "pattern": "178",
+                "pattern_description": "[Bool]",
+                "actions": "178"
+            },
+            "subtract ambient pressure":
+            {
+                "value": "false",
+                "default_value": "false",
+                "documentation": "Subtract ambient pressure from the recoil pressure. This can be used to ensure that the recoil pressure is zero at the boiling temperature.",
+                "pattern": "179",
+                "pattern_description": "[Bool]",
+                "actions": "179"
             },
             "ambient gas pressure":
             {
                 "value": "101300",
                 "default_value": "101300",
                 "documentation": "Ambient gas pressure for the recoil pressure model.",
-                "pattern": "177",
+                "pattern": "180",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "177"
+                "actions": "180"
             },
             "pressure coefficient":
             {
                 "value": "0.55",
                 "default_value": "0.55",
                 "documentation": "Pressure coefficient for the recoil pressure model.",
-                "pattern": "178",
+                "pattern": "181",
                 "pattern_description": "[Double 0...1 (inclusive)]",
-                "actions": "178"
+                "actions": "181"
             },
             "temperature constant":
             {
                 "value": "-1",
                 "default_value": "-1",
                 "documentation": "Temperature constant for the recoil pressure model. If this parameter is not set, the value is computed by latent_heat_evaporation * molar_mass \/ universal_gas_constant;",
-                "pattern": "179",
+                "pattern": "182",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "179"
+                "actions": "182"
             },
             "sticking constant":
             {
                 "value": "1",
                 "default_value": "1",
                 "documentation": "Sticking constant.",
-                "pattern": "180",
+                "pattern": "183",
                 "pattern_description": "[Double 0...1 (inclusive)]",
-                "actions": "180"
+                "actions": "183"
             },
             "interface distributed flux type":
             {
                 "value": "local_value",
                 "default_value": "local_value",
                 "documentation": "Type that determines how the recoil pressure force is computed in the interfacial zone.",
-                "pattern": "181",
+                "pattern": "184",
                 "pattern_description": "[Selection local_value|interface_value ]",
-                "actions": "181"
+                "actions": "184"
             },
             "activation temperature":
             {
                 "value": "-1e+100",
                 "default_value": "-1e+100",
                 "documentation": "Activation temperature for the recoil pressure. It must be smaller than or equal to the boiling temperature. As default value, the boiling temperature is chosen.",
-                "pattern": "182",
+                "pattern": "185",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "182"
+                "actions": "185"
             },
             "dirac delta function approximation":
             {
@@ -1798,54 +1825,54 @@
                     "value": "norm_of_indicator_gradient",
                     "default_value": "norm_of_indicator_gradient",
                     "documentation": "Choose how to smear a parameter over the interface.",
-                    "pattern": "183",
+                    "pattern": "186",
                     "pattern_description": "[Selection norm_of_indicator_gradient|heaviside_phase_weighted|heaviside_times_heaviside_phase_weighted|reciprocal_phase_weighted|reciprocal_times_heaviside_phase_weighted|heavy_phase_only ]",
-                    "actions": "183"
+                    "actions": "186"
                 },
                 "auto weights":
                 {
                     "value": "false",
                     "default_value": "false",
                     "documentation": "Choose if weights should be computed automatically.",
-                    "pattern": "184",
+                    "pattern": "187",
                     "pattern_description": "[Bool]",
-                    "actions": "184"
+                    "actions": "187"
                 },
                 "gas phase weight":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the gas phase (level set = -1).",
-                    "pattern": "185",
+                    "pattern": "188",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "185"
+                    "actions": "188"
                 },
                 "heavy phase weight":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "If >>> dirac delta function approximation type <<< is set to any phase weighted optionthis parameter controls the (first) weight of the heavy phase (level set = 1).",
-                    "pattern": "186",
+                    "pattern": "189",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "186"
+                    "actions": "189"
                 },
                 "gas phase weight 2":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the gas phase (level set = -1).",
-                    "pattern": "187",
+                    "pattern": "190",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "187"
+                    "actions": "190"
                 },
                 "heavy phase weight 2":
                 {
                     "value": "1",
                     "default_value": "1",
                     "documentation": "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< this parameter controls the second weight of the heavy liquid\/solid phase (level set = 1).",
-                    "pattern": "188",
+                    "pattern": "191",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "188"
+                    "actions": "191"
                 }
             },
             "type":
@@ -1853,9 +1880,9 @@
                 "value": "phenomenological",
                 "default_value": "phenomenological",
                 "documentation": "Choose the model to compute the recoil pressure coefficient: phenomenological or hybrid, in case there is also an evaporation-induced velocity jump.",
-                "pattern": "189",
+                "pattern": "192",
                 "pattern_description": "[Selection phenomenological|hybrid|pressure_aware ]",
-                "actions": "189"
+                "actions": "192"
             },
             "pressure aware":
             {
@@ -1864,18 +1891,18 @@
                     "value": "",
                     "default_value": "",
                     "documentation": "Fitting parameters for the recoil pressure calculation with pressure-aware boundary conditions.",
-                    "pattern": "190",
+                    "pattern": "193",
                     "pattern_description": "[List of <[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]> of length 0...4294967295 (inclusive)]",
-                    "actions": "190"
+                    "actions": "193"
                 },
                 "ambient gas pressure":
                 {
                     "value": "0",
                     "default_value": "0",
                     "documentation": "Ambient gas pressure for the pressure-aware model.",
-                    "pattern": "191",
+                    "pattern": "194",
                     "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                    "actions": "191"
+                    "actions": "194"
                 }
             }
         },
@@ -1884,18 +1911,18 @@
             "value": "interface_velocity_local",
             "default_value": "interface_velocity_local",
             "documentation": "Select the type how the evaporative mass flux should be considered in the level set equation.",
-            "pattern": "192",
+            "pattern": "195",
             "pattern_description": "[Selection interface_velocity_sharp|interface_velocity_sharp_heavy|interface_velocity_local|rhs ]",
-            "actions": "192"
+            "actions": "195"
         },
         "do level set pressure gradient interpolation":
         {
             "value": "false",
             "default_value": "false",
             "documentation": "Set if the level set gradient for computing the delta function within the evaporative mass flux source terms should be computed based on an interpolation to the pressure space. This is only implemented for evapor_level_set_source_term_type = rhs.",
-            "pattern": "193",
+            "pattern": "196",
             "pattern_description": "[Bool]",
-            "actions": "193"
+            "actions": "196"
         }
     },
     "material":
@@ -1905,9 +1932,9 @@
             "value": "none",
             "default_value": "none",
             "documentation": "If this parameter is initialized, the material parameters of the specified material will be used as template. Individual properties can be modified. However, be aware to put <material template> in the first place of the <material> section in these cases.",
-            "pattern": "194",
+            "pattern": "197",
             "pattern_description": "[Selection none|stainless_steel|Ti64|Ti64Cunningham ]",
-            "actions": "194,195"
+            "actions": "197,198"
         },
         "gas":
         {
@@ -1916,36 +1943,36 @@
                 "value": "0",
                 "default_value": "0",
                 "documentation": "thermal conductivity of the gas phase",
-                "pattern": "195",
+                "pattern": "198",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "196"
+                "actions": "199"
             },
             "specific heat capacity":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "specific heat capacity of the gas phase",
-                "pattern": "196",
+                "pattern": "199",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "197"
+                "actions": "200"
             },
             "density":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "density of the gas phase",
-                "pattern": "197",
+                "pattern": "200",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "198"
+                "actions": "201"
             },
             "dynamic viscosity":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "dynamic viscosity of the gas phase",
-                "pattern": "198",
+                "pattern": "201",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "199"
+                "actions": "202"
             }
         },
         "liquid":
@@ -1955,36 +1982,36 @@
                 "value": "0",
                 "default_value": "0",
                 "documentation": "thermal conductivity of the liquid phase",
-                "pattern": "199",
+                "pattern": "202",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "200"
+                "actions": "203"
             },
             "specific heat capacity":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "specific heat capacity of the liquid phase",
-                "pattern": "200",
+                "pattern": "203",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "201"
+                "actions": "204"
             },
             "density":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "density of the liquid phase",
-                "pattern": "201",
+                "pattern": "204",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "202"
+                "actions": "205"
             },
             "dynamic viscosity":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "dynamic viscosity of the liquid phase",
-                "pattern": "202",
+                "pattern": "205",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "203"
+                "actions": "206"
             }
         },
         "solid":
@@ -1994,36 +2021,36 @@
                 "value": "0",
                 "default_value": "0",
                 "documentation": "thermal conductivity of the solid phase",
-                "pattern": "203",
+                "pattern": "206",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "204"
+                "actions": "207"
             },
             "specific heat capacity":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "specific heat capacity of the solid phase",
-                "pattern": "204",
+                "pattern": "207",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "205"
+                "actions": "208"
             },
             "density":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "density of the solid phase",
-                "pattern": "205",
+                "pattern": "208",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "206"
+                "actions": "209"
             },
             "dynamic viscosity":
             {
                 "value": "0",
                 "default_value": "0",
                 "documentation": "dynamic viscosity of the solid phase",
-                "pattern": "206",
+                "pattern": "209",
                 "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-                "actions": "207"
+                "actions": "210"
             }
         },
         "solidus temperature":
@@ -2031,90 +2058,90 @@
             "value": "0",
             "default_value": "0",
             "documentation": "Solidus temperature (K).",
-            "pattern": "207",
+            "pattern": "210",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "208"
+            "actions": "211"
         },
         "liquidus temperature":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Liquidus temperature (K).",
-            "pattern": "208",
+            "pattern": "211",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "209"
+            "actions": "212"
         },
         "apparent capacity type":
         {
             "value": "qlq",
             "default_value": "qlq",
             "documentation": "Function type for the apparent capacity method to model latent heat during solidification. constant: apparent capacity is constant between the solidus and liquidus temperature; qlq: apparent capacity is given by a quadratic\/quadratic function of temperature between the solidus and liquidus temperature (default); poly4_bell: apparent capacity is given by a bell-shaped quartic polynomial function of temperature between the solidus and liquidus temperature.",
-            "pattern": "209",
+            "pattern": "212",
             "pattern_description": "[Selection poly4_bell|constant|qlq ]",
-            "actions": "210"
+            "actions": "213"
         },
         "latent heat of fusion":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Latent heat of fusion (J\/kg)",
-            "pattern": "210",
+            "pattern": "213",
             "pattern_description": "[Double 0...MAX_DOUBLE (inclusive)]",
-            "actions": "211"
+            "actions": "214"
         },
         "boiling temperature":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Boiling temperature (K).",
-            "pattern": "211",
+            "pattern": "214",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "212"
+            "actions": "215"
         },
         "latent heat of evaporation":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Latent heat of evaporation (J\/kg).",
-            "pattern": "212",
+            "pattern": "215",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "213"
+            "actions": "216"
         },
         "molar mass":
         {
             "value": "0",
             "default_value": "0",
             "documentation": "Molar mass (mol\/kg).",
-            "pattern": "213",
+            "pattern": "216",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "214"
+            "actions": "217"
         },
         "specific enthalpy reference temperature":
         {
             "value": "-1e+100",
             "default_value": "-1e+100",
             "documentation": "Reference temperature of the specific enthalpy",
-            "pattern": "214",
+            "pattern": "217",
             "pattern_description": "[Double -MAX_DOUBLE...MAX_DOUBLE (inclusive)]",
-            "actions": "215"
+            "actions": "218"
         },
         "two phase fluid properties transition type":
         {
             "value": "smooth",
             "default_value": "smooth",
             "documentation": "Choose how to interpolate the properties over the interface. sharp: properties jump at heaviside = 0.5; smooth: properties are smeared between the phases proportional to the heaviside (default); consistent_with_evaporation: same as \"smooth\", but the density is interpolated proportional by the harmonic mean.",
-            "pattern": "215",
+            "pattern": "218",
             "pattern_description": "[Selection sharp|smooth|consistent_with_evaporation ]",
-            "actions": "216"
+            "actions": "219"
         },
         "solid liquid properties transition type":
         {
             "value": "mushy_zone",
             "default_value": "mushy_zone",
             "documentation": "Choose how to interpolate the properties over between the liquid and the solid phase. mushy_zone: solid and liquid properties are interpolated between the solidus and liquidus temperature (default); sharp: the solid and liquid properties jump at the melting point, which is set via the solidus temperature.",
-            "pattern": "216",
+            "pattern": "219",
             "pattern_description": "[Selection mushy_zone|sharp ]",
-            "actions": "217"
+            "actions": "220"
         }
     },
     "amr":
@@ -2124,9 +2151,9 @@
             "value": "generic",
             "default_value": "generic",
             "documentation": "Select the AMR strategy.",
-            "pattern": "217",
+            "pattern": "220",
             "pattern_description": "[Selection generic|refine_all_interface_cells ]",
-            "actions": "218"
+            "actions": "221"
         }
     }
 }

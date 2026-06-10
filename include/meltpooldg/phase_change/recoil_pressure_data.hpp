@@ -38,6 +38,14 @@ namespace MeltPoolDG::Evaporation
     // Enable or disable recoil-pressure related effects.
     bool enable = false;
 
+    // Enable or disable a linear activation ramp for recoil pressure between
+    // the activation temperature and the boiling temperature.
+    bool enable_linear_activation_ramp = true;
+
+    // Subtract the ambient pressure from the recoil pressure. This can be used
+    // to ensure that the recoil pressure is zero at the boiling temperature.
+    bool subtract_ambient_pressure = false;
+
     // ambient gas pressure
     // default value for air in Pa
     number ambient_gas_pressure = 1.013e5;

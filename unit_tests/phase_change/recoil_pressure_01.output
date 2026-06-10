@@ -1,0 +1,22 @@
+With activation ramp
+T = 1890, recoil pressure = 0
+T = 1900, recoil pressure = 0
+T = 2516.5, recoil pressure = 516.977
+T = 3133, recoil pressure = 55000
+T = 3143, recoil pressure = 57913.1
+
+Without activation ramp
+T = 1890, recoil pressure = 1.27992
+T = 1900, recoil pressure = 1.4745
+T = 2516.5, recoil pressure = 1033.95
+T = 3133, recoil pressure = 55000
+T = 3143, recoil pressure = 57913.1
+
+Without activation ramp and with ambient pressure subtraction
+T = 1890, recoil pressure = 0
+T = 1900, recoil pressure = 0
+T = 2516.5, recoil pressure = 0
+T = 3133, recoil pressure = 0
+T = 3233, recoil pressure = 0
+T = 3333, recoil pressure = 45577.5
+T = 3433, recoil pressure = 126981

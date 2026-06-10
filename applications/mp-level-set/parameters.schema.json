@@ -1408,6 +1408,11 @@
               "description": "Set this parameter to true to consider evaporative cooling in the heat equation",
               "default": false
             },
+            "enable linear activation ramp": {
+              "type": "boolean",
+              "description": "Enable a linear activation ramp for evaporative cooling between the activation temperature and the boiling temperature. If enabled, the mass flux increases smoothly and linearly within this temperature range. Otherwise, the mass flux is computed directly without applying a ramp.",
+              "default": true
+            },
             "consider enthalpy transport vapor mass flux": {
               "type": "string",
               "enum": [
@@ -1487,6 +1492,16 @@
             "enable": {
               "type": "boolean",
               "description": "Set this parameter to true to prescribe the evaporation-induced jump in the pressure field (i.e. recoil pressure), considered as an interfacial force in the momentum balance equation.If 'evaporative dilation rate' is enabled, this pressure jump will be added to the one resulting from the discontinuous normal velocity field.",
+              "default": false
+            },
+            "enable linear activation ramp": {
+              "type": "boolean",
+              "description": "Enable a linear activation ramp for recoil pressure between the activation temperature and the boiling temperature. If enabled, the recoil pressure increases smoothly and linearly within this temperature range. Otherwise, the recoil pressure is computed directly without applying a ramp.",
+              "default": true
+            },
+            "subtract ambient pressure": {
+              "type": "boolean",
+              "description": "Subtract ambient pressure from the recoil pressure. This can be used to ensure that the recoil pressure is zero at the boiling temperature.",
               "default": false
             },
             "ambient gas pressure": {
