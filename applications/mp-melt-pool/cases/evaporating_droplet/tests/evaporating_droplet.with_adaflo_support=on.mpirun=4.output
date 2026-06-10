@@ -1,6 +1,6 @@
 | || normal_0 ||L2 = 2.03719032468e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.03719029072e+00                                               normal_vector |
-| || curvature ||L2 = 4.52998486766e+00                                                  curvature |
+| || curvature ||L2 = 4.37451495498e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -15,7 +15,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 2.04571421189e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04571418529e+00                                               normal_vector |
-| || curvature ||L2 = 4.61755452524e+00                                                  curvature |
+| || curvature ||L2 = 4.37382858737e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14493           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6572555080e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.436206003259272e+00                                    navier_stokes_adaflo |
@@ -28,13 +28,13 @@
 | || normal_1 ||L2 = 2.04565604816e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 2.525004203305873e-03                                       reinitialization |
+| || delta phi ||L2 = 2.525004203262586e-03                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 1.970787607947517e-03                                       reinitialization |
+| || delta phi ||L2 = 1.970787607901992e-03                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 2.05026962457e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05026967506e+00                                               normal_vector |
-| || curvature ||L2 = 4.61681302556e+00                                                  curvature |
+| || curvature ||L2 = 4.37367496131e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.1477            evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6664740992e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.437786894522458e+00                                    navier_stokes_adaflo |
@@ -47,13 +47,13 @@
 | || normal_1 ||L2 = 2.05021268894e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 1.445991959325339e-03                                       reinitialization |
+| || delta phi ||L2 = 1.445991959276275e-03                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 1.182404254672854e-03                                       reinitialization |
+| || delta phi ||L2 = 1.182404250519249e-03                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 2.05215361036e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05215358181e+00                                               normal_vector |
-| || curvature ||L2 = 4.61664042346e+00                                                  curvature |
+| || curvature ||L2 = 4.37372292766e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14886           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6714006450e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438553457331016e+00                                    navier_stokes_adaflo |
@@ -66,15 +66,15 @@
 | || normal_1 ||L2 = 2.05209688982e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 9.545726925579804e-04                                       reinitialization |
+| || delta phi ||L2 = 9.545726476351316e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 8.764800418947185e-04                                       reinitialization |
+| || delta phi ||L2 = 8.764799527130393e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 2.05274326822e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05274343828e+00                                               normal_vector |
-| || curvature ||L2 = 4.61670418348e+00                                                  curvature |
+| || curvature ||L2 = 4.37384404484e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14901           evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6736467897e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6736467896e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438831169894766e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.229926029552402e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -85,131 +85,131 @@
 | || normal_1 ||L2 = 2.05268660951e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 8.144161337703653e-04                                       reinitialization |
+| || delta phi ||L2 = 8.144160420456325e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 7.908704551061678e-04                                       reinitialization |
+| || delta phi ||L2 = 7.908702752415909e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 2.05271671805e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05271660194e+00                                               normal_vector |
-| || curvature ||L2 = 4.61686396774e+00                                                  curvature |
+| || curvature ||L2 = 4.37399117414e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14867           evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6746018014e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6746018011e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438879956036528e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.227646710278650e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.227646710269431e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 6      t = 5.0000e-03 to 6.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.8398932296e+00                                    advection_diffusion |
-| || normal_0 ||L2 = 2.05265990054e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.05265991474e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.05265990056e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.05265991482e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 7.880442615676542e-04                                       reinitialization |
+| || delta phi ||L2 = 7.880440392379990e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 7.693946138186890e-04                                       reinitialization |
+| || delta phi ||L2 = 7.693943017591345e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 2.05239779706e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.05239770755e+00                                               normal_vector |
-| || curvature ||L2 = 4.61706124496e+00                                                  curvature |
+| || normal_1 ||L2 = 2.05239770763e+00                                               normal_vector |
+| || curvature ||L2 = 4.37414750317e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14812           evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6749492606e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6749492601e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438827552253439e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.225493840131022e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.225493840110940e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 7      t = 6.0000e-03 to 7.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.8399996438e+00                                    advection_diffusion |
+| || advected field ||L2 = 3.8399997011e+00                                    advection_diffusion |
 | || normal_0 ||L2 = 2.05234082103e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05234080019e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 7.842031688101274e-04                                       reinitialization |
+| || delta phi ||L2 = 7.842028165874006e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 7.617984671241341e-04                                       reinitialization |
+| || delta phi ||L2 = 7.617979848258415e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.05194154800e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.05194154802e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05194152747e+00                                               normal_vector |
-| || curvature ||L2 = 4.61727251024e+00                                                  curvature |
+| || curvature ||L2 = 4.37430738079e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14748           evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6750171190e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6750171179e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438735122758546e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.224153856210359e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.224153856342494e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 8      t = 7.0000e-03 to 8.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.8400760498e+00                                    advection_diffusion |
-| || normal_0 ||L2 = 2.05188456782e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.05188456784e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05188447303e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 7.819301643834272e-04                                       reinitialization |
+| || delta phi ||L2 = 7.819296050736140e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 7.563187247040206e-04                                       reinitialization |
+| || delta phi ||L2 = 7.563179990667168e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 2.05142088143e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.05142088051e+00                                               normal_vector |
-| || curvature ||L2 = 4.61748827859e+00                                                  curvature |
+| || normal_1 ||L2 = 2.05142088059e+00                                               normal_vector |
+| || curvature ||L2 = 4.37446835960e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14682           evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6749630249e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6749630235e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438631549540571e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.223300364789063e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.223300364734216e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 9      t = 8.0000e-03 to 9.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.8401386066e+00                                    advection_diffusion |
+| || advected field ||L2 = 3.8401386638e+00                                    advection_diffusion |
 | || normal_0 ||L2 = 2.05136372939e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.05136376247e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.05136376255e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 7.782745893826716e-04                                       reinitialization |
+| || delta phi ||L2 = 7.782739111745709e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 7.508179701690576e-04                                       reinitialization |
+| || delta phi ||L2 = 7.508172942688117e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.05086964237e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.05086964239e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05086957842e+00                                               normal_vector |
-| || curvature ||L2 = 4.61770509707e+00                                                  curvature |
+| || curvature ||L2 = 4.37463035502e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14616           evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6748615302e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6748615288e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438530022332106e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.222703890495015e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.222703890427305e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 10     t = 9.0000e-03 to 1.0000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.8401945971e+00                                    advection_diffusion |
-| || normal_0 ||L2 = 2.05081248887e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.05081239522e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.05081248889e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.05081247864e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 7.735379216339673e-04                                       reinitialization |
+| || delta phi ||L2 = 7.735372517959655e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 7.451143694953180e-04                                       reinitialization |
+| || delta phi ||L2 = 7.451137466068861e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.05030315915e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.05030319255e+00                                               normal_vector |
-| || curvature ||L2 = 4.61792123128e+00                                                  curvature |
+| || normal_0 ||L2 = 2.05030315917e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.05030327597e+00                                               normal_vector |
+| || curvature ||L2 = 4.37479228171e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14551           evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6747472938e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6747472928e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438436777333366e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.222252610063080e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.222252610005302e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 11     t = 1.0000e-02 to 1.1000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.8402473545e+00                                    advection_diffusion |
-| || normal_0 ||L2 = 2.05024583730e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.05024584203e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05024577351e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 7.682417454011496e-04                                       reinitialization |
+| || delta phi ||L2 = 7.682411662710593e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 7.393079767466563e-04                                       reinitialization |
+| || delta phi ||L2 = 7.393074852597133e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 2.04972850007e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04972825658e+00                                               normal_vector |
-| || curvature ||L2 = 4.61813652549e+00                                                  curvature |
+| || curvature ||L2 = 4.37495496720e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14488           evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6746362176e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6746362174e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438354356097026e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.221889424041516e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.221889555591789e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 12     t = 1.1000e-02 to 1.2000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -218,17 +218,17 @@
 | || normal_1 ||L2 = 2.04967102555e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 7.627083087078896e-04                                       reinitialization |
+| || delta phi ||L2 = 7.627078583612575e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 7.334826167182839e-04                                       reinitialization |
+| || delta phi ||L2 = 7.334823357772366e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.04914847984e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.04914853301e+00                                               normal_vector |
-| || curvature ||L2 = 4.61835075108e+00                                                  curvature |
+| || normal_0 ||L2 = 2.04914847986e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.04914845084e+00                                               normal_vector |
+| || curvature ||L2 = 4.37511815161e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14428           evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6745355294e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6745355302e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438283903964857e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.221584467473920e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.221584467619271e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 13     t = 1.2000e-02 to 1.3000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -237,55 +237,55 @@
 | || normal_1 ||L2 = 2.04909091064e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 7.570989210873334e-04                                       reinitialization |
+| || delta phi ||L2 = 7.570986385468397e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 7.276804331857650e-04                                       reinitialization |
+| || delta phi ||L2 = 7.276802368716371e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.04856483372e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.04856491499e+00                                               normal_vector |
-| || curvature ||L2 = 4.61856403069e+00                                                  curvature |
+| || normal_0 ||L2 = 2.04856483374e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.04856483282e+00                                               normal_vector |
+| || curvature ||L2 = 4.37528193726e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.1437            evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6744484944e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6744484959e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438225841225555e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.221321892039891e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.221321892196017e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 14     t = 1.3000e-02 to 1.4000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.8403982038e+00                                    advection_diffusion |
-| || normal_0 ||L2 = 2.04850718082e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.04850718084e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04850714322e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 7.514853456499574e-04                                       reinitialization |
+| || delta phi ||L2 = 7.514851880136853e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 7.219168370904326e-04                                       reinitialization |
+| || delta phi ||L2 = 7.219167634577686e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.04797820978e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.04797820980e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04797812838e+00                                               normal_vector |
-| || curvature ||L2 = 4.61877604807e+00                                                  curvature |
+| || curvature ||L2 = 4.37544628218e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14315           evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6743765537e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6743765557e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438180138615574e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.221092658936977e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.221092659104292e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 15     t = 1.4000e-02 to 1.5000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.8404471841e+00                                    advection_diffusion |
-| || normal_0 ||L2 = 2.04792039681e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.04792037132e+00                                               normal_vector |
+| || advected field ||L2 = 3.8404472459e+00                                    advection_diffusion |
+| || normal_0 ||L2 = 2.04792039683e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.04792037686e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 7.458953585412131e-04                                       reinitialization |
+| || delta phi ||L2 = 7.458953238958278e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 7.161939464476830e-04                                       reinitialization |
+| || delta phi ||L2 = 7.161939539856730e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.04738867938e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.04738859717e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04738872338e+00                                               normal_vector |
-| || curvature ||L2 = 4.61898726759e+00                                                  curvature |
+| || curvature ||L2 = 4.37561113855e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14262           evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6743202988e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6743203012e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438146798315312e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.220891137621459e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.220891137787750e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 16     t = 1.5000e-02 to 1.6000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -294,55 +294,55 @@
 | || normal_1 ||L2 = 2.04733074405e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 7.403372679556512e-04                                       reinitialization |
+| || delta phi ||L2 = 7.403373146331520e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 7.105084413858282e-04                                       reinitialization |
+| || delta phi ||L2 = 7.105084474929613e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.04679664161e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.04679664163e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04679670325e+00                                               normal_vector |
-| || curvature ||L2 = 4.61919734913e+00                                                  curvature |
+| || curvature ||L2 = 4.37577713659e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14212           evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6742799127e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6742799153e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438125588563977e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.220713793349047e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.220713793514323e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 17     t = 1.6000e-02 to 1.7000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.8405439087e+00                                    advection_diffusion |
-| || normal_0 ||L2 = 2.04673866897e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.04673866252e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.04673866899e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.04673874594e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 7.348110185282203e-04                                       reinitialization |
+| || delta phi ||L2 = 7.348111054972743e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 7.048553206307499e-04                                       reinitialization |
+| || delta phi ||L2 = 7.048553677612275e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.04620209055e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.04620217277e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04620213487e+00                                               normal_vector |
-| || curvature ||L2 = 4.61940677848e+00                                                  curvature |
+| || curvature ||L2 = 4.37594336545e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14164           evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6742553685e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6742553710e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438116248567901e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.220557351701284e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.220557352055653e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 18     t = 1.7000e-02 to 1.8000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.8405915342e+00                                    advection_diffusion |
-| || normal_0 ||L2 = 2.04614403269e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.04614403271e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04614403822e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 7.293138448029457e-04                                       reinitialization |
+| || delta phi ||L2 = 7.293139311232205e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 6.992298044416664e-04                                       reinitialization |
+| || delta phi ||L2 = 6.992298910800694e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.04560516864e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.04560517333e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04560525431e+00                                               normal_vector |
-| || curvature ||L2 = 4.61961530157e+00                                                  curvature |
+| || curvature ||L2 = 4.37611031075e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14118           evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6742465204e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6742465229e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438118530177806e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.220419587592887e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.220419587605953e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 19     t = 1.8000e-02 to 1.9000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -351,17 +351,17 @@
 | || normal_1 ||L2 = 2.04554702781e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 7.238426240128799e-04                                       reinitialization |
+| || delta phi ||L2 = 7.238427914210204e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 6.936278488149290e-04                                       reinitialization |
+| || delta phi ||L2 = 6.936279552110508e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 2.04500588352e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04500589932e+00                                               normal_vector |
-| || curvature ||L2 = 4.61982257902e+00                                                  curvature |
+| || curvature ||L2 = 4.37627788619e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14074           evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6742531476e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6742531500e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438132103567711e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.220298273406956e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.220298273757957e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 20     t = 1.9000e-02 to 2.0000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -370,17 +370,17 @@
 | || normal_1 ||L2 = 2.04494769970e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.1                                                                        reinitialization |
-| || delta phi ||L2 = 7.183946789619936e-04                                       reinitialization |
+| || delta phi ||L2 = 7.183947227387296e-04                                       reinitialization |
 |  τ = 0.2                                                                        reinitialization |
-| || delta phi ||L2 = 6.880463347333605e-04                                       reinitialization |
+| || delta phi ||L2 = 6.880464405361709e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.04440437774e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.04440437776e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04440438487e+00                                               normal_vector |
-| || curvature ||L2 = 4.62002969079e+00                                                  curvature |
+| || curvature ||L2 = 4.37644610079e+00                                                  curvature |
 | evaporation: jump in the velocity field = -3.14033           evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 2.6742749761e-01            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.6742749784e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.438156811170816e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.220191444124104e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.220191444137455e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
