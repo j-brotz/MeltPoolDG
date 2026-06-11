@@ -33,8 +33,13 @@ namespace MeltPoolDG::LevelSet
   template <typename number>
   struct ReinitializationEllipticData
   {
-    /// Penalty parameter for enforcement of the initial level-set zero iso-surface.
     number penalty_parameter = 0.;
+
+    struct FixedPointIterationData
+    {
+      unsigned int max_n_steps = 5;
+      number       tolerance   = std::numeric_limits<number>::min();
+    } fix_point_iteration;
 
     void
     add_parameters(dealii::ParameterHandler &prm);

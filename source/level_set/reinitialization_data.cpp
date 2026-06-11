@@ -17,6 +17,19 @@ namespace MeltPoolDG::LevelSet
                         "level-set iso-surface during the elliptic reinitialization.",
                         dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
     }
+    prm.enter_subsection("fixed point iteration");
+    {
+      prm.add_parameter("max n steps",
+                        fix_point_iteration.max_n_steps,
+                        "Sets the maximum number of fixed point iterations.");
+
+      prm.add_parameter("tolerance",
+                        fix_point_iteration.tolerance,
+                        "Set the tolerance for reinitialization. If the maximum change of the "
+                        "level set field exceeds the tolerance, reinitialization steps will be "
+                        "performed.");
+      prm.leave_subsection();
+    }
     prm.leave_subsection();
   }
 

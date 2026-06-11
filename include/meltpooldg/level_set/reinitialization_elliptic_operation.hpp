@@ -55,10 +55,16 @@ namespace MeltPoolDG::LevelSet
                                       const unsigned int                   ls_dof_idx_in);
 
     /**
-     * @brief Solve the nonlinear system of equations of the elliptic reinitialization problem.
+     * @brief Solve the elliptic reinitialization problem using fix point iteration.
      */
     void
     solve() override;
+
+    /**
+     * @brief Solve one step of the fix point iteration for the elliptic reinitialization problem.
+     */
+    void
+    solve_one_iter();
 
     /**
      * @brief Resizes the vectors to the right size of the underlying DoF handler and initializes
@@ -126,12 +132,12 @@ namespace MeltPoolDG::LevelSet
     attach_output_vectors(GenericDataOut<dim, number> &data_out) const override;
 
     /**
-     * @brief Get the maximum change of the level set due to the reinitialization procedure.
+     * @brief Get the relative change of the level set L2 norm between the current and previous fix point iteration.
      *
-     * @return Maximum change of the level set.
+     * @return Relative change of the level set norm.
      */
     number
-    get_max_change_level_set() const;
+    get_relative_change_level_set() const;
 
   private:
     /**
@@ -181,7 +187,10 @@ namespace MeltPoolDG::LevelSet
     /// Preconditioner for the linear solver
     Preconditioner<dim, VectorType, number> preconditioner;
 
-    /// Maximum change of the level set due to the reinitialization procedure
-    number max_change_level_set = std::numeric_limits<number>::max();
+    /// Relative change of the level L2 norm between the current and previous fix point iteration.
+    number relative_change_level_set = std::numeric_limits<number>::max();
+
+    /// Locally relevant DoF vector. It is required by the mesh classifier.
+    VectorType level_set_old_locally_owned;
   };
 } // namespace MeltPoolDG::LevelSet

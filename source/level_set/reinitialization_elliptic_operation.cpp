@@ -1,3 +1,5 @@
+#include <deal.II/dofs/dof_tools.h>
+
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
 #include <meltpooldg/level_set/reinitialization_elliptic_operation.hpp>
@@ -27,10 +29,36 @@ namespace MeltPoolDG::LevelSet
     , ls_dof_idx(ls_dof_idx_in)
   {}
 
-
   template <int dim, typename number>
   void
   ReinitializationEllipticOperation<dim, number>::solve()
+  {
+    const unsigned int max_iterations = reinit_data.elliptic.fix_point_iteration.max_n_steps;
+    number             tolerance      = reinit_data.elliptic.fix_point_iteration.tolerance;
+    unsigned int       iter           = 0;
+
+    while (iter < max_iterations && relative_change_level_set > tolerance)
+      {
+        solve_one_iter();
+        ++iter;
+      }
+
+    Journal::print_line(scratch_data.get_pcout(1),
+                        "Reinitialization completed in " + std::to_string(iter) + " iterations.",
+                        "reinitialization");
+
+    Journal::print_formatted_norm<number>(scratch_data.get_pcout(2),
+                                          relative_change_level_set,
+                                          "|Δψ|/|ψ^n|",
+                                          "reinitialization",
+                                          8 /*precision*/,
+                                          "L2 ",
+                                          2 /*extra_size*/);
+  }
+
+  template <int dim, typename number>
+  void
+  ReinitializationEllipticOperation<dim, number>::solve_one_iter()
   {
     const ScopedName         scope_n("solve");
     const TimerOutput::Scope scope_t(scratch_data.get_timer(), scope_n);
@@ -39,19 +67,13 @@ namespace MeltPoolDG::LevelSet
     if (ls_update_ghosts)
       solution_level_set.update_ghost_values();
 
-    mesh_classifier->reclassify();
-    compute_intersected_quadrature();
-
     reinit_operator->create_rhs(rhs, level_set_old);
 
-    // TODO
-    // preconditioner.update();
-    dealii::PreconditionIdentity identity;
-    int                          iter = LinearSolver::solve<VectorType>(*reinit_operator,
+    int iter = LinearSolver::solve<VectorType>(*reinit_operator,
                                                solution_level_set,
                                                rhs,
                                                reinit_data.linear_solver,
-                                               identity,
+                                               preconditioner,
                                                "reinitialization_operation");
 
     scratch_data.get_constraint(reinit_dof_idx).distribute(solution_level_set);
@@ -61,14 +83,14 @@ namespace MeltPoolDG::LevelSet
     VectorType delta_level_set(solution_level_set);
     delta_level_set -= level_set_old;
 
-    number max_delta_level_set =
+    number delta_level_set_L2 =
       VectorTools::compute_norm<dim, number>(delta_level_set,
                                              scratch_data,
                                              reinit_dof_idx,
                                              reinit_quad_idx,
                                              dealii::VectorTools::NormType::L2_norm);
-    number max_relative_delta_level_set =
-      max_delta_level_set /
+    relative_change_level_set =
+      delta_level_set_L2 /
       (VectorTools::compute_norm<dim, number>(level_set_old,
                                               scratch_data,
                                               reinit_dof_idx,
@@ -85,22 +107,30 @@ namespace MeltPoolDG::LevelSet
       },
       "ψ^(n+1)",
       "reinitialization",
-      5 /*precision*/
+      8 /*precision*/,
+      "L2 ",
+      1 /*extra_size*/
     );
 
     Journal::print_formatted_norm<number>(scratch_data.get_pcout(2),
-                                          max_relative_delta_level_set,
+                                          relative_change_level_set,
                                           "|Δψ|/|ψ^n|",
                                           "reinitialization",
-                                          5 /*precision*/,
+                                          8 /*precision*/,
                                           "L2 ",
-                                          3);
+                                          2 /*extra_size*/);
 
     Journal::print_line(scratch_data.get_pcout(2),
                         "LinearSolver completed in " + std::to_string(iter) + " iterations.",
                         "reinitialization");
 
     IterationMonitor<number>::add_linear_iterations(scope_n, iter);
+
+    level_set_old.copy_locally_owned_data_from(solution_level_set);
+    level_set_old.update_ghost_values();
+
+    level_set_old_locally_owned.copy_locally_owned_data_from(level_set_old);
+    level_set_old_locally_owned.update_ghost_values();
   }
 
   template <int dim, typename number>
@@ -111,18 +141,24 @@ namespace MeltPoolDG::LevelSet
     scratch_data.initialize_dof_vector(rhs, reinit_dof_idx);
     scratch_data.initialize_dof_vector(level_set_old, ls_dof_idx);
 
+    level_set_old_locally_owned.reinit(
+      scratch_data.get_dof_handler(ls_dof_idx).locally_owned_dofs(),
+      dealii::DoFTools::extract_locally_relevant_dofs(scratch_data.get_dof_handler(ls_dof_idx)),
+      scratch_data.get_mpi_comm(ls_dof_idx));
+
     // here the mesh classifier placeholder is created, since the level_set_old is empty
     // the mesh classifier is populated in the solve iteration
     if (not mesh_classifier)
       mesh_classifier = std::make_shared<dealii::NonMatching::MeshClassifier<dim>>(
-        scratch_data.get_dof_handler(ls_dof_idx), level_set_old);
+        scratch_data.get_dof_handler(ls_dof_idx), level_set_old_locally_owned);
 
     if (not reinit_operator)
       create_operator();
 
     reinit_operator->reinit();
-    // TODO
-    // preconditioner.reinit();
+    preconditioner.reinit();
+
+    relative_change_level_set = std::numeric_limits<number>::max();
   }
 
   template <int dim, typename number>
@@ -132,11 +168,20 @@ namespace MeltPoolDG::LevelSet
   {
     level_set_old.zero_out_ghost_values();
     level_set_old.copy_locally_owned_data_from(solution_level_set_in);
+    level_set_old.update_ghost_values();
+
+    level_set_old_locally_owned.zero_out_ghost_values();
+    level_set_old_locally_owned.copy_locally_owned_data_from(level_set_old);
+    level_set_old_locally_owned.update_ghost_values();
 
     solution_level_set.zero_out_ghost_values();
     solution_level_set.copy_locally_owned_data_from(solution_level_set_in);
+    solution_level_set.update_ghost_values();
 
-    // preconditioner.set_do_update_preconditioner(true);
+    preconditioner.set_do_update_preconditioner(true);
+    mesh_classifier->reclassify();
+    compute_intersected_quadrature();
+    preconditioner.update();
   }
 
   template <int dim, typename number>
@@ -152,12 +197,20 @@ namespace MeltPoolDG::LevelSet
                                      level_set_old);
 
     scratch_data.get_constraint(ls_dof_idx).distribute(level_set_old);
+    level_set_old.update_ghost_values();
+
+    level_set_old_locally_owned.zero_out_ghost_values();
+    level_set_old_locally_owned.copy_locally_owned_data_from(level_set_old);
+    level_set_old_locally_owned.update_ghost_values();
 
     solution_level_set.zero_out_ghost_values();
     solution_level_set.copy_locally_owned_data_from(level_set_old);
     solution_level_set.update_ghost_values();
 
-    // preconditioner.set_do_update_preconditioner(true);
+    preconditioner.set_do_update_preconditioner(true);
+    mesh_classifier->reclassify();
+    compute_intersected_quadrature();
+    preconditioner.update();
   }
 
   template <int dim, typename number>
@@ -176,9 +229,9 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number>
   number
-  ReinitializationEllipticOperation<dim, number>::get_max_change_level_set() const
+  ReinitializationEllipticOperation<dim, number>::get_relative_change_level_set() const
   {
-    return max_change_level_set;
+    return relative_change_level_set;
   }
 
   template <int dim, typename number>
@@ -212,16 +265,15 @@ namespace MeltPoolDG::LevelSet
                                                                       ls_dof_idx,
                                                                       mesh_classifier);
 
-    /* preconditioner =
-      make_preconditioner<dim,
-                          number,
-                          ReinitializationEllipticOperator<dim, number>,
-                          VectorType>(reinit_data.linear_solver.preconditioner_type,
-                                      reinit_operator.get(),
-                                      scratch_data,
-                                      reinit_dof_idx,
-                                      reinit_data.linear_solver.do_matrix_free);
-    preconditioner.set_do_update_preconditioner(false); */
+    preconditioner =
+      make_preconditioner<dim, number, ReinitializationEllipticOperator<dim, number>, VectorType>(
+        reinit_data.linear_solver.preconditioner_type,
+        reinit_operator.get(),
+        scratch_data,
+        reinit_dof_idx,
+        reinit_data.linear_solver.do_matrix_free);
+
+    preconditioner.set_do_update_preconditioner(false);
   }
 
   template <int dim, typename number>
@@ -236,6 +288,7 @@ namespace MeltPoolDG::LevelSet
                                                  scratch_data.get_matrix_free(),
                                                  scratch_data.get_degree(ls_dof_idx));
   }
+
 
   template class ReinitializationEllipticOperation<1, double>;
   template class ReinitializationEllipticOperation<2, double>;
