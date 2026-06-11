@@ -22,7 +22,7 @@ main()
   material_data.latent_heat_of_evaporation    = 8.84e6;
   material_data.liquid.specific_heat_capacity = 1000.0;
 
-  evapor_data.evaporative_mass_flux_model = EvaporationModelType::recoil_pressure;
+  evapor_data.evaporative_mass_flux_model = EvaporationModelType::saturated_vapor_pressure;
 
   evapor_data.recoil.enable                 = true;
   evapor_data.recoil.ambient_gas_pressure   = 1e5;

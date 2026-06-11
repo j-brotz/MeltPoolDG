@@ -1,13 +1,13 @@
 With activation ramp
-T = 1890, evaporative cooling = -1.29974e+08, derivative = -68769.4
-T = 1900, evaporative cooling = -1.30662e+08, derivative = -68769.4
-T = 2516.5, evaporative cooling = -1.73058e+08, derivative = -68769.4
-T = 3133, evaporative cooling = -2.15454e+08, derivative = -122.301
-T = 3143, evaporative cooling = -2.26505e+08, derivative = -127.744
+T = 1890, evaporative cooling = -2.36317e+08, derivative = -125035
+T = 1900, evaporative cooling = -2.37567e+08, derivative = -125035
+T = 2516.5, evaporative cooling = -3.14651e+08, derivative = -125035
+T = 3133, evaporative cooling = -3.91735e+08, derivative = -222.366
+T = 3143, evaporative cooling = -4.11827e+08, derivative = -232.262
 
 Without activation ramp
-T = 1890, evaporative cooling = -0, derivative = -0
-T = 1900, evaporative cooling = -0, derivative = -0
-T = 2516.5, evaporative cooling = -2.25967e+06, derivative = -2.00059
-T = 3133, evaporative cooling = -2.15454e+08, derivative = -122.301
-T = 3143, evaporative cooling = -2.26505e+08, derivative = -127.744
+T = 1890, evaporative cooling = -11737.1, derivative = -0.0185387
+T = 1900, evaporative cooling = -13485.9, derivative = -0.0210751
+T = 2516.5, evaporative cooling = -8.21699e+06, derivative = -7.27486
+T = 3133, evaporative cooling = -3.91735e+08, derivative = -222.366
+T = 3143, evaporative cooling = -4.11827e+08, derivative = -232.262

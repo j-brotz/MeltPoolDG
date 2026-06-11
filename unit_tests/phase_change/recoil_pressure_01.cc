@@ -10,8 +10,9 @@ using namespace MeltPoolDG::Evaporation;
 int
 main()
 {
-  using number = double;
   using namespace MeltPoolDG;
+  using number          = double;
+  using VectorizedArray = dealii::VectorizedArray<number>;
 
   RecoilPressureData<number> recoil_data;
   MaterialData<number>       material_data;
@@ -32,15 +33,27 @@ main()
   const number h_v  = material_data.latent_heat_of_evaporation;
   const number M    = material_data.molar_mass;
 
+  const auto print_result = [](const auto &scalar_model, const number T) {
+    VectorizedArray T_vec;
+    T_vec = T;
+
+    const auto recoil_pressure_vec = scalar_model.compute_recoil_pressure_coefficient(T_vec);
+    const auto recoil_pressure     = scalar_model.compute_recoil_pressure_coefficient(T);
+
+    AssertThrow(recoil_pressure == recoil_pressure_vec[0],
+                dealii::ExcMessage("Vectorized and scalar version diverge."));
+
+    std::cout << "T = " << T << ", recoil pressure = " << recoil_pressure
+              << ", recoil pressure vec[0] = " << recoil_pressure_vec[0] << std::endl;
+  };
+
   {
     RecoilPressurePhenomenologicalModel<number> model(recoil_data, T_v, M, h_v);
 
     std::cout << "With activation ramp" << std::endl;
 
     for (const auto T : {T_ac - 10.0, T_ac, 0.5 * (T_ac + T_v), T_v, T_v + 10.0})
-      std::cout << "T = " << T
-                << ", recoil pressure = " << model.compute_recoil_pressure_coefficient(T)
-                << std::endl;
+      print_result(model, T);
   }
 
   {
@@ -51,9 +64,7 @@ main()
     std::cout << "\nWithout activation ramp" << std::endl;
 
     for (const auto T : {T_ac - 10.0, T_ac, 0.5 * (T_ac + T_v), T_v, T_v + 10.0})
-      std::cout << "T = " << T
-                << ", recoil pressure = " << no_ramp_model.compute_recoil_pressure_coefficient(T)
-                << std::endl;
+      print_result(no_ramp_model, T);
   }
 
   {
@@ -66,9 +77,7 @@ main()
 
     for (const auto T :
          {T_ac - 10.0, T_ac, 0.5 * (T_ac + T_v), T_v, T_v + 100, T_v + 200, T_v + 300})
-      std::cout << "T = " << T
-                << ", recoil pressure = " << no_ramp_model.compute_recoil_pressure_coefficient(T)
-                << std::endl;
+      print_result(no_ramp_model, T);
   }
 
   return 0;

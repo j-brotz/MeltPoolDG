@@ -1,9 +1,10 @@
 #pragma once
 
-#include <meltpooldg/phase_change/evaporation_tools.hpp>
 #include <meltpooldg/phase_change/recoil_pressure_operation.hpp>
 //
 #include <deal.II/base/utilities.h>
+
+#include <meltpooldg/phase_change/evaporation_tools.hpp>
 
 #include <cmath>
 
@@ -41,7 +42,7 @@ namespace MeltPoolDG::Evaporation
     const number T_ac = recoil_data.activation_temperature;
     const number T_v  = boiling_temperature;
 
-    dealii::VectorizedArray<number> recoil_pressure =
+    dealii::VectorizedArray<number> full_recoil_pressure =
       recoil_data.pressure_coefficient *
       compute_saturated_gas_pressure(T,
                                      T_v,
@@ -49,20 +50,23 @@ namespace MeltPoolDG::Evaporation
                                      recoil_data.temperature_constant);
 
     if (recoil_data.subtract_ambient_pressure)
-      recoil_pressure -= recoil_data.ambient_gas_pressure;
+      full_recoil_pressure -= recoil_data.ambient_gas_pressure;
 
-    if (recoil_data.enable_linear_activation_ramp)
-      {
-        const dealii::VectorizedArray<number> scaling_coeff =
-          compute_linear_scaling_coeff(T, T_ac, T_v);
-        recoil_pressure *= scaling_coeff;
-      }
+    dealii::VectorizedArray<number> ramped_recoil_pressure =
+      activation_ramp_derivative * (T - T_ac);
 
-    return compare_and_apply_mask<dealii::SIMDComparison::greater_than_or_equal>(
-      recoil_pressure,
-      dealii::VectorizedArray<number>(0),
-      recoil_pressure,
-      dealii::VectorizedArray<number>(0));
+    dealii::VectorizedArray<number> recoil_pressure =
+      compare_and_apply_mask<dealii::SIMDComparison::greater_than_or_equal>(
+        T,
+        recoil_data.enable_linear_activation_ramp ? T_v : T_ac,
+        full_recoil_pressure,
+        recoil_data.enable_linear_activation_ramp ? ramped_recoil_pressure : 0.0);
+
+    // Recoil pressure is constrained to remain non-negative.
+    return compare_and_apply_mask<dealii::SIMDComparison::greater_than_or_equal>(recoil_pressure,
+                                                                                 0.0,
+                                                                                 recoil_pressure,
+                                                                                 0.0);
   }
 
   template <typename number>
@@ -73,23 +77,34 @@ namespace MeltPoolDG::Evaporation
     const number T_ac = recoil_data.activation_temperature;
     const number T_v  = boiling_temperature;
 
+    // Recoil pressure is inactive below the activation temperature.
+    if (T < T_ac)
+      return 0.0;
 
-    number recoil_pressure = recoil_data.pressure_coefficient *
-                             compute_saturated_gas_pressure(T,
-                                                            T_v,
-                                                            recoil_data.ambient_gas_pressure,
-                                                            recoil_data.temperature_constant);
+    number recoil_pressure = 0;
 
-    if (recoil_data.subtract_ambient_pressure)
-      recoil_pressure -= recoil_data.ambient_gas_pressure;
-
-    if (recoil_data.enable_linear_activation_ramp)
+    if (T >= T_v or not recoil_data.enable_linear_activation_ramp)
       {
-        const number scaling_coeff = compute_linear_scaling_coeff(T, T_ac, T_v);
-        recoil_pressure *= scaling_coeff;
+        // Above the boiling temperature, or when the activation ramp is disabled,
+        // compute the recoil pressure directly from the saturated gas pressure.
+        recoil_pressure = recoil_data.pressure_coefficient *
+                          compute_saturated_gas_pressure(T,
+                                                         T_v,
+                                                         recoil_data.ambient_gas_pressure,
+                                                         recoil_data.temperature_constant);
+
+        // Optionally use the pressure relative to the ambient gas pressure.
+        if (recoil_data.subtract_ambient_pressure)
+          recoil_pressure -= recoil_data.ambient_gas_pressure;
+      }
+    else
+      {
+        // Between the activation and boiling temperatures, linearly ramp the
+        // recoil pressure from zero to its value at the boiling temperature.
+        recoil_pressure = activation_ramp_derivative * (T - T_ac);
       }
 
-    return (recoil_pressure >= 0.0) ? recoil_pressure : 0.0;
+    return std::max(recoil_pressure, 0.0);
   }
 
 
