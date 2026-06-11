@@ -1,5 +1,6 @@
 #pragma once
 
+#include "meltpooldg/phase_change/evaporation_tools.hpp"
 #include <meltpooldg/phase_change/evaporative_cooling.hpp>
 //
 #include <deal.II/base/exceptions.h>
@@ -8,7 +9,6 @@
 #include <meltpooldg/phase_change/evaporation_model_recoil_pressure.hpp>
 #include <meltpooldg/phase_change/evaporation_model_saturated_vapor_pressure.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
-
 
 namespace MeltPoolDG::Evaporation
 {
@@ -22,6 +22,7 @@ namespace MeltPoolDG::Evaporation
     , specific_heat_capacity(material_data.liquid.specific_heat_capacity)
     , specific_enthalpy_reference_temperature(material_data.specific_enthalpy_reference_temperature)
     , boiling_temperature(material_data.boiling_temperature)
+    , ramp_enabled(evapor_data.evaporative_cooling.enable_linear_activation_ramp)
   {
     if (do_phenomenological_recoil_pressure)
       AssertThrow(not numbers::is_invalid(specific_enthalpy_reference_temperature),
@@ -71,9 +72,13 @@ namespace MeltPoolDG::Evaporation
                 compute_evaporative_cooling_derivative_with_temperature_dependent_mass_flux(
                   material_data.boiling_temperature);
           }
-        activation_ramp_derivative =
-          compute_evaporative_cooling(material_data.boiling_temperature) /
-          (material_data.boiling_temperature - activation_temperature);
+
+        if (ramp_enabled)
+          {
+            activation_ramp_derivative =
+              compute_evaporative_cooling(material_data.boiling_temperature) /
+              (material_data.boiling_temperature - activation_temperature);
+          }
       }
   }
 
@@ -103,7 +108,7 @@ namespace MeltPoolDG::Evaporation
 
     if (temperature < activation_temperature)
       return 0.0;
-    else if (temperature >= boiling_temperature)
+    else if (temperature >= boiling_temperature or not ramp_enabled)
       return compute_evaporative_cooling(
         mass_flux_operator->local_compute_evaporative_mass_flux(temperature), temperature);
     else
@@ -127,7 +132,7 @@ namespace MeltPoolDG::Evaporation
       0,
       dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than_or_equal>(
         temperature,
-        boiling_temperature,
+        ramp_enabled ? boiling_temperature : activation_temperature,
         compute_evaporative_cooling(
           mass_flux_operator->local_compute_evaporative_mass_flux_vec(temperature), temperature),
         activation_ramp_derivative * (temperature - activation_temperature)));
@@ -159,7 +164,7 @@ namespace MeltPoolDG::Evaporation
 
     if (temperature < activation_temperature)
       return 0.0;
-    else if (temperature >= boiling_temperature)
+    else if (temperature >= boiling_temperature or not ramp_enabled)
       {
         const auto mass_flux_derivative =
           mass_flux_operator->local_compute_evaporative_mass_flux_derivative(temperature);
@@ -193,7 +198,7 @@ namespace MeltPoolDG::Evaporation
       0,
       dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than_or_equal>(
         temperature,
-        boiling_temperature,
+        ramp_enabled ? boiling_temperature : activation_temperature,
         (do_phenomenological_recoil_pressure) ?
           -specific_heat_capacity *
               mass_flux_operator->local_compute_evaporative_mass_flux_vec(temperature) -

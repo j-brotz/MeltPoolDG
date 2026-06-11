@@ -73,7 +73,7 @@ namespace MeltPoolDG::Evaporation
     const number                      boiling_temperature;
     const number                      molar_mass;
     const number                      latent_heat_evaporation;
-
+    number                            activation_ramp_derivative;
 
   public:
     RecoilPressurePhenomenologicalModel(const RecoilPressureData<number> &recoil_data,

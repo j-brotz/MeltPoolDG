@@ -3,6 +3,7 @@
 #include <deal.II/matrix_free/evaluation_flags.h>
 
 #include <meltpooldg/cut/util.hpp>
+#include <meltpooldg/phase_change/evaporation_tools.hpp>
 #include <meltpooldg/utilities/dof_tools.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
@@ -28,7 +29,17 @@ namespace MeltPoolDG::Evaporation
     , boiling_temperature(boiling_temperature)
     , molar_mass(molar_mass)
     , latent_heat_evaporation(latent_heat_evaporation)
+    , activation_ramp_derivative(recoil_data.pressure_coefficient *
+                                 compute_saturated_gas_pressure(boiling_temperature,
+                                                                boiling_temperature,
+                                                                recoil_data.ambient_gas_pressure,
+                                                                recoil_data.temperature_constant))
   {
+    if (recoil_data.subtract_ambient_pressure)
+      activation_ramp_derivative -= recoil_data.ambient_gas_pressure;
+
+    activation_ramp_derivative /= (boiling_temperature - recoil_data.activation_temperature);
+
     AssertThrow(boiling_temperature > 0.0,
                 ExcMessage("The boiling temperature must be greater than zero! Abort..."));
 

@@ -20,6 +20,7 @@ mpdg_setup_mpi_unit_tests(
 add_subdirectory(flow)
 add_subdirectory(heat)
 add_subdirectory(particles)
+add_subdirectory(phase_change)
 add_subdirectory(utilities)
 add_subdirectory(species_transport)
 add_subdirectory(level_set)
