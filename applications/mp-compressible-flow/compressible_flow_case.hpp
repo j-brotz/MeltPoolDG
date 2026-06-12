@@ -404,10 +404,10 @@ namespace MeltPoolDG::CompressibleFlow
       std::array<number, 3> errors;
       for (unsigned int d = 0; d < 3; ++d)
         errors[d] = std::sqrt(errors_squared[d]);
-      labels                           = {"density", "momentum", "total energy"};
+      labels                           = {"density", "momentum", "total_energy"};
       component_errors["density"]      = errors[0];
       component_errors["momentum"]     = errors[1];
-      component_errors["total energy"] = errors[2];
+      component_errors["total_energy"] = errors[2];
 
       pretty_print_norm("L2 " + norm_name, labels, component_errors);
     }

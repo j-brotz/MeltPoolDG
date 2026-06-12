@@ -1,3 +1,4 @@
+#include <meltpooldg/compressible_flow/bound_preserving_limiter.hpp>
 #include <meltpooldg/compressible_flow/boundary_conditions.templates.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_explicit.hpp>
@@ -47,13 +48,15 @@ namespace MeltPoolDG::CompressibleFlow
 
     std::function<void(number, number, VectorType &, const VectorType &)> post_processing =
       [&](number, number, VectorType &dst, const VectorType &src) -> void {
-      Utilities::apply_minmod_type_limiter<dim, n_conserved_variables<dim, n_species>, number>(
-        {flow_scratch_data.scratch_data.get_matrix_free(),
-         flow_scratch_data.dof_idx,
-         flow_scratch_data.quad_idx},
-        dst,
-        src,
-        flow_scratch_data.flow_data.limiter_data);
+      if constexpr (n_species > 1)
+        bound_preserving_limiter<dim, number, n_species>(
+          {flow_scratch_data.scratch_data.get_matrix_free(),
+           flow_scratch_data.dof_idx,
+           flow_scratch_data.quad_idx},
+          dst,
+          src,
+          flow_scratch_data.flow_data.limiter_data,
+          flow_scratch_data.material.data);
     };
 
     time_integrator.perform_time_step(
